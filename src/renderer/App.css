@@ -1,0 +1,104 @@
+/*
+ * @NOTE: Prepend a `~` to css file paths that are in your node_modules
+ *        See https://github.com/webpack-contrib/sass-loader#imports
+ */
+
+html {
+  margin: 0px;
+  height: 100%;
+  width: 100%;
+  overflow: clip;
+  background-color: #000000;
+}
+
+body {
+  margin: 0px;
+  height: 100%;
+  width: 100%;
+  font-family: sans-serif;
+}
+
+div#root {
+  height: 100%;
+  width: 100%;
+}
+
+.video{
+  width: 100%;
+  top: 0px;
+}
+
+.Hello {
+  height: 100%;
+  width: 100%;
+}
+
+.TabPanel {
+  height: 100%;
+  width: 100%;
+  background-color: #505050;
+  padding: 0;
+}
+
+.MuiTypography-root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.MuiBox-root {
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+}
+
+h1 {text-align: center;}
+h2 {
+  width: 100%;
+  height: 100%;
+  padding: 0px;
+  text-align: center;
+  background: #1abc9c;
+  color: rgb(0, 0, 0);
+  font-size: 30px;
+}
+
+#title-bar {
+  -webkit-app-region: drag;
+  height: 32px;
+  padding: 0px;
+  margin: 0px;
+  color: white;
+  font-family: sans-serif;
+}
+
+#title {
+  position: fixed;
+  top: 0px;
+  left: 12px;
+  line-height: 32px;
+  font-size: 14px;
+}
+
+#title-bar-btns {
+  -webkit-app-region: no-drag;
+  position: fixed;
+  top: 1px;
+  right: 0px;
+}
+
+#title-bar-btns button {
+  height: 32px;
+  width: 32px;
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+}
+
+#title-bar-btns button:hover {
+  background-color: #1A1A1A;
+}
+
