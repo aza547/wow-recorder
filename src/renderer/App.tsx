@@ -1,11 +1,14 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
+import TitleBar from './TitleBar';
 import './App.css';
 
-const Hello = () => {
+
+const Application = () => {
   return (
-    <div className="Hello">    
-      <Layout/> 
+    <div className="App">
+      <TitleBar />
+      <Layout />
     </div>
   );
 };
@@ -14,8 +17,10 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Hello />} />
+        <Route path="/" element={<Application />} />
       </Routes>
     </Router>
   );
 }
+
+

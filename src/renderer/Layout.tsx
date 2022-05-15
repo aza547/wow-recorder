@@ -3,6 +3,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import Video2v2 from './Video2v2';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -15,7 +16,7 @@ function TabPanel(props: TabPanelProps) {
 
   return (
     <div
-      className = "TabPanel"
+      className="TabPanel"
       role="tabpanel"
       hidden={value !== index}
       id={`vertical-tabpanel-${index}`}
@@ -46,12 +47,13 @@ export default function VerticalTabs() {
   };
 
   return (
-    <Box sx= {{
-      width: '100%',
-      height: "100%",
-      display: 'flex',
-      }} >
-
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+      }}
+    >
       <Tabs
         orientation="vertical"
         variant="fullWidth"
@@ -66,36 +68,34 @@ export default function VerticalTabs() {
         <Tab label="Mythic+" {...a11yProps(3)} sx = {{  bgcolor: '#505050', color: 'white', border: '1px solid', borderColor: 'black' }}/>
         <Tab label="Raids" {...a11yProps(4)} sx = {{ bgcolor: '#505050', color: 'white', border: '1px solid', borderColor: 'black' }} />
         <Tab label="Battlegrounds" {...a11yProps(5)} sx = {{ bgcolor: '#505050', color: 'white', border: '1px solid', borderColor: 'black' }}/>
-        <Tab label="Settings" {...a11yProps(6)} sx = {{ color: 'white', border: '1px solid', borderColor: 'black' }}/>
       </Tabs>
       <TabPanel value={value} index={0}>
-        <video className="video" controls>
-          <source src="file:///D:/vid.mp4"/>
-        </video>
+        <Video2v2 />
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <video className="video" controls >
-          <source src="file:///D:/vid.mp4"/>
+        <video className="video" controls>
+          <source src="file:///D:/vid.mp4" />
         </video>
       </TabPanel>
       <TabPanel value={value} index={2}>
-        <video className="video" controls >
-          <source src="file:///D:/vid.mp4"/>
+        <video className="video" controls>
+          <source src="file:///D:/vid.mp4" />
         </video>
       </TabPanel>
       <TabPanel value={value} index={3}>
-        <video className="video" controls >
-          <source src="file:///D:/vid.mp4"/>
+        <video className="video" controls>
+          <source src="file:///D:/vid.mp4" />
         </video>
       </TabPanel>
       <TabPanel value={value} index={4}>
-        <h2>This will be the Encounter tab.</h2>
+        <video className="video" controls>
+          <source src="file:///D:/vid.mp4" />
+        </video>
       </TabPanel>
       <TabPanel value={value} index={5}>
-        <h2>This will be the BG tab.</h2>
-      </TabPanel>
-      <TabPanel value={value} index={6}>
-        <h2>This will be the Settings tab.</h2>
+        <video className="video" controls>
+          <source src="file:///D:/vid.mp4" />
+        </video>
       </TabPanel>
     </Box>
   );

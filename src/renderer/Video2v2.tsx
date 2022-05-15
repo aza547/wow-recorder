@@ -5,10 +5,11 @@ window.electron.ipcRenderer.on('LISTRESPONSE', (arg) => {
   // eslint-disable-next-line no-console
   files = arg;
 });
+
 window.electron.ipcRenderer.sendMessage('LIST', ['ping']);
 
 function getVideo() {
-  return "file:///D:/wow-recorder-files/2v2/" + files[0];
+  return "file:///D:/wow-recorder-files/2v2/1.mp4"; //+ files[0]; TIMING ISSUE HERE
 }
 
 export default function Video() {

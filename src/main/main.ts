@@ -12,9 +12,20 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import TitleBar from 'frameless-titlebar';
 import { resolveHtmlPath } from './util';
 
+const fs = require('fs');
+const files = fs.readdirSync('D:/wow-recorder-files/2v2');
+
+ipcMain.on('LIST', (event, args) => {
+  event.reply('LISTRESPONSE', files);
+});
+
+ipcMain.on('maximize', () => {
+  //mainWindow is the reference to your window
+  console.log("received maximize event");
+  if (mainWindow !== null) mainWindow.maximize();
+})
 
 export default class AppUpdater {
   constructor() {
@@ -73,9 +84,9 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
-    height: 728,
-    minWidth: 500,
-    minHeight: 500,
+    height: 525,
+    minWidth: 1024,
+    minHeight: 525,
     icon: getAssetPath('icon.png'),
    // autoHideMenuBar: true,
    frame: false,
@@ -138,3 +149,17 @@ app
     });
   })
   .catch(console.log);
+
+ipcMain.on('HIDE', () => {
+    if (mainWindow !== null) mainWindow.minimize();
+  })
+
+ipcMain.on('RESIZE', () => {
+    if (mainWindow !== null) {
+      mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
+    };
+})
+
+ipcMain.on('QUIT', () => {
+  if (mainWindow !== null) mainWindow.close();
+})
