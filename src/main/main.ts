@@ -36,6 +36,7 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let settingsWindow: BrowserWindow | null = null;
 
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
@@ -126,6 +127,59 @@ const createWindow = async () => {
   new AppUpdater();
 };
 
+const createSettingsWindow = async () => {
+  if (isDebug) {
+    await installExtensions();
+  }
+
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
+
+  const getAssetPath = (...paths: string[]): string => {
+    return path.join(RESOURCES_PATH, ...paths);
+  };
+
+  settingsWindow = new BrowserWindow({
+    show: false,
+    width: 400,
+    height: 400,
+    resizable: false,
+    icon: getAssetPath('icons8-settings.svg'),
+   // autoHideMenuBar: true,
+    frame: false,
+    webPreferences: {
+      webSecurity: false,
+      preload: app.isPackaged
+        ? path.join(__dirname, 'preload.js')
+        : path.join(__dirname, '../../.erb/dll/preload.js'),
+    },
+  });
+
+  settingsWindow.loadURL(`file://${__dirname}/../settings/settings.html`);
+
+  settingsWindow.on('ready-to-show', () => {
+    if (!settingsWindow) {
+      throw new Error('"settingsWindow" is not defined');
+    }
+    if (process.env.START_MINIMIZED) {
+      settingsWindow.minimize();
+    } else {
+      settingsWindow.show();
+    }
+  });
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+  });
+
+  // Open urls in the user's browser
+  settingsWindow.webContents.setWindowOpenHandler((edata) => {
+    shell.openExternal(edata.url);
+    return { action: 'deny' };
+  });
+};
+
 /**
  * Add event listeners...
  */
@@ -162,4 +216,16 @@ ipcMain.on('RESIZE', () => {
 
 ipcMain.on('QUIT', () => {
   if (mainWindow !== null) mainWindow.close();
+})
+
+ipcMain.on('CREATE-SETTINGS', () => {
+  if (settingsWindow === null) createSettingsWindow();
+})
+
+ipcMain.on('SAVE-SETTINGS', () => {
+  if (settingsWindow !== null) settingsWindow.close();
+})
+
+ipcMain.on('CLOSE-SETTINGS', () => {
+  if (settingsWindow !== null)  settingsWindow.close();
 })

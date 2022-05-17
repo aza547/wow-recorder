@@ -8,7 +8,7 @@ html {
   height: 100%;
   width: 100%;
   overflow: clip;
-  background-color: #000000;
+  background-color: #1A233A;
 }
 
 body {
@@ -36,7 +36,7 @@ div#root {
 .TabPanel {
   height: 100%;
   width: 100%;
-  background-color: #505050;
+  background-color: #272e48;
   padding: 0;
 }
 
@@ -70,15 +70,16 @@ h2 {
   height: 35px;
   padding: 0px;
   margin: 0px;
-  color: white;
+
   font-family: sans-serif;
 }
 
 #title {
-
+  color: #bb4220;
   line-height: 32px;
   font-size: 14px;
   text-align: center;
+  font-weight: bold;
 }
 
 #title-bar-btns {
@@ -112,4 +113,25 @@ h2 {
   position:fixed;
   top: 5px;
   left: 5px;
+}
+
+#settings{
+  position:fixed;
+  bottom: 5px;
+  left: 5px;
+}
+
+#settings-cog{
+  background-color: transparent;
+  border-style: outset;
+  border-width: 2px;
+  cursor: pointer;
+}
+
+#settings-cog:hover {
+  background-color: darkgrey;
+}
+
+#settings-cog:active {
+  border-style: inset;
 }

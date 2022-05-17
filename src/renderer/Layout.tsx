@@ -4,6 +4,15 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Video2v2 from './Video2v2';
+import { makeStyles} from '@mui/styles';
+
+const useStyles = makeStyles({
+  tabs: {
+    "& .MuiTab-root.Mui-selected": {
+      color: '#bb4220'
+    }
+  }
+})
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -41,6 +50,7 @@ function a11yProps(index: number) {
 
 export default function VerticalTabs() {
   const [value, setValue] = React.useState(0);
+  const classes = useStyles();
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -56,18 +66,20 @@ export default function VerticalTabs() {
     >
       <Tabs
         orientation="vertical"
-        variant="fullWidth"
+        variant="standard"
         value={value}
         onChange={handleChange}
         aria-label="Vertical tabs example"
-        sx={{ borderRight: 3, borderColor: '#000000', bgcolor: '#505050' }}
+        sx={{ borderRight: 3, borderColor: '#000000', bgcolor: '#272e48' ,  textColor: 'secondary'}}
+        className={classes.tabs}
+        TabIndicatorProps={{style: { background:'#bb4220' }}}
       >
-        <Tab label="2v2" {...a11yProps(0)} sx = {{ bgcolor: '#505050', color:'green', color: 'white', border: '1px solid', borderColor: 'black'}}/>
-        <Tab label="3v3" {...a11yProps(1)} sx = {{ bgcolor: '#505050' , color: 'white', border: '1px solid', borderColor: 'black' }}/>
-        <Tab label="Skirmish" {...a11yProps(2)} sx = {{ bgcolor: '#505050', color: 'white', border: '1px solid', borderColor: 'black' }} />
-        <Tab label="Mythic+" {...a11yProps(3)} sx = {{  bgcolor: '#505050', color: 'white', border: '1px solid', borderColor: 'black' }}/>
-        <Tab label="Raids" {...a11yProps(4)} sx = {{ bgcolor: '#505050', color: 'white', border: '1px solid', borderColor: 'black' }} />
-        <Tab label="Battlegrounds" {...a11yProps(5)} sx = {{ bgcolor: '#505050', color: 'white', border: '1px solid', borderColor: 'black' }}/>
+        <Tab label="2v2" {...a11yProps(0)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px'}}/>
+        <Tab label="3v3" {...a11yProps(1)} sx = {{ padding:'12px', bgcolor: '#272e48' , color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }} />
+        <Tab label="Skirmish" {...a11yProps(2)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }} />
+        <Tab label="Mythic+" {...a11yProps(3)} sx = {{  padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }}/>
+        <Tab label="Raids" {...a11yProps(4)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }} />
+        <Tab label="Battlegrounds" {...a11yProps(5)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }}/>
       </Tabs>
       <TabPanel value={value} index={0}>
         <Video2v2 />
