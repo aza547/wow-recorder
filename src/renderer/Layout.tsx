@@ -6,6 +6,21 @@ import Box from '@mui/material/Box';
 import Video2v2 from './Video2v2';
 import { makeStyles} from '@mui/styles';
 
+let files: string[];
+
+// calling IPC exposed from preload script
+window.electron.ipcRenderer.on('LISTRESPONSE', (arg) => {
+  files = arg;
+});
+
+window.electron.ipcRenderer.on('GET-STORAGE-PATH', (arg) => {
+  // eslint-disable-next-line no-console
+  console.log(arg);
+  files = arg;
+});
+
+window.electron.ipcRenderer.sendSync('LIST', ['ping']);
+
 const useStyles = makeStyles({
   tabs: {
     "& .MuiTab-root.Mui-selected": {
@@ -56,11 +71,19 @@ export default function VerticalTabs() {
     setValue(newValue);
   };
 
+  const handleChange2v2 = () => {
+    const selectionBox: any = document!.getElementById('select2v2')!;
+    const selection: any = selectionBox.value;
+    const videoPath: any = "D:/wow-recorder-files/2v2/" + selection;
+    const videoElement: any = document!.getElementById('video2v2')!;
+    videoElement.src = videoPath;
+  };
+
   return (
     <Box
       sx={{
         width: '100%',
-        height: '100%',
+        height: '180px',
         display: 'flex',
       }}
     >
@@ -83,6 +106,13 @@ export default function VerticalTabs() {
       </Tabs>
       <TabPanel value={value} index={0}>
         <Video2v2 />
+        <select id="select2v2" onChange={handleChange2v2}>
+          {files.map(file => {
+            return(
+              <option value={file} key={file}>{file}</option>
+            )
+          })}
+        </select>
       </TabPanel>
       <TabPanel value={value} index={1}>
         <video className="video" controls>

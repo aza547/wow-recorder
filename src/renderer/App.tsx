@@ -4,7 +4,6 @@ import TitleBar from '../utils/TitleBar';
 import SettingsButton from './SettingsButton';
 import './App.css';
 
-
 const Application = () => {
   return (
     <div className="App">

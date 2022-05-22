@@ -9,16 +9,26 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
+
+const Store = require('electron-store');
+Store.initRenderer();
+const store = new Store();
+
+store.set('storage-path', 'D:/wow-recorder-files');
+store.set('log-path', 'D:/World of Warcraft/_retail_/Logs');
+store.set('max-storage', '50');
+
 
 const fs = require('fs');
 const files = fs.readdirSync('D:/wow-recorder-files/2v2');
 
 ipcMain.on('LIST', (event, args) => {
   event.reply('LISTRESPONSE', files);
+  return event.returnValue = "";
 });
 
 ipcMain.on('maximize', () => {
@@ -85,7 +95,7 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
-    height: 525,
+    height: 575,
     minWidth: 1024,
     minHeight: 525,
     icon: getAssetPath('icon.png'),
@@ -144,7 +154,7 @@ const createSettingsWindow = async () => {
     show: false,
     width: 400,
     height: 400,
-    resizable: false,
+    resizable: true,
     icon: getAssetPath('icons8-settings.svg'),
    // autoHideMenuBar: true,
     frame: false,
@@ -222,10 +232,65 @@ ipcMain.on('CREATE-SETTINGS', () => {
   if (settingsWindow === null) createSettingsWindow();
 })
 
-ipcMain.on('SAVE-SETTINGS', () => {
-  if (settingsWindow !== null) settingsWindow.close();
+ipcMain.on('SAVE-SETTINGS', (event, settings) => {
+  if (settingsWindow !== null) {
+    console.log(settings);
+    console.log(settings[0]);
+    console.log(settings[1]);
+    console.log(settings[2]);
+    settingsWindow.close();
+  }
 })
 
 ipcMain.on('CLOSE-SETTINGS', () => {
   if (settingsWindow !== null)  settingsWindow.close();
 })
+
+ipcMain.on('GET-STORAGE-PATH', (event) => {
+  event.reply('RESP-STORAGE-PATH', store.get('storage-path'));
+})
+
+ipcMain.on('GET-LOG-PATH', (event) => {
+  event.reply('RESP-LOG-PATH', store.get('log-path'));
+})
+
+ipcMain.on('GET-MAX-STORAGE', (event) => {
+  event.reply('RESP-MAX-STORAGE', store.get('max-storage'));
+})
+
+/**
+ * Dialog window folder selection.
+ */
+ipcMain.on("SET-STORAGE-PATH", (event) => {
+  if (settingsWindow !== null) {
+  dialog.showOpenDialog(settingsWindow, {
+      properties: ['openDirectory']
+  }).then(result => {
+    console.log(result.canceled)
+    if (result.canceled) {
+      console.log("User cancelled dialog");
+    } else {
+      event.reply('APPLY-STORAGE-PATH', result.filePaths[0]);
+    }
+  }).catch(err => {
+    console.log(err);
+  })
+  }
+});
+
+ipcMain.on("SET-LOG-PATH", (event) => {
+  if (settingsWindow !== null) {
+  dialog.showOpenDialog(settingsWindow, {
+      properties: ['openDirectory']
+  }).then(result => {
+    console.log(result.canceled)
+    if (result.canceled) {
+      console.log("User cancelled dialog");
+    } else {
+      event.reply('APPLY-LOG-PATH', result.filePaths[0]);
+    }
+  }).catch(err => {
+    console.log(err);
+  })
+  }
+});

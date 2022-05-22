@@ -28,19 +28,19 @@
 					<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
 						<div class="form-group">
 							<label for="storage-path">Storage Path</label>
-							<input type="text" class="form-control" id="storage-path" placeholder="Enter full path to storage folder">
-						</div>
+							<input type="text" class="form-control" id="storage-path" placeholder="Enter full path to storage folder" onclick = "setStoragePath()">
+            </div>
 					</div>
 					<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
 						<div class="form-group">
 							<label for="log-path">Log Path</label>
-							<input type="text" class="form-control" id="log-path" placeholder="Enter full path to WoW logs folder">
+							<input type="text" class="form-control" id="log-path" placeholder="Enter full path to WoW logs folder" onclick = "setLogPath()">
 						</div>
 					</div>
 					<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
 						<div class="form-group">
-							<label for="max-usage">Max Storage</label>
-							<input type="number" class="form-control" id="max-usage" placeholder="Max disk space usage (GB)">
+							<label for="max-storage">Max Storage</label>
+							<input type="number" class="form-control" id="max-storage" placeholder="Max disk space usage (GB)">
 						</div>
 					</div>
 				</div>
@@ -56,6 +56,9 @@
 		</div>
 	</div>
 </div>
+<script>
+  populateSettings();
+</script>
 </div>
 
 <style type="text/css">
@@ -63,39 +66,11 @@ body{margin-top:0px;
 color: #bcd0f7;
     background: #1A233A;
 }
-.account-settings .user-profile {
-    margin: 0 0 1rem 0;
-    padding-bottom: 1rem;
-    text-align: center;
-}
-.account-settings .user-profile .user-avatar {
-    margin: 0 0 1rem 0;
-}
-.account-settings .user-profile .user-avatar img {
-    width: 90px;
-    height: 90px;
-    -webkit-border-radius: 100px;
-    -moz-border-radius: 100px;
-    border-radius: 100px;
-}
-.account-settings .user-profile h5.user-name {
-    margin: 0 0 0.5rem 0;
-}
-.account-settings .user-profile h6.user-email {
-    margin: 0;
-    font-size: 0.8rem;
-    font-weight: 400;
-}
-.account-settings .about {
-    margin: 1rem 0 0 0;
-    font-size: 0.8rem;
-    text-align: center;
-}
 .card {
     background: #272E48;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
-    border-radius: 5px;
+    border-radius: 1px;
     border: 0;
     margin-bottom: 1rem;
 }
@@ -112,7 +87,6 @@ color: #bcd0f7;
 </style>
 
 <script type="text/javascript">
-
 </script>
 </body>
 </html>

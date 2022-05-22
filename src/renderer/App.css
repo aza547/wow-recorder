@@ -123,13 +123,14 @@ h2 {
 
 #settings-cog{
   background-color: transparent;
-  border-style: outset;
-  border-width: 2px;
+  border-width: 0px;
   cursor: pointer;
 }
 
 #settings-cog:hover {
   background-color: darkgrey;
+  border-width: 0px;
+  border-radius: 100px;
 }
 
 #settings-cog:active {
