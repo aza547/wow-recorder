@@ -8,15 +8,8 @@ import { makeStyles} from '@mui/styles';
 
 let files: string[];
 
-// calling IPC exposed from preload script
 window.electron.ipcRenderer.on('LISTRESPONSE', (arg) => {
-  files = arg;
-});
-
-window.electron.ipcRenderer.on('GET-STORAGE-PATH', (arg) => {
-  // eslint-disable-next-line no-console
-  console.log(arg);
-  files = arg;
+  files = arg as string[];
 });
 
 window.electron.ipcRenderer.sendSync('LIST', ['ping']);

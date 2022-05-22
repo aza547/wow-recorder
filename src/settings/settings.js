@@ -1,5 +1,5 @@
 /**
- * Clickable buttons.
+ * Program clickable buttons.
  */
 function saveSettings(){
   console.log("SAVE-SETTINGS event");

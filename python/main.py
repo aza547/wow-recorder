@@ -3,6 +3,7 @@ import argparse
 from Watcher import Watcher
 import threading
 
+# Set up command line inputs.
 parser = argparse.ArgumentParser(description='Warcraft recorder python backend.')
 
 parser.add_argument('--storage', type=str, required=True, metavar='<PATH>', help='path to directory for storing video and metadata')
@@ -11,6 +12,7 @@ parser.add_argument('--size',  type=int, required=True, metavar='<NUMBER>', help
 
 args = parser.parse_args()
 
+# Config object built from command line arguments.
 cfg = {
   "video_storage": args.storage,
   "wow_logs": args.logs,

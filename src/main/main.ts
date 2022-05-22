@@ -1,7 +1,7 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 
 /**
- *
+ * Application entrypoint point.
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
@@ -13,9 +13,13 @@ const Store = require('electron-store');
 const fs = require('fs');
 
 /**
- * Create a settings store.
+ * Create a settings store to handle the config.
  */
 const cfg = new Store();
+
+/**
+ * Validate the config, else prompt the user for some?.
+ */
 
 /**
  * Load the list of video files.
@@ -35,6 +39,7 @@ export default class AppUpdater {
  */
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
+let pythonWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -179,21 +184,55 @@ const createSettingsWindow = async () => {
 };
 
 /**
+ * Creates the settings window, called on clicking the settings cog.
+ */
+const createPythonWindow = async () => {
+  if (isDebug) {
+    await installExtensions();
+  }
+
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
+
+  pythonWindow = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+ });
+
+  pythonWindow.loadURL(`file://${__dirname}/../recorder/recorder.html`);
+
+  pythonWindow.on('closed', () => {
+    pythonWindow = null;
+  });
+
+  // Open urls in the user's browser
+  pythonWindow.webContents.setWindowOpenHandler((edata) => {
+    shell.openExternal(edata.url);
+    return { action: 'deny' };
+  });
+};
+
+/**
  * Add event listeners...
  */
- ipcMain.on('ipc-example', async (event, arg) => {
+ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
   event.reply('ipc-example', msgTemplate('pong'));
 });
 
- ipcMain.on('maximize', () => {
+ipcMain.on('maximize', () => {
   //mainWindow is the reference to your window
-  console.log("received maximize event");
   if (mainWindow !== null) mainWindow.maximize();
 })
 
- ipcMain.on('LIST', (event, args) => {
+ipcMain.on('LIST', (event, args) => {
+  console.log("main");
+  console.log(files);
   event.reply('LISTRESPONSE', files);
   event.returnValue = "";
 });
@@ -210,6 +249,7 @@ app
   .whenReady()
   .then(() => {
     createWindow();
+    createPythonWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.

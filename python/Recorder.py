@@ -17,7 +17,7 @@ class Recorder:
         now = datetime.now()
         current_time = now.strftime("%H.%M.%S")
         video_path = self.cfg["video_storage"]
-        self.file_name = f"{video_path}/{self.bracket}-{self.zone}-{current_time}.mp4"
+        self.file_name = f"{video_path}/{self.bracket}/{self.zone}-{current_time}.mp4"
 
     def get_path(self):
         """Return the path of the video file as a Path object."""
