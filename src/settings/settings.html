@@ -28,21 +28,21 @@
 					<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
 						<div class="form-group">
 							<label for="storage-path">Storage Path</label>
-							<input type="text" class="form-control" id="storage-path" placeholder="Enter full path to storage folder" onclick = "setStoragePath()">
+							<input type="text" class="form-control" id="storage-path"  onclick = "setStoragePath()">
             </div>
 					</div>
 					<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
 						<div class="form-group">
 							<label for="log-path">Log Path</label>
-							<input type="text" class="form-control" id="log-path" placeholder="Enter full path to WoW logs folder" onclick = "setLogPath()">
+							<input type="text" class="form-control" id="log-path" onclick = "setLogPath()">
 						</div>
 					</div>
 					<div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-						<div class="form-group">
-							<label for="max-storage">Max Storage</label>
-							<input type="number" class="form-control" id="max-storage" placeholder="Max disk space usage (GB)">
+            <div class="form-group">
+							<label for="max-storage" style="--value:100;">Max Storage</label>
+              <input type="text" id="max-storage" class="form-control" oninput="setMaxStorage(this)">
 						</div>
-					</div>
+          </div>
 				</div>
 				<div class="row gutters">
 					<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">

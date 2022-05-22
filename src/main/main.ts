@@ -1,12 +1,7 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 
 /**
- * This module executes inside of electron's main process. You can start
- * electron renderer process from here and communicate with the other processes
- * through IPC.
  *
- * When running `npm run build` or `npm run build:main`, this file is compiled to
- * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
@@ -15,27 +10,17 @@ import log from 'electron-log';
 import { resolveHtmlPath } from './util';
 
 const Store = require('electron-store');
-Store.initRenderer();
-const store = new Store();
-
-store.set('storage-path', 'D:/wow-recorder-files');
-store.set('log-path', 'D:/World of Warcraft/_retail_/Logs');
-store.set('max-storage', '50');
-
-
 const fs = require('fs');
+
+/**
+ * Create a settings store.
+ */
+const cfg = new Store();
+
+/**
+ * Load the list of video files.
+ */
 const files = fs.readdirSync('D:/wow-recorder-files/2v2');
-
-ipcMain.on('LIST', (event, args) => {
-  event.reply('LISTRESPONSE', files);
-  return event.returnValue = "";
-});
-
-ipcMain.on('maximize', () => {
-  //mainWindow is the reference to your window
-  console.log("received maximize event");
-  if (mainWindow !== null) mainWindow.maximize();
-})
 
 export default class AppUpdater {
   constructor() {
@@ -45,14 +30,11 @@ export default class AppUpdater {
   }
 }
 
+/**
+ * Define renderer windows.
+ */
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
-
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -79,6 +61,9 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
+/**
+ * Creates the main window I think?
+ */
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
@@ -99,10 +84,10 @@ const createWindow = async () => {
     minWidth: 1024,
     minHeight: 525,
     icon: getAssetPath('icon.png'),
-   // autoHideMenuBar: true,
-   frame: false,
+    frame: false,
     webPreferences: {
       webSecurity: false,
+      //devTools: false,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
@@ -137,6 +122,9 @@ const createWindow = async () => {
   new AppUpdater();
 };
 
+/**
+ * Creates the settings window, called on clicking the settings cog.
+ */
 const createSettingsWindow = async () => {
   if (isDebug) {
     await installExtensions();
@@ -154,12 +142,12 @@ const createSettingsWindow = async () => {
     show: false,
     width: 400,
     height: 400,
-    resizable: true,
+    resizable: false,
     icon: getAssetPath('icons8-settings.svg'),
-   // autoHideMenuBar: true,
     frame: false,
     webPreferences: {
       webSecurity: false,
+      //devTools: false,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
@@ -193,6 +181,22 @@ const createSettingsWindow = async () => {
 /**
  * Add event listeners...
  */
+ ipcMain.on('ipc-example', async (event, arg) => {
+  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
+  console.log(msgTemplate(arg));
+  event.reply('ipc-example', msgTemplate('pong'));
+});
+
+ ipcMain.on('maximize', () => {
+  //mainWindow is the reference to your window
+  console.log("received maximize event");
+  if (mainWindow !== null) mainWindow.maximize();
+})
+
+ ipcMain.on('LIST', (event, args) => {
+  event.reply('LISTRESPONSE', files);
+  event.returnValue = "";
+});
 
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
@@ -232,31 +236,49 @@ ipcMain.on('CREATE-SETTINGS', () => {
   if (settingsWindow === null) createSettingsWindow();
 })
 
+/**
+ * Save settings event, write any non-null settings to the store,
+ * then close the settings window.
+ */
 ipcMain.on('SAVE-SETTINGS', (event, settings) => {
+
+  console.log(settings[0]);
+  console.log(settings[1]);
+  console.log(settings[2]);
+
+  if (settings[0] !== null) {
+    cfg.set("storage-path", settings[0]);
+  }
+  if (settings[1] !== null) {
+    cfg.set("log-path", settings[1]);
+  }
+  if (settings[2] !== null) {
+    cfg.set("max-storage", settings[2]);
+  }
+
   if (settingsWindow !== null) {
-    console.log(settings);
-    console.log(settings[0]);
-    console.log(settings[1]);
-    console.log(settings[2]);
     settingsWindow.close();
   }
-})
+});
 
+/**
+ * Close settings window.
+ */
 ipcMain.on('CLOSE-SETTINGS', () => {
   if (settingsWindow !== null)  settingsWindow.close();
-})
+});
 
 ipcMain.on('GET-STORAGE-PATH', (event) => {
-  event.reply('RESP-STORAGE-PATH', store.get('storage-path'));
-})
+  event.reply('RESP-STORAGE-PATH', cfg.get('storage-path'));
+});
 
 ipcMain.on('GET-LOG-PATH', (event) => {
-  event.reply('RESP-LOG-PATH', store.get('log-path'));
-})
+  event.reply('RESP-LOG-PATH', cfg.get('log-path'));
+});
 
 ipcMain.on('GET-MAX-STORAGE', (event) => {
-  event.reply('RESP-MAX-STORAGE', store.get('max-storage'));
-})
+  event.reply('RESP-MAX-STORAGE', cfg.get('max-storage'));
+});
 
 /**
  * Dialog window folder selection.

@@ -6,15 +6,15 @@ function saveSettings(){
 
   const storagePath = document
   .getElementById("storage-path")
-  .getAttribute("text");
+  .getAttribute("value");
 
   const logPath = document
   .getElementById("log-path")
-  .getAttribute("text");
+  .getAttribute("value");
 
   const maxStorage = document
   .getElementById("max-storage")
-  .getAttribute("text");
+  .getAttribute("value");
 
   window.electron.ipcRenderer
   .sendMessage('SAVE-SETTINGS', [storagePath, logPath, maxStorage]);
@@ -39,22 +39,22 @@ function populateSettings() {
   .sendMessage('GET-MAX-STORAGE');
 }
 
-window.electron.ipcRenderer.on('RESP-STORAGE-PATH', (arg) => {
+window.electron.ipcRenderer.on('RESP-STORAGE-PATH', (path) => {
   document
   .getElementById("storage-path")
-  .setAttribute("placeholder", arg);
+  .setAttribute("placeholder", path);
 });
 
-window.electron.ipcRenderer.on('RESP-LOG-PATH', (arg) => {
+window.electron.ipcRenderer.on('RESP-LOG-PATH', (path) => {
   document
   .getElementById("log-path")
-  .setAttribute("placeholder", arg);
+  .setAttribute("placeholder", path);
 });
 
-window.electron.ipcRenderer.on('RESP-MAX-STORAGE', (arg) => {
+window.electron.ipcRenderer.on('RESP-MAX-STORAGE', (value) => {
   document
   .getElementById("max-storage")
-  .setAttribute("placeholder", arg + "GB");
+  .setAttribute("placeholder", value + "GB");
 });
 
 /**
@@ -79,3 +79,15 @@ window.electron.ipcRenderer.on('APPLY-LOG-PATH', (arg) => {
   .getElementById("log-path")
   .setAttribute("value", arg);
 });
+
+/**
+ * Max storage text box event listener.
+ */
+function setMaxStorage(event){
+  document
+  .getElementById("max-storage")
+  .setAttribute("value", event.value);
+}
+
+
+
