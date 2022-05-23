@@ -24,8 +24,9 @@ div#root {
 }
 
 .video{
-  width: 100%;
+  width: calc(100% - 4px);
   top: 0px;
+  border: 2px solid;
 }
 
 .App {

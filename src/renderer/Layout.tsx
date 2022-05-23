@@ -6,14 +6,6 @@ import Box from '@mui/material/Box';
 import Video2v2 from './Video2v2';
 import { makeStyles} from '@mui/styles';
 
-let files: string[];
-
-window.electron.ipcRenderer.on('LISTRESPONSE', (arg) => {
-  files = arg as string[];
-});
-
-window.electron.ipcRenderer.sendSync('LIST', ['ping']);
-
 const useStyles = makeStyles({
   tabs: {
     "& .MuiTab-root.Mui-selected": {
@@ -72,11 +64,27 @@ export default function VerticalTabs() {
     videoElement.src = videoPath;
   };
 
+  function getFirstVideo() {
+    return "file:///D:/wow-recorder-files/2v2/" + window.electron.ipcRenderer.sendSync('LIST', [])[0];
+  }
+
+  function getVideoList() {
+    return window.electron.ipcRenderer.sendSync('LIST', []);
+  }
+
+  function getFirstSoloVideo() {
+    return "file:///D:/wow-recorder-files/Solo Shuffle/" + window.electron.ipcRenderer.sendSync('LISTSOLO', [])[0];
+  }
+
+  function getSoloVideoList() {
+    return window.electron.ipcRenderer.sendSync('LISTSOLO', []);
+  }
+
   return (
     <Box
       sx={{
         width: '100%',
-        height: '180px',
+        height: '210px',
         display: 'flex',
       }}
     >
@@ -86,25 +94,29 @@ export default function VerticalTabs() {
         value={value}
         onChange={handleChange}
         aria-label="Vertical tabs example"
-        sx={{ borderRight: 3, borderColor: '#000000', bgcolor: '#272e48' ,  textColor: 'secondary'}}
+        sx={{  borderColor: '#000000', bgcolor: '#272e48' ,  textColor: 'secondary'}}
         className={classes.tabs}
         TabIndicatorProps={{style: { background:'#bb4220' }}}
       >
         <Tab label="2v2" {...a11yProps(0)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px'}}/>
         <Tab label="3v3" {...a11yProps(1)} sx = {{ padding:'12px', bgcolor: '#272e48' , color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }} />
         <Tab label="Skirmish" {...a11yProps(2)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }} />
+        <Tab label="Solo Shuffle" {...a11yProps(2)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }} />
         <Tab label="Mythic+" {...a11yProps(3)} sx = {{  padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }}/>
         <Tab label="Raids" {...a11yProps(4)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }} />
         <Tab label="Battlegrounds" {...a11yProps(5)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }}/>
       </Tabs>
       <TabPanel value={value} index={0}>
-        <Video2v2 />
-        <select id="select2v2" onChange={handleChange2v2}>
-          {files.map(file => {
+        <video className="video" id="video2v2" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+          <source src={ getFirstVideo() } />
+        </video>
+        <select id="select2v2" onChange={ handleChange2v2 }>
+        { getVideoList().map(file => {
             return(
               <option value={file} key={file}>{file}</option>
             )
-          })}
+          })
+        }
         </select>
       </TabPanel>
       <TabPanel value={value} index={1}>
@@ -118,9 +130,17 @@ export default function VerticalTabs() {
         </video>
       </TabPanel>
       <TabPanel value={value} index={3}>
-        <video className="video" controls>
-          <source src="file:///D:/vid.mp4" />
+        <video className="video" id="videoSolo" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+          <source src={ getFirstSoloVideo() } />
         </video>
+        <select id="select2v2" onChange={ handleChange2v2 }>
+        { getSoloVideoList().map(file => {
+            return(
+              <option value={file} key={file}>{file}</option>
+            )
+          })
+        }
+        </select>
       </TabPanel>
       <TabPanel value={value} index={4}>
         <video className="video" controls>
@@ -128,6 +148,11 @@ export default function VerticalTabs() {
         </video>
       </TabPanel>
       <TabPanel value={value} index={5}>
+        <video className="video" controls>
+          <source src="file:///D:/vid.mp4" />
+        </video>
+      </TabPanel>
+      <TabPanel value={value} index={6}>
         <video className="video" controls>
           <source src="file:///D:/vid.mp4" />
         </video>

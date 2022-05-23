@@ -2,19 +2,42 @@ const { PythonShell } = require('python-shell');
 const { ipcRenderer } = require('electron');
 const path = require('path');
 
-const pythonRecorderPath = path.join(__dirname, '/../../python/main.py')
+/**
+ * Request config from the main process and store it off.
+ */
+async function getConfig(){
+  const cfg = await ipcRenderer.invoke('GET-CFG', []);
+  console.log(cfg);
+  return cfg;
+}
 
-const options = {
-  mode: 'text',
-  pythonOptions: ['-u'], // get print results in real-time
-  scriptPath: path.join(__dirname, '/../../python/'),
-  args: ['--storage', 'D:\\wow-recorder-files',
-         '--logs', 'D:\\World of Warcraft\\_retail_\\Logs',
-         '--size', '50']
-};
+/**
+ * Start the recorder. This is thread blocking.
+ */
+async function startRecording(){
+  const cfg = await getConfig();
 
-PythonShell.run("main.py", options, function (err, results) {
-  console.log('started');
-  if (err) throw err;
-  console.log('finished');
-});
+  const options = {
+    mode: 'text',
+    pythonOptions: ['-u'], // get print results in real-time
+    scriptPath: path.join(__dirname, '/../../python/'),
+    args: ['--storage', `${cfg[0]}`,
+           '--logs',    `${cfg[1]}`,
+           '--size',    `${cfg[2]}`]
+  };
+
+  console.log('starting with args:\n' + `--storage ${cfg[0]}\n` + `--logs ${cfg[1]}\n` + `--size ${cfg[2]}`);
+
+  PythonShell.run("main.py", options, function (err, results) {
+    if (err) throw err;
+  });
+}
+
+/**
+ * Call startRecording().
+ */
+ startRecording();
+
+
+
+

@@ -13,7 +13,11 @@ contextBridge.exposeInMainWorld('electron', {
     },
 
     sendSync(channel: Channels, args: unknown[]) {
-      ipcRenderer.sendSync(channel, args);
+      return ipcRenderer.sendSync(channel, args);
+    },
+
+    invoke(channel: Channels, args: unknown[]) {
+      return ipcRenderer.invoke(channel, args);
     },
 
     on(channel: Channels, func: (...args: unknown[]) => void) {

@@ -21,10 +21,7 @@ const cfg = new Store();
  * Validate the config, else prompt the user for some?.
  */
 
-/**
- * Load the list of video files.
- */
-const files = fs.readdirSync('D:/wow-recorder-files/2v2');
+
 
 export default class AppUpdater {
   constructor() {
@@ -91,6 +88,7 @@ const createWindow = async () => {
     icon: getAssetPath('icon.png'),
     frame: false,
     webPreferences: {
+      nodeIntegration: true,
       webSecurity: false,
       //devTools: false,
       preload: app.isPackaged
@@ -230,12 +228,7 @@ ipcMain.on('maximize', () => {
   if (mainWindow !== null) mainWindow.maximize();
 })
 
-ipcMain.on('LIST', (event, args) => {
-  console.log("main");
-  console.log(files);
-  event.reply('LISTRESPONSE', files);
-  event.returnValue = "";
-});
+
 
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
@@ -355,4 +348,32 @@ ipcMain.on("SET-LOG-PATH", (event) => {
     console.log(err);
   })
   }
+});
+
+/**
+ * Get the list of video files.
+ */
+ipcMain.on('LIST', (event) => {
+  event.returnValue = fs.readdirSync('D:/wow-recorder-files/2v2');
+  return fs.readdirSync('D:/wow-recorder-files/2v2');
+});
+
+/**
+ * Get the list of video files.
+ */
+ ipcMain.on('LISTSOLO', (event) => {
+  event.returnValue = fs.readdirSync('D:/wow-recorder-files/Solo Shuffle');
+  return fs.readdirSync('D:/wow-recorder-files/Solo Shuffle');
+});
+
+/**
+ * Return the config.
+ * See https://electron-react-boilerplate.js.org/docs/electron-store for a better way to do this.
+ */
+ipcMain.handle('GET-CFG', async () => {
+  return [
+    cfg.get('storage-path'),
+    cfg.get('log-path'),
+    cfg.get('max-storage')
+  ];
 });

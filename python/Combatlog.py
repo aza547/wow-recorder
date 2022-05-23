@@ -121,6 +121,10 @@ class Combatlog:
                 # self.GUI.logger.debug(f"It's a skirmish in {self.zone}")
                 print(f"It's a skirmish in {self.zone}")
                 self.bracket = "Skirmish"
+            elif "Solo Shuffle" in line:
+                # self.GUI.logger.debug(f"It's a Solo Shuffle in {self.zone}")
+                print(f"It's a Solo Shuffle in {self.zone}")
+                self.bracket = "Solo Shuffle"
 
         # Deliberatly before ARENA_MATCH_END handling to log that line for completeness.
         # Just push to list. We flush this to a file after the game.
