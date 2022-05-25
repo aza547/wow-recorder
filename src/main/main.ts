@@ -194,7 +194,7 @@ const createPythonWindow = async () => {
     : path.join(__dirname, '../../assets');
 
   pythonWindow = new BrowserWindow({
-    show: false,
+    show: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -364,6 +364,14 @@ ipcMain.on('LIST', (event) => {
  ipcMain.on('LISTSOLO', (event) => {
   event.returnValue = fs.readdirSync('D:/wow-recorder-files/Solo Shuffle');
   return fs.readdirSync('D:/wow-recorder-files/Solo Shuffle');
+});
+
+/**
+ * Get the list of video files.
+ */
+ ipcMain.on('LISTRAID', (event) => {
+  event.returnValue = fs.readdirSync('D:/wow-recorder-files/Raids');
+  return fs.readdirSync('D:/wow-recorder-files/Raids');
 });
 
 /**

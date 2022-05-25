@@ -27,9 +27,11 @@ async function startRecording(){
   };
 
   console.log('starting with args:\n' + `--storage ${cfg[0]}\n` + `--logs ${cfg[1]}\n` + `--size ${cfg[2]}`);
+  let pyshell = new PythonShell("main.py", options);
 
-  PythonShell.run("main.py", options, function (err, results) {
-    if (err) throw err;
+  pyshell.on('message', function (message) {
+    // handle message (a line of text from stdout)
+    console.log(message);
   });
 }
 

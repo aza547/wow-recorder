@@ -64,6 +64,14 @@ export default function VerticalTabs() {
     videoElement.src = videoPath;
   };
 
+  const handleChangeRaid = () => {
+    const selectionBox: any = document!.getElementById('selectRaid')!;
+    const selection: any = selectionBox.value;
+    const videoPath: any = "D:/wow-recorder-files/Raids/" + selection;
+    const videoElement: any = document!.getElementById('videoRaid')!;
+    videoElement.src = videoPath;
+  };
+
   function getFirstVideo() {
     return "file:///D:/wow-recorder-files/2v2/" + window.electron.ipcRenderer.sendSync('LIST', [])[0];
   }
@@ -76,8 +84,16 @@ export default function VerticalTabs() {
     return "file:///D:/wow-recorder-files/Solo Shuffle/" + window.electron.ipcRenderer.sendSync('LISTSOLO', [])[0];
   }
 
+  function getFirstRaidVideo() {
+    return "file:///D:/wow-recorder-files/Raids/" + window.electron.ipcRenderer.sendSync('LISTRAID', [])[0];
+  }
+
   function getSoloVideoList() {
     return window.electron.ipcRenderer.sendSync('LISTSOLO', []);
+  }
+
+  function getRaidVideoList() {
+    return window.electron.ipcRenderer.sendSync('LISTRAID', []);
   }
 
   return (
@@ -148,9 +164,17 @@ export default function VerticalTabs() {
         </video>
       </TabPanel>
       <TabPanel value={value} index={5}>
-        <video className="video" controls>
-          <source src="file:///D:/vid.mp4" />
+        <video className="video" id="videoRaid" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+          <source src={ getFirstRaidVideo() } />
         </video>
+        <select id="selectRaid" onChange={ handleChangeRaid }>
+        { getRaidVideoList().map(file => {
+            return(
+              <option value={file} key={file}>{file}</option>
+            )
+          })
+        }
+        </select>
       </TabPanel>
       <TabPanel value={value} index={6}>
         <video className="video" controls>

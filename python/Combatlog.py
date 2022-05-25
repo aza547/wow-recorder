@@ -4,19 +4,23 @@ from pathlib import Path
 import configparser
 
 ARENA_ZONES = {
-    1672: "Blade's Edge Arena",
-    617: "Dalaran Arena",
-    1505: "Nagrand Arena",
-    572: "Ruins of Lordaeron",
-    2167: "The Robodrome",
-    1134: "Tiger's Peak",
-    980: "Tol'Viron Arena",
-    1504: "Black Rook Hold Arena",
-    2373: "Empyrean Domain",
-    1552: "Ashamane's Fall",
-    1911: "Mugambala",
-    1825: "Hook Point",
-    2509: "Maldraxxus Coliseum"
+  1672: "Blade's Edge Arena",
+  617: "Dalaran Arena",
+  1505: "Nagrand Arena",
+  572: "Ruins of Lordaeron",
+  2167: "The Robodrome",
+  1134: "Tiger's Peak",
+  980: "Tol'Viron Arena",
+  1504: "Black Rook Hold Arena",
+  2373: "Empyrean Domain",
+  1552: "Ashamane's Fall",
+  1911: "Mugambala",
+  1825: "Hook Point",
+  2509: "Maldraxxus Coliseum"
+}
+
+RAID_ZONES = {
+  2537: "Sepulcher of the First Ones"
 }
 
 
@@ -126,14 +130,33 @@ class Combatlog:
                 print(f"It's a Solo Shuffle in {self.zone}")
                 self.bracket = "Solo Shuffle"
 
+        elif "ENCOUNTER_START" in line:
+            # self.GUI.logger.debug(f"Detected ENCOUNTER_START event")
+            print(f"Detected ENCOUNTER_START event")
+            self.started = True
+            self.ended = False
+
+            # Get the encounter and zone name
+            encounter = line.split(",")[2].replace('"', '') # comes in quotes so strip those
+            zone = int(line.split(",")[1])
+            self.zone = RAID_ZONES[zone]
+            print(f"{encounter} encounter started in {self.zone}!")
+            self.bracket = "Raids"
+
         # Deliberatly before ARENA_MATCH_END handling to log that line for completeness.
         # Just push to list. We flush this to a file after the game.
         if self.is_active():
             self.output_log_lines.append(line)
 
-        if "ARENA_MATCH_END" in line:
+        if ("ARENA_MATCH_END" in line):
             # self.GUI.logger.debug(f"Detected ARENA_MATCH_END event")
             print(f"Detected ARENA_MATCH_END event")
+            self.ended = True
+            self.flush_copied_log()
+        elif ("ENCOUNTER_END" in line):
+        ## easy to get win loss? 2nd to last arg is 1 for success or 0 for fail
+        #  -- ENCOUNTER_END,2537,"The Jailer",16,20,0,112540
+            print(f"Detected ENCOUNTER_END event")
             self.ended = True
             self.flush_copied_log()
 
