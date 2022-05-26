@@ -3,8 +3,17 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import Video2v2 from './Video2v2';
 import { makeStyles} from '@mui/styles';
+
+const categories = [
+  "2v2",
+  "3v3",
+  "Skirmish",
+  "Solo Shuffle",
+  "Mythic+",
+  "Raids",
+  "Battlegrounds"
+];
 
 const useStyles = makeStyles({
   tabs: {
@@ -50,68 +59,45 @@ function a11yProps(index: number) {
 
 export default function VerticalTabs() {
   const [value, setValue] = React.useState(0);
+  const [videoIndex, setVideoIndex] = React.useState(0);
+  const [category, setCategory] = React.useState("2v2");
+
   const classes = useStyles();
+  let videoList = window.electron.ipcRenderer.sendSync('LIST-VIDEOS', category);
+  let videoLocation = `D:/wow-recorder-files/${category}/`;
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChangeCategory = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
+    setCategory(categories[newValue]);
   };
 
-  const handleChange2v2 = () => {
-    const selectionBox: any = document!.getElementById('select2v2')!;
-    const selection: any = selectionBox.value;
-    const videoPath: any = "D:/wow-recorder-files/2v2/" + selection;
-    const videoElement: any = document!.getElementById('video2v2')!;
-    videoElement.src = videoPath;
+  const handleChangeVideo = (event: React.SyntheticEvent, newValue: number) => {
+    setVideoIndex(newValue);
+
+    const videoElement = document.getElementById('video' + category);
+    const videoPath = videoList[newValue];
+
+    if (videoElement !== null) {
+      videoElement.src = videoLocation + videoPath;
+    }
   };
-
-  const handleChangeRaid = () => {
-    const selectionBox: any = document!.getElementById('selectRaid')!;
-    const selection: any = selectionBox.value;
-    const videoPath: any = "D:/wow-recorder-files/Raids/" + selection;
-    const videoElement: any = document!.getElementById('videoRaid')!;
-    videoElement.src = videoPath;
-  };
-
-  function getFirstVideo() {
-    return "file:///D:/wow-recorder-files/2v2/" + window.electron.ipcRenderer.sendSync('LIST', [])[0];
-  }
-
-  function getVideoList() {
-    return window.electron.ipcRenderer.sendSync('LIST', []);
-  }
-
-  function getFirstSoloVideo() {
-    return "file:///D:/wow-recorder-files/Solo Shuffle/" + window.electron.ipcRenderer.sendSync('LISTSOLO', [])[0];
-  }
-
-  function getFirstRaidVideo() {
-    return "file:///D:/wow-recorder-files/Raids/" + window.electron.ipcRenderer.sendSync('LISTRAID', [])[0];
-  }
-
-  function getSoloVideoList() {
-    return window.electron.ipcRenderer.sendSync('LISTSOLO', []);
-  }
-
-  function getRaidVideoList() {
-    return window.electron.ipcRenderer.sendSync('LISTRAID', []);
-  }
 
   return (
     <Box
       sx={{
         width: '100%',
         height: '210px',
-        display: 'flex',
+        display: 'flex'
       }}
     >
       <Tabs
         orientation="vertical"
         variant="standard"
-        value={value}
-        onChange={handleChange}
+        value={ value }
+        onChange={ handleChangeCategory }
         aria-label="Vertical tabs example"
-        sx={{  borderColor: '#000000', bgcolor: '#272e48' ,  textColor: 'secondary'}}
-        className={classes.tabs}
+        sx={{  borderColor: '#000000', bgcolor: '#272e48' ,  textColor: 'secondary', width: '175px', overflow: 'visible'}}
+        className={ classes.tabs }
         TabIndicatorProps={{style: { background:'#bb4220' }}}
       >
         <Tab label="2v2" {...a11yProps(0)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px'}}/>
@@ -124,16 +110,25 @@ export default function VerticalTabs() {
       </Tabs>
       <TabPanel value={value} index={0}>
         <video className="video" id="video2v2" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
-          <source src={ getFirstVideo() } />
+          <source src={ videoLocation + videoList[videoIndex] } />
         </video>
-        <select id="select2v2" onChange={ handleChange2v2 }>
-        { getVideoList().map(file => {
-            return(
-              <option value={file} key={file}>{file}</option>
-            )
-          })
-        }
-        </select>
+        <Tabs
+          value={videoIndex}
+          onChange={ handleChangeVideo }
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="scrollable auto tabs example"
+          sx={{  borderColor: '#000000', bgcolor: '#272e48' ,  textColor: 'secondary', overflow: 'visible'}}
+          className={ classes.tabs }
+          TabIndicatorProps={{style: { background:'#bb4220' }}}
+        >
+          { videoList.map(file => {
+              return(
+                <Tab label={file} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderLeft: '1px solid', borderRight: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '50px'}}/>
+              )
+            })
+          }
+        </Tabs>
       </TabPanel>
       <TabPanel value={value} index={1}>
         <video className="video" controls>
@@ -146,17 +141,6 @@ export default function VerticalTabs() {
         </video>
       </TabPanel>
       <TabPanel value={value} index={3}>
-        <video className="video" id="videoSolo" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
-          <source src={ getFirstSoloVideo() } />
-        </video>
-        <select id="select2v2" onChange={ handleChange2v2 }>
-        { getSoloVideoList().map(file => {
-            return(
-              <option value={file} key={file}>{file}</option>
-            )
-          })
-        }
-        </select>
       </TabPanel>
       <TabPanel value={value} index={4}>
         <video className="video" controls>
@@ -164,17 +148,23 @@ export default function VerticalTabs() {
         </video>
       </TabPanel>
       <TabPanel value={value} index={5}>
-        <video className="video" id="videoRaid" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
-          <source src={ getFirstRaidVideo() } />
+        <video className="video" id="videoRaids" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+          <source src={ videoLocation + videoList[videoIndex] } />
         </video>
-        <select id="selectRaid" onChange={ handleChangeRaid }>
-        { getRaidVideoList().map(file => {
-            return(
-              <option value={file} key={file}>{file}</option>
-            )
-          })
-        }
-        </select>
+        <Tabs
+          value={videoIndex}
+          onChange={ handleChangeVideo }
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="scrollable auto tabs example"
+        >
+          { videoList.map(file => {
+              return(
+                <Tab label={file} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderLeft: '1px solid', borderRight: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '50px'}}/>
+              )
+            })
+          }
+        </Tabs>
       </TabPanel>
       <TabPanel value={value} index={6}>
         <video className="video" controls>

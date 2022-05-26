@@ -82,9 +82,6 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
-    height: 575,
-    minWidth: 1024,
-    minHeight: 525,
     icon: getAssetPath('icon.png'),
     frame: false,
     webPreferences: {
@@ -103,6 +100,9 @@ const createWindow = async () => {
     if (!mainWindow) {
       throw new Error('"mainWindow" is not defined');
     }
+
+    mainWindow.setAspectRatio(15/9);
+
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
     } else {
@@ -194,7 +194,7 @@ const createPythonWindow = async () => {
     : path.join(__dirname, '../../assets');
 
   pythonWindow = new BrowserWindow({
-    show: true,
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -350,28 +350,14 @@ ipcMain.on("SET-LOG-PATH", (event) => {
   }
 });
 
-/**
- * Get the list of video files.
- */
-ipcMain.on('LIST', (event) => {
-  event.returnValue = fs.readdirSync('D:/wow-recorder-files/2v2');
-  return fs.readdirSync('D:/wow-recorder-files/2v2');
-});
 
 /**
  * Get the list of video files.
  */
- ipcMain.on('LISTSOLO', (event) => {
-  event.returnValue = fs.readdirSync('D:/wow-recorder-files/Solo Shuffle');
-  return fs.readdirSync('D:/wow-recorder-files/Solo Shuffle');
-});
-
-/**
- * Get the list of video files.
- */
- ipcMain.on('LISTRAID', (event) => {
-  event.returnValue = fs.readdirSync('D:/wow-recorder-files/Raids');
-  return fs.readdirSync('D:/wow-recorder-files/Raids');
+ipcMain.on('LIST-VIDEOS', (event, category) => {
+  console.log(category);
+  event.returnValue = fs.readdirSync(`D:/wow-recorder-files/${category}`);
+  return fs.readdirSync(`D:/wow-recorder-files/${category}`);
 });
 
 /**
