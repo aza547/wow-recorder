@@ -58,29 +58,33 @@ function a11yProps(index: number) {
 }
 
 export default function VerticalTabs() {
-  const [value, setValue] = React.useState(0);
-  const [videoIndex, setVideoIndex] = React.useState(0);
-  const [category, setCategory] = React.useState("2v2");
 
-  const classes = useStyles();
-  let videoList = window.electron.ipcRenderer.sendSync('LIST-VIDEOS', category);
-  let videoLocation = `D:/wow-recorder-files/${category}/`;
+  const [state, setState] = React.useState(() => {
+    return {
+      categoryIndex: 0,
+      videoIndex: 0,
+      videoList:  window.electron.ipcRenderer.sendSync('LIST-VIDEOS', "2v2")
+    };
+  });
 
   const handleChangeCategory = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-    setCategory(categories[newValue]);
+    setState(() => {
+      return {
+        categoryIndex: newValue,
+        videoIndex: 0,
+        videoList: window.electron.ipcRenderer.sendSync('LIST-VIDEOS', categories[newValue])
+      }
+    })
   };
 
   const handleChangeVideo = (event: React.SyntheticEvent, newValue: number) => {
-    setVideoIndex(newValue);
-
-    const videoElement = document.getElementById('video' + category);
-    const videoPath = videoList[newValue];
-
-    if (videoElement !== null) {
-      videoElement.src = videoLocation + videoPath;
-    }
+    setState(prevState => { return {...prevState, videoIndex: newValue} })
   };
+
+  const category = categories[state.categoryIndex];
+  const videoDir = `D:/wow-recorder-files/${category}/`;
+  const absVideoPath = videoDir + state.videoList[state.videoIndex];
+  const classes = useStyles();
 
   return (
     <Box
@@ -93,7 +97,7 @@ export default function VerticalTabs() {
       <Tabs
         orientation="vertical"
         variant="standard"
-        value={ value }
+        value={ state.categoryIndex }
         onChange={ handleChangeCategory }
         aria-label="Vertical tabs example"
         sx={{  borderColor: '#000000', bgcolor: '#272e48' ,  textColor: 'secondary', width: '175px', overflow: 'visible'}}
@@ -108,12 +112,12 @@ export default function VerticalTabs() {
         <Tab label="Raids" {...a11yProps(4)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }} />
         <Tab label="Battlegrounds" {...a11yProps(5)} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }}/>
       </Tabs>
-      <TabPanel value={value} index={0}>
-        <video className="video" id="video2v2" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
-          <source src={ videoLocation + videoList[videoIndex] } />
+      <TabPanel value={state.categoryIndex} index={0}>
+        <video key = { absVideoPath } className="video" id="video2v2" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+          <source src={ absVideoPath } />
         </video>
         <Tabs
-          value={videoIndex}
+          value={state.videoIndex}
           onChange={ handleChangeVideo }
           variant="scrollable"
           scrollButtons="auto"
@@ -122,51 +126,51 @@ export default function VerticalTabs() {
           className={ classes.tabs }
           TabIndicatorProps={{style: { background:'#bb4220' }}}
         >
-          { videoList.map(file => {
-              return(
-                <Tab label={file} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderLeft: '1px solid', borderRight: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '50px'}}/>
-              )
-            })
-          }
+        { state.videoList.map(file => {
+            return(
+              <Tab label={file} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderLeft: '1px solid', borderRight: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '50px'}}/>
+            )
+          })
+        }
         </Tabs>
       </TabPanel>
-      <TabPanel value={value} index={1}>
+      <TabPanel value={state.categoryIndex} index={1}>
         <video className="video" controls>
           <source src="file:///D:/vid.mp4" />
         </video>
       </TabPanel>
-      <TabPanel value={value} index={2}>
+      <TabPanel value={state.categoryIndex} index={2}>
         <video className="video" controls>
           <source src="file:///D:/vid.mp4" />
         </video>
       </TabPanel>
-      <TabPanel value={value} index={3}>
+      <TabPanel value={state.categoryIndex} index={3}>
       </TabPanel>
-      <TabPanel value={value} index={4}>
+      <TabPanel value={state.categoryIndex} index={4}>
         <video className="video" controls>
           <source src="file:///D:/vid.mp4" />
         </video>
       </TabPanel>
-      <TabPanel value={value} index={5}>
-        <video className="video" id="videoRaids" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
-          <source src={ videoLocation + videoList[videoIndex] } />
+      <TabPanel value={state.categoryIndex} index={5}>
+        <video key = { absVideoPath } className="video" id="videoRaids" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+          <source src={ absVideoPath } />
         </video>
         <Tabs
-          value={videoIndex}
+          value={state.videoIndex}
           onChange={ handleChangeVideo }
           variant="scrollable"
           scrollButtons="auto"
           aria-label="scrollable auto tabs example"
         >
-          { videoList.map(file => {
-              return(
-                <Tab label={file} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderLeft: '1px solid', borderRight: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '50px'}}/>
-              )
-            })
-          }
+        { state.videoList.map(file => {
+            return(
+              <Tab label={file} sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderLeft: '1px solid', borderRight: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '50px'}}/>
+            )
+          })
+        }
         </Tabs>
       </TabPanel>
-      <TabPanel value={value} index={6}>
+      <TabPanel value={state.categoryIndex} index={6}>
         <video className="video" controls>
           <source src="file:///D:/vid.mp4" />
         </video>

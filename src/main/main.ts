@@ -355,7 +355,6 @@ ipcMain.on("SET-LOG-PATH", (event) => {
  * Get the list of video files.
  */
 ipcMain.on('LIST-VIDEOS', (event, category) => {
-  console.log(category);
   event.returnValue = fs.readdirSync(`D:/wow-recorder-files/${category}`);
   return fs.readdirSync(`D:/wow-recorder-files/${category}`);
 });
