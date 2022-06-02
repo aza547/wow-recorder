@@ -243,6 +243,7 @@
     "electron-updater": "^4.6.5",
     "frameless-titlebar": "^2.1.4",
     "fs": "^0.0.1-security",
+    "get-video-duration": "^4.1.0",
     "history": "^5.3.0",
     "path": "^0.12.7",
     "python-shell": "^3.0.1",

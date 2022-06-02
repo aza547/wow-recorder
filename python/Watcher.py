@@ -44,7 +44,6 @@ class Watcher:
                     self.current_combat_log.zone,
                     self.current_combat_log.bracket,
                     self.cfg
-                    # self.GUI.cfgpath,
                 )
 
                 # Start recording in a thread.
@@ -54,10 +53,6 @@ class Watcher:
                 # Block until the arena match is over.
                 while self.current_combat_log.is_active():
                     sleep(1)
-
-                # Not sure why we need this sleep, but games are cut short otherwise.
-                # TODO - investigate this and find a better solution.
-                # sleep(5)
 
                 # Stop recording now the game is over.
                 # self.GUI.logger.info(f"Stopped recording")

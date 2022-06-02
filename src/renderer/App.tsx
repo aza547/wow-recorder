@@ -2,6 +2,7 @@ import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
 import TitleBar from '../utils/TitleBar';
 import SettingsButton from './SettingsButton';
+import Status from './Status';
 import './App.css';
 
 const Application = () => {
@@ -10,6 +11,7 @@ const Application = () => {
       <TitleBar />
       <Layout />
       <SettingsButton />
+      <Status />
     </div>
   );
 };

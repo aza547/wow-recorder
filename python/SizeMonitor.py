@@ -17,16 +17,21 @@ class SizeMonitor:
 
     def run(self):
         """Call to do work."""
+        print("Running size monitor")
         if (time() - self.last_check_time) > self.interval:
             self.last_check_time = time()
 
             # Don't just delete one file, that might not make enough room.
             while self.check():
+                print("Deleting oldest video")
                 self.delete_oldest_video()
 
     def check(self):
         """Check if the size of directory is more than the limit."""
-        return self.get_dir_size() > int(self.max_size_gb)
+        size = self.get_dir_size()
+        limit = int(self.max_size_gb)
+        print(f"Size monitor results: Used:{size}, Limit:{limit}")
+        return size > limit
 
     def get_dir_size(self):
         """Get the sum of the sizes of all the videos in {self.path}."""

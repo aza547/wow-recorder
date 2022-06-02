@@ -2,6 +2,8 @@
 import argparse
 from Watcher import Watcher
 import threading
+from SizeMonitor import SizeMonitor
+
 
 # Set up command line inputs.
 parser = argparse.ArgumentParser(description='Warcraft recorder python backend.')
@@ -18,6 +20,10 @@ cfg = {
   "wow_logs": args.logs,
   "max_storage": args.size
 }
+
+# Run size monitor on start-up.
+size_monitor = SizeMonitor(cfg)
+size_monitor.run()
 
 # Create watcher object and start it in a thread.
 watcher = Watcher(cfg)

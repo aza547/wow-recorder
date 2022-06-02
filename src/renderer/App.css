@@ -24,7 +24,7 @@ div#root {
 }
 
 .video{
-  width: calc(100% - 4px);
+  height: calc(100vh - 140px);
   top: 0px;
   border: 2px solid;
 }
@@ -53,6 +53,15 @@ div#root {
   width: 100%;
   margin: 0px;
   padding: 0px;
+}
+
+.MuiTabScrollButton-root {
+  opacity: 1;
+  border-top: 1px solid black;
+}
+
+.MuiButtonBase-root {
+  padding: 0;
 }
 
 h1 {text-align: center;}
@@ -118,7 +127,7 @@ h2 {
 
 #settings{
   position:fixed;
-  bottom: 5px;
+  top: 250px;
   left: 5px;
 }
 
@@ -136,4 +145,105 @@ h2 {
 
 #settings-cog:active {
   border-style: inset;
+}
+
+.videoButton {
+  height: 100%;
+  width: 100%;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 20px; /* <-- adjust this to spread out text */
+  text-transform: none;
+  -webkit-text-stroke: 0.5px black;
+  -webkit-text-fill-color: white;
+  font: bold 18px Arial Narrow;
+  text-shadow:
+    1px  1px 0 #000,
+   -1px -1px 0 #000,
+    1px -1px 0 #000,
+   -1px  1px 0 #000,
+    1px  1px 0 #000;
+}
+
+.sepulcherRaid{
+  background-image: url("../../assets/wow/sepulcher.jpg");
+}
+
+.tolvironArena{
+  background-image: url("../../assets/wow/tolviron-arena.png");
+}
+
+.encounter {
+  font: bold 25px Arial Narrow;
+  position: absolute;
+  top: 30px;
+  width: 100%;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.zone {
+  font: bold 13px Arial Narrow;
+  position: absolute;
+  top: 55px;
+  width: 100%;
+  text-align: center;
+}
+
+.duration {
+  top: 5px;
+  right: 5px;
+  position: absolute;
+  text-align: right;
+}
+
+.date {
+  bottom: 5px;
+  left: 5px;
+  position: absolute;
+}
+
+.result {
+  bottom: 5px;
+  right: 5px;
+  position: absolute;
+  text-align: right;
+}
+
+.time {
+  top: 5px;
+  left: 5px;
+  position: absolute;
+}
+
+@keyframes blink {
+  0% {
+      opacity: 1;
+  }
+  50% {
+      opacity: 0;
+  }
+  100% {
+      opacity: 1;
+  }
+}
+
+#status-icon{
+  position:fixed;
+  bottom: 100px;
+  left: 40px;
+  height: 75px;
+  width: 75px;
+  animation: blink 1s;
+  animation-iteration-count: infinite;
+}
+
+#eye-icon{
+  position:fixed;
+  bottom: 125px;
+  left: 65px;
+  height: 30px;
+  width: 30px;
+  animation: blink 1s;
+  animation-iteration-count: infinite;
 }

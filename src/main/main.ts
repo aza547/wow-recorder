@@ -11,6 +11,7 @@ import { resolveHtmlPath } from './util';
 
 const Store = require('electron-store');
 const fs = require('fs');
+const { getVideoDurationInSeconds } = require('get-video-duration')
 
 /**
  * Create a settings store to handle the config.
@@ -18,9 +19,26 @@ const fs = require('fs');
 const cfg = new Store();
 
 /**
- * Validate the config, else prompt the user for some?.
+ * TODO Validate the config, else prompt the user for some?.
  */
 
+/**
+ * Months of the year.
+ */
+ const monthNames = [
+   "January",
+   "February",
+   "March",
+   "April",
+   "May",
+   "June",
+   "July",
+   "August",
+   "September",
+   "October",
+   "November",
+   "December"
+  ];
 
 
 export default class AppUpdater {
@@ -82,6 +100,7 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
+    minWidth: 1024,
     icon: getAssetPath('icon.png'),
     frame: false,
     webPreferences: {
@@ -101,7 +120,7 @@ const createWindow = async () => {
       throw new Error('"mainWindow" is not defined');
     }
 
-    mainWindow.setAspectRatio(15/9);
+   mainWindow.setAspectRatio(15/9);
 
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
@@ -194,7 +213,7 @@ const createPythonWindow = async () => {
     : path.join(__dirname, '../../assets');
 
   pythonWindow = new BrowserWindow({
-    show: false,
+    show: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -350,13 +369,50 @@ ipcMain.on("SET-LOG-PATH", (event) => {
   }
 });
 
-
 /**
- * Get the list of video files.
+ * Get the list of video files and their state.
  */
-ipcMain.on('LIST-VIDEOS', (event, category) => {
-  event.returnValue = fs.readdirSync(`D:/wow-recorder-files/${category}`);
-  return fs.readdirSync(`D:/wow-recorder-files/${category}`);
+ ipcMain.on('getVideoState', (event, category) => {
+
+  const path = `D:/wow-recorder-files/${category}/`;
+  const videos = fs.readdirSync(path).sort(function(a, b) {
+    // reverse chronological sort
+    // https://stackoverflow.com/questions/10559685/using-node-js-how-do-you-get-a-list-of-files-in-chronological-order
+    return fs.statSync(path + b).mtime.getTime() - fs.statSync(path + a).mtime.getTime();
+  });
+
+  let videoState = [];
+
+  for (let i = 0; i < videos.length; i++) {
+    const fullPath = path + "/" + videos[i];
+    const name = videos[i];
+
+    // Get date object when file was last modified.
+    const date = new Date(fs.statSync(path + videos[i]).mtime)
+
+    // Get a date string in the form "7 Sep".
+    const day = date.getDate();
+    const month = monthNames[date.getMonth()].slice(0, 3);
+    const dateStr = `${day} ${month}`;
+
+    // Get a clock time in the form "HH:MM".
+    const hours = date.getHours().toLocaleString('en-US', { minimumIntegerDigits: 2});
+    const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
+    const timeStr = `${hours}:${mins}`;
+
+    videoState.push({
+      name: name,
+      index: i,
+      fullPath: fullPath,
+      zone: "-",
+      duration: "-",
+      result: 0, // 0 for fail, 1 for success
+      date: dateStr,
+      time: timeStr
+    });
+  }
+
+  event.returnValue = videoState;
 });
 
 /**
