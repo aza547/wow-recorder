@@ -244,6 +244,6 @@ h2 {
   left: 65px;
   height: 30px;
   width: 30px;
-  animation: blink 1s;
+  animation: blink 3s;
   animation-iteration-count: infinite;
 }

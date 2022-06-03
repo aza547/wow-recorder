@@ -17,7 +17,6 @@ class SizeMonitor:
 
     def run(self):
         """Call to do work."""
-        print("Running size monitor")
         if (time() - self.last_check_time) > self.interval:
             self.last_check_time = time()
 

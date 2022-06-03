@@ -30,7 +30,7 @@ watcher = Watcher(cfg)
 threading.Thread(target=(watcher.watch)).start()
 
 # Block till ready to exit.
-input("Running, press any key to quit.\n")
+input("RUNNING, press any key to quit.\n")
 
 # Ready to exit, stop thread.
 watcher.stop_watching()

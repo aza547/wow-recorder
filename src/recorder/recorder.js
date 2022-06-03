@@ -12,7 +12,7 @@ async function getConfig(){
 }
 
 /**
- * Start the recorder. This is thread blocking.
+ * Start the recorder.
  */
 async function startRecording(){
   const cfg = await getConfig();
@@ -32,6 +32,14 @@ async function startRecording(){
   pyshell.on('message', function (message) {
     // handle message (a line of text from stdout)
     console.log(message);
+
+    if (message.includes('RUNNING')) {
+      ipcRenderer.send('setStatus', 0);
+    } else if (message.includes('STARTED RECORDING')) {
+      ipcRenderer.send('setStatus', 1);
+    } else if (message.includes('STOPPED RECORDING')) {
+      ipcRenderer.send('setStatus', 0);
+    }
   });
 }
 

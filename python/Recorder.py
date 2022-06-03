@@ -37,6 +37,9 @@ class Recorder:
             cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True
         )
 
+        print("STARTED RECORDING")
+
     def stop_recording(self):
         """Pass q to the subprocess to signal ffmpeg to stop recording."""
         self.recording_process.communicate("q".encode("utf-8"))
+        print("STOPPED RECORDING")

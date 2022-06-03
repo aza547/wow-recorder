@@ -3,7 +3,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { makeStyles} from '@mui/styles';
+import { makeStyles } from '@mui/styles';
 
 /**
  * List of supported categories. Order is the order they show up in the GUI.
@@ -88,7 +88,7 @@ export default function Layout() {
     return {
       categoryIndex: 0,
       videoIndex: 0,
-      videoState: window.electron.ipcRenderer.sendSync('getVideoState', "2v2")
+      videoState: window.electron.ipcRenderer.sendSync('getVideoState', categories)
     };
   });
 
@@ -96,12 +96,8 @@ export default function Layout() {
    * Update the state variable following a change of selected category.
    */
   const handleChangeCategory = (event: React.SyntheticEvent, newValue: number) => {
-    setState(() => {
-      return {
-        categoryIndex: newValue,
-        videoIndex: 0,
-        videoState: window.electron.ipcRenderer.sendSync('getVideoState', categories[newValue])
-      }
+    setState(prevState => {
+      return {...prevState, categoryIndex: newValue, videoIndex: 0}
     })
   };
 
@@ -112,12 +108,28 @@ export default function Layout() {
     setState(prevState => { return {...prevState, videoIndex: newValue} })
   };
 
+
+
  /**
   * State dependant variables.
   */
   const category = categories[state.categoryIndex];
 
   const classes = useStyles();
+
+  /**
+   * Refresh handler.
+   */
+  window.electron.ipcRenderer.on('refreshState', () => {
+    console.log("refreshing");
+    setState(prevState => {
+      return {
+        ...prevState,
+        videoState: window.electron.ipcRenderer.sendSync('getVideoState', categories)
+        }
+      }
+    )
+  });
 
   // for debugging
   console.log(state.videoState);
@@ -153,13 +165,13 @@ export default function Layout() {
 
     // Get appropriate success/fail text for the content type.
     if (isPvp) {
-      if (state.videoState[index].result) {
+      if (state.videoState[category][index].result) {
         result = "Win";
       } else {
        result = "Loss";
      }
     } else {
-      if (state.videoState[index].result) {
+      if (state.videoState[category][index].result) {
         result = "Kill";
       } else {
         result = "Wipe";
@@ -189,11 +201,11 @@ export default function Layout() {
     return(
       <Tab label={
         <div className={klazz}>
-          <div className='duration'>{ state.videoState[index].duration }</div>
-          <div className='encounter'>{ encounter }</div>
-          <div className='zone'>{ state.videoState[index].zone }</div>
-          <div className='time'>{ state.videoState[index].time }</div>
-          <div className='date'>{ state.videoState[index].date }</div>
+          <div className='duration'>{ state.videoState[category][index].duration }</div>
+          <div className='encounter'>The Jailer</div>
+          <div className='zone'>Sepulcher of the First Ones</div>
+          <div className='time'>{ state.videoState[category][index].time }</div>
+          <div className='date'>{ state.videoState[category][index].date }</div>
           <div className='result'>{ result }</div>
         </div>
       }
@@ -208,8 +220,8 @@ export default function Layout() {
   function generateTabPanel(tabIndex: number) {
     return (
       <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-        <video key = { state.videoState[state.videoIndex].fullPath } className="video" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
-          <source src={ state.videoState[state.videoIndex].fullPath } />
+        <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+          <source src={ state.videoState[category][state.videoIndex].fullPath } />
         </video>
         <Tabs
           value={state.videoIndex}
@@ -234,7 +246,7 @@ export default function Layout() {
           className={ classes.tabs }
           TabIndicatorProps={{style: { background:'#bb4220' }}}
         >
-        { state.videoState.map(file => {
+        { state.videoState[category].map(file => {
           return(
             generateVideoButton(file.name, file.index)
           )

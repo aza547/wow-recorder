@@ -3,7 +3,7 @@
 /**
  * Application entrypoint point.
  */
-import path from 'path';
+import path, { join } from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
@@ -11,7 +11,6 @@ import { resolveHtmlPath } from './util';
 
 const Store = require('electron-store');
 const fs = require('fs');
-const { getVideoDurationInSeconds } = require('get-video-duration')
 
 /**
  * Create a settings store to handle the config.
@@ -247,8 +246,6 @@ ipcMain.on('maximize', () => {
   if (mainWindow !== null) mainWindow.maximize();
 })
 
-
-
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
@@ -372,44 +369,50 @@ ipcMain.on("SET-LOG-PATH", (event) => {
 /**
  * Get the list of video files and their state.
  */
- ipcMain.on('getVideoState', (event, category) => {
+ ipcMain.on('getVideoState', (event, categories: string[]) => {
 
-  const path = `D:/wow-recorder-files/${category}/`;
-  const videos = fs.readdirSync(path).sort(function(a, b) {
-    // reverse chronological sort
-    // https://stackoverflow.com/questions/10559685/using-node-js-how-do-you-get-a-list-of-files-in-chronological-order
-    return fs.statSync(path + b).mtime.getTime() - fs.statSync(path + a).mtime.getTime();
-  });
+  let videoState = {};
 
-  let videoState = [];
+  for (let i = 0; i < categories.length; i++) {
+    videoState[categories[i]] = [];
 
-  for (let i = 0; i < videos.length; i++) {
-    const fullPath = path + "/" + videos[i];
-    const name = videos[i];
-
-    // Get date object when file was last modified.
-    const date = new Date(fs.statSync(path + videos[i]).mtime)
-
-    // Get a date string in the form "7 Sep".
-    const day = date.getDate();
-    const month = monthNames[date.getMonth()].slice(0, 3);
-    const dateStr = `${day} ${month}`;
-
-    // Get a clock time in the form "HH:MM".
-    const hours = date.getHours().toLocaleString('en-US', { minimumIntegerDigits: 2});
-    const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
-    const timeStr = `${hours}:${mins}`;
-
-    videoState.push({
-      name: name,
-      index: i,
-      fullPath: fullPath,
-      zone: "-",
-      duration: "-",
-      result: 0, // 0 for fail, 1 for success
-      date: dateStr,
-      time: timeStr
+    const path = `D:/wow-recorder-files/${categories[i]}/`;
+    const videos = fs.readdirSync(path).sort(function(a, b) {
+      // reverse chronological sort
+      // https://stackoverflow.com/questions/10559685/using-node-js-how-do-you-get-a-list-of-files-in-chronological-order
+      return fs.statSync(path + b).mtime.getTime() - fs.statSync(path + a).mtime.getTime();
     });
+
+
+
+    for (let j = 0; j < videos.length; j++) {
+      const fullPath = path + "/" + videos[j];
+      const name = videos[j];
+
+      // Get date object when file was last modified.
+      const date = new Date(fs.statSync(path + videos[j]).mtime)
+
+      // Get a date string in the form "7 Sep".
+      const day = date.getDate();
+      const month = monthNames[date.getMonth()].slice(0, 3);
+      const dateStr = `${day} ${month}`;
+
+      // Get a clock time in the form "HH:MM".
+      const hours = date.getHours().toLocaleString('en-US', { minimumIntegerDigits: 2});
+      const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
+      const timeStr = `${hours}:${mins}`;
+
+      videoState[categories[i]].push({
+        name: name,
+        index: j,
+        fullPath: fullPath,
+        zone: "-",
+        duration: "-",
+        result: 0, // 0 for fail, 1 for success
+        date: dateStr,
+        time: timeStr
+      });
+    }
   }
 
   event.returnValue = videoState;
@@ -425,4 +428,21 @@ ipcMain.handle('GET-CFG', async () => {
     cfg.get('log-path'),
     cfg.get('max-storage')
   ];
+});
+
+
+/**
+ * Update status.
+ */
+ ipcMain.on('setStatus', (event, status) => {
+
+  if (!mainWindow) {
+    throw new Error('"mainWindow" is not defined');
+  }
+
+  mainWindow.webContents.send('updateStatus', status);
+
+  if (status === 0) {
+    mainWindow.webContents.send('refreshState');
+  }
 });
