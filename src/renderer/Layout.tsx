@@ -6,6 +6,44 @@ import Box from '@mui/material/Box';
 import { makeStyles } from '@mui/styles';
 
 /**
+ * Import all the zone backdrops.
+ */
+import bladesEdge from  "../../assets/wow/bladesedge-arena.png";
+import dalaran from "../../assets/wow/dalaran-arena.jpg";
+import nagrand from  "../../assets/wow/nagrand-arena.jpg";
+import ruins from  "../../assets/wow/ruins-arena.png";
+import robodrome from  "../../assets/wow/robodrome-arena.jpg";
+import tigersPeak from "../../assets/wow/tigerspeak-arena.png";
+import tolviron from  "../../assets/wow/tolviron-arena.png";
+import blackrook  from "../../assets/wow/blackrook-arena.jpg";
+import empyrean from  "../../assets/wow/empyrean-arena.jpg";
+import ashamanesFall  from "../../assets/wow/ashamanesfall-arena.jpg";
+import mugambala from  "../../assets/wow/mugambala.jpg";
+import hookpoint  from "../../assets/wow/hookpoint-arena.jpg";
+import maldraxxus from  "../../assets/wow/maldraxxus-arena.jpg";
+import enigma  from "../../assets/wow/enigma-arena.png";
+
+/**
+ * List of arenas and their backdrop image.
+ */
+ const zoneBackdrops =  {
+   1672: bladesEdge,
+   617: dalaran,
+   1505: nagrand,
+   572: ruins,
+   2167: robodrome,
+   1134: tigersPeak,
+   980: tolviron,
+   1504: blackrook,
+   2373: empyrean,
+   1552: ashamanesFall,
+   1911: mugambala,
+   1825: hookpoint,
+   2509: maldraxxus,
+   2547: enigma
+ };
+
+/**
  * List of supported categories. Order is the order they show up in the GUI.
  */
 const categories = [
@@ -25,13 +63,28 @@ const categories = [
   sepulcher: "../../assets/wow/sepulcher.jpg"
 };
 
-/**
- * List of arenas and their image.
- */
- const arenas = {
-  sepulcher: "2v2"
-};
 
+
+const zones = {
+  // Arenas
+  1672: "Blade's Edge Arena",
+  617: "Dalaran Arena",
+  1505: "Nagrand Arena",
+  572: "Ruins of Lordaeron",
+  2167: "The Robodrome",
+  1134: "Tiger's Peak",
+  980: "Tol'Viron Arena",
+  1504: "Black Rook Hold Arena",
+  2373: "Empyrean Domain",
+  1552: "Ashamane's Fall",
+  1911: "Mugambala",
+  1825: "Hook Point",
+  2509: "Maldraxxus Coliseum",
+  2547: "Enigma Crucible"
+  // Raids
+  // Dungeons
+  // Battlegrounds
+}
 /**
  * Needed to style the tabs with the right color.
  */
@@ -121,7 +174,6 @@ export default function Layout() {
    * Refresh handler.
    */
   window.electron.ipcRenderer.on('refreshState', () => {
-    console.log("refreshing");
     setState(prevState => {
       return {
         ...prevState,
@@ -178,9 +230,6 @@ export default function Layout() {
       }
     }
 
-    // TODO make this conditonal on zone
-    let klazz: string ="videoButton " + "sepulcherRaid";
-
     // Get the encounter name as per below.
     //  Raid:    encounter name
     //  Arena:   bracket name
@@ -200,10 +249,10 @@ export default function Layout() {
 
     return(
       <Tab label={
-        <div className={klazz}>
-          <div className='duration'>{ state.videoState[category][index].duration }</div>
-          <div className='encounter'>The Jailer</div>
-          <div className='zone'>Sepulcher of the First Ones</div>
+        <div className={ "videoButton" } style={{ backgroundImage: `url(${zoneBackdrops[state.videoState[category][index].zoneID]})`}}>
+          <div className='duration'>{ state.videoState[category][index].duration + "s" }</div>
+          <div className='encounter'>{ encounter }</div>
+          <div className='zone'>{ state.videoState[category][index].zone }</div>
           <div className='time'>{ state.videoState[category][index].time }</div>
           <div className='date'>{ state.videoState[category][index].date }</div>
           <div className='result'>{ result }</div>
@@ -260,7 +309,7 @@ export default function Layout() {
   return (
     <Box
       sx={{
-        width: '100%',
+        width: '50%',
         height: '210px',
         display: 'flex'
       }}

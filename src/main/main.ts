@@ -39,6 +39,27 @@ const cfg = new Store();
    "December"
   ];
 
+const zones = {
+    // Arenas
+    1672: "Blade's Edge Arena",
+    617: "Dalaran Arena",
+    1505: "Nagrand Arena",
+    572: "Ruins of Lordaeron",
+    2167: "The Robodrome",
+    1134: "Tiger's Peak",
+    980: "Tol'Viron Arena",
+    1504: "Black Rook Hold Arena",
+    2373: "Empyrean Domain",
+    1552: "Ashamane's Fall",
+    1911: "Mugambala",
+    1825: "Hook Point",
+    2509: "Maldraxxus Coliseum",
+    2547: "Enigma Crucible"
+    // Raids
+    // Dungeons
+    // Battlegrounds
+  }
+
 
 export default class AppUpdater {
   constructor() {
@@ -389,6 +410,10 @@ ipcMain.on("SET-LOG-PATH", (event) => {
       const fullPath = path + "/" + videos[j];
       const name = videos[j];
 
+      // Split the zoneID and duration out of the video file.
+      const zoneID = name.split("-")[0];
+      const duration = name.split("-")[1];
+
       // Get date object when file was last modified.
       const date = new Date(fs.statSync(path + videos[j]).mtime)
 
@@ -406,8 +431,9 @@ ipcMain.on("SET-LOG-PATH", (event) => {
         name: name,
         index: j,
         fullPath: fullPath,
-        zone: "-",
-        duration: "-",
+        zone: zones[zoneID],
+        zoneID: zoneID,
+        duration: duration,
         result: 0, // 0 for fail, 1 for success
         date: dateStr,
         time: timeStr

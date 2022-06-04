@@ -41,7 +41,7 @@ class Watcher:
 
                 # Create recording object.
                 recorder = Recorder(
-                    self.current_combat_log.zone,
+                    self.current_combat_log.zoneID,
                     self.current_combat_log.bracket,
                     self.cfg
                 )
@@ -64,7 +64,7 @@ class Watcher:
                 # Rename the log to match the video name.
                 # TODO remove hardcoding of path.
                 log_path = self.current_combat_log.get_copied_log()
-                vid_path = recorder.get_path()
+                vid_path = recorder.get_final_path()
                 os.rename(
                     log_path,
                     self.cfg["video_storage"]

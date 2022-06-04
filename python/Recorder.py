@@ -7,9 +7,9 @@ import subprocess
 
 
 class Recorder:
-    def __init__(self, zone, bracket, cfg):
+    def __init__(self, zoneID, bracket, cfg):
         """Constructor."""
-        self.zone = zone
+        self.zoneID = zoneID
         self.bracket = bracket
         self.cfg = cfg
 
@@ -17,14 +17,20 @@ class Recorder:
         now = datetime.now()
         current_time = now.strftime("%H.%M.%S")
         video_path = self.cfg["video_storage"]
-        self.file_name = f"{video_path}/{self.bracket}/{self.zone}-{current_time}.mp4"
+        self.file_name = f"{video_path}/{self.bracket}/{self.zoneID}.mp4"
 
     def get_path(self):
         """Return the path of the video file as a Path object."""
         return Path(self.file_name)
 
+    def get_final_path(self):
+        """Return the path of the final video file as a Path object."""
+        return Path(self.final_file_name)
+
     def start_recording(self):
         """Call ffmpeg to start the recording."""
+        self.start_time_seconds = round(time.time())
+
         cmd = f'ffmpeg                                                     \
         -thread_queue_size 1024                                            \
         -f gdigrab -framerate 50 -video_size 1920x1080 -i desktop          \
@@ -41,5 +47,11 @@ class Recorder:
 
     def stop_recording(self):
         """Pass q to the subprocess to signal ffmpeg to stop recording."""
+        self.end_time_seconds = round(time.time())
+        self.duration_seconds = (self.end_time_seconds - self.start_time_seconds)
         self.recording_process.communicate("q".encode("utf-8"))
+        time.sleep(2)
+        video_path = self.cfg["video_storage"]
+        self.final_file_name = f"{video_path}/{self.bracket}/{self.zoneID}-{self.duration_seconds}-{self.start_time_seconds}.mp4"
+        os.rename(self.file_name, self.final_file_name)
         print("STOPPED RECORDING")

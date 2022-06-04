@@ -16,7 +16,8 @@ ARENA_ZONES = {
   1552: "Ashamane's Fall",
   1911: "Mugambala",
   1825: "Hook Point",
-  2509: "Maldraxxus Coliseum"
+  2509: "Maldraxxus Coliseum",
+  2547: "Enigma Crucible"
 }
 
 RAID_ZONES = {
@@ -33,6 +34,7 @@ class Combatlog:
         self.cfg = cfg
 
         self.zone = "UnknownZone"
+        self.zoneID = 0
         self.bracket = None
 
         self.started = False
@@ -99,39 +101,40 @@ class Combatlog:
 
             # Get the zone.
             if zone not in ARENA_ZONES:
-                # self.GUI.logger.debug(f"Detected ZONE_CHANGE, left arena")
                 print(f"Detected ZONE_CHANGE, left arena")
                 self.ended = True
 
         if "ARENA_MATCH_START" in line:
-            # self.GUI.logger.debug(f"Detected ARENA_MATCH_START event")
             print(f"Detected ARENA_MATCH_START event")
             self.started = True
             self.ended = False
 
             ## Get the zone name from the ZONE_CHANGE event.
             zone = int(line.split(",")[1])
-            self.zone = ARENA_ZONES[zone]
+
+            if zone not in ARENA_ZONES:
+              # Guard against new arena zones breaking everything.
+              print(f"Invalid zone - stopping recording.")
+              self.ended = True
+              self.flush_copied_log()
+            else:
+              self.zone = ARENA_ZONES[zone]
+              self.zoneID = zone
 
             if "3v3" in line:
-                # self.GUI.logger.debug(f"It's 3v3 in {self.zone}")
                 print(f"It's 3v3 in {self.zone}")
                 self.bracket = "3v3"
             elif "2v2" in line:
-                # self.GUI.logger.debug(f"It's 2v2 in {self.zone}")
                 print(f"It's 2v2 in {self.zone}")
                 self.bracket = "2v2"
             elif "Skirmish" in line:
-                # self.GUI.logger.debug(f"It's a skirmish in {self.zone}")
                 print(f"It's a skirmish in {self.zone}")
                 self.bracket = "Skirmish"
             elif "Solo Shuffle" in line:
-                # self.GUI.logger.debug(f"It's a Solo Shuffle in {self.zone}")
                 print(f"It's a Solo Shuffle in {self.zone}")
                 self.bracket = "Solo Shuffle"
 
         elif "ENCOUNTER_START" in line:
-            # self.GUI.logger.debug(f"Detected ENCOUNTER_START event")
             print(f"Detected ENCOUNTER_START event")
             self.started = True
             self.ended = False
@@ -139,8 +142,8 @@ class Combatlog:
             # Get the encounter and zone name
             encounter = line.split(",")[2].replace('"', '') # comes in quotes so strip those
             zone = int(line.split(",")[1])
-            self.zone = RAID_ZONES[zone]
-            print(f"{encounter} encounter started in {self.zone}!")
+            self.zoneID = zone
+            print(f"{encounter} encounter started in {self.zoneID}!")
             self.bracket = "Raids"
 
         # Deliberatly before ARENA_MATCH_END handling to log that line for completeness.
@@ -149,7 +152,6 @@ class Combatlog:
             self.output_log_lines.append(line)
 
         if ("ARENA_MATCH_END" in line):
-            # self.GUI.logger.debug(f"Detected ARENA_MATCH_END event")
             print(f"Detected ARENA_MATCH_END event")
             self.ended = True
             self.flush_copied_log()
