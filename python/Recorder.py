@@ -39,9 +39,11 @@ class Recorder:
         "{self.file_name}"'
 
         #  -f dshow -i audio="Microphone (3- G533 Gaming Headset)"
-        self.recording_process = subprocess.Popen(
-            cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True
-        )
+
+        with open("D:\wow-recorder-files\diags\python.log", "a") as python_log:
+          self.recording_process = subprocess.Popen(
+              cmd, stdin=subprocess.PIPE, stdout=python_log, stderr=python_log, shell=True
+          )
 
         print("STARTED RECORDING")
 
@@ -50,7 +52,7 @@ class Recorder:
         self.end_time_seconds = round(time.time())
         self.duration_seconds = (self.end_time_seconds - self.start_time_seconds)
         self.recording_process.communicate("q".encode("utf-8"))
-        time.sleep(2)
+        time.sleep(1)
         video_path = self.cfg["video_storage"]
         self.final_file_name = f"{video_path}/{self.bracket}/{self.zoneID}-{self.duration_seconds}-{self.start_time_seconds}.mp4"
         os.rename(self.file_name, self.final_file_name)

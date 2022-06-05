@@ -233,7 +233,7 @@ const createPythonWindow = async () => {
     : path.join(__dirname, '../../assets');
 
   pythonWindow = new BrowserWindow({
-    show: true,
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false

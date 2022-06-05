@@ -41,6 +41,13 @@ async function startRecording(){
       ipcRenderer.send('setStatus', 0);
     }
   });
+
+  // we redirect stderr from ffmpeg to diags logs so it doesn't trigger this branch
+  pyshell.on('stderr', function (message) {
+    // handle message (a line of text from stderr)
+    console.log(message);
+    ipcRenderer.send('setStatus', 2);
+  });
 }
 
 /**

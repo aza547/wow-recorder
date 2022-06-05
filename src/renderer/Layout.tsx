@@ -247,10 +247,16 @@ export default function Layout() {
       encounter = "bug?";
     }
 
+    // Format duration so that its MM:SS.
+    const durationDate = new Date(0);
+    durationDate.setSeconds(state.videoState[category][index].duration);
+    const formattedDuration = durationDate.toISOString().substr(14, 5);
+
+
     return(
       <Tab label={
         <div className={ "videoButton" } style={{ backgroundImage: `url(${zoneBackdrops[state.videoState[category][index].zoneID]})`}}>
-          <div className='duration'>{ state.videoState[category][index].duration + "s" }</div>
+          <div className='duration'>{ formattedDuration }</div>
           <div className='encounter'>{ encounter }</div>
           <div className='zone'>{ state.videoState[category][index].zone }</div>
           <div className='time'>{ state.videoState[category][index].time }</div>
@@ -267,42 +273,51 @@ export default function Layout() {
    * Returns TSX for the video player and video selection tabs.
    */
   function generateTabPanel(tabIndex: number) {
-    return (
-      <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-        <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
-          <source src={ state.videoState[category][state.videoIndex].fullPath } />
-        </video>
-        <Tabs
-          value={state.videoIndex}
-          onChange={ handleChangeVideo }
-          variant="scrollable"
-          scrollButtons="auto"
-          aria-label="scrollable auto tabs example"
-          sx= {{
-            position: 'fixed',
-            bottom: '1px',
-            left: '1px',
-            width: '100%',
-            borderColor: '#000000',
-            bgcolor: '#272e48' ,
-            textColor: 'secondary',
-            overflow: 'visible',
-            borderTop: '1px solid',
-            borderBottom: '1px solid',
-            borderLeft: '1px solid',
-            borderRight: '1px solid'
-          }}
-          className={ classes.tabs }
-          TabIndicatorProps={{style: { background:'#bb4220' }}}
-        >
-        { state.videoState[category].map(file => {
-          return(
-            generateVideoButton(file.name, file.index)
-          )
-        })}
-        </Tabs>
-      </TabPanel>
-    );
+    if (state.videoState[category][state.videoIndex]) {
+      return (
+        <TabPanel value={ state.categoryIndex } index={ tabIndex }>
+          <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+            <source src={ state.videoState[category][state.videoIndex].fullPath } />
+          </video>
+          <Tabs
+            value={state.videoIndex}
+            onChange={ handleChangeVideo }
+            variant="scrollable"
+            scrollButtons="auto"
+            aria-label="scrollable auto tabs example"
+            sx= {{
+              position: 'fixed',
+              bottom: '1px',
+              left: '1px',
+              width: '100%',
+              borderColor: '#000000',
+              bgcolor: '#272e48' ,
+              textColor: 'secondary',
+              overflow: 'visible',
+              borderTop: '1px solid',
+              borderBottom: '1px solid',
+              borderLeft: '1px solid',
+              borderRight: '1px solid'
+            }}
+            className={ classes.tabs }
+            TabIndicatorProps={{style: { background:'#bb4220' }}}
+          >
+          { state.videoState[category].map(file => {
+            return(
+              generateVideoButton(file.name, file.index)
+            )
+          })}
+          </Tabs>
+        </TabPanel>
+      );
+    } else {
+      return (
+        <TabPanel value={ state.categoryIndex } index={ tabIndex }>
+          <video key = "None" className="video" poster="file:///D:/Checkouts/wow-recorder/assets/poster-novideos.png"></video>
+          <div className="noVideos"></div>
+        </TabPanel>
+      );
+    }
   };
 
 

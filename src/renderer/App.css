@@ -247,3 +247,32 @@ h2 {
   animation: blink 3s;
   animation-iteration-count: infinite;
 }
+
+#error-icon{
+  position:fixed;
+  bottom: 125px;
+  left: 55px;
+  height: 50px;
+  width: 50px;
+  animation: blink 3s;
+  animation-iteration-count: infinite;
+}
+
+.noVideos{
+  -webkit-text-stroke: 0.5px black;
+  -webkit-text-fill-color: white;
+  font: bold 18px Arial Narrow;
+  text-shadow:
+    1px  1px 0 #000,
+   -1px -1px 0 #000,
+    1px -1px 0 #000,
+   -1px  1px 0 #000,
+    1px  1px 0 #000;
+  height: 100px;
+  width: 200%;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  background-color: #272e48;
+}
+

@@ -29,7 +29,7 @@ class SizeMonitor:
         """Check if the size of directory is more than the limit."""
         size = self.get_dir_size()
         limit = int(self.max_size_gb)
-        print(f"Size monitor results: Used:{size}, Limit:{limit}")
+        print(f"Size monitor results: Used:{round(size)}, Limit:{limit}")
         return size > limit
 
     def get_dir_size(self):
