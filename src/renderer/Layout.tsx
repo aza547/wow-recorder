@@ -22,6 +22,7 @@ import mugambala from  "../../assets/wow/mugambala.jpg";
 import hookpoint  from "../../assets/wow/hookpoint-arena.jpg";
 import maldraxxus from  "../../assets/wow/maldraxxus-arena.jpg";
 import enigma  from "../../assets/wow/enigma-arena.png";
+import sepulcherOfTheFirstOnes  from "../../assets/wow/sepulcher.jpg";
 
 /**
  * List of arenas and their backdrop image.
@@ -40,7 +41,8 @@ import enigma  from "../../assets/wow/enigma-arena.png";
    1911: mugambala,
    1825: hookpoint,
    2509: maldraxxus,
-   2547: enigma
+   2547: enigma,
+   2537: sepulcherOfTheFirstOnes
  };
 
 /**
@@ -212,7 +214,6 @@ export default function Layout() {
    function generateVideoButton(file: string, index: number) {
 
     let result;
-    let encounter;
     const isPvp = (category === "2v2") || (category === "3v3") || (category === "Skirmish") || (category === "Solo Shuffle");
 
     // Get appropriate success/fail text for the content type.
@@ -230,23 +231,6 @@ export default function Layout() {
       }
     }
 
-    // Get the encounter name as per below.
-    //  Raid:    encounter name
-    //  Arena:   bracket name
-    //  BG:      BG name
-    //  Mythic+: dungeon name
-    if ((category === "2v2") || (category === "3v3") || (category === "Skirmish") || (category === "Solo Shuffle")) {
-      encounter = category;
-    } else if (category === "Raids") {
-      encounter = category; // TODO fix this to actually show encounter.
-    } else if (category === "Mythic+") {
-      encounter = category; // TODO fix this to actually show dungeon name.
-    } else if (category === "Battleground") {
-      encounter = category; // TODO fix this to actually show BG name.
-    } else {
-      encounter = "bug?";
-    }
-
     // Format duration so that its MM:SS.
     const durationDate = new Date(0);
     durationDate.setSeconds(state.videoState[category][index].duration);
@@ -257,7 +241,7 @@ export default function Layout() {
       <Tab label={
         <div className={ "videoButton" } style={{ backgroundImage: `url(${zoneBackdrops[state.videoState[category][index].zoneID]})`}}>
           <div className='duration'>{ formattedDuration }</div>
-          <div className='encounter'>{ encounter }</div>
+          <div className='encounter'>{ state.videoState[category][index].encounter }</div>
           <div className='zone'>{ state.videoState[category][index].zone }</div>
           <div className='time'>{ state.videoState[category][index].time }</div>
           <div className='date'>{ state.videoState[category][index].date }</div>

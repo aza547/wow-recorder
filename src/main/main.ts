@@ -54,11 +54,15 @@ const zones = {
     1911: "Mugambala",
     1825: "Hook Point",
     2509: "Maldraxxus Coliseum",
-    2547: "Enigma Crucible"
+    2547: "Enigma Crucible",
     // Raids
     // Dungeons
     // Battlegrounds
   }
+
+const encounters = {
+  2537: "The Jailer" // The Jailer Encounter
+}
 
 
 export default class AppUpdater {
@@ -394,10 +398,12 @@ ipcMain.on("SET-LOG-PATH", (event) => {
 
   let videoState = {};
 
-  for (let i = 0; i < categories.length; i++) {
-    videoState[categories[i]] = [];
 
-    const path = `D:/wow-recorder-files/${categories[i]}/`;
+  for (let i = 0; i < categories.length; i++) {
+    const category = categories[i];
+    videoState[category] = [];
+
+    const path = `D:/wow-recorder-files/${category}/`;
     const videos = fs.readdirSync(path).sort(function(a, b) {
       // reverse chronological sort
       // https://stackoverflow.com/questions/10559685/using-node-js-how-do-you-get-a-list-of-files-in-chronological-order
@@ -427,11 +433,31 @@ ipcMain.on("SET-LOG-PATH", (event) => {
       const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
       const timeStr = `${hours}:${mins}`;
 
+      // If in a raid, zoneID is actually the encounter ID.
+      let zone: string;
+
+      if (category === "Raids") {
+        zone = "Sepulcher of the First Ones"; // Sepulcher, to add support for future raids as released.
+      } else {
+        zone = zones[zoneID]
+      }
+
+      // If in a raid, zoneID is actually the encounter ID.
+      // If in PVP, just use the category e.g. "2v2" as the encounter name.
+      let encounter: string;
+
+      if (category === "Raids") {
+        encounter = encounters[zoneID];
+      } else {
+        encounter = category;
+      }
+
       videoState[categories[i]].push({
         name: name,
         index: j,
         fullPath: fullPath,
-        zone: zones[zoneID],
+        encounter: encounter,
+        zone: zone,
         zoneID: zoneID,
         duration: duration,
         result: 0, // 0 for fail, 1 for success
