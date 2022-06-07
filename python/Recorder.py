@@ -45,7 +45,7 @@ class Recorder:
               cmd, stdin=subprocess.PIPE, stdout=python_log, stderr=python_log, shell=True
           )
 
-        print("STARTED RECORDING")
+        print("STARTED RECORDING", flush=True)
 
     def stop_recording(self):
         """Pass q to the subprocess to signal ffmpeg to stop recording."""
@@ -56,4 +56,4 @@ class Recorder:
         video_path = self.cfg["video_storage"]
         self.final_file_name = f"{video_path}/{self.bracket}/{self.zoneID}-{self.duration_seconds}-{self.start_time_seconds}.mp4"
         os.rename(self.file_name, self.final_file_name)
-        print("STOPPED RECORDING")
+        print("STOPPED RECORDING", flush=True)

@@ -101,11 +101,11 @@ class Combatlog:
 
             # Get the zone.
             if zone not in ARENA_ZONES:
-                print(f"Detected ZONE_CHANGE, left arena")
+                print(f"Detected ZONE_CHANGE, left arena" , flush=True)
                 self.ended = True
 
         if "ARENA_MATCH_START" in line:
-            print(f"Detected ARENA_MATCH_START event")
+            print(f"Detected ARENA_MATCH_START event", flush=True)
             self.started = True
             self.ended = False
 
@@ -114,7 +114,7 @@ class Combatlog:
 
             if zone not in ARENA_ZONES:
               # Guard against new arena zones breaking everything.
-              print(f"Invalid zone - stopping recording.")
+              print(f"Invalid zone - stopping recording.", flush=True)
               self.ended = True
               self.flush_copied_log()
             else:
@@ -122,20 +122,20 @@ class Combatlog:
               self.zoneID = zone
 
             if "3v3" in line:
-                print(f"It's 3v3 in {self.zone}")
+                print(f"It's 3v3 in {self.zone}", flush=True)
                 self.bracket = "3v3"
             elif "2v2" in line:
-                print(f"It's 2v2 in {self.zone}")
+                print(f"It's 2v2 in {self.zone}", flush=True)
                 self.bracket = "2v2"
             elif "Skirmish" in line:
-                print(f"It's a skirmish in {self.zone}")
+                print(f"It's a skirmish in {self.zone}", flush=True)
                 self.bracket = "Skirmish"
             elif "Solo Shuffle" in line:
-                print(f"It's a Solo Shuffle in {self.zone}")
+                print(f"It's a Solo Shuffle in {self.zone}", flush=True)
                 self.bracket = "Solo Shuffle"
 
         elif "ENCOUNTER_START" in line:
-            print(f"Detected ENCOUNTER_START event")
+            print(f"Detected ENCOUNTER_START event", flush=True)
             self.started = True
             self.ended = False
 
@@ -143,7 +143,7 @@ class Combatlog:
             encounter = line.split(",")[2].replace('"', '') # comes in quotes so strip those
             zone = int(line.split(",")[1])
             self.zoneID = zone
-            print(f"{encounter} encounter started in {self.zoneID}!")
+            print(f"{encounter} encounter started in {self.zoneID}!", flush=True)
             self.bracket = "Raids"
 
         # Deliberatly before ARENA_MATCH_END handling to log that line for completeness.
@@ -152,13 +152,13 @@ class Combatlog:
             self.output_log_lines.append(line)
 
         if ("ARENA_MATCH_END" in line):
-            print(f"Detected ARENA_MATCH_END event")
+            print(f"Detected ARENA_MATCH_END event", flush=True)
             self.ended = True
             self.flush_copied_log()
         elif ("ENCOUNTER_END" in line):
         ## easy to get win loss? 2nd to last arg is 1 for success or 0 for fail
         #  -- ENCOUNTER_END,2537,"The Jailer",16,20,0,112540
-            print(f"Detected ENCOUNTER_END event")
+            print(f"Detected ENCOUNTER_END event", flush=True)
             self.ended = True
             self.flush_copied_log()
 

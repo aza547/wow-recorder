@@ -22,14 +22,14 @@ class SizeMonitor:
 
             # Don't just delete one file, that might not make enough room.
             while self.check():
-                print("Deleting oldest video")
+                print("Deleting oldest video", flush=True)
                 self.delete_oldest_video()
 
     def check(self):
         """Check if the size of directory is more than the limit."""
         size = self.get_dir_size()
         limit = int(self.max_size_gb)
-        print(f"Size monitor results: Used:{round(size)}, Limit:{limit}")
+        print(f"Size monitor results: Used:{round(size)}, Limit:{limit}", flush=True)
         return size > limit
 
     def get_dir_size(self):
@@ -64,4 +64,4 @@ class SizeMonitor:
         # self.GUI.logger.warning(
         #     f"Removed {os.path.basename(oldest_video)} to comply with {self.max_size_gb}GB storage limit."
         # )
-        print(f"Removed {os.path.basename(oldest_video)} to comply with {self.max_size_gb}GB storage limit.")
+        print(f"Removed {os.path.basename(oldest_video)} to comply with {self.max_size_gb}GB storage limit.", flush=True)
