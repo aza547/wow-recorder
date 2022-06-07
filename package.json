@@ -39,7 +39,8 @@
       "dist",
       "node_modules",
       "package.json",
-      "win64recorder"
+      "win64recorder",
+      "ffmpeg"
     ],
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {

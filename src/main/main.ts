@@ -154,6 +154,11 @@ const createWindow = async () => {
   });
 
   mainWindow.on('closed', () => {
+    if (pythonWindow !== null) {
+      console.log("kill python")
+      pythonWindow.webContents.send('kill', []);
+    }
+
     mainWindow = null;
   });
 

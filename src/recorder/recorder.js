@@ -3,7 +3,7 @@ const { ipcRenderer } = require('electron');
 const path = require('path');
 
 const spawn = require("child_process").spawn;
-var executablePath = "D:\\checkouts\\wow-recorder\\python\\dist\\ArenaRecorder\\ArenaRecorder.exe";
+var executablePath = "D:\\checkouts\\wow-recorder\\release\\app\\win64recorder\\ArenaRecorder.exe";
 
 
 /**
@@ -20,17 +20,6 @@ async function getConfig(){
  */
 async function startRecording(){
   const cfg = await getConfig();
-
-  const options = {
-    mode: 'text',
-    pythonOptions: ['-u'], // get print results in real-time
-    scriptPath: path.join(__dirname, '/../../python/'),
-    args: ['--storage', `${cfg[0]}`,
-           '--logs',    `${cfg[1]}`,
-           '--size',    `${cfg[2]}`]
-  };
-
-  console.log('starting with args:\n' + `--storage ${cfg[0]}\n` + `--logs ${cfg[1]}\n` + `--size ${cfg[2]}`);
 
   var parameters = [
     '--storage', `\"${cfg[0]}\"`,
@@ -60,7 +49,13 @@ async function startRecording(){
   process.on('close', (code) => {
     console.log(`child process exited with code ${code}`);
   });
+
+  ipcRenderer.on('kill', () => {
+    process.kill('SIGINT')
+  });
 }
+
+
 
 /**
  * Call startRecording().

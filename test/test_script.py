@@ -19,7 +19,7 @@ print("Writing START")
 f = open(f"{path}/WoWCombatLog-123.txt", "a")
 f.write(START)
 f.close()
-time.sleep(2)
+time.sleep(25)
 
 f = open(f"{path}/WoWCombatLog-123.txt", "a")
 f.write(RANDOM)

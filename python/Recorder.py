@@ -31,11 +31,11 @@ class Recorder:
         """Call ffmpeg to start the recording."""
         self.start_time_seconds = round(time.time())
 
-        cmd = f'ffmpeg                                                     \
-        -thread_queue_size 1024                                            \
-        -f gdigrab -framerate 50 -video_size 1920x1080 -i desktop          \
-        -f dshow -i audio="virtual-audio-capturer"                         \
-        -r 50 -preset fast -c:v h264_nvenc -qp 23 -pix_fmt yuv420p         \
+        cmd = f'D:\\checkouts\wow-recorder\\release\\app\\ffmpeg\\ffmpeg.exe \
+        -y -thread_queue_size 1024                                           \
+        -f gdigrab -framerate 50 -video_size 1920x1080 -i desktop            \
+        -f dshow -i audio="virtual-audio-capturer"                           \
+        -r 50 -preset fast -c:v h264_nvenc -qp 23 -pix_fmt yuv420p           \
         "{self.file_name}"'
 
         #  -f dshow -i audio="Microphone (3- G533 Gaming Headset)"

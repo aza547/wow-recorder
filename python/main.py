@@ -3,7 +3,14 @@ import argparse
 from Watcher import Watcher
 import threading
 from SizeMonitor import SizeMonitor
+import signal
+import sys
 
+# Quietly exit on SIGINT
+def signal_handler(sig, frame):
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 # Set up command line inputs.
 parser = argparse.ArgumentParser(description='Warcraft recorder python backend.')
@@ -13,6 +20,7 @@ parser.add_argument('--logs', type=str, required=True, metavar='<PATH>', help='p
 parser.add_argument('--size',  type=int, required=True, metavar='<NUMBER>', help='max storage videos may consume on disk in GB')
 
 args = parser.parse_args()
+print(args, flush=True)
 
 # Config object built from command line arguments.
 cfg = {
@@ -27,7 +35,9 @@ size_monitor.run()
 
 # Create watcher object and start it in a thread.
 watcher = Watcher(cfg)
-threading.Thread(target=(watcher.watch)).start()
+watcherThread = threading.Thread(target=(watcher.watch))
+watcherThread.daemon = True
+watcherThread.start()
 
 # Block till ready to exit.
 input("RUNNING, press any key to quit.\n")

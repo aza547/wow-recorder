@@ -35,7 +35,9 @@ class Watcher:
                 # self.GUI.logger.debug(
                 #     f"Started watching: {os.path.basename(self.current_log_path)}"
                 # )
-                threading.Thread(target=self.current_combat_log.follow).start()
+                combatlogThread = threading.Thread(target=self.current_combat_log.follow)
+                combatlogThread.daemon = True
+                combatlogThread.start()
 
             if self.current_combat_log.is_active():
 
@@ -48,7 +50,9 @@ class Watcher:
 
                 # Start recording in a thread.
                 # self.GUI.logger.info(f"Started recording")
-                threading.Thread(target=recorder.start_recording).start()
+                recorderThread = threading.Thread(target=recorder.start_recording)
+                recorderThread.daemon = True
+                recorderThread.start()
 
                 # Block until the arena match is over.
                 while self.current_combat_log.is_active():
