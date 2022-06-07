@@ -38,7 +38,8 @@
     "files": [
       "dist",
       "node_modules",
-      "package.json"
+      "package.json",
+      "win64recorder"
     ],
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
