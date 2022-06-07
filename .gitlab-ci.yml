@@ -1,9 +1,12 @@
-stages:  
+stages:
   - build
 
 build-job:
+  image: 4tqrgqe5yrgfd/electron
   stage: build
   script:
     - echo "Compiling the code..."
+    - npm run package
     - echo "Compile complete."
+
 
