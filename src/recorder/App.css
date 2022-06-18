@@ -1,0 +1,278 @@
+/*
+ * @NOTE: Prepend a `~` to css file paths that are in your node_modules
+ *        See https://github.com/webpack-contrib/sass-loader#imports
+ */
+
+html {
+  margin: 0px;
+  height: 100%;
+  width: 100%;
+  overflow: clip;
+  background-color: #1A233A;
+}
+
+body {
+  margin: 0px;
+  height: 100%;
+  width: 100%;
+  font-family: sans-serif;
+}
+
+div#root {
+  height: 100%;
+  width: 100%;
+}
+
+.video{
+  height: calc(100vh - 140px);
+  top: 0px;
+  border: 2px solid;
+}
+
+.App {
+  height: 100%;
+  width: 100%;
+}
+
+.TabPanel {
+  height: 100%;
+  width: 100%;
+  background-color: #272e48;
+  padding: 0;
+}
+
+.MuiTypography-root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.MuiBox-root {
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+}
+
+.MuiTabScrollButton-root {
+  opacity: 1;
+  border-top: 1px solid black;
+}
+
+.MuiButtonBase-root {
+  padding: 0;
+}
+
+h1 {text-align: center;}
+h2 {
+  width: 100%;
+  height: 100%;
+  padding: 0px;
+  text-align: center;
+  background: #1abc9c;
+  color: rgb(0, 0, 0);
+  font-size: 30px;
+}
+
+#title-bar {
+  -webkit-app-region: drag;
+  height: 35px;
+  padding: 0px;
+  margin: 0px;
+
+  font-family: sans-serif;
+}
+
+#title {
+  color: #bb4220;
+  line-height: 32px;
+  font-size: 14px;
+  text-align: center;
+  font-weight: bold;
+}
+
+#title-bar-btns {
+  -webkit-app-region: no-drag;
+  position: fixed;
+  top: 1px;
+  right: 0px;
+}
+
+#title-bar-btns button {
+  height: 32px;
+  width: 32px;
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  outline: none;
+}
+
+#title-bar-btns button:hover {
+  background-color: #1A1A1A;
+  outline: none;
+}
+
+.center {
+  border: 5px solid #FFFF00;
+  text-align: center;
+}
+
+#logo{
+  position:fixed;
+  top: 5px;
+  left: 5px;
+}
+
+#settings{
+  position:fixed;
+  top: 250px;
+  left: 5px;
+}
+
+#settings-cog{
+  background-color: transparent;
+  border-width: 0px;
+  cursor: pointer;
+}
+
+#settings-cog:hover {
+  background-color: darkgrey;
+  border-width: 0px;
+  border-radius: 100px;
+}
+
+#settings-cog:active {
+  border-style: inset;
+}
+
+.videoButton {
+  height: 100%;
+  width: 100%;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 20px; /* <-- adjust this to spread out text */
+  text-transform: none;
+  -webkit-text-stroke: 0.5px black;
+  -webkit-text-fill-color: white;
+  font: bold 18px Arial Narrow;
+  text-shadow:
+    1px  1px 0 #000,
+   -1px -1px 0 #000,
+    1px -1px 0 #000,
+   -1px  1px 0 #000,
+    1px  1px 0 #000;
+}
+
+/* .sepulcherRaid{
+  background-image: url("../../assets/wow/sepulcher.jpg");
+}
+
+.tolvironArena{
+  background-image: url("../../assets/wow/tolviron-arena.png");
+} */
+
+.encounter {
+  font: bold 25px Arial Narrow;
+  position: absolute;
+  top: 30px;
+  width: 100%;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.zone {
+  font: bold 13px Arial Narrow;
+  position: absolute;
+  top: 55px;
+  width: 100%;
+  text-align: center;
+}
+
+.duration {
+  top: 5px;
+  right: 5px;
+  position: absolute;
+  text-align: right;
+}
+
+.date {
+  bottom: 5px;
+  left: 5px;
+  position: absolute;
+}
+
+.result {
+  bottom: 5px;
+  right: 5px;
+  position: absolute;
+  text-align: right;
+}
+
+.time {
+  top: 5px;
+  left: 5px;
+  position: absolute;
+}
+
+@keyframes blink {
+  0% {
+      opacity: 1;
+  }
+  50% {
+      opacity: 0;
+  }
+  100% {
+      opacity: 1;
+  }
+}
+
+#status-icon{
+  position:fixed;
+  bottom: 100px;
+  left: 40px;
+  height: 75px;
+  width: 75px;
+  animation: blink 1s;
+  animation-iteration-count: infinite;
+}
+
+#eye-icon{
+  position:fixed;
+  bottom: 125px;
+  left: 65px;
+  height: 30px;
+  width: 30px;
+  animation: blink 3s;
+  animation-iteration-count: infinite;
+}
+
+#error-icon{
+  position:fixed;
+  bottom: 125px;
+  left: 55px;
+  height: 50px;
+  width: 50px;
+  animation: blink 3s;
+  animation-iteration-count: infinite;
+}
+
+.noVideos{
+  -webkit-text-stroke: 0.5px black;
+  -webkit-text-fill-color: white;
+  font: bold 18px Arial Narrow;
+  text-shadow:
+    1px  1px 0 #000,
+   -1px -1px 0 #000,
+    1px -1px 0 #000,
+   -1px  1px 0 #000,
+    1px  1px 0 #000;
+  height: 100px;
+  width: 200%;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  background-color: #272e48;
+}
+

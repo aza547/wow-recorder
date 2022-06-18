@@ -32,7 +32,14 @@ const configuration: webpack.Configuration = {
 
   target: ['web', 'electron-renderer'],
 
-  entry: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
+  entry: {
+    mainWindow: [
+      path.join(webpackPaths.srcRendererPath, 'index.tsx')
+    ],
+    recorder: [
+      path.join(webpackPaths.srcRecorderPath, 'index.tsx')
+    ]
+  },
 
   output: {
     path: webpackPaths.distRendererPath,
@@ -113,8 +120,22 @@ const configuration: webpack.Configuration = {
     }),
 
     new HtmlWebpackPlugin({
-      filename: 'index.html',
+      filename: 'mainWindow/index.html',
       template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
+      chunks: ['mainWindow'],
+      minify: {
+        collapseWhitespace: true,
+        removeAttributeQuotes: true,
+        removeComments: true,
+      },
+      isBrowser: false,
+      isDevelopment: process.env.NODE_ENV !== 'production',
+    }),
+
+    new HtmlWebpackPlugin({
+      filename: 'recorder/index.html',
+      template: path.join(webpackPaths.srcRecorderPath, 'index.ejs'),
+      chunks: ['recorder'],
       minify: {
         collapseWhitespace: true,
         removeAttributeQuotes: true,

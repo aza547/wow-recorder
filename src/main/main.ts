@@ -9,6 +9,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
 
+const spawn = require('child_process').spawn;
 const Store = require('electron-store');
 const fs = require('fs');
 
@@ -137,7 +138,7 @@ const createWindow = async () => {
     },
   });
 
-  mainWindow.loadURL(resolveHtmlPath('index.html'));
+  mainWindow.loadURL(resolveHtmlPath('mainWindow/index.html'));
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
@@ -205,7 +206,7 @@ const createSettingsWindow = async () => {
     },
   });
 
-  settingsWindow.loadURL(`file://${__dirname}/../settings/settings.html`);
+  settingsWindow.loadURL(resolveHtmlPath("settings/settings.html"));
 
   settingsWindow.on('ready-to-show', () => {
     if (!settingsWindow) {
@@ -245,11 +246,13 @@ const createPythonWindow = async () => {
     show: true,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      preload: app.isPackaged
+      ? path.join(__dirname, 'preload.js')
+      : path.join(__dirname, '../../.erb/dll/preload.js'),
     }
  });
 
-  pythonWindow.loadURL(`file://${__dirname}/../recorder/recorder.html`);
+  pythonWindow.loadURL(resolveHtmlPath("recorder/index.html"));
 
   pythonWindow.on('closed', () => {
     pythonWindow = null;
