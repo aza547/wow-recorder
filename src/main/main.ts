@@ -192,8 +192,8 @@ const createSettingsWindow = async () => {
 
   settingsWindow = new BrowserWindow({
     show: false,
-    width: 400,
-    height: 400,
+    width: 380,
+    height: 380,
     resizable: false,
     icon: getAssetPath('icons8-settings.svg'),
     frame: false,
@@ -206,7 +206,7 @@ const createSettingsWindow = async () => {
     },
   });
 
-  settingsWindow.loadURL(resolveHtmlPath("settings/settings.html"));
+  settingsWindow.loadURL(resolveHtmlPath("settings/index.html"));
 
   settingsWindow.on('ready-to-show', () => {
     if (!settingsWindow) {

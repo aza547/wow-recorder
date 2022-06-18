@@ -1,6 +1,6 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
-import TitleBar from '../utils/TitleBar';
+import TitleBar from './TitleBar';
 import SettingsButton from './SettingsButton';
 import Status from './Status';
 import './App.css';

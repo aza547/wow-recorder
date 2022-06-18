@@ -38,6 +38,9 @@ const configuration: webpack.Configuration = {
     ],
     recorder: [
       path.join(webpackPaths.srcRecorderPath, 'index.tsx')
+    ],
+    settings: [
+      path.join(webpackPaths.srcSettingsPath, 'index.tsx')
     ]
   },
 
@@ -144,6 +147,20 @@ const configuration: webpack.Configuration = {
       isBrowser: false,
       isDevelopment: process.env.NODE_ENV !== 'production',
     }),
+
+    new HtmlWebpackPlugin({
+      filename: 'settings/index.html',
+      template: path.join(webpackPaths.srcRecorderPath, 'index.ejs'),
+      chunks: ['settings'],
+      minify: {
+        collapseWhitespace: true,
+        removeAttributeQuotes: true,
+        removeComments: true,
+      },
+      isBrowser: false,
+      isDevelopment: process.env.NODE_ENV !== 'production',
+    }),
+
   ],
 };
 
