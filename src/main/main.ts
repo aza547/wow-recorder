@@ -22,6 +22,10 @@ const cfg = new Store();
 /**
  * Arena recorder python executable path. 
  */
+// const executablePath = app.isPackaged
+//  ? path.join(process.resourcesPath, 'assets')
+//  : path.join(__dirname, '../../assets');
+
 var executablePath = "D:\\checkouts\\wow-recorder\\release\\app\\win64recorder\\ArenaRecorder.exe";
 let recorderProcess: any;
 
@@ -37,13 +41,9 @@ const startRecorder = () => {
     '--size',    `\"${cfg.get('max-storage')}\"`];
 
   // Start the executable. 
-  recorderProcess = spawn(
-    executablePath, 
-    parameters, 
-    { shell: true }
-  );
+  recorderProcess = spawn(executablePath, parameters, { shell: true });
 
-  // Setup listeners for executable. 
+  // Setup stdout listeners for executable. 
   recorderProcess.stdout.on('data', function (data: any) {
     const message = data.toString();
     console.log('stdout: ' + message);
@@ -66,6 +66,7 @@ const startRecorder = () => {
     }
   });
 
+  // Any stderr event is treated as a fatal error and will flag failed in the GUI. 
   recorderProcess.stderr.on('data', function (data: any) {
     console.log('stderr: ' + data.toString());
     if (mainWindow) {
@@ -73,6 +74,7 @@ const startRecorder = () => {
     }
   });
 
+  // Log process exit for debugging.
   recorderProcess.on('close', (code: any) => {
     console.log(`recorderProcess exited with code ${code}`);
   });
@@ -232,7 +234,7 @@ const createWindow = async () => {
 
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
-  new AppUpdater();
+  // new AppUpdater();
 };
 
 /**
