@@ -17,7 +17,7 @@ const spawn = require('child_process').spawn;
 /**
  * Create a settings store to handle the config.
  */
- const cfg = new Store();
+const cfg = new Store();
 
 /**
  * Arena recorder python executable path. 
@@ -59,6 +59,8 @@ const startRecorder = () => {
     } else if (message.includes('STOPPED RECORDING')) {
       if (mainWindow !== null) {
         mainWindow.webContents.send('updateStatus', 0);
+
+        // If we finish recording, refresh the GUI to show the new video. 
         mainWindow.webContents.send('refreshState');
       }
     }
