@@ -1,14 +1,14 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import Settings from './Settings';
-import TitleBar from './TitleBar';
-import './TitleBar.css';
+import SettingsTitleBar from './SettingsTitleBar';
+import './SettingsTitleBar.css';
 import './Settings.css';
 
 
 const Application = () => {
   return (
     <div className="App">
-      <TitleBar />
+      <SettingsTitleBar />
       <Settings />
     </div>
   );

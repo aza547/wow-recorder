@@ -139,7 +139,7 @@ const configuration: webpack.Configuration = {
     new ReactRefreshWebpackPlugin(),
 
     new HtmlWebpackPlugin({
-      filename: path.join('mainWindow/index.html'),
+      filename: path.join('mainWindow.index.html'),
       template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
       chunks: ['mainWindow'],
       minify: {
@@ -154,7 +154,7 @@ const configuration: webpack.Configuration = {
     }),
 
     new HtmlWebpackPlugin({
-      filename: path.join('settings/index.html'),
+      filename: path.join('settings.index.html'),
       template: path.join(webpackPaths.srcSettingsPath, 'index.ejs'),
       chunks: ['settings'],
       minify: {

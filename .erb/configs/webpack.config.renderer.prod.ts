@@ -44,7 +44,7 @@ const configuration: webpack.Configuration = {
   output: {
     path: webpackPaths.distRendererPath,
     publicPath: './',
-    filename: 'renderer.js',
+    filename: '[name].renderer.js',
     library: {
       type: 'umd',
     },
@@ -112,7 +112,7 @@ const configuration: webpack.Configuration = {
     }),
 
     new MiniCssExtractPlugin({
-      filename: 'style.css',
+      filename: '[name].style.css',
     }),
 
     new BundleAnalyzerPlugin({
@@ -120,7 +120,7 @@ const configuration: webpack.Configuration = {
     }),
 
     new HtmlWebpackPlugin({
-      filename: 'mainWindow/index.html',
+      filename: 'mainWindow.index.html',
       template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
       chunks: ['mainWindow'],
       minify: {
@@ -133,7 +133,7 @@ const configuration: webpack.Configuration = {
     }),
 
     new HtmlWebpackPlugin({
-      filename: 'settings/index.html',
+      filename: 'settings.index.html',
       template: path.join(webpackPaths.srcSettingsPath, 'index.ejs'),
       chunks: ['settings'],
       minify: {
