@@ -9,14 +9,72 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
 
-const spawn = require('child_process').spawn;
+
 const Store = require('electron-store');
 const fs = require('fs');
+const spawn = require('child_process').spawn;
 
 /**
  * Create a settings store to handle the config.
  */
-const cfg = new Store();
+ const cfg = new Store();
+
+/**
+ * Arena recorder python executable path. 
+ */
+var executablePath = "D:\\checkouts\\wow-recorder\\release\\app\\win64recorder\\ArenaRecorder.exe";
+let recorderProcess: any;
+
+/**
+ * Start the recording process. 
+ */
+const startRecorder = () => {
+
+  // Include quotes as we're using shell: true. 
+  const parameters = [
+    '--storage', `\"${cfg.get('storage-path')}\"`,
+    '--logs',    `\"${cfg.get('log-path')}\"`,
+    '--size',    `\"${cfg.get('max-storage')}\"`];
+
+  // Start the executable. 
+  recorderProcess = spawn(
+    executablePath, 
+    parameters, 
+    { shell: true }
+  );
+
+  // Setup listeners for executable. 
+  recorderProcess.stdout.on('data', function (data: any) {
+    const message = data.toString();
+    console.log('stdout: ' + message);
+
+    if (message.includes('RUNNING')) {
+      if (mainWindow !== null)  {
+        mainWindow.webContents.send('updateStatus', 0);
+      }
+    } else if (message.includes('STARTED RECORDING')) {
+      if (mainWindow !== null) {
+        mainWindow.webContents.send('updateStatus', 1);
+      }
+    } else if (message.includes('STOPPED RECORDING')) {
+      if (mainWindow !== null) {
+        mainWindow.webContents.send('updateStatus', 0);
+        mainWindow.webContents.send('refreshState');
+      }
+    }
+  });
+
+  recorderProcess.stderr.on('data', function (data: any) {
+    console.log('stderr: ' + data.toString());
+    if (mainWindow) {
+      mainWindow.webContents.send('updateStatus', 2);
+    }
+  });
+
+  recorderProcess.on('close', (code: any) => {
+    console.log(`recorderProcess exited with code ${code}`);
+  });
+}
 
 /**
  * TODO Validate the config, else prompt the user for some?.
@@ -79,7 +137,6 @@ export default class AppUpdater {
  */
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
-let pythonWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -145,7 +202,10 @@ const createWindow = async () => {
       throw new Error('"mainWindow" is not defined');
     }
 
-   mainWindow.setAspectRatio(15/9);
+    startRecorder();
+    mainWindow.webContents.send('updateStatus', 2);
+
+    mainWindow.setAspectRatio(15/9);
 
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
@@ -155,9 +215,8 @@ const createWindow = async () => {
   });
 
   mainWindow.on('closed', () => {
-    if (pythonWindow !== null) {
-      console.log("kill python")
-      pythonWindow.webContents.send('kill', []);
+    if (recorderProcess !== null) {
+      recorderProcess.kill('SIGINT')
     }
 
     mainWindow = null;
@@ -231,41 +290,6 @@ const createSettingsWindow = async () => {
 };
 
 /**
- * Creates the settings window, called on clicking the settings cog.
- */
-const createPythonWindow = async () => {
-  if (isDebug) {
-    await installExtensions();
-  }
-
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
-
-  pythonWindow = new BrowserWindow({
-    show: true,
-    webPreferences: {
-      nodeIntegration: true,
-      preload: app.isPackaged
-      ? path.join(__dirname, 'preload.js')
-      : path.join(__dirname, '../../.erb/dll/preload.js'),
-    }
- });
-
-  pythonWindow.loadURL(resolveHtmlPath("recorder/index.html"));
-
-  pythonWindow.on('closed', () => {
-    pythonWindow = null;
-  });
-
-  // Open urls in the user's browser
-  pythonWindow.webContents.setWindowOpenHandler((edata) => {
-    shell.openExternal(edata.url);
-    return { action: 'deny' };
-  });
-};
-
-/**
  * Add event listeners...
  */
 ipcMain.on('ipc-example', async (event, arg) => {
@@ -291,7 +315,6 @@ app
   .whenReady()
   .then(() => {
     createWindow();
-    createPythonWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
@@ -476,33 +499,4 @@ ipcMain.on("SET-LOG-PATH", (event) => {
   }
 
   event.returnValue = videoState;
-});
-
-/**
- * Return the config.
- * See https://electron-react-boilerplate.js.org/docs/electron-store for a better way to do this.
- */
-ipcMain.handle('GET-CFG', async () => {
-  return [
-    cfg.get('storage-path'),
-    cfg.get('log-path'),
-    cfg.get('max-storage')
-  ];
-});
-
-
-/**
- * Update status.
- */
- ipcMain.on('setStatus', (event, status) => {
-
-  if (!mainWindow) {
-    throw new Error('"mainWindow" is not defined');
-  }
-
-  mainWindow.webContents.send('updateStatus', status);
-
-  if (status === 0) {
-    mainWindow.webContents.send('refreshState');
-  }
 });
