@@ -194,7 +194,7 @@ const createSettingsWindow = async () => {
     show: false,
     width: 380,
     height: 380,
-    resizable: false,
+    resizable: true,
     icon: getAssetPath('icons8-settings.svg'),
     frame: false,
     webPreferences: {

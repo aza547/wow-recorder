@@ -4,19 +4,22 @@ import icon from '../../assets/icons8-heart-with-mouse-48.png';
 
 export default function Settings() {
 
+  const [storagePath, setStoragePath] = React.useState();
+  const [logPath, setLogPath] = React.useState();
+  const [maxStorage, setMaxStorage] = React.useState();
+
   /**
    * Save values. 
    */
    const saveSettings = () => {
     console.log("SAVE-SETTINGS event");
-
-    const storagePath = document.getElementById("storage-path").getAttribute("value");
-    const logPath = document.getElementById("log-path").getAttribute("value");
-    const maxStorage = document.getElementById("max-storage").getAttribute("value");
     
     window.electron.ipcRenderer.sendMessage(
-      'SAVE-SETTINGS', 
-      [storagePath, logPath, maxStorage]
+      'SAVE-SETTINGS', [ 
+        document.getElementById("storage-path").getAttribute("value"), 
+        document.getElementById("log-path").getAttribute("value"), 
+        document.getElementById("max-storage").getAttribute("value")
+      ]
     );
   }
 
@@ -28,36 +31,36 @@ export default function Settings() {
   /**
    * Fill the placeholders with current config.
    */
-  function populateSettings() {
+   const populateSettings = () => {
     window.electron.ipcRenderer.sendMessage('GET-STORAGE-PATH', []);
     window.electron.ipcRenderer.sendMessage('GET-LOG-PATH', []);
     window.electron.ipcRenderer.sendMessage('GET-MAX-STORAGE', []);
   }
 
   window.electron.ipcRenderer.on('RESP-STORAGE-PATH', (path) => {
-    document.getElementById("storage-path").setAttribute("placeholder", path);
+    setStoragePath(path);
   });
   
   window.electron.ipcRenderer.on('RESP-LOG-PATH', (path) => {
-    document.getElementById("log-path").setAttribute("placeholder", path);
+    setLogPath(path);
   });
   
   window.electron.ipcRenderer.on('RESP-MAX-STORAGE', (value) => {
-    document.getElementById("max-storage").setAttribute("placeholder", value + "GB");
+   setMaxStorage(value);
   });
   
   /**
    * Dialog window folder selection.
    */
-  function setStoragePath() {
+  const setCfgStoragePath = () => {
     window.electron.ipcRenderer.sendMessage("SET-STORAGE-PATH", "message");
   }
 
   window.electron.ipcRenderer.on('APPLY-STORAGE-PATH', (arg) => {
-    document.getElementById("storage-path").setAttribute("value", arg);
+    document.getElementById("storage-path").setAttribute("value", arg); 
   });
 
-  function setLogPath() {
+  const setCfgLogPath = () => {
     window.electron.ipcRenderer.sendMessage("SET-LOG-PATH", "message");
   }
 
@@ -65,12 +68,11 @@ export default function Settings() {
     document.getElementById("log-path").setAttribute("value", arg);
   });
 
-  /**
-   * Max storage text box event listener.
-   */
-  function setMaxStorage(event){
-    document.getElementById("max-storage").setAttribute("value", event.value);
+  const updateMaxStorageValue = (event) => {
+    document.getElementById("max-storage").setAttribute("value", event.target.value);
   }
+
+  populateSettings();
   
   return (
     <div className="container">
@@ -81,27 +83,27 @@ export default function Settings() {
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label>Storage Path</label>
-                  <input type="text" className="form-control" id="storage-path"/>
+                  <input type="text" className="form-control" id="storage-path" placeholder={storagePath} onClick={setCfgStoragePath}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label>Log Path</label>
-                  <input type="text" className="form-control" id="log-path"/>
+                  <input type="text" className="form-control" id="log-path" placeholder={logPath} onClick={setCfgLogPath}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
-                  <label>Max Storage</label>
-                  <input type="text" id="max-storage" className="form-control"/>
+                  <label>Max Storage (GB)</label>
+                  <input type="text" id="max-storage" className="form-control" placeholder={maxStorage} onChange={(event) => updateMaxStorageValue(event)}/>
                 </div>
               </div>
             </div>
             <div className="row gutters">
               <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                 <div className="text-right">
-                  <button type="button" id="close" name="close" className="btn btn-secondary" onClick={saveSettings}>Close</button>
-                  <button type="button" id="submit" name="submit" className="btn btn-primary" onClick={closeSettings} >Update</button>
+                  <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings}>Close</button>
+                  <button type="button" id="submit" name="submit" className="btn btn-primary" onClick={saveSettings} >Update</button>
                 </div>
               </div>
             </div>
