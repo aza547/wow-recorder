@@ -25,12 +25,15 @@ const cfg = new Store();
 let recorderProcess: any;
 
 const recorderBinaryPath = app.isPackaged
-? path.join(__dirname, '../../win64recorder/recorder.exe')
+? path.join(process.resourcesPath, 'win64recorder/recorder.exe')
 : path.join(__dirname, '../../release/app/win64recorder/recorder.exe');
 
 const ffmpegBinaryPath = app.isPackaged
-? path.join(__dirname, '../../ffmpeg/ffmpeg.exe')
+? path.join(process.resourcesPath, 'ffmpeg/ffmpeg.exe')
 : path.join(__dirname, '../../release/app/ffmpeg/ffmpeg.exe');
+
+console.log("a" + recorderBinaryPath);
+console.log("b" + ffmpegBinaryPath);
 
 /**
  * Start the recording process. 
