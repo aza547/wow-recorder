@@ -22,12 +22,15 @@ const cfg = new Store();
 /**
  * Arena recorder python executable path. 
  */
-// const executablePath = app.isPackaged
-//  ? path.join(process.resourcesPath, 'assets')
-//  : path.join(__dirname, '../../assets');
-
-var executablePath = "D:\\checkouts\\wow-recorder\\release\\app\\win64recorder\\ArenaRecorder.exe";
 let recorderProcess: any;
+
+const recorderBinaryPath = app.isPackaged
+? path.join(__dirname, '../../win64recorder/recorder.exe')
+: path.join(__dirname, '../../release/app/win64recorder/recorder.exe');
+
+const ffmpegBinaryPath = app.isPackaged
+? path.join(__dirname, '../../ffmpeg/ffmpeg.exe')
+: path.join(__dirname, '../../release/app/ffmpeg/ffmpeg.exe');
 
 /**
  * Start the recording process. 
@@ -38,10 +41,12 @@ const startRecorder = () => {
   const parameters = [
     '--storage', `\"${cfg.get('storage-path')}\"`,
     '--logs',    `\"${cfg.get('log-path')}\"`,
-    '--size',    `\"${cfg.get('max-storage')}\"`];
+    '--size',    `\"${cfg.get('max-storage')}\"`,
+    '--ffmpeg',  `\"${ffmpegBinaryPath}\"`
+  ];
 
   // Start the executable. 
-  recorderProcess = spawn(executablePath, parameters, { shell: true });
+  recorderProcess = spawn(recorderBinaryPath, parameters, { shell: true });
 
   // Setup stdout listeners for executable. 
   recorderProcess.stdout.on('data', function (data: any) {
@@ -124,9 +129,8 @@ const zones = {
   }
 
 const encounters = {
-  2537: "The Jailer" // The Jailer Encounter
+  2537: "The Jailer"
 }
-
 
 export default class AppUpdater {
   constructor() {
@@ -187,7 +191,7 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     minWidth: 1024,
-    icon: getAssetPath('icon.png'),
+    icon: getAssetPath('icons8-heart-with-mouse-48.png'),
     frame: false,
     webPreferences: {
       nodeIntegration: true,

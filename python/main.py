@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(description='Warcraft recorder python backend.'
 parser.add_argument('--storage', type=str, required=True, metavar='<PATH>', help='path to directory for storing video and metadata')
 parser.add_argument('--logs', type=str, required=True, metavar='<PATH>', help='path to World of Warcraft logs')
 parser.add_argument('--size',  type=int, required=True, metavar='<NUMBER>', help='max storage videos may consume on disk in GB')
+parser.add_argument('--ffmpeg',  type=str, required=True, metavar='<PATH>', help='path to ffmpeg binary')
 
 args = parser.parse_args()
 print(args, flush=True)
@@ -26,7 +27,8 @@ print(args, flush=True)
 cfg = {
   "video_storage": args.storage,
   "wow_logs": args.logs,
-  "max_storage": args.size
+  "max_storage": args.size,
+  "ffmpeg_path": args.ffmpeg
 }
 
 # Run size monitor on start-up.

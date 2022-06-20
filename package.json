@@ -34,7 +34,7 @@
     "productName": "WarcraftRecorder",
     "appId": "org.WarcraftRecorder",
     "asar": true,
-    "asarUnpack": "**\\*.{node,dll}",
+    "asarUnpack": "**\\**",
     "files": [
       "dist",
       "node_modules",
