@@ -1,6 +1,6 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
-import TitleBar from '../utils/TitleBar';
+import RendererTitleBar from './RendererTitleBar';
 import SettingsButton from './SettingsButton';
 import Status from './Status';
 import './App.css';
@@ -8,7 +8,7 @@ import './App.css';
 const Application = () => {
   return (
     <div className="App">
-      <TitleBar />
+      <RendererTitleBar />
       <Layout />
       <SettingsButton />
       <Status />

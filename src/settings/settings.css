@@ -62,15 +62,18 @@ section {
 }
 
 body {
-  margin: 0;
+  margin: 2;
+  margin-top: 0px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #212529;
+  color: #bcd0f7;
+  background: #1A233A;
   text-align: left;
-  background-color: #fff
+  background-color: #1A233A;
 }
+
 
 [tabindex="-1"]:focus:not(:focus-visible) {
   outline: 0 !important
@@ -2338,15 +2341,17 @@ pre code {
   width: 100%;
   height: calc(1.5em + .75rem + 2px);
   padding: .375rem .75rem;
-  font-size: 1rem;
+  font-size: .825rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #495057;
-  background-color: #fff;
+  color: #bcd0f7;
+  background: #1A233A;
   background-clip: padding-box;
-  border: 1px solid #ced4da;
-  border-radius: .25rem;
-  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out
+  border: 1px solid #596280;
+  border-radius: 2px;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
 }
 
 @media (prefers-reduced-motion:reduce) {
@@ -5256,10 +5261,14 @@ input[type=submit].btn-block {
   flex-direction: column;
   min-width: 0;
   word-wrap: break-word;
-  background-color: #fff;
+  background-color: #272E48;
   background-clip: border-box;
   border: 1px solid rgba(0, 0, 0, .125);
-  border-radius: .25rem
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 2px;
+  border: 0;
+  margin-bottom: 1rem;
 }
 
 .card>hr {

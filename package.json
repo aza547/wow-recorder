@@ -31,16 +31,14 @@
     ]
   },
   "build": {
-    "productName": "ElectronReact",
-    "appId": "org.erb.ElectronReact",
+    "productName": "WarcraftRecorder",
+    "appId": "org.WarcraftRecorder",
     "asar": true,
-    "asarUnpack": "**\\*.{node,dll}",
+    "asarUnpack": "**\\**",
     "files": [
       "dist",
       "node_modules",
-      "package.json",
-      "win64recorder",
-      "ffmpeg"
+      "package.json"
     ],
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
@@ -88,7 +86,9 @@
       "output": "release/build"
     },
     "extraResources": [
-      "./assets/**"
+      "./assets/**",
+      "./win64recorder/**",
+      "./ffmpeg/**"
     ],
     "publish": {
       "provider": "github",

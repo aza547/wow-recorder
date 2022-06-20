@@ -15,8 +15,8 @@ class Recorder:
 
         # Get an appropriate file name and path.
         now = datetime.now()
-        current_time = now.strftime("%H.%M.%S")
         video_path = self.cfg["video_storage"]
+        self.ffmpeg_path = self.cfg["ffmpeg_path"]
         self.file_name = f"{video_path}/{self.bracket}/{self.zoneID}.mp4"
 
     def get_path(self):
@@ -31,8 +31,7 @@ class Recorder:
         """Call ffmpeg to start the recording."""
         self.start_time_seconds = round(time.time())
 
-        cmd = f'D:\\checkouts\wow-recorder\\release\\app\\ffmpeg\\ffmpeg.exe \
-        -y -thread_queue_size 1024                                           \
+        cmd = f'{self.cfg["ffmpeg_path"]} -y -thread_queue_size 1024         \
         -f gdigrab -framerate 50 -video_size 1920x1080 -i desktop            \
         -f dshow -i audio="virtual-audio-capturer"                           \
         -r 50 -preset fast -c:v h264_nvenc -qp 23 -pix_fmt yuv420p           \

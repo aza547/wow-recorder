@@ -32,12 +32,19 @@ const configuration: webpack.Configuration = {
 
   target: ['web', 'electron-renderer'],
 
-  entry: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
+  entry: {
+    mainWindow: [
+      path.join(webpackPaths.srcRendererPath, 'index.tsx')
+    ],
+    settings: [
+      path.join(webpackPaths.srcSettingsPath, 'index.tsx')
+    ]
+  },
 
   output: {
     path: webpackPaths.distRendererPath,
     publicPath: './',
-    filename: 'renderer.js',
+    filename: '[name].renderer.js',
     library: {
       type: 'umd',
     },
@@ -105,7 +112,7 @@ const configuration: webpack.Configuration = {
     }),
 
     new MiniCssExtractPlugin({
-      filename: 'style.css',
+      filename: '[name].style.css',
     }),
 
     new BundleAnalyzerPlugin({
@@ -113,8 +120,9 @@ const configuration: webpack.Configuration = {
     }),
 
     new HtmlWebpackPlugin({
-      filename: 'index.html',
+      filename: 'mainWindow.index.html',
       template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
+      chunks: ['mainWindow'],
       minify: {
         collapseWhitespace: true,
         removeAttributeQuotes: true,
@@ -123,6 +131,20 @@ const configuration: webpack.Configuration = {
       isBrowser: false,
       isDevelopment: process.env.NODE_ENV !== 'production',
     }),
+
+    new HtmlWebpackPlugin({
+      filename: 'settings.index.html',
+      template: path.join(webpackPaths.srcSettingsPath, 'index.ejs'),
+      chunks: ['settings'],
+      minify: {
+        collapseWhitespace: true,
+        removeAttributeQuotes: true,
+        removeComments: true,
+      },
+      isBrowser: false,
+      isDevelopment: process.env.NODE_ENV !== 'production',
+    }),
+
   ],
 };
 
