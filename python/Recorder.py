@@ -33,11 +33,17 @@ class Recorder:
 
         cmd = f'{self.cfg["ffmpeg_path"]} -y -thread_queue_size 1024         \
         -f gdigrab -framerate 50 -video_size 1920x1080 -i desktop            \
-        -f dshow -i audio="virtual-audio-capturer"                           \
-        -r 50 -preset fast -c:v h264_nvenc -qp 23 -pix_fmt yuv420p           \
+        -r 50 -preset fast -qp 23 -pix_fmt yuv420p                           \
         "{self.file_name}"'
 
+        # Mic capture -- requires setup
         #  -f dshow -i audio="Microphone (3- G533 Gaming Headset)"
+
+        # Audio capture -- requires setup
+        #  -f dshow -i audio="virtual-audio-capturer"      
+
+        # Adds hardware encoding -- requires recent nvidia drivers (requires 11.1 or 471.41 not sure which is relevant)        
+        # -c:v h264_nvenc 
 
         with open("D:\wow-recorder-files\diags\python.log", "a") as python_log:
           self.recording_process = subprocess.Popen(

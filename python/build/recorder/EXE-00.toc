@@ -47,7 +47,7 @@
  [],
  False,
  False,
- 1655761967,
+ 1655845531,
  [('run.exe',
    'C:\\Users\\alexa\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python39\\site-packages\\PyInstaller\\bootloader\\Windows-64bit\\run.exe',
    'EXECUTABLE')])

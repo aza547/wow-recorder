@@ -25,6 +25,12 @@ import enigma  from "../../assets/wow/enigma-arena.png";
 import sepulcherOfTheFirstOnes  from "../../assets/wow/sepulcher.jpg";
 
 /**
+ * Import video posters. 
+ */
+import infoPoster  from  "../../assets/poster.png";
+import noVideosPoster from  "../../assets/poster-novideos.png";
+
+/**
  * List of arenas and their backdrop image.
  */
  const zoneBackdrops =  {
@@ -260,7 +266,7 @@ export default function Layout() {
     if (state.videoState[category][state.videoIndex]) {
       return (
         <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster="file:///D:/Checkouts/wow-recorder/assets/poster.png" controls>
+          <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster={infoPoster} controls>
             <source src={ state.videoState[category][state.videoIndex].fullPath } />
           </video>
           <Tabs
@@ -297,7 +303,7 @@ export default function Layout() {
     } else {
       return (
         <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = "None" className="video" poster="file:///D:/Checkouts/wow-recorder/assets/poster-novideos.png"></video>
+          <video key = "None" className="video" poster={ noVideosPoster }></video>
           <div className="noVideos"></div>
         </TabPanel>
       );

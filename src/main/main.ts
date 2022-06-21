@@ -32,9 +32,6 @@ const ffmpegBinaryPath = app.isPackaged
 ? path.join(process.resourcesPath, 'ffmpeg/ffmpeg.exe')
 : path.join(__dirname, '../../ffmpeg/ffmpeg.exe');
 
-console.log("a" + recorderBinaryPath);
-console.log("b" + ffmpegBinaryPath);
-
 /**
  * Start the recording process. 
  */
