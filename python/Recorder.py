@@ -45,7 +45,7 @@ class Recorder:
         # Adds hardware encoding -- requires recent nvidia drivers (requires 11.1 or 471.41 not sure which is relevant)        
         # -c:v h264_nvenc 
 
-        with open(f"{self.video_path}/diags/python.log", "a") as python_log:
+        with open(f"{self.video_path}/diags/ffmpeg.log", "a") as python_log:
           self.recording_process = subprocess.Popen(
               cmd, stdin=subprocess.PIPE, stdout=python_log, stderr=python_log, shell=True
           )
