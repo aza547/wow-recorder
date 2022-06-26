@@ -9,6 +9,18 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
 
+/**
+ * List of supported categories. Order is the order they show up in the GUI.
+ */
+ const categories = [
+  "2v2",
+  "3v3",
+  "Skirmish",
+  "Solo Shuffle",
+  "Mythic+",
+  "Raids",
+  "Battlegrounds"
+];
 
 const Store = require('electron-store');
 const fs = require('fs');
@@ -18,7 +30,7 @@ const spawn = require('child_process').spawn;
  * Create a settings store to handle the config.
  */
 const cfg = new Store();
-let configIsDefined: boolean = false; 
+let configIsDefined: boolean = true; 
 
 /**
  * Arena recorder python executable path. 
@@ -87,6 +99,16 @@ const startRecorder = () => {
 }
 
 /**
+ * Start the recording process. 
+ */
+ const stopRecorder = () => {
+  if (recorderProcess !== null) {
+    recorderProcess.kill('SIGINT');
+    recorderProcess = null;
+  }
+ }
+
+/**
  * TODO Validate the config, else prompt the user for some?.
  */
 
@@ -146,7 +168,6 @@ export default class AppUpdater {
  */
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
-let initialSettingsWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -174,18 +195,45 @@ const installExtensions = async () => {
 };
 
 /**
- * Check we have got config.
+ * Check we have got config. If not, will run initial setup. 
  */
 const initConfig = () => {
-  if ((cfg.get('storage-path') === undefined) && 
-      (cfg.get('log-path')     !== undefined) &&
-      (cfg.get('max-storage')  !== undefined)) {
-    configIsDefined = true;
+  if ((cfg.get('storage-path') === undefined) ||
+      (cfg.get('log-path')     === undefined) ||
+      (cfg.get('max-storage')  === undefined)) {
+    configIsDefined = false;
   }
 }
 
-const runFirstTimeSetup = async () => {
-  createInitialSettingsWindow();
+/**
+ * Check dirs we expect to exist do, create them if not. 
+ */
+const checkDirs = () => {
+  
+  if (cfg.get('storage-path') === undefined) {
+    console.log("Storage path was undefined");
+  } else {
+    // Create dirs for categories if they don't exist.
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      const storagePath = `${cfg.get('storage-path')}/${category}/`;
+
+      if (!fs.existsSync(storagePath)) {
+        fs.mkdirSync(storagePath, { recursive: true });
+      }
+    }
+
+    // Create dirs for diags and metadata if they don't exist.
+    const diagsPath = `${cfg.get('storage-path')}/diags`;
+    const metadataPath = `${cfg.get('storage-path')}/metadata`;
+
+    if (!fs.existsSync(diagsPath)) {
+      fs.mkdirSync(diagsPath, { recursive: true });
+    }
+    if (!fs.existsSync(metadataPath)) {
+      fs.mkdirSync(metadataPath, { recursive: true });
+    } 
+  }
 }
 
 /**
@@ -315,62 +363,6 @@ const createSettingsWindow = async () => {
 };
 
 /**
- * Creates the settings window, called on clicking the settings cog.
- */
- const createInitialSettingsWindow = async () => {
-  if (isDebug) {
-    await installExtensions();
-  }
-
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
-
-  initialSettingsWindow = new BrowserWindow({
-    show: false,
-    width: 380,
-    height: 380,
-    resizable: true,
-    icon: getAssetPath('icons8-settings.svg'),
-    frame: false,
-    webPreferences: {
-      webSecurity: false,
-      //devTools: false,
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
-    },
-  });
-
-  initialSettingsWindow.loadURL(resolveHtmlPath("settings.index.html"));
-
-  initialSettingsWindow.on('ready-to-show', () => {
-    if (!initialSettingsWindow) {
-      throw new Error('"initialSettingsWindow" is not defined');
-    }
-    if (process.env.START_MINIMIZED) {
-      initialSettingsWindow.minimize();
-    } else {
-      initialSettingsWindow.show();
-    }
-  });
-
-  initialSettingsWindow.on('closed', () => {
-    settingsWindow = null;
-  });
-
-  // Open urls in the user's browser
-  initialSettingsWindow.webContents.setWindowOpenHandler((edata) => {
-    shell.openExternal(edata.url);
-    return { action: 'deny' };
-  });
-};
-
-/**
  * Add event listeners...
  */
 ipcMain.on('maximize', () => {
@@ -390,15 +382,10 @@ app
   .whenReady()
   .then(() => {
     initConfig();
-
-    if (configIsDefined) {
-      createWindow();
-    } else {
-      runFirstTimeSetup();
-    }
+    checkDirs();
+    createWindow();
   })
   .catch(console.log);
-
 
 /**
  * Window control listeners. 
@@ -427,9 +414,8 @@ ipcMain.on('CREATE-SETTINGS', () => {
  */
 ipcMain.on('SAVE-SETTINGS', (event, settings) => {
 
-  console.log(settings[0]);
-  console.log(settings[1]);
-  console.log(settings[2]);
+  // Log the passed config. 
+  console.log(settings);
 
   if (settings[0] !== null) {
     cfg.set("storage-path", settings[0]);
@@ -444,6 +430,15 @@ ipcMain.on('SAVE-SETTINGS', (event, settings) => {
   if (settingsWindow !== null) {
     settingsWindow.close();
   }
+
+  if (mainWindow !== null) {
+    mainWindow.webContents.send('refreshState');
+  }
+
+  // Restart recorder process with new config.
+  stopRecorder();
+  checkDirs();
+  startRecorder();
 });
 
 /**
@@ -451,10 +446,6 @@ ipcMain.on('SAVE-SETTINGS', (event, settings) => {
  */
 ipcMain.on('CLOSE-SETTINGS', () => {
   if (settingsWindow !== null)  settingsWindow.close();
-});
-
-ipcMain.on('CLOSE--I-SETTINGS', () => {
-  if (initialSettingsWindow !== null) {initialSettingsWindow.close(); createWindow();};
 });
 
 ipcMain.on('GET-STORAGE-PATH', (event) => {
@@ -473,47 +464,48 @@ ipcMain.on('GET-MAX-STORAGE', (event) => {
  * Dialog window folder selection.
  */
 ipcMain.on("SET-STORAGE-PATH", (event) => {
+
   if (settingsWindow !== null) {
-  dialog.showOpenDialog(settingsWindow, {
-      properties: ['openDirectory']
-  }).then(result => {
-    console.log(result.canceled)
-    if (result.canceled) {
-      console.log("User cancelled dialog");
-    } else {
-      event.reply('APPLY-STORAGE-PATH', result.filePaths[0]);
-    }
-  }).catch(err => {
-    console.log(err);
-  })
-  }
+    dialog.showOpenDialog(settingsWindow, {
+        properties: ['openDirectory']
+    }).then(result => {
+      console.log(result.canceled)
+      if (result.canceled) {
+        console.log("User cancelled dialog");
+      } else {
+        event.reply('APPLY-STORAGE-PATH', result.filePaths[0]);
+      }
+    }).catch(err => {
+      console.log(err);
+    })
+  } 
 });
 
 ipcMain.on("SET-LOG-PATH", (event) => {
+
   if (settingsWindow !== null) {
-  dialog.showOpenDialog(settingsWindow, {
-      properties: ['openDirectory']
-  }).then(result => {
-    console.log(result.canceled)
-    if (result.canceled) {
-      console.log("User cancelled dialog");
-    } else {
-      event.reply('APPLY-LOG-PATH', result.filePaths[0]);
-    }
-  }).catch(err => {
-    console.log(err);
-  })
+    dialog.showOpenDialog(settingsWindow, {
+        properties: ['openDirectory']
+    }).then(result => {
+      console.log(result.canceled)
+      if (result.canceled) {
+        console.log("User cancelled dialog");
+      } else {
+        event.reply('APPLY-LOG-PATH', result.filePaths[0]);
+      }
+    }).catch(err => {
+      console.log(err);
+    })
   }
 });
 
 /**
  * Get the list of video files and their state.
  */
- ipcMain.on('getVideoState', (event, categories: string[]) => {
+ ipcMain.on('getVideoState', (event) => {
 
   let videoState = {};
   const storagePath = cfg.get('storage-path');
-
 
   for (let i = 0; i < categories.length; i++) {
     const category = categories[i];

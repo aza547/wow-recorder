@@ -23,7 +23,7 @@ class Watcher:
         while self.keepwatching:
             all_logs = glob.glob(f"{self.cfg['wow_logs']}/WoWCombatLog*")
 
-            if self.current_log_path != max(all_logs, key=os.path.getmtime):
+            if all_logs and (self.current_log_path != max(all_logs, key=os.path.getmtime)):
 
                 # Stop following a noncurrent current_combat_log.
                 self.close_combatlog()
@@ -39,7 +39,7 @@ class Watcher:
                 combatlogThread.daemon = True
                 combatlogThread.start()
 
-            if self.current_combat_log.is_active():
+            if all_logs and self.current_combat_log.is_active():
 
                 # Create recording object.
                 recorder = Recorder(

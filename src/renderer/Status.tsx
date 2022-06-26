@@ -37,7 +37,7 @@ export default function Status() {
       )} else if (status === 2) {
         return(
           <div id="status">
-            <img id="error-icon" title="Python screen recorder hit an error." alt="icon" src={errorIcon}/>
+            <img id="error-icon" title="Screen recorder hit an error, try checking config." alt="icon" src={errorIcon}/>
           </div>
       )}
     }
