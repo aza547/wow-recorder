@@ -27,3 +27,8 @@ npm-debug.log.*
 *.css.d.ts
 *.sass.d.ts
 *.scss.d.ts
+
+# Python recorder build
+python/dist
+python/build
+python/__pycache__
