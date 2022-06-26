@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed up README and CHANGELOG. 
+- Remove some hardcoded paths.
 
 ## [1.0.0] - 2014-08-09
 ### Added
