@@ -507,71 +507,77 @@ ipcMain.on("SET-LOG-PATH", (event) => {
   let videoState = {};
   const storagePath = cfg.get('storage-path');
 
-  for (let i = 0; i < categories.length; i++) {
-    const category = categories[i];
-    videoState[category] = [];
+  if (storagePath === undefined) {
+    for (let i = 0; i < categories.length; i++) {
+      videoState[categories[i]] = [];
+    }
+  } else {
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      videoState[category] = [];
 
-    const path = `${storagePath}/${category}/`;
-    const videos = fs.readdirSync(path).sort(function(a, b) {
-      // reverse chronological sort
-      // https://stackoverflow.com/questions/10559685/using-node-js-how-do-you-get-a-list-of-files-in-chronological-order
-      return fs.statSync(path + b).mtime.getTime() - fs.statSync(path + a).mtime.getTime();
-    });
-
-
-
-    for (let j = 0; j < videos.length; j++) {
-      const fullPath = path + "/" + videos[j];
-      const name = videos[j];
-
-      // Split the zoneID and duration out of the video file.
-      const zoneID = name.split("-")[0];
-      const duration = name.split("-")[1];
-
-      // Get date object when file was last modified.
-      const date = new Date(fs.statSync(path + videos[j]).mtime)
-
-      // Get a date string in the form "7 Sep".
-      const day = date.getDate();
-      const month = monthNames[date.getMonth()].slice(0, 3);
-      const dateStr = `${day} ${month}`;
-
-      // Get a clock time in the form "HH:MM".
-      const hours = date.getHours().toLocaleString('en-US', { minimumIntegerDigits: 2});
-      const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
-      const timeStr = `${hours}:${mins}`;
-
-      // If in a raid, zoneID is actually the encounter ID.
-      let zone: string;
-
-      if (category === "Raids") {
-        zone = "Sepulcher of the First Ones"; // Sepulcher, to add support for future raids as released.
-      } else {
-        zone = zones[zoneID]
-      }
-
-      // If in a raid, zoneID is actually the encounter ID.
-      // If in PVP, just use the category e.g. "2v2" as the encounter name.
-      let encounter: string;
-
-      if (category === "Raids") {
-        encounter = encounters[zoneID];
-      } else {
-        encounter = category;
-      }
-
-      videoState[categories[i]].push({
-        name: name,
-        index: j,
-        fullPath: fullPath,
-        encounter: encounter,
-        zone: zone,
-        zoneID: zoneID,
-        duration: duration,
-        result: 0, // 0 for fail, 1 for success
-        date: dateStr,
-        time: timeStr
+      const path = `${storagePath}/${category}/`;
+      const videos = fs.readdirSync(path).sort(function(a, b) {
+        // reverse chronological sort
+        // https://stackoverflow.com/questions/10559685/using-node-js-how-do-you-get-a-list-of-files-in-chronological-order
+        return fs.statSync(path + b).mtime.getTime() - fs.statSync(path + a).mtime.getTime();
       });
+
+
+
+      for (let j = 0; j < videos.length; j++) {
+        const fullPath = path + "/" + videos[j];
+        const name = videos[j];
+
+        // Split the zoneID and duration out of the video file.
+        const zoneID = name.split("-")[0];
+        const duration = name.split("-")[1];
+
+        // Get date object when file was last modified.
+        const date = new Date(fs.statSync(path + videos[j]).mtime)
+
+        // Get a date string in the form "7 Sep".
+        const day = date.getDate();
+        const month = monthNames[date.getMonth()].slice(0, 3);
+        const dateStr = `${day} ${month}`;
+
+        // Get a clock time in the form "HH:MM".
+        const hours = date.getHours().toLocaleString('en-US', { minimumIntegerDigits: 2});
+        const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
+        const timeStr = `${hours}:${mins}`;
+
+        // If in a raid, zoneID is actually the encounter ID.
+        let zone: string;
+
+        if (category === "Raids") {
+          zone = "Sepulcher of the First Ones"; // Sepulcher, to add support for future raids as released.
+        } else {
+          zone = zones[zoneID]
+        }
+
+        // If in a raid, zoneID is actually the encounter ID.
+        // If in PVP, just use the category e.g. "2v2" as the encounter name.
+        let encounter: string;
+
+        if (category === "Raids") {
+          encounter = encounters[zoneID];
+        } else {
+          encounter = category;
+        }
+
+        videoState[categories[i]].push({
+          name: name,
+          index: j,
+          fullPath: fullPath,
+          encounter: encounter,
+          zone: zone,
+          zoneID: zoneID,
+          duration: duration,
+          result: 0, // 0 for fail, 1 for success
+          date: dateStr,
+          time: timeStr
+        });
+      }
     }
   }
 
