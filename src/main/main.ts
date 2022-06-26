@@ -50,11 +50,16 @@ const ffmpegBinaryPath = app.isPackaged
  */
 const startRecorder = () => {
 
+  // Get config.
+  const storagePath = cfg.get('storage-path');
+  const logPath = cfg.get('log-path');
+  const maxStorage = cfg.get('max-storage');
+
   // Include quotes as we're using shell: true. 
   const parameters = [
-    '--storage', `\"${cfg.get('storage-path')}\"`,
-    '--logs',    `\"${cfg.get('log-path')}\"`,
-    '--size',    `\"${cfg.get('max-storage')}\"`,
+    '--storage', `\"${storagePath}\"`,
+    '--logs',    `\"${logPath}\"`,
+    '--size',    `\"${maxStorage}\"`,
     '--ffmpeg',  `\"${ffmpegBinaryPath}\"`
   ];
 
@@ -64,7 +69,7 @@ const startRecorder = () => {
   // Setup stdout listeners for executable. 
   recorderProcess.stdout.on('data', function (data: any) {
     const message = 'stdout: ' + data.toString();
-    const outputLog = `${cfg.get('storage-path')}/diags/output.log`;
+    const outputLog = `${storagePath}/diags/output.log`;
 
     fs.appendFile(outputLog, message, err => {
       if (err) {
@@ -93,7 +98,7 @@ const startRecorder = () => {
   // Any stderr event is treated as a fatal error and will flag failed in the GUI. 
   recorderProcess.stderr.on('data', function (data: any) {
     const errorMessage = 'stderr: ' + data.toString();
-    const outputLog = `${cfg.get('storage-path')}/diags/output.log`;
+    const outputLog = `${storagePath}/diags/output.log`;
 
     fs.appendFile(outputLog, errorMessage, err => {
       if (err) {

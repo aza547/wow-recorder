@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+
+## [1.0.1] - 2014-08-09
+### Fixed
 - Fixed up README and CHANGELOG. 
 - Remove some hardcoded paths.
 - Fix bug that recorder doesn't start on a dir without logs in it.
