@@ -63,8 +63,14 @@ const startRecorder = () => {
 
   // Setup stdout listeners for executable. 
   recorderProcess.stdout.on('data', function (data: any) {
-    const message = data.toString();
-    console.log('stdout: ' + message);
+    const message = 'stdout: ' + data.toString();
+    const outputLog = `${cfg.get('storage-path')}/diags/output.log`;
+
+    fs.appendFile(outputLog, message, err => {
+      if (err) {
+        console.error(err);
+      }
+    });    
 
     if (message.includes('RUNNING')) {
       if (mainWindow !== null)  {
@@ -86,7 +92,15 @@ const startRecorder = () => {
 
   // Any stderr event is treated as a fatal error and will flag failed in the GUI. 
   recorderProcess.stderr.on('data', function (data: any) {
-    console.log('stderr: ' + data.toString());
+    const errorMessage = 'stderr: ' + data.toString();
+    const outputLog = `${cfg.get('storage-path')}/diags/output.log`;
+
+    fs.appendFile(outputLog, errorMessage, err => {
+      if (err) {
+        console.error(err);
+      }
+    });  
+
     if (mainWindow) {
       mainWindow.webContents.send('updateStatus', 2);
     }

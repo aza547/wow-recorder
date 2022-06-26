@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix bug that recorder doesn't start on a dir without logs in it.
 - Create required directories in storage path if they don't exist. 
 - Stop/start recorder process on config change.
+- Add some extremely basic console logs for python recorder controller. 
 
 ## [1.0.0] - 2014-08-09
 ### Added
