@@ -15,7 +15,7 @@ class Recorder:
 
         # Get an appropriate file name and path.
         now = datetime.now()
-        video_path = self.cfg["video_storage"]
+        self.video_path = self.cfg["video_storage"]
         self.ffmpeg_path = self.cfg["ffmpeg_path"]
         self.file_name = f"{video_path}/{self.bracket}/{self.zoneID}.mp4"
 
@@ -45,7 +45,7 @@ class Recorder:
         # Adds hardware encoding -- requires recent nvidia drivers (requires 11.1 or 471.41 not sure which is relevant)        
         # -c:v h264_nvenc 
 
-        with open("D:\wow-recorder-files\diags\python.log", "a") as python_log:
+        with open(f"{self.video_path}/diags/python.log", "a") as python_log:
           self.recording_process = subprocess.Popen(
               cmd, stdin=subprocess.PIPE, stdout=python_log, stderr=python_log, shell=True
           )

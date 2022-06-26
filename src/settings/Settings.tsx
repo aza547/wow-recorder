@@ -25,7 +25,7 @@ export default function Settings() {
 
   const closeSettings = () => {
     console.log("QUIT event");
-    window.electron.ipcRenderer.sendMessage('CLOSE-SETTINGS', []);
+    window.electron.ipcRenderer.sendMessage('CLOSE-I-SETTINGS', []);
   }
 
   /**

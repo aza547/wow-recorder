@@ -18,6 +18,7 @@ const spawn = require('child_process').spawn;
  * Create a settings store to handle the config.
  */
 const cfg = new Store();
+let configIsDefined: boolean = false; 
 
 /**
  * Arena recorder python executable path. 
@@ -145,6 +146,7 @@ export default class AppUpdater {
  */
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
+let initialSettingsWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -172,7 +174,22 @@ const installExtensions = async () => {
 };
 
 /**
- * Creates the main window I think?
+ * Check we have got config.
+ */
+const initConfig = () => {
+  if ((cfg.get('storage-path') === undefined) && 
+      (cfg.get('log-path')     !== undefined) &&
+      (cfg.get('max-storage')  !== undefined)) {
+    configIsDefined = true;
+  }
+}
+
+const runFirstTimeSetup = async () => {
+  createInitialSettingsWindow();
+}
+
+/**
+ * Creates the main window.
  */
 const createWindow = async () => {
   if (isDebug) {
@@ -298,14 +315,64 @@ const createSettingsWindow = async () => {
 };
 
 /**
+ * Creates the settings window, called on clicking the settings cog.
+ */
+ const createInitialSettingsWindow = async () => {
+  if (isDebug) {
+    await installExtensions();
+  }
+
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
+
+  const getAssetPath = (...paths: string[]): string => {
+    return path.join(RESOURCES_PATH, ...paths);
+  };
+
+  initialSettingsWindow = new BrowserWindow({
+    show: false,
+    width: 380,
+    height: 380,
+    resizable: true,
+    icon: getAssetPath('icons8-settings.svg'),
+    frame: false,
+    webPreferences: {
+      webSecurity: false,
+      //devTools: false,
+      preload: app.isPackaged
+        ? path.join(__dirname, 'preload.js')
+        : path.join(__dirname, '../../.erb/dll/preload.js'),
+    },
+  });
+
+  initialSettingsWindow.loadURL(resolveHtmlPath("settings.index.html"));
+
+  initialSettingsWindow.on('ready-to-show', () => {
+    if (!initialSettingsWindow) {
+      throw new Error('"initialSettingsWindow" is not defined');
+    }
+    if (process.env.START_MINIMIZED) {
+      initialSettingsWindow.minimize();
+    } else {
+      initialSettingsWindow.show();
+    }
+  });
+
+  initialSettingsWindow.on('closed', () => {
+    settingsWindow = null;
+  });
+
+  // Open urls in the user's browser
+  initialSettingsWindow.webContents.setWindowOpenHandler((edata) => {
+    shell.openExternal(edata.url);
+    return { action: 'deny' };
+  });
+};
+
+/**
  * Add event listeners...
  */
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
-
 ipcMain.on('maximize', () => {
   //mainWindow is the reference to your window
   if (mainWindow !== null) mainWindow.maximize();
@@ -322,15 +389,20 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    createWindow();
-    app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
-    });
+    initConfig();
+
+    if (configIsDefined) {
+      createWindow();
+    } else {
+      runFirstTimeSetup();
+    }
   })
   .catch(console.log);
 
+
+/**
+ * Window control listeners. 
+ */
 ipcMain.on('HIDE', () => {
     if (mainWindow !== null) mainWindow.minimize();
   })
@@ -379,6 +451,10 @@ ipcMain.on('SAVE-SETTINGS', (event, settings) => {
  */
 ipcMain.on('CLOSE-SETTINGS', () => {
   if (settingsWindow !== null)  settingsWindow.close();
+});
+
+ipcMain.on('CLOSE--I-SETTINGS', () => {
+  if (initialSettingsWindow !== null) {initialSettingsWindow.close(); createWindow();};
 });
 
 ipcMain.on('GET-STORAGE-PATH', (event) => {
@@ -436,13 +512,14 @@ ipcMain.on("SET-LOG-PATH", (event) => {
  ipcMain.on('getVideoState', (event, categories: string[]) => {
 
   let videoState = {};
+  const storagePath = cfg.get('storage-path');
 
 
   for (let i = 0; i < categories.length; i++) {
     const category = categories[i];
     videoState[category] = [];
 
-    const path = `D:/wow-recorder-files/${category}/`;
+    const path = `${storagePath}/${category}/`;
     const videos = fs.readdirSync(path).sort(function(a, b) {
       // reverse chronological sort
       // https://stackoverflow.com/questions/10559685/using-node-js-how-do-you-get-a-list-of-files-in-chronological-order
