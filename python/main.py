@@ -19,6 +19,7 @@ parser.add_argument('--storage', type=str, required=True, metavar='<PATH>', help
 parser.add_argument('--logs', type=str, required=True, metavar='<PATH>', help='path to World of Warcraft logs')
 parser.add_argument('--size',  type=int, required=True, metavar='<NUMBER>', help='max storage videos may consume on disk in GB')
 parser.add_argument('--ffmpeg',  type=str, required=True, metavar='<PATH>', help='path to ffmpeg binary')
+parser.add_argument('--hwe', type=str, required=False, metavar='<NVIDIA/AMD>', help='GPU brand for hardware encoding')
 
 args = parser.parse_args()
 print(args, flush=True)
@@ -28,7 +29,8 @@ cfg = {
   "video_storage": args.storage,
   "wow_logs": args.logs,
   "max_storage": args.size,
-  "ffmpeg_path": args.ffmpeg
+  "ffmpeg_path": args.ffmpeg,
+  "hwe": args.hwe
 }
 
 # Run size monitor on start-up.

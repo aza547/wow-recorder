@@ -250,6 +250,7 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.3.0",
+    "systeminformation": "^5.11.22",
     "tsc": "^2.0.4"
   },
   "devEngines": {

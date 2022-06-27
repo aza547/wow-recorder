@@ -25,12 +25,12 @@ import { resolveHtmlPath } from './util';
 const Store = require('electron-store');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
+const systemInformation = require('systeminformation');
 
 /**
  * Create a settings store to handle the config.
  */
 const cfg = new Store();
-let configIsDefined: boolean = true; 
 
 /**
  * Arena recorder python executable path. 
@@ -46,6 +46,22 @@ const ffmpegBinaryPath = app.isPackaged
 : path.join(__dirname, '../../ffmpeg/ffmpeg.exe');
 
 /**
+ * Get the GPU type. Restart recorder to pick it up. 
+ */
+ let GPUVendor: string;
+
+ systemInformation.graphics()
+   .then((data) => {
+     if (data.controllers[0].vendor) {
+       GPUVendor = data.controllers[0].vendor;
+       restartRecorder();
+     }
+   })
+   .catch((error) => {
+     console.error(error);
+   });
+
+/**
  * Start the recording process. 
  */
 const startRecorder = () => {
@@ -55,13 +71,21 @@ const startRecorder = () => {
   const logPath = cfg.get('log-path');
   const maxStorage = cfg.get('max-storage');
 
+
   // Include quotes as we're using shell: true. 
-  const parameters = [
+  let parameters = [
     '--storage', `\"${storagePath}\"`,
     '--logs',    `\"${logPath}\"`,
     '--size',    `\"${maxStorage}\"`,
     '--ffmpeg',  `\"${ffmpegBinaryPath}\"`
   ];
+
+  // If we got an NVIDIA or AMD card, use hardware encoding. 
+  if ((GPUVendor) && (GPUVendor.toUpperCase().includes("NVIDIA"))) {
+    parameters.push("--hwe", "NVIDIA");
+  } else if ((GPUVendor) && (GPUVendor.toUpperCase().includes("AMD"))) {
+    parameters.push("--hwe", "AMD");
+  }
 
   // Start the executable. 
   recorderProcess = spawn(recorderBinaryPath, parameters, { shell: true });
@@ -121,10 +145,18 @@ const startRecorder = () => {
  * Start the recording process. 
  */
  const stopRecorder = () => {
-  if (recorderProcess !== null) {
+  if (recorderProcess) {
     recorderProcess.kill('SIGINT');
     recorderProcess = null;
   }
+ }
+
+/**
+ * Restart the recording process. 
+ */
+ const restartRecorder = () => {
+  stopRecorder();
+  startRecorder();
  }
 
 /**
@@ -212,17 +244,6 @@ const installExtensions = async () => {
     )
     .catch(console.log);
 };
-
-/**
- * Check we have got config. If not, will run initial setup. 
- */
-const initConfig = () => {
-  if ((cfg.get('storage-path') === undefined) ||
-      (cfg.get('log-path')     === undefined) ||
-      (cfg.get('max-storage')  === undefined)) {
-    configIsDefined = false;
-  }
-}
 
 /**
  * Check dirs we expect to exist do, create them if not. 
@@ -400,7 +421,6 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    initConfig();
     checkDirs();
     createWindow();
   })

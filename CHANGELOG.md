@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Rename python.log to ffmpeg.log.
+- Use hardware encoding on NVIDIA or AMD GPUs.
 
 ### Fixed
 
