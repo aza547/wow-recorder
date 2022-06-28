@@ -7,13 +7,13 @@ Nothing magic happens here, the application watches the combat log file for even
 ![](https://i.imgur.com/PwuGFQ8.png)
 
 #  How to Use
-1. Download and run the installer from the releases section.
+1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.1.0.2.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
 1. Launch the application and fill out the settings page. 
 1. Enable combat logging in-game, I recommend the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon to automate this. 
 
 # Bug Reports & Suggestions
 
-Please create an issue, I will get to it eventually. Please bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
+Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
 
 #  Size Monitor
 
