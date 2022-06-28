@@ -9,15 +9,15 @@ Nothing magic happens here, the application watches the combat log file for even
 #  How to Use
 1. Download and run the installer from the releases section.
 1. Launch the application and fill out the settings page. 
-1. Enable combat logging in-game, I recommend the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon for this. 
-
-#  Release Status
-
-The initial `1.0.0` release is lacking in several areas. If something doesn't work as you expect, please check the open issues. 
+1. Enable combat logging in-game, I recommend the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon to automate this. 
 
 # Bug Reports & Suggestions
 
 Please create an issue, I will get to it eventually. Please bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
+
+#  Size Monitor
+
+The configuration has a 'Max Storage' option. The app will never exceed this storage usage on disk. This feature is inspired by car dashcam behaviour: it achieves this by deleting the oldest video when it reaches the limit, so be aware that if you want to keep a video long term you should copy it off to another location before it gets aged out. I suggest 100GB is a reasonable minimum for this setting. 
 
 # Motivation
 
