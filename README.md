@@ -17,7 +17,9 @@ Please create an issue, I will get to it eventually. Please bear in mind maintai
 
 #  Size Monitor
 
-The configuration has a 'Max Storage' option. The app will never exceed this storage usage on disk. This feature is inspired by car dashcam behaviour: it achieves this by deleting the oldest video when it reaches the limit, so be aware that if you want to keep a video long term you should copy it off to another location before it gets aged out. I suggest 100GB is a reasonable minimum for this setting. 
+The configuration has a 'max storage' option. The app will never exceed this storage usage on disk. I suggest 100GB is a reasonable size for this setting. 
+
+This feature is inspired by car dash cam behaviour: it deletes the oldest video when the size limit is hit. Be aware that if you want to keep a video long term you should copy it off to another location before it gets aged out. 
 
 # Motivation
 
