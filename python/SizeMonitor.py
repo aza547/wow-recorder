@@ -1,5 +1,4 @@
 import os
-import glob
 from time import time
 from pathlib import Path
 
@@ -22,7 +21,6 @@ class SizeMonitor:
 
             # Don't just delete one file, that might not make enough room.
             while self.check():
-                print("Deleting oldest video", flush=True)
                 self.delete_oldest_video()
 
     def check(self):
@@ -44,9 +42,12 @@ class SizeMonitor:
 
     def delete_oldest_video(self):
         """Find the oldest video in {self.path} and remove it and the corresponding log snippet."""
+        videos=list()
 
         # Glob for the oldest video.
-        videos = glob.glob(f"{self.path}/*.mp4")
+        for video in Path(f"{self.path}").rglob("*.mp4"):
+            videos.append(video)
+
         oldest_video = min(videos, key=os.path.getmtime)
 
         # Stitch together the path to the CombatLog for the corresponding video.
