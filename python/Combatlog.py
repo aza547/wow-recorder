@@ -20,6 +20,18 @@ ARENA_ZONES = {
   2547: "Enigma Crucible"
 }
 
+DUNGEON_ZONES = {
+  2291: "De Other Side",
+  2287: "Halls of Atonement",
+  2290: "Mists of Tirna Scithe",
+  2289: "Plaguefall",
+  2284: "Sanguine Depths",
+  2285: "Spires of Ascension",
+  2286: "The Necrotic Wake",
+  2293: "Theater of Pain",
+  2441: "Tazavesh the Veiled Market",
+}
+
 RAID_ZONES = {
   2537: "Sepulcher of the First Ones"
 }
@@ -35,7 +47,7 @@ class Combatlog:
 
         self.zone = "UnknownZone"
         self.zoneID = 0
-        self.bracket = None
+        self.category = None
 
         self.started = False
         self.ended = False
@@ -94,14 +106,22 @@ class Combatlog:
 
     def handle_line(self, line):
         """Parse a line of the combat log looking for anything interesting."""
-        if "ZONE_CHANGE" in line:
-
-            ## Get the zone ID from the ZONE_CHANGE event.
+        if ("ZONE_CHANGE" in line):
             zone = int(line.split(",")[1])
 
-            # Get the zone.
-            if zone not in ARENA_ZONES:
+            isDungeon = (self.category == "Mythic+")
+            isRaid = (self.category == "Raids")
+            isArena = (self.category == "2v2") or (self.category == "3v3") or (self.category == "Skirmish") or (self.category == "Solo Shuffle")
+
+            # End if player leaves the zone. 
+            if (isDungeon) and (zone not in DUNGEON_ZONES):
+                print(f"Detected ZONE_CHANGE, left dungeon" , flush=True)
+                self.ended = True
+            elif (isArena) and (zone not in ARENA_ZONES):
                 print(f"Detected ZONE_CHANGE, left arena" , flush=True)
+                self.ended = True
+            elif (isRaid) and (zone not in RAID_ZONES):
+                print(f"Detected ZONE_CHANGE, left raid" , flush=True)
                 self.ended = True
 
         if "ARENA_MATCH_START" in line:
@@ -123,16 +143,16 @@ class Combatlog:
 
             if "3v3" in line:
                 print(f"It's 3v3 in {self.zone}", flush=True)
-                self.bracket = "3v3"
+                self.category = "3v3"
             elif "2v2" in line:
                 print(f"It's 2v2 in {self.zone}", flush=True)
-                self.bracket = "2v2"
+                self.category = "2v2"
             elif "Skirmish" in line:
                 print(f"It's a skirmish in {self.zone}", flush=True)
-                self.bracket = "Skirmish"
+                self.category = "Skirmish"
             elif "Solo Shuffle" in line:
                 print(f"It's a Solo Shuffle in {self.zone}", flush=True)
-                self.bracket = "Solo Shuffle"
+                self.category = "Solo Shuffle"
 
         elif "ENCOUNTER_START" in line:
             print(f"Detected ENCOUNTER_START event", flush=True)
@@ -144,7 +164,16 @@ class Combatlog:
             zone = int(line.split(",")[1])
             self.zoneID = zone
             print(f"{encounter} encounter started in {self.zoneID}!", flush=True)
-            self.bracket = "Raids"
+            self.category = "Raids"
+
+        elif "CHALLENGE_MODE_START" in line:
+            print(f"Detected CHALLENGE_MODE_START event", flush=True)
+            self.started = True
+            self.ended = False  
+            self.zoneID = int(line.split(",")[2])
+            self.zone = str(line.split(",")[1]).replace('"', '') # comes in quotes so strip those
+            self.category = "Mythic+"
+            print(f"Mythic+ started in {self.zone}!", flush=True)
 
         # Deliberatly before ARENA_MATCH_END handling to log that line for completeness.
         # Just push to list. We flush this to a file after the game.
@@ -159,6 +188,10 @@ class Combatlog:
         ## easy to get win loss? 2nd to last arg is 1 for success or 0 for fail
         #  -- ENCOUNTER_END,2537,"The Jailer",16,20,0,112540
             print(f"Detected ENCOUNTER_END event", flush=True)
+            self.ended = True
+            self.flush_copied_log()
+        elif ("CHALLENGE_MODE_END" in line):
+            print(f"Detected CHALLENGE_MODE_END event", flush=True)
             self.ended = True
             self.flush_copied_log()
 

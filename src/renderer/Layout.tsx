@@ -6,23 +6,40 @@ import Box from '@mui/material/Box';
 import { makeStyles } from '@mui/styles';
 
 /**
- * Import all the zone backdrops.
+ * Import the arena zone backdrops.
  */
-import bladesEdge from  "../../assets/wow/bladesedge-arena.png";
-import dalaran from "../../assets/wow/dalaran-arena.jpg";
-import nagrand from  "../../assets/wow/nagrand-arena.jpg";
-import ruins from  "../../assets/wow/ruins-arena.png";
-import robodrome from  "../../assets/wow/robodrome-arena.jpg";
-import tigersPeak from "../../assets/wow/tigerspeak-arena.png";
-import tolviron from  "../../assets/wow/tolviron-arena.png";
-import blackrook  from "../../assets/wow/blackrook-arena.jpg";
-import empyrean from  "../../assets/wow/empyrean-arena.jpg";
-import ashamanesFall  from "../../assets/wow/ashamanesfall-arena.jpg";
-import mugambala from  "../../assets/wow/mugambala.jpg";
-import hookpoint  from "../../assets/wow/hookpoint-arena.jpg";
-import maldraxxus from  "../../assets/wow/maldraxxus-arena.jpg";
-import enigma  from "../../assets/wow/enigma-arena.png";
-import sepulcherOfTheFirstOnes  from "../../assets/wow/sepulcher.jpg";
+import arenaBED from "../../assets/arena/BED.png";
+import arenaDAL from "../../assets/arena/DAL.jpg";
+import arenaNAG from "../../assets/arena/NAG.jpg";
+import arenaROL from "../../assets/arena/ROL.png";
+import arenaROB from "../../assets/arena/ROB.jpg";
+import arenaTP  from "../../assets/arena/TP.png";
+import arenaTOL from "../../assets/arena/TOL.png";
+import arenaBRK from "../../assets/arena/BRK.jpg";
+import arenaED  from "../../assets/arena/ED.jpg";
+import arenaASH from "../../assets/arena/ASH.jpg";
+import arenaMUG from "../../assets/arena/MUG.jpg";
+import arenaHP  from "../../assets/arena/HP.jpg";
+import arenaMAL from "../../assets/arena/MAL.jpg";
+import arenaENI from "../../assets/arena/ENI.png";
+
+/**
+ * Import the dungeon zone backdrops.
+ */
+import dungeonTOP from "../../assets/dungeon/TOP.jpg";
+import dungeonTVM from "../../assets/dungeon/TVM.jpg";
+import dungeonHOA from "../../assets/dungeon/HOA.jpg";
+import dungeonNW  from "../../assets/dungeon/NW.jpg";
+import dungeonSOA from "../../assets/dungeon/SOA.jpg";
+import dungeonPF  from "../../assets/dungeon/PF.jpg";
+import dungeonSD  from "../../assets/dungeon/SD.jpg";
+import dungeonDOS from "../../assets/dungeon/DOS.jpg";
+import dungeonMTS from "../../assets/dungeon/MTS.jpg";
+
+/**
+ * Import the raid zone backdrops.
+ */
+ import raidSOFO  from "../../assets/raid/SOFO.jpg";
 
 /**
  * Import video posters. 
@@ -31,24 +48,38 @@ import infoPoster  from  "../../assets/poster.png";
 import noVideosPoster from  "../../assets/poster-novideos.png";
 
 /**
- * List of arenas and their backdrop image.
+ * List of zones and their backdrop image.
  */
  const zoneBackdrops =  {
-   1672: bladesEdge,
-   617: dalaran,
-   1505: nagrand,
-   572: ruins,
-   2167: robodrome,
-   1134: tigersPeak,
-   980: tolviron,
-   1504: blackrook,
-   2373: empyrean,
-   1552: ashamanesFall,
-   1911: mugambala,
-   1825: hookpoint,
-   2509: maldraxxus,
-   2547: enigma,
-   2537: sepulcherOfTheFirstOnes
+  // Arenas
+  1672: arenaBED,
+  617:  arenaDAL,
+  1505: arenaNAG,
+  572:  arenaROL,
+  2167: arenaROB,
+  1134: arenaTP,
+  980:  arenaTOL,
+  1504: arenaBRK,
+  2373: arenaED,
+  1552: arenaASH,
+  1911: arenaMUG,
+  1825: arenaHP,
+  2509: arenaMAL,
+  2547: arenaENI,
+
+  // Raids
+  2537: raidSOFO,
+
+  // Dungeons
+  2291: dungeonDOS,
+  2287: dungeonHOA,
+  2290: dungeonMTS,
+  2289: dungeonPF,
+  2284: dungeonSD,
+  2258: dungeonSOA,
+  2286: dungeonNW,
+  2293: dungeonTOP,
+  2441: dungeonTVM
  };
 
 /**
@@ -64,35 +95,6 @@ const categories = [
   "Battlegrounds"
 ];
 
-/**
- * List of raids and their image.
- */
- const raids = {
-  sepulcher: "../../assets/wow/sepulcher.jpg"
-};
-
-
-
-const zones = {
-  // Arenas
-  1672: "Blade's Edge Arena",
-  617: "Dalaran Arena",
-  1505: "Nagrand Arena",
-  572: "Ruins of Lordaeron",
-  2167: "The Robodrome",
-  1134: "Tiger's Peak",
-  980: "Tol'Viron Arena",
-  1504: "Black Rook Hold Arena",
-  2373: "Empyrean Domain",
-  1552: "Ashamane's Fall",
-  1911: "Mugambala",
-  1825: "Hook Point",
-  2509: "Maldraxxus Coliseum",
-  2547: "Enigma Crucible"
-  // Raids
-  // Dungeons
-  // Battlegrounds
-}
 /**
  * Needed to style the tabs with the right color.
  */

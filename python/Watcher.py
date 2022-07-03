@@ -44,7 +44,7 @@ class Watcher:
                 # Create recording object.
                 recorder = Recorder(
                     self.current_combat_log.zoneID,
-                    self.current_combat_log.bracket,
+                    self.current_combat_log.category,
                     self.cfg
                 )
 

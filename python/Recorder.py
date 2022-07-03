@@ -1,23 +1,22 @@
 import time
 import os
-from datetime import datetime
 from pathlib import Path
 import os
 import subprocess
 
 
 class Recorder:
-    def __init__(self, zoneID, bracket, cfg):
+    def __init__(self, zoneID, category, cfg):
         """Constructor."""
         self.zoneID = zoneID
-        self.bracket = bracket
+        self.category = category
         self.cfg = cfg
 
         # Get an appropriate file name and path.
         self.video_path = self.cfg["video_storage"]
         self.ffmpeg_path = self.cfg["ffmpeg_path"]
         self.hwe = self.cfg['hwe']
-        self.file_name = f"{self.video_path}/{self.bracket}/{self.zoneID}.mp4"
+        self.file_name = f"{self.video_path}/{self.category}/{self.zoneID}.mp4"
 
     def get_path(self):
         """Return the path of the video file as a Path object."""
@@ -64,6 +63,6 @@ class Recorder:
         self.recording_process.communicate("q".encode("utf-8"))
         time.sleep(1)
         video_path = self.cfg["video_storage"]
-        self.final_file_name = f"{video_path}/{self.bracket}/{self.zoneID}-{self.duration_seconds}-{self.start_time_seconds}.mp4"
+        self.final_file_name = f"{video_path}/{self.category}/{self.zoneID}-{self.duration_seconds}-{self.start_time_seconds}.mp4"
         os.rename(self.file_name, self.final_file_name)
         print("STOPPED RECORDING", flush=True)

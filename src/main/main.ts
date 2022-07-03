@@ -26,6 +26,7 @@ const Store = require('electron-store');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
 const systemInformation = require('systeminformation');
+const obsRecorder = require('./obsRecorder');
 
 /**
  * Create a settings store to handle the config.
@@ -113,7 +114,6 @@ const startRecorder = () => {
   // Setup stdout listeners for executable. 
   recorderProcess.stdout.on('data', function (data: any) {
     const message = 'stdout: ' + data.toString();
-    const outputLog = `${storagePath}/diags/output.log`;
 
     fs.appendFile(outputLog, message, err => {
       if (err) {
