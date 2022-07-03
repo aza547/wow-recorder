@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Output.log path fix. 
 
 ## [1.0.3] - 2022-07-03
 ### Added
