@@ -46,20 +46,38 @@ const ffmpegBinaryPath = app.isPackaged
 : path.join(__dirname, '../../ffmpeg/ffmpeg.exe');
 
 /**
+ * Diags log path. 
+ */
+let outputLog: string = path.join(process.resourcesPath, 'output.log');
+
+/**
  * Get the GPU type. Restart recorder to pick it up. 
  */
  let GPUVendor: string;
 
+
  systemInformation.graphics()
    .then((data) => {
-     if (data.controllers[0].vendor) {
-       GPUVendor = data.controllers[0].vendor;
-       restartRecorder();
+      fs.appendFile(outputLog, "\nGPU Data: " + JSON.stringify(data) + "\n", err => {
+        if (err) {
+          console.error(err);
+        }
+      });    
+
+      if (data.controllers[0].vendor) {
+        GPUVendor = data.controllers[0].vendor;
+        fs.appendFile(outputLog, "GPU Vendor: " + GPUVendor + "\n", err => {
+          if (err) {
+            console.error(err);
+          }
+        });    
+        restartRecorder();
      }
    })
    .catch((error) => {
      console.error(error);
    });
+   
 
 /**
  * Start the recording process. 
@@ -71,7 +89,6 @@ const startRecorder = () => {
   const logPath = cfg.get('log-path');
   const maxStorage = cfg.get('max-storage');
 
-
   // Include quotes as we're using shell: true. 
   let parameters = [
     '--storage', `\"${storagePath}\"`,
@@ -80,10 +97,13 @@ const startRecorder = () => {
     '--ffmpeg',  `\"${ffmpegBinaryPath}\"`
   ];
 
-  // If we got an NVIDIA or AMD card, use hardware encoding. 
-  if ((GPUVendor) && (GPUVendor.toUpperCase().includes("NVIDIA"))) {
+  // Identify brand of GPU and use hardware encoding if NVIDIA/AMD, defaults to CPU encoding. 
+  const isNvidia = GPUVendor && GPUVendor.toUpperCase().includes("NVIDIA");
+  const isAMD = GPUVendor && ((GPUVendor.toUpperCase().includes("AMD")) || (GPUVendor.toUpperCase().includes("ADVANCED MICRO DEVICES")));
+
+  if (isNvidia) {
     parameters.push("--hwe", "NVIDIA");
-  } else if ((GPUVendor) && (GPUVendor.toUpperCase().includes("AMD"))) {
+  } else if (isAMD) {
     parameters.push("--hwe", "AMD");
   }
 

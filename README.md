@@ -4,6 +4,8 @@ A desktop screen recorder application that records and saves videos of in-game e
 
 Nothing magic happens here, the application watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
 
+Only 64 bit Windows (any modern version) and retail WoW are currently supported. 
+
 ![](https://i.imgur.com/PwuGFQ8.png)
 
 #  How to Use
@@ -11,19 +13,43 @@ Nothing magic happens here, the application watches the combat log file for even
 1. Launch the application and fill out the settings page. 
 1. Enable combat logging in-game, I recommend the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon to automate this. 
 
-# Bug Reports & Suggestions
-
-Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
-
 #  Size Monitor
 
 The configuration has a 'max storage' option. The app will never exceed this storage usage on disk. I suggest 100GB is a reasonable size for this setting. 
 
 This feature is inspired by car dash cam behaviour: it deletes the oldest video when the size limit is hit. Be aware that if you want to keep a video long term you should copy it off to another location before it gets aged out. 
 
+# Bug Reports & Suggestions
+
+Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
+
 # Motivation
 
 This project is free and open source software. It is built on the [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate) repository. It is released in the hope that it will be useful to other players.
+
+# Contributing
+
+The below steps are how to launch the app in development mode on Windows. 
+
+1. Install Node.js from [here](https://nodejs.org/en/).
+1. Clone a copy of the [wow-recorder](https://github.com/aza547/wow-recorder) codebase.
+1. Change into the checkout directory. 
+1. Run `npm install` on the command line to install required node packages.
+1. Run `npm start` to launch the application.
+
+To package and distritubte the application on Windows, 3 steps are currently required. 
+
+1. Rebuild the python screen recorder executable. Not required if you have not made python code changes.
+	1. `pyinstaller ./python/main.py -n "recorder"`
+	2. Copy the built dist over the contents of `win64recorder`. 
+1. Build the electron application.
+    1. Update the version number in `./release/app/package.json`. 
+    1. Run `npm run package` to build the electron application. 
+1. Share the application.
+    1. Update the CHANGELOG.md with the new version number and change details. 
+	1.Tag a release on GitHub and attach the executable (e.g. `./release/build/WarcraftRecorder Setup 1.0.2.exe`).
+
+This relies on the awesome infrascturcture offered by electron-react-boilerplate. You can read more about it on their [docs](https://electron-react-boilerplate.js.org/).  
 
 # License
 
