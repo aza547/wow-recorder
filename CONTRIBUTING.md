@@ -1,6 +1,9 @@
 # Contributing
 
-The below steps are how to launch the app in development mode on Windows. 
+The below steps describe how to get started for development on Windows. The app is currently not supported on other operating systems. 
+
+## Start in Development Mode
+Development mode benefits from the infrastructure offered by [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate). You can read more about it on their [docs](https://electron-react-boilerplate.js.org/). It allows for a very quick development cycle, with hot reloading of the app on saving new changes. 
 
 1. Install Node.js from [here](https://nodejs.org/en/).
 1. Clone a copy of the [wow-recorder](https://github.com/aza547/wow-recorder) codebase.
@@ -8,7 +11,8 @@ The below steps are how to launch the app in development mode on Windows.
 1. Run `npm install` on the command line to install required node packages.
 1. Run `npm start` to launch the application.
 
-To package and distritubte the application on Windows, 3 steps are currently required. 
+## Building and Packaging
+To package and distribute the application on Windows, 3 steps are currently required. 
 
 1. Rebuild the python screen recorder executable. Not required if you have not made python code changes.
 	1. `pyinstaller ./python/main.py -n "recorder"`
