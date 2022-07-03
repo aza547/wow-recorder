@@ -46,7 +46,7 @@ To package and distritubte the application on Windows, 3 steps are currently req
     1. Update the version number in `./release/app/package.json`. 
     1. Run `npm run package` to build the electron application. 
 1. Share the application.
-    1. Update the CHANGELOG.md with the new version number and change details. 
+    1. Update the CHANGELOG.md with the new version number and change details. Commit and push all changes
 	1. Tag a release on GitHub and attach the executable (e.g. `./release/build/WarcraftRecorder Setup 1.0.2.exe`).
 
 This relies on the awesome infrascturcture offered by electron-react-boilerplate. You can read more about it on their [docs](https://electron-react-boilerplate.js.org/).  
