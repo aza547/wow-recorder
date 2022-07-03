@@ -3,7 +3,7 @@
 The below steps describe how to get started for development on Windows. The app is currently not supported on other operating systems. 
 
 ## Start in Development Mode
-Development mode benefits from the infrastructure offered by [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate). You can read more about it on their [docs](https://electron-react-boilerplate.js.org/). It allows for a very quick development cycle, with hot reloading of the app on saving new changes. 
+Development mode benefits from the infrastructure offered by [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate). You can read more about it on their [docs](https://electron-react-boilerplate.js.org/). It allows for a very quick development cycle, access to chrome dev tools, and hot reloading of the app on saving new changes. 
 
 1. Install Node.js from [here](https://nodejs.org/en/).
 1. Clone a copy of the [wow-recorder](https://github.com/aza547/wow-recorder) codebase.
