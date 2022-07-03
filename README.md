@@ -41,7 +41,7 @@ To package and distritubte the application on Windows, 3 steps are currently req
 
 1. Rebuild the python screen recorder executable. Not required if you have not made python code changes.
 	1. `pyinstaller ./python/main.py -n "recorder"`
-	2. Copy the built `./python/dist` folder over the contents of `win64recorder`. 
+	2. Copy the contents of the built `./python/dist/recorder` folder over the contents of `./win64recorder`. 
 1. Build the electron application.
     1. Update the version number in `./release/app/package.json`. 
     1. Run `npm run package` to build the electron application. 
