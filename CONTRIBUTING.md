@@ -1,6 +1,6 @@
 # Contributing
 
-The below steps describe how to get started for development on Windows. The app is currently not supported on other operating systems. 
+The below steps describe development on Windows. The app is currently not supported on other operating systems. 
 
 ## Start in Development Mode
 Development mode benefits from the infrastructure offered by [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate). You can read more about it on their [docs](https://electron-react-boilerplate.js.org/). It allows for a very quick development cycle, access to chrome dev tools, and hot reloading of the app on saving new changes. 
@@ -12,8 +12,6 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 1. Run `npm start` to launch the application.
 
 ## Building and Packaging
-To package and distribute the application on Windows, 3 steps are currently required. 
-
 1. Rebuild the python screen recorder executable. Not required if you have not made python code changes.
 	1. `pyinstaller ./python/main.py -n "recorder"`
 	2. Copy the contents of the built `./python/dist/recorder` folder over the contents of `./win64recorder`. 
@@ -24,5 +22,3 @@ To package and distribute the application on Windows, 3 steps are currently requ
     1. Update the CHANGELOG.md with the new version number and change details. 
     1. Commit and push all changes.
 	1. Tag a release on GitHub and attach the executable (e.g. `./release/build/WarcraftRecorder Setup 1.0.2.exe`).
-
-This relies on the infrastructure offered by [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate). You can read more about it on their [docs](https://electron-react-boilerplate.js.org/).  
