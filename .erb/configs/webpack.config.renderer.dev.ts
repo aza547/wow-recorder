@@ -56,11 +56,6 @@ const configuration: webpack.Configuration = {
       `webpack-dev-server/client?http://localhost:${port}/dist`,
       'webpack/hot/only-dev-server',
       path.join(webpackPaths.srcSettingsPath, 'index.tsx'),
-    ],
-    recorder: [
-      `webpack-dev-server/client?http://localhost:${port}/dist`,
-      'webpack/hot/only-dev-server',
-      path.join(webpackPaths.srcRecorderPath, 'index.tsx'),
     ]
   }, 
 
@@ -172,21 +167,6 @@ const configuration: webpack.Configuration = {
       isDevelopment: process.env.NODE_ENV !== 'production',
       nodeModules: webpackPaths.appNodeModulesPath,
     }),
-
-    new HtmlWebpackPlugin({
-      filename: path.join('recorder.index.html'),
-      template: path.join(webpackPaths.srcRecorderPath, 'index.ejs'),
-      chunks: ['recorder'],
-      minify: {
-        collapseWhitespace: true,
-        removeAttributeQuotes: true,
-        removeComments: true,
-      },
-      isBrowser: false,
-      env: process.env.NODE_ENV,
-      isDevelopment: process.env.NODE_ENV !== 'production',
-      nodeModules: webpackPaths.appNodeModulesPath,
-    })
   ],
 
   node: {

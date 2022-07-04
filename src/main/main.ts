@@ -31,7 +31,6 @@ ipcMain.on('cfg-set', async (_event, key, val) => {
  */
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
-let recorderWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -175,100 +174,13 @@ const createSettingsWindow = async () => {
   });
 };
 
-/**
- * Creates the recorder window.
- */
- const createRecorderWindow = async () => {
-  if (isDebug) {
-    await installExtensions();
-  }
-
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
-
-  recorderWindow = new BrowserWindow({
-    show: false,
-    width: 300,
-    height: 300,
-    resizable: true,
-    icon: getAssetPath('./icon/small-icon.png'),
-    frame: true,
-    webPreferences: {
-      nodeIntegration: true,
-      webSecurity: false,
-      //devTools: false,
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
-    },
-  });
-
-  ipcMain.handle('recording-init', (event) => {
-    obsRecorder.initialize(recorderWindow);
-    return true;
-  });
-
-  ipcMain.handle('recording-start', (event) => {
-    obsRecorder.start();
-
-    if (mainWindow) {
-      mainWindow.webContents.send('updateStatus', 1);
-    }
-    
-    return { recording: true };
-  });
-
-  ipcMain.handle('recording-stop', (event) => {
-    obsRecorder.stop();
-
-    if (mainWindow) {
-      mainWindow.webContents.send('updateStatus', 0);
-    }
-
-    return { recording: false };
-  });
-
-  recorderWindow.loadURL(resolveHtmlPath("recorder.index.html"));
-
-  recorderWindow.on('ready-to-show', () => {
-    if (!recorderWindow) {
-      throw new Error('"recorderWindow" is not defined');
-    }
-    if (process.env.START_MINIMIZED) {
-      recorderWindow.minimize();
-    } else {
-      recorderWindow.show();
-    }
-  });
-
-  recorderWindow.on('closed', () => {
-    recorderWindow = null;
-  });
-
-  // Open urls in the user's browser
-  recorderWindow.webContents.setWindowOpenHandler((edata) => {
-    shell.openExternal(edata.url);
-    return { action: 'deny' };
-  });
-};
-
 const openPathDialog = (event: any, args: any) => {
   if (!settingsWindow) return;
   const setting = args[1];
   
-  dialog.showOpenDialog(settingsWindow, { properties: ['openDirectory'] })
-  .then(result => {
+  dialog.showOpenDialog(settingsWindow, { properties: ['openDirectory'] }).then(result => {
     if (!result.canceled) {
-      event.reply('settingsWindow', [
-        'pathSelected', 
-        setting, 
-        result.filePaths[0]
-      ]);
+      event.reply('settingsWindow', ['pathSelected', setting, result.filePaths[0]]);
     }
   })
   .catch(err => {
@@ -332,6 +244,38 @@ app
   .then(() => {
     checkDirs(baseStoragePath);
     createWindow();
-    createRecorderWindow();
   })
   .catch(console.log);
+
+
+
+
+
+
+
+
+  
+  // ipcMain.handle('recording-init', (event) => {
+  //   obsRecorder.initialize(recorderWindow);
+  //   return true;
+  // });
+
+  // ipcMain.handle('recording-start', (event) => {
+  //   obsRecorder.start();
+
+  //   if (mainWindow) {
+  //     mainWindow.webContents.send('updateStatus', 1);
+  //   }
+    
+  //   return { recording: true };
+  // });
+
+  // ipcMain.handle('recording-stop', (event) => {
+  //   obsRecorder.stop();
+
+  //   if (mainWindow) {
+  //     mainWindow.webContents.send('updateStatus', 0);
+  //   }
+
+  //   return { recording: false };
+  // });
