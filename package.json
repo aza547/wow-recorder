@@ -92,9 +92,7 @@
       "output": "release/build"
     },
     "extraResources": [
-      "./assets/**",
-      "./win64recorder/**",
-      "./ffmpeg/**"
+      "./assets/**"
     ],
     "publish": {
       "provider": "github",
