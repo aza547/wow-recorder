@@ -1,6 +1,6 @@
-import recordIcon from '../../assets/record.png';
-import eyeIcon from  '../../assets/icons8-sleep-50.png';
-import errorIcon from  '../../assets/icons8-error-16.png';
+import recordIcon from '../../assets/icon/record-icon.png';
+import eyeIcon from  '../../assets/icon/sleep-icon.png';
+import errorIcon from  '../../assets/icon/error-icon.png';
 import * as React from 'react';
 
 export default function Status() {

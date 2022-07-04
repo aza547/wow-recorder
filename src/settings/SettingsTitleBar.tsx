@@ -1,11 +1,11 @@
-import icon from '../../assets/icons8-heart-with-mouse-48.png';
+import icon from '../../assets/icon/small-icon.png';
+
+const ipc = window.electron.ipcRenderer;
 
 export default function TitleBar() {
 
   const clickedQuit = () => {
-    console.log("QUIT event");
-    window.electron.ipcRenderer.sendMessage('CLOSE-SETTINGS', []);
-    // 
+    ipc.sendMessage('settingsWindow', ['quit']);
   };
 
   return (

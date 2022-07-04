@@ -1,20 +1,19 @@
-import icon from '../../assets/icons8-heart-with-mouse-48.png';
+import icon from '../../assets/icon/small-icon.png';
+
+const ipc = window.electron.ipcRenderer;
 
 export default function RendererTitleBar() {
 
   const clickedHide = () => {
-    console.log("HIDE event");
-    window.electron.ipcRenderer.sendMessage('HIDE', ['ping']);
+    ipc.sendMessage('mainWindow', ['minimize']);
   };
 
   const clickedResize = () => {
-    console.log("RESIZE event");
-    window.electron.ipcRenderer.sendMessage('RESIZE', ['ping']);
+    ipc.sendMessage('mainWindow', ['resize']);
   };
 
   const clickedQuit = () => {
-    console.log("QUIT event");
-    window.electron.ipcRenderer.sendMessage('QUIT', ['ping']);
+    ipc.sendMessage('mainWindow', ['quit']);
   };
 
   return (
@@ -24,9 +23,9 @@ export default function RendererTitleBar() {
       </div>
       <div id="title">Warcraft Recorder</div>
       <div id="title-bar-btns">
-        <button id="min-btn"   onClick={clickedHide}   >🗕</button>
+        <button id="min-btn"   onClick={clickedHide} >🗕</button>
         <button id="max-btn"   onClick={clickedResize} >🗗</button>
-        <button id="close-btn" onClick={clickedQuit}   >✖</button>
+        <button id="close-btn" onClick={clickedQuit} >✖</button>
       </div>
     </div>
   );

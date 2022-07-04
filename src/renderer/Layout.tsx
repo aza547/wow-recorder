@@ -4,6 +4,7 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { makeStyles } from '@mui/styles';
+import { categories }  from '../main/constants';
 
 /**
  * Import the arena zone backdrops.
@@ -44,13 +45,13 @@ import dungeonMTS from "../../assets/dungeon/MTS.jpg";
 /**
  * Import video posters. 
  */
-import infoPoster  from  "../../assets/poster.png";
-import noVideosPoster from  "../../assets/poster-novideos.png";
+import readyPoster  from  "../../assets/poster/ready.png";
+import notReadyPoster from  "../../assets/poster/not-ready.png";
 
 /**
  * List of zones and their backdrop image.
  */
- const zoneBackdrops =  {
+const zoneBackdrops =  {
   // Arenas
   1672: arenaBED,
   617:  arenaDAL,
@@ -80,20 +81,9 @@ import noVideosPoster from  "../../assets/poster-novideos.png";
   2286: dungeonNW,
   2293: dungeonTOP,
   2441: dungeonTVM
- };
+};
 
-/**
- * List of supported categories. Order is the order they show up in the GUI.
- */
-const categories = [
-  "2v2",
-  "3v3",
-  "Skirmish",
-  "Solo Shuffle",
-  "Mythic+",
-  "Raids",
-  "Battlegrounds"
-];
+const ipc = window.electron.ipcRenderer;
 
 /**
  * Needed to style the tabs with the right color.
@@ -151,7 +141,7 @@ export default function Layout() {
     return {
       categoryIndex: 0,
       videoIndex: 0,
-      videoState: window.electron.ipcRenderer.sendSync('getVideoState', categories)
+      videoState: ipc.sendSync('getVideoState', categories)
     };
   });
 
@@ -183,11 +173,11 @@ export default function Layout() {
   /**
    * Refresh handler.
    */
-  window.electron.ipcRenderer.on('refreshState', () => {
+  ipc.on('refreshState', () => {
     setState(prevState => {
       return {
         ...prevState,
-        videoState: window.electron.ipcRenderer.sendSync('getVideoState', categories)
+        videoState: ipc.sendSync('getVideoState', categories)
         }
       }
     )
@@ -226,6 +216,8 @@ export default function Layout() {
 
     // Get appropriate success/fail text for the content type.
     if (isPvp) {
+      console.log(state.videoState[category][index]);
+      console.log(file, index);
       if (state.videoState[category][index].result) {
         result = "Win";
       } else {
@@ -268,7 +260,7 @@ export default function Layout() {
     if (state.videoState[category][state.videoIndex]) {
       return (
         <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster={infoPoster} controls>
+          <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster={readyPoster} controls>
             <source src={ state.videoState[category][state.videoIndex].fullPath } />
           </video>
           <Tabs
@@ -305,7 +297,7 @@ export default function Layout() {
     } else {
       return (
         <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = "None" className="video" poster={ noVideosPoster }></video>
+          <video key = "None" className="video" poster={ notReadyPoster }></video>
           <div className="noVideos"></div>
         </TabPanel>
       );

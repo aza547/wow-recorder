@@ -3,242 +3,35 @@
 /**
  * Application entrypoint point.
  */
-import path, { join } from 'path';
+import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
-import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
-import { resolveHtmlPath } from './util';
+import { resolveHtmlPath, checkDirs, getVideoState } from './util';
+import Store from 'electron-store';
 
-/**
- * List of supported categories. Order is the order they show up in the GUI.
- */
- const categories = [
-  "2v2",
-  "3v3",
-  "Skirmish",
-  "Solo Shuffle",
-  "Mythic+",
-  "Raids",
-  "Battlegrounds"
-];
-
-const Store = require('electron-store');
-const fs = require('fs');
-const spawn = require('child_process').spawn;
-const systemInformation = require('systeminformation');
-const obsRecorder = require('./obsRecorder');
+const obsRecorder = require('./../../obsRecorder');
 
 /**
  * Create a settings store to handle the config.
  */
 const cfg = new Store();
+let baseStoragePath: unknown = cfg.get('storage-path');
 
 /**
- * Arena recorder python executable path. 
+ * Getter and setter config listeners. 
  */
-let recorderProcess: any;
-
-const recorderBinaryPath = app.isPackaged
-? path.join(process.resourcesPath, 'win64recorder/recorder.exe')
-: path.join(__dirname, '../../win64recorder/recorder.exe');
-
-const ffmpegBinaryPath = app.isPackaged
-? path.join(process.resourcesPath, 'ffmpeg/ffmpeg.exe')
-: path.join(__dirname, '../../ffmpeg/ffmpeg.exe');
-
-/**
- * Diags log path. 
- */
-let outputLog: string = path.join(process.resourcesPath, 'output.log');
-
-/**
- * Get the GPU type. Restart recorder to pick it up. 
- */
- let GPUVendor: string;
-
-
- systemInformation.graphics()
-   .then((data) => {
-      fs.appendFile(outputLog, "\nGPU Data: " + JSON.stringify(data) + "\n", err => {
-        if (err) {
-          console.error(err);
-        }
-      });    
-
-      if (data.controllers[0].vendor) {
-        GPUVendor = data.controllers[0].vendor;
-        fs.appendFile(outputLog, "GPU Vendor: " + GPUVendor + "\n", err => {
-          if (err) {
-            console.error(err);
-          }
-        });    
-        restartRecorder();
-     }
-   })
-   .catch((error) => {
-     console.error(error);
-   });
-   
-
-/**
- * Start the recording process. 
- */
-const startRecorder = () => {
-
-  // Get config.
-  const storagePath = cfg.get('storage-path');
-  const logPath = cfg.get('log-path');
-  const maxStorage = cfg.get('max-storage');
-
-  // Include quotes as we're using shell: true. 
-  let parameters = [
-    '--storage', `\"${storagePath}\"`,
-    '--logs',    `\"${logPath}\"`,
-    '--size',    `\"${maxStorage}\"`,
-    '--ffmpeg',  `\"${ffmpegBinaryPath}\"`
-  ];
-
-  // Identify brand of GPU and use hardware encoding if NVIDIA/AMD, defaults to CPU encoding. 
-  const isNvidia = GPUVendor && GPUVendor.toUpperCase().includes("NVIDIA");
-  const isAMD = GPUVendor && ((GPUVendor.toUpperCase().includes("AMD")) || (GPUVendor.toUpperCase().includes("ADVANCED MICRO DEVICES")));
-
-  if (isNvidia) {
-    parameters.push("--hwe", "NVIDIA");
-  } else if (isAMD) {
-    parameters.push("--hwe", "AMD");
-  }
-
-  // Start the executable. 
-  recorderProcess = spawn(recorderBinaryPath, parameters, { shell: true });
-
-  // Setup stdout listeners for executable. 
-  recorderProcess.stdout.on('data', function (data: any) {
-    const message = 'stdout: ' + data.toString();
-
-    fs.appendFile(outputLog, message, err => {
-      if (err) {
-        console.error(err);
-      }
-    });    
-
-    if (message.includes('RUNNING')) {
-      if (mainWindow !== null)  {
-        mainWindow.webContents.send('updateStatus', 0);
-      }
-    } else if (message.includes('STARTED RECORDING')) {
-      if (mainWindow !== null) {
-        mainWindow.webContents.send('updateStatus', 1);
-      }
-    } else if (message.includes('STOPPED RECORDING')) {
-      if (mainWindow !== null) {
-        mainWindow.webContents.send('updateStatus', 0);
-
-        // If we finish recording, refresh the GUI to show the new video. 
-        mainWindow.webContents.send('refreshState');
-      }
-    }
-  });
-
-  // Any stderr event is treated as a fatal error and will flag failed in the GUI. 
-  recorderProcess.stderr.on('data', function (data: any) {
-    const errorMessage = 'stderr: ' + data.toString();
-    const outputLog = `${storagePath}/diags/output.log`;
-
-    fs.appendFile(outputLog, errorMessage, err => {
-      if (err) {
-        console.error(err);
-      }
-    });  
-
-    if (mainWindow) {
-      mainWindow.webContents.send('updateStatus', 2);
-    }
-  });
-
-  // Log process exit for debugging.
-  recorderProcess.on('close', (code: any) => {
-    console.log(`recorderProcess exited with code ${code}`);
-  });
-}
-
-/**
- * Start the recording process. 
- */
- const stopRecorder = () => {
-  if (recorderProcess) {
-    recorderProcess.kill('SIGINT');
-    recorderProcess = null;
-  }
- }
-
-/**
- * Restart the recording process. 
- */
- const restartRecorder = () => {
-  stopRecorder();
-  startRecorder();
- }
-
-/**
- * TODO Validate the config, else prompt the user for some?.
- */
-
-/**
- * Months of the year.
- */
- const monthNames = [
-   "January",
-   "February",
-   "March",
-   "April",
-   "May",
-   "June",
-   "July",
-   "August",
-   "September",
-   "October",
-   "November",
-   "December"
-  ];
-
-const zones = {
-    // Arenas
-    1672: "Blade's Edge Arena",
-    617: "Dalaran Arena",
-    1505: "Nagrand Arena",
-    572: "Ruins of Lordaeron",
-    2167: "The Robodrome",
-    1134: "Tiger's Peak",
-    980: "Tol'Viron Arena",
-    1504: "Black Rook Hold Arena",
-    2373: "Empyrean Domain",
-    1552: "Ashamane's Fall",
-    1911: "Mugambala",
-    1825: "Hook Point",
-    2509: "Maldraxxus Coliseum",
-    2547: "Enigma Crucible",
-    // Raids
-    // Dungeons
-    // Battlegrounds
-  }
-
-const encounters = {
-  2537: "The Jailer"
-}
-
-export default class AppUpdater {
-  constructor() {
-    log.transports.file.level = 'info';
-    autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
-  }
-}
+ipcMain.on('cfg-get', async (event, val) => {
+  event.returnValue = cfg.get(val);
+});
+ipcMain.on('cfg-set', async (_event, key, val) => {
+  cfg.set(key, val);
+});
 
 /**
  * Define renderer windows.
  */
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
+let recorderWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -266,37 +59,6 @@ const installExtensions = async () => {
 };
 
 /**
- * Check dirs we expect to exist do, create them if not. 
- */
-const checkDirs = () => {
-  
-  if (cfg.get('storage-path') === undefined) {
-    console.log("Storage path was undefined");
-  } else {
-    // Create dirs for categories if they don't exist.
-    for (let i = 0; i < categories.length; i++) {
-      const category = categories[i];
-      const storagePath = `${cfg.get('storage-path')}/${category}/`;
-
-      if (!fs.existsSync(storagePath)) {
-        fs.mkdirSync(storagePath, { recursive: true });
-      }
-    }
-
-    // Create dirs for diags and metadata if they don't exist.
-    const diagsPath = `${cfg.get('storage-path')}/diags`;
-    const metadataPath = `${cfg.get('storage-path')}/metadata`;
-
-    if (!fs.existsSync(diagsPath)) {
-      fs.mkdirSync(diagsPath, { recursive: true });
-    }
-    if (!fs.existsSync(metadataPath)) {
-      fs.mkdirSync(metadataPath, { recursive: true });
-    } 
-  }
-}
-
-/**
  * Creates the main window.
  */
 const createWindow = async () => {
@@ -316,7 +78,7 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     minWidth: 1024,
-    icon: getAssetPath('icons8-heart-with-mouse-48.png'),
+    icon: getAssetPath('./icon/small-icon.png'),
     frame: false,
     webPreferences: {
       nodeIntegration: true,
@@ -335,8 +97,7 @@ const createWindow = async () => {
       throw new Error('"mainWindow" is not defined');
     }
 
-    startRecorder();
-    mainWindow.webContents.send('updateStatus', 2);
+    mainWindow.webContents.send('updateStatus', 0);
 
     mainWindow.setAspectRatio(15/9);
 
@@ -348,10 +109,6 @@ const createWindow = async () => {
   });
 
   mainWindow.on('closed', () => {
-    if (recorderProcess !== null) {
-      recorderProcess.kill('SIGINT')
-    }
-
     mainWindow = null;
   });
 
@@ -360,10 +117,6 @@ const createWindow = async () => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
-
-  // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
-  // new AppUpdater();
 };
 
 /**
@@ -387,7 +140,7 @@ const createSettingsWindow = async () => {
     width: 380,
     height: 380,
     resizable: true,
-    icon: getAssetPath('icons8-settings.svg'),
+    icon: getAssetPath('./icon/settings-icon.svg'),
     frame: false,
     webPreferences: {
       webSecurity: false,
@@ -423,13 +176,146 @@ const createSettingsWindow = async () => {
 };
 
 /**
- * Add event listeners...
+ * Creates the recorder window.
  */
-ipcMain.on('maximize', () => {
-  //mainWindow is the reference to your window
-  if (mainWindow !== null) mainWindow.maximize();
+ const createRecorderWindow = async () => {
+  if (isDebug) {
+    await installExtensions();
+  }
+
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'assets')
+    : path.join(__dirname, '../../assets');
+
+  const getAssetPath = (...paths: string[]): string => {
+    return path.join(RESOURCES_PATH, ...paths);
+  };
+
+  recorderWindow = new BrowserWindow({
+    show: false,
+    width: 300,
+    height: 300,
+    resizable: true,
+    icon: getAssetPath('./icon/small-icon.png'),
+    frame: true,
+    webPreferences: {
+      nodeIntegration: true,
+      webSecurity: false,
+      //devTools: false,
+      preload: app.isPackaged
+        ? path.join(__dirname, 'preload.js')
+        : path.join(__dirname, '../../.erb/dll/preload.js'),
+    },
+  });
+
+  ipcMain.handle('recording-init', (event) => {
+    obsRecorder.initialize(recorderWindow);
+    return true;
+  });
+
+  ipcMain.handle('recording-start', (event) => {
+    obsRecorder.start();
+
+    if (mainWindow) {
+      mainWindow.webContents.send('updateStatus', 1);
+    }
+    
+    return { recording: true };
+  });
+
+  ipcMain.handle('recording-stop', (event) => {
+    obsRecorder.stop();
+
+    if (mainWindow) {
+      mainWindow.webContents.send('updateStatus', 0);
+    }
+
+    return { recording: false };
+  });
+
+  recorderWindow.loadURL(resolveHtmlPath("recorder.index.html"));
+
+  recorderWindow.on('ready-to-show', () => {
+    if (!recorderWindow) {
+      throw new Error('"recorderWindow" is not defined');
+    }
+    if (process.env.START_MINIMIZED) {
+      recorderWindow.minimize();
+    } else {
+      recorderWindow.show();
+    }
+  });
+
+  recorderWindow.on('closed', () => {
+    recorderWindow = null;
+  });
+
+  // Open urls in the user's browser
+  recorderWindow.webContents.setWindowOpenHandler((edata) => {
+    shell.openExternal(edata.url);
+    return { action: 'deny' };
+  });
+};
+
+const openPathDialog = (event: any, args: any) => {
+  if (!settingsWindow) return;
+  const setting = args[1];
+  
+  dialog.showOpenDialog(settingsWindow, { properties: ['openDirectory'] })
+  .then(result => {
+    if (!result.canceled) {
+      event.reply('settingsWindow', [
+        'pathSelected', 
+        setting, 
+        result.filePaths[0]
+      ]);
+    }
+  })
+  .catch(err => {
+    console.log(err);
+  })
+} 
+
+/**
+ * mainWindow event listeners.
+ */
+ipcMain.on('mainWindow', (_event, args) => {
+  if (mainWindow === null) return; 
+  if (args[0] === "maximize") mainWindow.maximize();
+  if (args[0] === "resize") mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
+  if (args[0] === "quit") mainWindow.close();
 })
 
+/**
+ * settingsWindow event listeners.
+ */
+ipcMain.on('settingsWindow', (event, args) => {
+  if (args[0] === "create") createSettingsWindow();
+  if (settingsWindow === null) return; 
+  if (args[0] === "quit") settingsWindow.close();
+  if (args[0] === "openPathDialog") openPathDialog(event, args);
+})
+
+/**
+ * checkDirs listener.
+ */
+ipcMain.on('checkDirs', () => {
+  const baseStoragePath = cfg.get('storage-path');
+  checkDirs(baseStoragePath);
+})
+
+/**
+ * Get the list of video files and their state.
+ */
+ ipcMain.on('getVideoState', (event) => {
+  baseStoragePath = cfg.get('storage-path');
+  const videoState = getVideoState(baseStoragePath);
+  event.returnValue = videoState;
+});
+
+/**
+ * Shutdown the app if all windows closed. 
+ */
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
@@ -438,207 +324,14 @@ app.on('window-all-closed', () => {
   }
 });
 
+/**
+ * App start-up.
+ */
 app
   .whenReady()
   .then(() => {
-    checkDirs();
+    checkDirs(baseStoragePath);
     createWindow();
+    createRecorderWindow();
   })
   .catch(console.log);
-
-/**
- * Window control listeners. 
- */
-ipcMain.on('HIDE', () => {
-    if (mainWindow !== null) mainWindow.minimize();
-  })
-
-ipcMain.on('RESIZE', () => {
-    if (mainWindow !== null) {
-      mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
-    };
-})
-
-ipcMain.on('QUIT', () => {
-  if (mainWindow !== null) mainWindow.close();
-})
-
-ipcMain.on('CREATE-SETTINGS', () => {
-  if (settingsWindow === null) createSettingsWindow();
-})
-
-/**
- * Save settings event, write any non-null settings to the store,
- * then close the settings window.
- */
-ipcMain.on('SAVE-SETTINGS', (event, settings) => {
-
-  // Log the passed config. 
-  console.log(settings);
-
-  if (settings[0] !== null) {
-    cfg.set("storage-path", settings[0]);
-  }
-  if (settings[1] !== null) {
-    cfg.set("log-path", settings[1]);
-  }
-  if (settings[2] !== null) {
-    cfg.set("max-storage", settings[2]);
-  }
-
-  if (settingsWindow !== null) {
-    settingsWindow.close();
-  }
-
-  if (mainWindow !== null) {
-    mainWindow.webContents.send('refreshState');
-  }
-
-  // Restart recorder process with new config.
-  stopRecorder();
-  checkDirs();
-  startRecorder();
-});
-
-/**
- * Close settings window.
- */
-ipcMain.on('CLOSE-SETTINGS', () => {
-  if (settingsWindow !== null)  settingsWindow.close();
-});
-
-ipcMain.on('GET-STORAGE-PATH', (event) => {
-  event.reply('RESP-STORAGE-PATH', cfg.get('storage-path'));
-});
-
-ipcMain.on('GET-LOG-PATH', (event) => {
-  event.reply('RESP-LOG-PATH', cfg.get('log-path'));
-});
-
-ipcMain.on('GET-MAX-STORAGE', (event) => {
-  event.reply('RESP-MAX-STORAGE', cfg.get('max-storage'));
-});
-
-/**
- * Dialog window folder selection.
- */
-ipcMain.on("SET-STORAGE-PATH", (event) => {
-
-  if (settingsWindow !== null) {
-    dialog.showOpenDialog(settingsWindow, {
-        properties: ['openDirectory']
-    }).then(result => {
-      console.log(result.canceled)
-      if (result.canceled) {
-        console.log("User cancelled dialog");
-      } else {
-        event.reply('APPLY-STORAGE-PATH', result.filePaths[0]);
-      }
-    }).catch(err => {
-      console.log(err);
-    })
-  } 
-});
-
-ipcMain.on("SET-LOG-PATH", (event) => {
-
-  if (settingsWindow !== null) {
-    dialog.showOpenDialog(settingsWindow, {
-        properties: ['openDirectory']
-    }).then(result => {
-      console.log(result.canceled)
-      if (result.canceled) {
-        console.log("User cancelled dialog");
-      } else {
-        event.reply('APPLY-LOG-PATH', result.filePaths[0]);
-      }
-    }).catch(err => {
-      console.log(err);
-    })
-  }
-});
-
-/**
- * Get the list of video files and their state.
- */
- ipcMain.on('getVideoState', (event) => {
-
-  let videoState = {};
-  const storagePath = cfg.get('storage-path');
-
-  if (storagePath === undefined) {
-    for (let i = 0; i < categories.length; i++) {
-      videoState[categories[i]] = [];
-    }
-  } else {
-    for (let i = 0; i < categories.length; i++) {
-      const category = categories[i];
-      videoState[category] = [];
-
-      const path = `${storagePath}/${category}/`;
-      const videos = fs.readdirSync(path).sort(function(a, b) {
-        // reverse chronological sort
-        // https://stackoverflow.com/questions/10559685/using-node-js-how-do-you-get-a-list-of-files-in-chronological-order
-        return fs.statSync(path + b).mtime.getTime() - fs.statSync(path + a).mtime.getTime();
-      });
-
-
-
-      for (let j = 0; j < videos.length; j++) {
-        const fullPath = path + "/" + videos[j];
-        const name = videos[j];
-
-        // Split the zoneID and duration out of the video file.
-        const zoneID = name.split("-")[0];
-        const duration = name.split("-")[1];
-
-        // Get date object when file was last modified.
-        const date = new Date(fs.statSync(path + videos[j]).mtime)
-
-        // Get a date string in the form "7 Sep".
-        const day = date.getDate();
-        const month = monthNames[date.getMonth()].slice(0, 3);
-        const dateStr = `${day} ${month}`;
-
-        // Get a clock time in the form "HH:MM".
-        const hours = date.getHours().toLocaleString('en-US', { minimumIntegerDigits: 2});
-        const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
-        const timeStr = `${hours}:${mins}`;
-
-        // If in a raid, zoneID is actually the encounter ID.
-        let zone: string;
-
-        if (category === "Raids") {
-          zone = "Sepulcher of the First Ones"; // Sepulcher, to add support for future raids as released.
-        } else {
-          zone = zones[zoneID]
-        }
-
-        // If in a raid, zoneID is actually the encounter ID.
-        // If in PVP, just use the category e.g. "2v2" as the encounter name.
-        let encounter: string;
-
-        if (category === "Raids") {
-          encounter = encounters[zoneID];
-        } else {
-          encounter = category;
-        }
-
-        videoState[categories[i]].push({
-          name: name,
-          index: j,
-          fullPath: fullPath,
-          encounter: encounter,
-          zone: zone,
-          zoneID: zoneID,
-          duration: duration,
-          result: 0, // 0 for fail, 1 for success
-          date: dateStr,
-          time: timeStr
-        });
-      }
-    }
-  }
-
-  event.returnValue = videoState;
-});

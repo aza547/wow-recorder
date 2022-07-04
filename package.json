@@ -16,6 +16,12 @@
     "test": "jest",
     "prepare": "husky install"
   },
+  "electronmon": {
+    "patterns": [
+      "!./src/main/osn-data/**", 
+      "!./osn-data/**"
+    ]
+  },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "cross-env NODE_ENV=development eslint --cache"

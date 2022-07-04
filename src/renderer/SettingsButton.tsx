@@ -1,10 +1,11 @@
-import icon from '../../assets/icons8-settings.svg';
+import icon from '../../assets/icon/settings-icon.svg';
+
+const ipc = window.electron.ipcRenderer;
 
 export default function SettingsButton() {
 
   const openSettings = () => {
-   console.log("openening settings");
-   window.electron.ipcRenderer.sendMessage('CREATE-SETTINGS', ['open']);
+    ipc.sendMessage('settingsWindow', ['create']);
   };
 
   return (
