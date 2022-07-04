@@ -18,7 +18,7 @@
   },
   "electronmon": {
     "patterns": [
-      "!./src/main/osn-data/**", 
+      "!./src/main/osn-data/**",
       "!./osn-data/**"
     ]
   },
@@ -256,6 +256,7 @@
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.3.0",
     "systeminformation": "^5.11.22",
+    "tail": "^2.2.4",
     "tsc": "^2.0.4"
   },
   "devEngines": {

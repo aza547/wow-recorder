@@ -189,6 +189,29 @@ const openPathDialog = (event: any, args: any) => {
 } 
 
 /**
+ * Create a settings store to handle the config.
+ */
+const initOBS = () => {
+  obsRecorder.initialize();
+}
+
+/**
+ * Start recording.
+ */
+ const startRecording = () => {
+  obsRecorder.start();
+  if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
+}
+
+/**
+ * Start recording.
+ */
+ const stopRecording = () => {
+  obsRecorder.stop();
+  if (mainWindow) mainWindow.webContents.send('updateStatus', 0);
+}
+
+/**
  * mainWindow event listeners.
  */
 ipcMain.on('mainWindow', (_event, args) => {
@@ -219,10 +242,21 @@ ipcMain.on('checkDirs', () => {
 /**
  * Get the list of video files and their state.
  */
- ipcMain.on('getVideoState', (event) => {
+ipcMain.on('getVideoState', (event) => {
   baseStoragePath = cfg.get('storage-path');
   const videoState = getVideoState(baseStoragePath);
   event.returnValue = videoState;
+});
+
+/**
+ * Get the list of video files and their state.
+ */
+ipcMain.handle('recording-start', () => {
+  startRecording();
+});
+
+ipcMain.handle('recording-stop', () => {
+  stopRecording();
 });
 
 /**
@@ -237,12 +271,30 @@ app.on('window-all-closed', () => {
 });
 
 /**
+ * Watch WoW log file.
+ */
+const fs = require('fs');
+// const Tail = require('tail').Tail;
+
+// const tail = new Tail("D:/World of Warcraft/_retail_/Logs/WoWCombatLog-123.txt");
+
+// tail.on("line", function(data) {
+//   console.log(data);
+// });
+
+fs.watchFile("D:/World of Warcraft/_retail_/Logs/WoWCombatLog-123.txt", { interval: 1000 }, (data) => {
+  console.log("file Changed");
+  console.log(data);
+});
+
+/**
  * App start-up.
  */
 app
   .whenReady()
   .then(() => {
     checkDirs(baseStoragePath);
+    initOBS();
     createWindow();
   })
   .catch(console.log);
@@ -254,28 +306,4 @@ app
 
 
 
-  
-  // ipcMain.handle('recording-init', (event) => {
-  //   obsRecorder.initialize(recorderWindow);
-  //   return true;
-  // });
 
-  // ipcMain.handle('recording-start', (event) => {
-  //   obsRecorder.start();
-
-  //   if (mainWindow) {
-  //     mainWindow.webContents.send('updateStatus', 1);
-  //   }
-    
-  //   return { recording: true };
-  // });
-
-  // ipcMain.handle('recording-stop', (event) => {
-  //   obsRecorder.stop();
-
-  //   if (mainWindow) {
-  //     mainWindow.webContents.send('updateStatus', 0);
-  //   }
-
-  //   return { recording: false };
-  // });

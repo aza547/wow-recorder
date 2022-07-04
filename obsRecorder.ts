@@ -22,7 +22,7 @@ function fixPathWhenPackaged(p) {
 }
 
 // Init the library, launch OBS Studio instance, configure it, set up sources and scene
-function initialize(win) {
+function initialize() {
   if (obsInitialized) {
     console.warn("OBS is already initialized, skipping initialization.");
     return;
@@ -33,12 +33,6 @@ function initialize(win) {
   scene = setupScene();
   setupSources(scene);
   obsInitialized = true;
-
-  const perfStatTimer = setInterval(() => {
-	  win.webContents.send("performanceStatistics", osn.NodeObs.OBS_API_getPerformanceStatistics());
-  }, 1000);
-
-  win.on('close', () => clearInterval(perfStatTimer));
 }
 
 function initOBS() {
@@ -103,7 +97,7 @@ function displayInfo() {
 
 function setupScene() {
   const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
-
+  
   const { physicalWidth, physicalHeight, aspectRatio } = displayInfo();
 
   // Update source settings:
@@ -137,7 +131,7 @@ function getAudioDevices(type, subtype) {
   return devices;
 };
 
-function setupSources() {
+function setupSources(scene) {
   osn.Global.setOutputSource(1, scene);
 
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
