@@ -1,18 +1,10 @@
 const path = require('path');
 const { Subject } = require('rxjs');
 const { first } = require('rxjs/operators');
-const { byOS, OS, getOS } = require('./operatingSystems');
+const { byOS, OS } = require('./operatingSystems');
 
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
-const videoPath = (require("electron").app).getPath("videos");
-
-let nwr;
-
-// NWR is used to handle display rendering via IOSurface on mac
-if (getOS() === OS.Mac) {
-  nwr = require('node-window-rendering');
-}
 
 let obsInitialized = false;
 let scene = null;

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Mythic+ framework.
 
 ### Changed
+- Use libobs for recording.
 
 ### Fixed
 - Output.log path fix. 
