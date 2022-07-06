@@ -183,9 +183,6 @@ export default function Layout() {
     )
   });
 
-  // for debugging
-  console.log(state.videoState);
-
   /**
    * Returns TSX for the tab buttons for category selection, with an
    * additional border style for the 0th (top) tab.
@@ -216,8 +213,6 @@ export default function Layout() {
 
     // Get appropriate success/fail text for the content type.
     if (isPvp) {
-      console.log(state.videoState[category][index]);
-      console.log(file, index);
       if (state.videoState[category][index].result) {
         result = "Win";
       } else {
@@ -233,6 +228,7 @@ export default function Layout() {
 
     // Format duration so that its MM:SS.
     const durationDate = new Date(0);
+    console.log(state.videoState);
     durationDate.setSeconds(state.videoState[category][index].duration);
     const formattedDuration = durationDate.toISOString().substr(14, 5);
 

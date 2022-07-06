@@ -2,7 +2,10 @@
 import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones }  from './constants';
+import { Metadata }  from './logutils';
+
 const fs = require('fs');
+const glob = require('glob');
 
 export let resolveHtmlPath: (htmlFileName: string) => string;
 
@@ -57,24 +60,53 @@ const getEmptyState = () => {
 }
 
 /**
- * Get videos from folder in reverse chronological order.  
+ * Load videos from category folders in reverse chronological order.  
  */
- const loadVideos = (baseStoragePath: unknown, videoState: any) => {
+const loadAllVideos = (baseStoragePath: unknown, videoState: any) => {
     for (const category of categories) {
-        const path = baseStoragePath + "/" + category + "/";      
+        const categoryPath = baseStoragePath + "/" + category + "/";      
         
-        const videos = fs
-        .readdirSync(path)
-        .sort(function(A: any, B: any) {
+        const videos = glob.sync(categoryPath + "*.mp4")        
+            .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
+            .sort((A: any, B: any) => B.mtime - A.mtime);
 
-            const timeA = fs.statSync(path + A).mtime.getTime()
-            const timeB = fs.statSync(path + B).mtime.getTime()
-
-            return (timeB - timeA);
-        });
-       
-        loadVideoDetails(category, videos, baseStoragePath, videoState);
+        for (const video of videos) {
+            loadVideoDetails(video, videoState);
+        }        
     }
+}
+
+/**
+ * Load video details from the metadata and add it to videoState. 
+ */
+ const loadVideoDetails = (video: any, videoState: any) => {
+    let index: number = 0;
+    const dateObject = new Date(fs.statSync(video.name).mtime)
+    const metadata = loadMetadataForVideo(video)
+
+    videoState[metadata.category].push({
+        index: index++,
+        fullPath: video.name,
+        encounter: getVideoEncounter(metadata.zoneID, metadata.category),
+        zone: getVideoZone(metadata.zoneID, metadata.category),
+        zoneID: metadata.zoneID,
+        duration: metadata.duration,
+        result: metadata.result, 
+        date: getVideoDate(dateObject),
+        time: getVideoTime(dateObject)
+    });
+}
+
+/**
+ * Get the date a video was recorded from the date object.
+ */
+const loadMetadataForVideo = (video: any) => {
+    const videoFileName = path.basename(video.name, '.mp4');
+    const videoDirName = path.dirname(video.name);
+    const metadataFile = videoDirName + "/" + videoFileName + ".json";
+    const metadataJSON = fs.readFileSync(metadataFile);
+    const metadata = JSON.parse(metadataJSON);
+    return metadata;
 }
 
 /**
@@ -100,7 +132,7 @@ const getVideoTime = (date: Date) => {
 /**
  * Get the zoneID of a video from the file name.
  */
- const getZoneID = (videoName: string) => {
+const getZoneID = (videoName: string) => {
     const zoneID: number = parseInt(videoName.split("-")[0]);
     return zoneID;
 }
@@ -108,7 +140,7 @@ const getVideoTime = (date: Date) => {
 /**
  * Get the duration of a video from the file name.
  */
- const getVideoDuration = (videoName: string) => {
+const getVideoDuration = (videoName: string) => {
     const duration: number = parseInt(videoName.split("-")[1]);
     return duration;
 }
@@ -116,7 +148,8 @@ const getVideoTime = (date: Date) => {
 /**
  * Get the zone name.
  */
- const getVideoZone = (zoneID: number, category: string) => {
+const getVideoZone = (zoneID: number, category: string) => {
+    console.log("get zone: " , zoneID, category);
     const zone = (category === "Raids" ? "Sepulcher of the First Ones" : zones[zoneID])
     return zone;
 }
@@ -124,49 +157,45 @@ const getVideoTime = (date: Date) => {
 /**
  * Get the encounter name.
  */
- const getVideoEncounter = (zoneID: number, category: string) => {
+const getVideoEncounter = (zoneID: number, category: string) => {
     const encounter = (category === "Raids" ? zones[zoneID] : category);
     return encounter;
 }
 
-/**
- * 
- */
- const loadVideoDetails = (category: string, videos: string[], baseStoragePath: unknown, videoState: any) => {
-    let index: number = 0;
 
-    for (const videoName of videos) {
-        const fullVideoPath: string = baseStoragePath + "/" + category + "/" + videoName;
-        const dateObject = new Date(fs.statSync(fullVideoPath).mtime)
-        const zoneID: number = getZoneID(videoName);
-
-        videoState[category].push({
-            name : videoName,
-            index: index++,
-            fullPath: fullVideoPath,
-            encounter: getVideoEncounter(zoneID, category),
-            zone: getVideoZone(zoneID, category),
-            zoneID: zoneID,
-            duration: getVideoDuration(videoName),
-            result: 0, // 0 for fail, 1 for success
-            date: getVideoDate(dateObject),
-            time: getVideoTime(dateObject)
-        });
-    }
-}
 
 /**
  * Get the state of all videos. 
  * Returns an empty array if baseStoragePath is undefined. 
  */
- const getVideoState = (baseStoragePath: unknown) => {
+const getVideoState = (baseStoragePath: unknown) => {
     let videoState = getEmptyState();
     if (!baseStoragePath) return videoState;
-    loadVideos(baseStoragePath, videoState);
+    loadAllVideos(baseStoragePath, videoState);
     return videoState;
+}    
+
+/**
+ *  writeMetadataFile
+ */
+const writeMetadataFile = (storagePath: string, metadata: Metadata) => {
+    const jsonString = JSON.stringify(metadata, null, 2);
+    const categoryPath = storagePath + "/" + metadata["category"] + "/";
+
+    const timeOrderedVideos = glob.sync(categoryPath + "*.mp4")
+        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
+        .sort((A: any, B: any) => B.mtime - A.mtime);
+
+    const newestVideoPath = timeOrderedVideos[0].name;
+    const newestVideoName = path.basename(newestVideoPath, '.mp4');
+
+    fs.writeFile(categoryPath + newestVideoName + ".json", jsonString, err => {
+        if (err) console.log("Error writing file", err);
+    })
 }    
 
 export {
     checkDirs,
-    getVideoState
+    getVideoState,
+    writeMetadataFile    
 };

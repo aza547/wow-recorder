@@ -6,6 +6,7 @@ const { byOS, OS, getOS } = require('./operatingSystems');
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
 const videoPath = (require("electron").app).getPath("videos");
+
 let nwr;
 
 // NWR is used to handle display rendering via IOSurface on mac
@@ -22,17 +23,21 @@ function fixPathWhenPackaged(p) {
 }
 
 // Init the library, launch OBS Studio instance, configure it, set up sources and scene
-function initialize() {
+function initialize(baseStoragePath: string) {
   if (obsInitialized) {
     console.warn("OBS is already initialized, skipping initialization.");
     return;
   }
 
   initOBS();
-  configureOBS();
+  configureOBS(baseStoragePath);
   scene = setupScene();
   setupSources(scene);
   obsInitialized = true;
+}
+
+function configureOutputPath(baseStoragePath: string) {
+  setSetting('Output', 'RecFilePath', baseStoragePath);
 }
 
 function initOBS() {
@@ -66,13 +71,13 @@ function initOBS() {
   console.debug('OBS initialized');
 }
 
-function configureOBS() {
+function configureOBS(baseStoragePath: string) {
   console.debug('Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
   const availableEncoders = getAvailableValues('Output', 'Recording', 'RecEncoder');
   setSetting('Output', 'RecEncoder', availableEncoders.slice(-1)[0] || 'x264');
-  setSetting('Output', 'RecFilePath', videoPath);
-  setSetting('Output', 'RecFormat', 'mkv');
+  setSetting('Output', 'RecFilePath', baseStoragePath);
+  setSetting('Output', 'RecFormat', 'mp4');
   setSetting('Output', 'VBitrate', 10000); // 10 Mbps
   setSetting('Video', 'FPSCommon', 60);
 
@@ -159,56 +164,6 @@ function setupSources(scene) {
 }
 
 const displayId = 'display1';
-
-function setupPreview(window, bounds) {
-  osn.NodeObs.OBS_content_createSourcePreviewDisplay(
-    window.getNativeWindowHandle(),
-    scene.name, // or use camera source Id here
-    displayId,
-  );
-  osn.NodeObs.OBS_content_setShouldDrawUI(displayId, false);
-  osn.NodeObs.OBS_content_setPaddingSize(displayId, 0);
-  // Match padding color with main window background color
-  osn.NodeObs.OBS_content_setPaddingColor(displayId, 255, 255, 255);
-
-  return resizePreview(window, bounds);
-}
-let existingWindow = false
-let initY = 0
-function resizePreview(window, bounds) {
-  let { aspectRatio, scaleFactor } = displayInfo();
-  if (getOS() === OS.Mac) {
-    scaleFactor = 1
-  }
-  const displayWidth = Math.floor(bounds.width);
-  const displayHeight = Math.round(displayWidth / aspectRatio);
-  const displayX = Math.floor(bounds.x);
-  const displayY = Math.floor(bounds.y);
-  if (initY === 0) {
-    initY = displayY
-  }
-  osn.NodeObs.OBS_content_resizeDisplay(displayId, displayWidth * scaleFactor, displayHeight * scaleFactor);
-
-  if (getOS() === OS.Mac) {
-    if (existingWindow) {
-      nwr.destroyWindow(displayId);
-      nwr.destroyIOSurface(displayId);
-    }
-    const surface = osn.NodeObs.OBS_content_createIOSurface(displayId)
-    nwr.createWindow(
-      displayId,
-      window.getNativeWindowHandle(),
-    );
-    nwr.connectIOSurface(displayId, surface);
-    nwr.moveWindow(displayId, displayX * scaleFactor, (initY - displayY + initY) * scaleFactor)
-    existingWindow = true
-  } else {
-    osn.NodeObs.OBS_content_moveDisplay(displayId, displayX * scaleFactor, displayY * scaleFactor);
-  }
-
-  return { height: displayHeight }
-}
-
 async function start() {
   if (!obsInitialized) initialize();
 
@@ -278,7 +233,7 @@ function setSetting(category, parameter, value) {
 
   settings.forEach(subCategory => {
     subCategory.parameters.forEach(param => {
-      if (param.name === parameter) {
+      if (param.name === parameter) {        
         oldValue = param.currentValue;
         param.currentValue = value;
       }
@@ -322,14 +277,10 @@ function getNextSignalInfo() {
   });
 }
 
-function busySleep(sleepDuration) {
-  var now = new Date().getTime();
-  while(new Date().getTime() < now + sleepDuration) { /* do nothing */ };
+export {
+  initialize,
+  start,
+  stop,
+  shutdown,
+  configureOutputPath
 }
-
-module.exports.initialize = initialize;
-module.exports.start = start;
-module.exports.stop = stop;
-module.exports.shutdown = shutdown;
-module.exports.setupPreview = setupPreview;
-module.exports.resizePreview = resizePreview;

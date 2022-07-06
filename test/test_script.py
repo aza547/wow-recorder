@@ -1,8 +1,11 @@
 import time
+import random
 
 path = "D:/World of Warcraft/_retail_/Logs"
+randomNumber = random.random()
+logName = f"WoWCombatLog-{randomNumber}.txt"
 
-f = open(f"{path}/WoWCombatLog-123.txt", "a")
+f = open(f"{path}/{logName}", "a")
 
 ZONE = "\n10/15 12:39:02.457  ZONE_CHANGE,1825,\"Hook Point\",0"
 START = "\n10/15 12:39:44.614  ARENA_MATCH_START,1825,31,2v2,0"
@@ -16,12 +19,12 @@ time.sleep(2)
 
 
 print("Writing START")
-f = open(f"{path}/WoWCombatLog-123.txt", "a")
+f = open(f"{path}/{logName}", "a")
 f.write(START)
 f.close()
 time.sleep(2)
 
-f = open(f"{path}/WoWCombatLog-123.txt", "a")
+f = open(f"{path}/{logName}", "a")
 f.write(RANDOM)
 f.write(RANDOM)
 f.write(RANDOM)
@@ -29,6 +32,6 @@ f.write(RANDOM)
 f.close()
 
 print("Writing END")
-f = open(f"{path}/WoWCombatLog-123.txt", "a")
+f = open(f"{path}/{logName}", "a")
 f.write(END)
 f.close()

@@ -90,9 +90,25 @@ const zones: { [id: number]: string; } = {
     489:  "Warsong Gulch"
 }
 
+/**
+ * Log strings that should start the recorder.
+ */
+const logStringStart: string[] = [
+    "ARENA_MATCH_START"
+];
+
+/**
+ * Log strings that should stop the recorder.
+ */
+const logStringStop: string[] = [
+    "ARENA_MATCH_END"
+];
+
 export {
     categories,
     months,
     zones,
+    logStringStart,
+    logStringStop
 };
 

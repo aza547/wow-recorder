@@ -5,16 +5,20 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
-import { resolveHtmlPath, checkDirs, getVideoState } from './util';
+import { resolveHtmlPath, checkDirs, getVideoState, writeMetadataFile } from './util';
+import { watchLogs, Metadata } from './logutils';
 import Store from 'electron-store';
 
 const obsRecorder = require('./../../obsRecorder');
+const glob = require('glob');
+const fs = require('fs');
 
 /**
  * Create a settings store to handle the config.
  */
 const cfg = new Store();
-let baseStoragePath: unknown = cfg.get('storage-path');
+let baseStoragePath: any = cfg.get('storage-path');
+let baseLogPath: any = cfg.get('log-path');
 
 /**
  * Getter and setter config listeners. 
@@ -189,16 +193,10 @@ const openPathDialog = (event: any, args: any) => {
 } 
 
 /**
- * Create a settings store to handle the config.
- */
-const initOBS = () => {
-  obsRecorder.initialize();
-}
-
-/**
  * Start recording.
  */
- const startRecording = () => {
+ const startRecording = (metadata: Metadata) => {
+  obsRecorder.configureOutputPath(baseStoragePath + "/" + metadata["category"] + "/");
   obsRecorder.start();
   if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
 }
@@ -206,10 +204,18 @@ const initOBS = () => {
 /**
  * Start recording.
  */
- const stopRecording = () => {
+ const stopRecording = (metadata: Metadata) => {
   obsRecorder.stop();
-  if (mainWindow) mainWindow.webContents.send('updateStatus', 0);
+  writeMetadataFile(baseStoragePath, metadata);
+
+  setTimeout(() => {
+      if (mainWindow) { 
+        mainWindow.webContents.send('updateStatus', 0);
+        mainWindow.webContents.send('refreshState');
+      };
+  }, 1000);
 }
+
 
 /**
  * mainWindow event listeners.
@@ -271,37 +277,22 @@ app.on('window-all-closed', () => {
 });
 
 /**
- * Watch WoW log file.
- */
-const fs = require('fs');
-// const Tail = require('tail').Tail;
-
-// const tail = new Tail("D:/World of Warcraft/_retail_/Logs/WoWCombatLog-123.txt");
-
-// tail.on("line", function(data) {
-//   console.log(data);
-// });
-
-fs.watchFile("D:/World of Warcraft/_retail_/Logs/WoWCombatLog-123.txt", { interval: 1000 }, (data) => {
-  console.log("file Changed");
-  console.log(data);
-});
-
-/**
  * App start-up.
  */
 app
   .whenReady()
   .then(() => {
     checkDirs(baseStoragePath);
-    initOBS();
+    obsRecorder.initialize(baseStoragePath);
     createWindow();
+    watchLogs(baseLogPath + "/");
   })
   .catch(console.log);
 
-
-
-
+export {
+  startRecording,
+  stopRecording    
+};
 
 
 
