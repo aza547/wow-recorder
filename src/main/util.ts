@@ -6,7 +6,7 @@ import { Metadata }  from './logutils';
 
 const fs = require('fs');
 const glob = require('glob');
-let videoIndex: number;
+let videoIndex: { [category: string]: number }  = {};
 
 export let resolveHtmlPath: (htmlFileName: string) => string;
 
@@ -21,23 +21,6 @@ if (process.env.NODE_ENV === 'development') {
   resolveHtmlPath = (htmlFileName: string) => {
     return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
   };
-}
-
-/**
- * Check for dirs we expect to exist, create them if not. 
- */
-const checkDirs = (baseStoragePath: unknown) => {
-    if (!baseStoragePath) return;
-    const diagsPath = baseStoragePath + "/diags";
-    const metadataPath = baseStoragePath + "/metadata";
-    
-    fs.existsSync(diagsPath) || createDirSyncRecursive(diagsPath);
-    fs.existsSync(metadataPath) || createDirSyncRecursive(metadataPath);
-
-    for (const category of categories) {
-        const storagePath = baseStoragePath + "/" + category;
-        fs.existsSync(storagePath) || createDirSyncRecursive(storagePath);
-    }
 }
 
 /**
@@ -63,20 +46,18 @@ const getEmptyState = () => {
 /**
  * Load videos from category folders in reverse chronological order.  
  */
-const loadAllVideos = (baseStoragePath: any, videoState: any) => {
+const loadAllVideos = (storageDir: any, videoState: any) => {
+    const videos = glob.sync(storageDir + "*.mp4")        
+        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
+        .sort((A: any, B: any) => B.mtime - A.mtime);
+
     for (const category of categories) {
-        const categoryPath = baseStoragePath + "/" + category + "/";      
-        
-        const videos = glob.sync(categoryPath + "*.mp4")        
-            .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-            .sort((A: any, B: any) => B.mtime - A.mtime);
-
-        videoIndex = 0;
-
-        for (const video of videos) {            
-            loadVideoDetails(video, videoState);
-        }        
+        videoIndex[category] = 0;
     }
+
+    for (const video of videos) {            
+        loadVideoDetails(video, videoState);
+    }        
 }
 
 /**
@@ -84,10 +65,10 @@ const loadAllVideos = (baseStoragePath: any, videoState: any) => {
  */
  const loadVideoDetails = (video: any, videoState: any) => {
     const dateObject = new Date(fs.statSync(video.name).mtime)
-    const metadata = loadMetadataForVideo(video)
+    const metadata = getMetadataForVideo(video)
 
     videoState[metadata.category].push({
-        index: videoIndex++,
+        index: videoIndex[metadata.category]++,
         fullPath: video.name,
         encounter: getVideoEncounter(metadata.zoneID, metadata.category),
         zone: getVideoZone(metadata.zoneID, metadata.category),
@@ -102,13 +83,23 @@ const loadAllVideos = (baseStoragePath: any, videoState: any) => {
 /**
  * Get the date a video was recorded from the date object.
  */
-const loadMetadataForVideo = (video: any) => {
+const getMetadataForVideo = (video: any) => {
     const videoFileName = path.basename(video.name, '.mp4');
     const videoDirName = path.dirname(video.name);
     const metadataFile = videoDirName + "/" + videoFileName + ".json";
     const metadataJSON = fs.readFileSync(metadataFile);
     const metadata = JSON.parse(metadataJSON);
     return metadata;
+}
+
+/**
+ * Get the date a video was recorded from the date object.
+ */
+ const getMetadataFileForVideo = (video: any) => {
+    const videoFileName = path.basename(video.name, '.mp4');
+    const videoDirName = path.dirname(video.name);
+    const metadataFilePath = videoDirName + "/" + videoFileName + ".json";
+    return metadataFilePath;
 }
 
 /**
@@ -163,40 +154,78 @@ const getVideoEncounter = (zoneID: number, category: string) => {
     return encounter;
 }
 
-
-
 /**
  * Get the state of all videos. 
- * Returns an empty array if baseStoragePath is undefined. 
+ * Returns an empty array if storageDir is undefined. 
  */
-const getVideoState = (baseStoragePath: unknown) => {
+const getVideoState = (storageDir: unknown) => {
     let videoState = getEmptyState();
-    if (!baseStoragePath) return videoState;
-    loadAllVideos(baseStoragePath, videoState);
+    if (!storageDir) return videoState;
+    loadAllVideos(storageDir, videoState);
     return videoState;
 }    
 
 /**
  *  writeMetadataFile
  */
-const writeMetadataFile = (storagePath: string, metadata: Metadata) => {
+const writeMetadataFile = (storageDir: string, metadata: Metadata) => {
     const jsonString = JSON.stringify(metadata, null, 2);
-    const categoryPath = storagePath + "/" + metadata["category"] + "/";
 
-    const timeOrderedVideos = glob.sync(categoryPath + "*.mp4")
+    const timeOrderedVideos = glob.sync(storageDir + "*.mp4")
         .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
         .sort((A: any, B: any) => B.mtime - A.mtime);
 
     const newestVideoPath = timeOrderedVideos[0].name;
     const newestVideoName = path.basename(newestVideoPath, '.mp4');
 
-    fs.writeFile(categoryPath + newestVideoName + ".json", jsonString, err => {
-        if (err) console.log("Error writing file", err);
-    })
+    fs.writeFileSync(storageDir + newestVideoName + ".json", jsonString);
 }    
 
+/**
+ * runSizeMonitor, maxStorage in bytes
+ */
+const runSizeMonitor = async (storageDir: any, maxStorage: any) => {  
+    let totalSize = 0;
+    const files = fs.readdirSync(storageDir);
+
+    files.forEach((file: any) => {
+        totalSize += fs.statSync(storageDir + file).size;
+    });
+
+    if (totalSize > maxStorage) { 
+        await deleteOldestVideo(storageDir);
+        runSizeMonitor(storageDir, maxStorage);
+    } 
+
+    console.log("totalSize: " + totalSize);
+
+    return;
+}   
+
+/**
+ * deleteOldestVideo
+ */
+const deleteOldestVideo = async (storageDir: any) => {
+    const oldestVideo = glob.sync(storageDir + "*.mp4")
+        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
+        .sort((A: any, B: any) => B.mtime - A.mtime)
+        .pop();
+
+    const oldestMetadata = getMetadataFileForVideo(oldestVideo);
+
+    await fs.unlink(oldestVideo.name, (err: any) => {
+        if (err) throw err;
+        console.log(oldestVideo.name + ' was deleted');
+    });
+
+    await fs.unlink(oldestMetadata, (err: any) => {
+        if (err) throw err;
+        console.log(oldestMetadata + ' was deleted');
+    });
+}  
+
 export {
-    checkDirs,
     getVideoState,
-    writeMetadataFile    
+    writeMetadataFile,
+    runSizeMonitor 
 };

@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
-import { resolveHtmlPath, checkDirs, getVideoState, writeMetadataFile } from './util';
+import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor } from './util';
 import { watchLogs, Metadata } from './logutils';
 import Store from 'electron-store';
 
@@ -15,9 +15,9 @@ const obsRecorder = require('./obsRecorder');
  * Create a settings store to handle the config.
  */
 const cfg = new Store();
-let baseStoragePath: any = cfg.get('storage-path');
+let storageDir: any = cfg.get('storage-path') + "/";
 let baseLogPath: any = cfg.get('log-path');
-
+let maxStorage: any = cfg.get('max-storage');
 /**
  * Getter and setter config listeners. 
  */
@@ -194,7 +194,7 @@ const openPathDialog = (event: any, args: any) => {
  * Start recording.
  */
  const startRecording = (metadata: Metadata) => {
-  obsRecorder.configureOutputPath(baseStoragePath + "/" + metadata["category"] + "/");
+  obsRecorder.configureOutputPath(storageDir + "/");
   obsRecorder.start();
   if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
 }
@@ -204,16 +204,16 @@ const openPathDialog = (event: any, args: any) => {
  */
  const stopRecording = (metadata: Metadata) => {
   obsRecorder.stop();
-  writeMetadataFile(baseStoragePath, metadata);
 
   setTimeout(() => {
       if (mainWindow) { 
+        writeMetadataFile(storageDir, metadata);
+        runSizeMonitor(storageDir, maxStorage * 1000000000);
         mainWindow.webContents.send('updateStatus', 0);
         mainWindow.webContents.send('refreshState');
       };
-  }, 1000);
+  }, 2000);
 }
-
 
 /**
  * mainWindow event listeners.
@@ -236,19 +236,10 @@ ipcMain.on('settingsWindow', (event, args) => {
 })
 
 /**
- * checkDirs listener.
- */
-ipcMain.on('checkDirs', () => {
-  const baseStoragePath = cfg.get('storage-path');
-  checkDirs(baseStoragePath);
-})
-
-/**
  * Get the list of video files and their state.
  */
 ipcMain.on('getVideoState', (event) => {
-  baseStoragePath = cfg.get('storage-path');
-  const videoState = getVideoState(baseStoragePath);
+  const videoState = getVideoState(storageDir);
   event.returnValue = videoState;
 });
 
@@ -256,8 +247,8 @@ ipcMain.on('getVideoState', (event) => {
  * Shutdown the app if all windows closed. 
  */
 app.on('window-all-closed', () => {
-  // Respect the OSX convention of having the application in memory even
-  // after all windows have been closed
+  obsRecorder.shutdown();
+
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -269,8 +260,7 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    checkDirs(baseStoragePath);
-    obsRecorder.initialize(baseStoragePath);
+    obsRecorder.initialize(storageDir);
     createWindow();
     watchLogs(baseLogPath + "/");
   })
