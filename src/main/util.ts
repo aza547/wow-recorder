@@ -6,6 +6,7 @@ import { Metadata }  from './logutils';
 
 const fs = require('fs');
 const glob = require('glob');
+let videoIndex: number;
 
 export let resolveHtmlPath: (htmlFileName: string) => string;
 
@@ -62,7 +63,7 @@ const getEmptyState = () => {
 /**
  * Load videos from category folders in reverse chronological order.  
  */
-const loadAllVideos = (baseStoragePath: unknown, videoState: any) => {
+const loadAllVideos = (baseStoragePath: any, videoState: any) => {
     for (const category of categories) {
         const categoryPath = baseStoragePath + "/" + category + "/";      
         
@@ -70,7 +71,9 @@ const loadAllVideos = (baseStoragePath: unknown, videoState: any) => {
             .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
             .sort((A: any, B: any) => B.mtime - A.mtime);
 
-        for (const video of videos) {
+        videoIndex = 0;
+
+        for (const video of videos) {            
             loadVideoDetails(video, videoState);
         }        
     }
@@ -80,12 +83,11 @@ const loadAllVideos = (baseStoragePath: unknown, videoState: any) => {
  * Load video details from the metadata and add it to videoState. 
  */
  const loadVideoDetails = (video: any, videoState: any) => {
-    let index: number = 0;
     const dateObject = new Date(fs.statSync(video.name).mtime)
     const metadata = loadMetadataForVideo(video)
 
     videoState[metadata.category].push({
-        index: index++,
+        index: videoIndex++,
         fullPath: video.name,
         encounter: getVideoEncounter(metadata.zoneID, metadata.category),
         zone: getVideoZone(metadata.zoneID, metadata.category),
@@ -149,7 +151,6 @@ const getVideoDuration = (videoName: string) => {
  * Get the zone name.
  */
 const getVideoZone = (zoneID: number, category: string) => {
-    console.log("get zone: " , zoneID, category);
     const zone = (category === "Raids" ? "Sepulcher of the First Ones" : zones[zoneID])
     return zone;
 }

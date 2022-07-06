@@ -9,9 +9,7 @@ import { resolveHtmlPath, checkDirs, getVideoState, writeMetadataFile } from './
 import { watchLogs, Metadata } from './logutils';
 import Store from 'electron-store';
 
-const obsRecorder = require('./../../obsRecorder');
-const glob = require('glob');
-const fs = require('fs');
+const obsRecorder = require('./obsRecorder');
 
 /**
  * Create a settings store to handle the config.
@@ -252,17 +250,6 @@ ipcMain.on('getVideoState', (event) => {
   baseStoragePath = cfg.get('storage-path');
   const videoState = getVideoState(baseStoragePath);
   event.returnValue = videoState;
-});
-
-/**
- * Get the list of video files and their state.
- */
-ipcMain.handle('recording-start', () => {
-  startRecording();
-});
-
-ipcMain.handle('recording-stop', () => {
-  stopRecording();
 });
 
 /**

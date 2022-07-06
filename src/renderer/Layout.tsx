@@ -228,10 +228,8 @@ export default function Layout() {
 
     // Format duration so that its MM:SS.
     const durationDate = new Date(0);
-    console.log(state.videoState);
     durationDate.setSeconds(state.videoState[category][index].duration);
     const formattedDuration = durationDate.toISOString().substr(14, 5);
-
 
     return(
       <Tab label={
@@ -284,7 +282,7 @@ export default function Layout() {
           >
           { state.videoState[category].map(file => {
             return(
-              generateVideoButton(file.name, file.index)
+              generateVideoButton(file.fullPath, file.index)
             )
           })}
           </Tabs>

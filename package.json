@@ -213,6 +213,7 @@
     "jest": "^27.5.1",
     "lint-staged": "^12.3.7",
     "mini-css-extract-plugin": "^2.6.0",
+    "node-loader": "^2.0.0",
     "opencollective-postinstall": "^2.0.3",
     "prettier": "^2.6.2",
     "react-refresh": "^0.12.0",
