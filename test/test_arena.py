@@ -63,5 +63,6 @@ print("Writing END")
 f = open(f"{path}/{logName}", "a")
 f.write(END)
 f.close()
-time.sleep(2)
+
+time.sleep(5)
 

@@ -49,18 +49,18 @@ const zones: { [id: number]: string; } = {
     2509: "Maldraxxus Coliseum",
     2547: "Enigma Crucible",
 
-    // Raids (Encounter IDs)
-    2537: "The Jailer",
-    2512: "Vigilant Guardian",
-    2529: "Halondrus the Reclaimer",
-    2539: "Lihuvim, Principal Architect",
-    2540: "Dausegne, the Fallen Oracle",
-    2542: "Skolex, the Insatiable Ravener",
-    2543: "Lords of Dread",
-    2544: "Prototype Pantheon",
-    2546: "Anduin Wrynn",
+    // Raids (Encounter IDs), shortened to fit on button
+    2537: "Jailer",
+    2512: "Guardian",
+    2529: "Halondrus",
+    2539: "Lihuvim",
+    2540: "Dausegne",
+    2542: "Skolex",
+    2543: "Lords",
+    2544: "Pantheon",
+    2546: "Anduin",
     2549: "Rygelon",
-    2553: "Artificer Xy'mox",
+    2553: "Xy'mox",
 
     // Dungeons (Zone IDs)
     2291: "De Other Side",
@@ -90,25 +90,9 @@ const zones: { [id: number]: string; } = {
     489:  "Warsong Gulch"
 }
 
-/**
- * Log strings that should start the recorder.
- */
-const logStringStart: string[] = [
-    "ARENA_MATCH_START"
-];
-
-/**
- * Log strings that should stop the recorder.
- */
-const logStringStop: string[] = [
-    "ARENA_MATCH_END"
-];
-
 export {
     categories,
     months,
     zones,
-    logStringStart,
-    logStringStop
 };
 

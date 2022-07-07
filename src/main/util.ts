@@ -24,13 +24,6 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 /**
- * Create a directory synchronously and recursively.
- */
-const createDirSyncRecursive = (dir: string) => {
-    fs.mkdirSync(dir, { recursive: true });
-}
-
-/**
  * Empty video state. 
  */
 const getEmptyState = () => {
@@ -70,9 +63,10 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
     videoState[metadata.category].push({
         index: videoIndex[metadata.category]++,
         fullPath: video.name,
-        encounter: getVideoEncounter(metadata.zoneID, metadata.category),
         zone: getVideoZone(metadata.zoneID, metadata.category),
         zoneID: metadata.zoneID,
+        encounter: getVideoEncounter(metadata),
+        encounterID: metadata.encounterID,
         duration: metadata.duration,
         result: metadata.result, 
         date: getVideoDate(dateObject),
@@ -149,9 +143,12 @@ const getVideoZone = (zoneID: number, category: string) => {
 /**
  * Get the encounter name.
  */
-const getVideoEncounter = (zoneID: number, category: string) => {
-    const encounter = (category === "Raids" ? zones[zoneID] : category);
-    return encounter;
+const getVideoEncounter = (metadata: Metadata) => {
+    if (metadata.encounterID) { 
+        return zones[metadata.encounterID]; 
+    } else {
+        return metadata.category; 
+    }
 }
 
 /**
