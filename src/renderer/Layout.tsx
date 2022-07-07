@@ -38,9 +38,24 @@ import dungeonDOS from "../../assets/dungeon/DOS.jpg";
 import dungeonMTS from "../../assets/dungeon/MTS.jpg";
 
 /**
+ * Import the raid encounter backdrops.
+ */
+import raid2512 from "../../assets/raid/2512.jpg";
+import raid2537 from "../../assets/raid/2537.jpg";
+import raid2539 from "../../assets/raid/2539.jpg";
+import raid2540  from "../../assets/raid/2540.jpg";
+import raid2542 from "../../assets/raid/2542.jpg";
+import raid2543  from "../../assets/raid/2543.jpg";
+import raid2544  from "../../assets/raid/2544.jpg";
+import raid2546 from "../../assets/raid/2546.jpg";
+import raid2549 from "../../assets/raid/2549.jpg";
+import raid2553 from "../../assets/raid/2553.jpg";
+import raid2529 from "../../assets/raid/2529.jpg";
+
+/**
  * Import the raid zone backdrops.
  */
- import raidSOFO  from "../../assets/raid/SOFO.jpg";
+import raidSOFO  from "../../assets/raid/SOFO.jpg";
 
 /**
  * Import video posters. 
@@ -70,17 +85,17 @@ const zoneBackdrops: any =  {
   2547: arenaENI,
 
   // Raids
-  2537: raidSOFO,
-  2512: raidSOFO,
-  2529: raidSOFO,
-  2539: raidSOFO,
-  2540: raidSOFO,
-  2542: raidSOFO,
-  2543: raidSOFO,
-  2544: raidSOFO,
-  2546: raidSOFO,
-  2549: raidSOFO,
-  2553: raidSOFO,
+  2537: raid2537,
+  2512: raid2512,
+  2529: raid2529,
+  2539: raid2539,
+  2540: raid2540,
+  2542: raid2542,
+  2543: raid2543,
+  2544: raid2544,
+  2546: raid2546,
+  2549: raid2549,
+  2553: raid2553,
 
   // Dungeons
   2291: dungeonDOS,

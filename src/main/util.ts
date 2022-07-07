@@ -211,8 +211,19 @@ const deleteOldestVideo = (storageDir: any) => {
     console.log("Size monitor deleted: ", oldestVideo.name, oldestMetadata);
 }  
 
+/**
+ * isConfigReady
+ */
+ const isConfigReady = (cfg: any) => {
+    if (!cfg.get('storage-path')) return false;
+    if (!cfg.get('log-path')) return false;
+    if (!cfg.get('max-storage')) return false;
+    return true;
+}  
+
 export {
     getVideoState,
     writeMetadataFile,
-    runSizeMonitor 
+    runSizeMonitor, 
+    isConfigReady
 };

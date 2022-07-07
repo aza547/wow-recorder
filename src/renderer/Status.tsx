@@ -26,18 +26,18 @@ export default function Status() {
   function getStatus() {
     if (status === 0) {
       return(
-        <div id="status" title="Waiting for a game to start...">
+        <div id="status" title="Waiting for a game to start.">
           <img id="eye-icon" alt="icon" src={eyeIcon}/>
         </div>
       )} else if (status === 1) {
         return(
           <div id="status">
-            <img id="status-icon" title="Recording a game!" alt="icon" src={recordIcon}/>
+            <img id="status-icon" title="Recording a game." alt="icon" src={recordIcon}/>
           </div>
       )} else if (status === 2) {
         return(
           <div id="status">
-            <img id="error-icon" title="Screen recorder hit an error, try checking config." alt="icon" src={errorIcon}/>
+            <img id="error-icon" title="Failed to launch, fix config and restart." alt="icon" src={errorIcon}/>
           </div>
       )}
     }

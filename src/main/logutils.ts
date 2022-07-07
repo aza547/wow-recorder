@@ -24,13 +24,17 @@ let metadata: Metadata;
 /**
  * getLatestLog 
  */
-const getLatestLog = (path: unknown) => {
+const getLatestLog = (path: any) => {
     const globPath = path + 'WoWCombatLog-*.txt';
 
     const logs = glob.sync(globPath)
         .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
         .sort((A: any, B: any) => B.mtime - A.mtime);
 
+    if (logs.length === 0) {
+        return false;
+    }
+    
     const newestLog = logs[0].name;
     return newestLog;
 }    
@@ -136,7 +140,7 @@ const handleArenaStartLine = (line: string) => {
  * Watch the logs. Check every second for a new file, 
  * if there is, swap to watching that. 
  */
-const watchLogs = (logdir: unknown) => {
+const watchLogs = (logdir: any) => {
     const checkInterval: number = 1000;
     
     setInterval(() => {
@@ -147,12 +151,14 @@ const watchLogs = (logdir: unknown) => {
             tailFile(currentLogFile);
             lastLogFile = currentLogFile;
         }
-    },
-    checkInterval);
+    }, checkInterval);
+
+    return true;
 }
 
 export {
     handleLogLine,
     watchLogs,
+    getLatestLog,
     Metadata
 };
