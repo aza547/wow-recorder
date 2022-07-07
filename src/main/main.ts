@@ -5,8 +5,8 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
-import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor } from './util';
-import { watchLogs, Metadata } from './logutils';
+import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady } from './util';
+import { watchLogs, Metadata, getLatestLog } from './logutils';
 import Store from 'electron-store';
 
 const obsRecorder = require('./obsRecorder');
@@ -16,8 +16,9 @@ const obsRecorder = require('./obsRecorder');
  */
 const cfg = new Store();
 let storageDir: any = cfg.get('storage-path') + "/";
-let baseLogPath: any = cfg.get('log-path');
+let baseLogPath: any = cfg.get('log-path') + "/";
 let maxStorage: any = cfg.get('max-storage');
+
 /**
  * Getter and setter config listeners. 
  */
@@ -92,15 +93,17 @@ const createWindow = async () => {
   });
 
   mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
+  mainWindow.setAspectRatio(15/9);
 
   mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) {
-      throw new Error('"mainWindow" is not defined');
+    if (!mainWindow) throw new Error('"mainWindow" is not defined');
+
+    // Check we have all config, and at least one log is in the log directory. 
+    if (isConfigReady(cfg) && (getLatestLog(baseLogPath))) {
+      mainWindow.webContents.send('updateStatus', 0);
+    } else {
+      mainWindow.webContents.send('updateStatus', 2);
     }
-
-    mainWindow.webContents.send('updateStatus', 0);
-
-    mainWindow.setAspectRatio(15/9);
 
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
@@ -194,7 +197,6 @@ const openPathDialog = (event: any, args: any) => {
  * Start recording.
  */
  const startRecording = (metadata: Metadata) => {
-  obsRecorder.configureOutputPath(storageDir + "/");
   obsRecorder.start();
   if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
 }
@@ -262,7 +264,8 @@ app
   .then(() => {
     obsRecorder.initialize(storageDir);
     createWindow();
-    watchLogs(baseLogPath + "/");
+    if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
+    watchLogs(baseLogPath);
   })
   .catch(console.log);
 

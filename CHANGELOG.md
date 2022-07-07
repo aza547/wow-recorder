@@ -4,17 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-
 ## [Unreleased]
-
-## [2.0.0] - 2022-07-07
 ### Added
 
 ### Changed
+
+### Fixed
+
+## [2.0.0] - 2022-07-07
+### Added
+- Backdrops for SOFO raid bosses.
+
+### Changed
 - Use libobs for recording.
-- Refactor of most internal logic 
-- Removal of the python screen recorder and ffmpeg executables.
-- Disable BG/Mythic+ modes for now. 
+  - Removal of the python code for screen recording.
+  - Removal of ffmpeg binary for screen capture. 
+- Refactor of most internal logic.
+- Disable BG/Mythic+ modes in the GUI for now. 
 
 ### Fixed
 

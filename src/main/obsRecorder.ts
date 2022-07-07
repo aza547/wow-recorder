@@ -28,10 +28,6 @@ function initialize(baseStoragePath: string) {
   obsInitialized = true;
 }
 
-function configureOutputPath(baseStoragePath: string) {
-  setSetting('Output', 'RecFilePath', baseStoragePath);
-}
-
 function initOBS() {
   console.debug('Initializing OBS...');
   osn.NodeObs.IPC.host(`obs-studio-node-example-${uuid()}`);
@@ -70,8 +66,8 @@ function configureOBS(baseStoragePath: string) {
   setSetting('Output', 'RecEncoder', availableEncoders.slice(-1)[0] || 'x264');
   setSetting('Output', 'RecFilePath', baseStoragePath);
   setSetting('Output', 'RecFormat', 'mp4');
-  setSetting('Output', 'VBitrate', 10000); // 10 Mbps
-  setSetting('Video', 'FPSCommon', 60);
+  setSetting('Output', 'VBitrate', 60000); // increasing improves quality?
+  setSetting('Video', 'FPSCommon', 50);
 
   console.debug('OBS Configured');
 }
