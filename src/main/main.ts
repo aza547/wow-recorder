@@ -208,7 +208,7 @@ const openPathDialog = (event: any, args: any) => {
   setTimeout(() => {
       if (mainWindow) { 
         writeMetadataFile(storageDir, metadata);
-        runSizeMonitor(storageDir, maxStorage * 1000000000);
+        runSizeMonitor(storageDir, maxStorage * 1000000000); //convert GB to bytes
         mainWindow.webContents.send('updateStatus', 0);
         mainWindow.webContents.send('refreshState');
       };

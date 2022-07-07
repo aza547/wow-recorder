@@ -184,44 +184,34 @@ const writeMetadataFile = (storageDir: string, metadata: Metadata) => {
 /**
  * runSizeMonitor, maxStorage in bytes
  */
-const runSizeMonitor = async (storageDir: any, maxStorage: any) => {  
+const runSizeMonitor = (storageDir: any, maxStorage: any) => {  
+
     let totalSize = 0;
     const files = fs.readdirSync(storageDir);
 
-    files.forEach((file: any) => {
+    for (const file of files) {
         totalSize += fs.statSync(storageDir + file).size;
-    });
+    }
 
     if (totalSize > maxStorage) { 
-        await deleteOldestVideo(storageDir);
+        deleteOldestVideo(storageDir);
         runSizeMonitor(storageDir, maxStorage);
     } 
-
-    console.log("totalSize: " + totalSize);
-
-    return;
 }   
 
 /**
  * deleteOldestVideo
  */
-const deleteOldestVideo = async (storageDir: any) => {
+const deleteOldestVideo = (storageDir: any) => {
     const oldestVideo = glob.sync(storageDir + "*.mp4")
         .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
         .sort((A: any, B: any) => B.mtime - A.mtime)
         .pop();
 
     const oldestMetadata = getMetadataFileForVideo(oldestVideo);
-
-    await fs.unlink(oldestVideo.name, (err: any) => {
-        if (err) throw err;
-        console.log(oldestVideo.name + ' was deleted');
-    });
-
-    await fs.unlink(oldestMetadata, (err: any) => {
-        if (err) throw err;
-        console.log(oldestMetadata + ' was deleted');
-    });
+    fs.unlinkSync(oldestVideo.name);
+    fs.unlinkSync(oldestMetadata);
+    console.log("Size monitor deleted: ", oldestVideo.name, oldestMetadata);
 }  
 
 export {
