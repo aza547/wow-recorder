@@ -1,79 +1,81 @@
 import * as React from 'react';
-import icon from '../../assets/icons8-heart-with-mouse-48.png';
 
+const ipc = window.electron.ipcRenderer;
 
 export default function Settings() {
 
-  const [storagePath, setStoragePath] = React.useState();
-  const [logPath, setLogPath] = React.useState();
-  const [maxStorage, setMaxStorage] = React.useState();
+  /**
+   * React state variables.
+   */
+  const [storagePath] = React.useState(window.electron.store.get('storage-path'));
+  const [logPath] = React.useState(window.electron.store.get('log-path'));
+  const [maxStorage] = React.useState(window.electron.store.get('max-storage'));
+
+  /**
+   * Close window.
+   */
+  const closeSettings = () => {
+    ipc.sendMessage('settingsWindow', ['quit']);
+  }
 
   /**
    * Save values. 
    */
-   const saveSettings = () => {
-    console.log("SAVE-SETTINGS event");
-    
-    window.electron.ipcRenderer.sendMessage(
-      'SAVE-SETTINGS', [ 
-        document.getElementById("storage-path").getAttribute("value"), 
-        document.getElementById("log-path").getAttribute("value"), 
-        document.getElementById("max-storage").getAttribute("value")
-      ]
-    );
-  }
-
-  const closeSettings = () => {
-    console.log("QUIT event");
-    window.electron.ipcRenderer.sendMessage('CLOSE-SETTINGS', []);
+  const saveSettings = () => {   
+    saveItem("storage-path");
+    saveItem("log-path");
+    saveItem("max-storage");
+    closeSettings();
   }
 
   /**
-   * Fill the placeholders with current config.
+   * Close window.
    */
-   const populateSettings = () => {
-    window.electron.ipcRenderer.sendMessage('GET-STORAGE-PATH', []);
-    window.electron.ipcRenderer.sendMessage('GET-LOG-PATH', []);
-    window.electron.ipcRenderer.sendMessage('GET-MAX-STORAGE', []);
+  const saveItem = (setting: string) => {
+    if (!document) return;
+    const element = document.getElementById(setting); 
+    
+    if (element) {
+      const value = element.getAttribute("value");
+      if (value) window.electron.store.set(setting, value);
+    }
   }
-
-  window.electron.ipcRenderer.on('RESP-STORAGE-PATH', (path) => {
-    setStoragePath(path);
-  });
-  
-  window.electron.ipcRenderer.on('RESP-LOG-PATH', (path) => {
-    setLogPath(path);
-  });
-  
-  window.electron.ipcRenderer.on('RESP-MAX-STORAGE', (value) => {
-   setMaxStorage(value);
-  });
   
   /**
    * Dialog window folder selection.
    */
-  const setCfgStoragePath = () => {
-    window.electron.ipcRenderer.sendMessage("SET-STORAGE-PATH", "message");
+  const openStoragePathDialog = () => {
+    ipc.sendMessage("settingsWindow", ["openPathDialog", "storage-path"]);
   }
 
-  window.electron.ipcRenderer.on('APPLY-STORAGE-PATH', (arg) => {
-    document.getElementById("storage-path").setAttribute("value", arg); 
+  const openLogPathDialog = () => {
+    ipc.sendMessage("settingsWindow", ["openPathDialog", "log-path"]);
+  }
+
+  /**
+   * Event handler when user types a new value for max storage.
+   */
+  const updateMaxStorageValue = (event: any) => {
+    const maxStorageElement = document.getElementById("max-storage");
+    if (maxStorageElement) maxStorageElement.setAttribute("value", event.target.value);
+  }
+
+  /**
+   * setSetting, why not just use react state hook?
+   */
+   const setSetting = (args: any) => {
+    const setting = args[1];
+    const value = args[2];
+    const element = document.getElementById(setting);
+    if (element) element.setAttribute("value", value);
+  }
+  /**
+   * Event handler when user selects an option in dialog window.
+   */
+  ipc.on('settingsWindow', (args: any) => {
+    if (args[0] === "pathSelected") setSetting(args);
   });
 
-  const setCfgLogPath = () => {
-    window.electron.ipcRenderer.sendMessage("SET-LOG-PATH", "message");
-  }
-
-  window.electron.ipcRenderer.on('APPLY-LOG-PATH', (arg) => {
-    document.getElementById("log-path").setAttribute("value", arg);
-  });
-
-  const updateMaxStorageValue = (event) => {
-    document.getElementById("max-storage").setAttribute("value", event.target.value);
-  }
-
-  populateSettings();
-  
   return (
     <div className="container">
       <div className="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12">
@@ -83,13 +85,13 @@ export default function Settings() {
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label>Storage Path</label>
-                  <input type="text" className="form-control" id="storage-path" placeholder={storagePath} onClick={setCfgStoragePath}/>
+                  <input type="text" className="form-control" id="storage-path" placeholder={storagePath} onClick={openStoragePathDialog}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label>Log Path</label>
-                  <input type="text" className="form-control" id="log-path" placeholder={logPath} onClick={setCfgLogPath}/>
+                  <input type="text" className="form-control" id="log-path" placeholder={logPath} onClick={openLogPathDialog}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">

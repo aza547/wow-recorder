@@ -12,9 +12,6 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 1. Run `npm start` to launch the application.
 
 ## Building and Packaging
-1. Rebuild the python screen recorder executable. Not required if you have not made python code changes.
-	1. `pyinstaller ./python/main.py -n "recorder"`
-	2. Copy the contents of the built `./python/dist/recorder` folder over the contents of `./win64recorder`. 
 1. Build the electron application.
     1. Update the version number in `./release/app/package.json`. 
     1. Run `npm run package` to build the electron application. 

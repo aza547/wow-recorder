@@ -25,11 +25,11 @@ Please create an issue, I will get to it eventually. Bear in mind maintaining th
 
 # Motivation
 
-This project is free and open source software. It is built on the [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate) repository. It is released in the hope that it will be useful to other players.
+This project is free and open source. It is built on the [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate) repository. It is released in the hope that it will be useful to other players.
 
 # Contributing
 
-See [contributing.md](https://github.com/aza547/wow-recorder/blob/main/CONTRIBUTING.md).
+See [contributing](https://github.com/aza547/wow-recorder/blob/main/CONTRIBUTING.md) docs.
 
 # License
 

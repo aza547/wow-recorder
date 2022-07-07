@@ -6,13 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+## [2.0.0] - 2022-07-07
 ### Added
-- Add Mythic+ framework.
 
 ### Changed
+- Use libobs for recording.
+- Refactor of most internal logic 
+- Removal of the python screen recorder and ffmpeg executables.
+- Disable BG/Mythic+ modes for now. 
 
 ### Fixed
-- Output.log path fix. 
 
 ## [1.0.3] - 2022-07-03
 ### Added

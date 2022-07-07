@@ -4,6 +4,7 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { makeStyles } from '@mui/styles';
+import { categories }  from '../main/constants';
 
 /**
  * Import the arena zone backdrops.
@@ -44,13 +45,14 @@ import dungeonMTS from "../../assets/dungeon/MTS.jpg";
 /**
  * Import video posters. 
  */
-import infoPoster  from  "../../assets/poster.png";
-import noVideosPoster from  "../../assets/poster-novideos.png";
+import readyPoster  from  "../../assets/poster/ready.png";
+import notReadyPoster from  "../../assets/poster/not-ready.png";
+import unsupportedPoster from  "../../assets/poster/unsupported.png";
 
 /**
  * List of zones and their backdrop image.
  */
- const zoneBackdrops =  {
+const zoneBackdrops: any =  {
   // Arenas
   1672: arenaBED,
   617:  arenaDAL,
@@ -69,6 +71,16 @@ import noVideosPoster from  "../../assets/poster-novideos.png";
 
   // Raids
   2537: raidSOFO,
+  2512: raidSOFO,
+  2529: raidSOFO,
+  2539: raidSOFO,
+  2540: raidSOFO,
+  2542: raidSOFO,
+  2543: raidSOFO,
+  2544: raidSOFO,
+  2546: raidSOFO,
+  2549: raidSOFO,
+  2553: raidSOFO,
 
   // Dungeons
   2291: dungeonDOS,
@@ -80,20 +92,9 @@ import noVideosPoster from  "../../assets/poster-novideos.png";
   2286: dungeonNW,
   2293: dungeonTOP,
   2441: dungeonTVM
- };
+};
 
-/**
- * List of supported categories. Order is the order they show up in the GUI.
- */
-const categories = [
-  "2v2",
-  "3v3",
-  "Skirmish",
-  "Solo Shuffle",
-  "Mythic+",
-  "Raids",
-  "Battlegrounds"
-];
+const ipc = window.electron.ipcRenderer;
 
 /**
  * Needed to style the tabs with the right color.
@@ -151,14 +152,14 @@ export default function Layout() {
     return {
       categoryIndex: 0,
       videoIndex: 0,
-      videoState: window.electron.ipcRenderer.sendSync('getVideoState', categories)
+      videoState: ipc.sendSync('getVideoState', categories)
     };
   });
 
   /**
    * Update the state variable following a change of selected category.
    */
-  const handleChangeCategory = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChangeCategory = (_event: React.SyntheticEvent, newValue: number) => {
     setState(prevState => {
       return {...prevState, categoryIndex: newValue, videoIndex: 0}
     })
@@ -167,7 +168,7 @@ export default function Layout() {
   /**
    * Update the state variable following a change of selected video.
    */
-  const handleChangeVideo = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChangeVideo = (_event: React.SyntheticEvent, newValue: number) => {
     setState(prevState => { return {...prevState, videoIndex: newValue} })
   };
 
@@ -183,18 +184,15 @@ export default function Layout() {
   /**
    * Refresh handler.
    */
-  window.electron.ipcRenderer.on('refreshState', () => {
+  ipc.on('refreshState', () => {
     setState(prevState => {
       return {
         ...prevState,
-        videoState: window.electron.ipcRenderer.sendSync('getVideoState', categories)
+        videoState: ipc.sendSync('getVideoState', categories)
         }
       }
     )
   });
-
-  // for debugging
-  console.log(state.videoState);
 
   /**
    * Returns TSX for the tab buttons for category selection, with an
@@ -244,10 +242,18 @@ export default function Layout() {
     durationDate.setSeconds(state.videoState[category][index].duration);
     const formattedDuration = durationDate.toISOString().substr(14, 5);
 
+    // Handle encounterID vs zoneID. Raid encounter start event doesn't contain zoneID. 
+    let labelBackdrop: string;
+
+    if (category === "Raids") {
+      labelBackdrop = zoneBackdrops[state.videoState[category][index].encounterID];
+    } else {
+      labelBackdrop = zoneBackdrops[state.videoState[category][index].zoneID];
+    }
 
     return(
       <Tab label={
-        <div className={ "videoButton" } style={{ backgroundImage: `url(${zoneBackdrops[state.videoState[category][index].zoneID]})`}}>
+        <div className={ "videoButton" } style={{ backgroundImage: `url(${labelBackdrop})`}}>
           <div className='duration'>{ formattedDuration }</div>
           <div className='encounter'>{ state.videoState[category][index].encounter }</div>
           <div className='zone'>{ state.videoState[category][index].zone }</div>
@@ -265,10 +271,18 @@ export default function Layout() {
    * Returns TSX for the video player and video selection tabs.
    */
   function generateTabPanel(tabIndex: number) {
-    if (state.videoState[category][state.videoIndex]) {
+
+    if ((tabIndex === 4) || (tabIndex === 6)) {
       return (
         <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster={infoPoster} controls>
+          <video key = "None" className="video" poster={ unsupportedPoster }></video>
+          <div className="noVideos"></div>
+        </TabPanel>
+      );
+    } else if (state.videoState[category][state.videoIndex]) {
+      return (
+        <TabPanel value={ state.categoryIndex } index={ tabIndex }>
+          <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster={readyPoster} controls>
             <source src={ state.videoState[category][state.videoIndex].fullPath } />
           </video>
           <Tabs
@@ -294,9 +308,9 @@ export default function Layout() {
             className={ classes.tabs }
             TabIndicatorProps={{style: { background:'#bb4220' }}}
           >
-          { state.videoState[category].map(file => {
+          { state.videoState[category].map((file: any) => {
             return(
-              generateVideoButton(file.name, file.index)
+              generateVideoButton(file.fullPath, file.index)
             )
           })}
           </Tabs>
@@ -305,14 +319,14 @@ export default function Layout() {
     } else {
       return (
         <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = "None" className="video" poster={ noVideosPoster }></video>
+          <video key = "None" className="video" poster={ notReadyPoster }></video>
           <div className="noVideos"></div>
         </TabPanel>
       );
     }
   };
 
-
+  
   return (
     <Box
       sx={{

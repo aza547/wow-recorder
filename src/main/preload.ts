@@ -1,12 +1,17 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'LIST';
-export type Channels = 'LISTRESPONSE';
-export type Channels = 'HIDE';
-export type Channels = 'RESIZE';
-export type Channels = 'QUIT';
+export type Channels = 'mainWindow' | 'settingsWindow' | 'getVideoState';
 
 contextBridge.exposeInMainWorld('electron', {
+  store: {
+    get(val: any) {
+      return ipcRenderer.sendSync('cfg-get', val);
+    },
+
+    set(property: any, val: any) {
+      ipcRenderer.send('cfg-set', property, val);
+    },
+  },
   ipcRenderer: {
     sendMessage(channel: Channels, args: unknown[]) {
       ipcRenderer.send(channel, args);
