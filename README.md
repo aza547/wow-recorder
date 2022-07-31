@@ -10,8 +10,10 @@ Only 64 bit Windows (any modern version) and retail WoW are currently supported.
 
 #  How to Use
 1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.1.0.2.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
-1. Launch the application and fill out the settings page. Restart the application to pick up the new config. 
-1. Enable combat logging in-game, I recommend the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon to automate this. 
+1. Launch the application and fill out the settings page. Restart the application to pick up the new config. See below image for an example. 
+1. Install the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon to automate combat logging, or manually type `/combatlog` in-game every time you login to enable combat logging on. 
+
+<img src="https://i.imgur.com/qmBDnle.png" width="300">
 
 #  Size Monitor
 
@@ -21,7 +23,7 @@ This feature is inspired by car dash cam behaviour: it deletes the oldest video 
 
 # Bug Reports & Suggestions
 
-Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
+Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR. If you don't have a github account and can't be bothered making one, you can contact me on [twitter](https://twitter.com/AlexsmiteWow).
 
 # Motivation
 
