@@ -35,6 +35,12 @@ ipcMain.on('cfg-set', async (_event, key, val) => {
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 
+/**
+ * Are we currently recording, and what category? 
+ */
+let isRecording: boolean = false;
+let isRecordingCategory: string | null = null;
+
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
@@ -198,6 +204,8 @@ const openPathDialog = (event: any, args: any) => {
  */
  const startRecording = (metadata: Metadata) => {
   obsRecorder.start();
+  isRecording = true;
+  isRecordingCategory = metadata.category;
   if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
 }
 
@@ -206,6 +214,8 @@ const openPathDialog = (event: any, args: any) => {
  */
  const stopRecording = (metadata: Metadata) => {
   obsRecorder.stop();
+  isRecording = false;
+  isRecordingCategory = null;
 
   setTimeout(() => {
       if (mainWindow) { 
@@ -222,7 +232,7 @@ const openPathDialog = (event: any, args: any) => {
  */
 ipcMain.on('mainWindow', (_event, args) => {
   if (mainWindow === null) return; 
-  if (args[0] === "maximize") mainWindow.maximize();
+  if (args[0] === "minimize") mainWindow.minimize();
   if (args[0] === "resize") mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
   if (args[0] === "quit") mainWindow.close();
 })
@@ -271,7 +281,9 @@ app
 
 export {
   startRecording,
-  stopRecording    
+  stopRecording,
+  isRecording,
+  isRecordingCategory
 };
 
 

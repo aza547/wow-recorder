@@ -1,12 +1,10 @@
 {
   "name": "WarcraftRecorder",
   "version": "2.0.0",
-  "description": "A foundation for scalable desktop apps",
+  "description": "A World of Warcraft screen recorder",
   "main": "./dist/main/main.js",
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://github.com/electron-react-boilerplate"
+    "name": "Alex K"
   },
   "scripts": {
     "electron-rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",

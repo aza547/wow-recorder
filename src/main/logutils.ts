@@ -1,5 +1,5 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
-import { startRecording, stopRecording}  from './main';
+import { startRecording, stopRecording, isRecording, isRecordingCategory}  from './main';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -75,6 +75,8 @@ const handleLogLine = (line: string) => {
         handleRaidStartLine(line);
     } else if (line.includes("ENCOUNTER_END")) {
         handleRaidStopLine(line);
+    } else if (line.includes("ZONE_CHANGE")) {
+        handleZoneChange();
     }  
 }    
 
@@ -133,6 +135,25 @@ const handleArenaStartLine = (line: string) => {
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
     metadata.result = Boolean(parseInt(line.split(',')[5]));
+    stopRecording(metadata);
+}
+
+/**
+ * Handle a line from the WoW log.
+ */
+ const handleZoneChange = () => {
+    // No-op if not already recording.
+    if (!isRecording) return;  
+
+    // Zone change doesn't mean mythic+ is over.
+    if (isRecordingCategory === "Mythic+") return;
+
+    const videoStopDate = new Date();
+    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+    metadata.duration = Math.round(milliSeconds / 1000);
+
+    // Assume loss if zoned out of content. 
+    metadata.result = false;
     stopRecording(metadata);
 }
 
