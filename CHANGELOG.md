@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+
+## [2.0.1] - 2022-07-31
+
+### Fixed
 - Fix minimize button.
 - Handle people /afking out of content gracefully by stopping recording on ZONE_CHANGE for most categories.
 
