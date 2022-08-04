@@ -25,7 +25,9 @@ This feature is inspired by car dash cam behaviour: it deletes the oldest video 
 
 # Bug Reports & Suggestions
 
-Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR. If you don't have a github account and can't be bothered making one, you can contact me on [twitter](https://twitter.com/AlexsmiteWow).
+Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
+
+I've created a dedicated discord for this project, feel free to join [here](https://discord.gg/NPha7KdjVk).
 
 # Motivation
 
