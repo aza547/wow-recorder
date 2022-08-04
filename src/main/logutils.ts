@@ -105,6 +105,7 @@ const handleArenaStartLine = (line: string) => {
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
+    metadata.result = Boolean(parseInt(line.split(',')[1]));
     stopRecording(metadata);
 }
 
