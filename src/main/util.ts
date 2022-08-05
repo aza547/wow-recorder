@@ -59,7 +59,7 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
  const loadVideoDetails = (video: any, videoState: any) => {
     const dateObject = new Date(fs.statSync(video.name).mtime)
     const metadata = getMetadataForVideo(video)
-    if (metadata != undefined){
+    if (metadata != undefined) {
         videoState[metadata.category].push({
             index: videoIndex[metadata.category]++,
             fullPath: video.name,
