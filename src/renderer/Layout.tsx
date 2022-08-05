@@ -252,6 +252,14 @@ export default function Layout() {
       }
     }
 
+    let resultClass: string; 
+
+    if (state.videoState[category][index].result){
+      resultClass = "goodResult";
+    } else {
+      resultClass = "badResult";
+    }
+
     // Format duration so that its MM:SS.
     const durationDate = new Date(0);
     durationDate.setSeconds(state.videoState[category][index].duration);
@@ -274,7 +282,7 @@ export default function Layout() {
           <div className='zone'>{ state.videoState[category][index].zone }</div>
           <div className='time'>{ state.videoState[category][index].time }</div>
           <div className='date'>{ state.videoState[category][index].date }</div>
-          <div className='result'>{ result }</div>
+          <div className={ resultClass }>{ result }</div>
         </div>
       }
       key={ file }

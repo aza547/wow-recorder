@@ -196,8 +196,6 @@ const determineArenaMatchResult = (line: string): boolean => {
         const srcFlags = line.split(',')[3];
         const srcCombatantData = combatantInfoMap.get(srcGUID)
 
-        console.log(combatantInfoMap)
-
         if (srcCombatantData !== undefined) {
             srcCombatantData.friendly = isFriendlyUnit(parseInt(srcFlags));
         }

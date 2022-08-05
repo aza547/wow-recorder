@@ -6,10 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Add some color to outcome indicator. 
 
 ### Changed
 
 ### Fixed
+- Fix arena win/loss indicator. Thanks to ericlytle for the code contribution. 
 
 ## [2.0.1] - 2022-07-31
 

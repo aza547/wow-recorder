@@ -19,3 +19,8 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
     1. Update the CHANGELOG.md with the new version number and change details. 
     1. Commit and push all changes.
 	1. Tag a release on GitHub and attach the executable (e.g. `./release/build/WarcraftRecorder Setup 1.0.2.exe`).
+
+## Microsoft Stamp of Approval
+If we just build a .exe and release it Windows will warn it may be dangerous. Could resolve this buy purchasing a certificate from a CA, but it costs a fortune. Read more about it in this [issue](https://github.com/aza547/wow-recorder/issues/11).
+1. Submit it for analysis here after releasing it to make that warning go away.
+1. This isn't instant but seems to get resolved within 24 hours, that seems good enough. 

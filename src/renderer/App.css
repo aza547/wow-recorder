@@ -203,11 +203,20 @@ h2 {
   position: absolute;
 }
 
-.result {
+.goodResult {
   bottom: 5px;
   right: 5px;
   position: absolute;
   text-align: right;
+  -webkit-text-fill-color: rgb(18, 211, 18);
+}
+
+.badResult {
+  bottom: 5px;
+  right: 5px;
+  position: absolute;
+  text-align: right;
+  -webkit-text-fill-color: red;
 }
 
 .time {
