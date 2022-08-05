@@ -59,19 +59,20 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
  const loadVideoDetails = (video: any, videoState: any) => {
     const dateObject = new Date(fs.statSync(video.name).mtime)
     const metadata = getMetadataForVideo(video)
-
-    videoState[metadata.category].push({
-        index: videoIndex[metadata.category]++,
-        fullPath: video.name,
-        zone: getVideoZone(metadata.zoneID, metadata.category),
-        zoneID: metadata.zoneID,
-        encounter: getVideoEncounter(metadata),
-        encounterID: metadata.encounterID,
-        duration: metadata.duration,
-        result: metadata.result, 
-        date: getVideoDate(dateObject),
-        time: getVideoTime(dateObject)
-    });
+    if (metadata != undefined){
+        videoState[metadata.category].push({
+            index: videoIndex[metadata.category]++,
+            fullPath: video.name,
+            zone: getVideoZone(metadata.zoneID, metadata.category),
+            zoneID: metadata.zoneID,
+            encounter: getVideoEncounter(metadata),
+            encounterID: metadata.encounterID,
+            duration: metadata.duration,
+            result: metadata.result, 
+            date: getVideoDate(dateObject),
+            time: getVideoTime(dateObject)
+        });
+    }
 }
 
 /**
@@ -81,9 +82,13 @@ const getMetadataForVideo = (video: any) => {
     const videoFileName = path.basename(video.name, '.mp4');
     const videoDirName = path.dirname(video.name);
     const metadataFile = videoDirName + "/" + videoFileName + ".json";
-    const metadataJSON = fs.readFileSync(metadataFile);
-    const metadata = JSON.parse(metadataJSON);
-    return metadata;
+    if (fs.existsSync(metadataFile)) {
+        const metadataJSON = fs.readFileSync(metadataFile);
+        const metadata = JSON.parse(metadataJSON);
+        return metadata;
+    }
+    console.log("Metadata file does not exist: ", metadataFile);
+    return undefined;
 }
 
 /**
@@ -114,22 +119,6 @@ const getVideoTime = (date: Date) => {
     const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
     const timeAsString = hours + ":" + mins;
     return timeAsString;
-}
-
-/**
- * Get the zoneID of a video from the file name.
- */
-const getZoneID = (videoName: string) => {
-    const zoneID: number = parseInt(videoName.split("-")[0]);
-    return zoneID;
-}
-
-/**
- * Get the duration of a video from the file name.
- */
-const getVideoDuration = (videoName: string) => {
-    const duration: number = parseInt(videoName.split("-")[1]);
-    return duration;
 }
 
 /**
