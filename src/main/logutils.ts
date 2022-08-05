@@ -1,5 +1,4 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
-import internal from 'stream';
 import { startRecording, stopRecording, isRecording, isRecordingCategory}  from './main';
 
 const tail = require('tail').Tail;
@@ -11,9 +10,8 @@ let currentLogFile: string;
 let lastLogFile: string;
 let videoStartDate: Date; 
 
-type CombatantData = 
-{
-    teamId: string;
+type CombatantData = {
+    teamID: string;
     friendly: boolean;
 }
 
@@ -93,48 +91,6 @@ const handleLogLine = (line: string) => {
 }
 
 /**
- * Handles the SPELL_AURA_APPLIED line from WoW log.
- * @param line the SPELL_AURA_APPLIED line
- */
-const handleSpellAuraAppliedLine = (line: string) => {
-    if (combatantInfoMap.size > 0)
-    {
-        let sourcePlayerId = line.split(',')[2];
-        let sourceGUID = line.split(',')[3];
-        let playerData = combatantInfoMap.get(sourcePlayerId)
-        if (playerData != undefined)
-        {
-            playerData.friendly = isFriendlyUnit(parseInt(sourceGUID));
-        }
-    }
-}
-
-/**
- * Handles the COMBATANT_INFO line from WoW log.
- * @param line the COMBATANT_INFO line
- */
-const handleCombatantInfoLine = (line: string) => {
-    let combatantData: CombatantData;
-    combatantData = {
-        friendly: false,
-        teamId: "",
-    }
-    const playerKey = line.split(',')[1];
-    combatantData.teamId = line.split(',')[2];
-    combatantInfoMap.set(playerKey, combatantData);
-}
-
-/**
- * Determines if the source GUID is from a friendly unit.
- * @param sourceGUID the source GUID
- * @returns true if sourceGUID belongs to a friendly unit; false otherwise. 
- */
-const isFriendlyUnit = (sourceGUID: number): boolean => {
-    const masked = sourceGUID & 0x000000f0;
-    return masked == 0x00000010;
-}
-
-/**
  * Handle a line from the WoW log. 
  */
 const handleArenaStartLine = (line: string) => {
@@ -152,6 +108,7 @@ const handleArenaStartLine = (line: string) => {
 
     startRecording(metadata);
 }
+
 /**
  * Handle a line from the WoW log. 
  */
@@ -165,14 +122,20 @@ const handleArenaStartLine = (line: string) => {
 }
 
 /**
- * Determines the arena match result
+ * Determines the arena match result.
  * @param line the line from the WoW log. 
- * @returns true if you won the match; otherwise false
+ * @returns true if the observer won the match; otherwise false
  */
 const determineArenaMatchResult = (line: string): boolean => {
-    const [playerData] = combatantInfoMap.values();
-    const winningTeamId = line.split(',')[1];
-    return playerData.friendly ? playerData.teamId == winningTeamId : !(playerData.teamId == winningTeamId);
+    const [combatantData] = combatantInfoMap.values();
+    const winningTeamID = line.split(',')[1];
+    const combatantWon: boolean = (combatantData.teamID === winningTeamID);
+
+    if (combatantData.friendly) {
+        return combatantWon;
+    } else {
+        return !combatantWon;
+    }
 }
 
 /**
@@ -222,6 +185,48 @@ const determineArenaMatchResult = (line: string): boolean => {
     // Assume loss if zoned out of content. 
     metadata.result = false;
     stopRecording(metadata);
+}
+/**
+ * Handles the SPELL_AURA_APPLIED line from WoW log.
+ * @param line the SPELL_AURA_APPLIED line
+ */
+ const handleSpellAuraAppliedLine = (line: string) => {
+    if (combatantInfoMap.size > 0) {
+        const srcGUID = line.split(',')[1];
+        const srcFlags = line.split(',')[3];
+        const srcCombatantData = combatantInfoMap.get(srcGUID)
+
+        console.log(combatantInfoMap)
+
+        if (srcCombatantData !== undefined) {
+            srcCombatantData.friendly = isFriendlyUnit(parseInt(srcFlags));
+        }
+    }
+}
+
+/**
+ * Handles the COMBATANT_INFO line from WoW log by adding it to combatantInfoMap.
+ * @param line the COMBATANT_INFO line
+ */
+const handleCombatantInfoLine = (line: string) => {
+    const combatantGUID = line.split(',')[1];
+
+    const combatantData: CombatantData = {
+        friendly: false,
+        teamID: line.split(',')[2],
+    }
+
+    combatantInfoMap.set(combatantGUID, combatantData);
+}
+
+/**
+ * Determine if the srcFlags indicate a friendly unit.
+ * @param srcFlags the srcFlags bitmask
+ * @returns true if friendly; false otherwise. 
+ */
+const isFriendlyUnit = (srcFlags: number): boolean => {
+    const masked = srcFlags & 0x000000f0;
+    return (masked === 0x00000010);
 }
 
 /**
