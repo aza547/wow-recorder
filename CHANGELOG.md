@@ -19,13 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
-- Fix arena win/loss indicator. Thanks to ericlytle for the code contribution. 
+- [5](https://github.com/aza547/wow-recorder/issues/5) - Fix arena win/loss indicator. Thanks to ericlytle for the code contribution. 
 
 ## [2.0.1] - 2022-07-31
 
 ### Fixed
 - Fix minimize button.
-- Handle people /afking out of content gracefully by stopping recording on ZONE_CHANGE for most categories.
+- [21](https://github.com/aza547/wow-recorder/issues/21) - Handle people /afking out of content gracefully by stopping recording on ZONE_CHANGE for most categories.
 
 ## [2.0.0] - 2022-07-07
 ### Added
