@@ -10,6 +10,11 @@ let currentLogFile: string;
 let lastLogFile: string;
 let videoStartDate: Date; 
 
+type CombatantData = {
+    teamID: string;
+    friendly: boolean;
+}
+
 type Metadata = {
     name: string;
     category: string;
@@ -20,6 +25,7 @@ type Metadata = {
 }
 
 let metadata: Metadata;
+let combatantInfoMap: Map<string, CombatantData> = new Map();
 
 /**
  * getLatestLog 
@@ -77,8 +83,12 @@ const handleLogLine = (line: string) => {
         handleRaidStopLine(line);
     } else if (line.includes("ZONE_CHANGE")) {
         handleZoneChange();
-    }  
-}    
+    } else if (line.includes("COMBATANT_INFO")) {
+        handleCombatantInfoLine(line);
+    } else if (line.includes("SPELL_AURA_APPLIED")){
+        handleSpellAuraAppliedLine(line);
+    }
+}
 
 /**
  * Handle a line from the WoW log. 
@@ -98,6 +108,7 @@ const handleArenaStartLine = (line: string) => {
 
     startRecording(metadata);
 }
+
 /**
  * Handle a line from the WoW log. 
  */
@@ -105,7 +116,26 @@ const handleArenaStartLine = (line: string) => {
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
+    metadata.result = determineArenaMatchResult(line);
+    combatantInfoMap.clear();
     stopRecording(metadata);
+}
+
+/**
+ * Determines the arena match result.
+ * @param line the line from the WoW log. 
+ * @returns true if the observer won the match; otherwise false
+ */
+const determineArenaMatchResult = (line: string): boolean => {
+    const [combatantData] = combatantInfoMap.values();
+    const winningTeamID = line.split(',')[1];
+    const combatantWon: boolean = (combatantData.teamID === winningTeamID);
+
+    if (combatantData.friendly) {
+        return combatantWon;
+    } else {
+        return !combatantWon;
+    }
 }
 
 /**
@@ -155,6 +185,48 @@ const handleArenaStartLine = (line: string) => {
     // Assume loss if zoned out of content. 
     metadata.result = false;
     stopRecording(metadata);
+}
+/**
+ * Handles the SPELL_AURA_APPLIED line from WoW log.
+ * @param line the SPELL_AURA_APPLIED line
+ */
+ const handleSpellAuraAppliedLine = (line: string) => {
+    if (combatantInfoMap.size > 0) {
+        const srcGUID = line.split(',')[1];
+        const srcFlags = line.split(',')[3];
+        const srcCombatantData = combatantInfoMap.get(srcGUID)
+
+        console.log(combatantInfoMap)
+
+        if (srcCombatantData !== undefined) {
+            srcCombatantData.friendly = isFriendlyUnit(parseInt(srcFlags));
+        }
+    }
+}
+
+/**
+ * Handles the COMBATANT_INFO line from WoW log by adding it to combatantInfoMap.
+ * @param line the COMBATANT_INFO line
+ */
+const handleCombatantInfoLine = (line: string) => {
+    const combatantGUID = line.split(',')[1];
+
+    const combatantData: CombatantData = {
+        friendly: false,
+        teamID: line.split(',')[2],
+    }
+
+    combatantInfoMap.set(combatantGUID, combatantData);
+}
+
+/**
+ * Determine if the srcFlags indicate a friendly unit.
+ * @param srcFlags the srcFlags bitmask
+ * @returns true if friendly; false otherwise. 
+ */
+const isFriendlyUnit = (srcFlags: number): boolean => {
+    const masked = srcFlags & 0x000000f0;
+    return (masked === 0x00000010);
 }
 
 /**
