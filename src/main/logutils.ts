@@ -1,4 +1,5 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
+import internal from 'stream';
 import { startRecording, stopRecording, isRecording, isRecordingCategory}  from './main';
 
 const tail = require('tail').Tail;
@@ -10,6 +11,12 @@ let currentLogFile: string;
 let lastLogFile: string;
 let videoStartDate: Date; 
 
+type CombatantData = 
+{
+    teamId: string;
+    friendly: boolean;
+}
+
 type Metadata = {
     name: string;
     category: string;
@@ -20,6 +27,7 @@ type Metadata = {
 }
 
 let metadata: Metadata;
+let combatantInfoMap: Map<string, CombatantData> = new Map();
 
 /**
  * getLatestLog 
@@ -77,8 +85,54 @@ const handleLogLine = (line: string) => {
         handleRaidStopLine(line);
     } else if (line.includes("ZONE_CHANGE")) {
         handleZoneChange();
-    }  
-}    
+    } else if (line.includes("COMBATANT_INFO")) {
+        handleCombatantInfoLine(line);
+    } else if (line.includes("SPELL_AURA_APPLIED")){
+        handleSpellAuraAppliedLine(line);
+    }
+}
+
+/**
+ * Handles the SPELL_AURA_APPLIED line from WoW log.
+ * @param line the SPELL_AURA_APPLIED line
+ */
+const handleSpellAuraAppliedLine = (line: string) => {
+    if (combatantInfoMap.size > 0)
+    {
+        let sourcePlayerId = line.split(',')[2];
+        let sourceGUID = line.split(',')[3];
+        let playerData = combatantInfoMap.get(sourcePlayerId)
+        if (playerData != undefined)
+        {
+            playerData.friendly = isFriendlyUnit(parseInt(sourceGUID));
+        }
+    }
+}
+
+/**
+ * Handles the COMBATANT_INFO line from WoW log.
+ * @param line the COMBATANT_INFO line
+ */
+const handleCombatantInfoLine = (line: string) => {
+    let combatantData: CombatantData;
+    combatantData = {
+        friendly: false,
+        teamId: "",
+    }
+    const playerKey = line.split(',')[1];
+    combatantData.teamId = line.split(',')[2];
+    combatantInfoMap.set(playerKey, combatantData);
+}
+
+/**
+ * Determines if the source GUID is from a friendly unit.
+ * @param sourceGUID the source GUID
+ * @returns true if sourceGUID belongs to a friendly unit; false otherwise. 
+ */
+const isFriendlyUnit = (sourceGUID: number): boolean => {
+    const masked = sourceGUID & 0x000000f0;
+    return masked == 0x00000010;
+}
 
 /**
  * Handle a line from the WoW log. 
@@ -105,8 +159,19 @@ const handleArenaStartLine = (line: string) => {
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
-    metadata.result = Boolean(parseInt(line.split(',')[1]));
+    metadata.result = determineArenaMatchResult(line);
     stopRecording(metadata);
+}
+
+/**
+ * Determines the arena match result
+ * @param line the line from the WoW log. 
+ * @returns true if you won the match; otherwise false
+ */
+const determineArenaMatchResult = (line: string): boolean => {
+    const [playerData] = combatantInfoMap.values();
+    const winningTeamId = line.split(',')[1];
+    return playerData.friendly ? playerData.teamId == winningTeamId : !(playerData.teamId == winningTeamId);
 }
 
 /**
