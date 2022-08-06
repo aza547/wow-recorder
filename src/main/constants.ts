@@ -90,9 +90,45 @@ const zones: { [id: number]: string; } = {
     489:  "Warsong Gulch"
 }
 
+const videoTabsSx = {
+  position: 'fixed',
+  bottom: '1px',
+  left: '1px',
+  width: '100%',
+  borderColor: '#000000',
+  bgcolor: '#272e48' ,
+  textColor: 'secondary',
+  overflow: 'visible',
+  borderTop: '1px solid',
+  borderBottom: '1px solid',
+  borderLeft: '1px solid',
+  borderRight: '1px solid'
+};
+
+  const categoryTabSx = {
+  padding:'12px', 
+  bgcolor: '#272e48', 
+  color: 'white', 
+  borderBottom: '1px solid', 
+  borderColor: 'black', 
+  minHeight: '1px', 
+  height: '30px'
+}
+
+  const categoryTabsSx = {
+  borderColor: '#000000', 
+  bgcolor: '#272e48', 
+  textColor: 'secondary', 
+  width: '175px', 
+  overflow: 'visible'
+}
+
 export {
     categories,
     months,
     zones,
+    videoTabsSx,
+    categoryTabSx,
+    categoryTabsSx
 };
 

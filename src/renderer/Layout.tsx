@@ -4,55 +4,8 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { makeStyles } from '@mui/styles';
-import { categories }  from '../main/constants';
-import VideoTab  from './VideoTab';
-
-
-/**
- * Import the arena zone backdrops.
- */
-import arenaBED from "../../assets/arena/BED.png";
-import arenaDAL from "../../assets/arena/DAL.jpg";
-import arenaNAG from "../../assets/arena/NAG.jpg";
-import arenaROL from "../../assets/arena/ROL.png";
-import arenaROB from "../../assets/arena/ROB.jpg";
-import arenaTP  from "../../assets/arena/TP.png";
-import arenaTOL from "../../assets/arena/TOL.png";
-import arenaBRK from "../../assets/arena/BRK.jpg";
-import arenaED  from "../../assets/arena/ED.jpg";
-import arenaASH from "../../assets/arena/ASH.jpg";
-import arenaMUG from "../../assets/arena/MUG.jpg";
-import arenaHP  from "../../assets/arena/HP.jpg";
-import arenaMAL from "../../assets/arena/MAL.jpg";
-import arenaENI from "../../assets/arena/ENI.png";
-
-/**
- * Import the dungeon zone backdrops.
- */
-import dungeonTOP from "../../assets/dungeon/TOP.jpg";
-import dungeonTVM from "../../assets/dungeon/TVM.jpg";
-import dungeonHOA from "../../assets/dungeon/HOA.jpg";
-import dungeonNW  from "../../assets/dungeon/NW.jpg";
-import dungeonSOA from "../../assets/dungeon/SOA.jpg";
-import dungeonPF  from "../../assets/dungeon/PF.jpg";
-import dungeonSD  from "../../assets/dungeon/SD.jpg";
-import dungeonDOS from "../../assets/dungeon/DOS.jpg";
-import dungeonMTS from "../../assets/dungeon/MTS.jpg";
-
-/**
- * Import the raid encounter backdrops.
- */
-import raid2512 from "../../assets/raid/2512.jpg";
-import raid2537 from "../../assets/raid/2537.jpg";
-import raid2539 from "../../assets/raid/2539.jpg";
-import raid2540  from "../../assets/raid/2540.jpg";
-import raid2542 from "../../assets/raid/2542.jpg";
-import raid2543  from "../../assets/raid/2543.jpg";
-import raid2544  from "../../assets/raid/2544.jpg";
-import raid2546 from "../../assets/raid/2546.jpg";
-import raid2549 from "../../assets/raid/2549.jpg";
-import raid2553 from "../../assets/raid/2553.jpg";
-import raid2529 from "../../assets/raid/2529.jpg";
+import { categories, videoTabsSx, categoryTabSx, categoryTabsSx }  from '../main/constants';
+import VideoButton  from './VideoButton';
 
 /**
  * Import video posters. 
@@ -62,50 +15,8 @@ import notReadyPoster from  "../../assets/poster/not-ready.png";
 import unsupportedPoster from  "../../assets/poster/unsupported.png";
 
 /**
- * List of zones and their backdrop image.
+ * For shorthand referencing. 
  */
-const zoneBackdrops: any =  {
-  // Arenas
-  1672: arenaBED,
-  617:  arenaDAL,
-  1505: arenaNAG,
-  572:  arenaROL,
-  2167: arenaROB,
-  1134: arenaTP,
-  980:  arenaTOL,
-  1504: arenaBRK,
-  2373: arenaED,
-  1552: arenaASH,
-  1911: arenaMUG,
-  1825: arenaHP,
-  2509: arenaMAL,
-  2547: arenaENI,
-
-  // Raids
-  2537: raid2537,
-  2512: raid2512,
-  2529: raid2529,
-  2539: raid2539,
-  2540: raid2540,
-  2542: raid2542,
-  2543: raid2543,
-  2544: raid2544,
-  2546: raid2546,
-  2549: raid2549,
-  2553: raid2553,
-
-  // Dungeons
-  2291: dungeonDOS,
-  2287: dungeonHOA,
-  2290: dungeonMTS,
-  2289: dungeonPF,
-  2284: dungeonSD,
-  2258: dungeonSOA,
-  2286: dungeonNW,
-  2293: dungeonTOP,
-  2441: dungeonTVM
-};
-
 const ipc = window.electron.ipcRenderer;
 
 /**
@@ -181,10 +92,9 @@ export default function Layout() {
    * Update the state variable following a change of selected video.
    */
   const handleChangeVideo = (_event: React.SyntheticEvent, newValue: number) => {
+    console.log("change");
     setState(prevState => { return {...prevState, videoIndex: newValue} })
   };
-
-
 
  /**
   * State dependant variables.
@@ -213,85 +123,19 @@ export default function Layout() {
    function generateTab(tabIndex: number) {
      if (tabIndex === 0) {
        return (
-        <Tab
-        label={ categories[tabIndex] } {...a11yProps(tabIndex)}
-        sx = {{ padding:'12px', bgcolor: '#272e48', color: 'white', borderTop: '1px solid', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px'}}/>
+        <Tab label={ categories[tabIndex] } {...a11yProps(tabIndex)} sx = {{ borderTop: '1px solid', ...categoryTabSx }}/>
        )
      } else {
       return (
-        <Tab
-        label={ categories[tabIndex] } {...a11yProps(tabIndex)}
-        sx = {{ padding:'12px', bgcolor: '#272e48' , color: 'white', borderBottom: '1px solid', borderColor: 'black', minHeight: '1px', height: '30px' }}/>
+        <Tab label={ categories[tabIndex] } {...a11yProps(tabIndex)} sx = {{ ...categoryTabSx }}/>
       );
      }
-  };
-
-  /**
-   * Reads the video file name and seperates out into useful parameter.
-   */
-   function generateVideoButton(file: string, index: number) {
-
-    let result;
-    const isPvp = (category === "2v2") || (category === "3v3") || (category === "Skirmish") || (category === "Solo Shuffle");
-
-    // Get appropriate success/fail text for the content type.
-    if (isPvp) {
-      if (state.videoState[category][index].result) {
-        result = "Win";
-      } else {
-       result = "Loss";
-     }
-    } else {
-      if (state.videoState[category][index].result) {
-        result = "Kill";
-      } else {
-        result = "Wipe";
-      }
-    }
-
-    let resultClass: string; 
-
-    if (state.videoState[category][index].result){
-      resultClass = "goodResult";
-    } else {
-      resultClass = "badResult";
-    }
-
-    // Format duration so that its MM:SS.
-    const durationDate = new Date(0);
-    durationDate.setSeconds(state.videoState[category][index].duration);
-    const formattedDuration = durationDate.toISOString().substr(14, 5);
-
-    // Handle encounterID vs zoneID. Raid encounter start event doesn't contain zoneID. 
-    let labelBackdrop: string;
-
-    if (category === "Raids") {
-      labelBackdrop = zoneBackdrops[state.videoState[category][index].encounterID];
-    } else {
-      labelBackdrop = zoneBackdrops[state.videoState[category][index].zoneID];
-    }
-
-    return(
-      <Tab label={
-        <div className={ "videoButton" } style={{ backgroundImage: `url(${labelBackdrop})`}}>
-          <div className='duration'>{ formattedDuration }</div>
-          <div className='encounter'>{ state.videoState[category][index].encounter }</div>
-          <div className='zone'>{ state.videoState[category][index].zone }</div>
-          <div className='time'>{ state.videoState[category][index].time }</div>
-          <div className='date'>{ state.videoState[category][index].date }</div>
-          <div className={ resultClass }>{ result }</div>
-        </div>
-      }
-      key={ file }
-      sx={{ padding: '0px', borderLeft: '1px solid black', borderRight: '1px solid black', bgcolor: '#272e48', color: 'white', minHeight: '1px', height: '100px', width: '200px' }}/>
-    )
   };
 
   /**
    * Returns TSX for the video player and video selection tabs.
    */
   function generateTabPanel(tabIndex: number) {
-
     if ((tabIndex === 4) || (tabIndex === 6)) {
       return (
         <TabPanel value={ state.categoryIndex } index={ tabIndex }>
@@ -311,26 +155,14 @@ export default function Layout() {
             variant="scrollable"
             scrollButtons="auto"
             aria-label="scrollable auto tabs example"
-            sx= {{
-              position: 'fixed',
-              bottom: '1px',
-              left: '1px',
-              width: '100%',
-              borderColor: '#000000',
-              bgcolor: '#272e48' ,
-              textColor: 'secondary',
-              overflow: 'visible',
-              borderTop: '1px solid',
-              borderBottom: '1px solid',
-              borderLeft: '1px solid',
-              borderRight: '1px solid'
-            }}
+            sx= {{ ...videoTabsSx }}
             className={ classes.tabs }
             TabIndicatorProps={{style: { background:'#bb4220' }}}
           >
+
           { state.videoState[category].map((file: any) => {
             return(
-              <VideoTab key={file.fullPath} state={state} index={file.index}/>
+              <VideoButton key={file.fullPath} state={state} index={file.index}/>
             )
           })}
           </Tabs>
@@ -345,7 +177,6 @@ export default function Layout() {
       );
     }
   };
-
   
   return (
     <Box
@@ -361,7 +192,7 @@ export default function Layout() {
         value={ state.categoryIndex }
         onChange={ handleChangeCategory }
         aria-label="Vertical tabs example"
-        sx={{  borderColor: '#000000', bgcolor: '#272e48', textColor: 'secondary', width: '175px', overflow: 'visible'}}
+        sx={{ ...categoryTabsSx }}
         className={ classes.tabs }
         TabIndicatorProps={{style: { background:'#bb4220' }}} >
           { generateTab(0) }
