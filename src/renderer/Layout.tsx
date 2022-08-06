@@ -5,6 +5,8 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { makeStyles } from '@mui/styles';
 import { categories }  from '../main/constants';
+import VideoTab  from './VideoTab';
+
 
 /**
  * Import the arena zone backdrops.
@@ -51,11 +53,6 @@ import raid2546 from "../../assets/raid/2546.jpg";
 import raid2549 from "../../assets/raid/2549.jpg";
 import raid2553 from "../../assets/raid/2553.jpg";
 import raid2529 from "../../assets/raid/2529.jpg";
-
-/**
- * Import the raid zone backdrops.
- */
-import raidSOFO  from "../../assets/raid/SOFO.jpg";
 
 /**
  * Import video posters. 
@@ -333,7 +330,7 @@ export default function Layout() {
           >
           { state.videoState[category].map((file: any) => {
             return(
-              generateVideoButton(file.fullPath, file.index)
+              <VideoTab key={file.fullPath} state={state} index={file.index}/>
             )
           })}
           </Tabs>

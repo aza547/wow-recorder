@@ -6,21 +6,13 @@ import MenuItem from '@mui/material/MenuItem';
 import { categories }  from '../main/constants';
 import { getResultText, getFormattedDuration } from './rendererutils';
 
-
-import * as React from 'react';
-import Tabs from '@mui/material/Tabs';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import { makeStyles } from '@mui/styles';
-
-
 /**
  * Import video posters. 
  */
  import readyPoster  from  "../../assets/poster/ready.png";
  import notReadyPoster from  "../../assets/poster/not-ready.png";
  import unsupportedPoster from  "../../assets/poster/unsupported.png";
-
+ 
 /**
  * Import the arena zone backdrops.
  */
@@ -113,8 +105,6 @@ import raid2529 from "../../assets/raid/2529.jpg";
 };
 
 export default function VideoButton(props: any) {
-
-    
     const state = props.state;
     const videoIndex = props.index;
     const file = props.file;
@@ -173,12 +163,6 @@ export default function VideoButton(props: any) {
         handleCloseMenu();
     };
 
-    if ((props.index === 4) || (props.index === 6)) {
-        return (
-            <div></div>
-        );
-    }
-
     return (
         <React.Fragment>
             <Tab label={
@@ -201,42 +185,3 @@ export default function VideoButton(props: any) {
         </React.Fragment>
     );
 }
-
-
-if (state.videoState[category][state.videoIndex]) {
-    return (
-      <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-        <video key={ state.videoState[category][state.videoIndex].fullPath } className="video" poster={readyPoster} controls>
-          <source src={ state.videoState[category][state.videoIndex].fullPath } />
-        </video>
-        <Tabs
-          value={state.videoIndex}
-          onChange={ handleChangeVideo }
-          variant="scrollable"
-          scrollButtons="auto"
-          aria-label="scrollable auto tabs example"
-          sx= {{
-            position: 'fixed',
-            bottom: '1px',
-            left: '1px',
-            width: '100%',
-            borderColor: '#000000',
-            bgcolor: '#272e48' ,
-            textColor: 'secondary',
-            overflow: 'visible',
-            borderTop: '1px solid',
-            borderBottom: '1px solid',
-            borderLeft: '1px solid',
-            borderRight: '1px solid'
-          }}
-          className={ classes.tabs }
-          TabIndicatorProps={{style: { background:'#bb4220' }}}
-        >
-        { state.videoState[category].map((file: any) => {
-          return(
-            <VideoButton key={file.fullPath} state={state} file={file.fullPath} index={file.index}/>
-          )
-        })}
-        </Tabs>
-      </TabPanel>
-    );
