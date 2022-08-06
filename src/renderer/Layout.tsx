@@ -179,13 +179,7 @@ export default function Layout() {
   };
   
   return (
-    <Box
-      sx={{
-        width: '50%',
-        height: '210px',
-        display: 'flex'
-      }}
-    >
+    <Box sx={{ width: '50%', height: '210px', display: 'flex' }}>
       <Tabs
         orientation="vertical"
         variant="standard"
@@ -194,7 +188,7 @@ export default function Layout() {
         aria-label="Vertical tabs example"
         sx={{ ...categoryTabsSx }}
         className={ classes.tabs }
-        TabIndicatorProps={{style: { background:'#bb4220' }}} >
+        TabIndicatorProps={{style: { background:'#bb4220' }}}>
           { generateTab(0) }
           { generateTab(1) }
           { generateTab(2) }
