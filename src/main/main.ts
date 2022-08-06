@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
-import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady } from './util';
+import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected } from './util';
 import { watchLogs, Metadata, getLatestLog } from './logutils';
 import Store from 'electron-store';
 
@@ -245,6 +245,28 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (settingsWindow === null) return; 
   if (args[0] === "quit") settingsWindow.close();
   if (args[0] === "openPathDialog") openPathDialog(event, args);
+})
+
+/**
+ * contextMenu event listeners.
+ */
+ipcMain.on('contextMenu', (event, args) => {
+  if (args[0] === "delete") {
+    const videoForDeletion = args[1];
+    deleteVideo(videoForDeletion);
+    if (mainWindow) mainWindow.webContents.send('refreshState');
+  }
+
+  if (args[0] === "open") {
+    const fileToOpen = args[1];
+    openSystemExplorer(fileToOpen);
+  }
+
+  if (args[0] === "save") {
+    const videoToToggle = args[1];
+    toggleVideoProtected(videoToToggle);
+    if (mainWindow) mainWindow.webContents.send('refreshState');
+  }
 })
 
 /**

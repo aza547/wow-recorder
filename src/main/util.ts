@@ -3,6 +3,7 @@ import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones }  from './constants';
 import { Metadata }  from './logutils';
+const { exec } = require('child_process');
 
 const fs = require('fs');
 const glob = require('glob');
@@ -70,7 +71,8 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
             duration: metadata.duration,
             result: metadata.result, 
             date: getVideoDate(dateObject),
-            time: getVideoTime(dateObject)
+            time: getVideoTime(dateObject),
+            protected: Boolean(metadata.protected)
         });
     }
 }
@@ -82,21 +84,23 @@ const getMetadataForVideo = (video: any) => {
     const videoFileName = path.basename(video.name, '.mp4');
     const videoDirName = path.dirname(video.name);
     const metadataFile = videoDirName + "/" + videoFileName + ".json";
+
     if (fs.existsSync(metadataFile)) {
         const metadataJSON = fs.readFileSync(metadataFile);
         const metadata = JSON.parse(metadataJSON);
         return metadata;
+    } else {
+        console.log("Metadata file does not exist: ", metadataFile);
+        return undefined;
     }
-    console.log("Metadata file does not exist: ", metadataFile);
-    return undefined;
 }
 
 /**
  * Get the date a video was recorded from the date object.
  */
  const getMetadataFileForVideo = (video: any) => {
-    const videoFileName = path.basename(video.name, '.mp4');
-    const videoDirName = path.dirname(video.name);
+    const videoFileName = path.basename(video, '.mp4');
+    const videoDirName = path.dirname(video);
     const metadataFilePath = videoDirName + "/" + videoFileName + ".json";
     return metadataFilePath;
 }
@@ -186,18 +190,50 @@ const runSizeMonitor = (storageDir: any, maxStorage: any) => {
 }   
 
 /**
- * deleteOldestVideo
+ * Delete the oldest video, unprotected video.
  */
 const deleteOldestVideo = (storageDir: any) => {
-    const oldestVideo = glob.sync(storageDir + "*.mp4")
+    const sortedVideos = glob.sync(storageDir + "*.mp4")
         .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
         .sort((A: any, B: any) => B.mtime - A.mtime)
-        .pop();
 
-    const oldestMetadata = getMetadataFileForVideo(oldestVideo);
-    fs.unlinkSync(oldestVideo.name);
-    fs.unlinkSync(oldestMetadata);
-    console.log("Size monitor deleted: ", oldestVideo.name, oldestMetadata);
+    let videoForDeletion = sortedVideos.pop();
+    let deleteNotAllowed = isVideoProtected(videoForDeletion.name);
+
+    while ((deleteNotAllowed) && (sortedVideos.length > 0)) {
+        videoForDeletion = sortedVideos.pop();
+        deleteNotAllowed = isVideoProtected(videoForDeletion.name)
+    }
+
+    if (!deleteNotAllowed) deleteVideo(videoForDeletion.name);
+}  
+
+/**
+ * isVideoProtected
+ */
+ const isVideoProtected = (videoPath: string) => {
+    const metadataPath = getMetadataFileForVideo(videoPath);
+    const metadataJSON = fs.readFileSync(metadataPath);
+    const metadata = JSON.parse(metadataJSON);
+    console.log(videoPath, metadata)
+    return Boolean(metadata.protected);
+}  
+
+/**
+ * Delete a video and its metadata file. 
+ */
+ const deleteVideo = (videoPath: string) => {
+    const metadataPath = getMetadataFileForVideo(videoPath);
+
+    if (!fs.existsSync(metadataPath)) {
+        console.log("WTF have you done to get here?");
+        return;
+    }
+
+    fs.unlinkSync(videoPath);
+    console.log("Deleted: " + videoPath);
+    fs.unlinkSync(metadataPath);
+    console.log("Deleted: " + metadataPath);  
 }  
 
 /**
@@ -210,9 +246,45 @@ const deleteOldestVideo = (storageDir: any) => {
     return true;
 }  
 
+/**
+ * Open a folder in system explorer. 
+ */
+ const openSystemExplorer = (filePath: string) => {
+    const windowsPath = filePath.replace(/\//g,"\\");
+    let cmd = 'explorer.exe /select,"' + windowsPath + '"';
+    exec(cmd, () => {});
+}  
+
+/**
+ * Put a save marker on a video, protecting it from the file monitor.
+ */
+ const toggleVideoProtected = (videoPath: string) => {
+    const metadataFile = getMetadataFileForVideo(videoPath);
+
+    if (!fs.existsSync(metadataFile)) {
+        console.log("WTF have you done to get here?");
+        return;
+    }
+
+    const metadataJSON = fs.readFileSync(metadataFile);
+    const metadata = JSON.parse(metadataJSON);
+
+    if (metadata.protected === undefined) {
+        metadata.protected = true;
+    } else {
+        metadata.protected =  !Boolean(metadata.protected);
+    }
+
+    const newMetadataJsonString = JSON.stringify(metadata, null, 2);
+    fs.writeFileSync(metadataFile, newMetadataJsonString);
+}
+
 export {
     getVideoState,
     writeMetadataFile,
     runSizeMonitor, 
-    isConfigReady
+    isConfigReady,
+    deleteVideo,
+    openSystemExplorer,
+    toggleVideoProtected
 };
