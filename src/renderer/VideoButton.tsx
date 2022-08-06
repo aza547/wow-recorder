@@ -5,6 +5,8 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { categories }  from '../main/constants';
 import { getResultText, getFormattedDuration } from './rendererutils';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Check from '@mui/icons-material/Check';
 
 /**
  * Import the arena zone backdrops.
@@ -97,19 +99,27 @@ const buttonBackdrops: any =  {
 2441: dungeonTVM
 };
 
+/**
+ * For shorthand referencing. 
+ */
+const ipc = window.electron.ipcRenderer;
+
 export default function VideoButton(props: any) {
   const state = props.state;
   const videoIndex = props.index;
-  const file = props.file;
 
   const categoryIndex = state.categoryIndex;
   const category = categories[categoryIndex]
 
   const video = state.videoState[category][videoIndex];
-  const isGoodResult = video.result;
-  const duration = video.duration;
+  const videoPath = video.fullPath;
 
+  const isGoodResult = video.result;
   const resultText = getResultText(category, isGoodResult);
+
+  const isProtected = video.protected;
+
+  const duration = video.duration;
   const formattedDuration = getFormattedDuration(duration);
 
   const resultClass: string = isGoodResult ? "goodResult" : "badResult";
@@ -133,29 +143,26 @@ export default function VideoButton(props: any) {
   };
 
   /**
-  * Delete a video and its metadata file. 
+  * Delete a video.
   */
-  const deleteVideo = () => {
-    // TODO do some work
-    // Communicate to IPC delete
+  function deleteVideo(filePath: string) {6
+    ipc.sendMessage('contextMenu', ['delete', filePath])
     handleCloseMenu();
   };
 
   /**
   * Move a video to the permanently saved location. 
   */
-  const saveVideo = () => {
-    // TODO do some work
-    // Communicate to IPC to move to "vault"?
+  const saveVideo = (filePath: string) => {
+    ipc.sendMessage('contextMenu', ['save', filePath])
     handleCloseMenu();
   };
 
   /**
   * Open the location of the video in file explorer.
   */
-  const openLocation = () => {
-    // TODO do some work
-    // Communicate to IPC to open system explorer.
+  const openLocation = (filePath: string) => {
+    ipc.sendMessage('contextMenu', ['open', filePath])
     handleCloseMenu();
   };
 
@@ -163,7 +170,7 @@ export default function VideoButton(props: any) {
     <React.Fragment>
       <Tab 
         label={
-          <div id={ file } className={ "videoButton" } style={{ backgroundImage: `url(${buttonBackdrop})`}} onContextMenu={openMenu}>
+          <div id={ videoPath } className={ "videoButton" } style={{ backgroundImage: `url(${buttonBackdrop})`}} onContextMenu={openMenu}>
             <div className='duration'>{ formattedDuration }</div>
             <div className='encounter'>{ video.encounter }</div>
             <div className='zone'>{ video.zone }</div>
@@ -172,14 +179,21 @@ export default function VideoButton(props: any) {
             <div className={ resultClass }>{ resultText }</div>
           </div> 
         }
-        key={ file }
+        key={ videoPath }
         sx={{ padding: '0px', borderLeft: '1px solid black', borderRight: '1px solid black', bgcolor: '#272e48', color: 'white', minHeight: '1px', height: '100px', width: '200px', opacity: 1 }}
         {...props}
       />
-      <Menu id={ file } anchorEl={anchorElement} anchorOrigin={{ vertical: "bottom", horizontal: "center" }} open={open} onClose={handleCloseMenu} MenuListProps={{'aria-labelledby': 'basic-button'}}>
-        <MenuItem onClick={deleteVideo}>Delete</MenuItem>
-        <MenuItem onClick={saveVideo}>Save</MenuItem>
-        <MenuItem onClick={openLocation}>Open Location</MenuItem>
+      <Menu id={ videoPath } anchorEl={anchorElement} anchorOrigin={{ vertical: "bottom", horizontal: "center" }} open={open} onClose={handleCloseMenu} MenuListProps={{'aria-labelledby': 'basic-button'}}>
+        <MenuItem onClick={() => deleteVideo(videoPath)}>Delete</MenuItem>
+        <MenuItem onClick={() => saveVideo(videoPath)}> 
+          {isProtected &&
+            <ListItemIcon>
+              <Check />
+            </ListItemIcon>
+          }
+          Save
+        </MenuItem>
+        <MenuItem onClick={() => openLocation(videoPath)}>Open Location</MenuItem>
       </Menu>
     </React.Fragment>
   );
