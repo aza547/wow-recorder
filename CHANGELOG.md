@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [28](https://github.com/aza547/wow-recorder/issues/28) - Add open file in system explorer and delete video options when right clicking videos.
+- [27](https://github.com/aza547/wow-recorder/issues/27) - Add save video option when right clicking videos.
 
 ### Changed
 
