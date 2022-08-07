@@ -6,7 +6,7 @@ Nothing magic happens here, the application watches the combat log file for even
 
 Only 64 bit Windows (any modern version) and retail WoW are currently supported. 
 
-![](https://i.imgur.com/PwuGFQ8.png)
+![](https://i.imgur.com/1BeOG8i.png)
 
 #  How to Use
 1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.2.0.1.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
