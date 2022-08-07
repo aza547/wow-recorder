@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [27](https://github.com/aza547/wow-recorder/issues/27) - Add save video option when right clicking videos.
 
 ### Changed
+- [37](https://github.com/aza547/wow-recorder/issues/37) - Remove bitrate cap, drastically increasing recording quality (and file size). Probably should make this configurable in the future. 
 
 ### Fixed
 - [22](https://github.com/aza547/wow-recorder/issues/22) - Make app less fragile to missing metadata files. 

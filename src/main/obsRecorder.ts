@@ -66,7 +66,12 @@ function configureOBS(baseStoragePath: string) {
   setSetting('Output', 'RecEncoder', availableEncoders.slice(-1)[0] || 'x264');
   setSetting('Output', 'RecFilePath', baseStoragePath);
   setSetting('Output', 'RecFormat', 'mp4');
-  setSetting('Output', 'VBitrate', 60000); // increasing improves quality?
+
+  // No idea how this works, but it does. 
+  setSetting('Output', 'Recbitrate', 'lossless'); 
+  setSetting('Output', 'Recmax_bitrate', 300000); 
+
+  // Pretty sure this doesn't work but I'm scared to touch it. 
   setSetting('Video', 'FPSCommon', 50);
 
   console.debug('OBS Configured');
@@ -91,7 +96,7 @@ function displayInfo() {
 function setupScene() {
   const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
   
-  const { physicalWidth, physicalHeight, aspectRatio } = displayInfo();
+  const { physicalWidth, physicalHeight } = displayInfo();
 
   // Update source settings:
   let settings = videoSource.settings;
@@ -101,8 +106,8 @@ function setupScene() {
   videoSource.save();
 
   // Set output video size to 1920x1080
-  const outputWidth = 1920;
-  const outputHeight = Math.round(outputWidth / aspectRatio);
+  const outputWidth = physicalWidth;
+  const outputHeight = physicalHeight;
   setSetting('Video', 'Base', `${outputWidth}x${outputHeight}`);
   setSetting('Video', 'Output', `${outputWidth}x${outputHeight}`);
   const videoScaleFactor = physicalWidth / outputWidth;
@@ -151,7 +156,6 @@ function setupSources(scene) {
   setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
 }
 
-const displayId = 'display1';
 async function start() {
   if (!obsInitialized) initialize();
 
