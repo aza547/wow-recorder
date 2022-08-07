@@ -58,8 +58,8 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
  * Load video details from the metadata and add it to videoState. 
  */
  const loadVideoDetails = (video: any, videoState: any) => {
-    const dateObject = new Date(fs.statSync(video.name).mtime)
-    const metadata = getMetadataForVideo(video)
+    const dateObject = new Date(fs.statSync(video.name).mtime);
+    const metadata = getMetadataForVideo(video);
 
     if (metadata === undefined) return;
 
@@ -75,7 +75,7 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
         date: getVideoDate(dateObject),
         time: getVideoTime(dateObject),
         protected: Boolean(metadata.protected)
-    })
+    });
 }
 
 /**
