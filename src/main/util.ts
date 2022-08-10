@@ -29,6 +29,7 @@ if (process.env.NODE_ENV === 'development') {
  */
 const getEmptyState = () => {
     let videoState: { [category: string]: [] } = {};
+
     for (const category of categories) {
         videoState[category] = [];
     }
@@ -57,23 +58,24 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
  * Load video details from the metadata and add it to videoState. 
  */
  const loadVideoDetails = (video: any, videoState: any) => {
-    const dateObject = new Date(fs.statSync(video.name).mtime)
-    const metadata = getMetadataForVideo(video)
-    if (metadata !== undefined) {
-        videoState[metadata.category].push({
-            index: videoIndex[metadata.category]++,
-            fullPath: video.name,
-            zone: getVideoZone(metadata.zoneID, metadata.category),
-            zoneID: metadata.zoneID,
-            encounter: getVideoEncounter(metadata),
-            encounterID: metadata.encounterID,
-            duration: metadata.duration,
-            result: metadata.result, 
-            date: getVideoDate(dateObject),
-            time: getVideoTime(dateObject),
-            protected: Boolean(metadata.protected)
-        });
-    }
+    const dateObject = new Date(fs.statSync(video.name).mtime);
+    const metadata = getMetadataForVideo(video);
+
+    if (metadata === undefined) return;
+
+    videoState[metadata.category].push({
+        index: videoIndex[metadata.category]++,
+        fullPath: video.name,
+        zone: getVideoZone(metadata.zoneID, metadata.category),
+        zoneID: metadata.zoneID,
+        encounter: getVideoEncounter(metadata),
+        encounterID: metadata.encounterID,
+        duration: metadata.duration,
+        result: metadata.result, 
+        date: getVideoDate(dateObject),
+        time: getVideoTime(dateObject),
+        protected: Boolean(metadata.protected)
+    });
 }
 
 /**
