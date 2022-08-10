@@ -1,5 +1,6 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
-import { startRecording, stopRecording, isRecording, isRecordingCategory}  from './main';
+import { startRecording, stopRecording, isRecording, isRecordingCategory }  from './main';
+import { Combatant } from './combatant';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -8,12 +9,7 @@ const fs = require('fs');
 let tailHandler: any;
 let currentLogFile: string;
 let lastLogFile: string;
-let videoStartDate: Date; 
-
-type CombatantData = {
-    teamID: string;
-    friendly: boolean;
-}
+let videoStartDate: Date;
 
 type Metadata = {
     name: string;
@@ -22,10 +18,12 @@ type Metadata = {
     encounterID?: number;
     duration: number;
     result: boolean;
+    playerName: string;
 }
 
 let metadata: Metadata;
-let combatantInfoMap: Map<string, CombatantData> = new Map();
+let combatantInfoMap: Map<string, Combatant> = new Map();
+let selfCombatantInfo = new Combatant();
 
 /**
  * getLatestLog 
@@ -85,7 +83,7 @@ const handleLogLine = (line: string) => {
         handleZoneChange();
     } else if (line.includes("COMBATANT_INFO")) {
         handleCombatantInfoLine(line);
-    } else if (line.includes("SPELL_AURA_APPLIED")){
+    } else if (selfCombatantInfo != null && line.includes("SPELL_AURA_APPLIED")){
         handleSpellAuraAppliedLine(line);
     }
 }
@@ -94,6 +92,7 @@ const handleLogLine = (line: string) => {
  * Handle a line from the WoW log. 
  */
 const handleArenaStartLine = (line: string) => {
+    selfCombatantInfo = new Combatant();
     const zoneID = parseInt(line.split(',')[1]);
     const category = line.split(',')[3];
     videoStartDate = new Date();
@@ -104,6 +103,7 @@ const handleArenaStartLine = (line: string) => {
         zoneID: zoneID,
         duration: 0,
         result: false,
+        playerName: "",
     }
 
     startRecording(metadata);
@@ -117,6 +117,7 @@ const handleArenaStartLine = (line: string) => {
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
     metadata.result = determineArenaMatchResult(line);
+    metadata.playerName = selfCombatantInfo.name;
     combatantInfoMap.clear();
     stopRecording(metadata);
 }
@@ -127,15 +128,8 @@ const handleArenaStartLine = (line: string) => {
  * @returns true if the observer won the match; otherwise false
  */
 const determineArenaMatchResult = (line: string): boolean => {
-    const [combatantData] = combatantInfoMap.values();
     const winningTeamID = line.split(',')[1];
-    const combatantWon: boolean = (combatantData.teamID === winningTeamID);
-
-    if (combatantData.friendly) {
-        return combatantWon;
-    } else {
-        return !combatantWon;
-    }
+    return selfCombatantInfo.teamID === winningTeamID;
 }
 
 /**
@@ -152,6 +146,7 @@ const determineArenaMatchResult = (line: string): boolean => {
         encounterID: encounterID,
         duration: 0,
         result: false,
+        playerName: "",
     }
 
     startRecording(metadata);
@@ -196,8 +191,9 @@ const determineArenaMatchResult = (line: string): boolean => {
         const srcFlags = line.split(',')[3];
         const srcCombatantData = combatantInfoMap.get(srcGUID)
 
-        if (srcCombatantData !== undefined) {
-            srcCombatantData.friendly = isFriendlyUnit(parseInt(srcFlags));
+        if (srcCombatantData !== undefined && isUnitSelf(parseInt(srcFlags))) {
+            selfCombatantInfo.name = line.split(',')[2].replace(/['"]+/g, '');
+            selfCombatantInfo.teamID = srcCombatantData.teamID;
         }
     }
 }
@@ -208,23 +204,19 @@ const determineArenaMatchResult = (line: string): boolean => {
  */
 const handleCombatantInfoLine = (line: string) => {
     const combatantGUID = line.split(',')[1];
+    let combatantInfo = new Combatant(line.split(',')[2]);
 
-    const combatantData: CombatantData = {
-        friendly: false,
-        teamID: line.split(',')[2],
-    }
-
-    combatantInfoMap.set(combatantGUID, combatantData);
+    combatantInfoMap.set(combatantGUID, combatantInfo);
 }
 
 /**
- * Determine if the srcFlags indicate a friendly unit.
+ * Determine if the srcFlags indicate a self unit.
  * @param srcFlags the srcFlags bitmask
- * @returns true if friendly; false otherwise. 
+ * @returns true if self; false otherwise. 
  */
-const isFriendlyUnit = (srcFlags: number): boolean => {
-    const masked = srcFlags & 0x000000f0;
-    return (masked === 0x00000010);
+const isUnitSelf = (srcFlags: number): boolean => {
+    const masked = srcFlags & 0x511;
+    return masked === 0x511;
 }
 
 /**
