@@ -3,7 +3,7 @@ import * as React from 'react';
 import Tab from '@mui/material/Tab';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { categories }  from '../main/constants';
+import { categories, videoButtonSx }  from '../main/constants';
 import { getResultText, getFormattedDuration } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
@@ -180,10 +180,15 @@ export default function VideoButton(props: any) {
           </div> 
         }
         key={ videoPath }
-        sx={{ padding: '0px', borderLeft: '1px solid black', borderRight: '1px solid black', bgcolor: '#272e48', color: 'white', minHeight: '1px', height: '100px', width: '200px', opacity: 1 }}
+        sx = {{ ...videoButtonSx }}
         {...props}
       />
-      <Menu id={ videoPath } anchorEl={anchorElement} anchorOrigin={{ vertical: "bottom", horizontal: "center" }} open={open} onClose={handleCloseMenu} MenuListProps={{'aria-labelledby': 'basic-button'}}>
+      <Menu 
+        id={ videoPath } 
+        anchorEl={anchorElement} 
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }} 
+        open={open} onClose={handleCloseMenu} 
+        MenuListProps={{'aria-labelledby': 'basic-button'}}>
         <MenuItem onClick={() => deleteVideo(videoPath)}>Delete</MenuItem>
         <MenuItem onClick={() => saveVideo(videoPath)}> 
           {isProtected &&

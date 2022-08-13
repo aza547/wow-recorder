@@ -35,13 +35,19 @@ const useStyles = makeStyles({
   },
 })
 
+/**
+ * TabPanelProps
+ */
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
 }
 
-function TabPanel(props: TabPanelProps) {
+/**
+ * MUI TabPanel
+ */
+const TabPanel = (props: TabPanelProps) => {
   const { children, value, index, ...other } = props;
 
   return (
@@ -62,21 +68,41 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-function a11yProps(index: number) {
+/**
+ * Some MUI specific props. 
+ */
+const a11yProps = (index: number) => {
   return {
     id: `vertical-tab-${index}`,
     'aria-controls': `vertical-tabpanel-${index}`,
   };
 }
 
+/**
+ * Category tab borders. 
+ */
+const tabProps = (index: number) => {
+  if (index == 0) {
+    return {
+      borderTop: '1px solid',
+      ...categoryTabSx
+    }
+  } else {
+    return {
+      ...categoryTabSx
+    }
+  }
+}
+
+/**
+ * The GUI itself. 
+ */
 export default function Layout() {
 
-  const [state, setState] = React.useState(() => {
-    return {
-      categoryIndex: 0,
-      videoIndex: 0,
-      videoState: ipc.sendSync('getVideoState', categories)
-    };
+  const [state, setState] = React.useState({
+    categoryIndex: 0,
+    videoIndex: 0,
+    videoState: ipc.sendSync('getVideoState', categories)
   });
 
   /**
@@ -84,7 +110,11 @@ export default function Layout() {
    */
   const handleChangeCategory = (_event: React.SyntheticEvent, newValue: number) => {
     setState(prevState => {
-      return {...prevState, categoryIndex: newValue, videoIndex: 0}
+      return {
+        ...prevState, 
+        categoryIndex: newValue, 
+        videoIndex: 0
+      }
     })
   };
 
@@ -92,8 +122,12 @@ export default function Layout() {
    * Update the state variable following a change of selected video.
    */
   const handleChangeVideo = (_event: React.SyntheticEvent, newValue: number) => {
-    console.log("change");
-    setState(prevState => { return {...prevState, videoIndex: newValue} })
+    setState(prevState => { 
+      return {
+        ...prevState, 
+        videoIndex: newValue
+      } 
+    })
   };
 
  /**
@@ -101,7 +135,10 @@ export default function Layout() {
   */
   const category = categories[state.categoryIndex];
 
-  const classes = useStyles();
+  /**
+  * MUI styles.
+  */
+  const styles = useStyles(); 
 
   /**
    * Refresh handler.
@@ -109,101 +146,127 @@ export default function Layout() {
   ipc.on('refreshState', () => {
     setState(prevState => {
       return {
-        ...prevState,
+        ...prevState, 
         videoState: ipc.sendSync('getVideoState', categories)
-        }
       }
-    )
+    })
   });
 
   /**
-   * Returns TSX for the tab buttons for category selection, with an
-   * additional border style for the 0th (top) tab.
+   * Returns TSX for the tab buttons for category selection.
    */
-   function generateTab(tabIndex: number) {
-     if (tabIndex === 0) {
-       return (
-        <Tab label={ categories[tabIndex] } {...a11yProps(tabIndex)} sx = {{ borderTop: '1px solid', ...categoryTabSx }}/>
-       )
-     } else {
-      return (
-        <Tab label={ categories[tabIndex] } {...a11yProps(tabIndex)} sx = {{ ...categoryTabSx }}/>
-      );
-     }
+  const generateTab = (tabIndex: number) => {
+    const category = categories[tabIndex];
+
+    return (
+      <Tab label={ category } {...a11yProps(tabIndex)} sx = {{ ...tabProps(tabIndex) }}/>
+    )
   };
+
+  /**
+   * Returns a video panel for a currently unsupported category.
+   */
+  const unsupportedVideoPanel = (index: number) => {
+    const categoryIndex = state.categoryIndex;
+
+    return (
+      <TabPanel value={ categoryIndex } index={ index }>
+        <video key = "None" className="video" poster={ unsupportedPoster }></video>
+        <div className="noVideos"></div>
+      </TabPanel>
+    );
+  }
+
+  /**
+   * Returns a video panel where no videos are present.
+   */
+  const noVideoPanel = (index: number) => {
+    const categoryIndex = state.categoryIndex;
+    
+    return (
+      <TabPanel value={ categoryIndex } index={ index }>
+        <video key = "None" className="video" poster={ notReadyPoster }></video>
+        <div className="noVideos"></div>
+      </TabPanel>
+    );
+  }
+
+  /**
+   * Returns a video panel with videos. 
+   */
+  const videoPanel = (index: number) => {
+    const categoryIndex = state.categoryIndex;
+    const videoIndex = state.videoIndex;
+    const categoryState = state.videoState[category];
+    const video = state.videoState[category][state.videoIndex];
+    const videoFullPath = video.fullPath;
+
+    return (
+      <TabPanel value={ categoryIndex } index={ index }>
+        <video key = { videoFullPath } className="video" poster={ readyPoster } controls>
+          <source src={ videoFullPath } />
+        </video>
+        <Tabs
+          value={ videoIndex }
+          onChange={ handleChangeVideo }
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="scrollable auto tabs example"
+          sx= {{ ...videoTabsSx }}
+          className={ styles.tabs }
+          TabIndicatorProps={{style: { background:'#bb4220' }}}
+        >
+        { categoryState.map((file: any) => {
+            return(
+              <VideoButton key={ file.fullPath } state={ state } index={ file.index }/>
+            )
+          })
+        }
+        </Tabs>
+      </TabPanel>
+    );
+  } 
 
   /**
    * Returns TSX for the video player and video selection tabs.
    */
-  function generateTabPanel(tabIndex: number) {
-    if ((tabIndex === 4) || (tabIndex === 6)) {
-      return (
-        <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = "None" className="video" poster={ unsupportedPoster }></video>
-          <div className="noVideos"></div>
-        </TabPanel>
-      );
-    } else if (state.videoState[category][state.videoIndex]) {
-      return (
-        <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = { state.videoState[category][state.videoIndex].fullPath } className="video" poster={readyPoster} controls>
-            <source src={ state.videoState[category][state.videoIndex].fullPath } />
-          </video>
-          <Tabs
-            value={state.videoIndex}
-            onChange={ handleChangeVideo }
-            variant="scrollable"
-            scrollButtons="auto"
-            aria-label="scrollable auto tabs example"
-            sx= {{ ...videoTabsSx }}
-            className={ classes.tabs }
-            TabIndicatorProps={{style: { background:'#bb4220' }}}
-          >
+   const generateTabPanel = (tabIndex: number) => {
+    const haveVideos = state.videoState[category][state.videoIndex];
 
-          { state.videoState[category].map((file: any) => {
-            return(
-              <VideoButton key={file.fullPath} state={state} index={file.index}/>
-            )
-          })}
-          </Tabs>
-        </TabPanel>
-      );
+    if (tabIndex === 4 || tabIndex === 6) {
+      return unsupportedVideoPanel(tabIndex);
+    } else if (!haveVideos) {
+      return noVideoPanel(tabIndex);
     } else {
-      return (
-        <TabPanel value={ state.categoryIndex } index={ tabIndex }>
-          <video key = "None" className="video" poster={ notReadyPoster }></video>
-          <div className="noVideos"></div>
-        </TabPanel>
-      );
-    }
+      return videoPanel(tabIndex);
+    }   
   };
+
+  const tabNumbers = [...Array(7).keys()];
+  const categoryIndex = state.categoryIndex;
   
   return (
     <Box sx={{ width: '50%', height: '210px', display: 'flex' }}>
       <Tabs
         orientation="vertical"
         variant="standard"
-        value={ state.categoryIndex }
+        value={ categoryIndex }
         onChange={ handleChangeCategory }
         aria-label="Vertical tabs example"
         sx={{ ...categoryTabsSx }}
-        className={ classes.tabs }
+        className={ styles.tabs }
         TabIndicatorProps={{style: { background:'#bb4220' }}}>
-          { generateTab(0) }
-          { generateTab(1) }
-          { generateTab(2) }
-          { generateTab(3) }
-          { generateTab(4) }
-          { generateTab(5) }
-          { generateTab(6) }
+
+        { tabNumbers.map((tabNumber: number) => {
+            return(generateTab(tabNumber));
+          })
+        }
       </Tabs>
-        { generateTabPanel(0) }
-        { generateTabPanel(1) }
-        { generateTabPanel(2) }
-        { generateTabPanel(3) }
-        { generateTabPanel(4) }
-        { generateTabPanel(5) }
-        { generateTabPanel(6) }
+
+      { tabNumbers.map((tabNumber: number) => {
+          return(generateTabPanel(tabNumber));
+        })
+      }
     </Box>
   );
 }

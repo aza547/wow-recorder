@@ -105,7 +105,7 @@ const videoTabsSx = {
   borderRight: '1px solid'
 };
 
-  const categoryTabSx = {
+const categoryTabSx = {
   padding:'12px', 
   bgcolor: '#272e48', 
   color: 'white', 
@@ -115,12 +115,24 @@ const videoTabsSx = {
   height: '30px'
 }
 
-  const categoryTabsSx = {
+const categoryTabsSx = {
   borderColor: '#000000', 
   bgcolor: '#272e48', 
   textColor: 'secondary', 
   width: '175px', 
   overflow: 'visible'
+}
+
+const videoButtonSx = {
+  padding: '0px', 
+  borderLeft: '1px solid black', 
+  borderRight: '1px solid black', 
+  bgcolor: '#272e48', 
+  color: 'white', 
+  minHeight: '1px', 
+  height: '100px', 
+  width: '200px', 
+  opacity: 1 
 }
 
 export {
@@ -129,6 +141,7 @@ export {
     zones,
     videoTabsSx,
     categoryTabSx,
-    categoryTabsSx
+    categoryTabsSx,
+    videoButtonSx
 };
 
