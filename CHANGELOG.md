@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Resources directory and better test scripts, although they still suck.
 - [10](https://github.com/aza547/wow-recorder/issues/10) - Add logging infrastructure. 
+- Add tray icon and menu. Make minimizing now hide in system tray.
 
 ### Changed
 - Record at 60 FPS instead of 30. 

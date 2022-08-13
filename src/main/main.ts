@@ -4,7 +4,7 @@
  * Application entrypoint point.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
 import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged} from './util';
 import { watchLogs, Metadata, getLatestLog } from './logutils';
 import Store from 'electron-store';
@@ -44,6 +44,7 @@ ipcMain.on('cfg-set', async (_event, key, val) => {
  */
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
+let tray = null;
 
 /**
  * Are we currently recording, and what category? 
@@ -76,6 +77,44 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
+const RESOURCES_PATH = app.isPackaged
+? path.join(process.resourcesPath, 'assets')
+: path.join(__dirname, '../../assets');
+
+const getAssetPath = (...paths: string[]): string => {
+  return path.join(RESOURCES_PATH, ...paths);
+};
+
+/**
+ * Setup tray icon, menu and even listeners. 
+ */
+const setupTray = () => {
+  tray = new Tray(getAssetPath("./icon/small-icon.png"));
+
+  const contextMenu = Menu.buildFromTemplate([
+    { 
+      label: 'Open', click() {
+        console.log("User clicked open on tray icon");
+        if (mainWindow) mainWindow.show();
+      }
+    },
+    { 
+      label: 'Quit', click() { 
+        console.log("User clicked close on tray icon");
+        if (mainWindow) mainWindow.close();
+      } 
+    },
+  ])
+
+  tray.setToolTip('Warcraft Recorder')
+  tray.setContextMenu(contextMenu)
+
+  tray.on("double-click", () => {
+    console.log("User double clicked tray icon");
+    if (mainWindow) mainWindow.show();
+  }) 
+}
+
 /**
  * Creates the main window.
  */
@@ -83,14 +122,6 @@ const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
   }
-
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
 
   mainWindow = new BrowserWindow({
     show: false,
@@ -131,6 +162,8 @@ const createWindow = async () => {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  setupTray();
 
   // Open urls in the user's browser
   mainWindow.webContents.setWindowOpenHandler((edata) => {
@@ -246,9 +279,11 @@ const openPathDialog = (event: any, args: any) => {
  */
 ipcMain.on('mainWindow', (_event, args) => {
   if (mainWindow === null) return; 
+
   if (args[0] === "minimize") {
     console.log("User clicked minimize");
-    mainWindow.minimize();
+    //mainWindow.minimize();
+    mainWindow.hide();
   }
 
   if (args[0] === "resize") {
