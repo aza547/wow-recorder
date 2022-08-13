@@ -23,7 +23,7 @@ The configuration has a 'max storage' option. The app will never exceed this sto
 
 This feature is inspired by car dash cam behaviour: it deletes the oldest video when the size limit is hit. You can mark a video to be saved by right clicking it, so that it won't be cleaned up by this mechanism.
 
-![](https://i.imgur.com/tvI4pRx.png)
+<img src="https://i.imgur.com/tvI4pRx.png" width="300">
 
 # Bug Reports & Suggestions
 
