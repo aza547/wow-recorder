@@ -215,6 +215,7 @@ const openPathDialog = (event: any, args: any) => {
  const startRecording = (metadata: Metadata) => {
   obsRecorder.start();
   console.log("Started recording");
+  console.log(JSON.stringify(metadata));
   isRecording = true;
   isRecordingCategory = metadata.category;
   if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
@@ -226,6 +227,7 @@ const openPathDialog = (event: any, args: any) => {
  const stopRecording = (metadata: Metadata) => {
   obsRecorder.stop();
   console.log("Stopped recording");
+  console.log(JSON.stringify(metadata));
   isRecording = false;
   isRecordingCategory = null;
 
