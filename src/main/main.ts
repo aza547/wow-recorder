@@ -5,11 +5,21 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
-import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected } from './util';
+import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged} from './util';
 import { watchLogs, Metadata, getLatestLog } from './logutils';
 import Store from 'electron-store';
-
 const obsRecorder = require('./obsRecorder');
+
+/**
+ * Setup logging. We override console log methods. All console log method will go to 
+ * both the console if it exists, and a file on disk. 
+ */
+const log = require('electron-log');
+const date = new Date().toISOString().slice(0, 10);
+const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
+log.transports.file.resolvePath = () => fixPathWhenPackaged(path.join(__dirname, logRelativePath));
+Object.assign(console, log.functions);
+console.log("App starting");
 
 /**
  * Create a settings store to handle the config.
@@ -204,6 +214,7 @@ const openPathDialog = (event: any, args: any) => {
  */
  const startRecording = (metadata: Metadata) => {
   obsRecorder.start();
+  console.log("Started recording");
   isRecording = true;
   isRecordingCategory = metadata.category;
   if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
@@ -214,16 +225,17 @@ const openPathDialog = (event: any, args: any) => {
  */
  const stopRecording = (metadata: Metadata) => {
   obsRecorder.stop();
+  console.log("Stopped recording");
   isRecording = false;
   isRecordingCategory = null;
 
   setTimeout(() => {
-      if (mainWindow) { 
-        writeMetadataFile(storageDir, metadata);
-        runSizeMonitor(storageDir, maxStorage * 1000000000); //convert GB to bytes
-        mainWindow.webContents.send('updateStatus', 0);
-        mainWindow.webContents.send('refreshState');
-      };
+    if (mainWindow) { 
+      writeMetadataFile(storageDir, metadata);
+      runSizeMonitor(storageDir, maxStorage * 1000000000); //convert GB to bytes
+      mainWindow.webContents.send('updateStatus', 0);
+      mainWindow.webContents.send('refreshState');
+    };
   }, 2000);
 }
 
@@ -232,18 +244,39 @@ const openPathDialog = (event: any, args: any) => {
  */
 ipcMain.on('mainWindow', (_event, args) => {
   if (mainWindow === null) return; 
-  if (args[0] === "minimize") mainWindow.minimize();
-  if (args[0] === "resize") mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
-  if (args[0] === "quit") mainWindow.close();
+  if (args[0] === "minimize") {
+    console.log("User clicked minimize");
+    mainWindow.minimize();
+  }
+
+  if (args[0] === "resize") {
+    console.log("User clicked resize");
+    mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
+  }
+
+  if (args[0] === "quit"){
+    console.log("User clicked quit");
+    mainWindow.close();
+  }
 })
 
 /**
  * settingsWindow event listeners.
  */
 ipcMain.on('settingsWindow', (event, args) => {
-  if (args[0] === "create") createSettingsWindow();
+
+  if (args[0] === "create") {
+    console.log("User opened settings");
+    createSettingsWindow();
+  }
+    
   if (settingsWindow === null) return; 
-  if (args[0] === "quit") settingsWindow.close();
+
+  if (args[0] === "quit") {
+    console.log("User closed settings");
+    settingsWindow.close();
+  }
+
   if (args[0] === "openPathDialog") openPathDialog(event, args);
 })
 
@@ -281,11 +314,9 @@ ipcMain.on('getVideoState', (event) => {
  * Shutdown the app if all windows closed. 
  */
 app.on('window-all-closed', () => {
+  console.log("User closed app");
   obsRecorder.shutdown();
-
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 /**
@@ -294,6 +325,7 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+    console.log("App ready");
     obsRecorder.initialize(storageDir);
     createWindow();
     if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;

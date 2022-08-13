@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Resources directory and better test scripts, although they still suck.
+- [10](https://github.com/aza547/wow-recorder/issues/10) - Add logging infrastructure. 
 
 ### Changed
 - Record at 60 FPS instead of 30. 
