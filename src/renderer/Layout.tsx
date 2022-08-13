@@ -157,9 +157,10 @@ export default function Layout() {
    */
   const generateTab = (tabIndex: number) => {
     const category = categories[tabIndex];
+    const key = "tab" + tabIndex;
 
     return (
-      <Tab label={ category } {...a11yProps(tabIndex)} sx = {{ ...tabProps(tabIndex) }}/>
+      <Tab key={ key } label={ category } {...a11yProps(tabIndex)} sx = {{ ...tabProps(tabIndex) }}/>
     )
   };
 
@@ -168,9 +169,10 @@ export default function Layout() {
    */
   const unsupportedVideoPanel = (index: number) => {
     const categoryIndex = state.categoryIndex;
+    const key = "videoPanel" + index;
 
     return (
-      <TabPanel value={ categoryIndex } index={ index }>
+      <TabPanel key={ key } value={ categoryIndex } index={ index }>
         <video key = "None" className="video" poster={ unsupportedPoster }></video>
         <div className="noVideos"></div>
       </TabPanel>
@@ -182,9 +184,10 @@ export default function Layout() {
    */
   const noVideoPanel = (index: number) => {
     const categoryIndex = state.categoryIndex;
+    const key = "noVideoPanel" + index;
     
     return (
-      <TabPanel value={ categoryIndex } index={ index }>
+      <TabPanel key={ key } value={ categoryIndex } index={ index }>
         <video key = "None" className="video" poster={ notReadyPoster }></video>
         <div className="noVideos"></div>
       </TabPanel>
@@ -200,9 +203,10 @@ export default function Layout() {
     const categoryState = state.videoState[category];
     const video = state.videoState[category][state.videoIndex];
     const videoFullPath = video.fullPath;
+    const key = "videoPanel" + index;
 
     return (
-      <TabPanel value={ categoryIndex } index={ index }>
+      <TabPanel key={ key } value={ categoryIndex } index={ index }>
         <video key = { videoFullPath } className="video" poster={ readyPoster } controls>
           <source src={ videoFullPath } />
         </video>
@@ -214,7 +218,7 @@ export default function Layout() {
           aria-label="scrollable auto tabs example"
           sx= {{ ...videoTabsSx }}
           className={ styles.tabs }
-          TabIndicatorProps={{style: { background:'#bb4220' }}}
+          TabIndicatorProps={{ style: { background:'#bb4220' } }}
         >
         { categoryState.map((file: any) => {
             return(

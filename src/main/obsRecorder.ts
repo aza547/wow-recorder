@@ -71,8 +71,7 @@ function configureOBS(baseStoragePath: string) {
   setSetting('Output', 'Recbitrate', 'lossless'); 
   setSetting('Output', 'Recmax_bitrate', 300000); 
 
-  // Pretty sure this doesn't work but I'm scared to touch it. 
-  setSetting('Video', 'FPSCommon', 50);
+  setSetting('Video', 'FPSCommon', 60);
 
   console.debug('OBS Configured');
 }
@@ -273,6 +272,5 @@ export {
   initialize,
   start,
   stop,
-  shutdown,
-  configureOutputPath
+  shutdown
 }
