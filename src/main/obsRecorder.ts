@@ -63,7 +63,14 @@ function configureOBS(baseStoragePath: string) {
   console.debug('Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
   const availableEncoders = getAvailableValues('Output', 'Recording', 'RecEncoder');
-  setSetting('Output', 'RecEncoder', availableEncoders.slice(-1)[0] || 'x264');
+
+  // Get a list of available encoders, select the last one.
+  console.debug("Available encoder: " + JSON.stringify(availableEncoders));
+  const selectedEncoder = availableEncoders.slice(-1)[0] || 'x264';
+  console.debug("Selected encoder: " + selectedEncoder);
+  setSetting('Output', 'RecEncoder', selectedEncoder);
+
+  // Set output path and video format.
   setSetting('Output', 'RecFilePath', baseStoragePath);
   setSetting('Output', 'RecFormat', 'mp4');
 
