@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Fixed
+
+## [2.3.0] - 2022-08-14
+### Added
 - Resources directory and better test scripts, although they still suck.
 - [10](https://github.com/aza547/wow-recorder/issues/10) - Add logging infrastructure. 
 - [33](https://github.com/aza547/wow-recorder/issues/33) - Add tray icon and menu. Make minimizing now hide in system tray.

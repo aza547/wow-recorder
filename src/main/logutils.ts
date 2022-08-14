@@ -114,6 +114,7 @@ const handleArenaStartLine = (line: string) => {
  * Handle a line from the WoW log. 
  */
  const handleArenaStopLine = (line: string) => {
+    if (!isRecording) return;
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);

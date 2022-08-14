@@ -37,6 +37,7 @@ const months: string[] = [
   2107: "Arathi Basin",
   1681: "Arathi Basin",
   1105: "Deepwind Gorge",
+  2245: "Deepwind Gorge",
   566:  "Eye of the Storm",
   968:  "Eye of the Storm",
   628:  "Isle of Conquest",
