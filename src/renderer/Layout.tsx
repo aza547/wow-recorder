@@ -237,7 +237,7 @@ export default function Layout() {
    const generateTabPanel = (tabIndex: number) => {
     const haveVideos = state.videoState[category][state.videoIndex];
 
-    if (tabIndex === 4 || tabIndex === 6) {
+    if (tabIndex === 4) {
       return unsupportedVideoPanel(tabIndex);
     } else if (!haveVideos) {
       return noVideoPanel(tabIndex);

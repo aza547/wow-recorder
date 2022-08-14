@@ -9,7 +9,7 @@
         "3v3", 
         "Skirmish", 
         "Solo Shuffle", 
-        "Battleground"
+        "Battlegrounds"
     ];
 
     if (pvpCategories.includes(category)) {
@@ -23,6 +23,13 @@
  * getResultText
  */
  const getResultText = (category: string, isGoodResult: boolean) => {
+
+    // Not sure how we can decide who won or lost yet. 
+    // Combat log doesn't make it obvious.
+    if ((category == "Battlegrounds") || (category == "Solo Shuffle")) {
+        return "";
+    }
+
     const isPvp = isCategoryPVP(category);
 
     if (isPvp && isGoodResult) {

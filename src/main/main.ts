@@ -13,6 +13,7 @@ const obsRecorder = require('./obsRecorder');
 /**
  * Setup logging. We override console log methods. All console log method will go to 
  * both the console if it exists, and a file on disk. 
+ * TODO: Currently only main process logs go here. Fix so react component logs go here as well. 
  */
 const log = require('electron-log');
 const date = new Date().toISOString().slice(0, 10);
@@ -23,6 +24,9 @@ console.log("App starting");
 
 /**
  * Create a settings store to handle the config.
+ * This defaults to a path like: 
+ *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config.json"
+ *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
  */
 const cfg = new Store();
 let storageDir: any = cfg.get('storage-path') + "/";
@@ -32,10 +36,14 @@ let maxStorage: any = cfg.get('max-storage');
 /**
  * Getter and setter config listeners. 
  */
-ipcMain.on('cfg-get', async (event, val) => {
-  event.returnValue = cfg.get(val);
+ipcMain.on('cfg-get', async (event, field) => {
+  const value = cfg.get(field);
+  console.log("Got from config store: ", field, value);
+  event.returnValue = value;
 });
+
 ipcMain.on('cfg-set', async (_event, key, val) => {
+  console.log("Setting in config store: ", key, val);
   cfg.set(key, val);
 });
 
@@ -191,7 +199,7 @@ const createSettingsWindow = async () => {
   settingsWindow = new BrowserWindow({
     show: false,
     width: 380,
-    height: 380,
+    height: 450,
     resizable: true,
     icon: getAssetPath('./icon/settings-icon.svg'),
     frame: false,
@@ -305,6 +313,15 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (args[0] === "create") {
     console.log("User opened settings");
     createSettingsWindow();
+  }
+
+  if (args[0] === "startup") {
+    const isStartUp = (args[1] === "true");
+    console.log("OS level set start-up behaviour: ", isStartUp);
+
+    app.setLoginItemSettings({
+      openAtLogin: isStartUp    
+    })
   }
     
   if (settingsWindow === null) return; 

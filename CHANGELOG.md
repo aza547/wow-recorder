@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Resources directory and better test scripts, although they still suck.
 - [10](https://github.com/aza547/wow-recorder/issues/10) - Add logging infrastructure. 
-- Add tray icon and menu. Make minimizing now hide in system tray.
+- [33](https://github.com/aza547/wow-recorder/issues/33) - Add tray icon and menu. Make minimizing now hide in system tray.
+- [32](https://github.com/aza547/wow-recorder/issues/32) - Add setting to run on start-up. 
+- [6](https://github.com/aza547/wow-recorder/issues/6) - Battlegrounds is now a supported category.
 
 ### Changed
 - Record at 60 FPS instead of 30. 

@@ -30,26 +30,49 @@ const months: string[] = [
 ];
 
 /**
- * Zones by ID. 
+ * Battlegrounds by ID. 
  */
-const zones: { [id: number]: string; } = {
-    // Arenas (Zone IDs)
-    1672: "Blade's Edge Arena",
-    617: "Dalaran Arena",
-    1505: "Nagrand Arena",
-    572: "Ruins of Lordaeron",
-    2167: "The Robodrome",
-    1134: "Tiger's Peak",
-    980: "Tol'Viron Arena",
-    1504: "Black Rook Hold Arena",
-    2373: "Empyrean Domain",
-    1552: "Ashamane's Fall",
-    1911: "Mugambala",
-    1825: "Hook Point",
-    2509: "Maldraxxus Coliseum",
-    2547: "Enigma Crucible",
+ const battlegrounds: { [id: number]: string; } = {
+  30:	  "Alterac Valley",
+  2107: "Arathi Basin",
+  1681: "Arathi Basin",
+  1105: "Deepwind Gorge",
+  566:  "Eye of the Storm",
+  968:  "Eye of the Storm",
+  628:  "Isle of Conquest",
+  1803: "Seething Shore",
+  727:  "Silvershard Mines",
+  //607:  "Strand of the Ancients",
+  998:  "Temple of Kotmogu",
+  761:  "The Battle for Gilneas",
+  726:  "Twin Peaks",
+  489:  "Warsong Gulch"
+}
 
-    // Raids (Encounter IDs), shortened to fit on button
+/**
+ * Arenas by ID. 
+ */
+ const arenas: { [id: number]: string; } = {
+  1672: "Blade's Edge Arena",
+  617: "Dalaran Arena",
+  1505: "Nagrand Arena",
+  572: "Ruins of Lordaeron",
+  2167: "The Robodrome",
+  1134: "Tiger's Peak",
+  980: "Tol'Viron Arena",
+  1504: "Black Rook Hold Arena",
+  2373: "Empyrean Domain",
+  1552: "Ashamane's Fall",
+  1911: "Mugambala",
+  1825: "Hook Point",
+  2509: "Maldraxxus Coliseum",
+  2547: "Enigma Crucible",
+}
+
+/**
+ * Encounters by ID.  
+ */
+ const raids: { [id: number]: string; } = {
     2537: "Jailer",
     2512: "Guardian",
     2529: "Halondrus",
@@ -61,34 +84,34 @@ const zones: { [id: number]: string; } = {
     2546: "Anduin",
     2549: "Rygelon",
     2553: "Xy'mox",
-
-    // Dungeons (Zone IDs)
-    2291: "De Other Side",
-    2287: "Halls of Atonement",
-    2290: "Mists of Tirna Scithe",
-    2289: "Plaguefall",
-    2284: "Sanguine Depths",
-    2285: "Spires of Ascension",
-    2286: "The Necrotic Wake",
-    2293: "Theater of Pain",
-    2441: "Tazavesh the Veiled Market",
-    
-    // Battlegrounds (Zone IDs)
-    30:	  "Alterac Valley",
-    2107: "Arathi Basin",
-    1681: "Arathi Basin",
-    1105: "Deepwind Gorge",
-    566:  "Eye of the Storm",
-    968:  "Eye of the Storm",
-    628:  "Isle of Conquest",
-    1803: "Seething Shore",
-    727:  "Silvershard Mines",
-    607:  "Strand of the Ancients",
-    998:  "Temple of Kotmogu",
-    761:  "The Battle for Gilneas",
-    726:  "Twin Peaks",
-    489:  "Warsong Gulch"
 }
+
+/**
+ * Dungeons by ID. 
+ */
+ const dungeons: { [id: number]: string; } = {
+  2291: "De Other Side",
+  2287: "Halls of Atonement",
+  2290: "Mists of Tirna Scithe",
+  2289: "Plaguefall",
+  2284: "Sanguine Depths",
+  2285: "Spires of Ascension",
+  2286: "The Necrotic Wake",
+  2293: "Theater of Pain",
+  2441: "Tazavesh the Veiled Market",
+}
+
+/**
+ * Zones by ID. 
+ */
+const zones: { [id: number]: string; } = {
+    ...arenas,
+    ...raids,
+    ...battlegrounds,
+    ...dungeons,
+}
+
+
 
 const videoTabsSx = {
   position: 'fixed',
@@ -138,10 +161,13 @@ const videoButtonSx = {
 export {
     categories,
     months,
-    zones,
     videoTabsSx,
     categoryTabSx,
     categoryTabsSx,
-    videoButtonSx
+    videoButtonSx,
+    zones,
+    arenas,
+    raids,
+    battlegrounds,
+    dungeons
 };
-

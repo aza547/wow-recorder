@@ -1,5 +1,6 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
-import { startRecording, stopRecording, isRecording, isRecordingCategory}  from './main';
+import { startRecording, stopRecording, isRecording}  from './main';
+import { battlegrounds }  from './constants';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -82,7 +83,7 @@ const handleLogLine = (line: string) => {
     } else if (line.includes("ENCOUNTER_END")) {
         handleRaidStopLine(line);
     } else if (line.includes("ZONE_CHANGE")) {
-        handleZoneChange();
+        handleZoneChange(line);
     } else if (line.includes("COMBATANT_INFO")) {
         handleCombatantInfoLine(line);
     } else if (line.includes("SPELL_AURA_APPLIED")){
@@ -171,21 +172,38 @@ const determineArenaMatchResult = (line: string): boolean => {
 /**
  * Handle a line from the WoW log.
  */
- const handleZoneChange = () => {
-    // No-op if not already recording.
-    if (!isRecording) return;  
+ const handleZoneChange = (line: string) => {
 
-    // Zone change doesn't mean mythic+ is over.
-    if (isRecordingCategory === "Mythic+") return;
+    console.log("handling zone cahnge", line);
 
-    const videoStopDate = new Date();
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    metadata.duration = Math.round(milliSeconds / 1000);
+    const zoneID = parseInt(line.split(',')[1]);
+    const zoneName = removeQuotes(line.split(',')[2]);
 
-    // Assume loss if zoned out of content. 
-    metadata.result = false;
-    stopRecording(metadata);
+    // For some reason two ZONE_CHANGE events seem to fire with the same zoneID.
+    // so we need to specifically check the ID matches the name. 
+    //  8/14 10:53:06.469  ZONE_CHANGE,998,"Zereth Mortis",0
+    //  8/14 10:53:06.548  ZONE_CHANGE,998,"Temple of Kotmogu",0
+    const isBG = (battlegrounds.hasOwnProperty(zoneID)) && (zoneName === battlegrounds[zoneID]);
+
+    if (!isRecording && isBG) {
+        battlegroundStartRecording(line);  
+    } else if (isRecording && isBG) {
+        battlegroundStopRecording();
+    } else if (isRecording) {
+        const videoStopDate = new Date();
+        const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+        metadata.duration = Math.round(milliSeconds / 1000);
+    
+        // Assume loss if zoned out of content. 
+        metadata.result = false;
+        stopRecording(metadata);
+    }
+
+    if (!isRecording) return;
+
+    return;
 }
+
 /**
  * Handles the SPELL_AURA_APPLIED line from WoW log.
  * @param line the SPELL_AURA_APPLIED line
@@ -218,6 +236,39 @@ const handleCombatantInfoLine = (line: string) => {
 }
 
 /**
+ * ZONE_CHANGE event into a BG.  
+ */
+ const battlegroundStartRecording = (line: string) => {
+    const zoneID = parseInt(line.split(',')[1]);
+    const battlegroundName = battlegrounds[zoneID];
+    const category = "Battlegrounds";
+    videoStartDate = new Date();
+
+    metadata = {
+        name: battlegroundName,
+        category: category,
+        zoneID: zoneID,
+        duration: 0,
+        result: false,
+    }
+
+    startRecording(metadata);
+}
+
+/**
+ * battlegroundStopRecording
+ */
+ const battlegroundStopRecording = () => {
+    const videoStopDate = new Date();
+    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+    metadata.duration = Math.round(milliSeconds / 1000);
+
+    // No idea how we can tell who has won a BG so assume loss. 
+    metadata.result = false;
+    stopRecording(metadata);
+}
+
+/**
  * Determine if the srcFlags indicate a friendly unit.
  * @param srcFlags the srcFlags bitmask
  * @returns true if friendly; false otherwise. 
@@ -245,6 +296,13 @@ const watchLogs = (logdir: any) => {
     }, checkInterval);
 
     return true;
+}
+
+/**
+ * Remove double and single quotes from a string. 
+ */
+ const removeQuotes = (s: string) => {
+    return s.replace(/['"]+/g, '');
 }
 
 export {

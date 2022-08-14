@@ -55,48 +55,80 @@ import raid2553 from "../../assets/raid/2553.jpg";
 import raid2529 from "../../assets/raid/2529.jpg";
 
 /**
+ * Import the battleground backdrops.
+ */
+ import battlegroundAB from "../../assets/battlegrounds/AB.jpg";
+ import battlegroundAV from "../../assets/battlegrounds/AV.jpg";
+ import battlegroundBFG from "../../assets/battlegrounds/BFG.jpg";
+ import battlegroundDG  from "../../assets/battlegrounds/DG.jpg";
+ import battlegroundEOTS from "../../assets/battlegrounds/EOTS.jpg";
+ import battlegroundIOC  from "../../assets/battlegrounds/IOC.jpg";
+ import battlegroundSM  from "../../assets/battlegrounds/SM.jpg";
+ import battlegroundSS from "../../assets/battlegrounds/SS.jpg";
+ import battlegroundTOK from "../../assets/battlegrounds/TOK.jpg";
+ import battlegroundTP from "../../assets/battlegrounds/TP.jpg";
+ import battlegroundWSG from "../../assets/battlegrounds/WSG.jpg";
+
+/**
  * List of zones and their backdrop image.
  */
 const buttonBackdrops: any =  {
-// Arenas
-1672: arenaBED,
-617:  arenaDAL,
-1505: arenaNAG,
-572:  arenaROL,
-2167: arenaROB,
-1134: arenaTP,
-980:  arenaTOL,
-1504: arenaBRK,
-2373: arenaED,
-1552: arenaASH,
-1911: arenaMUG,
-1825: arenaHP,
-2509: arenaMAL,
-2547: arenaENI,
+  // Arenas
+  1672: arenaBED,
+  617:  arenaDAL,
+  1505: arenaNAG,
+  572:  arenaROL,
+  2167: arenaROB,
+  1134: arenaTP,
+  980:  arenaTOL,
+  1504: arenaBRK,
+  2373: arenaED,
+  1552: arenaASH,
+  1911: arenaMUG,
+  1825: arenaHP,
+  2509: arenaMAL,
+  2547: arenaENI,
 
-// Raids
-2537: raid2537,
-2512: raid2512,
-2529: raid2529,
-2539: raid2539,
-2540: raid2540,
-2542: raid2542,
-2543: raid2543,
-2544: raid2544,
-2546: raid2546,
-2549: raid2549,
-2553: raid2553,
+  // Raids
+  2537: raid2537,
+  2512: raid2512,
+  2529: raid2529,
+  2539: raid2539,
+  2540: raid2540,
+  2542: raid2542,
+  2543: raid2543,
+  2544: raid2544,
+  2546: raid2546,
+  2549: raid2549,
+  2553: raid2553,
 
-// Dungeons
-2291: dungeonDOS,
-2287: dungeonHOA,
-2290: dungeonMTS,
-2289: dungeonPF,
-2284: dungeonSD,
-2258: dungeonSOA,
-2286: dungeonNW,
-2293: dungeonTOP,
-2441: dungeonTVM
+  // Dungeons
+  2291: dungeonDOS,
+  2287: dungeonHOA,
+  2290: dungeonMTS,
+  2289: dungeonPF,
+  2284: dungeonSD,
+  2258: dungeonSOA,
+  2286: dungeonNW,
+  2293: dungeonTOP,
+  2441: dungeonTVM,
+
+  // BGs
+  30:	  battlegroundAV,
+  2107: battlegroundAB,
+  1681: battlegroundAB,
+  1105: battlegroundDG,
+  566:  battlegroundEOTS,
+  968:  battlegroundEOTS,
+  628:  battlegroundIOC,
+  1803: battlegroundSS,
+  727:  battlegroundSM,
+  //607:  "Strand of the Ancients",
+  998:  battlegroundTOK,
+  761:  battlegroundBFG,
+  726:  battlegroundTP,
+  489:  battlegroundWSG
+
 };
 
 /**
