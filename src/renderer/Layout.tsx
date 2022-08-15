@@ -173,7 +173,9 @@ export default function Layout() {
 
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
-        <video key = "None" className="video" poster={ unsupportedPoster }></video>
+        <div className="video-container">
+          <video key="None" className="video" poster={ unsupportedPoster }></video>
+        </div>
         <div className="noVideos"></div>
       </TabPanel>
     );
@@ -188,7 +190,9 @@ export default function Layout() {
     
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
-        <video key = "None" className="video" poster={ notReadyPoster }></video>
+        <div className="video-container">
+          <video key="None" className="video" poster={ notReadyPoster }></video>
+        </div>        
         <div className="noVideos"></div>
       </TabPanel>
     );

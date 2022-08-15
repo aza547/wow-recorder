@@ -82,7 +82,7 @@ function configureOBS(baseStoragePath: string) {
   }
   else {
     // No idea how this works, but it does. 
-    setSetting('Output', 'Recbitrate', 'lossless');
+    setSetting('Output', 'Recbitrate', 'Lossless');
   }
    
   setSetting('Output', 'Recmax_bitrate', 300000); 
@@ -236,6 +236,7 @@ function setSetting(category, parameter, value) {
 
   // Getting settings container
   const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
+  console.log(JSON.stringify(settings, null, 2));
 
   settings.forEach(subCategory => {
     subCategory.parameters.forEach(param => {
