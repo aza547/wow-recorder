@@ -60,8 +60,8 @@ const TabPanel = (props: TabPanelProps) => {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 0 }}>
-          <Typography component={'span'}>{children}</Typography>
+        <Box sx={{ p: 0, width: "100%" }}>
+          <Typography component={'span'} sx={{ width: "100%" }}>{children}</Typography>
         </Box>
       )}
     </div>
@@ -207,9 +207,11 @@ export default function Layout() {
 
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
-        <video key = { videoFullPath } className="video" poster={ readyPoster } controls>
-          <source src={ videoFullPath } />
-        </video>
+        <div className="video-container">
+          <video key = { videoFullPath } className="video" poster={ readyPoster } controls>
+            <source src={ videoFullPath } />
+          </video>
+        </div>
         <Tabs
           value={ videoIndex }
           onChange={ handleChangeVideo }
@@ -250,7 +252,7 @@ export default function Layout() {
   const categoryIndex = state.categoryIndex;
   
   return (
-    <Box sx={{ width: '50%', height: '210px', display: 'flex' }}>
+    <Box sx={{ width: '100%', height: '210px', display: 'flex' }}>
       <Tabs
         orientation="vertical"
         variant="standard"

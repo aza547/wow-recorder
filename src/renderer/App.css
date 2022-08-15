@@ -23,8 +23,14 @@ div#root {
   width: 100%;
 }
 
+.video-container {
+  height: 100vh;
+  width: 100%;
+  background-color: black;
+}
+
 .video{
-  height: calc(100vh - 140px);
+  height: calc(100% - 140px);
   top: 0px;
   border: 2px solid;
 }

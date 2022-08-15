@@ -133,8 +133,8 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1024,
-    minWidth: 1024,
+    height: 1020 * 0.75,
+    width: 1980 * 0.65,
     icon: getAssetPath('./icon/small-icon.png'),
     frame: false,
     webPreferences: {
@@ -148,7 +148,6 @@ const createWindow = async () => {
   });
 
   mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
-  mainWindow.setAspectRatio(15/9);
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');

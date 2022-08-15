@@ -73,11 +73,19 @@ function configureOBS(baseStoragePath: string) {
   // Set output path and video format.
   setSetting('Output', 'RecFilePath', baseStoragePath);
   setSetting('Output', 'RecFormat', 'mp4');
-
-  // No idea how this works, but it does. 
-  setSetting('Output', 'Recbitrate', 'lossless'); 
+  
+  if (selectedEncoder.toLowerCase().includes("amf")) {
+    // For AMF encoders, can't set 'lossless' bitrate.
+    // It interprets it as zero and fails to start.
+    // See https://github.com/aza547/wow-recorder/issues/40.
+    setSetting('Output', 'Recbitrate', 50000);
+  }
+  else {
+    // No idea how this works, but it does. 
+    setSetting('Output', 'Recbitrate', 'lossless');
+  }
+   
   setSetting('Output', 'Recmax_bitrate', 300000); 
-
   setSetting('Video', 'FPSCommon', 60);
 
   console.debug('OBS Configured');

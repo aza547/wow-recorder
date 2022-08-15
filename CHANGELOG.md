@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Remove hardcoded aspect ratio of application only appropriate for 1080p recordings. 
 
 ### Fixed
+- [40](https://github.com/aza547/wow-recorder/issues/40) - Fix to AMD AMF encoder. 
 
 ## [2.3.0] - 2022-08-14
 ### Added
