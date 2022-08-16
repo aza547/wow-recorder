@@ -18,7 +18,7 @@ type Metadata = {
     encounterID?: number;
     duration: number;
     result: boolean;
-    playerName: string;
+    playerName?: string;
 }
 
 let metadata: Metadata;
@@ -103,7 +103,6 @@ const handleArenaStartLine = (line: string) => {
         zoneID: zoneID,
         duration: 0,
         result: false,
-        playerName: "",
     }
 
     startRecording(metadata);
@@ -146,7 +145,6 @@ const determineArenaMatchResult = (line: string): boolean => {
         encounterID: encounterID,
         duration: 0,
         result: false,
-        playerName: "",
     }
 
     startRecording(metadata);
@@ -192,7 +190,7 @@ const determineArenaMatchResult = (line: string): boolean => {
         const srcCombatantData = combatantInfoMap.get(srcGUID)
 
         if (srcCombatantData !== undefined && isUnitSelf(parseInt(srcFlags))) {
-            selfCombatantInfo.name = line.split(',')[2].replace(/['"]+/g, '');
+            selfCombatantInfo.name = removeQuotes(line.split(',')[2]);
             selfCombatantInfo.teamID = srcCombatantData.teamID;
         }
     }
@@ -204,7 +202,8 @@ const determineArenaMatchResult = (line: string): boolean => {
  */
 const handleCombatantInfoLine = (line: string) => {
     const combatantGUID = line.split(',')[1];
-    let combatantInfo = new Combatant(line.split(',')[2]);
+    const teamID = line.split(',')[2];
+    let combatantInfo = new Combatant(teamID);
 
     combatantInfoMap.set(combatantGUID, combatantInfo);
 }
@@ -237,6 +236,15 @@ const watchLogs = (logdir: any) => {
     }, checkInterval);
 
     return true;
+}
+
+/**
+ * Removes quotes from the given string value.
+ * @param value the string value
+ * @returns the string value with quotes removed.
+ */
+const removeQuotes = (value: string): string => {
+    return value.replace(/['"]+/g, '');
 }
 
 export {
