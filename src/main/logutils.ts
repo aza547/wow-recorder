@@ -127,7 +127,7 @@ const handleArenaStartLine = (line: string) => {
  * @returns true if the observer won the match; otherwise false
  */
 const determineArenaMatchResult = (line: string): boolean => {
-    const winningTeamID = line.split(',')[1];
+    const winningTeamID = parseInt(line.split(',')[1]);
     return selfCombatantInfo.teamID === winningTeamID;
 }
 
@@ -202,7 +202,7 @@ const determineArenaMatchResult = (line: string): boolean => {
  */
 const handleCombatantInfoLine = (line: string) => {
     const combatantGUID = line.split(',')[1];
-    const teamID = line.split(',')[2];
+    const teamID = parseInt(line.split(',')[2]);
     let combatantInfo = new Combatant(teamID);
 
     combatantInfoMap.set(combatantGUID, combatantInfo);

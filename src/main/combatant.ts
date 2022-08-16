@@ -2,17 +2,15 @@
  * Represents an arena combatant.
  */
 class Combatant {
-    private _teamID: string;
-    private _name: string;
+    private _teamID: number;
+    private _name?: string;
 
     /**
      * Constructs a new Combatant.
      * @param teamID the team the combatant belongs to.
-     * @param name the name of the combatant.
      */
-    constructor(teamID: string = "", name: string = "") {
+    constructor(teamID: number = 0) {
         this._teamID = teamID;
-        this._name = name;
     }
 
     /**
@@ -31,6 +29,7 @@ class Combatant {
     
     /**
      * Gets the name.
+     * @apinote Name is in Name-Realm format
      */
     get name() {
         return this._name;
