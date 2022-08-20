@@ -5,8 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [2.3.1] - 2022-08-20
 ### Added
 - Write more useful information to metadata files, including player name and spec. Thanks again to ericlytle for the contribution. 
+- [19](https://github.com/aza547/wow-recorder/issues/19) Display spec and name on arena and raid videos. 
+- MMR hover text for arenas.
 
 ### Changed
 - Remove hardcoded aspect ratio of application only appropriate for 1080p recordings. 

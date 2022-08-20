@@ -57,23 +57,32 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
  * Load video details from the metadata and add it to videoState. 
  */
  const loadVideoDetails = (video: any, videoState: any) => {
-    const dateObject = new Date(fs.statSync(video.name).mtime)
+    const today = new Date();
+    const videoDate = new Date(fs.statSync(video.name).mtime)
+    const isVideoFromToday = (today.toDateString() === videoDate.toDateString());
+
     const metadata = getMetadataForVideo(video)
-    if (metadata !== undefined) {
-        videoState[metadata.category].push({
-            index: videoIndex[metadata.category]++,
-            fullPath: video.name,
-            zone: getVideoZone(metadata.zoneID, metadata.category),
-            zoneID: metadata.zoneID,
-            encounter: getVideoEncounter(metadata),
-            encounterID: metadata.encounterID,
-            duration: metadata.duration,
-            result: metadata.result, 
-            date: getVideoDate(dateObject),
-            time: getVideoTime(dateObject),
-            protected: Boolean(metadata.protected)
-        });
-    }
+    if (metadata === undefined) return;
+
+    videoState[metadata.category].push({
+        index: videoIndex[metadata.category]++,
+        fullPath: video.name,
+        zone: getVideoZone(metadata.zoneID, metadata.category),
+        zoneID: metadata.zoneID,
+        encounter: getVideoEncounter(metadata),
+        encounterID: metadata.encounterID,
+        duration: metadata.duration,
+        result: metadata.result, 
+        date: getVideoDate(videoDate),
+        isFromToday: isVideoFromToday,
+        time: getVideoTime(videoDate),
+        protected: Boolean(metadata.protected),
+        playerSpecID: getPlayerSpec(metadata),
+        playerName: getPlayerName(metadata),
+        playerRealm: getPlayerRealm(metadata),
+        teamMMR: metadata.teamMMR,
+    });
+
 }
 
 /**
@@ -140,6 +149,39 @@ const getVideoEncounter = (metadata: Metadata) => {
         return zones[metadata.encounterID]; 
     } else {
         return metadata.category; 
+    }
+}
+
+/**
+ * Get the player spec ID.
+ */
+ const getPlayerSpec = (metadata: Metadata) => {
+    if (metadata.playerSpecID) { 
+        return metadata.playerSpecID; 
+    } else {
+        return undefined; 
+    }
+}
+
+/**
+ * Get the player name.
+ */
+ const getPlayerName = (metadata: Metadata) => {
+    if (metadata.playerName) { 
+        return metadata.playerName; 
+    } else {
+        return undefined; 
+    }
+}
+
+/**
+ * Get the player realm.
+ */
+ const getPlayerRealm = (metadata: Metadata) => {
+    if (metadata.playerRealm) { 
+        return metadata.playerRealm; 
+    } else {
+        return undefined; 
     }
 }
 

@@ -20,7 +20,9 @@ type Metadata = {
     duration: number;
     result: boolean;
     playerName?: string;
+    playerRealm?: string;
     playerSpecID?: number;
+    teamMMR?: number;
 }
 
 let metadata: Metadata;
@@ -117,16 +119,18 @@ const handleArenaStartLine = (line: string) => {
 
     if (playerCombatant) {
         metadata.playerName = playerCombatant.name;
-        metadata.playerSpecID = playerCombatant.specID;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;        
     }
 
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     const duration = Math.round(milliSeconds / 1000);
-    const result = determineArenaMatchResult(line);
+    const [result, MMR] = determineArenaMatchResult(line);
 
     metadata.duration = duration; 
     metadata.result = result;
+    metadata.teamMMR = MMR;
 
     combatantMap.clear();
     playerCombatant = undefined;
@@ -136,12 +140,25 @@ const handleArenaStartLine = (line: string) => {
 /**
  * Determines the arena match result.
  * @param line the line from the WoW log. 
- * @returns true if the observer won the match; otherwise false
+ * @returns [win: boolean, newRating: number]
  */
-const determineArenaMatchResult = (line: string): boolean => {
-    if (playerCombatant === undefined) return false;
+const determineArenaMatchResult = (line: string): any[] => {
+    if (playerCombatant === undefined) return [undefined, undefined];
+    const teamID = playerCombatant.teamID;
+    const indexForMMR = (teamID == 0) ? 3 : 4; 
+    const MMR = parseInt(line.split(',')[indexForMMR]);    
     const winningTeamID = parseInt(line.split(',')[1]);
-    return (playerCombatant.teamID === winningTeamID);
+    const win = (teamID === winningTeamID)
+    return [win, MMR];
+}
+
+/**
+ * Determines the raid encounter result.
+ * @param line the ENCOUNTER_END event from the WoW log. 
+ * @returns true if wipe, else false
+ */
+ const determineRaidEncounterResult = (line: string): boolean => {
+    return Boolean(parseInt(line.split(',')[5]));
 }
 
 /**
@@ -167,10 +184,23 @@ const determineArenaMatchResult = (line: string): boolean => {
  * Handle a line from the WoW log. 
  */
  const handleRaidStopLine = (line: string) => {
+    if (!isRecording) return; 
+
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;        
+    }
+
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    metadata.duration = Math.round(milliSeconds / 1000);
-    metadata.result = Boolean(parseInt(line.split(',')[5]));
+    const duration = Math.round(milliSeconds / 1000);
+
+    metadata.duration = duration; 
+    metadata.result = determineRaidEncounterResult(line);
+    
+    combatantMap.clear();
+    playerCombatant = undefined;
     stopRecording(metadata);
 }
 
@@ -210,14 +240,16 @@ const determineArenaMatchResult = (line: string): boolean => {
     if (combatantMap.size === 0) return;    
 
     const srcGUID = line.split(',')[1];    
-    const srcName = removeQuotes(line.split(',')[2])
+    const srcNameRealm = removeQuotes(line.split(',')[2])
     const srcFlags = parseInt(line.split(',')[3]);
     
     const srcCombatant = combatantMap.get(srcGUID);
     if (srcCombatant === undefined) return;
 
     if (isUnitSelf(srcFlags)) {
+        const [srcName, srcRealm] = ambiguate(srcNameRealm);
         srcCombatant.name = srcName;
+        srcCombatant.realm = srcRealm;
         playerCombatant = srcCombatant;
     }
 }
@@ -306,6 +338,19 @@ const watchLogs = (logdir: any) => {
  */
 const removeQuotes = (value: string): string => {
     return value.replace(/['"]+/g, '');
+}
+
+/**
+ * Split name and realm. Name stolen from:
+ * https://wowpedia.fandom.com/wiki/API_Ambiguate
+ * @param nameRealm string containing name and realm
+ * @returns array containing name and realm
+ */
+ const ambiguate = (nameRealm: string): string[] => {
+    const split = nameRealm.split("-");
+    const name = split[0];
+    const realm = split[1];
+    return [name, realm];
 }
 
 export {

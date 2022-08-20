@@ -31,16 +31,19 @@
     }
 
     const isPvp = isCategoryPVP(category);
+    let resultText: string;
 
     if (isPvp && isGoodResult) {
-        return "Win";
+        resultText = "Win";     
     } else if (isPvp && !isGoodResult) {
-        return "Loss";
+        resultText = "Loss";
     } else if (!isPvp && isGoodResult) {
-        return "Kill";
+        resultText = "Kill";
     } else {
-        return "Wipe";
+        resultText = "Wipe";
     }
+
+    return resultText;
 } 
 
 /**

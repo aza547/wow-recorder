@@ -3,7 +3,7 @@ import * as React from 'react';
 import Tab from '@mui/material/Tab';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { categories, videoButtonSx }  from '../main/constants';
+import { categories, videoButtonSx, specToClass }  from '../main/constants';
 import { getResultText, getFormattedDuration } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
@@ -57,17 +57,97 @@ import raid2529 from "../../assets/raid/2529.jpg";
 /**
  * Import the battleground backdrops.
  */
- import battlegroundAB from "../../assets/battlegrounds/AB.jpg";
- import battlegroundAV from "../../assets/battlegrounds/AV.jpg";
- import battlegroundBFG from "../../assets/battlegrounds/BFG.jpg";
- import battlegroundDG  from "../../assets/battlegrounds/DG.jpg";
- import battlegroundEOTS from "../../assets/battlegrounds/EOTS.jpg";
- import battlegroundIOC  from "../../assets/battlegrounds/IOC.jpg";
- import battlegroundSM  from "../../assets/battlegrounds/SM.jpg";
- import battlegroundSS from "../../assets/battlegrounds/SS.jpg";
- import battlegroundTOK from "../../assets/battlegrounds/TOK.jpg";
- import battlegroundTP from "../../assets/battlegrounds/TP.jpg";
- import battlegroundWSG from "../../assets/battlegrounds/WSG.jpg";
+import battlegroundAB from "../../assets/battlegrounds/AB.jpg";
+import battlegroundAV from "../../assets/battlegrounds/AV.jpg";
+import battlegroundBFG from "../../assets/battlegrounds/BFG.jpg";
+import battlegroundDG  from "../../assets/battlegrounds/DG.jpg";
+import battlegroundEOTS from "../../assets/battlegrounds/EOTS.jpg";
+import battlegroundIOC  from "../../assets/battlegrounds/IOC.jpg";
+import battlegroundSM  from "../../assets/battlegrounds/SM.jpg";
+import battlegroundSS from "../../assets/battlegrounds/SS.jpg";
+import battlegroundTOK from "../../assets/battlegrounds/TOK.jpg";
+import battlegroundTP from "../../assets/battlegrounds/TP.jpg";
+import battlegroundWSG from "../../assets/battlegrounds/WSG.jpg";
+
+/**
+ * Import spec icons. 
+ */
+import bloodDEATHKNIGHT from "../../assets/specs/250.png";
+import frostDEATHKNIGHT from "../../assets/specs/251.png";
+import unholyDEATHKNIGHT from "../../assets/specs/252.png";
+import havocDEMONHUNTER from "../../assets/specs/577.png";
+import vengenceDEMONHUNTER from "../../assets/specs/581.png";
+import balanceDRUID from "../../assets/specs/102.png";
+import feralDRUID from "../../assets/specs/103.png";
+import guardianDRUID from "../../assets/specs/104.png";
+import restorationDRUID from "../../assets/specs/105.png";
+import beastmasteryHUNTER from "../../assets/specs/253.png";
+import marksmanshipHUNTER from "../../assets/specs/254.png";
+import survivalHUNTER from "../../assets/specs/255.png";
+import arcaneMAGE from "../../assets/specs/62.png";
+import fireMAGE from "../../assets/specs/63.png";
+import frostMAGE from "../../assets/specs/64.png";
+import brewmasterMONK from "../../assets/specs/268.png";
+import mistweaverMONK from "../../assets/specs/270.png";
+import windwalkerMONK from "../../assets/specs/269.png";
+import holyPALADIN from "../../assets/specs/65.png";
+import protectionPALADIN from "../../assets/specs/66.png";
+import retributionPALADIN from "../../assets/specs/70.png";
+import disciplinePRIEST from "../../assets/specs/256.png";
+import holyPRIEST from "../../assets/specs/257.png";
+import shadowPRIEST from "../../assets/specs/258.png";
+import assassinationROGUE from "../../assets/specs/259.png";
+import outlawROGUE from "../../assets/specs/260.png";
+import subtletyROGUE from "../../assets/specs/261.png";
+import elementalSHAMAN from "../../assets/specs/262.png";
+import enhancementSHAMAN from "../../assets/specs/263.png";
+import restorationSHAMAN from "../../assets/specs/264.png";
+import afflicationWARLOCK from "../../assets/specs/265.png";
+import demonologyWARLOCK from "../../assets/specs/266.png";
+import destructionWARLOCK from "../../assets/specs/267.png";
+import armsWARRIOR from "../../assets/specs/71.png";
+import furyWARRIOR from "../../assets/specs/72.png";
+import protectionWARRIOR from "../../assets/specs/73.png";
+import specNotFound from "../../assets/icon/wowNotFound.png";
+
+const specIcons: any =  {
+  250: bloodDEATHKNIGHT,
+  251: frostDEATHKNIGHT,
+  252: unholyDEATHKNIGHT,
+  577: havocDEMONHUNTER,
+  581: vengenceDEMONHUNTER,
+  102: balanceDRUID,
+  103: feralDRUID,
+  104: guardianDRUID,
+  105: restorationDRUID,
+  253: beastmasteryHUNTER,
+  254: marksmanshipHUNTER,
+  255: survivalHUNTER,
+  62:  arcaneMAGE,
+  63:  fireMAGE,
+  64:  frostMAGE,
+  268: brewmasterMONK,
+  270: mistweaverMONK,
+  269: windwalkerMONK,
+  65:  holyPALADIN,
+  66:  protectionPALADIN,
+  70:  retributionPALADIN,
+  256: disciplinePRIEST,
+  257: holyPRIEST,
+  258: shadowPRIEST,
+  259: assassinationROGUE,
+  260: outlawROGUE,
+  261: subtletyROGUE,
+  262: elementalSHAMAN,
+  263: enhancementSHAMAN,
+  264: restorationSHAMAN,
+  265: afflicationWARLOCK,
+  266: demonologyWARLOCK,
+  267: destructionWARLOCK,
+  71:  armsWARRIOR,
+  72:  furyWARRIOR,
+  73:  protectionWARRIOR
+}
 
 /**
  * List of zones and their backdrop image.
@@ -129,7 +209,6 @@ const buttonBackdrops: any =  {
   761:  battlegroundBFG,
   726:  battlegroundTP,
   489:  battlegroundWSG
-
 };
 
 /**
@@ -149,6 +228,7 @@ export default function VideoButton(props: any) {
 
   const isGoodResult = video.result;
   const resultText = getResultText(category, isGoodResult);
+  const MMR = video.teamMMR ? ("MMR: " + video.teamMMR) : undefined;
 
   const isProtected = video.protected;
 
@@ -157,12 +237,24 @@ export default function VideoButton(props: any) {
 
   const resultClass: string = isGoodResult ? "goodResult" : "badResult";
   const buttonBackdrop: string = (category === "Raids") ? buttonBackdrops[video.encounterID] : buttonBackdrops[video.zoneID];
-
+  
   const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorElement);
 
+  const playerName = video.playerName;
+  const specIcon: string = specIcons[video.playerSpecID] || specNotFound;
+  const playerClass = specToClass[video.playerSpecID];
+  
+  const dateDisplay: string = video.isFromToday ? video.time : video.date;
+  const dateHoverText = video.date + " " + video.time;
+
+  // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
+  // that we can for other categories. 
+  const isBG = category === "Battlegrounds";
+  
+
   /**
-  * Called when a rightclick on the video button occurs. 
+  * Called when a right click on the video button occurs. 
   */
   const openMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorElement(event.currentTarget);
@@ -203,13 +295,20 @@ export default function VideoButton(props: any) {
     <React.Fragment>
       <Tab 
         label={
-          <div id={ videoPath } className={ "videoButton" } style={{ backgroundImage: `url(${buttonBackdrop})`}} onContextMenu={openMenu}>
+          <div id={ videoPath } className='videoButton' style={{ backgroundImage: `url(${buttonBackdrop})`}} onContextMenu={openMenu}>
             <div className='duration'>{ formattedDuration }</div>
-            <div className='encounter'>{ video.encounter }</div>
+            <div className='encounter'>{ video.encounter }</div>            
             <div className='zone'>{ video.zone }</div>
-            <div className='time'>{ video.time }</div>
-            <div className='date'>{ video.date }</div>
-            <div className={ resultClass }>{ resultText }</div>
+            <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    
+            { isBG ||
+              <div>
+                <div className='specIcon'>
+                  <img src={ specIcon } width='25' height='25'/>
+                </div>  
+                <div className={ playerClass + ' name'}>{ playerName }</div>
+              </div>
+            }
+            <div className={ resultClass } title={ MMR }>{ resultText }</div>
           </div> 
         }
         key={ videoPath }
@@ -219,7 +318,7 @@ export default function VideoButton(props: any) {
       <Menu 
         id={ videoPath } 
         anchorEl={anchorElement} 
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }} 
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} 
         open={open} onClose={handleCloseMenu} 
         MenuListProps={{'aria-labelledby': 'basic-button'}}>
         <MenuItem onClick={() => deleteVideo(videoPath)}>Delete</MenuItem>

@@ -54,14 +54,14 @@ const months: string[] = [
  * Arenas by ID. 
  */
  const arenas: { [id: number]: string; } = {
-  1672: "Blade's Edge Arena",
-  617: "Dalaran Arena",
-  1505: "Nagrand Arena",
+  1672: "Blade's Edge",
+  617: "Dalaran",
+  1505: "Nagrand",
   572: "Ruins of Lordaeron",
   2167: "The Robodrome",
   1134: "Tiger's Peak",
-  980: "Tol'Viron Arena",
-  1504: "Black Rook Hold Arena",
+  980: "Tol'Viron",
+  1504: "Black Rook Hold",
   2373: "Empyrean Domain",
   1552: "Ashamane's Fall",
   1911: "Mugambala",
@@ -157,6 +157,45 @@ const videoButtonSx = {
   opacity: 1 
 }
 
+const specToClass: { [id: number]: string; } = {
+  250: "DEATHKNIGHT",
+  251: "DEATHKNIGHT",
+  252: "DEATHKNIGHT",
+  577: "DEMONHUNTER",
+  581: "DEMONHUNTER",
+  102: "DRUID",
+  103: "DRUID",
+  104: "DRUID",
+  105: "DRUID",
+  253: "HUNTER",
+  254: "HUNTER",
+  255: "HUNTER",
+  62:  "MAGE",
+  63:  "MAGE",
+  64:  "MAGE",
+  268: "MONK",
+  270: "MONK",
+  269: "MONK",
+  65:  "PALADIN",
+  66:  "PALADIN",
+  70:  "PALADIN",
+  256: "PRIEST",
+  257: "PRIEST",
+  258: "PRIEST",
+  259: "ROGUE",
+  260: "ROGUE",
+  261: "ROGUE",
+  262: "SHAMAN",
+  263: "SHAMAN",
+  264: "SHAMAN",
+  265: "WARLOCK",
+  266: "WARLOCK",
+  267: "WARLOCK",
+  71:  "WARRIOR",
+  72:  "WARRIOR",
+  73:  "WARRIOR"
+}
+
 export {
     categories,
     months,
@@ -168,5 +207,6 @@ export {
     arenas,
     raids,
     battlegrounds,
-    dungeons
+    dungeons,
+    specToClass
 };

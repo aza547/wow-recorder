@@ -6,6 +6,7 @@ class Combatant {
     private _teamID: number;
     private _specID: number;
     private _name?: string;
+    private _realm?: string;
 
     /**
      * Constructs a new Combatant.
@@ -52,6 +53,22 @@ class Combatant {
      */
     set name(value) {
         this._name = value;
+    }
+
+    /**
+     * Gets the name.
+     * @apinote Name is in Name-Realm format
+     */
+        get realm() {
+        return this._realm;
+    }
+    
+    /**
+     * Sets the name.
+     * @apinote Name is in Name-Realm format
+     */
+    set realm(value) {
+        this._realm = value;
     }
 }
 

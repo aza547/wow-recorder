@@ -182,7 +182,7 @@ h2 {
 .encounter {
   font: bold 25px Arial Narrow;
   position: absolute;
-  top: 30px;
+  top: 27px;
   width: 100%;
   text-align: center;
   text-transform: uppercase;
@@ -191,26 +191,38 @@ h2 {
 .zone {
   font: bold 13px Arial Narrow;
   position: absolute;
-  top: 55px;
+  top: 52px;
   width: 100%;
   text-align: center;
 }
 
-.duration {
+.time {
   top: 5px;
+  left: 5px;
+  position: absolute;
+}
+
+.duration {
+  top: 7px;
   right: 5px;
   position: absolute;
   text-align: right;
 }
 
-.date {
-  bottom: 5px;
-  left: 5px;
+.name {
+  bottom: 7px;
+  left: 30px;
+  position: absolute;
+}
+
+.specIcon {
+  bottom: 1px;
+  left: 3px;
   position: absolute;
 }
 
 .goodResult {
-  bottom: 5px;
+  bottom: 7px;
   right: 5px;
   position: absolute;
   text-align: right;
@@ -218,17 +230,11 @@ h2 {
 }
 
 .badResult {
-  bottom: 5px;
+  bottom: 7px;
   right: 5px;
   position: absolute;
   text-align: right;
   -webkit-text-fill-color: red;
-}
-
-.time {
-  top: 5px;
-  left: 5px;
-  position: absolute;
 }
 
 @keyframes blink {
@@ -291,3 +297,50 @@ h2 {
   background-color: #272e48;
 }
 
+.DEATHKNIGHT {
+  -webkit-text-fill-color: #C41E3A;
+}
+
+.DEMONHUNTER {
+  -webkit-text-fill-color: #A330C9;
+}
+
+.DRUID {
+  -webkit-text-fill-color: #FF7C0A;
+}
+
+.HUNTER {
+  -webkit-text-fill-color: #AAD372;
+}
+
+.MAGE {
+  -webkit-text-fill-color: #3FC7EB;
+}
+
+.MONK {
+  -webkit-text-fill-color: #00FF98;
+}
+
+.PALADIN {
+  -webkit-text-fill-color: 	#F48CBA	;
+}
+
+.PRIEST {
+  -webkit-text-fill-color: #FFFFFF;
+}
+
+.ROGUE {
+  -webkit-text-fill-color: #FFF468;
+}
+
+.SHAMAN {
+  -webkit-text-fill-color: #0070DD;
+}
+
+.WARLOCK {
+  -webkit-text-fill-color: #8788EE;
+}
+
+.WARRIOR {
+  -webkit-text-fill-color: #C69B6D;
+}
