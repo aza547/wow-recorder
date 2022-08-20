@@ -2,6 +2,7 @@
  * Represents an arena combatant.
  */
 class Combatant {
+    private _GUID: string;
     private _teamID: number;
     private _name?: string;
 
@@ -9,8 +10,23 @@ class Combatant {
      * Constructs a new Combatant.
      * @param teamID the team the combatant belongs to.
      */
-    constructor(teamID: number = 0) {
+    constructor(GUID: string, teamID: number) {
+        this._GUID = GUID;
         this._teamID = teamID;
+    }
+
+    /**
+     * Gets the GUID.
+     */
+    get GUID() {
+        return this._GUID;
+    }
+    
+    /**
+     * Sets the GUID.
+     */
+    set GUID(GUID) {
+        this._GUID = GUID;
     }
 
     /**
@@ -37,6 +53,7 @@ class Combatant {
 
     /**
      * Sets the name.
+     * @apinote Name is in Name-Realm format
      */
     set name(value) {
         this._name = value;

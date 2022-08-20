@@ -21,7 +21,9 @@ Only 64 bit Windows (any modern version) and retail WoW are currently supported.
 
 The configuration has a 'max storage' option. The app will never exceed this storage usage on disk. I suggest 100GB is a reasonable size for this setting. 
 
-This feature is inspired by car dash cam behaviour: it deletes the oldest video when the size limit is hit. Be aware that if you want to keep a video long term you should copy it off to another location before it gets aged out. 
+This feature is inspired by car dash cam behaviour: it deletes the oldest video when the size limit is hit. You can mark a video to be saved by right clicking it, so that it won't be cleaned up by this mechanism.
+
+<img src="https://i.imgur.com/tvI4pRx.png" width="600">
 
 # Bug Reports & Suggestions
 

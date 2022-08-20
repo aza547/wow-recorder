@@ -8,8 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Remove hardcoded aspect ratio of application only appropriate for 1080p recordings. 
 
 ### Fixed
+- [40](https://github.com/aza547/wow-recorder/issues/40) - Fix to AMD AMF encoder. 
+- [42](https://github.com/aza547/wow-recorder/issues/42) - Fix to Deepwind Gorge button image.
+- [42](https://github.com/aza547/wow-recorder/issues/42) - Fix issue where internal BG zone changes stop the recording.
+
+## [2.3.0] - 2022-08-14
+### Added
+- Resources directory and better test scripts, although they still suck.
+- [10](https://github.com/aza547/wow-recorder/issues/10) - Add logging infrastructure. 
+- [33](https://github.com/aza547/wow-recorder/issues/33) - Add tray icon and menu. Make minimizing now hide in system tray.
+- [32](https://github.com/aza547/wow-recorder/issues/32) - Add setting to run on start-up. 
+- [6](https://github.com/aza547/wow-recorder/issues/6) - Battlegrounds is now a supported category.
+
+### Changed
+- Record at 60 FPS instead of 30. 
+
+### Fixed
+- Clean-up of react UI code. 
 
 ## [2.2.0] - 2022-08-07
 ### Added

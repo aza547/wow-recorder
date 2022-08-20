@@ -1,6 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
-import { startRecording, stopRecording, isRecording, isRecordingCategory }  from './main';
 import { Combatant } from './combatant';
+import { startRecording, stopRecording, isRecording}  from './main';
+import { battlegrounds }  from './constants';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -80,7 +81,7 @@ const handleLogLine = (line: string) => {
     } else if (line.includes("ENCOUNTER_END")) {
         handleRaidStopLine(line);
     } else if (line.includes("ZONE_CHANGE")) {
-        handleZoneChange();
+        handleZoneChange(line);
     } else if (line.includes("COMBATANT_INFO")) {
         handleCombatantInfoLine(line);
     } else if (selfCombatantInfo != null && line.includes("SPELL_AURA_APPLIED")){
@@ -112,6 +113,7 @@ const handleArenaStartLine = (line: string) => {
  * Handle a line from the WoW log. 
  */
  const handleArenaStopLine = (line: string) => {
+    if (!isRecording) return;
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
@@ -164,21 +166,30 @@ const determineArenaMatchResult = (line: string): boolean => {
 /**
  * Handle a line from the WoW log.
  */
- const handleZoneChange = () => {
-    // No-op if not already recording.
-    if (!isRecording) return;  
+ const handleZoneChange = (line: string) => {
+    console.log("Handling zone change: ", line);
+    const zoneID = parseInt(line.split(',')[1]);
+    const isBG = battlegrounds.hasOwnProperty(zoneID);
 
-    // Zone change doesn't mean mythic+ is over.
-    if (isRecordingCategory === "Mythic+") return;
+    if (!isRecording && isBG) {
+        battlegroundStartRecording(line);  
+    } else if (isRecording && isBG) {
+        battlegroundStopRecording();
+    } else if (isRecording) {
+        const videoStopDate = new Date();
+        const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+        metadata.duration = Math.round(milliSeconds / 1000);
+    
+        // Assume loss if zoned out of content. 
+        metadata.result = false;
+        stopRecording(metadata);
+    }
 
-    const videoStopDate = new Date();
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    metadata.duration = Math.round(milliSeconds / 1000);
+    if (!isRecording) return;
 
-    // Assume loss if zoned out of content. 
-    metadata.result = false;
-    stopRecording(metadata);
+    return;
 }
+
 /**
  * Handles the SPELL_AURA_APPLIED line from WoW log.
  * @param line the SPELL_AURA_APPLIED line
@@ -209,7 +220,40 @@ const handleCombatantInfoLine = (line: string) => {
 }
 
 /**
- * Determine if the srcFlags indicate a self unit.
+ * ZONE_CHANGE event into a BG.  
+ */
+ const battlegroundStartRecording = (line: string) => {
+    const zoneID = parseInt(line.split(',')[1]);
+    const battlegroundName = battlegrounds[zoneID];
+    const category = "Battlegrounds";
+    videoStartDate = new Date();
+
+    metadata = {
+        name: battlegroundName,
+        category: category,
+        zoneID: zoneID,
+        duration: 0,
+        result: false,
+    }
+
+    startRecording(metadata);
+}
+
+/**
+ * battlegroundStopRecording
+ */
+ const battlegroundStopRecording = () => {
+    const videoStopDate = new Date();
+    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+    metadata.duration = Math.round(milliSeconds / 1000);
+
+    // No idea how we can tell who has won a BG so assume loss. 
+    metadata.result = false;
+    stopRecording(metadata);
+}
+
+/**
+ * Determine if the srcFlags indicate a friendly unit.
  * @param srcFlags the srcFlags bitmask
  * @returns true if self; false otherwise. 
  */
@@ -239,7 +283,7 @@ const watchLogs = (logdir: any) => {
 }
 
 /**
- * Removes quotes from the given string value.
+ * Removes double and single quotes from the given string value.
  * @param value the string value
  * @returns the string value with quotes removed.
  */

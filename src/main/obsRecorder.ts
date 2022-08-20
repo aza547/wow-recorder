@@ -63,11 +63,30 @@ function configureOBS(baseStoragePath: string) {
   console.debug('Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
   const availableEncoders = getAvailableValues('Output', 'Recording', 'RecEncoder');
-  setSetting('Output', 'RecEncoder', availableEncoders.slice(-1)[0] || 'x264');
+
+  // Get a list of available encoders, select the last one.
+  console.debug("Available encoder: " + JSON.stringify(availableEncoders));
+  const selectedEncoder = availableEncoders.slice(-1)[0] || 'x264';
+  console.debug("Selected encoder: " + selectedEncoder);
+  setSetting('Output', 'RecEncoder', selectedEncoder);
+
+  // Set output path and video format.
   setSetting('Output', 'RecFilePath', baseStoragePath);
   setSetting('Output', 'RecFormat', 'mp4');
-  setSetting('Output', 'VBitrate', 60000); // increasing improves quality?
-  setSetting('Video', 'FPSCommon', 50);
+  
+  if (selectedEncoder.toLowerCase().includes("amf")) {
+    // For AMF encoders, can't set 'lossless' bitrate.
+    // It interprets it as zero and fails to start.
+    // See https://github.com/aza547/wow-recorder/issues/40.
+    setSetting('Output', 'Recbitrate', 50000);
+  }
+  else {
+    // No idea how this works, but it does. 
+    setSetting('Output', 'Recbitrate', 'Lossless');
+  }
+   
+  setSetting('Output', 'Recmax_bitrate', 300000); 
+  setSetting('Video', 'FPSCommon', 60);
 
   console.debug('OBS Configured');
 }
@@ -218,6 +237,7 @@ function setSetting(category, parameter, value) {
 
   // Getting settings container
   const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
+  console.log(JSON.stringify(settings, null, 2));
 
   settings.forEach(subCategory => {
     subCategory.parameters.forEach(param => {
@@ -269,6 +289,5 @@ export {
   initialize,
   start,
   stop,
-  shutdown,
-  configureOutputPath
+  shutdown
 }

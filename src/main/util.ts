@@ -214,7 +214,6 @@ const deleteOldestVideo = (storageDir: any) => {
     const metadataPath = getMetadataFileForVideo(videoPath);
     const metadataJSON = fs.readFileSync(metadataPath);
     const metadata = JSON.parse(metadataJSON);
-    console.log(videoPath, metadata)
     return Boolean(metadata.protected);
 }  
 
@@ -278,6 +277,11 @@ const deleteOldestVideo = (storageDir: any) => {
     fs.writeFileSync(metadataFile, newMetadataJsonString);
 }
 
+// When packaged, we need to fix some paths
+const fixPathWhenPackaged = (p) => {
+    return p.replace("app.asar", "app.asar.unpacked");
+}
+
 export {
     getVideoState,
     writeMetadataFile,
@@ -285,5 +289,6 @@ export {
     isConfigReady,
     deleteVideo,
     openSystemExplorer,
-    toggleVideoProtected
+    toggleVideoProtected,
+    fixPathWhenPackaged
 };
