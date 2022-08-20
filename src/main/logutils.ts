@@ -174,17 +174,9 @@ const determineArenaMatchResult = (line: string): boolean => {
  * Handle a line from the WoW log.
  */
  const handleZoneChange = (line: string) => {
-
-    console.log("handling zone cahnge", line);
-
+    console.log("Handling zone change: ", line);
     const zoneID = parseInt(line.split(',')[1]);
-    const zoneName = removeQuotes(line.split(',')[2]);
-
-    // For some reason two ZONE_CHANGE events seem to fire with the same zoneID.
-    // so we need to specifically check the ID matches the name. 
-    //  8/14 10:53:06.469  ZONE_CHANGE,998,"Zereth Mortis",0
-    //  8/14 10:53:06.548  ZONE_CHANGE,998,"Temple of Kotmogu",0
-    const isBG = (battlegrounds.hasOwnProperty(zoneID)) && (zoneName === battlegrounds[zoneID]);
+    const isBG = battlegrounds.hasOwnProperty(zoneID);
 
     if (!isRecording && isBG) {
         battlegroundStartRecording(line);  

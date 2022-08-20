@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [40](https://github.com/aza547/wow-recorder/issues/40) - Fix to AMD AMF encoder. 
+- [42](https://github.com/aza547/wow-recorder/issues/42) - Fix to Deepwind Gorge button image.
+- [42](https://github.com/aza547/wow-recorder/issues/42) - Fix issue where internal BG zone changes stop the recording.
 
 ## [2.3.0] - 2022-08-14
 ### Added

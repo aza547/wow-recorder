@@ -118,6 +118,7 @@ const buttonBackdrops: any =  {
   2107: battlegroundAB,
   1681: battlegroundAB,
   1105: battlegroundDG,
+  2245: battlegroundDG,
   566:  battlegroundEOTS,
   968:  battlegroundEOTS,
   628:  battlegroundIOC,

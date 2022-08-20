@@ -112,8 +112,6 @@ const zones: { [id: number]: string; } = {
     ...dungeons,
 }
 
-
-
 const videoTabsSx = {
   position: 'fixed',
   bottom: '1px',
