@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Write more useful information to metadata files, including player name and spec. Thanks again to ericlytle for the contribution. 
 
 ### Changed
 - Remove hardcoded aspect ratio of application only appropriate for 1080p recordings. 
