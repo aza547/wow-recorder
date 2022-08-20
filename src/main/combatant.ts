@@ -4,15 +4,17 @@
 class Combatant {
     private _GUID: string;
     private _teamID: number;
+    private _specID: number;
     private _name?: string;
 
     /**
      * Constructs a new Combatant.
      * @param teamID the team the combatant belongs to.
      */
-    constructor(GUID: string, teamID: number) {
+    constructor(GUID: string, teamID: number, specID: number) {
         this._GUID = GUID;
         this._teamID = teamID;
+        this._specID = specID;
     }
 
     /**
@@ -20,13 +22,6 @@ class Combatant {
      */
     get GUID() {
         return this._GUID;
-    }
-    
-    /**
-     * Sets the GUID.
-     */
-    set GUID(GUID) {
-        this._GUID = GUID;
     }
 
     /**
@@ -37,12 +32,12 @@ class Combatant {
     }
 
     /**
-     * Sets the team ID.
+     * Gets the team ID.
      */
-    set teamID(value) {
-        this._teamID = value;
-    }
-    
+    get specID() {
+        return this._specID;
+    } 
+
     /**
      * Gets the name.
      * @apinote Name is in Name-Realm format

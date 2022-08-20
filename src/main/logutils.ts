@@ -20,11 +20,12 @@ type Metadata = {
     duration: number;
     result: boolean;
     playerName?: string;
+    playerSpecID?: number;
 }
 
 let metadata: Metadata;
-let combatantInfoMap: Map<string, Combatant> = new Map();
-let selfCombatantInfo = new Combatant();
+let combatantMap: Map<string, Combatant> = new Map();
+let playerCombatant: Combatant | undefined;
 
 /**
  * getLatestLog 
@@ -84,7 +85,7 @@ const handleLogLine = (line: string) => {
         handleZoneChange(line);
     } else if (line.includes("COMBATANT_INFO")) {
         handleCombatantInfoLine(line);
-    } else if (selfCombatantInfo != null && line.includes("SPELL_AURA_APPLIED")){
+    } else if (line.includes("SPELL_AURA_APPLIED")){
         handleSpellAuraAppliedLine(line);
     }
 }
@@ -93,7 +94,6 @@ const handleLogLine = (line: string) => {
  * Handle a line from the WoW log. 
  */
 const handleArenaStartLine = (line: string) => {
-    selfCombatantInfo = new Combatant();
     const zoneID = parseInt(line.split(',')[1]);
     const category = line.split(',')[3];
     videoStartDate = new Date();
@@ -113,13 +113,23 @@ const handleArenaStartLine = (line: string) => {
  * Handle a line from the WoW log. 
  */
  const handleArenaStopLine = (line: string) => {
-    if (!isRecording) return;
+    if (!isRecording) return; 
+
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerSpecID = playerCombatant.specID;
+    }
+
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    metadata.duration = Math.round(milliSeconds / 1000);
-    metadata.result = determineArenaMatchResult(line);
-    metadata.playerName = selfCombatantInfo.name;
-    combatantInfoMap.clear();
+    const duration = Math.round(milliSeconds / 1000);
+    const result = determineArenaMatchResult(line);
+
+    metadata.duration = duration; 
+    metadata.result = result;
+
+    combatantMap.clear();
+    playerCombatant = undefined;
     stopRecording(metadata);
 }
 
@@ -129,8 +139,9 @@ const handleArenaStartLine = (line: string) => {
  * @returns true if the observer won the match; otherwise false
  */
 const determineArenaMatchResult = (line: string): boolean => {
+    if (playerCombatant === undefined) return false;
     const winningTeamID = parseInt(line.split(',')[1]);
-    return selfCombatantInfo.teamID === winningTeamID;
+    return (playerCombatant.teamID === winningTeamID);
 }
 
 /**
@@ -195,28 +206,33 @@ const determineArenaMatchResult = (line: string): boolean => {
  * @param line the SPELL_AURA_APPLIED line
  */
  const handleSpellAuraAppliedLine = (line: string) => {
-    if (combatantInfoMap.size > 0) {
-        const srcGUID = line.split(',')[1];
-        const srcFlags = line.split(',')[3];
-        const srcCombatantData = combatantInfoMap.get(srcGUID)
+    if (playerCombatant) return;
+    if (combatantMap.size === 0) return;    
 
-        if (srcCombatantData !== undefined && isUnitSelf(parseInt(srcFlags))) {
-            selfCombatantInfo.name = removeQuotes(line.split(',')[2]);
-            selfCombatantInfo.teamID = srcCombatantData.teamID;
-        }
+    const srcGUID = line.split(',')[1];    
+    const srcName = removeQuotes(line.split(',')[2])
+    const srcFlags = parseInt(line.split(',')[3]);
+    
+    const srcCombatant = combatantMap.get(srcGUID);
+    if (srcCombatant === undefined) return;
+
+    if (isUnitSelf(srcFlags)) {
+        srcCombatant.name = srcName;
+        playerCombatant = srcCombatant;
     }
 }
 
 /**
- * Handles the COMBATANT_INFO line from WoW log by adding it to combatantInfoMap.
+ * Handles the COMBATANT_INFO line from WoW log by creating a Combatant and 
+ * adding it to combatantMap.
  * @param line the COMBATANT_INFO line
  */
 const handleCombatantInfoLine = (line: string) => {
-    const combatantGUID = line.split(',')[1];
+    const GUID = line.split(',')[1];
     const teamID = parseInt(line.split(',')[2]);
-    let combatantInfo = new Combatant(teamID);
-
-    combatantInfoMap.set(combatantGUID, combatantInfo);
+    const specID = parseInt(line.split(',')[24]);
+    let combatantInfo = new Combatant(GUID, teamID, specID);
+    combatantMap.set(GUID, combatantInfo);
 }
 
 /**
@@ -248,6 +264,7 @@ const handleCombatantInfoLine = (line: string) => {
     metadata.duration = Math.round(milliSeconds / 1000);
 
     // No idea how we can tell who has won a BG so assume loss. 
+    // I've just disabled displaying this in the UI so this does nothing.
     metadata.result = false;
     stopRecording(metadata);
 }
