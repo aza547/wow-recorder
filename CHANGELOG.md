@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.4.0] - 2022-08-20
 ### Added
 - Write more useful information to metadata files, including player name and spec. Thanks again to ericlytle for the contribution. 
-- [19](https://github.com/aza547/wow-recorder/issues/19) Display spec and name on arena and raid videos. 
+- [19](https://github.com/aza547/wow-recorder/issues/19) - Display spec and name on arena and raid videos. 
 - MMR hover text for arenas.
 
 ### Changed
