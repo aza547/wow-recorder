@@ -47,7 +47,8 @@ const months: string[] = [
   998:  "Temple of Kotmogu",
   761:  "The Battle for Gilneas",
   726:  "Twin Peaks",
-  489:  "Warsong Gulch"
+  489:  "Warsong Gulch",
+  2106:  "Warsong Gulch"
 }
 
 /**
@@ -55,8 +56,8 @@ const months: string[] = [
  */
  const arenas: { [id: number]: string; } = {
   1672: "Blade's Edge",
-  617: "Dalaran",
-  1505: "Nagrand",
+  617: "Dalaran Sewers",
+  1505: "Nagrand Arena",
   572: "Ruins of Lordaeron",
   2167: "The Robodrome",
   1134: "Tiger's Peak",

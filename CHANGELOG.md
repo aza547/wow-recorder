@@ -3,7 +3,6 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
 
 ### Added
@@ -12,27 +11,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [2.4.1] - 2022-08-20
+### Fixed
+- Fix BG recording that was regressed in 2.4.0. 
+- Fix Warsong Gulch zone ID.
+
 ## [2.4.0] - 2022-08-20
 ### Added
 - Write more useful information to metadata files, including player name and spec. Thanks again to ericlytle for the contribution. 
-- [19](https://github.com/aza547/wow-recorder/issues/19) - Display spec and name on arena and raid videos. 
+- [Issue 19](https://github.com/aza547/wow-recorder/issues/19) - Display spec and name on arena and raid videos. 
 - MMR hover text for arenas.
 
 ### Changed
 - Remove hardcoded aspect ratio of application only appropriate for 1080p recordings. 
 
 ### Fixed
-- [40](https://github.com/aza547/wow-recorder/issues/40) - Fix to AMD AMF encoder. 
-- [42](https://github.com/aza547/wow-recorder/issues/42) - Fix to Deepwind Gorge button image.
-- [42](https://github.com/aza547/wow-recorder/issues/42) - Fix issue where internal BG zone changes stop the recording.
+- [Issue 40](https://github.com/aza547/wow-recorder/issues/40) - Fix to AMD AMF encoder. 
+- [Issue 42](https://github.com/aza547/wow-recorder/issues/42) - Fix to Deepwind Gorge button image.
+- [Issue 42](https://github.com/aza547/wow-recorder/issues/42) - Fix issue where internal BG zone changes stop the recording.
 
 ## [2.3.0] - 2022-08-14
 ### Added
 - Resources directory and better test scripts, although they still suck.
-- [10](https://github.com/aza547/wow-recorder/issues/10) - Add logging infrastructure. 
-- [33](https://github.com/aza547/wow-recorder/issues/33) - Add tray icon and menu. Make minimizing now hide in system tray.
-- [32](https://github.com/aza547/wow-recorder/issues/32) - Add setting to run on start-up. 
-- [6](https://github.com/aza547/wow-recorder/issues/6) - Battlegrounds is now a supported category.
+- [Issue 10](https://github.com/aza547/wow-recorder/issues/10) - Add logging infrastructure. 
+- [Issue 33](https://github.com/aza547/wow-recorder/issues/33) - Add tray icon and menu. Make minimizing now hide in system tray.
+- [Issue 32](https://github.com/aza547/wow-recorder/issues/32) - Add setting to run on start-up. 
+- [Issue 6](https://github.com/aza547/wow-recorder/issues/6) - Battlegrounds is now a supported category.
 
 ### Changed
 - Record at 60 FPS instead of 30. 
@@ -42,15 +46,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.2.0] - 2022-08-07
 ### Added
-- [28](https://github.com/aza547/wow-recorder/issues/28) - Add open file in system explorer option when right clicking videos.
-- [28](https://github.com/aza547/wow-recorder/issues/28) - Add delete video option when right clicking videos.
-- [27](https://github.com/aza547/wow-recorder/issues/27) - Add save video option when right clicking videos.
+- [Issue 28](https://github.com/aza547/wow-recorder/issues/28) - Add open file in system explorer option when right clicking videos.
+- [Issue 28](https://github.com/aza547/wow-recorder/issues/28) - Add delete video option when right clicking videos.
+- [Issue 27](https://github.com/aza547/wow-recorder/issues/27) - Add save video option when right clicking videos.
 
 ### Changed
-- [37](https://github.com/aza547/wow-recorder/issues/37) - Remove bitrate cap, drastically increasing recording quality (and file size). Probably should make this configurable in the future. 
+- [Issue 37](https://github.com/aza547/wow-recorder/issues/37) - Remove bitrate cap, drastically increasing recording quality (and file size). Probably should make this configurable in the future. 
 
 ### Fixed
-- [22](https://github.com/aza547/wow-recorder/issues/22) - Make app less fragile to missing metadata files. 
+- [Issue 22](https://github.com/aza547/wow-recorder/issues/22) - Make app less fragile to missing metadata files. 
 
 ## [2.1.0] - 2022-08-05
 ### Added
@@ -59,13 +63,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
-- [5](https://github.com/aza547/wow-recorder/issues/5) - Fix arena win/loss indicator. Thanks to ericlytle for the code contribution. 
+- [Issue 5](https://github.com/aza547/wow-recorder/issues/5) - Fix arena win/loss indicator. Thanks to ericlytle for the code contribution. 
 
 ## [2.0.1] - 2022-07-31
 
 ### Fixed
 - Fix minimize button.
-- [21](https://github.com/aza547/wow-recorder/issues/21) - Handle people /afking out of content gracefully by stopping recording on ZONE_CHANGE for most categories.
+- [Issue 21](https://github.com/aza547/wow-recorder/issues/21) - Handle people /afking out of content gracefully by stopping recording on ZONE_CHANGE for most categories.
 
 ## [2.0.0] - 2022-07-07
 ### Added

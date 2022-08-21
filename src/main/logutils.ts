@@ -213,22 +213,15 @@ const determineArenaMatchResult = (line: string): any[] => {
     const isBG = battlegrounds.hasOwnProperty(zoneID);
 
     if (!isRecording && isBG) {
-        battlegroundStartRecording(line);  
-    } else if (isRecording && isBG) {
+        console.log("ZONE_CHANGE into BG, start recording");
+        battlegroundStartRecording(line);   
+    } else if (isRecording && !isBG ) {
+        console.log("ZONE_CHANGE out of BG, stop recording");
         battlegroundStopRecording();
-    } else if (isRecording) {
-        const videoStopDate = new Date();
-        const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-        metadata.duration = Math.round(milliSeconds / 1000);
-    
-        // Assume loss if zoned out of content. 
-        metadata.result = false;
-        stopRecording(metadata);
+    } else if (isRecording && !isBG) {
+        console.log("ZONE_CHANGE out of unknown content, stop recording");
+        zoneChangeStopRecording();
     }
-
-    if (!isRecording) return;
-
-    return;
 }
 
 /**
@@ -297,6 +290,19 @@ const handleCombatantInfoLine = (line: string) => {
 
     // No idea how we can tell who has won a BG so assume loss. 
     // I've just disabled displaying this in the UI so this does nothing.
+    metadata.result = false;
+    stopRecording(metadata);
+}
+
+/**
+ * zoneChangeStopRecording
+ */
+ const zoneChangeStopRecording = () => {
+    const videoStopDate = new Date();
+    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+    metadata.duration = Math.round(milliSeconds / 1000);
+
+    // Assume loss if zoned out of content. 
     metadata.result = false;
     stopRecording(metadata);
 }
