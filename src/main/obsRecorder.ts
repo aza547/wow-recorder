@@ -237,7 +237,6 @@ function setSetting(category, parameter, value) {
 
   // Getting settings container
   const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
-  console.log(JSON.stringify(settings, null, 2));
 
   settings.forEach(subCategory => {
     subCategory.parameters.forEach(param => {
