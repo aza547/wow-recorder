@@ -18,6 +18,9 @@ const getSpecImage = (id: number) => {
     return require(`../../assets/specs/${id}.png`);
 }
 
+// Still some more clean-up to do here. Current plan is to have
+// a list of IDs that we loop through and build the objects below.
+
 const arena = {
     1672: getArenaImage(1672),
     617:  getArenaImage(617),

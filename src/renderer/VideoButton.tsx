@@ -53,6 +53,7 @@ export default function VideoButton(props: any) {
 
   let buttonImage;
 
+  // TODO, clean this ugly code up. What about M+ eventually?
   if (category === "Raids") {
     buttonImage = Images.raid[video.encounterID];
   } else if (isBG) {
