@@ -130,8 +130,6 @@ for (const id of specIDs) {
     spec[id] = require(`../../assets/specs/${id}.png`);
 }
 
-// Finally done.
-// Export everything. 
 export {
     arena,
     dungeon,
