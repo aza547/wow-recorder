@@ -1,16 +1,43 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
-import { startRecording, stopRecording, isRecording}  from './main';
+import { startRecording, stopRecording, isRecording }  from './main';
 import { battlegrounds }  from './constants';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
 const fs = require('fs');
+const tasklist = require('tasklist');
 
 let tailHandler: any;
 let currentLogFile: string;
 let lastLogFile: string;
 let videoStartDate: Date;
+
+/**
+ * Is wow running? Starts false but we'll check immediately on start-up. 
+ */
+let isWowRunning: boolean = false;
+
+const wowProcessStarted = () => {
+    console.log("Wow.exe has started");
+    isWowRunning = true;
+};
+
+const wowProcessStopped = () => {
+    console.log("Wow.exe has stopped");
+    isWowRunning = false;
+    if (!isRecording) return; 
+
+    const videoStopDate = new Date();
+    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+    metadata.duration = Math.round(milliSeconds / 1000);
+
+    // Assume loss as game was closed. 
+    metadata.result = false;
+
+    stopRecording(metadata);
+};
+
 
 type Metadata = {
     name: string;
@@ -359,9 +386,44 @@ const removeQuotes = (value: string): string => {
     return [name, realm];
 }
 
+/**
+ * checkWoWProcess
+ */
+const checkWoWProcess = async () => {
+    let wowRunning = false;
+    const taskList = await tasklist(); 
+
+    taskList.forEach((process: any) => {
+        if (process.imageName === "Wow.exe") {
+            console.log("Found Wow.exe process; WoW is running.");
+            wowRunning = true;
+        }
+    });
+  
+    return wowRunning;
+}
+
+/**
+ * pollWoWProcess
+ */
+const pollWowProcess = () => {
+    setInterval(async () => {
+        const wowProcessFound = await checkWoWProcess();
+        const wowProcessChanged = (wowProcessFound !== isWowRunning);    
+        if (!wowProcessChanged) return;
+          
+        if (wowProcessFound) {
+            wowProcessStarted();
+        } else {
+            wowProcessStopped();
+        }
+    }, 5000);
+}
+
 export {
     handleLogLine,
     watchLogs,
     getLatestLog,
+    pollWowProcess,
     Metadata
 };

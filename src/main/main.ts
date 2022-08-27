@@ -5,8 +5,8 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged} from './util';
-import { watchLogs, Metadata, getLatestLog } from './logutils';
+import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged } from './util';
+import { watchLogs, Metadata, getLatestLog, pollWowProcess } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 
@@ -382,6 +382,7 @@ app
     obsRecorder.initialize(storageDir);
     createWindow();
     if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
+    pollWowProcess();
     watchLogs(baseLogPath);
   })
   .catch(console.log);

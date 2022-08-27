@@ -74,18 +74,50 @@ const months: string[] = [
 /**
  * Encounters by ID.  
  */
- const raids: { [id: number]: string; } = {
-    2537: "Jailer",
-    2512: "Guardian",
-    2529: "Halondrus",
-    2539: "Lihuvim",
-    2540: "Dausegne",
-    2542: "Skolex",
-    2543: "Lords",
-    2544: "Pantheon",
-    2546: "Anduin",
-    2549: "Rygelon",
-    2553: "Xy'mox",
+const encountersSepulcher: { [id: number]: string; } = {
+  2537: "Jailer",
+  2512: "Guardian",
+  2529: "Halondrus",
+  2539: "Lihuvim",
+  2540: "Dausegne",
+  2542: "Skolex",
+  2543: "Lords",
+  2544: "Pantheon",
+  2546: "Anduin",
+  2549: "Rygelon",
+  2553: "Xy'mox",
+}
+
+const encountersSanctum: { [id: number]: string; } = {
+  2523: "The Tarragrue",
+  2433: "Jailer's Eye",
+  2429: "The Nine",
+  2432: "Ner'zhul",
+  2434: "Souldrender",
+  2430: "Painsmith",
+  2436: "Guardian",
+  2431: "Fatescribe",
+  2422: "Kel'Thuzad",
+  2435: "Sylvanas",
+}
+
+const encountersNathria: { [id: number]: string; } = {
+  2398: "Shriekwing",
+  2418: "Huntsman",
+  2404: "Sun King",
+  2405: "Xy'mox",
+  2383: "Hungering",
+  2406: "Inerva",
+  2412: "Council",
+  2399: "Sludgefist",
+  2417: "SLG",
+  2407: "Denathrius"
+}
+
+const raids: { [id: number]: string; } = {
+  ...encountersNathria,
+  ...encountersSanctum,
+  ...encountersSepulcher
 }
 
 /**
@@ -209,5 +241,8 @@ export {
     raids,
     battlegrounds,
     dungeons,
-    specToClass
+    specToClass,
+    encountersSanctum,
+    encountersNathria,
+    encountersSepulcher,
 };

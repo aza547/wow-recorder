@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { URL } from 'url';
 import path from 'path';
-import { categories, months, zones }  from './constants';
+import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
 const { exec } = require('child_process');
 
@@ -67,7 +67,7 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
     videoState[metadata.category].push({
         index: videoIndex[metadata.category]++,
         fullPath: video.name,
-        zone: getVideoZone(metadata.zoneID, metadata.category),
+        zone: getVideoZone(metadata.zoneID, metadata.encounterID, metadata.category),
         zoneID: metadata.zoneID,
         encounter: getVideoEncounter(metadata),
         encounterID: metadata.encounterID,
@@ -136,9 +136,36 @@ const getVideoTime = (date: Date) => {
 /**
  * Get the zone name.
  */
-const getVideoZone = (zoneID: number, category: string) => {
-    const zone = (category === "Raids" ? "Sepulcher of the First Ones" : zones[zoneID])
+const getVideoZone = (zoneID: number, encounterID: number, category: string) => {
+    const isRaidEncounter = (category === "Raids"); 
+    let zone: string;
+    
+    if (isRaidEncounter) {
+        zone = getRaidName(encounterID);
+    } else {
+        zone = zones[zoneID];
+    }
+
     return zone;
+}
+
+/**
+ * Get the raid name from the encounter ID.
+ */
+ const getRaidName = (encounterID: number) => {
+    let raidName: string;
+
+    if (encountersNathria.hasOwnProperty(encounterID)) {
+        raidName = "Castle Nathria";
+    } else if (encountersSanctum.hasOwnProperty(encounterID)) {
+        raidName = "Sanctum of Domination";
+    } else if (encountersSepulcher.hasOwnProperty(encounterID)) {
+        raidName = "Sepulcher of the First Ones";
+    } else {
+        raidName = "Unknown Raid";
+    }
+
+    return raidName;
 }
 
 /**
@@ -319,7 +346,9 @@ const deleteOldestVideo = (storageDir: any) => {
     fs.writeFileSync(metadataFile, newMetadataJsonString);
 }
 
-// When packaged, we need to fix some paths
+/**
+ * When packaged, we need to fix some paths
+ */
 const fixPathWhenPackaged = (p) => {
     return p.replace("app.asar", "app.asar.unpacked");
 }
