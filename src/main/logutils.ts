@@ -1,6 +1,6 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
-import { startRecording, stopRecording, isRecording }  from './main';
+import { recorder }  from './main';
 import { battlegrounds }  from './constants';
 
 const tail = require('tail').Tail;
@@ -21,12 +21,13 @@ let isWowRunning: boolean = false;
 const wowProcessStarted = () => {
     console.log("Wow.exe has started");
     isWowRunning = true;
+    recorder.startBuffer();
 };
 
 const wowProcessStopped = () => {
     console.log("Wow.exe has stopped");
     isWowRunning = false;
-    if (!isRecording) return; 
+    if (!recorder.isRecording) return; 
 
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
@@ -35,9 +36,8 @@ const wowProcessStopped = () => {
     // Assume loss as game was closed. 
     metadata.result = false;
 
-    stopRecording(metadata);
+    recorder.stop(metadata);
 };
-
 
 type Metadata = {
     name: string;
@@ -134,15 +134,13 @@ const handleArenaStartLine = (line: string) => {
         duration: 0,
         result: false,
     }
-
-    startRecording(metadata);
 }
 
 /**
  * Handle a line from the WoW log. 
  */
  const handleArenaStopLine = (line: string) => {
-    if (!isRecording) return; 
+    if (!recorder.isRecording) return; 
 
     if (playerCombatant) {
         metadata.playerName = playerCombatant.name;
@@ -161,7 +159,7 @@ const handleArenaStartLine = (line: string) => {
 
     combatantMap.clear();
     playerCombatant = undefined;
-    stopRecording(metadata);
+    recorder.stop(metadata);
 }
 
 /**
@@ -203,15 +201,13 @@ const determineArenaMatchResult = (line: string): any[] => {
         duration: 0,
         result: false,
     }
-
-    startRecording(metadata);
 }
 
 /**
  * Handle a line from the WoW log. 
  */
  const handleRaidStopLine = (line: string) => {
-    if (!isRecording) return; 
+    if (!recorder.isRecording) return; 
 
     if (playerCombatant) {
         metadata.playerName = playerCombatant.name;
@@ -228,7 +224,7 @@ const determineArenaMatchResult = (line: string): any[] => {
     
     combatantMap.clear();
     playerCombatant = undefined;
-    stopRecording(metadata);
+    recorder.stop(metadata);
 }
 
 /**
@@ -239,15 +235,15 @@ const determineArenaMatchResult = (line: string): any[] => {
     const zoneID = parseInt(line.split(',')[1]);
     const isBG = battlegrounds.hasOwnProperty(zoneID);
 
-    if (!isRecording && isBG) {
+    if (!recorder.isRecording && isBG) {
         console.log("ZONE_CHANGE into BG, start recording");
-        battlegroundStartRecording(line);   
-    } else if (isRecording && !isBG ) {
+        battlegroundStart(line);   
+    } else if (recorder.isRecording && !isBG ) {
         console.log("ZONE_CHANGE out of BG, stop recording");
-        battlegroundStopRecording();
-    } else if (isRecording && !isBG) {
+        battlegroundStop();
+    } else if (recorder.isRecording && !isBG) {
         console.log("ZONE_CHANGE out of unknown content, stop recording");
-        zoneChangeStopRecording();
+        zoneChangeStop();
     }
 }
 
@@ -290,7 +286,7 @@ const handleCombatantInfoLine = (line: string) => {
 /**
  * ZONE_CHANGE event into a BG.  
  */
- const battlegroundStartRecording = (line: string) => {
+ const battlegroundStart = (line: string) => {
     const zoneID = parseInt(line.split(',')[1]);
     const battlegroundName = battlegrounds[zoneID];
     const category = "Battlegrounds";
@@ -303,14 +299,12 @@ const handleCombatantInfoLine = (line: string) => {
         duration: 0,
         result: false,
     }
-
-    startRecording(metadata);
 }
 
 /**
- * battlegroundStopRecording
+ * battlegroundStop
  */
- const battlegroundStopRecording = () => {
+ const battlegroundStop = () => {
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
@@ -318,20 +312,20 @@ const handleCombatantInfoLine = (line: string) => {
     // No idea how we can tell who has won a BG so assume loss. 
     // I've just disabled displaying this in the UI so this does nothing.
     metadata.result = false;
-    stopRecording(metadata);
+    recorder.stop(metadata);
 }
 
 /**
- * zoneChangeStopRecording
+ * zoneChangeStop
  */
- const zoneChangeStopRecording = () => {
+ const zoneChangeStop = () => {
     const videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
 
     // Assume loss if zoned out of content. 
     metadata.result = false;
-    stopRecording(metadata);
+    recorder.stop(metadata);
 }
 
 /**

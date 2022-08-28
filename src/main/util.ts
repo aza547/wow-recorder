@@ -67,7 +67,7 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
     videoState[metadata.category].push({
         index: videoIndex[metadata.category]++,
         fullPath: video.name,
-        zone: getVideoZone(metadata.zoneID, metadata.encounterID, metadata.category),
+        zone: getVideoZone(metadata),
         zoneID: metadata.zoneID,
         encounter: getVideoEncounter(metadata),
         encounterID: metadata.encounterID,
@@ -136,14 +136,20 @@ const getVideoTime = (date: Date) => {
 /**
  * Get the zone name.
  */
-const getVideoZone = (zoneID: number, encounterID: number, category: string) => {
-    const isRaidEncounter = (category === "Raids"); 
+const getVideoZone = (metadata: Metadata) => {
+    const zoneID = metadata.zoneID;
+    const encounterID = metadata.encounterID;
+    const category = metadata.category;
+
+    const isRaidEncounter = (category === "Raids") && encounterID; 
     let zone: string;
     
     if (isRaidEncounter) {
         zone = getRaidName(encounterID);
-    } else {
+    } else if (zoneID) {
         zone = zones[zoneID];
+    } else {
+        zone = "Unknown";
     }
 
     return zone;
@@ -277,6 +283,18 @@ const deleteOldestVideo = (storageDir: any) => {
 }  
 
 /**
+ * Delete the newest video.
+ */
+ const deleteNewestVideo = (storageDir: any) => {
+    const sortedVideos = glob.sync(storageDir + "*.mp4")
+        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
+        .sort((A: any, B: any) => A.mtime - B.mtime)
+
+    let videoForDeletion = sortedVideos.pop();
+    deleteVideo(videoForDeletion.name);
+}  
+
+/**
  * isVideoProtected
  */
  const isVideoProtected = (videoPath: string) => {
@@ -287,20 +305,18 @@ const deleteOldestVideo = (storageDir: any) => {
 }  
 
 /**
- * Delete a video and its metadata file. 
+ * Delete a video and its metadata file if it exists. 
  */
  const deleteVideo = (videoPath: string) => {
     const metadataPath = getMetadataFileForVideo(videoPath);
 
-    if (!fs.existsSync(metadataPath)) {
-        console.log("WTF have you done to get here?");
-        return;
+    if (fs.existsSync(metadataPath)) {
+        console.log("Deleting: " + metadataPath);  
+        fs.unlinkSync(metadataPath);        
     }
 
+    console.log("Deleting: " + videoPath);
     fs.unlinkSync(videoPath);
-    console.log("Deleted: " + videoPath);
-    fs.unlinkSync(metadataPath);
-    console.log("Deleted: " + metadataPath);  
 }  
 
 /**
@@ -329,7 +345,7 @@ const deleteOldestVideo = (storageDir: any) => {
     const metadataFile = getMetadataFileForVideo(videoPath);
 
     if (!fs.existsSync(metadataFile)) {
-        console.log("WTF have you done to get here?");
+        console.log("WTF have you done to get here? (toggleVideoProtected)");
         return;
     }
 
@@ -361,5 +377,6 @@ export {
     deleteVideo,
     openSystemExplorer,
     toggleVideoProtected,
-    fixPathWhenPackaged
+    fixPathWhenPackaged,
+    deleteNewestVideo
 };

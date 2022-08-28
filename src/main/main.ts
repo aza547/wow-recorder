@@ -5,10 +5,13 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, writeMetadataFile, runSizeMonitor, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged } from './util';
-import { watchLogs, Metadata, getLatestLog, pollWowProcess } from './logutils';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged } from './util';
+import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
+
+import { Recorder } from './recorder';
+let recorder: Recorder;
 
 /**
  * Setup logging. We override console log methods. All console log method will go to 
@@ -53,12 +56,6 @@ ipcMain.on('cfg-set', async (_event, key, val) => {
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let tray = null;
-
-/**
- * Are we currently recording, and what category? 
- */
-let isRecording: boolean = false;
-let isRecordingCategory: string | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -249,37 +246,6 @@ const openPathDialog = (event: any, args: any) => {
   })
 } 
 
-/**
- * Start recording.
- */
- const startRecording = (metadata: Metadata) => {
-  obsRecorder.start();
-  console.log("Started recording");
-  console.log(JSON.stringify(metadata));
-  isRecording = true;
-  isRecordingCategory = metadata.category;
-  if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
-}
-
-/**
- * Start recording.
- */
- const stopRecording = (metadata: Metadata) => {
-  obsRecorder.stop();
-  console.log("Stopped recording");
-  console.log(JSON.stringify(metadata));
-  isRecording = false;
-  isRecordingCategory = null;
-
-  setTimeout(() => {
-    if (mainWindow) { 
-      writeMetadataFile(storageDir, metadata);
-      runSizeMonitor(storageDir, maxStorage * 1000000000); //convert GB to bytes
-      mainWindow.webContents.send('updateStatus', 0);
-      mainWindow.webContents.send('refreshState');
-    };
-  }, 2000);
-}
 
 /**
  * mainWindow event listeners.
@@ -379,19 +345,17 @@ app
   .whenReady()
   .then(() => {
     console.log("App ready");
-    obsRecorder.initialize(storageDir);
     createWindow();
     if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
+    recorder = new Recorder(storageDir, maxStorage);  
     pollWowProcess();
     watchLogs(baseLogPath);
   })
   .catch(console.log);
 
 export {
-  startRecording,
-  stopRecording,
-  isRecording,
-  isRecordingCategory
+  mainWindow,
+  recorder
 };
 
 
