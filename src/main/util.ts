@@ -413,7 +413,6 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
                 .on('end', async (err: any) => {
                     if (!err) { 
                         console.log("FFmpeg cut video succeeded");
-                        fs.unlinkSync(initialFile); 
                         resolve("");
                     }
                 })

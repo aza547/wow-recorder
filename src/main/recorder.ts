@@ -115,10 +115,7 @@ const glob = require('glob');
 
         // Wait 2 seconds here just incase OBS has to do anything.
         setTimeout(() => {
-            // TODO shouldn't delete this until we're sure we don't need it
-            // Case where restartBuffer is called after gates open but before combatlog write
-            // We need this video to exist and to stich it together
-            deleteVideo(getNewestVideo(this._tempStorageDir));
+            this.cleanupBuffer();
             obsRecorder.start();
         }, 2000); 
     }
@@ -167,15 +164,15 @@ const glob = require('glob');
     cleanupBuffer = () => {
         const globString = path.join(this._tempStorageDir, "*.mp4"); 
 
-        // // Sort oldest to newest, pop the newest off the list; don't delete that. 
-        // const videosToDelete = glob.sync(globString) 
-        //     .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        //     .sort((A: any, B: any) => B.mtime - A.mtime)
-        //     .pop();
-        
-        // for (const video of videosToDelete) {
-        //     deleteVideo(video);
-        // }
+        // Sort newest to oldest, remove newest from the list; we don't delete that. 
+        const videosToDelete = glob.sync(globString) 
+            .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
+            .sort((A: any, B: any) => B.mtime - A.mtime)
+            .slice(1);
+
+        for (const video of videosToDelete) {
+            deleteVideo(video.name);
+        }
     }
 }
 

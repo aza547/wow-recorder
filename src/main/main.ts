@@ -333,7 +333,7 @@ ipcMain.on('getVideoState', (event) => {
  */
 app.on('window-all-closed', () => {
   console.log("User closed app");
-  cleanupBuffer();
+  recorder.cleanupBuffer();
   obsRecorder.shutdown();
   app.quit();
 });
