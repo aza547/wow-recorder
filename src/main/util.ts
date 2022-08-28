@@ -13,8 +13,10 @@ import { Metadata }  from './logutils';
 
 const { exec } = require('child_process');
 const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
+const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').path);
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 const fs = require('fs');
 const glob = require('glob');
 
