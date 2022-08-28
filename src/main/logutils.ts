@@ -135,7 +135,10 @@ const handleLogLine = (line: string) => {
 const handleArenaStartLine = (line: string) => {
     const zoneID = parseInt(line.split(',')[1]);
     const category = line.split(',')[3];
-    videoStartDate = new Date();
+
+    // If all goes to plan we don't need this but we do it incase the game
+    // crashes etc. so we can still get a reasonable duration.
+    videoStartDate = getCombatLogDate(line);
 
     metadata = {
         name: "name",
@@ -160,10 +163,9 @@ const handleArenaStartLine = (line: string) => {
         metadata.playerSpecID = playerCombatant.specID;        
     }
 
-    const videoStopDate = new Date();
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    const duration = Math.round(milliSeconds / 1000);
-    const [result, MMR] = determineArenaMatchResult(line);
+    // Helpfully ARENA_MATCH_END events contain the game duration. 
+    const duration = parseInt(line.split(',')[2]);
+    const [result, MMR] = determineArenaMatchResult(line);   
 
     metadata.duration = duration; 
     metadata.result = result;
@@ -204,7 +206,8 @@ const determineArenaMatchResult = (line: string): any[] => {
  const handleRaidStartLine = (line: string) => {
     const encounterID = parseInt(line.split(',')[1]);
     const category = "Raids";
-    videoStartDate = new Date();
+
+    videoStartDate = getCombatLogDate(line);
 
     metadata = {
         name: "name",
@@ -227,7 +230,7 @@ const determineArenaMatchResult = (line: string): any[] => {
         metadata.playerSpecID = playerCombatant.specID;        
     }
 
-    const videoStopDate = new Date();
+    const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     const duration = Math.round(milliSeconds / 1000);
 
@@ -252,10 +255,10 @@ const determineArenaMatchResult = (line: string): any[] => {
         battlegroundStart(line);   
     } else if (recorder.isRecording && !isBG ) {
         console.log("ZONE_CHANGE out of BG, stop recording");
-        battlegroundStop();
+        battlegroundStop(line);
     } else if (recorder.isRecording && !isBG) {
         console.log("ZONE_CHANGE out of unknown content, stop recording");
-        zoneChangeStop();
+        zoneChangeStop(line);
     }
 }
 
@@ -302,7 +305,8 @@ const handleCombatantInfoLine = (line: string) => {
     const zoneID = parseInt(line.split(',')[1]);
     const battlegroundName = battlegrounds[zoneID];
     const category = "Battlegrounds";
-    videoStartDate = new Date();
+
+    videoStartDate = getCombatLogDate(line);
 
     metadata = {
         name: battlegroundName,
@@ -316,8 +320,8 @@ const handleCombatantInfoLine = (line: string) => {
 /**
  * battlegroundStop
  */
- const battlegroundStop = () => {
-    const videoStopDate = new Date();
+ const battlegroundStop = (line) => {
+    const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
 
@@ -330,8 +334,8 @@ const handleCombatantInfoLine = (line: string) => {
 /**
  * zoneChangeStop
  */
- const zoneChangeStop = () => {
-    const videoStopDate = new Date();
+ const zoneChangeStop = (line) => {
+    const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
 
@@ -423,6 +427,26 @@ const pollWowProcess = () => {
             wowProcessStopped();
         }
     }, 5000);
+}
+
+/**
+ * getCombatLogDate
+ */
+const getCombatLogDate = (line: string) => {
+    const [date, time] = line.split(" ").slice(0, 1);
+    const [month, day] = date.split("/").slice(0, 1);
+    const [hours, mins, secs, msecs] = time.split(":").slice(0, 3);
+    const dateObj = new Date();
+
+    dateObj.setDate(parseInt(day));
+    dateObj.setMonth(parseInt(month));
+
+    dateObj.setHours(parseInt(hours));
+    dateObj.setMinutes(parseInt(mins));
+    dateObj.setSeconds(parseInt(secs));
+    dateObj.setMilliseconds(parseInt(msecs));
+
+    return dateObj;
 }
 
 export {

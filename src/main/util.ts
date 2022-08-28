@@ -402,7 +402,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
             // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
             ffmpeg(initialFile)
                 .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
-                // .outputOptions([ "-c:v copy", "-c:a copy" ])
+                .outputOptions([ "-c:v copy", "-c:a copy" ])
                 .output(finalVideoPath)
                 .on('end', async (err: any) => {
                     if (!err) { 
