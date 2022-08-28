@@ -5,11 +5,10 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, cleanupBuffer } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged } from './util';
 import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
-
 import { Recorder } from './recorder';
 let recorder: Recorder;
 

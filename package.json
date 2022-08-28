@@ -250,6 +250,7 @@
     "electron-osx-prompt": "^1.4.1",
     "electron-store": "^8.0.1",
     "electron-updater": "^4.6.5",
+    "ffmpeg-static": "^5.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "fs": "^0.0.1-security",
     "get-video-duration": "^4.1.0",

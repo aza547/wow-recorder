@@ -4,8 +4,15 @@ import path from 'path';
 import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
 
+/**
+ * When packaged, we need to fix some paths
+ */
+ const fixPathWhenPackaged = (path: string) => {
+    return path.replace("app.asar", "app.asar.unpacked");
+}
+
 const { exec } = require('child_process');
-const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
+const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 const fs = require('fs');
@@ -362,13 +369,6 @@ const deleteOldestVideo = (storageDir: any) => {
 }
 
 /**
- * When packaged, we need to fix some paths
- */
-const fixPathWhenPackaged = (p) => {
-    return p.replace("app.asar", "app.asar.unpacked");
-}
-
-/**
  * cutVideo
  * bit ugly async stuff but works
  * holy shit this function is a mess, need to deal with it. 
@@ -398,12 +398,17 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
                         "Calculated start time:", startTime);
 
             // It's crucial that we don't re-encode the video here as that would
-            // spin the CPU and delay the replay being available. We ensure that we 
-            // don't re-encode by passing the "-c copy" option to ffmpeg. Read about it here:
+            // spin the CPU and delay the replay being available.
+            //
+            // We ensure that we don't re-encode by passing the "-c copy" 
+            // option to ffmpeg. Read about it here:
             // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
+            //
+            // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
+            // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
             ffmpeg(initialFile)
                 .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
-                .outputOptions([ "-c:v copy", "-c:a copy" ])
+                .outputOptions([ `-t ${desiredDuration}`, "-c:v copy", "-c:a copy", "-avoid_negative_ts make_zero" ])
                 .output(finalVideoPath)
                 .on('end', async (err: any) => {
                     if (!err) { 
@@ -421,13 +426,6 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
     });
 }
 
-/**
- * cleanupBuffer
- */
-const cleanupBuffer = () => {
-
-}
-
 export {
     getVideoState,
     writeMetadataFile,
@@ -438,6 +436,5 @@ export {
     toggleVideoProtected,
     fixPathWhenPackaged,
     getNewestVideo,
-    cutVideo,
-    cleanupBuffer
+    cutVideo
 };

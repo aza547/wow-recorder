@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "A World of Warcraft screen recorder",
   "main": "./dist/main/main.js",
   "author": {
@@ -12,6 +12,7 @@
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "obs-studio-node": "https://s3-us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/osn-0.15.6-release-win64.tar.gz"
   },
   "license": "MIT"
