@@ -193,9 +193,8 @@ async function start() {
 async function stop() {
   let signalInfo;
 
-  console.debug('Stopping recording...');
+  console.debug('OBS stopping recording...');
   osn.NodeObs.OBS_service_stopRecording();
-  console.debug('Stopped?');
 
   signalInfo = await getNextSignalInfo();
 

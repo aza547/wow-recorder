@@ -24,7 +24,7 @@ print("Starting")
 for line in sample_log_lines:
     if "ARENA_MATCH_END" in line:
         # Sleep before writing the end event so we actually record something. 
-        time.sleep(2)
+        time.sleep(10)
     logFile.write(line)
 
 print("Done")

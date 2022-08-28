@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, cleanupBuffer } from './util';
 import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -334,6 +334,7 @@ ipcMain.on('getVideoState', (event) => {
  */
 app.on('window-all-closed', () => {
   console.log("User closed app");
+  cleanupBuffer();
   obsRecorder.shutdown();
   app.quit();
 });
@@ -348,6 +349,7 @@ app
     createWindow();
     if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
     recorder = new Recorder(storageDir, maxStorage);  
+    recorder.init();
     pollWowProcess();
     watchLogs(baseLogPath);
   })

@@ -3,10 +3,14 @@ import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
-const { exec } = require('child_process');
 
+const { exec } = require('child_process');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
 const fs = require('fs');
 const glob = require('glob');
+
 let videoIndex: { [category: string]: number }  = {};
 
 export let resolveHtmlPath: (htmlFileName: string) => string;
@@ -234,14 +238,8 @@ const getVideoState = (storageDir: unknown) => {
  */
 const writeMetadataFile = (storageDir: string, metadata: Metadata) => {
     const jsonString = JSON.stringify(metadata, null, 2);
-
-    const timeOrderedVideos = glob.sync(storageDir + "*.mp4")
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => B.mtime - A.mtime);
-
-    const newestVideoPath = timeOrderedVideos[0].name;
+    const newestVideoPath = getNewestVideo(storageDir);
     const newestVideoName = path.basename(newestVideoPath, '.mp4');
-
     fs.writeFileSync(storageDir + newestVideoName + ".json", jsonString);
 }    
 
@@ -283,15 +281,16 @@ const deleteOldestVideo = (storageDir: any) => {
 }  
 
 /**
- * Delete the newest video.
+ * Get the newest video.
  */
- const deleteNewestVideo = (storageDir: any) => {
-    const sortedVideos = glob.sync(storageDir + "*.mp4")
+ const getNewestVideo = (dir: any): string => {
+    const globString = path.join(dir, "*.mp4"); 
+    const sortedVideos = glob.sync(globString)
         .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
         .sort((A: any, B: any) => A.mtime - B.mtime)
 
     let videoForDeletion = sortedVideos.pop();
-    deleteVideo(videoForDeletion.name);
+    return videoForDeletion.name;
 }  
 
 /**
@@ -369,6 +368,65 @@ const fixPathWhenPackaged = (p) => {
     return p.replace("app.asar", "app.asar.unpacked");
 }
 
+/**
+ * cutVideo
+ * bit ugly async stuff but works
+ * holy shit this function is a mess, need to deal with it. 
+ */
+const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number) => {   
+    return new Promise((resolve) => {
+        const videoFileName = path.basename(initialFile, '.mp4');
+        const finalVideoPath = path.join(finalDir, videoFileName + ".mp4");
+
+        ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
+            if (err) {
+                console.log("FFprobe error: ", err);
+                throw new Error("FFprobe error when cutting video");
+            }
+
+            const bufferedDuration = data.format.duration;
+            const startTime = Math.round(bufferedDuration - desiredDuration);
+
+            if (startTime <= 0) {
+                throw new Error("Video start time not positive");
+            }
+
+            console.log("Ready to cut video.");
+            console.log("Initial duration:", bufferedDuration, 
+                        "Desired duration:", desiredDuration,
+                        "Calculated start time:", startTime);
+
+            // It's crucial that we don't re-encode the video here as that would
+            // spin the CPU and delay the replay being available. We ensure that we 
+            // don't re-encode by passing the "-c copy" option to ffmpeg. Read about it here:
+            // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
+            ffmpeg(initialFile)
+                .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
+                // .outputOptions([ "-c:v copy", "-c:a copy" ])
+                .output(finalVideoPath)
+                .on('end', async (err: any) => {
+                    if (!err) { 
+                        console.log("FFmpeg cut video succeeded");
+                        fs.unlinkSync(initialFile); 
+                        resolve("");
+                    }
+                })
+                .on('error', (err: any) => {
+                    console.log('FFmpeg video cut error: ', err)
+                    throw new Error("FFmpeg error when cutting video");
+                })
+                .run()    
+        })
+    });
+}
+
+/**
+ * cleanupBuffer
+ */
+const cleanupBuffer = () => {
+
+}
+
 export {
     getVideoState,
     writeMetadataFile,
@@ -378,5 +436,7 @@ export {
     openSystemExplorer,
     toggleVideoProtected,
     fixPathWhenPackaged,
-    deleteNewestVideo
+    getNewestVideo,
+    cutVideo,
+    cleanupBuffer
 };

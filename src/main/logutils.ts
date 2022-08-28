@@ -12,34 +12,14 @@ let tailHandler: any;
 let currentLogFile: string;
 let lastLogFile: string;
 let videoStartDate: Date;
+let metadata: Metadata;
+let combatantMap: Map<string, Combatant> = new Map();
+let playerCombatant: Combatant | undefined;
 
 /**
- * Is wow running? Starts false but we'll check immediately on start-up. 
+ * wowProcessStopped
  */
-let isWowRunning: boolean = false;
-
-const wowProcessStarted = () => {
-    console.log("Wow.exe has started");
-    isWowRunning = true;
-    recorder.startBuffer();
-};
-
-const wowProcessStopped = () => {
-    console.log("Wow.exe has stopped");
-    isWowRunning = false;
-    if (!recorder.isRecording) return; 
-
-    const videoStopDate = new Date();
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    metadata.duration = Math.round(milliSeconds / 1000);
-
-    // Assume loss as game was closed. 
-    metadata.result = false;
-
-    recorder.stop(metadata);
-};
-
-type Metadata = {
+ type Metadata = {
     name: string;
     category: string;
     zoneID?: number;
@@ -52,9 +32,39 @@ type Metadata = {
     teamMMR?: number;
 }
 
-let metadata: Metadata;
-let combatantMap: Map<string, Combatant> = new Map();
-let playerCombatant: Combatant | undefined;
+/**
+ * Is wow running? Starts false but we'll check immediately on start-up. 
+ */
+let isWowRunning: boolean = false;
+
+/**
+ * wowProcessStarted
+ */
+const wowProcessStarted = () => {
+    console.log("Wow.exe has started");
+    isWowRunning = true;
+    recorder.startBuffer();
+};
+
+/**
+ * wowProcessStopped
+ */
+const wowProcessStopped = () => {
+    console.log("Wow.exe has stopped");
+    isWowRunning = false;
+
+    if (recorder.isRecording) {
+        const videoStopDate = new Date();
+        const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+        metadata.duration = Math.round(milliSeconds / 1000);
+    
+        // Assume loss as game was closed. 
+        metadata.result = false;
+        recorder.stop(metadata);
+    } else if (recorder.isRecordingBuffer) {
+        recorder.stopBuffer();
+    }
+};
 
 /**
  * getLatestLog 
@@ -134,6 +144,8 @@ const handleArenaStartLine = (line: string) => {
         duration: 0,
         result: false,
     }
+    
+    recorder.start();
 }
 
 /**
