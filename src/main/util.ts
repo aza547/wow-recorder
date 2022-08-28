@@ -385,10 +385,11 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
             }
 
             const bufferedDuration = data.format.duration;
-            const startTime = Math.round(bufferedDuration - desiredDuration);
+            let startTime = Math.round(bufferedDuration - desiredDuration);
 
-            if (startTime <= 0) {
-                throw new Error("Video start time not positive");
+            if (startTime < 0) {
+                console.log("Video start time negative, avoiding error by not cutting video");
+                startTime = 0;
             }
 
             console.log("Ready to cut video.");

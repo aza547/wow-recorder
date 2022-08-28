@@ -216,6 +216,8 @@ const determineArenaMatchResult = (line: string): any[] => {
         duration: 0,
         result: false,
     }
+
+    recorder.start();
 }
 
 /**
@@ -315,12 +317,14 @@ const handleCombatantInfoLine = (line: string) => {
         duration: 0,
         result: false,
     }
+
+    recorder.start();
 }
 
 /**
  * battlegroundStop
  */
- const battlegroundStop = (line) => {
+ const battlegroundStop = (line: string) => {
     const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
@@ -334,7 +338,7 @@ const handleCombatantInfoLine = (line: string) => {
 /**
  * zoneChangeStop
  */
- const zoneChangeStop = (line) => {
+ const zoneChangeStop = (line: string) => {
     const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
@@ -444,6 +448,7 @@ const getCombatLogDate = (line: string) => {
     dateObj.setMinutes(parseInt(mins));
     dateObj.setSeconds(parseInt(secs));
 
+    console.log(line, dateObj);
     return dateObj;
 }
 
