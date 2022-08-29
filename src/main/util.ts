@@ -251,10 +251,10 @@ const writeMetadataFile = (storageDir: string, metadata: Metadata) => {
 }    
 
 /**
- * runSizeMonitor, maxStorage in bytes
+ * runSizeMonitor, maxStorage in GB.
  */
-const runSizeMonitor = (storageDir: any, maxStorage: any) => {  
-
+const runSizeMonitor = (storageDir: any, maxStorageGB: any) => {  
+    const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
     let totalSize = 0;
     const files = fs.readdirSync(storageDir);
 
@@ -262,9 +262,9 @@ const runSizeMonitor = (storageDir: any, maxStorage: any) => {
         totalSize += fs.statSync(storageDir + file).size;
     }
 
-    if (totalSize > maxStorage) { 
+    if (totalSize > maxStorageBytes) { 
         deleteOldestVideo(storageDir);
-        runSizeMonitor(storageDir, maxStorage);
+        runSizeMonitor(storageDir, maxStorageBytes);
     } 
 }   
 

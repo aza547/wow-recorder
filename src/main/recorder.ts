@@ -38,35 +38,41 @@ const glob = require('glob');
     }
 
     /**
-     * 
+     * Get the value of isRecording. 
+     * @returns {boolean} true if currently recording a game/encounter
      */
      get isRecording() {
         return this._isRecording;
     }
 
     /**
-     * 
+     * Set the value of isRecording. 
+     * @param {boolean} isRecording true if currently recording a game/encounter
      */
     set isRecording(value) {
         this._isRecording = value;
     }
 
     /**
-     * 
+     * Get the value of isRecordingBuffer. 
+     * @returns {boolean} true if currently recording a buffer
      */
     get isRecordingBuffer() {
         return this._isRecordingBuffer;
     }
     
     /**
-     * 
+     * Set the value of isRecordingBuffer. 
+     * @param {boolean} isRecordingBuffer true if currently recording a game/encounter
      */
     set isRecordingBuffer(value) {
         this._isRecordingBuffer = value;
     }
 
     /**
-     * Start recorder buffer.
+     * Start recorder buffer. This starts OBS and records in 5 min chunks
+     * to the temp buffer location. Called on start-up of application when
+     * WoW is open. 
      */
     startBuffer = () => {
         console.log("Recorder: Start recording buffer");
@@ -74,6 +80,8 @@ const glob = require('glob');
         this._isRecordingBuffer = true;
         if (mainWindow) mainWindow.webContents.send('updateStatus', 3);
     
+        // We store off this timer as a member variable as we will cancel
+        // it when a real game is detected. 
         this._bufferIntervalID = setInterval(() => {
             this.restartBuffer()
         }, 5 * 60 * 1000); // Five mins
@@ -81,28 +89,21 @@ const glob = require('glob');
 
     
     /**
-     * Stop recorder buffer.
+     * Stop recorder buffer. Called when WoW is closed. 
      */
     stopBuffer = () => {
         console.log("Recorder: Stop recording buffer");
         obsRecorder.stop();
+        this.isRecordingBuffer = false;
+        if (mainWindow) mainWindow.webContents.send('updateStatus', 0);
 
         setTimeout(() => {
-            deleteVideo(getNewestVideo(this._bufferStorageDir));
+            this.cleanupBuffer();
         }, 2000);
-
-        this.isRecordingBuffer = false;
-
-        if (mainWindow) mainWindow.webContents.send('updateStatus', 0);
     }
 
     /**
-     * Restarts the buffer recording. Fairly interesting function. 
-     * Does the following:
-     *   - Stop the OBS recording.
-     *   - Wait a couple seconds for OBS to finish. 
-     *   - Delete the most recent video. Logically it's not anything we want. TODO fix this comment not actually true, see below comment on deleteVideo.
-     *   - Start the OBS recording. 
+     * Restarts the buffer recording. Cleans the temp dir between stop/start.
      */
     restartBuffer = () => {
         console.log("Recorder: Restart recording buffer");
@@ -117,7 +118,8 @@ const glob = require('glob');
 
     /**
      * Start recording for real, this basically just cancels pending 
-     * buffer recording restarts.
+     * buffer recording restarts. We don't need to actually start OBS 
+     * recording as it's should already be running. 
      */
     start = () => {
         console.log("Recorder: Start recording");
@@ -127,37 +129,65 @@ const glob = require('glob');
     }
 
     /**
-     * Stop recording, no-op if not already recording. 
-     * By this point we need to have all the Metadata. 
+     * Stop recording, no-op if not already recording. Quite a bit happens in 
+     * this function, so I've included lots of comments. The ordering is also
+     * important. 
+     * @param {Metadata} metadata the details of the recording
+     * @param {number} overrun how long to continue recording after stop is called
      */
     stop = (metadata: Metadata, overrun: number = 0) => {
-        setTimeout(() => {      
+
+        // Wait for a delay specificed by overrun. This lets us
+        // Capture the boss death animation/score screens.  
+        setTimeout(async () => {
+            
+            // Verbose logging so it's obvious what's happening. 
             console.log("Recorder: Stop recording");
             console.log("Recorder:", JSON.stringify(metadata));
+
+            // Take the actions to stop the recording.
             if (!this._isRecording) return;
             obsRecorder.stop();       
             this._isRecording = false;
+
+            // Update the GUI to show we're processing a video. 
             if (mainWindow) mainWindow.webContents.send('updateStatus', 4);
-        
-            setTimeout(async () => {
-                const bufferedVideo = getNewestVideo(this._bufferStorageDir); 
-                await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
-                writeMetadataFile(this._storageDir, metadata);
-                runSizeMonitor(this._storageDir, this._maxStorage * 1000000000); // convert GB to bytes
 
-                if (mainWindow) {
-                    mainWindow.webContents.send('refreshState');
-                }
+            // Cut the video to length and write its metadata JSON file.
+            await this.finalizeVideo(metadata)
 
-                this.cleanupBuffer();
-                this.startBuffer();
-            }, 2000);
+            // Run the size monitor to ensure we stay within size limit.
+            // Need some maths to convert GB to bytes
+            runSizeMonitor(this._storageDir, this._maxStorage); 
 
-        }, overrun * 1000);
+            // Clean-up the temporary recording directory. 
+            this.cleanupBuffer();
+
+            // Refresh the GUI
+            if (mainWindow) mainWindow.webContents.send('refreshState');
+
+            // Restart the buffer recording ready for next game.
+            this.startBuffer();
+        }, 
+        overrun * 1000);
     }
 
     /**
-     * Delete all but the most recent buffer mp4 file. 
+     * Finalize the video by cutting it to size and writing the metadata JSON file. 
+     * @param {Metadata} metadata the details of the recording
+     */
+    finalizeVideo = async (metadata: Metadata) => {
+
+        setTimeout(async () => {
+            const bufferedVideo = getNewestVideo(this._bufferStorageDir); 
+            await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
+            writeMetadataFile(this._storageDir, metadata);            
+        }, 
+        2000);      
+    }
+
+    /**
+     * Delete all but the most recent buffer .mp4 file. 
      */
     cleanupBuffer = () => {
         const globString = path.join(this._bufferStorageDir, "*.mp4"); 
