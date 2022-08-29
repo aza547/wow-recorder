@@ -133,6 +133,7 @@ const handleLogLine = (line: string) => {
  * Handle a line from the WoW log. 
  */
 const handleArenaStartLine = (line: string) => {
+    if (recorder.isRecording) return; 
     const zoneID = parseInt(line.split(',')[1]);
     const category = line.split(',')[3];
 
@@ -163,14 +164,23 @@ const handleArenaStartLine = (line: string) => {
         metadata.playerSpecID = playerCombatant.specID;        
     }
 
+    let duration; 
+    
+    // Helpfully ARENA_MATCH_END events contain the game duration. Solo shuffle
+    // ARENA_MATCH_END duration only counts the last game so needs special handling. 
+    if (metadata.category !== "Solo Shuffle") {
+        duration = parseInt(line.split(',')[2]);
+    } else {
+        const soloShuffleStopDate = getCombatLogDate(line);
+        const milliSeconds = (soloShuffleStopDate.getTime() - videoStartDate.getTime()); 
+        duration = Math.round(milliSeconds / 1000);
+    }     
+
     // Add a few seconds so we reliably can see the end screen.
-    const overrun = 3;
+    const overrun = 3;   
+    metadata.duration = duration + overrun; 
 
-    // Helpfully ARENA_MATCH_END events contain the game duration. 
-    const duration = parseInt(line.split(',')[2]) + overrun;
-    const [result, MMR] = determineArenaMatchResult(line);   
-
-    metadata.duration = duration; 
+    const [result, MMR] = determineArenaMatchResult(line); 
     metadata.result = result;
     metadata.teamMMR = MMR;
 
