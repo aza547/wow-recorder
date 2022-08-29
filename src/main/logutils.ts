@@ -456,7 +456,6 @@ const getCombatLogDate = (line: string) => {
     dateObj.setMinutes(parseInt(mins));
     dateObj.setSeconds(parseInt(secs));
 
-    console.log(line, dateObj);
     return dateObj;
 }
 
