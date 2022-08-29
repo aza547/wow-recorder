@@ -15,8 +15,8 @@ const glob = require('glob');
     private _isRecording: boolean = false;
     private _isRecordingBuffer: boolean = false;
     private _storageDir: string;
-    private _tempStorageDir: any;
     private _maxStorage: number;
+    private _bufferStorageDir: any;
     private _bufferIntervalID?: any;
 
     /**
@@ -25,7 +25,16 @@ const glob = require('glob');
     constructor(storageDir: string, maxStorage: number) {
         this._storageDir = storageDir;
         this._maxStorage = maxStorage;       
-        this._tempStorageDir = path.join(app.getPath("temp"), "WarcraftRecorder"); // C:\Users\alexa\AppData\Local\Temp\WarcraftRecorder
+
+        // Something like: C:\Users\alexa\AppData\Local\Temp\WarcraftRecorder
+        this._bufferStorageDir = path.join(app.getPath("temp"), "WarcraftRecorder"); 
+
+        if (!fs.existsSync(this._bufferStorageDir)) {
+            console.log("Creating dir:", this._bufferStorageDir)
+            fs.mkdirSync(this._bufferStorageDir);
+        }
+
+        obsRecorder.initialize(this._bufferStorageDir);
     }
 
     /**
@@ -57,20 +66,6 @@ const glob = require('glob');
     }
 
     /**
-     * init
-     */
-    init = () => {
-        console.log("Recorder: init");
-
-        if (!fs.existsSync(this._tempStorageDir)){
-            console.log("Creating dir:", this._tempStorageDir)
-            fs.mkdirSync(this._tempStorageDir);
-        }
-
-        obsRecorder.initialize(this._tempStorageDir);
-    }
-    
-    /**
      * Start recorder buffer.
      */
     startBuffer = () => {
@@ -93,7 +88,7 @@ const glob = require('glob');
         obsRecorder.stop();
 
         setTimeout(() => {
-            deleteVideo(getNewestVideo(this._tempStorageDir));
+            deleteVideo(getNewestVideo(this._bufferStorageDir));
         }, 2000);
 
         this.isRecordingBuffer = false;
@@ -135,34 +130,37 @@ const glob = require('glob');
      * Stop recording, no-op if not already recording. 
      * By this point we need to have all the Metadata. 
      */
-    stop = (metadata: Metadata) => {
-        console.log("Recorder: Stop recording");
-        console.log("Recorder:", JSON.stringify(metadata));
-        if (!this._isRecording) return;
-        obsRecorder.stop();       
-        this._isRecording = false;
-        if (mainWindow) mainWindow.webContents.send('updateStatus', 0);
-      
-        setTimeout(async () => {
-            const bufferedVideo = getNewestVideo(this._tempStorageDir); 
-            await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
-            writeMetadataFile(this._storageDir, metadata);
-            runSizeMonitor(this._storageDir, this._maxStorage * 1000000000); // convert GB to bytes
+    stop = (metadata: Metadata, overrun: number = 0) => {
+        setTimeout(() => {      
+            console.log("Recorder: Stop recording");
+            console.log("Recorder:", JSON.stringify(metadata));
+            if (!this._isRecording) return;
+            obsRecorder.stop();       
+            this._isRecording = false;
+            if (mainWindow) mainWindow.webContents.send('updateStatus', 4);
+        
+            setTimeout(async () => {
+                const bufferedVideo = getNewestVideo(this._bufferStorageDir); 
+                await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
+                writeMetadataFile(this._storageDir, metadata);
+                runSizeMonitor(this._storageDir, this._maxStorage * 1000000000); // convert GB to bytes
 
-            if (mainWindow) {
-                mainWindow.webContents.send('refreshState');
-            }
+                if (mainWindow) {
+                    mainWindow.webContents.send('refreshState');
+                }
 
-            this.cleanupBuffer();
-            this.startBuffer();
-        }, 2000);
+                this.cleanupBuffer();
+                this.startBuffer();
+            }, 2000);
+
+        }, overrun * 1000);
     }
 
     /**
      * Delete all but the most recent buffer mp4 file. 
      */
     cleanupBuffer = () => {
-        const globString = path.join(this._tempStorageDir, "*.mp4"); 
+        const globString = path.join(this._bufferStorageDir, "*.mp4"); 
 
         // Sort newest to oldest, remove newest from the list; we don't delete that. 
         const videosToDelete = glob.sync(globString) 

@@ -2,6 +2,8 @@ import recordIcon from '../../assets/icon/record-icon.png';
 import eyeIcon from  '../../assets/icon/sleep-icon.png';
 import errorIcon from  '../../assets/icon/error-icon.png';
 import watchIcon from  '../../assets/icon/watch-icon.png';
+import savingIcon from  '../../assets/icon/saving-icon.png';
+
 import * as React from 'react';
 
 export default function Status() {
@@ -44,6 +46,11 @@ export default function Status() {
         return(
           <div id="status">
             <img id="error-icon" title="Ready and waiting" alt="icon" src={ watchIcon }/>
+          </div>
+      )} else if (status === 4) {
+        return(
+          <div id="status">
+            <img id="error-icon" title="Saving video..." alt="icon" src={ savingIcon }/>
           </div>
       )}
     }

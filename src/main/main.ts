@@ -348,7 +348,6 @@ app
     createWindow();
     if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
     recorder = new Recorder(storageDir, maxStorage);  
-    recorder.init();
     pollWowProcess();
     watchLogs(baseLogPath);
   })

@@ -163,8 +163,11 @@ const handleArenaStartLine = (line: string) => {
         metadata.playerSpecID = playerCombatant.specID;        
     }
 
+    // Add a few seconds so we reliably can see the end screen.
+    const overrun = 3;
+
     // Helpfully ARENA_MATCH_END events contain the game duration. 
-    const duration = parseInt(line.split(',')[2]);
+    const duration = parseInt(line.split(',')[2]) + overrun;
     const [result, MMR] = determineArenaMatchResult(line);   
 
     metadata.duration = duration; 
@@ -173,7 +176,8 @@ const handleArenaStartLine = (line: string) => {
 
     combatantMap.clear();
     playerCombatant = undefined;
-    recorder.stop(metadata);
+
+    recorder.stop(metadata, overrun);
 }
 
 /**
@@ -232,16 +236,21 @@ const determineArenaMatchResult = (line: string): any[] => {
         metadata.playerSpecID = playerCombatant.specID;        
     }
 
+    // Add a few seconds so we reliably see the boss death animation.
+    const overrun = 3;
+
     const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    const duration = Math.round(milliSeconds / 1000);
+    const duration = Math.round(milliSeconds / 1000) + overrun;
 
     metadata.duration = duration; 
     metadata.result = determineRaidEncounterResult(line);
     
     combatantMap.clear();
     playerCombatant = undefined;
-    recorder.stop(metadata);
+
+    recorder.stop(metadata, overrun);
+
 }
 
 /**
