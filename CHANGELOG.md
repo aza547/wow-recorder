@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [2.5.2] - 2022-08-29
+### Fixed
+- Fix issue where ZONE_CHANGE can crash the app.
+
 ## [2.5.1] - 2022-08-29
 ### Fixed
 - Fix ID for Sun King's Salvation encounter.

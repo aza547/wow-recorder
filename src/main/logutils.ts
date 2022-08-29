@@ -270,7 +270,14 @@ const determineArenaMatchResult = (line: string): any[] => {
     const zoneID = parseInt(line.split(',')[1]);
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
-    const isRecordingBG = (metadata.category === "Battlegrounds");    
+
+    let isRecordingBG = false;
+
+    // This is super hacky but it's late and I'm tired. 
+    // TODO come back and fix this. 
+    if (metadata !== undefined) {
+        isRecordingBG = (metadata.category === "Battlegrounds"); 
+    }
 
     if (!isRecording && isNewZoneBG) {
         console.log("ZONE_CHANGE into BG, start recording");
