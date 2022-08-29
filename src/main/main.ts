@@ -20,7 +20,9 @@ let recorder: Recorder;
 const log = require('electron-log');
 const date = new Date().toISOString().slice(0, 10);
 const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-log.transports.file.resolvePath = () => fixPathWhenPackaged(path.join(__dirname, logRelativePath));
+const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath))
+const logDir = path.dirname(logPath);
+log.transports.file.resolvePath = () => logPath;
 Object.assign(console, log.functions);
 console.log("App starting");
 
@@ -318,6 +320,23 @@ ipcMain.on('contextMenu', (event, args) => {
     toggleVideoProtected(videoToToggle);
     if (mainWindow) mainWindow.webContents.send('refreshState');
   }
+})
+
+/**
+ * logPath event listener.
+ */
+ ipcMain.on('logPath', (event, args) => {
+  if (args[0] === "open") {
+    openSystemExplorer(logDir);
+  }
+})
+
+/**
+ * openURL event listener.
+ */
+ ipcMain.on('openURL', (event, args) => {
+  event.preventDefault();
+  require('electron').shell.openExternal(args[0]);
 })
 
 /**

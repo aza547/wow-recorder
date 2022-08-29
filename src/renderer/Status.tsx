@@ -2,17 +2,17 @@ import recordIcon from '../../assets/icon/record-icon.png';
 import eyeIcon from  '../../assets/icon/sleep-icon.png';
 import errorIcon from  '../../assets/icon/error-icon.png';
 import watchIcon from  '../../assets/icon/watch-icon.png';
-import savingIcon from  '../../assets/icon/saving-icon.png';
-
 import * as React from 'react';
 
 export default function Status() {
 
   /**
-   * Python subprocess status.
+   * Recorder subprocess status.
    *   0 - waiting
    *   1 - recording
    *   2 - stopped/error
+   *   3 - watching
+   *   4 - saving
    */
   const [status, setStatus] = React.useState(0);
 
@@ -47,11 +47,9 @@ export default function Status() {
           <div id="status">
             <img id="error-icon" title="Ready and waiting" alt="icon" src={ watchIcon }/>
           </div>
-      )} else if (status === 4) {
+      )} else {
         return(
-          <div id="status">
-            <img id="error-icon" title="Saving video..." alt="icon" src={ savingIcon }/>
-          </div>
+          <div>Never reach here, but avoid linter error.</div>
       )}
     }
 

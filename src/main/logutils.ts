@@ -237,7 +237,7 @@ const determineArenaMatchResult = (line: string): any[] => {
     }
 
     // Add a few seconds so we reliably see the aftermath of a kill.
-    const overrun = 10;
+    const overrun = 15;
 
     const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
