@@ -371,36 +371,51 @@ const deleteOldestVideo = (storageDir: any) => {
 }
 
 /**
- * cutVideo
- * bit ugly async stuff but works
- * holy shit this function is a mess, need to deal with it. 
+ * Takes an input MP4 file, trims the footage from the start of the video so
+ * that the output is desiredDuration seconds. Some ugly async/await stuff 
+ * here. Some interesting implementation details around ffmpeg in comments 
+ * below. 
+ * 
+ * @param {string} initialFile path to initial MP4 file
+ * @param {string} finalDir path to output directory
+ * @param {number} desiredDuration seconds to cut down to
  */
-const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number) => {   
-    return new Promise((resolve) => {
-        const videoFileName = path.basename(initialFile, '.mp4');
-        const finalVideoPath = path.join(finalDir, videoFileName + ".mp4");
+const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number) => { 
+    
+    const videoFileName = path.basename(initialFile, '.mp4');
+    const finalVideoPath = path.join(finalDir, videoFileName + ".mp4");
 
+    return new Promise<void> ((resolve) => {
+
+        // Use ffprobe to check the length of the initial file.
         ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
             if (err) {
                 console.log("FFprobe error: ", err);
                 throw new Error("FFprobe error when cutting video");
             }
 
+            // Calculate the desired start time relative to the initial file. 
             const bufferedDuration = data.format.duration;
             let startTime = Math.round(bufferedDuration - desiredDuration);
 
+            // Defensively avoid a negative start time error case. 
             if (startTime < 0) {
-                console.log("Video start time negative, avoiding error by not cutting video");
+                console.log("Video start time was: ", startTime);
+                console.log("Avoiding error by not cutting video");
                 startTime = 0;
             }
 
+            // This was super helpful in debugging during development so I've kept it.
             console.log("Ready to cut video.");
             console.log("Initial duration:", bufferedDuration, 
                         "Desired duration:", desiredDuration,
                         "Calculated start time:", startTime);
 
-            // It's crucial that we don't re-encode the video here as that would
-            // spin the CPU and delay the replay being available.
+            // It's crucial that we don't re-encode the video here as that 
+            // would spin the CPU and delay the replay being available. I 
+            // did try this with re-encoding as it has compression benefits 
+            // but took literally ages. My CPU was maxed out for nearly the 
+            // same elapsed time as the recording. 
             //
             // We ensure that we don't re-encode by passing the "-c copy" 
             // option to ffmpeg. Read about it here:
@@ -412,15 +427,24 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
                 .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
                 .outputOptions([ `-t ${desiredDuration}`, "-c:v copy", "-c:a copy", "-avoid_negative_ts make_zero" ])
                 .output(finalVideoPath)
+
+                // Handle the end of the FFmpeg cutting.
                 .on('end', async (err: any) => {
-                    if (!err) { 
+                    if (err) {
+                        console.log('FFmpeg video cut error (1): ', err)
+                        throw new Error("FFmpeg error when cutting video (1)");
+                    }
+                    else {
                         console.log("FFmpeg cut video succeeded");
-                        resolve("");
+                        resolve();
                     }
                 })
+
+                // Handle an error with the FFmpeg cutting. Not sure if we 
+                // need this as well as the above but being careful.
                 .on('error', (err: any) => {
-                    console.log('FFmpeg video cut error: ', err)
-                    throw new Error("FFmpeg error when cutting video");
+                    console.log('FFmpeg video cut error (2): ', err)
+                    throw new Error("FFmpeg error when cutting video (2)");
                 })
                 .run()    
         })

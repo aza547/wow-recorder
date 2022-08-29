@@ -39,6 +39,7 @@ const glob = require('glob');
 
     /**
      * Get the value of isRecording. 
+     * 
      * @returns {boolean} true if currently recording a game/encounter
      */
      get isRecording() {
@@ -47,6 +48,7 @@ const glob = require('glob');
 
     /**
      * Set the value of isRecording. 
+     * 
      * @param {boolean} isRecording true if currently recording a game/encounter
      */
     set isRecording(value) {
@@ -55,6 +57,7 @@ const glob = require('glob');
 
     /**
      * Get the value of isRecordingBuffer. 
+     * 
      * @returns {boolean} true if currently recording a buffer
      */
     get isRecordingBuffer() {
@@ -63,6 +66,7 @@ const glob = require('glob');
     
     /**
      * Set the value of isRecordingBuffer. 
+     * 
      * @param {boolean} isRecordingBuffer true if currently recording a game/encounter
      */
     set isRecordingBuffer(value) {
@@ -113,7 +117,8 @@ const glob = require('glob');
         setTimeout(() => {
             this.cleanupBuffer();
             obsRecorder.start();
-        }, 2000); 
+        }, 
+        2000); 
     }
 
     /**
@@ -132,19 +137,17 @@ const glob = require('glob');
      * Stop recording, no-op if not already recording. Quite a bit happens in 
      * this function, so I've included lots of comments. The ordering is also
      * important. 
+     * 
      * @param {Metadata} metadata the details of the recording
      * @param {number} overrun how long to continue recording after stop is called
      */
     stop = (metadata: Metadata, overrun: number = 0) => {
+        console.log("Recorder: Stop recording after", overrun, "seconds");
+        console.log("Recorder:", JSON.stringify(metadata));
 
         // Wait for a delay specificed by overrun. This lets us
         // Capture the boss death animation/score screens.  
-        setTimeout(async () => {
-            
-            // Verbose logging so it's obvious what's happening. 
-            console.log("Recorder: Stop recording");
-            console.log("Recorder:", JSON.stringify(metadata));
-
+        setTimeout(async () => {           
             // Take the actions to stop the recording.
             if (!this._isRecording) return;
             obsRecorder.stop();       
@@ -154,7 +157,8 @@ const glob = require('glob');
             if (mainWindow) mainWindow.webContents.send('updateStatus', 4);
 
             // Cut the video to length and write its metadata JSON file.
-            await this.finalizeVideo(metadata)
+            // Await for this to finish before we return to waiting state.
+            await this.finalizeVideo(metadata);
 
             // Run the size monitor to ensure we stay within size limit.
             // Need some maths to convert GB to bytes
@@ -173,17 +177,26 @@ const glob = require('glob');
     }
 
     /**
-     * Finalize the video by cutting it to size and writing the metadata JSON file. 
+     * Finalize the video by cutting it to size, moving it to the persistent
+     * storage directory and writing the metadata JSON file. 
+     * 
      * @param {Metadata} metadata the details of the recording
      */
     finalizeVideo = async (metadata: Metadata) => {
 
-        setTimeout(async () => {
-            const bufferedVideo = getNewestVideo(this._bufferStorageDir); 
-            await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
-            writeMetadataFile(this._storageDir, metadata);            
-        }, 
-        2000);      
+        // Gnarly syntax to await for the setTimeout to finish.
+        await new Promise<void> ((resolve) => {
+
+            // It's a bit hacky that we async wait for 2 seconds for OBS to 
+            // finish up with the video file. Maybe this can be done better. 
+            setTimeout(async () => {
+                const bufferedVideo = getNewestVideo(this._bufferStorageDir);
+                await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
+                writeMetadataFile(this._storageDir, metadata);  
+                resolve();       
+            }, 
+            2000)
+        });   
     }
 
     /**
