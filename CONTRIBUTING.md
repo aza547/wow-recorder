@@ -16,11 +16,11 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
     1. Update the version number in `./release/app/package.json`. 
     1. Run `npm run package` to build the electron application. 
 1. Install the .exe and run the tests to make sure you've not broken something crass.
-    1. With warcraft recorder open, run `python .\resources\test-scripts\all_tests.py`.
-    1. Manually check the app behaves as expected while this runs:
+    1. With WarcraftRecorder open, run: `python .\resources\test-scripts\all_tests.py`.
+    1. Manually check the app behaves as expected while this runs.
         1. Recordings are created.
         1. Appropriate metadata is created.
-        1. User experience is as usual.
+        1. User experience has not degraded.
 1. Share the application.
     1. Update the CHANGELOG.md with the new version number and change details. 
     1. Commit and push all changes.
