@@ -18,8 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 26](https://github.com/aza547/wow-recorder/issues/26) - Buffer recording to always capture the beginning of games/encounters. 
 - Add a button to open the application log path for debugging. 
 - Add a link to Discord in the application.
-
-### Changed
+- Small improvements improvements to tests.
 
 ### Fixed
 - Clean-up handling of images, it was really messy.
