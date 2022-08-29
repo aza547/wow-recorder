@@ -268,18 +268,25 @@ const determineArenaMatchResult = (line: string): any[] => {
  const handleZoneChange = (line: string) => {
     console.log("Handling zone change: ", line);
     const zoneID = parseInt(line.split(',')[1]);
-    const isBG = battlegrounds.hasOwnProperty(zoneID);
+    const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
+    const isRecording = recorder.isRecording;
+    const isRecordingBG = (metadata.category === "Battlegrounds");    
 
-    if (!recorder.isRecording && isBG) {
+    if (!isRecording && isNewZoneBG) {
         console.log("ZONE_CHANGE into BG, start recording");
         battlegroundStart(line);   
-    } else if (recorder.isRecording && !isBG ) {
+    } else if (isRecording && isRecordingBG && !isNewZoneBG) {
         console.log("ZONE_CHANGE out of BG, stop recording");
         battlegroundStop(line);
-    } else if (recorder.isRecording && !isBG) {
-        console.log("ZONE_CHANGE out of unknown content, stop recording");
-        zoneChangeStop(line);
     }
+
+    // TODO there is the case here where a tilted raider hearths 
+    // out mid-pull. I think the correct way to handle is just a 
+    // log inactivity stop, else raid encounters with ZONE_CHANGES
+    // internally will always stop recording. That's a bit of work
+    // so I'm skipping the implementation for now and making a 
+    // quick fix. For now, hearting out mid-encounter won't stop
+    // the recording and the user will need to restart the app.  
 }
 
 /**
