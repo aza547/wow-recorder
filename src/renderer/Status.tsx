@@ -2,7 +2,10 @@ import recordIcon from '../../assets/icon/record-icon.png';
 import eyeIcon from  '../../assets/icon/sleep-icon.png';
 import errorIcon from  '../../assets/icon/error-icon.png';
 import watchIcon from  '../../assets/icon/watch-icon.png';
+<<<<<<< HEAD
 import savingIcon from '../../assets/icon/saving-icon.png';
+=======
+>>>>>>> main
 import * as React from 'react';
 
 export default function Status() {
