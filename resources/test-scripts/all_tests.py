@@ -10,6 +10,7 @@ tests = {
     "Solo Shuffle": os.path.join(dirname, "./soloshuffle.py"),
     "Raid": os.path.join(dirname, "./raid.py"),
     "Rated BG": os.path.join(dirname, "./rbg.py"),
+    "Zone Changes": os.path.join(dirname, "./zonechange.py"),
 }
 
 for test in tests:
