@@ -236,8 +236,8 @@ const determineArenaMatchResult = (line: string): any[] => {
         metadata.playerSpecID = playerCombatant.specID;        
     }
 
-    // Add a few seconds so we reliably see the boss death animation.
-    const overrun = 3;
+    // Add a few seconds so we reliably see the aftermath of a kill.
+    const overrun = 10;
 
     const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
@@ -250,7 +250,6 @@ const determineArenaMatchResult = (line: string): any[] => {
     playerCombatant = undefined;
 
     recorder.stop(metadata, overrun);
-
 }
 
 /**
