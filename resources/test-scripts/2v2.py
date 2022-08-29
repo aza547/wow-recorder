@@ -1,16 +1,18 @@
 import time
 import random
+import os
 
+dirname = os.path.dirname(__file__)
 LOG_PATH = "D:/World of Warcraft/_retail_/Logs"
-SAMPLE_LOG = "D:/checkouts/wow-recorder/resources/example-logs/2v2.txt"
+SAMPLE_LOG = os.path.join(dirname, "../example-logs/2v2.txt")
 
 # Open a combat log ready for writing.
 randomNumber = random.random()
 logName = f"WoWCombatLog-{randomNumber}.txt"
-logFile = open(f"{LOG_PATH}/{logName}", "w")
+logFile = open(f"{LOG_PATH}/{logName}", "w", encoding="utf-8")
 
 # Load the sample combat log into memory.
-sample_log = open(SAMPLE_LOG, 'r')
+sample_log = open(SAMPLE_LOG, 'r', encoding="utf-8")
 sample_log_lines = sample_log.readlines()
 
 # If ARENA_MATCH_START is the first line we don't start recording 
