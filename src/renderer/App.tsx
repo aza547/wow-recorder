@@ -3,6 +3,8 @@ import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import SettingsButton from './SettingsButton';
 import Status from './Status';
+import LogButton from './LogButton';
+import DiscordButton from './DiscordButton';
 import './App.css';
 
 const Application = () => {
@@ -11,6 +13,8 @@ const Application = () => {
       <RendererTitleBar />
       <Layout />
       <SettingsButton />
+      <LogButton />
+      <DiscordButton />
       <Status />
     </div>
   );

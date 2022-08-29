@@ -3,10 +3,23 @@ import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
-const { exec } = require('child_process');
 
+/**
+ * When packaged, we need to fix some paths
+ */
+ const fixPathWhenPackaged = (path: string) => {
+    return path.replace("app.asar", "app.asar.unpacked");
+}
+
+const { exec } = require('child_process');
+const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
+const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').path);
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 const fs = require('fs');
 const glob = require('glob');
+
 let videoIndex: { [category: string]: number }  = {};
 
 export let resolveHtmlPath: (htmlFileName: string) => string;
@@ -67,7 +80,7 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
     videoState[metadata.category].push({
         index: videoIndex[metadata.category]++,
         fullPath: video.name,
-        zone: getVideoZone(metadata.zoneID, metadata.encounterID, metadata.category),
+        zone: getVideoZone(metadata),
         zoneID: metadata.zoneID,
         encounter: getVideoEncounter(metadata),
         encounterID: metadata.encounterID,
@@ -136,14 +149,20 @@ const getVideoTime = (date: Date) => {
 /**
  * Get the zone name.
  */
-const getVideoZone = (zoneID: number, encounterID: number, category: string) => {
-    const isRaidEncounter = (category === "Raids"); 
+const getVideoZone = (metadata: Metadata) => {
+    const zoneID = metadata.zoneID;
+    const encounterID = metadata.encounterID;
+    const category = metadata.category;
+
+    const isRaidEncounter = (category === "Raids") && encounterID; 
     let zone: string;
     
     if (isRaidEncounter) {
         zone = getRaidName(encounterID);
-    } else {
+    } else if (zoneID) {
         zone = zones[zoneID];
+    } else {
+        zone = "Unknown";
     }
 
     return zone;
@@ -228,22 +247,16 @@ const getVideoState = (storageDir: unknown) => {
  */
 const writeMetadataFile = (storageDir: string, metadata: Metadata) => {
     const jsonString = JSON.stringify(metadata, null, 2);
-
-    const timeOrderedVideos = glob.sync(storageDir + "*.mp4")
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => B.mtime - A.mtime);
-
-    const newestVideoPath = timeOrderedVideos[0].name;
+    const newestVideoPath = getNewestVideo(storageDir);
     const newestVideoName = path.basename(newestVideoPath, '.mp4');
-
     fs.writeFileSync(storageDir + newestVideoName + ".json", jsonString);
 }    
 
 /**
- * runSizeMonitor, maxStorage in bytes
+ * runSizeMonitor, maxStorage in GB.
  */
-const runSizeMonitor = (storageDir: any, maxStorage: any) => {  
-
+const runSizeMonitor = (storageDir: any, maxStorageGB: any) => {  
+    const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
     let totalSize = 0;
     const files = fs.readdirSync(storageDir);
 
@@ -251,9 +264,9 @@ const runSizeMonitor = (storageDir: any, maxStorage: any) => {
         totalSize += fs.statSync(storageDir + file).size;
     }
 
-    if (totalSize > maxStorage) { 
+    if (totalSize > maxStorageBytes) { 
         deleteOldestVideo(storageDir);
-        runSizeMonitor(storageDir, maxStorage);
+        runSizeMonitor(storageDir, maxStorageBytes);
     } 
 }   
 
@@ -277,6 +290,19 @@ const deleteOldestVideo = (storageDir: any) => {
 }  
 
 /**
+ * Get the newest video.
+ */
+ const getNewestVideo = (dir: any): string => {
+    const globString = path.join(dir, "*.mp4"); 
+    const sortedVideos = glob.sync(globString)
+        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
+        .sort((A: any, B: any) => A.mtime - B.mtime)
+
+    let videoForDeletion = sortedVideos.pop();
+    return videoForDeletion.name;
+}  
+
+/**
  * isVideoProtected
  */
  const isVideoProtected = (videoPath: string) => {
@@ -287,20 +313,18 @@ const deleteOldestVideo = (storageDir: any) => {
 }  
 
 /**
- * Delete a video and its metadata file. 
+ * Delete a video and its metadata file if it exists. 
  */
  const deleteVideo = (videoPath: string) => {
     const metadataPath = getMetadataFileForVideo(videoPath);
 
-    if (!fs.existsSync(metadataPath)) {
-        console.log("WTF have you done to get here?");
-        return;
+    if (fs.existsSync(metadataPath)) {
+        console.log("Deleting: " + metadataPath);  
+        fs.unlinkSync(metadataPath);        
     }
 
+    console.log("Deleting: " + videoPath);
     fs.unlinkSync(videoPath);
-    console.log("Deleted: " + videoPath);
-    fs.unlinkSync(metadataPath);
-    console.log("Deleted: " + metadataPath);  
 }  
 
 /**
@@ -329,7 +353,7 @@ const deleteOldestVideo = (storageDir: any) => {
     const metadataFile = getMetadataFileForVideo(videoPath);
 
     if (!fs.existsSync(metadataFile)) {
-        console.log("WTF have you done to get here?");
+        console.log("WTF have you done to get here? (toggleVideoProtected)");
         return;
     }
 
@@ -347,10 +371,84 @@ const deleteOldestVideo = (storageDir: any) => {
 }
 
 /**
- * When packaged, we need to fix some paths
+ * Takes an input MP4 file, trims the footage from the start of the video so
+ * that the output is desiredDuration seconds. Some ugly async/await stuff 
+ * here. Some interesting implementation details around ffmpeg in comments 
+ * below. 
+ * 
+ * @param {string} initialFile path to initial MP4 file
+ * @param {string} finalDir path to output directory
+ * @param {number} desiredDuration seconds to cut down to
  */
-const fixPathWhenPackaged = (p) => {
-    return p.replace("app.asar", "app.asar.unpacked");
+const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number) => { 
+    
+    const videoFileName = path.basename(initialFile, '.mp4');
+    const finalVideoPath = path.join(finalDir, videoFileName + ".mp4");
+
+    return new Promise<void> ((resolve) => {
+
+        // Use ffprobe to check the length of the initial file.
+        ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
+            if (err) {
+                console.log("FFprobe error: ", err);
+                throw new Error("FFprobe error when cutting video");
+            }
+
+            // Calculate the desired start time relative to the initial file. 
+            const bufferedDuration = data.format.duration;
+            let startTime = Math.round(bufferedDuration - desiredDuration);
+
+            // Defensively avoid a negative start time error case. 
+            if (startTime < 0) {
+                console.log("Video start time was: ", startTime);
+                console.log("Avoiding error by not cutting video");
+                startTime = 0;
+            }
+
+            // This was super helpful in debugging during development so I've kept it.
+            console.log("Ready to cut video.");
+            console.log("Initial duration:", bufferedDuration, 
+                        "Desired duration:", desiredDuration,
+                        "Calculated start time:", startTime);
+
+            // It's crucial that we don't re-encode the video here as that 
+            // would spin the CPU and delay the replay being available. I 
+            // did try this with re-encoding as it has compression benefits 
+            // but took literally ages. My CPU was maxed out for nearly the 
+            // same elapsed time as the recording. 
+            //
+            // We ensure that we don't re-encode by passing the "-c copy" 
+            // option to ffmpeg. Read about it here:
+            // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
+            //
+            // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
+            // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
+            ffmpeg(initialFile)
+                .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
+                .outputOptions([ `-t ${desiredDuration}`, "-c:v copy", "-c:a copy", "-avoid_negative_ts make_zero" ])
+                .output(finalVideoPath)
+
+                // Handle the end of the FFmpeg cutting.
+                .on('end', async (err: any) => {
+                    if (err) {
+                        console.log('FFmpeg video cut error (1): ', err)
+                        throw new Error("FFmpeg error when cutting video (1)");
+                    }
+                    else {
+                        console.log("FFmpeg cut video succeeded");
+                        resolve();
+                    }
+                })
+
+                // Handle an error with the FFmpeg cutting. Not sure if we 
+                // need this as well as the above but being careful.
+                .on('error', (err: any) => {
+                    console.log('FFmpeg video cut error (2): ', err)
+                    throw new Error("FFmpeg error when cutting video (2)");
+                })
+                .run()    
+        })
+    });
 }
 
 export {
@@ -361,5 +459,7 @@ export {
     deleteVideo,
     openSystemExplorer,
     toggleVideoProtected,
-    fixPathWhenPackaged
+    fixPathWhenPackaged,
+    getNewestVideo,
+    cutVideo
 };

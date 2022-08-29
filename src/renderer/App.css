@@ -146,10 +146,54 @@ h2 {
 #settings-cog:hover {
   background-color: darkgrey;
   border-width: 0px;
-  border-radius: 100px;
+  border-radius: 10px;
 }
 
 #settings-cog:active {
+  border-style: inset;
+}
+
+#log-button-div {
+  position:fixed;
+  top: 250px;
+  left: 40px;
+}
+
+#log-button{
+  background-color: transparent;
+  border-width: 0px;
+  cursor: pointer;
+}
+
+#log-button:hover {
+  background-color: darkgrey;
+  border-width: 0px;
+  border-radius: 10px;
+}
+
+#log-button:active {
+  border-style: inset;
+}
+
+#discord-button-div {
+  position:fixed;
+  top: 250px;
+  left: 75px;
+}
+
+#discord-button{
+  background-color: transparent;
+  border-width: 0px;
+  cursor: pointer;
+}
+
+#discord-button:hover {
+  background-color: darkgrey;
+  border-width: 0px;
+  border-radius: 10px;
+}
+
+#discord-button:active {
   border-style: inset;
 }
 

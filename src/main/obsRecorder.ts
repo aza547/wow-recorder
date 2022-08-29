@@ -170,13 +170,12 @@ function setupSources(scene) {
   setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
 }
 
-const displayId = 'display1';
 async function start() {
   if (!obsInitialized) initialize();
 
   let signalInfo;
 
-  console.debug('Starting recording...');
+  console.debug('OBS is now recording...');
   osn.NodeObs.OBS_service_startRecording();
 
   console.debug('Started?');
@@ -194,9 +193,8 @@ async function start() {
 async function stop() {
   let signalInfo;
 
-  console.debug('Stopping recording...');
+  console.debug('OBS stopping recording...');
   osn.NodeObs.OBS_service_stopRecording();
-  console.debug('Stopped?');
 
   signalInfo = await getNextSignalInfo();
 
