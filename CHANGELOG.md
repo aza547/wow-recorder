@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- Fix ID for Sun King's Salvation encounter.
+- Fix resolution hardcoded regression.
 
 ## [2.5.0] - 2022-08-29
 ### Added

@@ -104,7 +104,7 @@ const encountersSanctum: { [id: number]: string; } = {
 const encountersNathria: { [id: number]: string; } = {
   2398: "Shriekwing",
   2418: "Huntsman",
-  2404: "Sun King",
+  2402: "Sun King",
   2405: "Xy'mox",
   2383: "Hungering",
   2406: "Inerva",
