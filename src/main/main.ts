@@ -219,7 +219,6 @@ const createSettingsWindow = async () => {
   });
 
   settingsWindow.on('closed', () => {
-
     settingsWindow = null;
   });
 
@@ -247,12 +246,6 @@ const openPathDialog = (event: any, args: any) => {
 const checkConfig = () => {
   if (mainWindow === null) return; 
   return isConfigReady(cfg) && (getLatestLog(baseLogPath));
-  // Check we have all config, and at least one log is in the log directory. 
-  // if (isConfigReady(cfg) && (getLatestLog(baseLogPath))) {
-  //   mainWindow.webContents.send('updateStatus', 0);
-  // } else {
-  //   mainWindow.webContents.send('updateStatus', 2);
-  // }
 }
 
 const updateStatus = (status: number) => {
