@@ -38,6 +38,11 @@ let playerCombatant: Combatant | undefined;
 let isWowRunning: boolean = false;
 
 /**
+ * Is Challenge Mode recording in progress?
+ */
+let isRecordingChallengeMode: boolean = false;
+
+/**
  * wowProcessStarted
  */
 const wowProcessStarted = () => {
@@ -120,6 +125,10 @@ const handleLogLine = (line: string) => {
         handleEncounterStartLine(line);
     } else if (line.includes("ENCOUNTER_END")) {
         handleEncounterStopLine(line);
+    } else if (line.includes("CHALLENGE_MODE_START")) {
+        handleChallengeModeStartLine(line);
+    } else if (line.includes("CHALLENGE_MODE_END")) {
+        handleChallengeModeStopLine(line);
     } else if (line.includes("ZONE_CHANGE")) {
         handleZoneChange(line);
     } else if (line.includes("COMBATANT_INFO")) {
@@ -215,9 +224,21 @@ const determineArenaMatchResult = (line: string): any[] => {
 }
 
 /**
+ * Determines the challenge mode result.
+ * @param line the CHALLENGE_MODE_END event from the WoW log. 
+ * @returns true if wipe, else false
+ */
+ const determineChallengeModeResult = (line: string): boolean => {
+    return Boolean(parseInt(line.split(',')[2]));
+}
+
+/**
  * Handle a line from the WoW log. 
  */
  const handleEncounterStartLine = (line: string) => {
+    // ignore encounter events inside Challenge Modes
+    if (isRecordingChallengeMode) return; 
+
     const encounterID = parseInt(line.split(',')[1]);
     const category = "Raids";
 
@@ -239,6 +260,9 @@ const determineArenaMatchResult = (line: string): any[] => {
  */
  const handleEncounterStopLine = (line: string) => {
     if (!recorder.isRecording) return; 
+    
+    // ignore encounter events inside Challenge Modes
+    if (isRecordingChallengeMode) return; 
 
     if (playerCombatant) {
         metadata.playerName = playerCombatant.name;
@@ -260,6 +284,69 @@ const determineArenaMatchResult = (line: string): any[] => {
     playerCombatant = undefined;
 
     recorder.stop(metadata, overrun);
+}
+
+/**
+ * Handle a line from the WoW log. 
+ */
+ const handleChallengeModeStartLine = (line: string) => {
+    /**
+     * starting a new keystone fires CHALLENGE_MODE_STOP before the CHALLENGE_MODE_START
+     * so in theory if you start a new keystone before a failed key has been stopped the
+     * video will still be stopped/started in quick succession to ensure a separation.
+     */
+
+    const encounterID = parseInt(line.split(',')[1]);
+    const category = "ChallengeModes";
+
+    videoStartDate = getCombatLogDate(line);
+
+    metadata = {
+        name: "name",
+        category: category,
+        encounterID: encounterID,
+        duration: 0,
+        result: false,
+    }
+
+    recorder.start();
+    isRecordingChallengeMode = true;
+}
+
+/**
+ * Handle a line from the WoW log. 
+ */
+ const handleChallengeModeStopLine = (line: string) => {
+    if (!recorder.isRecording) return; 
+
+    /**
+     * CHALLENGE_MODE_END appears to fire before CHALLENGE_MODE_START
+     * so avoid nuking the buffer if there is no previous challenge mode dungeon being recorded
+     */
+    
+    if (!isRecordingChallengeMode) return; 
+
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;        
+    }
+
+    // Add a few seconds so we reliably see the aftermath of a key.
+    const overrun = 15;
+
+    const videoStopDate = getCombatLogDate(line);
+    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
+    const duration = Math.round(milliSeconds / 1000) + overrun;
+
+    metadata.duration = duration; 
+    metadata.result = determineChallengeModeResult(line);
+    
+    combatantMap.clear();
+    playerCombatant = undefined;
+
+    recorder.stop(metadata, overrun);
+    isRecordingChallengeMode = false;
 }
 
 /**
