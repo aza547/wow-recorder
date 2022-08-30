@@ -117,9 +117,9 @@ const handleLogLine = (line: string) => {
     } else if (line.includes("ARENA_MATCH_END")) {
         handleArenaStopLine(line);
     } else if (line.includes("ENCOUNTER_START")) {
-        handleRaidStartLine(line);
+        handleEncounterStartLine(line);
     } else if (line.includes("ENCOUNTER_END")) {
-        handleRaidStopLine(line);
+        handleEncounterStopLine(line);
     } else if (line.includes("ZONE_CHANGE")) {
         handleZoneChange(line);
     } else if (line.includes("COMBATANT_INFO")) {
@@ -217,7 +217,7 @@ const determineArenaMatchResult = (line: string): any[] => {
 /**
  * Handle a line from the WoW log. 
  */
- const handleRaidStartLine = (line: string) => {
+ const handleEncounterStartLine = (line: string) => {
     const encounterID = parseInt(line.split(',')[1]);
     const category = "Raids";
 
@@ -237,7 +237,7 @@ const determineArenaMatchResult = (line: string): any[] => {
 /**
  * Handle a line from the WoW log. 
  */
- const handleRaidStopLine = (line: string) => {
+ const handleEncounterStopLine = (line: string) => {
     if (!recorder.isRecording) return; 
 
     if (playerCombatant) {
