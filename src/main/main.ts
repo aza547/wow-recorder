@@ -151,11 +151,7 @@ const createWindow = async () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');
 
     // Check we have all config, and at least one log is in the log directory. 
-    if (isConfigReady(cfg) && (getLatestLog(baseLogPath))) {
-      mainWindow.webContents.send('updateStatus', 0);
-    } else {
-      mainWindow.webContents.send('updateStatus', 2);
-    }
+    updateStatus(checkConfig() ? 0 : 2);
 
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
@@ -223,6 +219,7 @@ const createSettingsWindow = async () => {
   });
 
   settingsWindow.on('closed', () => {
+
     settingsWindow = null;
   });
 
@@ -247,6 +244,21 @@ const openPathDialog = (event: any, args: any) => {
   })
 } 
 
+const checkConfig = () => {
+  if (mainWindow === null) return; 
+  return isConfigReady(cfg) && (getLatestLog(baseLogPath));
+  // Check we have all config, and at least one log is in the log directory. 
+  // if (isConfigReady(cfg) && (getLatestLog(baseLogPath))) {
+  //   mainWindow.webContents.send('updateStatus', 0);
+  // } else {
+  //   mainWindow.webContents.send('updateStatus', 2);
+  // }
+}
+
+const updateStatus = (status: number) => {
+  if (mainWindow === null) return; 
+  mainWindow.webContents.send('updateStatus', status);
+}
 
 /**
  * mainWindow event listeners.
@@ -291,10 +303,19 @@ ipcMain.on('settingsWindow', (event, args) => {
   }
     
   if (settingsWindow === null) return; 
-
+  
   if (args[0] === "quit") {
     console.log("User closed settings");
     settingsWindow.close();
+    storageDir = cfg.has('storage-path') ? cfg.get('storage-path') + "/" : "";
+    baseLogPath = cfg.has('log-path') ? cfg.get('log-path') + "/" : "";
+    maxStorage = cfg.has('max-storage') ? cfg.get('max-storage') : "";
+    if (checkConfig()) {
+      updateStatus(0);
+      recorder = new Recorder(storageDir, maxStorage);  
+      watchLogs(String(baseLogPath));
+      pollWowProcess();
+    }
   }
 
   if (args[0] === "openPathDialog") openPathDialog(event, args);

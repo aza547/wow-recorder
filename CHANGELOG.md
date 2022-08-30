@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- - [Issue 23](https://github.com/aza547/wow-recorder/issues/23) - Fix issue where app needed to be restarted upon initial config setup. 
 
 ## [2.5.2] - 2022-08-29
 ### Fixed
