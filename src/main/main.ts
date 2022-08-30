@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getStringConfigSafe } from './util';
 import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -33,9 +33,9 @@ console.log("App starting");
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
  */
 const cfg = new Store();
-let storageDir: any = cfg.get('storage-path') + "/";
-let baseLogPath: any = cfg.get('log-path') + "/";
-let maxStorage: any = cfg.get('max-storage');
+let storageDir: any = getStringConfigSafe(cfg, 'storage-path');
+let baseLogPath: any = getStringConfigSafe(cfg, 'log-path');
+let maxStorage: any = getStringConfigSafe(cfg, 'max-storage');
 
 /**
  * Getter and setter config listeners. 
@@ -307,9 +307,9 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (args[0] === "quit") {
     console.log("User closed settings");
     settingsWindow.close();
-    storageDir = cfg.has('storage-path') ? cfg.get('storage-path') + "/" : "";
-    baseLogPath = cfg.has('log-path') ? cfg.get('log-path') + "/" : "";
-    maxStorage = cfg.has('max-storage') ? cfg.get('max-storage') : "";
+    storageDir = getStringConfigSafe(cfg, 'storage-path');
+    baseLogPath = getStringConfigSafe(cfg, 'log-path');
+    maxStorage = getStringConfigSafe(cfg, 'max-storage');
     if (checkConfig()) {
       updateStatus(0);
       recorder = new Recorder(storageDir, maxStorage);  

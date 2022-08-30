@@ -451,6 +451,17 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
     });
 }
 
+/**
+ * Gets string value from the config in a more reliable manner.
+ * @param cfg the config store
+ * @param preference the preference
+ * @returns the string config
+ */
+const getStringConfigSafe = (cfg: any, preference: string) : string =>  
+{
+  return cfg.has(preference) ? cfg.get(preference) + "/" : "";
+}
+
 export {
     getVideoState,
     writeMetadataFile,
@@ -461,5 +472,6 @@ export {
     toggleVideoProtected,
     fixPathWhenPackaged,
     getNewestVideo,
-    cutVideo
+    cutVideo,
+    getStringConfigSafe
 };
