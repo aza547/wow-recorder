@@ -457,8 +457,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
  * @param preference the preference
  * @returns the string config
  */
-const getStringConfigSafe = (cfg: any, preference: string) : string =>  
-{
+const getStringConfigSafe = (cfg: any, preference: string) : string => {
   return cfg.has(preference) ? cfg.get(preference) + "/" : "";
 }
 
