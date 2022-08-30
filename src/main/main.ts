@@ -242,12 +242,19 @@ const openPathDialog = (event: any, args: any) => {
     console.log(err);
   })
 } 
-
-const checkConfig = () => {
-  if (mainWindow === null) return; 
+/**
+ * Checks the app config.
+ * @returns true if config is setup, false otherwise. 
+ */
+const checkConfig = () : boolean => {
+  if (mainWindow === null) return false; 
   return isConfigReady(cfg) && (getLatestLog(baseLogPath));
 }
 
+/**
+ * Updates the status icon for the application.
+ * @param status the status number
+ */
 const updateStatus = (status: number) => {
   if (mainWindow === null) return; 
   mainWindow.webContents.send('updateStatus', status);
