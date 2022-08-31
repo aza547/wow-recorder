@@ -13,6 +13,7 @@ Only 64 bit Windows (any modern version) and retail WoW are currently supported.
 1. Launch the application and fill out the settings page. Restart the application to pick up the new config.
 1. Pick one of the below options to enable [combat logging](https://wowwiki-archive.fandom.com/wiki/Combat_Log). 
     - Install the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon to automatically combat log.
+    - Use MRT automatic combat logging in a similar fashion to SimpleCombatLogger. 
     - Manually type `/combatlog` in-game every time you login or reload.
 
 <img src="https://i.imgur.com/053UaYq.png" width="300">
