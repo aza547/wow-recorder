@@ -6,11 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Better ZONE_CHANGE tests. 
+- Added plumbing for future classic support.
+- Improved logging more logs. 
+- Added plumbing for monitor selection support. 
 
 ### Changed
+- Assert that OBS behaves as expected or crash the app, previously we would just log this and get into god knows what error states.  
 
 ### Fixed
 - Rename window from "Arena Recorder" to "Warcraft Recorder". 
+- [Issue 23](https://github.com/aza547/wow-recorder/issues/23) - Fix clean-up buffer issue on app close. 
 
 ## [2.5.2] - 2022-08-29
 ### Fixed

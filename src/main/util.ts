@@ -255,7 +255,8 @@ const writeMetadataFile = (storageDir: string, metadata: Metadata) => {
 /**
  * runSizeMonitor, maxStorage in GB.
  */
-const runSizeMonitor = (storageDir: any, maxStorageGB: any) => {  
+const runSizeMonitor = (storageDir: any, maxStorageGB: any) => {
+    console.debug("Running size monitor");  
     const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
     let totalSize = 0;
     const files = fs.readdirSync(storageDir);
