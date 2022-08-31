@@ -1,34 +1,37 @@
+import { fixPathWhenPackaged } from "./util";
+
 const path = require('path');
 const { Subject } = require('rxjs');
 const { first } = require('rxjs/operators');
 const { byOS, OS } = require('./operatingSystems');
-
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
+
+const signals = new Subject();
 
 let obsInitialized = false;
 let scene = null;
 
-// When packaged, we need to fix some paths
-function fixPathWhenPackaged(p) {
-  return p.replace("app.asar", "app.asar.unpacked");
-}
-
-// Init the library, launch OBS Studio instance, configure it, set up sources and scene
-function initialize(baseStoragePath: string) {
+/*
+* Init the library, launch OBS Studio instance, configure it, set up sources and scene
+*/
+const initialize = (outputPath: string, monitorIndex: number) => {
   if (obsInitialized) {
-    console.warn("OBS is already initialized, skipping initialization.");
+    console.warn("OBS is already initialized");
     return;
   }
 
   initOBS();
-  configureOBS(baseStoragePath);
-  scene = setupScene();
+  configureOBS(outputPath);
+  scene = setupScene(monitorIndex);
   setupSources(scene);
   obsInitialized = true;
 }
 
-function initOBS() {
+/*
+* initOBS
+*/
+const initOBS = () => {
   console.debug('Initializing OBS...');
   osn.NodeObs.IPC.host(`obs-studio-node-example-${uuid()}`);
   osn.NodeObs.SetWorkingDirectory(fixPathWhenPackaged(path.join(__dirname,'../../', 'node_modules', 'obs-studio-node')));
@@ -52,14 +55,17 @@ function initOBS() {
     throw Error(errorMessage);
   }
 
-  osn.NodeObs.OBS_service_connectOutputSignals((signalInfo) => {
+  osn.NodeObs.OBS_service_connectOutputSignals((signalInfo: any) => {
     signals.next(signalInfo);
   });
 
   console.debug('OBS initialized');
 }
 
-function configureOBS(baseStoragePath: string) {
+/*
+* configureOBS
+*/
+const configureOBS = (baseStoragePath: string) => {
   console.debug('Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
   const availableEncoders = getAvailableValues('Output', 'Recording', 'RecEncoder');
@@ -91,12 +97,14 @@ function configureOBS(baseStoragePath: string) {
   console.debug('OBS Configured');
 }
 
-// Get information about primary display
-function displayInfo() {
+/*
+* Get information about primary display
+*/
+const displayInfo = (displayIndex: number) => {
   const { screen } = require('electron');
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.size;
-  const { scaleFactor } = primaryDisplay;
+  const display = screen.getAllDisplays()[displayIndex];
+  const { width, height } = display.size;
+  const { scaleFactor } = display;
   return {
     width,
     height,
@@ -107,10 +115,13 @@ function displayInfo() {
   }
 }
 
-function setupScene() {
+/*
+* setupScene
+*/
+const setupScene = (monitorIndex: number) => {
   const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
   
-  const { physicalWidth, physicalHeight } = displayInfo();
+  const { physicalWidth, physicalHeight } = displayInfo(monitorIndex);
 
   // Update source settings:
   let settings = videoSource.settings;
@@ -134,7 +145,10 @@ function setupScene() {
   return scene;
 }
 
-function getAudioDevices(type, subtype) {
+/*
+* getAudioDevices
+*/
+const getAudioDevices = (type: any, subtype: any) => {
   const dummyDevice = osn.InputFactory.create(type, subtype, { device_id: 'does_not_exist' });
   const devices = dummyDevice.properties.get('device_id').details.items.map(({ name, value }) => {
     return { device_id: value, name,};
@@ -143,13 +157,16 @@ function getAudioDevices(type, subtype) {
   return devices;
 };
 
-function setupSources(scene) {
+/*
+* setupSources
+*/
+const setupSources = (scene: any) => {
   osn.Global.setOutputSource(1, scene);
 
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
   let currentTrack = 2;
 
-  getAudioDevices(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio').forEach(metadata => {
+  getAudioDevices(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio').forEach((metadata: any) => {
     if (metadata.device_id === 'default') return;
     const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio', { device_id: metadata.device_id });
     setSetting('Output', `Track${currentTrack}Name`, metadata.name);
@@ -158,7 +175,7 @@ function setupSources(scene) {
     currentTrack++;
   });
 
-  getAudioDevices(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio').forEach(metadata => {
+  getAudioDevices(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio').forEach((metadata: any) => {
     if (metadata.device_id === 'default') return;
     const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio', { device_id: metadata.device_id });
     setSetting('Output', `Track${currentTrack}Name`, metadata.name);
@@ -170,46 +187,38 @@ function setupSources(scene) {
   setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
 }
 
-async function start() {
-  if (!obsInitialized) initialize();
-
-  let signalInfo;
-
-  console.debug('OBS is now recording...');
-  osn.NodeObs.OBS_service_startRecording();
-
-  console.debug('Started?');
-  signalInfo = await getNextSignalInfo();
-
-  if (signalInfo.signal === 'Stop') {
-    throw Error(signalInfo.error);
+/*
+* start
+*/
+const start = async () => {
+  if (!obsInitialized) {
+    throw Error("OBS not initialised")
   }
 
-  console.debug('Started signalInfo.type:', signalInfo.type, '(expected: "recording")');
-  console.debug('Started signalInfo.signal:', signalInfo.signal, '(expected: "start")');
-  console.debug('Started!');
+  osn.NodeObs.OBS_service_startRecording();
+  const signalInfo = await getNextSignalInfo();
+  assertSignal(signalInfo, "recording", "start");
 }
 
-async function stop() {
-  let signalInfo;
-
-  console.debug('OBS stopping recording...');
+/*
+* stop
+*/
+const stop = async () => {
   osn.NodeObs.OBS_service_stopRecording();
 
-  signalInfo = await getNextSignalInfo();
-
-  console.debug('On stop signalInfo.type:', signalInfo.type, '(expected: "recording")');
-  console.debug('On stop signalInfo.signal:', signalInfo.signal, '(expected: "stopping")');
+  let signalInfo;
 
   signalInfo = await getNextSignalInfo();
+  assertSignal(signalInfo, "recording", "stopping");
 
-  console.debug('After stop signalInfo.type:', signalInfo.type, '(expected: "recording")');
-  console.debug('After stop signalInfo.signal:', signalInfo.signal, '(expected: "stop")');
-
-  console.debug('Stopped!');
+  signalInfo = await getNextSignalInfo();
+  assertSignal(signalInfo, "recording", "stop");
 }
 
-function shutdown() {
+/*
+* shutdown
+*/
+const shutdown = () => {
   if (!obsInitialized) {
     console.debug('OBS is already shut down!');
     return false;
@@ -230,7 +239,10 @@ function shutdown() {
   return true;
 }
 
-function setSetting(category, parameter, value) {
+/*
+* setSetting
+*/
+const setSetting = (category: any, parameter: any, value: any) => {
   let oldValue;
 
   console.debug('OBS: setSetting', category, parameter, value);
@@ -238,8 +250,8 @@ function setSetting(category, parameter, value) {
   // Getting settings container
   const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
 
-  settings.forEach(subCategory => {
-    subCategory.parameters.forEach(param => {
+  settings.forEach((subCategory: any) => {
+    subCategory.parameters.forEach((param: any) => {
       if (param.name === parameter) {        
         oldValue = param.currentValue;
         param.currentValue = value;
@@ -253,35 +265,67 @@ function setSetting(category, parameter, value) {
   }
 }
 
-function getAvailableValues(category, subcategory, parameter) {
+/*
+* getAvailableValues
+*/
+const getAvailableValues = (category: any, subcategory: any, parameter: any) => {
   const categorySettings = osn.NodeObs.OBS_settings_getSettings(category).data;
+
   if (!categorySettings) {
     console.warn(`There is no category ${category} in OBS settings`);
-    return [];
+    return;
   }
 
-  const subcategorySettings = categorySettings.find(sub => sub.nameSubCategory === subcategory);
+  const subcategorySettings = categorySettings.find((sub: any) => sub.nameSubCategory === subcategory);
+
   if (!subcategorySettings) {
     console.warn(`There is no subcategory ${subcategory} for OBS settings category ${category}`);
-    return [];
+    return;
   }
 
-  const parameterSettings = subcategorySettings.parameters.find(param => param.name === parameter);
+  const parameterSettings = subcategorySettings.parameters.find((param: any) => param.name === parameter);
+  
   if (!parameterSettings) {
     console.warn(`There is no parameter ${parameter} for OBS settings category ${category}.${subcategory}`);
-    return [];
+    return;
   }
 
-  return parameterSettings.values.map( value => Object.values(value)[0]);
+  return parameterSettings.values.map( (value: any) => Object.values(value)[0]);
 }
 
-const signals = new Subject();
-
-function getNextSignalInfo() {
+/*
+* getNextSignalInfo
+*/
+const getNextSignalInfo = () => {
   return new Promise((resolve, reject) => {
-    signals.pipe(first()).subscribe(signalInfo => resolve(signalInfo));
-    setTimeout(() => reject('Output signal timeout'), 30000);
+    signals.pipe(first()).subscribe((signalInfo: any) => resolve(signalInfo));
+
+    setTimeout(() => { 
+      reject('Output signal timeout')
+    }, 30000 );
   });
+}
+
+/*
+* Assert a signal from OBS is as expected, otherwise throw an error. 
+*/
+const assertSignal = (signalInfo: any, type: string, value: string) => {
+
+  // Assert the type is as expected.
+  if (signalInfo.type !== type) {
+    console.error(signalInfo);
+    console.error("OBS signal type unexpected", signalInfo.signal, value);
+    throw Error("OBS behaved unexpectedly");
+  }
+
+  // Assert the signal value is as expected.
+  if (signalInfo.signal !== value) {
+    console.error(signalInfo);
+    console.error("OBS signal value unexpected", signalInfo.signal, value);
+    throw Error("OBS behaved unexpectedly");
+  }
+
+  console.debug("Asserted OBS signal:", type, value);
 }
 
 export {

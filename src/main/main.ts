@@ -370,9 +370,7 @@ ipcMain.on('getVideoState', (event) => {
  */
 app.on('window-all-closed', () => {
   console.log("User closed app");
-  if (recorder) {
-    recorder.cleanupBuffer();
-  }
+  if (recorder) recorder.cleanupBuffer();
   obsRecorder.shutdown();
   app.quit();
 });
@@ -386,7 +384,10 @@ app
     console.log("App ready");
     createWindow();
     if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
-    recorder = new Recorder(storageDir, maxStorage);  
+
+    // TODO plumb monitor index from config to here
+    recorder = new Recorder(storageDir, maxStorage, 0);  
+    
     pollWowProcess();
     watchLogs(baseLogPath);
   })
