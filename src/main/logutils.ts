@@ -441,6 +441,7 @@ const checkWoWProcess = async () => {
 
     taskList.forEach((process: any) => {
         if (process.imageName === "Wow.exe") {
+            process.
             wowRunning = true;
         }
     });

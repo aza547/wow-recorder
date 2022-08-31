@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getStringConfigSafe } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe } from './util';
 import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -33,9 +33,9 @@ console.log("App starting");
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
  */
 const cfg = new Store();
-let storageDir: any = getStringConfigSafe(cfg, 'storage-path');
-let baseLogPath: any = getStringConfigSafe(cfg, 'log-path');
-let maxStorage: any = getStringConfigSafe(cfg, 'max-storage');
+let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
+let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
+let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
 
 /**
  * Getter and setter config listeners. 
@@ -150,7 +150,6 @@ const createWindow = async () => {
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');
 
-    // Check we have all config, and at least one log is in the log directory. 
     updateStatus(checkConfig() ? 0 : 2);
 
     if (process.env.START_MINIMIZED) {
@@ -247,8 +246,7 @@ const openPathDialog = (event: any, args: any) => {
  * @returns true if config is setup, false otherwise. 
  */
 const checkConfig = () : boolean => {
-  if (mainWindow === null) return false; 
-  return isConfigReady(cfg) && (getLatestLog(baseLogPath));
+  return mainWindow !== null ? isConfigReady(cfg) && (getLatestLog(baseLogPath)) : false;
 }
 
 /**
@@ -256,8 +254,7 @@ const checkConfig = () : boolean => {
  * @param status the status number
  */
 const updateStatus = (status: number) => {
-  if (mainWindow === null) return; 
-  mainWindow.webContents.send('updateStatus', status);
+  if (mainWindow !== null) mainWindow.webContents.send('updateStatus', status);
 }
 
 /**
@@ -307,9 +304,9 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (args[0] === "quit") {
     console.log("User closed settings");
     settingsWindow.close();
-    storageDir = getStringConfigSafe(cfg, 'storage-path');
-    baseLogPath = getStringConfigSafe(cfg, 'log-path');
-    maxStorage = getStringConfigSafe(cfg, 'max-storage');
+    storageDir = getPathConfigSafe(cfg, 'storage-path');
+    baseLogPath = getPathConfigSafe(cfg, 'log-path');
+    maxStorage = getNumberConfigSafe(cfg, 'max-storage');
     if (checkConfig()) {
       updateStatus(0);
       recorder = new Recorder(storageDir, maxStorage);  
@@ -373,7 +370,9 @@ ipcMain.on('getVideoState', (event) => {
  */
 app.on('window-all-closed', () => {
   console.log("User closed app");
-  recorder.cleanupBuffer();
+  if (recorder) {
+    recorder.cleanupBuffer();
+  }
   obsRecorder.shutdown();
   app.quit();
 });

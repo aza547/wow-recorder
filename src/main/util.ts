@@ -454,12 +454,22 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
 /**
  * Gets string value from the config in a more reliable manner.
  * @param cfg the config store
- * @param preference the preference
+ * @param key the key
  * @returns the string config
  */
-const getStringConfigSafe = (cfg: any, preference: string) : string => {
-  return cfg.has(preference) ? cfg.get(preference) + "/" : "";
+const getPathConfigSafe = (cfg: any, key: string) : string => {
+  return cfg.has(key) ? path.join(cfg.get(key), "/") : "";
 }
+
+/**
+ * Gets number value from the config in a more reliable manner.
+ * @param cfg the config store
+ * @param preference the preference
+ * @returns the number config
+ */
+ const getNumberConfigSafe = (cfg: any, preference: string) : number => {
+    return cfg.has(preference) ? parseInt(cfg.get(preference)) : -1;
+  }
 
 export {
     getVideoState,
@@ -472,5 +482,6 @@ export {
     fixPathWhenPackaged,
     getNewestVideo,
     cutVideo,
-    getStringConfigSafe
+    getPathConfigSafe,
+    getNumberConfigSafe
 };
