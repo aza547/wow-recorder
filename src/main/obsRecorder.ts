@@ -17,7 +17,7 @@ let scene = null;
 */
 const initialize = (outputPath: string, monitorIndex: number) => {
   if (obsInitialized) {
-    console.warn("OBS is already initialized, skipping initialization.");
+    console.warn("OBS is already initialized");
     return;
   }
 
