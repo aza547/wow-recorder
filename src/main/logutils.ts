@@ -463,27 +463,25 @@ const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
 }
 
 /**
+ * pollWoWProcessLogic
+ */
+const pollWoWProcessLogic = async (startup: boolean) => {
+    const [retailFound, classicFound] = await checkWoWProcess();
+    const retailProcessChanged = (retailFound !== isRetailRunning);    
+    // TODO classic support
+    const classicProcessChanged = (classicFound !== isClassicRunning);  
+    const processChanged = (retailProcessChanged || classicProcessChanged);
+    if (!retailProcessChanged && !startup) return;
+    (retailFound) ? wowProcessStarted() : wowProcessStopped();
+}
+
+/**
  * pollWoWProcess
  */
 const pollWowProcess = () => {
-
+    pollWoWProcessLogic(true);
     if (pollWowProcessInterval) clearInterval(pollWowProcessInterval);
-
-    pollWowProcessInterval = setInterval(async () => {
-        const [retailFound, classicFound] = await checkWoWProcess();
-        const retailProcessChanged = (retailFound !== isRetailRunning);    
-        // TODO classic support
-        const classicProcessChanged = (classicFound !== isClassicRunning);  
-        const processChanged = (retailProcessChanged || classicProcessChanged);
-
-        if (!retailProcessChanged) return;
-          
-        if (retailFound) {
-            wowProcessStarted();
-        } else {
-            wowProcessStopped();
-        }
-    }, 5000);
+    pollWowProcessInterval = setInterval(() => pollWoWProcessLogic(false), 5000);
 }
 
 /**

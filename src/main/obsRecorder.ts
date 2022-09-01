@@ -125,6 +125,7 @@ const setupScene = (monitorIndex: number) => {
 
   // Update source settings:
   let settings = videoSource.settings;
+  settings['monitor'] = monitorIndex;
   settings['width'] = physicalWidth;
   settings['height'] = physicalHeight;
   videoSource.update(settings);

@@ -159,6 +159,11 @@ const createWindow = async () => {
     } else {
       mainWindow.show();
     }
+
+    if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
+    recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
+    pollWowProcess();
+    watchLogs(baseLogPath);
   });
 
   mainWindow.on('closed', () => {
@@ -315,6 +320,7 @@ ipcMain.on('settingsWindow', (event, args) => {
       storageDir = getPathConfigSafe(cfg, 'storage-path');
       baseLogPath = getPathConfigSafe(cfg, 'log-path');
       maxStorage = getNumberConfigSafe(cfg, 'max-storage');
+      monitorIndex = getNumberConfigSafe(cfg, 'monitor-index') - 1;
   
       if (checkConfig()) {
         updateStatus(0);
@@ -398,10 +404,6 @@ app
   .then(() => {
     console.log("App ready");
     createWindow();
-    if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
-    recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
-    pollWowProcess();
-    watchLogs(baseLogPath);
   })
   .catch(console.log);
 
