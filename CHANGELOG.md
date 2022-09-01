@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Better ZONE_CHANGE tests. 
 - Added plumbing for future classic support.
-- Improved logging more logs. 
+- Added a bunch more logging. 
 - Added plumbing for monitor selection support. 
 
 ### Changed
