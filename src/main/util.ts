@@ -332,9 +332,27 @@ const deleteOldestVideo = (storageDir: any) => {
  * isConfigReady
  */
  const isConfigReady = (cfg: any) => {
-    if (!cfg.get('storage-path')) return false;
-    if (!cfg.get('log-path')) return false;
-    if (!cfg.get('max-storage')) return false;
+
+    if (!cfg.get('storage-path')) {
+        return false;
+    }
+
+    if (!cfg.get('log-path')) {
+        return false;
+    }
+
+    const maxStorage = parseInt(cfg.get('max-storage'));
+
+    if ((!maxStorage) && (maxStorage > 0)) { 
+        return false;
+    }
+
+    const monitorIndex = parseInt(cfg.get('monitor-index'));
+
+    if ((!monitorIndex) || (monitorIndex < 1) || (monitorIndex > 3)) {
+        return false;
+    }
+
     return true;
 }  
 

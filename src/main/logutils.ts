@@ -39,6 +39,12 @@ let isRetailRunning: boolean = false;
 let isClassicRunning: boolean = false;
 
 /**
+ * Timers for poll
+ */
+let pollWowProcessInterval: NodeJS.Timer;
+let watchLogsInterval: NodeJS.Timer;
+ 
+/**
  * wowProcessStarted
  */
 const wowProcessStarted = () => {
@@ -398,7 +404,9 @@ const isUnitSelf = (srcFlags: number): boolean => {
 const watchLogs = (logdir: any) => {
     const checkInterval: number = 1000;
     
-    setInterval(() => {
+    if (watchLogsInterval) clearInterval(watchLogsInterval);
+
+    watchLogsInterval = setInterval(() => {
         currentLogFile = getLatestLog(logdir);
         const logFileChanged = (lastLogFile !== currentLogFile)
 
@@ -458,7 +466,10 @@ const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
  * pollWoWProcess
  */
 const pollWowProcess = () => {
-    setInterval(async () => {
+
+    if (pollWowProcessInterval) clearInterval(pollWowProcessInterval);
+
+    pollWowProcessInterval = setInterval(async () => {
         const [retailFound, classicFound] = await checkWoWProcess();
         const retailProcessChanged = (retailFound !== isRetailRunning);    
         // TODO classic support
@@ -468,9 +479,9 @@ const pollWowProcess = () => {
         if (!retailProcessChanged) return;
           
         if (retailFound) {
-            wowProcessStarted(true);
+            wowProcessStarted();
         } else {
-            wowProcessStopped(true);
+            wowProcessStopped();
         }
     }, 5000);
 }

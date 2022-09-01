@@ -36,6 +36,8 @@ const cfg = new Store();
 let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
+// -1 so that users don't have to start at zero
+let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index') - 1;
 
 /**
  * Getter and setter config listeners. 
@@ -191,7 +193,7 @@ const createSettingsWindow = async () => {
   settingsWindow = new BrowserWindow({
     show: false,
     width: 380,
-    height: 450,
+    height: 525,
     resizable: true,
     icon: getAssetPath('./icon/settings-icon.svg'),
     frame: false,
@@ -317,7 +319,7 @@ ipcMain.on('settingsWindow', (event, args) => {
       if (checkConfig()) {
         updateStatus(0);
         if (recorder) recorder.shutdown(); 
-        recorder = new Recorder(storageDir, maxStorage, 0);  
+        recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
         watchLogs(baseLogPath);
         pollWowProcess();
       } else {
@@ -397,10 +399,7 @@ app
     console.log("App ready");
     createWindow();
     if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
-
-    // TODO plumb monitor index from config to here
-    recorder = new Recorder(storageDir, maxStorage, 0);  
-    
+    recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
     pollWowProcess();
     watchLogs(baseLogPath);
   })
