@@ -18,13 +18,16 @@ const glob = require('glob');
     private _maxStorage: number;
     private _bufferStorageDir: any;
     private _bufferIntervalID?: any;
+    private _monitorIndex: number;
 
     /**
      * Constructs a new Recorder.
      */
-    constructor(storageDir: string, maxStorage: number) {
+    constructor(storageDir: string, maxStorage: number, monitorIndex: number) {
+        console.debug("Construcing recorder with: ", storageDir, maxStorage, monitorIndex);
         this._storageDir = storageDir;
-        this._maxStorage = maxStorage;       
+        this._maxStorage = maxStorage;     
+        this._monitorIndex = monitorIndex;           
 
         // Something like: C:\Users\alexa\AppData\Local\Temp\WarcraftRecorder
         this._bufferStorageDir = path.join(app.getPath("temp"), "WarcraftRecorder"); 
@@ -34,7 +37,7 @@ const glob = require('glob');
             fs.mkdirSync(this._bufferStorageDir);
         }
 
-        obsRecorder.initialize(this._bufferStorageDir);
+        obsRecorder.initialize(this._bufferStorageDir, this._monitorIndex);
     }
 
     /**
