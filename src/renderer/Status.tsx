@@ -41,7 +41,7 @@ export default function Status() {
       )} else if (status === 2) {
         return(
           <div id="status">
-            <img id="error-icon" title="Failed to launch, fix config and restart" alt="icon" src={ errorIcon }/>
+            <img id="error-icon" title="Failed to launch, check config is valid" alt="icon" src={ errorIcon }/>
           </div>
       )} else if (status === 3) {
         return(
