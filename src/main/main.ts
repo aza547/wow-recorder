@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe } from './util';
 import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -33,9 +33,9 @@ console.log("App starting");
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
  */
 const cfg = new Store();
-let storageDir: any = cfg.get('storage-path') + "/";
-let baseLogPath: any = cfg.get('log-path') + "/";
-let maxStorage: any = cfg.get('max-storage');
+let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
+let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
+let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
 
 /**
  * Getter and setter config listeners. 
@@ -150,12 +150,7 @@ const createWindow = async () => {
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');
 
-    // Check we have all config, and at least one log is in the log directory. 
-    if (isConfigReady(cfg) && (getLatestLog(baseLogPath))) {
-      mainWindow.webContents.send('updateStatus', 0);
-    } else {
-      mainWindow.webContents.send('updateStatus', 2);
-    }
+    updateStatus(checkConfig() ? 0 : 2);
 
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
@@ -246,7 +241,21 @@ const openPathDialog = (event: any, args: any) => {
     console.log(err);
   })
 } 
+/**
+ * Checks the app config.
+ * @returns true if config is setup, false otherwise. 
+ */
+const checkConfig = () : boolean => {
+  return mainWindow !== null ? isConfigReady(cfg) && (getLatestLog(baseLogPath)) : false;
+}
 
+/**
+ * Updates the status icon for the application.
+ * @param status the status number
+ */
+const updateStatus = (status: number) => {
+  if (mainWindow !== null) mainWindow.webContents.send('updateStatus', status);
+}
 
 /**
  * mainWindow event listeners.
@@ -291,10 +300,20 @@ ipcMain.on('settingsWindow', (event, args) => {
   }
     
   if (settingsWindow === null) return; 
-
+  
   if (args[0] === "quit") {
     console.log("User closed settings");
     settingsWindow.close();
+    storageDir = getPathConfigSafe(cfg, 'storage-path');
+    baseLogPath = getPathConfigSafe(cfg, 'log-path');
+    maxStorage = getNumberConfigSafe(cfg, 'max-storage');
+    
+    if (checkConfig()) {
+      updateStatus(0);
+      recorder = new Recorder(storageDir, maxStorage, 0);  
+      watchLogs(baseLogPath);
+      pollWowProcess();
+    }
   }
 
   if (args[0] === "openPathDialog") openPathDialog(event, args);

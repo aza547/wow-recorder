@@ -452,6 +452,26 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
     });
 }
 
+/**
+ * Gets string value from the config in a more reliable manner.
+ * @param cfg the config store
+ * @param key the key
+ * @returns the string config
+ */
+const getPathConfigSafe = (cfg: any, key: string) : string => {
+    return cfg.has(key) ? path.join(cfg.get(key), "/") : "";
+}
+
+/**
+ * Gets number value from the config in a more reliable manner.
+ * @param cfg the config store
+ * @param preference the preference
+ * @returns the number config
+ */
+ const getNumberConfigSafe = (cfg: any, preference: string) : number => {
+    return cfg.has(preference) ? parseInt(cfg.get(preference)) : NaN;
+}
+
 export {
     getVideoState,
     writeMetadataFile,
@@ -462,5 +482,7 @@ export {
     toggleVideoProtected,
     fixPathWhenPackaged,
     getNewestVideo,
-    cutVideo
+    cutVideo,
+    getPathConfigSafe,
+    getNumberConfigSafe
 };
