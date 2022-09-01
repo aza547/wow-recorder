@@ -304,22 +304,28 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (args[0] === "quit") {
     console.log("User closed settings");
     settingsWindow.close();
+  }
 
-    storageDir = getPathConfigSafe(cfg, 'storage-path');
-    baseLogPath = getPathConfigSafe(cfg, 'log-path');
-    maxStorage = getNumberConfigSafe(cfg, 'max-storage');
+  if (args[0] === "update") {
+    console.log("User updated settings");
+    
+    settingsWindow.once('closed', () => {
+      storageDir = getPathConfigSafe(cfg, 'storage-path');
+      baseLogPath = getPathConfigSafe(cfg, 'log-path');
+      maxStorage = getNumberConfigSafe(cfg, 'max-storage');
+  
+      if (checkConfig()) {
+        updateStatus(0);
+        if (recorder) recorder.shutdown(); 
+        recorder = new Recorder(storageDir, maxStorage, 0);  
+        watchLogs(baseLogPath);
+        pollWowProcess();
+      } else {
+        updateStatus(2);
+      }
+    })
 
-    if (checkConfig()) {
-      updateStatus(0);
-
-      if (recorder) {
-        recorder.shutdown();
-      } 
-
-      recorder = new Recorder(storageDir, maxStorage, 0);  
-      watchLogs(baseLogPath);
-      pollWowProcess();
-    }
+    settingsWindow.close();
   }
 
   if (args[0] === "openPathDialog") openPathDialog(event, args);

@@ -32,7 +32,7 @@ export default function Settings() {
     saveItem("log-path");
     saveItem("max-storage");
     saveItem("start-up");
-    closeSettings();
+    ipc.sendMessage('settingsWindow', ['update']);
   }
 
   /**
