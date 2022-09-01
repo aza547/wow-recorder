@@ -310,7 +310,7 @@ ipcMain.on('settingsWindow', (event, args) => {
     
     if (checkConfig()) {
       updateStatus(0);
-      recorder = new Recorder(storageDir, maxStorage);  
+      recorder = new Recorder(storageDir, maxStorage, 0);  
       watchLogs(baseLogPath);
       pollWowProcess();
     }
