@@ -458,7 +458,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
  * @returns the string config
  */
 const getPathConfigSafe = (cfg: any, key: string) : string => {
-  return cfg.has(key) ? path.join(cfg.get(key), "/") : "";
+    return cfg.has(key) ? path.join(cfg.get(key), "/") : "";
 }
 
 /**
@@ -468,8 +468,8 @@ const getPathConfigSafe = (cfg: any, key: string) : string => {
  * @returns the number config
  */
  const getNumberConfigSafe = (cfg: any, preference: string) : number => {
-    return cfg.has(preference) ? parseInt(cfg.get(preference)) : -1;
-  }
+    return cfg.has(preference) ? parseInt(cfg.get(preference)) : NaN;
+}
 
 export {
     getVideoState,

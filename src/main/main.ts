@@ -307,6 +307,7 @@ ipcMain.on('settingsWindow', (event, args) => {
     storageDir = getPathConfigSafe(cfg, 'storage-path');
     baseLogPath = getPathConfigSafe(cfg, 'log-path');
     maxStorage = getNumberConfigSafe(cfg, 'max-storage');
+    
     if (checkConfig()) {
       updateStatus(0);
       recorder = new Recorder(storageDir, maxStorage);  
