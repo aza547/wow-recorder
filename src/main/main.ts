@@ -324,7 +324,7 @@ ipcMain.on('settingsWindow', (event, args) => {
   
       if (checkConfig()) {
         updateStatus(0);
-        if (recorder) recorder.shutdown(); 
+        if (recorder) recorder.shutdown();
         recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
         watchLogs(baseLogPath);
         pollWowProcess();

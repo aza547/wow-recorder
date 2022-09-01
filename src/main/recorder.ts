@@ -132,6 +132,7 @@ const glob = require('glob');
     start = () => {
         console.log("Recorder: Start recording");
         this._isRecording = true;
+        this.isRecordingBuffer = false;
         clearInterval(this._bufferIntervalID);
         if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
     }
@@ -155,6 +156,7 @@ const glob = require('glob');
             if (!this._isRecording) return;
             obsRecorder.stop();       
             this._isRecording = false;
+            this.isRecordingBuffer = false;
 
             // Update the GUI to show we're processing a video. 
             if (mainWindow) mainWindow.webContents.send('updateStatus', 4);
@@ -223,6 +225,13 @@ const glob = require('glob');
      * Shutdown OBS.
      */
     shutdown = () => {
+        if (this._isRecording) {
+            obsRecorder.stop();       
+            this._isRecording = false;
+        } else if (this._isRecordingBuffer) {
+            this.stopBuffer()
+        }
+
         obsRecorder.shutdown();
     }
 }

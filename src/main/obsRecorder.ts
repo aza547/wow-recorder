@@ -56,6 +56,7 @@ const initOBS = () => {
   }
 
   osn.NodeObs.OBS_service_connectOutputSignals((signalInfo: any) => {
+    console.log("Set signalinfo");
     signals.next(signalInfo);
   });
 
@@ -197,8 +198,14 @@ const start = async () => {
   }
 
   osn.NodeObs.OBS_service_startRecording();
-  const signalInfo = await getNextSignalInfo();
-  assertSignal(signalInfo, "recording", "start");
+
+  // TODO fix this
+  try {
+    const signalInfo = await getNextSignalInfo();
+    assertSignal(signalInfo, "recording", "start");
+  } catch (error) {
+    console.log("error1");
+  }
 }
 
 /*
@@ -209,11 +216,16 @@ const stop = async () => {
 
   let signalInfo;
 
-  signalInfo = await getNextSignalInfo();
-  assertSignal(signalInfo, "recording", "stopping");
-
-  signalInfo = await getNextSignalInfo();
-  assertSignal(signalInfo, "recording", "stop");
+  // TODO fix this
+  try {
+    signalInfo = await getNextSignalInfo();
+    assertSignal(signalInfo, "recording", "stopping");
+  
+    signalInfo = await getNextSignalInfo();
+    assertSignal(signalInfo, "recording", "stop");
+  } catch (error) {
+    console.log("error2");
+  }
 }
 
 /*
