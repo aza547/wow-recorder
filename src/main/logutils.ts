@@ -24,6 +24,7 @@ let playerCombatant: Combatant | undefined;
     category: string;
     zoneID?: number;
     encounterID?: number;
+    keystoneLevel?: number;
     duration: number;
     result: boolean;
     playerName?: string;
@@ -296,7 +297,9 @@ const determineArenaMatchResult = (line: string): any[] => {
      * video will still be stopped/started in quick succession to ensure a separation.
      */
 
-    const encounterID = parseInt(line.split(',')[1]);
+    const lineColumns = line.split(',');
+    const encounterID = parseInt(lineColumns[3]); //ChallengeModeID, see https://wow.tools/dbc/?dbc=mapchallengemode
+    const keystoneLevel = parseInt(lineColumns[4]);
     const category = "ChallengeModes";
 
     videoStartDate = getCombatLogDate(line);
@@ -305,6 +308,7 @@ const determineArenaMatchResult = (line: string): any[] => {
         name: "name",
         category: category,
         encounterID: encounterID,
+        keystoneLevel: keystoneLevel,
         duration: 0,
         result: false,
     }
