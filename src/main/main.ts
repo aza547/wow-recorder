@@ -308,11 +308,14 @@ ipcMain.on('settingsWindow', (event, args) => {
     storageDir = getPathConfigSafe(cfg, 'storage-path');
     baseLogPath = getPathConfigSafe(cfg, 'log-path');
     maxStorage = getNumberConfigSafe(cfg, 'max-storage');
-    
-    // TODO fix this being potentially leaky. 
-    // Need to shutdown obs, destroy recorder, recreate recorder? 
+
     if (checkConfig()) {
       updateStatus(0);
+
+      if (recorder) {
+        recorder.shutdown();
+      } 
+
       recorder = new Recorder(storageDir, maxStorage, 0);  
       watchLogs(baseLogPath);
       pollWowProcess();
