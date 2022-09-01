@@ -36,7 +36,8 @@ let playerCombatant: Combatant | undefined;
 /**
  * Is wow running? Starts false but we'll check immediately on start-up. 
  */
-let isWowRunning: boolean = false;
+let isRetailRunning: boolean = false;
+let isClassicRunning: boolean = false;
 
 /**
  * Is Challenge Mode recording in progress?
@@ -48,7 +49,7 @@ let isRecordingChallengeMode: boolean = false;
  */
 const wowProcessStarted = () => {
     console.log("Wow.exe has started");
-    isWowRunning = true;
+    isRetailRunning = true;
     recorder.startBuffer();
 };
 
@@ -57,7 +58,7 @@ const wowProcessStarted = () => {
  */
 const wowProcessStopped = () => {
     console.log("Wow.exe has stopped");
-    isWowRunning = false;
+    isRetailRunning = false;
 
     if (recorder.isRecording) {
         const videoStopDate = new Date();
@@ -525,18 +526,23 @@ const removeQuotes = (value: string): string => {
 
 /**
  * checkWoWProcess
+ * @returns {[boolean, boolean]} retailRunning, classicRunning
  */
-const checkWoWProcess = async () => {
-    let wowRunning = false;
+const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
+    let retailRunning = false;
+    let classicRunning = false;
+
     const taskList = await tasklist(); 
 
     taskList.forEach((process: any) => {
         if (process.imageName === "Wow.exe") {
-            wowRunning = true;
+            retailRunning = true;
+        } else if (process.imageName === "WowClassic.exe") {
+            classicRunning = true;
         }
     });
-  
-    return wowRunning;
+
+    return [retailRunning, classicRunning]
 }
 
 /**
@@ -544,14 +550,18 @@ const checkWoWProcess = async () => {
  */
 const pollWowProcess = () => {
     setInterval(async () => {
-        const wowProcessFound = await checkWoWProcess();
-        const wowProcessChanged = (wowProcessFound !== isWowRunning);    
-        if (!wowProcessChanged) return;
+        const [retailFound, classicFound] = await checkWoWProcess();
+        const retailProcessChanged = (retailFound !== isRetailRunning);    
+        // TODO classic support
+        const classicProcessChanged = (classicFound !== isClassicRunning);  
+        const processChanged = (retailProcessChanged || classicProcessChanged);
+
+        if (!retailProcessChanged) return;
           
-        if (wowProcessFound) {
-            wowProcessStarted();
+        if (retailFound) {
+            wowProcessStarted(true);
         } else {
-            wowProcessStopped();
+            wowProcessStopped(true);
         }
     }, 5000);
 }
