@@ -494,10 +494,10 @@ const getPathConfigSafe = (cfg: any, key: string): string => {
 /**
  *  Default the monitor index to 1. 
  */
- const defaultMonitorIndex = (cfg: any, val: number): number => {
-    console.info("Defaulting monitor index to", val);
-    cfg.set('monitor-index', val);
-    return val;
+ const defaultMonitorIndex = (cfg: any): number => {
+    console.info("Defaulting monitor index to 1");
+    cfg.set('monitor-index', 1);
+    return 1;
 }
 
 /**

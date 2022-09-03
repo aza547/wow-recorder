@@ -39,7 +39,7 @@ let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
 let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
 
 if (!monitorIndex) {
-  monitorIndex = defaultMonitorIndex(cfg, 1);
+  monitorIndex = defaultMonitorIndex(cfg);
 }
 
 /**
