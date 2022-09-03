@@ -132,6 +132,7 @@ const setupScene = (monitorIndex: number) => {
 
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
   const monitorIndexFromZero = monitorIndex - 1; 
+  console.info("monitorIndexFromZero:", monitorIndexFromZero);
   const { physicalWidth, physicalHeight } = displayInfo(monitorIndexFromZero);
 
   // Update source settings:

@@ -323,7 +323,7 @@ ipcMain.on('settingsWindow', (event, args) => {
       storageDir = getPathConfigSafe(cfg, 'storage-path');
       baseLogPath = getPathConfigSafe(cfg, 'log-path');
       maxStorage = getNumberConfigSafe(cfg, 'max-storage');
-      monitorIndex = getNumberConfigSafe(cfg, 'monitor-index') - 1;
+      monitorIndex = getNumberConfigSafe(cfg, 'monitor-index');
   
       if (checkConfig()) {
         updateStatus(0);
