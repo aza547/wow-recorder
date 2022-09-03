@@ -26,6 +26,17 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
     1. Commit and push all changes.
 	1. Tag a release on GitHub and attach the executable (e.g. `./release/build/WarcraftRecorder Setup 1.0.2.exe`).
 
+## Debugging Mode
+You can use VSCode's JavaScript Debug terminal to step through the code, add breakpoints, view variables and the other IDE features.  
+
+1. Go to file, new terminal. 
+1. Click the arrow next to the "+" icon. 
+1. Select "JavaScrtip Debug Terminal". See below image.
+1. Run the application in development mode as per above instructions (i.e. `npm start`).
+1. Enjoy the ability to use the IDE features.
+
+<img src="https://i.imgur.com/zFIaGHa.png" width="200">
+
 ## Microsoft Stamp of Approval
 If we just build a .exe and release it Windows will warn it may be dangerous. Could resolve this buy purchasing a certificate from a CA, but it costs a fortune. Read more about it in this [issue](https://github.com/aza547/wow-recorder/issues/11).
 1. Submit it for analysis [here](https://www.microsoft.com/en-us/wdsi/filesubmission) after releasing it to make that warning go away.

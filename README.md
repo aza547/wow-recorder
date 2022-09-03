@@ -16,7 +16,13 @@ Only 64 bit Windows (any modern version) and retail WoW are currently supported.
     - Use MRT automatic combat logging in a similar fashion to SimpleCombatLogger. 
     - Manually type `/combatlog` in-game every time you login or reload.
 
-<img src="https://i.imgur.com/053UaYq.png" width="300">
+Optionally, test it works by clicking the test icon after you have completed the above steps. 
+
+<img src="https://i.imgur.com/bwChWgI.png">
+
+An example of valid config can be found below.
+
+<img src="https://i.imgur.com/uVD9zsp.png" width="300">
 
 #  Size Monitor
 
