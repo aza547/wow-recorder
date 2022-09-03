@@ -56,6 +56,7 @@ The build instructions on obs-studio-node's GitHub page are not perfect, there i
     cpack -G TGZ
     ```
  2. Host it on a file sharing platform of your choice so that it's downloadable via a URL. I've used Azure for this, for example I build 0.22.10 and hosted it [here](https://wowrecorder.blob.core.windows.net/wowrecorder/obs-studio-node-0.22.10-win64.tar.gz). 
+ 
  3. Place the URL to it to `package.json`. You should do this in both package.json files in the project, this is important for distributing. 
 
     ```json
