@@ -237,6 +237,10 @@ h2 {
     1px  1px 0 #000;
 }
 
+.videoButton.dungeon {
+  background-size: cover;
+}
+
 /* .sepulcherRaid{
   background-image: url("../../assets/wow/sepulcher.jpg");
 }
