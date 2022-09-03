@@ -279,11 +279,14 @@ const determineArenaMatchResult = (line: string): any[] => {
     const isRecording = recorder.isRecording;
 
     let isRecordingBG = false;
+    let isRecordingArena = false;
 
-    // This is super hacky but it's late and I'm tired. 
-    // TODO come back and fix this. 
     if (metadata !== undefined) {
-        isRecordingBG = (metadata.category === "Battlegrounds"); 
+        isRecordingBG = (metadata.category === "Battlegrounds");
+        isRecordingArena = (metadata.category === "2v2") || 
+                           (metadata.category === "3v3") || 
+                           (metadata.category === "Solo Shuffle") ||
+                           (metadata.category === "Skirmish");
     }
 
     if (!isRecording && isNewZoneBG) {
@@ -292,6 +295,9 @@ const determineArenaMatchResult = (line: string): any[] => {
     } else if (isRecording && isRecordingBG && !isNewZoneBG) {
         console.log("ZONE_CHANGE out of BG, stop recording");
         battlegroundStop(line);
+    } else if (isRecording && isRecordingArena) {
+        console.log("ZONE_CHANGE out of arena, stop recording");
+        zoneChangeStop(line);
     }
 
     // TODO there is the case here where a tilted raider hearths 
