@@ -124,6 +124,10 @@ const raids: { [id: number]: string; } = {
  * Dungeons by ID. 
  */
  const dungeons: { [id: number]: string; } = {
+  1651: 'Return to Karazhan',
+  1208: 'Grimrail Depot',
+  1195: 'Iron Docks',
+  2097: "Operation: Mechagon",
   2291: "De Other Side",
   2287: "Halls of Atonement",
   2290: "Mists of Tirna Scithe",

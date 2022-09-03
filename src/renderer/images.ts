@@ -1,3 +1,5 @@
+import { dungeons } from '../main/constants'
+
 interface imageObject {
     [id: number]: string;
 }
@@ -27,25 +29,15 @@ for (const id of arenaIDs) {
     arena[id] = require(`../../assets/arena/${id}.jpg`);
 }
 
-// Load the dungeon images. This expects files with the name <id>.jpg 
-// to exist in the appropriate assets folder.
-const dungeonIDs = [
-    // Shadowlands
-    2293, // Theatre of Pain
-    2441, // Tazavesh
-    2287, // Halls of Atonement
-    2286, // Necrotic Wake
-    2258, // Spires of Ascension
-    2289, // Plaguefall 
-    2284, // Sanguine Depths
-    2291, // De Other Side
-    2290, // Mists of Tirna Sithe
-]
+const dungeonIDs = Object.keys(dungeons).map(v=> parseInt(v, 10))
 
 let dungeon: imageObject = {};
 
 for (const id of dungeonIDs) {
-    dungeon[id] = require(`../../assets/dungeon/${id}.jpg`);
+    try {
+        dungeon[id] = require(`../../assets/dungeon/${id}.jpg`);
+    }
+    catch {};
 }
 
 // Load the raid encounter images. This expects files with the 
