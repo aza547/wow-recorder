@@ -5,13 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 ### Added
-- Added plumbing for future classic support.
-- Added plumbing for monitor selection support. Defaults to first monitor. 
-- [Issue 2](https://github.com/aza547/wow-recorder/issues/2) - Add a monitor selection config option.
+- [Issue 50](https://github.com/aza547/wow-recorder/issues/50) - Add some plumbing for future when we support classic.
+- [Issue 2](https://github.com/aza547/wow-recorder/issues/2) - Add a monitor selection config option. Defaults to first monitor.
 - [Issue 9](https://github.com/aza547/wow-recorder/issues/9) - Add a test button to the GUI. 
 
 ### Changed
-- Assert that OBS behaves as expected or crash the app, previously we would just log this and get into god knows what error states.  
+- Assert that OBS behaves as expected or crash the app, previously we would just continue and get into god knows what error states.  
 - No longer require the application to be restarted on a config change.
 - Take OSN `0.22.10`, previously was on `0.10.10`.
 
