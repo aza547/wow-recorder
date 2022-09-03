@@ -6,7 +6,7 @@
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
 import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex } from './util';
-import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
+import { watchLogs, getLatestLog, pollWowProcess, runRecordingTest } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
@@ -394,6 +394,18 @@ ipcMain.on('contextMenu', (event, args) => {
 ipcMain.on('getVideoState', (event) => {
   const videoState = getVideoState(storageDir);
   event.returnValue = videoState;
+});
+
+/**
+ * Get the list of video files and their state.
+ */
+ipcMain.on('test', (event) => {
+  if (isConfigReady(cfg)) { 
+    console.info("Config is good, running test!");
+    runRecordingTest()
+  } else {
+    console.info("Config is bad, don't run test");
+  }
 });
 
 /**

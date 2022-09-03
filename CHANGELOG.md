@@ -7,18 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added plumbing for future classic support.
 - Added plumbing for monitor selection support. Defaults to first monitor. 
-- Take OSN `0.22.10`, previously was on `0.10.10`.
 - [Issue 2](https://github.com/aza547/wow-recorder/issues/2) - Add a monitor selection config option.
-- [Issue 64](https://github.com/aza547/wow-recorder/issues/64), [Issue 60](https://github.com/aza547/wow-recorder/issues/60) - Overhaul async logic causing problems. 
-- [Issue 54](https://github.com/aza547/wow-recorder/issues/54) - Fix to stop recording when leaving arena games with /afk. 
+- [Issue 9](https://github.com/aza547/wow-recorder/issues/9) - Add a test button to the GUI. 
 
 ### Changed
 - Assert that OBS behaves as expected or crash the app, previously we would just log this and get into god knows what error states.  
 - No longer require the application to be restarted on a config change.
+- Take OSN `0.22.10`, previously was on `0.10.10`.
 
 ### Fixed
 - Rename window from "Arena Recorder" to "Warcraft Recorder". 
 - [Issue 23](https://github.com/aza547/wow-recorder/issues/23) - Fix clean-up buffer issue on app close. 
+- [Issue 64](https://github.com/aza547/wow-recorder/issues/64), [Issue 60](https://github.com/aza547/wow-recorder/issues/60) - Overhaul async logic causing problems. 
+- [Issue 54](https://github.com/aza547/wow-recorder/issues/54) - Fix to stop recording when leaving arena games with /afk. 
 
 ## [2.5.2] - 2022-08-29
 ### Fixed

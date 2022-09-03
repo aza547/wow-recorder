@@ -5,6 +5,7 @@ import SettingsButton from './SettingsButton';
 import Status from './Status';
 import LogButton from './LogButton';
 import DiscordButton from './DiscordButton';
+import TestButton from './TestButton';
 import './App.css';
 
 const Application = () => {
@@ -15,6 +16,7 @@ const Application = () => {
       <SettingsButton />
       <LogButton />
       <DiscordButton />
+      <TestButton />
       <Status />
     </div>
   );
