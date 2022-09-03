@@ -4,6 +4,7 @@ import { mainWindow }  from './main';
 import { app } from 'electron';
 import path from 'path';
 
+const chalk = require('chalk');
 const obsRecorder = require('./obsRecorder');
 const fs = require('fs');
 const glob = require('glob');
@@ -17,7 +18,7 @@ const glob = require('glob');
     private _storageDir: string;
     private _maxStorage: number;
     private _bufferStorageDir: any;
-    private _bufferIntervalID?: any;
+    private _bufferRestartIntervalID?: any;
     private _monitorIndex: number;
 
     /**
@@ -81,15 +82,20 @@ const glob = require('glob');
      * to the temp buffer location. Called on start-up of application when
      * WoW is open. 
      */
-    startBuffer = () => {
-        console.log("Recorder: Start recording buffer");
-        obsRecorder.start();
+    startBuffer = async () => {
+        if (this._isRecordingBuffer) {
+            console.error("Already recording a buffer");
+            return;
+        }
+
+        console.log(chalk.cyan("Recorder: Start recording buffer"));
+        await obsRecorder.start();
         this._isRecordingBuffer = true;
         if (mainWindow) mainWindow.webContents.send('updateStatus', 3);
     
         // We store off this timer as a member variable as we will cancel
         // it when a real game is detected. 
-        this._bufferIntervalID = setInterval(() => {
+        this._bufferRestartIntervalID = setInterval(() => {
             this.restartBuffer()
         }, 5 * 60 * 1000); // Five mins
     }
@@ -98,42 +104,50 @@ const glob = require('glob');
     /**
      * Stop recorder buffer. Called when WoW is closed. 
      */
-    stopBuffer = () => {
-        console.log("Recorder: Stop recording buffer");
-        obsRecorder.stop();
+    stopBuffer = async () => {
+        if (!this._isRecordingBuffer) {
+            console.error("No buffer recording to stop.");
+            return;
+        }
+
+        console.log(chalk.cyan("Recorder: Stop recording buffer"));
+        clearInterval(this._bufferRestartIntervalID);
+        await obsRecorder.stop();
         this.isRecordingBuffer = false;
         if (mainWindow) mainWindow.webContents.send('updateStatus', 0);
-
-        setTimeout(() => {
-            this.cleanupBuffer();
-        }, 2000);
+        this.cleanupBuffer();
     }
 
     /**
      * Restarts the buffer recording. Cleans the temp dir between stop/start.
+     * We wait 2s here between the stop start. I don't know why, but if we
+     * don't then OBS becomes unresponsive. I spent a lot of time on this, 
+     * trying all sorts of other solutions don't fuck with it unless you have 
+     * to; here be dragons. 
      */
-    restartBuffer = () => {
-        console.log("Recorder: Restart recording buffer");
-        obsRecorder.stop();
-
-        // Wait 2 seconds here just incase OBS has to do anything.
+    restartBuffer = async () => {
+        console.log(chalk.cyan("Recorder: Restart recording buffer"));
+        await obsRecorder.stop();
+        this.isRecordingBuffer = false;
         setTimeout(() => {
-            this.cleanupBuffer();
+            this.isRecordingBuffer = true;
             obsRecorder.start();
-        }, 
-        2000); 
+        }, 2000);
+
+        this.cleanupBuffer();
     }
 
     /**
      * Start recording for real, this basically just cancels pending 
      * buffer recording restarts. We don't need to actually start OBS 
-     * recording as it's should already be running. 
+     * recording as it's should already be running (or just about to 
+     * start if we hit this in the 2s restart window). 
      */
-    start = () => {
-        console.log("Recorder: Start recording");
-        this._isRecording = true;
-        this.isRecordingBuffer = false;
-        clearInterval(this._bufferIntervalID);
+    start = async () => {
+        console.log(chalk.green("Recorder: Start recording by cancelling buffer restart"));
+        clearInterval(this._bufferRestartIntervalID);
+        this.isRecordingBuffer = false;        
+        this._isRecording = true;   
         if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
     }
 
@@ -146,15 +160,15 @@ const glob = require('glob');
      * @param {number} overrun how long to continue recording after stop is called
      */
     stop = (metadata: Metadata, overrun: number = 0) => {
-        console.log("Recorder: Stop recording after", overrun, "seconds");
+        console.log(chalk.green("Recorder: Stop recording after", overrun, "seconds"));
         console.log("Recorder:", JSON.stringify(metadata));
 
         // Wait for a delay specificed by overrun. This lets us
-        // Capture the boss death animation/score screens.  
+        // capture the boss death animation/score screens.  
         setTimeout(async () => {           
             // Take the actions to stop the recording.
             if (!this._isRecording) return;
-            obsRecorder.stop();       
+            await obsRecorder.stop();       
             this._isRecording = false;
             this.isRecordingBuffer = false;
 
@@ -205,16 +219,16 @@ const glob = require('glob');
     }
 
     /**
-     * Delete all but the most recent buffer .mp4 file. 
+     * Delete all but the most recent two .mp4 buffer files. 
      */
     cleanupBuffer = () => {
         const globString = path.join(this._bufferStorageDir, "*.mp4"); 
 
-        // Sort newest to oldest, remove newest from the list; we don't delete that. 
+        // Sort newest to oldest, remove newest 2 from the list; we don't delete those. 
         const videosToDelete = glob.sync(globString) 
             .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
             .sort((A: any, B: any) => B.mtime - A.mtime)
-            .slice(1);
+            .slice(2);
 
         for (const video of videosToDelete) {
             deleteVideo(video.name);
@@ -233,6 +247,22 @@ const glob = require('glob');
         }
 
         obsRecorder.shutdown();
+
+    }
+
+    /**
+     * Reconfigure the underlying obsRecorder. 
+     */
+    reconfigure = (outputPath: string, monitorIndex: number) => {      
+
+        if (this._isRecording) {
+            obsRecorder.stop();       
+            this._isRecording = false;
+        } else if (this._isRecordingBuffer) {
+            this.stopBuffer()
+        }
+
+        obsRecorder.reconfigure(outputPath, monitorIndex);
     }
 }
 

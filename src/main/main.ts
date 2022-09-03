@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex } from './util';
 import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -36,8 +36,11 @@ const cfg = new Store();
 let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
-// -1 so that users don't have to start at zero
-let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index') - 1;
+let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
+
+if (!monitorIndex) {
+  monitorIndex = defaultMonitorIndex(cfg, 1);
+}
 
 /**
  * Getter and setter config listeners. 
@@ -324,9 +327,16 @@ ipcMain.on('settingsWindow', (event, args) => {
   
       if (checkConfig()) {
         updateStatus(0);
-        if (recorder) recorder.shutdown();
-        recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
-        watchLogs(baseLogPath);
+
+        // If this is the first time config has been valid we
+        // need to create a recorder. If the config was previously
+        // valid but has since changed, just do a reconfigure. 
+        if (recorder) {
+          recorder.reconfigure(storageDir, monitorIndex);
+        } else {
+          recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
+        }
+        watchLogs(baseLogPath); 
         pollWowProcess();
       } else {
         updateStatus(2);

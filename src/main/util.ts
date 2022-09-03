@@ -476,7 +476,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
  * @param key the key
  * @returns the string config
  */
-const getPathConfigSafe = (cfg: any, key: string) : string => {
+const getPathConfigSafe = (cfg: any, key: string): string => {
     return cfg.has(key) ? path.join(cfg.get(key), "/") : "";
 }
 
@@ -486,8 +486,17 @@ const getPathConfigSafe = (cfg: any, key: string) : string => {
  * @param preference the preference
  * @returns the number config
  */
- const getNumberConfigSafe = (cfg: any, preference: string) : number => {
+ const getNumberConfigSafe = (cfg: any, preference: string): number => {
     return cfg.has(preference) ? parseInt(cfg.get(preference)) : NaN;
+}
+
+/**
+ *  Default the monitor index to 1. 
+ */
+ const defaultMonitorIndex = (cfg: any, val: number): number => {
+    console.info("Defaulting monitor index to", val);
+    cfg.set('monitor-index', val);
+    return val;
 }
 
 export {
@@ -502,5 +511,6 @@ export {
     getNewestVideo,
     cutVideo,
     getPathConfigSafe,
-    getNumberConfigSafe
+    getNumberConfigSafe,
+    defaultMonitorIndex
 };

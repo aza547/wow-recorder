@@ -48,7 +48,7 @@ let watchLogsInterval: NodeJS.Timer;
  * wowProcessStarted
  */
 const wowProcessStarted = () => {
-    console.log("Wow.exe has started");
+    console.log("Wow.exe is running");
     isRetailRunning = true;
     recorder.startBuffer();
 };

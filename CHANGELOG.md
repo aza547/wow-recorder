@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better ZONE_CHANGE tests. 
 - Added plumbing for future classic support.
 - Added a bunch more logging. 
-- Added plumbing for monitor selection support. 
+- Added plumbing for monitor selection support. Defaults to first monitor. 
+- Take OSN `0.22.10` from `0.10.10`.
 - [Issue 2](https://github.com/aza547/wow-recorder/issues/2) - Add a monitor selection config option.
 
 ### Changed
