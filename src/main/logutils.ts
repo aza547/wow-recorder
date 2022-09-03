@@ -408,21 +408,21 @@ const isUnitSelf = (srcFlags: number): boolean => {
  * if there is, swap to watching that. 
  */
 const watchLogs = (logdir: any) => {
-    const checkInterval: number = 1000;
-    
     if (watchLogsInterval) clearInterval(watchLogsInterval);
 
     watchLogsInterval = setInterval(() => {
         currentLogFile = getLatestLog(logdir);
-        const logFileChanged = (lastLogFile !== currentLogFile)
+
+        // Handle the case where there is no logs in the WoW log directory.
+        if (!currentLogFile) return;
+        
+        const logFileChanged = (lastLogFile !== currentLogFile);
 
         if (!lastLogFile || logFileChanged) {
             tailFile(currentLogFile);
             lastLogFile = currentLogFile;
         }
-    }, checkInterval);
-
-    return true;
+    }, 1000);
 }
 
 /**

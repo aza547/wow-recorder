@@ -6,7 +6,7 @@
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
 import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex } from './util';
-import { watchLogs, getLatestLog, pollWowProcess, runRecordingTest } from './logutils';
+import { watchLogs, pollWowProcess, runRecordingTest } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
@@ -163,7 +163,7 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
+    if (!isConfigReady(cfg)) return;
     recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
     pollWowProcess();
     watchLogs(baseLogPath);
@@ -256,7 +256,7 @@ const openPathDialog = (event: any, args: any) => {
  * @returns true if config is setup, false otherwise. 
  */
 const checkConfig = () : boolean => {
-  return mainWindow !== null ? isConfigReady(cfg) && (getLatestLog(baseLogPath)) : false;
+  return (mainWindow !== null) ? isConfigReady(cfg) : false;
 }
 
 /**
