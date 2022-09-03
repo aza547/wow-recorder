@@ -1,10 +1,9 @@
 import { Metadata } from './logutils';
-import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo } from './util';
+import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor } from './util';
 import { mainWindow }  from './main';
 import { app } from 'electron';
 import path from 'path';
 
-const chalk = require('chalk');
 const obsRecorder = require('./obsRecorder');
 const fs = require('fs');
 const glob = require('glob');
@@ -88,7 +87,7 @@ const glob = require('glob');
             return;
         }
 
-        console.log(chalk.cyan("Recorder: Start recording buffer"));
+        console.log(addColor("Recorder: Start recording buffer", "cyan"));
         await obsRecorder.start();
         this._isRecordingBuffer = true;
         if (mainWindow) mainWindow.webContents.send('updateStatus', 3);
@@ -110,7 +109,7 @@ const glob = require('glob');
             return;
         }
 
-        console.log(chalk.cyan("Recorder: Stop recording buffer"));
+        console.log(addColor("Recorder: Stop recording buffer", "cyan"));
         clearInterval(this._bufferRestartIntervalID);
         await obsRecorder.stop();
         this.isRecordingBuffer = false;
@@ -126,7 +125,7 @@ const glob = require('glob');
      * to; here be dragons. 
      */
     restartBuffer = async () => {
-        console.log(chalk.cyan("Recorder: Restart recording buffer"));
+        console.log(addColor("Recorder: Restart recording buffer", "cyan"));
         await obsRecorder.stop();
         this.isRecordingBuffer = false;
         setTimeout(() => {
@@ -144,7 +143,7 @@ const glob = require('glob');
      * start if we hit this in the 2s restart window). 
      */
     start = async () => {
-        console.log(chalk.green("Recorder: Start recording by cancelling buffer restart"));
+        console.log(addColor("Recorder: Start recording by cancelling buffer restart", "green"));
         clearInterval(this._bufferRestartIntervalID);
         this.isRecordingBuffer = false;        
         this._isRecording = true;   
@@ -160,8 +159,9 @@ const glob = require('glob');
      * @param {number} overrun how long to continue recording after stop is called
      */
     stop = (metadata: Metadata, overrun: number = 0) => {
-        console.log(chalk.green("Recorder: Stop recording after", overrun, "seconds"));
-        console.log("Recorder:", JSON.stringify(metadata));
+        console.log(addColor("Recorder: Stop recording after overrun", "green"));
+        console.info("Overrun:", overrun);
+        console.info("Recorder:", JSON.stringify(metadata));
 
         // Wait for a delay specificed by overrun. This lets us
         // capture the boss death animation/score screens.  

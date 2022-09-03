@@ -3,6 +3,7 @@ import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
+const chalk = require('chalk');
 
 /**
  * When packaged, we need to fix some paths
@@ -499,6 +500,23 @@ const getPathConfigSafe = (cfg: any, key: string): string => {
     return val;
 }
 
+/**
+ *  Add some escape characters to color text. Just return the string
+ *  if production as don't want to litter real logs with this as it just
+ *  looks messy.
+ */
+ const addColor = (s: string, color: string): string => {
+    if (process.env.NODE_ENV === 'production') return s;
+
+    if (color === "cyan") {
+        return chalk.cyan(s);
+    } else if (color === "green") {
+        return chalk.green(s);
+    } else {
+        return s;
+    }    
+}
+
 export {
     getVideoState,
     writeMetadataFile,
@@ -512,5 +530,6 @@ export {
     cutVideo,
     getPathConfigSafe,
     getNumberConfigSafe,
-    defaultMonitorIndex
+    defaultMonitorIndex, 
+    addColor
 };

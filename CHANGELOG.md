@@ -5,12 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 ### Added
-- Better ZONE_CHANGE tests. 
 - Added plumbing for future classic support.
-- Added a bunch more logging. 
 - Added plumbing for monitor selection support. Defaults to first monitor. 
-- Take OSN `0.22.10` from `0.10.10`.
+- Take OSN `0.22.10`, previously was on `0.10.10`.
 - [Issue 2](https://github.com/aza547/wow-recorder/issues/2) - Add a monitor selection config option.
+- [Issue 64](https://github.com/aza547/wow-recorder/issues/64), [Issue 60](https://github.com/aza547/wow-recorder/issues/60) - Overhaul async logic causing problems. 
 
 ### Changed
 - Assert that OBS behaves as expected or crash the app, previously we would just log this and get into god knows what error states.  
