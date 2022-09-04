@@ -15,6 +15,7 @@ let videoStartDate: Date;
 let metadata: Metadata;
 let combatantMap: Map<string, Combatant> = new Map();
 let playerCombatant: Combatant | undefined;
+let testRunning: boolean = false;
 
 /**
  * wowProcessStopped
@@ -520,9 +521,14 @@ const getCombatLogDate = (line: string) => {
  */
 const runRecordingTest = () => {
     console.log("User started a test!");
+
+    if (testRunning) {
+        console.info("Test already running, not starting test.");
+    } 
     
     if (isRetailRunning) {
         console.info("WoW is running, starting test.");
+        testRunning = true;
     } else {
         console.info("WoW isn't running, not starting test.");
         return;
@@ -539,6 +545,7 @@ const runRecordingTest = () => {
 
     setTimeout(() => {
         handleArenaStopLine(testArenaStopLine);
+        testRunning = false;
     }, 10 * 1000);
 }
 
