@@ -388,6 +388,12 @@ const handleCombatantInfoLine = (line: string) => {
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
 
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;        
+    }
+
     // Assume loss if zoned out of content. 
     metadata.result = false;
     recorder.stop(metadata);
