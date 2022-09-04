@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 - [Issue 70](https://github.com/aza547/wow-recorder/issues/70) - Double clicking test button no longer breaks the test.
+- Update various NPM packages to resolve various dependabot security issues.
 
 ## [2.6.0] - 2022-08-29
 ### Added
