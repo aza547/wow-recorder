@@ -201,7 +201,7 @@ const createSettingsWindow = async () => {
   settingsWindow = new BrowserWindow({
     show: false,
     width: 380,
-    height: 525,
+    height: 550,
     resizable: true,
     icon: getAssetPath('./icon/settings-icon.svg'),
     frame: false,
@@ -296,8 +296,8 @@ ipcMain.on('mainWindow', (_event, args) => {
 ipcMain.on('settingsWindow', (event, args) => {
 
   if (args[0] === "create") {
-    console.log("User opened settings");
-    createSettingsWindow();
+    console.log("User clicked open settings");
+    if (!settingsWindow) createSettingsWindow();
   }
 
   if (args[0] === "startup") {
