@@ -1,4 +1,4 @@
-import { dungeons } from '../main/constants'
+import { dungeonsByZoneId } from '../main/constants'
 
 interface imageObject {
     [id: number]: string;
@@ -29,7 +29,7 @@ for (const id of arenaIDs) {
     arena[id] = require(`../../assets/arena/${id}.jpg`);
 }
 
-const dungeonIDs = Object.keys(dungeons).map(v=> parseInt(v, 10))
+const dungeonIDs = Object.keys(dungeonsByZoneId).map(v=> parseInt(v, 10))
 
 let dungeon: imageObject = {};
 
