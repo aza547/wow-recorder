@@ -3,6 +3,7 @@ import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
+const chalk = require('chalk');
 
 /**
  * When packaged, we need to fix some paths
@@ -476,7 +477,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
  * @param key the key
  * @returns the string config
  */
-const getPathConfigSafe = (cfg: any, key: string) : string => {
+const getPathConfigSafe = (cfg: any, key: string): string => {
     return cfg.has(key) ? path.join(cfg.get(key), "/") : "";
 }
 
@@ -486,8 +487,34 @@ const getPathConfigSafe = (cfg: any, key: string) : string => {
  * @param preference the preference
  * @returns the number config
  */
- const getNumberConfigSafe = (cfg: any, preference: string) : number => {
+ const getNumberConfigSafe = (cfg: any, preference: string): number => {
     return cfg.has(preference) ? parseInt(cfg.get(preference)) : NaN;
+}
+
+/**
+ *  Default the monitor index to 1. 
+ */
+ const defaultMonitorIndex = (cfg: any): number => {
+    console.info("Defaulting monitor index to 1");
+    cfg.set('monitor-index', 1);
+    return 1;
+}
+
+/**
+ *  Add some escape characters to color text. Just return the string
+ *  if production as don't want to litter real logs with this as it just
+ *  looks messy.
+ */
+ const addColor = (s: string, color: string): string => {
+    if (process.env.NODE_ENV === 'production') return s;
+
+    if (color === "cyan") {
+        return chalk.cyan(s);
+    } else if (color === "green") {
+        return chalk.green(s);
+    } else {
+        return s;
+    }    
 }
 
 export {
@@ -502,5 +529,7 @@ export {
     getNewestVideo,
     cutVideo,
     getPathConfigSafe,
-    getNumberConfigSafe
+    getNumberConfigSafe,
+    defaultMonitorIndex, 
+    addColor
 };

@@ -15,6 +15,7 @@ let videoStartDate: Date;
 let metadata: Metadata;
 let combatantMap: Map<string, Combatant> = new Map();
 let playerCombatant: Combatant | undefined;
+let testRunning: boolean = false;
 
 /**
  * wowProcessStopped
@@ -54,7 +55,7 @@ let watchLogsInterval: NodeJS.Timer;
  * wowProcessStarted
  */
 const wowProcessStarted = () => {
-    console.log("Wow.exe has started");
+    console.log("Wow.exe is running");
     isRetailRunning = true;
     recorder.startBuffer();
 };
@@ -83,7 +84,7 @@ const wowProcessStopped = () => {
  * getLatestLog 
  */
 const getLatestLog = (path: any) => {
-    const globPath = path + 'WoWCombatLog-*.txt';
+    const globPath = path + 'WoWCombatLog*.txt';
 
     const logs = glob.sync(globPath)
         .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
@@ -373,11 +374,14 @@ const determineArenaMatchResult = (line: string): any[] => {
     const isRecording = recorder.isRecording;
 
     let isRecordingBG = false;
+    let isRecordingArena = false;
 
-    // This is super hacky but it's late and I'm tired. 
-    // TODO come back and fix this. 
     if (metadata !== undefined) {
-        isRecordingBG = (metadata.category === "Battlegrounds"); 
+        isRecordingBG = (metadata.category === "Battlegrounds");
+        isRecordingArena = (metadata.category === "2v2") || 
+                           (metadata.category === "3v3") || 
+                           (metadata.category === "Solo Shuffle") ||
+                           (metadata.category === "Skirmish");
     }
 
     if (!isRecording && isNewZoneBG) {
@@ -386,6 +390,9 @@ const determineArenaMatchResult = (line: string): any[] => {
     } else if (isRecording && isRecordingBG && !isNewZoneBG) {
         console.log("ZONE_CHANGE out of BG, stop recording");
         battlegroundStop(line);
+    } else if (isRecording && isRecordingArena) {
+        console.log("ZONE_CHANGE out of arena, stop recording");
+        zoneChangeStop(line);
     }
 
     // TODO there is the case here where a tilted raider hearths 
@@ -476,6 +483,12 @@ const handleCombatantInfoLine = (line: string) => {
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
 
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;        
+    }
+
     // Assume loss if zoned out of content. 
     metadata.result = false;
     recorder.stop(metadata);
@@ -496,21 +509,21 @@ const isUnitSelf = (srcFlags: number): boolean => {
  * if there is, swap to watching that. 
  */
 const watchLogs = (logdir: any) => {
-    const checkInterval: number = 1000;
-    
     if (watchLogsInterval) clearInterval(watchLogsInterval);
 
     watchLogsInterval = setInterval(() => {
         currentLogFile = getLatestLog(logdir);
-        const logFileChanged = (lastLogFile !== currentLogFile)
+
+        // Handle the case where there is no logs in the WoW log directory.
+        if (!currentLogFile) return;
+        
+        const logFileChanged = (lastLogFile !== currentLogFile);
 
         if (!lastLogFile || logFileChanged) {
             tailFile(currentLogFile);
             lastLogFile = currentLogFile;
         }
-    }, checkInterval);
-
-    return true;
+    }, 1000);
 }
 
 /**
@@ -557,27 +570,25 @@ const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
 }
 
 /**
+ * pollWoWProcessLogic
+ */
+const pollWoWProcessLogic = async (startup: boolean) => {
+    const [retailFound, classicFound] = await checkWoWProcess();
+    const retailProcessChanged = (retailFound !== isRetailRunning);    
+    // TODO classic support
+    const classicProcessChanged = (classicFound !== isClassicRunning);  
+    const processChanged = (retailProcessChanged || classicProcessChanged);
+    if (!retailProcessChanged && !startup) return;
+    (retailFound) ? wowProcessStarted() : wowProcessStopped();
+}
+
+/**
  * pollWoWProcess
  */
 const pollWowProcess = () => {
-
+    pollWoWProcessLogic(true);
     if (pollWowProcessInterval) clearInterval(pollWowProcessInterval);
-
-    pollWowProcessInterval = setInterval(async () => {
-        const [retailFound, classicFound] = await checkWoWProcess();
-        const retailProcessChanged = (retailFound !== isRetailRunning);    
-        // TODO classic support
-        const classicProcessChanged = (classicFound !== isClassicRunning);  
-        const processChanged = (retailProcessChanged || classicProcessChanged);
-
-        if (!retailProcessChanged) return;
-          
-        if (retailFound) {
-            wowProcessStarted();
-        } else {
-            wowProcessStopped();
-        }
-    }, 5000);
+    pollWowProcessInterval = setInterval(() => pollWoWProcessLogic(false), 5000);
 }
 
 /**
@@ -598,10 +609,45 @@ const getCombatLogDate = (line: string) => {
     return dateObj;
 }
 
+/**
+ * Function to invoke if the user clicks the "run a test" button 
+ * in the GUI. Uses some sample log lines from 2v2.txt.
+ */
+const runRecordingTest = () => {
+    console.log("User started a test!");
+
+    if (testRunning) {
+        console.info("Test already running, not starting test.");
+    } 
+    
+    if (isRetailRunning) {
+        console.info("WoW is running, starting test.");
+        testRunning = true;
+    } else {
+        console.info("WoW isn't running, not starting test.");
+        return;
+    }
+
+    const testArenaStartLine = "8/3 22:09:58.548  ARENA_MATCH_START,2547,33,2v2,1"; 
+    const testArenaCombatantLine = "8/3 22:09:58.548  COMBATANT_INFO,Player-1084-08A89569,0,194,452,3670,2353,0,0,0,111,111,111,0,0,632,632,632,0,345,1193,1193,1193,779,256,(102351,102401,197491,5211,158478,203651,155675),(0,203553,203399,353114),[4,4,[],[(1123),(1124),(1129),(1135),(1136),(1819),(1122),(1126),(1128),(1820)],[(256,200),(278,200),(276,200),(275,200),(271,200)]],[(188847,265,(),(7578,8151,7899,1472,6646),()),(186787,265,(),(7578,7893,1524,6646),()),(172319,291,(),(7098,7882,8156,6649,6650,1588),()),(44693,1,(),(),()),(188849,265,(),(8153,7899,1472,6646),()),(186819,265,(),(8136,8137,7578,7896,1524,6646),()),(188848,265,(),(8155,7899,1472,6646),()),(186809,265,(),(8136,8137,7896,1524,6646),()),(186820,265,(),(8136,8138,7578,7893,1524,6646),()),(188853,265,(),(8154,7896,1472,6646),()),(178926,291,(),(8121,7882,8156,6649,6650,1588,6935),()),(186786,265,(),(7579,7893,1524,6646),()),(185304,233,(),(7305,1492,6646),()),(186868,262,(),(7534,1521,6646),()),(186782,265,(),(8136,8138,7893,1524,6646),()),(186865,275,(),(7548,6652,1534,6646),()),(0,0,(),(),()),(147336,37,(),(),())],[Player-1084-08A89569,768,Player-1084-08A89569,5225],327,33,767,1";
+    const testArenaSpellLine = "8/3 22:09:59.365  SPELL_AURA_APPLIED,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,110310,\"Dampening\",0x1,DEBUFF";
+    const testArenaStopLine = "8/3 22:12:14.889  ARENA_MATCH_END,0,8,1673,1668";
+
+    handleArenaStartLine(testArenaStartLine);
+    handleCombatantInfoLine(testArenaCombatantLine);
+    handleSpellAuraAppliedLine(testArenaSpellLine);
+
+    setTimeout(() => {
+        handleArenaStopLine(testArenaStopLine);
+        testRunning = false;
+    }, 10 * 1000);
+}
+
 export {
     handleLogLine,
     watchLogs,
     getLatestLog,
     pollWowProcess,
+    runRecordingTest,
     Metadata
 };

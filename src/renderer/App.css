@@ -197,6 +197,28 @@ h2 {
   border-style: inset;
 }
 
+#test-button-div {
+  position:fixed;
+  top: 250px;
+  left: 110px;
+}
+
+#test-button{
+  background-color: transparent;
+  border-width: 0px;
+  cursor: pointer;
+}
+
+#test-button:hover {
+  background-color: darkgrey;
+  border-width: 0px;
+  border-radius: 10px;
+}
+
+#test-button:active {
+  border-style: inset;
+}
+
 .videoButton {
   height: 100%;
   width: 100%;

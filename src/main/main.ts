@@ -5,8 +5,8 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe } from './util';
-import { watchLogs, getLatestLog, pollWowProcess } from './logutils';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex } from './util';
+import { watchLogs, pollWowProcess, runRecordingTest } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
@@ -36,8 +36,11 @@ const cfg = new Store();
 let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
-// -1 so that users don't have to start at zero
-let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index') - 1;
+let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
+
+if (!monitorIndex) {
+  monitorIndex = defaultMonitorIndex(cfg);
+}
 
 /**
  * Getter and setter config listeners. 
@@ -159,6 +162,11 @@ const createWindow = async () => {
     } else {
       mainWindow.show();
     }
+
+    if (!isConfigReady(cfg)) return;
+    recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
+    pollWowProcess();
+    watchLogs(baseLogPath);
   });
 
   mainWindow.on('closed', () => {
@@ -193,7 +201,7 @@ const createSettingsWindow = async () => {
   settingsWindow = new BrowserWindow({
     show: false,
     width: 380,
-    height: 525,
+    height: 550,
     resizable: true,
     icon: getAssetPath('./icon/settings-icon.svg'),
     frame: false,
@@ -248,7 +256,7 @@ const openPathDialog = (event: any, args: any) => {
  * @returns true if config is setup, false otherwise. 
  */
 const checkConfig = () : boolean => {
-  return mainWindow !== null ? isConfigReady(cfg) && (getLatestLog(baseLogPath)) : false;
+  return (mainWindow !== null) ? isConfigReady(cfg) : false;
 }
 
 /**
@@ -288,8 +296,8 @@ ipcMain.on('mainWindow', (_event, args) => {
 ipcMain.on('settingsWindow', (event, args) => {
 
   if (args[0] === "create") {
-    console.log("User opened settings");
-    createSettingsWindow();
+    console.log("User clicked open settings");
+    if (!settingsWindow) createSettingsWindow();
   }
 
   if (args[0] === "startup") {
@@ -315,12 +323,20 @@ ipcMain.on('settingsWindow', (event, args) => {
       storageDir = getPathConfigSafe(cfg, 'storage-path');
       baseLogPath = getPathConfigSafe(cfg, 'log-path');
       maxStorage = getNumberConfigSafe(cfg, 'max-storage');
+      monitorIndex = getNumberConfigSafe(cfg, 'monitor-index');
   
       if (checkConfig()) {
         updateStatus(0);
-        if (recorder) recorder.shutdown(); 
-        recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
-        watchLogs(baseLogPath);
+
+        // If this is the first time config has been valid we
+        // need to create a recorder. If the config was previously
+        // valid but has since changed, just do a reconfigure. 
+        if (recorder) {
+          recorder.reconfigure(storageDir, monitorIndex);
+        } else {
+          recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
+        }
+        watchLogs(baseLogPath); 
         pollWowProcess();
       } else {
         updateStatus(2);
@@ -381,6 +397,18 @@ ipcMain.on('getVideoState', (event) => {
 });
 
 /**
+ * Get the list of video files and their state.
+ */
+ipcMain.on('test', (event) => {
+  if (isConfigReady(cfg)) { 
+    console.info("Config is good, running test!");
+    runRecordingTest()
+  } else {
+    console.info("Config is bad, don't run test");
+  }
+});
+
+/**
  * Shutdown the app if all windows closed. 
  */
 app.on('window-all-closed', () => {
@@ -398,10 +426,6 @@ app
   .then(() => {
     console.log("App ready");
     createWindow();
-    if (!isConfigReady(cfg) || !getLatestLog(baseLogPath)) return;
-    recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
-    pollWowProcess();
-    watchLogs(baseLogPath);
   })
   .catch(console.log);
 

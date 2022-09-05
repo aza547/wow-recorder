@@ -1,16 +1,22 @@
 import { fixPathWhenPackaged } from "./util";
-
+import WaitQueue from 'wait-queue';
+const waitQueue = new WaitQueue<any>();
 const path = require('path');
-const { Subject } = require('rxjs');
-const { first } = require('rxjs/operators');
 const { byOS, OS } = require('./operatingSystems');
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
 
-const signals = new Subject();
-
 let obsInitialized = false;
 let scene = null;
+
+/*
+* Reconfigure the recorder without destroying it.
+*/
+const reconfigure = (outputPath: string, monitorIndex: number) => {
+  configureOBS(outputPath);
+  scene = setupScene(monitorIndex);
+  setupSources(scene);
+}
 
 /*
 * Init the library, launch OBS Studio instance, configure it, set up sources and scene
@@ -33,7 +39,7 @@ const initialize = (outputPath: string, monitorIndex: number) => {
 */
 const initOBS = () => {
   console.debug('Initializing OBS...');
-  osn.NodeObs.IPC.host(`obs-studio-node-example-${uuid()}`);
+  osn.NodeObs.IPC.host(`warcraft-recorder-${uuid()}`);
   osn.NodeObs.SetWorkingDirectory(fixPathWhenPackaged(path.join(__dirname,'../../', 'node_modules', 'obs-studio-node')));
 
   const obsDataPath = fixPathWhenPackaged(path.join(__dirname, 'osn-data')); // OBS Studio configs and logs
@@ -56,7 +62,7 @@ const initOBS = () => {
   }
 
   osn.NodeObs.OBS_service_connectOutputSignals((signalInfo: any) => {
-    signals.next(signalInfo);
+    waitQueue.push(signalInfo);
   });
 
   console.debug('OBS initialized');
@@ -99,11 +105,13 @@ const configureOBS = (baseStoragePath: string) => {
 
 /*
 * Get information about primary display
+* @param zero starting monitor index
 */
 const displayInfo = (displayIndex: number) => {
-  console.debug("Get display info for monitor:", displayIndex);
   const { screen } = require('electron');
-  const display = screen.getAllDisplays()[displayIndex];
+  const displays = screen.getAllDisplays();
+  console.info("Displays:", displays);
+  const display = displays[displayIndex];
   const { width, height } = display.size;
   const { scaleFactor } = display;
   return {
@@ -121,10 +129,15 @@ const displayInfo = (displayIndex: number) => {
 */
 const setupScene = (monitorIndex: number) => {
   const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
-  const { physicalWidth, physicalHeight } = displayInfo(monitorIndex);
+
+  // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
+  const monitorIndexFromZero = monitorIndex - 1; 
+  console.info("monitorIndexFromZero:", monitorIndexFromZero);
+  const { physicalWidth, physicalHeight } = displayInfo(monitorIndexFromZero);
 
   // Update source settings:
   let settings = videoSource.settings;
+  settings['monitor'] = monitorIndexFromZero;
   settings['width'] = physicalWidth;
   settings['height'] = physicalHeight;
   videoSource.update(settings);
@@ -195,8 +208,10 @@ const start = async () => {
     throw Error("OBS not initialised")
   }
 
+  console.log("obsRecorder: start");
   osn.NodeObs.OBS_service_startRecording();
-  const signalInfo = await getNextSignalInfo();
+
+  let signalInfo = await waitQueue.shift();
   assertSignal(signalInfo, "recording", "start");
 }
 
@@ -204,15 +219,17 @@ const start = async () => {
 * stop
 */
 const stop = async () => {
+  console.log("obsRecorder: stop");
   osn.NodeObs.OBS_service_stopRecording();
 
-  let signalInfo;
-
-  signalInfo = await getNextSignalInfo();
+  let signalInfo = await waitQueue.shift();
   assertSignal(signalInfo, "recording", "stopping");
-
-  signalInfo = await getNextSignalInfo();
+  
+  signalInfo = await waitQueue.shift();
   assertSignal(signalInfo, "recording", "stop");
+
+  signalInfo = await waitQueue.shift();
+  assertSignal(signalInfo, "recording", "wrote");
 }
 
 /*
@@ -293,36 +310,28 @@ const getAvailableValues = (category: any, subcategory: any, parameter: any) => 
   return parameterSettings.values.map( (value: any) => Object.values(value)[0]);
 }
 
-/*
-* getNextSignalInfo
-*/
-const getNextSignalInfo = () => {
-  return new Promise((resolve, reject) => {
-    signals.pipe(first()).subscribe((signalInfo: any) => resolve(signalInfo));
-
-    setTimeout(() => { 
-      reject('Output signal timeout')
-    }, 30000 );
-  });
-}
 
 /*
 * Assert a signal from OBS is as expected, otherwise throw an error. 
 */
 const assertSignal = (signalInfo: any, type: string, value: string) => {
 
+  if (signalInfo === undefined) {
+    throw Error("OBS behaved unexpectedly (1)");
+  }
+
   // Assert the type is as expected.
   if (signalInfo.type !== type) {
     console.error(signalInfo);
     console.error("OBS signal type unexpected", signalInfo.signal, value);
-    throw Error("OBS behaved unexpectedly");
+    throw Error("OBS behaved unexpectedly (2)");
   }
 
   // Assert the signal value is as expected.
   if (signalInfo.signal !== value) {
     console.error(signalInfo);
     console.error("OBS signal value unexpected", signalInfo.signal, value);
-    throw Error("OBS behaved unexpectedly");
+    throw Error("OBS behaved unexpectedly (3)");
   }
 
   console.debug("Asserted OBS signal:", type, value);
@@ -332,5 +341,6 @@ export {
   initialize,
   start,
   stop,
-  shutdown
+  shutdown,
+  reconfigure
 }
