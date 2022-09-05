@@ -219,6 +219,13 @@ const dungeonEncounters: { [id: number]: string } = {
   2442: "So'leah",
 };
 
+const instanceNamesByZoneId: { [id: number]: string } = {
+  ...dungeons,
+  13224: 'Castle Nathria',
+  13561: 'Sanctum of Domination',
+  13742: 'Sepulcher of the First Ones',
+};
+
 const dungeonAffixesById: { [id: number]: string } = {
     1: 'Overflowing',
     2: 'Skittish',
@@ -355,6 +362,7 @@ export {
     raids,
     battlegrounds,
     dungeons,
+    instanceNamesByZoneId,
     dungeonAffixesById,
     dungeonEncounters,
     specToClass,
