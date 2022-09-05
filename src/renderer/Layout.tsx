@@ -3,7 +3,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { categories, videoTabsSx, categoryTabSx, categoryTabsSx }  from '../main/constants';
 import VideoButton  from './VideoButton';
 
@@ -22,7 +22,7 @@ const ipc = window.electron.ipcRenderer;
 /**
  * Needed to style the tabs with the right color.
  */
-const useStyles = makeStyles({
+const useStyles = makeStyles()({
   tabs: {
     "& .MuiTab-root.Mui-selected": {
       color: '#bb4220'
@@ -138,7 +138,7 @@ export default function Layout() {
   /**
   * MUI styles.
   */
-  const styles = useStyles(); 
+  const { classes: styles } = useStyles();
 
   /**
    * Refresh handler.
