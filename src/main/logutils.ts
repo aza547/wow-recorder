@@ -117,6 +117,108 @@ const tailFile = (path: string) => {
 }    
 
 /**
+ * Splits a WoW combat line intelligently with respect to quotes,
+ * lists, tuples, and what have we.
+ * 
+ * TODO: Implement a full split including the time stamp and
+ *       log line type (e.g. ENCOUNTER_START)
+ */
+const splitLogLine = (line: string): any => {
+    let in_quote = false;
+    let list_items: string[][] = [];
+    let tuple_items: string[][] = [];
+    let in_what: string[] = [];
+    let args_list: any = [];
+    let value: any = '';
+
+    // eslint-disable-next-line no-plusplus
+    // Timestamp is always a fixed width of 18, and we want to skip that here.
+    for (let ptr = 18; ptr < line.length; ptr++) {
+        const c = line.charAt(ptr);
+        if (c === '\n') {
+            break;
+        }
+
+        if (in_quote) {
+            if (c === '"') {
+                in_quote = false;
+                continue;
+            }
+
+        } else {
+            switch (c) {
+            case ',':
+                const in_what_index = in_what.length - 1
+                if (in_what.length) {
+                    if (in_what[in_what_index] == 'tuple') {
+                        tuple_items[tuple_items.length - 1].push(value);
+                    } else if (in_what[in_what_index] == 'list') {
+                        list_items[list_items.length - 1].push(value);
+                    }
+                } else {
+                    args_list.push(value);
+                }
+
+                value = '';
+                continue;
+
+            case '"':
+                in_quote = true;
+                continue;
+
+            case '[':
+                list_items.push([]);
+                in_what.push('list');
+                continue;
+
+            case ']':
+                if (!list_items.length) {
+                    throw 'Unexpected ]. No list is open.';
+                }
+
+                if (value) {
+                    list_items[list_items.length - 1].push(value);
+                }
+
+                value = list_items.pop();
+                in_what.pop();
+                continue;
+
+            case '(':
+                tuple_items.push([]);
+                in_what.push('tuple');
+                continue;
+
+            case ')':
+                if (!tuple_items.length) {
+                    throw 'Unexpected ). No tuple is open.';
+                }
+
+                if (value) {
+                    tuple_items[tuple_items.length - 1].push(value);
+                }
+
+                value = tuple_items.pop();
+                in_what.pop();
+                continue;
+            }
+        }
+
+        value += c;
+    }
+
+    if (value) {
+        args_list.push(value)
+        }
+
+    if (in_what.length) {
+        throw 'Unexpected EOL. There are open tuples/lists.'
+    }
+
+    return args_list;
+}
+
+    /**
  * Handle a line from the WoW log. 
  */
 const handleLogLine = (line: string) => {
@@ -142,8 +244,8 @@ const handleLogLine = (line: string) => {
  */
 const handleArenaStartLine = (line: string) => {
     if (recorder.isRecording) return; 
-    const zoneID = parseInt(line.split(',')[1]);
-    const category = line.split(',')[3];
+    const lineArgs = splitLogLine(line);
+    const zoneID = parseInt(lineArgs[1], 10);
 
     // If all goes to plan we don't need this but we do it incase the game
     // crashes etc. so we can still get a reasonable duration.
@@ -151,7 +253,7 @@ const handleArenaStartLine = (line: string) => {
 
     metadata = {
         name: "name",
-        category: category,
+        category: lineArgs[3],
         zoneID: zoneID,
         duration: 0,
         result: false,
@@ -177,7 +279,8 @@ const handleArenaStartLine = (line: string) => {
     // Helpfully ARENA_MATCH_END events contain the game duration. Solo shuffle
     // ARENA_MATCH_END duration only counts the last game so needs special handling. 
     if (metadata.category !== VideoCategory.SoloShuffle) {
-        duration = parseInt(line.split(',')[2]);
+        const lineArgs = splitLogLine(line);
+        duration = parseInt(lineArgs[2], 10);
     } else {
         const soloShuffleStopDate = getCombatLogDate(line);
         const milliSeconds = (soloShuffleStopDate.getTime() - videoStartDate.getTime()); 
@@ -205,35 +308,27 @@ const handleArenaStartLine = (line: string) => {
  */
 const determineArenaMatchResult = (line: string): any[] => {
     if (playerCombatant === undefined) return [undefined, undefined];
+    const lineArgs = splitLogLine(line);
     const teamID = playerCombatant.teamID;
     const indexForMMR = (teamID == 0) ? 3 : 4; 
-    const MMR = parseInt(line.split(',')[indexForMMR]);    
-    const winningTeamID = parseInt(line.split(',')[1]);
+    const MMR = parseInt(lineArgs[indexForMMR], 10);
+    const winningTeamID = parseInt(lineArgs[1], 10);
     const win = (teamID === winningTeamID)
     return [win, MMR];
-}
-
-/**
- * Determines the raid encounter result.
- * @param line the ENCOUNTER_END event from the WoW log. 
- * @returns true if wipe, else false
- */
- const determineRaidEncounterResult = (line: string): boolean => {
-    return Boolean(parseInt(line.split(',')[5]));
 }
 
 /**
  * Handle a line from the WoW log. 
  */
  const handleRaidStartLine = (line: string) => {
-    const encounterID = parseInt(line.split(',')[1]);
+    const lineArgs = splitLogLine(line);
 
     videoStartDate = getCombatLogDate(line);
 
     metadata = {
         name: "name",
         category: VideoCategory.Raids,
-        encounterID: encounterID,
+        encounterID: parseInt(lineArgs[1], 10),
         duration: 0,
         result: false,
     }
@@ -256,12 +351,13 @@ const determineArenaMatchResult = (line: string): any[] => {
     // Add a few seconds so we reliably see the aftermath of a kill.
     const overrun = 15;
 
+    const lineArgs = splitLogLine(line);
     const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     const duration = Math.round(milliSeconds / 1000) + overrun;
 
     metadata.duration = duration; 
-    metadata.result = determineRaidEncounterResult(line);
+    metadata.result = Boolean(parseInt(lineArgs[5], 10));
     
     combatantMap.clear();
     playerCombatant = undefined;
@@ -274,7 +370,8 @@ const determineArenaMatchResult = (line: string): any[] => {
  */
  const handleZoneChange = (line: string) => {
     console.log("Handling zone change: ", line);
-    const zoneID = parseInt(line.split(',')[1]);
+    const lineArgs = splitLogLine(line);
+    const zoneID = parseInt(lineArgs[1], 10);
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
 
@@ -317,9 +414,10 @@ const determineArenaMatchResult = (line: string): any[] => {
     if (playerCombatant) return;
     if (combatantMap.size === 0) return;    
 
-    const srcGUID = line.split(',')[1];    
-    const srcNameRealm = removeQuotes(line.split(',')[2])
-    const srcFlags = parseInt(line.split(',')[3]);
+    const lineArgs = splitLogLine(line);
+    const srcGUID = lineArgs[1];    
+    const srcNameRealm = lineArgs[2]
+    const srcFlags = parseInt(lineArgs[3], 10);
     
     const srcCombatant = combatantMap.get(srcGUID);
     if (srcCombatant === undefined) return;
@@ -338,9 +436,10 @@ const determineArenaMatchResult = (line: string): any[] => {
  * @param line the COMBATANT_INFO line
  */
 const handleCombatantInfoLine = (line: string) => {
-    const GUID = line.split(',')[1];
-    const teamID = parseInt(line.split(',')[2]);
-    const specID = parseInt(line.split(',')[24]);
+    const lineArgs = splitLogLine(line);
+    const GUID = lineArgs[1];
+    const teamID = parseInt(lineArgs[2], 10);
+    const specID = parseInt(lineArgs[24], 10);
     let combatantInfo = new Combatant(GUID, teamID, specID);
     combatantMap.set(GUID, combatantInfo);
 }
@@ -349,13 +448,13 @@ const handleCombatantInfoLine = (line: string) => {
  * ZONE_CHANGE event into a BG.  
  */
  const battlegroundStart = (line: string) => {
-    const zoneID = parseInt(line.split(',')[1]);
-    const battlegroundName = battlegrounds[zoneID];
+    const lineArgs = splitLogLine(line);
+    const zoneID = parseInt(lineArgs[1], 10);
 
     videoStartDate = getCombatLogDate(line);
 
     metadata = {
-        name: battlegroundName,
+        name: battlegrounds[zoneID],
         category: VideoCategory.Battlegrounds,
         zoneID: zoneID,
         duration: 0,
@@ -428,15 +527,6 @@ const watchLogs = (logdir: any) => {
             lastLogFile = currentLogFile;
         }
     }, 1000);
-}
-
-/**
- * Removes double and single quotes from the given string value.
- * @param value the string value
- * @returns the string value with quotes removed.
- */
-const removeQuotes = (value: string): string => {
-    return value.replace(/['"]+/g, '');
 }
 
 /**
