@@ -498,17 +498,16 @@ const pollWowProcess = () => {
 /**
  * getCombatLogDate
  */
-const getCombatLogDate = (line: string) => {
-    const [date, time] = line.split(" ");
-    const [month, day] = date.split("/");
-    const [hours, mins, secs] = time.split(":");
-
+const getCombatLogDate = (line: string): Date => {
+    const [month, day, hours, mins, secs, msec] = line.split(/[ \/:\.]/, 6);
     const dateObj = new Date();
-    dateObj.setDate(parseInt(day));
-    dateObj.setMonth(parseInt(month));
-    dateObj.setHours(parseInt(hours));
-    dateObj.setMinutes(parseInt(mins));
-    dateObj.setSeconds(parseInt(secs));
+
+    dateObj.setDate(parseInt(day, 10));
+    dateObj.setMonth(parseInt(month, 10));
+    dateObj.setHours(parseInt(hours, 10));
+    dateObj.setMinutes(parseInt(mins, 10));
+    dateObj.setSeconds(parseInt(secs, 10));
+    dateObj.setMilliseconds(parseInt(msec, 10))
 
     return dateObj;
 }
