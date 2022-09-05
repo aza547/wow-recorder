@@ -1,23 +1,4 @@
-/**
- * isCategoryPVP
- */
- const isCategoryPVP = (category: string) => {
-    if (!category) return false;
-
-    const pvpCategories = [
-        "2v2", 
-        "3v3", 
-        "Skirmish", 
-        "Solo Shuffle", 
-        "Battlegrounds"
-    ];
-
-    if (pvpCategories.includes(category)) {
-        return true;
-    } else {
-        return false;
-    }
-}  
+import { VideoCategory } from "main/constants";
 
 /**
  * getResultText
@@ -26,24 +7,16 @@
 
     // Not sure how we can decide who won or lost yet. 
     // Combat log doesn't make it obvious.
-    if ((category == "Battlegrounds") || (category == "Solo Shuffle")) {
-        return "";
+    switch (category) {
+        case VideoCategory.MythicPlus:
+            return isGoodResult ? "Timed" : "Fail";
+
+        case VideoCategory.Raids:
+            return isGoodResult ? "Kill" : "Wipe";
+
+        default:
+            return isGoodResult ? "Win" : "Loss";
     }
-
-    const isPvp = isCategoryPVP(category);
-    let resultText: string;
-
-    if (isPvp && isGoodResult) {
-        resultText = "Win";     
-    } else if (isPvp && !isGoodResult) {
-        resultText = "Loss";
-    } else if (!isPvp && isGoodResult) {
-        resultText = "Kill";
-    } else {
-        resultText = "Wipe";
-    }
-
-    return resultText;
 } 
 
 /**
@@ -59,7 +32,6 @@
 }  
 
 export {
-    isCategoryPVP,
     getResultText,
     getFormattedDuration
 };
