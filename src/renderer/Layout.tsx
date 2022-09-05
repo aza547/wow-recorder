@@ -22,7 +22,7 @@ const ipc = window.electron.ipcRenderer;
 /**
  * Needed to style the tabs with the right color.
  */
-const useStyles = makeStyles({
+const useStyles = makeStyles()({
   tabs: {
     "& .MuiTab-root.Mui-selected": {
       color: '#bb4220'
@@ -138,7 +138,7 @@ export default function Layout() {
   /**
   * MUI styles.
   */
-  const styles = useStyles(); 
+  const { classes: styles } = useStyles();
 
   /**
    * Refresh handler.
