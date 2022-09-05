@@ -3,7 +3,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from 'tss-react/mui';
 import { categories, videoTabsSx, categoryTabSx, categoryTabsSx }  from '../main/constants';
 import VideoButton  from './VideoButton';
 
