@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { URL } from 'url';
 import path from 'path';
-import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
+import { VideoCategory, categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
 const chalk = require('chalk');
 
@@ -158,7 +158,7 @@ const getVideoZone = (metadata: Metadata) => {
     const encounterID = metadata.encounterID;
     const category = metadata.category;
 
-    const isRaidEncounter = (category === "Raids") && encounterID; 
+    const isRaidEncounter = (category === VideoCategory.Raids) && encounterID;
     let zone: string;
     
     if (isRaidEncounter) {

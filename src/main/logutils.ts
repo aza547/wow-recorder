@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds }  from './constants';
+import { VideoCategory, battlegrounds }  from './constants';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -176,7 +176,7 @@ const handleArenaStartLine = (line: string) => {
     
     // Helpfully ARENA_MATCH_END events contain the game duration. Solo shuffle
     // ARENA_MATCH_END duration only counts the last game so needs special handling. 
-    if (metadata.category !== "Solo Shuffle") {
+    if (metadata.category !== VideoCategory.SoloShuffle) {
         duration = parseInt(line.split(',')[2]);
     } else {
         const soloShuffleStopDate = getCombatLogDate(line);
@@ -227,13 +227,12 @@ const determineArenaMatchResult = (line: string): any[] => {
  */
  const handleRaidStartLine = (line: string) => {
     const encounterID = parseInt(line.split(',')[1]);
-    const category = "Raids";
 
     videoStartDate = getCombatLogDate(line);
 
     metadata = {
         name: "name",
-        category: category,
+        category: VideoCategory.Raids,
         encounterID: encounterID,
         duration: 0,
         result: false,
@@ -283,11 +282,11 @@ const determineArenaMatchResult = (line: string): any[] => {
     let isRecordingArena = false;
 
     if (metadata !== undefined) {
-        isRecordingBG = (metadata.category === "Battlegrounds");
-        isRecordingArena = (metadata.category === "2v2") || 
-                           (metadata.category === "3v3") || 
-                           (metadata.category === "Solo Shuffle") ||
-                           (metadata.category === "Skirmish");
+        isRecordingBG = (metadata.category === VideoCategory.Battlegrounds);
+        isRecordingArena = (metadata.category === VideoCategory.TwoVTwo) || 
+                           (metadata.category === VideoCategory.ThreeVThree) || 
+                           (metadata.category === VideoCategory.SoloShuffle) ||
+                           (metadata.category === VideoCategory.Skirmish);
     }
 
     if (!isRecording && isNewZoneBG) {
@@ -352,13 +351,12 @@ const handleCombatantInfoLine = (line: string) => {
  const battlegroundStart = (line: string) => {
     const zoneID = parseInt(line.split(',')[1]);
     const battlegroundName = battlegrounds[zoneID];
-    const category = "Battlegrounds";
 
     videoStartDate = getCombatLogDate(line);
 
     metadata = {
         name: battlegroundName,
-        category: category,
+        category: VideoCategory.Battlegrounds,
         zoneID: zoneID,
         duration: 0,
         result: false,

@@ -3,7 +3,7 @@ import * as React from 'react';
 import Tab from '@mui/material/Tab';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { categories, videoButtonSx, specToClass }  from '../main/constants';
+import { VideoCategory, categories, videoButtonSx, specToClass }  from '../main/constants';
 import { getResultText, getFormattedDuration } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
@@ -49,17 +49,22 @@ export default function VideoButton(props: any) {
 
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
-  const isBG = category === "Battlegrounds";
+  const isBG = category === VideoCategory.Battlegrounds;
 
   let buttonImage;
 
   // TODO, clean this ugly code up. What about M+ eventually?
-  if (category === "Raids") {
-    buttonImage = Images.raid[video.encounterID];
-  } else if (isBG) {
-    buttonImage = Images.battleground[video.zoneID];
-  } else {
-    buttonImage = Images.arena[video.zoneID];
+  switch (category) {
+    case VideoCategory.Raids:
+      buttonImage = Images.raid[video.encounterID];
+      break;
+
+      case VideoCategory.Battlegrounds:
+      buttonImage = Images.battleground[video.zoneID];
+      break;
+
+    default:
+      buttonImage = Images.arena[video.zoneID];
   }
 
   /**

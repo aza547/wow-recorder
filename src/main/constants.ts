@@ -1,14 +1,24 @@
 /**
  * List of supported categories. Order is the order they show up in the GUI.
  */
-const categories: string[]  = [
-    "2v2",
-    "3v3",
-    "Skirmish",
-    "Solo Shuffle",
-    "Mythic+",
-    "Raids",
-    "Battlegrounds"
+enum VideoCategory {
+  TwoVTwo = '2v2',
+  ThreeVThree = '3v3',
+  Skirmish = 'Skirmish',
+  SoloShuffle = 'Solo Shuffle',
+  MythicPlus = 'Mythic+',
+  Raids = 'Raids',
+  Battlegrounds = 'Battlegrounds',
+};
+
+const categories: string[] = [
+  VideoCategory.TwoVTwo,
+  VideoCategory.ThreeVThree,
+  VideoCategory.Skirmish,
+  VideoCategory.SoloShuffle,
+  VideoCategory.MythicPlus,
+  VideoCategory.Raids,
+  VideoCategory.Battlegrounds,
 ];
 
 /**
@@ -234,6 +244,7 @@ const specToClass: { [id: number]: string; } = {
 }
 
 export {
+    VideoCategory,
     categories,
     months,
     videoTabsSx,
