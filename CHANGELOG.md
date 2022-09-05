@@ -8,9 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+
+## [2.6.1] - 2022-09-05
+### Added
+### Changed
+### Fixed
 - [Issue 70](https://github.com/aza547/wow-recorder/issues/70) - Double clicking test button no longer breaks the test.
 - [Issue 77](https://github.com/aza547/wow-recorder/issues/77) - Don't expect hyphen in WoWCombatLog.txt. 
-- [Issue 82](https://github.com/aza547/wow-recorder/issues/82) - Don't fall over if a 5v5 war game recording is made.
+- [Issue 82](https://github.com/aza547/wow-recorder/issues/82) - Don't fall over if a 5v5 wargame recording is made.
 - Update various NPM packages to resolve various dependabot security issues.
 
 ## [2.6.0] - 2022-08-29
