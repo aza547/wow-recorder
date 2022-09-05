@@ -78,7 +78,7 @@ const wowProcessStopped = () => {
  * getLatestLog 
  */
 const getLatestLog = (path: any) => {
-    const globPath = path + 'WoWCombatLog-*.txt';
+    const globPath = path + 'WoWCombatLog*.txt';
 
     const logs = glob.sync(globPath)
         .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
