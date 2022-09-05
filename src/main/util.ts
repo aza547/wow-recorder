@@ -78,6 +78,9 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
     const metadata = getMetadataForVideo(video)
     if (metadata === undefined) return;
 
+    // Hilariously 5v5 is still a war game mode that will break things without this.
+    if (!categories.includes(metadata.category)) return;
+
     videoState[metadata.category].push({
         index: videoIndex[metadata.category]++,
         fullPath: video.name,
