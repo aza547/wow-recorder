@@ -222,20 +222,35 @@ const splitLogLine = (line: string): any => {
  * Handle a line from the WoW log. 
  */
 const handleLogLine = (line: string) => {
-    if (line.includes("ARENA_MATCH_START")) {
+    // Skip timestamp
+    let lineToken = line.substring(18);
+    // Get log line token
+    lineToken = lineToken.substring(0, lineToken.indexOf(','));
+
+    switch (lineToken) {
+        case "ARENA_MATCH_START":
         handleArenaStartLine(line);
-    } else if (line.includes("ARENA_MATCH_END")) {
+            break;
+        case "ARENA_MATCH_END":
         handleArenaStopLine(line);
-    } else if (line.includes("ENCOUNTER_START")) {
+            break;
+        case "ENCOUNTER_START":
         handleEncounterStartLine(line);
-    } else if (line.includes("ENCOUNTER_END")) {
+            break;
+        case "ENCOUNTER_END":
         handleEncounterStopLine(line);
-    } else if (line.includes("ZONE_CHANGE")) {
+            break;
+        case "ZONE_CHANGE":
         handleZoneChange(line);
-    } else if (line.includes("COMBATANT_INFO")) {
+            break;
+        case "COMBATANT_INFO":
         handleCombatantInfoLine(line);
-    } else if (line.includes("SPELL_AURA_APPLIED")){
+            break;
+        case "SPELL_AURA_APPLIED":
         handleSpellAuraAppliedLine(line);
+            break;
+        default:
+            break;
     }
 }
 
