@@ -131,9 +131,9 @@ const raids: { [id: number]: string; } = {
 }
 
 /**
- * Dungeons by ID. 
+ * Dungeons by zone ID.
  */
- const dungeons: { [id: number]: string; } = {
+const dungeonsByZoneId: { [id: number]: string; } = {
   1651: 'Return to Karazhan',
   1208: 'Grimrail Depot',
   1195: 'Iron Docks',
@@ -149,78 +149,136 @@ const raids: { [id: number]: string; } = {
   2441: "Tazavesh the Veiled Market",
 }
 
+/**
+ * Dungeons by map Id
+ * Names have been shortened, or abbreviated due to size constraints i
+ * <VideoButton/>
+ */
+const dungeonsByMapId: { [id: number]: string; } = {
+  166: 'Grimrail Depot',
+  169: 'Iron Docks',
+  206: 'Neltharion\'s Lair',
+  227: 'Karazhan: Lower',
+  234: 'Karazhan: Upper',
+  369: 'Mechagon: Junkyard',
+  370: 'Mechagon: Workshop',
+  375: 'Mists of Tirna Scithe',
+  376: 'The Necrotic Wake',
+  377: 'De Other Side',
+  378: 'Halls of Atonement',
+  379: 'Plaguefall',
+  380: 'Sanguine Depths',
+  381: 'Spires of Ascension',
+  382: 'Theater of Pain',
+  391: 'Tazavesh: Streets',
+  392: 'Tazavesh: Gambit',
+}
+
 const dungeonEncounters: { [id: number]: string } = {
+  // Grimrail Depot
   1715: 'Rocketspark and Borka',
   1732: 'Nitrogg Thundertower',
   1736: 'Skylord Tovra',
+
+  // Iron Docks
   1748: 'Grimrail Enforcers',
   1749: "Fleshrender Nok'gar",
   1750: 'Oshir',
   1754: 'Skulloc, Son of Gruul',
+
+  // Nelthairon's Lair
   1790: 'Rokmora',
   1791: 'Ularogg Cragshaper',
   1792: 'Naraxas',
   1793: 'Dargrul the Underking',
+
+  // Return to Karazhan: Lower
   1954: 'Maiden of Virtue',
   1957: 'Opera Hall',
-  1959: 'Mana Devourer',
   1960: 'Attumen the Huntsman',
   1961: 'Moroes',
+
+  // Return to Karazhan: Upper
   1964: 'The Curator',
+  1959: 'Mana Devourer',
   1965: 'Shade of Medivh',
   2017: "Viz'aduum the Watcher",
+
+  // Mechagon: Workshop
   2257: 'Tussle Tonks',
   2258: 'K.U.-J.0.',
   2259: "Machinist's Garden",
   2260: 'King Mechagon',
+
+  // Mechagon: Junkyard
   2290: 'King Gobbamak',
   2291: 'HK-8 Aerial Oppression Unit',
   2292: 'Gunker',
   2312: 'Trixie & Naeno',
+
+  // Spires of Ascension
   2356: 'Ventunax',
   2357: 'Kin-Tara',
   2358: 'Oryphrion',
   2359: 'Devos, Paragon of Loyalty',
+
+  // Sanguine Depths
   2360: 'Kryxis the Voracious',
   2361: 'Executor Tarvold',
   2362: 'Grand Proctor Beryllia',
   2363: 'General Kaal',
+
+  // Theater of Pain
   2364: "Kul'tharok",
   2365: 'Gorechop',
   2366: 'Xav the Unfallen',
+  2391: 'An Affront of Challengers',
+  2404: 'Mordretha',
+
+  // Halls of Atonement
   2380: 'Echelon',
   2381: 'Lord Chamberlain',
+  2401: 'Halkias, the Sin-Stained Goliath',
+  2403: 'High Adjudicator Aleez',
+
+  // Plaguefall
   2382: 'Globgrog',
   2384: 'Doctor Ickus',
   2385: 'Domina Venomblade',
   2386: 'Stradama Margrave',
+
+  // Necrotic Wake
   2387: 'Blightbone',
-  2388: 'Amarth  The Harvester',
+  2388: 'Amarth, The Harvester',
   2389: 'Surgeon Stitchflesh',
   2390: 'Nalthor the Rimebinder',
-  2391: 'An Affront of Challengers',
-  2392: 'Mistcaller',
-  2393: "Tred'ova",
+
+  // De Other Side
   2394: 'The Manastorms',
   2395: 'Hakkar, the Soulflayer',
   2396: "Mueh'zala",
-  2397: 'Ingra Maloch',
   2400: "Dealer Xy'exa",
-  2401: 'Halkias, the Sin-Stained Goliath',
-  2403: 'High Adjudicator Aleez',
-  2404: 'Mordretha',
+
+  // Mists of Tirna Scithe
+  2397: 'Ingra Maloch',
+  2392: 'Mistcaller',
+  2393: "Tred'ova",
+
+  // Tazavesh: So'leah's Gambit
   2419: "Timecap'n Hooktail",
+  2426: 'Hylbrande',
+  2442: "So'leah",
+
+  // Tazavesh: Streets of Wonder
   2424: 'Mailroom Mayhem',
   2425: "Zo'phex the Sentinel",
-  2426: 'Hylbrande',
+  2441: 'The Grand Menagerie',
   2437: "So'azmi",
   2440: "Myza's Oasis",
-  2441: 'The Grand Menagerie',
-  2442: "So'leah",
 };
 
 const instanceNamesByZoneId: { [id: number]: string } = {
-  ...dungeons,
+  ...dungeonsByZoneId,
   13224: 'Castle Nathria',
   13561: 'Sanctum of Domination',
   13742: 'Sepulcher of the First Ones',
@@ -262,7 +320,7 @@ const zones: { [id: number]: string; } = {
     ...arenas,
     ...raids,
     ...battlegrounds,
-    ...dungeons,
+    ...dungeonsByZoneId,
 }
 
 const videoTabsSx = {
@@ -361,7 +419,8 @@ export {
     arenas,
     raids,
     battlegrounds,
-    dungeons,
+    dungeonsByMapId,
+    dungeonsByZoneId,
     instanceNamesByZoneId,
     dungeonAffixesById,
     dungeonEncounters,
