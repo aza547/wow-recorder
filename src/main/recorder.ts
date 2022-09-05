@@ -218,6 +218,13 @@ const glob = require('glob');
             deleteVideo(video.name);
         }
     }
+
+    /**
+     * Shutdown OBS.
+     */
+    shutdown = () => {
+        obsRecorder.shutdown();
+    }
 }
 
 export {

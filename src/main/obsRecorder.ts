@@ -101,6 +101,7 @@ const configureOBS = (baseStoragePath: string) => {
 * Get information about primary display
 */
 const displayInfo = (displayIndex: number) => {
+  console.debug("Get display info for monitor:", displayIndex);
   const { screen } = require('electron');
   const display = screen.getAllDisplays()[displayIndex];
   const { width, height } = display.size;
@@ -120,7 +121,6 @@ const displayInfo = (displayIndex: number) => {
 */
 const setupScene = (monitorIndex: number) => {
   const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
-  
   const { physicalWidth, physicalHeight } = displayInfo(monitorIndex);
 
   // Update source settings:

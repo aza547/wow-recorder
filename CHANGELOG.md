@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Better ZONE_CHANGE tests. 
 - Added plumbing for future classic support.
-- Improved logging more logs. 
+- Added a bunch more logging. 
 - Added plumbing for monitor selection support. 
+- [Issue 2](https://github.com/aza547/wow-recorder/issues/2) - Add a monitor selection config option.
 
 ### Changed
 - Assert that OBS behaves as expected or crash the app, previously we would just log this and get into god knows what error states.  
+- No longer require the application to be restarted on a config change.
 
 ### Fixed
 - Rename window from "Arena Recorder" to "Warcraft Recorder". 

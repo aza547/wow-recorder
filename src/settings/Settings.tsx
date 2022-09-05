@@ -12,6 +12,7 @@ export default function Settings() {
   const [storagePath] = React.useState(window.electron.store.get('storage-path'));
   const [logPath] = React.useState(window.electron.store.get('log-path'));
   const [maxStorage] = React.useState(window.electron.store.get('max-storage'));
+  const [monitorIndex] = React.useState(window.electron.store.get('monitor-index'));
 
   const [startUp, setStartUp] = React.useState(() => {
     return (window.electron.store.get('start-up') === 'true');
@@ -32,7 +33,8 @@ export default function Settings() {
     saveItem("log-path");
     saveItem("max-storage");
     saveItem("start-up");
-    closeSettings();
+    saveItem("monitor-index");
+    ipc.sendMessage('settingsWindow', ['update']);
   }
 
   /**
@@ -74,6 +76,14 @@ export default function Settings() {
   }
 
   /**
+   * Event handler when user types a new value for max storage.
+   */
+  const updateMonitorIndexValue = (event: any) => {
+    const monitorIndexElement = document.getElementById("monitor-index");
+    if (monitorIndexElement) monitorIndexElement.setAttribute("value", event.target.value);
+  }
+
+  /**
    * setSetting, why not just use react state hook?
    */
    const setSetting = (args: any) => {
@@ -112,6 +122,12 @@ export default function Settings() {
                 <div className="form-group">
                   <label> Max Storage (GB) </label>
                   <input type="text" id="max-storage" className="form-control" placeholder={maxStorage} onChange={(event) => updateMaxStorageValue(event)}/>
+                </div>
+              </div>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
+                  <label> Monitor Number </label>
+                  <input type="text" id="monitor-index" className="form-control" placeholder={monitorIndex} onChange={(event) => updateMonitorIndexValue(event)}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">

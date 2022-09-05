@@ -332,9 +332,27 @@ const deleteOldestVideo = (storageDir: any) => {
  * isConfigReady
  */
  const isConfigReady = (cfg: any) => {
-    if (!cfg.get('storage-path')) return false;
-    if (!cfg.get('log-path')) return false;
-    if (!cfg.get('max-storage')) return false;
+
+    if (!cfg.get('storage-path')) {
+        return false;
+    }
+
+    if (!cfg.get('log-path')) {
+        return false;
+    }
+
+    const maxStorage = parseInt(cfg.get('max-storage'));
+
+    if ((!maxStorage) && (maxStorage > 0)) { 
+        return false;
+    }
+
+    const monitorIndex = parseInt(cfg.get('monitor-index'));
+
+    if ((!monitorIndex) || (monitorIndex < 1) || (monitorIndex > 3)) {
+        return false;
+    }
+
     return true;
 }  
 
@@ -452,6 +470,26 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
     });
 }
 
+/**
+ * Gets string value from the config in a more reliable manner.
+ * @param cfg the config store
+ * @param key the key
+ * @returns the string config
+ */
+const getPathConfigSafe = (cfg: any, key: string) : string => {
+    return cfg.has(key) ? path.join(cfg.get(key), "/") : "";
+}
+
+/**
+ * Gets number value from the config in a more reliable manner.
+ * @param cfg the config store
+ * @param preference the preference
+ * @returns the number config
+ */
+ const getNumberConfigSafe = (cfg: any, preference: string) : number => {
+    return cfg.has(preference) ? parseInt(cfg.get(preference)) : NaN;
+}
+
 export {
     getVideoState,
     writeMetadataFile,
@@ -462,5 +500,7 @@ export {
     toggleVideoProtected,
     fixPathWhenPackaged,
     getNewestVideo,
-    cutVideo
+    cutVideo,
+    getPathConfigSafe,
+    getNumberConfigSafe
 };
