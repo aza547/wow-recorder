@@ -4,7 +4,7 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { makeStyles } from 'tss-react/mui';
-import { categories, videoTabsSx, categoryTabSx, categoryTabsSx }  from '../main/constants';
+import { categories, videoTabsSx, categoryTabSx, categoryTabsSx, VideoCategory }  from '../main/constants';
 import VideoButton  from './VideoButton';
 
 /**
@@ -12,6 +12,7 @@ import VideoButton  from './VideoButton';
  */
 import readyPoster  from  "../../assets/poster/ready.png";
 import notReadyPoster from  "../../assets/poster/not-ready.png";
+import { dungeon } from './images';
 
 /**
  * For shorthand referencing. 
@@ -127,7 +128,7 @@ export default function Layout() {
         ...prevState, 
         videoIndex: newValue,
         videoSeek: 0,
-      } 
+      }
     })
   };
 
@@ -212,11 +213,17 @@ export default function Layout() {
     const video = state.videoState[category][state.videoIndex];
     const videoFullPath = video.fullPath;
     const key = "videoPanel" + index;
+    const isMythicPlus = video.category === VideoCategory.MythicPlus && video.challengeMode !== undefined
+    let videoPoster = readyPoster;
+
+    if (isMythicPlus) {
+      videoPoster = dungeon[video.challengeMode.zoneId];
+    }
 
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
-        <div className="video-container">
-          <video key={ videoFullPath } className="video" poster={ readyPoster } id='video-player' controls>
+        <div className={ 'video-container' + (isMythicPlus ? ' mythic-keystone' : '')}>
+          <video key={ videoFullPath } className="video" poster={ videoPoster } id='video-player' controls>
             <source src={ videoFullPath } />
           </video>
         </div>
