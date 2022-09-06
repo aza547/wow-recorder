@@ -9,7 +9,7 @@ import { VideoCategory } from "main/constants";
     // Combat log doesn't make it obvious.
     switch (category) {
         case VideoCategory.MythicPlus:
-            return isGoodResult ? "Timed" : "Fail";
+            return isGoodResult ? "Timed" : "Depleted";
 
         case VideoCategory.Raids:
             return isGoodResult ? "Kill" : "Wipe";
