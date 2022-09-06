@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
 import { VideoCategory, categories, videoButtonSx, specToClass, dungeonEncounters, dungeonsByMapId }  from 'main/constants';
 import { VideoSegmentType, calculateCompletionResult } from 'main/keystone';
-import { getResultText, getFormattedDuration } from './rendererutils';
+import { getResultText, getFormattedDuration, getVideoResult } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
@@ -25,7 +25,7 @@ export default function VideoButton(props: any) {
   const video = state.videoState[category][videoIndex];
   const videoPath = video.fullPath;
 
-  const isGoodResult = video.result;
+  const isGoodResult = getVideoResult(video);
   const resultText = getResultText(category, isGoodResult);
   const MMR = video.teamMMR ? ("MMR: " + video.teamMMR) : undefined;
 

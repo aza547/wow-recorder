@@ -22,7 +22,7 @@ class ChallengeModeVideoSegment {
 };
 
 class ChallengeModeDungeon {
-    completed: boolean = false;
+    timed: boolean = false;
     duration: number = 0;
     videoSegments: ChallengeModeVideoSegment[] = []
 
@@ -85,7 +85,7 @@ class ChallengeModeDungeon {
  *
  * Return value is a number between 0 and 3:
  *
- * 0   = depleted
+ * 0   = depleted,
  * 1-3 = keystone upgrade levels
  */
 const calculateCompletionResult = (mapId: number, duration: number): number => {

@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { ChallengeModeDungeon, ChallengeModeVideoSegment, VideoSegmentType } from './keystone';
+import { calculateCompletionResult, ChallengeModeDungeon, ChallengeModeVideoSegment, VideoSegmentType } from './keystone';
 import { VideoCategory, battlegrounds }  from './constants';
 
 const tail = require('tail').Tail;
@@ -419,6 +419,9 @@ const handleChallengeModeEndLine = (line: string) => {
     // The actual log duration of the dungeon, from which keystone upgrade
     // levels can be calculated
     activeChallengeMode.duration = Math.round(parseInt(lineArgs[4], 10) / 1000);
+
+    // Calculate whether the key was timed or not
+    activeChallengeMode.timed = calculateCompletionResult(activeChallengeMode.mapId, activeChallengeMode.duration) > 0;
 
     // Realistically, this can't fail, but .find() can fail and that's
     // why it can return  'undefined'

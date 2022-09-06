@@ -19,6 +19,13 @@ import { VideoCategory } from "main/constants";
     }
 } 
 
+const getVideoResult = (video: any): boolean => {
+    if (video.challengeMode !== undefined) {
+        return Boolean(video.challengeMode.timed)
+    }
+
+    return video.result
+}
 /**
  * getFormattedDuration
  * 
@@ -33,5 +40,6 @@ import { VideoCategory } from "main/constants";
 
 export {
     getResultText,
-    getFormattedDuration
+    getVideoResult,
+    getFormattedDuration,
 };
