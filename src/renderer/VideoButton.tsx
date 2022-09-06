@@ -125,15 +125,16 @@ export default function VideoButton(props: any) {
     return 'Unknown boss';
   }
 
-  const keystoneResult = calculateCompletionResult(
-    video.challengeMode.mapId,
-    video.challengeMode.duration
-  );
-  const keystonePlusses = '+'.repeat(keystoneResult)
-
   const buttonClasses = ['videoButton'];
+  let keystonePlusses;
   let mythicKeystoneSegments = []
   if (isMythicPlus) {
+    const keystoneResult = calculateCompletionResult(
+      video.challengeMode.mapId,
+      video.challengeMode.duration
+    );
+    keystonePlusses = '+'.repeat(keystoneResult)
+
     buttonClasses.push('dungeon')
 
     const videoSegments = video.challengeMode.videoSegments.map((segment: any) => {
