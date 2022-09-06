@@ -272,9 +272,7 @@ const handleUnitdiedLine = (line: string) => {
         return;
     }
 
-    if (!challengeModeUnitDiedTime) {
-        challengeModeUnitDiedTime = getCombatLogDate(line);
-    }
+    challengeModeUnitDiedTime = getCombatLogDate(line);
 }
 
 /**
@@ -375,6 +373,8 @@ const handleChallengeModeStartLine = (line: string) => {
         VideoSegmentType.Trash, videoStartDate, 0
     ));
 
+    console.debug("[ChallengeMode] Starting Challenge Mode dungeon")
+
     metadata = {
         name: lineArgs[1],
         encounterID: parseInt(lineArgs[1], 10),
@@ -421,14 +421,16 @@ const handleChallengeModeEndLine = (line: string) => {
     // Realistically, this can't fail, but .find() can fail and that's
     // why it can return  'undefined'
     const lastBossEncounter = activeChallengeMode.getLastBossEncounter()
-    if (lastBossEncounter) {
+    if (lastBossEncounter && challengeModeUnitDiedTime) {
         // If we didn't see any unit kills in the last (trash) segment
-        // within 1 second of the last ENCOUNTER_END, remove it as it's useless.
-        const sawUnitsDieAfterEncounterEnd = lastBossEncounter.logEnd.getTime() - activeChallengeMode.videoSegments[-1].logEnd.getTime()
-        if (sawUnitsDieAfterEncounterEnd <= 1) {
+        // within 250 ms of the last ENCOUNTER_END, remove it as it's useless.
+        const sawUnitsDieAfterEncounterEnd = challengeModeUnitDiedTime.getTime() - lastBossEncounter.logEnd.getTime()
+        if (sawUnitsDieAfterEncounterEnd <= 250) {
+            console.debug("[ChallengeMode] Removing last video segment (last unit died " + sawUnitsDieAfterEncounterEnd + " ms after encounter)")
             activeChallengeMode.removeLastSegment();
         }
     } else {
+        console.debug("[ChallengeMode] Ending current video segment")
         activeChallengeMode.endVideoSegment(videoStopDate);
     }
 
@@ -458,6 +460,7 @@ const getRelativeTimestampForVideoSegment = (currentDate: Date): number => {
             encounterID
         )
         activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
+        console.debug("[ChallengeMode] Starting new boss encounter")
 
         return;
     }
@@ -496,6 +499,7 @@ const getRelativeTimestampForVideoSegment = (currentDate: Date): number => {
 
             // Add a trash segment as the boss encounter ended
             activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
+            console.debug("[ChallengeMode] Ending boss encounter")
 
             // Flag that we haven't seen any kills
             challengeModeUnitDiedTime = null
