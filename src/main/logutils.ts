@@ -226,8 +226,10 @@ const splitLogLine = (line: string): any => {
  * Handle a line from the WoW log. 
  */
 const handleLogLine = (line: string) => {
-    // Skip timestamp
-    let lineToken = line.substring(18);
+    // Skip timestamp and trim the start as there can be between
+    // 0 - 3 spaces.
+    let lineToken = line.substring(18).trimStart();
+
     // Get log line token
     lineToken = lineToken.substring(0, lineToken.indexOf(','));
 
