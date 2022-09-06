@@ -136,7 +136,7 @@ const splitLogLine = (line: string): any => {
     let value: any = '';
 
     // eslint-disable-next-line no-plusplus
-    // Timestamp is always a fixed width of 18, and we want to skip that here.
+    // Timestamp is never longer than 18 charaters, and we want to skip that here.
     for (let ptr = 18; ptr < line.length; ptr++) {
         const c = line.charAt(ptr);
         if (c === '\n') {
