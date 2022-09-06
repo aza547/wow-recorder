@@ -53,10 +53,16 @@ class ChallengeModeDungeon {
         return this.videoSegments.at(-1)
     }
 
+    /**
+     * Find and return the last video segment from a boss encounter
+     */
     getLastBossEncounter(): ChallengeModeVideoSegment | undefined {
         return this.videoSegments.slice().reverse().find(v => v.segmentType === VideoSegmentType.BossEncounter);
     }
 
+    /**
+     * End a video segment by setting its logEnd date.
+     */
     endVideoSegment(logDate: Date) {
         const currentSegment = this.getCurrentVideoSegment()
         if (currentSegment) {
@@ -64,12 +70,24 @@ class ChallengeModeDungeon {
         }
     }
 
-    // Remove the last video segment
+    /**
+     * Pop the last video segment and discard it
+     */
     removeLastSegment() {
         this.videoSegments.pop();
     }
 };
 
+/**
+ * Calculate the completion result of a Mythic Keystone
+ * based on the duration of the dungeon (from the logs) tested against
+ * the dungeon timer values from `dungeonTimersByMapId`.
+ *
+ * Return value is a number between 0 and 3:
+ *
+ * 0   = depleted
+ * 1-3 = keystone upgrade levels
+ */
 const calculateCompletionResult = (mapId: number, duration: number): number => {
     const timerValues = dungeonTimersByMapId[mapId]
 
