@@ -6,15 +6,19 @@ enum VideoSegmentType {
 };
 
 class ChallengeModeVideoSegment {
-    logEnd?: Date
-    result?: Boolean;
+    logEnd: Date
+    result?: Boolean
 
     constructor(
         public segmentType: VideoSegmentType,
         public logStart: Date,
         public ts: number,
         public encounterId?: number
-    ) {}
+    ) {
+        // Initially, let's set this to log start date to avoid logEnd
+        // potentially being undefined.
+        this.logEnd = logStart
+    }
 };
 
 class ChallengeModeDungeon {
@@ -47,6 +51,10 @@ class ChallengeModeDungeon {
 
     getCurrentVideoSegment(): ChallengeModeVideoSegment | undefined {
         return this.videoSegments.at(-1)
+    }
+
+    getLastBossEncounter(): ChallengeModeVideoSegment | undefined {
+        return this.videoSegments.reverse().find(v => v.segmentType === VideoSegmentType.BossEncounter);
     }
 
     endVideoSegment(logDate: Date) {

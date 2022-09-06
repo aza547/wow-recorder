@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { URL } from 'url';
 import path from 'path';
-import { VideoCategory, categories, months, zones, instanceNamesByZoneId, dungeons }  from './constants';
+import { VideoCategory, categories, months, zones, instanceNamesByZoneId, dungeonsByMapId }  from './constants';
 import { Metadata }  from './logutils';
 const chalk = require('chalk');
 
@@ -157,7 +157,7 @@ const getVideoZone = (metadata: Metadata) => {
         if (category === VideoCategory.Raids || category === VideoCategory.MythicPlus) {
             return getInstanceName(zoneID);
         }
-    
+
         return zones[zoneID];
     }
 
@@ -179,11 +179,15 @@ const getVideoZone = (metadata: Metadata) => {
  * Get the encounter name.
  */
 const getVideoEncounter = (metadata: Metadata) => {
+    if (metadata.challengeMode !== undefined) {
+        return dungeonsByMapId[metadata.challengeMode.mapId];
+    }
+
     if (metadata.encounterID) { 
         return zones[metadata.encounterID]; 
-    } else {
-        return metadata.category; 
     }
+
+    return metadata.category;
 }
 
 /**

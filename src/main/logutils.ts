@@ -1,6 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
+import { ChallengeModeDungeon, ChallengeModeVideoSegment, VideoSegmentType } from './keystone';
 import { VideoCategory, battlegrounds }  from './constants';
 
 const tail = require('tail').Tail;
@@ -17,6 +18,10 @@ let combatantMap: Map<string, Combatant> = new Map();
 let playerCombatant: Combatant | undefined;
 let testRunning: boolean = false;
 
+// Time of first UNIT_DIED line seen after an ENCOUNTER_END
+let challengeModeUnitDiedTime: Date | null = null;
+let activeChallengeMode: ChallengeModeDungeon | undefined;
+
 /**
  * wowProcessStopped
  */
@@ -25,6 +30,7 @@ let testRunning: boolean = false;
     category: string;
     zoneID?: number;
     encounterID?: number;
+    challengeMode?: ChallengeModeDungeon;
     duration: number;
     result: boolean;
     playerName?: string;
@@ -120,8 +126,6 @@ const tailFile = (path: string) => {
  * Splits a WoW combat line intelligently with respect to quotes,
  * lists, tuples, and what have we.
  * 
- * TODO: Implement a full split including the time stamp and
- *       log line type (e.g. ENCOUNTER_START)
  */
 const splitLogLine = (line: string): any => {
     let in_quote = false;
@@ -229,28 +233,47 @@ const handleLogLine = (line: string) => {
 
     switch (lineToken) {
         case "ARENA_MATCH_START":
-        handleArenaStartLine(line);
+            handleArenaStartLine(line);
             break;
         case "ARENA_MATCH_END":
-        handleArenaStopLine(line);
+            handleArenaStopLine(line);
             break;
         case "ENCOUNTER_START":
-        handleEncounterStartLine(line);
+            handleEncounterStartLine(line);
             break;
         case "ENCOUNTER_END":
-        handleEncounterStopLine(line);
+            handleEncounterStopLine(line);
+            break;
+        case "CHALLENGE_MODE_START":
+            handleChallengeModeStartLine(line);
+            break;
+        case "CHALLENGE_MODE_END":
+            handleChallengeModeEndLine(line);
             break;
         case "ZONE_CHANGE":
-        handleZoneChange(line);
+            handleZoneChange(line);
             break;
         case "COMBATANT_INFO":
-        handleCombatantInfoLine(line);
+            handleCombatantInfoLine(line);
             break;
         case "SPELL_AURA_APPLIED":
-        handleSpellAuraAppliedLine(line);
+            handleSpellAuraAppliedLine(line);
+            break;
+        case "UNIT_DIED":
+            handleUnitdiedLine(line);
             break;
         default:
             break;
+    }
+}
+
+const handleUnitdiedLine = (line: string) => {
+    if (!activeChallengeMode) {
+        return;
+    }
+
+    if (!challengeModeUnitDiedTime) {
+        challengeModeUnitDiedTime = getCombatLogDate(line);
     }
 }
 
@@ -332,18 +355,119 @@ const determineArenaMatchResult = (line: string): any[] => {
     return [win, MMR];
 }
 
+const handleChallengeModeStartLine = (line: string) => {
+    const lineArgs = splitLogLine(line);
+
+    if (activeChallengeMode) {
+        return;
+    }
+
+    videoStartDate = getCombatLogDate(line);
+
+    activeChallengeMode = new ChallengeModeDungeon(
+        parseInt(lineArgs[2], 10), // zoneId
+        parseInt(lineArgs[3], 10), // mapId
+        parseInt(lineArgs[4], 10), // Keystone Level
+        lineArgs[5].map((v: string) => parseInt(v, 10)) // Array of affixes, as numbers
+    )
+
+    activeChallengeMode.addVideoSegment(new ChallengeModeVideoSegment(
+        VideoSegmentType.Trash, videoStartDate, 0
+    ));
+
+    metadata = {
+        name: lineArgs[1],
+        encounterID: parseInt(lineArgs[1], 10),
+        category: VideoCategory.MythicPlus,
+        zoneID: parseInt(lineArgs[5]),
+        duration: 0,
+        result: false,
+        challengeMode: activeChallengeMode
+    };
+
+    recorder.start();
+};
+
+const handleChallengeModeEndLine = (line: string) => {
+    if (!recorder.isRecording || !activeChallengeMode) {
+        return;
+    }
+
+    const lineArgs = splitLogLine(line);
+
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;
+    }
+
+    // Add a few seconds so we reliably see the aftermath of a kill.
+    const overrun = 5;
+
+    const videoStopDate = getCombatLogDate(line);
+    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime());
+    const duration = Math.round(milliSeconds / 1000);
+
+    metadata.duration = duration + overrun;
+    metadata.result = Boolean(parseInt(lineArgs[1]));
+
+    combatantMap.clear();
+    playerCombatant = undefined;
+
+    // The actual log duration of the dungeon, from which keystone upgrade
+    // levels can be calculated
+    activeChallengeMode.duration = Math.round(parseInt(lineArgs[4], 10) / 1000);
+
+    // Realistically, this can't fail, but .find() can fail and that's
+    // why it can return  'undefined'
+    const lastBossEncounter = activeChallengeMode.getLastBossEncounter()
+    if (lastBossEncounter) {
+        // If we didn't see any unit kills in the last (trash) segment
+        // within 1 second of the last ENCOUNTER_END, remove it as it's useless.
+        const sawUnitsDieAfterEncounterEnd = lastBossEncounter.logEnd.getTime() - activeChallengeMode.videoSegments[-1].logEnd.getTime()
+        if (sawUnitsDieAfterEncounterEnd <= 1) {
+            activeChallengeMode.removeLastSegment();
+        }
+    } else {
+        activeChallengeMode.endVideoSegment(videoStopDate);
+    }
+
+    recorder.stop(metadata, overrun);
+};
+
+
+const getRelativeTimestampForVideoSegment = (currentDate: Date): number => {
+    if (!videoStartDate) {
+        return 0;
+    }
+
+    return (currentDate.getTime() - videoStartDate.getTime()) / 1000;
+};
+
 /**
  * Handle a line from the WoW log. 
  */
  const handleEncounterStartLine = (line: string) => {
     const lineArgs = splitLogLine(line);
+    const encounterID = parseInt(lineArgs[1], 10)
+    const videoStopDate = getCombatLogDate(line);
 
-    videoStartDate = getCombatLogDate(line);
+    if (recorder.isRecording && activeChallengeMode) {
+        const vSegment = new ChallengeModeVideoSegment(
+            VideoSegmentType.BossEncounter, videoStopDate, getRelativeTimestampForVideoSegment(videoStopDate),
+            encounterID
+        )
+        activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
+
+        return;
+    }
+
+    videoStartDate = videoStopDate;
 
     metadata = {
         name: "name",
         category: VideoCategory.Raids,
-        encounterID: parseInt(lineArgs[1], 10),
+        encounterID: encounterID,
         duration: 0,
         result: false,
     }
@@ -355,7 +479,30 @@ const determineArenaMatchResult = (line: string): any[] => {
  * Handle a line from the WoW log. 
  */
  const handleEncounterStopLine = (line: string) => {
-    if (!recorder.isRecording) return; 
+    const videoStopDate = getCombatLogDate(line);
+    const lineArgs = splitLogLine(line);
+    const encounterResult = Boolean(parseInt(lineArgs[5], 10));
+
+    if (recorder.isRecording) {
+        if (activeChallengeMode) {
+            const currentSegment = activeChallengeMode.getCurrentVideoSegment()
+            if (currentSegment) {
+                currentSegment.result = encounterResult
+            }
+
+            const vSegment = new ChallengeModeVideoSegment(
+                VideoSegmentType.Trash, videoStopDate, getRelativeTimestampForVideoSegment(videoStopDate)
+            )
+
+            // Add a trash segment as the boss encounter ended
+            activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
+
+            // Flag that we haven't seen any kills
+            challengeModeUnitDiedTime = null
+        }
+
+        return;
+    }
 
     if (playerCombatant) {
         metadata.playerName = playerCombatant.name;
@@ -366,13 +513,11 @@ const determineArenaMatchResult = (line: string): any[] => {
     // Add a few seconds so we reliably see the aftermath of a kill.
     const overrun = 15;
 
-    const lineArgs = splitLogLine(line);
-    const videoStopDate = getCombatLogDate(line);
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     const duration = Math.round(milliSeconds / 1000) + overrun;
 
     metadata.duration = duration; 
-    metadata.result = Boolean(parseInt(lineArgs[5], 10));
+    metadata.result = encounterResult
     
     combatantMap.clear();
     playerCombatant = undefined;
@@ -657,5 +802,5 @@ export {
     getLatestLog,
     pollWowProcess,
     runRecordingTest,
-    Metadata
+    Metadata,
 };
