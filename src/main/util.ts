@@ -84,12 +84,9 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
     videoState[metadata.category].push({
         index: videoIndex[metadata.category]++,
         fullPath: video.name,
+        ...metadata,
         zone: getVideoZone(metadata),
-        zoneID: metadata.zoneID,
         encounter: getVideoEncounter(metadata),
-        encounterID: metadata.encounterID,
-        duration: metadata.duration,
-        result: metadata.result, 
         date: getVideoDate(videoDate),
         isFromToday: isVideoFromToday,
         time: getVideoTime(videoDate),
@@ -97,7 +94,6 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
         playerSpecID: getPlayerSpec(metadata),
         playerName: getPlayerName(metadata),
         playerRealm: getPlayerRealm(metadata),
-        teamMMR: metadata.teamMMR,
     });
 
 }
