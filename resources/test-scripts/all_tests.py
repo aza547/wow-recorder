@@ -11,6 +11,7 @@ tests = {
     "Solo Shuffle": os.path.join(dirname, "./soloshuffle.py"),
     "Raid": os.path.join(dirname, "./raid.py"),
     "Rated BG": os.path.join(dirname, "./rbg.py"),
+    "Mythic+": os.path.join(dirname, "./dungeon.py"),
     "Zone Changes": os.path.join(dirname, "./zonechange.py"),
 }
 
