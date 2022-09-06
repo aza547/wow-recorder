@@ -54,7 +54,7 @@ class ChallengeModeDungeon {
     }
 
     getLastBossEncounter(): ChallengeModeVideoSegment | undefined {
-        return this.videoSegments.reverse().find(v => v.segmentType === VideoSegmentType.BossEncounter);
+        return this.videoSegments.slice().reverse().find(v => v.segmentType === VideoSegmentType.BossEncounter);
     }
 
     endVideoSegment(logDate: Date) {
