@@ -32,7 +32,13 @@ This feature is inspired by car dash cam behaviour: it deletes the oldest video 
 
 <img src="https://i.imgur.com/iqe8COL.png" width="600">
 
-# Bug Reports & Suggestions
+# Mythic Keystone Dungeons
+
+Support for Mythic Keystone dungeons has been added with the ability to quickly seek to a trash/boss segments of the video by means of the right-click context menu.
+
+<img src="https://i.imgur.com/miZeIrf.png">
+
+# Bug Reports & Sggestions
 
 Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
 

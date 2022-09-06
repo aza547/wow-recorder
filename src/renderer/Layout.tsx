@@ -12,7 +12,6 @@ import VideoButton  from './VideoButton';
  */
 import readyPoster  from  "../../assets/poster/ready.png";
 import notReadyPoster from  "../../assets/poster/not-ready.png";
-import unsupportedPoster from  "../../assets/poster/unsupported.png";
 
 /**
  * For shorthand referencing. 
@@ -102,7 +101,8 @@ export default function Layout() {
   const [state, setState] = React.useState({
     categoryIndex: 0,
     videoIndex: 0,
-    videoState: ipc.sendSync('getVideoState', categories)
+    videoState: ipc.sendSync('getVideoState', categories),
+    videoSeek: 0,
   });
 
   /**
@@ -125,7 +125,8 @@ export default function Layout() {
     setState(prevState => { 
       return {
         ...prevState, 
-        videoIndex: newValue
+        videoIndex: newValue,
+        videoSeek: 0,
       } 
     })
   };
@@ -152,6 +153,26 @@ export default function Layout() {
     })
   });
 
+  ipc.on('seekVideo', (vi, vs) => {
+    const videoIndex = parseInt((vi as string), 10);
+    const videoSeek = parseInt((vs as string), 10);
+
+    setState(prevState => {
+      return {
+        ...prevState,
+        videoIndex,
+        videoSeek,
+      }
+    });
+  });
+
+  React.useEffect(() => {
+    const videoPlayer = document.getElementById('video-player') as HTMLVideoElement;
+    if (videoPlayer) {
+      videoPlayer.currentTime = state.videoSeek;
+    }
+  }, [state.videoSeek]);
+
   /**
    * Returns TSX for the tab buttons for category selection.
    */
@@ -163,23 +184,6 @@ export default function Layout() {
       <Tab key={ key } label={ category } {...a11yProps(tabIndex)} sx = {{ ...tabProps(tabIndex) }}/>
     )
   };
-
-  /**
-   * Returns a video panel for a currently unsupported category.
-   */
-  const unsupportedVideoPanel = (index: number) => {
-    const categoryIndex = state.categoryIndex;
-    const key = "videoPanel" + index;
-
-    return (
-      <TabPanel key={ key } value={ categoryIndex } index={ index }>
-        <div className="video-container">
-          <video key="None" className="video" poster={ unsupportedPoster }></video>
-        </div>
-        <div className="noVideos"></div>
-      </TabPanel>
-    );
-  }
 
   /**
    * Returns a video panel where no videos are present.
@@ -212,7 +216,7 @@ export default function Layout() {
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
         <div className="video-container">
-          <video key = { videoFullPath } className="video" poster={ readyPoster } controls>
+          <video key={ videoFullPath } className="video" poster={ readyPoster } id='video-player' controls>
             <source src={ videoFullPath } />
           </video>
         </div>
@@ -243,13 +247,11 @@ export default function Layout() {
    const generateTabPanel = (tabIndex: number) => {
     const haveVideos = state.videoState[category][state.videoIndex];
 
-    if (tabIndex === 4) {
-      return unsupportedVideoPanel(tabIndex);
-    } else if (!haveVideos) {
+    if (!haveVideos) {
       return noVideoPanel(tabIndex);
-    } else {
-      return videoPanel(tabIndex);
-    }   
+    }
+
+    return videoPanel(tabIndex);
   };
 
   const tabNumbers = [...Array(7).keys()];

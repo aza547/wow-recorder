@@ -263,6 +263,15 @@ h2 {
   text-align: center;
 }
 
+.dungeon .zone {
+  font-size: 16px;
+  top: 35px;
+}
+
+.dungeon .zone.level {
+  top: 55px;
+}
+
 .time {
   top: 5px;
   left: 5px;
@@ -282,26 +291,74 @@ h2 {
   position: absolute;
 }
 
+.dungeon .name {
+  bottom: 5px;
+  left: 27px;
+  font-size: 14px;
+}
+
 .specIcon {
   bottom: 1px;
   left: 3px;
   position: absolute;
 }
 
-.goodResult {
+.specIcon > img {
+  width: 25px;
+  height: 25px;
+}
+
+.dungeon .specIcon > img {
+  width: 16px;
+  height: 16px;
+}
+
+.resultText {
   bottom: 7px;
   right: 5px;
   position: absolute;
   text-align: right;
+}
+
+.dungeon .resultText {
+  bottom: 5px;
+  right: 5px;
+  font-size: 14px;
+  position: absolute;
+  text-align: right;
+}
+
+.goodResult {
   -webkit-text-fill-color: rgb(18, 211, 18);
 }
 
 .badResult {
-  bottom: 7px;
-  right: 5px;
-  position: absolute;
-  text-align: right;
   -webkit-text-fill-color: red;
+}
+
+.segment-entry {
+  width: -webkit-fill-available;
+}
+
+.segment-entry .goodResult {
+  -webkit-text-fill-color: rgb(53, 164, 50);
+}
+
+.segment-entry .badResult {
+  -webkit-text-fill-color: rgb(156, 21, 21);
+}
+
+.segment-entry .segment-type {
+  padding-right: 20px;
+  float: left;
+}
+
+.segment-entry .segment-result {
+  float: right;
+}
+
+.segment-entry .segment-result {
+  text-align: right;
 }
 
 @keyframes blink {
