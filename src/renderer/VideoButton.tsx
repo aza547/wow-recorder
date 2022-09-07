@@ -126,8 +126,9 @@ export default function VideoButton(props: any) {
   }
 
   const buttonClasses = ['videoButton'];
+  const mythicKeystoneSegments = []
   let keystonePlusses;
-  let mythicKeystoneSegments = []
+
   if (isMythicPlus) {
     const keystoneResult = calculateCompletionResult(
       video.challengeMode.mapId,
