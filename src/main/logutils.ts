@@ -567,7 +567,7 @@ const getRelativeTimestampForVideoSegment = (currentDate: Date): number => {
     const lineArgs = splitLogLine(line);
     const srcGUID = lineArgs[1];    
     const srcNameRealm = lineArgs[2]
-    const srcFlags = parseInt(lineArgs[3], 10);
+    const srcFlags = parseInt(lineArgs[3], 16);
     
     const srcCombatant = combatantMap.get(srcGUID);
     if (srcCombatant === undefined) return;
