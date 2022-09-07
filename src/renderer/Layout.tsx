@@ -154,18 +154,23 @@ export default function Layout() {
     })
   });
 
-  ipc.on('seekVideo', (vi, vs) => {
-    const videoIndex = parseInt((vi as string), 10);
-    const videoSeek = parseInt((vs as string), 10);
+  /**
+   * Attach listener for seeking in the video on load/unload
+   */
+  React.useEffect(() => {
+    ipc.on('seekVideo', (vi, vs) => {
+      const videoIndex = parseInt((vi as string), 10);
+      const videoSeek = parseInt((vs as string), 10);
 
-    setState(prevState => {
-      return {
-        ...prevState,
-        videoIndex,
-        videoSeek,
-      }
+      setState(prevState => {
+        return {
+          ...prevState,
+          videoIndex,
+          videoSeek,
+        }
+      });
     });
-  });
+  }, []);
 
   React.useEffect(() => {
     const videoPlayer = document.getElementById('video-player') as HTMLVideoElement;
