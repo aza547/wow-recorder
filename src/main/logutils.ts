@@ -736,10 +736,12 @@ const pollWowProcess = () => {
 }
 
 /**
- * getCombatLogDate
+ * Parse the timestamp from a log line and create a Date value from it
+ *
+ * Split the line by any delimiter that isn't a number
  */
 const getCombatLogDate = (line: string): Date => {
-    const [month, day, hours, mins, secs, msec] = line.split(/[ \/:\.]/, 6);
+    const [month, day, hours, mins, secs, msec] = line.split(/[^0-9]/, 6);
     const dateObj = new Date();
 
     dateObj.setDate(parseInt(day, 10));
