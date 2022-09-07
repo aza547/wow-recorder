@@ -229,13 +229,16 @@ h2 {
   -webkit-text-stroke: 0.5px black;
   -webkit-text-fill-color: white;
   font: bold 18px Arial Narrow;
-  background-size: contain;
   text-shadow:
     1px  1px 0 #000,
    -1px -1px 0 #000,
     1px -1px 0 #000,
    -1px  1px 0 #000,
     1px  1px 0 #000;
+}
+
+.videoButton.dungeon {
+  background-size: cover;
 }
 
 /* .sepulcherRaid{
