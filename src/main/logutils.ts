@@ -128,16 +128,18 @@ const tailFile = (path: string) => {
  * 
  */
 const splitLogLine = (line: string): any => {
+    const line_len = line.length
+    const list_items: string[][] = [];
+    const args_list: any = [];
     let in_quote = false;
-    let list_items: string[][] = [];
-    let tuple_items: string[][] = [];
-    let in_what: string[] = [];
-    let args_list: any = [];
+    let open_lists = 0;
     let value: any = '';
 
-    // eslint-disable-next-line no-plusplus
-    // Timestamp is never longer than 18 charaters, and we want to skip that here.
-    for (let ptr = 18; ptr < line.length; ptr++) {
+    // Combat log line always has '<timestamp>  <line>' format,
+    // that is, two spaces between ts and line.
+    const tsIndexEnd = line.indexOf('  ');
+
+    for (let ptr = tsIndexEnd + 2; ptr < line_len; ptr++) {
         const c = line.charAt(ptr);
         if (c === '\n') {
             break;
@@ -152,13 +154,8 @@ const splitLogLine = (line: string): any => {
         } else {
             switch (c) {
             case ',':
-                const in_what_index = in_what.length - 1
-                if (in_what.length) {
-                    if (in_what[in_what_index] == 'tuple') {
-                        tuple_items[tuple_items.length - 1].push(value);
-                    } else if (in_what[in_what_index] == 'list') {
-                        list_items[list_items.length - 1].push(value);
-                    }
+                if (open_lists > 0) {
+                    list_items.at(-1)?.push(value);
                 } else {
                     args_list.push(value);
                 }
@@ -171,39 +168,23 @@ const splitLogLine = (line: string): any => {
                 continue;
 
             case '[':
+            case '(':
                 list_items.push([]);
-                in_what.push('list');
+                open_lists++;
                 continue;
 
             case ']':
+            case ')':
                 if (!list_items.length) {
-                    throw 'Unexpected ]. No list is open.';
+                    throw `Unexpected ${c}. No list is open.`;
                 }
 
                 if (value) {
-                    list_items[list_items.length - 1].push(value);
+                    list_items.at(-1)?.push(value);
                 }
 
                 value = list_items.pop();
-                in_what.pop();
-                continue;
-
-            case '(':
-                tuple_items.push([]);
-                in_what.push('tuple');
-                continue;
-
-            case ')':
-                if (!tuple_items.length) {
-                    throw 'Unexpected ). No tuple is open.';
-                }
-
-                if (value) {
-                    tuple_items[tuple_items.length - 1].push(value);
-                }
-
-                value = tuple_items.pop();
-                in_what.pop();
+                open_lists--;
                 continue;
             }
         }
@@ -215,8 +196,8 @@ const splitLogLine = (line: string): any => {
         args_list.push(value)
         }
 
-    if (in_what.length) {
-        throw 'Unexpected EOL. There are open tuples/lists.'
+    if (open_lists > 0) {
+        throw `Unexpected EOL. There are ${open_lists} open tuples/lists.`
     }
 
     return args_list;
