@@ -1,5 +1,7 @@
 import { fixPathWhenPackaged } from "./util";
 import WaitQueue from 'wait-queue';
+import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
+import Store from 'electron-store';
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
 const { byOS, OS } = require('./operatingSystems');
@@ -159,43 +161,42 @@ const setupScene = (monitorIndex: number) => {
 }
 
 /*
-* getAudioDevices
-*/
-const getAudioDevices = (type: any, subtype: any) => {
-  const dummyDevice = osn.InputFactory.create(type, subtype, { device_id: 'does_not_exist' });
-  const devices = dummyDevice.properties.get('device_id').details.items.map(({ name, value }) => {
-    return { device_id: value, name,};
-  });
-  dummyDevice.release();
-  return devices;
-};
-
-/*
 * setupSources
 */
 const setupSources = (scene: any) => {
+  const cfg = new Store();
+  const selectedInputAudioDevice = (cfg.get('audio-input-device', 'all') as string);
+  const selectedOutputAudioDevice = (cfg.get('audio-output-device', 'all') as string);
+
   osn.Global.setOutputSource(1, scene);
 
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
   let currentTrack = 2;
 
-  getAudioDevices(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio').forEach((metadata: any) => {
-    if (metadata.device_id === 'default') return;
-    const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio', { device_id: metadata.device_id });
-    setSetting('Output', `Track${currentTrack}Name`, metadata.name);
-    source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
-    osn.Global.setOutputSource(currentTrack, source);
-    currentTrack++;
-  });
+  if (selectedOutputAudioDevice !== 'none') {
+    getAvailableAudioOutputDevices()
+        // Filter devices that are selected, or none if all are selected.
+        .filter(device => selectedOutputAudioDevice === 'all' || device.id === selectedOutputAudioDevice)
+        .forEach(device => {
+          const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio', { device_id: device.id });
+          setSetting('Output', `Track${currentTrack}Name`, device.name);
+          source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
+          osn.Global.setOutputSource(currentTrack, source);
+          currentTrack++;
+        });
+    }
 
-  getAudioDevices(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio').forEach((metadata: any) => {
-    if (metadata.device_id === 'default') return;
-    const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio', { device_id: metadata.device_id });
-    setSetting('Output', `Track${currentTrack}Name`, metadata.name);
-    source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
-    osn.Global.setOutputSource(currentTrack, source);
-    currentTrack++;
-  });
+    if (selectedInputAudioDevice !== 'none') {
+      getAvailableAudioInputDevices()
+        .filter(device => selectedInputAudioDevice === 'all' || device.id === selectedInputAudioDevice)
+        .forEach(device => {
+          const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio', { device_id: device.id });
+          setSetting('Output', `Track${currentTrack}Name`, device.name);
+          source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
+          osn.Global.setOutputSource(currentTrack, source);
+          currentTrack++;
+        });
+    }
 
   setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
 }
