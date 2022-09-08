@@ -96,9 +96,11 @@ export default function Settings() {
   /**
    * Event handler when user selects an option in dialog window.
    */
-  ipc.on('settingsWindow', (args: any) => {
-    if (args[0] === "pathSelected") setSetting(args);
-  });
+  React.useEffect(() => {
+    ipc.on('settingsWindow', (args: any) => {
+      if (args[0] === "pathSelected") setSetting(args);
+    });
+  }, []);
 
   return (
     <div className="container">
