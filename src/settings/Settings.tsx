@@ -1,6 +1,7 @@
 import * as React from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import ToggleButton from '@mui/material/ToggleButton';
+import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -13,6 +14,21 @@ export default function Settings() {
   const [logPath] = React.useState(window.electron.store.get('log-path'));
   const [maxStorage] = React.useState(window.electron.store.get('max-storage'));
   const [monitorIndex] = React.useState(window.electron.store.get('monitor-index'));
+  const [audioInputDevice] = React.useState(window.electron.store.get('audio-input-device', 'all'));
+  const [audioOutputDevice] = React.useState(window.electron.store.get('audio-output-device', 'all'));
+
+  /**
+   * These settings are saved when 'Update' is clicked.
+   */
+  const settingsToSave = [
+    'storage-path',
+    'log-path',
+    'max-storage',
+    'start-up',
+    'monitor-index',
+    'audio-input-device',
+    'audio-output-device',
+  ];
 
   const [startUp, setStartUp] = React.useState(() => {
     return (window.electron.store.get('start-up') === 'true');
@@ -28,12 +44,9 @@ export default function Settings() {
   /**
    * Save values. 
    */
-  const saveSettings = () => {   
-    saveItem("storage-path");
-    saveItem("log-path");
-    saveItem("max-storage");
-    saveItem("start-up");
-    saveItem("monitor-index");
+  const saveSettings = () => {
+    settingsToSave.forEach(saveItem);
+
     ipc.sendMessage('settingsWindow', ['update']);
   }
 
@@ -43,7 +56,7 @@ export default function Settings() {
   const saveItem = (setting: string) => {
     if (!document) return;
     const element = document.getElementById(setting); 
-    if (!element) return;    
+    if (!element) return;
     let value;
 
     if (setting === "start-up") {
@@ -84,6 +97,13 @@ export default function Settings() {
   }
 
   /**
+   * Event handler when user selects a new audio device
+   */
+  const updateAudioDeviceValue = (event: any, category: string) => {
+    document.getElementById("audio-" + category + "-device")?.setAttribute("value", event.target.value);
+  }
+
+  /**
    * setSetting, why not just use react state hook?
    */
    const setSetting = (args: any) => {
@@ -101,6 +121,20 @@ export default function Settings() {
       if (args[0] === "pathSelected") setSetting(args);
     });
   }, []);
+
+  const audioDevices = ipc.sendSync('getAudioDevices', []);
+  const availableAudioDevices = {
+    input: [
+      new ObsAudioDevice('none', '(None: no microphone input will be recorded)'),
+      new ObsAudioDevice('all', '(All)'),
+      ...audioDevices.input,
+    ],
+    output: [
+      new ObsAudioDevice('none', 'None: no sound will be recorded'),
+      new ObsAudioDevice('all', '(All)'),
+      ...audioDevices.output,
+    ]
+  };
 
   return (
     <div className="container">
@@ -130,6 +164,30 @@ export default function Settings() {
                 <div className="form-group">
                   <label> Monitor Number </label>
                   <input type="text" id="monitor-index" className="form-control" placeholder={monitorIndex} onChange={(event) => updateMonitorIndexValue(event)}/>
+                </div>
+              </div>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
+                  <label> Record audio input from </label>
+                  <select id="audio-input-device" className="form-control" onChange={(event) => updateAudioDeviceValue(event, 'input')}>
+                    { availableAudioDevices.input.map((device: ObsAudioDevice) => {
+                      return (
+                        <option value={ device.id } selected={ audioInputDevice == device.id }>{ device.name }</option>
+                      )
+                    })}
+                  </select>
+                </div>
+              </div>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
+                  <label> Record audio output from </label>
+                  <select id="audio-output-device" className="form-control" onChange={(event) => updateAudioDeviceValue(event, 'output')}>
+                    { availableAudioDevices.output.map((device: ObsAudioDevice) => {
+                      return (
+                        <option value={ device.id } selected={ audioOutputDevice == device.id }>{ device.name }</option>
+                      )
+                    })}
+                  </select>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
