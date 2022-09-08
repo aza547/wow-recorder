@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 86](https://github.com/aza547/wow-recorder/issues/86) - Fix an event listener leak.
 
 ## [2.6.1] - 2022-09-05
 ### Fixed
