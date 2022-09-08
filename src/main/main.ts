@@ -10,6 +10,7 @@ import { watchLogs, pollWowProcess, runRecordingTest } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
+import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 let recorder: Recorder;
 
 /**
@@ -394,6 +395,13 @@ ipcMain.on('contextMenu', (event, args) => {
 ipcMain.on('getVideoState', (event) => {
   const videoState = getVideoState(storageDir);
   event.returnValue = videoState;
+});
+
+ipcMain.on('getAudioDevices', (event) => {
+  event.returnValue = {
+    input: getAvailableAudioInputDevices(),
+    output: getAvailableAudioOutputDevices(),
+  }
 });
 
 /**
