@@ -182,6 +182,7 @@ const setupSources = (scene: any) => {
           setSetting('Output', `Track${currentTrack}Name`, device.name);
           source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
           osn.Global.setOutputSource(currentTrack, source);
+          source.release()
           currentTrack++;
         });
     }
@@ -194,6 +195,7 @@ const setupSources = (scene: any) => {
           setSetting('Output', `Track${currentTrack}Name`, device.name);
           source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
           osn.Global.setOutputSource(currentTrack, source);
+          source.release()
           currentTrack++;
         });
     }
