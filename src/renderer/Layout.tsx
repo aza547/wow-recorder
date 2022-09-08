@@ -140,17 +140,28 @@ export default function Layout() {
   */
   const { classes: styles } = useStyles();
 
-  /**
-   * Refresh handler.
-   */
-  ipc.on('refreshState', () => {
-    setState(prevState => {
-      return {
-        ...prevState, 
-        videoState: ipc.sendSync('getVideoState', categories)
-      }
-    })
-  });
+  // This is effectively equivalent to componentDidMount() in
+  // React Component classes
+  React.useEffect(() => {
+      /**
+       * Refresh handler.
+       */
+      ipc.on('refreshState', () => {
+        setState(prevState => {
+          return {
+            ...prevState,
+            videoState: ipc.sendSync('getVideoState', categories)
+          }
+        })
+      });
+    },
+    // From React documentation:
+    //
+    // > It's important to note the empty array as second argument for the
+    // > Effect Hook which makes sure to trigger the effect only on component
+    // > load (mount) and component unload (unmount).
+    []
+  );
 
   /**
    * Returns TSX for the tab buttons for category selection.
