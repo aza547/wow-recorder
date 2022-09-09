@@ -12,6 +12,11 @@ const chalk = require('chalk');
     return path.replace("app.asar", "app.asar.unpacked");
 }
 
+type VideoInfo = {
+    name: string;
+    mtime: number;
+};
+
 const { exec } = require('child_process');
 const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
 const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').path);
@@ -56,8 +61,8 @@ const getEmptyState = () => {
  */
 const loadAllVideos = (storageDir: any, videoState: any) => {
     const videos = glob.sync(storageDir + "*.mp4")        
-        .map((name: any) => ({name, mtime: fscb.statSync(name).mtime}))
-        .sort((A: any, B: any) => B.mtime - A.mtime);
+        .map((name: any): VideoInfo => ({name, mtime: fscb.statSync(name).mtime}))
+        .sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
 
     for (const category of categories) {
         videoIndex[category] = 0;
@@ -71,12 +76,12 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
 /**
  * Load video details from the metadata and add it to videoState. 
  */
- const loadVideoDetails = (video: any, videoState: any) => {
+ const loadVideoDetails = (video: VideoInfo, videoState: any) => {
     const today = new Date();
-    const videoDate = new Date(fscb.statSync(video.name).mtime)
+    const videoDate = new Date(video.mtime)
     const isVideoFromToday = (today.toDateString() === videoDate.toDateString());
 
-    const metadata = getMetadataForVideo(video)
+    const metadata = getMetadataForVideo(video.name)
     if (metadata === undefined) return;
 
     // Hilariously 5v5 is still a war game mode that will break things without this.
@@ -119,7 +124,7 @@ const getMetadataForVideo = (video: string) => {
     }
 }
 
-const saveMetadataForVideo = (videoPath: any, metadata: any) => {
+const saveMetadataForVideo = (videoPath: string, metadata: any) => {
     const metadataFile = getMetadataFileForVideo(videoPath);
 
     const newMetadataJsonString = JSON.stringify(metadata, null, 2);
@@ -285,14 +290,14 @@ const runSizeMonitor = (storageDir: any, maxStorageGB: any) => {
 
 const getSortedVideos = async (storageDir: string) => {
     const files = await glob(path.join(storageDir, "*.mp4"));
-    let videoFiles = files.map((name: string): { name: string; mtime: number; } => {
+    let videoFiles = files.map((name: string): VideoInfo => {
         const fstats = fscb.statSync(name);
         const mtime = fstats.mtime;
 
         return { name, mtime };
     });
 
-    return videoFiles.sort((A: any, B: any) => B.mtime - A.mtime);
+    return videoFiles.sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
 };
 
 /**
@@ -410,14 +415,11 @@ const deleteOldestVideo = async (storageDir: any) => {
  * Put a save marker on a video, protecting it from the file monitor.
  */
  const toggleVideoProtected = (videoPath: string) => {
-    const metadataFile = getMetadataFileForVideo(videoPath);
-
-    if (!fscb.existsSync(metadataFile)) {
-        console.log("WTF have you done to get here? (toggleVideoProtected)");
+    const metadata = getMetadataForVideo(videoPath);
+    if (!metadata) {
+        console.error(`Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`);
         return;
     }
-
-    const metadata = getMetadataForVideo(metadataFile);
 
     if (metadata.protected === undefined) {
         metadata.protected = true;
