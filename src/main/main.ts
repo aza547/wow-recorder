@@ -203,8 +203,8 @@ const createSettingsWindow = async () => {
 
   settingsWindow = new BrowserWindow({
     show: false,
-    width: 380,
-    height: 550,
+    width: 650,
+    height: 450,
     resizable: true,
     icon: getAssetPath('./icon/settings-icon.svg'),
     frame: false,
