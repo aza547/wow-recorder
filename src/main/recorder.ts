@@ -209,10 +209,9 @@ const glob = require('glob');
             // It's a bit hacky that we async wait for 2 seconds for OBS to 
             // finish up with the video file. Maybe this can be done better. 
             setTimeout(async () => {
-                const bufferedVideo = getNewestVideo(this._bufferStorageDir);
+                const bufferedVideo = await getNewestVideo(this._bufferStorageDir);
                 await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
-                writeMetadataFile(this._storageDir, metadata);  
-                resolve();       
+                writeMetadataFile(this._storageDir, metadata).then(resolve);
             }, 
             2000)
         });   

@@ -18,8 +18,9 @@ const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').pa
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
-const fs = require('fs');
-const glob = require('glob');
+import fs from 'fs/promises';
+const fscb = require('fs')
+import glob from 'glob-promise';
 
 let videoIndex: { [category: string]: number }  = {};
 
@@ -55,7 +56,7 @@ const getEmptyState = () => {
  */
 const loadAllVideos = (storageDir: any, videoState: any) => {
     const videos = glob.sync(storageDir + "*.mp4")        
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
+        .map((name: any) => ({name, mtime: fscb.statSync(name).mtime}))
         .sort((A: any, B: any) => B.mtime - A.mtime);
 
     for (const category of categories) {
@@ -72,7 +73,7 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
  */
  const loadVideoDetails = (video: any, videoState: any) => {
     const today = new Date();
-    const videoDate = new Date(fs.statSync(video.name).mtime)
+    const videoDate = new Date(fscb.statSync(video.name).mtime)
     const isVideoFromToday = (today.toDateString() === videoDate.toDateString());
 
     const metadata = getMetadataForVideo(video)
@@ -105,13 +106,11 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
 /**
  * Get the date a video was recorded from the date object.
  */
-const getMetadataForVideo = (video: any) => {
-    const videoFileName = path.basename(video.name, '.mp4');
-    const videoDirName = path.dirname(video.name);
-    const metadataFile = videoDirName + "/" + videoFileName + ".json";
+const getMetadataForVideo = (video: string) => {
+    const metadataFile = getMetadataFileForVideo(video)
 
-    if (fs.existsSync(metadataFile)) {
-        const metadataJSON = fs.readFileSync(metadataFile);
+    if (fscb.existsSync(metadataFile)) {
+        const metadataJSON = fscb.readFileSync(metadataFile);
         const metadata = JSON.parse(metadataJSON);
         return metadata;
     } else {
@@ -120,14 +119,21 @@ const getMetadataForVideo = (video: any) => {
     }
 }
 
+const saveMetadataForVideo = (videoPath: any, metadata: any) => {
+    const metadataFile = getMetadataFileForVideo(videoPath);
+
+    const newMetadataJsonString = JSON.stringify(metadata, null, 2);
+    fscb.writeFileSync(metadataFile, newMetadataJsonString);
+}
+
 /**
- * Get the date a video was recorded from the date object.
+ * Get the filename for the metadata file associated with the given video file
  */
- const getMetadataFileForVideo = (video: any) => {
+ const getMetadataFileForVideo = (video: string) => {
     const videoFileName = path.basename(video, '.mp4');
     const videoDirName = path.dirname(video);
-    const metadataFilePath = videoDirName + "/" + videoFileName + ".json";
-    return metadataFilePath;
+
+    return path.join(videoDirName, videoFileName + '.json');
 }
 
 /**
@@ -247,13 +253,14 @@ const getVideoState = (storageDir: unknown) => {
 }    
 
 /**
- *  writeMetadataFile
+ *  Writes video metadata asynchronously and returns a Promise
  */
-const writeMetadataFile = (storageDir: string, metadata: Metadata) => {
+const writeMetadataFile = async (storageDir: string, metadata: Metadata) => {
+    const file = await getNewestVideo(storageDir);
     const jsonString = JSON.stringify(metadata, null, 2);
-    const newestVideoPath = getNewestVideo(storageDir);
-    const newestVideoName = path.basename(newestVideoPath, '.mp4');
-    fs.writeFileSync(storageDir + newestVideoName + ".json", jsonString);
+    const metadataFileName = getMetadataFileForVideo(file);
+
+    return await fs.writeFile(metadataFileName, jsonString);
 }    
 
 /**
@@ -263,58 +270,71 @@ const runSizeMonitor = (storageDir: any, maxStorageGB: any) => {
     console.debug("Running size monitor");  
     const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
     let totalSize = 0;
-    const files = fs.readdirSync(storageDir);
+    const files = fscb.readdirSync(storageDir);
 
     for (const file of files) {
-        totalSize += fs.statSync(storageDir + file).size;
+        totalSize += fscb.statSync(storageDir + file).size;
     }
 
     if (totalSize > maxStorageBytes) { 
-        deleteOldestVideo(storageDir);
-        runSizeMonitor(storageDir, maxStorageBytes);
+        deleteOldestVideo(storageDir).then(() => {
+            runSizeMonitor(storageDir, maxStorageBytes);
+        });
     } 
 }   
 
+const getSortedVideos = async (storageDir: string) => {
+    const files = await glob(path.join(storageDir, "*.mp4"));
+    let videoFiles = files.map((name: string): { name: string; mtime: number; } => {
+        const fstats = fscb.statSync(name);
+        const mtime = fstats.mtime;
+
+        return { name, mtime };
+    });
+
+    return videoFiles.sort((A: any, B: any) => B.mtime - A.mtime);
+};
+
 /**
- * Delete the oldest video, unprotected video.
+ * Asynchronously delete the oldest video, unprotected video
  */
-const deleteOldestVideo = (storageDir: any) => {
-    const sortedVideos = glob.sync(storageDir + "*.mp4")
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => B.mtime - A.mtime)
+const deleteOldestVideo = async (storageDir: any) => {
+    let files = await getSortedVideos(storageDir);
+    files = files.map((file: any) => {
+        try {
+            const metadataFileName = getMetadataFileForVideo(file.name);
+            const data = fscb.readFileSync(metadataFileName);
+            const metadata = JSON.parse(data.toString());
+            return { ...file, metadata, };
+        } catch (e) {
+            console.log(`Unable read and/or parse JSON from metadata file: ${file.name}`);
+        }
+    });
 
-    let videoForDeletion = sortedVideos.pop();
-    let deleteNotAllowed = isVideoProtected(videoForDeletion.name);
+    files = files.filter((file: any) => file && file.hasOwnProperty('metadata'));
+    files = files.filter((file: any) => Boolean(file.metadata.protected));
 
-    while ((deleteNotAllowed) && (sortedVideos.length > 0)) {
-        videoForDeletion = sortedVideos.pop();
-        deleteNotAllowed = isVideoProtected(videoForDeletion.name)
+    if (files.length > 0) {
+        const videoToDelete = files.pop();
+        //@ts-ignore 'object is possibly undefined'
+        // but it can't, due to the 'if' above and the '.filter' fiurther up.
+        return deleteVideo(videoToDelete.name);
     }
-
-    if (!deleteNotAllowed) deleteVideo(videoForDeletion.name);
-}  
+};
 
 /**
- * Get the newest video.
+ * Asynchronously get the newest video.
  */
- const getNewestVideo = (dir: any): string => {
-    const globString = path.join(dir, "*.mp4"); 
-    const sortedVideos = glob.sync(globString)
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => A.mtime - B.mtime)
+ const getNewestVideo = async (storageDir: any): Promise<string> => {
+    const files = await getSortedVideos(storageDir);
 
-    let videoForDeletion = sortedVideos.pop();
-    return videoForDeletion.name;
-}  
+    if (files.length > 0) {
+        //@ts-ignore 'object is possibly undefined'
+        // but it can't, due to the 'if' above.
+        return files.shift().name;
+     }
 
-/**
- * isVideoProtected
- */
- const isVideoProtected = (videoPath: string) => {
-    const metadataPath = getMetadataFileForVideo(videoPath);
-    const metadataJSON = fs.readFileSync(metadataPath);
-    const metadata = JSON.parse(metadataJSON);
-    return Boolean(metadata.protected);
+     return Promise.reject('no files');
 }  
 
 /**
@@ -324,7 +344,7 @@ const deleteOldestVideo = (storageDir: any) => {
  const tryUnlinkSync = (file: string): boolean => {
     try {
         console.log("Deleting: " + file);
-        fs.unlinkSync(file);
+        fscb.unlinkSync(file);
         return true;
     } catch (e) {
         console.error(`Unable to delete file: ${file}.`)
@@ -344,7 +364,7 @@ const deleteOldestVideo = (storageDir: any) => {
     }
 
     const metadataPath = getMetadataFileForVideo(videoPath);
-    if (fs.existsSync(metadataPath)) {
+    if (fscb.existsSync(metadataPath)) {
         tryUnlinkSync(metadataPath);
     }
 }  
@@ -392,13 +412,12 @@ const deleteOldestVideo = (storageDir: any) => {
  const toggleVideoProtected = (videoPath: string) => {
     const metadataFile = getMetadataFileForVideo(videoPath);
 
-    if (!fs.existsSync(metadataFile)) {
+    if (!fscb.existsSync(metadataFile)) {
         console.log("WTF have you done to get here? (toggleVideoProtected)");
         return;
     }
 
-    const metadataJSON = fs.readFileSync(metadataFile);
-    const metadata = JSON.parse(metadataJSON);
+    const metadata = getMetadataForVideo(metadataFile);
 
     if (metadata.protected === undefined) {
         metadata.protected = true;
@@ -406,8 +425,7 @@ const deleteOldestVideo = (storageDir: any) => {
         metadata.protected =  !Boolean(metadata.protected);
     }
 
-    const newMetadataJsonString = JSON.stringify(metadata, null, 2);
-    fs.writeFileSync(metadataFile, newMetadataJsonString);
+    saveMetadataForVideo(videoPath, metadata);
 }
 
 /**
