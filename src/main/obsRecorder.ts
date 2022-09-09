@@ -1,7 +1,6 @@
 import { fixPathWhenPackaged } from "./util";
 import WaitQueue from 'wait-queue';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
-import Store from 'electron-store';
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
 const { byOS, OS } = require('./operatingSystems');
@@ -14,16 +13,16 @@ let scene = null;
 /*
 * Reconfigure the recorder without destroying it.
 */
-const reconfigure = (outputPath: string, monitorIndex: number) => {
+const reconfigure = (outputPath: string, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
   configureOBS(outputPath);
   scene = setupScene(monitorIndex);
-  setupSources(scene);
+  setupSources(scene, audioInputDeviceId, audioOutputDeviceId);
 }
 
 /*
 * Init the library, launch OBS Studio instance, configure it, set up sources and scene
 */
-const initialize = (outputPath: string, monitorIndex: number) => {
+const initialize = (outputPath: string, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
   if (obsInitialized) {
     console.warn("OBS is already initialized");
     return;
@@ -32,7 +31,7 @@ const initialize = (outputPath: string, monitorIndex: number) => {
   initOBS();
   configureOBS(outputPath);
   scene = setupScene(monitorIndex);
-  setupSources(scene);
+  setupSources(scene, audioInputDeviceId, audioOutputDeviceId);
   obsInitialized = true;
 }
 
@@ -163,20 +162,16 @@ const setupScene = (monitorIndex: number) => {
 /*
 * setupSources
 */
-const setupSources = (scene: any) => {
-  const cfg = new Store();
-  const selectedInputAudioDevice = (cfg.get('audio-input-device', 'all') as string);
-  const selectedOutputAudioDevice = (cfg.get('audio-output-device', 'all') as string);
-
+const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceId: string ) => {
   osn.Global.setOutputSource(1, scene);
 
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
   let currentTrack = 2;
 
-  if (selectedOutputAudioDevice !== 'none') {
+  if (audioOutputDeviceId !== 'none') {
     getAvailableAudioOutputDevices()
         // Filter devices that are selected, or none if all are selected.
-        .filter(device => selectedOutputAudioDevice === 'all' || device.id === selectedOutputAudioDevice)
+        .filter(device => audioInputDeviceId === 'all' || device.id === audioInputDeviceId)
         .forEach(device => {
           const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio', { device_id: device.id });
           setSetting('Output', `Track${currentTrack}Name`, device.name);
@@ -187,9 +182,9 @@ const setupSources = (scene: any) => {
         });
     }
 
-    if (selectedInputAudioDevice !== 'none') {
+    if (audioOutputDeviceId !== 'none') {
       getAvailableAudioInputDevices()
-        .filter(device => selectedInputAudioDevice === 'all' || device.id === selectedInputAudioDevice)
+        .filter(device => audioOutputDeviceId === 'all' || device.id === audioOutputDeviceId)
         .forEach(device => {
           const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio', { device_id: device.id });
           setSetting('Output', `Track${currentTrack}Name`, device.name);

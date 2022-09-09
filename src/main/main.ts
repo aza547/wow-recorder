@@ -38,6 +38,8 @@ let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
 let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
+let audioInputDevice: string = (cfg.get('audio-input-device', 'all') as string)
+let audioOutputDevice: string = (cfg.get('audio-output-device', 'all') as string)
 
 if (!monitorIndex) {
   monitorIndex = defaultMonitorIndex(cfg);
@@ -165,7 +167,7 @@ const createWindow = async () => {
     }
 
     if (!isConfigReady(cfg)) return;
-    recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
+    recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
     pollWowProcess();
     watchLogs(baseLogPath);
   });
@@ -325,7 +327,9 @@ ipcMain.on('settingsWindow', (event, args) => {
       baseLogPath = getPathConfigSafe(cfg, 'log-path');
       maxStorage = getNumberConfigSafe(cfg, 'max-storage');
       monitorIndex = getNumberConfigSafe(cfg, 'monitor-index');
-  
+      audioInputDevice = (cfg.get('audio-input-device', 'all') as string);
+      audioOutputDevice = (cfg.get('audio-output-device', 'all') as string);
+
       if (checkConfig()) {
         updateStatus(0);
 
@@ -333,9 +337,9 @@ ipcMain.on('settingsWindow', (event, args) => {
         // need to create a recorder. If the config was previously
         // valid but has since changed, just do a reconfigure. 
         if (recorder) {
-          recorder.reconfigure(storageDir, monitorIndex);
+          recorder.reconfigure(storageDir, monitorIndex, audioInputDevice, audioOutputDevice);
         } else {
-          recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
+          recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
         }
         watchLogs(baseLogPath); 
         pollWowProcess();
