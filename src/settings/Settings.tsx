@@ -169,10 +169,10 @@ export default function Settings() {
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label> Record audio input from </label>
-                  <select id="audio-input-device" className="form-control" onChange={(event) => updateAudioDeviceValue(event, 'input')}>
+                  <select id="audio-input-device" className="form-control" value={ audioInputDevice } onChange={(event) => updateAudioDeviceValue(event, 'input')}>
                     { availableAudioDevices.input.map((device: ObsAudioDevice) => {
                       return (
-                        <option value={ device.id } selected={ audioInputDevice == device.id }>{ device.name }</option>
+                        <option key={ 'device_' + device.id } value={ device.id }>{ device.name }</option>
                       )
                     })}
                   </select>
@@ -181,10 +181,10 @@ export default function Settings() {
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label> Record audio output from </label>
-                  <select id="audio-output-device" className="form-control" onChange={(event) => updateAudioDeviceValue(event, 'output')}>
+                  <select id="audio-output-device" className="form-control" value={ audioOutputDevice } onChange={(event) => updateAudioDeviceValue(event, 'output')}>
                     { availableAudioDevices.output.map((device: ObsAudioDevice) => {
                       return (
-                        <option value={ device.id } selected={ audioOutputDevice == device.id }>{ device.name }</option>
+                        <option key={ 'device_' + device.id } value={ device.id }>{ device.name }</option>
                       )
                     })}
                   </select>
