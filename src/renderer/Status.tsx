@@ -20,9 +20,11 @@ export default function Status() {
   /**
    * Update status handler.
    */
-  window.electron.ipcRenderer.on('updateStatus', (status) => {
-    setStatus(status);
-  });
+   React.useEffect(() => {
+    window.electron.ipcRenderer.on('updateStatus', (status) => {
+      setStatus(status);
+    });
+  }, []);
 
   /**
    * Get the status, either watching, recording, or error.
