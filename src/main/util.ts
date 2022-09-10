@@ -318,18 +318,35 @@ const deleteOldestVideo = (storageDir: any) => {
 }  
 
 /**
+ * Try to unlink a file and return a boolean indicating the success
+ * Logs any errors to the console, if the file couldn't be deleted for some reason.
+ */
+ const tryUnlinkSync = (file: string): boolean => {
+    try {
+        console.log("Deleting: " + file);
+        fs.unlinkSync(file);
+        return true;
+    } catch (e) {
+        console.error(`Unable to delete file: ${file}.`)
+        console.error((e as Error).message);
+        return false;
+    }
+ }
+
+/**
  * Delete a video and its metadata file if it exists. 
  */
  const deleteVideo = (videoPath: string) => {
-    const metadataPath = getMetadataFileForVideo(videoPath);
-
-    if (fs.existsSync(metadataPath)) {
-        console.log("Deleting: " + metadataPath);  
-        fs.unlinkSync(metadataPath);        
+    // If we can't delete the video file, make sure we don't delete the metadata
+    // file either, which would leave the video file dangling.
+    if (!tryUnlinkSync(videoPath)) {
+        return;
     }
 
-    console.log("Deleting: " + videoPath);
-    fs.unlinkSync(videoPath);
+    const metadataPath = getMetadataFileForVideo(videoPath);
+    if (fs.existsSync(metadataPath)) {
+        tryUnlinkSync(metadataPath);
+    }
 }  
 
 /**
