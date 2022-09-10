@@ -125,6 +125,9 @@ const getMetadataForVideo = (video: string) => {
     }
 }
 
+/**
+ * Save metadata for the given video to disk
+ */
 const saveMetadataForVideo = (videoPath: string, metadata: any) => {
     const metadataFile = getMetadataFileForVideo(videoPath);
 
@@ -280,6 +283,10 @@ const getVideoInfo = (videoPath: string): VideoInfo => {
     return { name: videoPath, size, mtime };
 };
 
+/**
+ * Asynchronously find and return a list of video files in the given directory,
+ * sorted by modification time (newest to oldest)
+ */
 const getSortedVideos = async (storageDir: string): Promise<VideoInfo[]> => {
     const files = await glob(path.join(storageDir, "*.mp4"));
     return files
@@ -308,8 +315,6 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         }
     });
 
-    let totalVideoFileSize = 0;
-
     // Filter files with metadata
     files = files.filter((file: any) => file && file.hasOwnProperty('metadata'));
 
@@ -318,6 +323,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
 
     // Filter files that doesn't cause the total video file size to exceed the maximum
     // as given by `maxStorageBytes`
+    let totalVideoFileSize = 0;
     files = files.filter((file: any) => {
         totalVideoFileSize += file.size;
         return totalVideoFileSize > maxStorageBytes;
