@@ -181,7 +181,10 @@ const glob = require('glob');
 
             // Run the size monitor to ensure we stay within size limit.
             // Need some maths to convert GB to bytes
-            runSizeMonitor(this._storageDir, this._maxStorage); 
+            runSizeMonitor(this._storageDir, this._maxStorage)
+                .then(() => {
+                    if (mainWindow) mainWindow.webContents.send('refreshState');
+                });
 
             // Clean-up the temporary recording directory. 
             this.cleanupBuffer();

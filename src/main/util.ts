@@ -14,6 +14,7 @@ const chalk = require('chalk');
 
 type VideoInfo = {
     name: string;
+    size: number;
     mtime: number;
 };
 
@@ -61,7 +62,7 @@ const getEmptyState = () => {
  */
 const loadAllVideos = (storageDir: any, videoState: any) => {
     const videos = glob.sync(storageDir + "*.mp4")        
-        .map((name: any): VideoInfo => ({name, mtime: fscb.statSync(name).mtime}))
+        .map(getVideoInfo)
         .sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
 
     for (const category of categories) {
@@ -269,42 +270,33 @@ const writeMetadataFile = async (storageDir: string, metadata: Metadata) => {
 }    
 
 /**
- * runSizeMonitor, maxStorage in GB.
+ * Return information about a video needed for various parts of the application
  */
-const runSizeMonitor = (storageDir: any, maxStorageGB: any) => {
-    console.debug("Running size monitor");  
-    const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
-    let totalSize = 0;
-    const files = fscb.readdirSync(storageDir);
+const getVideoInfo = (videoPath: string): VideoInfo => {
+    const fstats = fscb.statSync(videoPath);
+    const mtime = fstats.mtime;
+    const size = fstats.size;
 
-    for (const file of files) {
-        totalSize += fscb.statSync(storageDir + file).size;
-    }
+    return { name: videoPath, size, mtime };
+};
 
-    if (totalSize > maxStorageBytes) { 
-        deleteOldestVideo(storageDir).then(() => {
-            runSizeMonitor(storageDir, maxStorageBytes);
-        });
-    } 
-}   
-
-const getSortedVideos = async (storageDir: string) => {
+const getSortedVideos = async (storageDir: string): Promise<VideoInfo[]> => {
     const files = await glob(path.join(storageDir, "*.mp4"));
-    let videoFiles = files.map((name: string): VideoInfo => {
-        const fstats = fscb.statSync(name);
-        const mtime = fstats.mtime;
-
-        return { name, mtime };
-    });
-
-    return videoFiles.sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
+    return files
+        .map(getVideoInfo)
+        .sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
 };
 
 /**
- * Asynchronously delete the oldest video, unprotected video
+ * Asynchronously delete the oldest, unprotected videos to ensure we don't store
+ * more material than the user has allowed us.
  */
-const deleteOldestVideo = async (storageDir: any) => {
+const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise<void> => {
+    const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
+
     let files = await getSortedVideos(storageDir);
+    console.debug(`[Size Monitor] Running (max size = ${maxStorageGB} GB)`);
+
     files = files.map((file: any) => {
         try {
             const metadataFileName = getMetadataFileForVideo(file.name);
@@ -316,15 +308,34 @@ const deleteOldestVideo = async (storageDir: any) => {
         }
     });
 
-    files = files.filter((file: any) => file && file.hasOwnProperty('metadata'));
-    files = files.filter((file: any) => Boolean(file.metadata.protected));
+    let totalVideoFileSize = 0;
 
-    if (files.length > 0) {
-        const videoToDelete = files.pop();
-        //@ts-ignore 'object is possibly undefined'
-        // but it can't, due to the 'if' above and the '.filter' fiurther up.
-        return deleteVideo(videoToDelete.name);
+    // Filter files with metadata
+    files = files.filter((file: any) => file && file.hasOwnProperty('metadata'));
+
+    // Filter files that aren't protected
+    files = files.filter((file: any) => !Boolean(file.metadata.protected));
+
+    // Filter files that doesn't cause the total video file size to exceed the maximum
+    // as given by `maxStorageBytes`
+    files = files.filter((file: any) => {
+        totalVideoFileSize += file.size;
+        return totalVideoFileSize > maxStorageBytes;
+    });
+
+    if (files.length == 0) {
+        return;
     }
+
+    console.log(`[Size Monitor] Deleting ${files.length} old video(s)`)
+    let videoToDelete;
+
+    while (videoToDelete = files.pop()) {
+        console.log(`[Size Monitor] Delete oldest video: ${videoToDelete.name}`)
+        deleteVideo(videoToDelete.name);
+    }
+
+    return Promise.resolve();
 };
 
 /**
