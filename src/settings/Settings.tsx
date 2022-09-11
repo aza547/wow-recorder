@@ -130,7 +130,7 @@ export default function Settings() {
       ...audioDevices.input,
     ],
     output: [
-      new ObsAudioDevice('none', 'None: no sound will be recorded'),
+      new ObsAudioDevice('none', '(None: no sound will be recorded)'),
       new ObsAudioDevice('all', '(All)'),
       ...audioDevices.output,
     ]
