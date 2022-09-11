@@ -168,34 +168,29 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
   let currentTrack = 2;
 
-  if (audioInputDeviceId !== 'none') {
-    getAvailableAudioInputDevices()
-        // Filter devices that are selected, or none if all are selected.
-        .filter(device => audioInputDeviceId === 'all' || device.id === audioInputDeviceId)
-        .forEach(device => {
-          const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio', { device_id: device.id });
-          console.log(`[ObsConfig] Selecting audio input device: ${device.name}`)
-          setSetting('Output', `Track${currentTrack}Name`, device.name);
-          source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
-          osn.Global.setOutputSource(currentTrack, source);
-          source.release()
-          currentTrack++;
-        });
-    }
+  getAvailableAudioInputDevices()
+    .forEach(device => {
+      const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio', { device_id: device.id });
+      setSetting('Output', `Track${currentTrack}Name`, device.name);
+      source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
+      source.muted = audioInputDeviceId === 'none' || (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
+      console.log(`[ObsConfig] Selecting audio input device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
+      osn.Global.setOutputSource(currentTrack, source);
+      source.release()
+      currentTrack++;
+    });
 
-    if (audioOutputDeviceId !== 'none') {
-      getAvailableAudioOutputDevices()
-        .filter(device => audioOutputDeviceId === 'all' || device.id === audioOutputDeviceId)
-        .forEach(device => {
-          const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio', { device_id: device.id });
-          console.log(`[ObsConfig] Selecting audio output device: ${device.name}`)
-          setSetting('Output', `Track${currentTrack}Name`, device.name);
-          source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
-          osn.Global.setOutputSource(currentTrack, source);
-          source.release()
-          currentTrack++;
-        });
-    }
+  getAvailableAudioOutputDevices()
+    .forEach(device => {
+      const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio', { device_id: device.id });
+      setSetting('Output', `Track${currentTrack}Name`, device.name);
+      source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
+      source.muted = audioOutputDeviceId === 'none' || (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
+      console.log(`[ObsConfig] Selecting audio output device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
+      osn.Global.setOutputSource(currentTrack, source);
+      source.release()
+      currentTrack++;
+    });
 
   setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
 }
