@@ -2,7 +2,7 @@
 import { Combatant } from './combatant';
 import { recorder }  from './main';
 import { calculateCompletionResult, ChallengeModeDungeon, ChallengeModeVideoSegment, VideoSegmentType } from './keystone';
-import { VideoCategory, battlegrounds }  from './constants';
+import { VideoCategory, battlegrounds, dungeonEncounters }  from './constants';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -18,8 +18,6 @@ let combatantMap: Map<string, Combatant> = new Map();
 let playerCombatant: Combatant | undefined;
 let testRunning: boolean = false;
 
-// Time of first UNIT_DIED line seen after an ENCOUNTER_END
-let challengeModeUnitDiedTime: Date | null = null;
 let activeChallengeMode: ChallengeModeDungeon | undefined;
 
 /**
@@ -303,20 +301,9 @@ const handleLogLine = (line: string) => {
         case "SPELL_AURA_APPLIED":
             handleSpellAuraAppliedLine(logLine);
             break;
-        case "UNIT_DIED":
-            handleUnitdiedLine(logLine);
-            break;
         default:
             break;
     }
-}
-
-const handleUnitdiedLine = (line: LogLine) => {
-    if (!activeChallengeMode) {
-        return;
-    }
-
-    challengeModeUnitDiedTime = line.date();
 }
 
 /**
@@ -395,9 +382,11 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
 }
 
 const handleChallengeModeStartLine = (line: LogLine) => {
-
+    // It's impossible to start a keystone dungeon while another one is in progress
+    // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
+    // is encountered.
     if (activeChallengeMode) {
-        return;
+        console.warn("[ChallengeMode] A Challenge Mode instance is already in progress; ending it.")
     }
 
     videoStartDate = line.date();
@@ -413,7 +402,7 @@ const handleChallengeModeStartLine = (line: LogLine) => {
         VideoSegmentType.Trash, videoStartDate, 0
     ));
 
-    console.debug("[ChallengeMode] Starting Challenge Mode dungeon")
+    console.debug("[ChallengeMode] Starting Challenge Mode instance")
 
     metadata = {
         name: line.args[1],
@@ -459,20 +448,15 @@ const handleChallengeModeEndLine = (line: LogLine) => {
     // Calculate whether the key was timed or not
     activeChallengeMode.timed = calculateCompletionResult(activeChallengeMode.mapId, activeChallengeMode.duration) > 0;
 
-    // Realistically, this can't fail, but .find() can fail and that's
-    // why it can return  'undefined'
-    const lastBossEncounter = activeChallengeMode.getLastBossEncounter()
-    if (lastBossEncounter && challengeModeUnitDiedTime) {
-        // If we didn't see any unit kills in the last (trash) segment
-        // within 250 ms of the last ENCOUNTER_END, remove it as it's useless.
-        const sawUnitsDieAfterEncounterEnd = challengeModeUnitDiedTime.getTime() - lastBossEncounter.logEnd.getTime()
-        if (sawUnitsDieAfterEncounterEnd <= 250) {
-            console.debug("[ChallengeMode] Removing last video segment (last unit died " + sawUnitsDieAfterEncounterEnd + " ms after encounter)")
-            activeChallengeMode.removeLastSegment();
-        }
-    } else {
-        console.debug("[ChallengeMode] Ending current video segment")
-        activeChallengeMode.endVideoSegment(videoStopDate);
+    console.debug("[ChallengeMode] Ending current video segment")
+    activeChallengeMode.endVideoSegment(videoStopDate);
+
+    // If last video segment is less than 10 seconds long, discard it.
+    // It's probably not useful
+    const lastVideoSegment = activeChallengeMode.getCurrentVideoSegment();
+    if (lastVideoSegment && lastVideoSegment.length() < 10000) {
+        console.debug("[ChallengeMode] Removing last video segment, because it's too short.")
+        activeChallengeMode.removeLastSegment();
     }
 
     recorder.stop(metadata, overrun);
@@ -500,7 +484,7 @@ const getRelativeTimestampForVideoSegment = (currentDate: Date): number => {
             encounterID
         )
         activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
-        console.debug("[ChallengeMode] Starting new boss encounter")
+        console.debug(`[ChallengeMode] Starting new boss encounter: ${dungeonEncounters[encounterID]}`)
 
         return;
     }
@@ -524,6 +508,7 @@ const getRelativeTimestampForVideoSegment = (currentDate: Date): number => {
  const handleEncounterStopLine = (line: LogLine) => {
     const videoStopDate = line.date();
     const encounterResult = Boolean(parseInt(line.args[5], 10));
+    const encounterID = parseInt(line.args[1], 10);
 
     if (recorder.isRecording) {
         if (activeChallengeMode) {
@@ -538,10 +523,7 @@ const getRelativeTimestampForVideoSegment = (currentDate: Date): number => {
 
             // Add a trash segment as the boss encounter ended
             activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
-            console.debug("[ChallengeMode] Ending boss encounter")
-
-            // Flag that we haven't seen any kills
-            challengeModeUnitDiedTime = null
+            console.debug(`[ChallengeMode] Ending boss encounter: ${dungeonEncounters[encounterID]}`)
         }
 
         return;

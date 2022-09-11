@@ -19,6 +19,10 @@ class ChallengeModeVideoSegment {
         // potentially being undefined.
         this.logEnd = logStart
     }
+
+    length (): number {
+        return (this.logEnd.getTime() - this.logStart.getTime())
+    }
 };
 
 class ChallengeModeDungeon {
