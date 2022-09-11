@@ -3,6 +3,7 @@ import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
+import ElectronStore from 'electron-store';
 const chalk = require('chalk');
 
 /**
@@ -352,7 +353,7 @@ const deleteOldestVideo = (storageDir: any) => {
 /**
  * isConfigReady
  */
- const isConfigReady = (cfg: any) => {
+ const isConfigReady = (cfg: ElectronStore) => {
 
     if (!cfg.get('storage-path')) {
         return false;
@@ -362,13 +363,13 @@ const deleteOldestVideo = (storageDir: any) => {
         return false;
     }
 
-    const maxStorage = parseInt(cfg.get('max-storage'));
+    const maxStorage = getNumberConfigSafe(cfg, 'max-storage');
 
     if ((!maxStorage) && (maxStorage > 0)) { 
         return false;
     }
 
-    const monitorIndex = parseInt(cfg.get('monitor-index'));
+    const monitorIndex = getNumberConfigSafe(cfg, 'monitor-index');
 
     if ((!monitorIndex) || (monitorIndex < 1) || (monitorIndex > 3)) {
         return false;
@@ -497,8 +498,8 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
  * @param key the key
  * @returns the string config
  */
-const getPathConfigSafe = (cfg: any, key: string): string => {
-    return cfg.has(key) ? path.join(cfg.get(key), path.sep) : "";
+const getPathConfigSafe = (cfg: ElectronStore, key: string): string => {
+    return cfg.has(key) ? path.join(getStringConfigSafe(cfg, key), path.sep) : "";
 }
 
 /**
@@ -507,8 +508,8 @@ const getPathConfigSafe = (cfg: any, key: string): string => {
  * @param preference the preference
  * @returns the number config
  */
- const getNumberConfigSafe = (cfg: any, preference: string): number => {
-    return cfg.has(preference) ? parseInt(cfg.get(preference)) : NaN;
+ const getNumberConfigSafe = (cfg: ElectronStore, preference: string): number => {
+    return cfg.has(preference) ? parseInt(getStringConfigSafe(cfg, preference)) : NaN;
 }
 
 /**
@@ -518,14 +519,14 @@ const getPathConfigSafe = (cfg: any, key: string): string => {
  * @param defaultValue default value, passed stright to `cfg.get()`
  * @returns the string value
  */
-const getStringConfigSafe = (cfg: any, key: string, defaultValue?: string): string => {
+const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: string): string => {
     return (cfg.get(key, defaultValue) as string);
 }
 
 /**
  *  Default the monitor index to 1. 
  */
- const defaultMonitorIndex = (cfg: any): number => {
+ const defaultMonitorIndex = (cfg: ElectronStore): number => {
     console.info("Defaulting monitor index to 1");
     cfg.set('monitor-index', 1);
     return 1;
