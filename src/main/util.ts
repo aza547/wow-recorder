@@ -492,13 +492,13 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
 }
 
 /**
- * Gets string value from the config in a more reliable manner.
+ * Gets a path (string) value from the config in a more reliable manner.
  * @param cfg the config store
  * @param key the key
  * @returns the string config
  */
 const getPathConfigSafe = (cfg: any, key: string): string => {
-    return cfg.has(key) ? path.join(cfg.get(key), "/") : "";
+    return cfg.has(key) ? path.join(cfg.get(key), path.sep) : "";
 }
 
 /**
@@ -509,6 +509,17 @@ const getPathConfigSafe = (cfg: any, key: string): string => {
  */
  const getNumberConfigSafe = (cfg: any, preference: string): number => {
     return cfg.has(preference) ? parseInt(cfg.get(preference)) : NaN;
+}
+
+/**
+ * Gets a string value from the config in a more reliable manner.
+ * @param cfg the config store
+ * @param key the key
+ * @param defaultValue default value, passed stright to `cfg.get()`
+ * @returns the string value
+ */
+const getStringConfigSafe = (cfg: any, key: string, defaultValue?: string): string => {
+    return (cfg.get(key, defaultValue) as string);
 }
 
 /**
@@ -550,6 +561,7 @@ export {
     cutVideo,
     getPathConfigSafe,
     getNumberConfigSafe,
+    getStringConfigSafe,
     defaultMonitorIndex, 
     addColor
 };

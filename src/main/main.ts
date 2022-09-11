@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, getStringConfigSafe } from './util';
 import { watchLogs, pollWowProcess, runRecordingTest } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -38,8 +38,8 @@ let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
 let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
-let audioInputDevice: string = (cfg.get('audio-input-device', 'all') as string)
-let audioOutputDevice: string = (cfg.get('audio-output-device', 'all') as string)
+let audioInputDevice: string = getStringConfigSafe(cfg, 'audio-input-device', 'all')
+let audioOutputDevice: string = getStringConfigSafe(cfg, 'audio-output-device', 'all')
 
 if (!monitorIndex) {
   monitorIndex = defaultMonitorIndex(cfg);
@@ -327,8 +327,8 @@ ipcMain.on('settingsWindow', (event, args) => {
       baseLogPath = getPathConfigSafe(cfg, 'log-path');
       maxStorage = getNumberConfigSafe(cfg, 'max-storage');
       monitorIndex = getNumberConfigSafe(cfg, 'monitor-index');
-      audioInputDevice = (cfg.get('audio-input-device', 'all') as string);
-      audioOutputDevice = (cfg.get('audio-output-device', 'all') as string);
+      audioInputDevice = getStringConfigSafe(cfg, 'audio-input-device', 'all');
+      audioOutputDevice = getStringConfigSafe(cfg, 'audio-output-device', 'all');
 
       if (checkConfig()) {
         updateStatus(0);
