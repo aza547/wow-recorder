@@ -25,8 +25,8 @@ const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
 import { promises as fspromise } from 'fs';
-const fs = require('fs')
-import glob from 'glob-promise';
+import glob from 'glob';
+import fs from 'fs';
 
 let videoIndex: { [category: string]: number } = {};
 
