@@ -24,11 +24,11 @@ const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').pa
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
-import fs from 'fs/promises';
-const fscb = require('fs')
+import { promises as fspromise } from 'fs';
+const fs = require('fs')
 import glob from 'glob-promise';
 
-let videoIndex: { [category: string]: number }  = {};
+let videoIndex: { [category: string]: number } = {};
 
 export let resolveHtmlPath: (htmlFileName: string) => string;
 
@@ -115,8 +115,8 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
 const getMetadataForVideo = (video: string) => {
     const metadataFile = getMetadataFileForVideo(video)
 
-    if (fscb.existsSync(metadataFile)) {
-        const metadataJSON = fscb.readFileSync(metadataFile);
+    if (fs.existsSync(metadataFile)) {
+        const metadataJSON = fs.readFileSync(metadataFile);
         const metadata = JSON.parse(metadataJSON);
         return metadata;
     } else {
@@ -132,7 +132,7 @@ const saveMetadataForVideo = (videoPath: string, metadata: any) => {
     const metadataFile = getMetadataFileForVideo(videoPath);
 
     const newMetadataJsonString = JSON.stringify(metadata, null, 2);
-    fscb.writeFileSync(metadataFile, newMetadataJsonString);
+    fs.writeFileSync(metadataFile, newMetadataJsonString);
 }
 
 /**
@@ -269,14 +269,14 @@ const writeMetadataFile = async (storageDir: string, metadata: Metadata) => {
     const jsonString = JSON.stringify(metadata, null, 2);
     const metadataFileName = getMetadataFileForVideo(file);
 
-    return await fs.writeFile(metadataFileName, jsonString);
+    return await fspromise.writeFile(metadataFileName, jsonString);
 }    
 
 /**
  * Return information about a video needed for various parts of the application
  */
 const getVideoInfo = (videoPath: string): VideoInfo => {
-    const fstats = fscb.statSync(videoPath);
+    const fstats = fs.statSync(videoPath);
     const mtime = fstats.mtime;
     const size = fstats.size;
 
@@ -307,7 +307,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
     files = files.map((file: any) => {
         try {
             const metadataFileName = getMetadataFileForVideo(file.name);
-            const data = fscb.readFileSync(metadataFileName);
+            const data = fs.readFileSync(metadataFileName);
             const metadata = JSON.parse(data.toString());
             return { ...file, metadata, };
         } catch (e) {
@@ -366,7 +366,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  const tryUnlinkSync = (file: string): boolean => {
     try {
         console.log("Deleting: " + file);
-        fscb.unlinkSync(file);
+        fs.unlinkSync(file);
         return true;
     } catch (e) {
         console.error(`Unable to delete file: ${file}.`)
@@ -386,7 +386,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
     }
 
     const metadataPath = getMetadataFileForVideo(videoPath);
-    if (fscb.existsSync(metadataPath)) {
+    if (fs.existsSync(metadataPath)) {
         tryUnlinkSync(metadataPath);
     }
 }  
