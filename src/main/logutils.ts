@@ -25,6 +25,7 @@ let testRunning: boolean = false;
     category: string;
     zoneID?: number;
     encounterID?: number;
+    difficultyID? : number;
     duration: number;
     result: boolean;
     playerName?: string;
@@ -227,6 +228,7 @@ const determineArenaMatchResult = (line: string): any[] => {
  */
  const handleRaidStartLine = (line: string) => {
     const encounterID = parseInt(line.split(',')[1]);
+    const difficultyID = parseInt(line.split(',')[3]);
     const category = "Raids";
 
     videoStartDate = getCombatLogDate(line);
@@ -235,6 +237,7 @@ const determineArenaMatchResult = (line: string): any[] => {
         name: "name",
         category: category,
         encounterID: encounterID,
+        difficultyID: difficultyID,
         duration: 0,
         result: false,
     }
