@@ -255,7 +255,8 @@ const glob = require('glob');
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = (outputPath: string, monitorIndex: number) => {      
+    reconfigure = (outputPath: string, maxStorage: number, monitorIndex: number) => {
+        this._maxStorage = maxStorage;
 
         if (this._isRecording) {
             obsRecorder.stop();       
