@@ -4,7 +4,7 @@ import Tab from '@mui/material/Tab';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { categories, videoButtonSx, specToClass }  from '../main/constants';
-import { getResultText, getFormattedDuration } from './rendererutils';
+import { getResultText, getFormattedDuration, getInstanceDifficulty } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
@@ -50,6 +50,8 @@ export default function VideoButton(props: any) {
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
   const isBG = category === "Battlegrounds";
+  const isRaid = category === "Raids";
+  const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
 
   let buttonImage;
 
@@ -109,6 +111,11 @@ export default function VideoButton(props: any) {
             <div className='encounter'>{ video.encounter }</div>            
             <div className='zone'>{ video.zone }</div>
             <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    
+            { isRaid && videoInstanceDifficulty &&
+              <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId}>
+                { videoInstanceDifficulty.difficulty.charAt(0).toUpperCase() }
+              </div>
+            }
             { isBG ||
               <div>
                 <div className='specIcon'>

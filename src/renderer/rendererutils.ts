@@ -1,3 +1,5 @@
+import { instanceDifficulty, InstanceDifficultyType } from "main/constants";
+
 /**
  * isCategoryPVP
  */
@@ -18,6 +20,14 @@
         return false;
     }
 }  
+
+const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | null => {
+    if (instanceDifficulty.hasOwnProperty(difficultyID)) {
+        return instanceDifficulty[difficultyID];
+    }
+
+    return null;
+}
 
 /**
  * getResultText
@@ -61,5 +71,6 @@
 export {
     isCategoryPVP,
     getResultText,
-    getFormattedDuration
+    getFormattedDuration,
+    getInstanceDifficulty
 };
