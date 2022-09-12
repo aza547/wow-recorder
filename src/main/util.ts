@@ -24,9 +24,11 @@ const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').pa
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
+import util from 'util';
 import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
+const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
 
@@ -277,7 +279,7 @@ const writeMetadataFile = async (storageDir: string, metadata: Metadata) => {
  */
 const getVideoInfo = (videoPath: string): VideoInfo => {
     const fstats = fs.statSync(videoPath);
-    const mtime = fstats.mtime;
+    const mtime = fstats.mtime.getTime();
     const size = fstats.size;
 
     return { name: videoPath, size, mtime };
@@ -288,7 +290,7 @@ const getVideoInfo = (videoPath: string): VideoInfo => {
  * sorted by modification time (newest to oldest)
  */
 const getSortedVideos = async (storageDir: string): Promise<VideoInfo[]> => {
-    const files = await glob(path.join(storageDir, "*.mp4"));
+    const files = await globPromise(path.join(storageDir, "*.mp4"));
     return files
         .map(getVideoInfo)
         .sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
