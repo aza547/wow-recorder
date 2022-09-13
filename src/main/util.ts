@@ -117,14 +117,13 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
 const getMetadataForVideo = (video: string) => {
     const metadataFile = getMetadataFileForVideo(video)
 
-    if (fs.existsSync(metadataFile)) {
-        const metadataJSON = fs.readFileSync(metadataFile);
-        const metadata = JSON.parse(metadataJSON);
-        return metadata;
-    } else {
+    if (!fs.existsSync(metadataFile)) {
         console.log("Metadata file does not exist: ", metadataFile);
         return undefined;
     }
+
+    const metadataJSON = fs.readFileSync(metadataFile);
+    return JSON.parse(metadataJSON.toString());
 }
 
 /**
