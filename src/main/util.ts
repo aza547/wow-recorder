@@ -344,7 +344,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         return files.shift().name;
      }
 
-     return Promise.reject('no files');
+     return Promise.reject('No video files were found while looking for the most recent video.');
 }  
 
 /**
