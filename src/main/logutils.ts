@@ -54,15 +54,19 @@ class LogLine {
      * Split the line by any delimiter that isn't a number
      */
     date (): Date {
-        const [month, day, hours, mins, secs, msec] = this.ts.split(/[^0-9]/, 6);
+        const timeParts = this.ts
+            .split(/[^0-9]/, 6)
+            .map(v => parseInt(v, 10))
+            .reverse();
+        const [msec, secs, mins, hours, day, month] = timeParts;
         const dateObj = new Date();
 
-        dateObj.setDate(parseInt(day, 10));
-        dateObj.setMonth(parseInt(month, 10));
-        dateObj.setHours(parseInt(hours, 10));
-        dateObj.setMinutes(parseInt(mins, 10));
-        dateObj.setSeconds(parseInt(secs, 10));
-        dateObj.setMilliseconds(parseInt(msec, 10))
+        if (day) dateObj.setDate(day);
+        if (month) dateObj.setMonth(month);
+        dateObj.setHours(hours);
+        dateObj.setMinutes(mins);
+        dateObj.setSeconds(secs);
+        dateObj.setMilliseconds(msec);
 
         return dateObj;
     }
