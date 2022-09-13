@@ -213,8 +213,8 @@ const glob = require('glob');
             // finish up with the video file. Maybe this can be done better. 
             setTimeout(async () => {
                 const bufferedVideo = await getNewestVideo(this._bufferStorageDir);
-                await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
-                writeMetadataFile(this._storageDir, metadata).then(resolve);
+                const videoPath = await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
+                writeMetadataFile(videoPath, metadata).then(resolve);
             }, 
             2000)
         });   

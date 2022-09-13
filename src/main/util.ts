@@ -118,22 +118,26 @@ const getMetadataForVideo = (video: string) => {
     const metadataFile = getMetadataFileForVideo(video)
 
     if (!fs.existsSync(metadataFile)) {
-        console.log("Metadata file does not exist: ", metadataFile);
+        console.error(`Metadata file does not exist: ${metadataFile}`);
         return undefined;
     }
 
-    const metadataJSON = fs.readFileSync(metadataFile);
-    return JSON.parse(metadataJSON.toString());
+    try {
+        const metadataJSON = fs.readFileSync(metadataFile);
+        return JSON.parse(metadataJSON.toString());
+    } catch (e) {
+        console.error(`Unable to read and/or parse JSON from metadata file: ${metadataFile}`);
+    }
 }
 
 /**
- * Save metadata for the given video to disk
+ * Writes video metadata asynchronously and returns a Promise
  */
-const saveMetadataForVideo = (videoPath: string, metadata: any) => {
-    const metadataFile = getMetadataFileForVideo(videoPath);
+ const writeMetadataFile = async (videoPath: string, metadata: any) => {
+    const metadataFileName = getMetadataFileForVideo(videoPath);
+    const jsonString = JSON.stringify(metadata, null, 2);
 
-    const newMetadataJsonString = JSON.stringify(metadata, null, 2);
-    fs.writeFileSync(metadataFile, newMetadataJsonString);
+    return await fspromise.writeFile(metadataFileName, jsonString);
 }
 
 /**
@@ -263,17 +267,6 @@ const getVideoState = (storageDir: unknown) => {
 }    
 
 /**
- *  Writes video metadata asynchronously and returns a Promise
- */
-const writeMetadataFile = async (storageDir: string, metadata: Metadata) => {
-    const file = await getNewestVideo(storageDir);
-    const jsonString = JSON.stringify(metadata, null, 2);
-    const metadataFileName = getMetadataFileForVideo(file);
-
-    return await fspromise.writeFile(metadataFileName, jsonString);
-}    
-
-/**
  * Return information about a video needed for various parts of the application
  */
 const getVideoInfo = (videoPath: string): VideoInfo => {
@@ -306,14 +299,8 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
     console.debug(`[Size Monitor] Running (max size = ${maxStorageGB} GB)`);
 
     files = files.map((file: any) => {
-        try {
-            const metadataFileName = getMetadataFileForVideo(file.name);
-            const data = fs.readFileSync(metadataFileName);
-            const metadata = JSON.parse(data.toString());
-            return { ...file, metadata, };
-        } catch (e) {
-            console.log(`Unable read and/or parse JSON from metadata file: ${file.name}`);
-        }
+        const metadata = getMetadataForVideo(file);
+        return { ...file, metadata, };
     });
 
     // Filter files with metadata
@@ -445,7 +432,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         metadata.protected =  !Boolean(metadata.protected);
     }
 
-    saveMetadataForVideo(videoPath, metadata);
+    writeMetadataFile(videoPath, metadata);
 }
 
 /**
@@ -457,13 +444,14 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  * @param {string} initialFile path to initial MP4 file
  * @param {string} finalDir path to output directory
  * @param {number} desiredDuration seconds to cut down to
+ * @returns full path of the final video file
  */
-const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number) => { 
+const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number): Promise<string> => {
     
     const videoFileName = path.basename(initialFile, '.mp4');
     const finalVideoPath = path.join(finalDir, videoFileName + ".mp4");
 
-    return new Promise<void> ((resolve) => {
+    return new Promise<string> ((resolve) => {
 
         // Use ffprobe to check the length of the initial file.
         ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
@@ -514,7 +502,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
                     }
                     else {
                         console.log("FFmpeg cut video succeeded");
-                        resolve();
+                        resolve(finalVideoPath);
                     }
                 })
 
