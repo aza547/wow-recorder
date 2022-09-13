@@ -16,23 +16,29 @@ let metadata: Metadata;
 let combatantMap: Map<string, Combatant> = new Map();
 let playerCombatant: Combatant | undefined;
 let testRunning: boolean = false;
+let isChallengeModeActive: boolean = false;
+
+declare interface LogLineHandlerType {
+    (line: LogLine): void
+};
+
+type InterestingCombatLogEventsType = { [key: string]: LogLineHandlerType }
 
 /**
- * Array of combat events we want to handle.
- *
- * This array is only created to avoid parsing every line, because
- * that'd be a heavy workload for nothing.
+ * List of of combat events we want to handle associated with their
+ * respective handler function.
  */
-const interestingCombatLogEvents = [
-    'ARENA_MATCH_START',
-    'ARENA_MATCH_END',
-    'ENCOUNTER_START',
-    'ENCOUNTER_END',
-    'ZONE_CHANGE',
-    'COMBATANT_INFO',
-    'SPELL_AURA_APPLIED',
-    'UNIT_DIED'
-];
+const interestingCombatLogEvents: InterestingCombatLogEventsType = {
+    'ARENA_MATCH_START': handleArenaStartLine,
+    'ARENA_MATCH_END': handleArenaStopLine,
+    'CHALLENGE_MODE_START': handleChallengeModeEndLine,
+    'CHALLENGE_MODE_END': handleChallengeModeStartLine,
+    'ENCOUNTER_START': handleEncounterStartLine,
+    'ENCOUNTER_END': handleEncounterStopLine,
+    'ZONE_CHANGE': handleZoneChange,
+    'COMBATANT_INFO': handleCombatantInfoLine,
+    'SPELL_AURA_APPLIED': handleSpellAuraAppliedLine,
+};
 
 /**
  * A parsed line from the WoW combat log
@@ -41,7 +47,7 @@ class LogLine {
     constructor (
         // Timestamp in string format, as-is, from the log
         // Example: '8/3 22:09:58.548'
-        public ts: string,
+        public timestamp: string,
 
         // Multi-dimensional array of arguments
         // Example: 'ARENA_MATCH_START', '2547', '33', '2v2', '1'
@@ -54,7 +60,7 @@ class LogLine {
      * Split the line by any delimiter that isn't a number
      */
     date (): Date {
-        const timeParts = this.ts
+        const timeParts = this.timestamp
             .split(/[^0-9]/, 6)
             .map(v => parseInt(v, 10))
             .reverse();
@@ -175,10 +181,21 @@ const tailFile = (path: string) => {
  * Splits a WoW combat line intelligently with respect to quotes,
  * lists, tuples, and what have we.
  *
+ * @param line Log line straight from the combat log
+ * @param maxSplits Madximum number of elements to find (same as `limit` for `string.split()` )
  */
 const splitLogLine = (line: string, maxSplits?: number): LogLine => {
+    // Avoid evaluating this on each iteration of the for(..) loop below
     const line_len = line.length
-    const list_items: string[][] = [];
+
+    // Array of items that has been parsedin the current scope of the parsing.
+    //
+    // This can end up being multidimensional in the case of some combat events
+    // that have complex data stored, like `COMBATANT_INFO`.
+    const list_items: any[] = [];
+
+    // Final argument list as parsed, which can contain one or more instances of `list_items`
+    // depending on the complexity of the combat log line
     const args_list: any[] = [];
     let in_quote = false;
     let open_lists = 0;
@@ -250,58 +267,37 @@ const splitLogLine = (line: string, maxSplits?: number): LogLine => {
     }
 
     if (open_lists > 0) {
-        throw `Unexpected EOL. There are ${open_lists} open tuples/lists.`
+        throw `Unexpected EOL. There are ${open_lists} open list(s).`
     }
 
     return new LogLine(timestamp, args_list)
 }
 
-    /**
+/**
  * Handle a line from the WoW log. 
  */
 const handleLogLine = (line: string) => {
     // Parse line, only until the line token is encountered
     let logLine = splitLogLine(line, 1)
+    const logLineTypeToken = logLine.args[0]
 
     // Check if we are interested in this event, and if not, discard it
-    if (interestingCombatLogEvents.indexOf(logLine.args[0]) === -1) {
+    if (!(logLineTypeToken in interestingCombatLogEvents)) {
         return;
     }
 
     // Parse the full line
     logLine = splitLogLine(line)
 
-    switch (logLine.args[0]) {
-        case "ARENA_MATCH_START":
-            handleArenaStartLine(logLine);
-            break;
-        case "ARENA_MATCH_END":
-            handleArenaStopLine(logLine);
-            break;
-        case "ENCOUNTER_START":
-            handleEncounterStartLine(logLine);
-            break;
-        case "ENCOUNTER_END":
-            handleEncounterStopLine(logLine);
-            break;
-        case "ZONE_CHANGE":
-            handleZoneChange(logLine);
-            break;
-        case "COMBATANT_INFO":
-            handleCombatantInfoLine(logLine);
-            break;
-        case "SPELL_AURA_APPLIED":
-            handleSpellAuraAppliedLine(logLine);
-            break;
-        default:
-            break;
-    }
+    // Call the handler for the given combat log line token
+    // (e.g. `ENCOUNTER_START`)
+    interestingCombatLogEvents[logLineTypeToken](logLine);
 }
 
 /**
  * Handle a line from the WoW log. 
  */
-const handleArenaStartLine = (line: LogLine) => {
+function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return; 
     const zoneID = parseInt(line.args[1], 10);
 
@@ -323,7 +319,7 @@ const handleArenaStartLine = (line: LogLine) => {
 /**
  * Handle a line from the WoW log. 
  */
- const handleArenaStopLine = (line: LogLine) => {
+function handleArenaStopLine (line: LogLine): void {
     if (!recorder.isRecording) return; 
 
     if (playerCombatant) {
@@ -374,9 +370,27 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
 }
 
 /**
+ * Guard functions for now to simply allow us to ignore
+ * Mythic Keystone encounters because we can't actually handle them
+ * right now.
+ */
+function handleChallengeModeStartLine (_line: LogLine): void {
+    isChallengeModeActive = true;
+}
+
+function handleChallengeModeEndLine (_line: LogLine): void {
+    isChallengeModeActive = false;
+}
+
+/**
  * Handle a line from the WoW log. 
  */
- const handleEncounterStartLine = (line: LogLine) => {
+function handleEncounterStartLine (line: LogLine): void {
+    if (isChallengeModeActive) {
+        console.log("ENCOUNTER_START in an active Mythic Keystone dungeon is ignored.")
+        return;
+    }
+
     const encounterID = parseInt(line.args[1], 10)
 
     videoStartDate = line.date();
@@ -395,7 +409,7 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
 /**
  * Handle a line from the WoW log. 
  */
- const handleEncounterStopLine = (line: LogLine) => {
+function handleEncounterStopLine (line: LogLine): void {
     const videoStopDate = line.date();
     const encounterResult = Boolean(parseInt(line.args[5], 10));
 
@@ -423,7 +437,7 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
 /**
  * Handle a line from the WoW log.
  */
- const handleZoneChange = (line: LogLine) => {
+function handleZoneChange (line: LogLine): void {
     console.log("Handling zone change: ", line);
     const zoneID = parseInt(line.args[1], 10);
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
@@ -464,7 +478,7 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
  * Handles the SPELL_AURA_APPLIED line from WoW log.
  * @param line the SPELL_AURA_APPLIED line
  */
- const handleSpellAuraAppliedLine = (line: LogLine) => {
+function handleSpellAuraAppliedLine (line: LogLine): void {
     if (playerCombatant) return;
     if (combatantMap.size === 0) return;    
 
@@ -488,7 +502,7 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
  * adding it to combatantMap.
  * @param line the COMBATANT_INFO line
  */
-const handleCombatantInfoLine = (line: LogLine) => {
+function handleCombatantInfoLine (line: LogLine): void {
     const GUID = line.args[1];
     const teamID = parseInt(line.args[2], 10);
     const specID = parseInt(line.args[24], 10);
@@ -499,7 +513,7 @@ const handleCombatantInfoLine = (line: LogLine) => {
 /**
  * ZONE_CHANGE event into a BG.  
  */
- const battlegroundStart = (line: LogLine) => {
+function battlegroundStart (line: LogLine): void {
     const zoneID = parseInt(line.args[1], 10);
     const battlegroundName = battlegrounds[zoneID];
     const category = "Battlegrounds";
@@ -520,7 +534,7 @@ const handleCombatantInfoLine = (line: LogLine) => {
 /**
  * battlegroundStop
  */
- const battlegroundStop = (line: LogLine) => {
+function battlegroundStop (line: LogLine): void {
     const videoStopDate = line.date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
@@ -534,7 +548,7 @@ const handleCombatantInfoLine = (line: LogLine) => {
 /**
  * zoneChangeStop
  */
- const zoneChangeStop = (line: LogLine) => {
+function zoneChangeStop (line: LogLine): void {
     const videoStopDate = line.date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
     metadata.duration = Math.round(milliSeconds / 1000);
