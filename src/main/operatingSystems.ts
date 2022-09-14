@@ -5,7 +5,7 @@ const OS = {
     Mac: 'darwin',
   }
   
-  function byOS(handlers) {
+  function byOS(handlers: any) {
     const handler = handlers[process.platform];
   
     if (typeof handler === 'function') return handler();
