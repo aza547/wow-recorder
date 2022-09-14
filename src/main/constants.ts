@@ -343,6 +343,39 @@ const zones: { [id: number]: string; } = {
     ...dungeonsByZoneId,
 }
 
+type InstanceDifficultyPartyType = 'party' | 'raid' | 'pvp'
+type ImstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp'
+type InstanceDifficultyType = {
+    difficultyId: ImstanceDifficultyIdType,
+    difficulty: string,
+    partyType: InstanceDifficultyPartyType,
+};
+type InstanceDifficultyObjectType = {
+  [key: number]: InstanceDifficultyType
+};
+
+const instanceDifficulty: InstanceDifficultyObjectType = {
+  1: { difficultyId: 'normal', difficulty: 'Normal', partyType: 'party' },
+  2: { difficultyId: 'heroic', difficulty: 'Heroic', partyType: 'party' },
+  3: { difficultyId: 'normal', difficulty: '10 Player', partyType: 'raid' },
+  4: { difficultyId: 'normal', difficulty: '25 Player', partyType: 'raid' },
+  5: { difficultyId: 'heroic', difficulty: 'Heroic (10P)', partyType: 'raid' },
+  6: { difficultyId: 'heroic', difficulty: 'Heroic (25P)', partyType: 'raid' },
+  7: { difficultyId: 'lfr', difficulty: 'Looking For Raid', partyType: 'raid' },
+  8: { difficultyId: 'mythic', difficulty: 'Mythic Keystone', partyType: 'party' },
+  9: { difficultyId: 'normal', difficulty: '40 Player', partyType: 'raid' },
+  14: { difficultyId: 'normal', difficulty: 'Normal', partyType: 'raid' },
+  15: { difficultyId: 'heroic', difficulty: 'Heroic', partyType: 'raid' },
+  16: { difficultyId: 'mythic', difficulty: 'Mythic', partyType: 'raid' },
+  17: { difficultyId: 'lfr', difficulty: 'Looking For Raid', partyType: 'raid' },
+  23: { difficultyId: 'mythic', difficulty: 'Mythic', partyType: 'party' },
+  24: { difficultyId: 'normal', difficulty: 'Timewalking', partyType: 'party' },
+  33: { difficultyId: 'normal', difficulty: 'Timewalking', partyType: 'raid' },
+  34: { difficultyId: 'pvp', difficulty: 'PvP', partyType: 'pvp' },
+  150: { difficultyId: 'normal', difficulty: 'Normal', partyType: 'party' },
+  151: { difficultyId: 'lfr', difficulty: 'Looking For Raid (TW)', partyType: 'raid' },
+}
+
 const videoTabsSx = {
   position: 'fixed',
   bottom: '1px',
@@ -449,4 +482,6 @@ export {
     encountersSanctum,
     encountersNathria,
     encountersSepulcher,
+    instanceDifficulty,
+    InstanceDifficultyType,
 };

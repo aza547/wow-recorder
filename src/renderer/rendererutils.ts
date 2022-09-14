@@ -1,4 +1,12 @@
-import { VideoCategory } from "main/constants";
+import { instanceDifficulty, InstanceDifficultyType, VideoCategory } from "main/constants";
+
+const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | null => {
+    if (instanceDifficulty.hasOwnProperty(difficultyID)) {
+        return instanceDifficulty[difficultyID];
+    }
+
+    return null;
+}
 
 /**
  * getResultText
@@ -26,6 +34,7 @@ const getVideoResult = (video: any): boolean => {
 
     return video.result
 }
+
 /**
  * getFormattedDuration
  * 
@@ -40,6 +49,7 @@ const getVideoResult = (video: any): boolean => {
 
 export {
     getResultText,
-    getVideoResult,
     getFormattedDuration,
+    getInstanceDifficulty,
+    getVideoResult,
 };

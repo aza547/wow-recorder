@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
 import { VideoCategory, categories, videoButtonSx, specToClass, dungeonEncounters, dungeonsByMapId }  from 'main/constants';
 import { VideoSegmentType, calculateCompletionResult } from 'main/keystone';
-import { getResultText, getFormattedDuration, getVideoResult } from './rendererutils';
+import { getResultText, getFormattedDuration, getVideoResult, getInstanceDifficulty } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
@@ -49,8 +49,9 @@ export default function VideoButton(props: any) {
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
   const isBG = category === VideoCategory.Battlegrounds;
-  const isMythicPlus = VideoCategory.MythicPlus && video.challengeMode !== undefined;
-  // For Mythic+, the recording player name and icon isn't super important
+  const isMythicPlus = category == VideoCategory.MythicPlus && video.challengeMode !== undefined;
+  const isRaid = category === VideoCategory.Raids;
+  const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
 
   let buttonImage;
 
@@ -190,6 +191,11 @@ export default function VideoButton(props: any) {
               </div>
             }
             <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    
+            { isRaid && videoInstanceDifficulty &&
+              <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId}>
+                { videoInstanceDifficulty.difficulty.charAt(0).toUpperCase() }
+              </div>
+            }
             { isBG ||
               <div>
                 <div className='specIcon'>

@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 98](https://github.com/aza547/wow-recorder/issues/98) - Fix recording Mythic Keystone boss encounters before M+ feature has been implemented.
+- [Issue 78](https://github.com/aza547/wow-recorder/issues/78) - Gracefully fail if a video can't be deleted, rather than giving an uncaught exception error
 - [Issue 86](https://github.com/aza547/wow-recorder/issues/86) - Fix an event listener leak.
+- Fixed memory leak in EventEmitter attachment of listener for 'updateStatus'
 
 ## [2.6.1] - 2022-09-05
 ### Fixed
