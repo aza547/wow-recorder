@@ -5,11 +5,12 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, getStringConfigSafe } from './util';
 import { watchLogs, pollWowProcess, runRecordingTest } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
+import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 let recorder: Recorder;
 
 /**
@@ -37,6 +38,8 @@ let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
 let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
+let audioInputDevice: string = getStringConfigSafe(cfg, 'audio-input-device', 'all')
+let audioOutputDevice: string = getStringConfigSafe(cfg, 'audio-output-device', 'all')
 
 if (!monitorIndex) {
   monitorIndex = defaultMonitorIndex(cfg);
@@ -164,7 +167,7 @@ const createWindow = async () => {
     }
 
     if (!isConfigReady(cfg)) return;
-    recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
+    recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
     pollWowProcess();
     watchLogs(baseLogPath);
   });
@@ -200,8 +203,8 @@ const createSettingsWindow = async () => {
 
   settingsWindow = new BrowserWindow({
     show: false,
-    width: 380,
-    height: 550,
+    width: 650,
+    height: 450,
     resizable: true,
     icon: getAssetPath('./icon/settings-icon.svg'),
     frame: false,
@@ -324,7 +327,9 @@ ipcMain.on('settingsWindow', (event, args) => {
       baseLogPath = getPathConfigSafe(cfg, 'log-path');
       maxStorage = getNumberConfigSafe(cfg, 'max-storage');
       monitorIndex = getNumberConfigSafe(cfg, 'monitor-index');
-  
+      audioInputDevice = getStringConfigSafe(cfg, 'audio-input-device', 'all');
+      audioOutputDevice = getStringConfigSafe(cfg, 'audio-output-device', 'all');
+
       if (checkConfig()) {
         updateStatus(0);
 
@@ -332,9 +337,9 @@ ipcMain.on('settingsWindow', (event, args) => {
         // need to create a recorder. If the config was previously
         // valid but has since changed, just do a reconfigure. 
         if (recorder) {
-          recorder.reconfigure(storageDir, monitorIndex);
+          recorder.reconfigure(storageDir, monitorIndex, audioInputDevice, audioOutputDevice);
         } else {
-          recorder = new Recorder(storageDir, maxStorage, monitorIndex);  
+          recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
         }
         watchLogs(baseLogPath); 
         pollWowProcess();
@@ -400,6 +405,13 @@ ipcMain.on('contextMenu', (event, args) => {
 ipcMain.on('getVideoState', (event) => {
   const videoState = getVideoState(storageDir);
   event.returnValue = videoState;
+});
+
+ipcMain.on('getAudioDevices', (event) => {
+  event.returnValue = {
+    input: getAvailableAudioInputDevices(),
+    output: getAvailableAudioOutputDevices(),
+  }
 });
 
 /**

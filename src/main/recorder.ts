@@ -19,15 +19,20 @@ const glob = require('glob');
     private _bufferStorageDir: any;
     private _bufferRestartIntervalID?: any;
     private _monitorIndex: number;
+    private _audioInputDeviceId: string;
+    private _audioOutputDeviceId: string;
+
 
     /**
      * Constructs a new Recorder.
      */
-    constructor(storageDir: string, maxStorage: number, monitorIndex: number) {
+    constructor(storageDir: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) {
         console.debug("Construcing recorder with: ", storageDir, maxStorage, monitorIndex);
         this._storageDir = storageDir;
         this._maxStorage = maxStorage;     
         this._monitorIndex = monitorIndex;           
+        this._audioInputDeviceId = audioInputDeviceId
+        this._audioOutputDeviceId = audioOutputDeviceId
 
         // Something like: C:\Users\alexa\AppData\Local\Temp\WarcraftRecorder
         this._bufferStorageDir = path.join(app.getPath("temp"), "WarcraftRecorder"); 
@@ -37,7 +42,7 @@ const glob = require('glob');
             fs.mkdirSync(this._bufferStorageDir);
         }
 
-        obsRecorder.initialize(this._bufferStorageDir, this._monitorIndex);
+        obsRecorder.initialize(this._bufferStorageDir, this._monitorIndex, this._audioInputDeviceId, this._audioOutputDeviceId);
     }
 
     /**
@@ -253,7 +258,7 @@ const glob = require('glob');
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = (outputPath: string, monitorIndex: number) => {      
+    reconfigure = (outputPath: string, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
 
         if (this._isRecording) {
             obsRecorder.stop();       
@@ -262,7 +267,7 @@ const glob = require('glob');
             this.stopBuffer()
         }
 
-        obsRecorder.reconfigure(outputPath, monitorIndex);
+        obsRecorder.reconfigure(outputPath, monitorIndex, audioInputDeviceId, audioOutputDeviceId);
     }
 }
 
