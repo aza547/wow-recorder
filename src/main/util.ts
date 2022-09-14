@@ -303,11 +303,9 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         return { ...file, metadata, };
     });
 
-    // Filter files with metadata
-    files = files.filter((file: any) => file && file.hasOwnProperty('metadata'));
-
-    // Filter files that aren't protected
-    files = files.filter((file: any) => !Boolean(file.metadata.protected));
+    // Consider files with NO metadata (dangling video files)
+    // and files that ARE NOT protected
+    files = files.filter((file: any) => !file.hasOwnProperty('metadata') || !Boolean(file.metadata.protected));
 
     // Filter files that doesn't cause the total video file size to exceed the maximum
     // as given by `maxStorageBytes`
