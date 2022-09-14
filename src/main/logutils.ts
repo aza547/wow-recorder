@@ -31,8 +31,8 @@ type InterestingCombatLogEventsType = { [key: string]: LogLineHandlerType }
 const interestingCombatLogEvents: InterestingCombatLogEventsType = {
     'ARENA_MATCH_START': handleArenaStartLine,
     'ARENA_MATCH_END': handleArenaStopLine,
-    'CHALLENGE_MODE_START': handleChallengeModeEndLine,
-    'CHALLENGE_MODE_END': handleChallengeModeStartLine,
+    'CHALLENGE_MODE_START': handleChallengeModeStartLine,
+    'CHALLENGE_MODE_END': handleChallengeModeEndLine,
     'ENCOUNTER_START': handleEncounterStartLine,
     'ENCOUNTER_END': handleEncounterStopLine,
     'ZONE_CHANGE': handleZoneChange,
