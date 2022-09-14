@@ -337,7 +337,7 @@ ipcMain.on('settingsWindow', (event, args) => {
         // need to create a recorder. If the config was previously
         // valid but has since changed, just do a reconfigure. 
         if (recorder) {
-          recorder.reconfigure(storageDir, monitorIndex, audioInputDevice, audioOutputDevice);
+          recorder.reconfigure(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
         } else {
           recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
         }

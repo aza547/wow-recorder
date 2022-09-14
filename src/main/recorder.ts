@@ -186,7 +186,10 @@ const glob = require('glob');
 
             // Run the size monitor to ensure we stay within size limit.
             // Need some maths to convert GB to bytes
-            runSizeMonitor(this._storageDir, this._maxStorage); 
+            runSizeMonitor(this._storageDir, this._maxStorage)
+                .then(() => {
+                    if (mainWindow) mainWindow.webContents.send('refreshState');
+                });
 
             // Clean-up the temporary recording directory. 
             this.cleanupBuffer();
@@ -214,10 +217,9 @@ const glob = require('glob');
             // It's a bit hacky that we async wait for 2 seconds for OBS to 
             // finish up with the video file. Maybe this can be done better. 
             setTimeout(async () => {
-                const bufferedVideo = getNewestVideo(this._bufferStorageDir);
-                await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
-                writeMetadataFile(this._storageDir, metadata);  
-                resolve();       
+                const bufferedVideo = await getNewestVideo(this._bufferStorageDir);
+                const videoPath = await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
+                writeMetadataFile(videoPath, metadata).then(resolve);
             }, 
             2000)
         });   
@@ -258,8 +260,9 @@ const glob = require('glob');
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = (outputPath: string, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
-
+    reconfigure = (outputPath: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
+        this._maxStorage = maxStorage;
+      
         if (this._isRecording) {
             obsRecorder.stop();       
             this._isRecording = false;
