@@ -13,16 +13,25 @@ const chalk = require('chalk');
     return path.replace("app.asar", "app.asar.unpacked");
 }
 
+type VideoInfo = {
+    name: string;
+    size: number;
+    mtime: number;
+};
+
 const { exec } = require('child_process');
 const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
 const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').path);
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 ffmpeg.setFfprobePath(ffprobePath);
-const fs = require('fs');
-const glob = require('glob');
+import util from 'util';
+import { promises as fspromise } from 'fs';
+import glob from 'glob';
+import fs from 'fs';
+const globPromise = util.promisify(glob)
 
-let videoIndex: { [category: string]: number }  = {};
+let videoIndex: { [category: string]: number } = {};
 
 export let resolveHtmlPath: (htmlFileName: string) => string;
 
@@ -56,8 +65,8 @@ const getEmptyState = () => {
  */
 const loadAllVideos = (storageDir: any, videoState: any) => {
     const videos = glob.sync(storageDir + "*.mp4")        
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => B.mtime - A.mtime);
+        .map(getVideoInfo)
+        .sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
 
     for (const category of categories) {
         videoIndex[category] = 0;
@@ -71,12 +80,12 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
 /**
  * Load video details from the metadata and add it to videoState. 
  */
- const loadVideoDetails = (video: any, videoState: any) => {
+ const loadVideoDetails = (video: VideoInfo, videoState: any) => {
     const today = new Date();
-    const videoDate = new Date(fs.statSync(video.name).mtime)
+    const videoDate = new Date(video.mtime)
     const isVideoFromToday = (today.toDateString() === videoDate.toDateString());
 
-    const metadata = getMetadataForVideo(video)
+    const metadata = getMetadataForVideo(video.name)
     if (metadata === undefined) return;
 
     // Hilariously 5v5 is still a war game mode that will break things without this.
@@ -107,29 +116,40 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
 /**
  * Get the date a video was recorded from the date object.
  */
-const getMetadataForVideo = (video: any) => {
-    const videoFileName = path.basename(video.name, '.mp4');
-    const videoDirName = path.dirname(video.name);
-    const metadataFile = videoDirName + "/" + videoFileName + ".json";
+const getMetadataForVideo = (video: string) => {
+    const metadataFile = getMetadataFileForVideo(video)
 
-    if (fs.existsSync(metadataFile)) {
-        const metadataJSON = fs.readFileSync(metadataFile);
-        const metadata = JSON.parse(metadataJSON);
-        return metadata;
-    } else {
-        console.log("Metadata file does not exist: ", metadataFile);
+    if (!fs.existsSync(metadataFile)) {
+        console.error(`Metadata file does not exist: ${metadataFile}`);
         return undefined;
+    }
+
+    try {
+        const metadataJSON = fs.readFileSync(metadataFile);
+        return JSON.parse(metadataJSON.toString());
+    } catch (e) {
+        console.error(`Unable to read and/or parse JSON from metadata file: ${metadataFile}`);
     }
 }
 
 /**
- * Get the date a video was recorded from the date object.
+ * Writes video metadata asynchronously and returns a Promise
  */
- const getMetadataFileForVideo = (video: any) => {
+ const writeMetadataFile = async (videoPath: string, metadata: any) => {
+    const metadataFileName = getMetadataFileForVideo(videoPath);
+    const jsonString = JSON.stringify(metadata, null, 2);
+
+    return await fspromise.writeFile(metadataFileName, jsonString);
+}
+
+/**
+ * Get the filename for the metadata file associated with the given video file
+ */
+ const getMetadataFileForVideo = (video: string) => {
     const videoFileName = path.basename(video, '.mp4');
     const videoDirName = path.dirname(video);
-    const metadataFilePath = videoDirName + "/" + videoFileName + ".json";
-    return metadataFilePath;
+
+    return path.join(videoDirName, videoFileName + '.json');
 }
 
 /**
@@ -249,74 +269,82 @@ const getVideoState = (storageDir: unknown) => {
 }    
 
 /**
- *  writeMetadataFile
+ * Return information about a video needed for various parts of the application
  */
-const writeMetadataFile = (storageDir: string, metadata: Metadata) => {
-    const jsonString = JSON.stringify(metadata, null, 2);
-    const newestVideoPath = getNewestVideo(storageDir);
-    const newestVideoName = path.basename(newestVideoPath, '.mp4');
-    fs.writeFileSync(storageDir + newestVideoName + ".json", jsonString);
-}    
+const getVideoInfo = (videoPath: string): VideoInfo => {
+    const fstats = fs.statSync(videoPath);
+    const mtime = fstats.mtime.getTime();
+    const size = fstats.size;
+
+    return { name: videoPath, size, mtime };
+};
 
 /**
- * runSizeMonitor, maxStorage in GB.
+ * Asynchronously find and return a list of video files in the given directory,
+ * sorted by modification time (newest to oldest)
  */
-const runSizeMonitor = (storageDir: any, maxStorageGB: any) => {
-    console.debug("Running size monitor");  
+const getSortedVideos = async (storageDir: string): Promise<VideoInfo[]> => {
+    const files = await globPromise(path.join(storageDir, "*.mp4"));
+    return files
+        .map(getVideoInfo)
+        .sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
+};
+
+/**
+ * Asynchronously delete the oldest, unprotected videos to ensure we don't store
+ * more material than the user has allowed us.
+ */
+const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise<void> => {
     const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
-    let totalSize = 0;
-    const files = fs.readdirSync(storageDir);
 
-    for (const file of files) {
-        totalSize += fs.statSync(storageDir + file).size;
+    let files = await getSortedVideos(storageDir);
+    console.debug(`[Size Monitor] Running (max size = ${maxStorageGB} GB)`);
+
+    files = files.map((file: any) => {
+        const metadata = getMetadataForVideo(file);
+        return { ...file, metadata, };
+    });
+
+    // Consider files with NO metadata (dangling video files)
+    // and files that ARE NOT protected
+    files = files.filter((file: any) => !file.hasOwnProperty('metadata') || !Boolean(file.metadata.protected));
+
+    // Filter files that doesn't cause the total video file size to exceed the maximum
+    // as given by `maxStorageBytes`
+    let totalVideoFileSize = 0;
+    files = files.filter((file: any) => {
+        totalVideoFileSize += file.size;
+        return totalVideoFileSize > maxStorageBytes;
+    });
+
+    if (files.length == 0) {
+        return;
     }
 
-    if (totalSize > maxStorageBytes) { 
-        deleteOldestVideo(storageDir);
-        runSizeMonitor(storageDir, maxStorageBytes);
-    } 
-}   
+    console.log(`[Size Monitor] Deleting ${files.length} old video(s)`)
+    let videoToDelete;
 
-/**
- * Delete the oldest video, unprotected video.
- */
-const deleteOldestVideo = (storageDir: any) => {
-    const sortedVideos = glob.sync(storageDir + "*.mp4")
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => B.mtime - A.mtime)
-
-    let videoForDeletion = sortedVideos.pop();
-    let deleteNotAllowed = isVideoProtected(videoForDeletion.name);
-
-    while ((deleteNotAllowed) && (sortedVideos.length > 0)) {
-        videoForDeletion = sortedVideos.pop();
-        deleteNotAllowed = isVideoProtected(videoForDeletion.name)
+    while (videoToDelete = files.pop()) {
+        console.log(`[Size Monitor] Delete oldest video: ${videoToDelete.name}`)
+        deleteVideo(videoToDelete.name);
     }
 
-    if (!deleteNotAllowed) deleteVideo(videoForDeletion.name);
-}  
+    return Promise.resolve();
+};
 
 /**
- * Get the newest video.
+ * Asynchronously get the newest video.
  */
- const getNewestVideo = (dir: any): string => {
-    const globString = path.join(dir, "*.mp4"); 
-    const sortedVideos = glob.sync(globString)
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => A.mtime - B.mtime)
+ const getNewestVideo = async (storageDir: any): Promise<string> => {
+    const files = await getSortedVideos(storageDir);
 
-    let videoForDeletion = sortedVideos.pop();
-    return videoForDeletion.name;
-}  
+    if (files.length > 0) {
+        //@ts-ignore 'object is possibly undefined'
+        // but it can't, due to the 'if' above.
+        return files.shift().name;
+     }
 
-/**
- * isVideoProtected
- */
- const isVideoProtected = (videoPath: string) => {
-    const metadataPath = getMetadataFileForVideo(videoPath);
-    const metadataJSON = fs.readFileSync(metadataPath);
-    const metadata = JSON.parse(metadataJSON);
-    return Boolean(metadata.protected);
+     return Promise.reject('No video files were found while looking for the most recent video.');
 }  
 
 /**
@@ -392,15 +420,11 @@ const deleteOldestVideo = (storageDir: any) => {
  * Put a save marker on a video, protecting it from the file monitor.
  */
  const toggleVideoProtected = (videoPath: string) => {
-    const metadataFile = getMetadataFileForVideo(videoPath);
-
-    if (!fs.existsSync(metadataFile)) {
-        console.log("WTF have you done to get here? (toggleVideoProtected)");
+    const metadata = getMetadataForVideo(videoPath);
+    if (!metadata) {
+        console.error(`Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`);
         return;
     }
-
-    const metadataJSON = fs.readFileSync(metadataFile);
-    const metadata = JSON.parse(metadataJSON);
 
     if (metadata.protected === undefined) {
         metadata.protected = true;
@@ -408,8 +432,7 @@ const deleteOldestVideo = (storageDir: any) => {
         metadata.protected =  !Boolean(metadata.protected);
     }
 
-    const newMetadataJsonString = JSON.stringify(metadata, null, 2);
-    fs.writeFileSync(metadataFile, newMetadataJsonString);
+    writeMetadataFile(videoPath, metadata);
 }
 
 /**
@@ -421,13 +444,14 @@ const deleteOldestVideo = (storageDir: any) => {
  * @param {string} initialFile path to initial MP4 file
  * @param {string} finalDir path to output directory
  * @param {number} desiredDuration seconds to cut down to
+ * @returns full path of the final video file
  */
-const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number) => { 
+const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number): Promise<string> => {
     
     const videoFileName = path.basename(initialFile, '.mp4');
     const finalVideoPath = path.join(finalDir, videoFileName + ".mp4");
 
-    return new Promise<void> ((resolve) => {
+    return new Promise<string> ((resolve) => {
 
         // Use ffprobe to check the length of the initial file.
         ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
@@ -478,7 +502,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
                     }
                     else {
                         console.log("FFmpeg cut video succeeded");
-                        resolve();
+                        resolve(finalVideoPath);
                     }
                 })
 
