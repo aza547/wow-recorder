@@ -413,6 +413,11 @@ function handleEncounterStartLine (line: LogLine): void {
  * Handle a line from the WoW log. 
  */
 function handleEncounterStopLine (line: LogLine): void {
+    if (isChallengeModeActive) {
+        console.log("ENCOUNTER_END in an active Mythic Keystone dungeon is ignored.")
+        return;
+    }
+    
     const videoStopDate = line.date();
     const encounterResult = Boolean(parseInt(line.args[5], 10));
 
