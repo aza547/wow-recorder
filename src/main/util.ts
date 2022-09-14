@@ -88,6 +88,7 @@ const loadAllVideos = (storageDir: any, videoState: any) => {
         zoneID: metadata.zoneID,
         encounter: getVideoEncounter(metadata),
         encounterID: metadata.encounterID,
+        difficultyID: metadata.difficultyID,
         duration: metadata.duration,
         result: metadata.result, 
         date: getVideoDate(videoDate),

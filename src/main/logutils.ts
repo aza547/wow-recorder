@@ -86,6 +86,7 @@ class LogLine {
     category: string;
     zoneID?: number;
     encounterID?: number;
+    difficultyID? : number;
     duration: number;
     result: boolean;
     playerName?: string;
@@ -391,7 +392,8 @@ function handleEncounterStartLine (line: LogLine): void {
         return;
     }
 
-    const encounterID = parseInt(line.args[1], 10)
+    const encounterID = parseInt(line.args[1], 10);
+    const difficultyID = parseInt(line.args[3], 10);
 
     videoStartDate = line.date();
 
@@ -399,6 +401,7 @@ function handleEncounterStartLine (line: LogLine): void {
         name: "name",
         category: "Raids",
         encounterID: encounterID,
+        difficultyID: difficultyID,
         duration: 0,
         result: false,
     }
