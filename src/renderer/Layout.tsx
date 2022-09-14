@@ -102,8 +102,27 @@ export default function Layout() {
   const [state, setState] = React.useState({
     categoryIndex: 0,
     videoIndex: 0,
-    videoState: ipc.sendSync('getVideoState', categories)
+    videoState: ipc.sendSync('getVideoState', categories),
+    videoMuted: false,
+    videoVolume: 1, // (Double) 0.00 - 1.00
   });
+
+  const getVideoPlayer = () => {
+    return (document.getElementById('video-player') as HTMLMediaElement);
+  }
+
+  const updateCurrentVideoSettings = () => {
+    const video = getVideoPlayer()
+    if (video) {
+      setState(prevState => {
+        return {
+          ...prevState,
+          videoMuted: video.muted,
+          videoVolume: video.volume,
+        }
+      });
+    }
+  }
 
   /**
    * Update the state variable following a change of selected category.
@@ -122,6 +141,7 @@ export default function Layout() {
    * Update the state variable following a change of selected video.
    */
   const handleChangeVideo = (_event: React.SyntheticEvent, newValue: number) => {
+    updateCurrentVideoSettings();
     setState(prevState => { 
       return {
         ...prevState, 
@@ -162,6 +182,18 @@ export default function Layout() {
     // > load (mount) and component unload (unmount).
     []
   );
+
+  /**
+   * When a new video is selected, let's set the video player volume and mute state
+   */
+  React.useEffect(() => {
+    const video = getVideoPlayer()
+    if (video) {
+      video.muted = state.videoMuted;
+      video.volume = state.videoVolume;
+    }
+
+  }, [state.videoIndex]);
 
   /**
    * Returns TSX for the tab buttons for category selection.
@@ -223,7 +255,7 @@ export default function Layout() {
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
         <div className="video-container">
-          <video key = { videoFullPath } className="video" poster={ readyPoster } controls>
+          <video key = { videoFullPath } className="video" poster={ readyPoster } controls id="video-player">
             <source src={ videoFullPath } />
           </video>
         </div>
