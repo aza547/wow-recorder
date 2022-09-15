@@ -1,6 +1,6 @@
 import { Metadata } from './logutils';
 import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor } from './util';
-import { mainWindow }  from './main';
+import { AppStatus, mainWindow }  from './main';
 import { app } from 'electron';
 import path from 'path';
 
@@ -95,7 +95,7 @@ const glob = require('glob');
         console.log(addColor("Recorder: Start recording buffer", "cyan"));
         await obsRecorder.start();
         this._isRecordingBuffer = true;
-        if (mainWindow) mainWindow.webContents.send('updateStatus', 3);
+        if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
     
         // We store off this timer as a member variable as we will cancel
         // it when a real game is detected. 
@@ -118,7 +118,7 @@ const glob = require('glob');
         clearInterval(this._bufferRestartIntervalID);
         await obsRecorder.stop();
         this.isRecordingBuffer = false;
-        if (mainWindow) mainWindow.webContents.send('updateStatus', 0);
+        if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.WaitingForWoW);
         this.cleanupBuffer();
     }
 
@@ -152,7 +152,7 @@ const glob = require('glob');
         clearInterval(this._bufferRestartIntervalID);
         this.isRecordingBuffer = false;        
         this._isRecording = true;   
-        if (mainWindow) mainWindow.webContents.send('updateStatus', 1);
+        if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.Recording);
     }
 
     /**
@@ -178,7 +178,7 @@ const glob = require('glob');
             this.isRecordingBuffer = false;
 
             // Update the GUI to show we're processing a video. 
-            if (mainWindow) mainWindow.webContents.send('updateStatus', 4);
+            if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.SavingVideo);
 
             // Cut the video to length and write its metadata JSON file.
             // Await for this to finish before we return to waiting state.
