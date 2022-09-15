@@ -26,7 +26,7 @@ const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath))
 const logDir = path.dirname(logPath);
 log.transports.file.resolvePath = () => logPath;
 Object.assign(console, log.functions);
-console.log("[Main] App starting");
+console.log("[Main] App starting: version", app.getVersion());
 
 /**
  * Create a settings store to handle the config.
@@ -149,6 +149,7 @@ const createWindow = async () => {
     width: 1980 * 0.65,
     icon: getAssetPath('./icon/small-icon.png'),
     frame: false,
+    title: 'Warcraft Recorder v' + app.getVersion(),
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false,
@@ -158,7 +159,7 @@ const createWindow = async () => {
         : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
-
+  
   mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
 
   mainWindow.on('ready-to-show', () => {
@@ -167,6 +168,8 @@ const createWindow = async () => {
     const initialStatus = checkConfig() ? AppStatus.WaitingForWoW : AppStatus.InvalidConfig;
 
     updateStatus(initialStatus);
+
+    mainWindow.webContents.send('updateTitleBar', 'Warcraft Recorder v' + app.getVersion());
 
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
