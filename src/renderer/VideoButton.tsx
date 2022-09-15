@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
-import { VideoCategory, categories, videoButtonSx, specToClass, dungeonEncounters, dungeonsByMapId }  from 'main/constants';
+import { VideoCategory, categories, videoButtonSx, specializationById, dungeonEncounters, dungeonsByMapId }  from 'main/constants';
 import { VideoSegmentType, calculateCompletionResult } from 'main/keystone';
 import { getResultText, getFormattedDuration, getVideoResult, getInstanceDifficulty } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -41,7 +41,7 @@ export default function VideoButton(props: any) {
 
   const playerName = video.playerName;
   const specIcon: string = Images.spec[video.playerSpecID] || Images.spec[0];
-  const playerClass = specToClass[video.playerSpecID];
+  const playerClass = specializationById[video.playerSpecID]?.class;
   
   const dateDisplay: string = video.isFromToday ? video.time : video.date;
   const dateHoverText = video.date + " " + video.time;
