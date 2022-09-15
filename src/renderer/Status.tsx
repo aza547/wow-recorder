@@ -3,7 +3,24 @@ import eyeIcon from  '../../assets/icon/sleep-icon.png';
 import errorIcon from  '../../assets/icon/error-icon.png';
 import watchIcon from  '../../assets/icon/watch-icon.png';
 import savingIcon from '../../assets/icon/saving-icon.png';
-import * as React from 'react';
+import { useState, useEffect } from 'react';
+import { AppStatus } from 'main/types';
+
+type StatusMessageType = 'error' | 'status';
+
+type StatusMessageObjectType = {
+  title: string,
+  type: StatusMessageType,
+  icon: string,
+};
+
+const statusMessages: { [key: number]: StatusMessageObjectType } = {
+  [AppStatus.WaitingForWoW]:   { type: 'status', icon: eyeIcon, title: 'Waiting for WoW to start' },
+  [AppStatus.Recording]:       { type: 'status', icon: recordIcon, title: 'Recording' },
+  [AppStatus.InvalidConfig]:   { type: 'error', icon: errorIcon, title: 'Failed to launch, check config is valid' },
+  [AppStatus.ReadyAndWaiting]: { type: 'status', icon: watchIcon, title: 'Ready and waiting'},
+  [AppStatus.SavingVideo]:     { type: 'status', icon: savingIcon, title: 'Saving video' },
+};
 
 export default function Status() {
 
@@ -15,54 +32,22 @@ export default function Status() {
    *   3 - watching
    *   4 - saving
    */
-  const [status, setStatus] = React.useState(0);
+  const [status, setStatus] = useState(AppStatus.WaitingForWoW);
 
   /**
    * Update status handler.
    */
-   React.useEffect(() => {
+   useEffect(() => {
     window.electron.ipcRenderer.on('updateStatus', (status) => {
-      setStatus(status);
+      setStatus(status as AppStatus);
     });
   }, []);
 
-  /**
-   * Get the status, either watching, recording, or error.
-   */
-  function getStatus() {
-    if (status === 0) {
-      return(
-        <div id="status" title="Waiting for WoW to start">
-          <img id="eye-icon" alt="icon" src={ eyeIcon }/>
-        </div>
-      )} else if (status === 1) {
-        return(
-          <div id="status">
-            <img id="status-icon" title="Recording" alt="icon" src={ recordIcon }/>
-          </div>
-      )} else if (status === 2) {
-        return(
-          <div id="status">
-            <img id="error-icon" title="Failed to launch, check config is valid" alt="icon" src={ errorIcon }/>
-          </div>
-      )} else if (status === 3) {
-        return(
-          <div id="status">
-            <img id="error-icon" title="Ready and waiting" alt="icon" src={ watchIcon }/>
-          </div>
-      )} else if (status === 4) {
-        return(
-          <div id="status">
-            <img id="error-icon" title="Saving video" alt="icon" src={ savingIcon }/>
-          </div>
-      )} else {
-        return(
-          <div>Never reach here, but avoid linter error.</div>
-      )}
-    }
+  const message = statusMessages[status];
 
   return (
-    getStatus()
+    <div id="status">
+      <img id={ message.type + '-icon' } title={ message.title } alt="icon" src={ message.icon }/>
+    </div>
   );
 }
-
