@@ -11,6 +11,7 @@ import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
+import { AppStatus } from './types';
 let recorder: Recorder;
 
 /**
@@ -158,7 +159,9 @@ const createWindow = async () => {
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');
 
-    updateStatus(checkConfig() ? 0 : 2);
+    const initialStatus = checkConfig() ? AppStatus.WaitingForWoW : AppStatus.InvalidConfig;
+
+    updateStatus(initialStatus);
 
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
@@ -266,7 +269,7 @@ const checkConfig = () : boolean => {
  * Updates the status icon for the application.
  * @param status the status number
  */
-const updateStatus = (status: number) => {
+const updateStatus = (status: AppStatus) => {
   if (mainWindow !== null) mainWindow.webContents.send('updateStatus', status);
 }
 
@@ -330,22 +333,24 @@ ipcMain.on('settingsWindow', (event, args) => {
       audioInputDevice = getStringConfigSafe(cfg, 'audio-input-device', 'all');
       audioOutputDevice = getStringConfigSafe(cfg, 'audio-output-device', 'all');
 
-      if (checkConfig()) {
-        updateStatus(0);
-
-        // If this is the first time config has been valid we
-        // need to create a recorder. If the config was previously
-        // valid but has since changed, just do a reconfigure. 
-        if (recorder) {
-          recorder.reconfigure(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
-        } else {
-          recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
-        }
-        watchLogs(baseLogPath); 
-        pollWowProcess();
-      } else {
-        updateStatus(2);
+      if (!checkConfig()) {
+        updateStatus(AppStatus.InvalidConfig);
+        return;
       }
+
+      updateStatus(AppStatus.WaitingForWoW);
+
+      // If this is the first time config has been valid we
+      // need to create a recorder. If the config was previously
+      // valid but has since changed, just do a reconfigure.
+      if (recorder) {
+        recorder.reconfigure(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
+      } else {
+        recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice);
+      }
+
+      watchLogs(baseLogPath);
+      pollWowProcess();
     })
 
     settingsWindow.close();
@@ -445,8 +450,3 @@ export {
   mainWindow,
   recorder
 };
-
-
-
-
-
