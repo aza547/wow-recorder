@@ -169,6 +169,7 @@ const createWindow = async () => {
 
     updateStatus(initialStatus);
 
+    // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send('updateTitleBar', 'Warcraft Recorder v' + app.getVersion());
 
     if (process.env.START_MINIMIZED) {
