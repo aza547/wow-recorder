@@ -282,37 +282,47 @@ const getSortedVideos = async (storageDir: string): Promise<VideoInfo[]> => {
  * more material than the user has allowed us.
  */
 const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise<void> => {
+    let videoToDelete;
     const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
 
     let files = await getSortedVideos(storageDir);
     console.debug(`[Size Monitor] Running (max size = ${maxStorageGB} GB)`);
 
     files = files.map((file: any) => {
-        const metadata = getMetadataForVideo(file);
+        const metadata = getMetadataForVideo(file.name);
         return { ...file, metadata, };
     });
 
-    // Consider files with NO metadata (dangling video files)
-    // and files that ARE NOT protected
-    files = files.filter((file: any) => !file.hasOwnProperty('metadata') || !Boolean(file.metadata.protected));
+    // Files without metadata are considered dangling and are cleaned up. 
+    const danglingFiles = files.filter((file: any) => !file.hasOwnProperty('metadata') || !file.metadata);
+    const unprotectedFiles = files.filter((file: any) => file.hasOwnProperty('metadata') && file.metadata && !Boolean(file.metadata.protected));
+
+    if (danglingFiles.length !== 0) {
+        console.log(`[Size Monitor] Deleting ${danglingFiles.length} dangling video(s)`);
+
+        while (videoToDelete = danglingFiles.pop()) {
+            console.log(`[Size Monitor] Delete dangling video: ${videoToDelete.name}`)
+            deleteVideo(videoToDelete.name);
+        }
+    }
 
     // Filter files that doesn't cause the total video file size to exceed the maximum
     // as given by `maxStorageBytes`
     let totalVideoFileSize = 0;
-    files = files.filter((file: any) => {
+
+    const filesOverMaxStorage = unprotectedFiles.filter((file: any) => {
         totalVideoFileSize += file.size;
         return totalVideoFileSize > maxStorageBytes;
     });
 
-    if (files.length == 0) {
+    if (filesOverMaxStorage.length === 0) {
         return;
     }
 
-    console.log(`[Size Monitor] Deleting ${files.length} old video(s)`)
-    let videoToDelete;
+    console.log(`[Size Monitor] Deleting ${filesOverMaxStorage.length} old video(s)`)
 
-    while (videoToDelete = files.pop()) {
-        console.log(`[Size Monitor] Delete oldest video: ${videoToDelete.name}`)
+    while (videoToDelete = filesOverMaxStorage.pop()) {
+        console.log(`[Size Monitor] Delete oldest video: ${videoToDelete.name}`);
         deleteVideo(videoToDelete.name);
     }
 

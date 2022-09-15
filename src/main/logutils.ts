@@ -303,6 +303,7 @@ const handleLogLine = (line: string) => {
  */
 function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return; 
+    playerCombatant = undefined;
     const zoneID = parseInt(line.args[1], 10);
 
     // If all goes to plan we don't need this but we do it incase the game
@@ -380,7 +381,6 @@ function handleChallengeModeStartLine (line: LogLine): void {
     if (activeChallengeMode) {
         console.warn("[ChallengeMode] A Challenge Mode instance is already in progress; ending it.")
     }
-
     videoStartDate = line.date();
 
     activeChallengeMode = new ChallengeModeDungeon(
