@@ -262,6 +262,12 @@ const glob = require('glob');
      */
     reconfigure = (outputPath: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
         this._maxStorage = maxStorage;
+
+        // User might just have shrunk the size, so run the size monitor.
+        runSizeMonitor(this._storageDir, this._maxStorage)
+        .then(() => {
+            if (mainWindow) mainWindow.webContents.send('refreshState');
+        });
       
         if (this._isRecording) {
             obsRecorder.stop();       

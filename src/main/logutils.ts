@@ -300,6 +300,7 @@ const handleLogLine = (line: string) => {
  */
 function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return; 
+    playerCombatant = undefined;
     const zoneID = parseInt(line.args[1], 10);
 
     // If all goes to plan we don't need this but we do it incase the game
@@ -391,7 +392,8 @@ function handleEncounterStartLine (line: LogLine): void {
         console.log("ENCOUNTER_START in an active Mythic Keystone dungeon is ignored.")
         return;
     }
-
+    
+    playerCombatant = undefined;
     const encounterID = parseInt(line.args[1], 10);
     const difficultyID = parseInt(line.args[3], 10);
 
@@ -487,6 +489,7 @@ function handleZoneChange (line: LogLine): void {
  * @param line the SPELL_AURA_APPLIED line
  */
 function handleSpellAuraAppliedLine (line: LogLine): void {
+    if (isChallengeModeActive) return;
     if (playerCombatant) return;
     if (combatantMap.size === 0) return;    
 
