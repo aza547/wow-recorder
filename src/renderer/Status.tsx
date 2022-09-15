@@ -6,7 +6,7 @@ import savingIcon from '../../assets/icon/saving-icon.png';
 import { useState, useEffect } from 'react';
 import { AppStatus } from 'main/types';
 
-type StatusMessageType = 'error' | 'status';
+type StatusMessageType = 'error' | 'status' | 'waiting';
 
 type StatusMessageObjectType = {
   title: string,
@@ -15,7 +15,7 @@ type StatusMessageObjectType = {
 };
 
 const statusMessages: { [key: number]: StatusMessageObjectType } = {
-  [AppStatus.WaitingForWoW]: { type: 'status', icon: eyeIcon, title: 'Waiting for WoW to start' },
+  [AppStatus.WaitingForWoW]: { type: 'waiting', icon: eyeIcon, title: 'Waiting for WoW to start' },
   [AppStatus.Recording]:     { type: 'status', icon: recordIcon, title: 'Recording' },
   [AppStatus.InvalidConfig]: { type: 'error', icon: errorIcon, title: 'Failed to launch, check config is valid' },
   [AppStatus.ReadyToRecord]: { type: 'status', icon: watchIcon, title: 'Ready and waiting'},
