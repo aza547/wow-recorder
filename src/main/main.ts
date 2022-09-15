@@ -448,6 +448,5 @@ app
 
 export {
   mainWindow,
-  recorder,
-  AppStatus
+  recorder
 };

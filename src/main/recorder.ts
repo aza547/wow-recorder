@@ -95,7 +95,7 @@ const glob = require('glob');
         console.log(addColor("Recorder: Start recording buffer", "cyan"));
         await obsRecorder.start();
         this._isRecordingBuffer = true;
-        if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyAndWaiting);
+        if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
     
         // We store off this timer as a member variable as we will cancel
         // it when a real game is detected. 

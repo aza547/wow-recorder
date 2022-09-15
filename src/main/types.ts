@@ -2,7 +2,7 @@ enum AppStatus {
     WaitingForWoW,
     Recording,
     InvalidConfig,
-    ReadyAndWaiting,
+    ReadyToRecord,
     SavingVideo,
 };
 

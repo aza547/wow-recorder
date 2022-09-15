@@ -15,23 +15,15 @@ type StatusMessageObjectType = {
 };
 
 const statusMessages: { [key: number]: StatusMessageObjectType } = {
-  [AppStatus.WaitingForWoW]:   { type: 'status', icon: eyeIcon, title: 'Waiting for WoW to start' },
-  [AppStatus.Recording]:       { type: 'status', icon: recordIcon, title: 'Recording' },
-  [AppStatus.InvalidConfig]:   { type: 'error', icon: errorIcon, title: 'Failed to launch, check config is valid' },
-  [AppStatus.ReadyAndWaiting]: { type: 'status', icon: watchIcon, title: 'Ready and waiting'},
-  [AppStatus.SavingVideo]:     { type: 'status', icon: savingIcon, title: 'Saving video' },
+  [AppStatus.WaitingForWoW]: { type: 'status', icon: eyeIcon, title: 'Waiting for WoW to start' },
+  [AppStatus.Recording]:     { type: 'status', icon: recordIcon, title: 'Recording' },
+  [AppStatus.InvalidConfig]: { type: 'error', icon: errorIcon, title: 'Failed to launch, check config is valid' },
+  [AppStatus.ReadyToRecord]: { type: 'status', icon: watchIcon, title: 'Ready and waiting'},
+  [AppStatus.SavingVideo]:   { type: 'status', icon: savingIcon, title: 'Saving video' },
 };
 
 export default function Status() {
 
-  /**
-   * Recorder subprocess status.
-   *   0 - waiting
-   *   1 - recording
-   *   2 - stopped/error
-   *   3 - watching
-   *   4 - saving
-   */
   const [status, setStatus] = useState(AppStatus.WaitingForWoW);
 
   /**
