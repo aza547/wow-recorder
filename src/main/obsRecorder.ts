@@ -136,19 +136,54 @@ const setupScene = (monitorIndex: number) => {
   console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
   const { physicalWidth, physicalHeight } = displayInfo(monitorIndexFromZero);
 
+  const obsSettings = osn.NodeObs.OBS_settings_getSettings('Video').data;
+
+  // Checks if val is +-1 compare
+  const isClose = (val: number, compare: number) => {
+    return Math.abs(compare - val) <= 1;
+  };
+
+  // Checks if resolution is close enough to monitor, and if so, sets the settingString.
+  const checkRes = (resolution: string) => {
+    const [resW, resH] = resolution.split('x');
+
+    if (
+      isClose(parseInt(resW, 10), physicalWidth) &&
+      isClose(parseInt(resH, 10), physicalHeight)
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
+  obsSettings.forEach((subCategory: any) => {
+    subCategory.parameters.forEach((param: any) => {
+      if (param.name === 'Base' || param.name === 'Output') {
+        console.log(param.name, param.currentValue, param.values);
+        param.values.forEach((vpair: { [key: string]: string }) => {
+          const res = Object.keys(vpair)[0];
+          if (checkRes(res)) {
+            param.currentValue = res;
+            console.info('Setting Video', param.name, 'to', res);
+          }
+        });
+      }
+    });
+  });
+
+  osn.NodeObs.OBS_settings_saveSettings('Video', obsSettings);
+
   // Update source settings:
   let settings = videoSource.settings;
   settings['monitor'] = monitorIndexFromZero;
-  settings['width'] = physicalWidth;
-  settings['height'] = physicalHeight;
   videoSource.update(settings);
   videoSource.save();
 
   const outputWidth = physicalWidth;
   const outputHeight = physicalHeight;
-  
-  setSetting('Video', 'Base', `${outputWidth}x${outputHeight}`);
-  setSetting('Video', 'Output', `${outputWidth}x${outputHeight}`);
+
   const videoScaleFactor = physicalWidth / outputWidth;
 
   // A scene is necessary here to properly scale captured screen size to output video size
