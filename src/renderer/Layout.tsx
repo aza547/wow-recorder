@@ -111,16 +111,15 @@ export default function Layout() {
     return (document.getElementById('video-player') as HTMLMediaElement);
   }
 
-  const updateCurrentVideoSettings = () => {
+  /**
+   * Read and store the video player state of 'volume' and 'muted' so that we may
+   * restore it when selecting a different video.
+   */
+  const readVideoPlayerSettings = () => {
     const video = getVideoPlayer()
     if (video) {
-      setState(prevState => {
-        return {
-          ...prevState,
-          videoMuted: video.muted,
-          videoVolume: video.volume,
-        }
-      });
+        state.videoMuted = video.muted;
+        state.videoVolume = video.volume;
     }
   }
 
@@ -141,7 +140,7 @@ export default function Layout() {
    * Update the state variable following a change of selected video.
    */
   const handleChangeVideo = (_event: React.SyntheticEvent, newValue: number) => {
-    updateCurrentVideoSettings();
+    readVideoPlayerSettings();
     setState(prevState => { 
       return {
         ...prevState, 
