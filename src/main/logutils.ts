@@ -68,7 +68,7 @@ class LogLine {
         const dateObj = new Date();
 
         if (day) dateObj.setDate(day);
-        if (month) dateObj.setMonth(month);
+        if (month) dateObj.setMonth(month - 1);
         dateObj.setHours(hours);
         dateObj.setMinutes(mins);
         dateObj.setSeconds(secs);
