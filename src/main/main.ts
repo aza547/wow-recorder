@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, getStringConfigSafe } from './util';
+import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe } from './util';
 import { watchLogs, pollWowProcess, runRecordingTest } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -41,10 +41,14 @@ let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
 let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
 let audioInputDevice: string = getStringConfigSafe(cfg, 'audio-input-device', 'all');
 let audioOutputDevice: string = getStringConfigSafe(cfg, 'audio-output-device', 'all');
-let minEncounterDuration: number = getNumberConfigSafe(cfg, 'min-encounter-duration', 15);
+let minEncounterDuration: number = getNumberConfigSafe(cfg, 'min-encounter-duration');
 
 if (!monitorIndex) {
   monitorIndex = defaultMonitorIndex(cfg);
+}
+
+if (!minEncounterDuration) {
+  minEncounterDuration = defaultMinEncounterDuration(cfg);
 }
 
 /**

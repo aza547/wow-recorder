@@ -1,6 +1,7 @@
 import { Metadata } from './logutils';
 import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor } from './util';
-import { AppStatus, mainWindow }  from './main';
+import { mainWindow }  from './main';
+import { AppStatus } from './types';
 import { app } from 'electron';
 import path from 'path';
 

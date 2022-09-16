@@ -574,6 +574,15 @@ const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: str
 }
 
 /**
+ *  Default the minimum encounter duration to 15. 
+ */
+ const defaultMinEncounterDuration = (cfg: ElectronStore): number => {
+    console.info("Defaulting minimum encounter duration to 15");
+    cfg.set('min-encounter-duration', 15);
+    return 15;
+}
+
+/**
  *  Add some escape characters to color text. Just return the string
  *  if production as don't want to litter real logs with this as it just
  *  looks messy.
@@ -604,6 +613,7 @@ export {
     getPathConfigSafe,
     getNumberConfigSafe,
     getStringConfigSafe,
-    defaultMonitorIndex, 
+    defaultMonitorIndex,
+    defaultMinEncounterDuration,
     addColor
 };
