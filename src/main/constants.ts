@@ -171,6 +171,36 @@ const dungeonsByMapId: { [id: number]: string; } = {
   392: 'Tazavesh: Gambit',
 }
 
+/**
+ * Alloted time for Mythic Keystone dungeons, in seconds, the format of:
+ *
+ * mapId: [3 chest, 2 chest, 1 chest]
+ *
+ * The last one is obviously also the one the determines if a key was timed or not.
+ *
+ * Tip: It's easier to keep them as a calculation here, for comparison when Blizzard
+ * occasionally adjusts timers for a dungeon.
+ */
+const dungeonTimersByMapId: { [id: number]: number[]; } = {
+  206: [(40 * 60), (40 * 60), (40 * 60)],
+  377: [(43 * 60), (34 * 60) + 25, (25 * 60) + 49],
+  378: [(32 * 60), (25 * 60) + 36, (19 * 60) + 12],
+  375: [(30 * 60), (24 * 60), (18 * 60)],
+  379: [(38 * 60), (30 * 60) + 24, (22 * 60) + 38],
+  380: [(41 * 60), (32 * 60) + 48, (24 * 60) + 36],
+  381: [(39 * 60), (31 * 60) + 12, (23 * 60) + 24],
+  376: [(36 * 60), (28 * 60) + 48, (21 * 60) + 36],
+  382: [(38 * 60), (30 * 60) + 24, (22 * 60) + 38],
+  227: [(42 * 60), (33 * 60) + 36, (25 * 60) + 12],
+  234: [(35 * 60), (28 * 60), (21 * 60)],
+  369: [(38 * 60), (30 * 60) + 24, (22 * 60) + 38],
+  370: [(32 * 60), (25 * 60) + 36, (19 * 60) + 12],
+  391: [(39 * 60), (31 * 60) + 12, (23 * 60) + 24],
+  392: [(30 * 60), (24 * 60), (18 * 60)],
+  169: [(32 * 60), (25 * 60) + 36, (19 * 60) + 12],
+  166: [(30 * 60), (24 * 60), (18 * 60)],
+}
+
 const dungeonEncounters: { [id: number]: string } = {
   // Grimrail Depot
   1715: 'Rocketspark and Borka',
@@ -451,6 +481,7 @@ export {
     dungeonsByMapId,
     dungeonsByZoneId,
     instanceNamesByZoneId,
+    dungeonTimersByMapId,
     dungeonAffixesById,
     dungeonEncounters,
     specToClass,
