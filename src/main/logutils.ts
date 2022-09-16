@@ -212,6 +212,9 @@ const splitLogLine = (line: string, maxSplits?: number): LogLine => {
         if (c === '\n') {
             break;
         }
+        if (maxSplits && args_list.length >= maxSplits) {
+            break;
+        }
 
         if (in_quote) {
             if (c === '"') {
@@ -226,9 +229,6 @@ const splitLogLine = (line: string, maxSplits?: number): LogLine => {
                     list_items.at(-1)?.push(value);
                 } else {
                     args_list.push(value);
-                    if (maxSplits && args_list.length >= maxSplits) {
-                        break;
-                    }
                 }
 
                 value = '';
