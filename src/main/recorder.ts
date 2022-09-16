@@ -1,8 +1,9 @@
 import { Metadata } from './logutils';
 import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor } from './util';
-import { AppStatus, mainWindow }  from './main';
+import { mainWindow }  from './main';
 import { app } from 'electron';
 import path from 'path';
+import { AppStatus } from './types';
 
 const obsRecorder = require('./obsRecorder');
 const fs = require('fs');
