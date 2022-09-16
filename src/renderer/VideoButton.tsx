@@ -42,7 +42,7 @@ export default function VideoButton(props: any) {
 
   const playerName = video.playerName;
   const specIcon: string = Images.spec[video.playerSpecID] || Images.spec[0];
-  const playerClass = specToClass[video.playerSpecID];
+  const playerClass = specializationById[video.playerSpecID]?.class ?? '';
   
   const dateDisplay: string = video.isFromToday ? video.time : video.date;
   const dateHoverText = video.date + " " + video.time;

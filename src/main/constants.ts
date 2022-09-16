@@ -428,44 +428,56 @@ const videoButtonSx = {
   opacity: 1 
 }
 
-const specToClass: { [id: number]: string; } = {
-  250: "DEATHKNIGHT",
-  251: "DEATHKNIGHT",
-  252: "DEATHKNIGHT",
-  577: "DEMONHUNTER",
-  581: "DEMONHUNTER",
-  102: "DRUID",
-  103: "DRUID",
-  104: "DRUID",
-  105: "DRUID",
-  253: "HUNTER",
-  254: "HUNTER",
-  255: "HUNTER",
-  62:  "MAGE",
-  63:  "MAGE",
-  64:  "MAGE",
-  268: "MONK",
-  270: "MONK",
-  269: "MONK",
-  65:  "PALADIN",
-  66:  "PALADIN",
-  70:  "PALADIN",
-  256: "PRIEST",
-  257: "PRIEST",
-  258: "PRIEST",
-  259: "ROGUE",
-  260: "ROGUE",
-  261: "ROGUE",
-  262: "SHAMAN",
-  263: "SHAMAN",
-  264: "SHAMAN",
-  265: "WARLOCK",
-  266: "WARLOCK",
-  267: "WARLOCK",
-  71:  "WARRIOR",
-  72:  "WARRIOR",
-  73:  "WARRIOR"
-}
+type WoWCharacterDamageType = 'melee' | 'ranged'
+type WoWCharacterRoleType = 'tank' | 'healer' | 'damage'
+type WoWCharacterClassType = 'DEATHKNIGHT' | 'DEMONHUNTER' | 'DRUID' | 'HUNTER' | 'MAGE' | 'MONK' | 'PALADIN' | 'PRIEST' | 'ROGUE' | 'SHAMAN' | 'WARLOCK' | 'WARRIOR';
+
+type SpecializationObjectType = {
+  type: WoWCharacterDamageType,
+  role: WoWCharacterRoleType,
+  class: WoWCharacterClassType,
+  label: string,
+  name: string
+};
+
+const specializationById: { [id: number]: SpecializationObjectType } = {
+  250: { type: 'melee',  role: 'tank',   class: 'DEATHKNIGHT', label: 'Death Knight', name: 'Blood' },
+  251: { type: 'melee',  role: 'damage', class: 'DEATHKNIGHT', label: 'Death Knight', name: 'Frost' },
+  252: { type: 'melee',  role: 'damage', class: 'DEATHKNIGHT', label: 'Death Knight', name: 'Unholy' },
+  577: { type: 'melee',  role: 'damage', class: 'DEMONHUNTER', label: 'Demon Hunter', name: 'Havoc' },
+  581: { type: 'melee',  role: 'tank',   class: 'DEMONHUNTER', label: 'Demon Hunter', name: 'Vengeance' },
+  102: { type: 'ranged', role: 'damage', class: 'DRUID',       label: 'Druid',        name: 'Balance' },
+  103: { type: 'melee',  role: 'damage', class: 'DRUID',       label: 'Druid',        name: 'Feral' },
+  104: { type: 'ranged', role: 'tank',   class: 'DRUID',       label: 'Druid',        name: 'Guardian' },
+  105: { type: 'ranged', role: 'healer', class: 'DRUID',       label: 'Druid',        name: 'Restoration' },
+  253: { type: 'ranged', role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Beast Mastery' },
+  254: { type: 'ranged', role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Marksmanship' },
+  255: { type: 'melee',  role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Survival' },
+  62:  { type: 'ranged', role: 'damage', class: 'MAGE',        label: 'Mage',         name: 'Arcane' },
+  63:  { type: 'ranged', role: 'damage', class: 'MAGE',        label: 'Mage',         name: 'Fire' },
+  64:  { type: 'ranged', role: 'damage', class: 'MAGE',        label: 'Mage',         name: 'Frost' },
+  268: { type: 'melee',  role: 'tank',   class: 'MONK',        label: 'Monk',         name: 'Brewmaster' },
+  269: { type: 'melee',  role: 'damage', class: 'MONK',        label: 'Monk',         name: 'Windwalker' },
+  270: { type: 'melee',  role: 'healer', class: 'MONK',        label: 'Monk',         name: 'Mistweaver' },
+  65:  { type: 'melee',  role: 'healer', class: 'PALADIN',     label: 'Paladin',      name: 'Holy' },
+  66:  { type: 'melee',  role: 'tank',   class: 'PALADIN',     label: 'Paladin',      name: 'Protection' },
+  70:  { type: 'melee',  role: 'damage', class: 'PALADIN',     label: 'Paladin',      name: 'Retribution' },
+  256: { type: 'ranged', role: 'healer', class: 'PRIEST',      label: 'Priest',       name: 'Discipline' },
+  257: { type: 'ranged', role: 'healer', class: 'PRIEST',      label: 'Priest',       name: 'Holy' },
+  258: { type: 'ranged', role: 'damage', class: 'PRIEST',      label: 'Priest',       name: 'Shadow' },
+  259: { type: 'melee',  role: 'damage', class: 'ROGUE',       label: 'Rogue',        name: 'Assassination' },
+  260: { type: 'melee',  role: 'damage', class: 'ROGUE',       label: 'Rogue',        name: 'Outlaw' },
+  261: { type: 'melee',  role: 'damage', class: 'ROGUE',       label: 'Rogue',        name: 'Subtlety' },
+  262: { type: 'ranged', role: 'damage', class: 'SHAMAN',      label: 'Shaman',       name: 'Elemental' },
+  263: { type: 'melee',  role: 'damage', class: 'SHAMAN',      label: 'Shaman',       name: 'Enhancement' },
+  264: { type: 'ranged', role: 'healer', class: 'SHAMAN',      label: 'Shaman',       name: 'Restoration' },
+  265: { type: 'ranged', role: 'damage', class: 'WARLOCK',     label: 'Warlock',      name: 'Affliction' },
+  266: { type: 'ranged', role: 'damage', class: 'WARLOCK',     label: 'Warlock',      name: 'Demonology' },
+  267: { type: 'ranged', role: 'damage', class: 'WARLOCK',     label: 'Warlock',      name: 'Destruction' },
+  71:  { type: 'melee',  role: 'damage', class: 'WARRIOR',     label: 'Warrior',      name: 'Arms' },
+  72:  { type: 'melee',  role: 'damage', class: 'WARRIOR',     label: 'Warrior',      name: 'Fury' },
+  73:  { type: 'melee',  role: 'tank',   class: 'WARRIOR',     label: 'Warrior',      name: 'Protection' },
+};
 
 export {
     categories,
@@ -484,7 +496,7 @@ export {
     dungeonTimersByMapId,
     dungeonAffixesById,
     dungeonEncounters,
-    specToClass,
+    specializationById,
     encountersSanctum,
     encountersNathria,
     encountersSepulcher,
