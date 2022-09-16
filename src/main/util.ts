@@ -414,6 +414,12 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         return false;
     }
 
+    const minEncounterDuration = getNumberConfigSafe(cfg, 'min-encounter-duration');
+
+    if ((!minEncounterDuration) || (minEncounterDuration < 0) || (minEncounterDuration > 10000)) {
+        return false;
+    }
+
     return true;
 }  
 

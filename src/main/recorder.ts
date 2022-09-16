@@ -21,18 +21,20 @@ const glob = require('glob');
     private _monitorIndex: number;
     private _audioInputDeviceId: string;
     private _audioOutputDeviceId: string;
+    private _minEncounterDuration: number;
 
 
     /**
      * Constructs a new Recorder.
      */
-    constructor(storageDir: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) {
+    constructor(storageDir: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string, minEncounterDuration: number) {
         console.debug("Construcing recorder with: ", storageDir, maxStorage, monitorIndex);
         this._storageDir = storageDir;
         this._maxStorage = maxStorage;     
         this._monitorIndex = monitorIndex;           
-        this._audioInputDeviceId = audioInputDeviceId
-        this._audioOutputDeviceId = audioOutputDeviceId
+        this._audioInputDeviceId = audioInputDeviceId;
+        this._audioOutputDeviceId = audioOutputDeviceId;
+        this._minEncounterDuration = minEncounterDuration;
 
         // Something like: C:\Users\alexa\AppData\Local\Temp\WarcraftRecorder
         this._bufferStorageDir = path.join(app.getPath("temp"), "WarcraftRecorder"); 
@@ -180,9 +182,11 @@ const glob = require('glob');
             // Update the GUI to show we're processing a video. 
             if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.SavingVideo);
 
-            // Cut the video to length and write its metadata JSON file.
-            // Await for this to finish before we return to waiting state.
-            await this.finalizeVideo(metadata);
+            if ((metadata.category != "Raids") || (metadata.duration - overrun >= this._minEncounterDuration)) {
+                // Cut the video to length and write its metadata JSON file.
+                // Await for this to finish before we return to waiting state.
+                await this.finalizeVideo(metadata);
+            }
 
             // Run the size monitor to ensure we stay within size limit.
             // Need some maths to convert GB to bytes
@@ -260,8 +264,9 @@ const glob = require('glob');
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = (outputPath: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
+    reconfigure = (outputPath: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string, minEncounterDuration: number) => {
         this._maxStorage = maxStorage;
+        this._minEncounterDuration = minEncounterDuration;
 
         // User might just have shrunk the size, so run the size monitor.
         runSizeMonitor(this._storageDir, this._maxStorage)
