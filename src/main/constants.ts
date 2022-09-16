@@ -174,6 +174,16 @@ const dungeonsByMapId: { [id: number]: string; } = {
   392: 'Tazavesh: Gambit',
 }
 
+/**
+ * Alloted time for Mythic Keystone dungeons, in seconds, the format of:
+ *
+ * mapId: [3 chest, 2 chest, 1 chest]
+ *
+ * The last one is obviously also the one the determines if a key was timed or not.
+ *
+ * Tip: It's easier to keep them as a calculation here, for comparison when Blizzard
+ * occasionally adjusts timers for a dungeon.
+ */
 const dungeonTimersByMapId: { [id: number]: number[]; } = {
   206: [(40 * 60), (40 * 60), (40 * 60)],
   377: [(43 * 60), (34 * 60) + 25, (25 * 60) + 49],
