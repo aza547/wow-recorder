@@ -1,24 +1,20 @@
-import { instanceDifficulty, InstanceDifficultyType } from "main/constants";
+import { instanceDifficulty, InstanceDifficultyType, VideoCategory } from "main/constants";
 
 /**
  * isCategoryPVP
  */
- const isCategoryPVP = (category: string) => {
+ const isCategoryPVP = (category: VideoCategory) => {
     if (!category) return false;
 
     const pvpCategories = [
-        "2v2", 
-        "3v3", 
-        "Skirmish", 
-        "Solo Shuffle", 
-        "Battlegrounds"
+        VideoCategory.TwoVTwo,
+        VideoCategory.ThreeVThree,
+        VideoCategory.Skirmish,
+        VideoCategory.SoloShuffle,
+        VideoCategory.Battlegrounds,
     ];
 
-    if (pvpCategories.includes(category)) {
-        return true;
-    } else {
-        return false;
-    }
+    return pvpCategories.includes(category);
 }  
 
 const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | null => {
@@ -32,11 +28,11 @@ const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | n
 /**
  * getResultText
  */
- const getResultText = (category: string, isGoodResult: boolean) => {
+ const getResultText = (category: VideoCategory, isGoodResult: boolean) => {
 
     // Not sure how we can decide who won or lost yet. 
     // Combat log doesn't make it obvious.
-    if ((category == "Battlegrounds") || (category == "Solo Shuffle")) {
+    if (category == VideoCategory.Battlegrounds || category == VideoCategory.SoloShuffle) {
         return "";
     }
 

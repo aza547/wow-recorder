@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds }  from './constants';
+import { battlegrounds, VideoCategory }  from './constants';
 import { UnitFlags } from './types';
 
 const tail = require('tail').Tail;
@@ -84,7 +84,7 @@ class LogLine {
  */
  type Metadata = {
     name: string;
-    category: string;
+    category: VideoCategory;
     zoneID?: number;
     encounterID?: number;
     difficultyID? : number;
@@ -310,7 +310,7 @@ function handleArenaStartLine (line: LogLine): void {
 
     metadata = {
         name: "name",
-        category: line.args[3],
+        category: (line.args[3] as VideoCategory),
         zoneID: zoneID,
         duration: 0,
         result: false,
@@ -335,7 +335,7 @@ function handleArenaStopLine (line: LogLine): void {
     
     // Helpfully ARENA_MATCH_END events contain the game duration. Solo shuffle
     // ARENA_MATCH_END duration only counts the last game so needs special handling. 
-    if (metadata.category !== "Solo Shuffle") {
+    if (metadata.category !== VideoCategory.SoloShuffle) {
         duration = parseInt(line.args[2], 10);
     } else {
         const soloShuffleStopDate = line.date();
@@ -402,7 +402,7 @@ function handleEncounterStartLine (line: LogLine): void {
 
     metadata = {
         name: "name",
-        category: "Raids",
+        category: VideoCategory.Raids,
         encounterID: encounterID,
         difficultyID: difficultyID,
         duration: 0,
@@ -458,11 +458,11 @@ function handleZoneChange (line: LogLine): void {
     let isRecordingArena = false;
 
     if (metadata !== undefined) {
-        isRecordingBG = (metadata.category === "Battlegrounds");
-        isRecordingArena = (metadata.category === "2v2") || 
-                           (metadata.category === "3v3") || 
-                           (metadata.category === "Solo Shuffle") ||
-                           (metadata.category === "Skirmish");
+        isRecordingBG = (metadata.category === VideoCategory.Battlegrounds);
+        isRecordingArena = (metadata.category === VideoCategory.TwoVTwo) ||
+                           (metadata.category === VideoCategory.ThreeVThree) ||
+                           (metadata.category === VideoCategory.SoloShuffle) ||
+                           (metadata.category === VideoCategory.Skirmish);
     }
 
     if (!isRecording && isNewZoneBG) {
@@ -528,13 +528,12 @@ function handleCombatantInfoLine (line: LogLine): void {
 function battlegroundStart (line: LogLine): void {
     const zoneID = parseInt(line.args[1], 10);
     const battlegroundName = battlegrounds[zoneID];
-    const category = "Battlegrounds";
 
     videoStartDate = line.date();
 
     metadata = {
         name: battlegroundName,
-        category: category,
+        category: VideoCategory.Battlegrounds,
         zoneID: zoneID,
         duration: 0,
         result: false,
