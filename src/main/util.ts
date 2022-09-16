@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { URL } from 'url';
 import path from 'path';
-import { categories, months, zones, encountersNathria, encountersSanctum, encountersSepulcher, VideoCategory }  from './constants';
+import { categories, months, zones, VideoCategory, dungeonsByMapId, instanceNamesByZoneId }  from './constants';
 import { Metadata }  from './logutils';
 import ElectronStore from 'electron-store';
 const chalk = require('chalk');
@@ -172,51 +172,44 @@ const getVideoTime = (date: Date) => {
  */
 const getVideoZone = (metadata: Metadata) => {
     const zoneID = metadata.zoneID;
-    const encounterID = metadata.encounterID;
     const category = metadata.category;
 
-    const isRaidEncounter = (category === VideoCategory.Raids) && encounterID; 
-    let zone: string;
-    
-    if (isRaidEncounter) {
-        zone = getRaidName(encounterID);
-    } else if (zoneID) {
-        zone = zones[zoneID];
-    } else {
-        zone = "Unknown";
+    if (zoneID) {
+        if (category === VideoCategory.Raids || category === VideoCategory.MythicPlus) {
+            return getInstanceName(zoneID);
+        }
+
+        return zones[zoneID];
     }
 
-    return zone;
+    return "Unknown";
 }
 
 /**
- * Get the raid name from the encounter ID.
+ * Get the instance name from the encounter ID.
  */
- const getRaidName = (encounterID: number) => {
-    let raidName: string;
-
-    if (encountersNathria.hasOwnProperty(encounterID)) {
-        raidName = "Castle Nathria";
-    } else if (encountersSanctum.hasOwnProperty(encounterID)) {
-        raidName = "Sanctum of Domination";
-    } else if (encountersSepulcher.hasOwnProperty(encounterID)) {
-        raidName = "Sepulcher of the First Ones";
-    } else {
-        raidName = "Unknown Raid";
+const getInstanceName = (zoneID: number) => {
+    if (instanceNamesByZoneId.hasOwnProperty(zoneID)) {
+        return instanceNamesByZoneId[zoneID]
     }
 
-    return raidName;
+    return 'Unknown Instance';
 }
+
 
 /**
  * Get the encounter name.
  */
 const getVideoEncounter = (metadata: Metadata) => {
-    if (metadata.encounterID) { 
-        return zones[metadata.encounterID]; 
-    } else {
-        return metadata.category; 
+    if (metadata.challengeMode !== undefined) {
+        return dungeonsByMapId[metadata.challengeMode.mapId];
     }
+
+    if (metadata.encounterID) {
+        return zones[metadata.encounterID];
+    }
+
+    return metadata.category;
 }
 
 /**
