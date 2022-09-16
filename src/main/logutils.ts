@@ -1,8 +1,8 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { calculateCompletionResult, ChallengeModeDungeon, ChallengeModeVideoSegment, VideoSegmentType } from './keystone';
-import { VideoCategory, battlegrounds, dungeonEncounters }  from './constants';
+import { calculateKeystoneCompletionResult, ChallengeModeDungeon, ChallengeModeVideoSegment, VideoSegmentType } from './keystone';
+import { VideoCategory, battlegrounds, dungeonEncounters, dungeonTimersByMapId, dungeonsByMapId }  from './constants';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -38,6 +38,7 @@ const interestingCombatLogEvents: InterestingCombatLogEventsType = {
     'ZONE_CHANGE': handleZoneChange,
     'COMBATANT_INFO': handleCombatantInfoLine,
     'SPELL_AURA_APPLIED': handleSpellAuraAppliedLine,
+    'UNIT_DIED': handleUnitDiedLine,
 };
 
 /**
@@ -379,15 +380,26 @@ function handleChallengeModeStartLine (line: LogLine): void {
     // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
     // is encountered.
     if (activeChallengeMode) {
-        console.warn("[ChallengeMode] A Challenge Mode instance is already in progress; ending it.")
+        console.warn("[ChallengeMode] A Challenge Mode instance is already in progress; abandoning it.")
     }
     videoStartDate = line.date();
 
+    const zoneName = line.args[2];
+    const mapId = parseInt(line.args[3], 10);
+
+    if (!(mapId in dungeonTimersByMapId && mapId in dungeonsByMapId)) {
+        console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
+    }
+
+    const dungeonAffixes = line.args[5].map((v: string) => parseInt(v, 10));
+
     activeChallengeMode = new ChallengeModeDungeon(
-        parseInt(line.args[2], 10), // zoneId
-        parseInt(line.args[3], 10), // mapId
-        parseInt(line.args[4], 10), // Keystone Level
-        line.args[5].map((v: string) => parseInt(v, 10)) // Array of affixes, as numbers
+        videoStartDate.getTime(),    // Start time
+        dungeonTimersByMapId[mapId], // Dungeon timers
+        parseInt(line.args[2], 10),  // zoneId
+        mapId,                       // mapId
+        parseInt(line.args[4], 10),  // Keystone Level
+        dungeonAffixes,              // Array of affixes, as numbers
     )
 
     activeChallengeMode.addVideoSegment(new ChallengeModeVideoSegment(
@@ -438,7 +450,7 @@ function handleChallengeModeEndLine (line: LogLine): void {
     activeChallengeMode.duration = Math.round(parseInt(line.args[4], 10) / 1000);
 
     // Calculate whether the key was timed or not
-    activeChallengeMode.timed = calculateCompletionResult(activeChallengeMode.mapId, activeChallengeMode.duration) > 0;
+    activeChallengeMode.timed = calculateKeystoneCompletionResult(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
 
     console.debug("[ChallengeMode] Ending current video segment")
     activeChallengeMode.endVideoSegment(videoStopDate);
@@ -504,22 +516,19 @@ function handleEncounterStopLine (line: LogLine): void {
     const encounterResult = Boolean(parseInt(line.args[5], 10));
     const encounterID = parseInt(line.args[1], 10);
 
-    if (recorder.isRecording) {
-        if (activeChallengeMode) {
-            const currentSegment = activeChallengeMode.getCurrentVideoSegment()
-            if (currentSegment) {
-                currentSegment.result = encounterResult
-            }
-
-            const vSegment = new ChallengeModeVideoSegment(
-                VideoSegmentType.Trash, videoStopDate, getRelativeTimestampForVideoSegment(videoStopDate)
-            )
-
-            // Add a trash segment as the boss encounter ended
-            activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
-            console.debug(`[ChallengeMode] Ending boss encounter: ${dungeonEncounters[encounterID]}`)
+    if (recorder.isRecording && activeChallengeMode) {
+        const currentSegment = activeChallengeMode.getCurrentVideoSegment()
+        if (currentSegment) {
+            currentSegment.result = encounterResult
         }
 
+        const vSegment = new ChallengeModeVideoSegment(
+            VideoSegmentType.Trash, videoStopDate, getRelativeTimestampForVideoSegment(videoStopDate)
+        )
+
+        // Add a trash segment as the boss encounter ended
+        activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
+        console.debug(`[ChallengeMode] Ending boss encounter: ${dungeonEncounters[encounterID]}`)
         return;
     }
 
@@ -621,6 +630,14 @@ function handleCombatantInfoLine (line: LogLine): void {
 }
 
 /**
+ * Return a combatant by guid, if it exists.
+ */
+function getCombatantByGuid(guid: string): Combatant | undefined {
+    console.log("combatant map", combatantMap.keys())
+    return combatantMap.get(guid);
+}
+
+/**
  * ZONE_CHANGE event into a BG.  
  */
  const battlegroundStart = (line: LogLine) => {
@@ -670,6 +687,50 @@ function zoneChangeStop (line: LogLine): void {
     // Assume loss if zoned out of content. 
     metadata.result = false;
     recorder.stop(metadata);
+}
+
+/**
+ * Handle a unit dying, but only if it's a player and we're in a Mythic Keystone dungeon
+ */
+function handleUnitDiedLine (line: LogLine): void {
+    // This is only interesting in a Mythic Keystone dungeon
+    if (!activeChallengeMode) {
+        return;
+    }
+
+    const unitFlags = parseInt(line.args[7], 16);
+
+    if (!isUnitPlayer(unitFlags)) {
+        return;
+    }
+
+    const playerName = line.args[6];
+    const playerGuid = line.args[5];
+    const playerSpecId = getCombatantByGuid(playerGuid)?.specID ?? 0;
+
+    // Add player death and subtract 2 seconds from the time of death to allow the
+    // user to view a bit of the video before the death and not at the actual millisecond
+    // it happens.
+    const relativeTimeStamp = ((line.date().getTime() - 2) - activeChallengeMode.startTime) / 1000;
+    activeChallengeMode.addPlayerDeath(relativeTimeStamp, playerName, playerSpecId)
+}
+
+/**
+ * Determine if the unit is a player
+ *
+ * This is determined by the unit having these flags:
+ *
+ * 0x00000002 = COMBATLOG_OBJECT_AFFILIATION_PARTY
+ * 0x00000010 = COMBATLOG_OBJECT_REACTION_FRIENDLY
+ * 0x00000100 = COMBATLOG_OBJECT_CONTROL_PLAYER
+ * 0x00000400 = COMBATLOG_OBJECT_TYPE_PLAYER
+ *
+ * OR isUnitSelf(unitFlags)
+ *
+ * See more here: https://wowpedia.fandom.com/wiki/UnitFlag
+ */
+const isUnitPlayer = (unitFlags: number): boolean => {
+    return ((unitFlags & 0x512) === 0x512) || isUnitSelf(unitFlags);
 }
 
 /**

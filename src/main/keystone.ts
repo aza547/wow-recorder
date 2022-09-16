@@ -1,8 +1,12 @@
-import { dungeonTimersByMapId } from "./constants";
-
 enum VideoSegmentType {
     BossEncounter = 'Boss',
     Trash = 'Trash'
+};
+
+type ChallengeModePlayerDeathType = {
+    name: string,
+    specId: number,
+    timestamp: number,
 };
 
 class ChallengeModeVideoSegment {
@@ -29,14 +33,17 @@ class ChallengeModeDungeon {
     timed: boolean = false;
     duration: number = 0;
     videoSegments: ChallengeModeVideoSegment[] = []
+    playerDeaths: ChallengeModePlayerDeathType[] = []
 
     constructor(
+        public startTime: number,
+        public allottedTime: number[],
         public zoneId: number,
         public mapId: number, // Some dungeons like Karazhan and such have have the
                               // same zoneId for both Upper/Lower, but have distinct
                               // mapVersion numbers.
         public level: number,
-        public affixes: number[]
+        public affixes: number[],
     ) {}
 
     /**
@@ -80,6 +87,16 @@ class ChallengeModeDungeon {
     removeLastSegment() {
         this.videoSegments.pop();
     }
+
+    /**
+     * Add a player death to the log
+     */
+    addPlayerDeath(timestamp: number, name: string, specId: number) {
+        // Ensure a timestamp cannot be negative
+        timestamp = timestamp >= 0 ? timestamp : 0;
+
+        this.playerDeaths.push({ name, specId, timestamp });
+    }
 };
 
 /**
@@ -92,11 +109,9 @@ class ChallengeModeDungeon {
  * 0   = depleted,
  * 1-3 = keystone upgrade levels
  */
-const calculateCompletionResult = (mapId: number, duration: number): number => {
-    const timerValues = dungeonTimersByMapId[mapId]
-
-    for (let i = timerValues.length - 1; i >= 0; i--) {
-        if (duration <= timerValues[i]) {
+const calculateKeystoneCompletionResult = (allottedTime: number[], duration: number): number => {
+    for (let i = allottedTime.length - 1; i >= 0; i--) {
+        if (duration <= allottedTime[i]) {
             return i + 1;
         }
     }
@@ -108,5 +123,5 @@ export {
     VideoSegmentType,
     ChallengeModeVideoSegment,
     ChallengeModeDungeon,
-    calculateCompletionResult,
+    calculateKeystoneCompletionResult,
 }
