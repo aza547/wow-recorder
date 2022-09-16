@@ -115,7 +115,7 @@ const glob = require('glob');
             return;
         }
 
-        console.log(addColor("[Recorder] Recorder: Stop recording buffer", "cyan"));
+        console.log(addColor("[Recorder] Stop recording buffer", "cyan"));
         clearInterval(this._bufferRestartIntervalID);
         await obsRecorder.stop();
         this.isRecordingBuffer = false;
@@ -131,7 +131,7 @@ const glob = require('glob');
      * to; here be dragons. 
      */
     restartBuffer = async () => {
-        console.log(addColor("[Recorder] Recorder: Restart recording buffer", "cyan"));
+        console.log(addColor("[Recorder] Restart recording buffer", "cyan"));
         await obsRecorder.stop();
         this.isRecordingBuffer = false;
         setTimeout(() => {
@@ -149,7 +149,7 @@ const glob = require('glob');
      * start if we hit this in the 2s restart window). 
      */
     start = async () => {
-        console.log(addColor("[Recorder] Recorder: Start recording by cancelling buffer restart", "green"));
+        console.log(addColor("[Recorder] Start recording by cancelling buffer restart", "green"));
         clearInterval(this._bufferRestartIntervalID);
         this.isRecordingBuffer = false;        
         this._isRecording = true;   
@@ -165,9 +165,9 @@ const glob = require('glob');
      * @param {number} overrun how long to continue recording after stop is called
      */
     stop = (metadata: Metadata, overrun: number = 0) => {
-        console.log(addColor("[Recorder] Recorder: Stop recording after overrun", "green"));
+        console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
-        console.info("[Recorder] Recorder:", JSON.stringify(metadata));
+        console.info("[Recorder]" , JSON.stringify(metadata));
 
         // Wait for a delay specificed by overrun. This lets us
         // capture the boss death animation/score screens.  
