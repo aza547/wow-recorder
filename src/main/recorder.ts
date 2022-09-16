@@ -28,7 +28,14 @@ const glob = require('glob');
     /**
      * Constructs a new Recorder.
      */
-    constructor(storageDir: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string, minEncounterDuration: number) {
+    constructor(
+        storageDir: string, 
+        maxStorage: number,
+        monitorIndex: number,
+        audioInputDeviceId: string,
+        audioOutputDeviceId: string,
+        minEncounterDuration: number
+    ) {
         console.debug("Construcing recorder with: ", storageDir, maxStorage, monitorIndex);
         this._storageDir = storageDir;
         this._maxStorage = maxStorage;     
@@ -183,7 +190,9 @@ const glob = require('glob');
             // Update the GUI to show we're processing a video. 
             if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.SavingVideo);
 
-            if ((metadata.category != "Raids") || (metadata.duration - overrun >= this._minEncounterDuration)) {
+            const isRaid = metadata.category == "Raids";
+            const isLongEnough = (metadata.duration - overrun) >= this._minEncounterDuration;
+            if (!isRaid || isLongEnough) {
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
                 await this.finalizeVideo(metadata);
@@ -265,7 +274,14 @@ const glob = require('glob');
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = (outputPath: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string, minEncounterDuration: number) => {
+    reconfigure = (
+        outputPath: string, 
+        maxStorage: number, 
+        monitorIndex: number, 
+        audioInputDeviceId: string, 
+        audioOutputDeviceId: string, 
+        minEncounterDuration: number
+    ) => {
         this._maxStorage = maxStorage;
         this._minEncounterDuration = minEncounterDuration;
 
