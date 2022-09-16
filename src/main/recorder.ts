@@ -28,7 +28,7 @@ const glob = require('glob');
      * Constructs a new Recorder.
      */
     constructor(storageDir: string, maxStorage: number, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) {
-        console.debug("Construcing recorder with: ", storageDir, maxStorage, monitorIndex);
+        console.debug("[Recorder] Construcing recorder with: ", storageDir, maxStorage, monitorIndex);
         this._storageDir = storageDir;
         this._maxStorage = maxStorage;     
         this._monitorIndex = monitorIndex;           
@@ -39,7 +39,7 @@ const glob = require('glob');
         this._bufferStorageDir = path.join(app.getPath("temp"), "WarcraftRecorder"); 
 
         if (!fs.existsSync(this._bufferStorageDir)) {
-            console.log("Creating dir:", this._bufferStorageDir)
+            console.log("[Recorder] Creating dir:", this._bufferStorageDir)
             fs.mkdirSync(this._bufferStorageDir);
         }
 
@@ -89,11 +89,11 @@ const glob = require('glob');
      */
     startBuffer = async () => {
         if (this._isRecordingBuffer) {
-            console.error("Already recording a buffer");
+            console.error("[Recorder] Already recording a buffer");
             return;
         }
 
-        console.log(addColor("Recorder: Start recording buffer", "cyan"));
+        console.log(addColor("[Recorder] Recorder: Start recording buffer", "cyan"));
         await obsRecorder.start();
         this._isRecordingBuffer = true;
         if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
@@ -111,11 +111,11 @@ const glob = require('glob');
      */
     stopBuffer = async () => {
         if (!this._isRecordingBuffer) {
-            console.error("No buffer recording to stop.");
+            console.error("[Recorder] No buffer recording to stop.");
             return;
         }
 
-        console.log(addColor("Recorder: Stop recording buffer", "cyan"));
+        console.log(addColor("[Recorder] Recorder: Stop recording buffer", "cyan"));
         clearInterval(this._bufferRestartIntervalID);
         await obsRecorder.stop();
         this.isRecordingBuffer = false;
@@ -131,7 +131,7 @@ const glob = require('glob');
      * to; here be dragons. 
      */
     restartBuffer = async () => {
-        console.log(addColor("Recorder: Restart recording buffer", "cyan"));
+        console.log(addColor("[Recorder] Recorder: Restart recording buffer", "cyan"));
         await obsRecorder.stop();
         this.isRecordingBuffer = false;
         setTimeout(() => {
@@ -149,7 +149,7 @@ const glob = require('glob');
      * start if we hit this in the 2s restart window). 
      */
     start = async () => {
-        console.log(addColor("Recorder: Start recording by cancelling buffer restart", "green"));
+        console.log(addColor("[Recorder] Recorder: Start recording by cancelling buffer restart", "green"));
         clearInterval(this._bufferRestartIntervalID);
         this.isRecordingBuffer = false;        
         this._isRecording = true;   
@@ -165,9 +165,9 @@ const glob = require('glob');
      * @param {number} overrun how long to continue recording after stop is called
      */
     stop = (metadata: Metadata, overrun: number = 0) => {
-        console.log(addColor("Recorder: Stop recording after overrun", "green"));
-        console.info("Overrun:", overrun);
-        console.info("Recorder:", JSON.stringify(metadata));
+        console.log(addColor("[Recorder] Recorder: Stop recording after overrun", "green"));
+        console.info("[Recorder] Overrun:", overrun);
+        console.info("[Recorder] Recorder:", JSON.stringify(metadata));
 
         // Wait for a delay specificed by overrun. This lets us
         // capture the boss death animation/score screens.  

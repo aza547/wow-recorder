@@ -6,20 +6,20 @@ import savingIcon from '../../assets/icon/saving-icon.png';
 import { useState, useEffect } from 'react';
 import { AppStatus } from 'main/types';
 
-type StatusMessageType = 'error' | 'status';
+type IconStyle = 'small' | 'big';
 
 type StatusMessageObjectType = {
   title: string,
-  type: StatusMessageType,
+  style: IconStyle,
   icon: string,
 };
 
 const statusMessages: { [key: number]: StatusMessageObjectType } = {
-  [AppStatus.WaitingForWoW]: { type: 'status', icon: eyeIcon, title: 'Waiting for WoW to start' },
-  [AppStatus.Recording]:     { type: 'status', icon: recordIcon, title: 'Recording' },
-  [AppStatus.InvalidConfig]: { type: 'error', icon: errorIcon, title: 'Failed to launch, check config is valid' },
-  [AppStatus.ReadyToRecord]: { type: 'status', icon: watchIcon, title: 'Ready and waiting'},
-  [AppStatus.SavingVideo]:   { type: 'status', icon: savingIcon, title: 'Saving video' },
+  [AppStatus.WaitingForWoW]: { style: 'small', icon: eyeIcon,    title: 'Waiting for WoW to start' },
+  [AppStatus.Recording]:     { style: 'big',   icon: recordIcon, title: 'Recording' },
+  [AppStatus.InvalidConfig]: { style: 'small', icon: errorIcon,  title: 'Failed to launch, check config is valid' },
+  [AppStatus.ReadyToRecord]: { style: 'small', icon: watchIcon,  title: 'Ready and waiting'},
+  [AppStatus.SavingVideo]:   { style: 'small', icon: savingIcon, title: 'Saving video' },
 };
 
 export default function Status() {
@@ -39,7 +39,7 @@ export default function Status() {
 
   return (
     <div id="status">
-      <img id={ message.type + '-icon' } title={ message.title } alt="icon" src={ message.icon }/>
+      <img id={ message.style + '-icon' } title={ message.title } alt="icon" src={ message.icon }/>
     </div>
   );
 }

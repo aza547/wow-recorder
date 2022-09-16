@@ -111,7 +111,7 @@ let watchLogsInterval: NodeJS.Timer;
  * wowProcessStarted
  */
 const wowProcessStarted = () => {
-    console.log("Wow.exe is running");
+    console.log("[Logutils] Wow.exe is running");
     isRetailRunning = true;
     recorder.startBuffer();
 };
@@ -120,7 +120,7 @@ const wowProcessStarted = () => {
  * wowProcessStopped
  */
 const wowProcessStopped = () => {
-    console.log("Wow.exe has stopped");
+    console.log("[Logutils] Wow.exe has stopped");
     isRetailRunning = false;
 
     if (recorder.isRecording) {
@@ -174,7 +174,7 @@ const tailFile = (path: string) => {
     });
 
     tailHandler.on("error", function(error: unknown ) {
-      console.log('ERROR: ', error);
+      console.log('[Logutils] ERROR: ', error);
     });
 }
 
@@ -389,7 +389,7 @@ function handleChallengeModeEndLine (_line: LogLine): void {
  */
 function handleEncounterStartLine (line: LogLine): void {
     if (isChallengeModeActive) {
-        console.log("ENCOUNTER_START in an active Mythic Keystone dungeon is ignored.")
+        console.log("[Logutils] ENCOUNTER_START in an active Mythic Keystone dungeon is ignored.")
         return;
     }
     
@@ -416,7 +416,7 @@ function handleEncounterStartLine (line: LogLine): void {
  */
 function handleEncounterStopLine (line: LogLine): void {
     if (isChallengeModeActive) {
-        console.log("ENCOUNTER_END in an active Mythic Keystone dungeon is ignored.")
+        console.log("[Logutils] ENCOUNTER_END in an active Mythic Keystone dungeon is ignored.")
         return;
     }
     
@@ -448,7 +448,7 @@ function handleEncounterStopLine (line: LogLine): void {
  * Handle a line from the WoW log.
  */
 function handleZoneChange (line: LogLine): void {
-    console.log("Handling zone change: ", line);
+    console.log("[Logutils] Handling zone change: ", line);
     const zoneID = parseInt(line.args[1], 10);
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
@@ -465,13 +465,13 @@ function handleZoneChange (line: LogLine): void {
     }
 
     if (!isRecording && isNewZoneBG) {
-        console.log("ZONE_CHANGE into BG, start recording");
+        console.log("[Logutils] ZONE_CHANGE into BG, start recording");
         battlegroundStart(line);   
     } else if (isRecording && isRecordingBG && !isNewZoneBG) {
-        console.log("ZONE_CHANGE out of BG, stop recording");
+        console.log("[Logutils] ZONE_CHANGE out of BG, stop recording");
         battlegroundStop(line);
     } else if (isRecording && isRecordingArena) {
-        console.log("ZONE_CHANGE out of arena, stop recording");
+        console.log("[Logutils] ZONE_CHANGE out of arena, stop recording");
         zoneChangeStop(line);
     }
 
@@ -668,17 +668,17 @@ const pollWowProcess = () => {
  * in the GUI. Uses some sample log lines from 2v2.txt.
  */
 const runRecordingTest = () => {
-    console.log("User started a test!");
+    console.log("[Logutils] User started a test!");
 
     if (testRunning) {
-        console.info("Test already running, not starting test.");
+        console.info("[Logutils] Test already running, not starting test.");
     } 
     
     if (isRetailRunning) {
-        console.info("WoW is running, starting test.");
+        console.info("[Logutils] WoW is running, starting test.");
         testRunning = true;
     } else {
-        console.info("WoW isn't running, not starting test.");
+        console.info("[Logutils] WoW isn't running, not starting test.");
         return;
     }
 
