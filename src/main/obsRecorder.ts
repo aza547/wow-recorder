@@ -147,29 +147,23 @@ const setupScene = (monitorIndex: number) => {
   const checkRes = (resolution: string) => {
     const [resW, resH] = resolution.split('x');
 
-    if (
-      isClose(parseInt(resW, 10), physicalWidth) &&
-      isClose(parseInt(resH, 10), physicalHeight)
-    ) {
-      return true;
-    }
-
-    return false;
+    return isClose(parseInt(resW, 10), physicalWidth) && isClose(parseInt(resH, 10), physicalHeight);
   };
 
   // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
   obsSettings.forEach((subCategory: any) => {
     subCategory.parameters.forEach((param: any) => {
-      if (param.name === 'Base' || param.name === 'Output') {
-        console.log(param.name, param.currentValue, param.values);
-        param.values.forEach((vpair: { [key: string]: string }) => {
-          const res = Object.keys(vpair)[0];
-          if (checkRes(res)) {
-            param.currentValue = res;
-            console.info('Setting Video', param.name, 'to', res);
-          }
-        });
+      if (!(param.name === 'Base' || param.name === 'Output')) {
+        return;
       }
+
+      param.values.forEach((vpair: { [key: string]: string }) => {
+        const res = Object.keys(vpair)[0];
+        if (checkRes(res)) {
+          param.currentValue = res;
+          console.info('Setting Video', param.name, 'to', res);
+        }
+      });
     });
   });
 
