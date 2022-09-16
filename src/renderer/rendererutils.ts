@@ -14,7 +14,7 @@ import { instanceDifficulty, InstanceDifficultyType, VideoCategory } from "main/
         VideoCategory.Battlegrounds,
     ];
 
-    return pvpCategories.indexOf(category) !== -1;
+    return pvpCategories.includes(category);
 }  
 
 const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | null => {

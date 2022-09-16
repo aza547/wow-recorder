@@ -21,7 +21,7 @@ export default function VideoButton(props: any) {
   const videoIndex = props.index;
 
   const categoryIndex = state.categoryIndex;
-  const category = categories[categoryIndex] as VideoCategory
+  const category = categories[categoryIndex] as VideoCategory;
 
   const video = state.videoState[category][videoIndex];
   const videoPath = video.fullPath;
