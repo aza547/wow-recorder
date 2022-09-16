@@ -2,6 +2,7 @@
 import { Combatant } from './combatant';
 import { recorder }  from './main';
 import { battlegrounds }  from './constants';
+import { UnitFlags } from './types';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -576,13 +577,34 @@ function zoneChangeStop (line: LogLine): void {
 }
 
 /**
- * Determine if the srcFlags indicate a friendly unit.
- * @param srcFlags the srcFlags bitmask
- * @returns true if self; false otherwise. 
+ * Return whether the bitmask `flags` contain the bitmask `flag`
  */
-const isUnitSelf = (srcFlags: number): boolean => {
-    const masked = srcFlags & 0x511;
-    return masked === 0x511;
+const hasFlag = (flags: number, flag: number): boolean => {
+    return (flags & flag) !== 0;
+}
+
+/**
+ * Determine if the `flags` value indicate our own unit.
+ * This is determined by the unit being a player and having the
+ * flags `AFFILIATION_MINE` and `REACTION_FRIENDLY`.
+ */
+const isUnitSelf = (flags: number): boolean => {
+    return isUnitPlayer(flags) && (
+        hasFlag(flags, UnitFlags.REACTION_FRIENDLY) &&
+        hasFlag(flags, UnitFlags.AFFILIATION_MINE)
+    );
+}
+
+/**
+* Determine if the unit is a player.
+*
+* See more here: https://wowpedia.fandom.com/wiki/UnitFlag
+*/
+const isUnitPlayer = (flags: number): boolean => {
+    return (
+        hasFlag(flags, UnitFlags.CONTROL_PLAYER) &&
+        hasFlag(flags, UnitFlags.TYPE_PLAYER)
+    );
 }
 
 /**
