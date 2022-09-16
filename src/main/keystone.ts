@@ -12,7 +12,7 @@ class ChallengeModeVideoSegment {
     constructor(
         public segmentType: VideoSegmentType,
         public logStart: Date,
-        public ts: number,
+        public timestamp: number,
         public encounterId?: number
     ) {
         // Initially, let's set this to log start date to avoid logEnd

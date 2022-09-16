@@ -141,17 +141,25 @@ export default function VideoButton(props: any) {
 
     const videoSegments = video.challengeMode.videoSegments.map((segment: any) => {
       let videoSegmentMenu;
+      let segmentDurationText
       const result = Boolean(segment.result)
+
+      try {
+        segmentDurationText = getFormattedDuration(segment.timestamp);
+      } catch (e: any) {
+        console.error(e)
+        return;
+      }
 
       if (segment.segmentType === VideoSegmentType.Trash) {
         videoSegmentMenu = <div className='segment-type segment-type-trash'>
-          <span>{ getFormattedDuration(segment.ts) }</span>: Trash
+          <span>{ segmentDurationText }</span>: Trash
         </div>
       } else
       if (segment.segmentType == VideoSegmentType.BossEncounter) {
         videoSegmentMenu = <div className='segment-entry'>
           <div className='segment-type segment-type-boss'>
-            <span>{ getFormattedDuration(segment.ts) }</span>: Boss: { getDungeonEncounterById(segment.encounterId) }
+            <span>{ segmentDurationText }</span>: Boss: { getDungeonEncounterById(segment.encounterId) }
           </div>
           <div className={ 'segment-result ' + (result ? 'goodResult' : 'badResult') }>
             { getResultText(VideoCategory.Raids, result) }
@@ -160,7 +168,7 @@ export default function VideoButton(props: any) {
       }
 
       return (
-        <MenuItem key={ 'video-segment-' + segment.ts } onClick={() => seekVideo(videoIndex, segment.ts)}>
+        <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(videoIndex, segment.timestamp)}>
           { videoSegmentMenu }
         </MenuItem>
       )
