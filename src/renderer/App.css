@@ -332,33 +332,23 @@ h2 {
   }
 }
 
-#status-icon{
-  position:fixed;
-  bottom: 100px;
-  left: 40px;
-  height: 75px;
-  width: 75px;
-  animation: blink 1s;
-  animation-iteration-count: infinite;
-}
-
-#eye-icon{
-  position:fixed;
-  bottom: 125px;
-  left: 65px;
-  height: 30px;
-  width: 30px;
-  animation: blink 3s;
-  animation-iteration-count: infinite;
-}
-
-#error-icon{
+#small-icon{
   position:fixed;
   bottom: 125px;
   left: 55px;
   height: 50px;
   width: 50px;
-  animation: blink 3s;
+  animation: blink 2s;
+  animation-iteration-count: infinite;
+}
+
+#big-icon{
+  position:fixed;
+  bottom: 100px;
+  left: 40px;
+  height: 80px;
+  width: 80px;
+  animation: blink 2s;
   animation-iteration-count: infinite;
 }
 

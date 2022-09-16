@@ -26,7 +26,7 @@ const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath))
 const logDir = path.dirname(logPath);
 log.transports.file.resolvePath = () => logPath;
 Object.assign(console, log.functions);
-console.log("App starting");
+console.log("[Main] App starting");
 
 /**
  * Create a settings store to handle the config.
@@ -56,12 +56,12 @@ if (!minEncounterDuration) {
  */
 ipcMain.on('cfg-get', async (event, field) => {
   const value = cfg.get(field);
-  console.log("Got from config store: ", field, value);
+  console.log("[Main] Got from config store: ", field, value);
   event.returnValue = value;
 });
 
 ipcMain.on('cfg-set', async (_event, key, val) => {
-  console.log("Setting in config store: ", key, val);
+  console.log("[Main] Setting in config store: ", key, val);
   cfg.set(key, val);
 });
 
@@ -114,13 +114,13 @@ const setupTray = () => {
   const contextMenu = Menu.buildFromTemplate([
     { 
       label: 'Open', click() {
-        console.log("User clicked open on tray icon");
+        console.log("[Main] User clicked open on tray icon");
         if (mainWindow) mainWindow.show();
       }
     },
     { 
       label: 'Quit', click() { 
-        console.log("User clicked close on tray icon");
+        console.log("[Main] User clicked close on tray icon");
         if (mainWindow) mainWindow.close();
       } 
     },
@@ -130,7 +130,7 @@ const setupTray = () => {
   tray.setContextMenu(contextMenu)
 
   tray.on("double-click", () => {
-    console.log("User double clicked tray icon");
+    console.log("[Main] User double clicked tray icon");
     if (mainWindow) mainWindow.show();
   }) 
 }
@@ -285,18 +285,18 @@ ipcMain.on('mainWindow', (_event, args) => {
   if (mainWindow === null) return; 
 
   if (args[0] === "minimize") {
-    console.log("User clicked minimize");
+    console.log("[Main] User clicked minimize");
     //mainWindow.minimize();
     mainWindow.hide();
   }
 
   if (args[0] === "resize") {
-    console.log("User clicked resize");
+    console.log("[Main] User clicked resize");
     mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
   }
 
   if (args[0] === "quit"){
-    console.log("User clicked quit");
+    console.log("[Main] User clicked quit");
     mainWindow.close();
   }
 })
@@ -307,13 +307,13 @@ ipcMain.on('mainWindow', (_event, args) => {
 ipcMain.on('settingsWindow', (event, args) => {
 
   if (args[0] === "create") {
-    console.log("User clicked open settings");
+    console.log("[Main] User clicked open settings");
     if (!settingsWindow) createSettingsWindow();
   }
 
   if (args[0] === "startup") {
     const isStartUp = (args[1] === "true");
-    console.log("OS level set start-up behaviour: ", isStartUp);
+    console.log("[Main] OS level set start-up behaviour: ", isStartUp);
 
     app.setLoginItemSettings({
       openAtLogin: isStartUp    
@@ -323,12 +323,12 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (settingsWindow === null) return; 
   
   if (args[0] === "quit") {
-    console.log("User closed settings");
+    console.log("[Main] User closed settings");
     settingsWindow.close();
   }
 
   if (args[0] === "update") {
-    console.log("User updated settings");
+    console.log("[Main] User updated settings");
     
     settingsWindow.once('closed', () => {
       storageDir = getPathConfigSafe(cfg, 'storage-path');
@@ -424,10 +424,10 @@ ipcMain.on('getAudioDevices', (event) => {
  */
 ipcMain.on('test', (event) => {
   if (isConfigReady(cfg)) { 
-    console.info("Config is good, running test!");
+    console.info("[Main] Config is good, running test!");
     runRecordingTest()
   } else {
-    console.info("Config is bad, don't run test");
+    console.info("[Main] Config is bad, don't run test");
   }
 });
 
@@ -435,7 +435,7 @@ ipcMain.on('test', (event) => {
  * Shutdown the app if all windows closed. 
  */
 app.on('window-all-closed', () => {
-  console.log("User closed app");
+  console.log("[Main] User closed app");
   if (recorder) recorder.cleanupBuffer();
   obsRecorder.shutdown();
   app.quit();
@@ -447,7 +447,7 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    console.log("App ready");
+    console.log("[Main] App ready");
     createWindow();
   })
   .catch(console.log);
