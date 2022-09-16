@@ -24,7 +24,7 @@ const reconfigure = (outputPath: string, monitorIndex: number, audioInputDeviceI
 */
 const initialize = (outputPath: string, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
   if (obsInitialized) {
-    console.warn("OBS is already initialized");
+    console.warn("[OBS] OBS is already initialized");
     return;
   }
 
@@ -39,7 +39,7 @@ const initialize = (outputPath: string, monitorIndex: number, audioInputDeviceId
 * initOBS
 */
 const initOBS = () => {
-  console.debug('Initializing OBS...');
+  console.debug('[OBS] Initializing OBS...');
   osn.NodeObs.IPC.host(`warcraft-recorder-${uuid()}`);
   osn.NodeObs.SetWorkingDirectory(fixPathWhenPackaged(path.join(__dirname,'../../', 'node_modules', 'obs-studio-node')));
 
@@ -55,7 +55,7 @@ const initOBS = () => {
 
     const errorMessage = errorReasons[initResult.toString()] || `An unknown error #${initResult} was encountered while initializing OBS.`;
 
-    console.error('OBS init failure', errorMessage);
+    console.error('[OBS] OBS init failure', errorMessage);
 
     shutdown();
 
@@ -66,21 +66,21 @@ const initOBS = () => {
     waitQueue.push(signalInfo);
   });
 
-  console.debug('OBS initialized');
+  console.debug('[OBS] OBS initialized');
 }
 
 /*
 * configureOBS
 */
 const configureOBS = (baseStoragePath: string) => {
-  console.debug('Configuring OBS');
+  console.debug('[OBS] Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
   const availableEncoders = getAvailableValues('Output', 'Recording', 'RecEncoder');
 
   // Get a list of available encoders, select the last one.
-  console.debug("Available encoder: " + JSON.stringify(availableEncoders));
+  console.debug("[OBS] Available encoder: " + JSON.stringify(availableEncoders));
   const selectedEncoder = availableEncoders.slice(-1)[0] || 'x264';
-  console.debug("Selected encoder: " + selectedEncoder);
+  console.debug("[OBS] Selected encoder: " + selectedEncoder);
   setSetting('Output', 'RecEncoder', selectedEncoder);
 
   // Set output path and video format.
@@ -101,7 +101,7 @@ const configureOBS = (baseStoragePath: string) => {
   setSetting('Output', 'Recmax_bitrate', 300000); 
   setSetting('Video', 'FPSCommon', 60);
 
-  console.debug('OBS Configured');
+  console.debug('[OBS] OBS Configured');
 }
 
 /*
@@ -111,7 +111,7 @@ const configureOBS = (baseStoragePath: string) => {
 const displayInfo = (displayIndex: number) => {
   const { screen } = require('electron');
   const displays = screen.getAllDisplays();
-  console.info("Displays:", displays);
+  console.info("[OBS] Displays:", displays);
   const display = displays[displayIndex];
   const { width, height } = display.size;
   const { scaleFactor } = display;
@@ -133,7 +133,7 @@ const setupScene = (monitorIndex: number) => {
 
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
   const monitorIndexFromZero = monitorIndex - 1; 
-  console.info("monitorIndexFromZero:", monitorIndexFromZero);
+  console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
   const { physicalWidth, physicalHeight } = displayInfo(monitorIndexFromZero);
 
   // Update source settings:
@@ -174,7 +174,7 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
       setSetting('Output', `Track${currentTrack}Name`, device.name);
       source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
       source.muted = audioInputDeviceId === 'none' || (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
-      console.log(`[ObsConfig] Selecting audio input device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
+      console.log(`[OBS] Selecting audio input device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
       osn.Global.setOutputSource(currentTrack, source);
       source.release()
       currentTrack++;
@@ -186,7 +186,7 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
       setSetting('Output', `Track${currentTrack}Name`, device.name);
       source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
       source.muted = audioOutputDeviceId === 'none' || (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
-      console.log(`[ObsConfig] Selecting audio output device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
+      console.log(`[OBS] Selecting audio output device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
       osn.Global.setOutputSource(currentTrack, source);
       source.release()
       currentTrack++;
@@ -203,7 +203,7 @@ const start = async () => {
     throw Error("OBS not initialised")
   }
 
-  console.log("obsRecorder: start");
+  console.log("[OBS] obsRecorder: start");
   osn.NodeObs.OBS_service_startRecording();
 
   let signalInfo = await waitQueue.shift();
@@ -214,7 +214,7 @@ const start = async () => {
 * stop
 */
 const stop = async () => {
-  console.log("obsRecorder: stop");
+  console.log("[OBS] obsRecorder: stop");
   osn.NodeObs.OBS_service_stopRecording();
 
   let signalInfo = await waitQueue.shift();
@@ -232,11 +232,11 @@ const stop = async () => {
 */
 const shutdown = () => {
   if (!obsInitialized) {
-    console.debug('OBS is already shut down!');
+    console.debug('[OBS]  OBS is already shut down!');
     return false;
   }
 
-  console.debug('Shutting down OBS...');
+  console.debug('[OBS]  Shutting down OBS...');
 
   try {
     osn.NodeObs.OBS_service_removeCallback();
@@ -246,7 +246,7 @@ const shutdown = () => {
     throw Error('Exception when shutting down OBS process' + e);
   }
 
-  console.debug('OBS shutdown successfully');
+  console.debug('[OBS]  OBS shutdown successfully');
 
   return true;
 }
@@ -257,7 +257,7 @@ const shutdown = () => {
 const setSetting = (category: any, parameter: any, value: any) => {
   let oldValue;
 
-  console.debug('OBS: setSetting', category, parameter, value);
+  console.debug('[OBS] OBS: setSetting', category, parameter, value);
 
   // Getting settings container
   const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
@@ -284,21 +284,21 @@ const getAvailableValues = (category: any, subcategory: any, parameter: any) => 
   const categorySettings = osn.NodeObs.OBS_settings_getSettings(category).data;
 
   if (!categorySettings) {
-    console.warn(`There is no category ${category} in OBS settings`);
+    console.warn(`[OBS] There is no category ${category} in OBS settings`);
     return;
   }
 
   const subcategorySettings = categorySettings.find((sub: any) => sub.nameSubCategory === subcategory);
 
   if (!subcategorySettings) {
-    console.warn(`There is no subcategory ${subcategory} for OBS settings category ${category}`);
+    console.warn(`[OBS] There is no subcategory ${subcategory} for OBS settings category ${category}`);
     return;
   }
 
   const parameterSettings = subcategorySettings.parameters.find((param: any) => param.name === parameter);
   
   if (!parameterSettings) {
-    console.warn(`There is no parameter ${parameter} for OBS settings category ${category}.${subcategory}`);
+    console.warn(`[OBS] There is no parameter ${parameter} for OBS settings category ${category}.${subcategory}`);
     return;
   }
 
@@ -317,19 +317,19 @@ const assertSignal = (signalInfo: any, type: string, value: string) => {
 
   // Assert the type is as expected.
   if (signalInfo.type !== type) {
-    console.error(signalInfo);
-    console.error("OBS signal type unexpected", signalInfo.signal, value);
+    console.error("[OBS] " + signalInfo);
+    console.error("[OBS] OBS signal type unexpected", signalInfo.signal, value);
     throw Error("OBS behaved unexpectedly (2)");
   }
 
   // Assert the signal value is as expected.
   if (signalInfo.signal !== value) {
-    console.error(signalInfo);
-    console.error("OBS signal value unexpected", signalInfo.signal, value);
+    console.error("[OBS] " + signalInfo);
+    console.error("[OBS] OBS signal value unexpected", signalInfo.signal, value);
     throw Error("OBS behaved unexpectedly (3)");
   }
 
-  console.debug("Asserted OBS signal:", type, value);
+  console.debug("[OBS] Asserted OBS signal:", type, value);
 }
 
 export {
