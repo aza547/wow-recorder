@@ -120,7 +120,7 @@ const getMetadataForVideo = (video: string) => {
     const metadataFile = getMetadataFileForVideo(video)
 
     if (!fs.existsSync(metadataFile)) {
-        console.error(`Metadata file does not exist: ${metadataFile}`);
+        console.error(`[Util] Metadata file does not exist: ${metadataFile}`);
         return undefined;
     }
 
@@ -128,7 +128,7 @@ const getMetadataForVideo = (video: string) => {
         const metadataJSON = fs.readFileSync(metadataFile);
         return JSON.parse(metadataJSON.toString());
     } catch (e) {
-        console.error(`Unable to read and/or parse JSON from metadata file: ${metadataFile}`);
+        console.error(`[Util] Unable to read and/or parse JSON from metadata file: ${metadataFile}`);
     }
 }
 
@@ -363,11 +363,11 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  */
  const tryUnlinkSync = (file: string): boolean => {
     try {
-        console.log("Deleting: " + file);
+        console.log("[Util] Deleting: " + file);
         fs.unlinkSync(file);
         return true;
     } catch (e) {
-        console.error(`Unable to delete file: ${file}.`)
+        console.error(`[Util] Unable to delete file: ${file}.`)
         console.error((e as Error).message);
         return false;
     }
@@ -432,7 +432,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  const toggleVideoProtected = (videoPath: string) => {
     const metadata = getMetadataForVideo(videoPath);
     if (!metadata) {
-        console.error(`Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`);
+        console.error(`[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`);
         return;
     }
 
@@ -466,7 +466,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
         // Use ffprobe to check the length of the initial file.
         ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
             if (err) {
-                console.log("FFprobe error: ", err);
+                console.log("[Util] FFprobe error: ", err);
                 throw new Error("FFprobe error when cutting video");
             }
 
@@ -476,14 +476,14 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
 
             // Defensively avoid a negative start time error case. 
             if (startTime < 0) {
-                console.log("Video start time was: ", startTime);
-                console.log("Avoiding error by not cutting video");
+                console.log("[Util] Video start time was: ", startTime);
+                console.log("[Util] Avoiding error by not cutting video");
                 startTime = 0;
             }
 
             // This was super helpful in debugging during development so I've kept it.
-            console.log("Ready to cut video.");
-            console.log("Initial duration:", bufferedDuration, 
+            console.log("[Util] Ready to cut video.");
+            console.log("[Util] Initial duration:", bufferedDuration, 
                         "Desired duration:", desiredDuration,
                         "Calculated start time:", startTime);
 
@@ -507,11 +507,11 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
                 // Handle the end of the FFmpeg cutting.
                 .on('end', async (err: any) => {
                     if (err) {
-                        console.log('FFmpeg video cut error (1): ', err)
+                        console.log('[Util] FFmpeg video cut error (1): ', err)
                         throw new Error("FFmpeg error when cutting video (1)");
                     }
                     else {
-                        console.log("FFmpeg cut video succeeded");
+                        console.log("[Util] FFmpeg cut video succeeded");
                         resolve(finalVideoPath);
                     }
                 })
@@ -519,7 +519,7 @@ const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: 
                 // Handle an error with the FFmpeg cutting. Not sure if we 
                 // need this as well as the above but being careful.
                 .on('error', (err: any) => {
-                    console.log('FFmpeg video cut error (2): ', err)
+                    console.log('[Util] FFmpeg video cut error (2): ', err)
                     throw new Error("FFmpeg error when cutting video (2)");
                 })
                 .run()    
@@ -562,7 +562,7 @@ const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: str
  *  Default the monitor index to 1. 
  */
  const defaultMonitorIndex = (cfg: ElectronStore): number => {
-    console.info("Defaulting monitor index to 1");
+    console.info("[Util] Defaulting monitor index to 1");
     cfg.set('monitor-index', 1);
     return 1;
 }
