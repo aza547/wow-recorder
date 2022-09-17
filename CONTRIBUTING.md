@@ -77,6 +77,12 @@ The build instructions on obs-studio-node's GitHub page are not perfect, there i
 
  5. Build the application with `npm run package`. 
 
+Below are various additional OSN resources:
+- [Example](https://github.com/Envek/obs-studio-node-example)
+- [Community Docs](https://github.com/hrueger/obs-studio-node-docs)
+- [Streamlabs Desktop](https://github.com/stream-labs/desktop)
+- [Enlyo Recorder](https://github.com/Enlyo/enlyo-recorder)
+
 ## Microsoft Stamp of Approval
 If we just build a .exe and release it Windows will warn it may be dangerous. Could resolve this buy purchasing a certificate from a CA, but it costs a fortune. Read more about it in this [issue](https://github.com/aza547/wow-recorder/issues/11).
 1. Submit it for analysis [here](https://www.microsoft.com/en-us/wdsi/filesubmission) after releasing it to make that warning go away.
