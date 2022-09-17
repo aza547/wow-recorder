@@ -385,6 +385,12 @@ ipcMain.on('contextMenu', (event, args) => {
     toggleVideoProtected(videoToToggle);
     if (mainWindow) mainWindow.webContents.send('refreshState');
   }
+
+  if (args[0] === "seekVideo") {
+    const videoIndex = parseInt(args[1], 10);
+    const seekTime = parseInt(args[2], 10);
+    if (mainWindow) mainWindow.webContents.send('seekVideo', videoIndex, seekTime);
+  }
 })
 
 /**

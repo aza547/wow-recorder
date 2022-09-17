@@ -4,18 +4,18 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { makeStyles } from 'tss-react/mui';
-import { categories, videoTabsSx, categoryTabSx, categoryTabsSx }  from '../main/constants';
+import { categories, videoTabsSx, categoryTabSx, categoryTabsSx, VideoCategory }  from '../main/constants';
 import VideoButton  from './VideoButton';
 
 /**
- * Import video posters. 
+ * Import video posters.
  */
 import readyPoster  from  "../../assets/poster/ready.png";
 import notReadyPoster from  "../../assets/poster/not-ready.png";
-import unsupportedPoster from  "../../assets/poster/unsupported.png";
+import { dungeon } from './images';
 
 /**
- * For shorthand referencing. 
+ * For shorthand referencing.
  */
 const ipc = window.electron.ipcRenderer;
 
@@ -69,7 +69,7 @@ const TabPanel = (props: TabPanelProps) => {
 }
 
 /**
- * Some MUI specific props. 
+ * Some MUI specific props.
  */
 const a11yProps = (index: number) => {
   return {
@@ -79,7 +79,7 @@ const a11yProps = (index: number) => {
 }
 
 /**
- * Category tab borders. 
+ * Category tab borders.
  */
 const tabProps = (index: number) => {
   if (index == 0) {
@@ -95,7 +95,7 @@ const tabProps = (index: number) => {
 }
 
 /**
- * The GUI itself. 
+ * The GUI itself.
  */
 export default function Layout() {
 
@@ -105,6 +105,7 @@ export default function Layout() {
     videoState: ipc.sendSync('getVideoState', categories),
     videoMuted: false,
     videoVolume: 1, // (Double) 0.00 - 1.00
+    videoSeek: 0,
   });
 
   const getVideoPlayer = () => {
@@ -129,8 +130,8 @@ export default function Layout() {
   const handleChangeCategory = (_event: React.SyntheticEvent, newValue: number) => {
     setState(prevState => {
       return {
-        ...prevState, 
-        categoryIndex: newValue, 
+        ...prevState,
+        categoryIndex: newValue,
         videoIndex: 0
       }
     })
@@ -141,11 +142,12 @@ export default function Layout() {
    */
   const handleChangeVideo = (_event: React.SyntheticEvent, newValue: number) => {
     readVideoPlayerSettings();
-    setState(prevState => { 
+    setState(prevState => {
       return {
-        ...prevState, 
-        videoIndex: newValue
-      } 
+        ...prevState,
+        videoIndex: newValue,
+        videoSeek: 0,
+      }
     })
   };
 
@@ -173,6 +175,19 @@ export default function Layout() {
           }
         })
       });
+
+      /**
+       * Attach listener for seeking in the video on load/unload
+       */
+      ipc.on('seekVideo', (vIndex, vSeekTime) => {
+        setState(prevState => {
+          return {
+            ...prevState,
+            videoIndex: parseInt((vIndex as string), 10),
+            videoSeek: parseInt((vSeekTime as string), 10),
+          }
+        });
+      });
     },
     // From React documentation:
     //
@@ -185,7 +200,7 @@ export default function Layout() {
   /**
    * When a new video is selected, let's set the video player volume and mute state
    */
-  React.useEffect(() => {
+   React.useEffect(() => {
     const video = getVideoPlayer()
     if (video) {
       video.muted = state.videoMuted;
@@ -193,6 +208,13 @@ export default function Layout() {
     }
 
   }, [state.videoIndex]);
+
+  React.useEffect(() => {
+    const videoPlayer = getVideoPlayer();
+    if (videoPlayer) {
+      videoPlayer.currentTime = state.videoSeek;
+    }
+  }, [state.videoSeek]);
 
   /**
    * Returns TSX for the tab buttons for category selection.
@@ -207,16 +229,16 @@ export default function Layout() {
   };
 
   /**
-   * Returns a video panel for a currently unsupported category.
+   * Returns a video panel where no videos are present.
    */
-  const unsupportedVideoPanel = (index: number) => {
+  const noVideoPanel = (index: number) => {
     const categoryIndex = state.categoryIndex;
-    const key = "videoPanel" + index;
+    const key = "noVideoPanel" + index;
 
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
         <div className="video-container">
-          <video key="None" className="video" poster={ unsupportedPoster }></video>
+          <video key="None" className="video" poster={ notReadyPoster }></video>
         </div>
         <div className="noVideos"></div>
       </TabPanel>
@@ -224,24 +246,7 @@ export default function Layout() {
   }
 
   /**
-   * Returns a video panel where no videos are present.
-   */
-  const noVideoPanel = (index: number) => {
-    const categoryIndex = state.categoryIndex;
-    const key = "noVideoPanel" + index;
-    
-    return (
-      <TabPanel key={ key } value={ categoryIndex } index={ index }>
-        <div className="video-container">
-          <video key="None" className="video" poster={ notReadyPoster }></video>
-        </div>        
-        <div className="noVideos"></div>
-      </TabPanel>
-    );
-  }
-
-  /**
-   * Returns a video panel with videos. 
+   * Returns a video panel with videos.
    */
   const videoPanel = (index: number) => {
     const categoryIndex = state.categoryIndex;
@@ -250,11 +255,18 @@ export default function Layout() {
     const video = state.videoState[category][state.videoIndex];
     const videoFullPath = video.fullPath;
     const key = "videoPanel" + index;
+    const isMythicPlus = video.category === VideoCategory.MythicPlus && video.challengeMode !== undefined
+    let videoPoster = readyPoster;
+
+    // Show a poster of the dungeon for M+ instead of "Select a video"
+    if (isMythicPlus) {
+      videoPoster = dungeon[video.challengeMode.zoneId];
+    }
 
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
-        <div className="video-container">
-          <video key = { videoFullPath } className="video" poster={ readyPoster } controls id="video-player">
+        <div className={ 'video-container' + (isMythicPlus ? ' mythic-keystone' : '')}>
+          <video key={ videoFullPath } className="video" poster={ videoPoster } id='video-player' controls>
             <source src={ videoFullPath } />
           </video>
         </div>
@@ -277,7 +289,7 @@ export default function Layout() {
         </Tabs>
       </TabPanel>
     );
-  } 
+  }
 
   /**
    * Returns TSX for the video player and video selection tabs.
@@ -285,18 +297,16 @@ export default function Layout() {
    const generateTabPanel = (tabIndex: number) => {
     const haveVideos = state.videoState[category][state.videoIndex];
 
-    if (tabIndex === 4) {
-      return unsupportedVideoPanel(tabIndex);
-    } else if (!haveVideos) {
+    if (!haveVideos) {
       return noVideoPanel(tabIndex);
-    } else {
-      return videoPanel(tabIndex);
-    }   
+    }
+
+    return videoPanel(tabIndex);
   };
 
   const tabNumbers = [...Array(7).keys()];
   const categoryIndex = state.categoryIndex;
-  
+
   return (
     <Box sx={{ width: '100%', height: '210px', display: 'flex' }}>
       <Tabs

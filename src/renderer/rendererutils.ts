@@ -20,16 +20,24 @@ const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | n
     }
 
     switch (category) {
-        case "Mythic+":
+        case VideoCategory.MythicPlus:
             return isGoodResult ? "Timed" : "Depleted";
 
-        case "Raids":
+        case VideoCategory.Raids:
             return isGoodResult ? "Kill" : "Wipe";
 
         default:
             return isGoodResult ? "Win" : "Loss";
     }
 } 
+
+const getVideoResult = (video: any): boolean => {
+    if (video.challengeMode !== undefined) {
+        return Boolean(video.challengeMode.timed)
+    }
+
+    return video.result
+}
 
 /**
  * getFormattedDuration
@@ -46,5 +54,6 @@ const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | n
 export {
     getResultText,
     getFormattedDuration,
-    getInstanceDifficulty
+    getInstanceDifficulty,
+    getVideoResult,
 };
