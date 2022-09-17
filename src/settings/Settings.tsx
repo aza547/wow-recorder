@@ -17,6 +17,7 @@ export default function Settings() {
     monitorIndex: window.electron.store.get('monitor-index'),
     audioInputDevice: window.electron.store.get('audio-input-device', 'all'),
     audioOutputDevice: window.electron.store.get('audio-output-device', 'all'),
+    minEncounterDuration: window.electron.store.get('min-encounter-duration'),
     startUp: window.electron.store.get('start-up') === 'true',
   });
 
@@ -30,6 +31,7 @@ export default function Settings() {
     'monitorIndex': 'monitor-index',
     'audioInputDevice': 'audio-input-device',
     'audioOutputDevice': 'audio-output-device',
+    'minEncounterDuration': 'min-encounter-duration',
     'startUp': 'start-up',
   };
   type StateToSettingKeyMapKey = keyof typeof stateKeyToSettingKeyMap;
@@ -173,6 +175,12 @@ export default function Settings() {
                       )
                     })}
                   </select>
+                </div>
+              </div>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
+                  <label> Min Encounter Duration (sec) </label>
+                  <input type="text" id="min-encounter-duration" className="form-control" placeholder={state.minEncounterDuration} onChange={(event) => setSetting('minEncounterDuration', event.target.value)}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
