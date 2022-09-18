@@ -608,11 +608,10 @@ const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: str
     }    
 }
 
-
 /*
-* Checks if val is +-1 compare
+* Checks if val is +-1 to compare.
 */
-const isClose = (val: number, compare: number) => {
+const isNumberClose = (val: number, compare: number) => {
     return Math.abs(compare - val) <= 1;
 };
 
@@ -633,5 +632,5 @@ export {
     defaultMonitorIndex,
     defaultMinEncounterDuration,
     addColor,
-    isClose
+    isNumberClose
 };

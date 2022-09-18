@@ -1,4 +1,4 @@
-import { fixPathWhenPackaged, isClose } from "./util";
+import { fixPathWhenPackaged, isNumberClose } from "./util";
 import WaitQueue from 'wait-queue';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
 const waitQueue = new WaitQueue<any>();
@@ -131,9 +131,8 @@ const displayInfo = (displayIndex: number) => {
 */
 const checkRes = (monitorWidth: number, monitorHeight: number, resolution: string) => {
   const [resWidth, resHeight] = resolution.split('x');
-
-  const isWidthClose = isClose(parseInt(resWidth, 10), monitorWidth);
-  const isHeightClose = isClose(parseInt(resHeight, 10), monitorHeight);
+  const isWidthClose = isNumberClose(parseInt(resWidth, 10), monitorWidth);
+  const isHeightClose = isNumberClose(parseInt(resHeight, 10), monitorHeight);
   return isWidthClose && isHeightClose;
 };
 
@@ -151,8 +150,10 @@ const checkRes = (monitorWidth: number, monitorHeight: number, resolution: strin
 */
 const setOBSVideoResolution = (monitorWidth: number, monitorHeight: number, paramString: string) => {
   const availableResolutions = getAvailableValues('Video', 'Untitled', paramString);
+
   for(let i = 0; i < availableResolutions.length; i++) {
     const resolution: string = availableResolutions[i];
+
     if (checkRes(monitorWidth, monitorHeight, resolution)) {
       setSetting('Video', paramString, resolution);
       return;
@@ -161,6 +162,7 @@ const setOBSVideoResolution = (monitorWidth: number, monitorHeight: number, para
   
   console.error('[OBS] ERROR! Matching resolution not found for Video Output');
   console.error(`Error attempting to match ${monitorWidth}x${monitorHeight} with ${availableResolutions} for ${paramString}`);
+  
   throw Error('Matching resolution not found for Video Output');
 }
 
