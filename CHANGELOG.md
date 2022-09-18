@@ -8,16 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [Issue 99](https://github.com/aza547/wow-recorder/issues/99) - Remember video sound settings when changing videos.
 - [Issue 107](https://github.com/aza547/wow-recorder/issues/107) - Add a config setting for minimum raid duration, to avoid saving boss resets. 
-
+- [Issue 17](https://github.com/aza547/wow-recorder/issues/17) - Allow the selection of input/output audio devices for recording in settings.
 ### Changed
+- [Issue 66](https://github.com/aza547/wow-recorder/issues/66) - Store buffer recordings in a better location. 
+
 ### Fixed
 - [Issue 98](https://github.com/aza547/wow-recorder/issues/98) - Fix recording Mythic Keystone boss encounters before M+ feature has been implemented.
-- [Issue 78](https://github.com/aza547/wow-recorder/issues/78) - Gracefully fail if a video can't be deleted, rather than giving an uncaught exception error
+- [Issue 78](https://github.com/aza547/wow-recorder/issues/78) - Gracefully fail if a video can't be deleted, rather than giving an uncaught exception error.
 - [Issue 75](https://github.com/aza547/wow-recorder/issues/75) - Fix size monitor blocking saving of videos.
-- [Issue 86](https://github.com/aza547/wow-recorder/issues/86) - Fix an event listener leak.
-- Fixed memory leak in EventEmitter attachment of listener for 'updateStatus'
-- [Issue 17](https://github.com/aza547/wow-recorder/issues/17) - Allow the selection of input/output audio devices for recording in settings
-- [Issue 66](https://github.com/aza547/wow-recorder/issues/66) - Store buffer recordings in a better location, and also clear it out when starting the app. 
+- [Issue 86](https://github.com/aza547/wow-recorder/issues/86) - Fix various event listener leaks.
 
 ## [2.6.1] - 2022-09-05
 ### Fixed
