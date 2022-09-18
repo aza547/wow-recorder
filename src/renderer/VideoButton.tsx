@@ -202,8 +202,12 @@ export default function VideoButton(props: any) {
             }
             { isMythicPlus &&
               <div>
-                <div className='zone'>{ dungeonsByMapId[video.challengeMode.mapId] }</div>
-                <div className='zone level'>+{ video.challengeMode.level }</div>
+                <div className='encounter'>
+                  { dungeonsByMapId[video.challengeMode.mapId] }
+                </div>
+                <div className='instance-difficulty difficulty-mythic'>
+                  +{ video.challengeMode.level }
+                </div>
               </div>
             }
             <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    
