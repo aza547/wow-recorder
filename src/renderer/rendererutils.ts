@@ -1,4 +1,4 @@
-import { instanceDifficulty, InstanceDifficultyType, VideoCategory } from "main/constants";
+import { dungeonEncounters, instanceDifficulty, InstanceDifficultyType, VideoCategory } from "main/constants";
 
 const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | null => {
     if (instanceDifficulty.hasOwnProperty(difficultyID)) {
@@ -51,9 +51,21 @@ const getVideoResult = (video: any): boolean => {
     return formattedDuration;
 }  
 
+/**
+ * Return the name of a dungeon encounter (boss) by its encounter ID
+ */
+ const getDungeonEncounterById = (id: number): string => {
+    if (dungeonEncounters.hasOwnProperty(id)) {
+      return dungeonEncounters[id]
+    }
+
+    return 'Unknown boss';
+}
+
 export {
     getResultText,
     getFormattedDuration,
     getInstanceDifficulty,
     getVideoResult,
+    getDungeonEncounterById,
 };

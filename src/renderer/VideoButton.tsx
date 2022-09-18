@@ -1,13 +1,11 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
-import { VideoCategory, categories, videoButtonSx, specializationById, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId }  from 'main/constants';
+import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, dungeonTimersByMapId }  from 'main/constants';
 import { VideoSegmentType, calculateKeystoneCompletionResult } from 'main/keystone';
-import { getResultText, getFormattedDuration, getVideoResult, getInstanceDifficulty } from './rendererutils';
+import { getResultText, getFormattedDuration, getVideoResult, getInstanceDifficulty, getDungeonEncounterById } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
-
-
 
 /**
  * For shorthand referencing. 
@@ -117,37 +115,12 @@ export default function VideoButton(props: any) {
     handleCloseMenu();
   };
 
-  const getDungeonEncounterById = (id: number): string => {
-    if (dungeonEncounters.hasOwnProperty(id)) {
-      return dungeonEncounters[id]
-    }
-
-    return 'Unknown boss';
-  }
-
-  const buttonClasses = ['videoButton'];
-  const keystoneVideoSegments = []
-  let keystoneUpgradeLevel;
-
-  if (isMythicPlus) {
-    buttonClasses.push('dungeon')
-
-    // If the video metadata doesn't contain its own alloted time array, we'll use whichever
-    // is current in the constants.
-    const keystoneAllottedTime = video.challengeMode.allottedTime ?? dungeonTimersByMapId[video.challengeMode.mapId];
-
-    // Calculate the upgrade levels of the keystone
-    const keystoneResult = calculateKeystoneCompletionResult(
-      keystoneAllottedTime,
-      video.challengeMode.duration
-    );
-    keystoneUpgradeLevel  = '+'.repeat(keystoneResult)
-
-    /**
-     * Generate the JSX for the video segments that are used in the context menu on
-     * the VideoButton.
-     */
-    const videoSegments = video.challengeMode.videoSegments.map((segment: any) => {
+  /**
+   * Generate the JSX for the video segments that are used in the context menu on
+   * the VideoButton.
+   */
+  const renderKeystoneVideoSegments = (challengeMode: any): any[] => {
+    const videoSegmentsMenuItems = challengeMode.videoSegments.map((segment: any) => {
       let videoSegmentMenu;
       let segmentDurationText;
       const result = Boolean(segment.result);
@@ -184,12 +157,32 @@ export default function VideoButton(props: any) {
       );
     });
 
-    keystoneVideoSegments.push(
+    return [
       <MenuItem key='video-segment-label' disabled>Video Segments</MenuItem>,
       <Divider key='video-segments-begin' />,
-      ...videoSegments,
+      ...videoSegmentsMenuItems,
       <Divider key='video-segments-end' />,
+    ];
+  };
+
+  const buttonClasses = ['videoButton'];
+  let keystoneVideoSegments = [];
+  let keystoneUpgradeLevel = 0;
+
+  if (isMythicPlus) {
+    buttonClasses.push('dungeon')
+
+    // If the video metadata doesn't contain its own alloted time array, we'll use whichever
+    // is current in the constants.
+    const keystoneAllottedTime = video.challengeMode.allottedTime ?? dungeonTimersByMapId[video.challengeMode.mapId];
+
+    // Calculate the upgrade levels of the keystone
+    keystoneUpgradeLevel = calculateKeystoneCompletionResult(
+      keystoneAllottedTime,
+      video.challengeMode.duration
     );
+
+    keystoneVideoSegments = renderKeystoneVideoSegments(video.challengeMode);
   }
 
   return (
@@ -207,7 +200,7 @@ export default function VideoButton(props: any) {
             { isMythicPlus &&
               <div>
                 <div className='zone'>{ dungeonsByMapId[video.challengeMode.mapId] }</div>
-                <div className='zone level'>{ keystoneUpgradeLevel  }{ video.challengeMode.level }</div>
+                <div className='zone level'>{ '+'.repeat(keystoneUpgradeLevel)}{ video.challengeMode.level }</div>
               </div>
             }
             <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    
