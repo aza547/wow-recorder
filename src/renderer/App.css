@@ -398,8 +398,16 @@ h2 {
 }
 
 .version-update-widget {
-  width: 145px;
-  padding-top: 1rem;
+  position:fixed;
+  width: 135px;
+  top: 300px;
+  left: 10px;
+  border-style: solid;
+  border-color: #bb4220;
+  background-color: #bb4220;
+  font-family: "Roboto","Helvetica","Arial",sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .version-update-widget > div {
@@ -413,6 +421,6 @@ a {
 }
 
 a:hover {
-  color: #bb4220;
+  color: black;
   text-decoration: none;
 }

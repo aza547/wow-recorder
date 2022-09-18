@@ -448,7 +448,7 @@ ipcMain.on('test', () => {
  */
 app.on('window-all-closed', () => {
   console.log("[Main] User closed app");
-  if (recorder) recorder.cleanupBuffer();
+  if (recorder) recorder.cleanupBuffer(0);
   obsRecorder.shutdown();
   app.quit();
 });
@@ -468,6 +468,7 @@ const checkAppUpdate = () => {
   }
 
   const request = net.request(options);
+  
   request.on('response', (response) => {
     let data = '';
 
@@ -476,7 +477,7 @@ const checkAppUpdate = () => {
     });
 
     response.on('end', () => {
-      if(response.statusCode !== 200) {
+      if (response.statusCode !== 200) {
         console.error(`[Main] ERROR, Failed to check for updates, status code: ${response.statusCode}`);
         return;
       }
@@ -491,9 +492,11 @@ const checkAppUpdate = () => {
       }
     });
   });
+
   request.on('error', (error) => {
-      console.error(`[Main] ERROR, Failed to check for updates: ${error}`);
+    console.error(`[Main] ERROR, Failed to check for updates: ${error}`);
   });
+
   request.end();
 }
 
