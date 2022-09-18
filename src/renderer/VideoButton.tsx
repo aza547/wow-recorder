@@ -23,7 +23,9 @@ export default function VideoButton(props: any) {
   const videoPath = video.fullPath;
 
   const isGoodResult = getVideoResult(video);
-  const resultText = getResultText(category, isGoodResult);
+  // Need to not be const as it will be modified later if the video is of a
+  // Mythic Keystone dungeon.
+  let resultText = getResultText(category, isGoodResult);
   const MMR = video.teamMMR ? ("MMR: " + video.teamMMR) : undefined;
 
   const isProtected = video.protected;
@@ -167,7 +169,6 @@ export default function VideoButton(props: any) {
 
   const buttonClasses = ['videoButton'];
   let keystoneTimelineSegments = [];
-  let keystoneUpgradeLevel = 0;
 
   if (isMythicPlus) {
     buttonClasses.push('dungeon')
@@ -177,10 +178,14 @@ export default function VideoButton(props: any) {
     const keystoneAllottedTime = video.challengeMode.allottedTime ?? dungeonTimersByMapId[video.challengeMode.mapId];
 
     // Calculate the upgrade levels of the keystone
-    keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(
+    const keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(
       keystoneAllottedTime,
       video.challengeMode.duration
     );
+
+    if (isGoodResult) {
+      resultText = '+' + keystoneUpgradeLevel;
+    }
 
     keystoneTimelineSegments = renderKeystoneTimelineSegments(video.challengeMode);
   }
@@ -200,7 +205,7 @@ export default function VideoButton(props: any) {
             { isMythicPlus &&
               <div>
                 <div className='zone'>{ dungeonsByMapId[video.challengeMode.mapId] }</div>
-                <div className='zone level'>{ '+'.repeat(keystoneUpgradeLevel)}{ video.challengeMode.level }</div>
+                <div className='zone level'>+{ video.challengeMode.level }</div>
               </div>
             }
             <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    
