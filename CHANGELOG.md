@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 ### Fixed
+- [Issue 96](https://github.com/aza547/wow-recorder/issues/96) - Fixed windows resolution scaling resulting in OBS Resolutions not being set properly
 - [Issue 98](https://github.com/aza547/wow-recorder/issues/98) - Fix recording Mythic Keystone boss encounters before M+ feature has been implemented.
 - [Issue 78](https://github.com/aza547/wow-recorder/issues/78) - Gracefully fail if a video can't be deleted, rather than giving an uncaught exception error
 - [Issue 75](https://github.com/aza547/wow-recorder/issues/75) - Fix size monitor blocking saving of videos.
