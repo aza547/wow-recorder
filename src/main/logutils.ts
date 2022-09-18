@@ -356,8 +356,7 @@ function handleArenaStopLine (line: LogLine): void {
     metadata.result = result;
     metadata.teamMMR = MMR;
 
-    combatantMap.clear();
-    playerCombatant = undefined;
+    clearCombatants();
 
     recorder.stop(metadata, overrun);
 }
@@ -395,6 +394,8 @@ function handleChallengeModeStartLine (line: LogLine): void {
     if (!(mapId in dungeonTimersByMapId && mapId in dungeonsByMapId)) {
         console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
     }
+
+    clearCombatants();
 
     const dungeonAffixes = line.args[5].map((v: string) => parseInt(v, 10));
 
@@ -450,8 +451,7 @@ function handleChallengeModeEndLine (line: LogLine): void {
     metadata.duration = duration + overrun;
     metadata.result = Boolean(parseInt(line.args[1]));
 
-    combatantMap.clear();
-    playerCombatant = undefined;
+    clearCombatants();
 
     // The actual log duration of the dungeon, from which keystone upgrade
     // levels can be calculated
@@ -557,8 +557,7 @@ function handleEncounterStopLine (line: LogLine): void {
     metadata.duration = duration; 
     metadata.result = encounterResult
     
-    combatantMap.clear();
-    playerCombatant = undefined;
+    clearCombatants();
 
     recorder.stop(metadata, overrun);
 }
@@ -644,6 +643,14 @@ function handleCombatantInfoLine (line: LogLine): void {
  */
 function getCombatantByGuid(guid: string): Combatant | undefined {
     return combatantMap.get(guid);
+}
+
+/**
+ * Clear combatants map and the current player combatant, if any.
+ */
+const clearCombatants = () => {
+    combatantMap.clear();
+    playerCombatant = undefined;
 }
 
 /**
