@@ -390,8 +390,10 @@ function handleChallengeModeStartLine (line: LogLine): void {
 
     const zoneName = line.args[2];
     const mapId = parseInt(line.args[3], 10);
+    const hasDungeonMap = (mapId in dungeonsByMapId);
+    const hasTimersForDungeon = (mapId in dungeonTimersByMapId);
 
-    if (!(mapId in dungeonTimersByMapId && mapId in dungeonsByMapId)) {
+    if (!hasDungeonMap || !hasTimersForDungeon) {
         console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
     }
 
@@ -414,7 +416,7 @@ function handleChallengeModeStartLine (line: LogLine): void {
     console.debug("[ChallengeMode] Starting Challenge Mode instance")
 
     metadata = {
-        name: line.args[1],
+        name: line.args[1], // Instance name (e.g. "Operation: Mechagon")
         encounterID: parseInt(line.args[1], 10),
         category: VideoCategory.MythicPlus,
         zoneID: parseInt(line.args[5]),
@@ -471,6 +473,8 @@ function handleChallengeModeEndLine (line: LogLine): void {
         activeChallengeMode.removeLastSegment();
     }
 
+    console.debug("[ChallengeMode] Ending Challenge Mode instance");
+
     recorder.stop(metadata, overrun);
 };
 
@@ -494,9 +498,12 @@ function handleEncounterStartLine (line: LogLine): void {
     // add a new boss encounter video segment.
     if (recorder.isRecording && activeChallengeMode) {
         const vSegment = new ChallengeModeVideoSegment(
-            VideoSegmentType.BossEncounter, eventDate, getRelativeTimestampForVideoSegment(eventDate),
+            VideoSegmentType.BossEncounter,
+            eventDate,
+            getRelativeTimestampForVideoSegment(eventDate),
             encounterID
-        )
+        );
+
         activeChallengeMode.addVideoSegment(vSegment, eventDate);
         console.debug(`[ChallengeMode] Starting new boss encounter: ${dungeonEncounters[encounterID]}`)
 
