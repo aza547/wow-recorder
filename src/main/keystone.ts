@@ -39,6 +39,26 @@ class ChallengeModeDungeon {
     ) {}
 
     /**
+     * Calculate the completion result of a Mythic Keystone
+     * based on the duration of the dungeon (from the logs) tested against
+     * the dungeon timer values from `dungeonTimersByMapId`.
+     *
+     * Return value is a number between 0 and 3:
+     *
+     * 0   = depleted,
+     * 1-3 = keystone upgrade levels
+     */
+    static calculateKeystoneUpgradeLevel(allottedTime: number[], duration: number): number {
+        for (let i = allottedTime.length - 1; i >= 0; i--) {
+            if (duration <= allottedTime[i]) {
+                return i + 1;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
      * Add a timeline segment, optionally ending the current one
      *
      * Given a date as endPrevious, that date is used as the logEnd for the
@@ -78,34 +98,13 @@ class ChallengeModeDungeon {
     /**
      * Pop the last timeline segment and discard it
      */
-    removeLastSegment() {
+    removeLastTimelineSegment() {
         this.timelineSegments.pop();
     }
 };
-
-/**
- * Calculate the completion result of a Mythic Keystone
- * based on the duration of the dungeon (from the logs) tested against
- * the dungeon timer values from `dungeonTimersByMapId`.
- *
- * Return value is a number between 0 and 3:
- *
- * 0   = depleted,
- * 1-3 = keystone upgrade levels
- */
-const calculateKeystoneCompletionResult = (allottedTime: number[], duration: number): number => {
-    for (let i = allottedTime.length - 1; i >= 0; i--) {
-        if (duration <= allottedTime[i]) {
-            return i + 1;
-        }
-    }
-
-    return 0;
-}
 
 export {
     TimelineSegmentType,
     ChallengeModeTimelineSegment,
     ChallengeModeDungeon,
-    calculateKeystoneCompletionResult,
 }

@@ -3,7 +3,7 @@ import { Combatant } from './combatant';
 import { recorder }  from './main';
 import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory }  from './constants';
 import { PlayerDeathType, UnitFlags } from './types';
-import { calculateKeystoneCompletionResult, ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
+import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -460,7 +460,7 @@ function handleChallengeModeEndLine (line: LogLine): void {
     activeChallengeMode.duration = Math.round(parseInt(line.args[4], 10) / 1000);
 
     // Calculate whether the key was timed or not
-    activeChallengeMode.timed = calculateKeystoneCompletionResult(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
+    activeChallengeMode.timed = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
 
     console.debug("[ChallengeMode] Ending current timeline segment")
     activeChallengeMode.endCurrentTimelineSegment(videoStopDate);
@@ -470,7 +470,7 @@ function handleChallengeModeEndLine (line: LogLine): void {
     const lastTimelineSegment = activeChallengeMode.getCurrentTimelineSegment();
     if (lastTimelineSegment && lastTimelineSegment.length() < 10000) {
         console.debug("[ChallengeMode] Removing last timeline segment, because it's too short.")
-        activeChallengeMode.removeLastSegment();
+        activeChallengeMode.removeLastTimelineSegment();
     }
 
     console.debug("[ChallengeMode] Ending Challenge Mode instance");

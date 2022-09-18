@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
 import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, dungeonTimersByMapId }  from 'main/constants';
-import { TimelineSegmentType, calculateKeystoneCompletionResult } from 'main/keystone';
+import { TimelineSegmentType, ChallengeModeDungeon } from 'main/keystone';
 import { getResultText, getFormattedDuration, getVideoResult, getInstanceDifficulty, getDungeonEncounterById } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
@@ -177,7 +177,7 @@ export default function VideoButton(props: any) {
     const keystoneAllottedTime = video.challengeMode.allottedTime ?? dungeonTimersByMapId[video.challengeMode.mapId];
 
     // Calculate the upgrade levels of the keystone
-    keystoneUpgradeLevel = calculateKeystoneCompletionResult(
+    keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(
       keystoneAllottedTime,
       video.challengeMode.duration
     );
