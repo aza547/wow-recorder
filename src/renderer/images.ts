@@ -1,3 +1,5 @@
+import { dungeonsByZoneId } from '../main/constants'
+
 interface imageObject {
     [id: number]: string;
 }
@@ -24,28 +26,25 @@ const arenaIDs = [
 let arena: imageObject = {};
 
 for (const id of arenaIDs) {
-    arena[id] = require(`../../assets/arena/${id}.jpg`);
+    try {
+        arena[id] = require(`../../assets/arena/${id}.jpg`);
+    }
+    catch (e) {
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+    };
 }
 
-// Load the dungeon images. This expects files with the name <id>.jpg 
-// to exist in the appropriate assets folder.
-const dungeonIDs = [
-    // Shadowlands
-    2293, // Theatre of Pain
-    2441, // Tazavesh
-    2287, // Halls of Atonement
-    2286, // Necrotic Wake
-    2258, // Spires of Ascension
-    2289, // Plaguefall 
-    2284, // Sanguine Depths
-    2291, // De Other Side
-    2290, // Mists of Tirna Sithe
-]
+const dungeonIDs = Object.keys(dungeonsByZoneId).map(v=> parseInt(v, 10))
 
 let dungeon: imageObject = {};
 
 for (const id of dungeonIDs) {
-    dungeon[id] = require(`../../assets/dungeon/${id}.jpg`);
+    try {
+        dungeon[id] = require(`../../assets/dungeon/${id}.jpg`);
+    }
+    catch (e) {
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+    };
 }
 
 // Load the raid encounter images. This expects files with the 
@@ -92,7 +91,12 @@ const raidIDs = [
 let raid: imageObject = {};
 
 for (const id of raidIDs) {
-    raid[id] = require(`../../assets/raid/${id}.jpg`);
+    try {
+        raid[id] = require(`../../assets/raid/${id}.jpg`);
+    }
+    catch (e) {
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+    };
 }
 
 // Load the battleground images. This expects files with the 
@@ -121,7 +125,12 @@ const battlegroundIDs = [
 let battleground: imageObject = {};
 
 for (const id of battlegroundIDs) {
-    battleground[id] = require(`../../assets/battlegrounds/${id}.jpg`);
+    try {
+        battleground[id] = require(`../../assets/battlegrounds/${id}.jpg`);
+    }
+    catch (e) {
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+    };
 }
 
 // Load the battleground images. This expects files with the name <id>.jpg 
@@ -150,7 +159,12 @@ let spec: imageObject = {
 };
 
 for (const id of specIDs) {
-    spec[id] = require(`../../assets/specs/${id}.png`);
+    try {
+        spec[id] = require(`../../assets/specs/${id}.png`);
+    }
+    catch (e) {
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+    };
 }
 
 export {

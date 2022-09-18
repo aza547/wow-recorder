@@ -1,21 +1,4 @@
-import { instanceDifficulty, InstanceDifficultyType, VideoCategory } from "main/constants";
-
-/**
- * isCategoryPVP
- */
- const isCategoryPVP = (category: VideoCategory) => {
-    if (!category) return false;
-
-    const pvpCategories = [
-        VideoCategory.TwoVTwo,
-        VideoCategory.ThreeVThree,
-        VideoCategory.Skirmish,
-        VideoCategory.SoloShuffle,
-        VideoCategory.Battlegrounds,
-    ];
-
-    return pvpCategories.includes(category);
-}  
+import { dungeonEncounters, instanceDifficulty, InstanceDifficultyType, VideoCategory } from "main/constants";
 
 const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | null => {
     if (instanceDifficulty.hasOwnProperty(difficultyID)) {
@@ -36,21 +19,25 @@ const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | n
         return "";
     }
 
-    const isPvp = isCategoryPVP(category);
-    let resultText: string;
+    switch (category) {
+        case VideoCategory.MythicPlus:
+            return isGoodResult ? "Time" : "Depl";
 
-    if (isPvp && isGoodResult) {
-        resultText = "Win";     
-    } else if (isPvp && !isGoodResult) {
-        resultText = "Loss";
-    } else if (!isPvp && isGoodResult) {
-        resultText = "Kill";
-    } else {
-        resultText = "Wipe";
+        case VideoCategory.Raids:
+            return isGoodResult ? "Kill" : "Wipe";
+
+        default:
+            return isGoodResult ? "Win" : "Loss";
+    }
+} 
+
+const getVideoResult = (video: any): boolean => {
+    if (video.challengeMode !== undefined) {
+        return Boolean(video.challengeMode.timed)
     }
 
-    return resultText;
-} 
+    return video.result
+}
 
 /**
  * getFormattedDuration
@@ -64,9 +51,21 @@ const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | n
     return formattedDuration;
 }  
 
+/**
+ * Return the name of a dungeon encounter (boss) by its encounter ID
+ */
+ const getDungeonEncounterById = (id: number): string => {
+    if (dungeonEncounters.hasOwnProperty(id)) {
+      return dungeonEncounters[id]
+    }
+
+    return 'Unknown boss';
+}
+
 export {
-    isCategoryPVP,
     getResultText,
     getFormattedDuration,
-    getInstanceDifficulty
+    getInstanceDifficulty,
+    getVideoResult,
+    getDungeonEncounterById,
 };
