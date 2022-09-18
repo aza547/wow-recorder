@@ -1,8 +1,9 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds, VideoCategory }  from './constants';
-import { UnitFlags } from './types';
+import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory }  from './constants';
+import { PlayerDeathType, UnitFlags } from './types';
+import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -17,7 +18,7 @@ let metadata: Metadata;
 let combatantMap: Map<string, Combatant> = new Map();
 let playerCombatant: Combatant | undefined;
 let testRunning: boolean = false;
-let isChallengeModeActive: boolean = false;
+let activeChallengeMode: ChallengeModeDungeon | undefined;
 
 declare interface LogLineHandlerType {
     (line: LogLine): void
@@ -39,6 +40,7 @@ const interestingCombatLogEvents: InterestingCombatLogEventsType = {
     'ZONE_CHANGE': handleZoneChange,
     'COMBATANT_INFO': handleCombatantInfoLine,
     'SPELL_AURA_APPLIED': handleSpellAuraAppliedLine,
+    'UNIT_DIED': handleUnitDiedLine,
 };
 
 /**
@@ -94,6 +96,8 @@ class LogLine {
     playerRealm?: string;
     playerSpecID?: number;
     teamMMR?: number;
+    challengeMode?: ChallengeModeDungeon;
+    playerDeaths: PlayerDeathType[];
 }
 
 /**
@@ -314,6 +318,7 @@ function handleArenaStartLine (line: LogLine): void {
         zoneID: zoneID,
         duration: 0,
         result: false,
+        playerDeaths: []
     }
     
     recorder.start();
@@ -351,8 +356,7 @@ function handleArenaStopLine (line: LogLine): void {
     metadata.result = result;
     metadata.teamMMR = MMR;
 
-    combatantMap.clear();
-    playerCombatant = undefined;
+    clearCombatants();
 
     recorder.stop(metadata, overrun);
 }
@@ -373,32 +377,143 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
 }
 
 /**
- * Guard functions for now to simply allow us to ignore
- * Mythic Keystone encounters because we can't actually handle them
- * right now.
+ * Handle a log line for CHALLENGE_MODE_START
  */
-function handleChallengeModeStartLine (_line: LogLine): void {
-    isChallengeModeActive = true;
-}
+function handleChallengeModeStartLine (line: LogLine): void {
+    // It's impossible to start a keystone dungeon while another one is in progress
+    // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
+    // is encountered.
+    if (activeChallengeMode) {
+        console.warn("[ChallengeMode] A Challenge Mode instance is already in progress; abandoning it.")
+    }
+    videoStartDate = line.date();
 
-function handleChallengeModeEndLine (_line: LogLine): void {
-    isChallengeModeActive = false;
-}
+    const zoneName = line.args[2];
+    const mapId = parseInt(line.args[3], 10);
+    const hasDungeonMap = (mapId in dungeonsByMapId);
+    const hasTimersForDungeon = (mapId in dungeonTimersByMapId);
+
+    if (!hasDungeonMap || !hasTimersForDungeon) {
+        console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
+    }
+
+    clearCombatants();
+
+    const dungeonAffixes = line.args[5].map((v: string) => parseInt(v, 10));
+
+    activeChallengeMode = new ChallengeModeDungeon(
+        dungeonTimersByMapId[mapId], // Dungeon timers
+        parseInt(line.args[2], 10),  // zoneId
+        mapId,                       // mapId
+        parseInt(line.args[4], 10),  // Keystone Level
+        dungeonAffixes,              // Array of affixes, as numbers
+    )
+
+    activeChallengeMode.addTimelineSegment(new ChallengeModeTimelineSegment(
+        TimelineSegmentType.Trash, videoStartDate, 0
+    ));
+
+    console.debug("[ChallengeMode] Starting Challenge Mode instance")
+
+    metadata = {
+        name: line.args[1], // Instance name (e.g. "Operation: Mechagon")
+        encounterID: parseInt(line.args[1], 10),
+        category: VideoCategory.MythicPlus,
+        zoneID: parseInt(line.args[5]),
+        duration: 0,
+        result: false,
+        challengeMode: activeChallengeMode,
+        playerDeaths: [],
+    };
+
+    recorder.start();
+};
+
+/**
+ * Handle a log line for CHALLENGE_MODE_END
+ */
+function handleChallengeModeEndLine (line: LogLine): void {
+    if (!recorder.isRecording || !activeChallengeMode) {
+        return;
+    }
+
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;
+    }
+
+    // Add a few seconds so we reliably see the aftermath of a kill.
+    const overrun = 5;
+
+    const videoStopDate = line.date();
+    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime());
+    const duration = Math.round(milliSeconds / 1000);
+
+    metadata.duration = duration + overrun;
+    metadata.result = Boolean(parseInt(line.args[1]));
+
+    clearCombatants();
+
+    // The actual log duration of the dungeon, from which keystone upgrade
+    // levels can be calculated.
+    //
+    // It's included separate from `metadata.duration` because the duration of the
+    // dungeon, as the game sees it, is what is important for this value to make sense.
+    activeChallengeMode.duration = Math.round(parseInt(line.args[4], 10) / 1000);
+
+    // Calculate whether the key was timed or not
+    activeChallengeMode.timed = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
+
+    console.debug("[ChallengeMode] Ending current timeline segment")
+    activeChallengeMode.endCurrentTimelineSegment(videoStopDate);
+
+    // If last timeline segment is less than 10 seconds long, discard it.
+    // It's probably not useful
+    const lastTimelineSegment = activeChallengeMode.getCurrentTimelineSegment();
+    if (lastTimelineSegment && lastTimelineSegment.length() < 10000) {
+        console.debug("[ChallengeMode] Removing last timeline segment, because it's too short.")
+        activeChallengeMode.removeLastTimelineSegment();
+    }
+
+    console.debug("[ChallengeMode] Ending Challenge Mode instance");
+
+    recorder.stop(metadata, overrun);
+};
+
+const getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
+    if (!videoStartDate) {
+        return 0;
+    }
+
+    return (currentDate.getTime() - videoStartDate.getTime()) / 1000;
+};
 
 /**
  * Handle a line from the WoW log. 
  */
 function handleEncounterStartLine (line: LogLine): void {
-    if (isChallengeModeActive) {
-        console.log("[Logutils] ENCOUNTER_START in an active Mythic Keystone dungeon is ignored.")
+    const encounterID = parseInt(line.args[1], 10)
+    const difficultyID = parseInt(line.args[3], 10);
+    const eventDate = line.date();
+
+    // If we're recording _and_ has an active challenge mode dungeon,
+    // add a new boss encounter timeline segment.
+    if (recorder.isRecording && activeChallengeMode) {
+        const vSegment = new ChallengeModeTimelineSegment(
+            TimelineSegmentType.BossEncounter,
+            eventDate,
+            getRelativeTimestampForTimelineSegment(eventDate),
+            encounterID
+        );
+
+        activeChallengeMode.addTimelineSegment(vSegment, eventDate);
+        console.debug(`[ChallengeMode] Starting new boss encounter: ${dungeonEncounters[encounterID]}`)
+
         return;
     }
-    
-    playerCombatant = undefined;
-    const encounterID = parseInt(line.args[1], 10);
-    const difficultyID = parseInt(line.args[3], 10);
 
-    videoStartDate = line.date();
+    videoStartDate = eventDate;
 
     metadata = {
         name: "name",
@@ -407,6 +522,7 @@ function handleEncounterStartLine (line: LogLine): void {
         difficultyID: difficultyID,
         duration: 0,
         result: false,
+        playerDeaths: [],
     }
 
     recorder.start();
@@ -416,13 +532,25 @@ function handleEncounterStartLine (line: LogLine): void {
  * Handle a line from the WoW log. 
  */
 function handleEncounterStopLine (line: LogLine): void {
-    if (isChallengeModeActive) {
-        console.log("[Logutils] ENCOUNTER_END in an active Mythic Keystone dungeon is ignored.")
-        return;
-    }
-    
     const videoStopDate = line.date();
     const encounterResult = Boolean(parseInt(line.args[5], 10));
+    const encounterID = parseInt(line.args[1], 10);
+
+    if (recorder.isRecording && activeChallengeMode) {
+        const currentSegment = activeChallengeMode.getCurrentTimelineSegment()
+        if (currentSegment) {
+            currentSegment.result = encounterResult
+        }
+
+        const vSegment = new ChallengeModeTimelineSegment(
+            TimelineSegmentType.Trash, videoStopDate, getRelativeTimestampForTimelineSegment(videoStopDate)
+        )
+
+        // Add a trash segment as the boss encounter ended
+        activeChallengeMode.addTimelineSegment(vSegment, videoStopDate);
+        console.debug(`[ChallengeMode] Ending boss encounter: ${dungeonEncounters[encounterID]}`)
+        return;
+    }
 
     if (playerCombatant) {
         metadata.playerName = playerCombatant.name;
@@ -439,8 +567,7 @@ function handleEncounterStopLine (line: LogLine): void {
     metadata.duration = duration; 
     metadata.result = encounterResult
     
-    combatantMap.clear();
-    playerCombatant = undefined;
+    clearCombatants();
 
     recorder.stop(metadata, overrun);
 }
@@ -490,7 +617,6 @@ function handleZoneChange (line: LogLine): void {
  * @param line the SPELL_AURA_APPLIED line
  */
 function handleSpellAuraAppliedLine (line: LogLine): void {
-    if (isChallengeModeActive) return;
     if (playerCombatant) return;
     if (combatantMap.size === 0) return;    
 
@@ -523,6 +649,21 @@ function handleCombatantInfoLine (line: LogLine): void {
 }
 
 /**
+ * Return a combatant by guid, if it exists.
+ */
+function getCombatantByGuid(guid: string): Combatant | undefined {
+    return combatantMap.get(guid);
+}
+
+/**
+ * Clear combatants map and the current player combatant, if any.
+ */
+const clearCombatants = () => {
+    combatantMap.clear();
+    playerCombatant = undefined;
+}
+
+/**
  * ZONE_CHANGE event into a BG.  
  */
 function battlegroundStart (line: LogLine): void {
@@ -537,6 +678,7 @@ function battlegroundStart (line: LogLine): void {
         zoneID: zoneID,
         duration: 0,
         result: false,
+        playerDeaths: [],
     }
 
     recorder.start();
@@ -573,6 +715,40 @@ function zoneChangeStop (line: LogLine): void {
     // Assume loss if zoned out of content. 
     metadata.result = false;
     recorder.stop(metadata);
+}
+
+/**
+ * Register a player death in the video metadata
+ */
+const registerPlayerDeath = (timestamp: number, name: string, specId: number): void => {
+    // Ensure a timestamp cannot be negative
+    timestamp = timestamp >= 0 ? timestamp : 0;
+
+    metadata.playerDeaths.push({ name, specId, timestamp });
+}
+
+/**
+ * Handle a unit dying, but only if it's a player.
+ */
+ function handleUnitDiedLine (line: LogLine): void {
+    const unitFlags = parseInt(line.args[7], 16);
+    const isUnitUnconsciousAtDeath = Boolean(parseInt(line.args[9], 10));
+
+    // We only want player deaths and we don't want fake deaths,
+    // i.e. a hunter that feigned death
+    if (!isUnitPlayer(unitFlags) || isUnitUnconsciousAtDeath) {
+        return;
+    }
+
+    const playerName = line.args[6];
+    const playerGuid = line.args[5];
+    const playerSpecId = getCombatantByGuid(playerGuid)?.specID ?? 0;
+
+    // Add player death and subtract 2 seconds from the time of death to allow the
+    // user to view a bit of the video before the death and not at the actual millisecond
+    // it happens.
+    const relativeTimeStamp = ((line.date().getTime() - 2) - videoStartDate.getTime()) / 1000;
+    registerPlayerDeath(relativeTimeStamp, playerName, playerSpecId);
 }
 
 /**

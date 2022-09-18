@@ -179,7 +179,7 @@ const glob = require('glob');
     stop = (metadata: Metadata, overrun: number = 0) => {
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
-        console.info("[Recorder]" , JSON.stringify(metadata));
+        console.info("[Recorder]" , JSON.stringify(metadata), 2);
 
         // Wait for a delay specificed by overrun. This lets us
         // capture the boss death animation/score screens.  

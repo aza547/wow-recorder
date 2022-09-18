@@ -13,7 +13,7 @@ enum AppStatus {
  * Unit flags from combat log events
  * See https://wowpedia.fandom.com/wiki/UnitFlag for more information
  */
- enum UnitFlags {
+enum UnitFlags {
     AFFILIATION_MINE = 0x00000001,
     AFFILIATION_PARTY = 0x00000002,
     AFFILIATION_RAID = 0x00000004,
@@ -42,8 +42,20 @@ enum AppStatus {
     MAINASSIST = 0x00080000,
     NONE = 0x80000000, // Whether the unit does not exist.
     SPECIAL_MASK = 0xFFFF0000,
-  };
+};
+
+/**
+ * Type that describes the player deaths that are detected and stored
+ * with the metadata for a video.
+ */
+type PlayerDeathType = {
+  name: string,
+  specId: number,
+  timestamp: number,
+};
+
 export {
     AppStatus,
     UnitFlags,
+    PlayerDeathType,
 }

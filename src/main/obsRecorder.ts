@@ -1,4 +1,4 @@
-import { fixPathWhenPackaged } from "./util";
+import { fixPathWhenPackaged, isClose } from "./util";
 import WaitQueue from 'wait-queue';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
 const waitQueue = new WaitQueue<any>();
@@ -126,29 +126,69 @@ const displayInfo = (displayIndex: number) => {
 }
 
 /*
+* Checks if string {W}x{H} resolution is close enough to monitor resolution
+* @param resolution - Resolution string of OBS in format {W}x{H}
+*/
+const checkRes = (monitorWidth: number, monitorHeight: number, resolution: string) => {
+  const [resWidth, resHeight] = resolution.split('x');
+
+  const isWidthClose = isClose(parseInt(resWidth, 10), monitorWidth);
+  const isHeightClose = isClose(parseInt(resHeight, 10), monitorHeight);
+  return isWidthClose && isHeightClose;
+};
+
+/*
+* Given a none-whole monitor resolution, find the closest one that 
+* OBS supports and set the corospoding setting in Video.Untitled.{paramString}
+* 
+* @remarks
+* Useful when windows scaling is not set to 100% (125%, 150%, etc) on higher resolution monitors, 
+* meaning electron screen.getAllDisplays() will return a none integer scaleFactor, causing 
+* the calucated monitor resolution to be none-whole.
+*
+* @throws
+* Throws an error if no matching resolution is found.
+*/
+const setOBSVideoResolution = (monitorWidth: number, monitorHeight: number, paramString: string) => {
+  const availableResolutions = getAvailableValues('Video', 'Untitled', paramString);
+  for(let i = 0; i < availableResolutions.length; i++) {
+    const resolution: string = availableResolutions[i];
+    if (checkRes(monitorWidth, monitorHeight, resolution)) {
+      setSetting('Video', paramString, resolution);
+      return;
+    }
+  }
+  
+  console.error('[OBS] ERROR! Matching resolution not found for Video Output');
+  console.error(`Error attempting to match ${monitorWidth}x${monitorHeight} with ${availableResolutions} for ${paramString}`);
+  throw Error('Matching resolution not found for Video Output');
+}
+
+/*
 * setupScene
 */
 const setupScene = (monitorIndex: number) => {
-  const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
-
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
   const monitorIndexFromZero = monitorIndex - 1; 
   console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
   const { physicalWidth, physicalHeight } = displayInfo(monitorIndexFromZero);
 
+  setOBSVideoResolution(physicalWidth, physicalHeight, 'Base');
+
+  // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
+  setOBSVideoResolution(physicalWidth, physicalHeight, 'Output');
+
+  const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
+
   // Update source settings:
   let settings = videoSource.settings;
   settings['monitor'] = monitorIndexFromZero;
-  settings['width'] = physicalWidth;
-  settings['height'] = physicalHeight;
   videoSource.update(settings);
   videoSource.save();
 
   const outputWidth = physicalWidth;
   const outputHeight = physicalHeight;
-  
-  setSetting('Video', 'Base', `${outputWidth}x${outputHeight}`);
-  setSetting('Video', 'Output', `${outputWidth}x${outputHeight}`);
+
   const videoScaleFactor = physicalWidth / outputWidth;
 
   // A scene is necessary here to properly scale captured screen size to output video size
