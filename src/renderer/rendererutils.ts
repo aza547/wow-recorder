@@ -21,7 +21,7 @@ const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | n
 
     switch (category) {
         case VideoCategory.MythicPlus:
-            return isGoodResult ? "Timed" : "Depleted";
+            return isGoodResult ? "Time" : "Depl";
 
         case VideoCategory.Raids:
             return isGoodResult ? "Kill" : "Wipe";

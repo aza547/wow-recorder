@@ -311,12 +311,6 @@ h2 {
   position: absolute;
 }
 
-.dungeon .name {
-  bottom: 5px;
-  left: 27px;
-  font-size: 14px;
-}
-
 .specIcon {
   bottom: 1px;
   left: 3px;
@@ -328,22 +322,9 @@ h2 {
   height: 25px;
 }
 
-.dungeon .specIcon > img {
-  width: 16px;
-  height: 16px;
-}
-
 .resultText {
   bottom: 7px;
   right: 5px;
-  position: absolute;
-  text-align: right;
-}
-
-.dungeon .resultText {
-  bottom: 5px;
-  right: 5px;
-  font-size: 14px;
   position: absolute;
   text-align: right;
 }
