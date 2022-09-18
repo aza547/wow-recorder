@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 86](https://github.com/aza547/wow-recorder/issues/86) - Fix an event listener leak.
 - Fixed memory leak in EventEmitter attachment of listener for 'updateStatus'
 - [Issue 17](https://github.com/aza547/wow-recorder/issues/17) - Allow the selection of input/output audio devices for recording in settings
-- Remember video sound settings when changing videos. 
+- [Issue 66](https://github.com/aza547/wow-recorder/issues/66) - Store buffer recordings in a better location, and also clear it out when starting the app. 
 
 ## [2.6.1] - 2022-09-05
 ### Fixed

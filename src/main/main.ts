@@ -426,9 +426,9 @@ ipcMain.on('getAudioDevices', (event) => {
 });
 
 /**
- * Get the list of video files and their state.
+ * Test button listener. 
  */
-ipcMain.on('test', (event) => {
+ipcMain.on('test', () => {
   if (isConfigReady(cfg)) { 
     console.info("[Main] Config is good, running test!");
     runRecordingTest()

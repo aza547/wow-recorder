@@ -45,11 +45,14 @@ const glob = require('glob');
         this._minEncounterDuration = minEncounterDuration;
 
         // Something like: C:\Users\alexa\AppData\Local\Temp\WarcraftRecorder
-        this._bufferStorageDir = path.join(app.getPath("temp"), "WarcraftRecorder"); 
+        this._bufferStorageDir = path.join(this._storageDir, ".temp"); 
 
         if (!fs.existsSync(this._bufferStorageDir)) {
-            console.log("[Recorder] Creating dir:", this._bufferStorageDir)
+            console.log("[Recorder] Creating dir:", this._bufferStorageDir);
             fs.mkdirSync(this._bufferStorageDir);
+        } else {
+            console.log("[Recorder] Clean out buffer")
+            this.cleanupBuffer(0);
         }
 
         obsRecorder.initialize(this._bufferStorageDir, this._monitorIndex, this._audioInputDeviceId, this._audioOutputDeviceId);
@@ -129,7 +132,7 @@ const glob = require('glob');
         await obsRecorder.stop();
         this.isRecordingBuffer = false;
         if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.WaitingForWoW);
-        this.cleanupBuffer();
+        this.cleanupBuffer(1);
     }
 
     /**
@@ -148,7 +151,7 @@ const glob = require('glob');
             obsRecorder.start();
         }, 2000);
 
-        this.cleanupBuffer();
+        this.cleanupBuffer(1);
     }
 
     /**
@@ -206,7 +209,7 @@ const glob = require('glob');
                 });
 
             // Clean-up the temporary recording directory. 
-            this.cleanupBuffer();
+            this.cleanupBuffer(1);
 
             // Refresh the GUI
             if (mainWindow) mainWindow.webContents.send('refreshState');
@@ -240,16 +243,17 @@ const glob = require('glob');
     }
 
     /**
-     * Delete all but the most recent two .mp4 buffer files. 
+     * Clean-up the buffer directory.
+     * @params Number of files to leave.
      */
-    cleanupBuffer = () => {
+    cleanupBuffer = (filesToLeave: number) => {
         const globString = path.join(this._bufferStorageDir, "*.mp4"); 
 
         // Sort newest to oldest, remove newest 2 from the list; we don't delete those. 
         const videosToDelete = glob.sync(globString) 
             .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
             .sort((A: any, B: any) => B.mtime - A.mtime)
-            .slice(2);
+            .slice(filesToLeave);
 
         for (const video of videosToDelete) {
             deleteVideo(video.name);
