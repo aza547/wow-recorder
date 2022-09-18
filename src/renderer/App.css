@@ -131,92 +131,25 @@ h2 {
   left: 5px;
 }
 
-#settings{
-  position:fixed;
-  top: 250px;
-  left: 5px;
+.app-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 145px;
+  padding-top: 1rem;
+  justify-items: center;
+  gap: .125rem 0rem;
 }
 
-#settings-cog{
+.app-buttons div button {
   background-color: transparent;
   border-width: 0px;
   cursor: pointer;
 }
 
-#settings-cog:hover {
+.app-buttons div button:hover {
   background-color: darkgrey;
   border-width: 0px;
   border-radius: 10px;
-}
-
-#settings-cog:active {
-  border-style: inset;
-}
-
-#log-button-div {
-  position:fixed;
-  top: 250px;
-  left: 40px;
-}
-
-#log-button{
-  background-color: transparent;
-  border-width: 0px;
-  cursor: pointer;
-}
-
-#log-button:hover {
-  background-color: darkgrey;
-  border-width: 0px;
-  border-radius: 10px;
-}
-
-#log-button:active {
-  border-style: inset;
-}
-
-#discord-button-div {
-  position:fixed;
-  top: 250px;
-  left: 75px;
-}
-
-#discord-button{
-  background-color: transparent;
-  border-width: 0px;
-  cursor: pointer;
-}
-
-#discord-button:hover {
-  background-color: darkgrey;
-  border-width: 0px;
-  border-radius: 10px;
-}
-
-#discord-button:active {
-  border-style: inset;
-}
-
-#test-button-div {
-  position:fixed;
-  top: 250px;
-  left: 110px;
-}
-
-#test-button{
-  background-color: transparent;
-  border-width: 0px;
-  cursor: pointer;
-}
-
-#test-button:hover {
-  background-color: darkgrey;
-  border-width: 0px;
-  border-radius: 10px;
-}
-
-#test-button:active {
-  border-style: inset;
 }
 
 .videoButton {
@@ -416,4 +349,28 @@ h2 {
 
 .WARRIOR {
   -webkit-text-fill-color: #C69B6D;
+}
+
+.hidden {
+  display: none;
+}
+
+.version-update-widget {
+  width: 145px;
+  padding-top: 1rem;
+}
+
+.version-update-widget > div {
+  text-align: center;
+  padding: 0 .5rem;
+}
+
+a {
+  color: #fff;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #bb4220;
+  text-decoration: none;
 }
