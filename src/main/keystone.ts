@@ -1,14 +1,14 @@
-enum VideoSegmentType {
+enum TimelineSegmentType {
     BossEncounter = 'Boss',
     Trash = 'Trash'
 };
 
-class ChallengeModeVideoSegment {
+class ChallengeModeTimelineSegment {
     logEnd: Date
     result?: Boolean
 
     constructor(
-        public segmentType: VideoSegmentType,
+        public segmentType: TimelineSegmentType,
         public logStart: Date,
         public timestamp: number,
         public encounterId?: number
@@ -26,7 +26,7 @@ class ChallengeModeVideoSegment {
 class ChallengeModeDungeon {
     timed: boolean = false;
     duration: number = 0;
-    videoSegments: ChallengeModeVideoSegment[] = []
+    timelineSegments: ChallengeModeTimelineSegment[] = []
 
     constructor(
         public allottedTime: number[],
@@ -39,47 +39,47 @@ class ChallengeModeDungeon {
     ) {}
 
     /**
-     * Add a video segment, optionally ending a current one
+     * Add a timeline segment, optionally ending the current one
      *
      * Given a date as endPrevious, that date is used as the logEnd for the
      * current segment.
      */
-    addVideoSegment(segment: ChallengeModeVideoSegment, endPrevious?: Date) {
+    addTimelineSegment(segment: ChallengeModeTimelineSegment, endPrevious?: Date) {
         if (endPrevious) {
-            this.endCurrentVideoSegment(endPrevious);
+            this.endCurrentTimelineSegment(endPrevious);
         }
 
-        this.videoSegments.push(segment);
+        this.timelineSegments.push(segment);
     }
 
-    getCurrentVideoSegment(): ChallengeModeVideoSegment | undefined {
-        return this.videoSegments.at(-1)
+    getCurrentTimelineSegment(): ChallengeModeTimelineSegment | undefined {
+        return this.timelineSegments.at(-1)
     }
 
     /**
-     * Find and return the last video segment from a boss encounter
+     * Find and return the last timeline segment from a boss encounter
      */
-    getLastBossEncounter(): ChallengeModeVideoSegment | undefined {
-        return this.videoSegments.slice().reverse().find(v => {
-            v.segmentType === VideoSegmentType.BossEncounter;
+    getLastBossEncounter(): ChallengeModeTimelineSegment | undefined {
+        return this.timelineSegments.slice().reverse().find(v => {
+            v.segmentType === TimelineSegmentType.BossEncounter;
         });
     }
 
     /**
-     * End a video segment by setting its logEnd date.
+     * End a timeline segment by setting its logEnd date.
      */
-    endCurrentVideoSegment(logDate: Date) {
-        const currentSegment = this.getCurrentVideoSegment()
+    endCurrentTimelineSegment(logDate: Date) {
+        const currentSegment = this.getCurrentTimelineSegment()
         if (currentSegment) {
             currentSegment.logEnd = logDate
         }
     }
 
     /**
-     * Pop the last video segment and discard it
+     * Pop the last timeline segment and discard it
      */
     removeLastSegment() {
-        this.videoSegments.pop();
+        this.timelineSegments.pop();
     }
 };
 
@@ -104,8 +104,8 @@ const calculateKeystoneCompletionResult = (allottedTime: number[], duration: num
 }
 
 export {
-    VideoSegmentType,
-    ChallengeModeVideoSegment,
+    TimelineSegmentType,
+    ChallengeModeTimelineSegment,
     ChallengeModeDungeon,
     calculateKeystoneCompletionResult,
 }

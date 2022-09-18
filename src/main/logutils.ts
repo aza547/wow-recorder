@@ -3,7 +3,7 @@ import { Combatant } from './combatant';
 import { recorder }  from './main';
 import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory }  from './constants';
 import { PlayerDeathType, UnitFlags } from './types';
-import { calculateKeystoneCompletionResult, ChallengeModeDungeon, ChallengeModeVideoSegment, VideoSegmentType } from './keystone';
+import { calculateKeystoneCompletionResult, ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 
 const tail = require('tail').Tail;
 const glob = require('glob');
@@ -409,8 +409,8 @@ function handleChallengeModeStartLine (line: LogLine): void {
         dungeonAffixes,              // Array of affixes, as numbers
     )
 
-    activeChallengeMode.addVideoSegment(new ChallengeModeVideoSegment(
-        VideoSegmentType.Trash, videoStartDate, 0
+    activeChallengeMode.addTimelineSegment(new ChallengeModeTimelineSegment(
+        TimelineSegmentType.Trash, videoStartDate, 0
     ));
 
     console.debug("[ChallengeMode] Starting Challenge Mode instance")
@@ -462,14 +462,14 @@ function handleChallengeModeEndLine (line: LogLine): void {
     // Calculate whether the key was timed or not
     activeChallengeMode.timed = calculateKeystoneCompletionResult(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
 
-    console.debug("[ChallengeMode] Ending current video segment")
-    activeChallengeMode.endCurrentVideoSegment(videoStopDate);
+    console.debug("[ChallengeMode] Ending current timeline segment")
+    activeChallengeMode.endCurrentTimelineSegment(videoStopDate);
 
-    // If last video segment is less than 10 seconds long, discard it.
+    // If last timeline segment is less than 10 seconds long, discard it.
     // It's probably not useful
-    const lastVideoSegment = activeChallengeMode.getCurrentVideoSegment();
-    if (lastVideoSegment && lastVideoSegment.length() < 10000) {
-        console.debug("[ChallengeMode] Removing last video segment, because it's too short.")
+    const lastTimelineSegment = activeChallengeMode.getCurrentTimelineSegment();
+    if (lastTimelineSegment && lastTimelineSegment.length() < 10000) {
+        console.debug("[ChallengeMode] Removing last timeline segment, because it's too short.")
         activeChallengeMode.removeLastSegment();
     }
 
@@ -478,7 +478,7 @@ function handleChallengeModeEndLine (line: LogLine): void {
     recorder.stop(metadata, overrun);
 };
 
-const getRelativeTimestampForVideoSegment = (currentDate: Date): number => {
+const getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
     if (!videoStartDate) {
         return 0;
     }
@@ -495,16 +495,16 @@ function handleEncounterStartLine (line: LogLine): void {
     const eventDate = line.date();
 
     // If we're recording _and_ has an active challenge mode dungeon,
-    // add a new boss encounter video segment.
+    // add a new boss encounter timeline segment.
     if (recorder.isRecording && activeChallengeMode) {
-        const vSegment = new ChallengeModeVideoSegment(
-            VideoSegmentType.BossEncounter,
+        const vSegment = new ChallengeModeTimelineSegment(
+            TimelineSegmentType.BossEncounter,
             eventDate,
-            getRelativeTimestampForVideoSegment(eventDate),
+            getRelativeTimestampForTimelineSegment(eventDate),
             encounterID
         );
 
-        activeChallengeMode.addVideoSegment(vSegment, eventDate);
+        activeChallengeMode.addTimelineSegment(vSegment, eventDate);
         console.debug(`[ChallengeMode] Starting new boss encounter: ${dungeonEncounters[encounterID]}`)
 
         return;
@@ -534,17 +534,17 @@ function handleEncounterStopLine (line: LogLine): void {
     const encounterID = parseInt(line.args[1], 10);
 
     if (recorder.isRecording && activeChallengeMode) {
-        const currentSegment = activeChallengeMode.getCurrentVideoSegment()
+        const currentSegment = activeChallengeMode.getCurrentTimelineSegment()
         if (currentSegment) {
             currentSegment.result = encounterResult
         }
 
-        const vSegment = new ChallengeModeVideoSegment(
-            VideoSegmentType.Trash, videoStopDate, getRelativeTimestampForVideoSegment(videoStopDate)
+        const vSegment = new ChallengeModeTimelineSegment(
+            TimelineSegmentType.Trash, videoStopDate, getRelativeTimestampForTimelineSegment(videoStopDate)
         )
 
         // Add a trash segment as the boss encounter ended
-        activeChallengeMode.addVideoSegment(vSegment, videoStopDate);
+        activeChallengeMode.addTimelineSegment(vSegment, videoStopDate);
         console.debug(`[ChallengeMode] Ending boss encounter: ${dungeonEncounters[encounterID]}`)
         return;
     }

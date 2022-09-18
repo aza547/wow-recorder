@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
 import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, dungeonTimersByMapId }  from 'main/constants';
-import { VideoSegmentType, calculateKeystoneCompletionResult } from 'main/keystone';
+import { TimelineSegmentType, calculateKeystoneCompletionResult } from 'main/keystone';
 import { getResultText, getFormattedDuration, getVideoResult, getInstanceDifficulty, getDungeonEncounterById } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
@@ -116,12 +116,12 @@ export default function VideoButton(props: any) {
   };
 
   /**
-   * Generate the JSX for the video segments that are used in the context menu on
+   * Generate the JSX for the timeline segments that are used in the context menu on
    * the VideoButton.
    */
-  const renderKeystoneVideoSegments = (challengeMode: any): any[] => {
-    const videoSegmentsMenuItems = challengeMode.videoSegments.map((segment: any) => {
-      let videoSegmentMenu;
+  const renderKeystoneTimelineSegments = (challengeMode: any): any[] => {
+    const timelineSegmentsMenuItems = challengeMode.timelineSegments.map((segment: any) => {
+      let timelineSegmentMenu;
       let segmentDurationText;
       const result = Boolean(segment.result);
 
@@ -134,13 +134,13 @@ export default function VideoButton(props: any) {
         return;
       }
 
-      if (segment.segmentType === VideoSegmentType.Trash) {
-        videoSegmentMenu = <div className='segment-type segment-type-trash'>
+      if (segment.segmentType === TimelineSegmentType.Trash) {
+        timelineSegmentMenu = <div className='segment-type segment-type-trash'>
           <span>{ segmentDurationText }</span>: Trash
         </div>
       } else
-      if (segment.segmentType == VideoSegmentType.BossEncounter) {
-        videoSegmentMenu = <div className='segment-entry'>
+      if (segment.segmentType == TimelineSegmentType.BossEncounter) {
+        timelineSegmentMenu = <div className='segment-entry'>
           <div className='segment-type segment-type-boss'>
             <span>{ segmentDurationText }</span>: Boss: { getDungeonEncounterById(segment.encounterId) }
           </div>
@@ -152,7 +152,7 @@ export default function VideoButton(props: any) {
 
       return (
         <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(videoIndex, segment.timestamp)}>
-          { videoSegmentMenu }
+          { timelineSegmentMenu }
         </MenuItem>
       );
     });
@@ -160,13 +160,13 @@ export default function VideoButton(props: any) {
     return [
       <MenuItem key='video-segment-label' disabled>Video Segments</MenuItem>,
       <Divider key='video-segments-begin' />,
-      ...videoSegmentsMenuItems,
+      ...timelineSegmentsMenuItems,
       <Divider key='video-segments-end' />,
     ];
   };
 
   const buttonClasses = ['videoButton'];
-  let keystoneVideoSegments = [];
+  let keystoneTimelineSegments = [];
   let keystoneUpgradeLevel = 0;
 
   if (isMythicPlus) {
@@ -182,7 +182,7 @@ export default function VideoButton(props: any) {
       video.challengeMode.duration
     );
 
-    keystoneVideoSegments = renderKeystoneVideoSegments(video.challengeMode);
+    keystoneTimelineSegments = renderKeystoneTimelineSegments(video.challengeMode);
   }
 
   return (
@@ -230,7 +230,7 @@ export default function VideoButton(props: any) {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} 
         open={open} onClose={handleCloseMenu} 
         MenuListProps={{'aria-labelledby': 'basic-button'}}>
-        { keystoneVideoSegments.length > 0 && keystoneVideoSegments }
+        { keystoneTimelineSegments.length > 0 && keystoneTimelineSegments }
         <MenuItem onClick={() => deleteVideo(videoPath)}>Delete</MenuItem>
         <MenuItem onClick={() => saveVideo(videoPath)}> 
           {isProtected &&
