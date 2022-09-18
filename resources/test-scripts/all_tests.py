@@ -9,11 +9,11 @@ tests = {
     "3v3": os.path.join(dirname, "./3v3.py"),
     "Skirmish": os.path.join(dirname, "./skirmish.py"),
     "Solo Shuffle": os.path.join(dirname, "./soloshuffle.py"),
+    "Mythic+": os.path.join(dirname, "./dungeon.py"),
     "Raid": os.path.join(dirname, "./raid.py"),
     "Raid Reset": os.path.join(dirname, "./raid-reset.py"),
     "Rated BG": os.path.join(dirname, "./rbg.py"),
-    "Mythic+": os.path.join(dirname, "./dungeon.py"),
-    "Zone Changes": os.path.join(dirname, "./zonechange.py"),
+    "Zone Changes": os.path.join(dirname, "./zonechange.py")
 }
 
 for test in tests:

@@ -477,7 +477,8 @@ function handleChallengeModeEndLine (line: LogLine): void {
     }
 
     console.debug("[ChallengeMode] Ending Challenge Mode instance");
-
+    activeChallengeMode = undefined;
+    
     recorder.stop(metadata, overrun);
 };
 
