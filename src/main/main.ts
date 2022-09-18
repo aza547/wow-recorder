@@ -470,6 +470,11 @@ const checkAppUpdate = () => {
     });
 
     response.on('end', () => {
+      if(response.statusCode !== 200) {
+        console.error(`[Main] ERROR, Failed to check for updates, status code: ${response.statusCode}`);
+        return;
+      }
+
       const release = JSON.parse(data);
       const latestVersion = release.tag_name;
       const downloadUrl = release.assets[0].browser_download_url;
