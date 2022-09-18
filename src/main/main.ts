@@ -448,7 +448,7 @@ app.on('window-all-closed', () => {
 });
 
 /**
- * https://api.github.com/repos/aza547/wow-recorder/releases/latest
+ * Checks for updates from the releases page on github, andif there is a new version, sends a message to the main window to display a notification
  */
 const checkAppUpdate = () => {
   const options = {
@@ -473,7 +473,7 @@ const checkAppUpdate = () => {
       const release = JSON.parse(data);
       const latestVersion = release.tag_name;
       const downloadUrl = release.assets[0].browser_download_url;
-      
+
       if (latestVersion !== app.getVersion()) {
         console.log("[Main] New version available:", latestVersion);
         if (mainWindow) mainWindow.webContents.send('updateAvailable', downloadUrl);
