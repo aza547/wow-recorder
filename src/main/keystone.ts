@@ -3,12 +3,6 @@ enum VideoSegmentType {
     Trash = 'Trash'
 };
 
-type ChallengeModePlayerDeathType = {
-    name: string,
-    specId: number,
-    timestamp: number,
-};
-
 class ChallengeModeVideoSegment {
     logEnd: Date
     result?: Boolean
@@ -33,10 +27,8 @@ class ChallengeModeDungeon {
     timed: boolean = false;
     duration: number = 0;
     videoSegments: ChallengeModeVideoSegment[] = []
-    playerDeaths: ChallengeModePlayerDeathType[] = []
 
     constructor(
-        public startTime: number,
         public allottedTime: number[],
         public zoneId: number,
         public mapId: number, // Some dungeons like Karazhan and such have have the
@@ -88,16 +80,6 @@ class ChallengeModeDungeon {
      */
     removeLastSegment() {
         this.videoSegments.pop();
-    }
-
-    /**
-     * Add a player death to the log
-     */
-    addPlayerDeath(timestamp: number, name: string, specId: number) {
-        // Ensure a timestamp cannot be negative
-        timestamp = timestamp >= 0 ? timestamp : 0;
-
-        this.playerDeaths.push({ name, specId, timestamp });
     }
 };
 

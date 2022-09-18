@@ -2,7 +2,7 @@
 import { Combatant } from './combatant';
 import { recorder }  from './main';
 import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory }  from './constants';
-import { UnitFlags } from './types';
+import { PlayerDeathType, UnitFlags } from './types';
 import { calculateKeystoneCompletionResult, ChallengeModeDungeon, ChallengeModeVideoSegment, VideoSegmentType } from './keystone';
 
 const tail = require('tail').Tail;
@@ -97,6 +97,7 @@ class LogLine {
     playerSpecID?: number;
     teamMMR?: number;
     challengeMode?: ChallengeModeDungeon;
+    playerDeaths: PlayerDeathType[];
 }
 
 /**
@@ -317,6 +318,7 @@ function handleArenaStartLine (line: LogLine): void {
         zoneID: zoneID,
         duration: 0,
         result: false,
+        playerDeaths: []
     }
     
     recorder.start();
@@ -397,7 +399,6 @@ function handleChallengeModeStartLine (line: LogLine): void {
     const dungeonAffixes = line.args[5].map((v: string) => parseInt(v, 10));
 
     activeChallengeMode = new ChallengeModeDungeon(
-        videoStartDate.getTime(),    // Start time
         dungeonTimersByMapId[mapId], // Dungeon timers
         parseInt(line.args[2], 10),  // zoneId
         mapId,                       // mapId
@@ -418,7 +419,8 @@ function handleChallengeModeStartLine (line: LogLine): void {
         zoneID: parseInt(line.args[5]),
         duration: 0,
         result: false,
-        challengeMode: activeChallengeMode
+        challengeMode: activeChallengeMode,
+        playerDeaths: [],
     };
 
     recorder.start();
@@ -510,6 +512,7 @@ function handleEncounterStartLine (line: LogLine): void {
         difficultyID: difficultyID,
         duration: 0,
         result: false,
+        playerDeaths: [],
     }
 
     recorder.start();
@@ -658,6 +661,7 @@ function battlegroundStart (line: LogLine): void {
         zoneID: zoneID,
         duration: 0,
         result: false,
+        playerDeaths: [],
     }
 
     recorder.start();
@@ -697,14 +701,19 @@ function zoneChangeStop (line: LogLine): void {
 }
 
 /**
- * Handle a unit dying, but only if it's a player and we're in a Mythic Keystone dungeon
+ * Register a player death in the video metadata
+ */
+const registerPlayerDeath = (timestamp: number, name: string, specId: number): void => {
+    // Ensure a timestamp cannot be negative
+    timestamp = timestamp >= 0 ? timestamp : 0;
+
+    metadata.playerDeaths.push({ name, specId, timestamp });
+}
+
+/**
+ * Handle a unit dying, but only if it's a player.
  */
  function handleUnitDiedLine (line: LogLine): void {
-    // This is only interesting in a Mythic Keystone dungeon
-    if (!activeChallengeMode) {
-        return;
-    }
-
     const unitFlags = parseInt(line.args[7], 16);
     const isUnitUnconsciousAtDeath = Boolean(parseInt(line.args[9], 10));
 
@@ -721,8 +730,8 @@ function zoneChangeStop (line: LogLine): void {
     // Add player death and subtract 2 seconds from the time of death to allow the
     // user to view a bit of the video before the death and not at the actual millisecond
     // it happens.
-    const relativeTimeStamp = ((line.date().getTime() - 2) - activeChallengeMode.startTime) / 1000;
-    activeChallengeMode.addPlayerDeath(relativeTimeStamp, playerName, playerSpecId)
+    const relativeTimeStamp = ((line.date().getTime() - 2) - videoStartDate.getTime()) / 1000;
+    registerPlayerDeath(relativeTimeStamp, playerName, playerSpecId);
 }
 
 /**
