@@ -13,6 +13,7 @@ import VideoButton  from './VideoButton';
 import readyPoster  from  "../../assets/poster/ready.png";
 import notReadyPoster from  "../../assets/poster/not-ready.png";
 import { dungeon } from './images';
+import { VideoPlayerSettings } from 'main/types';
 
 /**
  * For shorthand referencing.
@@ -95,6 +96,13 @@ const tabProps = (index: number) => {
 }
 
 /**
+ * Get video player settings initially when the component is loaded,
+ * because we do want to get it from here one time, but subsequently
+ * we'll only need to use the IPC channel `videoPlayerSettings`.
+ */
+const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
+
+/**
  * The GUI itself.
  */
 export default function Layout() {
@@ -103,8 +111,8 @@ export default function Layout() {
     categoryIndex: 0,
     videoIndex: 0,
     videoState: ipc.sendSync('getVideoState', categories),
-    videoMuted: false,
-    videoVolume: 1, // (Double) 0.00 - 1.00
+    videoMuted: videoPlayerSettings.muted,
+    videoVolume: videoPlayerSettings.volume, // (Double) 0.00 - 1.00
     videoSeek: 0,
   });
 
@@ -116,12 +124,16 @@ export default function Layout() {
    * Read and store the video player state of 'volume' and 'muted' so that we may
    * restore it when selecting a different video.
    */
-  const readVideoPlayerSettings = () => {
-    const video = getVideoPlayer()
-    if (video) {
-        state.videoMuted = video.muted;
-        state.videoVolume = video.volume;
-    }
+  const handleVideoPlayerVolumeChange = (event: any) => {
+    const videoPlayerSettings = {
+      muted: event.target.muted,
+      volume: event.target.volume,
+    };
+
+    state.videoMuted = videoPlayerSettings.muted;
+    state.videoVolume = videoPlayerSettings.volume;
+
+    ipc.sendMessage('videoPlayerSettings', ['set', videoPlayerSettings]);
   }
 
   /**
@@ -266,7 +278,13 @@ export default function Layout() {
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
         <div className={ 'video-container' + (isMythicPlus ? ' mythic-keystone' : '')}>
-          <video key={ videoFullPath } className="video" poster={ videoPoster } id='video-player' controls>
+          <video
+            key={ videoFullPath }
+            id='video-player'
+            className="video"
+            poster={ videoPoster }
+            onVolumeChange={ handleVideoPlayerVolumeChange }
+            controls>
             <source src={ videoFullPath } />
           </video>
         </div>
