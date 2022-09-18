@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { URL } from 'url';
 import path from 'path';
-import { categories, months, zones, VideoCategory, dungeonsByMapId, instanceNamesByZoneId }  from './constants';
+import { categories, months, zones, VideoCategory, dungeonsByMapId, instanceNamesByZoneId, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
 import ElectronStore from 'electron-store';
 const chalk = require('chalk');
@@ -172,17 +172,18 @@ const getVideoTime = (date: Date) => {
  */
 const getVideoZone = (metadata: Metadata) => {
     const zoneID = metadata.zoneID;
+    const encounterID = metadata.encounterID;
     const category = metadata.category;
 
-    if (zoneID) {
-        if (category === VideoCategory.Raids || category === VideoCategory.MythicPlus) {
-            return getInstanceName(zoneID);
-        }
-
+    if (category === VideoCategory.MythicPlus) {
+        if (zoneID) return getInstanceName(zoneID);
+    } else if (category === VideoCategory.Raids) {
+        if (encounterID) return getRaidName(encounterID);
+    } else if (zoneID) {
         return zones[zoneID];
+    } else {
+        return "Unknown";
     }
-
-    return "Unknown";
 }
 
 /**
@@ -196,6 +197,20 @@ const getInstanceName = (zoneID: number) => {
     return 'Unknown Instance';
 }
 
+/**
+ * Get the raid name from the encounter ID.
+ */
+ const getRaidName = (zoneID: number) => {
+    if (encountersNathria.hasOwnProperty(zoneID)) {
+        return "Castle Nathria";
+    } else if (encountersSanctum.hasOwnProperty(zoneID)) {
+        return "Sanctum of Domination";
+    } else if (encountersSepulcher) {
+        return "Sepulcher of the First Ones";
+    } else {
+        return 'Unknown Raid';
+    }
+}
 
 /**
  * Get the encounter name.

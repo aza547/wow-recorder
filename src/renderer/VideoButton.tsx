@@ -160,8 +160,6 @@ export default function VideoButton(props: any) {
     });
 
     return [
-      <MenuItem key='video-segment-label' disabled>Video Segments</MenuItem>,
-      <Divider key='video-segments-begin' />,
       ...timelineSegmentsMenuItems,
       <Divider key='video-segments-end' />,
     ];
