@@ -129,14 +129,10 @@ const displayInfo = (displayIndex: number) => {
 * setupScene
 */
 const setupScene = (monitorIndex: number) => {
-  const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
-
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
   const monitorIndexFromZero = monitorIndex - 1; 
   console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
   const { physicalWidth, physicalHeight } = displayInfo(monitorIndexFromZero);
-
-  const obsSettings = osn.NodeObs.OBS_settings_getSettings('Video').data;
 
   // Checks if val is +-1 compare
   const isClose = (val: number, compare: number) => {
@@ -150,24 +146,20 @@ const setupScene = (monitorIndex: number) => {
     return isClose(parseInt(resW, 10), physicalWidth) && isClose(parseInt(resH, 10), physicalHeight);
   };
 
-  // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
-  obsSettings.forEach((subCategory: any) => {
-    subCategory.parameters.forEach((param: any) => {
-      if (!(param.name === 'Base' || param.name === 'Output')) {
-        return;
-      }
-
-      param.values.forEach((vpair: { [key: string]: string }) => {
-        const res = Object.keys(vpair)[0];
-        if (checkRes(res)) {
-          param.currentValue = res;
-          console.info('Setting Video', param.name, 'to', res);
-        }
-      });
-    });
+  getAvailableValues('Video', 'Untitled', 'Base').forEach((resolution: string) => {
+  if (checkRes(resolution)) {
+      setSetting('Video', 'Base', resolution);
+    }
   });
 
-  osn.NodeObs.OBS_settings_saveSettings('Video', obsSettings);
+  // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
+  getAvailableValues('Video', 'Untitled', 'Output').forEach((resolution: string) => {
+    if (checkRes(resolution)) {
+      setSetting('Video', 'Output', resolution);
+    }
+  });
+
+  const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
 
   // Update source settings:
   let settings = videoSource.settings;
