@@ -706,8 +706,11 @@ function zoneChangeStop (line: LogLine): void {
     }
 
     const unitFlags = parseInt(line.args[7], 16);
+    const isUnitUnconsciousAtDeath = Boolean(parseInt(line.args[9], 10));
 
-    if (!isUnitPlayer(unitFlags)) {
+    // We only want player deaths and we don't want fake deaths,
+    // i.e. a hunter that feigned death
+    if (!isUnitPlayer(unitFlags) || isUnitUnconsciousAtDeath) {
         return;
     }
 
