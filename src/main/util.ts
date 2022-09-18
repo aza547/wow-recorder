@@ -134,7 +134,13 @@ const getMetadataForVideo = (video: string) => {
     const metadataFileName = getMetadataFileForVideo(videoPath);
     const jsonString = JSON.stringify(metadata, null, 2);
 
-    return await fspromise.writeFile(metadataFileName, jsonString);
+    return await fspromise.writeFile(
+        metadataFileName,
+        jsonString,
+        {
+            encoding: 'utf-8',
+        }
+    );
 }
 
 /**
