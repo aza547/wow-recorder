@@ -12,6 +12,7 @@ const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus } from './types';
+import { net } from 'electron';
 let recorder: Recorder;
 
 /**
@@ -182,6 +183,7 @@ const createWindow = async () => {
     recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice, minEncounterDuration);
     pollWowProcess();
     watchLogs(baseLogPath);
+    checkAppUpdate();
   });
 
   mainWindow.on('closed', () => {
@@ -450,6 +452,50 @@ app.on('window-all-closed', () => {
   obsRecorder.shutdown();
   app.quit();
 });
+
+/**
+ * Checks for updates from the releases page on github, and, if there is a new version, sends a message to the main window to display a notification
+ */
+const checkAppUpdate = () => {
+  const options = {
+    hostname: 'api.github.com',
+    protocol: 'https:',
+    path: '/repos/aza547/wow-recorder/releases/latest',
+    method: 'GET',
+    headers: {
+      'User-Agent': 'wow-recorder',
+    }
+  }
+
+  const request = net.request(options);
+  request.on('response', (response) => {
+    let data = '';
+
+    response.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    response.on('end', () => {
+      if(response.statusCode !== 200) {
+        console.error(`[Main] ERROR, Failed to check for updates, status code: ${response.statusCode}`);
+        return;
+      }
+
+      const release = JSON.parse(data);
+      const latestVersion = release.tag_name;
+      const downloadUrl = release.assets[0].browser_download_url;
+
+      if (latestVersion !== app.getVersion() && latestVersion && downloadUrl) {
+        console.log("[Main] New version available:", latestVersion);
+        if (mainWindow) mainWindow.webContents.send('updateAvailable', downloadUrl);
+      }
+    });
+  });
+  request.on('error', (error) => {
+      console.error(`[Main] ERROR, Failed to check for updates: ${error}`);
+  });
+  request.end();
+}
 
 /**
  * App start-up.
