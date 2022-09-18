@@ -599,6 +599,14 @@ const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: str
     }    
 }
 
+
+/*
+* Checks if val is +-1 compare
+*/
+const isClose = (val: number, compare: number) => {
+    return Math.abs(compare - val) <= 1;
+};
+
 export {
     getVideoState,
     writeMetadataFile,
@@ -615,5 +623,6 @@ export {
     getStringConfigSafe,
     defaultMonitorIndex,
     defaultMinEncounterDuration,
-    addColor
+    addColor,
+    isClose
 };
