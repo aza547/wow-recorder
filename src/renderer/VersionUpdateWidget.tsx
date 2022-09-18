@@ -7,18 +7,18 @@ export default function VersionUpdateWidget() {
     ipc.sendMessage('openURL', [downloadUrl]);
   };
 
-  const [widgetClass, setWidgetClass] = React.useState('hidden');
   const [downloadUrl, setDownloadUrl] = React.useState<string>('');
 
   React.useEffect(() => {
     ipc.on('updateAvailable', (downloadUrl) => {
-      setWidgetClass('');
       setDownloadUrl(downloadUrl as string);
     });
   }, []);
+  
+  if(!downloadUrl) { return null; }
 
   return (
-    <div className={`version-update-widget ${widgetClass}`}>
+    <div className={`version-update-widget`}>
       <div>
         <a href="#" onClick={openReleaseDownloadUrl}>
           New update available! Click here to download.

@@ -448,7 +448,7 @@ app.on('window-all-closed', () => {
 });
 
 /**
- * Checks for updates from the releases page on github, andif there is a new version, sends a message to the main window to display a notification
+ * Checks for updates from the releases page on github, and, if there is a new version, sends a message to the main window to display a notification
  */
 const checkAppUpdate = () => {
   const options = {
@@ -457,7 +457,7 @@ const checkAppUpdate = () => {
     path: '/repos/aza547/wow-recorder/releases/latest',
     method: 'GET',
     headers: {
-      'User-Agent': 'wow-recorder'
+      'User-Agent': 'wow-recorder',
     }
   }
 
