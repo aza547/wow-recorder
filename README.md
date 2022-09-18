@@ -34,9 +34,9 @@ This feature is inspired by car dash cam behaviour: it deletes the oldest video 
 
 # Mythic Keystone Dungeons
 
-Support for Mythic Keystone dungeons has been added with the ability to quickly seek to a trash/boss segments of the video by means of the right-click context menu.
+For Mythic Keystone dungeons, the application will detect and store information about when bosses are killed and the trash in-betwen  with the ability to quickly seek to a trash/boss segments of the video by means of the right-click context menu.
 
-<img src="https://i.imgur.com/miZeIrf.png">
+<img src="https://i.imgur.com/MbqaMRE.png">
 
 # Bug Reports & Sggestions
 

@@ -48,7 +48,7 @@ export default function VideoButton(props: any) {
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
   const isBG = category === VideoCategory.Battlegrounds;
-  const isMythicPlus = category == VideoCategory.MythicPlus && video.challengeMode !== undefined;
+  const isMythicPlus = (category == VideoCategory.MythicPlus && video.challengeMode !== undefined);
   const isRaid = category === VideoCategory.Raids;
   const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
 
@@ -112,8 +112,8 @@ export default function VideoButton(props: any) {
   /**
    * Seek the selected video to the specified relative timestamp
    */
-  const seekVideo = (videoIndex: number, ts: number) => {
-    ipc.sendMessage('contextMenu', ['seekVideo', videoIndex, ts])
+  const seekVideo = (videoIndex: number, timestamp: number) => {
+    ipc.sendMessage('contextMenu', ['seekVideo', videoIndex, timestamp])
     handleCloseMenu();
   };
 
@@ -127,7 +127,7 @@ export default function VideoButton(props: any) {
 
   const buttonClasses = ['videoButton'];
   const keystoneVideoSegments = []
-  let keystonePlusses;
+  let keystoneUpgradeLevel;
 
   if (isMythicPlus) {
     buttonClasses.push('dungeon')
@@ -141,7 +141,7 @@ export default function VideoButton(props: any) {
       keystoneAllottedTime,
       video.challengeMode.duration
     );
-    keystonePlusses = '+'.repeat(keystoneResult)
+    keystoneUpgradeLevel  = '+'.repeat(keystoneResult)
 
     /**
      * Generate the JSX for the video segments that are used in the context menu on
@@ -149,8 +149,8 @@ export default function VideoButton(props: any) {
      */
     const videoSegments = video.challengeMode.videoSegments.map((segment: any) => {
       let videoSegmentMenu;
-      let segmentDurationText
-      const result = Boolean(segment.result)
+      let segmentDurationText;
+      const result = Boolean(segment.result);
 
       // If the metadata for some reason gets a malformed timestamp, let's
       // not make it break the whole UI but instead silently ignore it for now.
@@ -181,13 +181,15 @@ export default function VideoButton(props: any) {
         <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(videoIndex, segment.timestamp)}>
           { videoSegmentMenu }
         </MenuItem>
-      )
+      );
     });
 
-    keystoneVideoSegments.push(<MenuItem key='video-segment-label' disabled>Video Segments</MenuItem>)
-    keystoneVideoSegments.push(<Divider key='video-segments-begin' />)
-    keystoneVideoSegments.push(...videoSegments)
-    keystoneVideoSegments.push(<Divider key='video-segments-end' />)
+    keystoneVideoSegments.push(
+      <MenuItem key='video-segment-label' disabled>Video Segments</MenuItem>,
+      <Divider key='video-segments-begin' />,
+      ...videoSegments,
+      <Divider key='video-segments-end' />,
+    );
   }
 
   return (
@@ -205,7 +207,7 @@ export default function VideoButton(props: any) {
             { isMythicPlus &&
               <div>
                 <div className='zone'>{ dungeonsByMapId[video.challengeMode.mapId] }</div>
-                <div className='zone level'>{ keystonePlusses }{ video.challengeMode.level }</div>
+                <div className='zone level'>{ keystoneUpgradeLevel  }{ video.challengeMode.level }</div>
               </div>
             }
             <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    

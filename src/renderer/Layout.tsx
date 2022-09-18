@@ -255,7 +255,7 @@ export default function Layout() {
     const video = state.videoState[category][state.videoIndex];
     const videoFullPath = video.fullPath;
     const key = "videoPanel" + index;
-    const isMythicPlus = video.category === VideoCategory.MythicPlus && video.challengeMode !== undefined
+    const isMythicPlus = (video.category === VideoCategory.MythicPlus && video.challengeMode !== undefined)
     let videoPoster = readyPoster;
 
     // Show a poster of the dungeon for M+ instead of "Select a video"

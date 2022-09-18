@@ -54,7 +54,7 @@ class ChallengeModeDungeon {
      */
     addVideoSegment(segment: ChallengeModeVideoSegment, endPrevious?: Date) {
         if (endPrevious) {
-            this.endVideoSegment(endPrevious);
+            this.endCurrentVideoSegment(endPrevious);
         }
 
         this.videoSegments.push(segment);
@@ -68,13 +68,15 @@ class ChallengeModeDungeon {
      * Find and return the last video segment from a boss encounter
      */
     getLastBossEncounter(): ChallengeModeVideoSegment | undefined {
-        return this.videoSegments.slice().reverse().find(v => v.segmentType === VideoSegmentType.BossEncounter);
+        return this.videoSegments.slice().reverse().find(v => {
+            v.segmentType === VideoSegmentType.BossEncounter;
+        });
     }
 
     /**
      * End a video segment by setting its logEnd date.
      */
-    endVideoSegment(logDate: Date) {
+    endCurrentVideoSegment(logDate: Date) {
         const currentSegment = this.getCurrentVideoSegment()
         if (currentSegment) {
             currentSegment.logEnd = logDate

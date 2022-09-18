@@ -30,7 +30,7 @@ for (const id of arenaIDs) {
         arena[id] = require(`../../assets/arena/${id}.jpg`);
     }
     catch (e) {
-        console.debug(`Unable to load image resource that was expected to exist.\n`, e)
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
 }
 
@@ -38,18 +38,12 @@ const dungeonIDs = Object.keys(dungeonsByZoneId).map(v=> parseInt(v, 10))
 
 let dungeon: imageObject = {};
 
-try {
-}
-catch (e) {
-    console.debug(`Unable to load image resource that was expected to exist.\n`, e)
-};
-
 for (const id of dungeonIDs) {
     try {
         dungeon[id] = require(`../../assets/dungeon/${id}.jpg`);
     }
     catch (e) {
-        console.debug(`Unable to load image resource that was expected to exist.\n`, e)
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
 }
 
@@ -101,7 +95,7 @@ for (const id of raidIDs) {
         raid[id] = require(`../../assets/raid/${id}.jpg`);
     }
     catch (e) {
-        console.debug(`Unable to load image resource that was expected to exist.\n`, e)
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
 }
 
@@ -135,7 +129,7 @@ for (const id of battlegroundIDs) {
         battleground[id] = require(`../../assets/battlegrounds/${id}.jpg`);
     }
     catch (e) {
-        console.debug(`Unable to load image resource that was expected to exist.\n`, e)
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
 }
 
@@ -169,7 +163,7 @@ for (const id of specIDs) {
         spec[id] = require(`../../assets/specs/${id}.png`);
     }
     catch (e) {
-        console.debug(`Unable to load image resource that was expected to exist.\n`, e)
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
 }
 

@@ -148,7 +148,7 @@ const dungeonsByZoneId: { [id: number]: string; } = {
 
 /**
  * Dungeons by map Id
- * Names have been shortened, or abbreviated due to size constraints i
+ * Names have been shortened, or abbreviated due to size constraints in
  * <VideoButton/>
  */
 const dungeonsByMapId: { [id: number]: string; } = {

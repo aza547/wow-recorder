@@ -459,7 +459,7 @@ function handleChallengeModeEndLine (line: LogLine): void {
     activeChallengeMode.timed = calculateKeystoneCompletionResult(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
 
     console.debug("[ChallengeMode] Ending current video segment")
-    activeChallengeMode.endVideoSegment(videoStopDate);
+    activeChallengeMode.endCurrentVideoSegment(videoStopDate);
 
     // If last video segment is less than 10 seconds long, discard it.
     // It's probably not useful
