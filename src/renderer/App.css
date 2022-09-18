@@ -199,13 +199,13 @@ h2 {
   text-align: center;
 }
 
-.dungeon .zone {
-  font-size: 16px;
-  top: 35px;
-}
-
-.dungeon .zone.level {
-  top: 55px;
+.dungeon .encounter {
+  font-size: 18px;
+  display: flex;
+  top: 0;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 
 .time {
