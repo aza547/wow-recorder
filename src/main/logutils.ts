@@ -456,7 +456,10 @@ function handleChallengeModeEndLine (line: LogLine): void {
     clearCombatants();
 
     // The actual log duration of the dungeon, from which keystone upgrade
-    // levels can be calculated
+    // levels can be calculated.
+    //
+    // It's included separate from `metadata.duration` because the duration of the
+    // dungeon, as the game sees it, is what is important for this value to make sense.
     activeChallengeMode.duration = Math.round(parseInt(line.args[4], 10) / 1000);
 
     // Calculate whether the key was timed or not
