@@ -479,7 +479,7 @@ const checkAppUpdate = () => {
       const latestVersion = release.tag_name;
       const downloadUrl = release.assets[0].browser_download_url;
 
-      if (latestVersion !== app.getVersion()) {
+      if (latestVersion !== app.getVersion() && latestVersion && downloadUrl) {
         console.log("[Main] New version available:", latestVersion);
         if (mainWindow) mainWindow.webContents.send('updateAvailable', downloadUrl);
       }
