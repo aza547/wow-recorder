@@ -308,7 +308,7 @@ export default function Layout() {
   const categoryIndex = state.categoryIndex;
 
   return (
-    <Box sx={{ width: '100%', height: '210px', display: 'flex' }}>
+    <Box sx={{ width: '250px', height: '210px', display: 'flex' }}>
       <Tabs
         orientation="vertical"
         variant="standard"

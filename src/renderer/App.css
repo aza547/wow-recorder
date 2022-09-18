@@ -399,9 +399,10 @@ h2 {
 
 .version-update-widget {
   position:fixed;
-  width: 135px;
+  text-align: center;
+  width: 130px;
   top: 300px;
-  left: 10px;
+  left: 9px;
   border-style: solid;
   border-color: #bb4220;
   background-color: #bb4220;
