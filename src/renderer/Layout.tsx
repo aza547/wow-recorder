@@ -97,8 +97,8 @@ const tabProps = (index: number) => {
 
 /**
  * Get video player settings initially when the component is loaded. We store 
- * as a variable in main rather than in config or state. It's fine if this is
- * lost when app is restarted. 
+ * as a variable in main rather than in config It's fine if this is lost when
+ * the app is restarted. 
  */
 const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
 
