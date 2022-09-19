@@ -442,10 +442,18 @@ ipcMain.on('getVideoState', (event) => {
 });
 
 ipcMain.on('getAudioDevices', (event) => {
+  // We can only get this information if the recorder (OBS) has been
+  // initialized and that only happens when the storage directory has
+  // been configured.
+  if (!recorder) {
+    event.returnValue = { input: [], output: [] };
+    return;
+  }
+
   event.returnValue = {
     input: getAvailableAudioInputDevices(),
     output: getAvailableAudioOutputDevices(),
-  }
+  };
 });
 
 /**
