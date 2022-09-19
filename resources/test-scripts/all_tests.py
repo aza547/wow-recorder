@@ -19,6 +19,6 @@ tests = {
 for test in tests:
     print(f"Running {test}")
     exec(open(tests[test]).read())
-    time.sleep(20)
+    time.sleep(30)
 
 print("Done!")

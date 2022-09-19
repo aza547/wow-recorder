@@ -18,7 +18,7 @@ sample_log_lines = sample_log.readlines()
 # If ARENA_MATCH_START is the first line we don't start recording 
 # but this never happens in reality so just write a line. 
 logFile.write("This is a test line to create the file\n")
-time.sleep(1)
+time.sleep(2)
 
 print("Starting")
 
