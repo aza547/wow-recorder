@@ -12,20 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.7.0] - 2022-09-19
 ### Added
-- [Issue 74](https://github.com/aza547/wow-recorder/issues/74) - Added version check from github releases page
+- [Issue 47](https://github.com/aza547/wow-recorder/issues/48) - Add Mythic+ recording support.
+- [Issue 74](https://github.com/aza547/wow-recorder/issues/74) - Added version check from github releases page.
 - [Issue 99](https://github.com/aza547/wow-recorder/issues/99) - Remember video sound settings when changing videos.
 - [Issue 107](https://github.com/aza547/wow-recorder/issues/107) - Add a config setting for minimum raid duration, to avoid saving boss resets. 
 - [Issue 17](https://github.com/aza547/wow-recorder/issues/17) - Allow the selection of input/output audio devices for recording in settings.
-- [Issue 47](https://github.com/aza547/wow-recorder/issues/48) - Add Mythic+ recording support.
 
 ### Changed
 - [Issue 66](https://github.com/aza547/wow-recorder/issues/66) - Store buffer recordings in a better location. 
 
 ### Fixed
-- [Issue 96](https://github.com/aza547/wow-recorder/issues/96) - Fixed windows resolution scaling resulting in OBS Resolutions not being set properly
-- [Issue 98](https://github.com/aza547/wow-recorder/issues/98) - Fix recording Mythic Keystone boss encounters before M+ feature has been implemented.
+- [Issue 96](https://github.com/aza547/wow-recorder/issues/96) - Fixed windows resolution scaling resulting in OBS Resolutions not being set properly.
 - [Issue 78](https://github.com/aza547/wow-recorder/issues/78) - Gracefully fail if a video can't be deleted, rather than giving an uncaught exception error.
-- [Issue 75](https://github.com/aza547/wow-recorder/issues/75) - Fix size monitor blocking saving of videos.
+- [Issue 75](https://github.com/aza547/wow-recorder/issues/75) - Fix to size monitor blocking saving of videos.
 - [Issue 86](https://github.com/aza547/wow-recorder/issues/86) - Fix various event listener leaks.
 
 ## [2.6.1] - 2022-09-05
