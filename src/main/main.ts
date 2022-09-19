@@ -30,6 +30,17 @@ Object.assign(console, log.functions);
 console.log("[Main] App starting: version", app.getVersion());
 
 /**
+ * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving 
+ * as expected then it's better to crash the app. See:
+ * - https://nodejs.org/api/process.html#process_event_unhandledrejection. 
+ * - https://nodejs.org/api/process.html#event-unhandledrejection
+ */
+ process.on('unhandledRejection', (reason: Error | any) => {
+  console.error("UnhandledPromiseRejectionWarning:", reason);
+  throw Error(reason);
+});
+
+/**
  * Create a settings store to handle the config.
  * This defaults to a path like: 
  *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config.json"
