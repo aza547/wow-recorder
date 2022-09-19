@@ -183,7 +183,13 @@ type RecorderOptionsType = {
 
             const isRaid = metadata.category == VideoCategory.Raids;
             const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
+<<<<<<< HEAD
             if ((!isRaid || isLongEnough) && !discardVideo) {
+||||||| parent of 9ab9743 (Refactor and simplify logutils)
+            if (!isRaid || isLongEnough) {
+=======
+            if (!isRaid || isLongEnough || discardVideo) {
+>>>>>>> 9ab9743 (Refactor and simplify logutils)
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
                 await this.finalizeVideo(metadata);

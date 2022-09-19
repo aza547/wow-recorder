@@ -193,6 +193,118 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 }
 
 /**
+<<<<<<< HEAD
+ * Initiate recording and mark as having something in-progress
+ */
+const startRecording = (category: VideoCategory) => {
+    console.log(`[Logutils] Start recording a video for category: ${category}`)
+
+    // Ensure combatant map and player combatant is clean before
+    // starting a new recording.
+    clearCombatants();
+
+    currentActivity = category;
+    recorder.start();
+};
+
+type EndRecordingOptionsType = {
+    discardVideo?: boolean, // Discard the video/don't save the recording
+    duration?: number,      // Explicitly give video duration
+    result?: boolean,       // Success/Failure result for the overall activity
+};
+
+/**
+ * Stop recording and mark as not doing anything
+ */
+const endRecording = (options?: EndRecordingOptionsType) => {
+    if (!recorder.isRecording || !currentActivity) {
+        return;
+    }
+
+    let duration = options?.duration;
+
+    const discardVideo = options?.discardVideo ?? false;
+    const overrun = videoOverrunPerCategory[currentActivity];
+
+    // If duration isn't given, calculate it from start/end event time-
+    if (!duration) {
+        const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
+        duration = Math.round(videoDuration / 1000);
+    }
+
+    metadata.duration = duration + overrun;
+    metadata.result = options?.result ?? false;
+
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;
+    }
+
+    console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
+
+    recorder.stop(metadata, overrun, discardVideo);
+    currentActivity = undefined;
+}
+
+/**
+||||||| parent of 9ab9743 (Refactor and simplify logutils)
+=======
+ * Initiate recording and mark as having something in-progress
+ */
+const startRecording = (category: VideoCategory) => {
+    console.log(`[Logutils] Start recording a video for category: ${category}`)
+
+    // Ensure combatant map and player combatant is clean before
+    // starting a new recording.
+    clearCombatants();
+
+    currentActivity = category;
+    recorder.start();
+};
+
+type EndRecordingOptionsType = {
+    discardVideo?: boolean, // Discard the video/don't save the recording
+    duration?: number,      // Explicitly give video duration
+    result?: boolean,       // Success/Failure result for the overall activity
+};
+
+/**
+ * Stop recording and mark as not doing anything
+ */
+const endRecording = (options?: EndRecordingOptionsType) => {
+    if (!recorder.isRecording || !currentActivity) {
+        return;
+    }
+
+    let duration = options?.duration;
+
+    const discardVideo = options?.discardVideo ?? false;
+    const overrun = videoOverrunPerCategory[currentActivity];
+
+    // If duration isn't given, calculate it from start/end event time-
+    if (!duration) {
+        const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
+        duration = Math.round(videoDuration / 1000);
+    }
+
+    metadata.duration += overrun;
+    metadata.result = options?.result ?? false;
+
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;
+    }
+
+    console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
+
+    recorder.stop(metadata, overrun, discardVideo);
+    currentActivity = undefined;
+}
+
+/**
+>>>>>>> 9ab9743 (Refactor and simplify logutils)
  * getLatestLog 
  */
 const getLatestLog = (path: any) => {
