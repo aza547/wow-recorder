@@ -19,6 +19,20 @@ const categories: string[] = [
 ];
 
 /**
+ * How long to keep recording after an activity ends to ensure we don't miss any
+ * important stuff at the end, per category, in seconds.
+ */
+const videoOverrunPerCategory: { [key: string]: number } = {
+  [VideoCategory.TwoVTwo]: 3,
+  [VideoCategory.ThreeVThree]: 3,
+  [VideoCategory.Skirmish]: 3,
+  [VideoCategory.SoloShuffle]: 3,
+  [VideoCategory.MythicPlus]: 5,    // For the whole dungeon
+  [VideoCategory.Raids]: 15,        // Per boss encounter
+  [VideoCategory.Battlegrounds]: 3,
+};
+
+/**
  * Months of the year.
  */
 const months: string[] = [
@@ -503,4 +517,5 @@ export {
     instanceDifficulty,
     InstanceDifficultyType,
     VideoCategory,
+    videoOverrunPerCategory,
 };
