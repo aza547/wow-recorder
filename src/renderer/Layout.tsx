@@ -96,9 +96,9 @@ const tabProps = (index: number) => {
 }
 
 /**
- * Get video player settings initially when the component is loaded,
- * because we do want to get it from here one time, but subsequently
- * we'll only need to use the IPC channel `videoPlayerSettings`.
+ * Get video player settings initially when the component is loaded. We store 
+ * as a variable in main rather than in config or state. It's fine if this is
+ * lost when app is restarted. 
  */
 const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
 
@@ -153,7 +153,6 @@ export default function Layout() {
    * Update the state variable following a change of selected video.
    */
   const handleChangeVideo = (_event: React.SyntheticEvent, newValue: number) => {
-    readVideoPlayerSettings();
     setState(prevState => {
       return {
         ...prevState,
