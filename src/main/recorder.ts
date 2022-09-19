@@ -56,6 +56,7 @@ const glob = require('glob');
         }
 
         obsRecorder.initialize(this._bufferStorageDir, this._monitorIndex, this._audioInputDeviceId, this._audioOutputDeviceId);
+        if (mainWindow) mainWindow.webContents.send('refreshState');
     }
 
     /**
@@ -303,6 +304,7 @@ const glob = require('glob');
         }
 
         obsRecorder.reconfigure(outputPath, monitorIndex, audioInputDeviceId, audioOutputDeviceId);
+        if (mainWindow) mainWindow.webContents.send('refreshState');
     }
 }
 
