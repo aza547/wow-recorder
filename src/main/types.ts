@@ -54,8 +54,18 @@ type PlayerDeathType = {
   timestamp: number,
 };
 
+/**
+ * Type that describes selected video player settings that we want to keep
+ * across changes in the UI like selecting a new video, new category, etc.
+ */
+type VideoPlayerSettings = {
+    muted: boolean;
+    volume: number;
+};
+
 export {
     AppStatus,
     UnitFlags,
     PlayerDeathType,
+    VideoPlayerSettings,
 }

@@ -11,7 +11,7 @@ import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
-import { AppStatus } from './types';
+import { AppStatus, VideoPlayerSettings } from './types';
 import { net } from 'electron';
 let recorder: Recorder;
 
@@ -43,6 +43,12 @@ let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
 let audioInputDevice: string = getStringConfigSafe(cfg, 'audio-input-device', 'all');
 let audioOutputDevice: string = getStringConfigSafe(cfg, 'audio-output-device', 'all');
 let minEncounterDuration: number = getNumberConfigSafe(cfg, 'min-encounter-duration');
+
+// Default video player settings on app start
+const videoPlayerSettings: VideoPlayerSettings = {
+  muted: false,
+  volume: 1,
+};
 
 if (!monitorIndex) {
   monitorIndex = defaultMonitorIndex(cfg);
@@ -428,6 +434,24 @@ ipcMain.on('getAudioDevices', (event) => {
   event.returnValue = {
     input: getAvailableAudioInputDevices(),
     output: getAvailableAudioOutputDevices(),
+  }
+});
+
+/**
+ * Set/Get global video player settings
+ */
+ipcMain.on('videoPlayerSettings', (event, args) => {
+  switch (args[0]) {
+    case 'get':
+      event.returnValue = videoPlayerSettings;
+      break;
+
+    case 'set':
+      const settings = (args[1] as VideoPlayerSettings);
+
+      videoPlayerSettings.muted = settings.muted;
+      videoPlayerSettings.volume = settings.volume;
+      break;
   }
 });
 
