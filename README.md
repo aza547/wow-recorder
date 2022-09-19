@@ -16,7 +16,9 @@ Only 64 bit Windows (any modern version) and retail WoW are currently supported.
     - Use MRT automatic combat logging in a similar fashion to SimpleCombatLogger. 
     - Manually type `/combatlog` in-game every time you login or reload.
 
-Optionally, test it works by clicking the test icon after you have completed the above steps. 
+If you are an arena player, I strongly recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon. This isn't essential for the app to work, but it may help you if you are having trouble with the app when leaving games by typing `/afk`.
+
+Optionally, you can test that Warcraft Recorder works by clicking the test icon after you have completed the above steps. This tests out the recording functionality by mimicing a 2v2 game.
 
 <img src="https://i.imgur.com/bwChWgI.png">
 
