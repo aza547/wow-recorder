@@ -217,6 +217,9 @@ h2 {
 .instance-difficulty {
   top: 5px;
   position: relative;
+  /* Arial narrow font looks great except when stroked "+" characters           */
+  /* Deliberately avoid that for some fields which are likely to contain them.  */
+  font: bold 18px Arial;
 }
 
 .instance-difficulty.difficulty-normal {
@@ -260,6 +263,9 @@ h2 {
   right: 5px;
   position: absolute;
   text-align: right;
+  /* Arial narrow font looks great except when stroked "+" characters           */
+  /* Deliberately avoid that for some fields which are likely to contain them.  */
+  font: bold 18px Arial;
 }
 
 .goodResult {
