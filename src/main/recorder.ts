@@ -131,7 +131,7 @@ const glob = require('glob');
         console.log(addColor("[Recorder] Stop recording buffer", "cyan"));
         clearInterval(this._bufferRestartIntervalID);
         await obsRecorder.stop();
-        this.isRecordingBuffer = false;
+        this._isRecordingBuffer = false;
         if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.WaitingForWoW);
         this.cleanupBuffer(1);
     }
@@ -146,9 +146,9 @@ const glob = require('glob');
     restartBuffer = async () => {
         console.log(addColor("[Recorder] Restart recording buffer", "cyan"));
         await obsRecorder.stop();
-        this.isRecordingBuffer = false;
+        this._isRecordingBuffer = false;
         setTimeout(() => {
-            this.isRecordingBuffer = true;
+            this._isRecordingBuffer = true;
             obsRecorder.start();
         }, 2000);
 
@@ -164,7 +164,7 @@ const glob = require('glob');
     start = async () => {
         console.log(addColor("[Recorder] Start recording by cancelling buffer restart", "green"));
         clearInterval(this._bufferRestartIntervalID);
-        this.isRecordingBuffer = false;        
+        this._isRecordingBuffer = false;        
         this._isRecording = true;   
         if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.Recording);
     }
@@ -189,7 +189,7 @@ const glob = require('glob');
             if (!this._isRecording) return;
             await obsRecorder.stop();       
             this._isRecording = false;
-            this.isRecordingBuffer = false;
+            this._isRecordingBuffer = false;
 
             // Update the GUI to show we're processing a video. 
             if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.SavingVideo);
