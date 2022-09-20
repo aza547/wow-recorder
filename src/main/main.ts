@@ -84,8 +84,12 @@ const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
  */
 const cfg = new Store();
-let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
+let baseLogPaths: string[] = [
+  getPathConfigSafe(cfg, 'log-path'),
+  getPathConfigSafe(cfg, 'log-path-classic'),
+  getPathConfigSafe(cfg, 'log-path-classic-era'),
+];
 
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
@@ -224,7 +228,7 @@ const createWindow = async () => {
 
     makeRecorder(recorderOptions)
     pollWowProcess();
-    watchLogs([baseLogPath]);
+    watchLogs(baseLogPaths);
     checkAppUpdate();
   });
 
@@ -402,11 +406,15 @@ ipcMain.on('settingsWindow', (event, args) => {
       // valid but has since changed, just do a reconfigure.
 
       recorderOptions = loadRecorderOptions(cfg);
-      baseLogPath = getPathConfigSafe(cfg, 'log-path');
-
       makeRecorder(recorderOptions);
 
-      watchLogs([baseLogPath]);
+      baseLogPaths = [
+        getPathConfigSafe(cfg, 'log-path'),
+        getPathConfigSafe(cfg, 'log-path-classic'),
+        getPathConfigSafe(cfg, 'log-path-classic-era'),
+      ];
+      watchLogs(baseLogPaths);
+
       pollWowProcess();
     })
 

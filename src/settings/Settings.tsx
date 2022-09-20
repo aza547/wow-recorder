@@ -12,7 +12,12 @@ export default function Settings() {
    */
   const [state, useState] = React.useState({
     storagePath: window.electron.store.get('storage-path'),
+    // Retail
     logPath: window.electron.store.get('log-path'),
+    // Classic (WotlK)
+    logPathClassic: window.electron.store.get('log-path-classic'),
+    // Classic (Vanilla)
+    logPathClassicEra: window.electron.store.get('log-path-classic-era'),
     maxStorage: window.electron.store.get('max-storage'),
     monitorIndex: window.electron.store.get('monitor-index'),
     audioInputDevice: window.electron.store.get('audio-input-device'),
@@ -27,6 +32,8 @@ export default function Settings() {
   const stateKeyToSettingKeyMap = {
     'storagePath': 'storage-path',
     'logPath': 'log-path',
+    'logPathClassic': 'log-path-classic',
+    'logPathClassicEra': 'log-path-classic-era',
     'maxStorage': 'max-storage',
     'monitorIndex': 'monitor-index',
     'audioInputDevice': 'audio-input-device',
@@ -71,17 +78,9 @@ export default function Settings() {
     if (value) window.electron.store.set(setting, value);
   }
   
-  /**
-   * Dialog window folder selection.
-   */
-  const openStoragePathDialog = () => {
-    ipc.sendMessage("settingsWindow", ["openPathDialog", "storagePath"]);
+  const openSelectDirectoryDialog = (_event: any, pathType: string) => {
+    ipc.sendMessage("settingsWindow", ["openPathDialog", pathType]);
   }
-
-  const openLogPathDialog = () => {
-    ipc.sendMessage("settingsWindow", ["openPathDialog", "logPath"]);
-  }
-
 
   /**
    * setSetting, why not just use react state hook?
@@ -131,14 +130,27 @@ export default function Settings() {
             <div className="row gutters">
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
-                  <label> Storage Path </label>
-                  <input type="text" className="form-control" id="storage-path" placeholder={state.storagePath} onClick={openStoragePathDialog}/>
+                  <label> Combat Log Path (Retail) </label>
+                  <input type="text" className="form-control" id="log-path" placeholder={state.logPath ?? '(Not set)'} onClick={(e) => openSelectDirectoryDialog(e, 'logPath')}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
-                  <label> Log Path </label>
-                  <input type="text" className="form-control" id="log-path" placeholder={state.logPath} onClick={openLogPathDialog}/>
+                  <label> Combat Log Path (WotLK) </label>
+                  <input type="text" className="form-control" id="log-path-classic" placeholder={state.logPathClassic ?? '(Not set)'} onClick={(e) => openSelectDirectoryDialog(e, 'logPathClassic')}/>
+                </div>
+              </div>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
+                  <label> Combat Log Path (Classic) </label>
+                  <input type="text" className="form-control" id="log-path-classic-era" placeholder={state.logPathClassicEra ?? '(Not set)'} onClick={(e) => openSelectDirectoryDialog(e, 'logPathClassicEra')}/>
+                </div>
+              </div>
+              <hr/>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
+                  <label> Storage Path </label>
+                  <input type="text" className="form-control" id="storage-path" placeholder={state.storagePath ?? '(Not set)'} onClick={(e) => openSelectDirectoryDialog(e, 'storagePath')}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">

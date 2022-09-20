@@ -345,7 +345,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         return false;
     }
 
-    if (!cfg.get('log-path')) {
+    if (!cfg.get('log-path') && !cfg.get('log-path-classic') && !cfg.get('log-path-classic-era')) {
         return false;
     }
 
