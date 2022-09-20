@@ -240,7 +240,7 @@ const interestingCombatLogEvents: InterestingCombatLogEventsType = {
 }
 
 /**
- * Is wow running? Starts false but we'll check immediately on start-up. 
+ * Is wow running? Starts false but we'll check immediately on start-up.
  */
 let isRetailRunning: boolean = false;
 let isClassicRunning: boolean = false;
@@ -250,7 +250,7 @@ let isClassicRunning: boolean = false;
  */
 let pollWowProcessInterval: NodeJS.Timer;
 let watchLogsInterval: NodeJS.Timer;
- 
+
 /**
  * wowProcessStarted
  */
@@ -330,7 +330,7 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 }
 
 /**
- * getLatestLog 
+ * getLatestLog
  */
 const getLatestLog = (path: any) => {
     const globPath = path + 'WoWCombatLog*.txt';
@@ -342,22 +342,22 @@ const getLatestLog = (path: any) => {
     if (logs.length === 0) {
         return false;
     }
-    
+
     const newestLog = logs[0].name;
     return newestLog;
-}    
+}
 
 /**
- * Tail a specific file. 
+ * Tail a specific file.
  */
 const tailFile = (path: string) => {
     if (tailHandler) {
         tailHandler.unwatch();
         tailHandler = null;
-    } 
+    }
 
-    const options = { 
-        flushAtEOF: true 
+    const options = {
+        flushAtEOF: true
     }
 
     tailHandler = new tail(path, options);
@@ -372,7 +372,7 @@ const tailFile = (path: string) => {
 }
 
 /**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 const handleLogLine = (line: string) => {
     // Parse line, only until the line token is encountered
@@ -390,10 +390,10 @@ const handleLogLine = (line: string) => {
 }
 
 /**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 function handleArenaStartLine (line: LogLine): void {
-    if (recorder.isRecording) return; 
+    if (recorder.isRecording) return;
     const category = (line.arg(3) as VideoCategory);
     const zoneID = parseInt(line.arg(1), 10);
 
@@ -409,26 +409,26 @@ function handleArenaStartLine (line: LogLine): void {
         result: false,
         playerDeaths: []
     }
-    
+
     startRecording(category);
 }
 
 /**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 function handleArenaStopLine (line: LogLine): void {
-    if (!recorder.isRecording) return; 
+    if (!recorder.isRecording) return;
 
     let duration;
     videoStopDate = line.date();
-    
+
     // Helpfully ARENA_MATCH_END events contain the game duration. Solo shuffle
-    // ARENA_MATCH_END duration only counts the last game so needs special handling. 
+    // ARENA_MATCH_END duration only counts the last game so needs special handling.
     if (metadata.category !== VideoCategory.SoloShuffle) {
         duration = parseInt(line.arg(2), 10);
     }
 
-    const [result, MMR] = determineArenaMatchResult(line); 
+    const [result, MMR] = determineArenaMatchResult(line);
     metadata.teamMMR = MMR;
 
     endRecording({duration,result,});
@@ -436,13 +436,13 @@ function handleArenaStopLine (line: LogLine): void {
 
 /**
  * Determines the arena match result.
- * @param line the line from the WoW log. 
+ * @param line the line from the WoW log.
  * @returns [win: boolean, newRating: number]
  */
 const determineArenaMatchResult = (line: LogLine): any[] => {
     if (playerCombatant === undefined) return [undefined, undefined];
     const teamID = playerCombatant.teamID;
-    const indexForMMR = (teamID == 0) ? 3 : 4; 
+    const indexForMMR = (teamID == 0) ? 3 : 4;
     const MMR = parseInt(line.arg(indexForMMR), 10);
     const winningTeamID = parseInt(line.arg(1), 10);
     const win = (teamID === winningTeamID)
@@ -556,7 +556,7 @@ const getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
 };
 
 /**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 function handleEncounterStartLine (line: LogLine): void {
     const encounterID = parseInt(line.arg(1), 10)
@@ -595,7 +595,7 @@ function handleEncounterStartLine (line: LogLine): void {
 }
 
 /**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 function handleEncounterStopLine (line: LogLine): void {
     const eventDate = line.date();
@@ -646,7 +646,7 @@ function handleZoneChange (line: LogLine): void {
 
     if (!isRecording && isNewZoneBG) {
         console.log("[Logutils] ZONE_CHANGE into BG, start recording");
-        battlegroundStart(line);   
+        battlegroundStart(line);
         return;
     }
     if (isRecording && isRecordingBG && !isNewZoneBG) {
@@ -660,13 +660,13 @@ function handleZoneChange (line: LogLine): void {
         return;
     }
 
-    // TODO there is the case here where a tilted raider hearths 
-    // out mid-pull. I think the correct way to handle is just a 
+    // TODO there is the case here where a tilted raider hearths
+    // out mid-pull. I think the correct way to handle is just a
     // log inactivity stop, else raid encounters with ZONE_CHANGES
     // internally will always stop recording. That's a bit of work
-    // so I'm skipping the implementation for now and making a 
+    // so I'm skipping the implementation for now and making a
     // quick fix. For now, hearting out mid-encounter won't stop
-    // the recording and the user will need to restart the app.  
+    // the recording and the user will need to restart the app.
 }
 
 /**
@@ -675,12 +675,12 @@ function handleZoneChange (line: LogLine): void {
  */
 function handleSpellAuraAppliedLine (line: LogLine): void {
     if (playerCombatant) return;
-    if (combatantMap.size === 0) return;    
+    if (combatantMap.size === 0) return;
 
     const srcGUID = line.arg(1);
     const srcNameRealm = line.arg(2)
     const srcFlags = parseInt(line.arg(3), 16);
-    
+
     const srcCombatant = combatantMap.get(srcGUID);
     if (srcCombatant === undefined) return;
 
@@ -693,7 +693,7 @@ function handleSpellAuraAppliedLine (line: LogLine): void {
 }
 
 /**
- * Handles the COMBATANT_INFO line from WoW log by creating a Combatant and 
+ * Handles the COMBATANT_INFO line from WoW log by creating a Combatant and
  * adding it to combatantMap.
  * @param line the COMBATANT_INFO line
  */
@@ -721,7 +721,7 @@ const clearCombatants = () => {
 }
 
 /**
- * ZONE_CHANGE event into a BG.  
+ * ZONE_CHANGE event into a BG.
  */
 function battlegroundStart (line: LogLine): void {
     const zoneID = parseInt(line.arg(1), 10);
@@ -829,8 +829,8 @@ const isUnitPlayer = (flags: number): boolean => {
 }
 
 /**
- * Watch the logs. Check every second for a new file, 
- * if there is, swap to watching that. 
+ * Watch the logs. Check every second for a new file,
+ * if there is, swap to watching that.
  */
 const watchLogs = (logdir: any) => {
     if (watchLogsInterval) clearInterval(watchLogsInterval);
@@ -840,7 +840,7 @@ const watchLogs = (logdir: any) => {
 
         // Handle the case where there is no logs in the WoW log directory.
         if (!currentLogFile) return;
-        
+
         const logFileChanged = (lastLogFile !== currentLogFile);
 
         if (!lastLogFile || logFileChanged) {
@@ -889,7 +889,7 @@ const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
     let retailRunning = false;
     let classicRunning = false;
 
-    const taskList = await tasklist(); 
+    const taskList = await tasklist();
 
     taskList.forEach((process: any) => {
         if (process.imageName === "Wow.exe") {
@@ -907,9 +907,9 @@ const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
  */
 const pollWoWProcessLogic = async (startup: boolean) => {
     const [retailFound, classicFound] = await checkWoWProcess();
-    const retailProcessChanged = (retailFound !== isRetailRunning);    
+    const retailProcessChanged = (retailFound !== isRetailRunning);
     // TODO classic support
-    const classicProcessChanged = (classicFound !== isClassicRunning);  
+    const classicProcessChanged = (classicFound !== isClassicRunning);
     const processChanged = (retailProcessChanged || classicProcessChanged);
     if (!retailProcessChanged && !startup) return;
     (retailFound) ? wowProcessStarted() : wowProcessStopped();
@@ -925,7 +925,7 @@ const pollWowProcess = () => {
 }
 
 /**
- * Function to invoke if the user clicks the "run a test" button 
+ * Function to invoke if the user clicks the "run a test" button
  * in the GUI. Uses some sample log lines from 2v2.txt.
  */
 const runRecordingTest = (endTest: boolean = true) => {
@@ -936,8 +936,8 @@ const runRecordingTest = (endTest: boolean = true) => {
 
     if (testRunning) {
         console.info("[Logutils] Test already running, not starting test.");
-    } 
-    
+    }
+
     if (isRetailRunning) {
         console.info("[Logutils] WoW is running, starting test.");
         testRunning = true;
