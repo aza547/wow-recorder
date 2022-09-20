@@ -224,7 +224,7 @@ const createWindow = async () => {
 
     makeRecorder(recorderOptions)
     pollWowProcess();
-    watchLogs(baseLogPath);
+    watchLogs([baseLogPath]);
     checkAppUpdate();
   });
 
@@ -406,7 +406,7 @@ ipcMain.on('settingsWindow', (event, args) => {
 
       makeRecorder(recorderOptions);
 
-      watchLogs(baseLogPath);
+      watchLogs([baseLogPath]);
       pollWowProcess();
     })
 
