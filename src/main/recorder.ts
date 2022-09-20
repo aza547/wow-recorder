@@ -112,7 +112,7 @@ const glob = require('glob');
     
         // Guard against multiple buffer timers. 
         if (this._bufferRestartIntervalID) {
-            console.error("[Recorder] Already have a buffer interval.")
+            console.error("[Recorder] Already has a buffer interval.")
             return;
         }
 
