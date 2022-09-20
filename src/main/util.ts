@@ -609,10 +609,10 @@ const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: str
 }
 
 /*
-* Checks if val is +-1 to compare.
+* Checks if val is +-2 to compare.
 */
 const isNumberClose = (val: number, compare: number) => {
-    return Math.abs(compare - val) <= 1;
+    return Math.abs(compare - val) <= 2;
 };
 
 export {
