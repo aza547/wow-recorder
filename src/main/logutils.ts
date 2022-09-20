@@ -177,7 +177,7 @@ const endRecording = (options?: EndRecordingOptionsType) => {
         duration = Math.round(videoDuration / 1000);
     }
 
-    metadata.duration += overrun;
+    metadata.duration = duration + overrun;
     metadata.result = options?.result ?? false;
 
     if (playerCombatant) {
