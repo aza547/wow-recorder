@@ -1,6 +1,7 @@
 import { fixPathWhenPackaged, isNumberClose } from "./util";
 import WaitQueue from 'wait-queue';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
+import { RecorderOptionsType } from "./recorder";
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
 const { byOS, OS } = require('./operatingSystems');
@@ -13,25 +14,23 @@ let scene = null;
 /*
 * Reconfigure the recorder without destroying it.
 */
-const reconfigure = (outputPath: string, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
-  configureOBS(outputPath);
-  scene = setupScene(monitorIndex);
-  setupSources(scene, audioInputDeviceId, audioOutputDeviceId);
+const reconfigure = (options: RecorderOptionsType) => {
+  configureOBS(options.bufferStorageDir);
+  scene = setupScene(options.monitorIndex);
+  setupSources(scene, options.audioInputDeviceId, options.audioOutputDeviceId);
 }
 
 /*
 * Init the library, launch OBS Studio instance, configure it, set up sources and scene
 */
-const initialize = (outputPath: string, monitorIndex: number, audioInputDeviceId: string, audioOutputDeviceId: string) => {
+const initialize = (options: RecorderOptionsType) => {
   if (obsInitialized) {
     console.warn("[OBS] OBS is already initialized");
     return;
   }
 
   initOBS();
-  configureOBS(outputPath);
-  scene = setupScene(monitorIndex);
-  setupSources(scene, audioInputDeviceId, audioOutputDeviceId);
+  reconfigure(options);
   obsInitialized = true;
 }
 
@@ -53,6 +52,7 @@ const initOBS = () => {
       '-5': 'Failed to initialize OBS. Your video drivers may be out of date, or Streamlabs OBS may not be supported on your system.',
     }
 
+    // @ts-ignore
     const errorMessage = errorReasons[initResult.toString()] || `An unknown error #${initResult} was encountered while initializing OBS.`;
 
     console.error('[OBS] OBS init failure', errorMessage);
@@ -379,5 +379,5 @@ export {
   start,
   stop,
   shutdown,
-  reconfigure
+  reconfigure,
 }

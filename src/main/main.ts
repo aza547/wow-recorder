@@ -9,10 +9,11 @@ import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemE
 import { watchLogs, pollWowProcess, runRecordingTest } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
-import { Recorder } from './recorder';
+import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus, VideoPlayerSettings } from './types';
 import { net } from 'electron';
+import ElectronStore from 'electron-store';
 let recorder: Recorder;
 
 /**
@@ -41,33 +42,48 @@ console.log("[Main] App starting: version", app.getVersion());
 });
 
 /**
+ * Load and return recorder options from the configuration store.
+ * Does some basic sanity checking for default values.
+ */
+const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
+  const storageDir = getPathConfigSafe(cfg, 'storage-path');
+
+  const config = {
+    storageDir: storageDir,
+    bufferStorageDir: path.join(storageDir, ".temp"),
+    maxStorage: getNumberConfigSafe(cfg, 'max-storage'),
+    monitorIndex: getNumberConfigSafe(cfg, 'monitor-index'),
+    audioInputDeviceId: getStringConfigSafe(cfg, 'audio-input-device', 'all'),
+    audioOutputDeviceId: getStringConfigSafe(cfg, 'audio-output-device', 'all'),
+    minEncounterDuration: getNumberConfigSafe(cfg, 'min-encounter-duration'),
+  };
+
+  if (!config.monitorIndex) {
+    config.monitorIndex = defaultMonitorIndex(cfg);
+  }
+
+  if (!config.minEncounterDuration) {
+    config.minEncounterDuration = defaultMinEncounterDuration(cfg);
+  }
+
+  return config;
+};
+
+/**
  * Create a settings store to handle the config.
  * This defaults to a path like: 
  *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config.json"
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
  */
 const cfg = new Store();
-let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
-let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
-let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
-let audioInputDevice: string = getStringConfigSafe(cfg, 'audio-input-device', 'all');
-let audioOutputDevice: string = getStringConfigSafe(cfg, 'audio-output-device', 'all');
-let minEncounterDuration: number = getNumberConfigSafe(cfg, 'min-encounter-duration');
+let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
 
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
   muted: false,
   volume: 1,
 };
-
-if (!monitorIndex) {
-  monitorIndex = defaultMonitorIndex(cfg);
-}
-
-if (!minEncounterDuration) {
-  minEncounterDuration = defaultMinEncounterDuration(cfg);
-}
 
 /**
  * Getter and setter config listeners. 
@@ -197,7 +213,8 @@ const createWindow = async () => {
     }
 
     if (!isConfigReady(cfg)) return;
-    recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice, minEncounterDuration);
+
+    makeRecorder(recorderOptions)
     pollWowProcess();
     watchLogs(baseLogPath);
     checkAppUpdate();
@@ -325,6 +342,17 @@ ipcMain.on('mainWindow', (_event, args) => {
 })
 
 /**
+ * Create or reconfigure the recorder instance
+ */
+const makeRecorder = (recorderOptions: RecorderOptionsType): void => {
+  if (recorder) {
+    recorder.reconfigure(recorderOptions);
+  } else {
+    recorder = new Recorder(recorderOptions);
+  }
+}
+
+/**
  * settingsWindow event listeners.
  */
 ipcMain.on('settingsWindow', (event, args) => {
@@ -354,14 +382,6 @@ ipcMain.on('settingsWindow', (event, args) => {
     console.log("[Main] User updated settings");
     
     settingsWindow.once('closed', () => {
-      storageDir = getPathConfigSafe(cfg, 'storage-path');
-      baseLogPath = getPathConfigSafe(cfg, 'log-path');
-      maxStorage = getNumberConfigSafe(cfg, 'max-storage');
-      monitorIndex = getNumberConfigSafe(cfg, 'monitor-index');
-      audioInputDevice = getStringConfigSafe(cfg, 'audio-input-device', 'all');
-      audioOutputDevice = getStringConfigSafe(cfg, 'audio-output-device', 'all');
-      minEncounterDuration = getNumberConfigSafe(cfg, 'min-encounter-duration');
-
       if (!checkConfig()) {
         updateStatus(AppStatus.InvalidConfig);
         return;
@@ -372,11 +392,11 @@ ipcMain.on('settingsWindow', (event, args) => {
       // If this is the first time config has been valid we
       // need to create a recorder. If the config was previously
       // valid but has since changed, just do a reconfigure.
-      if (recorder) {
-        recorder.reconfigure(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice, minEncounterDuration);
-      } else {
-        recorder = new Recorder(storageDir, maxStorage, monitorIndex, audioInputDevice, audioOutputDevice, minEncounterDuration);
-      }
+
+      recorderOptions = loadRecorderOptions(cfg);
+      baseLogPath = getPathConfigSafe(cfg, 'log-path');
+
+      makeRecorder(recorderOptions);
 
       watchLogs(baseLogPath);
       pollWowProcess();
@@ -437,7 +457,7 @@ ipcMain.on('contextMenu', (event, args) => {
  * Get the list of video files and their state.
  */
 ipcMain.on('getVideoState', (event) => {
-  const videoState = getVideoState(storageDir);
+  const videoState = getVideoState(recorderOptions.storageDir);
   event.returnValue = videoState;
 });
 
