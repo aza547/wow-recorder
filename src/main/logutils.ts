@@ -4,15 +4,10 @@ import { recorder }  from './main';
 import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, videoOverrunPerCategory }  from './constants';
 import { PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
+import { CombatLogParser, LogLine } from './combatLogParser';
 
-const tail = require('tail').Tail;
-const glob = require('glob');
-const fs = require('fs');
 const tasklist = require('tasklist');
 
-let tailHandler: any;
-let currentLogFile: string;
-let lastLogFile: string;
 let videoStartDate: Date;
 let videoStopDate: Date;
 let metadata: Metadata;
@@ -22,212 +17,51 @@ let testRunning: boolean = false;
 let activeChallengeMode: ChallengeModeDungeon | undefined;
 let currentActivity: VideoCategory | undefined;
 
-declare interface LogLineHandlerType {
-    (line: LogLine): void
-};
-
-type InterestingCombatLogEventsType = { [key: string]: LogLineHandlerType }
-
 /**
- * List of of combat events we want to handle associated with their
- * respective handler function.
+ * Parser and handler for WoW combat log files
+ * If no data has been received for 'dataTimeout' milliseconds, an event
+ * will be emitted ('DataTimeout') to be able to clean up whatever was going on.
  */
-const interestingCombatLogEvents: InterestingCombatLogEventsType = {
-    'ARENA_MATCH_START': handleArenaStartLine,
-    'ARENA_MATCH_END': handleArenaStopLine,
-    'CHALLENGE_MODE_START': handleChallengeModeStartLine,
-    'CHALLENGE_MODE_END': handleChallengeModeEndLine,
-    'ENCOUNTER_START': handleEncounterStartLine,
-    'ENCOUNTER_END': handleEncounterStopLine,
-    'ZONE_CHANGE': handleZoneChange,
-    'COMBATANT_INFO': handleCombatantInfoLine,
-    'SPELL_AURA_APPLIED': handleSpellAuraAppliedLine,
-    'UNIT_DIED': handleUnitDiedLine,
-};
+const combatLogParser = new CombatLogParser({
+    dataTimeout: 2 * 60 * 1000
+});
 
 /**
- * A just-in-time parsed line from the WoW combat log
+ * Log line handlers attached to their respective combat log event types.
+ * Any combat log event is valid here.
  *
- * The object is constructed from the original combat log line and will
- * parse log line arguments incrementally as they are requested, that is,
- * a log line like CHALLENGE_MODE_START which has few arguments won't see
- * much performance gain over parsing everything, but COMBATANT_INFO will
- * due to its absurdly long list of arguments that we most often won't use.
+ * Callback signature is:
+ *
+ * (line: LogLine, flavour: string)
+ *
+ * 'flavour' is the WoW flavour like 'wow_classic', 'wow' (retail)
  */
- class LogLine {
-    // Current parsing position in the original line
-    private linePosition = 0;
-    // Length of the original line to avoid reevaluating it
-    // many times.
-    private lineLength = 0;
+combatLogParser
+    .on('ARENA_MATCH_START', handleArenaStartLine)
+    .on('ARENA_MATCH_END', handleArenaStopLine)
+    .on('CHALLENGE_MODE_START', handleChallengeModeStartLine)
+    .on('CHALLENGE_MODE_END', handleChallengeModeEndLine)
+    .on('ENCOUNTER_START', handleEncounterStartLine)
+    .on('ENCOUNTER_END', handleEncounterStopLine)
+    .on('ZONE_CHANGE', handleZoneChange)
+    .on('COMBATANT_INFO', handleCombatantInfoLine)
+    .on('SPELL_AURA_APPLIED', handleSpellAuraAppliedLine)
+    .on('UNIT_DIED', handleUnitDiedLine)
+;
 
-    // Multi-dimensional array of arguments
-    // Example: 'ARENA_MATCH_START', '2547', '33', '2v2', '1'
-    private args: any[] = [];
-
-    // Length of this.args to avoid evaluating this.args.length
-    // may times.
-    private argsListLen = 0;
-
-    // Timestamp in string format, as-is, from the log
-    // Example: '8/3 22:09:58.548'
-    public timestamp: string = '';
-
-    constructor (
-        // Original line as it came from the log
-        public original: string
-    ) {
-        this.lineLength = this.original.length;
-
-        // Combat log line always has '<timestamp>  <line>' format,
-        // that is, two spaces between ts and line.
-        this.linePosition = this.original.indexOf('  ') + 2;
-        this.timestamp = this.original.substring(0, this.linePosition - 2);
-
-        // Parse the first argument, which is the event type and will always
-        // be needed.
-        this.parseLogArg(1);
-    }
+// If we haven't received data in a while, we're probably AFK and should stop recording.
+combatLogParser.on('DataTimeout', (timeoutMs: number) => {
+    console.log(`[CombatLogParser] Haven't received data for combatlog in ${timeoutMs / 1000} seconds.`)
 
     /**
-     * Returns the value of the argument at `index`.
-     * Argument is parsed on-demand if it hasn't yet been parsed.
-     * Basically, if you've asked for argument 2 and then later argument 8, it 
-     * will parse up to and including argument 8.
+     * End the current challenge mode dungeon and stop recording.
+     * We'll keep the video.
      */
-    arg(index: number): any {
-        if (!this.args || index >= this.argsListLen) {
-            const maxsplit = Math.max(index + 1, this.argsListLen);
-            this.parseLogArg(maxsplit);
-        }
-
-        return this.args[index];
+    if (activeChallengeMode) {
+        forceStopRecording();
+        return;
     }
-
-    /**
-     * Parse the timestamp from a log line and create a Date value from it
-     */
-    date(): Date {
-        // Split the line by any delimiter that isn't a number, convert them to
-        // actual numbers and reverse the array.
-        const timeParts = this.timestamp
-            .split(/[^0-9]/, 6)
-            .map(v => parseInt(v, 10))
-            .reverse();
-
-        const [msec, secs, mins, hours, day, month] = timeParts;
-        const dateObj = new Date();
-
-        if (day) dateObj.setDate(day);
-        if (month) dateObj.setMonth(month - 1);
-        dateObj.setHours(hours);
-        dateObj.setMinutes(mins);
-        dateObj.setSeconds(secs);
-        dateObj.setMilliseconds(msec);
-
-        return dateObj;
-    }
-
-    /**
-     * Returns the combat log event type of the log line
-     * E.g. `ENCOUNTER_START`. This is just a semantic shorthand for
-     * `Logline.arg(0)` but it makes it immediately evident what the code
-     * is doing.
-     */
-    type(): string {
-        return this.arg(0);
-    }
-
-    /**
-     * Splits a WoW combat line intelligently with respect to quotes,
-     * lists, tuples, and what have we.
-     *
-     * @param maxSplits Maximum number of elements to find (same as `limit` for `string.split()` )
-     */
-    parseLogArg (maxSplits?: number): void {
-        // Array of items that has been parsed in the current scope of the parsing.
-        //
-        // This can end up being multidimensional in the case of some combat events
-        // that have complex data stored, like `COMBATANT_INFO`.
-        const listItems: any[] = [];
-
-        // Final argument list as parsed, which can contain one or more instances of `listItems`
-        // depending on the complexity of the combat log line
-        let inQuotedString = false;
-        let openListCount = 0;
-        let value: any = '';
-
-        for (this.linePosition; this.linePosition < this.lineLength; this.linePosition++) {
-            const char = this.original.charAt(this.linePosition);
-            if (char === '\n') {
-                break;
-            }
-            if (maxSplits && this.argsListLen >= maxSplits) {
-                break;
-            }
-
-            if (inQuotedString) {
-                if (char === '"') {
-                    inQuotedString = false;
-                    continue;
-                }
-
-            } else {
-                switch (char) {
-                case ',':
-                    if (openListCount > 0) {
-                        listItems.at(-1)?.push(value);
-                    } else {
-                        this.args.push(value);
-                        this.argsListLen++;
-                    }
-
-                    value = '';
-                    continue;
-
-                case '"':
-                    inQuotedString = true;
-                    continue;
-
-                case '[':
-                case '(':
-                    listItems.push([]);
-                    openListCount++;
-                    continue;
-
-                case ']':
-                case ')':
-                    if (!listItems.length) {
-                        throw `Unexpected ${char}. No list is open.`;
-                    }
-
-                    if (value) {
-                        listItems.at(-1)?.push(value);
-                    }
-
-                    value = listItems.pop();
-                    openListCount--;
-                    continue;
-                }
-            }
-
-            value += char;
-        }
-
-        if (value) {
-            this.args.push(value);
-            this.argsListLen++;
-        }
-
-        if (openListCount > 0) {
-            throw `Unexpected EOL. There are ${openListCount} open list(s).`
-        }
-    }
-
-    toString(): string {
-        return this.original;
-    }
-}
+});
 
 /**
  * wowProcessStopped
@@ -258,7 +92,6 @@ let isClassicRunning: boolean = false;
  * Timers for poll
  */
 let pollWowProcessInterval: NodeJS.Timer;
-let watchLogsInterval: NodeJS.Timer;
 
 /**
  * wowProcessStarted
@@ -331,66 +164,6 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 
     recorder.stop(metadata, overrun, discardVideo);
     currentActivity = undefined;
-}
-
-/**
- * getLatestLog
- */
-const getLatestLog = (path: any) => {
-    const globPath = path + 'WoWCombatLog*.txt';
-
-    const logs = glob.sync(globPath)
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => B.mtime - A.mtime);
-
-    if (logs.length === 0) {
-        return false;
-    }
-
-    const newestLog = logs[0].name;
-    return newestLog;
-}
-
-/**
- * Tail a specific file.
- */
-const tailFile = (path: string) => {
-    if (tailHandler) {
-        tailHandler.unwatch();
-        tailHandler = null;
-    }
-
-    const options = {
-        flushAtEOF: true
-    }
-
-    tailHandler = new tail(path, options);
-
-    tailHandler.on("line", function(data: string) {
-        handleLogLine(data);
-    });
-
-    tailHandler.on("error", function(error: unknown ) {
-      console.log('[Logutils] ERROR: ', error);
-    });
-}
-
-/**
- * Handle a line from the WoW log.
- */
-const handleLogLine = (line: string) => {
-    // Parse line, only until the line token is encountered
-    const logLine = new LogLine(line);
-    const logLineTypeToken = logLine.type()
-
-    // Check if we are interested in this event, and if not, discard it
-    if (!(logLineTypeToken in interestingCombatLogEvents)) {
-        return;
-    }
-
-    // Call the handler for the given combat log line token
-    // (e.g. `ENCOUNTER_START`)
-    interestingCombatLogEvents[logLineTypeToken](logLine);
 }
 
 /**
@@ -826,28 +599,6 @@ const isUnitPlayer = (flags: number): boolean => {
 }
 
 /**
- * Watch the logs. Check every second for a new file,
- * if there is, swap to watching that.
- */
-const watchLogs = (logdir: any) => {
-    if (watchLogsInterval) clearInterval(watchLogsInterval);
-
-    watchLogsInterval = setInterval(() => {
-        currentLogFile = getLatestLog(logdir);
-
-        // Handle the case where there is no logs in the WoW log directory.
-        if (!currentLogFile) return;
-
-        const logFileChanged = (lastLogFile !== currentLogFile);
-
-        if (!lastLogFile || logFileChanged) {
-            tailFile(currentLogFile);
-            lastLogFile = currentLogFile;
-        }
-    }, 1000);
-}
-
-/**
  * Split name and realm. Name stolen from:
  * https://wowpedia.fandom.com/wiki/API_Ambiguate
  * @param nameRealm string containing name and realm
@@ -868,14 +619,31 @@ const forceStopRecording = () => {
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime());
     metadata.duration = Math.round(milliSeconds / 1000);
 
+    // If a Keystone Dungeon is in progress, end it properly before we stop recording
+    if (activeChallengeMode) {
+        endChallengeModeDungeon();
+    }
+
     // Clear all kinds of stuff that would prevent the app from starting another
     // recording
     clearCombatants();
 
+    // Regardless of what happens above these lines, _ensure_ that these variables
+    // are cleared.
     activeChallengeMode = undefined;
     testRunning = false;
 
     recorder.stop(metadata, 0);
+}
+
+/**
+ * Watch the logs. Check every second for a new file, 
+ * if there is, swap to watching that. 
+ */
+ const watchLogs = (logDirectories: string[]) => {
+    logDirectories.forEach((logdir: string) => {
+        combatLogParser.watchPath(logdir);
+    })
 }
 
 /**
@@ -959,29 +727,28 @@ const runRecordingTest = (endTest: boolean = true) => {
     const startDate = getAdjustedDate();
     const endDate = getAdjustedDate(2 * 60);
 
-    const testArenaStartLine = startDate + "  ARENA_MATCH_START,2547,33,2v2,1";
-    const testArenaCombatantLine = startDate + "  COMBATANT_INFO,Player-1084-08A89569,0,194,452,3670,2353,0,0,0,111,111,111,0,0,632,632,632,0,345,1193,1193,1193,779,256,(102351,102401,197491,5211,158478,203651,155675),(0,203553,203399,353114),[4,4,[],[(1123),(1124),(1129),(1135),(1136),(1819),(1122),(1126),(1128),(1820)],[(256,200),(278,200),(276,200),(275,200),(271,200)]],[(188847,265,(),(7578,8151,7899,1472,6646),()),(186787,265,(),(7578,7893,1524,6646),()),(172319,291,(),(7098,7882,8156,6649,6650,1588),()),(44693,1,(),(),()),(188849,265,(),(8153,7899,1472,6646),()),(186819,265,(),(8136,8137,7578,7896,1524,6646),()),(188848,265,(),(8155,7899,1472,6646),()),(186809,265,(),(8136,8137,7896,1524,6646),()),(186820,265,(),(8136,8138,7578,7893,1524,6646),()),(188853,265,(),(8154,7896,1472,6646),()),(178926,291,(),(8121,7882,8156,6649,6650,1588,6935),()),(186786,265,(),(7579,7893,1524,6646),()),(185304,233,(),(7305,1492,6646),()),(186868,262,(),(7534,1521,6646),()),(186782,265,(),(8136,8138,7893,1524,6646),()),(186865,275,(),(7548,6652,1534,6646),()),(0,0,(),(),()),(147336,37,(),(),())],[Player-1084-08A89569,768,Player-1084-08A89569,5225],327,33,767,1";
-    const testArenaSpellLine = startDate + "  SPELL_AURA_APPLIED,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,110310,\"Dampening\",0x1,DEBUFF";
-    const testArenaStopLine = endDate + "  ARENA_MATCH_END,0,8,1673,1668";
+    [
+        startDate + "  ARENA_MATCH_START,2547,33,2v2,1",
+        startDate + "  COMBATANT_INFO,Player-1084-08A89569,0,194,452,3670,2353,0,0,0,111,111,111,0,0,632,632,632,0,345,1193,1193,1193,779,256,(102351,102401,197491,5211,158478,203651,155675),(0,203553,203399,353114),[4,4,[],[(1123),(1124),(1129),(1135),(1136),(1819),(1122),(1126),(1128),(1820)],[(256,200),(278,200),(276,200),(275,200),(271,200)]],[(188847,265,(),(7578,8151,7899,1472,6646),()),(186787,265,(),(7578,7893,1524,6646),()),(172319,291,(),(7098,7882,8156,6649,6650,1588),()),(44693,1,(),(),()),(188849,265,(),(8153,7899,1472,6646),()),(186819,265,(),(8136,8137,7578,7896,1524,6646),()),(188848,265,(),(8155,7899,1472,6646),()),(186809,265,(),(8136,8137,7896,1524,6646),()),(186820,265,(),(8136,8138,7578,7893,1524,6646),()),(188853,265,(),(8154,7896,1472,6646),()),(178926,291,(),(8121,7882,8156,6649,6650,1588,6935),()),(186786,265,(),(7579,7893,1524,6646),()),(185304,233,(),(7305,1492,6646),()),(186868,262,(),(7534,1521,6646),()),(186782,265,(),(8136,8138,7893,1524,6646),()),(186865,275,(),(7548,6652,1534,6646),()),(0,0,(),(),()),(147336,37,(),(),())],[Player-1084-08A89569,768,Player-1084-08A89569,5225],327,33,767,1",
+        startDate + "  SPELL_AURA_APPLIED,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,110310,\"Dampening\",0x1,DEBUFF",
+        // 'SPELL_PERIODIC_HEAL' isn't currently an event of interest so we want to test that too
+        endDate + '  SPELL_PERIODIC_HEAL,Player-1084-08A89569,"Alexsmite-TarrenMill",0x10512,0x0,Player-1084-08A89569,"Alexsmite-TarrenMill",0x10512,0x0,199483,"Camouflage",0x1,Player-1084-08A89569,0000000000000000,86420,86420,2823,369,1254,0,2,100,100,0,284.69,287.62,0,2.9138,285,2291,2291,2291,0,nil',
+    ].forEach(v => combatLogParser.handleLogLine('retail', v));
 
-    handleLogLine(testArenaStartLine);
-    handleLogLine(testArenaCombatantLine);
-    handleLogLine(testArenaSpellLine);
+    const testArenaStopLine = endDate + "  ARENA_MATCH_END,0,8,1673,1668";
 
     if (!endTest) {
         return;
     }
 
     setTimeout(() => {
-        handleLogLine(testArenaStopLine);
+        combatLogParser.handleLogLine('retail', testArenaStopLine);
         testRunning = false;
     }, 10 * 1000);
 }
 
 export {
-    handleLogLine,
     watchLogs,
-    getLatestLog,
     pollWowProcess,
     runRecordingTest,
     Metadata,
