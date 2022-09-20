@@ -46,25 +46,64 @@ const interestingCombatLogEvents: InterestingCombatLogEventsType = {
 };
 
 /**
- * A parsed line from the WoW combat log
+ * A just-in-time parsed line from the WoW combat log
+ *
+ * The object is constructed from the original combat log line and will
+ * parse log line arguments incrementally as they are requested, that is,
+ * a log line like CHALLENGE_MODE_START which has few arguments won't see
+ * much performance gain over parsing everything, but COMBATANT_INFO will
+ * due to its absurdly long list of arguments that we most often won't use.
  */
-class LogLine {
-    constructor (
-        // Timestamp in string format, as-is, from the log
-        // Example: '8/3 22:09:58.548'
-        public timestamp: string,
+ class LogLine {
+    // Current parsing position in the original line
+    private linePosition = 0
+    // Length of the original line to avoid reevaluating it
+    // many times.
+    private lineLength = 0;
 
-        // Multi-dimensional array of arguments
-        // Example: 'ARENA_MATCH_START', '2547', '33', '2v2', '1'
-        public args: any[]
-    ) {}
+    // Multi-dimensional array of arguments
+    // Example: 'ARENA_MATCH_START', '2547', '33', '2v2', '1'
+    private args: any[] = [];
+
+    // Length of this.args to avoid evaluating this.args.length
+    // may times.
+    private argsListLen = 0;
+
+    // Timestamp in string format, as-is, from the log
+    // Example: '8/3 22:09:58.548'
+    public timestamp: string = '';
+
+    constructor (
+        // Original line as it came from the log
+        public original: string
+    ) {
+        this.lineLength = this.original.length;
+
+        // Combat log line always has '<timestamp>  <line>' format,
+        // that is, two spaces between ts and line.
+        this.linePosition = this.original.indexOf('  ') + 2;
+        this.timestamp = this.original.substring(0, this.linePosition - 2);
+
+        // Parse the first argument, which is the event type and will always
+        // be needed.
+        this.parseLogArg(1);
+    }
+
+    arg(index: number): any {
+        if (!this.args || index >= this.argsListLen) {
+            const maxsplit = Math.max(index + 1, this.argsListLen);
+            this.parseLogArg(maxsplit);
+        }
+
+        return this.args[index];
+    }
 
     /**
      * Parse the timestamp from a log line and create a Date value from it
      *
      * Split the line by any delimiter that isn't a number
      */
-    date (): Date {
+    date(): Date {
         const timeParts = this.timestamp
             .split(/[^0-9]/, 6)
             .map(v => parseInt(v, 10))
@@ -80,6 +119,104 @@ class LogLine {
         dateObj.setMilliseconds(msec);
 
         return dateObj;
+    }
+
+    /**
+     * Returns the combat log event type of the log line
+     * E.g. `ENCOUNTER_START`.
+     */
+    type(): string {
+        return this.arg(0);
+    }
+
+    /**
+     * Splits a WoW combat line intelligently with respect to quotes,
+     * lists, tuples, and what have we.
+     *
+     * @param maxSplits Maximum number of elements to find (same as `limit` for `string.split()` )
+     */
+    parseLogArg (maxSplits?: number): void {
+        // Array of items that has been parsedin the current scope of the parsing.
+        //
+        // This can end up being multidimensional in the case of some combat events
+        // that have complex data stored, like `COMBATANT_INFO`.
+        const list_items: any[] = [];
+
+        // Final argument list as parsed, which can contain one or more instances of `list_items`
+        // depending on the complexity of the combat log line
+        let in_quote = false;
+        let open_lists = 0;
+        let value: any = '';
+
+        for (this.linePosition; this.linePosition < this.lineLength; this.linePosition++) {
+            const c = this.original.charAt(this.linePosition);
+            if (c === '\n') {
+                break;
+            }
+            if (maxSplits && this.argsListLen >= maxSplits) {
+                break;
+            }
+
+            if (in_quote) {
+                if (c === '"') {
+                    in_quote = false;
+                    continue;
+                }
+
+            } else {
+                switch (c) {
+                case ',':
+                    if (open_lists > 0) {
+                        list_items.at(-1)?.push(value);
+                    } else {
+                        this.args.push(value);
+                        this.argsListLen++;
+                    }
+
+                    value = '';
+                    continue;
+
+                case '"':
+                    in_quote = true;
+                    continue;
+
+                case '[':
+                case '(':
+                    list_items.push([]);
+                    open_lists++;
+                    continue;
+
+                case ']':
+                case ')':
+                    if (!list_items.length) {
+                        throw `Unexpected ${c}. No list is open.`;
+                    }
+
+                    if (value) {
+                        list_items.at(-1)?.push(value);
+                    }
+
+                    value = list_items.pop();
+                    open_lists--;
+                    continue;
+                }
+            }
+
+            value += c;
+        }
+
+        if (value) {
+            this.args.push(value);
+            this.argsListLen++;
+        }
+
+        if (open_lists > 0) {
+            throw `Unexpected EOL. There are ${open_lists} open list(s).`
+        }
+    }
+
+    toString(): string {
+        return this.original;
     }
 }
 
@@ -193,118 +330,6 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 }
 
 /**
-<<<<<<< HEAD
- * Initiate recording and mark as having something in-progress
- */
-const startRecording = (category: VideoCategory) => {
-    console.log(`[Logutils] Start recording a video for category: ${category}`)
-
-    // Ensure combatant map and player combatant is clean before
-    // starting a new recording.
-    clearCombatants();
-
-    currentActivity = category;
-    recorder.start();
-};
-
-type EndRecordingOptionsType = {
-    discardVideo?: boolean, // Discard the video/don't save the recording
-    duration?: number,      // Explicitly give video duration
-    result?: boolean,       // Success/Failure result for the overall activity
-};
-
-/**
- * Stop recording and mark as not doing anything
- */
-const endRecording = (options?: EndRecordingOptionsType) => {
-    if (!recorder.isRecording || !currentActivity) {
-        return;
-    }
-
-    let duration = options?.duration;
-
-    const discardVideo = options?.discardVideo ?? false;
-    const overrun = videoOverrunPerCategory[currentActivity];
-
-    // If duration isn't given, calculate it from start/end event time-
-    if (!duration) {
-        const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
-        duration = Math.round(videoDuration / 1000);
-    }
-
-    metadata.duration = duration + overrun;
-    metadata.result = options?.result ?? false;
-
-    if (playerCombatant) {
-        metadata.playerName = playerCombatant.name;
-        metadata.playerRealm = playerCombatant.realm;
-        metadata.playerSpecID = playerCombatant.specID;
-    }
-
-    console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
-
-    recorder.stop(metadata, overrun, discardVideo);
-    currentActivity = undefined;
-}
-
-/**
-||||||| parent of 9ab9743 (Refactor and simplify logutils)
-=======
- * Initiate recording and mark as having something in-progress
- */
-const startRecording = (category: VideoCategory) => {
-    console.log(`[Logutils] Start recording a video for category: ${category}`)
-
-    // Ensure combatant map and player combatant is clean before
-    // starting a new recording.
-    clearCombatants();
-
-    currentActivity = category;
-    recorder.start();
-};
-
-type EndRecordingOptionsType = {
-    discardVideo?: boolean, // Discard the video/don't save the recording
-    duration?: number,      // Explicitly give video duration
-    result?: boolean,       // Success/Failure result for the overall activity
-};
-
-/**
- * Stop recording and mark as not doing anything
- */
-const endRecording = (options?: EndRecordingOptionsType) => {
-    if (!recorder.isRecording || !currentActivity) {
-        return;
-    }
-
-    let duration = options?.duration;
-
-    const discardVideo = options?.discardVideo ?? false;
-    const overrun = videoOverrunPerCategory[currentActivity];
-
-    // If duration isn't given, calculate it from start/end event time-
-    if (!duration) {
-        const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
-        duration = Math.round(videoDuration / 1000);
-    }
-
-    metadata.duration += overrun;
-    metadata.result = options?.result ?? false;
-
-    if (playerCombatant) {
-        metadata.playerName = playerCombatant.name;
-        metadata.playerRealm = playerCombatant.realm;
-        metadata.playerSpecID = playerCombatant.specID;
-    }
-
-    console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
-
-    recorder.stop(metadata, overrun, discardVideo);
-    currentActivity = undefined;
-}
-
-/**
->>>>>>> 9ab9743 (Refactor and simplify logutils)
  * getLatestLog 
  */
 const getLatestLog = (path: any) => {
@@ -347,116 +372,17 @@ const tailFile = (path: string) => {
 }
 
 /**
- * Splits a WoW combat line intelligently with respect to quotes,
- * lists, tuples, and what have we.
- *
- * @param line Log line straight from the combat log
- * @param maxSplits Madximum number of elements to find (same as `limit` for `string.split()` )
- */
-const splitLogLine = (line: string, maxSplits?: number): LogLine => {
-    // Avoid evaluating this on each iteration of the for(..) loop below
-    const line_len = line.length
-
-    // Array of items that has been parsedin the current scope of the parsing.
-    //
-    // This can end up being multidimensional in the case of some combat events
-    // that have complex data stored, like `COMBATANT_INFO`.
-    const list_items: any[] = [];
-
-    // Final argument list as parsed, which can contain one or more instances of `list_items`
-    // depending on the complexity of the combat log line
-    const args_list: any[] = [];
-    let in_quote = false;
-    let open_lists = 0;
-    let value: any = '';
-
-    // Combat log line always has '<timestamp>  <line>' format,
-    // that is, two spaces between ts and line.
-    const tsIndexEnd = line.indexOf('  ');
-    const timestamp = line.substring(0, tsIndexEnd);
-
-    for (let ptr = tsIndexEnd + 2; ptr < line_len; ptr++) {
-        const c = line.charAt(ptr);
-        if (c === '\n') {
-            break;
-        }
-        if (maxSplits && args_list.length >= maxSplits) {
-            break;
-        }
-
-        if (in_quote) {
-            if (c === '"') {
-                in_quote = false;
-                continue;
-            }
-
-        } else {
-            switch (c) {
-            case ',':
-                if (open_lists > 0) {
-                    list_items.at(-1)?.push(value);
-                } else {
-                    args_list.push(value);
-                }
-
-                value = '';
-                continue;
-
-            case '"':
-                in_quote = true;
-                continue;
-
-            case '[':
-            case '(':
-                list_items.push([]);
-                open_lists++;
-                continue;
-
-            case ']':
-            case ')':
-                if (!list_items.length) {
-                    throw `Unexpected ${c}. No list is open.`;
-                }
-
-                if (value) {
-                    list_items.at(-1)?.push(value);
-                }
-
-                value = list_items.pop();
-                open_lists--;
-                continue;
-            }
-        }
-
-        value += c;
-    }
-
-    if (value) {
-        args_list.push(value)
-    }
-
-    if (open_lists > 0) {
-        throw `Unexpected EOL. There are ${open_lists} open list(s).`
-    }
-
-    return new LogLine(timestamp, args_list)
-}
-
-/**
  * Handle a line from the WoW log. 
  */
 const handleLogLine = (line: string) => {
     // Parse line, only until the line token is encountered
-    let logLine = splitLogLine(line, 1)
-    const logLineTypeToken = logLine.args[0]
+    const logLine = new LogLine(line);
+    const logLineTypeToken = logLine.type()
 
     // Check if we are interested in this event, and if not, discard it
     if (!(logLineTypeToken in interestingCombatLogEvents)) {
         return;
     }
-
-    // Parse the full line
-    logLine = splitLogLine(line)
 
     // Call the handler for the given combat log line token
     // (e.g. `ENCOUNTER_START`)
@@ -468,8 +394,8 @@ const handleLogLine = (line: string) => {
  */
 function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return; 
-    const category = (line.args[3] as VideoCategory);
-    const zoneID = parseInt(line.args[1], 10);
+    const category = (line.arg(3) as VideoCategory);
+    const zoneID = parseInt(line.arg(1), 10);
 
     // If all goes to plan we don't need this but we do it incase the game
     // crashes etc. so we can still get a reasonable duration.
@@ -499,7 +425,7 @@ function handleArenaStopLine (line: LogLine): void {
     // Helpfully ARENA_MATCH_END events contain the game duration. Solo shuffle
     // ARENA_MATCH_END duration only counts the last game so needs special handling. 
     if (metadata.category !== VideoCategory.SoloShuffle) {
-        duration = parseInt(line.args[2], 10);
+        duration = parseInt(line.arg(2), 10);
     }
 
     const [result, MMR] = determineArenaMatchResult(line); 
@@ -517,8 +443,8 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
     if (playerCombatant === undefined) return [undefined, undefined];
     const teamID = playerCombatant.teamID;
     const indexForMMR = (teamID == 0) ? 3 : 4; 
-    const MMR = parseInt(line.args[indexForMMR], 10);
-    const winningTeamID = parseInt(line.args[1], 10);
+    const MMR = parseInt(line.arg(indexForMMR), 10);
+    const winningTeamID = parseInt(line.arg(1), 10);
     const win = (teamID === winningTeamID)
     return [win, MMR];
 }
@@ -535,8 +461,8 @@ function handleChallengeModeStartLine (line: LogLine): void {
     }
     videoStartDate = line.date();
 
-    const zoneName = line.args[2];
-    const mapId = parseInt(line.args[3], 10);
+    const zoneName = line.arg(2);
+    const mapId = parseInt(line.arg(3), 10);
     const hasDungeonMap = (mapId in dungeonsByMapId);
     const hasTimersForDungeon = (mapId in dungeonTimersByMapId);
 
@@ -544,13 +470,13 @@ function handleChallengeModeStartLine (line: LogLine): void {
         console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
     }
 
-    const dungeonAffixes = line.args[5].map((v: string) => parseInt(v, 10));
+    const dungeonAffixes = line.arg(5).map((v: string) => parseInt(v, 10));
 
     activeChallengeMode = new ChallengeModeDungeon(
         dungeonTimersByMapId[mapId], // Dungeon timers
-        parseInt(line.args[2], 10),  // zoneId
+        parseInt(line.arg(2), 10),  // zoneId
         mapId,                       // mapId
-        parseInt(line.args[4], 10),  // Keystone Level
+        parseInt(line.arg(4), 10),  // Keystone Level
         dungeonAffixes,              // Array of affixes, as numbers
     )
 
@@ -561,10 +487,10 @@ function handleChallengeModeStartLine (line: LogLine): void {
     console.debug("[ChallengeMode] Starting Challenge Mode instance")
 
     metadata = {
-        name: line.args[1], // Instance name (e.g. "Operation: Mechagon")
-        encounterID: parseInt(line.args[1], 10),
+        name: line.arg(1), // Instance name (e.g. "Operation: Mechagon")
+        encounterID: parseInt(line.arg(1), 10),
         category: VideoCategory.MythicPlus,
-        zoneID: parseInt(line.args[5]),
+        zoneID: parseInt(line.arg(5)),
         duration: 0,
         result: false,
         challengeMode: activeChallengeMode,
@@ -609,14 +535,14 @@ function handleChallengeModeEndLine (line: LogLine): void {
     //
     // It's included separate from `metadata.duration` because the duration of the
     // dungeon, as the game sees it, is what is important for this value to make sense.
-    activeChallengeMode.duration = Math.round(parseInt(line.args[4], 10) / 1000);
+    activeChallengeMode.duration = Math.round(parseInt(line.arg(4), 10) / 1000);
 
     // Calculate whether the key was timed or not
     activeChallengeMode.timed = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
 
     endChallengeModeDungeon();
 
-    const result = Boolean(parseInt(line.args[1]));
+    const result = Boolean(parseInt(line.arg(1)));
 
     endRecording({result,});
 };
@@ -633,8 +559,8 @@ const getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
  * Handle a line from the WoW log. 
  */
 function handleEncounterStartLine (line: LogLine): void {
-    const encounterID = parseInt(line.args[1], 10)
-    const difficultyID = parseInt(line.args[3], 10);
+    const encounterID = parseInt(line.arg(1), 10)
+    const difficultyID = parseInt(line.arg(3), 10);
     const eventDate = line.date();
 
     // If we're recording _and_ has an active challenge mode dungeon,
@@ -674,8 +600,8 @@ function handleEncounterStartLine (line: LogLine): void {
 function handleEncounterStopLine (line: LogLine): void {
     const eventDate = line.date();
 
-    const result = Boolean(parseInt(line.args[5], 10));
-    const encounterID = parseInt(line.args[1], 10);
+    const result = Boolean(parseInt(line.arg(5), 10));
+    const encounterID = parseInt(line.arg(1), 10);
 
     if (recorder.isRecording && activeChallengeMode) {
         const currentSegment = activeChallengeMode.getCurrentTimelineSegment()
@@ -703,7 +629,7 @@ function handleEncounterStopLine (line: LogLine): void {
  */
 function handleZoneChange (line: LogLine): void {
     console.log("[Logutils] Handling zone change: ", line);
-    const zoneID = parseInt(line.args[1], 10);
+    const zoneID = parseInt(line.arg(1), 10);
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
 
@@ -751,9 +677,9 @@ function handleSpellAuraAppliedLine (line: LogLine): void {
     if (playerCombatant) return;
     if (combatantMap.size === 0) return;    
 
-    const srcGUID = line.args[1];
-    const srcNameRealm = line.args[2]
-    const srcFlags = parseInt(line.args[3], 16);
+    const srcGUID = line.arg(1);
+    const srcNameRealm = line.arg(2)
+    const srcFlags = parseInt(line.arg(3), 16);
     
     const srcCombatant = combatantMap.get(srcGUID);
     if (srcCombatant === undefined) return;
@@ -772,9 +698,9 @@ function handleSpellAuraAppliedLine (line: LogLine): void {
  * @param line the COMBATANT_INFO line
  */
 function handleCombatantInfoLine (line: LogLine): void {
-    const GUID = line.args[1];
-    const teamID = parseInt(line.args[2], 10);
-    const specID = parseInt(line.args[24], 10);
+    const GUID = line.arg(1);
+    const teamID = parseInt(line.arg(2), 10);
+    const specID = parseInt(line.arg(24), 10);
     let combatantInfo = new Combatant(GUID, teamID, specID);
     combatantMap.set(GUID, combatantInfo);
 }
@@ -798,7 +724,7 @@ const clearCombatants = () => {
  * ZONE_CHANGE event into a BG.  
  */
 function battlegroundStart (line: LogLine): void {
-    const zoneID = parseInt(line.args[1], 10);
+    const zoneID = parseInt(line.arg(1), 10);
     const battlegroundName = battlegrounds[zoneID];
 
     videoStartDate = line.date();
@@ -851,8 +777,8 @@ const registerPlayerDeath = (timestamp: number, name: string, specId: number): v
         return;
     }
 
-    const unitFlags = parseInt(line.args[7], 16);
-    const isUnitUnconsciousAtDeath = Boolean(parseInt(line.args[9], 10));
+    const unitFlags = parseInt(line.arg(7), 16);
+    const isUnitUnconsciousAtDeath = Boolean(parseInt(line.arg(9), 10));
 
     // We only want player deaths and we don't want fake deaths,
     // i.e. a hunter that feigned death
@@ -860,8 +786,8 @@ const registerPlayerDeath = (timestamp: number, name: string, specId: number): v
         return;
     }
 
-    const playerName = line.args[6];
-    const playerGuid = line.args[5];
+    const playerName = line.arg(6);
+    const playerGuid = line.arg(5);
     const playerSpecId = getCombatantByGuid(playerGuid)?.specID ?? 0;
 
     // Add player death and subtract 2 seconds from the time of death to allow the
