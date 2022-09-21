@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Manual stop recording button, on the 'recording' status icon.
+- Now loads videos asynchronously to improve application reponsiveness on start up with many videos
 
 ### Changed
 ### Fixed

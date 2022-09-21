@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, getVideoState, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe } from './util';
+import { resolveHtmlPath, loadAllVideos, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe } from './util';
 import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -436,10 +436,7 @@ ipcMain.on('contextMenu', (event, args) => {
 /**
  * Get the list of video files and their state.
  */
-ipcMain.on('getVideoState', (event) => {
-  const videoState = getVideoState(storageDir);
-  event.returnValue = videoState;
-});
+ipcMain.handle('getVideoState', async () => loadAllVideos(storageDir));
 
 ipcMain.on('getAudioDevices', (event) => {
   // We can only get this information if the recorder (OBS) has been
