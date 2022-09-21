@@ -261,6 +261,8 @@ type RecorderOptionsType = {
      * Reconfigure the underlying obsRecorder. 
      */
     reconfigure = (options: RecorderOptionsType) => {
+        this._options = options;
+
         // User might just have shrunk the size, so run the size monitor.
         runSizeMonitor(this._options.storageDir, this._options.maxStorage)
         .then(() => {
@@ -274,7 +276,7 @@ type RecorderOptionsType = {
             this.stopBuffer()
         }
 
-        obsRecorder.reconfigure(options);
+        obsRecorder.reconfigure(this._options);
         if (mainWindow) mainWindow.webContents.send('refreshState');
     }
 }
