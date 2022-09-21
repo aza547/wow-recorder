@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [Issue 142](https://github.com/aza547/wow-recorder/issues/142) - Make it possible to stop recording.
 - Now loads videos asynchronously to improve application reponsiveness on start up with many videos
+- Remember the selected category across application restarts
 
 ### Changed
 ### Fixed
