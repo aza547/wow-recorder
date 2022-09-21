@@ -63,9 +63,15 @@ type VideoPlayerSettings = {
     volume: number;
 };
 
+enum FileSortDirection {
+    NewestFirst,
+    OldestFirst,
+};
+
 export {
     AppStatus,
     UnitFlags,
     PlayerDeathType,
     VideoPlayerSettings,
+    FileSortDirection,
 }

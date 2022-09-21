@@ -30,6 +30,7 @@ import util from 'util';
 import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
+import { FileSortDirection } from './types';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -53,10 +54,8 @@ if (process.env.NODE_ENV === 'development') {
  * Empty video state. 
  */
 const getEmptyState = () => {
-    let videoState: { [category: string]: [] } = {};
-    for (const category of categories) {
-        videoState[category] = [];
-    }
+    let videoState: { [category: string]: any[] } = {};
+    categories.forEach(category => videoState[category] = []);
 
     return videoState;
 }
@@ -64,49 +63,65 @@ const getEmptyState = () => {
 /**
  * Load videos from category folders in reverse chronological order.  
  */
-const loadAllVideos = (storageDir: any, videoState: any) => {
-    const videos = glob.sync(storageDir + "*.mp4")        
-        .map(getVideoInfo)
-        .sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
-
-    for (const category of categories) {
-        videoIndex[category] = 0;
+const loadAllVideos = async (storageDir: any): Promise<any> => {
+    let videoState = getEmptyState();
+    if (!storageDir) {
+        return videoState;
     }
 
-    for (const video of videos) {            
-        loadVideoDetails(video, videoState);
-    }        
+    const videos = await getSortedVideos(storageDir)
+    if (videos.length == 0) {
+        return videoState;
+    }
+
+    categories.forEach(category => videoIndex[category] = 0);
+
+    videos.forEach(video => {
+        const details = loadVideoDetails(video);
+        if (!details) {
+            return;
+        }
+
+        const category = (details.category as string);
+        videoState[category].push({
+            index: videoIndex[category]++,
+            ...details,
+        });
+    });
+
+    return videoState;
 }
 
 /**
  * Load video details from the metadata and add it to videoState. 
  */
- const loadVideoDetails = (video: VideoInfo, videoState: any) => {
-    const today = new Date();
-    const videoDate = new Date(video.mtime)
-    const isVideoFromToday = (today.toDateString() === videoDate.toDateString());
-
-    const metadata = getMetadataForVideo(video.name)
-    if (metadata === undefined) return;
+ const loadVideoDetails = (video: VideoInfo): any | undefined => {
+    const metadata = getMetadataForVideo(video.name);
+    if (metadata === undefined) {
+        return;
+    }
 
     // Hilariously 5v5 is still a war game mode that will break things without this.
-    if (!categories.includes(metadata.category)) return;
+    if (!categories.includes(metadata.category)) {
+        return;
+    };
 
-    videoState[metadata.category].push({
-        index: videoIndex[metadata.category]++,
+    const today = new Date();
+    const videoDate = new Date(video.mtime);
+
+    return {
         fullPath: video.name,
         ...metadata,
         zone: getVideoZone(metadata),
         encounter: getVideoEncounter(metadata),
         date: getVideoDate(videoDate),
-        isFromToday: isVideoFromToday,
+        isFromToday: (today.toDateString() === videoDate.toDateString()),
         time: getVideoTime(videoDate),
         protected: Boolean(metadata.protected),
-        playerSpecID: getPlayerSpec(metadata),
-        playerName: getPlayerName(metadata),
-        playerRealm: getPlayerRealm(metadata),
-    });
-
+        playerSpecID: metadata?.playerSpecID,
+        playerName: metadata?.playerName,
+        playerRealm: metadata?.playerRealm,
+    };
 }
 
 /**
@@ -235,50 +250,6 @@ const getVideoEncounter = (metadata: Metadata) => {
 }
 
 /**
- * Get the player spec ID.
- */
- const getPlayerSpec = (metadata: Metadata) => {
-    if (metadata.playerSpecID) { 
-        return metadata.playerSpecID; 
-    } else {
-        return undefined; 
-    }
-}
-
-/**
- * Get the player name.
- */
- const getPlayerName = (metadata: Metadata) => {
-    if (metadata.playerName) { 
-        return metadata.playerName; 
-    } else {
-        return undefined; 
-    }
-}
-
-/**
- * Get the player realm.
- */
- const getPlayerRealm = (metadata: Metadata) => {
-    if (metadata.playerRealm) { 
-        return metadata.playerRealm; 
-    } else {
-        return undefined; 
-    }
-}
-
-/**
- * Get the state of all videos. 
- * Returns an empty array if storageDir is undefined. 
- */
-const getVideoState = (storageDir: unknown) => {
-    let videoState = getEmptyState();
-    if (!storageDir) return videoState;
-    loadAllVideos(storageDir, videoState);
-    return videoState;
-}    
-
-/**
  * Return information about a video needed for various parts of the application
  */
 const getVideoInfo = (videoPath: string): VideoInfo => {
@@ -294,11 +265,15 @@ const getVideoInfo = (videoPath: string): VideoInfo => {
  * Asynchronously find and return a list of video files in the given directory,
  * sorted by modification time (newest to oldest)
  */
-const getSortedVideos = async (storageDir: string): Promise<VideoInfo[]> => {
-    const files = await globPromise(path.join(storageDir, "*.mp4"));
-    return files
-        .map(getVideoInfo)
-        .sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
+const getSortedVideos = async (storageDir: string, sortDirection: FileSortDirection = FileSortDirection.NewestFirst): Promise<VideoInfo[]> => {
+    const files = (await globPromise(path.join(storageDir, "*.mp4")))
+        .map(getVideoInfo);
+
+    if (sortDirection === FileSortDirection.NewestFirst) {
+        return files.sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
+    }
+
+    return files.sort((A: VideoInfo, B: VideoInfo) => A.mtime - B.mtime);
 };
 
 /**
@@ -623,7 +598,7 @@ const isNumberClose = (val: number, compare: number) => {
 };
 
 export {
-    getVideoState,
+    loadAllVideos,
     writeMetadataFile,
     runSizeMonitor, 
     isConfigReady,
@@ -639,5 +614,6 @@ export {
     defaultMonitorIndex,
     defaultMinEncounterDuration,
     addColor,
-    isNumberClose
+    isNumberClose,
+    getSortedVideos,
 };
