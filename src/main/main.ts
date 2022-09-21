@@ -6,7 +6,7 @@
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
 import { resolveHtmlPath, loadAllVideos, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe } from './util';
-import { watchLogs, pollWowProcess, runRecordingTest } from './logutils';
+import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder } from './recorder';
@@ -474,12 +474,22 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
 /**
  * Test button listener. 
  */
-ipcMain.on('test', () => {
+ipcMain.on('test', (_event, args) => {
   if (isConfigReady(cfg)) { 
     console.info("[Main] Config is good, running test!");
-    runRecordingTest()
+    runRecordingTest(Boolean(args[0]));
   } else {
     console.info("[Main] Config is bad, don't run test");
+  }
+});
+
+/**
+ * Recorder IPC functions
+ */
+ipcMain.on('recorder', (_event, args) => {
+  if (args[0] == 'stop') {
+    console.log('[Main] Force stopping recording due to user request.')
+    forceStopRecording();
   }
 });
 

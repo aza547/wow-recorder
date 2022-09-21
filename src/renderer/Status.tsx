@@ -3,8 +3,12 @@ import eyeIcon from  '../../assets/icon/sleep-icon.png';
 import errorIcon from  '../../assets/icon/error-icon.png';
 import watchIcon from  '../../assets/icon/watch-icon.png';
 import savingIcon from '../../assets/icon/saving-icon.png';
+import stopRecordingIcon from '../../assets/icon/stop-recording.png';
 import { useState, useEffect } from 'react';
 import { AppStatus } from 'main/types';
+import ConfirmationDialog from './ConfirmationDialog';
+
+const ipc = window.electron.ipcRenderer;
 
 type IconStyle = 'small' | 'big';
 
@@ -25,6 +29,18 @@ const statusMessages: { [key: number]: StatusMessageObjectType } = {
 export default function Status() {
 
   const [status, setStatus] = useState(AppStatus.WaitingForWoW);
+  const [openDialog, setDialog] = useState(false);
+
+  const closeDialog = () => setDialog(false);
+  const confirmStopRecording = () => setDialog(true);
+  const stopRecording = () => {
+    closeDialog();
+    ipc.sendMessage('recorder', ['stop']);
+  };
+
+  const showIcon = (event: any, icon: string) => {
+    event.target.src = icon;
+  };
 
   /**
    * Update status handler.
@@ -36,10 +52,34 @@ export default function Status() {
   }, []);
 
   const message = statusMessages[status];
+  const isRecording = (status === AppStatus.Recording);
 
   return (
     <div id="status">
-      <img id={ message.style + '-icon' } title={ message.title } alt="icon" src={ message.icon }/>
+      <div>
+        { isRecording ||
+          <img id={ message.style + '-icon' } title={ message.title } alt="icon" src={ message.icon }/>
+        }
+        { isRecording &&
+          <img
+            id={ message.style + '-icon' }
+            title={ message.title + ' - Click to stop recording' }
+            onClick={confirmStopRecording}
+            onMouseEnter={(e) => showIcon(e, stopRecordingIcon)}
+            onMouseLeave={(e) => showIcon(e, message.icon)}
+            alt="icon"
+            src={ message.icon }
+          />
+        }
+        <ConfirmationDialog
+          title='⚠️ Stop recording?'
+          open={openDialog}
+          onConfirm={stopRecording}
+          onReject={closeDialog}
+        >
+          Manually stopping the recording isn't usually a great idea, but it can be necessary if there's a bug that prevents it from stopping on its own.
+        </ConfirmationDialog>
+      </div>
     </div>
   );
 }
