@@ -102,6 +102,8 @@ const tabProps = (index: number) => {
  */
 const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
 
+let videoState: { [key: string]: any } = {}
+
 /**
  * The GUI itself.
  */
@@ -110,7 +112,7 @@ export default function Layout() {
   const [state, setState] = React.useState({
     categoryIndex: 0,
     videoIndex: 0,
-    videoState: ipc.sendSync('getVideoState', categories),
+    videoState,
     videoMuted: videoPlayerSettings.muted,
     videoVolume: videoPlayerSettings.volume, // (Double) 0.00 - 1.00
     videoSeek: 0,
@@ -178,11 +180,12 @@ export default function Layout() {
       /**
        * Refresh handler.
        */
-      ipc.on('refreshState', () => {
+      ipc.on('refreshState', async () => {
+        videoState = await ipc.invoke('getVideoState', categories);
         setState(prevState => {
           return {
             ...prevState,
-            videoState: ipc.sendSync('getVideoState', categories)
+            videoState,
           }
         })
       });
@@ -312,6 +315,10 @@ export default function Layout() {
    * Returns TSX for the video player and video selection tabs.
    */
    const generateTabPanel = (tabIndex: number) => {
+    if (!(category in state.videoState)) {
+      return noVideoPanel(tabIndex);
+    }
+
     const haveVideos = state.videoState[category][state.videoIndex];
 
     if (!haveVideos) {

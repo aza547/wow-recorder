@@ -1,13 +1,15 @@
 import { Metadata } from './logutils';
-import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor } from './util';
+import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor, getSortedVideos } from './util';
 import { mainWindow }  from './main';
 import { app } from 'electron';
 import path from 'path';
 import { AppStatus } from './types';
 
 const obsRecorder = require('./obsRecorder');
-const fs = require('fs');
-const glob = require('glob');
+import fs from 'fs';
+import glob from 'glob';
+import util from 'util';
+const globPromise = util.promisify(glob)
 
 /**
  * Represents an OBS recorder object.
@@ -247,18 +249,14 @@ const glob = require('glob');
      * Clean-up the buffer directory.
      * @params Number of files to leave.
      */
-    cleanupBuffer = (filesToLeave: number) => {
-        const globString = path.join(this._bufferStorageDir, "*.mp4"); 
+    cleanupBuffer = async (filesToLeave: number) => {
+        // Sort newest to oldest
+        const videosToDelete = await getSortedVideos(this._bufferStorageDir);
 
-        // Sort newest to oldest, remove newest 2 from the list; we don't delete those. 
-        const videosToDelete = glob.sync(globString) 
-            .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-            .sort((A: any, B: any) => B.mtime - A.mtime)
-            .slice(filesToLeave);
-
-        for (const video of videosToDelete) {
-            deleteVideo(video.name);
-        }
+        // Remove newest 2 from the list; we don't delete those.
+        videosToDelete
+            .slice(filesToLeave)
+            .forEach((v) => deleteVideo(v.name));
     }
 
     /**

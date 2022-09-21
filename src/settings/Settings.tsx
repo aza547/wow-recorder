@@ -15,8 +15,8 @@ export default function Settings() {
     logPath: window.electron.store.get('log-path'),
     maxStorage: window.electron.store.get('max-storage'),
     monitorIndex: window.electron.store.get('monitor-index'),
-    audioInputDevice: window.electron.store.get('audio-input-device', 'all'),
-    audioOutputDevice: window.electron.store.get('audio-output-device', 'all'),
+    audioInputDevice: window.electron.store.get('audio-input-device'),
+    audioOutputDevice: window.electron.store.get('audio-output-device'),
     minEncounterDuration: window.electron.store.get('min-encounter-duration'),
     startUp: window.electron.store.get('start-up') === 'true',
   });
