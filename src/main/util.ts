@@ -270,7 +270,7 @@ const getVideoEncounter = (metadata: Metadata) => {
  * Get the state of all videos. 
  * Returns an empty array if storageDir is undefined. 
  */
-const getVideoState = (storageDir: unknown) => {
+const getVideoState = async (storageDir: unknown) => {
     let videoState = getEmptyState();
     if (!storageDir) return videoState;
     loadAllVideos(storageDir, videoState);

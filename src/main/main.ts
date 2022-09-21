@@ -436,10 +436,7 @@ ipcMain.on('contextMenu', (event, args) => {
 /**
  * Get the list of video files and their state.
  */
-ipcMain.on('getVideoState', (event) => {
-  const videoState = getVideoState(storageDir);
-  event.returnValue = videoState;
-});
+ipcMain.handle('getVideoState', async () => getVideoState(storageDir));
 
 ipcMain.on('getAudioDevices', (event) => {
   // We can only get this information if the recorder (OBS) has been
