@@ -4,6 +4,7 @@ import path from 'path';
 import { categories, months, zones, VideoCategory, dungeonsByMapId, instanceNamesByZoneId, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
 import { Metadata }  from './logutils';
 import ElectronStore from 'electron-store';
+const byteSize = require('byte-size')
 const chalk = require('chalk');
 
 /**
@@ -281,6 +282,7 @@ const getVideoState = (storageDir: unknown) => {
  * Return information about a video needed for various parts of the application
  */
 const getVideoInfo = (videoPath: string): VideoInfo => {
+    videoPath = path.resolve(videoPath);
     const fstats = fs.statSync(videoPath);
     const mtime = fstats.mtime.getTime();
     const size = fstats.size;
@@ -308,9 +310,9 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
     const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
 
     let files = await getSortedVideos(storageDir);
-    console.debug(`[Size Monitor] Running (max size = ${maxStorageGB} GB)`);
+    console.debug(`[Size Monitor] Running (max size = ${byteSize(maxStorageBytes)})`);
 
-    files = files.map((file: any) => {
+    files = files.map(file => {
         const metadata = getMetadataForVideo(file.name);
         return { ...file, metadata, };
     });
@@ -337,6 +339,13 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         return totalVideoFileSize > maxStorageBytes;
     });
 
+    // Calculate total file size of all unprotected files
+    totalVideoFileSize = unprotectedFiles
+        .map(file => file.size)
+        .reduce((prev, curr) => prev + curr, 0);
+
+    console.log(`[Size Monitor] Unprotected file(s) considered ${unprotectedFiles.length}, total size = ${byteSize(totalVideoFileSize)}`)
+
     if (filesOverMaxStorage.length === 0) {
         return;
     }
@@ -344,11 +353,9 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
     console.log(`[Size Monitor] Deleting ${filesOverMaxStorage.length} old video(s)`)
 
     while (videoToDelete = filesOverMaxStorage.pop()) {
-        console.log(`[Size Monitor] Delete oldest video: ${videoToDelete.name}`);
+        console.log(`[Size Monitor] Delete oldest video: ${videoToDelete.name} (${byteSize(videoToDelete.size)})`);
         deleteVideo(videoToDelete.name);
     }
-
-    return Promise.resolve();
 };
 
 /**
