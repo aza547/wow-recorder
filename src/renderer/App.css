@@ -47,7 +47,7 @@ div#root {
   padding: 0;
 }
 
-.MuiTypography-root {
+.MuiTypography-root:not(.MuiDialogTitle-root) {
   height: 100%;
   width: 100%;
   margin: 0;
@@ -71,7 +71,7 @@ div#root {
 }
 
 h1 {text-align: center;}
-h2 {
+h2:not(.MuiDialogTitle-root) {
   width: 100%;
   height: 100%;
   padding: 0px;

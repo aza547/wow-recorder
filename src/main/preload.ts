@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'mainWindow' | 'settingsWindow' | 'getVideoState' | 'contextMenu' | 'logPath' | 'openURL' | 'test' | 'getAudioDevices' | 'videoPlayerSettings';
+export type Channels = 'mainWindow' | 'settingsWindow' | 'getVideoState' | 'contextMenu' | 'logPath' | 'openURL' | 'test' | 'getAudioDevices' | 'videoPlayerSettings' | 'recorder';
 
 contextBridge.exposeInMainWorld('electron', {
   store: {
