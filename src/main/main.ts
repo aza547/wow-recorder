@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, loadAllVideos, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe } from './util';
+import { resolveHtmlPath, loadAllVideos, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe, defaultAudioDevice } from './util';
 import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -51,8 +51,8 @@ let storageDir: string = getPathConfigSafe(cfg, 'storage-path');
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let maxStorage: number = getNumberConfigSafe(cfg, 'max-storage');
 let monitorIndex: number = getNumberConfigSafe(cfg, 'monitor-index');
-let audioInputDevice: string = getStringConfigSafe(cfg, 'audio-input-device', 'all');
-let audioOutputDevice: string = getStringConfigSafe(cfg, 'audio-output-device', 'all');
+let audioInputDevice: string = getStringConfigSafe(cfg, 'audio-input-device');
+let audioOutputDevice: string = getStringConfigSafe(cfg, 'audio-output-device');
 let minEncounterDuration: number = getNumberConfigSafe(cfg, 'min-encounter-duration');
 
 // Default video player settings on app start
@@ -60,6 +60,14 @@ const videoPlayerSettings: VideoPlayerSettings = {
   muted: false,
   volume: 1,
 };
+
+if (!audioInputDevice) {
+  audioInputDevice = defaultAudioDevice(cfg, 'input');
+}
+
+if (!audioOutputDevice) {
+  audioOutputDevice = defaultAudioDevice(cfg, 'output');
+}
 
 if (!monitorIndex) {
   monitorIndex = defaultMonitorIndex(cfg);

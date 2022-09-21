@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+- [Issue 130](https://github.com/aza547/wow-recorder/issues/130) - Fix invalid default audio input/output device.
+
 ## [2.7.0] - 2022-09-19
 ### Added
 - [Issue 47](https://github.com/aza547/wow-recorder/issues/48) - Add Mythic+ recording support.

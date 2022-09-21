@@ -555,6 +555,15 @@ const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: str
     return (cfg.get(key, defaultValue) as string);
 }
 
+const defaultAudioDevice = (cfg: ElectronStore, deviceType: string): string => {
+    const cfgKey = `audio-${deviceType}-device`;
+    const defaultValue = 'all';
+
+    console.info(`[Util] Defaulting ${cfgKey} to ${defaultValue}`);
+    cfg.set(cfgKey, defaultValue);
+    return defaultValue;
+}
+
 /**
  *  Default the monitor index to 1. 
  */
@@ -613,6 +622,7 @@ export {
     getStringConfigSafe,
     defaultMonitorIndex,
     defaultMinEncounterDuration,
+    defaultAudioDevice,
     addColor,
     isNumberClose,
     getSortedVideos,
