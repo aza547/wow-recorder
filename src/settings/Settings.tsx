@@ -2,16 +2,23 @@ import * as React from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import ToggleButton from '@mui/material/ToggleButton';
 import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
+import InformationDialog from 'renderer/InformationDialog';
 
 const ipc = window.electron.ipcRenderer;
 
 export default function Settings() {
+
+  const [dialogState, setDialog] = React.useState({
+    open: false,
+    dialogContent: '',
+  });
 
   /**
    * React state variables.
    */
   const [state, useState] = React.useState({
     storagePath: window.electron.store.get('storage-path'),
+    bufferStoragePath: window.electron.store.get('buffer-storage-path'),
     logPath: window.electron.store.get('log-path'),
     maxStorage: window.electron.store.get('max-storage'),
     monitorIndex: window.electron.store.get('monitor-index'),
@@ -26,6 +33,7 @@ export default function Settings() {
    */
   const stateKeyToSettingKeyMap = {
     'storagePath': 'storage-path',
+    'bufferStoragePath': 'buffer-storage-path',
     'logPath': 'log-path',
     'maxStorage': 'max-storage',
     'monitorIndex': 'monitor-index',
@@ -47,6 +55,14 @@ export default function Settings() {
    * Save values. 
    */
   const saveSettings = () => {
+    // Make sure that we can't select the same directory for both storagePath
+    // and bufferStoragePath as that would cause the deletion of all videos
+    // due to cleanupBuffer().
+    if (state['storagePath'] === state['bufferStoragePath']) {
+      openDialog((<span>Storage Path and Buffer Storage Path cannot be the same directory!</span>))
+      return;
+    }
+
     Object.values(stateKeyToSettingKeyMap).forEach(saveItem);
 
     ipc.sendMessage('settingsWindow', ['update']);
@@ -72,16 +88,11 @@ export default function Settings() {
   }
   
   /**
-   * Dialog window folder selection.
+   * Open a diretory selector dialog for the given camelCase settings key
    */
-  const openStoragePathDialog = () => {
-    ipc.sendMessage("settingsWindow", ["openPathDialog", "storagePath"]);
+  const openDirectorySelectorDialog = (settingsKey: string) => {
+    ipc.sendMessage("settingsWindow", ["openPathDialog", settingsKey]);
   }
-
-  const openLogPathDialog = () => {
-    ipc.sendMessage("settingsWindow", ["openPathDialog", "logPath"]);
-  }
-
 
   /**
    * setSetting, why not just use react state hook?
@@ -99,6 +110,25 @@ export default function Settings() {
 
     useState((prevState) => ({...prevState, [stateKey]: value}))
   }
+
+  const closeDialog = () => {
+    setDialog(prev => {
+      return {
+        ...prev,
+        open: false
+      };
+    });
+  };
+
+  const openDialog = (content: any) => {
+    setDialog(prev => {
+      return {
+        ...prev,
+        dialogContent: content,
+        open: true,
+      };
+    });
+  };
 
   /**
    * Event handler when user selects an option in dialog window.
@@ -123,8 +153,19 @@ export default function Settings() {
     ]
   };
 
+  const bufferStoragePathPlaceholder = state.bufferStoragePath ? state.bufferStoragePath : "(Default)";
+
   return (
     <div className="container">
+      <InformationDialog
+        title='Invalid Configuration'
+        open={dialogState.open}
+        buttons={['ok']}
+        onClose={closeDialog}
+      >
+        {dialogState.dialogContent}
+      </InformationDialog>
+
       <div className="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12">
         <div className="card h-100">
           <div className="card-body">
@@ -132,13 +173,19 @@ export default function Settings() {
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label> Storage Path </label>
-                  <input type="text" className="form-control" id="storage-path" placeholder={state.storagePath} onClick={openStoragePathDialog}/>
+                  <input type="text" className="form-control" id="storage-path" placeholder={state.storagePath} onClick={() => openDirectorySelectorDialog('storagePath')}/>
+                </div>
+              </div>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
+                  <label> Buffer Storage Path </label>
+                  <input type="text" className="form-control" id="buffer-storage-path" placeholder={bufferStoragePathPlaceholder} onClick={() => openDirectorySelectorDialog('bufferStoragePath')}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label> Log Path </label>
-                  <input type="text" className="form-control" id="log-path" placeholder={state.logPath} onClick={openLogPathDialog}/>
+                  <input type="text" className="form-control" id="log-path" placeholder={state.logPath} onClick={() => openDirectorySelectorDialog('logPath')}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
@@ -167,6 +214,12 @@ export default function Settings() {
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
+                  <label> Min Encounter Duration (sec) </label>
+                  <input type="text" id="min-encounter-duration" className="form-control" placeholder={state.minEncounterDuration} onChange={(event) => setSetting('minEncounterDuration', event.target.value)}/>
+                </div>
+              </div>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
                   <label> Record audio output from </label>
                   <select id="audio-output-device" className="form-control" value={state.audioOutputDevice} onChange={(event) => setSetting('audioOutputDevice', event.target.value)}>
                     { availableAudioDevices.output.map((device: ObsAudioDevice) => {
@@ -175,12 +228,6 @@ export default function Settings() {
                       )
                     })}
                   </select>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Min Encounter Duration (sec) </label>
-                  <input type="text" id="min-encounter-duration" className="form-control" placeholder={state.minEncounterDuration} onChange={(event) => setSetting('minEncounterDuration', event.target.value)}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">

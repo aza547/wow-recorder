@@ -47,10 +47,12 @@ console.log("[Main] App starting: version", app.getVersion());
  */
 const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
   const storageDir = getPathConfigSafe(cfg, 'storage-path');
+  const bufferStorageDir = getPathConfigSafe(cfg, 'buffer-storage-path');
 
   const config = {
     storageDir: storageDir,
-    bufferStorageDir: path.join(storageDir, ".temp"),
+    // Default value for buffer storage is '{storageDir}/.temp'
+    bufferStorageDir: bufferStorageDir ? bufferStorageDir : path.join(storageDir, '.temp'),
     maxStorage: getNumberConfigSafe(cfg, 'max-storage'),
     monitorIndex: getNumberConfigSafe(cfg, 'monitor-index'),
     audioInputDeviceId: getStringConfigSafe(cfg, 'audio-input-device', 'all'),

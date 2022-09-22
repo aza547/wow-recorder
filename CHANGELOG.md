@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Now loads videos asynchronously to improve application reponsiveness on start up with many videos
 
 ### Fixed
+- [Issue 124](https://github.com/aza547/wow-recorder/issues/234) - Make buffering dir configurable
 - [Issue 123](https://github.com/aza547/wow-recorder/issues/123) - Snap to resolutions within 2 pixels (up from 1).
 - [Issue 128](https://github.com/aza547/wow-recorder/issues/128) - Guard against multiple buffer restarts.
 - [Issue 130](https://github.com/aza547/wow-recorder/issues/130) - Fix invalid default audio input/output device.
