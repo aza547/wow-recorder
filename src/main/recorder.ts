@@ -5,6 +5,7 @@ import { AppStatus } from './types';
 
 const obsRecorder = require('./obsRecorder');
 import fs from 'fs';
+import { VideoCategory } from './constants';
 
 type RecorderOptionsType = {
     storageDir: string;
@@ -186,9 +187,9 @@ type RecorderOptionsType = {
             // Update the GUI to show we're processing a video. 
             if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.SavingVideo);
 
-            const isRaid = metadata.category == "Raids";
+            const isRaid = metadata.category == VideoCategory.Raids;
             const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
-            if (!isRaid || isLongEnough || discardVideo) {
+            if ((!isRaid || isLongEnough) && !discardVideo) {
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
                 await this.finalizeVideo(metadata);
