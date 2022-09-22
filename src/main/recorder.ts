@@ -315,7 +315,10 @@ type RecorderOptionsType = {
 
             default:
                 const zoneName = getInstanceNameByZoneId(metadata.zoneID);
-                outputFilename = `${zoneName} (${resultText})`;
+                outputFilename = zoneName;
+                if (resultText) {
+                    outputFilename += ' (' + resultText + ')'
+                }
             break;
         }
 
