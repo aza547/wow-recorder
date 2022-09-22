@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { URL } from 'url';
 import path from 'path';
-import { categories, months, zones, VideoCategory, dungeonsByMapId, instanceNamesByZoneId, encountersNathria, encountersSanctum, encountersSepulcher }  from './constants';
+import { categories, months, zones, dungeonsByMapId }  from './constants';
 import { Metadata }  from './logutils';
 import ElectronStore from 'electron-store';
 const byteSize = require('byte-size')
@@ -31,6 +31,7 @@ import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
 import { FileSortDirection } from './types';
+import { getVideoZone } from './helpers';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -187,51 +188,6 @@ const getVideoTime = (date: Date) => {
     const mins = date.getMinutes().toLocaleString('en-US', { minimumIntegerDigits: 2});
     const timeAsString = hours + ":" + mins;
     return timeAsString;
-}
-
-/**
- * Get the zone name.
- */
-const getVideoZone = (metadata: Metadata) => {
-    const zoneID = metadata.zoneID;
-    const encounterID = metadata.encounterID;
-    const category = metadata.category;
-
-    if (category === VideoCategory.MythicPlus) {
-        if (zoneID) return getInstanceName(zoneID);
-    } else if (category === VideoCategory.Raids) {
-        if (encounterID) return getRaidName(encounterID);
-    } else if (zoneID) {
-        return zones[zoneID];
-    } else {
-        return "Unknown";
-    }
-}
-
-/**
- * Get the instance name from the encounter ID.
- */
-const getInstanceName = (zoneID: number) => {
-    if (instanceNamesByZoneId.hasOwnProperty(zoneID)) {
-        return instanceNamesByZoneId[zoneID]
-    }
-
-    return 'Unknown Instance';
-}
-
-/**
- * Get the raid name from the encounter ID.
- */
- const getRaidName = (zoneID: number) => {
-    if (encountersNathria.hasOwnProperty(zoneID)) {
-        return "Castle Nathria";
-    } else if (encountersSanctum.hasOwnProperty(zoneID)) {
-        return "Sanctum of Domination";
-    } else if (encountersSepulcher) {
-        return "Sepulcher of the First Ones";
-    } else {
-        return 'Unknown Raid';
-    }
 }
 
 /**
@@ -443,6 +399,18 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
 }
 
 /**
+ * Sanitize a filename and replace all invalid characters with a space.
+ *
+ * Multiple consecutive invalid characters will be replaced by a single space.
+ * Multiple consecutive spaces will be replaced by a single space.
+ */
+const sanitizeFilename = (filename: string): string => {
+    return filename
+        .replace(/[<>:"/\|?*]/g, ' ')   // Replace all invalid characters with space
+        .replace(/ +/g, ' ');           // Replace multiple spaces with a single space
+};
+
+/**
  * Takes an input MP4 file, trims the footage from the start of the video so
  * that the output is desiredDuration seconds. Some ugly async/await stuff 
  * here. Some interesting implementation details around ffmpeg in comments 
@@ -453,10 +421,16 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  * @param {number} desiredDuration seconds to cut down to
  * @returns full path of the final video file
  */
-const cutVideo = async (initialFile: string, finalDir: string, desiredDuration: number): Promise<string> => {
+const cutVideo = async (
+        initialFile: string,
+        finalDir: string,
+        outputFilename: string | undefined,
+        desiredDuration: number
+    ): Promise<string> => {
     
     const videoFileName = path.basename(initialFile, '.mp4');
-    const finalVideoPath = path.join(finalDir, videoFileName + ".mp4");
+    const baseVideoFilename = sanitizeFilename(videoFileName + (outputFilename ? ' - ' + outputFilename : ''));
+    const finalVideoPath = path.join(finalDir, baseVideoFilename + ".mp4");
 
     return new Promise<string> ((resolve) => {
 
