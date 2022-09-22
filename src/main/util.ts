@@ -429,7 +429,8 @@ const cutVideo = async (
     ): Promise<string> => {
     
     const videoFileName = path.basename(initialFile, '.mp4');
-    const baseVideoFilename = sanitizeFilename(videoFileName + (outputFilename ? ' - ' + outputFilename : ''));
+    const videoFilenameSuffix = outputFilename ? ' - ' + outputFilename : '';
+    const baseVideoFilename = sanitizeFilename(videoFileName + videoFilenameSuffix);
     const finalVideoPath = path.join(finalDir, baseVideoFilename + ".mp4");
 
     return new Promise<string> ((resolve) => {

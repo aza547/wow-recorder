@@ -1,3 +1,11 @@
+/**
+ * Please keep this file FREE from any filesystem related code as it
+ * is used in both the backend and the frontend, and the frontend does
+ * not have access to import 'fs', for example.
+ *
+ * It is okay to import things from other modules that import 'fs' as
+ * long as you don't import a function that uses the 'fs' module.
+ */
 import { dungeonsByMapId, instanceDifficulty, InstanceDifficultyType, instanceEncountersById, instanceNamesByZoneId, raidInstances, VideoCategory, zones } from "./constants";
 import { Metadata } from "./logutils";
 import { RaidInstanceType } from "./types";
@@ -8,8 +16,7 @@ import { RaidInstanceType } from "./types";
  */
 export const getVideoResultText = (category: VideoCategory, isGoodResult: boolean): string => {
 
-    // Not sure how we can decide who won or lost yet.
-    // Combat log doesn't make it obvious.
+    // Non-trivial to determine who won a BG/SoloShuffle so just don't report it.
     if (category == VideoCategory.Battlegrounds || category == VideoCategory.SoloShuffle) {
         return "";
     }

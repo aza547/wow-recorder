@@ -300,32 +300,22 @@ type RecorderOptionsType = {
      */
     getFinalVideoFilename (metadata: Metadata): string | undefined {
         let outputFilename = '';
-        let zoneName: string;
         const resultText = getVideoResultText(metadata.category, metadata.result);
 
         switch (metadata.category) {
-            case VideoCategory.TwoVTwo:
-            case VideoCategory.ThreeVThree:
-            case VideoCategory.Skirmish:
-            case VideoCategory.SoloShuffle:
-                zoneName = getInstanceNameByZoneId(metadata.zoneID);
-                outputFilename = `${zoneName} (${resultText})`;
-            break;
-
             case VideoCategory.Raids:
                 const encounterName = getEncounterNameById(metadata.encounterID);
-                zoneName = getRaidNameByEncounterId(metadata.encounterID);
-                outputFilename = `${zoneName}, ${encounterName} (${resultText})`;
+                const raidName = getRaidNameByEncounterId(metadata.encounterID);
+                outputFilename = `${raidName}, ${encounterName} (${resultText})`;
             break;
 
             case VideoCategory.MythicPlus:
-                if (metadata.challengeMode) {
-                    const cm = metadata.challengeMode;
-                    const keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(cm.allottedTime, cm.duration);;
-                    const resultText = cm?.timed ? '+' + keystoneUpgradeLevel : 'Depleted';
+                outputFilename = this.getFinalVideoFilenameForCM(metadata.challengeMode);
+            break;
 
-                    outputFilename = `${getDungeonByMapId(cm.mapId)} +${cm.level} (${resultText})`;
-                }
+            default:
+                const zoneName = getInstanceNameByZoneId(metadata.zoneID);
+                outputFilename = `${zoneName} (${resultText})`;
             break;
         }
 
@@ -333,7 +323,22 @@ type RecorderOptionsType = {
             return;
         }
 
-        return `{${metadata.category}} ${outputFilename}`;
+        return metadata.category + ' ' + outputFilename;
+    }
+
+    /**
+     * Construct a video filename for a Mythic Keystone dungeon with information
+     * about level, keystone upgrade levels and what have we.
+     */
+    getFinalVideoFilenameForCM(cm?: ChallengeModeDungeon): string {
+        if (!cm) {
+            return '';
+        }
+
+        const keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(cm.allottedTime, cm.duration);;
+        const resultText = cm?.timed ? '+' + keystoneUpgradeLevel : 'Depleted';
+
+        return `${getDungeonByMapId(cm.mapId)} +${cm.level} (${resultText})`;
     }
 }
 
