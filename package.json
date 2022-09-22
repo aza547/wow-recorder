@@ -20,7 +20,9 @@
     "patterns": [
       "!./src/main/osn-data/**",
       "!./osn-data/**",
-      "!./src/main/logs/**"
+      "!./src/main/logs/**",
+      "!./.git/**",
+      "!./resources/**"
     ]
   },
   "lint-staged": {
