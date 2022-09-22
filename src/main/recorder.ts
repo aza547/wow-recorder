@@ -1,14 +1,20 @@
 import { Metadata } from './logutils';
 import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor, getSortedVideos } from './util';
 import { mainWindow }  from './main';
-import path from 'path';
 import { AppStatus } from './types';
 
 const obsRecorder = require('./obsRecorder');
 import fs from 'fs';
-import glob from 'glob';
-import util from 'util';
-const globPromise = util.promisify(glob)
+
+type RecorderOptionsType = {
+    storageDir: string;
+    bufferStorageDir: string;
+    maxStorage: number;
+    monitorIndex: number;
+    audioInputDeviceId: string;
+    audioOutputDeviceId: string;
+    minEncounterDuration: number;
+};
 
 /**
  * Represents an OBS recorder object.
@@ -16,47 +22,25 @@ const globPromise = util.promisify(glob)
  class Recorder {
     private _isRecording: boolean = false;
     private _isRecordingBuffer: boolean = false;
-    private _storageDir: string;
-    private _maxStorage: number;
-    private _bufferStorageDir: any;
     private _bufferRestartIntervalID?: any;
-    private _monitorIndex: number;
-    private _audioInputDeviceId: string;
-    private _audioOutputDeviceId: string;
-    private _minEncounterDuration: number;
-
+    private _options: RecorderOptionsType;
 
     /**
      * Constructs a new Recorder.
      */
-    constructor(
-        storageDir: string, 
-        maxStorage: number,
-        monitorIndex: number,
-        audioInputDeviceId: string,
-        audioOutputDeviceId: string,
-        minEncounterDuration: number
-    ) {
-        console.debug("[Recorder] Construcing recorder with: ", storageDir, maxStorage, monitorIndex);
-        this._storageDir = storageDir;
-        this._maxStorage = maxStorage;     
-        this._monitorIndex = monitorIndex;           
-        this._audioInputDeviceId = audioInputDeviceId;
-        this._audioOutputDeviceId = audioOutputDeviceId;
-        this._minEncounterDuration = minEncounterDuration;
+    constructor(options: RecorderOptionsType) {
+        this._options = options;
+        console.debug("[Recorder] Construcing recorder with: ", this._options);
 
-        // Something like: C:\Users\alexa\AppData\Local\Temp\WarcraftRecorder
-        this._bufferStorageDir = path.join(this._storageDir, ".temp"); 
-
-        if (!fs.existsSync(this._bufferStorageDir)) {
-            console.log("[Recorder] Creating dir:", this._bufferStorageDir);
-            fs.mkdirSync(this._bufferStorageDir);
+        if (!fs.existsSync(this._options.bufferStorageDir)) {
+            console.log("[Recorder] Creating dir:", this._options.bufferStorageDir);
+            fs.mkdirSync(this._options.bufferStorageDir);
         } else {
             console.log("[Recorder] Clean out buffer")
             this.cleanupBuffer(0);
         }
 
-        obsRecorder.initialize(this._bufferStorageDir, this._monitorIndex, this._audioInputDeviceId, this._audioOutputDeviceId);
+        obsRecorder.initialize(options);
         if (mainWindow) mainWindow.webContents.send('refreshState');
     }
 
@@ -197,7 +181,7 @@ const globPromise = util.promisify(glob)
             if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.SavingVideo);
 
             const isRaid = metadata.category == "Raids";
-            const isLongEnough = (metadata.duration - overrun) >= this._minEncounterDuration;
+            const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
             if (!isRaid || isLongEnough) {
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
@@ -206,7 +190,7 @@ const globPromise = util.promisify(glob)
 
             // Run the size monitor to ensure we stay within size limit.
             // Need some maths to convert GB to bytes
-            runSizeMonitor(this._storageDir, this._maxStorage)
+            runSizeMonitor(this._options.storageDir, this._options.maxStorage)
                 .then(() => {
                     if (mainWindow) mainWindow.webContents.send('refreshState');
                 });
@@ -237,8 +221,8 @@ const globPromise = util.promisify(glob)
             // It's a bit hacky that we async wait for 2 seconds for OBS to 
             // finish up with the video file. Maybe this can be done better. 
             setTimeout(async () => {
-                const bufferedVideo = await getNewestVideo(this._bufferStorageDir);
-                const videoPath = await cutVideo(bufferedVideo, this._storageDir, metadata.duration);
+                const bufferedVideo = await getNewestVideo(this._options.bufferStorageDir);
+                const videoPath = await cutVideo(bufferedVideo, this._options.storageDir, metadata.duration);
                 writeMetadataFile(videoPath, metadata).then(resolve);
             }, 
             2000)
@@ -251,12 +235,12 @@ const globPromise = util.promisify(glob)
      */
     cleanupBuffer = async (filesToLeave: number) => {
         // Sort newest to oldest
-        const videosToDelete = await getSortedVideos(this._bufferStorageDir);
+        const videosToDelete = await getSortedVideos(this._options.bufferStorageDir);
 
         // Remove newest 2 from the list; we don't delete those.
         videosToDelete
             .slice(filesToLeave)
-            .forEach((v) => deleteVideo(v.name));
+            .forEach(v => deleteVideo(v.name));
     }
 
     /**
@@ -277,19 +261,11 @@ const globPromise = util.promisify(glob)
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = (
-        outputPath: string, 
-        maxStorage: number, 
-        monitorIndex: number, 
-        audioInputDeviceId: string, 
-        audioOutputDeviceId: string, 
-        minEncounterDuration: number
-    ) => {
-        this._maxStorage = maxStorage;
-        this._minEncounterDuration = minEncounterDuration;
+    reconfigure = (options: RecorderOptionsType) => {
+        this._options = options;
 
         // User might just have shrunk the size, so run the size monitor.
-        runSizeMonitor(this._storageDir, this._maxStorage)
+        runSizeMonitor(this._options.storageDir, this._options.maxStorage)
         .then(() => {
             if (mainWindow) mainWindow.webContents.send('refreshState');
         });
@@ -301,11 +277,12 @@ const globPromise = util.promisify(glob)
             this.stopBuffer()
         }
 
-        obsRecorder.reconfigure(outputPath, monitorIndex, audioInputDeviceId, audioOutputDeviceId);
+        obsRecorder.reconfigure(this._options);
         if (mainWindow) mainWindow.webContents.send('refreshState');
     }
 }
 
 export {
-    Recorder
+    Recorder,
+    RecorderOptionsType,
 };
