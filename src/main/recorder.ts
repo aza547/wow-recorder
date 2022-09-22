@@ -87,6 +87,8 @@ type RecorderOptionsType = {
      * WoW is open. 
      */
     startBuffer = async () => {
+        
+        // Guard against multiple buffer timers. 
         if (this._isRecordingBuffer) {
             console.error("[Recorder] Already recording a buffer");
             return;
@@ -97,11 +99,6 @@ type RecorderOptionsType = {
         this._isRecordingBuffer = true;
         if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
     
-        // Guard against multiple buffer timers. 
-        if (this._bufferRestartIntervalID) {
-            console.error("[Recorder] Already has a buffer interval.")
-            return;
-        }
 
         // We store off this timer as a member variable as we will cancel
         // it when a real game is detected. 
@@ -121,10 +118,9 @@ type RecorderOptionsType = {
 
         console.log(addColor("[Recorder] Stop recording buffer", "cyan"));
         clearInterval(this._bufferRestartIntervalID);
-        this._bufferRestartIntervalID = undefined;
+        this._isRecordingBuffer = false;   
 
         await obsRecorder.stop();
-        this._isRecordingBuffer = false;
         if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.WaitingForWoW);
         this.cleanupBuffer(1);
     }
@@ -139,9 +135,7 @@ type RecorderOptionsType = {
     restartBuffer = async () => {
         console.log(addColor("[Recorder] Restart recording buffer", "cyan"));
         await obsRecorder.stop();
-        this._isRecordingBuffer = false;
         setTimeout(() => {
-            this._isRecordingBuffer = true;
             obsRecorder.start();
         }, 2000);
 

@@ -19,6 +19,7 @@ import { VideoPlayerSettings } from 'main/types';
  * For shorthand referencing.
  */
 const ipc = window.electron.ipcRenderer;
+const store = window.electron.store;
 
 /**
  * Needed to style the tabs with the right color.
@@ -101,6 +102,7 @@ const tabProps = (index: number) => {
  * the app is restarted. 
  */
 const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
+const selectedCategory = ((store.get('selected-category') ?? 0) as number);
 
 let videoState: { [key: string]: any } = {}
 
@@ -110,7 +112,7 @@ let videoState: { [key: string]: any } = {}
 export default function Layout() {
 
   const [state, setState] = React.useState({
-    categoryIndex: 0,
+    categoryIndex: selectedCategory,
     videoIndex: 0,
     videoState,
     videoMuted: videoPlayerSettings.muted,
@@ -142,6 +144,8 @@ export default function Layout() {
    * Update the state variable following a change of selected category.
    */
   const handleChangeCategory = (_event: React.SyntheticEvent, newValue: number) => {
+    store.set('selected-category', newValue);
+
     setState(prevState => {
       return {
         ...prevState,

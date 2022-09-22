@@ -733,6 +733,12 @@ const registerPlayerDeath = (timestamp: number, name: string, specId: number): v
  * Handle a unit dying, but only if it's a player.
  */
  function handleUnitDiedLine (line: LogLine): void {
+    // Only handle UNIT_DIED if we have a videoStartDate AND we're recording
+    // We're not interested in player deaths outside of an active activity/recording.
+    if (!videoStartDate || !recorder.isRecording) {
+        return;
+    }
+
     const unitFlags = parseInt(line.args[7], 16);
     const isUnitUnconsciousAtDeath = Boolean(parseInt(line.args[9], 10));
 
