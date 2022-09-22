@@ -129,7 +129,7 @@ type RecorderOptionsType = {
 
     /**
      * Restarts the buffer recording. Cleans the temp dir between stop/start.
-     * We wait 2s here between the stop start. I don't know why, but if we
+     * We wait 5s here between the stop start. I don't know why, but if we
      * don't then OBS becomes unresponsive. I spent a lot of time on this, 
      * trying all sorts of other solutions don't fuck with it unless you have 
      * to; here be dragons. 
@@ -137,9 +137,10 @@ type RecorderOptionsType = {
     restartBuffer = async () => {
         console.log(addColor("[Recorder] Restart recording buffer", "cyan"));
         await obsRecorder.stop();
+
         setTimeout(() => {
             obsRecorder.start();
-        }, 2000);
+        }, 5000);
 
         this.cleanupBuffer(1);
     }
@@ -186,10 +187,13 @@ type RecorderOptionsType = {
 
             const isRaid = metadata.category == "Raids";
             const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
+
             if (!isRaid || isLongEnough) {
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
                 await this.finalizeVideo(metadata, outputFilename);
+            } else {
+                console.info("[Recorder] Raid encounter was too short, discarding");
             }
 
             // Run the size monitor to ensure we stay within size limit.
@@ -206,7 +210,9 @@ type RecorderOptionsType = {
             if (mainWindow) mainWindow.webContents.send('refreshState');
 
             // Restart the buffer recording ready for next game.
-            this.startBuffer();
+            setTimeout(async () => {
+                this.startBuffer();
+            }, 5000)
         }, 
         overrun * 1000);
     }
