@@ -243,7 +243,12 @@ const start = async () => {
   console.log("[OBS] obsRecorder: start");
   osn.NodeObs.OBS_service_startRecording();
 
-  let signalInfo = await waitQueue.shift();
+  // Reject the promise if we don't get a response in time.
+  let signalInfo = await Promise.race([
+    waitQueue.shift(), 
+    new Promise((_r, rej) => setTimeout(rej, 5000))
+  ]);
+
   assertSignal(signalInfo, "recording", "start");
 }
 
@@ -254,13 +259,28 @@ const stop = async () => {
   console.log("[OBS] obsRecorder: stop");
   osn.NodeObs.OBS_service_stopRecording();
 
-  let signalInfo = await waitQueue.shift();
+  // Reject the promise if we don't get a response in time.
+  let signalInfo = await Promise.race([
+    waitQueue.shift(), 
+    new Promise((_r, rej) => setTimeout(rej, 5000))
+  ]);
+
   assertSignal(signalInfo, "recording", "stopping");
   
-  signalInfo = await waitQueue.shift();
+  // Reject the promise if we don't get a response in time.
+  signalInfo = await Promise.race([
+    waitQueue.shift(), 
+    new Promise((_r, rej) => setTimeout(rej, 5000))
+  ]);
+
   assertSignal(signalInfo, "recording", "stop");
 
-  signalInfo = await waitQueue.shift();
+  // Reject the promise if we don't get a response in time.
+  signalInfo = await Promise.race([
+    waitQueue.shift(), 
+    new Promise((_r, rej) => setTimeout(rej, 5000))
+  ]);
+  
   assertSignal(signalInfo, "recording", "wrote");
 }
 
