@@ -188,15 +188,10 @@ const setupScene = (monitorIndex: number) => {
   videoSource.update(settings);
   videoSource.save();
 
-  const outputWidth = physicalWidth;
-  const outputHeight = physicalHeight;
-
-  const videoScaleFactor = physicalWidth / outputWidth;
-
   // A scene is necessary here to properly scale captured screen size to output video size
   const scene = osn.SceneFactory.create('test-scene');
   const sceneItem = scene.add(videoSource);
-  sceneItem.scale = { x: 1.0/ videoScaleFactor, y: 1.0 / videoScaleFactor };
+  sceneItem.scale = { x: 1.0, y: 1.0 };
 
   return scene;
 }
@@ -247,9 +242,7 @@ const start = async () => {
 
   console.log("[OBS] obsRecorder: start");
   osn.NodeObs.OBS_service_startRecording();
-
-  let signalInfo = await waitQueue.shift();
-  assertSignal(signalInfo, "recording", "start");
+  assertNextSignal("start");
 }
 
 /*
@@ -258,15 +251,9 @@ const start = async () => {
 const stop = async () => {
   console.log("[OBS] obsRecorder: stop");
   osn.NodeObs.OBS_service_stopRecording();
-
-  let signalInfo = await waitQueue.shift();
-  assertSignal(signalInfo, "recording", "stopping");
-  
-  signalInfo = await waitQueue.shift();
-  assertSignal(signalInfo, "recording", "stop");
-
-  signalInfo = await waitQueue.shift();
-  assertSignal(signalInfo, "recording", "wrote");
+  assertNextSignal("stopping");
+  assertNextSignal("stop");
+  assertNextSignal("wrote");
 }
 
 /*
@@ -349,16 +336,21 @@ const getAvailableValues = (category: any, subcategory: any, parameter: any) => 
 
 
 /*
-* Assert a signal from OBS is as expected, otherwise throw an error. 
+* Assert a signal from OBS is as expected, if it is not received
+* within 5 seconds or is not as expected then throw an error. 
 */
-const assertSignal = (signalInfo: any, type: string, value: string) => {
+const assertNextSignal = async (value: string) => {
 
-  if (signalInfo === undefined) {
-    throw Error("OBS behaved unexpectedly (1)");
-  }
+  // Don't wait more than 5 seconds for the signal.
+  let signalInfo = await Promise.race([
+    waitQueue.shift(), 
+    new Promise((_, reject) => {
+      setTimeout(reject, 5000, "OBS didn't signal " + value + " in time")}
+    )
+  ]);
 
   // Assert the type is as expected.
-  if (signalInfo.type !== type) {
+  if (signalInfo.type !== "recording") {
     console.error("[OBS] " + signalInfo);
     console.error("[OBS] OBS signal type unexpected", signalInfo.signal, value);
     throw Error("OBS behaved unexpectedly (2)");
@@ -371,7 +363,7 @@ const assertSignal = (signalInfo: any, type: string, value: string) => {
     throw Error("OBS behaved unexpectedly (3)");
   }
 
-  console.debug("[OBS] Asserted OBS signal:", type, value);
+  console.debug("[OBS] Asserted OBS signal:", value);
 }
 
 export {

@@ -68,10 +68,22 @@ enum FileSortDirection {
     OldestFirst,
 };
 
+type NumberKeyToStringValueMapType = {
+    [id: number]: string;
+};
+
+type RaidInstanceType = {
+    zoneId: number;
+    name: string;
+    encounters: NumberKeyToStringValueMapType,
+};
+
 export {
     AppStatus,
     UnitFlags,
     PlayerDeathType,
     VideoPlayerSettings,
     FileSortDirection,
+    NumberKeyToStringValueMapType,
+    RaidInstanceType,
 }
