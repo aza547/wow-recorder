@@ -188,15 +188,10 @@ const setupScene = (monitorIndex: number) => {
   videoSource.update(settings);
   videoSource.save();
 
-  const outputWidth = physicalWidth;
-  const outputHeight = physicalHeight;
-
-  const videoScaleFactor = physicalWidth / outputWidth;
-
   // A scene is necessary here to properly scale captured screen size to output video size
   const scene = osn.SceneFactory.create('test-scene');
   const sceneItem = scene.add(videoSource);
-  sceneItem.scale = { x: 1.0/ videoScaleFactor, y: 1.0 / videoScaleFactor };
+  sceneItem.scale = { x: 1.0, y: 1.0 };
 
   return scene;
 }
