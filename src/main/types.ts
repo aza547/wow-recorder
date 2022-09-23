@@ -1,3 +1,5 @@
+import { Rectangle, Size } from "electron";
+
 /**
  * Application status
  */
@@ -75,13 +77,12 @@ enum FileSortDirection {
 type OurDisplayType = {
     id: number,
     index: number,
+    physicalPosition: string,
     primary: boolean,
     displayFrequency: number,
     depthPerComponent: number,
-    size: {
-        width: number,
-        height: number
-    },
+    size: Size,
+    bounds: Rectangle,
   };
 
 export {

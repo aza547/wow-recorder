@@ -37,7 +37,8 @@ export default function Settings() {
   };
   type StateToSettingKeyMapKey = keyof typeof stateKeyToSettingKeyMap;
 
-  const monitorConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
+  const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
+
   /**
    * Close window.
    */
@@ -155,9 +156,9 @@ export default function Settings() {
                 <div className="form-group">
                   <label> Monitor to Record </label>
                   <select id="monitor-index" className="form-control" value={state.monitorIndex} onChange={(event) => setSetting('monitorIndex', event.target.value)}>
-                    { monitorConfiguration.map((monitor: OurDisplayType) =>
-                        <option key={ 'display-' + monitor.id } value={ monitor.index }>
-                          [{ monitor.index }] { monitor.size.width }x{ monitor.size.height } @ { monitor.displayFrequency } Hz {monitor.primary ? ' (Primary)' : ''}
+                    { displayConfiguration.map((display: OurDisplayType) =>
+                        <option key={ 'display-' + display.id } value={ display.index }>
+                          [{ display.index }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
                         </option>
                     )}
                   </select>

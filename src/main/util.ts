@@ -30,7 +30,8 @@ import util from 'util';
 import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
-import { FileSortDirection } from './types';
+import { FileSortDirection, OurDisplayType } from './types';
+import { Display, screen } from 'electron';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -606,6 +607,62 @@ const isNumberClose = (val: number, compare: number) => {
     return Math.abs(compare - val) <= 2;
 };
 
+/**
+ * Get a text string that indicates the physical position of a display depending
+ * on its index.
+ */
+const getDisplayPhysicalPosition = (count: number, index: number): string => {
+    if (index === 0)         return 'Left';
+    if (index === count - 1) return 'Right';
+
+    return 'Middle #' + index;
+};
+
+/**
+ * Get and return a list of available displays on the system sorted by their
+ * physical position.
+ *
+ * This makes no attempts at being perfect - it completely ignores the `bounds.y`
+ * property for people who might have stacked their displays vertically rather than
+ * horizontally. This is okay.
+ */
+const getAvailableDisplays = (): OurDisplayType[] => {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const allDisplays = screen.getAllDisplays();
+
+    // Create an unsorted list of Display IDs to zero based monitor index
+    // So we're can use that index later, after sorting the displays according
+    // to their physical location.
+    const displayIdToIndex: {[key: number]: number } = {}
+    allDisplays.forEach((display: Display, index: number) => displayIdToIndex[display.id] = index)
+
+    // Iterate over all available displays and make our own list with the
+    // relevant attributes and some extra stuff to make it easier for the
+    // frontend.
+    const returnedDisplays: OurDisplayType[] = [];
+    const numberOfMonitors = allDisplays.length;
+
+    allDisplays
+        .sort((A: Display, B: Display) => A.bounds.x - B.bounds.x)
+        .forEach((display: Display, index: number) => {
+            const isPrimary = display.id === primaryDisplay.id;
+            const displayIndex = displayIdToIndex[display.id];
+
+            returnedDisplays.push({
+                id: display.id,
+                index: displayIndex,
+                physicalPosition: getDisplayPhysicalPosition(numberOfMonitors, index),
+                primary: isPrimary,
+                displayFrequency: display.displayFrequency,
+                depthPerComponent: display.depthPerComponent,
+                size: display.size,
+                bounds: display.bounds,
+            });
+        });
+
+    return returnedDisplays;
+}
+
 export {
     loadAllVideos,
     writeMetadataFile,
@@ -626,4 +683,5 @@ export {
     addColor,
     isNumberClose,
     getSortedVideos,
+    getAvailableDisplays,
 };

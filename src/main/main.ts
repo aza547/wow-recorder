@@ -5,7 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu, net, screen, Display } from 'electron';
-import { resolveHtmlPath, loadAllVideos, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe, defaultAudioDevice } from './util';
+import { resolveHtmlPath, loadAllVideos, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe, defaultAudioDevice, getAvailableDisplays } from './util';
 import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
 import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
@@ -418,26 +418,7 @@ ipcMain.on('settingsWindow', (event, args) => {
   }
 
   if (args[0] === 'getAllDisplays') {
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const returnedDisplays: OurDisplayType[] = [];
-
-    // Iterate over all available displays and make our own list with the
-    // relevant attributes and some extra stuff to make it easier for the
-    // frontend.
-    screen.getAllDisplays().forEach((monitor: Display, index: number) => {
-      const isPrimary = monitor.id === primaryDisplay.id;
-      returnedDisplays.push({
-        id: monitor.id,
-        index,
-        primary: isPrimary,
-        displayFrequency: monitor.displayFrequency,
-        depthPerComponent: monitor.depthPerComponent,
-        size: monitor.size,
-      });
-    });
-
-    event.returnValue = returnedDisplays;
-
+    event.returnValue = getAvailableDisplays();
     return;
   }
 })
