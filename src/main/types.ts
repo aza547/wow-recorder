@@ -87,6 +87,16 @@ type OurDisplayType = {
     scaleFactor: number,
 };
 
+type NumberKeyToStringValueMapType = {
+    [id: number]: string;
+};
+
+type RaidInstanceType = {
+    zoneId: number;
+    name: string;
+    encounters: NumberKeyToStringValueMapType,
+};
+
 export {
     AppStatus,
     UnitFlags,
@@ -94,4 +104,6 @@ export {
     VideoPlayerSettings,
     FileSortDirection,
     OurDisplayType,
+    NumberKeyToStringValueMapType,
+    RaidInstanceType,
 }
