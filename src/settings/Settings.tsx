@@ -68,7 +68,9 @@ export default function Settings() {
       value = element.getAttribute("value");
     }
 
-    if (value) window.electron.store.set(setting, value);
+    if (value !== null) {
+      window.electron.store.set(setting, value);
+    }
   }
   
   /**
