@@ -82,8 +82,10 @@ type OurDisplayType = {
     displayFrequency: number,
     depthPerComponent: number,
     size: Size,
-    bounds: Rectangle,
-  };
+    physicalSize: Size,
+    aspectRatio: number,
+    scaleFactor: number,
+};
 
 export {
     AppStatus,

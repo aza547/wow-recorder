@@ -639,7 +639,7 @@ const getAvailableDisplays = (): OurDisplayType[] => {
     // Iterate over all available displays and make our own list with the
     // relevant attributes and some extra stuff to make it easier for the
     // frontend.
-    const returnedDisplays: OurDisplayType[] = [];
+    const ourDisplays: OurDisplayType[] = [];
     const numberOfMonitors = allDisplays.length;
 
     allDisplays
@@ -647,8 +647,10 @@ const getAvailableDisplays = (): OurDisplayType[] => {
         .forEach((display: Display, index: number) => {
             const isPrimary = display.id === primaryDisplay.id;
             const displayIndex = displayIdToIndex[display.id];
+            const { width, height } = display.size;
+            console.log(display)
 
-            returnedDisplays.push({
+            ourDisplays.push({
                 id: display.id,
                 index: displayIndex,
                 physicalPosition: getDisplayPhysicalPosition(numberOfMonitors, index),
@@ -656,11 +658,16 @@ const getAvailableDisplays = (): OurDisplayType[] => {
                 displayFrequency: display.displayFrequency,
                 depthPerComponent: display.depthPerComponent,
                 size: display.size,
-                bounds: display.bounds,
+                scaleFactor: display.scaleFactor,
+                aspectRatio: width / height,
+                physicalSize: {
+                    width: Math.floor(width * display.scaleFactor),
+                    height: Math.floor(height * display.scaleFactor),
+                }
             });
         });
 
-    return returnedDisplays;
+    return ourDisplays;
 }
 
 export {

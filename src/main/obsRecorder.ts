@@ -1,7 +1,8 @@
-import { fixPathWhenPackaged, isNumberClose } from "./util";
+import { fixPathWhenPackaged, getAvailableDisplays, isNumberClose } from "./util";
 import WaitQueue from 'wait-queue';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
 import { RecorderOptionsType } from "./recorder";
+import { OurDisplayType } from "./types";
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
 const { byOS, OS } = require('./operatingSystems');
@@ -108,21 +109,11 @@ const configureOBS = (baseStoragePath: string) => {
 * Get information about primary display
 * @param zero starting monitor index
 */
-const displayInfo = (displayIndex: number) => {
-  const { screen } = require('electron');
-  const displays = screen.getAllDisplays();
+const displayInfo = (displayIndex: number): OurDisplayType | undefined => {
+  const displays = getAvailableDisplays();
   console.info("[OBS] Displays:", displays);
-  const display = displays[displayIndex];
-  const { width, height } = display.size;
-  const { scaleFactor } = display;
-  return {
-    width,
-    height,
-    scaleFactor:    scaleFactor,
-    aspectRatio:    width / height,
-    physicalWidth:  width * scaleFactor,
-    physicalHeight: height * scaleFactor,
-  }
+
+  return displays.find(d => d.index === displayIndex);
 }
 
 /*
@@ -171,9 +162,14 @@ const setOBSVideoResolution = (monitorWidth: number, monitorHeight: number, para
 */
 const setupScene = (monitorIndex: number) => {
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
-  const monitorIndexFromZero = monitorIndex - 1; 
+  const monitorIndexFromZero = monitorIndex - 1;
   console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
-  const { physicalWidth, physicalHeight } = displayInfo(monitorIndexFromZero);
+  const selectedDisplay = displayInfo(monitorIndexFromZero);
+  if (!selectedDisplay) {
+    throw Error(`[OBS] No such display with index: ${monitorIndexFromZero}.`)
+  }
+
+  const { width: physicalWidth, height: physicalHeight } = selectedDisplay.physicalSize;
 
   setOBSVideoResolution(physicalWidth, physicalHeight, 'Base');
 
