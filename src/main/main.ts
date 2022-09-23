@@ -51,7 +51,6 @@ const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
 
   const config = {
     storageDir: storageDir,
-    // Default value for buffer storage is '{storageDir}/.temp'
     bufferStorageDir: bufferStorageDir ? bufferStorageDir : path.join(storageDir, '.temp'),
     maxStorage: getNumberConfigSafe(cfg, 'max-storage'),
     monitorIndex: getNumberConfigSafe(cfg, 'monitor-index'),
