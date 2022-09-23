@@ -157,8 +157,8 @@ export default function Settings() {
                   <label> Monitor to Record </label>
                   <select id="monitor-index" className="form-control" value={state.monitorIndex} onChange={(event) => setSetting('monitorIndex', event.target.value)}>
                     { displayConfiguration.map((display: OurDisplayType) =>
-                        <option key={ 'display-' + display.id } value={ display.index }>
-                          [{ display.index }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
+                        <option key={ 'display-' + display.id } value={ display.index + 1 }>
+                          [{ display.index + 1 }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
                         </option>
                     )}
                   </select>
