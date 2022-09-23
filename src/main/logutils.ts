@@ -131,7 +131,6 @@ const wowProcessStopped = () => {
     isRetailRunning = false;
 
     if (recorder.isRecording) {
-        videoStopDate = new Date();
         endRecording();
     } else if (recorder.isRecordingBuffer) {
         recorder.stopBuffer();
@@ -154,30 +153,26 @@ const startRecording = (category: VideoCategory) => {
 
 type EndRecordingOptionsType = {
     discardVideo?: boolean, // Discard the video/don't save the recording
-    duration?: number,      // Explicitly give video duration
     result?: boolean,       // Success/Failure result for the overall activity
 };
 
 /**
- * Stop recording and mark as not doing anything
+ * Stop recording and mark as not doing anything.
  */
 const endRecording = (options?: EndRecordingOptionsType) => {
     if (!recorder.isRecording || !currentActivity) {
         return;
     }
 
-    let duration = options?.duration;
+    if (!videoStopDate) {
+        videoStopDate = new Date();
+    }
 
     const discardVideo = options?.discardVideo ?? false;
     const overrun = videoOverrunPerCategory[currentActivity];
+    const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
 
-    // If duration isn't given, calculate it from start/end event time-
-    if (!duration) {
-        const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
-        duration = Math.round(videoDuration / 1000);
-    }
-
-    metadata.duration = duration + overrun;
+    metadata.duration = Math.round(videoDuration / 1000) + overrun;
     metadata.result = options?.result ?? false;
 
     if (playerCombatant) {
@@ -381,19 +376,12 @@ function handleArenaStartLine (line: LogLine): void {
 function handleArenaStopLine (line: LogLine): void {
     if (!recorder.isRecording) return; 
 
-    let duration;
     videoStopDate = line.date();
     
-    // Helpfully ARENA_MATCH_END events contain the game duration. Solo shuffle
-    // ARENA_MATCH_END duration only counts the last game so needs special handling. 
-    if (metadata.category !== VideoCategory.SoloShuffle) {
-        duration = parseInt(line.args[2], 10);
-    }
-
     const [result, MMR] = determineArenaMatchResult(line); 
     metadata.teamMMR = MMR;
 
-    endRecording({duration,result,});
+    endRecording({result});
 }
 
 /**
@@ -506,7 +494,7 @@ function handleChallengeModeEndLine (line: LogLine): void {
 
     const result = Boolean(parseInt(line.args[1]));
 
-    endRecording({result,});
+    endRecording({result});
 };
 
 const getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
@@ -583,7 +571,7 @@ function handleEncounterStopLine (line: LogLine): void {
 
     videoStopDate = eventDate;
 
-    endRecording({result,});
+    endRecording({result});
 }
 
 /**
