@@ -68,10 +68,27 @@ enum FileSortDirection {
     OldestFirst,
 };
 
+/**
+ * Specifies the format that we use in Settings to display monitors
+ * to the user.
+ */
+type OurDisplayType = {
+    id: number,
+    index: number,
+    primary: boolean,
+    displayFrequency: number,
+    depthPerComponent: number,
+    size: {
+        width: number,
+        height: number
+    },
+  };
+
 export {
     AppStatus,
     UnitFlags,
     PlayerDeathType,
     VideoPlayerSettings,
     FileSortDirection,
+    OurDisplayType,
 }
