@@ -45,7 +45,7 @@ export default function InformationDialog(props: ConfirmationDialogProps) {
 
     const renderButton = (button: ValidButtonKeyType, autoFocus: boolean) => {
         return (
-            <Button onClick={() => handleBtnClick(button)} autoFocus={autoFocus}>
+            <Button key={'dialog-button-' + button} onClick={() => handleBtnClick(button)} autoFocus={autoFocus}>
                 { validButtons[button].label }
             </Button>
         );
@@ -57,7 +57,6 @@ export default function InformationDialog(props: ConfirmationDialogProps) {
 
     return (
         <Dialog
-            key='popunder-dialog'
             open={open}
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
