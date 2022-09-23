@@ -1,5 +1,3 @@
-import { Rectangle, Size } from "electron";
-
 /**
  * Application status
  */

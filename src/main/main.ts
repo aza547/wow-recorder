@@ -11,7 +11,7 @@ import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
-import { AppStatus, OurDisplayType, VideoPlayerSettings } from './types';
+import { AppStatus, VideoPlayerSettings } from './types';
 import ElectronStore from 'electron-store';
 let recorder: Recorder;
 
