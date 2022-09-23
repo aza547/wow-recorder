@@ -1,36 +1,3 @@
-import { dungeonEncounters, instanceDifficulty, InstanceDifficultyType, VideoCategory } from "main/constants";
-
-const getInstanceDifficulty = (difficultyID: number): InstanceDifficultyType | null => {
-    if (instanceDifficulty.hasOwnProperty(difficultyID)) {
-        return instanceDifficulty[difficultyID];
-    }
-
-    return null;
-}
-
-/**
- * getResultText
- */
- const getResultText = (category: VideoCategory, isGoodResult: boolean) => {
-
-    // Not sure how we can decide who won or lost yet. 
-    // Combat log doesn't make it obvious.
-    if (category == VideoCategory.Battlegrounds || category == VideoCategory.SoloShuffle) {
-        return "";
-    }
-
-    switch (category) {
-        case VideoCategory.MythicPlus:
-            return isGoodResult ? "Time" : "Depl";
-
-        case VideoCategory.Raids:
-            return isGoodResult ? "Kill" : "Wipe";
-
-        default:
-            return isGoodResult ? "Win" : "Loss";
-    }
-} 
-
 const getVideoResult = (video: any): boolean => {
     if (video.challengeMode !== undefined) {
         return Boolean(video.challengeMode.timed)
@@ -51,21 +18,7 @@ const getVideoResult = (video: any): boolean => {
     return formattedDuration;
 }  
 
-/**
- * Return the name of a dungeon encounter (boss) by its encounter ID
- */
- const getDungeonEncounterById = (id: number): string => {
-    if (dungeonEncounters.hasOwnProperty(id)) {
-      return dungeonEncounters[id]
-    }
-
-    return 'Unknown boss';
-}
-
 export {
-    getResultText,
     getFormattedDuration,
-    getInstanceDifficulty,
     getVideoResult,
-    getDungeonEncounterById,
 };

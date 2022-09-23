@@ -2,9 +2,12 @@ import { Metadata } from './logutils';
 import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor, getSortedVideos } from './util';
 import { mainWindow }  from './main';
 import { AppStatus } from './types';
+import { getDungeonByMapId, getEncounterNameById, getVideoResultText, getInstanceNameByZoneId, getRaidNameByEncounterId } from './helpers';
+import { VideoCategory } from './constants';
+import fs from 'fs';
+import { ChallengeModeDungeon } from './keystone';
 
 const obsRecorder = require('./obsRecorder');
-import fs from 'fs';
 
 type RecorderOptionsType = {
     storageDir: string;
@@ -164,6 +167,7 @@ type RecorderOptionsType = {
      * @param {number} overrun how long to continue recording after stop is called
      */
     stop = (metadata: Metadata, overrun: number = 0) => {
+        const outputFilename = this.getFinalVideoFilename(metadata);
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
         console.info("[Recorder]" , JSON.stringify(metadata, null, 2));
@@ -173,7 +177,7 @@ type RecorderOptionsType = {
         setTimeout(async () => {           
             // Take the actions to stop the recording.
             if (!this._isRecording) return;
-            await obsRecorder.stop();       
+            await obsRecorder.stop();
             this._isRecording = false;
             this._isRecordingBuffer = false;
 
@@ -185,7 +189,7 @@ type RecorderOptionsType = {
             if (!isRaid || isLongEnough) {
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
-                await this.finalizeVideo(metadata);
+                await this.finalizeVideo(metadata, outputFilename);
             }
 
             // Run the size monitor to ensure we stay within size limit.
@@ -213,17 +217,22 @@ type RecorderOptionsType = {
      * 
      * @param {Metadata} metadata the details of the recording
      */
-    finalizeVideo = async (metadata: Metadata) => {
+    finalizeVideo = async (metadata: Metadata, outputFilename?: string): Promise<string> => {
 
         // Gnarly syntax to await for the setTimeout to finish.
-        await new Promise<void> ((resolve) => {
+        return new Promise<string> ((resolve) => {
 
             // It's a bit hacky that we async wait for 2 seconds for OBS to 
             // finish up with the video file. Maybe this can be done better. 
             setTimeout(async () => {
                 const bufferedVideo = await getNewestVideo(this._options.bufferStorageDir);
-                const videoPath = await cutVideo(bufferedVideo, this._options.storageDir, metadata.duration);
-                writeMetadataFile(videoPath, metadata).then(resolve);
+                const videoPath = await cutVideo(bufferedVideo, this._options.storageDir, outputFilename, metadata.duration);
+
+                await writeMetadataFile(videoPath, metadata);
+
+                console.log('[Recorder] Finalized video', videoPath);
+
+                resolve(videoPath);
             }, 
             2000)
         });   
@@ -279,6 +288,60 @@ type RecorderOptionsType = {
 
         obsRecorder.reconfigure(this._options);
         if (mainWindow) mainWindow.webContents.send('refreshState');
+    }
+
+    /**
+     * Generate a filename for the final video of a recording according
+     * to its category, if possible.
+     *
+     * The final filename should contain adequate information to quickly be able
+     * to identify the video files on the filesystem and be able to tell what it
+     * was about and the result of it.
+     */
+    getFinalVideoFilename (metadata: Metadata): string | undefined {
+        let outputFilename = '';
+        const resultText = getVideoResultText(metadata.category, metadata.result);
+
+        switch (metadata.category) {
+            case VideoCategory.Raids:
+                const encounterName = getEncounterNameById(metadata.encounterID);
+                const raidName = getRaidNameByEncounterId(metadata.encounterID);
+                outputFilename = `${raidName}, ${encounterName} (${resultText})`;
+            break;
+
+            case VideoCategory.MythicPlus:
+                outputFilename = this.getFinalVideoFilenameForCM(metadata.challengeMode);
+            break;
+
+            default:
+                const zoneName = getInstanceNameByZoneId(metadata.zoneID);
+                outputFilename = zoneName;
+                if (resultText) {
+                    outputFilename += ' (' + resultText + ')'
+                }
+            break;
+        }
+
+        if (!outputFilename) {
+            return;
+        }
+
+        return metadata.category + ' ' + outputFilename;
+    }
+
+    /**
+     * Construct a video filename for a Mythic Keystone dungeon with information
+     * about level, keystone upgrade levels and what have we.
+     */
+    getFinalVideoFilenameForCM(cm?: ChallengeModeDungeon): string {
+        if (!cm) {
+            return '';
+        }
+
+        const keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(cm.allottedTime, cm.duration);;
+        const resultText = cm?.timed ? '+' + keystoneUpgradeLevel : 'Depleted';
+
+        return `${getDungeonByMapId(cm.mapId)} +${cm.level} (${resultText})`;
     }
 }
 

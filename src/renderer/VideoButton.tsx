@@ -2,10 +2,11 @@ import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
 import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, dungeonTimersByMapId }  from 'main/constants';
 import { TimelineSegmentType, ChallengeModeDungeon } from 'main/keystone';
-import { getResultText, getFormattedDuration, getVideoResult, getInstanceDifficulty, getDungeonEncounterById } from './rendererutils';
+import { getFormattedDuration, getVideoResult } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
+import { getEncounterNameById, getInstanceDifficulty, getVideoResultText } from 'main/helpers';
 
 /**
  * For shorthand referencing. 
@@ -25,7 +26,7 @@ export default function VideoButton(props: any) {
   const isGoodResult = getVideoResult(video);
   // Need to not be const as it will be modified later if the video is of a
   // Mythic Keystone dungeon.
-  let resultText = getResultText(category, isGoodResult);
+  let resultText = getVideoResultText(category, isGoodResult);
   const MMR = video.teamMMR ? ("MMR: " + video.teamMMR) : undefined;
 
   const isProtected = video.protected;
@@ -144,10 +145,10 @@ export default function VideoButton(props: any) {
       if (segment.segmentType == TimelineSegmentType.BossEncounter) {
         timelineSegmentMenu = <div className='segment-entry'>
           <div className='segment-type segment-type-boss'>
-            <span>{ segmentDurationText }</span>: Boss: { getDungeonEncounterById(segment.encounterId) }
+            <span>{ segmentDurationText }</span>: Boss: { getEncounterNameById(segment.encounterId) }
           </div>
           <div className={ 'segment-result ' + (result ? 'goodResult' : 'badResult') }>
-            { getResultText(VideoCategory.Raids, result) }
+            { getVideoResultText(VideoCategory.Raids, result) }
           </div>
         </div>
       }
