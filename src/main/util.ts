@@ -574,13 +574,6 @@ const defaultAudioDevice = (cfg: ElectronStore, deviceType: string): string => {
     }    
 }
 
-/*
-* Checks if val is +-2 to compare.
-*/
-const isNumberClose = (val: number, compare: number) => {
-    return Math.abs(compare - val) <= 2;
-};
-
 export {
     loadAllVideos,
     writeMetadataFile,
@@ -599,6 +592,5 @@ export {
     defaultMinEncounterDuration,
     defaultAudioDevice,
     addColor,
-    isNumberClose,
     getSortedVideos,
 };
