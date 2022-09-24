@@ -2,6 +2,7 @@ import * as React from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import ToggleButton from '@mui/material/ToggleButton';
 import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
+import { OurDisplayType } from 'main/types';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -36,6 +37,8 @@ export default function Settings() {
   };
   type StateToSettingKeyMapKey = keyof typeof stateKeyToSettingKeyMap;
 
+  const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
+
   /**
    * Close window.
    */
@@ -68,7 +71,9 @@ export default function Settings() {
       value = element.getAttribute("value");
     }
 
-    if (value) window.electron.store.set(setting, value);
+    if (value !== null) {
+      window.electron.store.set(setting, value);
+    }
   }
   
   /**
@@ -149,8 +154,14 @@ export default function Settings() {
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
-                  <label> Monitor Number </label>
-                  <input type="text" id="monitor-index" className="form-control" placeholder={state.monitorIndex} onChange={(event) => setSetting('monitorIndex', event.target.value)}/>
+                  <label> Monitor to Record </label>
+                  <select id="monitor-index" className="form-control" value={state.monitorIndex} onChange={(event) => setSetting('monitorIndex', event.target.value)}>
+                    { displayConfiguration.map((display: OurDisplayType) =>
+                        <option key={ 'display-' + display.id } value={ display.index + 1 }>
+                          [{ display.index + 1 }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
+                        </option>
+                    )}
+                  </select>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
