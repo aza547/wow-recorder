@@ -9,6 +9,12 @@ export default function ContentSettings() {
 
   return (
     <div>
+      <FormLabel id="radios" sx={{color: "white"}}>Game Type</FormLabel>
+      <Divider color="black" />
+      <FormGroup sx={{ width: '48ch', padding: 1 }} >
+        <FormControlLabel control={<Checkbox defaultChecked style = {{color: "#bb4220", padding: 5}} />} label="Retail" style = {{color: "white"}} />
+        <FormControlLabel control={<Checkbox defaultChecked style = {{color: "#bb4220", padding: 5}} />} label="Classic" style = {{color: "white"}} />
+      </FormGroup>
       <FormLabel id="radios" sx={{color: "white"}}>PvE</FormLabel>
       <Divider color="black" />
       <FormGroup sx={{ width: '48ch', padding: 1 }} >

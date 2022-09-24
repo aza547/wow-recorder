@@ -83,6 +83,14 @@ export default function Settings() {
     height: '600px'
   };
 
+  const categoryTabsSx = {
+    borderColor: '#000000', 
+    bgcolor: '#272e48', 
+    textColor: 'secondary', 
+    overflow: 'visible',
+    borderRight: '1px solid',
+  }
+
   const categoryTabSx = {
     padding:'12px', 
     bgcolor: '#272e48', 
@@ -125,7 +133,7 @@ const useStyles = makeStyles()({
         value={value}
         onChange={handleChange}
         aria-label="Vertical tabs example"
-        sx= {{ ...videoTabsSx }}
+        sx= {{ ...categoryTabsSx }}
         className={ styles.tabs }
         TabIndicatorProps={{ style: { background:'#bb4220' } }}
       >

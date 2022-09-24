@@ -1,15 +1,15 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import { stateKeyToSettingKeyMap, StateToSettingKeyMapKey } from './settingUtils';
+import Select from '@mui/material/Select';
+import { setSetting } from './settingUtils';
 import Stack from '@mui/material/Stack';
-import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
+import { OurDisplayType } from 'main/types';
 
 const ipc = window.electron.ipcRenderer;
 const store = window.electron.store;
+const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
 
 export default function VideoSettings() {
   const [state, setState] = React.useState({
@@ -31,25 +31,6 @@ export default function VideoSettings() {
     },
   }  
 
- /**
-   * setSetting, why not just use react state hook?
-   */
-  const setSetting = (stateKey: StateToSettingKeyMapKey, value: any) => {
-    const settingKey = stateKeyToSettingKeyMap[stateKey]
-    const element = document.getElementById(settingKey)
-
-    console.log(stateKey, value, settingKey, element);
-
-    if (!element) {
-      return;
-    }
-
-    console.log(`[SettingsWindow] Set setting '${settingKey}' to '${value}'`)
-    element.setAttribute("value", value);
-
-    setState((prevState) => ({...prevState, [stateKey]: value}))
-  }
-
   return (
     <Stack
       component="form"
@@ -63,15 +44,17 @@ export default function VideoSettings() {
         <InputLabel id="demo-simple-select-label" sx = {style}>Monitor</InputLabel>
         <Select
           labelId="demo-simple-select-label"
-          id="audio-input-device"
+          id="monitor-index"
           value={state.monitorIndex}
           label="Monitor"
-          onChange={(event) => setSetting('monitorIndex', event.target.value)}
+          onChange={(event) => setSetting('monitorIndex', event.target.value, setState)} 
           sx={style}
         >
-          <MenuItem key={ 'device_1'} value={ 1 }>1</MenuItem>
-          <MenuItem key={ 'device_2'  } value={ 2 }>2</MenuItem>
-          <MenuItem key={ 'device_3' } value={ 3 }>3</MenuItem>
+          { displayConfiguration.map((display: OurDisplayType) =>
+            <MenuItem key={ 'display-' + display.id } value={ display.index + 1 }>
+              [{ display.index + 1 }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
+            </MenuItem>
+          )}
         </Select>
       </FormControl>
     </Stack>

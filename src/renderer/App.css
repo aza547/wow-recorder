@@ -87,7 +87,7 @@ h2:not(.MuiDialogTitle-root) {
   height: 35px;
   padding: 0px;
   margin: 0px;
-
+  border-bottom: 1px solid black;
   font-family: sans-serif;
 }
 

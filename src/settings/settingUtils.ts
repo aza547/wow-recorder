@@ -1,6 +1,20 @@
 const ipc = window.electron.ipcRenderer;
 
 /**
+ * setSetting, why not just use react state hook?
+ */
+const setSetting = (stateKey: StateToSettingKeyMapKey, 
+                    value: any, setState: 
+                    React.Dispatch<React.SetStateAction<any>>) => {
+    const settingKey = stateKeyToSettingKeyMap[stateKey]
+    const element = document.getElementById(settingKey)
+    if (!element) return;
+    console.log(`[SettingsWindow] Set setting '${settingKey}' to '${value}'`)
+    element.setAttribute("value", value);
+    setState((prevState: any) => ({...prevState, [stateKey]: value}))
+}
+
+/**
  * These settings are saved when 'Update' is clicked.
  */
 const stateKeyToSettingKeyMap = {
@@ -26,5 +40,6 @@ const openDirectorySelectorDialog = (settingsKey: string) => {
 export {
     stateKeyToSettingKeyMap,
     StateToSettingKeyMapKey,
-    openDirectorySelectorDialog
+    openDirectorySelectorDialog,
+    setSetting
 };

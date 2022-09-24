@@ -81,22 +81,6 @@ const a11yProps = (index: number) => {
 }
 
 /**
- * Category tab borders.
- */
-const tabProps = (index: number) => {
-  if (index == 0) {
-    return {
-      borderTop: '1px solid',
-      ...categoryTabSx
-    }
-  } else {
-    return {
-      ...categoryTabSx
-    }
-  }
-}
-
-/**
  * Get video player settings initially when the component is loaded. We store 
  * as a variable in main rather than in config It's fine if this is lost when
  * the app is restarted. 
@@ -242,7 +226,7 @@ export default function Layout() {
     const key = "tab" + tabIndex;
 
     return (
-      <Tab key={ key } label={ category } {...a11yProps(tabIndex)} sx = {{ ...tabProps(tabIndex) }}/>
+      <Tab key={ key } label={ category } {...a11yProps(tabIndex)} sx = {{ ...categoryTabSx }}/>
     )
   };
 
