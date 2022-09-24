@@ -8,6 +8,7 @@ import GeneralSettings from './GeneralSettings';
 import VideoSettings from './VideoSettings';
 import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
+import RecordingSettings from './RecordingSettings';
 
 const ipc = window.electron.ipcRenderer;
 const settingsPages = [GeneralSettings, VideoSettings, AudioSettings, AdvancedSettings];
@@ -137,7 +138,7 @@ const useStyles = makeStyles()({
         <GeneralSettings/>
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <GeneralSettings/>
+        <RecordingSettings/>
       </TabPanel>
       <TabPanel value={value} index={2}>
         <VideoSettings/>
