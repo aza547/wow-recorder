@@ -637,8 +637,7 @@ const forceStopRecording = () => {
 }
 
 /**
- * Watch the logs. Check every second for a new file, 
- * if there is, swap to watching that. 
+ * Watch the given directories for combat log changes.
  */
  const watchLogs = (logDirectories: string[]) => {
     logDirectories.forEach((logdir: string) => {

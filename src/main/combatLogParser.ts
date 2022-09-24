@@ -235,11 +235,14 @@ class CombatLogParser extends EventEmitter {
      * Start watching a path, if it's a valid WoW logs directory.
      * This is checked via `getWowFlavour()` which looks for the file '../.flavour.info'
      * relative to the log directory, which all flavours of WoW have.
+     *
+     * This method can be called multiple times on different paths, and they will
+     * all be watched, if they appear to be a valid WoW combat log directory.
      */
     watchPath(pathSpec: string): void {
         pathSpec = path.resolve(pathSpec);
         if (pathSpec in this._handlers) {
-            this.unwatchPath(pathSpec);
+            return;
         }
 
         const wowFlavour = this.getWowFlavour(pathSpec);
