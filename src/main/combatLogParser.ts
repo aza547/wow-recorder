@@ -154,17 +154,17 @@ class LogLine {
                     }
 
                     value = '';
-                    break;
+                    continue;
 
                 case '"':
                     inQuotedString = true;
-                    break;
+                    continue;
 
                 case '[':
                 case '(':
                     listItems.push([]);
                     openListCount++;
-                    break;
+                    continue;
 
                 case ']':
                 case ')':
@@ -178,10 +178,8 @@ class LogLine {
 
                     value = listItems.pop();
                     openListCount--;
-                    break;
+                    continue;
                 }
-
-                continue;
             }
 
             value += char;
