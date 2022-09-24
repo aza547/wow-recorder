@@ -1,218 +1,126 @@
 import * as React from 'react';
-import CheckIcon from '@mui/icons-material/Check';
-import ToggleButton from '@mui/material/ToggleButton';
-import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import { makeStyles } from 'tss-react/mui';
 
-const ipc = window.electron.ipcRenderer;
-
-export default function Settings() {
-
-  /**
-   * React state variables.
-   */
-  const [state, useState] = React.useState({
-    storagePath: window.electron.store.get('storage-path'),
-    logPath: window.electron.store.get('log-path'),
-    maxStorage: window.electron.store.get('max-storage'),
-    monitorIndex: window.electron.store.get('monitor-index'),
-    audioInputDevice: window.electron.store.get('audio-input-device'),
-    audioOutputDevice: window.electron.store.get('audio-output-device'),
-    minEncounterDuration: window.electron.store.get('min-encounter-duration'),
-    startUp: window.electron.store.get('start-up') === 'true',
-  });
-
-  /**
-   * These settings are saved when 'Update' is clicked.
-   */
-  const stateKeyToSettingKeyMap = {
-    'storagePath': 'storage-path',
-    'logPath': 'log-path',
-    'maxStorage': 'max-storage',
-    'monitorIndex': 'monitor-index',
-    'audioInputDevice': 'audio-input-device',
-    'audioOutputDevice': 'audio-output-device',
-    'minEncounterDuration': 'min-encounter-duration',
-    'startUp': 'start-up',
-  };
-  type StateToSettingKeyMapKey = keyof typeof stateKeyToSettingKeyMap;
-
-  /**
-   * Close window.
-   */
-  const closeSettings = () => {
-    ipc.sendMessage('settingsWindow', ['quit']);
-  }
-
-  /**
-   * Save values. 
-   */
-  const saveSettings = () => {
-    Object.values(stateKeyToSettingKeyMap).forEach(saveItem);
-
-    ipc.sendMessage('settingsWindow', ['update']);
-  }
-
-  /**
-   * Close window.
-   */
-  const saveItem = (setting: string) => {
-    if (!document) return;
-    const element = document.getElementById(setting); 
-    if (!element) return;
-    let value;
-
-    if (setting === "start-up") {
-      value = element.getAttribute("aria-pressed");
-      ipc.sendMessage("settingsWindow", ["startup", value]);
-    } else {
-      value = element.getAttribute("value");
-    }
-
-    if (value) window.electron.store.set(setting, value);
-  }
-  
-  /**
-   * Dialog window folder selection.
-   */
-  const openStoragePathDialog = () => {
-    ipc.sendMessage("settingsWindow", ["openPathDialog", "storagePath"]);
-  }
-
-  const openLogPathDialog = () => {
-    ipc.sendMessage("settingsWindow", ["openPathDialog", "logPath"]);
-  }
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
 
-  /**
-   * setSetting, why not just use react state hook?
-   */
-   const setSetting = (stateKey: StateToSettingKeyMapKey, value: any) => {
-    const settingKey = stateKeyToSettingKeyMap[stateKey]
-    const element = document.getElementById(settingKey)
 
-    if (!element) {
-      return;
-    }
 
-    console.log(`[SettingsWindow] Set setting '${settingKey}' to '${value}'`)
-    element.setAttribute("value", value);
-
-    useState((prevState) => ({...prevState, [stateKey]: value}))
-  }
-
-  /**
-   * Event handler when user selects an option in dialog window.
-   */
-  React.useEffect(() => {
-    ipc.on('settingsWindow', (args: any) => {
-      if (args[0] === "pathSelected") setSetting(args[1], args[2]);
-    });
-  }, []);
-
-  const audioDevices = ipc.sendSync('getAudioDevices', []);
-  const availableAudioDevices = {
-    input: [
-      new ObsAudioDevice('none', '(None: no microphone input will be recorded)'),
-      new ObsAudioDevice('all', '(All)'),
-      ...audioDevices.input,
-    ],
-    output: [
-      new ObsAudioDevice('none', '(None: no sound will be recorded)'),
-      new ObsAudioDevice('all', '(All)'),
-      ...audioDevices.output,
-    ]
-  };
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
   return (
-    <div className="container">
-      <div className="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12">
-        <div className="card h-100">
-          <div className="card-body">
-            <div className="row gutters">
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Storage Path </label>
-                  <input type="text" className="form-control" id="storage-path" placeholder={state.storagePath} onClick={openStoragePathDialog}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Log Path </label>
-                  <input type="text" className="form-control" id="log-path" placeholder={state.logPath} onClick={openLogPathDialog}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Max Storage (GB) </label>
-                  <input type="text" id="max-storage" className="form-control" placeholder={state.maxStorage} onChange={(event) => setSetting('maxStorage', event.target.value)}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Monitor Number </label>
-                  <input type="text" id="monitor-index" className="form-control" placeholder={state.monitorIndex} onChange={(event) => setSetting('monitorIndex', event.target.value)}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Record audio input from </label>
-                  <select id="audio-input-device" className="form-control" value={state.audioInputDevice} onChange={(event) => setSetting('audioInputDevice', event.target.value)}>
-                    { availableAudioDevices.input.map((device: ObsAudioDevice) => {
-                      return (
-                        <option key={ 'device_' + device.id } value={ device.id }>{ device.name }</option>
-                      )
-                    })}
-                  </select>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Record audio output from </label>
-                  <select id="audio-output-device" className="form-control" value={state.audioOutputDevice} onChange={(event) => setSetting('audioOutputDevice', event.target.value)}>
-                    { availableAudioDevices.output.map((device: ObsAudioDevice) => {
-                      return (
-                        <option key={ 'device_' + device.id } value={ device.id }>{ device.name }</option>
-                      )
-                    })}
-                  </select>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Min Encounter Duration (sec) </label>
-                  <input type="text" id="min-encounter-duration" className="form-control" placeholder={state.minEncounterDuration} onChange={(event) => setSetting('minEncounterDuration', event.target.value)}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Run on Startup? </label>
-                  <ToggleButton
-                    id="start-up"
-                    size="small"
-                    sx={{ border: '1px solid #bcd0f7', width: 25, height: 25, margin: 1 }}
-                    value="check"
-                    selected={ state.startUp }
-                    onChange={ () => setSetting('startUp', !state.startUp) }
-                  >
-                  { state.startUp &&
-                    <CheckIcon sx={{ color: '#bcd0f7' }}/>
-                  }                    
-                  </ToggleButton>
-                </div>
-              </div>
-            </div>
-            <div className="row gutters">
-              <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                <div className="text-center">
-                  <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings}>Close</button>
-                  <button type="button" id="submit" name="submit" className="btn btn-primary" onClick={saveSettings}>Update</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
     </div>
-    
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `vertical-tab-${index}`,
+    'aria-controls': `vertical-tabpanel-${index}`,
+  };
+}
+
+export default function Settings() {
+  const [value, setValue] = React.useState(0);
+
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setValue(newValue);
+  };
+
+  const videoTabsSx = {
+    bgcolor: '#272e48' ,
+    textColor: 'secondary',
+    overflow: 'visible',
+    borderTop: '1px solid black',
+    borderBottom: '1px solid black',
+    borderLeft: '1px solid black',
+    borderRight: '1px solid black'
+  };
+
+  const categoryTabSx = {
+    padding:'12px', 
+    bgcolor: '#272e48', 
+    color: 'white', 
+    borderBottom: '1px solid', 
+    borderColor: 'black', 
+    minHeight: '1px', 
+    height: '100px',
+    width: '200px'
+  }
+
+  /**
+ * Needed to style the tabs with the right color.
+ */
+const useStyles = makeStyles()({
+  tabs: {
+    "& .MuiTab-root.Mui-selected": {
+      color: '#bb4220'
+    },
+    scrollButtons: { // this does nothing atm
+      "&.Mui-disabled": {
+        opacity: 1
+      }
+    }
+  },
+})
+
+  /**
+  * MUI styles.
+  */
+   const { classes: styles } = useStyles();
+
+  return (
+    <Box
+      sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: '100%' }}
+    >
+      <Tabs
+        orientation="vertical"
+        variant="scrollable"
+        value={value}
+        onChange={handleChange}
+        aria-label="Vertical tabs example"
+        sx= {{ ...videoTabsSx }}
+        className={ styles.tabs }
+        TabIndicatorProps={{ style: { background:'#bb4220' } }}
+      >
+        <Tab label="General" {...a11yProps(0)} sx = {{ ...categoryTabSx }} />
+        <Tab label="Video" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Audio" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Advanced" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
+      </Tabs>
+      <TabPanel value={value} index={0}>
+        Item One
+      </TabPanel>
+      <TabPanel value={value} index={1}>
+        Item Two
+      </TabPanel>
+      <TabPanel value={value} index={2}>
+        Item Three
+      </TabPanel>
+      <TabPanel value={value} index={3}>
+        Item Four
+      </TabPanel>
+    </Box>
   );
 }
