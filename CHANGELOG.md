@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- [Issue 81](https://github.com/aza547/wow-recorder/issues/81) - Do something better in UI for monitor selection
 - [Issue 52](https://github.com/aza547/wow-recorder/issues/52) - Video files are now named more sensibly according to their category
 - [Issue 134](https://github.com/aza547/wow-recorder/issues/134) - Only handle UNIT_DIED when a recording activity is in progress
 - [Issue 142](https://github.com/aza547/wow-recorder/issues/142) - Make it possible to stop recording.
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Now loads videos asynchronously to improve application reponsiveness on start up with many videos
 
 ### Fixed
+- [Issue 124](https://github.com/aza547/wow-recorder/issues/234) - Make buffering dir configurable
 - [Issue 123](https://github.com/aza547/wow-recorder/issues/123) - Snap to resolutions within 2 pixels (up from 1).
 - [Issue 128](https://github.com/aza547/wow-recorder/issues/128) - Guard against multiple buffer restarts.
 - [Issue 130](https://github.com/aza547/wow-recorder/issues/130) - Fix invalid default audio input/output device.

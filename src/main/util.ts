@@ -30,8 +30,9 @@ import util from 'util';
 import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
-import { FileSortDirection } from './types';
-import { getVideoZone } from './helpers';
+import { FileSortDirection, OurDisplayType } from './types';
+import { Display, screen } from 'electron';
+import { getNumberConfigSafe, getVideoZone } from './helpers';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -499,37 +500,6 @@ const cutVideo = async (
     });
 }
 
-/**
- * Gets a path (string) value from the config in a more reliable manner.
- * @param cfg the config store
- * @param key the key
- * @returns the string config
- */
-const getPathConfigSafe = (cfg: ElectronStore, key: string): string => {
-    return cfg.has(key) ? path.join(getStringConfigSafe(cfg, key), path.sep) : "";
-}
-
-/**
- * Gets number value from the config in a more reliable manner.
- * @param cfg the config store
- * @param preference the preference
- * @returns the number config
- */
- const getNumberConfigSafe = (cfg: ElectronStore, preference: string): number => {
-    return cfg.has(preference) ? parseInt(getStringConfigSafe(cfg, preference)) : NaN;
-}
-
-/**
- * Gets a string value from the config in a more reliable manner.
- * @param cfg the config store
- * @param key the key
- * @param defaultValue default value, passed stright to `cfg.get()`
- * @returns the string value
- */
-const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: string): string => {
-    return (cfg.get(key, defaultValue) as string);
-}
-
 const defaultAudioDevice = (cfg: ElectronStore, deviceType: string): string => {
     const cfgKey = `audio-${deviceType}-device`;
     const defaultValue = 'all';
@@ -574,6 +544,69 @@ const defaultAudioDevice = (cfg: ElectronStore, deviceType: string): string => {
     }    
 }
 
+/**
+ * Get a text string that indicates the physical position of a display depending
+ * on its index.
+ */
+const getDisplayPhysicalPosition = (count: number, index: number): string => {
+    if (index === 0)         return 'Left';
+    if (index === count - 1) return 'Right';
+
+    return 'Middle #' + index;
+};
+
+/**
+ * Get and return a list of available displays on the system sorted by their
+ * physical position.
+ *
+ * This makes no attempts at being perfect - it completely ignores the `bounds.y`
+ * property for people who might have stacked their displays vertically rather than
+ * horizontally. This is okay.
+ */
+const getAvailableDisplays = (): OurDisplayType[] => {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const allDisplays = screen.getAllDisplays();
+
+    // Create an unsorted list of Display IDs to zero based monitor index
+    // So we're can use that index later, after sorting the displays according
+    // to their physical location.
+    const displayIdToIndex: {[key: number]: number } = {}
+    allDisplays.forEach((display: Display, index: number) => displayIdToIndex[display.id] = index)
+
+    // Iterate over all available displays and make our own list with the
+    // relevant attributes and some extra stuff to make it easier for the
+    // frontend.
+    const ourDisplays: OurDisplayType[] = [];
+    const numberOfMonitors = allDisplays.length;
+
+    allDisplays
+        .sort((A: Display, B: Display) => A.bounds.x - B.bounds.x)
+        .forEach((display: Display, index: number) => {
+            const isPrimary = display.id === primaryDisplay.id;
+            const displayIndex = displayIdToIndex[display.id];
+            const { width, height } = display.size;
+            console.log(display)
+
+            ourDisplays.push({
+                id: display.id,
+                index: displayIndex,
+                physicalPosition: getDisplayPhysicalPosition(numberOfMonitors, index),
+                primary: isPrimary,
+                displayFrequency: display.displayFrequency,
+                depthPerComponent: display.depthPerComponent,
+                size: display.size,
+                scaleFactor: display.scaleFactor,
+                aspectRatio: width / height,
+                physicalSize: {
+                    width: Math.floor(width * display.scaleFactor),
+                    height: Math.floor(height * display.scaleFactor),
+                }
+            });
+        });
+
+    return ourDisplays;
+}
+
 export {
     loadAllVideos,
     writeMetadataFile,
@@ -585,12 +618,10 @@ export {
     fixPathWhenPackaged,
     getNewestVideo,
     cutVideo,
-    getPathConfigSafe,
-    getNumberConfigSafe,
-    getStringConfigSafe,
     defaultMonitorIndex,
     defaultMinEncounterDuration,
     defaultAudioDevice,
     addColor,
     getSortedVideos,
+    getAvailableDisplays,
 };

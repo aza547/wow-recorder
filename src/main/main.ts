@@ -4,16 +4,27 @@
  * Application entrypoint point.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, loadAllVideos, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, getPathConfigSafe, getNumberConfigSafe, defaultMonitorIndex, defaultMinEncounterDuration, getStringConfigSafe, defaultAudioDevice } from './util';
+import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu, net } from 'electron';
+import {
+  resolveHtmlPath,
+  loadAllVideos,
+  isConfigReady,
+  deleteVideo,
+  openSystemExplorer,
+  toggleVideoProtected,
+  fixPathWhenPackaged,
+  defaultMonitorIndex,
+  defaultMinEncounterDuration,
+  defaultAudioDevice,
+  getAvailableDisplays,
+} from './util';
 import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
-import Store from 'electron-store';
 const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus, VideoPlayerSettings } from './types';
-import { net } from 'electron';
 import ElectronStore from 'electron-store';
+import { getNumberConfigSafe, getPathConfigSafe, getStringConfigSafe, resolveBufferStoragePath } from './helpers';
 let recorder: Recorder;
 
 /**
@@ -47,10 +58,11 @@ console.log("[Main] App starting: version", app.getVersion());
  */
 const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
   const storageDir = getPathConfigSafe(cfg, 'storage-path');
+  const bufferStorageDir = getPathConfigSafe(cfg, 'buffer-storage-path');
 
   const config = {
     storageDir: storageDir,
-    bufferStorageDir: path.join(storageDir, ".temp"),
+    bufferStorageDir: resolveBufferStoragePath(storageDir, bufferStorageDir),
     maxStorage: getNumberConfigSafe(cfg, 'max-storage'),
     monitorIndex: getNumberConfigSafe(cfg, 'monitor-index'),
     audioInputDeviceId: getStringConfigSafe(cfg, 'audio-input-device', 'all'),
@@ -83,7 +95,7 @@ const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
  *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config.json"
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
  */
-const cfg = new Store();
+const cfg = new ElectronStore();
 let baseLogPath: string = getPathConfigSafe(cfg, 'log-path');
 let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
 
@@ -413,7 +425,15 @@ ipcMain.on('settingsWindow', (event, args) => {
     settingsWindow.close();
   }
 
-  if (args[0] === "openPathDialog") openPathDialog(event, args);
+  if (args[0] === "openPathDialog") {
+      openPathDialog(event, args);
+      return;
+  }
+
+  if (args[0] === 'getAllDisplays') {
+    event.returnValue = getAvailableDisplays();
+    return;
+  }
 })
 
 /**

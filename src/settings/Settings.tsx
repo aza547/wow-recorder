@@ -51,6 +51,8 @@ export default function Settings() {
   const [value, setValue] = React.useState(0);
   
 
+  const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
+
   /**
    * Close window.
    */
