@@ -21,7 +21,8 @@ export default function Settings() {
   const [state, useState] = React.useState({
     storagePath:          getElectronStoreValue<string>('storage-path'),
     bufferStoragePath:    getElectronStoreValue<string>('buffer-storage-path'),
-    logPath:              getElectronStoreValue<string>('log-path'),
+    logPath:              getElectronStoreValue<string>('log-path'),              // Retail
+    logPathClassic:       getElectronStoreValue<string>('log-path-classic'),      // Classic
     maxStorage:           getElectronStoreValue<string>('max-storage'),
     monitorIndex:         getElectronStoreValue<string>('monitor-index'),
     audioInputDevice:     getElectronStoreValue<string>('audio-input-device'),
@@ -37,6 +38,7 @@ export default function Settings() {
     'storagePath': 'storage-path',
     'bufferStoragePath': 'buffer-storage-path',
     'logPath': 'log-path',
+    'logPathClassic': 'log-path-classic',
     'maxStorage': 'max-storage',
     'monitorIndex': 'monitor-index',
     'audioInputDevice': 'audio-input-device',
@@ -190,8 +192,14 @@ export default function Settings() {
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
-                  <label> Log Path </label>
-                  <input type="text" className="form-control" id="log-path" placeholder={state.logPath} onClick={() => openDirectorySelectorDialog('logPath')}/>
+                  <label> Combat Log Path (Retail) </label>
+                  <input type="text" className="form-control" id="log-path" placeholder={state.logPath ?? '(Not set)'} onClick={() => openDirectorySelectorDialog('logPath')}/>
+                </div>
+              </div>
+              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+                <div className="form-group">
+                  <label> Combat Log Path (Classic) </label>
+                  <input type="text" className="form-control" id="log-path-classic" placeholder={state.logPathClassic ?? '(Not set)'} onClick={() => openDirectorySelectorDialog('logPathClassic')}/>
                 </div>
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
