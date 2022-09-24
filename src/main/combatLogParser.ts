@@ -321,7 +321,10 @@ class CombatLogParser extends EventEmitter {
      * Ensure only a single logfile is being watched once one of them starts
      * receiving data.
      *
-     * The lock will timeout after 30 seconds if no data has been received.
+     * The lock will timeout after a given number of seconds has passed with no
+     * data being received.
+     *
+     * This is set the constructor options property `dataTimeout`.
      */
     private lockHandler(handler: CombatLogMonitorHandlerType): boolean {
         // If it's locked, and not by 'handler', get out.
