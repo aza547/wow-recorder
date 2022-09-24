@@ -1,3 +1,5 @@
+import { Size } from "electron";
+
 /**
  * Application status
  */
@@ -69,6 +71,16 @@ enum FileSortDirection {
 };
 
 /**
+ * Signature for the file finder getSortedFiles() to be used as typing
+ * for methods/classes that accept it being injected.
+ */
+type FileFinderCallbackType = (
+    storageDir: string,
+    pattern: string,
+    sortDirection?: FileSortDirection
+) => Promise<FileInfo[]>;
+
+/**
  * Specifies the format that we use in Settings to display monitors
  * to the user.
  */
@@ -95,6 +107,12 @@ type RaidInstanceType = {
     encounters: NumberKeyToStringValueMapType,
 };
 
+type FileInfo = {
+    name: string;
+    size: number;
+    mtime: number;
+};
+
 export {
     AppStatus,
     UnitFlags,
@@ -104,4 +122,6 @@ export {
     OurDisplayType,
     NumberKeyToStringValueMapType,
     RaidInstanceType,
+    FileInfo,
+    FileFinderCallbackType,
 }

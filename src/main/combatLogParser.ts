@@ -1,8 +1,8 @@
-import { glob } from "glob";
 import path from "path";
 import fs from "fs";
 import { EventEmitter } from "stream";
 import { setInterval, clearInterval } from 'timers';
+import { FileFinderCallbackType, FileInfo, FileSortDirection } from "./types";
 
 const tail = require('tail').Tail;
 
@@ -20,6 +20,7 @@ type CombatLogMonitorHandlerType = {
 
 type CombatLogParserOptionsType = {
     dataTimeout: number,
+    fileFinderFn: FileFinderCallbackType,
 };
 
 /**
@@ -368,12 +369,8 @@ class CombatLogParser extends EventEmitter {
      * Find and return the most recent file that matches the combat log filename
      * pattern.
      */
-    private getLatestLog (pathSpec: string): string | undefined {
-        const globPath = path.join(pathSpec, 'WoWCombatLog*.txt');
-        const logs = glob.sync(globPath)
-            .map((name: string) => ({name, mtime: fs.statSync(name).mtime}))
-            .sort((A: any, B: any) => B.mtime.getTime() - A.mtime.getTime());
-
+    private async getLatestLog (pathSpec: string): Promise<string | undefined> {
+        const logs = await this._options.fileFinderFn(pathSpec, 'WoWCombatLog*.txt');
         if (logs.length === 0) {
             return;
         }
@@ -414,8 +411,8 @@ class CombatLogParser extends EventEmitter {
     private watchLogDirectory(path: string): void {
         const handler = this._handlers[path];
 
-        handler.watchInterval = setInterval(() => {
-            const latestLogFile = this.getLatestLog(path);
+        handler.watchInterval = setInterval(async () => {
+            const latestLogFile = await this.getLatestLog(path);
 
             // Handle the case where there is no logs in the WoW log directory.
             if (!latestLogFile) {

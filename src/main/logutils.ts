@@ -5,6 +5,7 @@ import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId
 import { PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 import { CombatLogParser, LogLine } from './combatLogParser';
+import { getSortedFiles } from './util';
 
 const tasklist = require('tasklist');
 
@@ -23,7 +24,8 @@ let currentActivity: VideoCategory | undefined;
  * will be emitted ('DataTimeout') to be able to clean up whatever was going on.
  */
 const combatLogParser = new CombatLogParser({
-    dataTimeout: 2 * 60 * 1000
+    dataTimeout: 2 * 60 * 1000,
+    fileFinderFn: getSortedFiles,
 });
 
 /**
