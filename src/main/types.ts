@@ -1,3 +1,5 @@
+import { Size } from "electron";
+
 /**
  * Application status
  */
