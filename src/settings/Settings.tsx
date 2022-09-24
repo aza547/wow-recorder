@@ -8,7 +8,7 @@ import GeneralSettings from './GeneralSettings';
 import VideoSettings from './VideoSettings';
 import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
-import RecordingSettings from './RecordingSettings';
+import ContentSettings from './ContentSettings';
 
 const ipc = window.electron.ipcRenderer;
 const settingsPages = [GeneralSettings, VideoSettings, AudioSettings, AdvancedSettings];
@@ -61,7 +61,6 @@ export default function Settings() {
   /**
    * Save values. 
    */
-  const myRef = React.createRef();
   const saveSettings = () => {
     settingsPages.forEach((s) => {console.log(s)});
   }
@@ -129,7 +128,7 @@ const useStyles = makeStyles()({
         TabIndicatorProps={{ style: { background:'#bb4220' } }}
       >
         <Tab label="General" {...a11yProps(0)} sx = {{ ...categoryTabSx }} />
-        <Tab label="Recording" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Content" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
         <Tab label="Video" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
         <Tab label="Audio" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
         <Tab label="Advanced" {...a11yProps(4)} sx = {{ ...categoryTabSx }}/>
@@ -138,7 +137,7 @@ const useStyles = makeStyles()({
         <GeneralSettings/>
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <RecordingSettings/>
+        <ContentSettings/>
       </TabPanel>
       <TabPanel value={value} index={2}>
         <VideoSettings/>
