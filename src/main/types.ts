@@ -1,3 +1,5 @@
+import { Size } from "electron";
+
 /**
  * Application status
  */
@@ -68,6 +70,23 @@ enum FileSortDirection {
     OldestFirst,
 };
 
+/**
+ * Specifies the format that we use in Settings to display monitors
+ * to the user.
+ */
+type OurDisplayType = {
+    id: number,
+    index: number,
+    physicalPosition: string,
+    primary: boolean,
+    displayFrequency: number,
+    depthPerComponent: number,
+    size: Size,
+    physicalSize: Size,
+    aspectRatio: number,
+    scaleFactor: number,
+};
+
 type NumberKeyToStringValueMapType = {
     [id: number]: string;
 };
@@ -84,6 +103,7 @@ export {
     PlayerDeathType,
     VideoPlayerSettings,
     FileSortDirection,
+    OurDisplayType,
     NumberKeyToStringValueMapType,
     RaidInstanceType,
 }

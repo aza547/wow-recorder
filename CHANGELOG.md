@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- [Issue 81](https://github.com/aza547/wow-recorder/issues/81) - Do something better in UI for monitor selection
 - [Issue 52](https://github.com/aza547/wow-recorder/issues/52) - Video files are now named more sensibly according to their category
 - [Issue 134](https://github.com/aza547/wow-recorder/issues/134) - Only handle UNIT_DIED when a recording activity is in progress
 - [Issue 142](https://github.com/aza547/wow-recorder/issues/142) - Make it possible to stop recording.

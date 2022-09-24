@@ -4,14 +4,25 @@
  * Application entrypoint point.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu } from 'electron';
-import { resolveHtmlPath, loadAllVideos, isConfigReady, deleteVideo, openSystemExplorer, toggleVideoProtected, fixPathWhenPackaged, defaultMonitorIndex, defaultMinEncounterDuration, defaultAudioDevice } from './util';
+import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu, net } from 'electron';
+import {
+  resolveHtmlPath,
+  loadAllVideos,
+  isConfigReady,
+  deleteVideo,
+  openSystemExplorer,
+  toggleVideoProtected,
+  fixPathWhenPackaged,
+  defaultMonitorIndex,
+  defaultMinEncounterDuration,
+  defaultAudioDevice,
+  getAvailableDisplays,
+} from './util';
 import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
 const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus, VideoPlayerSettings } from './types';
-import { net } from 'electron';
 import ElectronStore from 'electron-store';
 import { getNumberConfigSafe, getPathConfigSafe, getStringConfigSafe, resolveBufferStoragePath } from './helpers';
 let recorder: Recorder;
@@ -260,7 +271,7 @@ const createSettingsWindow = async () => {
 
   settingsWindow = new BrowserWindow({
     show: false,
-    width: 600,
+    width: 770,
     height: 500,
     resizable: (process.env.NODE_ENV === 'production') ? false : true,
     icon: getAssetPath('./icon/settings-icon.svg'),
@@ -414,7 +425,15 @@ ipcMain.on('settingsWindow', (event, args) => {
     settingsWindow.close();
   }
 
-  if (args[0] === "openPathDialog") openPathDialog(event, args);
+  if (args[0] === "openPathDialog") {
+      openPathDialog(event, args);
+      return;
+  }
+
+  if (args[0] === 'getAllDisplays') {
+    event.returnValue = getAvailableDisplays();
+    return;
+  }
 })
 
 /**
