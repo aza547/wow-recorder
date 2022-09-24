@@ -1,7 +1,8 @@
-import { fixPathWhenPackaged } from "./util";
+import { fixPathWhenPackaged, getAvailableDisplays } from "./util";
 import WaitQueue from 'wait-queue';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
 import { RecorderOptionsType } from "./recorder";
+import { OurDisplayType } from "./types";
 import { Size } from "electron";
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
@@ -109,24 +110,11 @@ const configureOBS = (baseStoragePath: string) => {
 * Get information about primary display
 * @param zero starting monitor index
 */
-const displayInfo = (displayIndex: number) => {
-  const { screen } = require('electron');
-  const displays = screen.getAllDisplays();
+const displayInfo = (displayIndex: number): OurDisplayType | undefined => {
+  const displays = getAvailableDisplays();
   console.info("[OBS] Displays:", displays);
-  const display = displays[displayIndex];
 
-  const { width, height } = display.size;
-  const { scaleFactor } = display;
-  return {
-    width,
-    height,
-    scaleFactor:    scaleFactor,
-    aspectRatio:    width / height,
-    physicalSize: {
-        width: width * scaleFactor,
-        height: height * scaleFactor
-    },
-  }
+  return displays.find(d => d.index === displayIndex);
 }
 
 /**
@@ -180,7 +168,7 @@ const setOBSVideoResolution = (res: Size, paramString: string) => {
 */
 const setupScene = (monitorIndex: number) => {
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
-  const monitorIndexFromZero = monitorIndex - 1; 
+  const monitorIndexFromZero = monitorIndex - 1;
   console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
   const selectedDisplay = displayInfo(monitorIndexFromZero);
   if (!selectedDisplay) {
