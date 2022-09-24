@@ -100,7 +100,6 @@ let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
 let baseLogPaths: string[] = [
   getPathConfigSafe(cfg, 'log-path'),
   getPathConfigSafe(cfg, 'log-path-classic'),
-  getPathConfigSafe(cfg, 'log-path-classic-era'),
 ];
 
 // Default video player settings on app start
@@ -423,7 +422,6 @@ ipcMain.on('settingsWindow', (event, args) => {
       baseLogPaths = [
         getPathConfigSafe(cfg, 'log-path'),
         getPathConfigSafe(cfg, 'log-path-classic'),
-        getPathConfigSafe(cfg, 'log-path-classic-era'),
       ];
       watchLogs(baseLogPaths);
 

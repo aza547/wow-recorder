@@ -200,17 +200,10 @@ export default function Settings() {
               </div>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
-                  <label> Combat Log Path (WotLK) </label>
+                  <label> Combat Log Path (Classic) </label>
                   <input type="text" className="form-control" id="log-path-classic" placeholder={state.logPathClassic ?? '(Not set)'} onClick={() => openDirectorySelectorDialog('logPathClassic')}/>
                 </div>
               </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Combat Log Path (Classic) </label>
-                  <input type="text" className="form-control" id="log-path-classic-era" placeholder={state.logPathClassicEra ?? '(Not set)'} onClick={() => openDirectorySelectorDialog('logPathClassicEra')}/>
-                </div>
-              </div>
-              <hr/>
               <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
                 <div className="form-group">
                   <label> Max Storage (GB) </label>
