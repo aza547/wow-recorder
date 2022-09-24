@@ -79,17 +79,16 @@ class LogLine {
      * Parse the timestamp from a log line and create a Date value from it
      */
     date(): Date {
-        // Split the line by any delimiter that isn't a number,
-        // convert them to actual numbers and reverse the array.
+        // Split the line by any delimiter that isn't a number
+        // and convert them to actual numbers.
         const timeParts = this.timestamp
             .split(/[^0-9]/, 6)
             .map(v => parseInt(v, 10))
-            .reverse();
-        const [msec, secs, mins, hours, day, month] = timeParts;
+        const [month, day, hours, mins, secs, msec] = timeParts;
         const dateObj = new Date();
 
-        if (month) dateObj.setMonth(month - 1);
-        if (day) dateObj.setDate(day);
+        dateObj.setMonth(month - 1);
+        dateObj.setDate(day);
         dateObj.setHours(hours);
         dateObj.setMinutes(mins);
         dateObj.setSeconds(secs);
