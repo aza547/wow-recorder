@@ -575,13 +575,6 @@ const defaultAudioDevice = (cfg: ElectronStore, deviceType: string): string => {
     }    
 }
 
-/*
-* Checks if val is +-2 to compare.
-*/
-const isNumberClose = (val: number, compare: number) => {
-    return Math.abs(compare - val) <= 2;
-};
-
 /**
  * Get a text string that indicates the physical position of a display depending
  * on its index.
@@ -663,7 +656,6 @@ export {
     defaultMinEncounterDuration,
     defaultAudioDevice,
     addColor,
-    isNumberClose,
     getSortedVideos,
     getAvailableDisplays,
 };

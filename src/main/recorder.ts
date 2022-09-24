@@ -167,7 +167,7 @@ type RecorderOptionsType = {
      * @param {Metadata} metadata the details of the recording
      * @param {number} overrun how long to continue recording after stop is called
      */
-    stop = (metadata: Metadata, overrun: number = 0) => {
+    stop = (metadata: Metadata, overrun: number = 0, discardVideo: boolean = false) => {
         const outputFilename = this.getFinalVideoFilename(metadata);
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
@@ -185,10 +185,9 @@ type RecorderOptionsType = {
             // Update the GUI to show we're processing a video. 
             if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.SavingVideo);
 
-            const isRaid = metadata.category == "Raids";
+            const isRaid = metadata.category == VideoCategory.Raids;
             const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
-
-            if (!isRaid || isLongEnough) {
+            if ((!isRaid || isLongEnough) && !discardVideo) {
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
                 await this.finalizeVideo(metadata, outputFilename);
