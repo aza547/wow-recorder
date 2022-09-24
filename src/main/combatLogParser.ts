@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { EventEmitter } from "stream";
 import { setInterval, clearInterval } from 'timers';
-import { FileFinderCallbackType, FileInfo, FileSortDirection } from "./types";
+import { FileFinderCallbackType } from "./types";
 
 const tail = require('tail').Tail;
 
@@ -18,6 +18,12 @@ type CombatLogMonitorHandlerType = {
     tail?: any,
 };
 
+/**
+ * Options for CombatLogParser
+ *
+ * 'dataTimeout'  = data timeout in milliseconds
+ * 'fileFinderFn' = Function for finding files according to a glob pattern
+ */
 type CombatLogParserOptionsType = {
     dataTimeout: number,
     fileFinderFn: FileFinderCallbackType,

@@ -22,8 +22,7 @@ export default function Settings() {
     storagePath:          getElectronStoreValue<string>('storage-path'),
     bufferStoragePath:    getElectronStoreValue<string>('buffer-storage-path'),
     logPath:              getElectronStoreValue<string>('log-path'),              // Retail
-    logPathClassic:       getElectronStoreValue<string>('log-path-classic'),      // Classic (WotlK)
-    logPathClassicEra:    getElectronStoreValue<string>('log-path-classic-era'),  // Classic (Vanilla)
+    logPathClassic:       getElectronStoreValue<string>('log-path-classic'),      // Classic
     maxStorage:           getElectronStoreValue<string>('max-storage'),
     monitorIndex:         getElectronStoreValue<string>('monitor-index'),
     audioInputDevice:     getElectronStoreValue<string>('audio-input-device'),
@@ -40,7 +39,6 @@ export default function Settings() {
     'bufferStoragePath': 'buffer-storage-path',
     'logPath': 'log-path',
     'logPathClassic': 'log-path-classic',
-    'logPathClassicEra': 'log-path-classic-era',
     'maxStorage': 'max-storage',
     'monitorIndex': 'monitor-index',
     'audioInputDevice': 'audio-input-device',
