@@ -70,7 +70,7 @@ const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
   if (!config.audioInputDeviceId) {
     config.audioInputDeviceId = defaultAudioDevice(cfg, 'input');
   }
-  
+
   if (!config.audioOutputDeviceId) {
     config.audioOutputDeviceId = defaultAudioDevice(cfg, 'output');
   }

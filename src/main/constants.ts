@@ -1,3 +1,5 @@
+import { NumberKeyToStringValueMapType, RaidInstanceType } from "./types";
+
 enum VideoCategory {
   TwoVTwo = '2v2',
   ThreeVThree = '3v3',
@@ -17,6 +19,20 @@ const categories: string[] = [
   VideoCategory.Raids,
   VideoCategory.Battlegrounds,
 ];
+
+/**
+ * How long to keep recording after an activity ends to ensure we don't miss any
+ * important stuff at the end, per category, in seconds.
+ */
+const videoOverrunPerCategory: { [key: string]: number } = {
+  [VideoCategory.TwoVTwo]: 3,
+  [VideoCategory.ThreeVThree]: 3,
+  [VideoCategory.Skirmish]: 3,
+  [VideoCategory.SoloShuffle]: 3,
+  [VideoCategory.MythicPlus]: 5,    // For the whole dungeon
+  [VideoCategory.Raids]: 15,        // Per boss encounter
+  [VideoCategory.Battlegrounds]: 3,
+};
 
 /**
  * Months of the year.
@@ -39,7 +55,7 @@ const months: string[] = [
 /**
  * Battlegrounds by ID. 
  */
- const battlegrounds: { [id: number]: string; } = {
+ const battlegrounds: NumberKeyToStringValueMapType = {
   30:	  "Alterac Valley",
   2107: "Arathi Basin",
   1681: "Arathi Basin",
@@ -61,7 +77,7 @@ const months: string[] = [
 /**
  * Arenas by ID. 
  */
- const arenas: { [id: number]: string; } = {
+ const arenas: NumberKeyToStringValueMapType = {
   1672: "Blade's Edge",
   617: "Dalaran Sewers",
   1505: "Nagrand Arena",
@@ -81,7 +97,7 @@ const months: string[] = [
 /**
  * Encounters by ID.  
  */
-const encountersSepulcher: { [id: number]: string; } = {
+const encountersSepulcher: NumberKeyToStringValueMapType = {
   2537: "Jailer",
   2512: "Guardian",
   2529: "Halondrus",
@@ -95,7 +111,7 @@ const encountersSepulcher: { [id: number]: string; } = {
   2553: "Xy'mox",
 }
 
-const encountersSanctum: { [id: number]: string; } = {
+const encountersSanctum: NumberKeyToStringValueMapType = {
   2523: "The Tarragrue",
   2433: "Jailer's Eye",
   2429: "The Nine",
@@ -108,7 +124,7 @@ const encountersSanctum: { [id: number]: string; } = {
   2435: "Sylvanas",
 }
 
-const encountersNathria: { [id: number]: string; } = {
+const encountersNathria: NumberKeyToStringValueMapType = {
   2398: "Shriekwing",
   2418: "Huntsman",
   2402: "Sun King",
@@ -121,16 +137,28 @@ const encountersNathria: { [id: number]: string; } = {
   2407: "Denathrius"
 }
 
-const raids: { [id: number]: string; } = {
+const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersNathria,
   ...encountersSanctum,
   ...encountersSepulcher
 }
 
 /**
+ * List of raids and their encounters
+ * This is used to figure out the raid name of a given encounter as that
+ * information is not available in `ENCOUNTER_START` and we shouldn't and
+ * can't rely on `ZONE_CHANGE` for this.
+ */
+const raidInstances: RaidInstanceType[] = [
+  { zoneId: 13224, name: 'Castle Nathria', encounters: encountersNathria },
+  { zoneId: 13561, name: 'Sanctum of Domination', encounters: encountersSanctum },
+  { zoneId: 13742, name: 'Sepulcher of the First Ones', encounters: encountersSepulcher },
+];
+
+/**
  * Dungeons by zone ID.
  */
-const dungeonsByZoneId: { [id: number]: string; } = {
+const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   1651: 'Return to Karazhan',
   1208: 'Grimrail Depot',
   1195: 'Iron Docks',
@@ -151,7 +179,7 @@ const dungeonsByZoneId: { [id: number]: string; } = {
  * Names have been shortened, or abbreviated due to size constraints in
  * <VideoButton/>
  */
-const dungeonsByMapId: { [id: number]: string; } = {
+const dungeonsByMapId: NumberKeyToStringValueMapType = {
   166: 'Grimrail Depot',
   169: 'Iron Docks',
   206: 'Neltharion\'s Lair',
@@ -201,7 +229,7 @@ const dungeonTimersByMapId: { [id: number]: number[]; } = {
   166: [(30 * 60), (24 * 60), (18 * 60)],
 }
 
-const dungeonEncounters: { [id: number]: string } = {
+const dungeonEncounters: NumberKeyToStringValueMapType = {
   // Grimrail Depot
   1715: 'Rocketspark and Borka',
   1732: 'Nitrogg Thundertower',
@@ -304,14 +332,13 @@ const dungeonEncounters: { [id: number]: string } = {
   2440: "Myza's Oasis",
 };
 
-const instanceNamesByZoneId: { [id: number]: string } = {
+const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
+  ...battlegrounds,
+  ...arenas,
   ...dungeonsByZoneId,
-  13224: 'Castle Nathria',
-  13561: 'Sanctum of Domination',
-  13742: 'Sepulcher of the First Ones',
 };
 
-const dungeonAffixesById: { [id: number]: string } = {
+const dungeonAffixesById: NumberKeyToStringValueMapType = {
     1: 'Overflowing',
     2: 'Skittish',
     3: 'Volcanic',
@@ -343,12 +370,17 @@ const dungeonAffixesById: { [id: number]: string } = {
 /**
  * Zones by ID. 
  */
-const zones: { [id: number]: string; } = {
+const zones: NumberKeyToStringValueMapType = {
     ...arenas,
-    ...raids,
+    ...raidEncountersById,
     ...battlegrounds,
     ...dungeonsByZoneId,
 }
+
+const instanceEncountersById: NumberKeyToStringValueMapType = {
+  ...raidEncountersById,
+  ...dungeonEncounters,
+};
 
 type InstanceDifficultyPartyType = 'party' | 'raid' | 'pvp'
 type ImstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp'
@@ -488,7 +520,7 @@ export {
     videoButtonSx,
     zones,
     arenas,
-    raids,
+    raidEncountersById,
     battlegrounds,
     dungeonsByMapId,
     dungeonsByZoneId,
@@ -501,6 +533,9 @@ export {
     encountersNathria,
     encountersSepulcher,
     instanceDifficulty,
+    instanceEncountersById,
     InstanceDifficultyType,
     VideoCategory,
+    videoOverrunPerCategory,
+    raidInstances,
 };

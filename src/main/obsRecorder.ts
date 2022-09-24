@@ -1,7 +1,8 @@
-import { fixPathWhenPackaged, isNumberClose } from "./util";
+import { fixPathWhenPackaged } from "./util";
 import WaitQueue from 'wait-queue';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
 import { RecorderOptionsType } from "./recorder";
+import { Size } from "electron";
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
 const { byOS, OS } = require('./operatingSystems');
@@ -113,6 +114,7 @@ const displayInfo = (displayIndex: number) => {
   const displays = screen.getAllDisplays();
   console.info("[OBS] Displays:", displays);
   const display = displays[displayIndex];
+
   const { width, height } = display.size;
   const { scaleFactor } = display;
   return {
@@ -120,20 +122,38 @@ const displayInfo = (displayIndex: number) => {
     height,
     scaleFactor:    scaleFactor,
     aspectRatio:    width / height,
-    physicalWidth:  width * scaleFactor,
-    physicalHeight: height * scaleFactor,
+    physicalSize: {
+        width: width * scaleFactor,
+        height: height * scaleFactor
+    },
   }
 }
 
-/*
-* Checks if string {W}x{H} resolution is close enough to monitor resolution
-* @param resolution - Resolution string of OBS in format {W}x{H}
-*/
-const checkRes = (monitorWidth: number, monitorHeight: number, resolution: string) => {
-  const [resWidth, resHeight] = resolution.split('x');
-  const isWidthClose = isNumberClose(parseInt(resWidth, 10), monitorWidth);
-  const isHeightClose = isNumberClose(parseInt(resHeight, 10), monitorHeight);
-  return isWidthClose && isHeightClose;
+/**
+ * Find the resolution from `resolutions` which closest match the one given in
+ * `target`.
+ */
+const getClosestResolution = (resolutions: string[], target: Size): string => {
+  // Split string like '2560x1440' into [2560, 1440]
+  const numericResolutions = resolutions.map((v: string) => {
+    return v.split('x').map(v => parseInt(v, 10));
+  });
+
+  // Create an array of values with the target resolution subtracted.
+  // We'll end up with an array where one element has a very low number,
+  // which is at the index we're after.
+  const indexArray = numericResolutions.map(v => {
+      return Math.abs((target.width - v[0]) + (target.height - v[1]));
+  });
+
+  // Find the minimum value from the indexing array. This value will
+  // be at the index in `indexArray` matching the one in `resolutions`
+  // where we'll find the closest matching resolution of the available ones.
+  const minValue = Math.min(...indexArray);
+
+  // At the position of `minValue` in `indexArray`, we'll find the actual
+  // resolution in `resolutions` at the same index.
+  return resolutions[indexArray.indexOf(minValue)];
 };
 
 /*
@@ -148,22 +168,11 @@ const checkRes = (monitorWidth: number, monitorHeight: number, resolution: strin
 * @throws
 * Throws an error if no matching resolution is found.
 */
-const setOBSVideoResolution = (monitorWidth: number, monitorHeight: number, paramString: string) => {
+const setOBSVideoResolution = (res: Size, paramString: string) => {
   const availableResolutions = getAvailableValues('Video', 'Untitled', paramString);
+  const closestResolution = getClosestResolution(availableResolutions, res);
 
-  for(let i = 0; i < availableResolutions.length; i++) {
-    const resolution: string = availableResolutions[i];
-
-    if (checkRes(monitorWidth, monitorHeight, resolution)) {
-      setSetting('Video', paramString, resolution);
-      return;
-    }
-  }
-  
-  console.error('[OBS] ERROR! Matching resolution not found for Video Output');
-  console.error(`Error attempting to match ${monitorWidth}x${monitorHeight} with ${availableResolutions} for ${paramString}`);
-  
-  throw Error('Matching resolution not found for Video Output');
+  setSetting('Video', paramString, closestResolution);
 }
 
 /*
@@ -173,12 +182,15 @@ const setupScene = (monitorIndex: number) => {
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
   const monitorIndexFromZero = monitorIndex - 1; 
   console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
-  const { physicalWidth, physicalHeight } = displayInfo(monitorIndexFromZero);
+  const selectedDisplay = displayInfo(monitorIndexFromZero);
+  if (!selectedDisplay) {
+    throw Error(`[OBS] No such display with index: ${monitorIndexFromZero}.`)
+  }
 
-  setOBSVideoResolution(physicalWidth, physicalHeight, 'Base');
+  setOBSVideoResolution(selectedDisplay.physicalSize, 'Base');
 
   // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
-  setOBSVideoResolution(physicalWidth, physicalHeight, 'Output');
+  setOBSVideoResolution(selectedDisplay.physicalSize, 'Output');
 
   const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
 
@@ -188,15 +200,10 @@ const setupScene = (monitorIndex: number) => {
   videoSource.update(settings);
   videoSource.save();
 
-  const outputWidth = physicalWidth;
-  const outputHeight = physicalHeight;
-
-  const videoScaleFactor = physicalWidth / outputWidth;
-
   // A scene is necessary here to properly scale captured screen size to output video size
   const scene = osn.SceneFactory.create('test-scene');
   const sceneItem = scene.add(videoSource);
-  sceneItem.scale = { x: 1.0/ videoScaleFactor, y: 1.0 / videoScaleFactor };
+  sceneItem.scale = { x: 1.0, y: 1.0 };
 
   return scene;
 }
@@ -247,9 +254,7 @@ const start = async () => {
 
   console.log("[OBS] obsRecorder: start");
   osn.NodeObs.OBS_service_startRecording();
-
-  let signalInfo = await waitQueue.shift();
-  assertSignal(signalInfo, "recording", "start");
+  assertNextSignal("start");
 }
 
 /*
@@ -258,15 +263,9 @@ const start = async () => {
 const stop = async () => {
   console.log("[OBS] obsRecorder: stop");
   osn.NodeObs.OBS_service_stopRecording();
-
-  let signalInfo = await waitQueue.shift();
-  assertSignal(signalInfo, "recording", "stopping");
-  
-  signalInfo = await waitQueue.shift();
-  assertSignal(signalInfo, "recording", "stop");
-
-  signalInfo = await waitQueue.shift();
-  assertSignal(signalInfo, "recording", "wrote");
+  assertNextSignal("stopping");
+  assertNextSignal("stop");
+  assertNextSignal("wrote");
 }
 
 /*
@@ -349,16 +348,21 @@ const getAvailableValues = (category: any, subcategory: any, parameter: any) => 
 
 
 /*
-* Assert a signal from OBS is as expected, otherwise throw an error. 
+* Assert a signal from OBS is as expected, if it is not received
+* within 5 seconds or is not as expected then throw an error. 
 */
-const assertSignal = (signalInfo: any, type: string, value: string) => {
+const assertNextSignal = async (value: string) => {
 
-  if (signalInfo === undefined) {
-    throw Error("OBS behaved unexpectedly (1)");
-  }
+  // Don't wait more than 5 seconds for the signal.
+  let signalInfo = await Promise.race([
+    waitQueue.shift(), 
+    new Promise((_, reject) => {
+      setTimeout(reject, 5000, "OBS didn't signal " + value + " in time")}
+    )
+  ]);
 
   // Assert the type is as expected.
-  if (signalInfo.type !== type) {
+  if (signalInfo.type !== "recording") {
     console.error("[OBS] " + signalInfo);
     console.error("[OBS] OBS signal type unexpected", signalInfo.signal, value);
     throw Error("OBS behaved unexpectedly (2)");
@@ -371,7 +375,7 @@ const assertSignal = (signalInfo: any, type: string, value: string) => {
     throw Error("OBS behaved unexpectedly (3)");
   }
 
-  console.debug("[OBS] Asserted OBS signal:", type, value);
+  console.debug("[OBS] Asserted OBS signal:", value);
 }
 
 export {

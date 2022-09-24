@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory }  from './constants';
+import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, videoOverrunPerCategory }  from './constants';
 import { PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 
@@ -14,11 +14,13 @@ let tailHandler: any;
 let currentLogFile: string;
 let lastLogFile: string;
 let videoStartDate: Date;
+let videoStopDate: Date;
 let metadata: Metadata;
 let combatantMap: Map<string, Combatant> = new Map();
 let playerCombatant: Combatant | undefined;
 let testRunning: boolean = false;
 let activeChallengeMode: ChallengeModeDungeon | undefined;
+let currentActivity: VideoCategory | undefined;
 
 declare interface LogLineHandlerType {
     (line: LogLine): void
@@ -129,17 +131,61 @@ const wowProcessStopped = () => {
     isRetailRunning = false;
 
     if (recorder.isRecording) {
-        const videoStopDate = new Date();
-        const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-        metadata.duration = Math.round(milliSeconds / 1000);
-    
-        // Assume loss as game was closed. 
-        metadata.result = false;
-        recorder.stop(metadata);
+        endRecording();
     } else if (recorder.isRecordingBuffer) {
         recorder.stopBuffer();
     }
 };
+
+/**
+ * Initiate recording and mark as having something in-progress
+ */
+const startRecording = (category: VideoCategory) => {
+    console.log(`[Logutils] Start recording a video for category: ${category}`)
+
+    // Ensure combatant map and player combatant is clean before
+    // starting a new recording.
+    clearCombatants();
+
+    currentActivity = category;
+    recorder.start();
+};
+
+type EndRecordingOptionsType = {
+    discardVideo?: boolean, // Discard the video/don't save the recording
+    result?: boolean,       // Success/Failure result for the overall activity
+};
+
+/**
+ * Stop recording and mark as not doing anything.
+ */
+const endRecording = (options?: EndRecordingOptionsType) => {
+    if (!recorder.isRecording || !currentActivity) {
+        return;
+    }
+
+    if (!videoStopDate) {
+        videoStopDate = new Date();
+    }
+
+    const discardVideo = options?.discardVideo ?? false;
+    const overrun = videoOverrunPerCategory[currentActivity];
+    const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
+
+    metadata.duration = Math.round(videoDuration / 1000) + overrun;
+    metadata.result = options?.result ?? false;
+
+    if (playerCombatant) {
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;
+    }
+
+    console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
+
+    recorder.stop(metadata, overrun, discardVideo);
+    currentActivity = undefined;
+}
 
 /**
  * getLatestLog 
@@ -305,7 +351,7 @@ const handleLogLine = (line: string) => {
  */
 function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return; 
-    playerCombatant = undefined;
+    const category = (line.args[3] as VideoCategory);
     const zoneID = parseInt(line.args[1], 10);
 
     // If all goes to plan we don't need this but we do it incase the game
@@ -314,14 +360,14 @@ function handleArenaStartLine (line: LogLine): void {
 
     metadata = {
         name: "name",
-        category: (line.args[3] as VideoCategory),
+        category: category,
         zoneID: zoneID,
         duration: 0,
         result: false,
         playerDeaths: []
     }
     
-    recorder.start();
+    startRecording(category);
 }
 
 /**
@@ -330,35 +376,12 @@ function handleArenaStartLine (line: LogLine): void {
 function handleArenaStopLine (line: LogLine): void {
     if (!recorder.isRecording) return; 
 
-    if (playerCombatant) {
-        metadata.playerName = playerCombatant.name;
-        metadata.playerRealm = playerCombatant.realm;
-        metadata.playerSpecID = playerCombatant.specID;        
-    }
-
-    let duration; 
+    videoStopDate = line.date();
     
-    // Helpfully ARENA_MATCH_END events contain the game duration. Solo shuffle
-    // ARENA_MATCH_END duration only counts the last game so needs special handling. 
-    if (metadata.category !== VideoCategory.SoloShuffle) {
-        duration = parseInt(line.args[2], 10);
-    } else {
-        const soloShuffleStopDate = line.date();
-        const milliSeconds = (soloShuffleStopDate.getTime() - videoStartDate.getTime()); 
-        duration = Math.round(milliSeconds / 1000);
-    }     
-
-    // Add a few seconds so we reliably can see the end screen.
-    const overrun = 3;   
-    metadata.duration = duration + overrun; 
-
     const [result, MMR] = determineArenaMatchResult(line); 
-    metadata.result = result;
     metadata.teamMMR = MMR;
 
-    clearCombatants();
-
-    recorder.stop(metadata, overrun);
+    endRecording({result});
 }
 
 /**
@@ -397,8 +420,6 @@ function handleChallengeModeStartLine (line: LogLine): void {
         console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
     }
 
-    clearCombatants();
-
     const dungeonAffixes = line.args[5].map((v: string) => parseInt(v, 10));
 
     activeChallengeMode = new ChallengeModeDungeon(
@@ -426,8 +447,28 @@ function handleChallengeModeStartLine (line: LogLine): void {
         playerDeaths: [],
     };
 
-    recorder.start();
+    startRecording(VideoCategory.MythicPlus);
 };
+
+const endChallengeModeDungeon = (): void => {
+    if (!activeChallengeMode) {
+        return;
+    }
+
+    console.debug("[ChallengeMode] Ending current timeline segment")
+    activeChallengeMode.endCurrentTimelineSegment(videoStopDate);
+
+    // If last timeline segment is less than 10 seconds long, discard it.
+    // It's probably not useful
+    const lastTimelineSegment = activeChallengeMode.getCurrentTimelineSegment();
+    if (lastTimelineSegment && lastTimelineSegment.length() < 10000) {
+        console.debug("[ChallengeMode] Removing last timeline segment because it's too short.")
+        activeChallengeMode.removeLastTimelineSegment();
+    }
+
+    console.debug("[ChallengeMode] Ending Challenge Mode instance");
+    activeChallengeMode = undefined;
+}
 
 /**
  * Handle a log line for CHALLENGE_MODE_END
@@ -437,23 +478,7 @@ function handleChallengeModeEndLine (line: LogLine): void {
         return;
     }
 
-    if (playerCombatant) {
-        metadata.playerName = playerCombatant.name;
-        metadata.playerRealm = playerCombatant.realm;
-        metadata.playerSpecID = playerCombatant.specID;
-    }
-
-    // Add a few seconds so we reliably see the aftermath of a kill.
-    const overrun = 5;
-
-    const videoStopDate = line.date();
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime());
-    const duration = Math.round(milliSeconds / 1000);
-
-    metadata.duration = duration + overrun;
-    metadata.result = Boolean(parseInt(line.args[1]));
-
-    clearCombatants();
+    videoStopDate = line.date();
 
     // The actual log duration of the dungeon, from which keystone upgrade
     // levels can be calculated.
@@ -465,21 +490,11 @@ function handleChallengeModeEndLine (line: LogLine): void {
     // Calculate whether the key was timed or not
     activeChallengeMode.timed = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
 
-    console.debug("[ChallengeMode] Ending current timeline segment")
-    activeChallengeMode.endCurrentTimelineSegment(videoStopDate);
+    endChallengeModeDungeon();
 
-    // If last timeline segment is less than 10 seconds long, discard it.
-    // It's probably not useful
-    const lastTimelineSegment = activeChallengeMode.getCurrentTimelineSegment();
-    if (lastTimelineSegment && lastTimelineSegment.length() < 10000) {
-        console.debug("[ChallengeMode] Removing last timeline segment, because it's too short.")
-        activeChallengeMode.removeLastTimelineSegment();
-    }
+    const result = Boolean(parseInt(line.args[1]));
 
-    console.debug("[ChallengeMode] Ending Challenge Mode instance");
-    activeChallengeMode = undefined;
-    
-    recorder.stop(metadata, overrun);
+    endRecording({result});
 };
 
 const getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
@@ -526,51 +541,37 @@ function handleEncounterStartLine (line: LogLine): void {
         playerDeaths: [],
     }
 
-    recorder.start();
+    startRecording(VideoCategory.Raids);
 }
 
 /**
  * Handle a line from the WoW log. 
  */
 function handleEncounterStopLine (line: LogLine): void {
-    const videoStopDate = line.date();
-    const encounterResult = Boolean(parseInt(line.args[5], 10));
+    const eventDate = line.date();
+
+    const result = Boolean(parseInt(line.args[5], 10));
     const encounterID = parseInt(line.args[1], 10);
 
     if (recorder.isRecording && activeChallengeMode) {
         const currentSegment = activeChallengeMode.getCurrentTimelineSegment()
         if (currentSegment) {
-            currentSegment.result = encounterResult
+            currentSegment.result = result
         }
 
         const vSegment = new ChallengeModeTimelineSegment(
-            TimelineSegmentType.Trash, videoStopDate, getRelativeTimestampForTimelineSegment(videoStopDate)
+            TimelineSegmentType.Trash, eventDate, getRelativeTimestampForTimelineSegment(eventDate)
         )
 
         // Add a trash segment as the boss encounter ended
-        activeChallengeMode.addTimelineSegment(vSegment, videoStopDate);
+        activeChallengeMode.addTimelineSegment(vSegment, eventDate);
         console.debug(`[ChallengeMode] Ending boss encounter: ${dungeonEncounters[encounterID]}`)
         return;
     }
 
-    if (playerCombatant) {
-        metadata.playerName = playerCombatant.name;
-        metadata.playerRealm = playerCombatant.realm;
-        metadata.playerSpecID = playerCombatant.specID;        
-    }
+    videoStopDate = eventDate;
 
-    // Add a few seconds so we reliably see the aftermath of a kill.
-    const overrun = 15;
-
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    const duration = Math.round(milliSeconds / 1000) + overrun;
-
-    metadata.duration = duration; 
-    metadata.result = encounterResult
-    
-    clearCombatants();
-
-    recorder.stop(metadata, overrun);
+    endRecording({result});
 }
 
 /**
@@ -596,12 +597,17 @@ function handleZoneChange (line: LogLine): void {
     if (!isRecording && isNewZoneBG) {
         console.log("[Logutils] ZONE_CHANGE into BG, start recording");
         battlegroundStart(line);   
-    } else if (isRecording && isRecordingBG && !isNewZoneBG) {
+        return;
+    }
+    if (isRecording && isRecordingBG && !isNewZoneBG) {
         console.log("[Logutils] ZONE_CHANGE out of BG, stop recording");
         battlegroundStop(line);
-    } else if (isRecording && isRecordingArena) {
+        return;
+    }
+    if (isRecording && isRecordingArena) {
         console.log("[Logutils] ZONE_CHANGE out of arena, stop recording");
         zoneChangeStop(line);
+        return;
     }
 
     // TODO there is the case here where a tilted raider hearths 
@@ -682,40 +688,23 @@ function battlegroundStart (line: LogLine): void {
         playerDeaths: [],
     }
 
-    recorder.start();
+    startRecording(VideoCategory.Battlegrounds);
 }
 
 /**
  * battlegroundStop
  */
 function battlegroundStop (line: LogLine): void {
-    const videoStopDate = line.date();
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    metadata.duration = Math.round(milliSeconds / 1000);
-
-    // No idea how we can tell who has won a BG so assume loss. 
-    // I've just disabled displaying this in the UI so this does nothing.
-    metadata.result = false;
-    recorder.stop(metadata);
+    videoStopDate = line.date();
+    endRecording();
 }
 
 /**
  * zoneChangeStop
  */
 function zoneChangeStop (line: LogLine): void {
-    const videoStopDate = line.date();
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime()); 
-    metadata.duration = Math.round(milliSeconds / 1000);
-
-    if (playerCombatant) {
-        metadata.playerName = playerCombatant.name;
-        metadata.playerRealm = playerCombatant.realm;
-        metadata.playerSpecID = playerCombatant.specID;        
-    }
-
-    // Assume loss if zoned out of content. 
-    metadata.result = false;
-    recorder.stop(metadata);
+    videoStopDate = line.date();
+    endRecording();
 }
 
 /**
