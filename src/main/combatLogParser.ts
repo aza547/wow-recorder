@@ -398,7 +398,7 @@ class CombatLogParser extends EventEmitter {
                 this.handleLogLine(handler.wowFlavour, line);
             })
             .on('error', (error: unknown) => {
-                console.error('[CombatLogParser] ERROR: ', error);
+                console.error(`[CombatLogParser] Error while tailing log file ${handler.currentLogFile}`, error);
             });
 
         handler.tail = tailHandler;
@@ -421,11 +421,13 @@ class CombatLogParser extends EventEmitter {
 
             const logFileChanged = (latestLogFile !== handler.currentLogFile);
 
-            if (!handler.currentLogFile || logFileChanged) {
-                console.log(`[CombatLogParser] Detected latest/new log file '${latestLogFile}'`);
-                handler.currentLogFile = latestLogFile;
-                this.tailLogFile(handler);
+            if (!logFileChanged) {
+                return;
             }
+
+            console.log(`[CombatLogParser] Detected latest/new log file '${latestLogFile}'`);
+            handler.currentLogFile = latestLogFile;
+            this.tailLogFile(handler);
         }, 1000);
     }
 };

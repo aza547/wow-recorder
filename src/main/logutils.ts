@@ -59,7 +59,7 @@ combatLogParser.on('DataTimeout', (timeoutMs: number) => {
      * End the current challenge mode dungeon and stop recording.
      * We'll keep the video.
      */
-    if (activeChallengeMode) {
+    if (activeChallengeMode || currentActivity === VideoCategory.Battlegrounds) {
         forceStopRecording();
         return;
     }
