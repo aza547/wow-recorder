@@ -1,8 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import Settings from './Settings';
 import SettingsTitleBar from './SettingsTitleBar';
-import './SettingsTitleBar.css';
-import './Settings.css';
+import '../renderer/App.css';
 
 
 const Application = () => {

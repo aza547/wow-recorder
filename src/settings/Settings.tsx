@@ -4,15 +4,19 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { makeStyles } from 'tss-react/mui';
+import GeneralSettings from './GeneralSettings';
+import VideoSettings from './VideoSettings';
+import AudioSettings from './AudioSettings';
+import AdvancedSettings from './AdvancedSettings';
+
+const ipc = window.electron.ipcRenderer;
+const settingsPages = [GeneralSettings, VideoSettings, AudioSettings, AdvancedSettings];
 
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
 }
-
-
-
 
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
@@ -41,8 +45,26 @@ function a11yProps(index: number) {
   };
 }
 
+
 export default function Settings() {
   const [value, setValue] = React.useState(0);
+  
+
+  /**
+   * Close window.
+   */
+  const closeSettings = () => {
+    ipc.sendMessage('settingsWindow', ['quit']);
+  }
+
+  /**
+   * Save values. 
+   */
+  const myRef = React.createRef();
+  const saveSettings = () => {
+    settingsPages.forEach((s) => {console.log(s)});
+  }
+
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -55,7 +77,8 @@ export default function Settings() {
     borderTop: '1px solid black',
     borderBottom: '1px solid black',
     borderLeft: '1px solid black',
-    borderRight: '1px solid black'
+    borderRight: '1px solid black',
+    height: '600px'
   };
 
   const categoryTabSx = {
@@ -65,11 +88,11 @@ export default function Settings() {
     borderBottom: '1px solid', 
     borderColor: 'black', 
     minHeight: '1px', 
-    height: '100px',
-    width: '200px'
+    height: '50px',
+    width: '150px'
   }
 
-  /**
+/**
  * Needed to style the tabs with the right color.
  */
 const useStyles = makeStyles()({
@@ -105,22 +128,30 @@ const useStyles = makeStyles()({
         TabIndicatorProps={{ style: { background:'#bb4220' } }}
       >
         <Tab label="General" {...a11yProps(0)} sx = {{ ...categoryTabSx }} />
-        <Tab label="Video" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
-        <Tab label="Audio" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
-        <Tab label="Advanced" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Recording" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Video" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Audio" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Advanced" {...a11yProps(4)} sx = {{ ...categoryTabSx }}/>
       </Tabs>
       <TabPanel value={value} index={0}>
-        Item One
+        <GeneralSettings/>
       </TabPanel>
       <TabPanel value={value} index={1}>
-        Item Two
+        <GeneralSettings/>
       </TabPanel>
       <TabPanel value={value} index={2}>
-        Item Three
+        <VideoSettings/>
       </TabPanel>
       <TabPanel value={value} index={3}>
-        Item Four
+        <AudioSettings/>
       </TabPanel>
+      <TabPanel value={value} index={4}>
+        <AdvancedSettings/>
+      </TabPanel>
+      <div style={{position: "fixed", bottom: "10px", left: "12px"}} >
+        <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings} >Close</button>
+        <button type="button" id="submit" name="save" className="btn btn-primary" onClick={saveSettings}>Save</button>
+      </div>
     </Box>
   );
 }
