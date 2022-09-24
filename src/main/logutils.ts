@@ -244,9 +244,9 @@ function handleChallengeModeStartLine (line: LogLine): void {
 
     activeChallengeMode = new ChallengeModeDungeon(
         dungeonTimersByMapId[mapId], // Dungeon timers
-        parseInt(line.arg(2), 10),  // zoneId
+        parseInt(line.arg(2), 10),   // zoneId
         mapId,                       // mapId
-        parseInt(line.arg(4), 10),  // Keystone Level
+        parseInt(line.arg(4), 10),   // Keystone Level
         dungeonAffixes,              // Array of affixes, as numbers
     )
 
