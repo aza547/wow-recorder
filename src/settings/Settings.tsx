@@ -3,6 +3,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import ToggleButton from '@mui/material/ToggleButton';
 import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
 import InformationDialog from 'renderer/InformationDialog';
+import { getElectronStoreValue, resolveBufferStoragePath } from 'main/helpers';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -17,15 +18,15 @@ export default function Settings() {
    * React state variables.
    */
   const [state, useState] = React.useState({
-    storagePath: window.electron.store.get('storage-path'),
-    bufferStoragePath: window.electron.store.get('buffer-storage-path'),
-    logPath: window.electron.store.get('log-path'),
-    maxStorage: window.electron.store.get('max-storage'),
-    monitorIndex: window.electron.store.get('monitor-index'),
-    audioInputDevice: window.electron.store.get('audio-input-device'),
-    audioOutputDevice: window.electron.store.get('audio-output-device'),
-    minEncounterDuration: window.electron.store.get('min-encounter-duration'),
-    startUp: window.electron.store.get('start-up') === 'true',
+    storagePath:          getElectronStoreValue<string>('storage-path'),
+    bufferStoragePath:    getElectronStoreValue<string>('buffer-storage-path'),
+    logPath:              getElectronStoreValue<string>('log-path'),
+    maxStorage:           getElectronStoreValue<string>('max-storage'),
+    monitorIndex:         getElectronStoreValue<string>('monitor-index'),
+    audioInputDevice:     getElectronStoreValue<string>('audio-input-device'),
+    audioOutputDevice:    getElectronStoreValue<string>('audio-output-device'),
+    minEncounterDuration: getElectronStoreValue<string>('min-encounter-duration'),
+    startUp:              getElectronStoreValue<string>('start-up') === 'true',
   });
 
   /**
@@ -153,7 +154,7 @@ export default function Settings() {
     ]
   };
 
-  const bufferStoragePathPlaceholder = state.bufferStoragePath ? state.bufferStoragePath : "(Default)";
+  const bufferStoragePathPlaceholder = resolveBufferStoragePath(state.storagePath, state.bufferStoragePath);
 
   return (
     <div className="container">
@@ -204,11 +205,9 @@ export default function Settings() {
                 <div className="form-group">
                   <label> Record audio input from </label>
                   <select id="audio-input-device" className="form-control" value={state.audioInputDevice} onChange={(event) => setSetting('audioInputDevice', event.target.value)}>
-                    { availableAudioDevices.input.map((device: ObsAudioDevice) => {
-                      return (
+                    { availableAudioDevices.input.map((device: ObsAudioDevice) =>
                         <option key={ 'device_' + device.id } value={ device.id }>{ device.name }</option>
-                      )
-                    })}
+                    )}
                   </select>
                 </div>
               </div>
@@ -222,11 +221,9 @@ export default function Settings() {
                 <div className="form-group">
                   <label> Record audio output from </label>
                   <select id="audio-output-device" className="form-control" value={state.audioOutputDevice} onChange={(event) => setSetting('audioOutputDevice', event.target.value)}>
-                    { availableAudioDevices.output.map((device: ObsAudioDevice) => {
-                      return (
+                    { availableAudioDevices.output.map((device: ObsAudioDevice) =>
                         <option key={ 'device_' + device.id } value={ device.id }>{ device.name }</option>
-                      )
-                    })}
+                    )}
                   </select>
                 </div>
               </div>
