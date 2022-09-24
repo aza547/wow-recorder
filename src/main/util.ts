@@ -26,7 +26,7 @@ import glob from 'glob';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { Display, screen } from 'electron';
-import { getVideoZone } from './helpers';
+import { getNumberConfigSafe, getVideoZone } from './helpers';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -506,37 +506,6 @@ const cutVideo = async (
     });
 }
 
-/**
- * Gets a path (string) value from the config in a more reliable manner.
- * @param cfg the config store
- * @param key the key
- * @returns the string config
- */
-const getPathConfigSafe = (cfg: ElectronStore, key: string): string => {
-    return cfg.has(key) ? path.join(getStringConfigSafe(cfg, key), path.sep) : "";
-}
-
-/**
- * Gets number value from the config in a more reliable manner.
- * @param cfg the config store
- * @param preference the preference
- * @returns the number config
- */
- const getNumberConfigSafe = (cfg: ElectronStore, preference: string): number => {
-    return cfg.has(preference) ? parseInt(getStringConfigSafe(cfg, preference)) : NaN;
-}
-
-/**
- * Gets a string value from the config in a more reliable manner.
- * @param cfg the config store
- * @param key the key
- * @param defaultValue default value, passed stright to `cfg.get()`
- * @returns the string value
- */
-const getStringConfigSafe = (cfg: ElectronStore, key: string, defaultValue?: string): string => {
-    return (cfg.get(key, defaultValue) as string);
-}
-
 const defaultAudioDevice = (cfg: ElectronStore, deviceType: string): string => {
     const cfgKey = `audio-${deviceType}-device`;
     const defaultValue = 'all';
@@ -655,9 +624,6 @@ export {
     fixPathWhenPackaged,
     getNewestVideo,
     cutVideo,
-    getPathConfigSafe,
-    getNumberConfigSafe,
-    getStringConfigSafe,
     defaultMonitorIndex,
     defaultMinEncounterDuration,
     defaultAudioDevice,

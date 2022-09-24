@@ -6,7 +6,7 @@ import savingIcon from '../../assets/icon/saving-icon.png';
 import stopRecordingIcon from '../../assets/icon/stop-recording.png';
 import { useState, useEffect } from 'react';
 import { AppStatus } from 'main/types';
-import ConfirmationDialog from './ConfirmationDialog';
+import InformationDialog from './InformationDialog';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -71,14 +71,16 @@ export default function Status() {
             src={ message.icon }
           />
         }
-        <ConfirmationDialog
+        <InformationDialog
           title='⚠️ Stop recording?'
           open={openDialog}
-          onConfirm={stopRecording}
-          onReject={closeDialog}
+          buttons={['confirm', 'close']}
+          default='close'
+          onAction={stopRecording}
+          onClose={closeDialog}
         >
           Manually stopping the recording isn't usually a great idea, but it can be necessary if there's a bug that prevents it from stopping on its own.
-        </ConfirmationDialog>
+        </InformationDialog>
       </div>
     </div>
   );
