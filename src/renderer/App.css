@@ -137,6 +137,7 @@ h2:not(.MuiDialogTitle-root) {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   width: 145px;
   padding-top: 1rem;
+  padding-left: 0.25rem;
   justify-items: center;
   gap: .125rem 0rem;
 }
