@@ -187,6 +187,7 @@ type RecorderOptionsType = {
 
             const isRaid = metadata.category == VideoCategory.Raids;
             const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
+
             if ((!isRaid || isLongEnough) && !discardVideo) {
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
@@ -232,12 +233,10 @@ type RecorderOptionsType = {
             setTimeout(async () => {
                 const bufferedVideo = await getNewestVideo(this._options.bufferStorageDir);
                 const videoPath = await cutVideo(bufferedVideo, this._options.storageDir, outputFilename, metadata.duration);
-
                 await writeMetadataFile(videoPath, metadata);
-
                 console.log('[Recorder] Finalized video', videoPath);
-
                 resolve(videoPath);
+                if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
             }, 
             2000)
         });   
