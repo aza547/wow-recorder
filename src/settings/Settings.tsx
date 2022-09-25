@@ -9,6 +9,8 @@ import VideoSettings from './VideoSettings';
 import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
 import ContentSettings from './ContentSettings';
+import ConfigContext from "./ConfigContext";
+import useSettings from "./useSettings";
 
 const ipc = window.electron.ipcRenderer;
 const settingsPages = [GeneralSettings, VideoSettings, AudioSettings, AdvancedSettings];
@@ -48,10 +50,11 @@ function a11yProps(index: number) {
 
 
 export default function Settings() {
-  const [value, setValue] = React.useState(0);
-  
+  const [config, setConfig] = useSettings();
 
-  const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
+  const handleChangeTab = (event: React.SyntheticEvent, newValue: number) => {
+    setConfig({...config, tabIndex: newValue});
+  };
 
   /**
    * Close window.
@@ -64,24 +67,8 @@ export default function Settings() {
    * Save values. 
    */
   const saveSettings = () => {
-    settingsPages.forEach((s) => {console.log(s)});
+    console.log(config);
   }
-
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  };
-
-  const videoTabsSx = {
-    bgcolor: '#272e48' ,
-    textColor: 'secondary',
-    overflow: 'visible',
-    borderTop: '1px solid black',
-    borderBottom: '1px solid black',
-    borderLeft: '1px solid black',
-    borderRight: '1px solid black',
-    height: '600px'
-  };
 
   const categoryTabsSx = {
     borderColor: '#000000', 
@@ -124,44 +111,46 @@ const useStyles = makeStyles()({
    const { classes: styles } = useStyles();
 
   return (
-    <Box
-      sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: '100%' }}
-    >
-      <Tabs
-        orientation="vertical"
-        variant="scrollable"
-        value={value}
-        onChange={handleChange}
-        aria-label="Vertical tabs example"
-        sx= {{ ...categoryTabsSx }}
-        className={ styles.tabs }
-        TabIndicatorProps={{ style: { background:'#bb4220' } }}
+    <ConfigContext.Provider value={[config, setConfig]}>
+      <Box
+        sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: '100%' }}
       >
-        <Tab label="General" {...a11yProps(0)} sx = {{ ...categoryTabSx }} />
-        <Tab label="Content" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
-        <Tab label="Video" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
-        <Tab label="Audio" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
-        <Tab label="Advanced" {...a11yProps(4)} sx = {{ ...categoryTabSx }}/>
-      </Tabs>
-      <TabPanel value={value} index={0}>
-        <GeneralSettings/>
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        <ContentSettings/>
-      </TabPanel>
-      <TabPanel value={value} index={2}>
-        <VideoSettings/>
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-        <AudioSettings/>
-      </TabPanel>
-      <TabPanel value={value} index={4}>
-        <AdvancedSettings/>
-      </TabPanel>
-      <div style={{position: "fixed", bottom: "10px", left: "12px"}} >
-        <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings} >Close</button>
-        <button type="button" id="submit" name="save" className="btn btn-primary" onClick={saveSettings}>Save</button>
-      </div>
-    </Box>
+        <Tabs
+          orientation="vertical"
+          variant="scrollable"
+          value={config.tabIndex}
+          onChange={handleChangeTab}
+          aria-label="Vertical tabs example"
+          sx= {{ ...categoryTabsSx }}
+          className={ styles.tabs }
+          TabIndicatorProps={{ style: { background:'#bb4220' } }}
+        >
+          <Tab label="General" {...a11yProps(0)} sx = {{ ...categoryTabSx }} />
+          <Tab label="Content" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
+          <Tab label="Video" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
+          <Tab label="Audio" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
+          <Tab label="Advanced" {...a11yProps(4)} sx = {{ ...categoryTabSx }}/>
+        </Tabs>
+        <TabPanel value={config.tabIndex} index={0}>
+          <GeneralSettings/>
+        </TabPanel>
+        <TabPanel value={config.tabIndex} index={1}>
+          <ContentSettings/>
+        </TabPanel>
+        <TabPanel value={config.tabIndex} index={2}>
+          <VideoSettings/>
+        </TabPanel>
+        <TabPanel value={config.tabIndex} index={3}>
+          <AudioSettings/>
+        </TabPanel>
+        <TabPanel value={config.tabIndex} index={4}>
+          <AdvancedSettings/>
+        </TabPanel>
+        <div style={{position: "fixed", bottom: "10px", left: "12px"}} >
+          <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings} >Close</button>
+          <button type="button" id="submit" name="save" className="btn btn-primary" onClick={saveSettings}>Save</button>
+        </div>
+      </Box>
+    </ConfigContext.Provider>
   );
 }

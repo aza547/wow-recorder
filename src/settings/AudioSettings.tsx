@@ -1,22 +1,21 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import { stateKeyToSettingKeyMap, StateToSettingKeyMapKey } from './settingUtils';
+import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
+import ConfigContext from "./ConfigContext";
 
 const ipc = window.electron.ipcRenderer;
-const store = window.electron.store;
 
 export default function GeneralSettings() {
 
-  const [state, setState] = React.useState({
-    audioInputDevice: store.get('audio-input-device'),
-    audioOutputDevice: store.get('audio-output-device'),
-  });
+  const [config, setConfig] = React.useContext(ConfigContext);
+
+  const modifyConfig = (stateKey: string, value: any) => {
+    setConfig((prevConfig) => ({ ...prevConfig, [stateKey]: value }));
+  };
 
   const audioDevices = ipc.sendSync('getAudioDevices', []);
 
@@ -32,25 +31,6 @@ export default function GeneralSettings() {
       ...audioDevices.output,
     ]
   };
-
-  /**
-   * setSetting, why not just use react state hook?
-   */
-  const setSetting = (stateKey: StateToSettingKeyMapKey, value: any) => {
-    const settingKey = stateKeyToSettingKeyMap[stateKey]
-    const element = document.getElementById(settingKey)
-
-    console.log(stateKey, value, settingKey, element);
-
-    if (!element) {
-      return;
-    }
-
-    console.log(`[SettingsWindow] Set setting '${settingKey}' to '${value}'`)
-    element.setAttribute("value", value);
-
-    setState((prevState) => ({...prevState, [stateKey]: value}))
-  }
 
   const style = {
     height: '2.5rem',
@@ -81,9 +61,9 @@ export default function GeneralSettings() {
         <Select
           labelId="demo-simple-select-label"
           id="audio-input-device"
-          value={state.audioInputDevice}
+          value={config.audioInputDevice}
           label="Input"
-          onChange={(event) => setSetting('audioInputDevice', event.target.value)}
+          onChange={(event) => modifyConfig('audioInputDevice', event.target.value)}
           sx={style}
         >
           { availableAudioDevices.input.map((device: ObsAudioDevice) => {
@@ -98,9 +78,9 @@ export default function GeneralSettings() {
         <Select
           labelId="demo-simple-select-label"
           id="audio-output-device"
-          value={state.audioOutputDevice}
+          value={config.audioOutputDevice}
           label="Output"
-          onChange={(event) => setSetting('audioOutputDevice', event.target.value)}
+          onChange={(event) => modifyConfig('audioOutputDevice', event.target.value)}
           sx={style}
         >
           { availableAudioDevices.output.map((device: ObsAudioDevice) => {

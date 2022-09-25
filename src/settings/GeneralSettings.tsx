@@ -1,26 +1,18 @@
 import * as React from 'react';
-import { openRetailLogPathDialog, openStoragePathDialog, openClassicLogPathDialog } from '../renderer/rendererutils';
-import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
-import { stateKeyToSettingKeyMap, StateToSettingKeyMapKey } from './settingUtils';
-import Checkbox from '@mui/material/Checkbox';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormControl from '@mui/material/FormControl';
-import FormLabel from '@mui/material/FormLabel';
+import { stateKeyToSettingKeyMap, StateToSettingKeyMapKey, openDirectorySelectorDialog } from './settingUtils';
+import ConfigContext from "./ConfigContext";
 
 const ipc = window.electron.ipcRenderer;
-const store = window.electron.store;
 
 export default function GeneralSettings() {
 
-  const [state, setState] = React.useState({
-    storagePath: store.get('storage-path'),
-    retailLogPath: store.get('retail-log-path'),
-    classicLogPath: store.get('classic-log-path'),
-    maxStorage: store.get('max-storage'),
-  });
+  const [config, setConfig] = React.useContext(ConfigContext);
+
+  const modifyConfig = (stateKey: string, value: any) => {
+    setConfig((prevConfig) => ({ ...prevConfig, [stateKey]: value }));
+  };
 
   /**
    * Event handler when user selects an option in dialog window.
@@ -28,7 +20,7 @@ export default function GeneralSettings() {
    React.useEffect(() => {
     ipc.on('settingsWindow', (args: any) => {
       console.log(args);
-      if (args[0] === "pathSelected") setSetting(args[1], args[2]);
+      if (args[0] === "pathSelected") modifyConfig(args[1], args[2]);
     });
   }, []);
 
@@ -70,44 +62,44 @@ export default function GeneralSettings() {
       autoComplete="off"
     >
       <TextField 
-        value={state.storagePath}
+        value={config.storagePath}
         id="storage-path" 
         label="Storage Path" 
         variant="outlined" 
-        onClick={openStoragePathDialog} 
+        onClick={() => openDirectorySelectorDialog("storagePath")} 
         InputLabelProps={{ shrink: true }}
         sx={style}
         inputProps={{ style: { color: "white" } }}
       />
       <TextField 
-        value={state.retailLogPath}
+        value={config.retailLogPath}
         id="retail-log-path" 
         label="Retail Log Path" 
         variant="outlined" 
-        onClick={openRetailLogPathDialog} 
+        onClick={() => openDirectorySelectorDialog("retailLogPath")} 
         InputLabelProps={{ shrink: true }}
         sx={style}
         inputProps={{ style: { color: "white" } }}
       />
       <TextField 
-        value={state.classicLogPath}
+        value={config.classicLogPath}
         id="classic-log-path" 
         label="Classic Log Path" 
         variant="outlined" 
-        onClick={openClassicLogPathDialog} 
+        onClick={() => openDirectorySelectorDialog("classicLogPath")} 
         InputLabelProps={{ shrink: true }}
         sx={style}
         inputProps={{ style: { color: "white" } }}
       />
       <TextField 
-        value={state.maxStorage}
-        onChange={event => setState({ maxStorage: event.target.value })}
+        value={config.maxStorage}
+        onChange={event => { modifyConfig("maxStorage", event.target.value) }}
         id="max-storage" 
         label="Max Storage (GB)" 
         variant="outlined" 
         type="number" 
-        error= { state.maxStorage < 1 }
-        helperText={(state.maxStorage < 1) ? "Must be positive" : ' '}
+        error= { config.maxStorage < 1 }
+        helperText={(config.maxStorage < 1) ? "Must be positive" : ' '}
         InputLabelProps={{ shrink: true }}
         sx={style}
         inputProps={{ style: { color: "white" } }}

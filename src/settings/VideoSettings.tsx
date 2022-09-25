@@ -3,18 +3,19 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
-import { setSetting } from './settingUtils';
 import Stack from '@mui/material/Stack';
 import { OurDisplayType } from 'main/types';
+import ConfigContext from "./ConfigContext";
 
 const ipc = window.electron.ipcRenderer;
-const store = window.electron.store;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
 
 export default function VideoSettings() {
-  const [state, setState] = React.useState({
-    monitorIndex: store.get('monitor-index'),
-  });
+  const [config, setConfig] = React.useContext(ConfigContext);
+
+  const modifyConfig = (stateKey: string, value: any) => {
+    setConfig((prevConfig) => ({ ...prevConfig, [stateKey]: value }));
+  };
 
   const style = {
     height: '2.5rem',
@@ -45,9 +46,9 @@ export default function VideoSettings() {
         <Select
           labelId="demo-simple-select-label"
           id="monitor-index"
-          value={state.monitorIndex}
+          value={config.monitorIndex}
           label="Monitor"
-          onChange={(event) => setSetting('monitorIndex', event.target.value, setState)} 
+          onChange={(event) => modifyConfig('monitorIndex', event.target.value)} 
           sx={style}
         >
           { displayConfiguration.map((display: OurDisplayType) =>
