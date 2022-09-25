@@ -5,8 +5,6 @@ import { openDirectorySelectorDialog } from './settingUtils';
 import Checkbox from '@mui/material/Checkbox';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Divider from '@mui/material/Divider';
-import FormLabel from '@mui/material/FormLabel';
 import ConfigContext from "./ConfigContext";
 
 const ipc = window.electron.ipcRenderer;
