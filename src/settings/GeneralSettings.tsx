@@ -98,7 +98,7 @@ export default function GeneralSettings() {
       />
       <TextField 
         value={config.maxStorage}
-        onChange={event => { modifyConfig("maxStorage", event.target.value) }}
+        onChange={event => { modifyConfig("maxStorage", parseInt(event.target.value, 10)) }}
         id="max-storage" 
         label="Max Storage (GB)" 
         variant="outlined" 

@@ -37,23 +37,23 @@ export default function ContentSettings() {
       <FormLabel id="radios" sx={formLabelStyle}>Game Type</FormLabel>
       <Divider color="black" />
       <FormGroup sx={formGroupStyle}>
-        <FormControlLabel control={getCheckBox("retail")} label="Retail" style = {formControlLabelStyle} />
-        <FormControlLabel control={getCheckBox("classic")} label="Classic" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordRetail")} label="Retail" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordClassic")} label="Classic" style = {formControlLabelStyle} />
       </FormGroup>
       <FormLabel id="radios" sx={formLabelStyle}>PvE</FormLabel>
       <Divider color="black" />
       <FormGroup sx={formGroupStyle}>
-        <FormControlLabel control={getCheckBox("raids")} label="Raids" style = {formControlLabelStyle} />
-        <FormControlLabel control={getCheckBox("dungeons")} label="Mythic+" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordRaids")} label="Raids" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordDungeons")} label="Mythic+" style = {formControlLabelStyle} />
       </FormGroup>
       <FormLabel id="radios" sx={formLabelStyle}>PvP</FormLabel>
       <Divider color="black" />
       <FormGroup sx={formGroupStyle}>
-        <FormControlLabel control={getCheckBox("twoVTwo")} label="2v2" style = {formControlLabelStyle} />
-        <FormControlLabel control={getCheckBox("threeVThree")} label="3v3" style = {formControlLabelStyle} />
-        <FormControlLabel control={getCheckBox("skirmish")} label="Skirmish" style = {formControlLabelStyle} />
-        <FormControlLabel control={getCheckBox("soloShuffle")} label="Solo Shuffle" style = {formControlLabelStyle} />
-        <FormControlLabel control={getCheckBox("battlegrounds")} label="Battlegrounds" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordTwoVTwo")} label="2v2" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordThreeVThree")} label="3v3" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordSkirmish")} label="Skirmish" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordSoloShuffle")} label="Solo Shuffle" style = {formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordBattlegrounds")} label="Battlegrounds" style = {formControlLabelStyle} />
       </FormGroup>
     </div>
   );

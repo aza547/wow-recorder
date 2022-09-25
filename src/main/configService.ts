@@ -6,8 +6,8 @@ import { EventEmitter } from "stream";
 type ConfigurationSchema = {
     storagePath: string,
     bufferStoragePath?: string,
-    logPath: string,
-    logPathClassic?: string,
+    retailLogPath?: string,
+    classicLogPath?: string,
     maxStorage: number,
     monitorIndex: number,
     selectedCategory: number,
@@ -15,6 +15,15 @@ type ConfigurationSchema = {
     audioOutputDevice?: string,
     minEncounterDuration: number,
     startUp?: boolean,
+    recordRetail: boolean,
+    recordClassic: boolean,
+    recordRaids: boolean,
+    recordDungeons: boolean,
+    recordTwoVTwo: boolean,
+    recordThreeVThree: boolean,
+    recordSkirmish: boolean,
+    recordSoloShuffle: boolean,
+    recordBattlegrounds: boolean,
 };
 
 /**
@@ -31,12 +40,12 @@ const schema = {
         type: 'string',
         default: '',
     },
-    logPath: {
+    retailLogPath: {
         description: 'Filesystem path where WoW Retail combat logs are stored',
         type: 'string',
         default: '',
     },
-    logPathClassic: {
+    classicLogPath: {
         description: 'Filesystem path where WoW Classic combat logs are stored',
         type: 'string',
         default: '',
@@ -80,6 +89,51 @@ const schema = {
         type: 'boolean',
         default: false,
     },
+    recordRetail: {
+        description: 'Whether the application should record retail',
+        type: 'boolean',
+        default: true,
+    },
+    recordClassic: {
+        description: 'Whether the application should record classic',
+        type: 'boolean',
+        default: true,
+    },
+    recordRaids: {
+        description: 'Whether the application should record raids',
+        type: 'boolean',
+        default: true,
+    },
+    recordDungeons: {
+        description: 'Whether the application should record Mythic+',
+        type: 'boolean',
+        default: true,
+    },
+    recordTwoVTwo: {
+        description: 'Whether the application should record 2v2',
+        type: 'boolean',
+        default: true,
+    },
+    recordThreeVThree: {
+        description: 'Whether the application should record 3v3',
+        type: 'boolean',
+        default: true,
+    },
+    recordSkirmish: {
+        description: 'Whether the application should record skirmishes',
+        type: 'boolean',
+        default: true,
+    },
+    recordSoloShuffle: {
+        description: 'Whether the application should record solo shuffle',
+        type: 'boolean',
+        default: true,
+    },
+    recordBattlegrounds: {
+        description: 'Whether the application should record battlegrounds',
+        type: 'boolean',
+        default: true,
+    },
 };
 
 export default class ConfigService extends EventEmitter {
@@ -120,8 +174,9 @@ export default class ConfigService extends EventEmitter {
             return false;
         }
 
-        if (!this._store.get('logPath')) {
-            console.warn('[ConfigService] Validation failed: `logPath` is empty');
+        // TODO either retail or classic is OK here
+        if (!this._store.get('retailLogPath')) {
+            console.warn('[ConfigService] Validation failed: `retailLogPath` is empty');
             return false;
         }
 

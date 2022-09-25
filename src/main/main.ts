@@ -20,7 +20,7 @@ import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
-import { getConfigValue } from 'settings/useSettings';
+
 let recorder: Recorder;
 
 /**
@@ -55,7 +55,7 @@ console.log("[Main] App starting: version", app.getVersion());
 const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
   const config = {
     storageDir:           cfg.get<string>('storagePath'),
-    bufferStorageDir:     cfg.get<string>('bufferStoragePath'),
+    bufferStorageDir:     cfg.get<string>('bufferStoragePath'), // TODO this will resolve an empty string if not in cfg
     maxStorage:           cfg.get<number>('maxStorage'),
     monitorIndex:         cfg.get<number>('monitorIndex'),
     audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
@@ -75,8 +75,8 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
 const cfg = new ConfigService();
 let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
 let baseLogPaths: string[] = [
-  cfg.getPath('log-path'),
-  cfg.getPath('log-path-classic'),
+  cfg.getPath('retailLogPath'),
+  cfg.getPath('classicLogPath'),
 ];
 
 // Default video player settings on app start
@@ -237,7 +237,7 @@ const createSettingsWindow = async () => {
 
   settingsWindow = new BrowserWindow({
     show: false,
-    width: 770,
+    width: 690,
     height: 500,
     resizable: (process.env.NODE_ENV === 'production') ? false : true,
     icon: getAssetPath('./icon/settings-icon.svg'),

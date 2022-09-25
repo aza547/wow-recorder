@@ -86,7 +86,7 @@ const a11yProps = (index: number) => {
  * the app is restarted. 
  */
 const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
-const selectedCategory = getConfigValue<number>('selected-category');
+const selectedCategory = getConfigValue<number>('selectedCategory');
 
 let videoState: { [key: string]: any } = {}
 
@@ -128,7 +128,7 @@ export default function Layout() {
    * Update the state variable following a change of selected category.
    */
   const handleChangeCategory = (_event: React.SyntheticEvent, newValue: number) => {
-    setConfigValue('selected-category', newValue);
+    setConfigValue('selectedCategory', newValue);
 
     setState(prevState => {
       return {

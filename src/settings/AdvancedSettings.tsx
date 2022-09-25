@@ -54,7 +54,7 @@ export default function GeneralSettings() {
       />
       <TextField 
         value={config.minEncounterDuration}
-        onChange={event => { modifyConfig("minEncounterDuration", event.target.value) }}
+        onChange={event => { modifyConfig("minEncounterDuration", parseInt(event.target.value, 10)) }}
         id="max-storage" 
         label="Min Encounter Duration (sec)" 
         variant="outlined" 

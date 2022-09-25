@@ -50,9 +50,10 @@ function a11yProps(index: number) {
 
 export default function Settings() {
   const [config, setConfig] = useSettings();
+  const [tabIndex, setTabIndex] = React.useState(0);
 
   const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
-    setConfig({...config, tabIndex: newValue});
+    setTabIndex(newValue);
   };
 
   /**
@@ -120,7 +121,7 @@ const useStyles = makeStyles()({
         <Tabs
           orientation="vertical"
           variant="scrollable"
-          value={config.tabIndex}
+          value={tabIndex}
           onChange={handleChangeTab}
           aria-label="Vertical tabs example"
           sx= {{ ...categoryTabsSx }}
@@ -133,19 +134,19 @@ const useStyles = makeStyles()({
           <Tab label="Audio" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
           <Tab label="Advanced" {...a11yProps(4)} sx = {{ ...categoryTabSx }}/>
         </Tabs>
-        <TabPanel value={config.tabIndex} index={0}>
+        <TabPanel value={tabIndex} index={0}>
           <GeneralSettings/>
         </TabPanel>
-        <TabPanel value={config.tabIndex} index={1}>
+        <TabPanel value={tabIndex} index={1}>
           <ContentSettings/>
         </TabPanel>
-        <TabPanel value={config.tabIndex} index={2}>
+        <TabPanel value={tabIndex} index={2}>
           <VideoSettings/>
         </TabPanel>
-        <TabPanel value={config.tabIndex} index={3}>
+        <TabPanel value={tabIndex} index={3}>
           <AudioSettings/>
         </TabPanel>
-        <TabPanel value={config.tabIndex} index={4}>
+        <TabPanel value={tabIndex} index={4}>
           <AdvancedSettings/>
         </TabPanel>
         <div style={{position: "fixed", bottom: "10px", left: "12px"}} >
