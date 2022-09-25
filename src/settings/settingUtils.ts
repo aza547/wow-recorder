@@ -5,7 +5,7 @@ const ipc = window.electron.ipcRenderer;
  */
 const stateKeyToSettingKeyMap = {
     'storagePath': 'storage-path',
-    'bufferPath': 'buffer-path',
+    'bufferStoragePath': 'buffer-path',
     'retailLogPath': 'retail-log-path',
     'classicLogPath': 'classic-log-path',
     'maxStorage': 'max-storage',

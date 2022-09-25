@@ -43,11 +43,11 @@ export default function GeneralSettings() {
       autoComplete="off"
     >
       <TextField 
-        value={config.bufferPath}
+        value={config.bufferStoragePath}
         id="buffer-path" 
         label="Buffer Path" 
         variant="outlined" 
-        onClick={() => openDirectorySelectorDialog('bufferPath')} 
+        onClick={() => openDirectorySelectorDialog('bufferStoragePath')} 
         InputLabelProps={{ shrink: true }}
         sx={style}
         inputProps={{ style: { color: "white" } }}
