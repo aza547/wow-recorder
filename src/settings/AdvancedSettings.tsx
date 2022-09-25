@@ -21,7 +21,6 @@ export default function GeneralSettings() {
    */
    React.useEffect(() => {
     ipc.on('settingsWindow', (args: any) => {
-      console.log(args);
       if (args[0] === "pathSelected") modifyConfig(args[1], args[2]);
     });
   }, []);

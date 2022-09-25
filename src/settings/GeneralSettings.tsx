@@ -19,29 +19,9 @@ export default function GeneralSettings() {
    */
    React.useEffect(() => {
     ipc.on('settingsWindow', (args: any) => {
-      console.log(args);
       if (args[0] === "pathSelected") modifyConfig(args[1], args[2]);
     });
   }, []);
-
-  /**
-   * setSetting, why not just use react state hook?
-   */
-  const setSetting = (stateKey: StateToSettingKeyMapKey, value: any) => {
-    const settingKey = stateKeyToSettingKeyMap[stateKey]
-    const element = document.getElementById(settingKey)
-
-    console.log(stateKey, value, settingKey, element);
-
-    if (!element) {
-      return;
-    }
-
-    console.log(`[SettingsWindow] Set setting '${settingKey}' to '${value}'`)
-    element.setAttribute("value", value);
-
-    setState((prevState) => ({...prevState, [stateKey]: value}))
-  }
 
   const style = {
     "& .MuiOutlinedInput-root": {
