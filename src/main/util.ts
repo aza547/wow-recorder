@@ -203,9 +203,9 @@ const getVideoEncounter = (metadata: Metadata) => {
 /**
  * Return information about a file needed for various parts of the application
  */
-const getFileInfo = (filePath: string): FileInfo => {
+const getFileInfo = async (filePath: string): Promise<FileInfo> => {
     filePath = path.resolve(filePath);
-    const fstats = fs.statSync(filePath);
+    const fstats = await fspromise.stat(filePath);
     const mtime = fstats.mtime.getTime();
     const size = fstats.size;
 
@@ -224,12 +224,14 @@ const getFileInfo = (filePath: string): FileInfo => {
 
     const files = (await globPromise(path.join(dir, pattern)))
         .map(getFileInfo);
+    
+    const mappedFiles = await Promise.all(files);
 
     if (sortDirection === FileSortDirection.NewestFirst) {
-        return files.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
+        return mappedFiles.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
     }
 
-    return files.sort((A: FileInfo, B: FileInfo) => A.mtime - B.mtime);
+    return mappedFiles.sort((A: FileInfo, B: FileInfo) => A.mtime - B.mtime);
 };
 
 /**

@@ -250,8 +250,8 @@ type RecorderOptionsType = {
     cleanupBuffer = async (filesToLeave: number) => {
         // Sort newest to oldest
         const videosToDelete = await getSortedVideos(this._options.bufferStorageDir);
-
-        // Remove newest 2 from the list; we don't delete those.
+        if (!videosToDelete || videosToDelete.length === 0) return;
+        
         videosToDelete
             .slice(filesToLeave)
             .forEach(v => deleteVideo(v.name));

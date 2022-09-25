@@ -375,10 +375,7 @@ class CombatLogParser extends EventEmitter {
      */
     private async getLatestLog (pathSpec: string): Promise<string | undefined> {
         const logs = await this._options.fileFinderFn(pathSpec, 'WoWCombatLog*.txt');
-        if (logs.length === 0) {
-            return;
-        }
-
+        if (logs.length === 0) return;
         return logs[0].name;
     }
 
