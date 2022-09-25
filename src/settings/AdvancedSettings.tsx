@@ -11,7 +11,7 @@ export default function GeneralSettings() {
   const [config, setConfig] = React.useContext(ConfigContext);
 
   const modifyConfig = (stateKey: string, value: any) => {
-    setConfig((prevConfig) => ({ ...prevConfig, [stateKey]: value }));
+    setConfig((prevConfig: any) => ({ ...prevConfig, [stateKey]: value }));
   };
 
   /**

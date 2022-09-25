@@ -1,5 +1,5 @@
 import React from "react";
-
-const ConfigContext = React.createContext([{}, () => {}]);
+                            // should be config type as first arg here
+const ConfigContext = React.createContext<[any, React.Dispatch<any>]>([{}, () => {}]);
 
 export default ConfigContext;

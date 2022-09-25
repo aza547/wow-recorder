@@ -26,5 +26,5 @@ export default function useSettings() {
     startUp: store.get('start-up'),
   });
 
-  return [config, setConfig];
+  return [config, setConfig] as const;
 }

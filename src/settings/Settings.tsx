@@ -51,7 +51,7 @@ function a11yProps(index: number) {
 export default function Settings() {
   const [config, setConfig] = useSettings();
 
-  const handleChangeTab = (event: React.SyntheticEvent, newValue: number) => {
+  const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
     setConfig({...config, tabIndex: newValue});
   };
 
