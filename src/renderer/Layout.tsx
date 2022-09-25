@@ -14,12 +14,12 @@ import readyPoster  from  "../../assets/poster/ready.png";
 import notReadyPoster from  "../../assets/poster/not-ready.png";
 import { dungeon } from './images';
 import { VideoPlayerSettings } from 'main/types';
+import { getConfigValue, setConfigValue } from 'settings/useSettings';
 
 /**
  * For shorthand referencing.
  */
 const ipc = window.electron.ipcRenderer;
-const store = window.electron.store;
 
 /**
  * Needed to style the tabs with the right color.
@@ -86,7 +86,7 @@ const a11yProps = (index: number) => {
  * the app is restarted. 
  */
 const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
-const selectedCategory = ((store.get('selected-category') ?? 0) as number);
+const selectedCategory = getConfigValue<number>('selected-category');
 
 let videoState: { [key: string]: any } = {}
 
@@ -128,7 +128,7 @@ export default function Layout() {
    * Update the state variable following a change of selected category.
    */
   const handleChangeCategory = (_event: React.SyntheticEvent, newValue: number) => {
-    store.set('selected-category', newValue);
+    setConfigValue('selected-category', newValue);
 
     setState(prevState => {
       return {

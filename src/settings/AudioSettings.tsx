@@ -18,6 +18,7 @@ export default function GeneralSettings() {
   };
 
   const audioDevices = ipc.sendSync('getAudioDevices', []);
+  console.log(audioDevices);
 
   const availableAudioDevices = {
     input: [

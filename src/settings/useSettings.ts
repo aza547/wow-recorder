@@ -1,14 +1,27 @@
 import * as React from 'react';
 
-const store = window.electron.store;
+export function getConfigValue<T>(configKey: string): T {
+  return (window.electron.ipcRenderer.sendSync('config', ['get', configKey]) as T);
+};
+
+export const setConfigValue = (configKey: string, value: any): void => {
+  console.log("saving value to e-storage: ", configKey, value);
+  window.electron.ipcRenderer.sendMessage('config', ['set', configKey, value]);
+};
 
 export default function useSettings() {
   const [config, setConfig] = React.useState({
+    storagePath:          getConfigValue<string>('storagePath'),
+    retailLogPath:        getConfigValue<string>('logPath'),
+    classicLogPath:       getConfigValue<string>('logPathClassic'),
+    maxStorage:           getConfigValue<number>('maxStorage'),
+    minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
+    monitorIndex:         getConfigValue<number>('monitorIndex'),
+    audioInputDevice:     getConfigValue<string>('audioInputDevice'),
+    audioOutputDevice:    getConfigValue<string>('audioOutputDevice'),
+    bufferPath:           getConfigValue<string>('bufferStoragePath'),
+    startUp:              getConfigValue<boolean>('startUp'),
     tabIndex: 0,
-    storagePath: store.get('storage-path'),
-    retailLogPath: store.get('retail-log-path'),
-    classicLogPath: store.get('classic-log-path'),
-    maxStorage: store.get('max-storage'),
     retail: true,
     classic: false,
     raids: true,
@@ -18,11 +31,7 @@ export default function useSettings() {
     skirmish: true,
     soloShuffle: true,
     battlegrounds: true,
-    monitorIndex: 1,
-    audioInputDevice: store.get('audio-input-device'),
-    audioOutputDevice: store.get('audio-output-device'),
-    bufferPath: store.get('buffer-storage-path'),
   });
 
   return [config, setConfig];
-}
+};
