@@ -9,6 +9,28 @@ export function setConfigValue<_, T>(configKey: string, value: any): void {
   window.electron.ipcRenderer.sendMessage('config', ['set', configKey, value as T]);
 };
 
+export const configSettings = [
+  'storagePath',
+  'retailLogPath',
+  'classicLogPath',
+  'maxStorage',
+  'minEncounterDuration',
+  'monitorIndex',
+  'audioInputDevice',
+  'audioOutputDevice',
+  'bufferStoragePath',
+  'startUp',
+  'recordRetail',
+  'recordClassic',
+  'recordRaids',
+  'recordDungeons',
+  'recordTwoVTwo',
+  'recordThreeVThree',
+  'recordSkirmish',
+  'recordSoloShuffle',
+  'recordBattlegrounds',
+];
+
 export default function useSettings() {
   const [config, setConfig] = React.useState({
     storagePath:          getConfigValue<string>('storagePath'),

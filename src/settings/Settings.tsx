@@ -10,7 +10,7 @@ import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
 import ContentSettings from './ContentSettings';
 import ConfigContext from "./ConfigContext";
-import useSettings, { setConfigValue } from "./useSettings";
+import useSettings, { configSettings, setConfigValue } from "./useSettings";
 
 const ipc = window.electron.ipcRenderer;
 
@@ -67,7 +67,7 @@ export default function Settings() {
    * Save values. 
    */
   const saveSettings = () => {
-    Object.keys(config).forEach((key: string) => {
+    configSettings.forEach((key: string) => {
       const configKey = (key as keyof typeof config);
       setConfigValue(key, config[configKey])
     });

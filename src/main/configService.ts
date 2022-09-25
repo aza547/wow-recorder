@@ -156,27 +156,33 @@ export default class ConfigService extends EventEmitter {
             const [fn, key] = args;
 
             if (fn === 'get') {
-                const value = this._store.get(key);
-                console.log("[ConfigService] Got from config store: ", key, value);
+                const value = this.get(key);
+                console.log('[ConfigService] Get from config store:', key, value);
                 event.returnValue = value;
             } else
             if (fn === 'set') {
                 const value = args[2];
-                console.log("[ConfigService] Setting in config store: ", key, value);
-                this._store.set(key, value);
+                this.set(key, value);
+                console.log('[ConfigService] Set in config store:', key, value);
             }
         });
     }
 
     validate(): boolean {
-        if (!this._store.get('storagePath')) {
+        const storagePath = this.get('storagePath');
+
+        if (storagePath) {
+            this.updateDefaults('storagePath', storagePath);
+        }
+
+        if (!this.get('storagePath')) {
             console.warn('[ConfigService] Validation failed: `storagePath` is empty');
             return false;
         }
 
         // TODO either retail or classic is OK here
-        if (!this._store.get('retailLogPath')) {
-            console.warn('[ConfigService] Validation failed: `retailLogPath` is empty');
+        if (!this.get('retailLogPath') && !this.get('classicLogPath')) {
+            console.warn('[ConfigService] Validation failed: `retailLogPath` and `classicLogPath` are empty. One needs to be set.');
             return false;
         }
 
@@ -188,15 +194,31 @@ export default class ConfigService extends EventEmitter {
     }
 
     get<T>(key: keyof ConfigurationSchema): T {
-        if (!this._store.has(key) && schema[key].default) {
-            return (schema[key].default as T);
+        if (!schema[key]) {
+            throw Error(`[ConfigService] Attempted to get invalid configuration key '${key}'`)
         }
 
-        return (this._store.get(key) as T)
+        const value = this._store.get(key);
+
+        if (!this._store.has(key) || (value === '' || value === null || value === undefined)) {
+            if (schema[key] && schema[key].default) {
+                return (schema[key].default as T);
+           }
+        }
+
+        return (value as T)
     }
 
     set(key: keyof ConfigurationSchema, value: any): void {
-        this._store.set(key, value);
+        if (!schema[key]) {
+            throw Error(`[ConfigService] Attempted to set invalid configuration key '${key}'`)
+        }
+
+        if (value === null || value === undefined || value === '') {
+            this._store.delete(key);
+        } else {
+            this._store.set(key, value);
+        }
     }
 
     getPath(key: keyof ConfigurationSchema): string {
@@ -229,7 +251,7 @@ export default class ConfigService extends EventEmitter {
     }
 
     private updateDefaults(key: string, newValue: any): void {
-        if (key == 'storagePath') {
+        if (key === 'storagePath') {
             schema['bufferStoragePath'].default = this.resolveBufferStoragePath(
                 newValue as string,
                 this.get('bufferStoragePath')
