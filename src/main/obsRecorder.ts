@@ -130,8 +130,11 @@ const getClosestResolution = (resolutions: string[], target: Size): string => {
   // Create an array of values with the target resolution subtracted.
   // We'll end up with an array where one element has a very low number,
   // which is at the index we're after.
+  //
+  // We multiply width/height by a different number to avoid having mirrored
+  // resolutions (1080x1920 vs 1920x1080) have the same sorting value.
   const indexArray = numericResolutions.map(v => {
-      return Math.abs((target.width - v[0]) + (target.height - v[1]));
+      return Math.abs(((target.width - v[0]) * 2) + ((target.height - v[1]) * 4));
   });
 
   // Find the minimum value from the indexing array. This value will
