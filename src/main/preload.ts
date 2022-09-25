@@ -1,17 +1,8 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'mainWindow' | 'settingsWindow' | 'getVideoState' | 'contextMenu' | 'logPath' | 'openURL' | 'test' | 'getAudioDevices' | 'videoPlayerSettings' | 'recorder';
+export type Channels = 'mainWindow' | 'settingsWindow' | 'getVideoState' | 'contextMenu' | 'logPath' | 'openURL' | 'test' | 'getAudioDevices' | 'videoPlayerSettings' | 'recorder' | 'config';
 
 contextBridge.exposeInMainWorld('electron', {
-  store: {
-    get(val: any) {
-      return ipcRenderer.sendSync('cfg-get', val);
-    },
-
-    set(property: any, val: any) {
-      ipcRenderer.send('cfg-set', property, val);
-    },
-  },
   ipcRenderer: {
     sendMessage(channel: Channels, args: unknown[]) {
       ipcRenderer.send(channel, args);

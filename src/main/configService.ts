@@ -4,76 +4,78 @@ import path from "path";
 import { EventEmitter } from "stream";
 
 type ConfigurationSchema = {
-    'storage-path': string,
-    'buffer-storage-path'?: string,
-    'log-path': string,
-    'log-path-classic'?: string,
-    'max-storage': number,
-    'monitor-index': number,
-    'selected-category': number,
-    'audio-input-device'?: string,
-    'audio-output-device'?: string,
-    'min-encounter-duration': number,
-    'start-up'?: boolean,
+    storagePath: string,
+    bufferStoragePath?: string,
+    logPath: string,
+    logPathClassic?: string,
+    maxStorage: number,
+    monitorIndex: number,
+    selectedCategory: number,
+    audioInputDevice?: string,
+    audioOutputDevice?: string,
+    minEncounterDuration: number,
+    startUp?: boolean,
 };
 
 /**
  * 
  */
 const schema = {
-    'storage-path': {
+    storagePath: {
         description: 'Filesystem path where finalized videos are stored',
         type: 'string',
+        default: '',
     },
-    'buffer-storage-path': {
+    bufferStoragePath: {
         description: 'Filesystem path where temporary videos files are stored',
         type: 'string',
         default: '',
     },
-    'log-path': {
+    logPath: {
         description: 'Filesystem path where WoW Retail combat logs are stored',
         type: 'string',
+        default: '',
     },
-    'log-path-classic': {
+    logPathClassic: {
         description: 'Filesystem path where WoW Classic combat logs are stored',
         type: 'string',
         default: '',
     },
-    'max-storage': {
+    maxStorage: {
         description: 'Maximum allowed storage, in GB, that the application will consume for non-protected video files',
         type: 'integer',
         default: 20,
         minimum: 1,
     },
-    'monitor-index': {
+    monitorIndex: {
         description: 'The one-based index of the display to record',
         type: 'integer',
         default: 1,
         minimum: 1,
         maximum: 4,        
     },
-    'selected-category': {
+    selectedCategory: {
         description: 'Last selected video category in the UI',
         type: 'integer',
         default: 0,
     },
-    'audio-input-device': {
+    audioInputDevice: {
         description: 'Audio input device to be included in the recording',
         type: 'string',
         default: 'all',
     },
-    'audio-output-device': {
+    audioOutputDevice: {
         description: 'Audio output device to be included in the recording',
         type: 'string',
         default: 'all',
     },
-    'min-encounter-duration': {
+    minEncounterDuration: {
         description: 'Minimum boss encounter duration, in seconds, in order for it to not be discarded [Raids only]',
         type: 'integer',
         default: 15,
         maximum: 10000,
     },
-    'start-up': {
+    startUp: {
         description: 'Whether the application starts on Windows start-up',
         type: 'boolean',
         default: false,
@@ -81,20 +83,7 @@ const schema = {
 };
 
 export default class ConfigService extends EventEmitter {
-    private _store = new ElectronStore<ConfigurationSchema>({schema, configName: 'newConfig'});
-    private _defaults: ConfigurationSchema = {
-        'storage-path': '',
-        'buffer-storage-path': '',
-        'log-path': '',
-        'log-path-classic': '',
-        'max-storage': 0,
-        'monitor-index': 1,
-        'selected-category': 0,
-        'audio-input-device': 'all',
-        'audio-output-device': 'all',
-        'min-encounter-duration': 15,
-        'start-up': false,
-    };
+    private _store = new ElectronStore<ConfigurationSchema>({schema, name: 'config-v2'});
 
     constructor() {
         super();
@@ -104,12 +93,7 @@ export default class ConfigService extends EventEmitter {
         });
 
         // Update the default for buffer-storage-path whenever 'storage-path' changes
-        this._store.onDidChange('storage-path', (newValue: any) => {
-            this._defaults['buffer-storage-path'] = this.resolveBufferStoragePath(
-                newValue as string,
-                this.get('buffer-storage-path')
-            );
-        });
+        this._store.onDidChange('storagePath', (newValue: any) => this.updateDefaults('storagePath', newValue));
 
         /**
          * Getter and setter config listeners. 
@@ -131,19 +115,29 @@ export default class ConfigService extends EventEmitter {
     }
 
     validate(): boolean {
-        return false;
+        if (!this._store.get('storagePath')) {
+            console.warn('[ConfigService] Validation failed: `storagePath` is empty');
+            return false;
+        }
+
+        if (!this._store.get('logPath')) {
+            console.warn('[ConfigService] Validation failed: `logPath` is empty');
+            return false;
+        }
+
+        return true;
     }
 
     has(key: keyof ConfigurationSchema): boolean {
         return this._store.has(key);
     }
 
-    get(key: keyof ConfigurationSchema): any {
-        if (!this.has(key) && this._defaults.hasOwnProperty(key)) {
-            return this._defaults[key];
+    get<T>(key: keyof ConfigurationSchema): T {
+        if (!this._store.has(key) && schema[key].default) {
+            return (schema[key].default as T);
         }
 
-        return this._store.get(key);
+        return (this._store.get(key) as T)
     }
 
     set(key: keyof ConfigurationSchema, value: any): void {
@@ -177,5 +171,15 @@ export default class ConfigService extends EventEmitter {
 
         // Do not use `path` here, as it uses Node JS `process` which isn't available in the render process.
         return storagePath ? path.join(storagePath, '.temp') : '';
-    };
+    }
+
+    private updateDefaults(key: string, newValue: any): void {
+        if (key == 'storagePath') {
+            schema['bufferStoragePath'].default = this.resolveBufferStoragePath(
+                newValue as string,
+                this.get('bufferStoragePath')
+            );
+            return;
+        }
+    }
 };

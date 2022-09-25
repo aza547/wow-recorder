@@ -8,14 +8,10 @@ import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu, net } from 'ele
 import {
   resolveHtmlPath,
   loadAllVideos,
-  isConfigReady,
   deleteVideo,
   openSystemExplorer,
   toggleVideoProtected,
   fixPathWhenPackaged,
-  defaultMonitorIndex,
-  defaultMinEncounterDuration,
-  defaultAudioDevice,
   getAvailableDisplays,
 } from './util';
 import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
@@ -23,8 +19,8 @@ const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus, VideoPlayerSettings } from './types';
-import ElectronStore from 'electron-store';
-import { getNumberConfigSafe, getPathConfigSafe, getStringConfigSafe, resolveBufferStoragePath } from './helpers';
+import ConfigService from './configService';
+import { getConfigValue } from 'settings/useSettings';
 let recorder: Recorder;
 
 /**
@@ -56,35 +52,16 @@ console.log("[Main] App starting: version", app.getVersion());
  * Load and return recorder options from the configuration store.
  * Does some basic sanity checking for default values.
  */
-const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
-  const storageDir = getPathConfigSafe(cfg, 'storage-path');
-  const bufferStorageDir = getPathConfigSafe(cfg, 'buffer-storage-path');
-
+const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
   const config = {
-    storageDir: storageDir,
-    bufferStorageDir: resolveBufferStoragePath(storageDir, bufferStorageDir),
-    maxStorage: getNumberConfigSafe(cfg, 'max-storage'),
-    monitorIndex: getNumberConfigSafe(cfg, 'monitor-index'),
-    audioInputDeviceId: getStringConfigSafe(cfg, 'audio-input-device', 'all'),
-    audioOutputDeviceId: getStringConfigSafe(cfg, 'audio-output-device', 'all'),
-    minEncounterDuration: getNumberConfigSafe(cfg, 'min-encounter-duration'),
+    storageDir:           cfg.get<string>('storagePath'),
+    bufferStorageDir:     cfg.get<string>('bufferStoragePath'),
+    maxStorage:           cfg.get<number>('maxStorage'),
+    monitorIndex:         cfg.get<number>('monitorIndex'),
+    audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
+    audioOutputDeviceId:  cfg.get<string>('audioOutputDevice'),
+    minEncounterDuration: cfg.get<number>('minEncounterDuration'),
   };
-
-  if (!config.monitorIndex) {
-    config.monitorIndex = defaultMonitorIndex(cfg);
-  }
-
-  if (!config.minEncounterDuration) {
-    config.minEncounterDuration = defaultMinEncounterDuration(cfg);
-  }
-
-  if (!config.audioInputDeviceId) {
-    config.audioInputDeviceId = defaultAudioDevice(cfg, 'input');
-  }
-
-  if (!config.audioOutputDeviceId) {
-    config.audioOutputDeviceId = defaultAudioDevice(cfg, 'output');
-  }
 
   return config;
 };
@@ -95,11 +72,11 @@ const loadRecorderOptions = (cfg: ElectronStore): RecorderOptionsType => {
  *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config.json"
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
  */
-const cfg = new ElectronStore();
+const cfg = new ConfigService();
 let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
 let baseLogPaths: string[] = [
-  getPathConfigSafe(cfg, 'log-path'),
-  getPathConfigSafe(cfg, 'log-path-classic'),
+  cfg.getPath('log-path'),
+  cfg.getPath('log-path-classic'),
 ];
 
 // Default video player settings on app start
@@ -107,20 +84,6 @@ const videoPlayerSettings: VideoPlayerSettings = {
   muted: false,
   volume: 1,
 };
-
-/**
- * Getter and setter config listeners. 
- */
-ipcMain.on('cfg-get', async (event, field) => {
-  const value = cfg.get(field);
-  console.log("[Main] Got from config store: ", field, value);
-  event.returnValue = value;
-});
-
-ipcMain.on('cfg-set', async (_event, key, val) => {
-  console.log("[Main] Setting in config store: ", key, val);
-  cfg.set(key, val);
-});
 
 /**
  * Define renderer windows.
@@ -235,7 +198,7 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    if (!isConfigReady(cfg)) return;
+    if (!cfg.validate()) return;
 
     makeRecorder(recorderOptions)
     pollWowProcess();
@@ -274,7 +237,7 @@ const createSettingsWindow = async () => {
 
   settingsWindow = new BrowserWindow({
     show: false,
-    width: 690,
+    width: 770,
     height: 500,
     resizable: (process.env.NODE_ENV === 'production') ? false : true,
     icon: getAssetPath('./icon/settings-icon.svg'),
@@ -330,7 +293,11 @@ const openPathDialog = (event: any, args: any) => {
  * @returns true if config is setup, false otherwise. 
  */
 const checkConfig = () : boolean => {
-  return (mainWindow !== null) ? isConfigReady(cfg) : false;
+  if (mainWindow === null) {
+    return false;
+  }
+  
+  return cfg.validate();
 }
 
 /**
@@ -420,8 +387,8 @@ ipcMain.on('settingsWindow', (event, args) => {
       makeRecorder(recorderOptions);
 
       baseLogPaths = [
-        getPathConfigSafe(cfg, 'log-path'),
-        getPathConfigSafe(cfg, 'log-path-classic'),
+        cfg.getPath('log-path'),
+        cfg.getPath('log-path-classic'),
       ];
       watchLogs(baseLogPaths);
 
@@ -529,7 +496,7 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  * Test button listener. 
  */
 ipcMain.on('test', (_event, args) => {
-  if (isConfigReady(cfg)) { 
+  if (cfg.validate()) { 
     console.info("[Main] Config is good, running test!");
     runRecordingTest(Boolean(args[0]));
   } else {
