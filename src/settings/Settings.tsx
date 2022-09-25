@@ -67,10 +67,14 @@ export default function Settings() {
    * Save values. 
    */
   const saveSettings = () => {
+    console.info("[Settings] User clicked save settings");
+
     configSettings.forEach((key: string) => {
       const configKey = (key as keyof typeof config);
       setConfigValue(key, config[configKey])
     });
+
+    closeSettings();
   }
 
   const categoryTabsSx = {

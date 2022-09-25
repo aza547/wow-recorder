@@ -27,7 +27,7 @@ type ConfigurationSchema = {
 };
 
 /**
- * 
+ * Config schema. 
  */
 const schema = {
     storagePath: {
@@ -157,13 +157,13 @@ export default class ConfigService extends EventEmitter {
 
             if (fn === 'get') {
                 const value = this.get(key);
-                console.log('[ConfigService] Get from config store:', key, value);
+                console.log('[Config Service] Get from config store:', key, value);
                 event.returnValue = value;
             } else
             if (fn === 'set') {
                 const value = args[2];
                 this.set(key, value);
-                console.log('[ConfigService] Set in config store:', key, value);
+                console.log('[Config Service] Set in config store:', key, value);
             }
         });
     }
@@ -176,13 +176,12 @@ export default class ConfigService extends EventEmitter {
         }
 
         if (!this.get('storagePath')) {
-            console.warn('[ConfigService] Validation failed: `storagePath` is empty');
+            console.warn('[Config Service] Validation failed: `storagePath` is empty');
             return false;
         }
 
-        // TODO either retail or classic is OK here
         if (!this.get('retailLogPath') && !this.get('classicLogPath')) {
-            console.warn('[ConfigService] Validation failed: `retailLogPath` and `classicLogPath` are empty. One needs to be set.');
+            console.warn('[Config Service] Validation failed: `retailLogPath` and `classicLogPath` are empty. One needs to be set.');
             return false;
         }
 
@@ -195,7 +194,7 @@ export default class ConfigService extends EventEmitter {
 
     get<T>(key: keyof ConfigurationSchema): T {
         if (!schema[key]) {
-            throw Error(`[ConfigService] Attempted to get invalid configuration key '${key}'`)
+            throw Error(`[Config Service] Attempted to get invalid configuration key '${key}'`)
         }
 
         const value = this._store.get(key);
@@ -211,7 +210,7 @@ export default class ConfigService extends EventEmitter {
 
     set(key: keyof ConfigurationSchema, value: any): void {
         if (!schema[key]) {
-            throw Error(`[ConfigService] Attempted to set invalid configuration key '${key}'`)
+            throw Error(`[Config Service] Attempted to set invalid configuration key '${key}'`)
         }
 
         if (value === null || value === undefined || value === '') {
@@ -235,18 +234,15 @@ export default class ConfigService extends EventEmitter {
 
     /**
      * Return a value for the `bufferStoragePath` setting, based on the given `storagePath`.
-     *
-     * If `bufferStoragePath` is not empty, it will simply be returned.
-     * If `bufferStoragePath` is empty, and `storagePath` is empty, so will `bufferStoragePath` be.
-     * If `bufferStoragePath` is empty, and `storagePath` is not empty, we'll construct
-     * a default value.
+     *   - If `bufferStoragePath` is not empty, it will simply be returned.
+     *   - If `bufferStoragePath` is empty, and `storagePath` is empty, so will `bufferStoragePath` be.
+     *   - If `bufferStoragePath` is empty, and `storagePath` is not empty, we'll construct a default value.
      */
     private resolveBufferStoragePath (storagePath?: string, bufferStoragePath?: string): string {
         if (bufferStoragePath) {
             return bufferStoragePath;
         }
 
-        // Do not use `path` here, as it uses Node JS `process` which isn't available in the render process.
         return storagePath ? path.join(storagePath, '.temp') : '';
     }
 
