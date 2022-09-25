@@ -52,6 +52,19 @@ export default function GeneralSettings() {
         sx={style}
         inputProps={{ style: { color: "white" } }}
       />
+      <TextField 
+        value={config.minEncounterDuration}
+        onChange={event => { modifyConfig("minEncounterDuration", event.target.value) }}
+        id="max-storage" 
+        label="Min Encounter Duration (sec)" 
+        variant="outlined" 
+        type="number" 
+        error= { config.minEncounterDuration < 1 }
+        helperText={(config.minEncounterDuration < 1) ? "Must be positive" : ' '}
+        InputLabelProps={{ shrink: true }}
+        sx={style}
+        inputProps={{ style: { color: "white" } }}
+      />
     </Stack>
   );
 }

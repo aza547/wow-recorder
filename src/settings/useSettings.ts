@@ -22,6 +22,8 @@ export default function useSettings() {
     audioInputDevice: store.get('audio-input-device'),
     audioOutputDevice: store.get('audio-output-device'),
     bufferPath: store.get('buffer-storage-path'),
+    minEncounterDuration: store.get('min-encounter-duration'),
+    startUp: store.get('start-up'),
   });
 
   return [config, setConfig];

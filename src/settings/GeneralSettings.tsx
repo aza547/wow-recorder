@@ -2,6 +2,11 @@ import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import { openDirectorySelectorDialog } from './settingUtils';
+import Checkbox from '@mui/material/Checkbox';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Divider from '@mui/material/Divider';
+import FormLabel from '@mui/material/FormLabel';
 import ConfigContext from "./ConfigContext";
 
 const ipc = window.electron.ipcRenderer;
@@ -12,6 +17,13 @@ export default function GeneralSettings() {
 
   const modifyConfig = (stateKey: string, value: any) => {
     setConfig((prevConfig) => ({ ...prevConfig, [stateKey]: value }));
+  };
+
+  const modifyCheckboxConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setConfig({
+      ...config,
+      [event.target.name]: event.target.checked,
+    });
   };
 
   /**
@@ -31,6 +43,21 @@ export default function GeneralSettings() {
     "& .MuiInputLabel-root": {color: 'white'},
     "& label.Mui-focused": {color: "#bb4220"},
   }   
+
+  const checkBoxStyle = {color: "#bb4220"};
+  const formControlLabelStyle = {color: "white"};
+  const formGroupStyle = {width: '48ch'};
+
+  const getCheckBox = (preference: string) => {
+    return (
+      <Checkbox 
+        checked={ Boolean(config[preference]) } 
+        onChange={modifyCheckboxConfig} 
+        name={preference}
+        style = {checkBoxStyle} 
+      />
+    )
+  }
 
   return (
     <Stack
@@ -84,6 +111,9 @@ export default function GeneralSettings() {
         sx={style}
         inputProps={{ style: { color: "white" } }}
       />
+      <FormGroup sx={formGroupStyle}>
+        <FormControlLabel control={getCheckBox("startUp")} label="Run on startup" style = {formControlLabelStyle} />
+      </FormGroup>
     </Stack>
   );
 }
