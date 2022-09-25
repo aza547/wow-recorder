@@ -7,7 +7,7 @@ import '../renderer/App.css';
 const Application = () => {
   return (
     <div className="App">
-      <SettingsTitleBar />
+      <SettingsTitleBar/>
       <Settings />
     </div>
   );

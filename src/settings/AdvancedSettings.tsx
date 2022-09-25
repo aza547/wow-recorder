@@ -2,11 +2,9 @@ import * as React from 'react';
 import { openDirectorySelectorDialog } from './settingUtils';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
-import { stateKeyToSettingKeyMap, StateToSettingKeyMapKey } from './settingUtils';
 import ConfigContext from "./ConfigContext";
 
 const ipc = window.electron.ipcRenderer;
-const store = window.electron.store;
 
 export default function GeneralSettings() {
 

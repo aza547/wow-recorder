@@ -9,11 +9,7 @@ import ConfigContext from "./ConfigContext";
 export default function ContentSettings() {
   const [config, setConfig] = React.useContext(ConfigContext);
 
-  const modifyConfig = (stateKey: string, value: any) => {
-    setConfig((prevConfig) => ({ ...prevConfig, [stateKey]: value }));
-  };
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const modifyConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
     setConfig({
       ...config,
       [event.target.name]: event.target.checked,
@@ -24,7 +20,7 @@ export default function ContentSettings() {
     return (
       <Checkbox 
         checked={config[preference]} 
-        onChange={handleChange} 
+        onChange={modifyConfig} 
         name={preference}
         style = {checkBoxStyle} 
       />

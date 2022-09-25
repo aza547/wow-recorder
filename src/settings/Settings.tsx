@@ -13,7 +13,6 @@ import ConfigContext from "./ConfigContext";
 import useSettings from "./useSettings";
 
 const ipc = window.electron.ipcRenderer;
-const settingsPages = [GeneralSettings, VideoSettings, AudioSettings, AdvancedSettings];
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -34,7 +33,7 @@ function TabPanel(props: TabPanelProps) {
     >
       {value === index && (
         <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
+          <Typography component={'span'}>{children}</Typography>
         </Box>
       )}
     </div>

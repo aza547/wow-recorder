@@ -1,7 +1,7 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
-import { stateKeyToSettingKeyMap, StateToSettingKeyMapKey, openDirectorySelectorDialog } from './settingUtils';
+import { openDirectorySelectorDialog } from './settingUtils';
 import ConfigContext from "./ConfigContext";
 
 const ipc = window.electron.ipcRenderer;
