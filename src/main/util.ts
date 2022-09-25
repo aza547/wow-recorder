@@ -217,12 +217,12 @@ const getFileInfo = (filePath: string): FileInfo => {
  * the given pattern (e.g '*.mp4'), sorted by modification time according to `sortDirection`.
  */
  const getSortedFiles = async (
-        storageDir: string,
+        dir: string,
         pattern: string,
         sortDirection: FileSortDirection = FileSortDirection.NewestFirst
     ): Promise<FileInfo[]> => {
 
-    const files = (await globPromise(path.join(storageDir, pattern)))
+    const files = (await globPromise(path.join(dir, pattern)))
         .map(getFileInfo);
 
     if (sortDirection === FileSortDirection.NewestFirst) {

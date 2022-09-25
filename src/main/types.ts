@@ -75,7 +75,7 @@ enum FileSortDirection {
  * for methods/classes that accept it being injected.
  */
 type FileFinderCallbackType = (
-    storageDir: string,
+    dir: string,
     pattern: string,
     sortDirection?: FileSortDirection
 ) => Promise<FileInfo[]>;
