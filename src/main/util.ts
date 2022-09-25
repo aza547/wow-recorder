@@ -591,7 +591,6 @@ const getAvailableDisplays = (): OurDisplayType[] => {
             const isPrimary = display.id === primaryDisplay.id;
             const displayIndex = displayIdToIndex[display.id];
             const { width, height } = display.size;
-            console.log(display)
 
             ourDisplays.push({
                 id: display.id,
