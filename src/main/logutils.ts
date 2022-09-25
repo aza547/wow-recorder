@@ -4,15 +4,11 @@ import { recorder }  from './main';
 import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, videoOverrunPerCategory }  from './constants';
 import { PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
+import { CombatLogParser, LogLine } from './combatLogParser';
+import { getSortedFiles } from './util';
 
-const tail = require('tail').Tail;
-const glob = require('glob');
-const fs = require('fs');
 const tasklist = require('tasklist');
 
-let tailHandler: any;
-let currentLogFile: string;
-let lastLogFile: string;
 let videoStartDate: Date;
 let videoStopDate: Date;
 let metadata: Metadata;
@@ -22,66 +18,52 @@ let testRunning: boolean = false;
 let activeChallengeMode: ChallengeModeDungeon | undefined;
 let currentActivity: VideoCategory | undefined;
 
-declare interface LogLineHandlerType {
-    (line: LogLine): void
-};
-
-type InterestingCombatLogEventsType = { [key: string]: LogLineHandlerType }
+/**
+ * Parser and handler for WoW combat log files
+ * If no data has been received for 'dataTimeout' milliseconds, an event
+ * will be emitted ('DataTimeout') to be able to clean up whatever was going on.
+ */
+const combatLogParser = new CombatLogParser({
+    dataTimeout: 2 * 60 * 1000,
+    fileFinderFn: getSortedFiles,
+});
 
 /**
- * List of of combat events we want to handle associated with their
- * respective handler function.
+ * Log line handlers attached to their respective combat log event types.
+ * Any combat log event is valid here.
+ *
+ * Callback signature is:
+ *
+ * (line: LogLine, flavour: string)
+ *
+ * 'flavour' is the WoW flavour like 'wow_classic', 'wow' (retail)
  */
-const interestingCombatLogEvents: InterestingCombatLogEventsType = {
-    'ARENA_MATCH_START': handleArenaStartLine,
-    'ARENA_MATCH_END': handleArenaStopLine,
-    'CHALLENGE_MODE_START': handleChallengeModeStartLine,
-    'CHALLENGE_MODE_END': handleChallengeModeEndLine,
-    'ENCOUNTER_START': handleEncounterStartLine,
-    'ENCOUNTER_END': handleEncounterStopLine,
-    'ZONE_CHANGE': handleZoneChange,
-    'COMBATANT_INFO': handleCombatantInfoLine,
-    'SPELL_AURA_APPLIED': handleSpellAuraAppliedLine,
-    'UNIT_DIED': handleUnitDiedLine,
-};
+combatLogParser
+    .on('ARENA_MATCH_START', handleArenaStartLine)
+    .on('ARENA_MATCH_END', handleArenaStopLine)
+    .on('CHALLENGE_MODE_START', handleChallengeModeStartLine)
+    .on('CHALLENGE_MODE_END', handleChallengeModeEndLine)
+    .on('ENCOUNTER_START', handleEncounterStartLine)
+    .on('ENCOUNTER_END', handleEncounterStopLine)
+    .on('ZONE_CHANGE', handleZoneChange)
+    .on('COMBATANT_INFO', handleCombatantInfoLine)
+    .on('SPELL_AURA_APPLIED', handleSpellAuraAppliedLine)
+    .on('UNIT_DIED', handleUnitDiedLine)
+;
 
-/**
- * A parsed line from the WoW combat log
- */
-class LogLine {
-    constructor (
-        // Timestamp in string format, as-is, from the log
-        // Example: '8/3 22:09:58.548'
-        public timestamp: string,
-
-        // Multi-dimensional array of arguments
-        // Example: 'ARENA_MATCH_START', '2547', '33', '2v2', '1'
-        public args: any[]
-    ) {}
+// If we haven't received data in a while, we're probably AFK and should stop recording.
+combatLogParser.on('DataTimeout', (timeoutMs: number) => {
+    console.log(`[CombatLogParser] Haven't received data for combatlog in ${timeoutMs / 1000} seconds.`)
 
     /**
-     * Parse the timestamp from a log line and create a Date value from it
-     *
-     * Split the line by any delimiter that isn't a number
+     * End the current challenge mode dungeon and stop recording.
+     * We'll keep the video.
      */
-    date (): Date {
-        const timeParts = this.timestamp
-            .split(/[^0-9]/, 6)
-            .map(v => parseInt(v, 10))
-            .reverse();
-        const [msec, secs, mins, hours, day, month] = timeParts;
-        const dateObj = new Date();
-
-        if (day) dateObj.setDate(day);
-        if (month) dateObj.setMonth(month - 1);
-        dateObj.setHours(hours);
-        dateObj.setMinutes(mins);
-        dateObj.setSeconds(secs);
-        dateObj.setMilliseconds(msec);
-
-        return dateObj;
+    if (activeChallengeMode || currentActivity === VideoCategory.Battlegrounds) {
+        forceStopRecording();
+        return;
     }
-}
+});
 
 /**
  * wowProcessStopped
@@ -103,7 +85,7 @@ class LogLine {
 }
 
 /**
- * Is wow running? Starts false but we'll check immediately on start-up. 
+ * Is wow running? Starts false but we'll check immediately on start-up.
  */
 let isRetailRunning: boolean = false;
 let isClassicRunning: boolean = false;
@@ -112,8 +94,7 @@ let isClassicRunning: boolean = false;
  * Timers for poll
  */
 let pollWowProcessInterval: NodeJS.Timer;
-let watchLogsInterval: NodeJS.Timer;
- 
+
 /**
  * wowProcessStarted
  */
@@ -188,171 +169,12 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 }
 
 /**
- * getLatestLog 
- */
-const getLatestLog = (path: any) => {
-    const globPath = path + 'WoWCombatLog*.txt';
-
-    const logs = glob.sync(globPath)
-        .map((name: any) => ({name, mtime: fs.statSync(name).mtime}))
-        .sort((A: any, B: any) => B.mtime - A.mtime);
-
-    if (logs.length === 0) {
-        return false;
-    }
-    
-    const newestLog = logs[0].name;
-    return newestLog;
-}    
-
-/**
- * Tail a specific file. 
- */
-const tailFile = (path: string) => {
-    if (tailHandler) {
-        tailHandler.unwatch();
-        tailHandler = null;
-    } 
-
-    const options = { 
-        flushAtEOF: true 
-    }
-
-    tailHandler = new tail(path, options);
-
-    tailHandler.on("line", function(data: string) {
-        handleLogLine(data);
-    });
-
-    tailHandler.on("error", function(error: unknown ) {
-      console.log('[Logutils] ERROR: ', error);
-    });
-}
-
-/**
- * Splits a WoW combat line intelligently with respect to quotes,
- * lists, tuples, and what have we.
- *
- * @param line Log line straight from the combat log
- * @param maxSplits Madximum number of elements to find (same as `limit` for `string.split()` )
- */
-const splitLogLine = (line: string, maxSplits?: number): LogLine => {
-    // Avoid evaluating this on each iteration of the for(..) loop below
-    const line_len = line.length
-
-    // Array of items that has been parsedin the current scope of the parsing.
-    //
-    // This can end up being multidimensional in the case of some combat events
-    // that have complex data stored, like `COMBATANT_INFO`.
-    const list_items: any[] = [];
-
-    // Final argument list as parsed, which can contain one or more instances of `list_items`
-    // depending on the complexity of the combat log line
-    const args_list: any[] = [];
-    let in_quote = false;
-    let open_lists = 0;
-    let value: any = '';
-
-    // Combat log line always has '<timestamp>  <line>' format,
-    // that is, two spaces between ts and line.
-    const tsIndexEnd = line.indexOf('  ');
-    const timestamp = line.substring(0, tsIndexEnd);
-
-    for (let ptr = tsIndexEnd + 2; ptr < line_len; ptr++) {
-        const c = line.charAt(ptr);
-        if (c === '\n') {
-            break;
-        }
-        if (maxSplits && args_list.length >= maxSplits) {
-            break;
-        }
-
-        if (in_quote) {
-            if (c === '"') {
-                in_quote = false;
-                continue;
-            }
-
-        } else {
-            switch (c) {
-            case ',':
-                if (open_lists > 0) {
-                    list_items.at(-1)?.push(value);
-                } else {
-                    args_list.push(value);
-                }
-
-                value = '';
-                continue;
-
-            case '"':
-                in_quote = true;
-                continue;
-
-            case '[':
-            case '(':
-                list_items.push([]);
-                open_lists++;
-                continue;
-
-            case ']':
-            case ')':
-                if (!list_items.length) {
-                    throw `Unexpected ${c}. No list is open.`;
-                }
-
-                if (value) {
-                    list_items.at(-1)?.push(value);
-                }
-
-                value = list_items.pop();
-                open_lists--;
-                continue;
-            }
-        }
-
-        value += c;
-    }
-
-    if (value) {
-        args_list.push(value)
-    }
-
-    if (open_lists > 0) {
-        throw `Unexpected EOL. There are ${open_lists} open list(s).`
-    }
-
-    return new LogLine(timestamp, args_list)
-}
-
-/**
- * Handle a line from the WoW log. 
- */
-const handleLogLine = (line: string) => {
-    // Parse line, only until the line token is encountered
-    let logLine = splitLogLine(line, 1)
-    const logLineTypeToken = logLine.args[0]
-
-    // Check if we are interested in this event, and if not, discard it
-    if (!(logLineTypeToken in interestingCombatLogEvents)) {
-        return;
-    }
-
-    // Parse the full line
-    logLine = splitLogLine(line)
-
-    // Call the handler for the given combat log line token
-    // (e.g. `ENCOUNTER_START`)
-    interestingCombatLogEvents[logLineTypeToken](logLine);
-}
-
-/**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 function handleArenaStartLine (line: LogLine): void {
-    if (recorder.isRecording) return; 
-    const category = (line.args[3] as VideoCategory);
-    const zoneID = parseInt(line.args[1], 10);
+    if (recorder.isRecording) return;
+    const category = (line.arg(3) as VideoCategory);
+    const zoneID = parseInt(line.arg(1), 10);
 
     // If all goes to plan we don't need this but we do it incase the game
     // crashes etc. so we can still get a reasonable duration.
@@ -366,15 +188,15 @@ function handleArenaStartLine (line: LogLine): void {
         result: false,
         playerDeaths: []
     }
-    
+
     startRecording(category);
 }
 
 /**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 function handleArenaStopLine (line: LogLine): void {
-    if (!recorder.isRecording) return; 
+    if (!recorder.isRecording) return;
 
     videoStopDate = line.date();
     
@@ -386,15 +208,15 @@ function handleArenaStopLine (line: LogLine): void {
 
 /**
  * Determines the arena match result.
- * @param line the line from the WoW log. 
+ * @param line the line from the WoW log.
  * @returns [win: boolean, newRating: number]
  */
 const determineArenaMatchResult = (line: LogLine): any[] => {
     if (playerCombatant === undefined) return [undefined, undefined];
     const teamID = playerCombatant.teamID;
-    const indexForMMR = (teamID == 0) ? 3 : 4; 
-    const MMR = parseInt(line.args[indexForMMR], 10);
-    const winningTeamID = parseInt(line.args[1], 10);
+    const indexForMMR = (teamID == 0) ? 3 : 4;
+    const MMR = parseInt(line.arg(indexForMMR), 10);
+    const winningTeamID = parseInt(line.arg(1), 10);
     const win = (teamID === winningTeamID)
     return [win, MMR];
 }
@@ -411,8 +233,8 @@ function handleChallengeModeStartLine (line: LogLine): void {
     }
     videoStartDate = line.date();
 
-    const zoneName = line.args[2];
-    const mapId = parseInt(line.args[3], 10);
+    const zoneName = line.arg(2);
+    const mapId = parseInt(line.arg(3), 10);
     const hasDungeonMap = (mapId in dungeonsByMapId);
     const hasTimersForDungeon = (mapId in dungeonTimersByMapId);
 
@@ -420,13 +242,13 @@ function handleChallengeModeStartLine (line: LogLine): void {
         console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
     }
 
-    const dungeonAffixes = line.args[5].map((v: string) => parseInt(v, 10));
+    const dungeonAffixes = line.arg(5).map((v: string) => parseInt(v, 10));
 
     activeChallengeMode = new ChallengeModeDungeon(
         dungeonTimersByMapId[mapId], // Dungeon timers
-        parseInt(line.args[2], 10),  // zoneId
+        parseInt(line.arg(2), 10),   // zoneId
         mapId,                       // mapId
-        parseInt(line.args[4], 10),  // Keystone Level
+        parseInt(line.arg(4), 10),   // Keystone Level
         dungeonAffixes,              // Array of affixes, as numbers
     )
 
@@ -437,10 +259,10 @@ function handleChallengeModeStartLine (line: LogLine): void {
     console.debug("[ChallengeMode] Starting Challenge Mode instance")
 
     metadata = {
-        name: line.args[1], // Instance name (e.g. "Operation: Mechagon")
-        encounterID: parseInt(line.args[1], 10),
+        name: line.arg(1), // Instance name (e.g. "Operation: Mechagon")
+        encounterID: parseInt(line.arg(1), 10),
         category: VideoCategory.MythicPlus,
-        zoneID: parseInt(line.args[5]),
+        zoneID: parseInt(line.arg(5)),
         duration: 0,
         result: false,
         challengeMode: activeChallengeMode,
@@ -485,14 +307,14 @@ function handleChallengeModeEndLine (line: LogLine): void {
     //
     // It's included separate from `metadata.duration` because the duration of the
     // dungeon, as the game sees it, is what is important for this value to make sense.
-    activeChallengeMode.duration = Math.round(parseInt(line.args[4], 10) / 1000);
+    activeChallengeMode.duration = Math.round(parseInt(line.arg(4), 10) / 1000);
 
     // Calculate whether the key was timed or not
     activeChallengeMode.timed = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
 
     endChallengeModeDungeon();
 
-    const result = Boolean(parseInt(line.args[1]));
+    const result = Boolean(parseInt(line.arg(1)));
 
     endRecording({result});
 };
@@ -506,11 +328,11 @@ const getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
 };
 
 /**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 function handleEncounterStartLine (line: LogLine): void {
-    const encounterID = parseInt(line.args[1], 10)
-    const difficultyID = parseInt(line.args[3], 10);
+    const encounterID = parseInt(line.arg(1), 10)
+    const difficultyID = parseInt(line.arg(3), 10);
     const eventDate = line.date();
 
     // If we're recording _and_ has an active challenge mode dungeon,
@@ -545,13 +367,13 @@ function handleEncounterStartLine (line: LogLine): void {
 }
 
 /**
- * Handle a line from the WoW log. 
+ * Handle a line from the WoW log.
  */
 function handleEncounterStopLine (line: LogLine): void {
     const eventDate = line.date();
 
-    const result = Boolean(parseInt(line.args[5], 10));
-    const encounterID = parseInt(line.args[1], 10);
+    const result = Boolean(parseInt(line.arg(5), 10));
+    const encounterID = parseInt(line.arg(1), 10);
 
     if (recorder.isRecording && activeChallengeMode) {
         const currentSegment = activeChallengeMode.getCurrentTimelineSegment()
@@ -579,7 +401,7 @@ function handleEncounterStopLine (line: LogLine): void {
  */
 function handleZoneChange (line: LogLine): void {
     console.log("[Logutils] Handling zone change: ", line);
-    const zoneID = parseInt(line.args[1], 10);
+    const zoneID = parseInt(line.arg(1), 10);
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
 
@@ -596,7 +418,7 @@ function handleZoneChange (line: LogLine): void {
 
     if (!isRecording && isNewZoneBG) {
         console.log("[Logutils] ZONE_CHANGE into BG, start recording");
-        battlegroundStart(line);   
+        battlegroundStart(line);
         return;
     }
     if (isRecording && isRecordingBG && !isNewZoneBG) {
@@ -610,13 +432,13 @@ function handleZoneChange (line: LogLine): void {
         return;
     }
 
-    // TODO there is the case here where a tilted raider hearths 
-    // out mid-pull. I think the correct way to handle is just a 
+    // TODO there is the case here where a tilted raider hearths
+    // out mid-pull. I think the correct way to handle is just a
     // log inactivity stop, else raid encounters with ZONE_CHANGES
     // internally will always stop recording. That's a bit of work
-    // so I'm skipping the implementation for now and making a 
+    // so I'm skipping the implementation for now and making a
     // quick fix. For now, hearting out mid-encounter won't stop
-    // the recording and the user will need to restart the app.  
+    // the recording and the user will need to restart the app.
 }
 
 /**
@@ -625,12 +447,12 @@ function handleZoneChange (line: LogLine): void {
  */
 function handleSpellAuraAppliedLine (line: LogLine): void {
     if (playerCombatant) return;
-    if (combatantMap.size === 0) return;    
+    if (combatantMap.size === 0) return;
 
-    const srcGUID = line.args[1];
-    const srcNameRealm = line.args[2]
-    const srcFlags = parseInt(line.args[3], 16);
-    
+    const srcGUID = line.arg(1);
+    const srcNameRealm = line.arg(2)
+    const srcFlags = parseInt(line.arg(3), 16);
+
     const srcCombatant = combatantMap.get(srcGUID);
     if (srcCombatant === undefined) return;
 
@@ -643,14 +465,14 @@ function handleSpellAuraAppliedLine (line: LogLine): void {
 }
 
 /**
- * Handles the COMBATANT_INFO line from WoW log by creating a Combatant and 
+ * Handles the COMBATANT_INFO line from WoW log by creating a Combatant and
  * adding it to combatantMap.
  * @param line the COMBATANT_INFO line
  */
 function handleCombatantInfoLine (line: LogLine): void {
-    const GUID = line.args[1];
-    const teamID = parseInt(line.args[2], 10);
-    const specID = parseInt(line.args[24], 10);
+    const GUID = line.arg(1);
+    const teamID = parseInt(line.arg(2), 10);
+    const specID = parseInt(line.arg(24), 10);
     let combatantInfo = new Combatant(GUID, teamID, specID);
     combatantMap.set(GUID, combatantInfo);
 }
@@ -671,10 +493,10 @@ const clearCombatants = () => {
 }
 
 /**
- * ZONE_CHANGE event into a BG.  
+ * ZONE_CHANGE event into a BG.
  */
 function battlegroundStart (line: LogLine): void {
-    const zoneID = parseInt(line.args[1], 10);
+    const zoneID = parseInt(line.arg(1), 10);
     const battlegroundName = battlegrounds[zoneID];
 
     videoStartDate = line.date();
@@ -727,8 +549,8 @@ const registerPlayerDeath = (timestamp: number, name: string, specId: number): v
         return;
     }
 
-    const unitFlags = parseInt(line.args[7], 16);
-    const isUnitUnconsciousAtDeath = Boolean(parseInt(line.args[9], 10));
+    const unitFlags = parseInt(line.arg(7), 16);
+    const isUnitUnconsciousAtDeath = Boolean(parseInt(line.arg(9), 10));
 
     // We only want player deaths and we don't want fake deaths,
     // i.e. a hunter that feigned death
@@ -736,8 +558,8 @@ const registerPlayerDeath = (timestamp: number, name: string, specId: number): v
         return;
     }
 
-    const playerName = line.args[6];
-    const playerGuid = line.args[5];
+    const playerName = line.arg(6);
+    const playerGuid = line.arg(5);
     const playerSpecId = getCombatantByGuid(playerGuid)?.specID ?? 0;
 
     // Add player death and subtract 2 seconds from the time of death to allow the
@@ -779,28 +601,6 @@ const isUnitPlayer = (flags: number): boolean => {
 }
 
 /**
- * Watch the logs. Check every second for a new file, 
- * if there is, swap to watching that. 
- */
-const watchLogs = (logdir: any) => {
-    if (watchLogsInterval) clearInterval(watchLogsInterval);
-
-    watchLogsInterval = setInterval(() => {
-        currentLogFile = getLatestLog(logdir);
-
-        // Handle the case where there is no logs in the WoW log directory.
-        if (!currentLogFile) return;
-        
-        const logFileChanged = (lastLogFile !== currentLogFile);
-
-        if (!lastLogFile || logFileChanged) {
-            tailFile(currentLogFile);
-            lastLogFile = currentLogFile;
-        }
-    }, 1000);
-}
-
-/**
  * Split name and realm. Name stolen from:
  * https://wowpedia.fandom.com/wiki/API_Ambiguate
  * @param nameRealm string containing name and realm
@@ -821,14 +621,30 @@ const forceStopRecording = () => {
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime());
     metadata.duration = Math.round(milliSeconds / 1000);
 
+    // If a Keystone Dungeon is in progress, end it properly before we stop recording
+    if (activeChallengeMode) {
+        endChallengeModeDungeon();
+    }
+
     // Clear all kinds of stuff that would prevent the app from starting another
     // recording
     clearCombatants();
 
+    // Regardless of what happens above these lines, _ensure_ that these variables
+    // are cleared.
     activeChallengeMode = undefined;
     testRunning = false;
 
     recorder.stop(metadata, 0);
+}
+
+/**
+ * Watch the given directories for combat log changes.
+ */
+ const watchLogs = (logDirectories: string[]) => {
+    logDirectories.forEach((logdir: string) => {
+        combatLogParser.watchPath(logdir);
+    })
 }
 
 /**
@@ -839,7 +655,7 @@ const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
     let retailRunning = false;
     let classicRunning = false;
 
-    const taskList = await tasklist(); 
+    const taskList = await tasklist();
 
     taskList.forEach((process: any) => {
         if (process.imageName === "Wow.exe") {
@@ -857,9 +673,9 @@ const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
  */
 const pollWoWProcessLogic = async (startup: boolean) => {
     const [retailFound, classicFound] = await checkWoWProcess();
-    const retailProcessChanged = (retailFound !== isRetailRunning);    
+    const retailProcessChanged = (retailFound !== isRetailRunning);
     // TODO classic support
-    const classicProcessChanged = (classicFound !== isClassicRunning);  
+    const classicProcessChanged = (classicFound !== isClassicRunning);
     const processChanged = (retailProcessChanged || classicProcessChanged);
     if (!retailProcessChanged && !startup) return;
     (retailFound) ? wowProcessStarted() : wowProcessStopped();
@@ -875,7 +691,7 @@ const pollWowProcess = () => {
 }
 
 /**
- * Function to invoke if the user clicks the "run a test" button 
+ * Function to invoke if the user clicks the "run a test" button
  * in the GUI. Uses some sample log lines from 2v2.txt.
  */
 const runRecordingTest = (endTest: boolean = true) => {
@@ -886,8 +702,8 @@ const runRecordingTest = (endTest: boolean = true) => {
 
     if (testRunning) {
         console.info("[Logutils] Test already running, not starting test.");
-    } 
-    
+    }
+
     if (isRetailRunning) {
         console.info("[Logutils] WoW is running, starting test.");
         testRunning = true;
@@ -912,29 +728,28 @@ const runRecordingTest = (endTest: boolean = true) => {
     const startDate = getAdjustedDate();
     const endDate = getAdjustedDate(10);
 
-    const testArenaStartLine = startDate + "  ARENA_MATCH_START,2547,33,2v2,1";
-    const testArenaCombatantLine = startDate + "  COMBATANT_INFO,Player-1084-08A89569,0,194,452,3670,2353,0,0,0,111,111,111,0,0,632,632,632,0,345,1193,1193,1193,779,256,(102351,102401,197491,5211,158478,203651,155675),(0,203553,203399,353114),[4,4,[],[(1123),(1124),(1129),(1135),(1136),(1819),(1122),(1126),(1128),(1820)],[(256,200),(278,200),(276,200),(275,200),(271,200)]],[(188847,265,(),(7578,8151,7899,1472,6646),()),(186787,265,(),(7578,7893,1524,6646),()),(172319,291,(),(7098,7882,8156,6649,6650,1588),()),(44693,1,(),(),()),(188849,265,(),(8153,7899,1472,6646),()),(186819,265,(),(8136,8137,7578,7896,1524,6646),()),(188848,265,(),(8155,7899,1472,6646),()),(186809,265,(),(8136,8137,7896,1524,6646),()),(186820,265,(),(8136,8138,7578,7893,1524,6646),()),(188853,265,(),(8154,7896,1472,6646),()),(178926,291,(),(8121,7882,8156,6649,6650,1588,6935),()),(186786,265,(),(7579,7893,1524,6646),()),(185304,233,(),(7305,1492,6646),()),(186868,262,(),(7534,1521,6646),()),(186782,265,(),(8136,8138,7893,1524,6646),()),(186865,275,(),(7548,6652,1534,6646),()),(0,0,(),(),()),(147336,37,(),(),())],[Player-1084-08A89569,768,Player-1084-08A89569,5225],327,33,767,1";
-    const testArenaSpellLine = startDate + "  SPELL_AURA_APPLIED,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,110310,\"Dampening\",0x1,DEBUFF";
-    const testArenaStopLine = endDate + "  ARENA_MATCH_END,0,10,1673,1668";
+    [
+        startDate + "  ARENA_MATCH_START,2547,33,2v2,1",
+        startDate + "  COMBATANT_INFO,Player-1084-08A89569,0,194,452,3670,2353,0,0,0,111,111,111,0,0,632,632,632,0,345,1193,1193,1193,779,256,(102351,102401,197491,5211,158478,203651,155675),(0,203553,203399,353114),[4,4,[],[(1123),(1124),(1129),(1135),(1136),(1819),(1122),(1126),(1128),(1820)],[(256,200),(278,200),(276,200),(275,200),(271,200)]],[(188847,265,(),(7578,8151,7899,1472,6646),()),(186787,265,(),(7578,7893,1524,6646),()),(172319,291,(),(7098,7882,8156,6649,6650,1588),()),(44693,1,(),(),()),(188849,265,(),(8153,7899,1472,6646),()),(186819,265,(),(8136,8137,7578,7896,1524,6646),()),(188848,265,(),(8155,7899,1472,6646),()),(186809,265,(),(8136,8137,7896,1524,6646),()),(186820,265,(),(8136,8138,7578,7893,1524,6646),()),(188853,265,(),(8154,7896,1472,6646),()),(178926,291,(),(8121,7882,8156,6649,6650,1588,6935),()),(186786,265,(),(7579,7893,1524,6646),()),(185304,233,(),(7305,1492,6646),()),(186868,262,(),(7534,1521,6646),()),(186782,265,(),(8136,8138,7893,1524,6646),()),(186865,275,(),(7548,6652,1534,6646),()),(0,0,(),(),()),(147336,37,(),(),())],[Player-1084-08A89569,768,Player-1084-08A89569,5225],327,33,767,1",
+        startDate + "  SPELL_AURA_APPLIED,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,110310,\"Dampening\",0x1,DEBUFF",
+        // 'SPELL_PERIODIC_HEAL' isn't currently an event of interest so we want to test that too
+        startDate + '  SPELL_PERIODIC_HEAL,Player-1084-08A89569,"Alexsmite-TarrenMill",0x10512,0x0,Player-1084-08A89569,"Alexsmite-TarrenMill",0x10512,0x0,199483,"Camouflage",0x1,Player-1084-08A89569,0000000000000000,86420,86420,2823,369,1254,0,2,100,100,0,284.69,287.62,0,2.9138,285,2291,2291,2291,0,nil',
+    ].forEach(v => combatLogParser.handleLogLine('retail', v));
 
-    handleLogLine(testArenaStartLine);
-    handleLogLine(testArenaCombatantLine);
-    handleLogLine(testArenaSpellLine);
+    const testArenaStopLine = endDate + "  ARENA_MATCH_END,0,8,1673,1668";
 
     if (!endTest) {
         return;
     }
 
     setTimeout(() => {
-        handleLogLine(testArenaStopLine);
+        combatLogParser.handleLogLine('retail', testArenaStopLine);
         testRunning = false;
     }, 10 * 1000);
 }
 
 export {
-    handleLogLine,
     watchLogs,
-    getLatestLog,
     pollWowProcess,
     runRecordingTest,
     Metadata,

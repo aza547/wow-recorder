@@ -14,12 +14,6 @@ const chalk = require('chalk');
     return path.replace("app.asar", "app.asar.unpacked");
 }
 
-type VideoInfo = {
-    name: string;
-    size: number;
-    mtime: number;
-};
-
 const { exec } = require('child_process');
 const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
 const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').path);
@@ -30,7 +24,7 @@ import util from 'util';
 import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
-import { FileSortDirection, OurDisplayType } from './types';
+import { FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { Display, screen } from 'electron';
 import { getNumberConfigSafe, getVideoZone } from './helpers';
 const globPromise = util.promisify(glob)
@@ -97,7 +91,7 @@ const loadAllVideos = async (storageDir: any): Promise<any> => {
 /**
  * Load video details from the metadata and add it to videoState. 
  */
- const loadVideoDetails = (video: VideoInfo): any | undefined => {
+ const loadVideoDetails = (video: FileInfo): any | undefined => {
     const metadata = getMetadataForVideo(video.name);
     if (metadata === undefined) {
         return;
@@ -207,31 +201,43 @@ const getVideoEncounter = (metadata: Metadata) => {
 }
 
 /**
- * Return information about a video needed for various parts of the application
+ * Return information about a file needed for various parts of the application
  */
-const getVideoInfo = (videoPath: string): VideoInfo => {
-    videoPath = path.resolve(videoPath);
-    const fstats = fs.statSync(videoPath);
+const getFileInfo = (filePath: string): FileInfo => {
+    filePath = path.resolve(filePath);
+    const fstats = fs.statSync(filePath);
     const mtime = fstats.mtime.getTime();
     const size = fstats.size;
 
-    return { name: videoPath, size, mtime };
+    return { name: filePath, size, mtime };
 };
 
 /**
- * Asynchronously find and return a list of video files in the given directory,
- * sorted by modification time (newest to oldest)
+ * Asynchronously find and return a list of files in the given directory, that matches
+ * the given pattern (e.g '*.mp4'), sorted by modification time according to `sortDirection`.
  */
-const getSortedVideos = async (storageDir: string, sortDirection: FileSortDirection = FileSortDirection.NewestFirst): Promise<VideoInfo[]> => {
-    const files = (await globPromise(path.join(storageDir, "*.mp4")))
-        .map(getVideoInfo);
+ const getSortedFiles = async (
+        dir: string,
+        pattern: string,
+        sortDirection: FileSortDirection = FileSortDirection.NewestFirst
+    ): Promise<FileInfo[]> => {
+
+    const files = (await globPromise(path.join(dir, pattern)))
+        .map(getFileInfo);
 
     if (sortDirection === FileSortDirection.NewestFirst) {
-        return files.sort((A: VideoInfo, B: VideoInfo) => B.mtime - A.mtime);
+        return files.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
     }
 
-    return files.sort((A: VideoInfo, B: VideoInfo) => A.mtime - B.mtime);
+    return files.sort((A: FileInfo, B: FileInfo) => A.mtime - B.mtime);
 };
+
+/**
+ * Get sorted video files. Shorthand for `getSortedFiles()` because it's used in quite a few places
+ */
+const getSortedVideos = async (storageDir: string, sortDirection: FileSortDirection = FileSortDirection.NewestFirst): Promise<FileInfo[]> => {
+    return getSortedFiles(storageDir, '*.mp4', sortDirection);
+}
 
 /**
  * Asynchronously delete the oldest, unprotected videos to ensure we don't store
@@ -346,7 +352,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         return false;
     }
 
-    if (!cfg.get('log-path')) {
+    if (!cfg.get('log-path') && !cfg.get('log-path-classic')) {
         return false;
     }
 
@@ -624,4 +630,5 @@ export {
     addColor,
     getSortedVideos,
     getAvailableDisplays,
+    getSortedFiles,
 };
