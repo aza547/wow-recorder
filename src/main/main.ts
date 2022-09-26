@@ -384,14 +384,14 @@ ipcMain.on('settingsWindow', (event, args) => {
       // If this is the first time config has been valid we
       // need to create a recorder. If the config was previously
       // valid but has since changed, just do a reconfigure.
-
       recorderOptions = loadRecorderOptions(cfg);
       makeRecorder(recorderOptions);
 
       baseLogPaths = [
-        cfg.getPath('log-path'),
-        cfg.getPath('log-path-classic'),
-      ];
+        cfg.getPath('retailLogPath'),
+        cfg.getPath('classicLogPath'),
+      ].filter(v => v); // Remove any empty
+      
       watchLogs(baseLogPaths);
 
       pollWowProcess();

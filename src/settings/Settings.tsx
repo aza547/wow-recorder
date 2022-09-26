@@ -79,6 +79,7 @@ export default function Settings() {
     });
 
     closeSettings();
+    ipc.sendMessage('settingsWindow', ['update']);
   }
 
   const categoryTabsSx = {

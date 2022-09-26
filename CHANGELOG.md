@@ -16,10 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 134](https://github.com/aza547/wow-recorder/issues/134) - Only handle UNIT_DIED when a recording activity is in progress.
 - [Issue 142](https://github.com/aza547/wow-recorder/issues/142) - Make it possible to stop recording by clicking the 'rec' icon.
 - [Issue 166](https://github.com/aza547/wow-recorder/issues/166) - Remember the selected category across application restarts.
+- [Issue 150](https://github.com/aza547/wow-recorder/issues/50) - Add infrastructure for future classic support.
+- [Issue 168](https://github.com/aza547/wow-recorder/issues/168) - Add a timeout feature that will end a recording after 2 minutes of combatlog inactivity. 
 
 ### Changed
 - [Issue 165](https://github.com/aza547/wow-recorder/issues/165) - Now loads videos asynchronously to improve application reponsiveness on start up with many videos.
-- [Issue 164](https://github.com/aza547/wow-recorder/issues/164) - Entirely revamp the settings page to be more responsive and modern.
+- [Issue 164](https://github.com/aza547/wow-recorder/issues/164) - Entirely revamp the settings to be more responsive and modern. Will reset user settings.
 
 ### Fixed
 - [Issue 124](https://github.com/aza547/wow-recorder/issues/234) - Make buffering dir configurable. This setting is optional and will sensibly default.
