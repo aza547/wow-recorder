@@ -18,7 +18,6 @@ export default function GeneralSettings() {
   };
 
   const modifyCheckboxConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(event.target.name, event.target.checked);
     setConfig({
       ...config,
       [event.target.name]: event.target.checked,
