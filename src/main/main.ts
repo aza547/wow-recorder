@@ -74,10 +74,12 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
  */
 const cfg = new ConfigService();
 let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
+
+// Collect the combat log paths
 let baseLogPaths: string[] = [
   cfg.getPath('retailLogPath'),
   cfg.getPath('classicLogPath'),
-];
+].filter(v => v); // Remove any empty
 
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
@@ -353,7 +355,7 @@ ipcMain.on('settingsWindow', (event, args) => {
   }
 
   if (args[0] === "startup") {
-    const isStartUp = (args[1] === "true");
+    const isStartUp = (args[1] === true);
     console.log("[Main] OS level set start-up behaviour: ", isStartUp);
 
     app.setLoginItemSettings({

@@ -4,9 +4,9 @@ export function getConfigValue<T>(configKey: string): T {
   return (window.electron.ipcRenderer.sendSync('config', ['get', configKey]) as T);
 };
 
-export function setConfigValue<_, T>(configKey: string, value: any): void {
-  console.log("saving value to e-storage: ", configKey, value as T);
-  window.electron.ipcRenderer.sendMessage('config', ['set', configKey, value as T]);
+export function setConfigValue(configKey: string, value: any): void {
+  console.log("saving value to e-storage: ", configKey, value);
+  window.electron.ipcRenderer.sendMessage('config', ['set', configKey, value]);
 };
 
 export const configSettings = [

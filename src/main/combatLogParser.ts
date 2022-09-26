@@ -250,7 +250,7 @@ class CombatLogParser extends EventEmitter {
         }
 
         const wowFlavour = CombatLogParser.getWowFlavour(pathSpec);
-        
+
         if (wowFlavour === 'unknown') {
             console.warn(`[CombatLogParser] Ignoring non-WoW combat log directory '${pathSpec}'`);
             return;
@@ -261,7 +261,7 @@ class CombatLogParser extends EventEmitter {
             path: pathSpec,
         };
 
-        console.log(`[CombatLogParser] Start watching '${pathSpec}' for '${wowFlavour}'`, this._handlers[pathSpec]);
+        console.log(`[CombatLogParser] Start watching '${pathSpec}' for '${wowFlavour}'`);
         this.watchLogDirectory(pathSpec);
     }
 

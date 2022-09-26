@@ -242,7 +242,13 @@ export default class ConfigService extends EventEmitter {
     }
 
     getPath(key: keyof ConfigurationSchema): string {
-        return path.join(this.get(key), path.sep);
+        const value = this.getString(key);
+        
+        if (!value) {
+            return '';
+        }
+
+        return path.join(value, path.sep);
     }
 
     getNumber(key: keyof ConfigurationSchema): number {

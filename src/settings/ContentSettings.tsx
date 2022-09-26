@@ -19,7 +19,7 @@ export default function ContentSettings() {
   const getCheckBox = (preference: string) => {
     return (
       <Checkbox 
-        checked={config[preference]} 
+        checked={Boolean(config[preference])} 
         onChange={modifyConfig} 
         name={preference}
         style = {checkBoxStyle} 

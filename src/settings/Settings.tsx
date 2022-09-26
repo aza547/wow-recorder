@@ -71,7 +71,11 @@ export default function Settings() {
 
     configSettings.forEach((key: string) => {
       const configKey = (key as keyof typeof config);
-      setConfigValue(key, config[configKey])
+      setConfigValue(key, config[configKey]);
+
+      if (key === "startUp") {
+        ipc.sendMessage("settingsWindow", ["startup", config[configKey]]);
+      }
     });
 
     closeSettings();

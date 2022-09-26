@@ -18,6 +18,7 @@ export default function GeneralSettings() {
   };
 
   const modifyCheckboxConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(event.target.name, event.target.checked);
     setConfig({
       ...config,
       [event.target.name]: event.target.checked,
@@ -49,7 +50,7 @@ export default function GeneralSettings() {
   const getCheckBox = (preference: string) => {
     return (
       <Checkbox 
-        checked={ Boolean(config[preference]) } 
+        checked={ config[preference] } 
         onChange={modifyCheckboxConfig} 
         name={preference}
         style = {checkBoxStyle} 
