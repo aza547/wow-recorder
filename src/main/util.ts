@@ -3,7 +3,6 @@ import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, dungeonsByMapId }  from './constants';
 import { Metadata }  from './logutils';
-import ElectronStore from 'electron-store';
 const byteSize = require('byte-size')
 const chalk = require('chalk');
 
@@ -26,7 +25,7 @@ import glob from 'glob';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { Display, screen } from 'electron';
-import { getNumberConfigSafe, getVideoZone } from './helpers';
+import { getVideoZone } from './helpers';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -346,40 +345,6 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
 }  
 
 /**
- * isConfigReady
- */
- const isConfigReady = (cfg: ElectronStore) => {
-
-    if (!cfg.get('storage-path')) {
-        return false;
-    }
-
-    if (!cfg.get('log-path') && !cfg.get('log-path-classic')) {
-        return false;
-    }
-
-    const maxStorage = getNumberConfigSafe(cfg, 'max-storage');
-
-    if ((!maxStorage) && (maxStorage > 0)) { 
-        return false;
-    }
-
-    const monitorIndex = getNumberConfigSafe(cfg, 'monitor-index');
-
-    if ((!monitorIndex) || (monitorIndex < 1) || (monitorIndex > 3)) {
-        return false;
-    }
-
-    const minEncounterDuration = getNumberConfigSafe(cfg, 'min-encounter-duration');
-
-    if ((!minEncounterDuration) || (minEncounterDuration < 0) || (minEncounterDuration > 10000)) {
-        return false;
-    }
-
-    return true;
-}  
-
-/**
  * Open a folder in system explorer. 
  */
  const openSystemExplorer = (filePath: string) => {
@@ -508,33 +473,6 @@ const cutVideo = async (
     });
 }
 
-const defaultAudioDevice = (cfg: ElectronStore, deviceType: string): string => {
-    const cfgKey = `audio-${deviceType}-device`;
-    const defaultValue = 'all';
-
-    console.info(`[Util] Defaulting ${cfgKey} to ${defaultValue}`);
-    cfg.set(cfgKey, defaultValue);
-    return defaultValue;
-}
-
-/**
- *  Default the monitor index to 1. 
- */
- const defaultMonitorIndex = (cfg: ElectronStore): number => {
-    console.info("[Util] Defaulting monitor index to 1");
-    cfg.set('monitor-index', 1);
-    return 1;
-}
-
-/**
- *  Default the minimum encounter duration to 15. 
- */
- const defaultMinEncounterDuration = (cfg: ElectronStore): number => {
-    console.info("Defaulting minimum encounter duration to 15");
-    cfg.set('min-encounter-duration', 15);
-    return 15;
-}
-
 /**
  *  Add some escape characters to color text. Just return the string
  *  if production as don't want to litter real logs with this as it just
@@ -618,16 +556,12 @@ export {
     loadAllVideos,
     writeMetadataFile,
     runSizeMonitor, 
-    isConfigReady,
     deleteVideo,
     openSystemExplorer,
     toggleVideoProtected,
     fixPathWhenPackaged,
     getNewestVideo,
     cutVideo,
-    defaultMonitorIndex,
-    defaultMinEncounterDuration,
-    defaultAudioDevice,
     addColor,
     getSortedVideos,
     getAvailableDisplays,

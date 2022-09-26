@@ -20,6 +20,16 @@ const categories: string[] = [
   VideoCategory.Battlegrounds,
 ];
 
+const categoryRecordConfigMapping: { [key in VideoCategory]: string } = {
+  [VideoCategory.TwoVTwo]: "recordTwoVTwo",
+  [VideoCategory.ThreeVThree]: "recordThreeVThree",
+  [VideoCategory.Skirmish]: "recordSkirmish",
+  [VideoCategory.SoloShuffle]: "recordSoloShuffle",
+  [VideoCategory.MythicPlus]:"recordRaids", // not used
+  [VideoCategory.Raids]: "recordDungeons", // not used
+  [VideoCategory.Battlegrounds]: "recordBattlegrounds",
+};
+
 /**
  * How long to keep recording after an activity ends to ensure we don't miss any
  * important stuff at the end, per category, in seconds.
@@ -538,4 +548,5 @@ export {
     VideoCategory,
     videoOverrunPerCategory,
     raidInstances,
+    categoryRecordConfigMapping
 };

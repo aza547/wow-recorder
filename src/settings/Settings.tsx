@@ -1,54 +1,60 @@
 import * as React from 'react';
-import CheckIcon from '@mui/icons-material/Check';
-import ToggleButton from '@mui/material/ToggleButton';
-import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
-import InformationDialog from 'renderer/InformationDialog';
-import { getElectronStoreValue, resolveBufferStoragePath } from 'main/helpers';
-import { OurDisplayType } from 'main/types';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import { makeStyles } from 'tss-react/mui';
+import GeneralSettings from './GeneralSettings';
+import VideoSettings from './VideoSettings';
+import AudioSettings from './AudioSettings';
+import AdvancedSettings from './AdvancedSettings';
+import ContentSettings from './ContentSettings';
+import ConfigContext from "./ConfigContext";
+import useSettings, { configSettings, setConfigValue } from "./useSettings";
 
 const ipc = window.electron.ipcRenderer;
 
-export default function Settings() {
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
-  const [dialogState, setDialog] = React.useState({
-    open: false,
-    dialogContent: '',
-  });
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
-  /**
-   * React state variables.
-   */
-  const [state, useState] = React.useState({
-    storagePath:          getElectronStoreValue<string>('storage-path'),
-    bufferStoragePath:    getElectronStoreValue<string>('buffer-storage-path'),
-    logPath:              getElectronStoreValue<string>('log-path'),              // Retail
-    logPathClassic:       getElectronStoreValue<string>('log-path-classic'),      // Classic
-    maxStorage:           getElectronStoreValue<string>('max-storage'),
-    monitorIndex:         getElectronStoreValue<string>('monitor-index'),
-    audioInputDevice:     getElectronStoreValue<string>('audio-input-device'),
-    audioOutputDevice:    getElectronStoreValue<string>('audio-output-device'),
-    minEncounterDuration: getElectronStoreValue<string>('min-encounter-duration'),
-    startUp:              getElectronStoreValue<string>('start-up') === 'true',
-  });
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography component={'span'}>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
 
-  /**
-   * These settings are saved when 'Update' is clicked.
-   */
-  const stateKeyToSettingKeyMap = {
-    'storagePath': 'storage-path',
-    'bufferStoragePath': 'buffer-storage-path',
-    'logPath': 'log-path',
-    'logPathClassic': 'log-path-classic',
-    'maxStorage': 'max-storage',
-    'monitorIndex': 'monitor-index',
-    'audioInputDevice': 'audio-input-device',
-    'audioOutputDevice': 'audio-output-device',
-    'minEncounterDuration': 'min-encounter-duration',
-    'startUp': 'start-up',
+function a11yProps(index: number) {
+  return {
+    id: `vertical-tab-${index}`,
+    'aria-controls': `vertical-tabpanel-${index}`,
   };
-  type StateToSettingKeyMapKey = keyof typeof stateKeyToSettingKeyMap;
+}
 
-  const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
+
+export default function Settings() {
+  const [config, setConfig] = useSettings();
+  const [tabIndex, setTabIndex] = React.useState(0);
+
+  const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabIndex(newValue);
+  };
 
   /**
    * Close window.
@@ -61,221 +67,101 @@ export default function Settings() {
    * Save values. 
    */
   const saveSettings = () => {
-    // Make sure that we can't select the same directory for both storagePath
-    // and bufferStoragePath as that would cause the deletion of all videos
-    // due to cleanupBuffer().
-    if (state['storagePath'] === state['bufferStoragePath']) {
-      openDialog((<span>Storage Path and Buffer Storage Path cannot be the same directory!</span>))
-      return;
-    }
+    console.info("[Settings] User clicked save settings");
 
-    Object.values(stateKeyToSettingKeyMap).forEach(saveItem);
+    configSettings.forEach((key: string) => {
+      const configKey = (key as keyof typeof config);
+      setConfigValue(key, config[configKey]);
 
-    ipc.sendMessage('settingsWindow', ['update']);
-  }
-
-  /**
-   * Close window.
-   */
-  const saveItem = (setting: string) => {
-    if (!document) return;
-    const element = document.getElementById(setting); 
-    if (!element) return;
-    let value;
-
-    if (setting === "start-up") {
-      value = element.getAttribute("aria-pressed");
-      ipc.sendMessage("settingsWindow", ["startup", value]);
-    } else {
-      value = element.getAttribute("value");
-    }
-
-    if (value !== null) {
-      window.electron.store.set(setting, value);
-    }
-  }
-  
-  /**
-   * Open a diretory selector dialog for the given camelCase settings key
-   */
-  const openDirectorySelectorDialog = (settingsKey: string) => {
-    ipc.sendMessage("settingsWindow", ["openPathDialog", settingsKey]);
-  }
-
-  /**
-   * setSetting, why not just use react state hook?
-   */
-   const setSetting = (stateKey: StateToSettingKeyMapKey, value: any) => {
-    const settingKey = stateKeyToSettingKeyMap[stateKey]
-    const element = document.getElementById(settingKey)
-
-    if (!element) {
-      return;
-    }
-
-    console.log(`[SettingsWindow] Set setting '${settingKey}' to '${value}'`)
-    element.setAttribute("value", value);
-
-    useState((prevState) => ({...prevState, [stateKey]: value}))
-  }
-
-  const closeDialog = () => {
-    setDialog(prev => {
-      return {
-        ...prev,
-        open: false
-      };
+      if (key === "startUp") {
+        ipc.sendMessage("settingsWindow", ["startup", config[configKey]]);
+      }
     });
-  };
 
-  const openDialog = (content: any) => {
-    setDialog(prev => {
-      return {
-        ...prev,
-        dialogContent: content,
-        open: true,
-      };
-    });
-  };
+    closeSettings();
+  }
+
+  const categoryTabsSx = {
+    borderColor: '#000000', 
+    bgcolor: '#272e48', 
+    textColor: 'secondary', 
+    overflow: 'visible',
+    borderRight: '1px solid',
+  }
+
+  const categoryTabSx = {
+    padding:'12px', 
+    bgcolor: '#272e48', 
+    color: 'white', 
+    borderBottom: '1px solid', 
+    borderColor: 'black', 
+    minHeight: '1px', 
+    height: '50px',
+    width: '150px'
+  }
+
+/**
+ * Needed to style the tabs with the right color.
+ */
+const useStyles = makeStyles()({
+  tabs: {
+    "& .MuiTab-root.Mui-selected": {
+      color: '#bb4220'
+    },
+    scrollButtons: { // this does nothing atm
+      "&.Mui-disabled": {
+        opacity: 1
+      }
+    }
+  },
+})
 
   /**
-   * Event handler when user selects an option in dialog window.
-   */
-  React.useEffect(() => {
-    ipc.on('settingsWindow', (args: any) => {
-      if (args[0] === "pathSelected") setSetting(args[1], args[2]);
-    });
-  }, []);
-
-  const audioDevices = ipc.sendSync('getAudioDevices', []);
-  const availableAudioDevices = {
-    input: [
-      new ObsAudioDevice('none', '(None: no microphone input will be recorded)'),
-      new ObsAudioDevice('all', '(All)'),
-      ...audioDevices.input,
-    ],
-    output: [
-      new ObsAudioDevice('none', '(None: no sound will be recorded)'),
-      new ObsAudioDevice('all', '(All)'),
-      ...audioDevices.output,
-    ]
-  };
-
-  const bufferStoragePathPlaceholder = resolveBufferStoragePath(state.storagePath, state.bufferStoragePath);
+  * MUI styles.
+  */
+   const { classes: styles } = useStyles();
 
   return (
-    <div className="container">
-      <InformationDialog
-        title='Invalid Configuration'
-        open={dialogState.open}
-        buttons={['ok']}
-        onClose={closeDialog}
+    <ConfigContext.Provider value={[config, setConfig]}>
+      <Box
+        sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: '100%' }}
       >
-        {dialogState.dialogContent}
-      </InformationDialog>
-
-      <div className="col-xl-9 col-lg-9 col-md-12 col-sm-12 col-12">
-        <div className="card h-100">
-          <div className="card-body">
-            <div className="row gutters">
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Storage Path </label>
-                  <input type="text" className="form-control" id="storage-path" placeholder={state.storagePath} onClick={() => openDirectorySelectorDialog('storagePath')}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Buffer Storage Path </label>
-                  <input type="text" className="form-control" id="buffer-storage-path" placeholder={bufferStoragePathPlaceholder} onClick={() => openDirectorySelectorDialog('bufferStoragePath')}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Combat Log Path (Retail) </label>
-                  <input type="text" className="form-control" id="log-path" placeholder={state.logPath ?? '(Not set)'} onClick={() => openDirectorySelectorDialog('logPath')}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Combat Log Path (Classic) </label>
-                  <input type="text" className="form-control" id="log-path-classic" placeholder={state.logPathClassic ?? '(Not set)'} onClick={() => openDirectorySelectorDialog('logPathClassic')}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Max Storage (GB) </label>
-                  <input type="text" id="max-storage" className="form-control" placeholder={state.maxStorage} onChange={(event) => setSetting('maxStorage', event.target.value)}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Monitor to Record </label>
-                  <select id="monitor-index" className="form-control" value={state.monitorIndex} onChange={(event) => setSetting('monitorIndex', event.target.value)}>
-                    { displayConfiguration.map((display: OurDisplayType) =>
-                        <option key={ 'display-' + display.id } value={ display.index + 1 }>
-                          [{ display.index + 1 }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
-                        </option>
-                    )}
-                  </select>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Record audio input from </label>
-                  <select id="audio-input-device" className="form-control" value={state.audioInputDevice} onChange={(event) => setSetting('audioInputDevice', event.target.value)}>
-                    { availableAudioDevices.input.map((device: ObsAudioDevice) =>
-                        <option key={ 'device_' + device.id } value={ device.id }>{ device.name }</option>
-                    )}
-                  </select>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Min Encounter Duration (sec) </label>
-                  <input type="text" id="min-encounter-duration" className="form-control" placeholder={state.minEncounterDuration} onChange={(event) => setSetting('minEncounterDuration', event.target.value)}/>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Record audio output from </label>
-                  <select id="audio-output-device" className="form-control" value={state.audioOutputDevice} onChange={(event) => setSetting('audioOutputDevice', event.target.value)}>
-                    { availableAudioDevices.output.map((device: ObsAudioDevice) =>
-                        <option key={ 'device_' + device.id } value={ device.id }>{ device.name }</option>
-                    )}
-                  </select>
-                </div>
-              </div>
-              <div className="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
-                <div className="form-group">
-                  <label> Run on Startup? </label>
-                  <ToggleButton
-                    id="start-up"
-                    size="small"
-                    sx={{ border: '1px solid #bcd0f7', width: 25, height: 25, margin: 1 }}
-                    value="check"
-                    selected={ state.startUp }
-                    onChange={ () => setSetting('startUp', !state.startUp) }
-                  >
-                  { state.startUp &&
-                    <CheckIcon sx={{ color: '#bcd0f7' }}/>
-                  }                    
-                  </ToggleButton>
-                </div>
-              </div>
-            </div>
-            <div className="row gutters">
-              <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                <div className="text-center">
-                  <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings}>Close</button>
-                  <button type="button" id="submit" name="submit" className="btn btn-primary" onClick={saveSettings}>Update</button>
-                </div>
-              </div>
-            </div>
-          </div>
+        <Tabs
+          orientation="vertical"
+          variant="scrollable"
+          value={tabIndex}
+          onChange={handleChangeTab}
+          aria-label="Vertical tabs example"
+          sx= {{ ...categoryTabsSx }}
+          className={ styles.tabs }
+          TabIndicatorProps={{ style: { background:'#bb4220' } }}
+        >
+          <Tab label="General" {...a11yProps(0)} sx = {{ ...categoryTabSx }} />
+          <Tab label="Content" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
+          <Tab label="Video" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
+          <Tab label="Audio" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
+          <Tab label="Advanced" {...a11yProps(4)} sx = {{ ...categoryTabSx }}/>
+        </Tabs>
+        <TabPanel value={tabIndex} index={0}>
+          <GeneralSettings/>
+        </TabPanel>
+        <TabPanel value={tabIndex} index={1}>
+          <ContentSettings/>
+        </TabPanel>
+        <TabPanel value={tabIndex} index={2}>
+          <VideoSettings/>
+        </TabPanel>
+        <TabPanel value={tabIndex} index={3}>
+          <AudioSettings/>
+        </TabPanel>
+        <TabPanel value={tabIndex} index={4}>
+          <AdvancedSettings/>
+        </TabPanel>
+        <div style={{position: "fixed", bottom: "10px", left: "12px"}} >
+          <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings} >Close</button>
+          <button type="button" id="submit" name="save" className="btn btn-primary" onClick={saveSettings}>Save</button>
         </div>
-      </div>
-    </div>
-    
+      </Box>
+    </ConfigContext.Provider>
   );
 }

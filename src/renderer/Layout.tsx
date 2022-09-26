@@ -14,12 +14,12 @@ import readyPoster  from  "../../assets/poster/ready.png";
 import notReadyPoster from  "../../assets/poster/not-ready.png";
 import { dungeon } from './images';
 import { VideoPlayerSettings } from 'main/types';
+import { getConfigValue, setConfigValue } from 'settings/useSettings';
 
 /**
  * For shorthand referencing.
  */
 const ipc = window.electron.ipcRenderer;
-const store = window.electron.store;
 
 /**
  * Needed to style the tabs with the right color.
@@ -81,28 +81,12 @@ const a11yProps = (index: number) => {
 }
 
 /**
- * Category tab borders.
- */
-const tabProps = (index: number) => {
-  if (index == 0) {
-    return {
-      borderTop: '1px solid',
-      ...categoryTabSx
-    }
-  } else {
-    return {
-      ...categoryTabSx
-    }
-  }
-}
-
-/**
  * Get video player settings initially when the component is loaded. We store 
  * as a variable in main rather than in config It's fine if this is lost when
  * the app is restarted. 
  */
 const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
-const selectedCategory = ((store.get('selected-category') ?? 0) as number);
+const selectedCategory = getConfigValue<number>('selectedCategory');
 
 let videoState: { [key: string]: any } = {}
 
@@ -144,7 +128,7 @@ export default function Layout() {
    * Update the state variable following a change of selected category.
    */
   const handleChangeCategory = (_event: React.SyntheticEvent, newValue: number) => {
-    store.set('selected-category', newValue);
+    setConfigValue('selectedCategory', newValue);
 
     setState(prevState => {
       return {
@@ -242,7 +226,7 @@ export default function Layout() {
     const key = "tab" + tabIndex;
 
     return (
-      <Tab key={ key } label={ category } {...a11yProps(tabIndex)} sx = {{ ...tabProps(tabIndex) }}/>
+      <Tab key={ key } label={ category } {...a11yProps(tabIndex)} sx = {{ ...categoryTabSx }}/>
     )
   };
 
