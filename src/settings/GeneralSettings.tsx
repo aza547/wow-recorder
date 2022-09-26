@@ -86,7 +86,7 @@ export default function GeneralSettings() {
         sx={style}
         inputProps={{ style: { color: "white" } }}
       />
-      <TextField 
+      {/* <TextField 
         value={config.classicLogPath}
         id="classic-log-path" 
         label="Classic Log Path" 
@@ -95,7 +95,7 @@ export default function GeneralSettings() {
         InputLabelProps={{ shrink: true }}
         sx={style}
         inputProps={{ style: { color: "white" } }}
-      />
+      /> */}
       <TextField 
         value={config.maxStorage}
         onChange={event => { modifyConfig("maxStorage", parseInt(event.target.value, 10)) }}
