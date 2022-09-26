@@ -2,6 +2,7 @@ import ElectronStore from "electron-store";
 import { ipcMain } from "electron";
 import path from "path";
 import { EventEmitter } from "stream";
+import { CombatLogParser } from "./combatLogParser";
 
 type ConfigurationSchema = {
     storagePath: string,
@@ -180,8 +181,25 @@ export default class ConfigService extends EventEmitter {
             return false;
         }
 
-        if (!this.get('retailLogPath') && !this.get('classicLogPath')) {
-            console.warn('[Config Service] Validation failed: `retailLogPath` and `classicLogPath` are empty. One needs to be set.');
+        // Check if the specified paths is a valid WoW Combat Log directory
+        const combatLogPaths = ['retailLogPath', 'classicLogPath'];
+        let hasValidCombatLogPath = false;
+        
+        combatLogPaths.forEach(configKey => {
+            const logPath = this.get<string>(configKey as keyof ConfigurationSchema)
+            if (!logPath) {
+                return;
+            }
+
+            const wowFlavour = CombatLogParser.getWowFlavour(logPath);
+            if (wowFlavour === 'unknown') {
+                console.warn(`[Config Service] Ignoring invalid combat log directory '${logPath}' for '${configKey}'.`);
+                return;
+            }
+        });
+
+        if (!hasValidCombatLogPath) {
+            console.warn(`[Config Service] No valid WoW Combat Log directory has been configured.`)
             return false;
         }
 
