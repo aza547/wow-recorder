@@ -69,8 +69,8 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
 /**
  * Create a settings store to handle the config.
  * This defaults to a path like: 
- *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config.json"
- *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config.json"
+ *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v2.json"
+ *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v2.json"
  */
 const cfg = new ConfigService();
 let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
