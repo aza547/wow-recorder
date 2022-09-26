@@ -187,23 +187,26 @@ export default class ConfigService extends EventEmitter {
         
         combatLogPaths.forEach(configKey => {
             const logPath = this.get<string>(configKey as keyof ConfigurationSchema)
+
             if (!logPath) {
                 return;
             }
 
             const wowFlavour = CombatLogParser.getWowFlavour(logPath);
+
             if (wowFlavour === 'unknown') {
                 console.warn(`[Config Service] Ignoring invalid combat log directory '${logPath}' for '${configKey}'.`);
                 return;
             }
+
+            hasValidCombatLogPath = true;
         });
 
         if (!hasValidCombatLogPath) {
             console.warn(`[Config Service] No valid WoW Combat Log directory has been configured.`)
-            return false;
         }
 
-        return true;
+        return hasValidCombatLogPath;
     }
 
     has(key: keyof ConfigurationSchema): boolean {
