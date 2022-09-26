@@ -6,7 +6,10 @@ import { PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 import { CombatLogParser, LogLine } from './combatLogParser';
 import { getSortedFiles } from './util';
+import ConfigService from './configService';
+import {categoryRecordConfigMapping} from './constants';
 
+const cfg = new ConfigService();
 const tasklist = require('tasklist');
 
 let videoStartDate: Date;
@@ -174,6 +177,12 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return;
     const category = (line.arg(3) as VideoCategory);
+
+    if (!cfg.get<boolean>(categoryRecordConfigMapping[category])) { 
+        console.log("[Logutils] Configured to not record", category) ; 
+        return;
+    };
+
     const zoneID = parseInt(line.arg(1), 10);
 
     // If all goes to plan we don't need this but we do it incase the game
@@ -225,12 +234,18 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
  * Handle a log line for CHALLENGE_MODE_START
  */
 function handleChallengeModeStartLine (line: LogLine): void {
+    if (!cfg.get<boolean>("recordDungeons")) {
+        console.log("[Logutils] Configured to not record Mythic+");
+        return;
+    }
+
     // It's impossible to start a keystone dungeon while another one is in progress
     // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
     // is encountered.
     if (activeChallengeMode) {
         console.warn("[ChallengeMode] A Challenge Mode instance is already in progress; abandoning it.")
     }
+
     videoStartDate = line.date();
 
     const zoneName = line.arg(2);
@@ -335,6 +350,11 @@ function handleEncounterStartLine (line: LogLine): void {
     const difficultyID = parseInt(line.arg(3), 10);
     const eventDate = line.date();
 
+    if (!activeChallengeMode && !cfg.get<boolean>("recordRaids")) {
+        console.log("[Logutils] Configured to not record raids");
+        return;
+    }
+
     // If we're recording _and_ has an active challenge mode dungeon,
     // add a new boss encounter timeline segment.
     if (recorder.isRecording && activeChallengeMode) {
@@ -417,7 +437,14 @@ function handleZoneChange (line: LogLine): void {
     }
 
     if (!isRecording && isNewZoneBG) {
-        console.log("[Logutils] ZONE_CHANGE into BG, start recording");
+        console.log("[Logutils] ZONE_CHANGE into BG");
+
+        if (!cfg.get<boolean>("recordBattlegrounds")) {
+            console.log("[Logutils] Configured to not record battlegrounds");
+            return;
+        }
+
+        console.log("[Logutils] Start recording BG");
         battlegroundStart(line);
         return;
     }
