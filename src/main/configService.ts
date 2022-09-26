@@ -52,10 +52,10 @@ const schema = {
         default: '',
     },
     maxStorage: {
-        description: 'Maximum allowed storage, in GB, that the application will consume for non-protected video files',
+        description: 'Maximum allowed storage, in GB, that the application will consume for non-protected video files. Set to 0 to signify no limit',
         type: 'integer',
-        default: 20,
-        minimum: 1,
+        default: 0,
+        minimum: 0,
     },
     monitorIndex: {
         description: 'The one-based index of the display to record',

@@ -103,8 +103,8 @@ export default function GeneralSettings() {
         label="Max Storage (GB)" 
         variant="outlined" 
         type="number" 
-        error= { config.maxStorage < 1 }
-        helperText={(config.maxStorage < 1) ? "Must be positive" : ' '}
+        error= { config.maxStorage < 0 }
+        helperText={(config.maxStorage < 0) ? "Must be positive" : ' '}
         InputLabelProps={{ shrink: true }}
         sx={style}
         inputProps={{ style: { color: "white" } }}

@@ -247,9 +247,14 @@ const getSortedVideos = async (storageDir: string, sortDirection: FileSortDirect
 const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise<void> => {
     let videoToDelete;
     const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
+    console.debug(`[Size Monitor] Running (max size = ${byteSize(maxStorageBytes)})`);
+
+    if (maxStorageGB == 0) {
+        console.debug(`[Size Monitor] Limitless storage, doing nothing`);
+        return;
+    }
 
     let files = await getSortedVideos(storageDir);
-    console.debug(`[Size Monitor] Running (max size = ${byteSize(maxStorageBytes)})`);
 
     files = files.map(file => {
         const metadata = getMetadataForVideo(file.name);
