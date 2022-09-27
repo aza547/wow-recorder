@@ -717,6 +717,11 @@ const pollWowProcess = () => {
     pollWowProcessInterval = setInterval(() => pollWoWProcessLogic(false), 5000);
 }
 
+const sendTestCombatLogLine = (line: string): void => {
+    console.debug('[Logutils] Sending test combat log line to the Combat Log Parser', line);
+    combatLogParser.handleLogLine('retail', line);
+};
+
 /**
  * Function to invoke if the user clicks the "run a test" button
  * in the GUI. Uses some sample log lines from 2v2.txt.
@@ -745,7 +750,7 @@ const runRecordingTest = (endTest: boolean = true) => {
      */
     const getAdjustedDate = (seconds: number = 0): string => {
         const now = new Date(new Date().getTime() + (seconds * 1000));
-        return `${now.getMonth() + 1}/${now.getDate()} ${now.toLocaleTimeString()}.000`
+        return `${now.getMonth() + 1}/${now.getDate()} ${now.toLocaleTimeString('en-GB')}.000`
     };
 
     // This inserts a test date so that the recorder doesn't confuse itself with
@@ -761,7 +766,7 @@ const runRecordingTest = (endTest: boolean = true) => {
         startDate + "  SPELL_AURA_APPLIED,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,110310,\"Dampening\",0x1,DEBUFF",
         // 'SPELL_PERIODIC_HEAL' isn't currently an event of interest so we want to test that too
         startDate + '  SPELL_PERIODIC_HEAL,Player-1084-08A89569,"Alexsmite-TarrenMill",0x10512,0x0,Player-1084-08A89569,"Alexsmite-TarrenMill",0x10512,0x0,199483,"Camouflage",0x1,Player-1084-08A89569,0000000000000000,86420,86420,2823,369,1254,0,2,100,100,0,284.69,287.62,0,2.9138,285,2291,2291,2291,0,nil',
-    ].forEach(v => combatLogParser.handleLogLine('retail', v));
+    ].forEach(sendTestCombatLogLine);
 
     const testArenaStopLine = endDate + "  ARENA_MATCH_END,0,8,1673,1668";
 
@@ -770,7 +775,7 @@ const runRecordingTest = (endTest: boolean = true) => {
     }
 
     setTimeout(() => {
-        combatLogParser.handleLogLine('retail', testArenaStopLine);
+        sendTestCombatLogLine(testArenaStopLine);
         testRunning = false;
     }, 10 * 1000);
 }

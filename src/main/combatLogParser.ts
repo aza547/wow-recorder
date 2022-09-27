@@ -89,7 +89,7 @@ class LogLine {
         // Split the line by any delimiter that isn't a number
         // and convert them to actual numbers.
         const timeParts = this.timestamp
-            .split(/[^0-9]/, 6)
+            .split(/[^0-9]/)
             .map(v => parseInt(v, 10))
         const [month, day, hours, mins, secs, msec] = timeParts;
         const dateObj = new Date();
