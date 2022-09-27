@@ -54,11 +54,11 @@ const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSet
     videoOverrun: 4,
   },
   [VideoCategory.MythicPlus]:{
-    configKey: 'recordRaids',
+    configKey: 'recordDungeons',
     videoOverrun: 5, // For the whole dungeon
   },
   [VideoCategory.Raids]: {
-    configKey: 'recordDungeons',
+    configKey: 'recordRaids',
     videoOverrun: 15, // Per boss encounter
   },
   [VideoCategory.Battlegrounds]: {
