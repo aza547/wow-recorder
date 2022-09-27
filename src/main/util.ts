@@ -5,6 +5,7 @@ import { categories, months, zones, dungeonsByMapId }  from './constants';
 import { Metadata }  from './logutils';
 const byteSize = require('byte-size')
 const chalk = require('chalk');
+const opened = require('@ronomon/opened');
 
 /**
  * When packaged, we need to fix some paths
@@ -23,9 +24,10 @@ import util from 'util';
 import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
-import { FileInfo, FileSortDirection, OurDisplayType } from './types';
+import { FileInfo, FileSortDirection, IFFProbeResult, OurDisplayType } from './types';
 import { Display, screen } from 'electron';
 import { getVideoZone } from './helpers';
+import { FfmpegError, FfmpegProbeError } from './errors';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -378,6 +380,47 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
 }
 
 /**
+ * Wait for a file to become accessible to us, if other applications
+ * have it open in exclusive mode.
+ *
+ * We'll only wait up to 'timeout' seconds and then fail, so as to not
+ * wait endlessly.
+ */
+const waitFile = async (file: string, timeout: number): Promise<void> => {
+    let intervalHandle: any;
+    const timeoutEnd = (new Date()).getTime() + (timeout * 1000);
+
+    return new Promise<void>((resolve, reject) => {
+        intervalHandle = setInterval(() => {
+            const hasTimedOut = (new Date()).getTime() > timeoutEnd;
+            if (hasTimedOut) {
+                clearInterval(intervalHandle);
+                reject(`timeout waiting for '${file}' to be released.`)
+                return;
+            }
+
+            // opened.file() will return `true` for status if the file is opened
+            // ffor exclusive access in another application.
+            opened.file(file, (err: Error | undefined, status: boolean) => {
+                if (!err && status) {
+                    return;
+                }
+
+                clearInterval(intervalHandle);
+
+                if (err) {
+                    reject(err);
+                }
+
+                if (!status) {
+                    resolve();
+                }
+            });
+        }, 200);
+    })
+}
+
+/**
  * Sanitize a filename and replace all invalid characters with a space.
  *
  * Multiple consecutive invalid characters will be replaced by a single space.
@@ -387,6 +430,22 @@ const sanitizeFilename = (filename: string): string => {
     return filename
         .replace(/[<>:"/\|?*]/g, ' ')   // Replace all invalid characters with space
         .replace(/ +/g, ' ');           // Replace multiple spaces with a single space
+};
+
+/**
+ * Promise verison of ffmpeg.ffprobe()
+ */
+const ffmpegProbe = async (sourceFile: string): Promise<IFFProbeResult> => {
+    return new Promise<IFFProbeResult>((resolve, reject) => {
+        ffmpeg.ffprobe(sourceFile, (err: any, data: any) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve(data.format);
+        })
+    });
 };
 
 /**
@@ -412,69 +471,73 @@ const cutVideo = async (
     const baseVideoFilename = sanitizeFilename(videoFileName + videoFilenameSuffix);
     const finalVideoPath = path.join(finalDir, baseVideoFilename + ".mp4");
 
+    console.log('[Util] Waiting up to 10 seconds for OBS to close the video file')
+
+    // Wait for OBS to close its exclusive write access to the file
+    // so ffmpeg can open and work with it.
+    await waitFile(initialFile, 10);
+    console.log('[Util] OBS closed the file, we may continue')
+
+    // Use ffprobe to check the length of the initial file.
+    const ffprobe = await ffmpegProbe(initialFile);
+    console.debug("[Util] ffprobe data", ffprobe);
+
+    // Calculate the desired start time relative to the initial file.
+    let bufferedDuration = ffprobe.duration;
+    let startTime = Math.round(bufferedDuration - desiredDuration);
+
+    if (bufferedDuration === null || bufferedDuration === NaN) {
+        console.log(`[Util] Temporary video duration is invalid (${bufferedDuration}), aborting ffmpeg cut to avoid errors.`);
+        throw new FfmpegProbeError('Temporary video duration is invalid', ffprobe);
+    }
+
+    // Defensively avoid a negative, null, or NaN start time error case.
+    if (startTime === null || startTime === NaN || startTime < 0) {
+        console.log("[Util] Video start time was: ", startTime);
+        console.log("[Util] Avoiding error by not cutting video");
+        startTime = 0;
+    }
+
+    // This was super helpful in debugging during development so I've kept it.
+    console.log("[Util] Ready to cut video.");
+    console.log("[Util] Initial duration:", bufferedDuration,
+                "Desired duration:", desiredDuration,
+                "Calculated start time:", startTime);
+
     return new Promise<string> ((resolve) => {
+        // It's crucial that we don't re-encode the video here as that
+        // would spin the CPU and delay the replay being available. I
+        // did try this with re-encoding as it has compression benefits
+        // but took literally ages. My CPU was maxed out for nearly the
+        // same elapsed time as the recording.
+        //
+        // We ensure that we don't re-encode by passing the "-c copy"
+        // option to ffmpeg. Read about it here:
+        // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
+        //
+        // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
+        // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
+        ffmpeg(initialFile)
+            .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
+            .outputOptions([ `-t ${desiredDuration}`, "-c:v copy", "-c:a copy", "-avoid_negative_ts make_zero" ])
+            .output(finalVideoPath)
 
-        // Use ffprobe to check the length of the initial file.
-        ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
-            if (err) {
-                console.log("[Util] FFprobe error: ", err);
-                throw new Error("FFprobe error when cutting video");
-            }
+            // Handle the end of the FFmpeg cutting.
+            .on('end', async (err: any) => {
+                if (err) {
+                    throw new FfmpegError("Error when cutting video (1)", err);
+                }
 
-            // Calculate the desired start time relative to the initial file. 
-            const bufferedDuration = data.format.duration;
-            let startTime = Math.round(bufferedDuration - desiredDuration);
+                console.log("[Util] FFmpeg cut video succeeded");
+                resolve(finalVideoPath);
+            })
 
-            // Defensively avoid a negative start time error case. 
-            if (startTime < 0) {
-                console.log("[Util] Video start time was: ", startTime);
-                console.log("[Util] Avoiding error by not cutting video");
-                startTime = 0;
-            }
-
-            // This was super helpful in debugging during development so I've kept it.
-            console.log("[Util] Ready to cut video.");
-            console.log("[Util] Initial duration:", bufferedDuration, 
-                        "Desired duration:", desiredDuration,
-                        "Calculated start time:", startTime);
-
-            // It's crucial that we don't re-encode the video here as that 
-            // would spin the CPU and delay the replay being available. I 
-            // did try this with re-encoding as it has compression benefits 
-            // but took literally ages. My CPU was maxed out for nearly the 
-            // same elapsed time as the recording. 
-            //
-            // We ensure that we don't re-encode by passing the "-c copy" 
-            // option to ffmpeg. Read about it here:
-            // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
-            //
-            // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
-            // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
-            ffmpeg(initialFile)
-                .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
-                .outputOptions([ `-t ${desiredDuration}`, "-c:v copy", "-c:a copy", "-avoid_negative_ts make_zero" ])
-                .output(finalVideoPath)
-
-                // Handle the end of the FFmpeg cutting.
-                .on('end', async (err: any) => {
-                    if (err) {
-                        console.log('[Util] FFmpeg video cut error (1): ', err)
-                        throw new Error("FFmpeg error when cutting video (1)");
-                    }
-                    else {
-                        console.log("[Util] FFmpeg cut video succeeded");
-                        resolve(finalVideoPath);
-                    }
-                })
-
-                // Handle an error with the FFmpeg cutting. Not sure if we 
-                // need this as well as the above but being careful.
-                .on('error', (err: any) => {
-                    console.log('[Util] FFmpeg video cut error (2): ', err)
-                    throw new Error("FFmpeg error when cutting video (2)");
-                })
-                .run()    
-        })
+            // Handle an error with the FFmpeg cutting. Not sure if we
+            // need this as well as the above but being careful.
+            .on('error', (err: any) => {
+                throw new FfmpegError("Error when cutting video (2)", err);
+            })
+            .run()
     });
 }
 

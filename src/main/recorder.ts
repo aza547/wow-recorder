@@ -208,6 +208,7 @@ type RecorderOptionsType = {
 
             // Refresh the GUI
             if (mainWindow) mainWindow.webContents.send('refreshState');
+            if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
 
             // Restart the buffer recording ready for next game.
             setTimeout(async () => {
@@ -224,22 +225,13 @@ type RecorderOptionsType = {
      * @param {Metadata} metadata the details of the recording
      */
     finalizeVideo = async (metadata: Metadata, outputFilename?: string): Promise<string> => {
+        const bufferedVideo = await getNewestVideo(this._options.bufferStorageDir);
+        const videoPath = await cutVideo(bufferedVideo, this._options.storageDir, outputFilename, metadata.duration);
 
-        // Gnarly syntax to await for the setTimeout to finish.
-        return new Promise<string> ((resolve) => {
+        await writeMetadataFile(videoPath, metadata);
+        console.log('[Recorder] Finalized video', videoPath);
 
-            // It's a bit hacky that we async wait for 2 seconds for OBS to 
-            // finish up with the video file. Maybe this can be done better. 
-            setTimeout(async () => {
-                const bufferedVideo = await getNewestVideo(this._options.bufferStorageDir);
-                const videoPath = await cutVideo(bufferedVideo, this._options.storageDir, outputFilename, metadata.duration);
-                await writeMetadataFile(videoPath, metadata);
-                console.log('[Recorder] Finalized video', videoPath);
-                resolve(videoPath);
-                if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
-            }, 
-            2000)
-        });   
+        return videoPath;
     }
 
     /**
