@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "A World of Warcraft screen recorder",
   "main": "./dist/main/main.js",
   "author": {
