@@ -1,3 +1,4 @@
+import { ConfigurationSchemaKey } from "./configService";
 import { NumberKeyToStringValueMapType, RaidInstanceType } from "./types";
 
 enum VideoCategory {
@@ -10,7 +11,7 @@ enum VideoCategory {
   Battlegrounds = 'Battlegrounds',
 };
 
-const categories: string[] = [
+const categories: VideoCategory[] = [
   VideoCategory.TwoVTwo,
   VideoCategory.ThreeVThree,
   VideoCategory.Skirmish,
@@ -20,28 +21,50 @@ const categories: string[] = [
   VideoCategory.Battlegrounds,
 ];
 
-const categoryRecordConfigMapping: { [key in VideoCategory]: string } = {
-  [VideoCategory.TwoVTwo]: "recordTwoVTwo",
-  [VideoCategory.ThreeVThree]: "recordThreeVThree",
-  [VideoCategory.Skirmish]: "recordSkirmish",
-  [VideoCategory.SoloShuffle]: "recordSoloShuffle",
-  [VideoCategory.MythicPlus]:"recordRaids", // not used
-  [VideoCategory.Raids]: "recordDungeons", // not used
-  [VideoCategory.Battlegrounds]: "recordBattlegrounds",
+interface ICategoryRecordingSettings {
+  configKey: ConfigurationSchemaKey,
+  videoOverrun: number,
 };
 
 /**
- * How long to keep recording after an activity ends to ensure we don't miss any
- * important stuff at the end, per category, in seconds.
+ * Category specific settings for recording
+ *
+ * `configKey`:    The configuration key name that specifies if we're allowed
+ *                 to record content from that particular category.
+ *
+ * `videoOverrun`: Number of seconds of how long to keep recording after an
+ *                 activity ends to ensure we don't miss any important stuff
+ *                  at the end.
  */
-const videoOverrunPerCategory: { [key: string]: number } = {
-  [VideoCategory.TwoVTwo]: 3,
-  [VideoCategory.ThreeVThree]: 3,
-  [VideoCategory.Skirmish]: 3,
-  [VideoCategory.SoloShuffle]: 3,
-  [VideoCategory.MythicPlus]: 5,    // For the whole dungeon
-  [VideoCategory.Raids]: 15,        // Per boss encounter
-  [VideoCategory.Battlegrounds]: 3,
+const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSettings } = {
+  [VideoCategory.TwoVTwo]: {
+    configKey: 'recordTwoVTwo',
+    videoOverrun: 4,
+  },
+  [VideoCategory.ThreeVThree]: {
+    configKey: 'recordThreeVThree',
+    videoOverrun: 4,
+  },
+  [VideoCategory.Skirmish]: {
+    configKey: 'recordSkirmish',
+    videoOverrun: 4,
+  },
+  [VideoCategory.SoloShuffle]: {
+    configKey: 'recordSoloShuffle',
+    videoOverrun: 4,
+  },
+  [VideoCategory.MythicPlus]:{
+    configKey: 'recordRaids',
+    videoOverrun: 5, // For the whole dungeon
+  },
+  [VideoCategory.Raids]: {
+    configKey: 'recordDungeons',
+    videoOverrun: 15, // Per boss encounter
+  },
+  [VideoCategory.Battlegrounds]: {
+    configKey: 'recordBattlegrounds',
+    videoOverrun: 3,
+  },
 };
 
 /**
@@ -546,7 +569,6 @@ export {
     instanceEncountersById,
     InstanceDifficultyType,
     VideoCategory,
-    videoOverrunPerCategory,
     raidInstances,
-    categoryRecordConfigMapping
+    categoryRecordingSettings,
 };
