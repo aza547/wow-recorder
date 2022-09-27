@@ -292,7 +292,7 @@ const endChallengeModeDungeon = (): void => {
         return;
     }
 
-    console.debug("[ChallengeMode] Ending current timeline segment")
+    console.debug("[ChallengeMode] Ending current timeline segment");
     activeChallengeMode.endCurrentTimelineSegment(videoStopDate);
 
     // If last timeline segment is less than 10 seconds long, discard it.
@@ -644,7 +644,7 @@ const isUnitPlayer = (flags: number): boolean => {
  * Forcibly stop recording and clean up whatever was going on
  */
 const forceStopRecording = () => {
-    const videoStopDate = new Date();
+    videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime());
     metadata.duration = Math.round(milliSeconds / 1000);
 
