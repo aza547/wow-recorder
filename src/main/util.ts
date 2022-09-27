@@ -386,38 +386,36 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  * We'll only wait up to 'timeout' seconds and then fail, so as to not
  * wait endlessly.
  */
-const waitFile = async (file: string, timeout: number): Promise<void> => {
+const waitFile = async (file: string, timeout: number): Promise<unknown> => {
     let intervalHandle: any;
-    const timeoutEnd = (new Date()).getTime() + (timeout * 1000);
 
-    return new Promise<void>((resolve, reject) => {
-        intervalHandle = setInterval(() => {
-            const hasTimedOut = (new Date()).getTime() > timeoutEnd;
-            if (hasTimedOut) {
-                clearInterval(intervalHandle);
-                reject(`timeout waiting for '${file}' to be released.`)
-                return;
-            }
+    return Promise.race([
+        new Promise((_, reject) => {
+            setTimeout(reject, timeout * 1000)}
+        ),
 
-            // opened.file() will return `true` for status if the file is opened
-            // ffor exclusive access in another application.
-            opened.file(file, (err: Error | undefined, status: boolean) => {
-                if (!err && status) {
-                    return;
-                }
+        new Promise<void>((resolve, reject) => {
+            intervalHandle = setInterval(() => {
+                // opened.file() will return `true` for status if the file is opened
+                // ffor exclusive access in another application.
+                opened.file(file, (err: Error | undefined, status: boolean) => {
+                    if (!err && status) {
+                        return;
+                    }
 
-                clearInterval(intervalHandle);
+                    clearInterval(intervalHandle);
 
-                if (err) {
-                    reject(err);
-                }
+                    if (err) {
+                        reject(err);
+                    }
 
-                if (!status) {
-                    resolve();
-                }
-            });
-        }, 200);
-    })
+                    if (!status) {
+                        resolve();
+                    }
+                });
+            }, 200);
+        })
+    ]);
 }
 
 /**
