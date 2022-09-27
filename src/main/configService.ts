@@ -4,7 +4,7 @@ import path from "path";
 import { EventEmitter } from "stream";
 import { CombatLogParser } from "./combatLogParser";
 
-type ConfigurationSchema = {
+export type ConfigurationSchema = {
     storagePath: string,
     bufferStoragePath?: string,
     retailLogPath?: string,
@@ -26,6 +26,8 @@ type ConfigurationSchema = {
     recordSoloShuffle: boolean,
     recordBattlegrounds: boolean,
 };
+
+export type ConfigurationSchemaKey = keyof ConfigurationSchema;
 
 /**
  * Config schema. 
@@ -138,6 +140,7 @@ const schema = {
 };
 
 export default class ConfigService extends EventEmitter {
+    // @ts-ignore 'schema' is "wrong", but it really isn't.
     private _store = new ElectronStore<ConfigurationSchema>({schema, name: 'config-v2'});
 
     constructor() {

@@ -1,13 +1,12 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, videoOverrunPerCategory }  from './constants';
+import { battlegrounds, categoryRecordingSettings, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory }  from './constants';
 import { PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 import { CombatLogParser, LogLine } from './combatLogParser';
 import { getSortedFiles } from './util';
 import ConfigService from './configService';
-import {categoryRecordConfigMapping} from './constants';
 
 const cfg = new ConfigService();
 const tasklist = require('tasklist');
@@ -122,9 +121,30 @@ const wowProcessStopped = () => {
 };
 
 /**
+ * Check and return whether we're allowed to record a certain type of content
+ */
+const allowRecordCategory = (category: VideoCategory): boolean => {
+    const categoryConfig = categoryRecordingSettings[category];
+    if (!cfg.get<boolean>(categoryConfig.configKey)) {
+        if (!testRunning) {
+            console.log("[Logutils] Configured to not record", category);
+            return false;
+        }
+
+        console.log(`[Logutils] Configured to not record ${category}, but test is running so recording anyway.`);
+    };
+
+    return true;
+};
+
+/**
  * Initiate recording and mark as having something in-progress
  */
 const startRecording = (category: VideoCategory) => {
+    if (!allowRecordCategory(category)) {
+        return;
+    }
+
     console.log(`[Logutils] Start recording a video for category: ${category}`)
 
     // Ensure combatant map and player combatant is clean before
@@ -153,7 +173,7 @@ const endRecording = (options?: EndRecordingOptionsType) => {
     }
 
     const discardVideo = options?.discardVideo ?? false;
-    const overrun = videoOverrunPerCategory[currentActivity];
+    const overrun = categoryRecordingSettings[currentActivity].videoOverrun;
     const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
 
     metadata.duration = Math.round(videoDuration / 1000) + overrun;
@@ -177,11 +197,6 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return;
     const category = (line.arg(3) as VideoCategory);
-
-    if (!cfg.get<boolean>(categoryRecordConfigMapping[category])) { 
-        console.log("[Logutils] Configured to not record", category) ; 
-        return;
-    };
 
     const zoneID = parseInt(line.arg(1), 10);
 
@@ -234,11 +249,6 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
  * Handle a log line for CHALLENGE_MODE_START
  */
 function handleChallengeModeStartLine (line: LogLine): void {
-    if (!cfg.get<boolean>("recordDungeons")) {
-        console.log("[Logutils] Configured to not record Mythic+");
-        return;
-    }
-
     // It's impossible to start a keystone dungeon while another one is in progress
     // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
     // is encountered.
@@ -350,11 +360,6 @@ function handleEncounterStartLine (line: LogLine): void {
     const difficultyID = parseInt(line.arg(3), 10);
     const eventDate = line.date();
 
-    if (!activeChallengeMode && !cfg.get<boolean>("recordRaids")) {
-        console.log("[Logutils] Configured to not record raids");
-        return;
-    }
-
     // If we're recording _and_ has an active challenge mode dungeon,
     // add a new boss encounter timeline segment.
     if (recorder.isRecording && activeChallengeMode) {
@@ -420,7 +425,7 @@ function handleEncounterStopLine (line: LogLine): void {
  * Handle a line from the WoW log.
  */
 function handleZoneChange (line: LogLine): void {
-    console.log("[Logutils] Handling zone change: ", line);
+    console.log("[Logutils] Handling zone change", line);
     const zoneID = parseInt(line.arg(1), 10);
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
@@ -438,13 +443,6 @@ function handleZoneChange (line: LogLine): void {
 
     if (!isRecording && isNewZoneBG) {
         console.log("[Logutils] ZONE_CHANGE into BG");
-
-        if (!cfg.get<boolean>("recordBattlegrounds")) {
-            console.log("[Logutils] Configured to not record battlegrounds");
-            return;
-        }
-
-        console.log("[Logutils] Start recording BG");
         battlegroundStart(line);
         return;
     }
@@ -458,14 +456,6 @@ function handleZoneChange (line: LogLine): void {
         zoneChangeStop(line);
         return;
     }
-
-    // TODO there is the case here where a tilted raider hearths
-    // out mid-pull. I think the correct way to handle is just a
-    // log inactivity stop, else raid encounters with ZONE_CHANGES
-    // internally will always stop recording. That's a bit of work
-    // so I'm skipping the implementation for now and making a
-    // quick fix. For now, hearting out mid-encounter won't stop
-    // the recording and the user will need to restart the app.
 }
 
 /**
