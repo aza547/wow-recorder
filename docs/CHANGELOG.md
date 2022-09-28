@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
-## [2.8.0] - 2022-09-27
+## [2.8.1] - 2022-09-27
 ### Fixed
 - [Issue 175](https://github.com/aza547/wow-recorder/issues/175) - Fix test button on non en-GB locales. 
 - [Issue 176](https://github.com/aza547/wow-recorder/issues/176) - Fix app crashing when recording is force stopped. 
