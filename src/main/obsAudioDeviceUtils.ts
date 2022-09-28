@@ -1,4 +1,3 @@
-const { byOS, OS } = require('./operatingSystems');
 const osn = require("obs-studio-node");
 
 class ObsAudioDevice {
@@ -25,25 +24,13 @@ const getAudioDevices = (type: any, subtype: any): ObsAudioDevice[] => {
 };
 
 const getAvailableAudioInputDevices = () => {
-  return getAudioDevices(
-    byOS({
-      [OS.Windows]: 'wasapi_input_capture',
-      [OS.Mac]: 'coreaudio_input_capture'
-    }),
-    'mic-audio'
-  )
-  .filter(v => v.id !== 'default');
+  return getAudioDevices('wasapi_input_capture', 'mic-audio')
+    .filter(v => v.id !== 'default');
 };
 
 const getAvailableAudioOutputDevices = () => {
-  return getAudioDevices(
-    byOS({
-      [OS.Windows]: 'wasapi_output_capture',
-      [OS.Mac]: 'coreaudio_output_capture'
-    }),
-    'desktop-audio'
-  )
-  .filter(v => v.id !== 'default');
+  return getAudioDevices('wasapi_output_capture', 'desktop-audio')
+    .filter(v => v.id !== 'default');
 };
 
 export {
