@@ -26,6 +26,8 @@ export type ConfigurationSchema = {
     recordSkirmish: boolean,
     recordSoloShuffle: boolean,
     recordBattlegrounds: boolean,
+    obsBaseResolution: string,
+    obsOutputResolution: string,
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -97,6 +99,16 @@ const schema = {
         description: "Whether the application starts minimized",
         type: 'boolean',
         default: false,
+    },
+    obsBaseResolution: {
+        description: 'Base resolution for OBS canvas',
+        type: 'string',
+        default: '1920x1080',
+    },
+    obsOutputResolution: {
+        description: 'Output resolution for OBS',
+        type: 'string',
+        default: '1920x1080',
     },
     recordRetail: {
         description: 'Whether the application should record retail',

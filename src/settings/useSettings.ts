@@ -30,6 +30,8 @@ export const configSettings = [
   'recordSkirmish',
   'recordSoloShuffle',
   'recordBattlegrounds',
+  'obsBaseResolution',
+  'obsOutputResolution',
 ];
 
 export default function useSettings() {
@@ -54,6 +56,8 @@ export default function useSettings() {
     recordSkirmish:       getConfigValue<boolean>('recordSkirmish'),
     recordSoloShuffle:    getConfigValue<boolean>('recordSoloShuffle'),
     recordBattlegrounds:  getConfigValue<boolean>('recordBattlegrounds'),
+    obsBaseResolution:    getConfigValue<string>('obsBaseResolution'),
+    obsOutputResolution:  getConfigValue<string>('obsOutputResolution'),
   });
 
   return [config, setConfig];

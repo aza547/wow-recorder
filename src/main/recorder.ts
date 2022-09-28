@@ -17,6 +17,8 @@ type RecorderOptionsType = {
     audioInputDeviceId: string;
     audioOutputDeviceId: string;
     minEncounterDuration: number;
+    obsBaseResolution: string,
+    obsOutputResolution: string,
 };
 
 /**

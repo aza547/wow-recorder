@@ -9,6 +9,8 @@ import ConfigContext from "./ConfigContext";
 
 const ipc = window.electron.ipcRenderer;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
+const obsResolutions: any = ipc.sendSync('settingsWindow', ['getObsAvailableResolutions']);
+const { Base: baseResolutions, Output: outputResolutions } = obsResolutions;
 
 export default function VideoSettings() {
   const [config, setConfig] = React.useContext(ConfigContext);
@@ -30,7 +32,7 @@ export default function VideoSettings() {
       borderColor: '#bb4220',
       color: '#bb4220'
     },
-  }  
+  }
 
   return (
     <Stack
@@ -54,6 +56,23 @@ export default function VideoSettings() {
           { displayConfiguration.map((display: OurDisplayType) =>
             <MenuItem key={ 'display-' + display.id } value={ display.index + 1 }>
               [{ display.index + 1 }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
+            </MenuItem>
+          )}
+        </Select>
+      </FormControl>
+      <FormControl fullWidth>
+        <InputLabel id="obs-output-resolution-label" sx = {style}>Video output resolution</InputLabel>
+        <Select
+          labelId="obs-output-resolution-label"
+          id="obs-output-resolution"
+          value={config.obsOutputResolution}
+          label="Output resolution for OBS"
+          onChange={(event) => modifyConfig('obsOutputResolution', event.target.value)}
+          sx={style}
+        >
+          { outputResolutions.map((res: string) =>
+            <MenuItem key={ 'obs-output-resolution-' + res } value={ res }>
+              { res }
             </MenuItem>
           )}
         </Select>

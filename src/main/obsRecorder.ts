@@ -4,6 +4,7 @@ import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from ".
 import { RecorderOptionsType } from "./recorder";
 import { OurDisplayType } from "./types";
 import { Size } from "electron";
+import { IScene } from "obs-studio-node";
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
 const osn = require("obs-studio-node");
@@ -16,10 +17,23 @@ let scene = null;
 * Reconfigure the recorder without destroying it.
 */
 const reconfigure = (options: RecorderOptionsType) => {
+  const baseResolution = parseResolutionsString(options.obsBaseResolution);
+  const outputResolution = parseResolutionsString(options.obsOutputResolution);
+
   configureOBS(options.bufferStorageDir);
-  scene = setupScene(options.monitorIndex);
+  scene = setupScene(options.monitorIndex, baseResolution, outputResolution);
   setupSources(scene, options.audioInputDeviceId, options.audioOutputDeviceId);
 }
+
+/**
+ * Parse a resolution string like '1920x1080' into a `Size` compatible
+ * format.
+ */
+const parseResolutionsString = (value: string): Size => {
+  const [width, height] = value.split('x').map(v => parseInt(v, 10));
+
+  return { width, height };
+};
 
 /*
 * Init the library, launch OBS Studio instance, configure it, set up sources and scene
@@ -168,7 +182,9 @@ const setOBSVideoResolution = (res: Size, paramString: string) => {
 /*
 * setupScene
 */
-const setupScene = (monitorIndex: number) => {
+const setupScene = (monitorIndex: number, baseResolution: Size, outputResolution: Size): IScene => {
+  setOBSVideoResolution(outputResolution, 'Output');
+
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
   const monitorIndexFromZero = monitorIndex - 1;
   console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
@@ -178,9 +194,6 @@ const setupScene = (monitorIndex: number) => {
   }
 
   setOBSVideoResolution(selectedDisplay.physicalSize, 'Base');
-
-  // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
-  setOBSVideoResolution(selectedDisplay.physicalSize, 'Output');
 
   const videoSource = osn.InputFactory.create('monitor_capture', 'desktop-video');
 
@@ -336,6 +349,15 @@ const getAvailableValues = (category: any, subcategory: any, parameter: any) => 
   return parameterSettings.values.map( (value: any) => Object.values(value)[0]);
 }
 
+/**
+ * Simply return a list of available resolutions from OBS for 'Base' and 'Output
+ */
+const getObsResolutions = (): any => {
+  return {
+    'Base':   getAvailableValues('Video', 'Untitled', 'Base'),
+    'Output': getAvailableValues('Video', 'Untitled', 'Output')
+  };
+}
 
 /*
 * Assert a signal from OBS is as expected, if it is not received
@@ -374,4 +396,5 @@ export {
   stop,
   shutdown,
   reconfigure,
+  getObsResolutions,
 }
