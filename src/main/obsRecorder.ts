@@ -6,7 +6,6 @@ import { OurDisplayType } from "./types";
 import { Size } from "electron";
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
-const { byOS, OS } = require('./operatingSystems');
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
 
@@ -183,7 +182,7 @@ const setupScene = (monitorIndex: number) => {
   // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
   setOBSVideoResolution(selectedDisplay.physicalSize, 'Output');
 
-  const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
+  const videoSource = osn.InputFactory.create('monitor_capture', 'desktop-video');
 
   // Update source settings:
   let settings = videoSource.settings;
@@ -210,7 +209,7 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 
   getAvailableAudioInputDevices()
     .forEach(device => {
-      const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio', { device_id: device.id });
+      const source = osn.InputFactory.create('wasapi_input_capture', 'mic-audio', { device_id: device.id });
       setSetting('Output', `Track${currentTrack}Name`, device.name);
       source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
       source.muted = audioInputDeviceId === 'none' || (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
@@ -222,7 +221,7 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 
   getAvailableAudioOutputDevices()
     .forEach(device => {
-      const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio', { device_id: device.id });
+      const source = osn.InputFactory.create('wasapi_output_capture', 'desktop-audio', { device_id: device.id });
       setSetting('Output', `Track${currentTrack}Name`, device.name);
       source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
       source.muted = audioOutputDeviceId === 'none' || (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
