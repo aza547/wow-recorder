@@ -8,7 +8,7 @@ import { CombatLogParser, LogLine } from './combatLogParser';
 import { getSortedFiles } from './util';
 import ConfigService from './configService';
 
-const cfg = new ConfigService();
+const cfg = ConfigService.getInstance();
 const tasklist = require('tasklist');
 
 let videoStartDate: Date;

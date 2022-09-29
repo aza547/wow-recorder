@@ -7,10 +7,27 @@ import { configSchema, ConfigurationSchema } from "./configSchema";
 import fs from 'fs';
 
 export default class ConfigService extends EventEmitter {
+    /**
+     * Singleton instance of class
+     */
+    private static _instance: ConfigService;
+
     // @ts-ignore 'schema' is "wrong", but it really isn't.
     private _store = new ElectronStore<ConfigurationSchema>({configSchema, name: 'config-v2'});
 
-    constructor() {
+    /**
+     * Get the instance of the class as a singleton.
+     * There should only ever be one instance created and his method faciliates that.
+     */
+    static getInstance(): ConfigService {
+        if (!ConfigService._instance) {
+            ConfigService._instance = new ConfigService();
+        }
+
+        return ConfigService._instance;
+    }
+
+    private constructor() {
         super();
 
         this._store.onDidAnyChange((newValue: any, oldValue: any) => {
