@@ -5,7 +5,6 @@ export function getConfigValue<T>(configKey: string): T {
 };
 
 export function setConfigValue(configKey: string, value: any): void {
-  console.log("saving value to e-storage: ", configKey, value);
   window.electron.ipcRenderer.sendMessage('config', ['set', configKey, value]);
 };
 

@@ -10,9 +10,11 @@ import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
 import ContentSettings from './ContentSettings';
 import ConfigContext from "./ConfigContext";
-import useSettings, { configSettings, setConfigValue } from "./useSettings";
+import useSettings, { setConfigValue } from "./useSettings";
+import { configSchema } from 'main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
+const configSettings = Object.keys(configSchema);
 
 interface TabPanelProps {
   children?: React.ReactNode;
