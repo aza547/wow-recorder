@@ -30,6 +30,8 @@ export default class ConfigService extends EventEmitter {
     private constructor() {
         super();
 
+        this.cleanupStore();
+
         this._store.onDidAnyChange((newValue: any, oldValue: any) => {
             this.emit('configChanged', oldValue, newValue);
         });
@@ -160,6 +162,28 @@ export default class ConfigService extends EventEmitter {
 
     getString(key: keyof ConfigurationSchema): string {
         return this.has(key) ? (this.get(key) as string) : '';
+    }
+
+    /**
+     * Ensure that only keys specified in the `configSchema` exists in the store
+     * and delete any that are no longer relevant. This is necessary to keep the
+     * config store up to date when config keys occasionally change/become obsolete.
+     */
+    private cleanupStore(): void {
+        const configSchemaKeys = Object.keys(configSchema);
+        const keysToDelete = Object.keys(this._store.store)
+            .filter(k => !configSchemaKeys.includes(k));
+
+        if (!keysToDelete.length) {
+            return;
+        }
+
+        // @ts-ignore complains about 'string' not being assignable to
+        // keyof ConfigurationSchema, which is true but also moot since we're
+        // trying to remove keys that _don't_ exist in the schema.
+        keysToDelete.forEach(k => this._store.delete(k));
+
+        console.log("[Config Service] Deleted deprecated keys from configuration store", keysToDelete);
     }
 
     /**
