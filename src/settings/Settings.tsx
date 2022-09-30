@@ -10,11 +10,10 @@ import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
 import ContentSettings from './ContentSettings';
 import ConfigContext from "./ConfigContext";
-import useSettings, { setConfigValue } from "./useSettings";
-import { configSchema } from 'main/configSchema';
+import useSettings, { configValues, setConfigValue } from "./useSettings";
 
 const ipc = window.electron.ipcRenderer;
-const configSettings = Object.keys(configSchema);
+const configSettingKeys = Object.keys(configValues);
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -71,7 +70,7 @@ export default function Settings() {
   const saveSettings = () => {
     console.info("[Settings] User clicked save settings");
 
-    configSettings.forEach((key: string) => {
+    configSettingKeys.forEach((key: string) => {
       const configKey = (key as keyof typeof config);
       setConfigValue(key, config[configKey]);
 
