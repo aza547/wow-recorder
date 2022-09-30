@@ -5,8 +5,11 @@ import { EventEmitter } from "stream";
 import { CombatLogParser } from "./combatLogParser";
 import { configSchema, ConfigurationSchema } from "./configSchema";
 import fs from 'fs';
+import util from 'util';
 
 export default class ConfigService extends EventEmitter {
+    private _logConfigTimeout: any;
+
     /**
      * Singleton instance of class
      */
@@ -14,6 +17,12 @@ export default class ConfigService extends EventEmitter {
 
     // @ts-ignore 'schema' is "wrong", but it really isn't.
     private _store = new ElectronStore<ConfigurationSchema>({configSchema, name: 'config-v2'});
+
+    /**
+     * Object of properties and values which has been changed in the past 500 ms of
+     * calls to `set()`
+     */
+    private _changedProperties: any = {};
 
     /**
      * Get the instance of the class as a singleton.
@@ -31,6 +40,8 @@ export default class ConfigService extends EventEmitter {
         super();
 
         this.cleanupStore();
+
+        console.log('[Config Service] Using configuration', util.inspect(this._store.store));
 
         this._store.onDidAnyChange((newValue: any, oldValue: any) => {
             this.emit('configChanged', oldValue, newValue);
@@ -56,13 +67,19 @@ export default class ConfigService extends EventEmitter {
 
             if (fn === 'get') {
                 const value = this.get(key);
-                console.log('[Config Service] Get from config store:', key, value);
                 event.returnValue = value;
             } else
             if (fn === 'set') {
                 const value = args[2];
                 this.set(key, value);
-                console.log('[Config Service] Set in config store:', key, value);
+
+                this._changedProperties[key] = value;
+
+                clearTimeout(this._logConfigTimeout);
+                this._logConfigTimeout = setTimeout(() => {
+                    console.log('[Config Service] Configuration changed:', util.inspect(this._changedProperties));
+                    this._changedProperties = {};
+                }, 500);
             }
         });
     }
