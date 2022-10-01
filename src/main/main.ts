@@ -194,13 +194,14 @@ const createWindow = async () => {
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send('updateTitleBar', 'Warcraft Recorder v' + app.getVersion());
 
-    if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
-    } else {
+    const configOK = cfg.validate();
+    const cfgStartMinimized = cfg.get<boolean>('startMinimized');
+
+    if (!cfgStartMinimized) {
       mainWindow.show();
     }
 
-    if (!cfg.validate()) return;
+    if (!configOK) return;
 
     makeRecorder(recorderOptions)
     pollWowProcess();

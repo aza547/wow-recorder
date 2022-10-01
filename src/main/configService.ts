@@ -16,6 +16,7 @@ export type ConfigurationSchema = {
     audioOutputDevice?: string,
     minEncounterDuration: number,
     startUp?: boolean,
+    startMinimized: boolean,
     recordRetail: boolean,
     recordClassic: boolean,
     recordRaids: boolean,
@@ -89,6 +90,11 @@ const schema = {
     },
     startUp: {
         description: 'Whether the application starts on Windows start-up',
+        type: 'boolean',
+        default: false,
+    },
+    startMinimized: {
+        description: "Whether the application starts minimized",
         type: 'boolean',
         default: false,
     },

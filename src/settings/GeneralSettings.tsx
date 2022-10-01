@@ -112,6 +112,9 @@ export default function GeneralSettings() {
       <FormGroup sx={formGroupStyle}>
         <FormControlLabel control={getCheckBox("startUp")} label="Run on startup" style = {formControlLabelStyle} />
       </FormGroup>
+      <FormGroup sx={formGroupStyle}>
+        <FormControlLabel control={getCheckBox("startMinimized")} label="Start minimized" style={formControlLabelStyle} />
+      </FormGroup>
     </Stack>
   );
 }
