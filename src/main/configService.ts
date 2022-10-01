@@ -94,7 +94,7 @@ const schema = {
         default: false,
     },
     startMinimized: {
-        description: "Whether the application starts minimized when it's set to autostart on Windows start-up",
+        description: "Whether the application starts minimized",
         type: 'boolean',
         default: false,
     },

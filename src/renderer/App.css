@@ -71,11 +71,6 @@ div#root {
   padding: 0;
 }
 
-.MuiFormControlLabel-root .MuiFormControlLabel-label.Mui-disabled,
-.Mui-disabled .MuiCheckbox-root .MuiSvgIcon-root {
-  color: #666 !important;
-}
-
 h1 {text-align: center;}
 h2:not(.MuiDialogTitle-root) {
   width: 100%;

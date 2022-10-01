@@ -195,10 +195,9 @@ const createWindow = async () => {
     mainWindow.webContents.send('updateTitleBar', 'Warcraft Recorder v' + app.getVersion());
 
     const configOK = cfg.validate();
-    const cfgStartUp = cfg.get<boolean>('startUp');
     const cfgStartMinimized = cfg.get<boolean>('startMinimized');
 
-    if (!(cfgStartUp && cfgStartMinimized)) {
+    if (!cfgStartMinimized) {
       mainWindow.show();
     }
 
