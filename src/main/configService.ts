@@ -28,6 +28,7 @@ export type ConfigurationSchema = {
     recordBattlegrounds: boolean,
     obsBaseResolution: string,
     obsOutputResolution: string,
+    obsFPS: number,
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -67,7 +68,7 @@ const schema = {
         type: 'integer',
         default: 1,
         minimum: 1,
-        maximum: 4,        
+        maximum: 4,
     },
     selectedCategory: {
         description: 'Last selected video category in the UI',
@@ -109,6 +110,13 @@ const schema = {
         description: 'Output resolution for OBS',
         type: 'string',
         default: '1920x1080',
+    },
+    obsFPS: {
+        description: 'Recording FPS',
+        type: 'integer',
+        default: 60,
+        minimum: 15,
+        maximum: 60,
     },
     recordRetail: {
         description: 'Whether the application should record retail',

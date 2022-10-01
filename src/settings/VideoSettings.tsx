@@ -6,6 +6,7 @@ import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import { OurDisplayType } from 'main/types';
 import ConfigContext from "./ConfigContext";
+import { TextField } from '@mui/material';
 
 const ipc = window.electron.ipcRenderer;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
@@ -31,6 +32,9 @@ export default function VideoSettings() {
     '&.Mui-focused': {
       borderColor: '#bb4220',
       color: '#bb4220'
+    },
+    "& .MuiInputLabel-root": {
+      color: 'white'
     },
   }
 
@@ -77,6 +81,19 @@ export default function VideoSettings() {
           )}
         </Select>
       </FormControl>
+      <TextField
+        value={config.obsFPS}
+        onChange={event => { modifyConfig("obsFPS", parseInt(event.target.value, 10)) }}
+        id="obs-fps"
+        label="Video FPS"
+        variant="outlined"
+        type="number"
+        error= { config.obsFPS < 15 || config.obsFPS > 60 }
+        helperText={(config.obsFPS < 15 || config.obsFPS > 60) ? "Must be between 15 - 60 fps" : ' '}
+        InputLabelProps={{ shrink: true }}
+        sx={style}
+        inputProps={{ style: { color: "white" } }}
+      />
     </Stack>
   );
 }

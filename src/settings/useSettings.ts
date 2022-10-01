@@ -32,6 +32,7 @@ export const configSettings = [
   'recordBattlegrounds',
   'obsBaseResolution',
   'obsOutputResolution',
+  'obsFPS',
 ];
 
 export default function useSettings() {
@@ -58,6 +59,7 @@ export default function useSettings() {
     recordBattlegrounds:  getConfigValue<boolean>('recordBattlegrounds'),
     obsBaseResolution:    getConfigValue<string>('obsBaseResolution'),
     obsOutputResolution:  getConfigValue<string>('obsOutputResolution'),
+    obsFPS:               getConfigValue<number>('obsFPS'),
   });
 
   return [config, setConfig];
