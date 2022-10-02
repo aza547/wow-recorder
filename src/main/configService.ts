@@ -3,171 +3,12 @@ import { ipcMain } from "electron";
 import path from "path";
 import { EventEmitter } from "stream";
 import { CombatLogParser } from "./combatLogParser";
-
-export type ConfigurationSchema = {
-    storagePath: string,
-    bufferStoragePath?: string,
-    retailLogPath?: string,
-    classicLogPath?: string,
-    maxStorage: number,
-    monitorIndex: number,
-    selectedCategory: number,
-    audioInputDevice?: string,
-    audioOutputDevice?: string,
-    minEncounterDuration: number,
-    startUp?: boolean,
-    startMinimized: boolean,
-    recordRetail: boolean,
-    recordClassic: boolean,
-    recordRaids: boolean,
-    recordDungeons: boolean,
-    recordTwoVTwo: boolean,
-    recordThreeVThree: boolean,
-    recordSkirmish: boolean,
-    recordSoloShuffle: boolean,
-    recordBattlegrounds: boolean,
-    obsBaseResolution: string,
-    obsOutputResolution: string,
-    obsFPS: number,
-};
-
-export type ConfigurationSchemaKey = keyof ConfigurationSchema;
-
-/**
- * Config schema. 
- */
-const schema = {
-    storagePath: {
-        description: 'Filesystem path where finalized videos are stored',
-        type: 'string',
-        default: '',
-    },
-    bufferStoragePath: {
-        description: 'Filesystem path where temporary videos files are stored',
-        type: 'string',
-        default: '',
-    },
-    retailLogPath: {
-        description: 'Filesystem path where WoW Retail combat logs are stored',
-        type: 'string',
-        default: '',
-    },
-    classicLogPath: {
-        description: 'Filesystem path where WoW Classic combat logs are stored',
-        type: 'string',
-        default: '',
-    },
-    maxStorage: {
-        description: 'Maximum allowed storage, in GB, that the application will consume for non-protected video files. Set to 0 to signify no limit',
-        type: 'integer',
-        default: 0,
-        minimum: 0,
-    },
-    monitorIndex: {
-        description: 'The one-based index of the display to record',
-        type: 'integer',
-        default: 1,
-        minimum: 1,
-        maximum: 4,
-    },
-    selectedCategory: {
-        description: 'Last selected video category in the UI',
-        type: 'integer',
-        default: 0,
-    },
-    audioInputDevice: {
-        description: 'Audio input device to be included in the recording',
-        type: 'string',
-        default: 'all',
-    },
-    audioOutputDevice: {
-        description: 'Audio output device to be included in the recording',
-        type: 'string',
-        default: 'all',
-    },
-    minEncounterDuration: {
-        description: 'Minimum boss encounter duration, in seconds, in order for it to not be discarded [Raids only]',
-        type: 'integer',
-        default: 15,
-        maximum: 10000,
-    },
-    startUp: {
-        description: 'Whether the application starts on Windows start-up',
-        type: 'boolean',
-        default: false,
-    },
-    startMinimized: {
-        description: "Whether the application starts minimized",
-        type: 'boolean',
-        default: false,
-    },
-    obsBaseResolution: {
-        description: 'Base resolution for OBS canvas',
-        type: 'string',
-        default: '1920x1080',
-    },
-    obsOutputResolution: {
-        description: 'Output resolution for OBS',
-        type: 'string',
-        default: '1920x1080',
-    },
-    obsFPS: {
-        description: 'Recording FPS',
-        type: 'integer',
-        default: 60,
-        minimum: 15,
-        maximum: 60,
-    },
-    recordRetail: {
-        description: 'Whether the application should record retail',
-        type: 'boolean',
-        default: true,
-    },
-    recordClassic: {
-        description: 'Whether the application should record classic',
-        type: 'boolean',
-        default: true,
-    },
-    recordRaids: {
-        description: 'Whether the application should record raids',
-        type: 'boolean',
-        default: true,
-    },
-    recordDungeons: {
-        description: 'Whether the application should record Mythic+',
-        type: 'boolean',
-        default: true,
-    },
-    recordTwoVTwo: {
-        description: 'Whether the application should record 2v2',
-        type: 'boolean',
-        default: true,
-    },
-    recordThreeVThree: {
-        description: 'Whether the application should record 3v3',
-        type: 'boolean',
-        default: true,
-    },
-    recordSkirmish: {
-        description: 'Whether the application should record skirmishes',
-        type: 'boolean',
-        default: true,
-    },
-    recordSoloShuffle: {
-        description: 'Whether the application should record solo shuffle',
-        type: 'boolean',
-        default: true,
-    },
-    recordBattlegrounds: {
-        description: 'Whether the application should record battlegrounds',
-        type: 'boolean',
-        default: true,
-    },
-};
+import { configSchema, ConfigurationSchema } from "./configSchema";
+import fs from 'fs';
 
 export default class ConfigService extends EventEmitter {
     // @ts-ignore 'schema' is "wrong", but it really isn't.
-    private _store = new ElectronStore<ConfigurationSchema>({schema, name: 'config-v2'});
+    private _store = new ElectronStore<ConfigurationSchema>({configSchema, name: 'config-v2'});
 
     constructor() {
         super();
@@ -178,6 +19,15 @@ export default class ConfigService extends EventEmitter {
 
         // Update the default for buffer-storage-path whenever 'storage-path' changes
         this._store.onDidChange('storagePath', (newValue: any) => this.updateDefaults('storagePath', newValue));
+
+        // We don't wait to wait until the first storagePath update to set the default
+        // bufferStoragePath correctly, as we immediately load config on start-up and
+        // don't want to end up with a blank string, force it to update now.  
+        const storagePath = this.get<string>('storagePath');
+
+        if (storagePath) {
+            this.updateDefaults('storagePath', storagePath);
+        }
 
         /**
          * Getter and setter config listeners. 
@@ -199,14 +49,21 @@ export default class ConfigService extends EventEmitter {
     }
 
     validate(): boolean {
-        const storagePath = this.get('storagePath');
+        const storagePath = this.get<string>('storagePath');
 
         if (storagePath) {
             this.updateDefaults('storagePath', storagePath);
         }
 
-        if (!this.get('storagePath')) {
+        if (!this.get('storagePath') || !fs.existsSync(path.dirname(storagePath))) {
             console.warn('[Config Service] Validation failed: `storagePath` is empty');
+            return false;
+        }
+
+        const bufferStoragePath = this.get<string>('bufferStoragePath');
+        
+        if (!bufferStoragePath || (bufferStoragePath.length === 0) || !fs.existsSync(path.dirname(bufferStoragePath))) {
+            console.warn('[Config Service] Validation failed: `bufferStoragePath` is invalid');
             return false;
         }
 
@@ -243,15 +100,15 @@ export default class ConfigService extends EventEmitter {
     }
 
     get<T>(key: keyof ConfigurationSchema): T {
-        if (!schema[key]) {
+        if (!configSchema[key]) {
             throw Error(`[Config Service] Attempted to get invalid configuration key '${key}'`)
         }
 
         const value = this._store.get(key);
 
         if (!this._store.has(key) || (value === '' || value === null || value === undefined)) {
-            if (schema[key] && schema[key].default) {
-                return (schema[key].default as T);
+            if (configSchema[key] && (configSchema[key].default !== undefined)) {
+                return (configSchema[key].default as T);
            }
         }
 
@@ -259,7 +116,7 @@ export default class ConfigService extends EventEmitter {
     }
 
     set(key: keyof ConfigurationSchema, value: any): void {
-        if (!schema[key]) {
+        if (!configSchema[key]) {
             throw Error(`[Config Service] Attempted to set invalid configuration key '${key}'`)
         }
 
@@ -304,7 +161,7 @@ export default class ConfigService extends EventEmitter {
 
     private updateDefaults(key: string, newValue: any): void {
         if (key === 'storagePath') {
-            schema['bufferStoragePath'].default = this.resolveBufferStoragePath(
+            configSchema['bufferStoragePath'].default = this.resolveBufferStoragePath(
                 newValue as string,
                 this.get('bufferStoragePath')
             );

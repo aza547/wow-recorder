@@ -241,7 +241,7 @@ const createSettingsWindow = async () => {
 
   settingsWindow = new BrowserWindow({
     show: false,
-    width: 690,
+    width: 650,
     height: 500,
     resizable: (process.env.NODE_ENV === 'production') ? false : true,
     icon: getAssetPath('./icon/settings-icon.svg'),
@@ -587,7 +587,14 @@ app
   .whenReady()
   .then(() => {
     console.log("[Main] App ready");
-    createWindow();
+    const singleInstanceLock = app.requestSingleInstanceLock();
+
+    if (!singleInstanceLock) {
+      console.warn("[Main] Blocked attempt to launch a second instance of the application");
+      app.quit();
+    } else {
+      createWindow();
+    }
   })
   .catch(console.log);
 

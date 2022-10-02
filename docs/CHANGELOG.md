@@ -5,12 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Added
-- [Issue 184](https://github.com/aza547/wow-recorder/issues/184) - Start-up to system tray.
-
 ### Changed
 ### Fixed
+
+## [2.8.2] - 2022-10-02
+
+### Added
+- [Issue 184](https://github.com/aza547/wow-recorder/issues/184) - Option to start-up to the system tray.
+
+### Fixed 
+- [Issue 164](https://github.com/aza547/wow-recorder/issues/164) - Expose the settings help text in the UI.
+- [Issue 178](https://github.com/aza547/wow-recorder/issues/178) - Fix bufferStoragePath defaulting to an empty string.
+- [Issue 186](https://github.com/aza547/wow-recorder/issues/186) - Prevent running multiple copies of WR. 
 
 ## [2.8.1] - 2022-09-27
 ### Fixed

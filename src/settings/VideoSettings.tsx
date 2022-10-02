@@ -7,6 +7,10 @@ import Stack from '@mui/material/Stack';
 import { OurDisplayType } from 'main/types';
 import ConfigContext from "./ConfigContext";
 import { TextField } from '@mui/material';
+import { configSchema } from '../main/configSchema'
+import InfoIcon from '@mui/icons-material/Info';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
@@ -21,7 +25,7 @@ export default function VideoSettings() {
   };
 
   const style = {
-    height: '2.5rem',
+    width: '405px',
     color: 'white',
     '& .MuiOutlinedInput-notchedOutline': {
       borderColor: 'black'
@@ -42,7 +46,7 @@ export default function VideoSettings() {
     <Stack
       component="form"
       sx={{
-        '& > :not(style)': { m: 1, width: '50ch' },
+        '& > :not(style)': { m: 0, width: '50ch' },
       }}
       noValidate
       autoComplete="off"
@@ -64,6 +68,12 @@ export default function VideoSettings() {
           )}
         </Select>
       </FormControl>
+      <Tooltip title={configSchema["monitorIndex"].description} >
+        <IconButton>
+          <InfoIcon style={{ color: 'white' }}/>
+        </IconButton>
+      </Tooltip>
+
       <FormControl fullWidth>
         <InputLabel id="obs-output-resolution-label" sx = {style}>Video output resolution</InputLabel>
         <Select
@@ -81,6 +91,12 @@ export default function VideoSettings() {
           )}
         </Select>
       </FormControl>
+      <Tooltip title={configSchema["obsOutputResolution"].description} >
+        <IconButton>
+          <InfoIcon style={{ color: 'white' }}/>
+        </IconButton>
+      </Tooltip>
+
       <TextField
         value={config.obsFPS}
         onChange={event => { modifyConfig("obsFPS", parseInt(event.target.value, 10)) }}
@@ -94,6 +110,11 @@ export default function VideoSettings() {
         sx={style}
         inputProps={{ style: { color: "white" } }}
       />
+      <Tooltip title={configSchema["obsFPS"].description} >
+        <IconButton>
+          <InfoIcon style={{ color: 'white' }}/>
+        </IconButton>
+      </Tooltip>
     </Stack>
   );
 }
