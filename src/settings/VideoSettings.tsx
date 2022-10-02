@@ -6,6 +6,11 @@ import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import { OurDisplayType } from 'main/types';
 import ConfigContext from "./ConfigContext";
+import { configSchema } from '../main/configSchema'
+import Box from '@mui/material/Box';
+import InfoIcon from '@mui/icons-material/Info';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
@@ -18,7 +23,7 @@ export default function VideoSettings() {
   };
 
   const style = {
-    height: '2.5rem',
+    width: '405px',
     color: 'white',
     '& .MuiOutlinedInput-notchedOutline': {
       borderColor: 'black'
@@ -36,28 +41,35 @@ export default function VideoSettings() {
     <Stack
       component="form"
       sx={{
-        '& > :not(style)': { m: 1, width: '50ch' },
+        '& > :not(style)': { m: 0, width: '50ch' },
       }}
       noValidate
       autoComplete="off"
     >
-      <FormControl fullWidth>
-        <InputLabel id="demo-simple-select-label" sx = {style}>Monitor</InputLabel>
-        <Select
-          labelId="demo-simple-select-label"
-          id="monitor-index"
-          value={config.monitorIndex}
-          label="Monitor"
-          onChange={(event) => modifyConfig('monitorIndex', event.target.value)} 
-          sx={style}
-        >
-          { displayConfiguration.map((display: OurDisplayType) =>
-            <MenuItem key={ 'display-' + display.id } value={ display.index + 1 }>
-              [{ display.index + 1 }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
-            </MenuItem>
-          )}
-        </Select>
-      </FormControl>
+      <Box component="span" sx={{ display: 'flex', alignItems: 'center'}}>
+        <FormControl sx={{my: 1}}>
+          <InputLabel id="demo-simple-select-label" sx = {style}>Monitor</InputLabel>
+          <Select
+            labelId="demo-simple-select-label"
+            id="monitor-index"
+            value={config.monitorIndex}
+            label="Monitor"
+            onChange={(event) => modifyConfig('monitorIndex', event.target.value)} 
+            sx={style}
+          >
+            { displayConfiguration.map((display: OurDisplayType) =>
+              <MenuItem key={ 'display-' + display.id } value={ display.index + 1 }>
+                [{ display.index + 1 }] { display.size.width }x{ display.size.height } @ { display.displayFrequency } Hz ({display.physicalPosition}) {display.primary ? ' (Primary)' : ''}
+              </MenuItem>
+            )}
+          </Select>
+        </FormControl>
+        <Tooltip title={configSchema["monitorIndex"].description} >
+          <IconButton>
+            <InfoIcon style={{ color: 'white' }}/>
+          </IconButton>
+        </Tooltip>
+      </Box>
     </Stack>
   );
 }
