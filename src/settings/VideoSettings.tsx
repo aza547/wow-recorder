@@ -17,12 +17,18 @@ const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
 const obsResolutions: any = ipc.sendSync('settingsWindow', ['getObsAvailableResolutions']);
 const { Base: baseResolutions, Output: outputResolutions } = obsResolutions;
 
+const fpsOptions = ['10', '20', '30', '60'];
+
 export default function VideoSettings() {
   const [config, setConfig] = React.useContext(ConfigContext);
 
   const modifyConfig = (stateKey: string, value: any) => {
     setConfig((prevConfig: any) => ({ ...prevConfig, [stateKey]: value }));
   };
+
+  if (!fpsOptions.includes(config.obsFPS)) {
+    config.obsFPS = fpsOptions.at(-1);
+  }
 
   const style = {
     width: '405px',

@@ -19,6 +19,7 @@ type RecorderOptionsType = {
     minEncounterDuration: number;
     obsBaseResolution: string,
     obsOutputResolution: string,
+    obsFPS: number;
 };
 
 /**

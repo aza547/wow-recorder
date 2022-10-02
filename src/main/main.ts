@@ -64,6 +64,7 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
     minEncounterDuration: cfg.get<number>('minEncounterDuration'),
     obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
     obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
+    obsFPS:               cfg.get<number>('obsFPS'),
   };
 };
 

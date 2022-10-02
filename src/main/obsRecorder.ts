@@ -20,7 +20,7 @@ const reconfigure = (options: RecorderOptionsType) => {
   const baseResolution = parseResolutionsString(options.obsBaseResolution);
   const outputResolution = parseResolutionsString(options.obsOutputResolution);
 
-  configureOBS(options.bufferStorageDir);
+  configureOBS(options);
   scene = setupScene(options.monitorIndex, baseResolution, outputResolution);
   setupSources(scene, options.audioInputDeviceId, options.audioOutputDeviceId);
 }
@@ -87,7 +87,7 @@ const initOBS = () => {
 /*
 * configureOBS
 */
-const configureOBS = (baseStoragePath: string) => {
+const configureOBS = (options: RecorderOptionsType) => {
   console.debug('[OBS] Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
   const availableEncoders = getAvailableValues('Output', 'Recording', 'RecEncoder');
@@ -99,7 +99,7 @@ const configureOBS = (baseStoragePath: string) => {
   setSetting('Output', 'RecEncoder', selectedEncoder);
 
   // Set output path and video format.
-  setSetting('Output', 'RecFilePath', baseStoragePath);
+  setSetting('Output', 'RecFilePath', options.bufferStorageDir);
   setSetting('Output', 'RecFormat', 'mp4');
   
   if (selectedEncoder.toLowerCase().includes("amf")) {
@@ -114,7 +114,7 @@ const configureOBS = (baseStoragePath: string) => {
   }
    
   setSetting('Output', 'Recmax_bitrate', 300000); 
-  setSetting('Video', 'FPSCommon', 60);
+  setSetting('Video', 'FPSCommon', options.obsFPS);
 
   console.debug('[OBS] OBS Configured');
 }
