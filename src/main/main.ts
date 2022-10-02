@@ -581,7 +581,14 @@ app
   .whenReady()
   .then(() => {
     console.log("[Main] App ready");
-    createWindow();
+    const singleInstanceLock = app.requestSingleInstanceLock();
+
+    if (!singleInstanceLock) {
+      console.warn("[Main] Blocked attempt to launch a second instance of the application");
+      app.quit();
+    } else {
+      createWindow();
+    }
   })
   .catch(console.log);
 

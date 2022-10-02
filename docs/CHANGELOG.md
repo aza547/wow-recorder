@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed 
 - [Issue 164](https://github.com/aza547/wow-recorder/issues/164) - Expose the settings help text in the UI.
 - [Issue 178](https://github.com/aza547/wow-recorder/issues/178) - Fix bufferStoragePath defaulting to an empty string.
+- [Issue 186](https://github.com/aza547/wow-recorder/issues/186) - Prevent running multiple copies of WR. 
 
 ## [2.8.1] - 2022-09-27
 ### Fixed
