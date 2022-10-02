@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.8.2] - 2022-10-02
 
 ### Added
-- [Issue 184](https://github.com/aza547/wow-recorder/issues/184) - Start-up to system tray.
+- [Issue 184](https://github.com/aza547/wow-recorder/issues/184) - Option to start-up to the system tray.
 
 ### Fixed 
 - [Issue 164](https://github.com/aza547/wow-recorder/issues/164) - Expose the settings help text in the UI.
