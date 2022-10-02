@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 184](https://github.com/aza547/wow-recorder/issues/184) - Start-up to system tray.
 
 ### Changed
-### Fixed
+### Fixed 
+- [Issue 164](https://github.com/aza547/wow-recorder/issues/164) - Expose the settings help text in the UI.
+- [Issue 178](https://github.com/aza547/wow-recorder/issues/178) - Fix bufferStoragePath defaulting to an empty string.
 
 ## [2.8.1] - 2022-09-27
 ### Fixed

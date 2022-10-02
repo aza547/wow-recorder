@@ -3,33 +3,9 @@ import { ipcMain } from "electron";
 import path from "path";
 import { EventEmitter } from "stream";
 import { CombatLogParser } from "./combatLogParser";
-import { configSchema } from './configSchema'
+import { configSchema, ConfigurationSchema } from "./configSchema";
+import fs from 'fs';
 
-export type ConfigurationSchema = {
-    storagePath: string,
-    bufferStoragePath?: string,
-    retailLogPath?: string,
-    classicLogPath?: string,
-    maxStorage: number,
-    monitorIndex: number,
-    selectedCategory: number,
-    audioInputDevice?: string,
-    audioOutputDevice?: string,
-    minEncounterDuration: number,
-    startUp?: boolean,
-    startMinimized: boolean,
-    recordRetail: boolean,
-    recordClassic: boolean,
-    recordRaids: boolean,
-    recordDungeons: boolean,
-    recordTwoVTwo: boolean,
-    recordThreeVThree: boolean,
-    recordSkirmish: boolean,
-    recordSoloShuffle: boolean,
-    recordBattlegrounds: boolean,
-};
-
-export type ConfigurationSchemaKey = keyof ConfigurationSchema;
 
 export default class ConfigService extends EventEmitter {
     // @ts-ignore 'schema' is "wrong", but it really isn't.
@@ -44,6 +20,15 @@ export default class ConfigService extends EventEmitter {
 
         // Update the default for buffer-storage-path whenever 'storage-path' changes
         this._store.onDidChange('storagePath', (newValue: any) => this.updateDefaults('storagePath', newValue));
+
+        // We don't wait to wait until the first storagePath update to set the default
+        // bufferStoragePath correctly, as we immediately load config on start-up and
+        // don't want to end up with a blank string, force it to update now.  
+        const storagePath = this.get<string>('storagePath');
+
+        if (storagePath) {
+            this.updateDefaults('storagePath', storagePath);
+        }
 
         /**
          * Getter and setter config listeners. 
@@ -65,14 +50,21 @@ export default class ConfigService extends EventEmitter {
     }
 
     validate(): boolean {
-        const storagePath = this.get('storagePath');
+        const storagePath = this.get<string>('storagePath');
 
         if (storagePath) {
             this.updateDefaults('storagePath', storagePath);
         }
 
-        if (!this.get('storagePath')) {
+        if (!this.get('storagePath') || !fs.existsSync(path.dirname(storagePath))) {
             console.warn('[Config Service] Validation failed: `storagePath` is empty');
+            return false;
+        }
+
+        const bufferStoragePath = this.get<string>('bufferStoragePath');
+        
+        if (!bufferStoragePath || (bufferStoragePath.length === 0) || !fs.existsSync(path.dirname(bufferStoragePath))) {
+            console.warn('[Config Service] Validation failed: `bufferStoragePath` is invalid');
             return false;
         }
 
@@ -116,7 +108,7 @@ export default class ConfigService extends EventEmitter {
         const value = this._store.get(key);
 
         if (!this._store.has(key) || (value === '' || value === null || value === undefined)) {
-            if (configSchema[key] && configSchema[key].default) {
+            if (configSchema[key] && (configSchema[key].default !== undefined)) {
                 return (configSchema[key].default as T);
            }
         }
