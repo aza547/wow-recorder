@@ -1,8 +1,8 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds, categoryRecordingSettings, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory }  from './constants';
-import { PlayerDeathType, UnitFlags } from './types';
+import { battlegrounds, categoryRecordingSettings, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, wowExecutableFlavours, WoWProcessResultKey }  from './constants';
+import { IWoWProcessResult, PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 import { CombatLogParser, LogLine } from './combatLogParser';
 import { getSortedFiles } from './util';
@@ -89,8 +89,7 @@ combatLogParser.on('DataTimeout', (timeoutMs: number) => {
 /**
  * Is wow running? Starts false but we'll check immediately on start-up.
  */
-let isRetailRunning: boolean = false;
-let isClassicRunning: boolean = false;
+let wowProcessRunning: IWoWProcessResult | null = null;
 
 /**
  * Timers for poll
@@ -100,9 +99,10 @@ let pollWowProcessInterval: NodeJS.Timer;
 /**
  * wowProcessStarted
  */
-const wowProcessStarted = () => {
-    console.log("[Logutils] Wow.exe is running");
-    isRetailRunning = true;
+const wowProcessStarted = (process: IWoWProcessResult) => {
+    wowProcessRunning = process;
+
+    console.log(`[Logutils] ${process.exe} (${process.flavour}) is running`);
     recorder.startBuffer();
 };
 
@@ -110,8 +110,12 @@ const wowProcessStarted = () => {
  * wowProcessStopped
  */
 const wowProcessStopped = () => {
-    console.log("[Logutils] Wow.exe has stopped");
-    isRetailRunning = false;
+    if (!wowProcessRunning) {
+        return;
+    }
+
+    console.log(`[Logutils] ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) has stopped`);
+    wowProcessRunning = null;
 
     if (recorder.isRecording) {
         endRecording();
@@ -665,46 +669,49 @@ const forceStopRecording = () => {
 }
 
 /**
- * checkWoWProcess
- * @returns {[boolean, boolean]} retailRunning, classicRunning
+ * Check Windows task list and find any WoW process.
  */
-const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
-    let retailRunning = false;
-    let classicRunning = false;
-
+const checkWoWProcess = async (): Promise<IWoWProcessResult[]> => {
+    const wowProcessRx = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
     const taskList = await tasklist();
 
-    taskList.forEach((process: any) => {
-        if (process.imageName === "Wow.exe") {
-            retailRunning = true;
-        } else if (process.imageName === "WowClassic.exe") {
-            classicRunning = true;
-        }
-    });
-
-    return [retailRunning, classicRunning]
+    return taskList
+        // Map all processes found to check if they match `wowProcessRx`
+        .map((p: any) => p.imageName.match(wowProcessRx))
+        // Remove those that result in `null` (didn't match)
+        .filter((p: any) => p)
+        // Return an object suitable for `IWoWProcessResult`
+        .map((match: any): IWoWProcessResult => ({
+            exe: match[0],
+            flavour: wowExecutableFlavours[match[1].toLowerCase()]
+        }))
+    ;
 }
 
 /**
  * pollWoWProcessLogic
  */
-const pollWoWProcessLogic = async (startup: boolean) => {
-    const [retailFound, classicFound] = await checkWoWProcess();
-    const retailProcessChanged = (retailFound !== isRetailRunning);
-    // TODO classic support
-    const classicProcessChanged = (classicFound !== isClassicRunning);
-    const processChanged = (retailProcessChanged || classicProcessChanged);
-    if (!retailProcessChanged && !startup) return;
-    (retailFound) ? wowProcessStarted() : wowProcessStopped();
+const pollWoWProcessLogic = async () => {
+    const wowProcesses = await checkWoWProcess();
+    const wowProcess = wowProcesses.pop();
+
+    if (wowProcess && wowProcessRunning === null) {
+        wowProcessStarted(wowProcess);
+    } else
+    if (!wowProcess && wowProcessRunning !== null) {
+        wowProcessStopped();
+    }
 }
 
 /**
  * pollWoWProcess
  */
 const pollWowProcess = () => {
-    pollWoWProcessLogic(true);
-    if (pollWowProcessInterval) clearInterval(pollWowProcessInterval);
-    pollWowProcessInterval = setInterval(() => pollWoWProcessLogic(false), 5000);
+    if (pollWowProcessInterval) {
+        clearInterval(pollWowProcessInterval);
+    }
+
+    pollWowProcessInterval = setInterval(pollWoWProcessLogic, 5000);
 }
 
 const sendTestCombatLogLine = (line: string): void => {
@@ -726,7 +733,7 @@ const runRecordingTest = (endTest: boolean = true) => {
         console.info("[Logutils] Test already running, not starting test.");
     }
 
-    if (isRetailRunning) {
+    if (wowProcessRunning !== null) {
         console.info("[Logutils] WoW is running, starting test.");
         testRunning = true;
     } else {

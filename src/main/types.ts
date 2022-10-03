@@ -1,4 +1,5 @@
 import { Size } from "electron";
+import { WoWProcessResultKey } from "./constants";
 
 /**
  * Application status
@@ -113,6 +114,11 @@ type FileInfo = {
     mtime: number;
 };
 
+interface IWoWProcessResult {
+    exe: string,
+    flavour: WoWProcessResultKey,
+};
+
 export {
     AppStatus,
     UnitFlags,
@@ -124,4 +130,5 @@ export {
     RaidInstanceType,
     FileInfo,
     FileFinderCallbackType,
+    IWoWProcessResult,
 }

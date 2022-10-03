@@ -566,6 +566,17 @@ const specializationById: { [id: number]: SpecializationObjectType } = {
   73:  { type: 'melee',  role: 'tank',   class: 'WARRIOR',     label: 'Warrior',      name: 'Protection' },
 };
 
+/**
+ * A map of WoW executable names to the appropriate WoW flavour
+ */
+const wowExecutableFlavours: { [key: string]: string } = {
+  'wow':        'Retail',
+  'wowt':       'PTR',
+  'wowb':       'Beta',
+  'wowclassic': 'Classic',
+};
+type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
+
 export {
     categories,
     months,
@@ -590,4 +601,6 @@ export {
     VideoCategory,
     raidInstances,
     categoryRecordingSettings,
+    wowExecutableFlavours,
+    WoWProcessResultKey,
 };
