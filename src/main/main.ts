@@ -414,11 +414,8 @@ ipcMain.on('settingsWindow', (event, args) => {
   }
 
   if (args[0] === 'getObsAvailableResolutions') {
-    if (!recorder) {
-      event.returnValue = { 'Base': [], 'Output': [] };
-      return;
-    }
-
+    event.returnValue = { 'Base': [], 'Output': [] };
+    if (!recorder) return;
     event.returnValue = getObsResolutions();
     return;
   }
