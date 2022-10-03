@@ -6,7 +6,6 @@ import { CombatLogParser } from "./combatLogParser";
 import { configSchema, ConfigurationSchema } from "./configSchema";
 import fs from 'fs';
 
-
 export default class ConfigService extends EventEmitter {
     // @ts-ignore 'schema' is "wrong", but it really isn't.
     private _store = new ElectronStore<ConfigurationSchema>({configSchema, name: 'config-v2'});

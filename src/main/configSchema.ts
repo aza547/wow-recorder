@@ -11,6 +11,9 @@ export type ConfigurationSchema = {
     minEncounterDuration: number,
     startUp?: boolean,
     startMinimized: boolean,
+    obsBaseResolution: string,
+    obsOutputResolution: string,
+    obsFPS: number,
     recordRetail: boolean,
     recordClassic: boolean,
     recordRaids: boolean,
@@ -91,6 +94,23 @@ export const configSchema = {
         description: "Open to the Windows system tray.",
         type: 'boolean',
         default: false,
+    },
+    obsBaseResolution: {
+        description: 'Base resolution for recording. Typically the same as the monitor you are recording.',
+        type: 'string',
+        default: '1920x1080',
+    },
+    obsOutputResolution: {
+        description: 'Resolution of videos as saved on disk. Smaller resolution gives smaller video size, but can look grainy/pixelated.',
+        type: 'string',
+        default: '1920x1080',
+    },
+    obsFPS: {
+        description: 'The number of frames per second to record the video at. Lower FPS gives smaller video size, but also more choppy playback.',
+        type: 'integer',
+        default: 60,
+        minimum: 15,
+        maximum: 60,
     },
     recordRetail: {
         description: 'Whether the application should record retail',

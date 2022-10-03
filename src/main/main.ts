@@ -20,6 +20,7 @@ import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
+import { getObsResolutions } from './obsRecorder';
 
 let recorder: Recorder;
 
@@ -53,7 +54,7 @@ console.log("[Main] App starting: version", app.getVersion());
  * Does some basic sanity checking for default values.
  */
 const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
-  const config = {
+  return {
     storageDir:           cfg.get<string>('storagePath'),
     bufferStorageDir:     cfg.get<string>('bufferStoragePath'), // TODO this will resolve an empty string if not in cfg
     maxStorage:           cfg.get<number>('maxStorage'),
@@ -61,9 +62,10 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
     audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
     audioOutputDeviceId:  cfg.get<string>('audioOutputDevice'),
     minEncounterDuration: cfg.get<number>('minEncounterDuration'),
+    obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
+    obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
+    obsFPS:               cfg.get<number>('obsFPS'),
   };
-
-  return config;
 };
 
 /**
@@ -408,6 +410,16 @@ ipcMain.on('settingsWindow', (event, args) => {
 
   if (args[0] === 'getAllDisplays') {
     event.returnValue = getAvailableDisplays();
+    return;
+  }
+
+  if (args[0] === 'getObsAvailableResolutions') {
+    if (!recorder) {
+      event.returnValue = { 'Base': [], 'Output': [] };
+      return;
+    }
+
+    event.returnValue = getObsResolutions();
     return;
   }
 })
