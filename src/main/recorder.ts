@@ -30,6 +30,7 @@ type RecorderOptionsType = {
     obsFPS: number;
     obsKBitRate: number;
     obsCaptureMode: string;
+    obsRecEncoder: string,
 };
 
 /**
