@@ -669,7 +669,6 @@ const forceStopRecording = () => {
  * @returns {[boolean, boolean]} retailRunning, classicRunning
  */
 const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
-    return [true, false];
     let retailRunning = false;
     let classicRunning = false;
 
