@@ -84,7 +84,7 @@ export default function VideoSettings() {
 
       <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{my: 1}}>
-          <InputLabel id="obs-output-resolution-label" sx = {style}>Video output resolution</InputLabel>
+          <InputLabel id="obs-output-resolution-label" sx = {style}>Video Output Resolution</InputLabel>
           <Select
             labelId="obs-output-resolution-label"
             id="obs-output-resolution"
