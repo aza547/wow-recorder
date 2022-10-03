@@ -5,9 +5,8 @@ import { RecorderOptionsType } from "./recorder";
 import { Size } from "electron";
 import path from 'path';
 import { inspectObject } from "./helpers";
-import { ISceneItem, IScene, IInput } from "obs-studio-node";
+import { ISceneItem, IScene, IInput, ISource } from "obs-studio-node";
 import { OurDisplayType } from "./types";
-import { ISource } from "obs-studio-node";
 const waitQueue = new WaitQueue<any>();
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
@@ -92,13 +91,8 @@ const initOBS = () => {
 const configureOBS = (options: RecorderOptionsType) => {
   console.debug('[OBS] Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
-  const availableEncoders = getAvailableValues('Output', 'Recording', 'RecEncoder');
 
-  // Get a list of available encoders, select the last one.
-  console.debug("[OBS] Available encoder: " + JSON.stringify(availableEncoders));
-  const selectedEncoder = availableEncoders.slice(-1)[0] || 'x264';
-  console.debug("[OBS] Selected encoder: " + selectedEncoder);
-  setSetting('Output', 'RecEncoder', selectedEncoder);
+  setObsRecEncoder(options);
 
   // Set output path and video format.
   setSetting('Output', 'RecFilePath', options.bufferStorageDir);
@@ -118,6 +112,29 @@ const configureOBS = (options: RecorderOptionsType) => {
   console.debug('[OBS] OBS Configured');
 }
 
+/**
+ * Configure the recording encoder for OBS
+ */
+const setObsRecEncoder = (options: RecorderOptionsType): void => {
+  const availableEncoders = getObsAvailableRecEncoders();
+
+  let encoder = options.obsRecEncoder;
+  let autoPickEncoder = (!encoder || encoder === 'auto');
+
+  console.debug("[OBS] Available encoders", inspectObject(availableEncoders));
+
+  if (!autoPickEncoder && !availableEncoders.includes(encoder)) {
+    console.debug(`[OBS] Configured encoder '${encoder}' is not available.`);
+    autoPickEncoder = true;
+  }
+
+  if (autoPickEncoder) {
+    encoder = availableEncoders.slice(-1)[0];
+    console.debug(`[OBS] Selecting encoder automatically: ${encoder}.`);
+  }
+
+  setSetting('Output', 'RecEncoder', encoder);
+}
 
 /*
 * Get information about primary display
@@ -502,6 +519,10 @@ const getObsLastRecording = (): string => {
   return path.resolve(osn.NodeObs.OBS_service_getLastRecording());
 };
 
+const getObsAvailableRecEncoders = (): string[] => {
+  return getAvailableValues('Output', 'Recording', 'RecEncoder');
+};
+
 export {
   initialize,
   start,
@@ -510,4 +531,5 @@ export {
   reconfigure,
   getObsResolutions,
   getObsLastRecording,
+  getObsAvailableRecEncoders,
 }
