@@ -102,7 +102,7 @@ let pollWowProcessInterval: NodeJS.Timer;
 const wowProcessStarted = (process: IWoWProcessResult) => {
     wowProcessRunning = process;
 
-    console.log(`[Logutils] ${process.exe} (${process.flavour}) is running`);
+    console.log(`[Logutils] Detected ${process.exe} (${process.flavour}) running`);
     recorder.startBuffer();
 };
 
@@ -114,7 +114,7 @@ const wowProcessStopped = () => {
         return;
     }
 
-    console.log(`[Logutils] ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) has stopped`);
+    console.log(`[Logutils] Detected ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) not running`);
     wowProcessRunning = null;
 
     if (recorder.isRecording) {
