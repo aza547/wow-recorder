@@ -57,7 +57,7 @@ export default function VideoSettings() {
       noValidate
       autoComplete="off"
     >
-      <Box component="span" sx={{ display: 'flex', alignItems: 'center'}}>
+      <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{my: 1}}>
           <InputLabel id="demo-simple-select-label" sx = {style}>Monitor</InputLabel>
           <Select
@@ -80,7 +80,9 @@ export default function VideoSettings() {
             <InfoIcon style={{ color: 'white' }}/>
           </IconButton>
         </Tooltip>
+      </Box>
 
+      <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{my: 1}}>
           <InputLabel id="obs-output-resolution-label" sx = {style}>Video output resolution</InputLabel>
           <Select
@@ -103,7 +105,9 @@ export default function VideoSettings() {
             <InfoIcon style={{ color: 'white' }}/>
           </IconButton>
         </Tooltip>
+      </Box>
 
+      <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{my: 1}}>
           <InputLabel id="obs-fps-label" sx = {style}>Video FPS</InputLabel>
           <Select

@@ -96,17 +96,17 @@ export const configSchema = {
         default: false,
     },
     obsBaseResolution: {
-        description: 'Base resolution for OBS canvas',
+        description: 'Base resolution for recording. Typically the same as the monitor you are recording.',
         type: 'string',
         default: '1920x1080',
     },
     obsOutputResolution: {
-        description: 'Output resolution for OBS',
+        description: 'Resolution of videos as saved on disk. Smaller resolution gives smaller video size, but can look grainy/pixelated.',
         type: 'string',
         default: '1920x1080',
     },
     obsFPS: {
-        description: 'Recording FPS',
+        description: 'The number of frames per second to record the video at. Lower FPS gives smaller video size, but also more choppy playback.',
         type: 'integer',
         default: 60,
         minimum: 15,
