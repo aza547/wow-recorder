@@ -65,6 +65,8 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
     obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
     obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
     obsFPS:               cfg.get<number>('obsFPS'),
+    obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
+    obsRecBitrate:        cfg.get<number>('obsRecBitrate'),
   };
 };
 

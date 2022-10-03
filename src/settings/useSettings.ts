@@ -33,6 +33,8 @@ export const configSettings = [
   'obsBaseResolution',
   'obsOutputResolution',
   'obsFPS',
+  'obsRecEncoder',
+  'obsRecBitrate',
 ];
 
 export default function useSettings() {
@@ -60,6 +62,8 @@ export default function useSettings() {
     obsBaseResolution:    getConfigValue<string>('obsBaseResolution'),
     obsOutputResolution:  getConfigValue<string>('obsOutputResolution'),
     obsFPS:               getConfigValue<number>('obsFPS'),
+    obsRecEncoder:        getConfigValue<string>('obsRecEncoder'),
+    obsRecBitrate:        getConfigValue<number>('obsRecBitrate'),
   });
 
   return [config, setConfig];

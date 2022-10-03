@@ -14,6 +14,8 @@ export type ConfigurationSchema = {
     obsBaseResolution: string,
     obsOutputResolution: string,
     obsFPS: number,
+    obsRecEncoder: string,
+    obsRecBitrate: number,
     recordRetail: boolean,
     recordClassic: boolean,
     recordRaids: boolean,
@@ -111,6 +113,18 @@ export const configSchema = {
         default: 60,
         minimum: 15,
         maximum: 60,
+    },
+    obsRecEncoder: {
+        description: "The video encoder to use for creating video files. If you don't know what this means, leave it on 'Automatic' to select the best option automatically.",
+        type: 'string',
+        default: 'auto',
+    },
+    obsRecBitrate: {
+        description: "The constant bitrate to record at. If you don't know what this means, leave it as-is.",
+        type: 'integer',
+        default: 50000,
+        minimum: 20000,
+        maximum: 35000000,
     },
     recordRetail: {
         description: 'Whether the application should record retail',
