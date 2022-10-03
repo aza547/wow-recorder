@@ -20,7 +20,7 @@ import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
-import { getObsResolutions } from './obsRecorder';
+import { getObsResolutions, getObsAvailableRecEncoders } from './obsRecorder';
 
 let recorder: Recorder;
 
@@ -422,6 +422,35 @@ ipcMain.on('settingsWindow', (event, args) => {
     }
 
     event.returnValue = getObsResolutions();
+    return;
+  }
+
+  if (args[0] === 'getObsAvailableRecEncoders') {
+    if (!recorder) {
+      event.returnValue = [];
+      return;
+    }
+
+    const obsEncoders: string[] = getObsAvailableRecEncoders();
+    const encoderList = [{id: 'auto', name: '(Automatic)'}];
+
+    obsEncoders
+      // We don't want people to be able to select 'none'.
+      .filter(encoder => encoder !== 'none')
+      .forEach(encoder => {
+        const isHardwareEncoder = encoder.includes('amd') || encoder.includes('nvenc') || encoder.includes('qsv');
+        let encoderName = encoder;
+
+        if (isHardwareEncoder) {
+          encoderName = `Hardware (${encoder})`;
+        } else {
+          encoderName = `Software (${encoder})`;
+        }
+
+        encoderList.push({id: encoder, name: encoderName});
+      });
+
+    event.returnValue = encoderList;
     return;
   }
 })
