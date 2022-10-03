@@ -1,4 +1,4 @@
-import { ConfigurationSchemaKey } from "./configService";
+import { ConfigurationSchemaKey } from "./configSchema";
 import { NumberKeyToStringValueMapType, RaidInstanceType } from "./types";
 
 enum VideoCategory {
@@ -128,22 +128,24 @@ const months: string[] = [
 }
 
 /**
- * Encounters by ID.  
+ * Shadowlands Tier 1
  */
-const encountersSepulcher: NumberKeyToStringValueMapType = {
-  2537: "Jailer",
-  2512: "Guardian",
-  2529: "Halondrus",
-  2539: "Lihuvim",
-  2540: "Dausegne",
-  2542: "Skolex",
-  2543: "Lords",
-  2544: "Pantheon",
-  2546: "Anduin",
-  2549: "Rygelon",
-  2553: "Xy'mox",
+ const encountersNathria: NumberKeyToStringValueMapType = {
+  2398: "Shriekwing",
+  2418: "Huntsman",
+  2402: "Sun King",
+  2405: "Xy'mox",
+  2383: "Hungering",
+  2406: "Inerva",
+  2412: "Council",
+  2399: "Sludgefist",
+  2417: "SLG",
+  2407: "Denathrius"
 }
 
+/**
+ * Shadowlands Tier 2
+ */
 const encountersSanctum: NumberKeyToStringValueMapType = {
   2523: "The Tarragrue",
   2433: "Jailer's Eye",
@@ -157,23 +159,42 @@ const encountersSanctum: NumberKeyToStringValueMapType = {
   2435: "Sylvanas",
 }
 
-const encountersNathria: NumberKeyToStringValueMapType = {
-  2398: "Shriekwing",
-  2418: "Huntsman",
-  2402: "Sun King",
-  2405: "Xy'mox",
-  2383: "Hungering",
-  2406: "Inerva",
-  2412: "Council",
-  2399: "Sludgefist",
-  2417: "SLG",
-  2407: "Denathrius"
+/**
+ * Shadowlands Tier 3
+ */
+ const encountersSepulcher: NumberKeyToStringValueMapType = {
+  2537: "Jailer",
+  2512: "Guardian",
+  2529: "Halondrus",
+  2539: "Lihuvim",
+  2540: "Dausegne",
+  2542: "Skolex",
+  2543: "Lords",
+  2544: "Pantheon",
+  2546: "Anduin",
+  2549: "Rygelon",
+  2553: "Xy'mox",
+}
+
+/**
+ * Dragonflight Tier 1
+ */
+const encountersVOI: NumberKeyToStringValueMapType = {
+  2587: "Eranog",
+  2639: "Terros",
+  2590: "Primal",
+  2592: "Sennarth",
+  2635: "Dathea",
+  2605: "Kurog",
+  2614: "Diurna",
+  2607: "Raszageth",
 }
 
 const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersNathria,
   ...encountersSanctum,
-  ...encountersSepulcher
+  ...encountersSepulcher,
+  ...encountersVOI
 }
 
 /**
@@ -186,6 +207,7 @@ const raidInstances: RaidInstanceType[] = [
   { zoneId: 13224, name: 'Castle Nathria', encounters: encountersNathria },
   { zoneId: 13561, name: 'Sanctum of Domination', encounters: encountersSanctum },
   { zoneId: 13742, name: 'Sepulcher of the First Ones', encounters: encountersSepulcher },
+  { zoneId: 14030, name: 'Vault of the Incarnates', encounters: encountersVOI },
 ];
 
 /**
@@ -562,9 +584,6 @@ export {
     dungeonAffixesById,
     dungeonEncounters,
     specializationById,
-    encountersSanctum,
-    encountersNathria,
-    encountersSepulcher,
     instanceDifficulty,
     instanceEncountersById,
     InstanceDifficultyType,

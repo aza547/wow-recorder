@@ -50,7 +50,34 @@ for (const id of dungeonIDs) {
 // Load the raid encounter images. This expects files with the 
 // name <id>.jpg to exist in the appropriate assets folder.
 const raidIDs = [
+    // Castle Nathria
+    // Shadowlands Tier 1
+    2398, // "Shriekwing",
+    2418, // "Huntsman Altimor",
+    2404, // "Sun King's Salvation",
+    2405, // "Xy'mox",
+    2383, // "Hungering Destroyer",
+    2406, // "Inerva",
+    2412, // "Council of Blood",
+    2399, // "Sludgefist",
+    2417, // "Stone Legion Generals",
+    2407, // "Sire Denathrius"
+
+    // Sanctum of Domination
+    // Shadowlands Tier 2
+    2523, // "The Tarragrue",
+    2433, // "Eye of the Jailer",
+    2429, // "The Nine",
+    2432, // "Remnant of Ner'zhul",
+    2434, // "Souldrender Dormazain",
+    2430, // "Painsmith Raznal",
+    2436, // "Guardian of the First Ones",
+    2431, // "Fatescribe Roh-Kalo",
+    2422, // "Kel'Thuzad",
+    2435, // "Sylvanas Windrunner",
+
     // Sepulcher of the First Ones
+    // Shadowlands Tier 3
     2512, // Vigilant Guardian
     2537, // Jailer
     2539, // Luhvium
@@ -63,29 +90,16 @@ const raidIDs = [
     2553, // Artificer
     2529, // Halondrus
 
-    // Sanctum of Domination
-    2523, // "The Tarragrue",
-    2433, // "Eye of the Jailer",
-    2429, // "The Nine",
-    2432, // "Remnant of Ner'zhul",
-    2434, // "Souldrender Dormazain",
-    2430, // "Painsmith Raznal",
-    2436, // "Guardian of the First Ones",
-    2431, // "Fatescribe Roh-Kalo",
-    2422, // "Kel'Thuzad",
-    2435, // "Sylvanas Windrunner",
-
-    // Castle Nathria
-    2398, // "Shriekwing",
-    2418, // "Huntsman Altimor",
-    2404, // "Sun King's Salvation",
-    2405, // "Xy'mox",
-    2383, // "Hungering Destroyer",
-    2406, // "Inerva",
-    2412, // "Council of Blood",
-    2399, // "Sludgefist",
-    2417, // "Stone Legion Generals",
-    2407, // "Sire Denathrius"
+    // Vault of the Incarnates
+    // Dragonflight Tier 1
+    2587, // Eranog
+    2639, // Terros
+    2590, // The Primal Council
+    2592, // Sennarth
+    2635, // Dathea
+    2605, // Kurog
+    2614, // Broodkeeper Diurna
+    2607, // Raszageth
 ]
 
 let raid: imageObject = {};
