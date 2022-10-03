@@ -1,4 +1,4 @@
-import { ConfigurationSchemaKey } from "./configService";
+import { ConfigurationSchemaKey } from "./configSchema";
 import { NumberKeyToStringValueMapType, RaidInstanceType } from "./types";
 
 enum VideoCategory {
