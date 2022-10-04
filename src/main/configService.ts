@@ -8,8 +8,6 @@ import fs from 'fs';
 import util from 'util';
 
 export default class ConfigService extends EventEmitter {
-    private _logConfigTimeout: any;
-
     /**
      * Singleton instance of class
      */
@@ -19,14 +17,8 @@ export default class ConfigService extends EventEmitter {
     private _store = new ElectronStore<ConfigurationSchema>({configSchema, name: 'config-v2'});
 
     /**
-     * Object of properties and values which has been changed in the past 500 ms of
-     * calls to `set()`
-     */
-    private _changedProperties: any = {};
-
-    /**
      * Get the instance of the class as a singleton.
-     * There should only ever be one instance created and his method faciliates that.
+     * There should only ever be one instance created and his method facilitates that.
      */
     static getInstance(): ConfigService {
         if (!ConfigService._instance) {
@@ -63,23 +55,35 @@ export default class ConfigService extends EventEmitter {
          * Getter and setter config listeners. 
          */
         ipcMain.on('config', (event, args) => {
-            const [fn, key] = args;
+            switch (args[0]) {
+                case 'get':
+                    const value = this.get(args[1]);
+                    event.returnValue = value;
+                    return;
 
-            if (fn === 'get') {
-                const value = this.get(key);
-                event.returnValue = value;
-            } else
-            if (fn === 'set') {
-                const value = args[2];
-                this.set(key, value);
+                case 'set':
+                    this.set(args[1], args[2]);
+                    return;
 
-                this._changedProperties[key] = value;
+                case 'set_values':
+                    const configObject = args[1];
+                    const configKeys = Object.keys(configObject);
+                    const newConfigValues: { [key: string]: any } = {};
 
-                clearTimeout(this._logConfigTimeout);
-                this._logConfigTimeout = setTimeout(() => {
-                    console.log('[Config Service] Configuration changed:', util.inspect(this._changedProperties));
-                    this._changedProperties = {};
-                }, 500);
+                    configKeys.forEach((key: string) => {
+                        if (this._store.get(key) === configObject[key]) {
+                            return;
+                        }
+
+                        newConfigValues[key] = configObject[key];
+                    });
+
+                    Object.keys(newConfigValues).forEach((key: any) => {
+                        this.set(key, newConfigValues[key]);
+                    })
+
+                    console.log('[Config Service] Configuration changed:', util.inspect(newConfigValues, { colors: true, compact: false }));
+                    return;
             }
         });
     }
