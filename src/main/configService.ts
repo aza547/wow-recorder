@@ -6,6 +6,7 @@ import { CombatLogParser } from "./combatLogParser";
 import { configSchema, ConfigurationSchema } from "./configSchema";
 import fs from 'fs';
 import util from 'util';
+import { inspectObject } from "./helpers";
 
 export default class ConfigService extends EventEmitter {
     /**
@@ -33,7 +34,7 @@ export default class ConfigService extends EventEmitter {
 
         this.cleanupStore();
 
-        console.log('[Config Service] Using configuration', util.inspect(this._store.store));
+        console.log('[Config Service] Using configuration', inspectObject(this._store.store));
 
         this._store.onDidAnyChange((newValue: any, oldValue: any) => {
             this.emit('configChanged', oldValue, newValue);
@@ -257,6 +258,6 @@ export default class ConfigService extends EventEmitter {
     }
 
     private logConfigChanged(newConfig: { [key: string ]: any }): void {
-        console.log('[Config Service] Configuration changed:', util.inspect(newConfig, { colors: true, compact: false }));
+        console.log('[Config Service] Configuration changed:', inspectObject(newConfig));
     }
 };

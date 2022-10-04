@@ -11,6 +11,7 @@ import ElectronStore from "electron-store";
 import { dungeonsByMapId, instanceDifficulty, InstanceDifficultyType, instanceEncountersById, instanceNamesByZoneId, raidInstances, VideoCategory, zones } from "./constants";
 import { Metadata } from "./logutils";
 import { RaidInstanceType } from "./types";
+import util from 'util';
 
 /** Poor man's path.join()/path.sep(). that use 'path' which uses Node JS 'process'.
  *
@@ -140,3 +141,7 @@ export const getRaidByEncounterId = (zoneID?: number): RaidInstanceType | undefi
 
     return raid.pop();
 };
+
+export const inspectObject = (value: any): string => {
+    return util.inspect(value, { colors: true, compact: false });
+}
