@@ -6,8 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Recording FPS now adjustable in Settings > Video Settings.
+- [Issue 191](https://github.com/aza547/wow-recorder/issues/191) - Recording FPS and output resolution now adjustable in video settings.
 - [Issue 187](https://github.com/aza547/wow-recorder/issues/187) - Added Vault of the Incarnates raid IDs. 
+- [Issue 192](https://github.com/aza547/wow-recorder/issues/192) - Accept Beta, PTR and classic processes as reason to move to ready state. 
 
 ### Changed
 ### Fixed

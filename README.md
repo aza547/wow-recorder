@@ -11,36 +11,23 @@ Only 64 bit Windows (any modern version) and retail WoW are currently supported.
 #  How to Use
 1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.2.6.0.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
 1. Launch the application and fill out the settings page.
-1. Pick one of the below options to enable [combat logging](https://wowwiki-archive.fandom.com/wiki/Combat_Log). 
-    - Install the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon to automatically combat log.
-    - Use MRT automatic combat logging in a similar fashion to SimpleCombatLogger. 
-    - Manually type `/combatlog` in-game every time you login or reload.
-
-If you are an arena player, I strongly recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon. This isn't essential for the app to work, but it may help you if you are having trouble with the app when leaving games by typing `/afk`.
-
-You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above steps. This runs a 10 second test of the recording functionality by mimicing a 2v2 game.
-
-<img src="https://i.imgur.com/bwChWgI.png">
+1. Install and configure the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon.
 
 An example of valid config can be found below.
 
-<img src="https://i.imgur.com/uVD9zsp.png" width="300">
+<img src="https://i.imgur.com/MTiLlOh.png" width="300">
 
-#  Size Monitor
+If you are an arena player, I also strongly recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon.
 
-The configuration has a 'max storage' option. The app will never exceed this storage usage on disk. I suggest 100GB is a reasonable size for this setting. 
+# Testing It Works
 
-This feature is inspired by car dash cam behaviour: it deletes the oldest video when the size limit is hit. You can mark a video to be saved by right clicking it, so that it won't be cleaned up by this mechanism.
+You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above setup steps. 
 
-<img src="https://i.imgur.com/iqe8COL.png" width="600">
+This runs a 10 second test of the recording functionality by mimicing a 2v2 game.
 
-# Mythic Keystone Dungeons
+<img src="https://i.imgur.com/bwChWgI.png">
 
-For Mythic Keystone dungeons, the application will detect and store information about when bosses are killed and the trash in-betwen  with the ability to quickly seek to a trash/boss segments of the video by means of the right-click context menu.
-
-<img src="https://i.imgur.com/MbqaMRE.png">
-
-# Bug Reports & Sggestions
+# Bug Reports & Suggestions
 
 Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
 
@@ -53,13 +40,3 @@ This project is free and open source. It is built on the [electron-react-boilerp
 # Contributing
 
 If you're interested in getting involved please drop me a message on discord and I can give you access to our development channel. Also see [contributing](https://github.com/aza547/wow-recorder/blob/main/CONTRIBUTING.md) docs.
-
-# License
-
-Copyright (c) 2022 Warcraft Recorder
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
