@@ -1,3 +1,4 @@
+import { ConfigurationSchemaKey } from "./configSchema";
 import { NumberKeyToStringValueMapType, RaidInstanceType } from "./types";
 
 enum VideoCategory {
@@ -10,7 +11,7 @@ enum VideoCategory {
   Battlegrounds = 'Battlegrounds',
 };
 
-const categories: string[] = [
+const categories: VideoCategory[] = [
   VideoCategory.TwoVTwo,
   VideoCategory.ThreeVThree,
   VideoCategory.Skirmish,
@@ -20,28 +21,50 @@ const categories: string[] = [
   VideoCategory.Battlegrounds,
 ];
 
-const categoryRecordConfigMapping: { [key in VideoCategory]: string } = {
-  [VideoCategory.TwoVTwo]: "recordTwoVTwo",
-  [VideoCategory.ThreeVThree]: "recordThreeVThree",
-  [VideoCategory.Skirmish]: "recordSkirmish",
-  [VideoCategory.SoloShuffle]: "recordSoloShuffle",
-  [VideoCategory.MythicPlus]:"recordRaids", // not used
-  [VideoCategory.Raids]: "recordDungeons", // not used
-  [VideoCategory.Battlegrounds]: "recordBattlegrounds",
+interface ICategoryRecordingSettings {
+  configKey: ConfigurationSchemaKey,
+  videoOverrun: number,
 };
 
 /**
- * How long to keep recording after an activity ends to ensure we don't miss any
- * important stuff at the end, per category, in seconds.
+ * Category specific settings for recording
+ *
+ * `configKey`:    The configuration key name that specifies if we're allowed
+ *                 to record content from that particular category.
+ *
+ * `videoOverrun`: Number of seconds of how long to keep recording after an
+ *                 activity ends to ensure we don't miss any important stuff
+ *                  at the end.
  */
-const videoOverrunPerCategory: { [key: string]: number } = {
-  [VideoCategory.TwoVTwo]: 3,
-  [VideoCategory.ThreeVThree]: 3,
-  [VideoCategory.Skirmish]: 3,
-  [VideoCategory.SoloShuffle]: 3,
-  [VideoCategory.MythicPlus]: 5,    // For the whole dungeon
-  [VideoCategory.Raids]: 15,        // Per boss encounter
-  [VideoCategory.Battlegrounds]: 3,
+const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSettings } = {
+  [VideoCategory.TwoVTwo]: {
+    configKey: 'recordTwoVTwo',
+    videoOverrun: 4,
+  },
+  [VideoCategory.ThreeVThree]: {
+    configKey: 'recordThreeVThree',
+    videoOverrun: 4,
+  },
+  [VideoCategory.Skirmish]: {
+    configKey: 'recordSkirmish',
+    videoOverrun: 4,
+  },
+  [VideoCategory.SoloShuffle]: {
+    configKey: 'recordSoloShuffle',
+    videoOverrun: 4,
+  },
+  [VideoCategory.MythicPlus]:{
+    configKey: 'recordDungeons',
+    videoOverrun: 5, // For the whole dungeon
+  },
+  [VideoCategory.Raids]: {
+    configKey: 'recordRaids',
+    videoOverrun: 15, // Per boss encounter
+  },
+  [VideoCategory.Battlegrounds]: {
+    configKey: 'recordBattlegrounds',
+    videoOverrun: 3,
+  },
 };
 
 /**
@@ -105,22 +128,24 @@ const months: string[] = [
 }
 
 /**
- * Encounters by ID.  
+ * Shadowlands Tier 1
  */
-const encountersSepulcher: NumberKeyToStringValueMapType = {
-  2537: "Jailer",
-  2512: "Guardian",
-  2529: "Halondrus",
-  2539: "Lihuvim",
-  2540: "Dausegne",
-  2542: "Skolex",
-  2543: "Lords",
-  2544: "Pantheon",
-  2546: "Anduin",
-  2549: "Rygelon",
-  2553: "Xy'mox",
+ const encountersNathria: NumberKeyToStringValueMapType = {
+  2398: "Shriekwing",
+  2418: "Huntsman",
+  2402: "Sun King",
+  2405: "Xy'mox",
+  2383: "Hungering",
+  2406: "Inerva",
+  2412: "Council",
+  2399: "Sludgefist",
+  2417: "SLG",
+  2407: "Denathrius"
 }
 
+/**
+ * Shadowlands Tier 2
+ */
 const encountersSanctum: NumberKeyToStringValueMapType = {
   2523: "The Tarragrue",
   2433: "Jailer's Eye",
@@ -134,23 +159,42 @@ const encountersSanctum: NumberKeyToStringValueMapType = {
   2435: "Sylvanas",
 }
 
-const encountersNathria: NumberKeyToStringValueMapType = {
-  2398: "Shriekwing",
-  2418: "Huntsman",
-  2402: "Sun King",
-  2405: "Xy'mox",
-  2383: "Hungering",
-  2406: "Inerva",
-  2412: "Council",
-  2399: "Sludgefist",
-  2417: "SLG",
-  2407: "Denathrius"
+/**
+ * Shadowlands Tier 3
+ */
+ const encountersSepulcher: NumberKeyToStringValueMapType = {
+  2537: "Jailer",
+  2512: "Guardian",
+  2529: "Halondrus",
+  2539: "Lihuvim",
+  2540: "Dausegne",
+  2542: "Skolex",
+  2543: "Lords",
+  2544: "Pantheon",
+  2546: "Anduin",
+  2549: "Rygelon",
+  2553: "Xy'mox",
+}
+
+/**
+ * Dragonflight Tier 1
+ */
+const encountersVOI: NumberKeyToStringValueMapType = {
+  2587: "Eranog",
+  2639: "Terros",
+  2590: "Primal",
+  2592: "Sennarth",
+  2635: "Dathea",
+  2605: "Kurog",
+  2614: "Diurna",
+  2607: "Raszageth",
 }
 
 const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersNathria,
   ...encountersSanctum,
-  ...encountersSepulcher
+  ...encountersSepulcher,
+  ...encountersVOI
 }
 
 /**
@@ -163,6 +207,7 @@ const raidInstances: RaidInstanceType[] = [
   { zoneId: 13224, name: 'Castle Nathria', encounters: encountersNathria },
   { zoneId: 13561, name: 'Sanctum of Domination', encounters: encountersSanctum },
   { zoneId: 13742, name: 'Sepulcher of the First Ones', encounters: encountersSepulcher },
+  { zoneId: 14030, name: 'Vault of the Incarnates', encounters: encountersVOI },
 ];
 
 /**
@@ -521,6 +566,17 @@ const specializationById: { [id: number]: SpecializationObjectType } = {
   73:  { type: 'melee',  role: 'tank',   class: 'WARRIOR',     label: 'Warrior',      name: 'Protection' },
 };
 
+/**
+ * A map of WoW executable names to the appropriate WoW flavour
+ */
+const wowExecutableFlavours: { [key: string]: string } = {
+  'wow':        'Retail',
+  'wowt':       'PTR',
+  'wowb':       'Beta',
+  'wowclassic': 'Classic',
+};
+type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
+
 export {
     categories,
     months,
@@ -539,14 +595,12 @@ export {
     dungeonAffixesById,
     dungeonEncounters,
     specializationById,
-    encountersSanctum,
-    encountersNathria,
-    encountersSepulcher,
     instanceDifficulty,
     instanceEncountersById,
     InstanceDifficultyType,
     VideoCategory,
-    videoOverrunPerCategory,
     raidInstances,
-    categoryRecordConfigMapping
+    categoryRecordingSettings,
+    wowExecutableFlavours,
+    WoWProcessResultKey,
 };

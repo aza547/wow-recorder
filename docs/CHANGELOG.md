@@ -6,8 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [Issue 191](https://github.com/aza547/wow-recorder/issues/191) - Recording FPS and output resolution now adjustable in video settings.
+- [Issue 187](https://github.com/aza547/wow-recorder/issues/187) - Added Vault of the Incarnates raid IDs. 
+- [Issue 192](https://github.com/aza547/wow-recorder/issues/192) - Accept Beta, PTR and classic processes as reason to move to ready state. 
+
 ### Changed
 ### Fixed
+
+## [2.8.2] - 2022-10-02
+
+### Added
+- [Issue 184](https://github.com/aza547/wow-recorder/issues/184) - Option to start-up to the system tray.
+
+### Fixed 
+- [Issue 164](https://github.com/aza547/wow-recorder/issues/164) - Expose the settings help text in the UI.
+- [Issue 178](https://github.com/aza547/wow-recorder/issues/178) - Fix bufferStoragePath defaulting to an empty string.
+- [Issue 186](https://github.com/aza547/wow-recorder/issues/186) - Prevent running multiple copies of WR. 
+
+## [2.8.1] - 2022-09-27
+### Fixed
+- [Issue 175](https://github.com/aza547/wow-recorder/issues/175) - Fix test button on non en-GB locales. 
+- [Issue 176](https://github.com/aza547/wow-recorder/issues/176) - Fix app crashing when recording is force stopped. 
+- [Issue 177](https://github.com/aza547/wow-recorder/issues/177) - Let test run regardless of 2v2 config setting.
 
 ## [2.8.0] - 2022-09-26
 ### Added

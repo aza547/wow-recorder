@@ -1,13 +1,12 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, videoOverrunPerCategory }  from './constants';
-import { PlayerDeathType, UnitFlags } from './types';
+import { battlegrounds, categoryRecordingSettings, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, wowExecutableFlavours, WoWProcessResultKey }  from './constants';
+import { IWoWProcessResult, PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 import { CombatLogParser, LogLine } from './combatLogParser';
 import { getSortedFiles } from './util';
 import ConfigService from './configService';
-import {categoryRecordConfigMapping} from './constants';
 
 const cfg = new ConfigService();
 const tasklist = require('tasklist');
@@ -90,8 +89,7 @@ combatLogParser.on('DataTimeout', (timeoutMs: number) => {
 /**
  * Is wow running? Starts false but we'll check immediately on start-up.
  */
-let isRetailRunning: boolean = false;
-let isClassicRunning: boolean = false;
+let wowProcessRunning: IWoWProcessResult | null = null;
 
 /**
  * Timers for poll
@@ -101,9 +99,10 @@ let pollWowProcessInterval: NodeJS.Timer;
 /**
  * wowProcessStarted
  */
-const wowProcessStarted = () => {
-    console.log("[Logutils] Wow.exe is running");
-    isRetailRunning = true;
+const wowProcessStarted = (process: IWoWProcessResult) => {
+    wowProcessRunning = process;
+
+    console.log(`[Logutils] Detected ${process.exe} (${process.flavour}) running`);
     recorder.startBuffer();
 };
 
@@ -111,8 +110,12 @@ const wowProcessStarted = () => {
  * wowProcessStopped
  */
 const wowProcessStopped = () => {
-    console.log("[Logutils] Wow.exe has stopped");
-    isRetailRunning = false;
+    if (!wowProcessRunning) {
+        return;
+    }
+
+    console.log(`[Logutils] Detected ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) not running`);
+    wowProcessRunning = null;
 
     if (recorder.isRecording) {
         endRecording();
@@ -122,9 +125,30 @@ const wowProcessStopped = () => {
 };
 
 /**
+ * Check and return whether we're allowed to record a certain type of content
+ */
+const allowRecordCategory = (category: VideoCategory): boolean => {
+    const categoryConfig = categoryRecordingSettings[category];
+    if (!cfg.get<boolean>(categoryConfig.configKey)) {
+        if (!testRunning) {
+            console.log("[Logutils] Configured to not record", category);
+            return false;
+        }
+
+        console.log(`[Logutils] Configured to not record ${category}, but test is running so recording anyway.`);
+    };
+
+    return true;
+};
+
+/**
  * Initiate recording and mark as having something in-progress
  */
 const startRecording = (category: VideoCategory) => {
+    if (!allowRecordCategory(category)) {
+        return;
+    }
+
     console.log(`[Logutils] Start recording a video for category: ${category}`)
 
     // Ensure combatant map and player combatant is clean before
@@ -153,7 +177,7 @@ const endRecording = (options?: EndRecordingOptionsType) => {
     }
 
     const discardVideo = options?.discardVideo ?? false;
-    const overrun = videoOverrunPerCategory[currentActivity];
+    const overrun = categoryRecordingSettings[currentActivity].videoOverrun;
     const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
 
     metadata.duration = Math.round(videoDuration / 1000) + overrun;
@@ -177,11 +201,6 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return;
     const category = (line.arg(3) as VideoCategory);
-
-    if (!cfg.get<boolean>(categoryRecordConfigMapping[category])) { 
-        console.log("[Logutils] Configured to not record", category) ; 
-        return;
-    };
 
     const zoneID = parseInt(line.arg(1), 10);
 
@@ -234,11 +253,6 @@ const determineArenaMatchResult = (line: LogLine): any[] => {
  * Handle a log line for CHALLENGE_MODE_START
  */
 function handleChallengeModeStartLine (line: LogLine): void {
-    if (!cfg.get<boolean>("recordDungeons")) {
-        console.log("[Logutils] Configured to not record Mythic+");
-        return;
-    }
-
     // It's impossible to start a keystone dungeon while another one is in progress
     // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
     // is encountered.
@@ -292,7 +306,7 @@ const endChallengeModeDungeon = (): void => {
         return;
     }
 
-    console.debug("[ChallengeMode] Ending current timeline segment")
+    console.debug("[ChallengeMode] Ending current timeline segment");
     activeChallengeMode.endCurrentTimelineSegment(videoStopDate);
 
     // If last timeline segment is less than 10 seconds long, discard it.
@@ -349,11 +363,6 @@ function handleEncounterStartLine (line: LogLine): void {
     const encounterID = parseInt(line.arg(1), 10)
     const difficultyID = parseInt(line.arg(3), 10);
     const eventDate = line.date();
-
-    if (!activeChallengeMode && !cfg.get<boolean>("recordRaids")) {
-        console.log("[Logutils] Configured to not record raids");
-        return;
-    }
 
     // If we're recording _and_ has an active challenge mode dungeon,
     // add a new boss encounter timeline segment.
@@ -420,7 +429,7 @@ function handleEncounterStopLine (line: LogLine): void {
  * Handle a line from the WoW log.
  */
 function handleZoneChange (line: LogLine): void {
-    console.log("[Logutils] Handling zone change: ", line);
+    console.log("[Logutils] Handling zone change", line);
     const zoneID = parseInt(line.arg(1), 10);
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
@@ -438,13 +447,6 @@ function handleZoneChange (line: LogLine): void {
 
     if (!isRecording && isNewZoneBG) {
         console.log("[Logutils] ZONE_CHANGE into BG");
-
-        if (!cfg.get<boolean>("recordBattlegrounds")) {
-            console.log("[Logutils] Configured to not record battlegrounds");
-            return;
-        }
-
-        console.log("[Logutils] Start recording BG");
         battlegroundStart(line);
         return;
     }
@@ -458,14 +460,6 @@ function handleZoneChange (line: LogLine): void {
         zoneChangeStop(line);
         return;
     }
-
-    // TODO there is the case here where a tilted raider hearths
-    // out mid-pull. I think the correct way to handle is just a
-    // log inactivity stop, else raid encounters with ZONE_CHANGES
-    // internally will always stop recording. That's a bit of work
-    // so I'm skipping the implementation for now and making a
-    // quick fix. For now, hearting out mid-encounter won't stop
-    // the recording and the user will need to restart the app.
 }
 
 /**
@@ -644,7 +638,7 @@ const isUnitPlayer = (flags: number): boolean => {
  * Forcibly stop recording and clean up whatever was going on
  */
 const forceStopRecording = () => {
-    const videoStopDate = new Date();
+    videoStopDate = new Date();
     const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime());
     metadata.duration = Math.round(milliSeconds / 1000);
 
@@ -675,47 +669,55 @@ const forceStopRecording = () => {
 }
 
 /**
- * checkWoWProcess
- * @returns {[boolean, boolean]} retailRunning, classicRunning
+ * Check Windows task list and find any WoW process.
  */
-const checkWoWProcess = async (): Promise<[boolean, boolean]> => {
-    let retailRunning = false;
-    let classicRunning = false;
-
+const checkWoWProcess = async (): Promise<IWoWProcessResult[]> => {
+    const wowProcessRx = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
     const taskList = await tasklist();
 
-    taskList.forEach((process: any) => {
-        if (process.imageName === "Wow.exe") {
-            retailRunning = true;
-        } else if (process.imageName === "WowClassic.exe") {
-            classicRunning = true;
-        }
-    });
-
-    return [retailRunning, classicRunning]
+    return taskList
+        // Map all processes found to check if they match `wowProcessRx`
+        .map((p: any) => p.imageName.match(wowProcessRx))
+        // Remove those that result in `null` (didn't match)
+        .filter((p: any) => p)
+        // Return an object suitable for `IWoWProcessResult`
+        .map((match: any): IWoWProcessResult => ({
+            exe: match[0],
+            flavour: wowExecutableFlavours[match[1].toLowerCase()]
+        }))
+    ;
 }
 
 /**
  * pollWoWProcessLogic
  */
-const pollWoWProcessLogic = async (startup: boolean) => {
-    const [retailFound, classicFound] = await checkWoWProcess();
-    const retailProcessChanged = (retailFound !== isRetailRunning);
-    // TODO classic support
-    const classicProcessChanged = (classicFound !== isClassicRunning);
-    const processChanged = (retailProcessChanged || classicProcessChanged);
-    if (!retailProcessChanged && !startup) return;
-    (retailFound) ? wowProcessStarted() : wowProcessStopped();
+const pollWoWProcessLogic = async () => {
+    const wowProcesses = await checkWoWProcess();
+    const wowProcess = wowProcesses.pop();
+
+    if (wowProcess && wowProcessRunning === null) {
+        wowProcessStarted(wowProcess);
+    } else
+    if (!wowProcess && wowProcessRunning !== null) {
+        wowProcessStopped();
+    }
 }
 
 /**
  * pollWoWProcess
  */
 const pollWowProcess = () => {
-    pollWoWProcessLogic(true);
-    if (pollWowProcessInterval) clearInterval(pollWowProcessInterval);
-    pollWowProcessInterval = setInterval(() => pollWoWProcessLogic(false), 5000);
+    if (pollWowProcessInterval) {
+        clearInterval(pollWowProcessInterval);
+    }
+
+    pollWowProcessInterval = setInterval(pollWoWProcessLogic, 5000);
 }
+
+const sendTestCombatLogLine = (line: string): void => {
+    console.debug('[Logutils] Sending test combat log line to the Combat Log Parser', line);
+    combatLogParser.handleLogLine('retail', line);
+};
 
 /**
  * Function to invoke if the user clicks the "run a test" button
@@ -731,7 +733,7 @@ const runRecordingTest = (endTest: boolean = true) => {
         console.info("[Logutils] Test already running, not starting test.");
     }
 
-    if (isRetailRunning) {
+    if (wowProcessRunning !== null) {
         console.info("[Logutils] WoW is running, starting test.");
         testRunning = true;
     } else {
@@ -745,7 +747,7 @@ const runRecordingTest = (endTest: boolean = true) => {
      */
     const getAdjustedDate = (seconds: number = 0): string => {
         const now = new Date(new Date().getTime() + (seconds * 1000));
-        return `${now.getMonth() + 1}/${now.getDate()} ${now.toLocaleTimeString()}.000`
+        return `${now.getMonth() + 1}/${now.getDate()} ${now.toLocaleTimeString('en-GB')}.000`
     };
 
     // This inserts a test date so that the recorder doesn't confuse itself with
@@ -761,7 +763,7 @@ const runRecordingTest = (endTest: boolean = true) => {
         startDate + "  SPELL_AURA_APPLIED,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,Player-1084-08A89569,\"Alexsmite-TarrenMill\",0x511,0x0,110310,\"Dampening\",0x1,DEBUFF",
         // 'SPELL_PERIODIC_HEAL' isn't currently an event of interest so we want to test that too
         startDate + '  SPELL_PERIODIC_HEAL,Player-1084-08A89569,"Alexsmite-TarrenMill",0x10512,0x0,Player-1084-08A89569,"Alexsmite-TarrenMill",0x10512,0x0,199483,"Camouflage",0x1,Player-1084-08A89569,0000000000000000,86420,86420,2823,369,1254,0,2,100,100,0,284.69,287.62,0,2.9138,285,2291,2291,2291,0,nil',
-    ].forEach(v => combatLogParser.handleLogLine('retail', v));
+    ].forEach(sendTestCombatLogLine);
 
     const testArenaStopLine = endDate + "  ARENA_MATCH_END,0,8,1673,1668";
 
@@ -770,7 +772,7 @@ const runRecordingTest = (endTest: boolean = true) => {
     }
 
     setTimeout(() => {
-        combatLogParser.handleLogLine('retail', testArenaStopLine);
+        sendTestCombatLogLine(testArenaStopLine);
         testRunning = false;
     }, 10 * 1000);
 }

@@ -17,6 +17,9 @@ type RecorderOptionsType = {
     audioInputDeviceId: string;
     audioOutputDeviceId: string;
     minEncounterDuration: number;
+    obsBaseResolution: string,
+    obsOutputResolution: string,
+    obsFPS: number;
 };
 
 /**
@@ -33,7 +36,7 @@ type RecorderOptionsType = {
      */
     constructor(options: RecorderOptionsType) {
         this._options = options;
-        console.debug("[Recorder] Construcing recorder with: ", this._options);
+        console.debug("[Recorder] Constructing recorder with: ", this._options);
 
         if (!fs.existsSync(this._options.bufferStorageDir)) {
             console.log("[Recorder] Creating dir:", this._options.bufferStorageDir);

@@ -20,6 +20,7 @@ export const configSettings = [
   'audioOutputDevice',
   'bufferStoragePath',
   'startUp',
+  'startMinimized',
   'recordRetail',
   'recordClassic',
   'recordRaids',
@@ -29,6 +30,9 @@ export const configSettings = [
   'recordSkirmish',
   'recordSoloShuffle',
   'recordBattlegrounds',
+  'obsBaseResolution',
+  'obsOutputResolution',
+  'obsFPS',
 ];
 
 export default function useSettings() {
@@ -43,6 +47,7 @@ export default function useSettings() {
     audioInputDevice:     getConfigValue<string>('audioInputDevice'),
     audioOutputDevice:    getConfigValue<string>('audioOutputDevice'),
     startUp:              getConfigValue<boolean>('startUp'),
+    startMinimized:       getConfigValue<boolean>('startMinimized'),
     recordRetail:         getConfigValue<boolean>('recordRetail'),
     recordClassic:        getConfigValue<boolean>('recordClassic'),
     recordRaids:          getConfigValue<boolean>('recordRaids'),
@@ -52,6 +57,9 @@ export default function useSettings() {
     recordSkirmish:       getConfigValue<boolean>('recordSkirmish'),
     recordSoloShuffle:    getConfigValue<boolean>('recordSoloShuffle'),
     recordBattlegrounds:  getConfigValue<boolean>('recordBattlegrounds'),
+    obsBaseResolution:    getConfigValue<string>('obsBaseResolution'),
+    obsOutputResolution:  getConfigValue<string>('obsOutputResolution'),
+    obsFPS:               getConfigValue<number>('obsFPS'),
   });
 
   return [config, setConfig];

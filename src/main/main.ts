@@ -20,6 +20,7 @@ import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { AppStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
+import { getObsResolutions } from './obsRecorder';
 
 let recorder: Recorder;
 
@@ -53,7 +54,7 @@ console.log("[Main] App starting: version", app.getVersion());
  * Does some basic sanity checking for default values.
  */
 const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
-  const config = {
+  return {
     storageDir:           cfg.get<string>('storagePath'),
     bufferStorageDir:     cfg.get<string>('bufferStoragePath'), // TODO this will resolve an empty string if not in cfg
     maxStorage:           cfg.get<number>('maxStorage'),
@@ -61,9 +62,10 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
     audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
     audioOutputDeviceId:  cfg.get<string>('audioOutputDevice'),
     minEncounterDuration: cfg.get<number>('minEncounterDuration'),
+    obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
+    obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
+    obsFPS:               cfg.get<number>('obsFPS'),
   };
-
-  return config;
 };
 
 /**
@@ -194,13 +196,14 @@ const createWindow = async () => {
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send('updateTitleBar', 'Warcraft Recorder v' + app.getVersion());
 
-    if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
-    } else {
+    const configOK = cfg.validate();
+    const cfgStartMinimized = cfg.get<boolean>('startMinimized');
+
+    if (!cfgStartMinimized) {
       mainWindow.show();
     }
 
-    if (!cfg.validate()) return;
+    if (!configOK) return;
 
     makeRecorder(recorderOptions)
     pollWowProcess();
@@ -239,7 +242,7 @@ const createSettingsWindow = async () => {
 
   settingsWindow = new BrowserWindow({
     show: false,
-    width: 690,
+    width: 650,
     height: 500,
     resizable: (process.env.NODE_ENV === 'production') ? false : true,
     icon: getAssetPath('./icon/settings-icon.svg'),
@@ -407,6 +410,16 @@ ipcMain.on('settingsWindow', (event, args) => {
 
   if (args[0] === 'getAllDisplays') {
     event.returnValue = getAvailableDisplays();
+    return;
+  }
+
+  if (args[0] === 'getObsAvailableResolutions') {
+    if (!recorder) {
+      event.returnValue = { 'Base': [], 'Output': [] };
+      return;
+    }
+
+    event.returnValue = getObsResolutions();
     return;
   }
 })
@@ -580,7 +593,14 @@ app
   .whenReady()
   .then(() => {
     console.log("[Main] App ready");
-    createWindow();
+    const singleInstanceLock = app.requestSingleInstanceLock();
+
+    if (!singleInstanceLock) {
+      console.warn("[Main] Blocked attempt to launch a second instance of the application");
+      app.quit();
+    } else {
+      createWindow();
+    }
   })
   .catch(console.log);
 

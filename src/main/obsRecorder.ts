@@ -4,9 +4,9 @@ import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from ".
 import { RecorderOptionsType } from "./recorder";
 import { OurDisplayType } from "./types";
 import { Size } from "electron";
+import { IScene } from "obs-studio-node";
 const waitQueue = new WaitQueue<any>();
 const path = require('path');
-const { byOS, OS } = require('./operatingSystems');
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
 
@@ -17,10 +17,23 @@ let scene = null;
 * Reconfigure the recorder without destroying it.
 */
 const reconfigure = (options: RecorderOptionsType) => {
-  configureOBS(options.bufferStorageDir);
-  scene = setupScene(options.monitorIndex);
+  const baseResolution = parseResolutionsString(options.obsBaseResolution);
+  const outputResolution = parseResolutionsString(options.obsOutputResolution);
+
+  configureOBS(options);
+  scene = setupScene(options.monitorIndex, baseResolution, outputResolution);
   setupSources(scene, options.audioInputDeviceId, options.audioOutputDeviceId);
 }
+
+/**
+ * Parse a resolution string like '1920x1080' into a `Size` compatible
+ * format.
+ */
+const parseResolutionsString = (value: string): Size => {
+  const [width, height] = value.split('x').map(v => parseInt(v, 10));
+
+  return { width, height };
+};
 
 /*
 * Init the library, launch OBS Studio instance, configure it, set up sources and scene
@@ -74,7 +87,7 @@ const initOBS = () => {
 /*
 * configureOBS
 */
-const configureOBS = (baseStoragePath: string) => {
+const configureOBS = (options: RecorderOptionsType) => {
   console.debug('[OBS] Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
   const availableEncoders = getAvailableValues('Output', 'Recording', 'RecEncoder');
@@ -86,7 +99,7 @@ const configureOBS = (baseStoragePath: string) => {
   setSetting('Output', 'RecEncoder', selectedEncoder);
 
   // Set output path and video format.
-  setSetting('Output', 'RecFilePath', baseStoragePath);
+  setSetting('Output', 'RecFilePath', options.bufferStorageDir);
   setSetting('Output', 'RecFormat', 'mp4');
   
   if (selectedEncoder.toLowerCase().includes("amf")) {
@@ -101,7 +114,7 @@ const configureOBS = (baseStoragePath: string) => {
   }
    
   setSetting('Output', 'Recmax_bitrate', 300000); 
-  setSetting('Video', 'FPSCommon', 60);
+  setSetting('Video', 'FPSCommon', options.obsFPS);
 
   console.debug('[OBS] OBS Configured');
 }
@@ -169,7 +182,9 @@ const setOBSVideoResolution = (res: Size, paramString: string) => {
 /*
 * setupScene
 */
-const setupScene = (monitorIndex: number) => {
+const setupScene = (monitorIndex: number, baseResolution: Size, outputResolution: Size): IScene => {
+  setOBSVideoResolution(outputResolution, 'Output');
+
   // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
   const monitorIndexFromZero = monitorIndex - 1;
   console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
@@ -180,10 +195,7 @@ const setupScene = (monitorIndex: number) => {
 
   setOBSVideoResolution(selectedDisplay.physicalSize, 'Base');
 
-  // TODO: Output should eventually be moved into a setting field to be scaled down. For now it matches the monitor resolution.
-  setOBSVideoResolution(selectedDisplay.physicalSize, 'Output');
-
-  const videoSource = osn.InputFactory.create(byOS({ [OS.Windows]: 'monitor_capture', [OS.Mac]: 'display_capture' }), 'desktop-video');
+  const videoSource = osn.InputFactory.create('monitor_capture', 'desktop-video');
 
   // Update source settings:
   let settings = videoSource.settings;
@@ -210,7 +222,7 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 
   getAvailableAudioInputDevices()
     .forEach(device => {
-      const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_input_capture', [OS.Mac]: 'coreaudio_input_capture' }), 'mic-audio', { device_id: device.id });
+      const source = osn.InputFactory.create('wasapi_input_capture', 'mic-audio', { device_id: device.id });
       setSetting('Output', `Track${currentTrack}Name`, device.name);
       source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
       source.muted = audioInputDeviceId === 'none' || (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
@@ -222,7 +234,7 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 
   getAvailableAudioOutputDevices()
     .forEach(device => {
-      const source = osn.InputFactory.create(byOS({ [OS.Windows]: 'wasapi_output_capture', [OS.Mac]: 'coreaudio_output_capture' }), 'desktop-audio', { device_id: device.id });
+      const source = osn.InputFactory.create('wasapi_output_capture', 'desktop-audio', { device_id: device.id });
       setSetting('Output', `Track${currentTrack}Name`, device.name);
       source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
       source.muted = audioOutputDeviceId === 'none' || (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
@@ -337,6 +349,15 @@ const getAvailableValues = (category: any, subcategory: any, parameter: any) => 
   return parameterSettings.values.map( (value: any) => Object.values(value)[0]);
 }
 
+/**
+ * Simply return a list of available resolutions from OBS for 'Base' and 'Output
+ */
+const getObsResolutions = (): any => {
+  return {
+    'Base':   getAvailableValues('Video', 'Untitled', 'Base'),
+    'Output': getAvailableValues('Video', 'Untitled', 'Output')
+  };
+}
 
 /*
 * Assert a signal from OBS is as expected, if it is not received
@@ -375,4 +396,5 @@ export {
   stop,
   shutdown,
   reconfigure,
+  getObsResolutions,
 }

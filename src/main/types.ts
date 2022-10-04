@@ -1,4 +1,5 @@
 import { Size } from "electron";
+import { WoWProcessResultKey } from "./constants";
 
 /**
  * Application status
@@ -131,6 +132,11 @@ interface IFFProbeResult {
     tags: { [key: string]: string }
 }
 
+interface IWoWProcessResult {
+    exe: string,
+    flavour: WoWProcessResultKey,
+};
+
 export {
     AppStatus,
     UnitFlags,
@@ -143,4 +149,5 @@ export {
     FileInfo,
     FileFinderCallbackType,
     IFFProbeResult,
+    IWoWProcessResult,
 }
