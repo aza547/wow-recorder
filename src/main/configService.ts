@@ -56,22 +56,31 @@ export default class ConfigService extends EventEmitter {
          */
         ipcMain.on('config', (event, args) => {
             switch (args[0]) {
-                case 'get':
+                case 'get': {
                     const value = this.get(args[1]);
                     event.returnValue = value;
                     return;
+                }
 
-                case 'set':
-                    this.set(args[1], args[2]);
+                case 'set': {
+                    const [_, key, value] = args;
+                    if (this.configValueChanged(key, value)) {
+                        return;
+                    }
+
+                    this.set(key, value);
+                    this.emit('change', key, value);
+                    this.logConfigChanged({[key]: value});
                     return;
+                }
 
-                case 'set_values':
+                case 'set_values': {
                     const configObject = args[1];
                     const configKeys = Object.keys(configObject);
                     const newConfigValues: { [key: string]: any } = {};
 
                     configKeys.forEach((key: string) => {
-                        if (this._store.get(key) === configObject[key]) {
+                        if (this.configValueChanged(key, configObject[key])) {
                             return;
                         }
 
@@ -79,11 +88,16 @@ export default class ConfigService extends EventEmitter {
                     });
 
                     Object.keys(newConfigValues).forEach((key: any) => {
-                        this.set(key, newConfigValues[key]);
+                        const value = newConfigValues[key];
+
+                        this.set(key, value);
+                        this.emit('change', key, value);
                     })
 
-                    console.log('[Config Service] Configuration changed:', util.inspect(newConfigValues, { colors: true, compact: false }));
+                    this.logConfigChanged(newConfigValues);
+
                     return;
+                }
             }
         });
     }
@@ -162,9 +176,10 @@ export default class ConfigService extends EventEmitter {
 
         if (value === null || value === undefined || value === '') {
             this._store.delete(key);
-        } else {
-            this._store.set(key, value);
+            return;
         }
+
+        this._store.set(key, value);
     }
 
     getPath(key: keyof ConfigurationSchema): string {
@@ -229,5 +244,19 @@ export default class ConfigService extends EventEmitter {
             );
             return;
         }
+    }
+
+    /**
+     * Determine whether a configuration value has changed.
+     */
+    private configValueChanged(key: string, value: any): boolean {
+        // We're checking for null here because we don't allow storing
+        // null values and as such if we get one, it's because it's empty/shouldn't
+        // be saved.
+        return value === null || this._store.get(key) === value;
+    }
+
+    private logConfigChanged(newConfig: { [key: string ]: any }): void {
+        console.log('[Config Service] Configuration changed:', util.inspect(newConfig, { colors: true, compact: false }));
     }
 };

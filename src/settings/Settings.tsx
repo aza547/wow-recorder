@@ -10,10 +10,9 @@ import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
 import ContentSettings from './ContentSettings';
 import ConfigContext from "./ConfigContext";
-import useSettings, { configValues, setConfigValue } from "./useSettings";
+import useSettings, { setConfigValues } from "./useSettings";
 
 const ipc = window.electron.ipcRenderer;
-const configSettingKeys = Object.keys(configValues);
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -70,14 +69,7 @@ export default function Settings() {
   const saveSettings = () => {
     console.info("[Settings] User clicked save settings");
 
-    configSettingKeys.forEach((key: string) => {
-      const configKey = (key as keyof typeof config);
-      setConfigValue(key, config[configKey]);
-
-      if (key === "startUp") {
-        ipc.sendMessage("settingsWindow", ["startup", config[configKey]]);
-      }
-    });
+    setConfigValues(config);
 
     closeSettings();
     ipc.sendMessage('settingsWindow', ['update']);
@@ -160,7 +152,7 @@ const useStyles = makeStyles()({
           <AdvancedSettings/>
         </TabPanel>
         <div style={{position: "fixed", bottom: "10px", left: "12px"}} >
-          <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings} >Close</button>
+          <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings}>Close</button>
           <button type="button" id="submit" name="save" className="btn btn-primary" onClick={saveSettings}>Save</button>
         </div>
       </Box>

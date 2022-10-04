@@ -12,7 +12,7 @@ export function setConfigValues(dict: { [key: string]: any }): void {
   window.electron.ipcRenderer.sendMessage('config', ['set_values', dict]);
 };
 
-export const configValues = {
+const configValues = {
   storagePath:          getConfigValue<string>('storagePath'),
   bufferStoragePath:    getConfigValue<string>('bufferStoragePath'),
   retailLogPath:        getConfigValue<string>('retailLogPath'),
