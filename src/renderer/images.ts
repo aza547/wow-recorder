@@ -100,6 +100,32 @@ const raidIDs = [
     2605, // Kurog
     2614, // Broodkeeper Diurna
     2607, // Raszageth
+
+    // Naxxramas
+    // WOTLK Classic Tier 1
+    1107, // Anub
+    1110, // Faerlina
+    1116, // Maexxna
+    1118, // Patchwerk
+    1117, // Noth
+    1112, // Heigan
+    1115, // Lotheb
+    1113, // Razuvious
+    1109, // Gothik
+    1121, // Horsemen
+    1119, // Sapphiron
+    1120, // Thaddius
+    1114, // Kel'Thuzad
+    1111, // Grobbulus
+    1108, // Gluth
+
+    // Eye of Eternity
+    // WOTLK Classic Tier 1
+    1094, // Malygos
+
+    // Obsidian Sanctum
+    // WOTLK Classic Tier 1
+    1090, // Sarthartion
 ]
 
 let raid: imageObject = {};

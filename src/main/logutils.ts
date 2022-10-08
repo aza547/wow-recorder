@@ -68,9 +68,9 @@ combatLogParser.on('DataTimeout', (timeoutMs: number) => {
 });
 
 /**
- * wowProcessStopped
+ * Metadata type. 
  */
- type Metadata = {
+type Metadata = {
     name: string;
     category: VideoCategory;
     zoneID?: number;
@@ -87,7 +87,7 @@ combatLogParser.on('DataTimeout', (timeoutMs: number) => {
 }
 
 /**
- * Is wow running? Starts false but we'll check immediately on start-up.
+ * Is wow running? Starts null but we'll check immediately on start-up.
  */
 let wowProcessRunning: IWoWProcessResult | null = null;
 
@@ -97,7 +97,7 @@ let wowProcessRunning: IWoWProcessResult | null = null;
 let pollWowProcessInterval: NodeJS.Timer;
 
 /**
- * wowProcessStarted
+ * Handle WoW process starting.
  */
 const wowProcessStarted = (process: IWoWProcessResult) => {
     wowProcessRunning = process;
@@ -107,7 +107,7 @@ const wowProcessStarted = (process: IWoWProcessResult) => {
 };
 
 /**
- * wowProcessStopped
+ * Handle WoW process stopping.
  */
 const wowProcessStopped = () => {
     if (!wowProcessRunning) {
@@ -146,6 +146,12 @@ const allowRecordCategory = (category: VideoCategory): boolean => {
  */
 const startRecording = (category: VideoCategory) => {
     if (!allowRecordCategory(category)) {
+        console.info("[LogUtils] Not configured to record", category);
+        return;
+    } else if (recorder.isRecording || !recorder.isRecordingBuffer) {
+        console.error("[LogUtils] Avoiding error by not attempting to start recording",
+                      recorder.isRecording,
+                      recorder.isRecordingBuffer);
         return;
     }
 
@@ -169,6 +175,7 @@ type EndRecordingOptionsType = {
  */
 const endRecording = (options?: EndRecordingOptionsType) => {
     if (!recorder.isRecording || !currentActivity) {
+        console.error("[LogUtils] Avoiding error by not attempting to stop recording");
         return;
     }
 
@@ -434,6 +441,12 @@ function handleZoneChange (line: LogLine): void {
     const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
 
+    // const classicArenas = [
+    //     617, // Dalaran
+    //     572, // Ruins
+    //     559, // Nagrand 
+    // ];
+
     let isRecordingBG = false;
     let isRecordingArena = false;
 
@@ -693,12 +706,12 @@ const checkWoWProcess = async (): Promise<IWoWProcessResult[]> => {
  */
 const pollWoWProcessLogic = async () => {
     const wowProcesses = await checkWoWProcess();
-    const wowProcess = wowProcesses.pop();
+    const processesToRecord = wowProcesses.filter(filterFlavoursByConfig);
+    const firstProcessToRecord = processesToRecord.pop();
 
-    if (wowProcess && wowProcessRunning === null) {
-        wowProcessStarted(wowProcess);
-    } else
-    if (!wowProcess && wowProcessRunning !== null) {
+    if ((wowProcessRunning === null) && firstProcessToRecord) {
+        wowProcessStarted(firstProcessToRecord);
+    } else if (wowProcessRunning !== null && !firstProcessToRecord) {
         wowProcessStopped();
     }
 }
@@ -712,6 +725,26 @@ const pollWowProcess = () => {
     }
 
     pollWowProcessInterval = setInterval(pollWoWProcessLogic, 5000);
+}
+
+/**
+ * Filter out flavours that we are not configured to record. 
+ */
+const filterFlavoursByConfig = (wowProcess: IWoWProcessResult) => {
+    const wowFlavour = wowProcess.flavour;
+
+    const recordClassic = cfg.get<boolean>("recordClassic");
+    const recordRetail = cfg.get<boolean>("recordRetail");
+
+    // Any non classic flavour is considered a retail flavour (i.e. retail, beta, ptr)
+    const validRetailProcess = (wowFlavour !== "Classic" && recordRetail);
+    const validClassicProcess = (wowFlavour === "Classic" && recordClassic);
+
+    if (validRetailProcess || validClassicProcess) {
+        return true;
+    }
+    
+    return false;
 }
 
 const sendTestCombatLogLine = (line: string): void => {

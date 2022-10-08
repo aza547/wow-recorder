@@ -6,12 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [Issue 50](https://github.com/aza547/wow-recorder/issues/50) - Add classic raid support. 
 - [Issue 191](https://github.com/aza547/wow-recorder/issues/191) - Recording FPS and output resolution now adjustable in video settings.
 - [Issue 187](https://github.com/aza547/wow-recorder/issues/187) - Added Vault of the Incarnates raid IDs. 
 - [Issue 192](https://github.com/aza547/wow-recorder/issues/192) - Accept Beta, PTR and classic processes as reason to move to ready state. 
 
 ### Changed
 ### Fixed
+- [Issue 193](https://github.com/aza547/wow-recorder/issues/193) - Add some guards so we don't start recording in an invalid state. 
 
 ## [2.8.2] - 2022-10-02
 

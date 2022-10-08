@@ -34,12 +34,12 @@ export default function ContentSettings() {
 
   return (
     <div>
-      {/* <FormLabel id="radios" sx={formLabelStyle}>Game Type</FormLabel>
+      <FormLabel id="radios" sx={formLabelStyle}>Game Type</FormLabel>
       <Divider color="black" />
       <FormGroup sx={formGroupStyle}>
         <FormControlLabel control={getCheckBox("recordRetail")} label="Retail" style = {formControlLabelStyle} />
         <FormControlLabel control={getCheckBox("recordClassic")} label="Classic" style = {formControlLabelStyle} />
-      </FormGroup> */}
+      </FormGroup>
       <FormLabel id="radios" sx={formLabelStyle}>PvE</FormLabel>
       <Divider color="black" />
       <FormGroup sx={formGroupStyle}>

@@ -190,11 +190,49 @@ const encountersVOI: NumberKeyToStringValueMapType = {
   2607: "Raszageth",
 }
 
+/**
+ * WOTLK Classic Naxxrammas
+ */
+ const encountersClassicNaxxramas: NumberKeyToStringValueMapType = {
+  1107: "Anub'Rekhan",
+  1110: "Faerlina",
+  1116: "Maexxna",
+  1118: "Patchwerk",
+  1117: "Noth",
+  1112: "Heigan",
+  1115: "Lotheb",
+  1113: "Razuvious",
+  1109: "Gothik",
+  1121: "Horsemen",
+  1119: "Sapphiron",
+  1120: "Thaddius",
+  1114: "Kel'Thuzad",
+  1111: "Grobbulus",
+  1108: "Gluth",
+}
+
+/**
+ * WOTLK Classic Eye of Eternity
+ */
+ const encountersClassicEye: NumberKeyToStringValueMapType = {
+  1094: "Malygos",
+}
+
+/**
+ * WOTLK Classic Obsidian Sanctum
+ */
+ const encountersClassicObsidian: NumberKeyToStringValueMapType = {
+  1090: "Sartharion",
+}
+
 const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersNathria,
   ...encountersSanctum,
   ...encountersSepulcher,
-  ...encountersVOI
+  ...encountersVOI,
+  ...encountersClassicNaxxramas,
+  ...encountersClassicEye,
+  ...encountersClassicObsidian,
 }
 
 /**
@@ -208,6 +246,9 @@ const raidInstances: RaidInstanceType[] = [
   { zoneId: 13561, name: 'Sanctum of Domination', encounters: encountersSanctum },
   { zoneId: 13742, name: 'Sepulcher of the First Ones', encounters: encountersSepulcher },
   { zoneId: 14030, name: 'Vault of the Incarnates', encounters: encountersVOI },
+  { zoneId: 3456, name: 'Naxxramas', encounters: encountersClassicNaxxramas },
+  { zoneId: 4500, name: 'Eye of Eternity', encounters: encountersClassicEye },
+  { zoneId: 4493, name: 'Obsidian Sanctum', encounters: encountersClassicObsidian },
 ];
 
 /**
@@ -449,25 +490,25 @@ type InstanceDifficultyObjectType = {
 };
 
 const instanceDifficulty: InstanceDifficultyObjectType = {
-  1: { difficultyId: 'normal', difficulty: 'Normal', partyType: 'party' },
-  2: { difficultyId: 'heroic', difficulty: 'Heroic', partyType: 'party' },
-  3: { difficultyId: 'normal', difficulty: '10 Player', partyType: 'raid' },
-  4: { difficultyId: 'normal', difficulty: '25 Player', partyType: 'raid' },
-  5: { difficultyId: 'heroic', difficulty: 'Heroic (10P)', partyType: 'raid' },
-  6: { difficultyId: 'heroic', difficulty: 'Heroic (25P)', partyType: 'raid' },
-  7: { difficultyId: 'lfr', difficulty: 'Looking For Raid', partyType: 'raid' },
+  1: { difficultyId: 'normal', difficulty: 'N', partyType: 'party' },
+  2: { difficultyId: 'heroic', difficulty: 'HC', partyType: 'party' },
+  3: { difficultyId: 'normal', difficulty: '10N', partyType: 'raid' },
+  4: { difficultyId: 'normal', difficulty: '25N', partyType: 'raid' },
+  5: { difficultyId: 'heroic', difficulty: '10HC', partyType: 'raid' },
+  6: { difficultyId: 'heroic', difficulty: '25HC', partyType: 'raid' },
+  7: { difficultyId: 'lfr', difficulty: 'LFR', partyType: 'raid' },
   8: { difficultyId: 'mythic', difficulty: 'Mythic Keystone', partyType: 'party' },
-  9: { difficultyId: 'normal', difficulty: '40 Player', partyType: 'raid' },
-  14: { difficultyId: 'normal', difficulty: 'Normal', partyType: 'raid' },
-  15: { difficultyId: 'heroic', difficulty: 'Heroic', partyType: 'raid' },
-  16: { difficultyId: 'mythic', difficulty: 'Mythic', partyType: 'raid' },
-  17: { difficultyId: 'lfr', difficulty: 'Looking For Raid', partyType: 'raid' },
-  23: { difficultyId: 'mythic', difficulty: 'Mythic', partyType: 'party' },
-  24: { difficultyId: 'normal', difficulty: 'Timewalking', partyType: 'party' },
-  33: { difficultyId: 'normal', difficulty: 'Timewalking', partyType: 'raid' },
+  9: { difficultyId: 'normal', difficulty: '40', partyType: 'raid' },
+  14: { difficultyId: 'normal', difficulty: 'N', partyType: 'raid' },
+  15: { difficultyId: 'heroic', difficulty: 'HC', partyType: 'raid' },
+  16: { difficultyId: 'mythic', difficulty: 'M', partyType: 'raid' },
+  17: { difficultyId: 'lfr', difficulty: 'LFR', partyType: 'raid' },
+  23: { difficultyId: 'mythic', difficulty: 'M', partyType: 'party' },
+  24: { difficultyId: 'normal', difficulty: 'T', partyType: 'party' },
+  33: { difficultyId: 'normal', difficulty: 'T', partyType: 'raid' },
   34: { difficultyId: 'pvp', difficulty: 'PvP', partyType: 'pvp' },
-  150: { difficultyId: 'normal', difficulty: 'Normal', partyType: 'party' },
-  151: { difficultyId: 'lfr', difficulty: 'Looking For Raid (TW)', partyType: 'raid' },
+  150: { difficultyId: 'normal', difficulty: 'N', partyType: 'party' },
+  151: { difficultyId: 'lfr', difficulty: 'T', partyType: 'raid' },
 }
 
 const videoTabsSx = {

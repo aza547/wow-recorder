@@ -214,7 +214,7 @@ export default function VideoButton(props: any) {
             <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    
             { isRaid && videoInstanceDifficulty &&
               <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId}>
-                { videoInstanceDifficulty.difficulty.charAt(0).toUpperCase() }
+                { videoInstanceDifficulty.difficulty }
               </div>
             }
             { isBG ||

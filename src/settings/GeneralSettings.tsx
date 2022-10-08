@@ -107,16 +107,24 @@ export default function GeneralSettings() {
           </IconButton>
         </Tooltip>
       </Box>
-      {/* <TextField 
+
+      <Box component="span" sx={{ display: 'flex', alignItems: 'flex-start' }}>
+      <TextField 
         value={config.classicLogPath}
         id="classic-log-path" 
         label="Classic Log Path" 
         variant="outlined" 
         onClick={() => openDirectorySelectorDialog("classicLogPath")} 
         InputLabelProps={{ shrink: true }}
-        sx={style}
+        sx={{...style, my: 1}}
         inputProps={{ style: { color: "white" } }}
-      /> */}
+      />
+        <Tooltip title={configSchema["classicLogPath"].description} sx={{position: 'relative', right: '0px', top: '17px'}}>
+          <IconButton>
+            <InfoIcon style={{ color: 'white' }}/>
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       <Box component="span" sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <TextField 
@@ -143,7 +151,7 @@ export default function GeneralSettings() {
         <FormGroup sx={formGroupStyle}>
           <FormControlLabel control={getCheckBox("startUp")} label="Run on startup" style = {formControlLabelStyle} />
         </FormGroup>
-        <Tooltip title={configSchema["startUp"].description} sx={{position: 'fixed', left: '315px', top: '292px'}}>
+        <Tooltip title={configSchema["startUp"].description} sx={{position: 'fixed', left: '310px', top: '363px'}}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }}/>
           </IconButton>
@@ -154,7 +162,7 @@ export default function GeneralSettings() {
         <FormGroup sx={formGroupStyle}>
           <FormControlLabel control={getCheckBox("startMinimized")} label="Start minimized" style={formControlLabelStyle} />
         </FormGroup>
-        <Tooltip title={configSchema["startMinimized"].description} sx={{position: 'fixed', left: '315px', top: '333px'}}>
+        <Tooltip title={configSchema["startMinimized"].description} sx={{position: 'fixed', left: '315px', top: '405px'}}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }}/>
           </IconButton>
