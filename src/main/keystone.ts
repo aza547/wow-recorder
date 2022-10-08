@@ -48,7 +48,14 @@ class ChallengeModeDungeon {
      * 0   = depleted,
      * 1-3 = keystone upgrade levels
      */
-    static calculateKeystoneUpgradeLevel(allottedTime: number[], duration: number): number {
+    static calculateKeystoneUpgradeLevel(allottedTime: number[] | undefined, duration: number): number {
+        // If we've been passed an undefined value, assume not timed.
+        // This can happen if the dungeon that was recorded doesn't have completion timers in
+        // dungeonTimersByMapId in constants.ts
+        if (!allottedTime) {
+            return 0;
+        }
+
         for (let i = allottedTime.length - 1; i >= 0; i--) {
             if (duration <= allottedTime[i]) {
                 return i + 1;
