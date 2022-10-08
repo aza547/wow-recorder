@@ -222,7 +222,7 @@ const encountersVOI: NumberKeyToStringValueMapType = {
  * WOTLK Classic Obsidian Sanctum
  */
  const encountersClassicObsidian: NumberKeyToStringValueMapType = {
-  1090: "Sartharion",
+  742: "Sartharion",
 }
 
 const raidEncountersById: NumberKeyToStringValueMapType = {
