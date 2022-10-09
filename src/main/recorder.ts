@@ -111,10 +111,17 @@ type RecorderOptionsType = {
         }
 
         console.log(addColor("[Recorder] Start recording buffer", "cyan"));
-        await obsRecorder.start();
+        
+        if (!this._obsInitialized) {
+            throw Error("OBS not initialised")
+        }
+        
+        console.log("[OBS] Starting OBS");
+        osn.NodeObs.OBS_service_startRecording();
+        this.assertNextSignal("start");
+        
         this._isRecordingBuffer = true;
         if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
-    
 
         // We store off this timer as a member variable as we will cancel
         // it when a real game is detected. 
@@ -136,7 +143,13 @@ type RecorderOptionsType = {
         clearInterval(this._bufferRestartIntervalID);
         this._isRecordingBuffer = false;   
 
-        await obsRecorder.stop();
+        console.log("[Recorder] Stopping OBS");
+        osn.NodeObs.OBS_service_stopRecording();
+        
+        this.assertNextSignal("stopping");
+        this.assertNextSignal("stop");
+        this.assertNextSignal("wrote");
+
         if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.WaitingForWoW);
         this.cleanupBuffer(1);
     }
@@ -596,6 +609,32 @@ type RecorderOptionsType = {
         const closestResolution = getClosestResolution(availableResolutions, res);
         this.setSettingOBS('Video', paramString, closestResolution);
     }
+
+    async assertNextSignal (value: string) {
+        // Don't wait more than 5 seconds for the signal.
+        let signalInfo = await Promise.race([
+            this._waitQueue.shift(), 
+            new Promise((_, reject) => {
+            setTimeout(reject, 5000, "OBS didn't signal " + value + " in time")}
+            )
+        ]);
+      
+        // Assert the type is as expected.
+        if (signalInfo.type !== "recording") {
+          console.error("[OBS] " + signalInfo);
+          console.error("[OBS] OBS signal type unexpected", signalInfo.signal, value);
+          throw Error("OBS behaved unexpectedly (2)");
+        }
+      
+        // Assert the signal value is as expected.
+        if (signalInfo.signal !== value) {
+          console.error("[OBS] " + signalInfo);
+          console.error("[OBS] OBS signal value unexpected", signalInfo.signal, value);
+          throw Error("OBS behaved unexpectedly (3)");
+        }
+      
+        console.debug("[OBS] Asserted OBS signal:", value);
+      }
 }
 
 export {
