@@ -14,11 +14,6 @@ const chalk = require('chalk');
 }
 
 const { exec } = require('child_process');
-const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
-const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').path);
-const ffmpeg = require('fluent-ffmpeg');
-ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
 import util from 'util';
 import { promises as fspromise } from 'fs';
 import glob from 'glob';
@@ -378,107 +373,6 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
 }
 
 /**
- * Sanitize a filename and replace all invalid characters with a space.
- *
- * Multiple consecutive invalid characters will be replaced by a single space.
- * Multiple consecutive spaces will be replaced by a single space.
- */
-const sanitizeFilename = (filename: string): string => {
-    return filename
-        .replace(/[<>:"/\|?*]/g, ' ')   // Replace all invalid characters with space
-        .replace(/ +/g, ' ');           // Replace multiple spaces with a single space
-};
-
-/**
- * Takes an input MP4 file, trims the footage from the start of the video so
- * that the output is desiredDuration seconds. Some ugly async/await stuff 
- * here. Some interesting implementation details around ffmpeg in comments 
- * below. 
- * 
- * @param {string} initialFile path to initial MP4 file
- * @param {string} finalDir path to output directory
- * @param {number} desiredDuration seconds to cut down to
- * @returns full path of the final video file
- */
-const cutVideo = async (
-        initialFile: string,
-        finalDir: string,
-        outputFilename: string | undefined,
-        desiredDuration: number
-    ): Promise<string> => {
-    
-    const videoFileName = path.basename(initialFile, '.mp4');
-    const videoFilenameSuffix = outputFilename ? ' - ' + outputFilename : '';
-    const baseVideoFilename = sanitizeFilename(videoFileName + videoFilenameSuffix);
-    const finalVideoPath = path.join(finalDir, baseVideoFilename + ".mp4");
-
-    return new Promise<string> ((resolve) => {
-
-        // Use ffprobe to check the length of the initial file.
-        ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
-            if (err) {
-                console.log("[Util] FFprobe error: ", err);
-                throw new Error("FFprobe error when cutting video");
-            }
-
-            // Calculate the desired start time relative to the initial file. 
-            const bufferedDuration = data.format.duration;
-            let startTime = Math.round(bufferedDuration - desiredDuration);
-
-            // Defensively avoid a negative start time error case. 
-            if (startTime < 0) {
-                console.log("[Util] Video start time was: ", startTime);
-                console.log("[Util] Avoiding error by not cutting video");
-                startTime = 0;
-            }
-
-            // This was super helpful in debugging during development so I've kept it.
-            console.log("[Util] Ready to cut video.");
-            console.log("[Util] Initial duration:", bufferedDuration, 
-                        "Desired duration:", desiredDuration,
-                        "Calculated start time:", startTime);
-
-            // It's crucial that we don't re-encode the video here as that 
-            // would spin the CPU and delay the replay being available. I 
-            // did try this with re-encoding as it has compression benefits 
-            // but took literally ages. My CPU was maxed out for nearly the 
-            // same elapsed time as the recording. 
-            //
-            // We ensure that we don't re-encode by passing the "-c copy" 
-            // option to ffmpeg. Read about it here:
-            // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
-            //
-            // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
-            // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
-            ffmpeg(initialFile)
-                .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
-                .outputOptions([ `-t ${desiredDuration}`, "-c:v copy", "-c:a copy", "-avoid_negative_ts make_zero" ])
-                .output(finalVideoPath)
-
-                // Handle the end of the FFmpeg cutting.
-                .on('end', async (err: any) => {
-                    if (err) {
-                        console.log('[Util] FFmpeg video cut error (1): ', err)
-                        throw new Error("FFmpeg error when cutting video (1)");
-                    }
-                    else {
-                        console.log("[Util] FFmpeg cut video succeeded");
-                        resolve(finalVideoPath);
-                    }
-                })
-
-                // Handle an error with the FFmpeg cutting. Not sure if we 
-                // need this as well as the above but being careful.
-                .on('error', (err: any) => {
-                    console.log('[Util] FFmpeg video cut error (2): ', err)
-                    throw new Error("FFmpeg error when cutting video (2)");
-                })
-                .run()    
-        })
-    });
-}
-
-/**
  *  Add some escape characters to color text. Just return the string
  *  if production as don't want to litter real logs with this as it just
  *  looks messy.
@@ -566,7 +460,6 @@ export {
     toggleVideoProtected,
     fixPathWhenPackaged,
     getNewestVideo,
-    cutVideo,
     addColor,
     getSortedVideos,
     getAvailableDisplays,
