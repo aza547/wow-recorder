@@ -12,8 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 192](https://github.com/aza547/wow-recorder/issues/192) - Accept Beta, PTR and classic processes as reason to move to ready state. 
 
 ### Changed
-### Fixed
 - [Issue 194](https://github.com/aza547/wow-recorder/issues/194) - Change to variable bitrate recording. This will drastically reduce video sizes. 
+
+### Fixed
+
 - [Issue 193](https://github.com/aza547/wow-recorder/issues/193) - Add some guards so we don't start recording in an invalid state. 
 
 ## [2.8.2] - 2022-10-02
