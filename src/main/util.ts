@@ -555,4 +555,5 @@ export {
     getSortedVideos,
     getAvailableDisplays,
     getSortedFiles,
+    tryUnlinkSync,
 };
