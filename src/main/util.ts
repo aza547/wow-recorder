@@ -24,7 +24,7 @@ import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
-import { Display, screen } from 'electron';
+import { Display, screen, Size } from 'electron';
 import { getVideoZone } from './helpers';
 const globPromise = util.promisify(glob)
 
@@ -557,6 +557,56 @@ const getAvailableDisplays = (): OurDisplayType[] => {
     return ourDisplays;
 }
 
+/**
+ * Parse a resolution string like '1920x1080' into a `Size` compatible
+ * format.
+ */
+const parseResolutionsString = (value: string): Size => {
+    const [width, height] = value.split('x').map(v => parseInt(v, 10));
+    return { width, height };
+};
+
+/**
+ * Find the resolution from `resolutions` which closest match the one given in
+ * `target`.
+ */
+const getClosestResolution = (resolutions: string[], target: Size): string => {
+    // Split string like '2560x1440' into [2560, 1440]
+    const numericResolutions = resolutions.map((v: string) => {
+      return v.split('x').map(v => parseInt(v, 10));
+    });
+  
+    // Create an array of values with the target resolution subtracted.
+    // We'll end up with an array where one element has a very low number,
+    // which is at the index we're after.
+    //
+    // We multiply width/height by a different number to avoid having mirrored
+    // resolutions (1080x1920 vs 1920x1080) have the same sorting value.
+    const indexArray = numericResolutions.map(v => {
+        return Math.abs(((target.width - v[0]) * 2) + ((target.height - v[1]) * 4));
+    });
+  
+    // Find the minimum value from the indexing array. This value will
+    // be at the index in `indexArray` matching the one in `resolutions`
+    // where we'll find the closest matching resolution of the available ones.
+    const minValue = Math.min(...indexArray);
+  
+    // At the position of `minValue` in `indexArray`, we'll find the actual
+    // resolution in `resolutions` at the same index.
+    return resolutions[indexArray.indexOf(minValue)];
+};
+
+/*
+* Get information about primary display
+* @param zero starting monitor index
+*/
+const displayInfo = (displayIndex: number): OurDisplayType | undefined => {
+    const displays = getAvailableDisplays();
+    console.info("[OBS] Displays:", displays);
+  
+    return displays.find(d => d.index === displayIndex);
+  }
+  
 export {
     loadAllVideos,
     writeMetadataFile,
@@ -571,4 +621,7 @@ export {
     getSortedVideos,
     getAvailableDisplays,
     getSortedFiles,
+    parseResolutionsString,
+    getClosestResolution,
+    displayInfo,
 };

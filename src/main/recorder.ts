@@ -1,13 +1,20 @@
 import { Metadata } from './logutils';
-import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor, getSortedVideos } from './util';
+import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor, getSortedVideos, fixPathWhenPackaged, parseResolutionsString, getClosestResolution, displayInfo} from './util';
 import { mainWindow }  from './main';
 import { AppStatus } from './types';
 import { getDungeonByMapId, getEncounterNameById, getVideoResultText, getInstanceNameByZoneId, getRaidNameByEncounterId } from './helpers';
 import { VideoCategory } from './constants';
 import fs from 'fs';
 import { ChallengeModeDungeon } from './keystone';
+import WaitQueue from 'wait-queue';
+import { IScene } from 'obs-studio-node';
+import { Size } from 'electron';
+import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
 
+const osn = require("obs-studio-node");
 const obsRecorder = require('./obsRecorder');
+const path = require('path');
+const { v4: uuid } = require('uuid');
 
 type RecorderOptionsType = {
     storageDir: string;
@@ -31,6 +38,9 @@ type RecorderOptionsType = {
     private _isRecordingBuffer: boolean = false;
     private _bufferRestartIntervalID?: any;
     private _options: RecorderOptionsType;
+    private _obsInitialized: boolean = false;
+    private _waitQueue = new WaitQueue<any>();
+    private _scene: IScene | null = null;
 
     /**
      * Constructs a new Recorder.
@@ -350,6 +360,241 @@ type RecorderOptionsType = {
         const resultText = cm?.timed ? '+' + keystoneUpgradeLevel : 'Depleted';
 
         return `${getDungeonByMapId(cm.mapId)} +${cm.level} (${resultText})`;
+    }
+
+    /**
+     * Initialize OBS.
+     */
+    initOBS(options: RecorderOptionsType): void {
+        if (this._obsInitialized) {
+            console.warn("[Recorder] OBS is already initialized");
+            return;
+        }
+        
+        console.debug('[Recorder] Initializing OBS...');
+        osn.NodeObs.IPC.host(`warcraft-recorder-${uuid()}`);
+        osn.NodeObs.SetWorkingDirectory(fixPathWhenPackaged(path.join(__dirname,'../../', 'node_modules', 'obs-studio-node')));
+        
+        const obsDataPath = fixPathWhenPackaged(path.join(__dirname, 'osn-data')); 
+        const initResult = osn.NodeObs.OBS_API_initAPI('en-US', obsDataPath, '1.0.0');
+
+        if (initResult !== 0) {
+            const errorReasons = {
+            '-2': 'DirectX could not be found on your system. Please install the latest version of DirectX for your machine here <https://www.microsoft.com/en-us/download/details.aspx?id=35?> and try again.',
+            '-5': 'Failed to initialize OBS. Your video drivers may be out of date, or Warcraft Recorder may not be supported on your system.',
+            }
+
+            // @ts-ignore
+            const errorMessage = errorReasons[initResult.toString()] ||
+             `An unknown error #${initResult} was encountered while initializing OBS.`;
+            console.error('[OBS] OBS init failure', errorMessage);
+            this.shutdownOBS();
+            throw Error(errorMessage);
+        }
+
+        osn.NodeObs.OBS_service_connectOutputSignals((signalInfo: any) => {
+            this._waitQueue.push(signalInfo);
+        });
+
+        console.debug('[OBS] OBS initialized');
+        this.configureOBS(options);
+        this._obsInitialized = true;
+    }
+
+    /**
+     * Shutdown OBS.
+     */
+    shutdownOBS(): void {
+        if (!this._obsInitialized) {
+            console.debug('[Recorder] OBS is already shut down!');
+            return;
+        }
+        
+        console.debug('[Recorder]  Shutting down OBS...');
+        
+        try {
+            osn.NodeObs.OBS_service_removeCallback();
+            osn.NodeObs.IPC.disconnect();
+            this._obsInitialized = false;
+        } catch(e) {
+            throw Error('Exception when shutting down OBS process' + e);
+        }
+        
+        console.debug('[Recorder]  OBS shutdown successfully');
+    }
+
+    /**
+     * Configure OBS.
+     */
+    configureOBS(options: RecorderOptionsType): void {
+        const baseResolution = parseResolutionsString(options.obsBaseResolution);
+        const outputResolution = parseResolutionsString(options.obsOutputResolution);
+      
+        console.debug('[OBS] Configuring OBS');
+        this.setSettingOBS('Output', 'Mode', 'Advanced');
+
+        // Get a list of available encoders.
+        const availableEncoders = this.getAvailableValuesOBS('Output', 'Recording', 'RecEncoder');
+        console.debug("[OBS] Available encoder: " + JSON.stringify(availableEncoders));
+        const selectedEncoder = availableEncoders.slice(-1)[0] || 'x264';
+
+        // Select the last one, for some reason this is always AMF or NVENC if available. 
+        console.debug("[OBS] Selected encoder: " + selectedEncoder);
+        this.setSettingOBS('Output', 'RecEncoder', selectedEncoder);
+
+        // Set output path and video format.
+        this.setSettingOBS('Output', 'RecFilePath', options.bufferStorageDir);
+        this.setSettingOBS('Output', 'RecFormat', 'mp4');
+
+        // VBR is "Variable Bit Rate", read about it here:
+        // https://blog.mobcrush.com/using-the-right-rate-control-in-obs-for-streaming-or-recording-4737e22895ed
+        this.setSettingOBS('Output', 'Recrate_control', 'VBR');
+        this.setSettingOBS('Output', 'Recbitrate', options.obsKBitRate * 1024);
+
+        // Without this, we'll never exceed the default max which is 5000.
+        this.setSettingOBS('Output', 'Recmax_bitrate', 300000);
+        
+        // FPS for the output video file. 
+        this.setSettingOBS('Video', 'FPSCommon', options.obsFPS);
+
+        console.debug('[OBS] OBS Configured');
+
+        this._scene = this.setupSceneOBS(options.monitorIndex, baseResolution, outputResolution);
+        this.setupSourcesOBS(this._scene, options.audioInputDeviceId, options.audioOutputDeviceId);
+    }
+
+    /*
+    * setSettingOBS
+    */
+    setSettingOBS(category: string, parameter: string, value: string | number): void {
+        let oldValue;
+        console.debug('[OBS] OBS: setSetting', category, parameter, value);
+        const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
+    
+        settings.forEach((subCategory: any) => {
+            subCategory.parameters.forEach((param: any) => {
+                if (param.name === parameter) {        
+                oldValue = param.currentValue;
+                param.currentValue = value;
+                }
+            });
+        });
+    
+        if (value != oldValue) {
+            osn.NodeObs.OBS_settings_saveSettings(category, settings);
+        }
+    }
+
+    /*
+    * getAvailableValuesOBS
+    */
+    getAvailableValuesOBS(category: any, subcategory: any, parameter: any): any {
+        const categorySettings = osn.NodeObs.OBS_settings_getSettings(category).data;
+
+        if (!categorySettings) {
+          console.warn(`[OBS] There is no category ${category} in OBS settings`);
+          return;
+        }
+      
+        const subcategorySettings = categorySettings.find((sub: any) => sub.nameSubCategory === subcategory);
+      
+        if (!subcategorySettings) {
+          console.warn(`[OBS] There is no subcategory ${subcategory} for OBS settings category ${category}`);
+          return;
+        }
+      
+        const parameterSettings = subcategorySettings.parameters.find((param: any) => param.name === parameter);
+        
+        if (!parameterSettings) {
+          console.warn(`[OBS] There is no parameter ${parameter} for OBS settings category ${category}.${subcategory}`);
+          return;
+        }
+      
+        return parameterSettings.values.map( (value: any) => Object.values(value)[0]);
+    }
+
+    /*
+    * setupSceneOBS
+    */
+    setupSceneOBS(monitorIndex: number, baseResolution: Size, outputResolution: Size): IScene {
+
+        this.setOBSVideoResolution(outputResolution, 'Output');
+
+        // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
+        const monitorIndexFromZero = monitorIndex - 1;
+        console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
+        const selectedDisplay = displayInfo(monitorIndexFromZero);
+        if (!selectedDisplay) {
+            throw Error(`[OBS] No such display with index: ${monitorIndexFromZero}.`)
+        }
+
+        this.setOBSVideoResolution(selectedDisplay.physicalSize, 'Base');
+
+        const videoSource = osn.InputFactory.create('monitor_capture', 'desktop-video');
+
+        // Update source settings:
+        let settings = videoSource.settings;
+        settings['monitor'] = monitorIndexFromZero;
+        videoSource.update(settings);
+        videoSource.save();
+
+        // A scene is necessary here to properly scale captured screen size to output video size
+        const scene = osn.SceneFactory.create('test-scene');
+        const sceneItem = scene.add(videoSource);
+        sceneItem.scale = { x: 1.0, y: 1.0 };
+
+        return scene;
+    }
+
+    setupSourcesOBS(scene: any, audioInputDeviceId: string, audioOutputDeviceId: string): void {
+        osn.Global.setOutputSource(1, this._scene);
+
+        this.setSettingOBS('Output', 'Track1Name', 'Mixed: all sources');
+        let currentTrack = 2;
+      
+        getAvailableAudioInputDevices()
+            .forEach(device => {
+                const source = osn.InputFactory.create('wasapi_input_capture', 'mic-audio', { device_id: device.id });
+                this.setSettingOBS('Output', `Track${currentTrack}Name`, device.name);
+                source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
+                source.muted = audioInputDeviceId === 'none' || (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
+                console.log(`[OBS] Selecting audio input device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
+                osn.Global.setOutputSource(currentTrack, source);
+                source.release()
+                currentTrack++;
+            });
+      
+        getAvailableAudioOutputDevices()
+            .forEach(device => {
+                const source = osn.InputFactory.create('wasapi_output_capture', 'desktop-audio', { device_id: device.id });
+                this.setSettingOBS('Output', `Track${currentTrack}Name`, device.name);
+                source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
+                source.muted = audioOutputDeviceId === 'none' || (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
+                console.log(`[OBS] Selecting audio output device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
+                osn.Global.setOutputSource(currentTrack, source);
+                source.release()
+                currentTrack++;
+            });
+      
+        this.setSettingOBS('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
+    }
+
+    /*
+    * Given a none-whole monitor resolution, find the closest one that 
+    * OBS supports and set the corospoding setting in Video.Untitled.{paramString}
+    * 
+    * @remarks
+    * Useful when windows scaling is not set to 100% (125%, 150%, etc) on higher resolution monitors, 
+    * meaning electron screen.getAllDisplays() will return a none integer scaleFactor, causing 
+    * the calucated monitor resolution to be none-whole.
+    *
+    * @throws
+    * Throws an error if no matching resolution is found.
+    */
+    setOBSVideoResolution(res: Size, paramString: string): void {
+        const availableResolutions = this.getAvailableValuesOBS('Video', 'Untitled', paramString);
+        const closestResolution = getClosestResolution(availableResolutions, res);
+        this.setSettingOBS('Video', paramString, closestResolution);
     }
 }
 
