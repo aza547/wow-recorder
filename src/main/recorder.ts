@@ -90,9 +90,6 @@ type RecorderOptionsType = {
                 .then(() => {
                     if (mainWindow) mainWindow.webContents.send('refreshState');
                 });
-
-            // Clean-up the temporary recording directory.
-            this.cleanupBuffer(1);
         });
 
         this._videoQueue.pool.on('start', (data: VideoQueueItem) => {
@@ -284,9 +281,10 @@ type RecorderOptionsType = {
                 console.log("[Recorder] Queuing video for processing", queueItem);
 
                 this._videoQueue.write(queueItem);
-                resolve();
 
                 if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
+
+                resolve();
             }, 
             2000)
         });
