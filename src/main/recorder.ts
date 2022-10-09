@@ -221,7 +221,7 @@ type RecorderOptionsType = {
      * @param {Metadata} metadata the details of the recording
      * @param {number} overrun how long to continue recording after stop is called
      */
-    stop = (metadata: Metadata, overrun: number = 0, discardVideo: boolean = false) => {
+    stop = (metadata: Metadata, overrun: number = 0) => {
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
         console.info("[Recorder]" , JSON.stringify(metadata, null, 2));
@@ -243,8 +243,6 @@ type RecorderOptionsType = {
 
             if (isRaid && !isLongEnough) {
                 console.info("[Recorder] Raid encounter was too short, discarding");
-            } else if (discardVideo) {
-                console.info("[Recorder] Discarding video");
             } else {
                 const bufferFile = obsRecorder.getObsLastRecording();
                 if (bufferFile) {

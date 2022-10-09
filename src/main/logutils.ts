@@ -166,7 +166,6 @@ const startRecording = (category: VideoCategory) => {
 };
 
 type EndRecordingOptionsType = {
-    discardVideo?: boolean, // Discard the video/don't save the recording
     result?: boolean,       // Success/Failure result for the overall activity
 };
 
@@ -183,7 +182,6 @@ const endRecording = (options?: EndRecordingOptionsType) => {
         videoStopDate = new Date();
     }
 
-    const discardVideo = options?.discardVideo ?? false;
     const overrun = categoryRecordingSettings[currentActivity].videoOverrun;
     const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
 
@@ -198,7 +196,7 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 
     console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
 
-    recorder.stop(metadata, overrun, discardVideo);
+    recorder.stop(metadata, overrun);
     currentActivity = undefined;
 }
 
