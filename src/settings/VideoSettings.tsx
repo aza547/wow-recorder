@@ -131,6 +131,28 @@ export default function VideoSettings() {
           </IconButton>
         </Tooltip>
       </Box>
+
+      <Box component="span" sx={{ display: 'flex', alignItems: 'flex-start' }}>
+        <TextField 
+          value={config.obsKBitRate}
+          onChange={event => { modifyConfig("obsKBitRate", parseInt(event.target.value, 10)) }}
+          id="video-bit-rate" 
+          label="Video Bit Rate (kbps)" 
+          variant="outlined" 
+          type="number" 
+          error= { config.obsKBitRate < 1  || config.obsKBitRate > 300 }
+          helperText={(config.obsKBitRate < 1  || config.obsKBitRate > 300) ? "Must be between 1 and 300" : ' '}
+          InputLabelProps={{ shrink: true }}
+          sx={{...style, my: 1}}
+          inputProps={{ style: { color: "white" } }}
+        />
+        <Tooltip title={configSchema["obsKBitRate"].description} sx={{position: 'relative', right: '0px', top: '17px'}}>
+          <IconButton>
+            <InfoIcon style={{ color: 'white' }}/>
+          </IconButton>
+        </Tooltip>
+      </Box>
+
     </Stack>
   );
 }

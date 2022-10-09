@@ -14,6 +14,7 @@ export type ConfigurationSchema = {
     obsBaseResolution: string,
     obsOutputResolution: string,
     obsFPS: number,
+    obsKBitRate: number,
     recordRetail: boolean,
     recordClassic: boolean,
     recordRaids: boolean,
@@ -111,6 +112,13 @@ export const configSchema = {
         default: 60,
         minimum: 15,
         maximum: 60,
+    },
+    obsKBitRate: {
+        description: 'Bit rate to record at. Lower bit rate values give smaller video size but worse video quality.',
+        type: 'integer',
+        default: 5,
+        minimum: 1,
+        maximum: 300,
     },
     recordRetail: {
         description: 'Whether the application should record retail',

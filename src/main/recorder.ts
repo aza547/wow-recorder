@@ -20,6 +20,7 @@ type RecorderOptionsType = {
     obsBaseResolution: string,
     obsOutputResolution: string,
     obsFPS: number;
+    obsKBitRate: number;
 };
 
 /**

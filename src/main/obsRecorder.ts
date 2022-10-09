@@ -101,19 +101,11 @@ const configureOBS = (options: RecorderOptionsType) => {
   // Set output path and video format.
   setSetting('Output', 'RecFilePath', options.bufferStorageDir);
   setSetting('Output', 'RecFormat', 'mp4');
-  
-  if (selectedEncoder.toLowerCase().includes("amf")) {
-    // For AMF encoders, can't set 'lossless' bitrate.
-    // It interprets it as zero and fails to start.
-    // See https://github.com/aza547/wow-recorder/issues/40.
-    setSetting('Output', 'Recbitrate', 50000);
-  }
-  else {
-    // No idea how this works, but it does. 
-    setSetting('Output', 'Recbitrate', 'Lossless');
-  }
-   
-  setSetting('Output', 'Recmax_bitrate', 300000); 
+
+  // VBR is "Variable Bit Rate"
+  // Read about it here https://blog.mobcrush.com/using-the-right-rate-control-in-obs-for-streaming-or-recording-4737e22895ed
+  setSetting('Output', 'Recrate_control', 'VBR');
+  setSetting('Output', 'Recbitrate', options.obsKBitRate * 1024);
   setSetting('Video', 'FPSCommon', options.obsFPS);
 
   console.debug('[OBS] OBS Configured');
