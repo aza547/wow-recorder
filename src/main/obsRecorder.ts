@@ -5,8 +5,8 @@ import { RecorderOptionsType } from "./recorder";
 import { OurDisplayType } from "./types";
 import { Size } from "electron";
 import { IScene } from "obs-studio-node";
+import path from 'path';
 const waitQueue = new WaitQueue<any>();
-const path = require('path');
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
 
@@ -382,8 +382,11 @@ const assertNextSignal = async (value: string) => {
   console.debug("[OBS] Asserted OBS signal:", value);
 }
 
+/**
+ * Return the full path of the file that was last recorded from OBS
+ */
 const getObsLastRecording = (): string => {
-  return osn.NodeObs.OBS_service_getLastRecording();
+  return path.resolve(osn.NodeObs.OBS_service_getLastRecording());
 };
 
 export {

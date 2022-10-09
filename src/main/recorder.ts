@@ -246,7 +246,7 @@ type RecorderOptionsType = {
             } else {
                 const bufferFile = obsRecorder.getObsLastRecording();
                 if (bufferFile) {
-                    await this.queueVideo(bufferFile, metadata);
+                    this.queueVideo(bufferFile, metadata);
                 } else {
                     console.error("[Recorder] Unable to get the last recording from OBS. Can't process video.");
                 }
@@ -256,8 +256,10 @@ type RecorderOptionsType = {
             if (mainWindow) mainWindow.webContents.send('refreshState');
 
             // Restart the buffer recording ready for next game.
-            this.startBuffer();
-        }, 
+            setTimeout(async () => {
+                this.startBuffer();
+            }, 5000)
+        },
         overrun * 1000);
     }
 
@@ -267,25 +269,21 @@ type RecorderOptionsType = {
      * @param {Metadata} metadata the details of the recording
      */
     queueVideo = async (bufferFile: string, metadata: Metadata): Promise<void> => {
-        return new Promise<void>((resolve) => {
-            // It's a bit hacky that we async wait for 2 seconds for OBS to 
-            // finish up with the video file. Maybe this can be done better. 
-            setTimeout(async () => {
-                const queueItem: VideoQueueItem = {
-                    bufferFile,
-                    metadata,
-                };
+        // It's a bit hacky that we async wait for 2 seconds for OBS to
+        // finish up with the video file. Maybe this can be done better.
+        setTimeout(async () => {
+            const queueItem: VideoQueueItem = {
+                bufferFile,
+                metadata,
+            };
 
-                console.log("[Recorder] Queuing video for processing", queueItem);
+            console.log("[Recorder] Queuing video for processing", queueItem);
 
-                this._videoQueue.write(queueItem);
+            this._videoQueue.write(queueItem);
 
-                if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
-
-                resolve();
-            }, 
-            2000)
-        });
+            if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
+        },
+        2000)
     }
 
     /**
