@@ -91,6 +91,10 @@ type Metadata = {
  */
 let wowProcessRunning: IWoWProcessResult | null = null;
 
+const resetProcessTracking = () => {
+    wowProcessRunning = null;
+}
+
 /**
  * Timers for poll
  */
@@ -101,7 +105,6 @@ let pollWowProcessInterval: NodeJS.Timer;
  */
 const wowProcessStarted = (process: IWoWProcessResult) => {
     wowProcessRunning = process;
-
     console.log(`[Logutils] Detected ${process.exe} (${process.flavour}) running`);
     recorder.startBuffer();
 };
@@ -718,6 +721,13 @@ const pollWoWProcessLogic = async () => {
  * pollWoWProcess
  */
 const pollWowProcess = () => {
+    // If we've re-called this we need to reset the current state of process 
+    // tracking. This is important for settings updates. 
+    resetProcessTracking();
+
+    // Run a check without waiting for the timeout. 
+    pollWoWProcessLogic();
+
     if (pollWowProcessInterval) {
         clearInterval(pollWowProcessInterval);
     }

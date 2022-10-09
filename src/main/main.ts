@@ -385,9 +385,6 @@ ipcMain.on('settingsWindow', (event, args) => {
 
       updateStatus(AppStatus.WaitingForWoW);
 
-      // If this is the first time config has been valid we
-      // need to create a recorder. If the config was previously
-      // valid but has since changed, just do a reconfigure.
       recorderOptions = loadRecorderOptions(cfg);
       makeRecorder(recorderOptions);
 

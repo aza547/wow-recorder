@@ -102,10 +102,15 @@ const configureOBS = (options: RecorderOptionsType) => {
   setSetting('Output', 'RecFilePath', options.bufferStorageDir);
   setSetting('Output', 'RecFormat', 'mp4');
 
-  // VBR is "Variable Bit Rate"
-  // Read about it here https://blog.mobcrush.com/using-the-right-rate-control-in-obs-for-streaming-or-recording-4737e22895ed
+  // VBR is "Variable Bit Rate", read about it here:
+  // https://blog.mobcrush.com/using-the-right-rate-control-in-obs-for-streaming-or-recording-4737e22895ed
   setSetting('Output', 'Recrate_control', 'VBR');
   setSetting('Output', 'Recbitrate', options.obsKBitRate * 1024);
+
+  // Without this, we'll never exceed the default max which is 5000.
+  setSetting('Output', 'Recmax_bitrate', 300000);
+  
+  // FPS for the output video file. 
   setSetting('Video', 'FPSCommon', options.obsFPS);
 
   console.debug('[OBS] OBS Configured');
