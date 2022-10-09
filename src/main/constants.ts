@@ -225,6 +225,14 @@ const encountersVOI: NumberKeyToStringValueMapType = {
   742: "Sartharion",
 }
 
+/**
+ * WOTLK Classic Vault of Archavon
+ */
+ const encountersClassicVault: NumberKeyToStringValueMapType = {
+  772: "Archavon",
+}
+
+
 const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersNathria,
   ...encountersSanctum,
@@ -233,6 +241,7 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersClassicNaxxramas,
   ...encountersClassicEye,
   ...encountersClassicObsidian,
+  ...encountersClassicVault,
 }
 
 /**
@@ -249,6 +258,7 @@ const raidInstances: RaidInstanceType[] = [
   { zoneId: 3456, name: 'Naxxramas', encounters: encountersClassicNaxxramas },
   { zoneId: 4500, name: 'Eye of Eternity', encounters: encountersClassicEye },
   { zoneId: 4493, name: 'Obsidian Sanctum', encounters: encountersClassicObsidian },
+  { zoneId: 4603, name: 'Vault of Archavon', encounters: encountersClassicVault },
 ];
 
 /**

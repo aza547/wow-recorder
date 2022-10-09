@@ -126,6 +126,10 @@ const raidIDs = [
     // Obsidian Sanctum
     // WOTLK Classic Tier 1
     742, // Sarthartion
+
+    // Vault of Archavon
+    // WOTLK Classic Tier 1
+    772, // Sarthartion
 ]
 
 let raid: imageObject = {};

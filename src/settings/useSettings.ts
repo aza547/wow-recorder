@@ -61,7 +61,7 @@ export default function useSettings() {
     obsBaseResolution:    getConfigValue<string>('obsBaseResolution'),
     obsOutputResolution:  getConfigValue<string>('obsOutputResolution'),
     obsFPS:               getConfigValue<number>('obsFPS'),
-    obsKBitRate:           getConfigValue<number>('obsKBitRate'),
+    obsKBitRate:          getConfigValue<number>('obsKBitRate'),
   });
 
   return [config, setConfig];
