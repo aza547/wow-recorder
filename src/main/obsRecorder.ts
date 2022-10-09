@@ -382,6 +382,10 @@ const assertNextSignal = async (value: string) => {
   console.debug("[OBS] Asserted OBS signal:", value);
 }
 
+const getObsLastRecording = (): string => {
+  return osn.NodeObs.OBS_service_getLastRecording();
+};
+
 export {
   initialize,
   start,
@@ -389,4 +393,5 @@ export {
   shutdown,
   reconfigure,
   getObsResolutions,
+  getObsLastRecording,
 }

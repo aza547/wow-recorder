@@ -1,5 +1,5 @@
 import { Metadata } from './logutils';
-import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, cutVideo, addColor, getSortedVideos } from './util';
+import { writeMetadataFile, runSizeMonitor, deleteVideo, cutVideo, addColor, getSortedVideos } from './util';
 import { mainWindow }  from './main';
 import { AppStatus } from './types';
 import { getDungeonByMapId, getEncounterNameById, getVideoResultText, getInstanceNameByZoneId, getRaidNameByEncounterId } from './helpers';
@@ -172,7 +172,6 @@ type RecorderOptionsType = {
      * @param {number} overrun how long to continue recording after stop is called
      */
     stop = (metadata: Metadata, overrun: number = 0, discardVideo: boolean = false) => {
-        const outputFilename = this.getFinalVideoFilename(metadata);
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
         console.info("[Recorder]" , JSON.stringify(metadata, null, 2));
@@ -193,9 +192,10 @@ type RecorderOptionsType = {
             const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
 
             if ((!isRaid || isLongEnough) && !discardVideo) {
+                const bufferedVideo = obsRecorder.getObsLastRecording();
                 // Cut the video to length and write its metadata JSON file.
                 // Await for this to finish before we return to waiting state.
-                await this.finalizeVideo(metadata, outputFilename);
+                await this.finalizeVideo(bufferedVideo, metadata);
             } else {
                 console.info("[Recorder] Raid encounter was too short, discarding");
             }
@@ -227,7 +227,7 @@ type RecorderOptionsType = {
      * 
      * @param {Metadata} metadata the details of the recording
      */
-    finalizeVideo = async (metadata: Metadata, outputFilename?: string): Promise<string> => {
+    finalizeVideo = async (bufferedVideo: string, metadata: Metadata): Promise<string> => {
 
         // Gnarly syntax to await for the setTimeout to finish.
         return new Promise<string> ((resolve) => {
@@ -235,11 +235,15 @@ type RecorderOptionsType = {
             // It's a bit hacky that we async wait for 2 seconds for OBS to 
             // finish up with the video file. Maybe this can be done better. 
             setTimeout(async () => {
-                const bufferedVideo = await getNewestVideo(this._options.bufferStorageDir);
+                const outputFilename = this.getFinalVideoFilename(metadata);
                 const videoPath = await cutVideo(bufferedVideo, this._options.storageDir, outputFilename, metadata.duration);
+
                 await writeMetadataFile(videoPath, metadata);
+
                 console.log('[Recorder] Finalized video', videoPath);
+
                 resolve(videoPath);
+
                 if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
             }, 
             2000)
