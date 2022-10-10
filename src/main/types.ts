@@ -119,6 +119,11 @@ interface IWoWProcessResult {
     flavour: WoWProcessResultKey,
 };
 
+type VideoQueueItem = {
+    bufferFile: string,
+    metadata: Metadata,
+};
+
 export {
     AppStatus,
     UnitFlags,
@@ -131,4 +136,5 @@ export {
     FileInfo,
     FileFinderCallbackType,
     IWoWProcessResult,
+    VideoQueueItem,
 }

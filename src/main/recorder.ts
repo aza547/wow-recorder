@@ -1,13 +1,14 @@
 import { Metadata } from './logutils';
-import { writeMetadataFile, runSizeMonitor, getNewestVideo, deleteVideo, addColor, getSortedVideos, fixPathWhenPackaged } from './util';
+import { writeMetadataFile, runSizeMonitor,  deleteVideo, addColor, getSortedVideos, fixPathWhenPackaged, tryUnlinkSync } from './util';
 import { mainWindow }  from './main';
-import { AppStatus } from './types';
+import { AppStatus, VideoQueueItem } from './types';
 import { getDungeonByMapId, getEncounterNameById, getVideoResultText, getInstanceNameByZoneId, getRaidNameByEncounterId } from './helpers';
 import { VideoCategory } from './constants';
 import fs from 'fs';
 import { ChallengeModeDungeon } from './keystone';
 import path from 'path';
 
+const atomicQueue = require('atomic-queue');
 const obsRecorder = require('./obsRecorder');
 
 const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
@@ -38,6 +39,7 @@ type RecorderOptionsType = {
     private _isRecordingBuffer: boolean = false;
     private _bufferRestartIntervalID?: any;
     private _options: RecorderOptionsType;
+    private _videoQueue;
 
     /**
      * Constructs a new Recorder.
@@ -45,6 +47,13 @@ type RecorderOptionsType = {
     constructor(options: RecorderOptionsType) {
         this._options = options;
         console.debug("[Recorder] Constructing recorder with: ", this._options);
+
+        this._videoQueue = atomicQueue(
+            this._processVideoQueueItem.bind(this),
+            { concurrency: 1 }
+        );
+
+        this._setupVideoProcessingQueue();
 
         if (!fs.existsSync(this._options.bufferStorageDir)) {
             console.log("[Recorder] Creating dir:", this._options.bufferStorageDir);
@@ -56,6 +65,48 @@ type RecorderOptionsType = {
 
         obsRecorder.initialize(options);
         if (mainWindow) mainWindow.webContents.send('refreshState');
+    }
+
+    /**
+     * Process an item from the video queue
+     */
+    private async _processVideoQueueItem(data: VideoQueueItem, done: Function): Promise<void> {
+        const outputFilename = this.getFinalVideoFilename(data.metadata);
+        const videoPath = await this._cutVideo(data.bufferFile, this._options.storageDir, outputFilename, data.metadata.duration);
+        await writeMetadataFile(videoPath, data.metadata);
+
+        // Delete the original buffer video
+        tryUnlinkSync(data.bufferFile);
+
+        done();
+    }
+
+    /**
+     * Setup events on the videoQueue
+     */
+    private _setupVideoProcessingQueue(): void {
+        this._videoQueue.on('error', (err: any) => {
+            console.error("[Recorder] Error occured during video processing", err);
+        });
+
+        this._videoQueue.on('idle', () => {
+            console.log("[Recorder] Video processing queue empty, running clean up.")
+
+            // Run the size monitor to ensure we stay within size limit.
+            // Need some maths to convert GB to bytes
+            runSizeMonitor(this._options.storageDir, this._options.maxStorage)
+                .then(() => {
+                    if (mainWindow) mainWindow.webContents.send('refreshState');
+                });
+        });
+
+        this._videoQueue.pool.on('start', (data: VideoQueueItem) => {
+            console.log("[Recorder] Processing video", data.bufferFile);
+        });
+
+        this._videoQueue.pool.on('finish', (_result: any, data: VideoQueueItem) => {
+            console.log("[Recorder] Finished processing video", data.bufferFile);
+        });
     }
 
     /**
@@ -178,8 +229,7 @@ type RecorderOptionsType = {
      * @param {Metadata} metadata the details of the recording
      * @param {number} overrun how long to continue recording after stop is called
      */
-    stop = (metadata: Metadata, overrun: number = 0, discardVideo: boolean = false) => {
-        const outputFilename = this.getFinalVideoFilename(metadata);
+    stop = (metadata: Metadata, overrun: number = 0) => {
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
         console.info("[Recorder]" , JSON.stringify(metadata, null, 2));
@@ -199,23 +249,16 @@ type RecorderOptionsType = {
             const isRaid = metadata.category == VideoCategory.Raids;
             const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
 
-            if ((!isRaid || isLongEnough) && !discardVideo) {
-                // Cut the video to length and write its metadata JSON file.
-                // Await for this to finish before we return to waiting state.
-                await this.finalizeVideo(metadata, outputFilename);
-            } else {
+            if (isRaid && !isLongEnough) {
                 console.info("[Recorder] Raid encounter was too short, discarding");
+            } else {
+                const bufferFile = obsRecorder.getObsLastRecording();
+                if (bufferFile) {
+                    this.queueVideo(bufferFile, metadata);
+                } else {
+                    console.error("[Recorder] Unable to get the last recording from OBS. Can't process video.");
+                }
             }
-
-            // Run the size monitor to ensure we stay within size limit.
-            // Need some maths to convert GB to bytes
-            runSizeMonitor(this._options.storageDir, this._options.maxStorage)
-                .then(() => {
-                    if (mainWindow) mainWindow.webContents.send('refreshState');
-                });
-
-            // Clean-up the temporary recording directory. 
-            this.cleanupBuffer(1);
 
             // Refresh the GUI
             if (mainWindow) mainWindow.webContents.send('refreshState');
@@ -224,33 +267,31 @@ type RecorderOptionsType = {
             setTimeout(async () => {
                 this.startBuffer();
             }, 5000)
-        }, 
+        },
         overrun * 1000);
     }
 
     /**
-     * Finalize the video by cutting it to size, moving it to the persistent
-     * storage directory and writing the metadata JSON file. 
+     * Queue the video for processing.
      * 
      * @param {Metadata} metadata the details of the recording
      */
-    finalizeVideo = async (metadata: Metadata, outputFilename?: string): Promise<string> => {
+    queueVideo = async (bufferFile: string, metadata: Metadata): Promise<void> => {
+        // It's a bit hacky that we async wait for 2 seconds for OBS to
+        // finish up with the video file. Maybe this can be done better.
+        setTimeout(async () => {
+            const queueItem: VideoQueueItem = {
+                bufferFile,
+                metadata,
+            };
 
-        // Gnarly syntax to await for the setTimeout to finish.
-        return new Promise<string> ((resolve) => {
+            console.log("[Recorder] Queuing video for processing", queueItem);
 
-            // It's a bit hacky that we async wait for 2 seconds for OBS to 
-            // finish up with the video file. Maybe this can be done better. 
-            setTimeout(async () => {
-                const bufferedVideo = await getNewestVideo(this._options.bufferStorageDir);
-                const videoPath = await this._cutVideo(bufferedVideo, this._options.storageDir, outputFilename, metadata.duration);
-                await writeMetadataFile(videoPath, metadata);
-                console.log('[Recorder] Finalized video', videoPath);
-                resolve(videoPath);
-                if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
-            }, 
-            2000)
-        });   
+            this._videoQueue.write(queueItem);
+
+            if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
+        },
+        2000)
     }
 
     /**
@@ -313,7 +354,7 @@ type RecorderOptionsType = {
      * to identify the video files on the filesystem and be able to tell what it
      * was about and the result of it.
      */
-    getFinalVideoFilename (metadata: Metadata): string | undefined {
+    getFinalVideoFilename (metadata: Metadata): string {
         let outputFilename = '';
         const resultText = getVideoResultText(metadata.category, metadata.result);
 
@@ -338,7 +379,7 @@ type RecorderOptionsType = {
         }
 
         if (!outputFilename) {
-            return;
+            outputFilename = 'Unknown Content';
         }
 
         return metadata.category + ' ' + outputFilename;
