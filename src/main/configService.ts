@@ -65,7 +65,7 @@ export default class ConfigService extends EventEmitter {
 
                 case 'set': {
                     const [_, key, value] = args;
-                    if (this.configValueChanged(key, value)) {
+                    if (!this.configValueChanged(key, value)) {
                         return;
                     }
 
@@ -81,7 +81,7 @@ export default class ConfigService extends EventEmitter {
                     const newConfigValues: { [key: string]: any } = {};
 
                     configKeys.forEach((key: string) => {
-                        if (this.configValueChanged(key, configObject[key])) {
+                        if (!this.configValueChanged(key, configObject[key])) {
                             return;
                         }
 
@@ -254,7 +254,7 @@ export default class ConfigService extends EventEmitter {
         // We're checking for null here because we don't allow storing
         // null values and as such if we get one, it's because it's empty/shouldn't
         // be saved.
-        return value === null || this._store.get(key) === value;
+        return value !== null && this._store.get(key) !== value;
     }
 
     private logConfigChanged(newConfig: { [key: string ]: any }): void {
