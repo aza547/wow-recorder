@@ -1,7 +1,7 @@
 import { Metadata } from './logutils';
 import { writeMetadataFile, runSizeMonitor,  deleteVideo, addColor, getSortedVideos, fixPathWhenPackaged, tryUnlinkSync } from './util';
 import { mainWindow }  from './main';
-import { AppStatus, VideoQueueItem } from './types';
+import { RecStatus, SaveStatus, VideoQueueItem } from './types';
 import { getDungeonByMapId, getEncounterNameById, getVideoResultText, getInstanceNameByZoneId, getRaidNameByEncounterId } from './helpers';
 import { VideoCategory } from './constants';
 import fs from 'fs';
@@ -102,10 +102,12 @@ type RecorderOptionsType = {
 
         this._videoQueue.pool.on('start', (data: VideoQueueItem) => {
             console.log("[Recorder] Processing video", data.bufferFile);
+            if (mainWindow) mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
         });
 
         this._videoQueue.pool.on('finish', (_result: any, data: VideoQueueItem) => {
             console.log("[Recorder] Finished processing video", data.bufferFile);
+            if (mainWindow) mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
         });
     }
 
@@ -161,7 +163,7 @@ type RecorderOptionsType = {
         console.log(addColor("[Recorder] Start recording buffer", "cyan"));
         await obsRecorder.start();
         this._isRecordingBuffer = true;
-        if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
+        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.ReadyToRecord);
     
 
         // We store off this timer as a member variable as we will cancel
@@ -185,7 +187,7 @@ type RecorderOptionsType = {
         this._isRecordingBuffer = false;   
 
         await obsRecorder.stop();
-        if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.WaitingForWoW);
+        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
         this.cleanupBuffer(1);
     }
 
@@ -218,7 +220,7 @@ type RecorderOptionsType = {
         clearInterval(this._bufferRestartIntervalID);
         this._isRecordingBuffer = false;        
         this._isRecording = true;   
-        if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.Recording);
+        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
     }
 
     /**
@@ -242,9 +244,6 @@ type RecorderOptionsType = {
             await obsRecorder.stop();
             this._isRecording = false;
             this._isRecordingBuffer = false;
-
-            // Update the GUI to show we're processing a video. 
-            if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.SavingVideo);
 
             const isRaid = metadata.category == VideoCategory.Raids;
             const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
@@ -289,7 +288,7 @@ type RecorderOptionsType = {
 
             this._videoQueue.write(queueItem);
 
-            if (mainWindow) mainWindow.webContents.send('updateStatus', AppStatus.ReadyToRecord);
+            if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.ReadyToRecord);
         },
         2000)
     }

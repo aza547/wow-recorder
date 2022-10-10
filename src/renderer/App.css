@@ -315,7 +315,17 @@ h2:not(.MuiDialogTitle-root) {
   }
 }
 
-#small-icon{
+#saving-status{
+  position:fixed;
+  bottom: 200px;
+  left: 50px;
+  height: 50px;
+  width: 50px;
+  animation: blink 2s;
+  animation-iteration-count: infinite;
+}
+
+#small-rec-status{
   position:fixed;
   bottom: 125px;
   left: 55px;
@@ -325,7 +335,7 @@ h2:not(.MuiDialogTitle-root) {
   animation-iteration-count: infinite;
 }
 
-#big-icon{
+#big-rec-status{
   position:fixed;
   bottom: 100px;
   left: 40px;

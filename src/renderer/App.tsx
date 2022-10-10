@@ -3,7 +3,8 @@ import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import SettingsButton from './SettingsButton';
 import VersionUpdateWidget from './VersionUpdateWidget';
-import Status from './Status';
+import SavingStatus from './SavingStatus';
+import RecorderStatus from './RecorderStatus';
 import LogButton from './LogButton';
 import DiscordButton from './DiscordButton';
 import TestButton from './TestButton';
@@ -21,7 +22,8 @@ const Application = () => {
         <TestButton />
       </div>
       <VersionUpdateWidget />
-      <Status />
+      <SavingStatus />
+      <RecorderStatus />
     </div>
   );
 };
