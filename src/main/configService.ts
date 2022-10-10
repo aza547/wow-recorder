@@ -19,7 +19,7 @@ export default class ConfigService extends EventEmitter {
 
     /**
      * Get the instance of the class as a singleton.
-     * There should only ever be one instance created and his method facilitates that.
+     * There should only ever be one instance created and this method facilitates that.
      */
     static getInstance(): ConfigService {
         if (!ConfigService._instance) {
