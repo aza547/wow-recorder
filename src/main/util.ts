@@ -298,21 +298,6 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
 };
 
 /**
- * Asynchronously get the newest video.
- */
- const getNewestVideo = async (storageDir: any): Promise<string> => {
-    const files = await getSortedVideos(storageDir);
-
-    if (files.length > 0) {
-        //@ts-ignore 'object is possibly undefined'
-        // but it can't, due to the 'if' above.
-        return files.shift().name;
-     }
-
-     return Promise.reject('No video files were found while looking for the most recent video.');
-}  
-
-/**
  * Try to unlink a file and return a boolean indicating the success
  * Logs any errors to the console, if the file couldn't be deleted for some reason.
  */
@@ -459,9 +444,9 @@ export {
     openSystemExplorer,
     toggleVideoProtected,
     fixPathWhenPackaged,
-    getNewestVideo,
     addColor,
     getSortedVideos,
     getAvailableDisplays,
     getSortedFiles,
+    tryUnlinkSync,
 };
