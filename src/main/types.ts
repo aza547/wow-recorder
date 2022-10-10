@@ -2,14 +2,21 @@ import { Size } from "electron";
 import { WoWProcessResultKey } from "./constants";
 
 /**
- * Application status
+ * Application recording status.
  */
-enum AppStatus {
+enum RecStatus {
     WaitingForWoW,
     Recording,
     InvalidConfig,
     ReadyToRecord,
-    SavingVideo,
+};
+
+/**
+ * Application saving status.
+ */
+ enum SaveStatus {
+    Saving,
+    NotSaving,
 };
 
 /**
@@ -125,7 +132,8 @@ type VideoQueueItem = {
 };
 
 export {
-    AppStatus,
+    RecStatus,
+    SaveStatus,
     UnitFlags,
     PlayerDeathType,
     VideoPlayerSettings,

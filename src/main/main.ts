@@ -18,7 +18,7 @@ import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from 
 const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
-import { AppStatus, VideoPlayerSettings } from './types';
+import { RecStatus, SaveStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
 import { getObsResolutions } from './obsRecorder';
 
@@ -201,9 +201,8 @@ const createWindow = async () => {
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');
 
-    const initialStatus = checkConfig() ? AppStatus.WaitingForWoW : AppStatus.InvalidConfig;
-
-    updateStatus(initialStatus);
+    const initialStatus = checkConfig() ? RecStatus.WaitingForWoW : RecStatus.InvalidConfig;
+    updateRecStatus(initialStatus);
 
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send('updateTitleBar', 'Warcraft Recorder v' + app.getVersion());
@@ -321,8 +320,8 @@ const checkConfig = () : boolean => {
  * Updates the status icon for the application.
  * @param status the status number
  */
-const updateStatus = (status: AppStatus) => {
-  if (mainWindow !== null) mainWindow.webContents.send('updateStatus', status);
+const updateRecStatus = (status: RecStatus) => {
+  if (mainWindow !== null) mainWindow.webContents.send('updateRecStatus', status);
 }
 
 /**
@@ -381,11 +380,11 @@ ipcMain.on('settingsWindow', (event, args) => {
     
     settingsWindow.once('closed', () => {
       if (!checkConfig()) {
-        updateStatus(AppStatus.InvalidConfig);
+        updateRecStatus(RecStatus.InvalidConfig);
         return;
       }
 
-      updateStatus(AppStatus.WaitingForWoW);
+      updateRecStatus(RecStatus.WaitingForWoW);
 
       recorderOptions = loadRecorderOptions(cfg);
       makeRecorder(recorderOptions);
