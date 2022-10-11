@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 194](https://github.com/aza547/wow-recorder/issues/194) - Cut videos in a queue and don't block the recorder.
 - [Issue 193](https://github.com/aza547/wow-recorder/issues/193) - Add some guards so we don't start recording in an invalid state. 
+- [Issue 199](https://github.com/aza547/wow-recorder/issues/199) - Fix a bug where clicking test button several times would do bad things. 
 
 ## [2.8.2] - 2022-10-02
 

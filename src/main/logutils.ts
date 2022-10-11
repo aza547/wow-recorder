@@ -765,13 +765,15 @@ const sendTestCombatLogLine = (line: string): void => {
  * in the GUI. Uses some sample log lines from 2v2.txt.
  */
 const runRecordingTest = (endTest: boolean = true) => {
-    console.log("[Logutils] User started a test!");
+    console.log("[Logutils] User pressed the test button!");
+
     if (!endTest) {
         console.log("[Logutils] The test will NOT end on its own and needs to be stopped manually.")
     }
 
     if (testRunning) {
         console.info("[Logutils] Test already running, not starting test.");
+        return;
     }
 
     if (wowProcessRunning !== null) {
