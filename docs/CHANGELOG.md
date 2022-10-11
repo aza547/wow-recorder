@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [Issue 2](https://github.com/aza547/wow-recorder/issues/2) - Replace monitor capture with game capture.
+
 ### Changed
 ### Fixed
 
