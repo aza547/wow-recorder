@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+### Changed
+### Fixed
+
+## [2.9.0] - 2022-10-11
+### Added
 - [Issue 50](https://github.com/aza547/wow-recorder/issues/50) - Add WOTLK classic raid support for Naxx, EOE, OS and VOA. 
 - [Issue 191](https://github.com/aza547/wow-recorder/issues/191) - Recording FPS, output resolution, and video bit rate now adjustable in video settings.
 - [Issue 187](https://github.com/aza547/wow-recorder/issues/187) - Added Vault of the Incarnates raid IDs. 
