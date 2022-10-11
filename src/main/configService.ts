@@ -254,7 +254,7 @@ export default class ConfigService extends EventEmitter {
         // We're checking for null here because we don't allow storing
         // null values and as such if we get one, it's because it's empty/shouldn't
         // be saved.
-        return value !== null && this._store.get(key) !== value;
+        return (value !== null && (this._store.get(key) !== value));
     }
 
     private logConfigChanged(newConfig: { [key: string ]: any }): void {
