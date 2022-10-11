@@ -5,13 +5,36 @@ import { EventEmitter } from "stream";
 import { CombatLogParser } from "./combatLogParser";
 import { configSchema, ConfigurationSchema } from "./configSchema";
 import fs from 'fs';
+import util from 'util';
+import { inspectObject } from "./helpers";
 
 export default class ConfigService extends EventEmitter {
+    /**
+     * Singleton instance of class
+     */
+    private static _instance: ConfigService;
+
     // @ts-ignore 'schema' is "wrong", but it really isn't.
     private _store = new ElectronStore<ConfigurationSchema>({configSchema, name: 'config-v2'});
 
-    constructor() {
+    /**
+     * Get the instance of the class as a singleton.
+     * There should only ever be one instance created and this method facilitates that.
+     */
+    static getInstance(): ConfigService {
+        if (!ConfigService._instance) {
+            ConfigService._instance = new ConfigService();
+        }
+
+        return ConfigService._instance;
+    }
+
+    private constructor() {
         super();
+
+        this.cleanupStore();
+
+        console.log('[Config Service] Using configuration', inspectObject(this._store.store));
 
         this._store.onDidAnyChange((newValue: any, oldValue: any) => {
             this.emit('configChanged', oldValue, newValue);
@@ -33,17 +56,49 @@ export default class ConfigService extends EventEmitter {
          * Getter and setter config listeners. 
          */
         ipcMain.on('config', (event, args) => {
-            const [fn, key] = args;
+            switch (args[0]) {
+                case 'get': {
+                    const value = this.get(args[1]);
+                    event.returnValue = value;
+                    return;
+                }
 
-            if (fn === 'get') {
-                const value = this.get(key);
-                console.log('[Config Service] Get from config store:', key, value);
-                event.returnValue = value;
-            } else
-            if (fn === 'set') {
-                const value = args[2];
-                this.set(key, value);
-                console.log('[Config Service] Set in config store:', key, value);
+                case 'set': {
+                    const [_, key, value] = args;
+                    if (!this.configValueChanged(key, value)) {
+                        return;
+                    }
+
+                    this.set(key, value);
+                    this.emit('change', key, value);
+                    this.logConfigChanged({[key]: value});
+                    return;
+                }
+
+                case 'set_values': {
+                    const configObject = args[1];
+                    const configKeys = Object.keys(configObject);
+                    const newConfigValues: { [key: string]: any } = {};
+
+                    configKeys.forEach((key: string) => {
+                        if (!this.configValueChanged(key, configObject[key])) {
+                            return;
+                        }
+
+                        newConfigValues[key] = configObject[key];
+                    });
+
+                    Object.keys(newConfigValues).forEach((key: any) => {
+                        const value = newConfigValues[key];
+
+                        this.set(key, value);
+                        this.emit('change', key, value);
+                    })
+
+                    this.logConfigChanged(newConfigValues);
+
+                    return;
+                }
             }
         });
     }
@@ -122,9 +177,10 @@ export default class ConfigService extends EventEmitter {
 
         if (value === null || value === undefined || value === '') {
             this._store.delete(key);
-        } else {
-            this._store.set(key, value);
+            return;
         }
+
+        this._store.set(key, value);
     }
 
     getPath(key: keyof ConfigurationSchema): string {
@@ -143,6 +199,28 @@ export default class ConfigService extends EventEmitter {
 
     getString(key: keyof ConfigurationSchema): string {
         return this.has(key) ? (this.get(key) as string) : '';
+    }
+
+    /**
+     * Ensure that only keys specified in the `configSchema` exists in the store
+     * and delete any that are no longer relevant. This is necessary to keep the
+     * config store up to date when config keys occasionally change/become obsolete.
+     */
+    private cleanupStore(): void {
+        const configSchemaKeys = Object.keys(configSchema);
+        const keysToDelete = Object.keys(this._store.store)
+            .filter(k => !configSchemaKeys.includes(k));
+
+        if (!keysToDelete.length) {
+            return;
+        }
+
+        // @ts-ignore complains about 'string' not being assignable to
+        // keyof ConfigurationSchema, which is true but also moot since we're
+        // trying to remove keys that _don't_ exist in the schema.
+        keysToDelete.forEach(k => this._store.delete(k));
+
+        console.log("[Config Service] Deleted deprecated keys from configuration store", keysToDelete);
     }
 
     /**
@@ -167,5 +245,19 @@ export default class ConfigService extends EventEmitter {
             );
             return;
         }
+    }
+
+    /**
+     * Determine whether a configuration value has changed.
+     */
+    private configValueChanged(key: string, value: any): boolean {
+        // We're checking for null here because we don't allow storing
+        // null values and as such if we get one, it's because it's empty/shouldn't
+        // be saved.
+        return (value !== null && (this._store.get(key) !== value));
+    }
+
+    private logConfigChanged(newConfig: { [key: string ]: any }): void {
+        console.log('[Config Service] Configuration changed:', inspectObject(newConfig));
     }
 };

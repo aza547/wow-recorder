@@ -75,8 +75,19 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
  *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v2.json"
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v2.json"
  */
-const cfg = new ConfigService();
+const cfg = ConfigService.getInstance();
 let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
+
+cfg.on('change', (key: string, value: any) => {
+  if (key === 'startUp') {
+    const isStartUp = (value === true);
+    console.log("[Main] OS level set start-up behaviour:", isStartUp);
+
+    app.setLoginItemSettings({
+      openAtLogin: isStartUp
+    });
+  }
+});
 
 // Collect the combat log paths
 let baseLogPaths: string[] = [
@@ -355,15 +366,6 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (args[0] === "create") {
     console.log("[Main] User clicked open settings");
     if (!settingsWindow) createSettingsWindow();
-  }
-
-  if (args[0] === "startup") {
-    const isStartUp = (args[1] === true);
-    console.log("[Main] OS level set start-up behaviour: ", isStartUp);
-
-    app.setLoginItemSettings({
-      openAtLogin: isStartUp    
-    })
   }
     
   if (settingsWindow === null) return; 
