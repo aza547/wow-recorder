@@ -121,7 +121,7 @@ const raidIDs = [
 
     // Eye of Eternity
     // WOTLK Classic Tier 1
-    1094, // Malygos
+    734, // Malygos
 
     // Obsidian Sanctum
     // WOTLK Classic Tier 1

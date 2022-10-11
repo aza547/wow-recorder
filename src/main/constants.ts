@@ -215,7 +215,7 @@ const encountersVOI: NumberKeyToStringValueMapType = {
  * WOTLK Classic Eye of Eternity
  */
  const encountersClassicEye: NumberKeyToStringValueMapType = {
-  1094: "Malygos",
+  734: "Malygos",
 }
 
 /**
