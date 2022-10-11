@@ -1,0 +1,9 @@
+{
+  "branch": "main",
+  "tagFormat": "${version}",
+  "plugins": [
+    ["@semantic-release/changelog", {
+      "changelogFile": "docs/CHANGELOG.md"
+    }]
+  ]
+}
