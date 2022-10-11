@@ -248,13 +248,10 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 * start
 */
 const start = async () => {
-  if (!obsInitialized) {
-    throw Error("OBS not initialised")
-  }
-
+  if (!obsInitialized) throw Error("OBS not initialised");
   console.log("[OBS] obsRecorder: start");
   osn.NodeObs.OBS_service_startRecording();
-  assertNextSignal("start");
+  await assertNextSignal("start");
 }
 
 /*
@@ -263,9 +260,9 @@ const start = async () => {
 const stop = async () => {
   console.log("[OBS] obsRecorder: stop");
   osn.NodeObs.OBS_service_stopRecording();
-  assertNextSignal("stopping");
-  assertNextSignal("stop");
-  assertNextSignal("wrote");
+  await assertNextSignal("stopping");
+  await assertNextSignal("stop");
+  await assertNextSignal("wrote");
 }
 
 /*
