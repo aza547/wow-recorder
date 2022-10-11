@@ -5,6 +5,7 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog, Tray, Menu, net } from 'electron';
+
 import {
   resolveHtmlPath,
   loadAllVideos,
@@ -14,20 +15,13 @@ import {
   fixPathWhenPackaged,
   getAvailableDisplays,
 } from './util';
-import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
-const obsRecorder = require('./obsRecorder');
-import { Recorder, RecorderOptionsType } from './recorder';
-import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
-import { RecStatus, SaveStatus, VideoPlayerSettings } from './types';
-import ConfigService from './configService';
-import { getObsResolutions } from './obsRecorder';
-
-let recorder: Recorder;
 
 /**
- * Setup logging. We override console log methods. All console log method will go to 
- * both the console if it exists, and a file on disk. 
- * TODO: Currently only main process logs go here. Fix so react component logs go here as well. 
+ * Setup logging. It's important this is the first thing we do. This works by
+ * overriding console log methods. All console log method will go to both the
+ * console if it exists, and a file on disk. 
+ * TODO: Currently only main process logs go here. Fix so react component 
+ * logs go here as well. 
  */
 const log = require('electron-log');
 const date = new Date().toISOString().slice(0, 10);
@@ -37,6 +31,18 @@ const logDir = path.dirname(logPath);
 log.transports.file.resolvePath = () => logPath;
 Object.assign(console, log.functions);
 console.log("[Main] App starting: version", app.getVersion());
+
+
+
+import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
+const obsRecorder = require('./obsRecorder');
+import { Recorder, RecorderOptionsType } from './recorder';
+import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
+import { RecStatus, VideoPlayerSettings } from './types';
+import ConfigService from './configService';
+import { getObsResolutions } from './obsRecorder';
+
+let recorder: Recorder;
 
 /**
  * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving 
