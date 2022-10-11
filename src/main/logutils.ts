@@ -776,13 +776,13 @@ const runRecordingTest = (endTest: boolean = true) => {
         return;
     }
 
-    if (wowProcessRunning !== null) {
-        console.info("[Logutils] WoW is running, starting test.");
-        testRunning = true;
-    } else {
+    if (wowProcessRunning === null) {
         console.info("[Logutils] WoW isn't running, not starting test.");
         return;
     }
+
+    console.info("[Logutils] WoW is running, starting test.");
+    testRunning = true;
 
     /**
      * Return a combatlog formatted timestamp representing the current date/time
