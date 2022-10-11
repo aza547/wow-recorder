@@ -1,5 +1,6 @@
 import { Size } from "electron";
 import { WoWProcessResultKey } from "./constants";
+import { Metadata } from "./logutils";
 
 /**
  * Application recording status.
