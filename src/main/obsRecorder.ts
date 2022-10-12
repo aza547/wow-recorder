@@ -1,6 +1,6 @@
 import { fixPathWhenPackaged, getAvailableDisplays } from "./util";
 import WaitQueue from 'wait-queue';
-import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
+import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices, ObsAudioDevice } from "./obsAudioDeviceUtils";
 import { RecorderOptionsType } from "./recorder";
 import { Size } from "electron";
 import path from 'path';
@@ -16,14 +16,19 @@ let obsInitialized = false;
 let timerVideoSourceSize: any;
 // Previous size of the video source as checked by checkVideoSourceSize()
 let lastVideoSourceSize: Size;
+let scene: IScene;
+let recorderOptions: RecorderOptionsType;
+let currentObsTrack: number;
 
 /*
 * Reconfigure the recorder without destroying it.
 */
 const reconfigure = (options: RecorderOptionsType) => {
-  configureOBS(options);
-  const scene = setupScene(options);
-  setupSources(scene, options.audioInputDeviceId, options.audioOutputDeviceId);
+  recorderOptions = options;
+
+  configureOBS();
+  scene = setupScene();
+  setupSources();
 }
 
 /**
@@ -88,26 +93,26 @@ const initOBS = () => {
 /*
 * configureOBS
 */
-const configureOBS = (options: RecorderOptionsType) => {
+const configureOBS = () => {
   console.debug('[OBS] Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
 
   setObsRecEncoder(options);
 
   // Set output path and video format.
-  setSetting('Output', 'RecFilePath', options.bufferStorageDir);
+  setSetting('Output', 'RecFilePath', recorderOptions.bufferStorageDir);
   setSetting('Output', 'RecFormat', 'mp4');
 
   // VBR is "Variable Bit Rate", read about it here:
   // https://blog.mobcrush.com/using-the-right-rate-control-in-obs-for-streaming-or-recording-4737e22895ed
   setSetting('Output', 'Recrate_control', 'VBR');
-  setSetting('Output', 'Recbitrate', options.obsKBitRate * 1024);
+  setSetting('Output', 'Recbitrate', recorderOptions.obsKBitRate * 1024);
 
   // Without this, we'll never exceed the default max which is 5000.
   setSetting('Output', 'Recmax_bitrate', 300000);
   
   // FPS for the output video file. 
-  setSetting('Video', 'FPSCommon', options.obsFPS);
+  setSetting('Video', 'FPSCommon', recorderOptions.obsFPS);
 
   console.debug('[OBS] OBS Configured');
 }
@@ -199,18 +204,18 @@ const setOBSVideoResolution = (res: Size, paramString: string) => {
 /*
 * setupScene
 */
-const setupScene = (options: RecorderOptionsType): IScene => {
-  const outputResolution = parseResolutionsString(options.obsOutputResolution);
+const setupScene = (): IScene => {
+  const outputResolution = parseResolutionsString(recorderOptions.obsOutputResolution);
   let baseResolution: Size;
 
   setOBSVideoResolution(outputResolution, 'Output');
 
   let videoSource: IInput;
 
-  switch (options.obsCaptureMode) {
+  switch (recorderOptions.obsCaptureMode) {
     case 'monitor_capture':
       // Correct the monitorIndex. In config we start a 1 so it's easy for users.
-      const monitorIndexFromZero = options.monitorIndex - 1;
+      const monitorIndexFromZero = recorderOptions.monitorIndex - 1;
       console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
       const selectedDisplay = displayInfo(monitorIndexFromZero);
       if (!selectedDisplay) {
@@ -228,7 +233,7 @@ const setupScene = (options: RecorderOptionsType): IScene => {
       break;
 
     default:
-      throw Error(`[OBS] Invalid capture mode: ${options.obsCaptureMode}`);
+      throw Error(`[OBS] Invalid capture mode: ${recorderOptions.obsCaptureMode}`);
   }
 
   setOBSVideoResolution(baseResolution, 'Base');
@@ -237,7 +242,7 @@ const setupScene = (options: RecorderOptionsType): IScene => {
   const sceneItem = scene.add(videoSource);
   sceneItem.scale = { x: 1.0, y: 1.0 };
 
-  console.log(`[OBS] Configured video input source with mode '${options.obsCaptureMode}'`, inspectObject(videoSource.settings))
+  console.log(`[OBS] Configured video input source with mode '${recorderOptions.obsCaptureMode}'`, inspectObject(videoSource.settings))
 
   watchVideoSourceSize(sceneItem, videoSource, baseResolution);
 
@@ -317,48 +322,53 @@ const watchVideoSourceSize = (sceneItem: ISceneItem, videoSource: IInput, baseRe
 /*
 * setupSources
 */
-const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceId: string ) => {
+const setupSources = () => {
+  const { audioInputDeviceId, audioOutputDeviceId } = recorderOptions;
+
   clearSources();
 
-  osn.Global.setOutputSource(1, scene);
+  osn.Global.setOutputSource(currentObsTrack++, scene);
 
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
-  let currentTrack = 2;
 
   getAvailableAudioInputDevices()
-    .forEach(device => {
-      const source = osn.InputFactory.create('wasapi_input_capture', 'mic-audio', { device_id: device.id });
-      setSetting('Output', `Track${currentTrack}Name`, device.name);
-      source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
-      source.muted = audioInputDeviceId === 'none' || (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
-      console.log(`[OBS] Selecting audio input device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
-      osn.Global.setOutputSource(currentTrack, source);
-      source.release()
-      currentTrack++;
-    });
+    .filter(device => audioInputDeviceId !== 'none' && (audioInputDeviceId === 'all' || device.id === audioInputDeviceId))
+    .forEach(device => addAudioSource(currentObsTrack++, 'wasapi_input_capture', device));
 
   getAvailableAudioOutputDevices()
-    .forEach(device => {
-      const source = osn.InputFactory.create('wasapi_output_capture', 'desktop-audio', { device_id: device.id });
-      setSetting('Output', `Track${currentTrack}Name`, device.name);
-      source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
-      source.muted = audioOutputDeviceId === 'none' || (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
-      console.log(`[OBS] Selecting audio output device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
-      osn.Global.setOutputSource(currentTrack, source);
-      source.release()
-      currentTrack++;
-    });
+    .filter(device => audioOutputDeviceId !== 'none' && (audioOutputDeviceId === 'all' || device.id === audioOutputDeviceId))
+    .forEach(device => addAudioSource(currentObsTrack++, 'wasapi_output_capture', device));
 
-  setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
-}
+  setRecTracks();
+};
+
+/**
+ * Set the Output.RecTracks setting for OBS
+ */
+const setRecTracks = (): void => {
+  if (currentObsTrack == 1) {
+    setSetting('Output', 'RecTracks', 0);
+    return;
+  }
+
+  // Bit mask of used tracks: 1111 to use first four (from available six)
+  setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentObsTrack - 1), 2));
+};
+
+/**
+ * Add an audio source to the global output of OBS
+ */
+const addAudioSource = (trackNo: number, sourceType: string, device: ObsAudioDevice): void => {
+  const source = osn.InputFactory.create(sourceType, 'Track' + trackNo, { device_id: device.id });
+  setSetting('Output', `Track${trackNo}Name`, device.name);
+  source.audioMixers = 1 | (1 << trackNo-1); // Bit mask to output to only tracks 1 and current track
+  osn.Global.setOutputSource(trackNo, source);
+};
 
 /**
  * Clear all sources from the global output of OBS
  */
- const clearSources = (): void => {
-  console.log("[OBS] Removing all output sources")
-
-  // OBS allows a maximum of 64 output sources
+const clearSources = (): void => {
   for (let index = 1; index < 64; index++) {
     const src: ISource = osn.Global.getOutputSource(index);
     if (src !== undefined) {
@@ -369,7 +379,8 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
     }
   }
 
-  setSetting('Output', 'RecTracks', 0); // Bit mask of used tracks: 1111 to use first four (from available six)
+  currentObsTrack = 1;
+  setRecTracks();
 };
 
 /*
@@ -377,9 +388,13 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 */
 const start = async () => {
   if (!obsInitialized) throw Error("OBS not initialised");
+
+  setupSources();
+
   console.log("[OBS] obsRecorder: start");
   osn.NodeObs.OBS_service_startRecording();
   await assertNextSignal("start");
+
 }
 
 /*
@@ -391,6 +406,8 @@ const stop = async () => {
   await assertNextSignal("stopping");
   await assertNextSignal("stop");
   await assertNextSignal("wrote");
+
+  clearSources();
 }
 
 /*
