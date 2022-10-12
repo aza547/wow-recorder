@@ -7,28 +7,10 @@
  * import a function that uses the 'fs' module. You'll very easily find out if what you
  * did was bad, because the render process will show its "Red Screen of Death".
  */
-import ElectronStore from "electron-store";
 import { dungeonsByMapId, instanceDifficulty, InstanceDifficultyType, instanceEncountersById, instanceNamesByZoneId, raidInstances, VideoCategory, zones } from "./constants";
 import { Metadata } from "./logutils";
 import { RaidInstanceType } from "./types";
 import util from 'util';
-
-/** Poor man's path.join()/path.sep(). that use 'path' which uses Node JS 'process'.
- *
- * It does NOT handle '..' in the path, but it doesn't need to at this point.
- *
- * '\' only works on Windows, but this app isn't made to work on anything else so that's fine.
- */
-const PATH_SEPARATOR = '\\';
-const joinPath = (...args: string[]): string => {
-    return args
-        // Normalize path separators and replace mulitple consecutive
-        // ones with a single one
-        .map(v => v.replace(/[\\/]+/g, PATH_SEPARATOR))
-        // Remove any trailing path separator
-        .map(v => v.replace(/\\$/, ''))
-        .join(PATH_SEPARATOR)
-};
 
 /**
  * Get a result text appropriate for the video category that signifies a

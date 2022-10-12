@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds, categoryRecordingSettings, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, wowExecutableFlavours, WoWProcessResultKey }  from './constants';
+import { battlegrounds, categoryRecordingSettings, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, wowExecutableFlavours }  from './constants';
 import { IWoWProcessResult, PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 import { CombatLogParser, LogLine } from './combatLogParser';
