@@ -137,7 +137,7 @@ export default function VideoSettings() {
           value={config.obsKBitRate}
           onChange={event => { modifyConfig("obsKBitRate", parseInt(event.target.value, 10)) }}
           id="video-bit-rate" 
-          label="Video Bit Rate (kbps)" 
+          label="Video Bit Rate (Mbps)" 
           variant="outlined" 
           type="number" 
           error= { config.obsKBitRate < 1  || config.obsKBitRate > 300 }

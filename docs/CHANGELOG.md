@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 206](https://github.com/aza547/wow-recorder/issues/206) - Bitrate label corrected say to Mbps. 
 
 ## [2.9.0] - 2022-10-11
 ### Added
