@@ -1,9 +1,10 @@
+import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
 
 declare global {
   interface Window {
     electron: {
-      store: any;
+      store: ElectronStore,
       ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]): void;
         sendSync(channel: Channels, args: unknown[]): any;
