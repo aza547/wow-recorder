@@ -37,6 +37,7 @@ const configValues = {
   obsOutputResolution:  getConfigValue<string>('obsOutputResolution'),
   obsFPS:               getConfigValue<number>('obsFPS'),
   obsKBitRate:          getConfigValue<number>('obsKBitRate'),
+  obsCaptureMode:       getConfigValue<string>('obsCaptureMode'),
 };
 
 export default function useSettings() {
