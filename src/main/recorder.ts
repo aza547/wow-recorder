@@ -312,9 +312,9 @@ type RecorderOptionsType = {
     /**
      * Shutdown OBS.
      */
-    shutdown = () => {
+    shutdown = async () => {
         if (this._isRecording) {
-            obsRecorder.stop();       
+            await obsRecorder.stop();
             this._isRecording = false;
         } else if (this._isRecordingBuffer) {
             this.stopBuffer()
@@ -327,7 +327,7 @@ type RecorderOptionsType = {
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = (options: RecorderOptionsType) => {
+    reconfigure = async (options: RecorderOptionsType) => {
         this._options = options;
 
         // User might just have shrunk the size, so run the size monitor.
@@ -337,7 +337,7 @@ type RecorderOptionsType = {
         });
       
         if (this._isRecording) {
-            obsRecorder.stop();       
+            await obsRecorder.stop();
             this._isRecording = false;
         } else if (this._isRecordingBuffer) {
             this.stopBuffer()
