@@ -191,12 +191,6 @@ const endRecording = (options?: EndRecordingOptionsType) => {
     metadata.duration = Math.round(videoDuration / 1000) + overrun;
     metadata.result = options?.result ?? false;
 
-    if (playerCombatant) {
-        metadata.playerName = playerCombatant.name;
-        metadata.playerRealm = playerCombatant.realm;
-        metadata.playerSpecID = playerCombatant.specID;
-    }
-
     console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
 
     recorder.stop(metadata, overrun);
@@ -496,6 +490,10 @@ function handleSpellAuraAppliedLine (line: LogLine): void {
         srcCombatant.name = srcName;
         srcCombatant.realm = srcRealm;
         playerCombatant = srcCombatant;
+
+        metadata.playerName = playerCombatant.name;
+        metadata.playerRealm = playerCombatant.realm;
+        metadata.playerSpecID = playerCombatant.specID;
     }
 }
 
