@@ -216,7 +216,7 @@ const setupScene = (options: RecorderOptionsType): IScene => {
 
   setOBSVideoResolution(baseResolution, 'Base');
 
-  const scene: IScene = osn.SceneFactory.create('test-scene');
+  const scene: IScene = osn.SceneFactory.create('main');
   const sceneItem = scene.add(videoSource);
   sceneItem.scale = { x: 1.0, y: 1.0 };
 

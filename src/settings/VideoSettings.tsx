@@ -19,8 +19,8 @@ const { Base: baseResolutions, Output: outputResolutions } = obsResolutions;
 
 const fpsOptions = ['10', '20', '30', '60'];
 const obsCaptureModes = {
-  'game_capture': 'Game (best)',
-  'monitor_capture': 'Monitor'
+  'game_capture': 'Game Capture (Recommended)',
+  'monitor_capture': 'Monitor Capture'
 };
 
 export default function VideoSettings() {
