@@ -41,6 +41,7 @@ import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from '.
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
 import { getObsResolutions } from './obsRecorder';
+import { CombatLogParser } from './combatLogParser';
 
 let recorder: Recorder;
 
@@ -304,7 +305,15 @@ const openPathDialog = (event: any, args: any) => {
   
   dialog.showOpenDialog(settingsWindow, { properties: ['openDirectory'] }).then(result => {
     if (!result.canceled) {
-      event.reply('settingsWindow', ['pathSelected', setting, result.filePaths[0]]);
+      const selectedPath = result.filePaths[0];
+      let validationResult = true;
+
+      // Validate the path if it's a path for a log directory
+      if (setting === 'retailLogPath' || setting === 'classicLogPath') {
+        validationResult = CombatLogParser.validateLogPath(selectedPath);
+      }
+
+      event.reply('settingsWindow', ['pathSelected', setting, selectedPath, validationResult]);
     }
   })
   .catch(err => {
