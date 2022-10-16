@@ -164,6 +164,7 @@ const battlegroundIDs = [
     998,  // Temple of Kotmogu
     726,  // Twin Peaks
     489,  // Warsong Gulch
+    2106, // Warsong Gulch
 ]
 
 let battleground: imageObject = {};

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 168](https://github.com/aza547/wow-recorder/issues/168) - Fix player combatant not being saved properly when a recording is forcibly ended.
 - [Issue 206](https://github.com/aza547/wow-recorder/issues/206) - Bitrate label corrected say to Mbps. 
+- [Issue 208](https://github.com/aza547/wow-recorder/issues/208) - Fix to Warsong Gulch image.
 
 ## [2.9.0] - 2022-10-11
 ### Added
