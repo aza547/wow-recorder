@@ -303,6 +303,23 @@ class CombatLogParser extends EventEmitter {
     }
 
     /**
+     * Validate a path as a combat log path
+     */
+    static validateLogPath(pathSpec: string): boolean {
+        pathSpec = path.resolve(pathSpec);
+
+        // Check if the leaf node of the path is actually 'logs',
+        // which _all_ WoW flavours use for logs.
+        const pathLeaf = path.basename(pathSpec).toLowerCase();
+        if (pathLeaf !== 'logs') {
+            return false;
+        }
+
+        // Check if the parent directory has a WoW flavour info file
+        return CombatLogParser.getWowFlavour(pathSpec) !== 'unknown'
+    }
+
+    /**
      * Find and return the flavour of WoW that the log directory
      * belongs to by means of the '.flavor.info' file.
      */
@@ -311,7 +328,7 @@ class CombatLogParser extends EventEmitter {
             path.join(pathSpec, '../.flavor.info')
         );
 
-        // If this file doesn't exist, it's not a WoW combat log directory
+        // If this file doesn't exist, it's not a subdirectory of a WoW flavour.
         if (!fs.existsSync(flavourInfoFile)) {
             return 'unknown';
         }
