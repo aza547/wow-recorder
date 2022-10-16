@@ -55,8 +55,7 @@ export default function VideoSettings() {
   const getTooltipText = () => {
     return (
       <div>
-        {configSchema["obsKBitRate"].description} 
-        Suggested values are found below.
+        {configSchema["obsKBitRate"].description}  
         <br></br>
         <br></br>
         <table>

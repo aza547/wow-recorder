@@ -115,7 +115,7 @@ export const configSchema = {
         maximum: 60,
     },
     obsKBitRate: {
-        description: 'Bit rate to record at. Lower bit rate values give smaller video size but worse video quality.',
+        description: 'Bit rate to record at. Lower bit rate values give smaller video size but worse video quality. Suggested values are found below.',
         type: 'integer',
         default: 15,
         minimum: 1,
