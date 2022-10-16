@@ -11,12 +11,17 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import { configSchema } from '../main/configSchema'
+import InformationDialog from '../renderer/InformationDialog';
+import { DialogContentText } from '@mui/material';
 
 const ipc = window.electron.ipcRenderer;
 
 export default function GeneralSettings() {
 
   const [config, setConfig] = React.useContext(ConfigContext);
+  const [openDialog, setDialog] = React.useState(false);
+
+  const closeDialog = () => setDialog(false);
 
   const modifyConfig = (stateKey: string, value: any) => {
     setConfig((prevConfig: any) => ({ ...prevConfig, [stateKey]: value }));
@@ -34,7 +39,18 @@ export default function GeneralSettings() {
    */
    React.useEffect(() => {
     ipc.on('settingsWindow', (args: any) => {
-      if (args[0] === "pathSelected") modifyConfig(args[1], args[2]);
+      const [func, setting, value, validationResult] = args;
+
+      if (func === "pathSelected") {
+        if (setting === 'retailLogPath' || setting === 'classicLogPath') {
+          if (!Boolean(validationResult)) {
+            setDialog(true);
+            return;
+          }
+        }
+
+        modifyConfig(setting, value);
+      }
     });
   }, []);
 
@@ -46,7 +62,7 @@ export default function GeneralSettings() {
     },
     "& .MuiInputLabel-root": {color: 'white'},
     "& label.Mui-focused": {color: "#bb4220"},
-  }   
+  };
 
   const checkBoxStyle = {color: "#bb4220"};
   const formControlLabelStyle = {color: "white"};
@@ -61,7 +77,11 @@ export default function GeneralSettings() {
         style = {checkBoxStyle} 
       />
     )
-  }
+  };
+
+  const openLink = (url: string) => {
+    ipc.sendMessage('openURL', [url]);
+  };
 
   return (
     <Stack
@@ -114,7 +134,7 @@ export default function GeneralSettings() {
         id="classic-log-path" 
         label="Classic Log Path" 
         variant="outlined" 
-        onClick={() => openDirectorySelectorDialog("classicLogPath")} 
+        onClick={() => openDirectorySelectorDialog("classicLogPath")}
         InputLabelProps={{ shrink: true }}
         sx={{...style, my: 1}}
         inputProps={{ style: { color: "white" } }}
@@ -168,7 +188,21 @@ export default function GeneralSettings() {
           </IconButton>
         </Tooltip>
       </Box>
-      
+      <InformationDialog
+          title='🚫 Not a combat log directory'
+          open={openDialog}
+          buttons={['close']}
+          default='close'
+          onClose={closeDialog}
+      >
+          <DialogContentText>
+            The directory you picked doesn't look like a directory for World of Warcraft combat logs.
+          </DialogContentText>
+
+          <DialogContentText>
+            You can easily find this directory by <a href="#" onClick={() => openLink('https://github.com/aza547/wow-recorder/blob/main/docs/LocateLogDirectory.md')}>following this guide</a>.
+          </DialogContentText>
+      </InformationDialog>
     </Stack>
   );
 }
