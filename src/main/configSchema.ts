@@ -122,7 +122,7 @@ export const configSchema = {
         maximum: 300,
     },
     obsCaptureMode: {
-        description: 'How to record the game.',
+        description: 'Game capture records the game directly but is limited in that only one OBS process can use game capture at a time. If you are also streaming with OBS Studio you may wish to use monitor capture here.',
         type: 'string',
         default: 'game_capture',
     },
