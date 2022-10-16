@@ -346,13 +346,14 @@ const setupSources = () => {
  * Set the Output.RecTracks setting for OBS
  */
 const setRecTracks = (): void => {
-  if (currentObsTrack == 1) {
-    setSetting('Output', 'RecTracks', 0);
-    return;
-  }
+  let audioBitMask = 0;
 
   // Bit mask of used tracks: 1111 to use first four (from available six)
-  setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentObsTrack - 1), 2));
+  if (currentObsTrack > 1) {
+    audioBitMask = parseInt('1'.repeat(currentObsTrack - 1), 2)
+  }
+
+  setSetting('Output', 'RecTracks', audioBitMask);
 };
 
 /**
@@ -379,6 +380,8 @@ const clearSources = (): void => {
     }
   }
 
+  // Clear the track number back to 1 (beginning) such that setupSources() will
+  // will start at the correct index.
   currentObsTrack = 1;
   setRecTracks();
 };
