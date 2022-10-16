@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds, categoryRecordingSettings, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, wowExecutableFlavours }  from './constants';
+import { battlegrounds, categoryRecordingSettings, classicArenas, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, wowExecutableFlavours }  from './constants';
 import { IWoWProcessResult, PlayerDeathType, UnitFlags } from './types';
 import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
 import { CombatLogParser, LogLine } from './combatLogParser';
@@ -430,44 +430,71 @@ function handleEncounterStopLine (line: LogLine): void {
 /**
  * Handle a line from the WoW log.
  */
-function handleZoneChange (line: LogLine): void {
+function handleZoneChange (line: LogLine, flavour: string): void {
     console.log("[Logutils] Handling zone change", line);
+
+    const isClassic = (flavour === "wow_classic")
+    const isRetail = !isClassic;
+    
     const zoneID = parseInt(line.arg(1), 10);
-    const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
     const isRecording = recorder.isRecording;
 
-    // const classicArenas = [
-    //     617, // Dalaran
-    //     572, // Ruins
-    //     559, // Nagrand 
-    // ];
-
-    let isRecordingBG = false;
-    let isRecordingArena = false;
+    let isRecordingBG;
+    let isRecordingArena;
+    let isRecordingClassicArena;
 
     if (metadata !== undefined) {
         isRecordingBG = (metadata.category === VideoCategory.Battlegrounds);
+
         isRecordingArena = (metadata.category === VideoCategory.TwoVTwo) ||
                            (metadata.category === VideoCategory.ThreeVThree) ||
                            (metadata.category === VideoCategory.SoloShuffle) ||
                            (metadata.category === VideoCategory.Skirmish);
+
+        isRecordingClassicArena = (metadata.category === VideoCategory.ClassicArena);
     }
 
-    if (!isRecording && isNewZoneBG) {
-        console.log("[Logutils] ZONE_CHANGE into BG");
-        battlegroundStart(line);
-        return;
+    if (isClassic) {
+        const isNewZoneArena = classicArenas.hasOwnProperty(zoneID);
+
+        if (!isRecording && isNewZoneArena) {
+            console.log("[Logutils] ZONE_CHANGE into classic arena");
+            classicArenaStart(line);
+            return;
+        }
+    
+        if (isRecording && isRecordingClassicArena && !isNewZoneArena) {
+            console.log("[Logutils] ZONE_CHANGE out of classic arena, stop recording");
+            classicArenaStop(line);
+            return;
+        }
+    } 
+    
+    if (isRetail) {
+        const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
+
+        if (!isRecording && isNewZoneBG) {
+            console.log("[Logutils] ZONE_CHANGE into BG");
+            battlegroundStart(line);
+            return;
+        }
+    
+        if (isRecording && isRecordingBG && !isNewZoneBG) {
+            console.log("[Logutils] ZONE_CHANGE out of BG, stop recording");
+            battlegroundStop(line);
+            return;
+        }
+    
+        if (isRecording && isRecordingArena) {
+            console.log("[Logutils] ZONE_CHANGE out of arena, stop recording");
+            zoneChangeStop(line);
+            return;
+        }
     }
-    if (isRecording && isRecordingBG && !isNewZoneBG) {
-        console.log("[Logutils] ZONE_CHANGE out of BG, stop recording");
-        battlegroundStop(line);
-        return;
-    }
-    if (isRecording && isRecordingArena) {
-        console.log("[Logutils] ZONE_CHANGE out of arena, stop recording");
-        zoneChangeStop(line);
-        return;
-    }
+       
+
+
+    
 }
 
 /**
@@ -553,6 +580,36 @@ function battlegroundStop (line: LogLine): void {
     videoStopDate = line.date();
     endRecording();
 }
+
+/**
+ * Called on a ZONE_CHANGE event into a classic arena.
+ */
+ function classicArenaStart (line: LogLine): void {
+    const zoneID = parseInt(line.arg(1), 10);
+    const arenaName = classicArenas[zoneID];
+
+    videoStartDate = line.date();
+
+    metadata = {
+        name: arenaName,
+        category: VideoCategory.ClassicArena,
+        zoneID: zoneID,
+        duration: 0,
+        result: false,
+        playerDeaths: [],
+    }
+
+    startRecording(VideoCategory.Battlegrounds);
+}
+
+/**
+ * classicArenaStop
+ */
+ function classicArenaStop (line: LogLine): void {
+    videoStopDate = line.date();
+    endRecording();
+}
+
 
 /**
  * zoneChangeStop

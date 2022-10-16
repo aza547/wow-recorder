@@ -21,6 +21,7 @@ export default function VideoButton(props: any) {
   const category = categories[categoryIndex] as VideoCategory;
 
   const video = state.videoState[category][videoIndex];
+  console.log(video);
   const videoPath = video.fullPath;
 
   const isGoodResult = getVideoResult(video);
@@ -67,6 +68,10 @@ export default function VideoButton(props: any) {
     case VideoCategory.Battlegrounds:
       buttonImage = Images.battleground[video.zoneID];
       break;
+
+    case VideoCategory.ClassicArena:
+        buttonImage = Images.classicArena[video.zoneID];
+        break;
 
     default:
       buttonImage = Images.arena[video.zoneID];

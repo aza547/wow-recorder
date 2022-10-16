@@ -6,6 +6,7 @@ enum VideoCategory {
   ThreeVThree = '3v3',
   Skirmish = 'Skirmish',
   SoloShuffle = 'Solo Shuffle',
+  ClassicArena = 'Classic Arena',
   MythicPlus = 'Mythic+',
   Raids = 'Raids',
   Battlegrounds = 'Battlegrounds',
@@ -16,6 +17,7 @@ const categories: VideoCategory[] = [
   VideoCategory.ThreeVThree,
   VideoCategory.Skirmish,
   VideoCategory.SoloShuffle,
+  VideoCategory.ClassicArena,
   VideoCategory.MythicPlus,
   VideoCategory.Raids,
   VideoCategory.Battlegrounds,
@@ -125,6 +127,16 @@ const months: string[] = [
   1825: "Hook Point",
   2509: "Maldraxxus Coliseum",
   2547: "Enigma Crucible",
+}
+
+/**
+ * Classic arenas by ID. 
+ */
+ const classicArenas: NumberKeyToStringValueMapType = {
+  572: "Ruins of Lordaeron",
+  559: "Nagrand Arena",
+  617: "Dalaran Arena",
+  562: "Blade's Edge Arena",
 }
 
 /**
@@ -478,6 +490,7 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
  */
 const zones: NumberKeyToStringValueMapType = {
     ...arenas,
+    ...classicArenas,
     ...raidEncountersById,
     ...battlegrounds,
     ...dungeonsByZoneId,
@@ -637,6 +650,7 @@ export {
     videoButtonSx,
     zones,
     arenas,
+    classicArenas,
     raidEncountersById,
     battlegrounds,
     dungeonsByMapId,
