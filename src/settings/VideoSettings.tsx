@@ -15,7 +15,7 @@ import Tooltip from '@mui/material/Tooltip';
 const ipc = window.electron.ipcRenderer;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
 const obsResolutions: any = ipc.sendSync('settingsWindow', ['getObsAvailableResolutions']);
-const { Base: baseResolutions, Output: outputResolutions } = obsResolutions;
+const { Output: outputResolutions } = obsResolutions;
 
 const fpsOptions = ['10', '20', '30', '60'];
 const obsCaptureModes = {
@@ -50,6 +50,44 @@ export default function VideoSettings() {
     "& .MuiInputLabel-root": {
       color: 'white'
     },
+  }
+
+  const getTooltipText = () => {
+    return (
+      <div>
+        {configSchema["obsKBitRate"].description} 
+        Suggested values are found below.
+        <br></br>
+        <br></br>
+        <table>
+          <tr>
+            <th>Quality</th>
+            <th>30 FPS</th>
+            <th>60 FPS</th>
+          </tr>
+          <tr>
+            <td>720p</td>
+            <td>7 Mbps</td>
+            <td>10 Mbps</td>
+          </tr>
+          <tr>
+            <td>1080p</td>
+            <td>10 Mbps</td>
+            <td>15 Mbps</td>
+          </tr>
+          <tr>
+            <td>1440p</td>
+            <td>20 Mbps</td>
+            <td>30 Mbps</td>
+          </tr>
+          <tr>
+            <td>2160p</td>
+            <td>50 Mbps</td>
+            <td>80 Mbps</td>
+          </tr>
+        </table>
+      </div>
+    )
   }
 
   return (
@@ -177,7 +215,7 @@ export default function VideoSettings() {
           sx={{...style, my: 1}}
           inputProps={{ style: { color: "white" } }}
         />
-        <Tooltip title={configSchema["obsKBitRate"].description} sx={{position: 'relative', right: '0px', top: '17px'}}>
+        <Tooltip title={getTooltipText()} sx={{position: 'relative', right: '0px', top: '17px'}}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }}/>
           </IconButton>
