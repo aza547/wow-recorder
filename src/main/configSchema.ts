@@ -15,6 +15,7 @@ export type ConfigurationSchema = {
     obsOutputResolution: string,
     obsFPS: number,
     obsKBitRate: number,
+    obsCaptureMode: string, // 'game_capture' or 'monitor_capture'
     recordRetail: boolean,
     recordClassic: boolean,
     recordRaids: boolean,
@@ -119,6 +120,11 @@ export const configSchema = {
         default: 10,
         minimum: 1,
         maximum: 300,
+    },
+    obsCaptureMode: {
+        description: 'Game capture records the game directly but is limited in that only one OBS process can use game capture at a time. If you are also streaming with OBS Studio you may wish to use monitor capture here.',
+        type: 'string',
+        default: 'game_capture',
     },
     recordRetail: {
         description: 'Whether the application should record retail',

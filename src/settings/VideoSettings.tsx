@@ -18,6 +18,10 @@ const obsResolutions: any = ipc.sendSync('settingsWindow', ['getObsAvailableReso
 const { Base: baseResolutions, Output: outputResolutions } = obsResolutions;
 
 const fpsOptions = ['10', '20', '30', '60'];
+const obsCaptureModes = {
+  'game_capture': 'Game Capture (Recommended)',
+  'monitor_capture': 'Monitor Capture'
+};
 
 export default function VideoSettings() {
   const [config, setConfig] = React.useContext(ConfigContext);
@@ -59,13 +63,39 @@ export default function VideoSettings() {
     >
       <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{my: 1}}>
+          <InputLabel id="obs-capture-mode-label" sx = {style}>Capture Mode</InputLabel>
+          <Select
+            labelId="obs-capture-mode-label"
+            id="obs-capture-mode"
+            value={config.obsCaptureMode}
+            label="Capture Mode"
+            onChange={(event) => modifyConfig('obsCaptureMode', event.target.value)}
+            sx={style}
+          >
+            { Object.entries(obsCaptureModes).map((captureMode: any) =>
+              <MenuItem key={ 'capture-mode-' + captureMode[0] } value={ captureMode[0] }>
+                { captureMode[1] }
+              </MenuItem>
+            )}
+          </Select>
+        </FormControl>
+        <Tooltip title={configSchema["obsCaptureMode"].description} >
+          <IconButton>
+            <InfoIcon style={{ color: 'white' }}/>
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      { config.obsCaptureMode == 'monitor_capture' &&
+      <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+        <FormControl sx={{my: 1}}>
           <InputLabel id="demo-simple-select-label" sx = {style}>Monitor</InputLabel>
           <Select
             labelId="demo-simple-select-label"
             id="monitor-index"
             value={config.monitorIndex}
             label="Monitor"
-            onChange={(event) => modifyConfig('monitorIndex', event.target.value)} 
+            onChange={(event) => modifyConfig('monitorIndex', event.target.value)}
             sx={style}
           >
             { displayConfiguration.map((display: OurDisplayType) =>
@@ -81,6 +111,7 @@ export default function VideoSettings() {
           </IconButton>
         </Tooltip>
       </Box>
+      }
 
       <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{my: 1}}>

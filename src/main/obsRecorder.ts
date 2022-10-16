@@ -2,26 +2,28 @@ import { fixPathWhenPackaged, getAvailableDisplays } from "./util";
 import WaitQueue from 'wait-queue';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
 import { RecorderOptionsType } from "./recorder";
-import { OurDisplayType } from "./types";
 import { Size } from "electron";
-import { IScene } from "obs-studio-node";
 import path from 'path';
+import { inspectObject } from "./helpers";
+import { ISceneItem, IScene, IInput } from "obs-studio-node";
+import { OurDisplayType } from "./types";
+import { ISource } from "obs-studio-node";
 const waitQueue = new WaitQueue<any>();
 const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
 
 let obsInitialized = false;
-let scene = null;
+// Timer for periodically checking the size of the video source
+let timerVideoSourceSize: any;
+// Previous size of the video source as checked by checkVideoSourceSize()
+let lastVideoSourceSize: Size;
 
 /*
 * Reconfigure the recorder without destroying it.
 */
 const reconfigure = (options: RecorderOptionsType) => {
-  const baseResolution = parseResolutionsString(options.obsBaseResolution);
-  const outputResolution = parseResolutionsString(options.obsOutputResolution);
-
   configureOBS(options);
-  scene = setupScene(options.monitorIndex, baseResolution, outputResolution);
+  const scene = setupScene(options);
   setupSources(scene, options.audioInputDeviceId, options.audioOutputDeviceId);
 }
 
@@ -116,6 +118,7 @@ const configureOBS = (options: RecorderOptionsType) => {
   console.debug('[OBS] OBS Configured');
 }
 
+
 /*
 * Get information about primary display
 * @param zero starting monitor index
@@ -158,12 +161,12 @@ const getClosestResolution = (resolutions: string[], target: Size): string => {
 };
 
 /*
-* Given a none-whole monitor resolution, find the closest one that 
+* Given a none-whole monitor resolution, find the closest one that
 * OBS supports and set the corospoding setting in Video.Untitled.{paramString}
-* 
+*
 * @remarks
-* Useful when windows scaling is not set to 100% (125%, 150%, etc) on higher resolution monitors, 
-* meaning electron screen.getAllDisplays() will return a none integer scaleFactor, causing 
+* Useful when windows scaling is not set to 100% (125%, 150%, etc) on higher resolution monitors,
+* meaning electron screen.getAllDisplays() will return a none integer scaleFactor, causing
 * the calucated monitor resolution to be none-whole.
 *
 * @throws
@@ -174,44 +177,132 @@ const setOBSVideoResolution = (res: Size, paramString: string) => {
   const closestResolution = getClosestResolution(availableResolutions, res);
 
   setSetting('Video', paramString, closestResolution);
-}
+};
 
 /*
 * setupScene
 */
-const setupScene = (monitorIndex: number, baseResolution: Size, outputResolution: Size): IScene => {
+const setupScene = (options: RecorderOptionsType): IScene => {
+  const outputResolution = parseResolutionsString(options.obsOutputResolution);
+  let baseResolution: Size;
+
   setOBSVideoResolution(outputResolution, 'Output');
 
-  // Correct the monitorIndex. In config we start a 1 so it's easy for users. 
-  const monitorIndexFromZero = monitorIndex - 1;
-  console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
-  const selectedDisplay = displayInfo(monitorIndexFromZero);
-  if (!selectedDisplay) {
-    throw Error(`[OBS] No such display with index: ${monitorIndexFromZero}.`)
+  let videoSource: IInput;
+
+  switch (options.obsCaptureMode) {
+    case 'monitor_capture':
+      // Correct the monitorIndex. In config we start a 1 so it's easy for users.
+      const monitorIndexFromZero = options.monitorIndex - 1;
+      console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
+      const selectedDisplay = displayInfo(monitorIndexFromZero);
+      if (!selectedDisplay) {
+        throw Error(`[OBS] No such display with index: ${monitorIndexFromZero}.`)
+      }
+
+      baseResolution = selectedDisplay.physicalSize;
+
+      videoSource = createMonitorCaptureSource(monitorIndexFromZero);
+      break;
+
+    case 'game_capture':
+      baseResolution = outputResolution;
+      videoSource = createGameCaptureSource();
+      break;
+
+    default:
+      throw Error(`[OBS] Invalid capture mode: ${options.obsCaptureMode}`);
   }
 
-  setOBSVideoResolution(selectedDisplay.physicalSize, 'Base');
+  setOBSVideoResolution(baseResolution, 'Base');
 
-  const videoSource = osn.InputFactory.create('monitor_capture', 'desktop-video');
-
-  // Update source settings:
-  let settings = videoSource.settings;
-  settings['monitor'] = monitorIndexFromZero;
-  videoSource.update(settings);
-  videoSource.save();
-
-  // A scene is necessary here to properly scale captured screen size to output video size
-  const scene = osn.SceneFactory.create('test-scene');
+  const scene: IScene = osn.SceneFactory.create('main');
   const sceneItem = scene.add(videoSource);
   sceneItem.scale = { x: 1.0, y: 1.0 };
 
+  console.log(`[OBS] Configured video input source with mode '${options.obsCaptureMode}'`, inspectObject(videoSource.settings))
+
+  watchVideoSourceSize(sceneItem, videoSource, baseResolution);
+
   return scene;
 }
+
+/**
+ * Create and return a game capture video source ('game_capture')
+ */
+const createGameCaptureSource = (): IInput => {
+  const videoSource = osn.InputFactory.create('game_capture', 'Game Capture');
+  const settings = videoSource.settings;
+
+  settings['capture_cursor'] = true;
+  settings['capture_mode'] = 'window';
+  settings['allow_transparency'] = true;
+  settings['priority'] = 1; // Window title must match
+  settings['window'] = 'World of Warcraft:GxWindowClass:Wow.exe';
+
+  videoSource.update(settings);
+  videoSource.save();
+
+  return videoSource;
+};
+
+/**
+ * Create and return a monitor capture video source ('monitor_capture')
+ */
+const createMonitorCaptureSource = (monitorIndex: number): IInput => {
+  const videoSource = osn.InputFactory.create('monitor_capture', 'Monitor Capture');
+  const settings = videoSource.settings;
+
+  settings['monitor'] = monitorIndex;
+
+  videoSource.update(settings);
+  videoSource.save();
+
+  return videoSource;
+};
+
+/**
+ * Watch the video input source for size changes and adjust the scene item
+ * scaling accordingly.
+ *
+ * @param sceneItem       Scene item as returned from `IScene.add()`
+ * @param sourceName      Video input source
+ * @param baseResolution  Resolution used as base for scaling the video source
+ */
+const watchVideoSourceSize = (sceneItem: ISceneItem, videoSource: IInput, baseResolution: Size): void => {
+  clearInterval(timerVideoSourceSize);
+  timerVideoSourceSize = setInterval(() => {
+    const result = { width: videoSource.width, height: videoSource.height };
+
+    if (result.width === 0 || result.height === 0) {
+      return;
+    }
+
+    if (lastVideoSourceSize && result.width === lastVideoSourceSize.width && result.height === lastVideoSourceSize.height) {
+      return;
+    }
+
+    lastVideoSourceSize = result;
+
+    const scaleFactor = baseResolution.width / result.width;
+    sceneItem.scale = { x: scaleFactor, y: scaleFactor };
+
+    const logDetails = {
+      base: baseResolution,
+      input: result,
+      scale: sceneItem.scale,
+    };
+
+    console.log("[OBS] Adjusting scene item scale due to video input source size change", inspectObject(logDetails));
+  }, 5000);
+};
 
 /*
 * setupSources
 */
 const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceId: string ) => {
+  clearSources();
+
   osn.Global.setOutputSource(1, scene);
 
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
@@ -243,6 +334,26 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 
   setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
 }
+
+/**
+ * Clear all sources from the global output of OBS
+ */
+ const clearSources = (): void => {
+  console.log("[OBS] Removing all output sources")
+
+  // OBS allows a maximum of 64 output sources
+  for (let index = 1; index < 64; index++) {
+    const src: ISource = osn.Global.getOutputSource(index);
+    if (src !== undefined) {
+      setSetting('Output', `Track${index}Name`, '');
+      osn.Global.setOutputSource(index, null);
+      src.release();
+      src.remove();
+    }
+  }
+
+  setSetting('Output', 'RecTracks', 0); // Bit mask of used tracks: 1111 to use first four (from available six)
+};
 
 /*
 * start

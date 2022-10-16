@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- [Issue 2](https://github.com/aza547/wow-recorder/issues/2) - Add Game Capture mode
+
 ### Changed
 ### Fixed
 - [Issue 206](https://github.com/aza547/wow-recorder/issues/206) - Bitrate label corrected say to Mbps. 
