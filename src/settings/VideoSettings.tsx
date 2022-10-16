@@ -52,7 +52,7 @@ export default function VideoSettings() {
     },
   }
 
-  const getTooltipText = () => {
+  const getBitrateTooltip = () => {
     return (
       <div>
         {configSchema["obsKBitRate"].description}  
@@ -214,7 +214,7 @@ export default function VideoSettings() {
           sx={{...style, my: 1}}
           inputProps={{ style: { color: "white" } }}
         />
-        <Tooltip title={getTooltipText()} sx={{position: 'relative', right: '0px', top: '17px'}}>
+        <Tooltip title={getBitrateTooltip()} sx={{position: 'relative', right: '0px', top: '17px'}}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }}/>
           </IconButton>
