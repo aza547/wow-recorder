@@ -11,7 +11,7 @@ Only 64 bit Windows (any modern version) and retail WoW are currently supported.
 #  How to Use
 1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.2.6.0.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
 1. Launch the application and fill out the settings page.
-1. Configure combatlogging.
+1. Enable combatlogging.
     - Retail: Install and configure the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon.
     - Classic: Enable combatlogging by typing /combatlog in-game. 
 
