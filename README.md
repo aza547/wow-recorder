@@ -4,7 +4,7 @@ A desktop screen recorder application that records and saves videos of in-game e
 
 Nothing magic happens here, the application watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
 
-Only 64 bit Windows (any modern version) and retail WoW are currently supported. 
+Only 64 bit Windows (any modern version) is currently supported. 
 
 ![](https://i.imgur.com/6GaC0bE.png)
 
