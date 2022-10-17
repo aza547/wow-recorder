@@ -9,8 +9,8 @@ import VideoSettings from './VideoSettings';
 import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
 import ContentSettings from './ContentSettings';
-import ConfigContext from "./ConfigContext";
 import useSettings, { setConfigValues } from "./useSettings";
+import { configSchema } from 'main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -47,10 +47,28 @@ function a11yProps(index: number) {
   };
 }
 
-
 export default function Settings() {
   const [config, setConfig] = useSettings();
   const [tabIndex, setTabIndex] = React.useState(0);
+
+  const modifyConfig = (event: any): void => {
+    const setting = (event.target.name as keyof typeof configSchema);
+    let value = event.target.value;
+
+    switch (configSchema[setting].type) {
+      case 'integer':
+        value = parseInt(value, 10);
+        break;
+
+      case 'boolean':
+        value = event.target.checked;
+        break;
+    }
+
+    console.debug("Modify config", { setting, value });
+
+    setConfig((prevConfig: any) => ({ ...prevConfig, [setting]: value }));
+  }
 
   const handleChangeTab = (_event: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
@@ -116,46 +134,44 @@ const useStyles = makeStyles()({
    const { classes: styles } = useStyles();
 
   return (
-    <ConfigContext.Provider value={[config, setConfig]}>
-      <Box
-        sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: '100%' }}
+    <Box
+      sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: '100%' }}
+    >
+      <Tabs
+        orientation="vertical"
+        variant="scrollable"
+        value={tabIndex}
+        onChange={handleChangeTab}
+        aria-label="Vertical tabs example"
+        sx= {{ ...categoryTabsSx }}
+        className={ styles.tabs }
+        TabIndicatorProps={{ style: { background:'#bb4220' } }}
       >
-        <Tabs
-          orientation="vertical"
-          variant="scrollable"
-          value={tabIndex}
-          onChange={handleChangeTab}
-          aria-label="Vertical tabs example"
-          sx= {{ ...categoryTabsSx }}
-          className={ styles.tabs }
-          TabIndicatorProps={{ style: { background:'#bb4220' } }}
-        >
-          <Tab label="General" {...a11yProps(0)} sx = {{ ...categoryTabSx }} />
-          <Tab label="Content" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
-          <Tab label="Video" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
-          <Tab label="Audio" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
-          <Tab label="Advanced" {...a11yProps(4)} sx = {{ ...categoryTabSx }}/>
-        </Tabs>
-        <TabPanel value={tabIndex} index={0}>
-          <GeneralSettings/>
-        </TabPanel>
-        <TabPanel value={tabIndex} index={1}>
-          <ContentSettings/>
-        </TabPanel>
-        <TabPanel value={tabIndex} index={2}>
-          <VideoSettings/>
-        </TabPanel>
-        <TabPanel value={tabIndex} index={3}>
-          <AudioSettings/>
-        </TabPanel>
-        <TabPanel value={tabIndex} index={4}>
-          <AdvancedSettings/>
-        </TabPanel>
-        <div style={{position: "fixed", bottom: "10px", left: "12px"}} >
-          <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings}>Close</button>
-          <button type="button" id="submit" name="save" className="btn btn-primary" onClick={saveSettings}>Save</button>
-        </div>
-      </Box>
-    </ConfigContext.Provider>
+        <Tab label="General" {...a11yProps(0)} sx = {{ ...categoryTabSx }} />
+        <Tab label="Content" {...a11yProps(1)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Video" {...a11yProps(2)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Audio" {...a11yProps(3)} sx = {{ ...categoryTabSx }}/>
+        <Tab label="Advanced" {...a11yProps(4)} sx = {{ ...categoryTabSx }}/>
+      </Tabs>
+      <TabPanel value={tabIndex} index={0}>
+        <GeneralSettings config={config} onChange={modifyConfig}/>
+      </TabPanel>
+      <TabPanel value={tabIndex} index={1}>
+        <ContentSettings config={config} onChange={modifyConfig}/>
+      </TabPanel>
+      <TabPanel value={tabIndex} index={2}>
+        <VideoSettings config={config} onChange={modifyConfig}/>
+      </TabPanel>
+      <TabPanel value={tabIndex} index={3}>
+        <AudioSettings config={config} onChange={modifyConfig}/>
+      </TabPanel>
+      <TabPanel value={tabIndex} index={4}>
+        <AdvancedSettings config={config} onChange={modifyConfig}/>
+      </TabPanel>
+      <div style={{position: "fixed", bottom: "10px", left: "12px"}} >
+        <button type="button" id="close" name="close" className="btn btn-secondary" onClick={closeSettings}>Close</button>
+        <button type="button" id="submit" name="save" className="btn btn-primary" onClick={saveSettings}>Save</button>
+      </div>
+    </Box>
   );
 }

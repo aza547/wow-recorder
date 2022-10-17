@@ -1,11 +1,9 @@
-import * as React from 'react';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
-import { OurDisplayType } from 'main/types';
-import ConfigContext from "./ConfigContext";
+import { OurDisplayType, ISettingsPanelProps } from 'main/types';
 import { Box, TextField } from '@mui/material';
 import { configSchema } from '../main/configSchema'
 import InfoIcon from '@mui/icons-material/Info';
@@ -23,12 +21,8 @@ const obsCaptureModes = {
   'monitor_capture': 'Monitor Capture'
 };
 
-export default function VideoSettings() {
-  const [config, setConfig] = React.useContext(ConfigContext);
-
-  const modifyConfig = (stateKey: string, value: any) => {
-    setConfig((prevConfig: any) => ({ ...prevConfig, [stateKey]: value }));
-  };
+export default function VideoSettings(props: ISettingsPanelProps) {
+  const { config } = props;
 
   if (!fpsOptions.includes(config.obsFPS)) {
     config.obsFPS = fpsOptions.at(-1);
@@ -102,11 +96,12 @@ export default function VideoSettings() {
         <FormControl sx={{my: 1}}>
           <InputLabel id="obs-capture-mode-label" sx = {style}>Capture Mode</InputLabel>
           <Select
+            name='obsCaptureMode'
             labelId="obs-capture-mode-label"
             id="obs-capture-mode"
             value={config.obsCaptureMode}
             label="Capture Mode"
-            onChange={(event) => modifyConfig('obsCaptureMode', event.target.value)}
+            onChange={props.onChange}
             sx={style}
           >
             { Object.entries(obsCaptureModes).map((captureMode: any) =>
@@ -128,11 +123,12 @@ export default function VideoSettings() {
         <FormControl sx={{my: 1}}>
           <InputLabel id="demo-simple-select-label" sx = {style}>Monitor</InputLabel>
           <Select
+            name='monitorIndex'
             labelId="demo-simple-select-label"
             id="monitor-index"
             value={config.monitorIndex}
             label="Monitor"
-            onChange={(event) => modifyConfig('monitorIndex', event.target.value)}
+            onChange={props.onChange}
             sx={style}
           >
             { displayConfiguration.map((display: OurDisplayType) =>
@@ -154,11 +150,12 @@ export default function VideoSettings() {
         <FormControl sx={{my: 1}}>
           <InputLabel id="obs-output-resolution-label" sx = {style}>Video Output Resolution</InputLabel>
           <Select
+            name='obsOutputResolution'
             labelId="obs-output-resolution-label"
             id="obs-output-resolution"
             value={config.obsOutputResolution}
             label="Output resolution for OBS"
-            onChange={(event) => modifyConfig('obsOutputResolution', event.target.value)}
+            onChange={props.onChange}
             sx={style}
           >
             { outputResolutions.map((res: string) =>
@@ -179,11 +176,12 @@ export default function VideoSettings() {
         <FormControl sx={{my: 1}}>
           <InputLabel id="obs-fps-label" sx = {style}>Video FPS</InputLabel>
           <Select
+            name='obsFPS'
             labelId="obs-fps-label"
             id="obs-fps"
             value={config.obsFPS}
             label="Video FPS"
-            onChange={(event) => modifyConfig('obsFPS', event.target.value)}
+            onChange={props.onChange}
             sx={style}
           >
             { fpsOptions.map((res: string) =>
@@ -202,13 +200,14 @@ export default function VideoSettings() {
 
       <Box component="span" sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <TextField 
+          name='obsKBitRate'
           value={config.obsKBitRate}
-          onChange={event => { modifyConfig("obsKBitRate", parseInt(event.target.value, 10)) }}
+          onChange={props.onChange}
           id="video-bit-rate" 
           label="Video Bit Rate (Mbps)" 
           variant="outlined" 
           type="number" 
-          error= { config.obsKBitRate < 1  || config.obsKBitRate > 300 }
+          error={ config.obsKBitRate < 1  || config.obsKBitRate > 300 }
           helperText={(config.obsKBitRate < 1  || config.obsKBitRate > 300) ? "Must be between 1 and 300" : ' '}
           InputLabelProps={{ shrink: true }}
           sx={{...style, my: 1}}
