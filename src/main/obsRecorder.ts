@@ -97,7 +97,7 @@ const configureOBS = () => {
   console.debug('[OBS] Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
 
-  setObsRecEncoder(options);
+  setObsRecEncoder(recorderOptions);
 
   // Set output path and video format.
   setSetting('Output', 'RecFilePath', recorderOptions.bufferStorageDir);
