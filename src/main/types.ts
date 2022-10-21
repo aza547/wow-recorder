@@ -132,6 +132,31 @@ type VideoQueueItem = {
     metadata: Metadata,
 };
 
+interface IEventTarget {
+    name: string,
+    value: any,
+};
+
+/**
+ * Class to fake an event for onChange in `ISettingsPanelProps`
+ */
+class FakeChangeEvent {
+    public target: IEventTarget;
+
+    constructor(name: string, value: any) {
+        this.target = {name, value};
+    }
+}
+
+interface IOurChangeEvent {
+    target: IEventTarget;
+};
+
+interface ISettingsPanelProps {
+    config: any,
+    onChange: (event: IOurChangeEvent) => void,
+};
+
 export {
     RecStatus,
     SaveStatus,
@@ -146,4 +171,6 @@ export {
     FileFinderCallbackType,
     IWoWProcessResult,
     VideoQueueItem,
+    FakeChangeEvent,
+    ISettingsPanelProps,
 }
