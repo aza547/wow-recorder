@@ -42,7 +42,5 @@ const configValues = {
 };
 
 export default function useSettings() {
-  const [config, setConfig] = React.useState(configValues);
-
-  return [config, setConfig];
+  return React.useState(configValues);
 };
