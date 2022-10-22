@@ -38,10 +38,9 @@ const configValues = {
   obsFPS:               getConfigValue<number>('obsFPS'),
   obsKBitRate:          getConfigValue<number>('obsKBitRate'),
   obsCaptureMode:       getConfigValue<string>('obsCaptureMode'),
+  obsRecEncoder:        getConfigValue<string>('obsRecEncoder'),
 };
 
 export default function useSettings() {
-  const [config, setConfig] = React.useState(configValues);
-
-  return [config, setConfig];
+  return React.useState(configValues);
 };

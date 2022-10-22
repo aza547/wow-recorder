@@ -6,6 +6,7 @@ import stopRecordingIcon from '../../assets/icon/stop-recording.png';
 import { useState, useEffect } from 'react';
 import { RecStatus } from 'main/types';
 import InformationDialog from './InformationDialog';
+import { DialogContentText } from '@mui/material';
 
 type IconStyle = 'small' | 'big';
 
@@ -77,7 +78,9 @@ export default function RecorderStatus() {
           onAction={stopRecording}
           onClose={closeDialog}
         >
-          Manually stopping the recording isn't usually a great idea, but it can be necessary if there's a bug that prevents it from stopping on its own.
+          <DialogContentText>
+            Manually stopping the recording isn't usually a great idea, but it can be necessary if there's a bug that prevents it from stopping on its own.
+          </DialogContentText>
         </InformationDialog>
       </div>
     </div>

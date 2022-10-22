@@ -30,6 +30,7 @@ type RecorderOptionsType = {
     obsFPS: number;
     obsKBitRate: number;
     obsCaptureMode: string;
+    obsRecEncoder: string,
 };
 
 /**
@@ -39,6 +40,7 @@ type RecorderOptionsType = {
     private _isRecording: boolean = false;
     private _isRecordingBuffer: boolean = false;
     private _bufferRestartIntervalID?: any;
+    private _bufferStartTimeoutID?: any;
     private _options: RecorderOptionsType;
     private _videoQueue;
 
@@ -69,7 +71,7 @@ type RecorderOptionsType = {
     }
 
     /**
-     * Process an item from the video queue
+     * Process an item from the video queue.
      */
     private async _processVideoQueueItem(data: VideoQueueItem, done: Function): Promise<void> {
         const outputFilename = this.getFinalVideoFilename(data.metadata);
@@ -83,7 +85,7 @@ type RecorderOptionsType = {
     }
 
     /**
-     * Setup events on the videoQueue
+     * Setup events on the videoQueue.
      */
     private _setupVideoProcessingQueue(): void {
         this._videoQueue.on('error', (err: any) => {
@@ -94,7 +96,6 @@ type RecorderOptionsType = {
             console.log("[Recorder] Video processing queue empty, running clean up.")
 
             // Run the size monitor to ensure we stay within size limit.
-            // Need some maths to convert GB to bytes
             runSizeMonitor(this._options.storageDir, this._options.maxStorage)
                 .then(() => {
                     if (mainWindow) mainWindow.webContents.send('refreshState');
@@ -178,16 +179,16 @@ type RecorderOptionsType = {
      * Stop recorder buffer. Called when WoW is closed. 
      */
     stopBuffer = async () => {
-        if (!this._isRecordingBuffer) {
+        this.cancelBufferTimers(true, true);
+
+        if (this._isRecordingBuffer) {
+            console.log(addColor("[Recorder] Stop recording buffer", "cyan"));
+            this._isRecordingBuffer = false;   
+            await obsRecorder.stop();
+        } else {
             console.error("[Recorder] No buffer recording to stop.");
-            return;
         }
 
-        console.log(addColor("[Recorder] Stop recording buffer", "cyan"));
-        clearInterval(this._bufferRestartIntervalID);
-        this._isRecordingBuffer = false;   
-
-        await obsRecorder.stop();
         if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
         this.cleanupBuffer(1);
     }
@@ -201,13 +202,32 @@ type RecorderOptionsType = {
      */
     restartBuffer = async () => {
         console.log(addColor("[Recorder] Restart recording buffer", "cyan"));
+        this.isRecordingBuffer = false;
         await obsRecorder.stop();
 
-        setTimeout(() => {
-            obsRecorder.start();
+        this._bufferStartTimeoutID = setTimeout(async () => {
+            this.isRecordingBuffer = true;
+            await obsRecorder.start();
         }, 5000);
 
         this.cleanupBuffer(1);
+    }
+
+    /**
+     * Cancel buffer timers. This can include any combination of:
+     *  - _bufferRestartIntervalID: the interval on which we periodically restart the buffer
+     *  - _bufferStartTimeoutID: the timer we use during buffer restart to start the recorder again.
+     */
+    cancelBufferTimers = (cancelRestartInterval: boolean, cancelStartTimeout: boolean) => {
+        if (cancelRestartInterval && this._bufferRestartIntervalID) {
+            console.log(addColor("[Recorder] Buffer restart interval cleared", "green"));
+            clearInterval(this._bufferRestartIntervalID);
+        }
+
+        if (cancelStartTimeout && this._bufferStartTimeoutID) {
+            console.log(addColor("[Recorder] Buffer start timeout cleared", "green"));
+            clearInterval(this._bufferStartTimeoutID);
+        }
     }
 
     /**
@@ -218,7 +238,7 @@ type RecorderOptionsType = {
      */
     start = async () => {
         console.log(addColor("[Recorder] Start recording by cancelling buffer restart", "green"));
-        clearInterval(this._bufferRestartIntervalID);
+        this.cancelBufferTimers(true, false);
         this._isRecordingBuffer = false;        
         this._isRecording = true;   
         if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
@@ -231,8 +251,9 @@ type RecorderOptionsType = {
      * 
      * @param {Metadata} metadata the details of the recording
      * @param {number} overrun how long to continue recording after stop is called
+     * @param {boolean} closedWow if wow has just been closed
      */
-    stop = (metadata: Metadata, overrun: number = 0) => {
+    stop = (metadata: Metadata, overrun: number = 0, closedWow: boolean = false) => {
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
         console.info("[Recorder]" , JSON.stringify(metadata, null, 2));
@@ -253,6 +274,7 @@ type RecorderOptionsType = {
                 console.info("[Recorder] Raid encounter was too short, discarding");
             } else {
                 const bufferFile = obsRecorder.getObsLastRecording();
+
                 if (bufferFile) {
                     this.queueVideo(bufferFile, metadata);
                 } else {
@@ -262,11 +284,15 @@ type RecorderOptionsType = {
 
             // Refresh the GUI
             if (mainWindow) mainWindow.webContents.send('refreshState');
+            if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
 
-            // Restart the buffer recording ready for next game.
-            setTimeout(async () => {
-                this.startBuffer();
-            }, 5000)
+            // Restart the buffer recording ready for next game. If this function
+            // has been called due to the wow process ending, don't start the buffer.
+            if (!closedWow) {
+                setTimeout(async () => {
+                    this.startBuffer();
+                }, 5000)
+            }
         },
         overrun * 1000);
     }
@@ -286,10 +312,7 @@ type RecorderOptionsType = {
             };
 
             console.log("[Recorder] Queuing video for processing", queueItem);
-
             this._videoQueue.write(queueItem);
-
-            if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.ReadyToRecord);
         },
         2000)
     }
@@ -311,9 +334,9 @@ type RecorderOptionsType = {
     /**
      * Shutdown OBS.
      */
-    shutdown = () => {
+    shutdown = async () => {
         if (this._isRecording) {
-            obsRecorder.stop();       
+            await obsRecorder.stop();
             this._isRecording = false;
         } else if (this._isRecordingBuffer) {
             this.stopBuffer()
@@ -326,7 +349,7 @@ type RecorderOptionsType = {
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = (options: RecorderOptionsType) => {
+    reconfigure = async (options: RecorderOptionsType) => {
         this._options = options;
 
         // User might just have shrunk the size, so run the size monitor.
@@ -336,7 +359,7 @@ type RecorderOptionsType = {
         });
       
         if (this._isRecording) {
-            obsRecorder.stop();       
+            await obsRecorder.stop();
             this._isRecording = false;
         } else if (this._isRecordingBuffer) {
             this.stopBuffer()

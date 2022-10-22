@@ -5,36 +5,40 @@ import { openDirectorySelectorDialog } from './settingUtils';
 import Checkbox from '@mui/material/Checkbox';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import ConfigContext from "./ConfigContext";
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import { configSchema } from '../main/configSchema'
+import InformationDialog from '../renderer/InformationDialog';
+import { DialogContentText } from '@mui/material';
+import { FakeChangeEvent, ISettingsPanelProps } from 'main/types';
 
 const ipc = window.electron.ipcRenderer;
 
-export default function GeneralSettings() {
+export default function GeneralSettings(props: ISettingsPanelProps) {
+  const { config } = props;
+  const [openDialog, setDialog] = React.useState(false);
 
-  const [config, setConfig] = React.useContext(ConfigContext);
-
-  const modifyConfig = (stateKey: string, value: any) => {
-    setConfig((prevConfig: any) => ({ ...prevConfig, [stateKey]: value }));
-  };
-
-  const modifyCheckboxConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig({
-      ...config,
-      [event.target.name]: event.target.checked,
-    });
-  };
+  const closeDialog = () => setDialog(false);
 
   /**
    * Event handler when user selects an option in dialog window.
    */
    React.useEffect(() => {
     ipc.on('settingsWindow', (args: any) => {
-      if (args[0] === "pathSelected") modifyConfig(args[1], args[2]);
+      const [func, setting, value, validationResult] = args;
+
+      if (func === "pathSelected") {
+        if (setting === 'retailLogPath' || setting === 'classicLogPath') {
+          if (!Boolean(validationResult)) {
+            setDialog(true);
+            return;
+          }
+        }
+
+        props.onChange(new FakeChangeEvent(setting, value));
+      }
     });
   }, []);
 
@@ -46,22 +50,23 @@ export default function GeneralSettings() {
     },
     "& .MuiInputLabel-root": {color: 'white'},
     "& label.Mui-focused": {color: "#bb4220"},
-  }   
+  };
 
   const checkBoxStyle = {color: "#bb4220"};
   const formControlLabelStyle = {color: "white"};
   const formGroupStyle = {width: '48ch'};
 
-  const getCheckBox = (preference: string) => {
-    return (
-      <Checkbox 
-        checked={ config[preference] } 
-        onChange={modifyCheckboxConfig} 
-        name={preference}
-        style = {checkBoxStyle} 
-      />
-    )
-  }
+  const getCheckBox = (preference: string) =>
+    <Checkbox
+      checked={Boolean(config[preference])}
+      onChange={props.onChange}
+      name={preference}
+      style={checkBoxStyle}
+    />;
+
+  const openLink = (url: string) => {
+    ipc.sendMessage('openURL', [url]);
+  };
 
   return (
     <Stack
@@ -74,6 +79,7 @@ export default function GeneralSettings() {
     >
       <Box component="span" sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <TextField 
+          name="storagePath"
           value={config.storagePath}
           id="storage-path" 
           label="Storage Path" 
@@ -109,16 +115,17 @@ export default function GeneralSettings() {
       </Box>
 
       <Box component="span" sx={{ display: 'flex', alignItems: 'flex-start' }}>
-      <TextField 
-        value={config.classicLogPath}
-        id="classic-log-path" 
-        label="Classic Log Path" 
-        variant="outlined" 
-        onClick={() => openDirectorySelectorDialog("classicLogPath")} 
-        InputLabelProps={{ shrink: true }}
-        sx={{...style, my: 1}}
-        inputProps={{ style: { color: "white" } }}
-      />
+        <TextField
+          name="classicLogPath"
+          value={config.classicLogPath}
+          id="classic-log-path"
+          label="Classic Log Path"
+          variant="outlined"
+          onClick={() => openDirectorySelectorDialog("classicLogPath")}
+          InputLabelProps={{ shrink: true }}
+          sx={{...style, my: 1}}
+          inputProps={{ style: { color: "white" } }}
+        />
         <Tooltip title={configSchema["classicLogPath"].description} sx={{position: 'relative', right: '0px', top: '17px'}}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }}/>
@@ -128,8 +135,9 @@ export default function GeneralSettings() {
 
       <Box component="span" sx={{ display: 'flex', alignItems: 'flex-start' }}>
         <TextField 
+          name="maxStorage"
           value={config.maxStorage}
-          onChange={event => { modifyConfig("maxStorage", parseInt(event.target.value, 10)) }}
+          onChange={props.onChange}
           id="max-storage" 
           label="Max Storage (GB)" 
           variant="outlined" 
@@ -168,7 +176,21 @@ export default function GeneralSettings() {
           </IconButton>
         </Tooltip>
       </Box>
-      
+      <InformationDialog
+          title='🚫 Not a combat log directory'
+          open={openDialog}
+          buttons={['close']}
+          default='close'
+          onClose={closeDialog}
+      >
+          <DialogContentText>
+            The directory you picked doesn't look like a directory for World of Warcraft combat logs.
+          </DialogContentText>
+
+          <DialogContentText>
+            You can easily find this directory by <a href="#" onClick={() => openLink('https://github.com/aza547/wow-recorder/blob/main/docs/LocateLogDirectory.md')}>following this guide</a>.
+          </DialogContentText>
+      </InformationDialog>
     </Stack>
   );
 }

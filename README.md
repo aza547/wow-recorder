@@ -4,14 +4,16 @@ A desktop screen recorder application that records and saves videos of in-game e
 
 Nothing magic happens here, the application watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
 
-Only 64 bit Windows (any modern version) and retail WoW are currently supported. 
+Windows is currently the only supported operating system. 
 
-![](https://i.imgur.com/0Z6w1bU.png)
+![](https://i.imgur.com/6GaC0bE.png)
 
 #  How to Use
-1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.2.6.0.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
+1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.2.9.0.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
 1. Launch the application and fill out the settings page.
-1. Install and configure the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon.
+1. Enable combatlogging.
+    - Retail: Install and configure the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon.
+    - Classic: Install and configure the [AutoCombatLogger](https://www.curseforge.com/wow/addons/autocombatlogger) addon. 
 
 An example of valid config can be found below.
 

@@ -40,7 +40,8 @@ import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
-import { getObsResolutions } from './obsRecorder';
+import { CombatLogParser } from './combatLogParser';
+import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
 
 let recorder: Recorder;
 
@@ -73,6 +74,7 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
     obsFPS:               cfg.get<number>('obsFPS'),
     obsKBitRate:          cfg.get<number>('obsKBitRate'),
     obsCaptureMode:       cfg.get<string>('obsCaptureMode'),
+    obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
   };
 };
 
@@ -304,7 +306,15 @@ const openPathDialog = (event: any, args: any) => {
   
   dialog.showOpenDialog(settingsWindow, { properties: ['openDirectory'] }).then(result => {
     if (!result.canceled) {
-      event.reply('settingsWindow', ['pathSelected', setting, result.filePaths[0]]);
+      const selectedPath = result.filePaths[0];
+      let validationResult = true;
+
+      // Validate the path if it's a path for a log directory
+      if (setting === 'retailLogPath' || setting === 'classicLogPath') {
+        validationResult = CombatLogParser.validateLogPath(selectedPath);
+      }
+
+      event.reply('settingsWindow', ['pathSelected', setting, selectedPath, validationResult]);
     }
   })
   .catch(err => {
@@ -426,6 +436,33 @@ ipcMain.on('settingsWindow', (event, args) => {
     }
 
     event.returnValue = getObsResolutions();
+    return;
+  }
+
+  if (args[0] === 'getObsAvailableRecEncoders') {
+    if (!recorder) {
+      event.returnValue = [];
+      return;
+    }
+
+    const obsEncoders = getObsAvailableRecEncoders();
+    const defaultEncoder = obsEncoders.at(-1);
+    const encoderList = [{id: 'auto', name: `Automatic (${defaultEncoder})`}];
+
+    obsEncoders
+      // We don't want people to be able to select 'none'.
+      .filter(encoder => encoder !== 'none')
+      .forEach(encoder => {
+        const isHardwareEncoder = encoder.includes('amd') || encoder.includes('nvenc') || encoder.includes('qsv');
+        const encoderType = isHardwareEncoder ? 'Hardware' : 'Software';
+
+        encoderList.push({
+          id: encoder,
+          name: `${encoderType} (${encoder})`,
+        });
+      });
+
+    event.returnValue = encoderList;
     return;
   }
 })

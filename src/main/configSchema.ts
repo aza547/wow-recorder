@@ -16,6 +16,7 @@ export type ConfigurationSchema = {
     obsFPS: number,
     obsKBitRate: number,
     obsCaptureMode: string, // 'game_capture' or 'monitor_capture'
+    obsRecEncoder: string,
     recordRetail: boolean,
     recordClassic: boolean,
     recordRaids: boolean,
@@ -125,6 +126,11 @@ export const configSchema = {
         description: 'Game capture records the game directly but is limited in that only one OBS process can use game capture at a time. If you are also streaming with OBS Studio you may wish to use monitor capture here.',
         type: 'string',
         default: 'game_capture',
+    },
+    obsRecEncoder: {
+        description: "The video encoder to use for creating video files. If you don't know what this means, leave it on 'Automatic' to select the best option automatically.",
+        type: 'string',
+        default: 'auto',
     },
     recordRetail: {
         description: 'Whether the application should record retail',
