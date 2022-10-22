@@ -1,6 +1,7 @@
 import { Size } from "electron";
 import { WoWProcessResultKey } from "./constants";
-import { Metadata } from "./logutils";
+import { ChallengeModeDungeon } from '../log_handling/keystone';
+import { VideoCategory  }  from './constants'
 
 /**
  * Application recording status.
@@ -157,6 +158,53 @@ interface ISettingsPanelProps {
     onChange: (event: IOurChangeEvent) => void,
 };
 
+/**
+ * Type that defines the structure of a combat log file handler,
+ * which is used to monitor a specific log directory.
+ */
+ type CombatLogMonitorHandlerType = {
+    path: string,
+    wowFlavour: string, // Read from the '.flavor.info' file from WoW
+    currentLogFile?: string,
+    watchInterval?: any,
+    tail?: any,
+};
+
+/**
+ * Options for CombatLogParser
+ *
+ * 'dataTimeout'  = data timeout in milliseconds
+ * 'fileFinderFn' = Function for finding files according to a glob pattern
+ */
+type CombatLogParserOptionsType = {
+    dataTimeout: number,
+    fileFinderFn: FileFinderCallbackType,
+};
+
+/**
+ * Metadata type. 
+ */
+ type Metadata = {
+    name: string;
+    category: VideoCategory;
+    zoneID?: number;
+    encounterID?: number;
+    difficultyID? : number;
+    duration: number;
+    result: boolean;
+    playerName?: string;
+    playerRealm?: string;
+    playerSpecID?: number;
+    teamMMR?: number;
+    challengeMode?: ChallengeModeDungeon;
+    playerDeaths: PlayerDeathType[];
+}
+
+type EndRecordingOptionsType = {
+    result?: boolean,       // Success/Failure result for the overall activity
+    closedWow?: boolean,    // If the wow process just ended
+};
+
 export {
     RecStatus,
     SaveStatus,
@@ -173,4 +221,8 @@ export {
     VideoQueueItem,
     FakeChangeEvent,
     ISettingsPanelProps,
+    CombatLogMonitorHandlerType,
+    CombatLogParserOptionsType,
+    Metadata,
+    EndRecordingOptionsType
 }

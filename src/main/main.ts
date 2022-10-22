@@ -32,18 +32,13 @@ log.transports.file.resolvePath = () => logPath;
 Object.assign(console, log.functions);
 console.log("[Main] App starting: version", app.getVersion());
 
-
-
-import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
-const obsRecorder = require('./obsRecorder');
-import { Recorder, RecorderOptionsType } from './recorder';
-import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
+const obsRecorder = require('../recorder/obsRecorder');
+import { Recorder, RecorderOptionsType } from '../recorder/recorder';
+import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from '../recorder/obsAudioDeviceUtils';
 import { RecStatus, VideoPlayerSettings } from './types';
-import ConfigService from './configService';
-import { CombatLogParser } from './combatLogParser';
-import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
-
-let recorder: Recorder;
+import ConfigService from '../config_service/ConfigService';
+import { CombatLogParser } from '../log_handling/CombatLogParser';
+import { getObsAvailableRecEncoders, getObsResolutions } from '../recorder/obsRecorder';
 
 /**
  * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving 
@@ -55,6 +50,8 @@ let recorder: Recorder;
   console.error("UnhandledPromiseRejectionWarning:", reason);
   throw Error(reason);
 });
+
+let recorder: Recorder;
 
 /**
  * Load and return recorder options from the configuration store.
@@ -77,6 +74,23 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
     obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
   };
 };
+
+/**
+ * Process event watchers. 
+ */
+const handleWoWStarted = () => {
+  // do smth
+}
+
+const handleWoWStopped = () => {
+  // do smth
+}
+
+import { ProcessWatcher } from '../process_watching/ProcessWatcher';
+
+new ProcessWatcher()
+  .on('started', handleWoWStarted)
+  .on('stopped', handleWoWStopped)
 
 /**
  * Create a settings store to handle the config.
@@ -226,8 +240,8 @@ const createWindow = async () => {
     if (!configOK) return;
 
     makeRecorder(recorderOptions)
-    pollWowProcess();
-    watchLogs(baseLogPaths);
+    // pollWowProcess();
+    // watchLogs(baseLogPaths);
     checkAppUpdate();
   });
 
@@ -411,9 +425,8 @@ ipcMain.on('settingsWindow', (event, args) => {
         cfg.getPath('classicLogPath'),
       ].filter(v => v); // Remove any empty
       
-      watchLogs(baseLogPaths);
-
-      pollWowProcess();
+      // watchLogs(baseLogPaths);
+      // pollWowProcess();
     })
 
     settingsWindow.close();
@@ -568,7 +581,7 @@ ipcMain.on('test', (_event, args) => {
 ipcMain.on('recorder', (_event, args) => {
   if (args[0] == 'stop') {
     console.log('[Main] Force stopping recording due to user request.')
-    forceStopRecording();
+    // forceStopRecording();
   }
 });
 

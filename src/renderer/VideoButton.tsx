@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
 import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, dungeonTimersByMapId }  from 'main/constants';
-import { TimelineSegmentType, ChallengeModeDungeon } from 'main/keystone';
+import { TimelineSegmentType, ChallengeModeDungeon } from 'log_handling/keystone';
 import { getFormattedDuration, getVideoResult } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
-import { getEncounterNameById, getInstanceDifficulty, getVideoResultText } from 'main/helpers';
+import { getEncounterNameById, getInstanceDifficulty, getVideoResultText } from 'log_handling/helpers';
 
 /**
  * For shorthand referencing. 

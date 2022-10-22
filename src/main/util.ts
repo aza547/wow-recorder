@@ -1,8 +1,8 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { URL } from 'url';
 import path from 'path';
-import { categories, months, zones, dungeonsByMapId }  from './constants';
-import { Metadata }  from './logutils';
+import { categories, months, zones, dungeonsByMapId }  from '../data/constants';
+import { Metadata }  from '../main/types';
 const byteSize = require('byte-size')
 const chalk = require('chalk');
 
@@ -20,7 +20,7 @@ import glob from 'glob';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { Display, screen } from 'electron';
-import { getVideoZone } from './helpers';
+import { getVideoZone } from '../log_handling/helpers';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
