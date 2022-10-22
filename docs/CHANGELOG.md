@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 205](https://github.com/aza547/wow-recorder/issues/205) - Expose encoder in Advanced Settings.
 - [Issue 206](https://github.com/aza547/wow-recorder/issues/206) - Bitrate label corrected say to Mbps. 
 - [Issue 208](https://github.com/aza547/wow-recorder/issues/208) - Fix to Warsong Gulch image.
+- [Issue 213](https://github.com/aza547/wow-recorder/issues/213) - Fix the application occasionally crashing when WoW is closed.
 
 ## [2.9.0] - 2022-10-11
 ### Added

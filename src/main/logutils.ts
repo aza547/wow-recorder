@@ -121,8 +121,8 @@ const wowProcessStopped = () => {
     wowProcessRunning = null;
 
     if (recorder.isRecording) {
-        endRecording();
-    } else if (recorder.isRecordingBuffer) {
+        endRecording({closedWow: true});
+    } else {
         recorder.stopBuffer();
     }
 };
@@ -170,6 +170,7 @@ const startRecording = (category: VideoCategory) => {
 
 type EndRecordingOptionsType = {
     result?: boolean,       // Success/Failure result for the overall activity
+    closedWow?: boolean,    // If the wow process just ended
 };
 
 /**
@@ -187,13 +188,14 @@ const endRecording = (options?: EndRecordingOptionsType) => {
 
     const overrun = categoryRecordingSettings[currentActivity].videoOverrun;
     const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
+    const closedWow = options?.closedWow ?? false;
 
     metadata.duration = Math.round(videoDuration / 1000) + overrun;
     metadata.result = options?.result ?? false;
 
     console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
 
-    recorder.stop(metadata, overrun);
+    recorder.stop(metadata, overrun, closedWow);
     currentActivity = undefined;
 }
 
