@@ -414,7 +414,7 @@ class CombatLogParser extends EventEmitter {
                     return;
                 }
 
-                console.log("[AHK]", line)
+                // console.log("[AHK]", line)
                 this.handleLogLine(handler.wowFlavour, line);
             })
             .on('error', (error: unknown) => {
