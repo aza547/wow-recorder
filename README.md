@@ -13,7 +13,7 @@ Windows is currently the only supported operating system.
 1. Launch the application and fill out the settings page.
 1. Enable combatlogging.
     - Retail: Install and configure the [SimpleCombatLogger](https://www.curseforge.com/wow/addons/simplecombatlogger) addon.
-    - Classic: Enable combatlogging by typing /combatlog in-game. 
+    - Classic: Install and configure the [AutoCombatLogger](https://www.curseforge.com/wow/addons/autocombatlogger) addon. 
 
 An example of valid config can be found below.
 
