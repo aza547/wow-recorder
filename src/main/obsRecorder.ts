@@ -28,7 +28,6 @@ const reconfigure = (options: RecorderOptionsType) => {
 
   configureOBS();
   scene = setupScene();
-  setupSources();
 }
 
 /**
