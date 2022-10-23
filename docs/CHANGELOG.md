@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 57](https://github.com/aza547/wow-recorder/issues/57) - Only enable audio sources when recording buffer to avoid Windows not being able to go into sleep mode.
 
 ## [2.10.0] - 2022-10-22
 ### Added
