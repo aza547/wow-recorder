@@ -34,7 +34,7 @@ console.log("[Main] App starting: version", app.getVersion());
 
 
 
-import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
+import { watchLogs, pollWowProcess, runRecordingTest, makeHandlers } from './logutils';
 const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
@@ -42,6 +42,9 @@ import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
 import { CombatLogParser } from './combatLogParser';
 import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
+
+let retailHandler;
+let classicHandler;
 
 let recorder: Recorder;
 
@@ -225,9 +228,10 @@ const createWindow = async () => {
 
     if (!configOK) return;
 
-    makeRecorder(recorderOptions)
+    makeRecorder(recorderOptions);
+    [retailHandler, classicHandler] = makeHandlers();
     pollWowProcess();
-    watchLogs(baseLogPaths);
+    watchLogs();
     checkAppUpdate();
   });
 
@@ -411,7 +415,7 @@ ipcMain.on('settingsWindow', (event, args) => {
         cfg.getPath('classicLogPath'),
       ].filter(v => v); // Remove any empty
       
-      watchLogs(baseLogPaths);
+      watchLogs();
 
       pollWowProcess();
     })

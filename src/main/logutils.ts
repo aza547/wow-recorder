@@ -1,89 +1,54 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
-import { Combatant } from './combatant';
 import { recorder }  from './main';
-import { battlegrounds, categoryRecordingSettings, dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory, wowExecutableFlavours }  from './constants';
-import { IWoWProcessResult, PlayerDeathType, UnitFlags } from './types';
-import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from './keystone';
-import { CombatLogParser, LogLine } from './combatLogParser';
+import { wowExecutableFlavours }  from './constants';
+import { IWoWProcessResult } from './types';
+import { CombatLogParser } from './combatLogParser';
 import { getSortedFiles } from './util';
 import ConfigService from './configService';
+import RetailLogHandler from '../log_handling/RetailLogHandler'
+import ClassicLogHandler from '../log_handling/ClassicLogHandler'
 
 const cfg = ConfigService.getInstance();
 const tasklist = require('tasklist');
-
-let videoStartDate: Date;
-let videoStopDate: Date;
-let metadata: Metadata;
-let combatantMap: Map<string, Combatant> = new Map();
-let playerCombatant: Combatant | undefined;
 let testRunning: boolean = false;
-let activeChallengeMode: ChallengeModeDungeon | undefined;
-let currentActivity: VideoCategory | undefined;
 
 /**
  * Parser and handler for WoW combat log files
  * If no data has been received for 'dataTimeout' milliseconds, an event
  * will be emitted ('DataTimeout') to be able to clean up whatever was going on.
  */
-const combatLogParser = new CombatLogParser({
+const retailCombatLogParser = new CombatLogParser({
     dataTimeout: 2 * 60 * 1000,
     fileFinderFn: getSortedFiles,
 });
 
 /**
- * Log line handlers attached to their respective combat log event types.
- * Any combat log event is valid here.
- *
- * Callback signature is:
- *
- * (line: LogLine, flavour: string)
- *
- * 'flavour' is the WoW flavour like 'wow_classic', 'wow' (retail)
+ * Parser and handler for WoW combat log files
+ * If no data has been received for 'dataTimeout' milliseconds, an event
+ * will be emitted ('DataTimeout') to be able to clean up whatever was going on.
  */
-combatLogParser
-    .on('ARENA_MATCH_START', handleArenaStartLine)
-    .on('ARENA_MATCH_END', handleArenaStopLine)
-    .on('CHALLENGE_MODE_START', handleChallengeModeStartLine)
-    .on('CHALLENGE_MODE_END', handleChallengeModeEndLine)
-    .on('ENCOUNTER_START', handleEncounterStartLine)
-    .on('ENCOUNTER_END', handleEncounterStopLine)
-    .on('ZONE_CHANGE', handleZoneChange)
-    .on('COMBATANT_INFO', handleCombatantInfoLine)
-    .on('SPELL_AURA_APPLIED', handleSpellAuraAppliedLine)
-    .on('UNIT_DIED', handleUnitDiedLine)
-;
-
-// If we haven't received data in a while, we're probably AFK and should stop recording.
-combatLogParser.on('DataTimeout', (timeoutMs: number) => {
-    console.log(`[CombatLogParser] Haven't received data for combatlog in ${timeoutMs / 1000} seconds.`)
-
-    /**
-     * End the current challenge mode dungeon and stop recording.
-     * We'll keep the video.
-     */
-    if (activeChallengeMode || currentActivity === VideoCategory.Battlegrounds) {
-        forceStopRecording();
-        return;
-    }
+ const classicCombatLogParser = new CombatLogParser({
+    dataTimeout: 2 * 60 * 1000,
+    fileFinderFn: getSortedFiles,
 });
 
 /**
- * Metadata type. 
+ * Setup log handlers.
  */
-type Metadata = {
-    name: string;
-    category: VideoCategory;
-    zoneID?: number;
-    encounterID?: number;
-    difficultyID? : number;
-    duration: number;
-    result: boolean;
-    playerName?: string;
-    playerRealm?: string;
-    playerSpecID?: number;
-    teamMMR?: number;
-    challengeMode?: ChallengeModeDungeon;
-    playerDeaths: PlayerDeathType[];
+const makeHandlers = () => {
+    const retailHandler = new RetailLogHandler(recorder, retailCombatLogParser);
+    const classicHandler = new ClassicLogHandler(recorder, classicCombatLogParser);
+    return [retailHandler, classicHandler]
+}
+
+
+/**
+ * Watch the given directories for combat log changes.
+ */
+ const watchLogs = () => {
+    // @@@
+    retailCombatLogParser.watchPath("D:\\World of Warcraft\\_retail_\\Logs");
+    classicCombatLogParser.watchPath("D:\\World of Warcraft\\_classic_\\Logs");
 }
 
 /**
@@ -121,566 +86,12 @@ const wowProcessStopped = () => {
     wowProcessRunning = null;
 
     if (recorder.isRecording) {
-        endRecording({closedWow: true});
+        // @@@
+        //endRecording({closedWow: true});
     } else {
         recorder.stopBuffer();
     }
 };
-
-/**
- * Check and return whether we're allowed to record a certain type of content
- */
-const allowRecordCategory = (category: VideoCategory): boolean => {
-    const categoryConfig = categoryRecordingSettings[category];
-    if (!cfg.get<boolean>(categoryConfig.configKey)) {
-        if (!testRunning) {
-            console.log("[Logutils] Configured to not record", category);
-            return false;
-        }
-
-        console.log(`[Logutils] Configured to not record ${category}, but test is running so recording anyway.`);
-    };
-
-    return true;
-};
-
-/**
- * Initiate recording and mark as having something in-progress
- */
-const startRecording = (category: VideoCategory) => {
-    if (!allowRecordCategory(category)) {
-        console.info("[LogUtils] Not configured to record", category);
-        return;
-    } else if (recorder.isRecording || !recorder.isRecordingBuffer) {
-        console.error("[LogUtils] Avoiding error by not attempting to start recording",
-                      recorder.isRecording,
-                      recorder.isRecordingBuffer);
-        return;
-    }
-
-    console.log(`[Logutils] Start recording a video for category: ${category}`)
-
-    // Ensure combatant map and player combatant is clean before
-    // starting a new recording.
-    clearCombatants();
-
-    currentActivity = category;
-    recorder.start();
-};
-
-type EndRecordingOptionsType = {
-    result?: boolean,       // Success/Failure result for the overall activity
-    closedWow?: boolean,    // If the wow process just ended
-};
-
-/**
- * Stop recording and mark as not doing anything.
- */
-const endRecording = (options?: EndRecordingOptionsType) => {
-    if (!recorder.isRecording || !currentActivity) {
-        console.error("[LogUtils] Avoiding error by not attempting to stop recording");
-        return;
-    }
-
-    if (!videoStopDate) {
-        videoStopDate = new Date();
-    }
-
-    const overrun = categoryRecordingSettings[currentActivity].videoOverrun;
-    const videoDuration = (videoStopDate.getTime() - videoStartDate.getTime());
-    const closedWow = options?.closedWow ?? false;
-
-    metadata.duration = Math.round(videoDuration / 1000) + overrun;
-    metadata.result = options?.result ?? false;
-
-    console.log(`[Logutils] Stop recording video for category: ${currentActivity}`)
-
-    recorder.stop(metadata, overrun, closedWow);
-    currentActivity = undefined;
-}
-
-/**
- * Handle a line from the WoW log.
- */
-function handleArenaStartLine (line: LogLine): void {
-    if (recorder.isRecording) return;
-    const category = (line.arg(3) as VideoCategory);
-
-    const zoneID = parseInt(line.arg(1), 10);
-
-    // If all goes to plan we don't need this but we do it incase the game
-    // crashes etc. so we can still get a reasonable duration.
-    videoStartDate = line.date();
-
-    metadata = {
-        name: "name",
-        category: category,
-        zoneID: zoneID,
-        duration: 0,
-        result: false,
-        playerDeaths: []
-    }
-
-    startRecording(category);
-}
-
-/**
- * Handle a line from the WoW log.
- */
-function handleArenaStopLine (line: LogLine): void {
-    if (!recorder.isRecording) return;
-
-    videoStopDate = line.date();
-    
-    const [result, MMR] = determineArenaMatchResult(line); 
-    metadata.teamMMR = MMR;
-
-    endRecording({result});
-}
-
-/**
- * Determines the arena match result.
- * @param line the line from the WoW log.
- * @returns [win: boolean, newRating: number]
- */
-const determineArenaMatchResult = (line: LogLine): any[] => {
-    if (playerCombatant === undefined) return [undefined, undefined];
-    const teamID = playerCombatant.teamID;
-    const indexForMMR = (teamID == 0) ? 3 : 4;
-    const MMR = parseInt(line.arg(indexForMMR), 10);
-    const winningTeamID = parseInt(line.arg(1), 10);
-    const win = (teamID === winningTeamID)
-    return [win, MMR];
-}
-
-/**
- * Handle a log line for CHALLENGE_MODE_START
- */
-function handleChallengeModeStartLine (line: LogLine): void {
-    // It's impossible to start a keystone dungeon while another one is in progress
-    // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
-    // is encountered.
-    if (activeChallengeMode) {
-        console.warn("[ChallengeMode] A Challenge Mode instance is already in progress; abandoning it.")
-    }
-
-    videoStartDate = line.date();
-
-    const zoneName = line.arg(2);
-    const mapId = parseInt(line.arg(3), 10);
-    const hasDungeonMap = (mapId in dungeonsByMapId);
-    const hasTimersForDungeon = (mapId in dungeonTimersByMapId);
-
-    if (!hasDungeonMap || !hasTimersForDungeon) {
-        console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
-    }
-
-    const dungeonAffixes = line.arg(5).map((v: string) => parseInt(v, 10));
-
-    activeChallengeMode = new ChallengeModeDungeon(
-        dungeonTimersByMapId[mapId], // Dungeon timers
-        parseInt(line.arg(2), 10),   // zoneId
-        mapId,                       // mapId
-        parseInt(line.arg(4), 10),   // Keystone Level
-        dungeonAffixes,              // Array of affixes, as numbers
-    )
-
-    activeChallengeMode.addTimelineSegment(new ChallengeModeTimelineSegment(
-        TimelineSegmentType.Trash, videoStartDate, 0
-    ));
-
-    console.debug("[ChallengeMode] Starting Challenge Mode instance")
-
-    metadata = {
-        name: line.arg(1), // Instance name (e.g. "Operation: Mechagon")
-        encounterID: parseInt(line.arg(1), 10),
-        category: VideoCategory.MythicPlus,
-        zoneID: parseInt(line.arg(5)),
-        duration: 0,
-        result: false,
-        challengeMode: activeChallengeMode,
-        playerDeaths: [],
-    };
-
-    startRecording(VideoCategory.MythicPlus);
-};
-
-const endChallengeModeDungeon = (): void => {
-    if (!activeChallengeMode) {
-        return;
-    }
-
-    console.debug("[ChallengeMode] Ending current timeline segment");
-    activeChallengeMode.endCurrentTimelineSegment(videoStopDate);
-
-    // If last timeline segment is less than 10 seconds long, discard it.
-    // It's probably not useful
-    const lastTimelineSegment = activeChallengeMode.getCurrentTimelineSegment();
-    if (lastTimelineSegment && lastTimelineSegment.length() < 10000) {
-        console.debug("[ChallengeMode] Removing last timeline segment because it's too short.")
-        activeChallengeMode.removeLastTimelineSegment();
-    }
-
-    console.debug("[ChallengeMode] Ending Challenge Mode instance");
-    activeChallengeMode = undefined;
-}
-
-/**
- * Handle a log line for CHALLENGE_MODE_END
- */
-function handleChallengeModeEndLine (line: LogLine): void {
-    if (!recorder.isRecording || !activeChallengeMode) {
-        return;
-    }
-
-    videoStopDate = line.date();
-
-    // The actual log duration of the dungeon, from which keystone upgrade
-    // levels can be calculated.
-    //
-    // It's included separate from `metadata.duration` because the duration of the
-    // dungeon, as the game sees it, is what is important for this value to make sense.
-    activeChallengeMode.duration = Math.round(parseInt(line.arg(4), 10) / 1000);
-
-    // Calculate whether the key was timed or not
-    activeChallengeMode.timed = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(activeChallengeMode.allottedTime, activeChallengeMode.duration) > 0;
-
-    endChallengeModeDungeon();
-
-    const result = Boolean(parseInt(line.arg(1)));
-
-    endRecording({result});
-};
-
-const getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
-    if (!videoStartDate) {
-        return 0;
-    }
-
-    return (currentDate.getTime() - videoStartDate.getTime()) / 1000;
-};
-
-/**
- * Handle a line from the WoW log.
- */
-function handleEncounterStartLine (line: LogLine): void {
-    const encounterID = parseInt(line.arg(1), 10)
-    const difficultyID = parseInt(line.arg(3), 10);
-    const eventDate = line.date();
-
-    // If we're recording _and_ has an active challenge mode dungeon,
-    // add a new boss encounter timeline segment.
-    if (recorder.isRecording && activeChallengeMode) {
-        const vSegment = new ChallengeModeTimelineSegment(
-            TimelineSegmentType.BossEncounter,
-            eventDate,
-            getRelativeTimestampForTimelineSegment(eventDate),
-            encounterID
-        );
-
-        activeChallengeMode.addTimelineSegment(vSegment, eventDate);
-        console.debug(`[ChallengeMode] Starting new boss encounter: ${dungeonEncounters[encounterID]}`)
-
-        return;
-    }
-
-    videoStartDate = eventDate;
-
-    metadata = {
-        name: "name",
-        category: VideoCategory.Raids,
-        encounterID: encounterID,
-        difficultyID: difficultyID,
-        duration: 0,
-        result: false,
-        playerDeaths: [],
-    }
-
-    startRecording(VideoCategory.Raids);
-}
-
-/**
- * Handle a line from the WoW log.
- */
-function handleEncounterStopLine (line: LogLine): void {
-    const eventDate = line.date();
-
-    const result = Boolean(parseInt(line.arg(5), 10));
-    const encounterID = parseInt(line.arg(1), 10);
-
-    if (recorder.isRecording && activeChallengeMode) {
-        const currentSegment = activeChallengeMode.getCurrentTimelineSegment()
-        if (currentSegment) {
-            currentSegment.result = result
-        }
-
-        const vSegment = new ChallengeModeTimelineSegment(
-            TimelineSegmentType.Trash, eventDate, getRelativeTimestampForTimelineSegment(eventDate)
-        )
-
-        // Add a trash segment as the boss encounter ended
-        activeChallengeMode.addTimelineSegment(vSegment, eventDate);
-        console.debug(`[ChallengeMode] Ending boss encounter: ${dungeonEncounters[encounterID]}`)
-        return;
-    }
-
-    videoStopDate = eventDate;
-
-    endRecording({result});
-}
-
-/**
- * Handle a line from the WoW log.
- */
-function handleZoneChange (line: LogLine): void {
-    console.log("[Logutils] Handling zone change", line);
-    const zoneID = parseInt(line.arg(1), 10);
-    const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
-    const isRecording = recorder.isRecording;
-
-    // const classicArenas = [
-    //     617, // Dalaran
-    //     572, // Ruins
-    //     559, // Nagrand 
-    // ];
-
-    let isRecordingBG = false;
-    let isRecordingArena = false;
-
-    if (metadata !== undefined) {
-        isRecordingBG = (metadata.category === VideoCategory.Battlegrounds);
-        isRecordingArena = (metadata.category === VideoCategory.TwoVTwo) ||
-                           (metadata.category === VideoCategory.ThreeVThree) ||
-                           (metadata.category === VideoCategory.SoloShuffle) ||
-                           (metadata.category === VideoCategory.Skirmish);
-    }
-
-    if (!isRecording && isNewZoneBG) {
-        console.log("[Logutils] ZONE_CHANGE into BG");
-        battlegroundStart(line);
-        return;
-    }
-    if (isRecording && isRecordingBG && !isNewZoneBG) {
-        console.log("[Logutils] ZONE_CHANGE out of BG, stop recording");
-        battlegroundStop(line);
-        return;
-    }
-    if (isRecording && isRecordingArena) {
-        console.log("[Logutils] ZONE_CHANGE out of arena, stop recording");
-        zoneChangeStop(line);
-        return;
-    }
-}
-
-/**
- * Handles the SPELL_AURA_APPLIED line from WoW log.
- * @param line the SPELL_AURA_APPLIED line
- */
-function handleSpellAuraAppliedLine (line: LogLine): void {
-    if (playerCombatant) return;
-    if (combatantMap.size === 0) return;
-
-    const srcGUID = line.arg(1);
-    const srcNameRealm = line.arg(2)
-    const srcFlags = parseInt(line.arg(3), 16);
-
-    const srcCombatant = combatantMap.get(srcGUID);
-    if (srcCombatant === undefined) return;
-
-    if (isUnitSelf(srcFlags)) {
-        const [srcName, srcRealm] = ambiguate(srcNameRealm);
-        srcCombatant.name = srcName;
-        srcCombatant.realm = srcRealm;
-        playerCombatant = srcCombatant;
-
-        metadata.playerName = playerCombatant.name;
-        metadata.playerRealm = playerCombatant.realm;
-        metadata.playerSpecID = playerCombatant.specID;
-    }
-}
-
-/**
- * Handles the COMBATANT_INFO line from WoW log by creating a Combatant and
- * adding it to combatantMap.
- * @param line the COMBATANT_INFO line
- */
-function handleCombatantInfoLine (line: LogLine): void {
-    const GUID = line.arg(1);
-    const teamID = parseInt(line.arg(2), 10);
-    const specID = parseInt(line.arg(24), 10);
-    let combatantInfo = new Combatant(GUID, teamID, specID);
-    combatantMap.set(GUID, combatantInfo);
-}
-
-/**
- * Return a combatant by guid, if it exists.
- */
-function getCombatantByGuid(guid: string): Combatant | undefined {
-    return combatantMap.get(guid);
-}
-
-/**
- * Clear combatants map and the current player combatant, if any.
- */
-const clearCombatants = () => {
-    combatantMap.clear();
-    playerCombatant = undefined;
-}
-
-/**
- * ZONE_CHANGE event into a BG.
- */
-function battlegroundStart (line: LogLine): void {
-    const zoneID = parseInt(line.arg(1), 10);
-    const battlegroundName = battlegrounds[zoneID];
-
-    videoStartDate = line.date();
-
-    metadata = {
-        name: battlegroundName,
-        category: VideoCategory.Battlegrounds,
-        zoneID: zoneID,
-        duration: 0,
-        result: false,
-        playerDeaths: [],
-    }
-
-    startRecording(VideoCategory.Battlegrounds);
-}
-
-/**
- * battlegroundStop
- */
-function battlegroundStop (line: LogLine): void {
-    videoStopDate = line.date();
-    endRecording();
-}
-
-/**
- * zoneChangeStop
- */
-function zoneChangeStop (line: LogLine): void {
-    videoStopDate = line.date();
-    endRecording();
-}
-
-/**
- * Register a player death in the video metadata
- */
-const registerPlayerDeath = (timestamp: number, name: string, specId: number): void => {
-    // Ensure a timestamp cannot be negative
-    timestamp = timestamp >= 0 ? timestamp : 0;
-
-    metadata.playerDeaths.push({ name, specId, timestamp });
-}
-
-/**
- * Handle a unit dying, but only if it's a player.
- */
- function handleUnitDiedLine (line: LogLine): void {
-    // Only handle UNIT_DIED if we have a videoStartDate AND we're recording
-    // We're not interested in player deaths outside of an active activity/recording.
-    if (!videoStartDate || !recorder.isRecording) {
-        return;
-    }
-
-    const unitFlags = parseInt(line.arg(7), 16);
-    const isUnitUnconsciousAtDeath = Boolean(parseInt(line.arg(9), 10));
-
-    // We only want player deaths and we don't want fake deaths,
-    // i.e. a hunter that feigned death
-    if (!isUnitPlayer(unitFlags) || isUnitUnconsciousAtDeath) {
-        return;
-    }
-
-    const playerName = line.arg(6);
-    const playerGuid = line.arg(5);
-    const playerSpecId = getCombatantByGuid(playerGuid)?.specID ?? 0;
-
-    // Add player death and subtract 2 seconds from the time of death to allow the
-    // user to view a bit of the video before the death and not at the actual millisecond
-    // it happens.
-    const relativeTimeStamp = ((line.date().getTime() - 2) - videoStartDate.getTime()) / 1000;
-    registerPlayerDeath(relativeTimeStamp, playerName, playerSpecId);
-}
-
-/**
- * Return whether the bitmask `flags` contain the bitmask `flag`
- */
-const hasFlag = (flags: number, flag: number): boolean => {
-    return (flags & flag) !== 0;
-}
-
-/**
- * Determine if the `flags` value indicate our own unit.
- * This is determined by the unit being a player and having the
- * flags `AFFILIATION_MINE` and `REACTION_FRIENDLY`.
- */
-const isUnitSelf = (flags: number): boolean => {
-    return isUnitPlayer(flags) && (
-        hasFlag(flags, UnitFlags.REACTION_FRIENDLY) &&
-        hasFlag(flags, UnitFlags.AFFILIATION_MINE)
-    );
-}
-
-/**
-* Determine if the unit is a player.
-*
-* See more here: https://wowpedia.fandom.com/wiki/UnitFlag
-*/
-const isUnitPlayer = (flags: number): boolean => {
-    return (
-        hasFlag(flags, UnitFlags.CONTROL_PLAYER) &&
-        hasFlag(flags, UnitFlags.TYPE_PLAYER)
-    );
-}
-
-/**
- * Split name and realm. Name stolen from:
- * https://wowpedia.fandom.com/wiki/API_Ambiguate
- * @param nameRealm string containing name and realm
- * @returns array containing name and realm
- */
- const ambiguate = (nameRealm: string): string[] => {
-    const split = nameRealm.split("-");
-    const name = split[0];
-    const realm = split[1];
-    return [name, realm];
-}
-
-/**
- * Forcibly stop recording and clean up whatever was going on
- */
-const forceStopRecording = () => {
-    videoStopDate = new Date();
-    const milliSeconds = (videoStopDate.getTime() - videoStartDate.getTime());
-    metadata.duration = Math.round(milliSeconds / 1000);
-
-    // If a Keystone Dungeon is in progress, end it properly before we stop recording
-    if (activeChallengeMode) {
-        endChallengeModeDungeon();
-    }
-
-    // Clear all kinds of stuff that would prevent the app from starting another
-    // recording
-    clearCombatants();
-
-    // Regardless of what happens above these lines, _ensure_ that these variables
-    // are cleared.
-    activeChallengeMode = undefined;
-    testRunning = false;
-
-    recorder.stop(metadata, 0);
-}
-
-/**
- * Watch the given directories for combat log changes.
- */
- const watchLogs = (logDirectories: string[]) => {
-    logDirectories.forEach((logdir: string) => {
-        combatLogParser.watchPath(logdir);
-    })
-}
 
 /**
  * Check Windows task list and find any WoW process.
@@ -757,7 +168,7 @@ const filterFlavoursByConfig = (wowProcess: IWoWProcessResult) => {
 
 const sendTestCombatLogLine = (line: string): void => {
     console.debug('[Logutils] Sending test combat log line to the Combat Log Parser', line);
-    combatLogParser.handleLogLine('retail', line);
+    retailCombatLogParser.handleLogLine('retail', line);
 };
 
 /**
@@ -824,6 +235,5 @@ export {
     watchLogs,
     pollWowProcess,
     runRecordingTest,
-    Metadata,
-    forceStopRecording,
+    makeHandlers,
 };

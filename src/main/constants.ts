@@ -39,19 +39,19 @@ interface ICategoryRecordingSettings {
 const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSettings } = {
   [VideoCategory.TwoVTwo]: {
     configKey: 'recordTwoVTwo',
-    videoOverrun: 4,
+    videoOverrun: 3,
   },
   [VideoCategory.ThreeVThree]: {
     configKey: 'recordThreeVThree',
-    videoOverrun: 4,
+    videoOverrun: 3,
   },
   [VideoCategory.Skirmish]: {
     configKey: 'recordSkirmish',
-    videoOverrun: 4,
+    videoOverrun: 3,
   },
   [VideoCategory.SoloShuffle]: {
     configKey: 'recordSoloShuffle',
-    videoOverrun: 4,
+    videoOverrun: 3,
   },
   [VideoCategory.MythicPlus]:{
     configKey: 'recordDungeons',
