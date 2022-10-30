@@ -18,9 +18,10 @@ import util from 'util';
 import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
-import { FileInfo, FileSortDirection, OurDisplayType } from './types';
+import { FileInfo, FileSortDirection, OurDisplayType, VideoQueueItem } from './types';
 import { Display, screen } from 'electron';
 import { getVideoZone } from './helpers';
+import Activity from '../activitys/Activity';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -136,10 +137,10 @@ const getMetadataForVideo = (video: string) => {
 /**
  * Writes video metadata asynchronously and returns a Promise
  */
- const writeMetadataFile = async (videoPath: string, metadata: any) => {
+ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
     const metadataFileName = getMetadataFileForVideo(videoPath);
     const jsonString = JSON.stringify(metadata, null, 2);
-
+    
     return await fspromise.writeFile(
         metadataFileName,
         jsonString,
@@ -342,7 +343,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  * Put a save marker on a video, protecting it from the file monitor.
  */
  const toggleVideoProtected = (videoPath: string) => {
-    const metadata = getMetadataForVideo(videoPath);
+    const metadata: Metadata = getMetadataForVideo(videoPath);
     if (!metadata) {
         console.error(`[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`);
         return;

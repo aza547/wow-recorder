@@ -1,64 +1,84 @@
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
-import { dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, VideoCategory } from "../main/constants";
-import { ChallengeModeDungeon, ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
+import { dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, retailBattlegrounds, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
+import ArenaMatch from "../activitys/ArenaMatch";
 import LogHandler from "./LogHandler";
+import Battleground from "../activitys/Battleground";
+import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
+import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 
+/**
+ * RetailLogHandler class.
+ */
 export default class RetailLogHandler extends LogHandler {
-    private activeChallengeMode: ChallengeModeDungeon | undefined;
     
-    constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
+    constructor(recorder: Recorder, 
+                combatLogParser: CombatLogParser) 
+    {
         super(recorder, combatLogParser);
+
         this.combatLogParser
-            .on('ARENA_MATCH_START', this.handleArenaStartLine)
-            .on('ARENA_MATCH_END', this.handleArenaStopLine)
-            .on('CHALLENGE_MODE_START', this.handleChallengeModeStartLine)
-            .on('CHALLENGE_MODE_END', this.handleChallengeModeEndLine)
-            .on('COMBATANT_INFO', this.handleCombatantInfoLine);
+            .on('ENCOUNTER_START',      (line: LogLine) => { this.handleEncounterStartLine(line) })
+            .on('ENCOUNTER_END',        (line: LogLine) => { this.handleEncounterEndLine(line) })
+            .on('ZONE_CHANGE',          (line: LogLine) => { this.handleZoneChange(line) })
+            .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.handleSpellAuraAppliedLine(line) })
+            .on('UNIT_DIED',            (line: LogLine) => { this.handleUnitDiedLine(line) })
+            .on('ARENA_MATCH_START',    (line: LogLine) => { this.handleArenaStartLine(line) })
+            .on('ARENA_MATCH_END',      (line: LogLine) => { this.handleArenaEndLine(line) })
+            .on('CHALLENGE_MODE_START', (line: LogLine) => { this.handleChallengeModeStartLine(line) })
+            .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.handleChallengeModeEndLine(line) })
+            .on('COMBATANT_INFO',       (line: LogLine) => { this.handleCombatantInfoLine(line) });
     };
 
     handleArenaStartLine(line: LogLine): void {
+        if (this.activity) {
+            console.error("[RetailLogHandler] Another activity in progress, can't start arena");
+            return;
+        }
+
+        console.debug("[RetailLogHandler] Handling ARENA_MATCH_START line:", line);
         if (this.recorder.isRecording) return;
+        
+        const startTime = line.date();
         const category = (line.arg(3) as VideoCategory);
         const zoneID = parseInt(line.arg(1), 10);
 
-        // If all goes to plan we don't need this but we do it incase the game
-        // crashes etc. so we can still get a reasonable duration.
-        this.videoStartDate = line.date();
-
-        this.metadata = {
-            name: "name",
-            category: category,
-            zoneID: zoneID,
-            duration: 0,
-            result: false,
-            playerDeaths: []
-        }
-
-        this.startRecording(category);
+        this.activity = new ArenaMatch(startTime, category, zoneID);
+        this.startRecording(this.activity);
     };
 
-    handleArenaStopLine (line: LogLine): void {
-        if (!this.recorder.isRecording) return;
+    handleArenaEndLine (line: LogLine): void {
+        console.debug("[RetailLogHandler] Handling ARENA_MATCH_END line:", line);
 
-        this.videoStopDate = line.date();
-        
-        const [result, MMR] = this.determineArenaMatchResult(line); 
-        this.metadata.teamMMR = MMR;
+        if (!this.activity) {
+            console.error("[RetailLogHandler] Arena stop with no active arena match");
+            return;
+        }
 
-        this.endRecording({result});
+        const arenaMatch = this.activity as ArenaMatch;
+        const endTime = line.date();
+        const winningTeamID = parseInt(line.arg(1), 10);
+        arenaMatch.endArenaMatch(endTime, winningTeamID);
+        this.endRecording(arenaMatch);
     }
 
     handleChallengeModeStartLine (line: LogLine): void {
+        console.debug("[RetailLogHandler] Handling CHALLENGE_MODE_START line:", line);
+
         // It's impossible to start a keystone dungeon while another one is in progress
         // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
-        // is encountered.
-        if (this.activeChallengeMode) {
-            console.warn("[ChallengeMode] A Challenge Mode instance is already in progress; abandoning it.")
-        }
+        // is encountered. If any other activity is in progress, we will just exit.
+        if (this.activity) {
+            const activeChallengeMode = (this.activity.getCategory() === VideoCategory.MythicPlus);
 
-        this.videoStartDate = line.date();
+            if (activeChallengeMode) {
+                console.warn("[RetailLogHandler] A challenge mode instance is already in progress; abandoning it.")
+            } else {
+                console.error("[RetailLogHandler] Another activity in progress, can't start challenge mode.");
+                return;
+            }
+        }
 
         const zoneName = line.arg(2);
         const mapId = parseInt(line.arg(3), 10);
@@ -66,204 +86,259 @@ export default class RetailLogHandler extends LogHandler {
         const hasTimersForDungeon = (mapId in dungeonTimersByMapId);
 
         if (!hasDungeonMap || !hasTimersForDungeon) {
-            console.error(`[ChallengeMode] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
+            console.error(`[RetailLogHandler] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`)
         }
 
+        const startTime = line.date();
+        const zoneID = parseInt(line.arg(2), 10);
+        const level = parseInt(line.arg(4), 10);
         const dungeonAffixes = line.arg(5).map((v: string) => parseInt(v, 10));
 
-        this.activeChallengeMode = new ChallengeModeDungeon(
-            dungeonTimersByMapId[mapId], // Dungeon timers
-            parseInt(line.arg(2), 10),   // zoneId
-            mapId,                       // mapId
-            parseInt(line.arg(4), 10),   // Keystone Level
-            dungeonAffixes,              // Array of affixes, as numbers
-        )
+        this.activity = new ChallengeModeDungeon(startTime, zoneID, mapId, level, dungeonAffixes);
+        const challengeModeActivity = (this.activity as ChallengeModeDungeon);
 
-        this.activeChallengeMode.addTimelineSegment(new ChallengeModeTimelineSegment(
-            TimelineSegmentType.Trash, this.videoStartDate, 0
+        challengeModeActivity.addTimelineSegment(new ChallengeModeTimelineSegment(
+            TimelineSegmentType.Trash, this.activity.getStartDate(), 0
         ));
 
-        console.debug("[ChallengeMode] Starting Challenge Mode instance")
-
-        this.metadata = {
-            name: line.arg(1), // Instance name (e.g. "Operation: Mechagon")
-            encounterID: parseInt(line.arg(1), 10),
-            category: VideoCategory.MythicPlus,
-            zoneID: parseInt(line.arg(5)),
-            duration: 0,
-            result: false,
-            challengeMode: this.activeChallengeMode,
-            playerDeaths: [],
-        };
-
-        this.startRecording(VideoCategory.MythicPlus);
+        this.startRecording(this.activity);
     };
-
-    endChallengeModeDungeon = (): void => {
-        if (!this.activeChallengeMode) {
-            return;
-        }
-
-        console.debug("[ChallengeMode] Ending current timeline segment");
-        this.activeChallengeMode.endCurrentTimelineSegment(this.videoStopDate);
-
-        // If last timeline segment is less than 10 seconds long, discard it.
-        // It's probably not useful
-        const lastTimelineSegment = this.activeChallengeMode.getCurrentTimelineSegment();
-        if (lastTimelineSegment && lastTimelineSegment.length() < 10000) {
-            console.debug("[ChallengeMode] Removing last timeline segment because it's too short.");
-            this.activeChallengeMode.removeLastTimelineSegment();
-        }
-
-        console.debug("[ChallengeMode] Ending Challenge Mode instance");
-        this.activeChallengeMode = undefined;
-    }
 
     /**
      * Handle a log line for CHALLENGE_MODE_END
      */
     handleChallengeModeEndLine (line: LogLine): void {
-        if (!this.recorder.isRecording || !this.activeChallengeMode) {
+        console.debug("[RetailLogHandler] Handling CHALLENGE_MODE_STOP line:", line);
+
+        if (!this.activity) {
+            console.error("[RetailLogHandler] Challenge mode stop with no active ChallengeModeDungeon");
             return;
         }
 
-        this.videoStopDate = line.date();
+        const challengeModeActivity = this.activity as ChallengeModeDungeon;
+        const endDate = line.date();
 
         // The actual log duration of the dungeon, from which keystone upgrade
-        // levels can be calculated.
-        //
-        // It's included separate from `metadata.duration` because the duration of the
-        // dungeon, as the game sees it, is what is important for this value to make sense.
-        this.activeChallengeMode.duration = Math.round(parseInt(line.arg(4), 10) / 1000);
+        // levels can be calculated. This includes player death penalty. 
+        const CMDuration = Math.round(parseInt(line.arg(4), 10) / 1000);
 
-        // Calculate whether the key was timed or not
-        this.activeChallengeMode.timed = 
-            ChallengeModeDungeon.calculateKeystoneUpgradeLevel(
-                this.activeChallengeMode.allottedTime, 
-                this.activeChallengeMode.duration
-            ) > 0;
-
-        this.endChallengeModeDungeon();
-
-        const result = Boolean(parseInt(line.arg(1)));
-
-        this.endRecording({result});
-    };
-
-    getRelativeTimestampForTimelineSegment = (currentDate: Date): number => {
-        if (!this.videoStartDate) {
-            return 0;
-        }
-
-        return (currentDate.getTime() - this.videoStartDate.getTime()) / 1000;
+        challengeModeActivity.endChallengeMode(endDate, CMDuration);
+        this.endRecording(this.activity);
     };
 
     handleEncounterStartLine(line: LogLine) {
-        const encounterID = parseInt(line.arg(1), 10)
-        const eventDate = line.date();
+        console.debug("[RetailLogHandler] Handling ENCOUNTER_START line:", line);
 
-        // If we're recording _and_ has an active challenge mode dungeon,
-        // add a new boss encounter timeline segment.
-        if (this.recorder.isRecording && this.activeChallengeMode) {
-            const vSegment = new ChallengeModeTimelineSegment(
-                TimelineSegmentType.BossEncounter,
-                eventDate,
-                this.getRelativeTimestampForTimelineSegment(eventDate),
-                encounterID
-            );
+        if (!this.activity) {
+            super.handleEncounterStartLine(line);
+        } else {
+            const category = this.activity.getCategory();
+            const isChallengeMode = category === VideoCategory.MythicPlus;
 
-            this.activeChallengeMode.addTimelineSegment(vSegment, eventDate);
-            console.debug(`[ChallengeMode] Starting new boss encounter: ${dungeonEncounters[encounterID]}`)
-
-            return;
+            if (isChallengeMode) {
+                const activeChallengeMode = this.activity as ChallengeModeDungeon;
+                const encounterID = parseInt(line.arg(1), 10)
+                const eventDate = line.date();
+                
+                const segment = new ChallengeModeTimelineSegment(
+                    TimelineSegmentType.BossEncounter,
+                    eventDate,
+                    this.getRelativeTimestampForTimelineSegment(eventDate),
+                    encounterID
+                );
+    
+                activeChallengeMode.addTimelineSegment(segment, eventDate);
+                console.debug(`[RetailLogHandler] Starting new boss encounter: ${dungeonEncounters[encounterID]}`)
+            }
         }
-
-        super.handleEncounterStartLine(line);
     }
 
-    handleEncounterStopLine(line: LogLine) {
-        const eventDate = line.date();
-        const result = Boolean(parseInt(line.arg(5), 10));
-        const encounterID = parseInt(line.arg(1), 10);
+    handleEncounterEndLine(line: LogLine) {
+        console.debug("[RetailLogHandler] Handling ENCOUNTER_END line:", line);
 
-        if (this.recorder.isRecording && this.activeChallengeMode) {
-            const currentSegment = this.activeChallengeMode.getCurrentTimelineSegment()
+        if (this.activity) {
+            const category = this.activity.getCategory(); 
+            const isChallengeMode = category === VideoCategory.MythicPlus;
 
-            if (currentSegment) {
-                currentSegment.result = result;
+            if (!isChallengeMode) {
+                console.debug("[RetailLogHandler] Must be raid encounter, calling super method.");
+                super.handleEncounterEndLine(line);
+            } else {
+                console.debug("[RetailLogHandler] Challenge mode boss encounter.");
+                const activeChallengeMode = this.activity as ChallengeModeDungeon;
+                const eventDate = line.date();
+                const result = Boolean(parseInt(line.arg(5), 10));
+                const encounterID = parseInt(line.arg(1), 10);
+                const currentSegment = activeChallengeMode.getCurrentTimelineSegment();
+
+                if (currentSegment) {
+                    currentSegment.result = result;
+                }
+
+                const segment = new ChallengeModeTimelineSegment(
+                    TimelineSegmentType.Trash, 
+                    eventDate, 
+                    this.getRelativeTimestampForTimelineSegment(eventDate)
+                )
+
+                // Add a trash segment as the boss encounter ended
+                activeChallengeMode.addTimelineSegment(segment, eventDate);
+                console.debug(`[RetailLogHandler] Ending boss encounter: ${dungeonEncounters[encounterID]}`);
             }
-
-            const vSegment = new ChallengeModeTimelineSegment(
-                TimelineSegmentType.Trash, 
-                eventDate, 
-                this.getRelativeTimestampForTimelineSegment(eventDate)
-            )
-
-            // Add a trash segment as the boss encounter ended
-            this.activeChallengeMode.addTimelineSegment(vSegment, eventDate);
-            console.debug(`[ChallengeMode] Ending boss encounter: ${dungeonEncounters[encounterID]}`)
-            return;
         }
-
-        super.handleEncounterStopLine(line);
     }
 
     handleZoneChange(line: LogLine) {
-        // do stuff
+        console.info("[RetailLogHandler] Handling ZONE_CHANGE line:", line);
+        const zoneID = parseInt(line.arg(1), 10);
+        const isZoneBG = retailBattlegrounds.hasOwnProperty(zoneID);
+
+        if (this.activity) 
+        {
+            const category = this.activity.getCategory();
+            const isActivityBG = (category === VideoCategory.Battlegrounds);
+            const isActivityArena = 
+                (category === VideoCategory.TwoVTwo) ||
+                (category === VideoCategory.ThreeVThree) ||
+                (category === VideoCategory.Skirmish) ||
+                (category === VideoCategory.SoloShuffle);
+
+            if (isZoneBG && isActivityBG) 
+            {
+                console.info("[RetailLogHandler] Internal BG zone change: ", zoneID);
+            } 
+            else if (isZoneBG && !isActivityBG) 
+            {
+                // @@@
+                console.error("[RetailLogHandler] uh oh");
+            } 
+            else if (!isZoneBG && isActivityBG) 
+            {
+                console.error("[RetailLogHandler] Zone change out of BG");
+                this.battlegroundEnd(line);
+            } 
+            else if (isActivityArena)
+            {
+                console.error("[RetailLogHandler] ZONE_CHANGE out of arena");
+                this.zoneChangeStop(line);
+            }
+            else 
+            {
+                // @@@
+                console.error("[RetailLogHandler] uh oh 2");       
+            }
+        } 
+        else 
+        {
+            if (isZoneBG) 
+            {
+                console.info("[RetailLogHandler] Zone change into BG");
+                this.battlegroundStart(line);
+            } 
+            else 
+            {
+                console.info("[RetailLogHandler] Uninteresting zone change");
+            }
+        } 
     }
 
     handleCombatantInfoLine (line: LogLine): void {
+        console.debug("[RetailLogHandler] Handling COMBATANT_INFO line:", line);
+
+        if (!this.activity) {
+            console.error("[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO");
+            return;
+        }
+
         const GUID = line.arg(1);
+
+        // In Mythic+ we see COMBANTANT_INFO events for each encounter.
+        // Don't bother overwriting them if we have them already. 
+        if (this.activity.getCombatant(GUID)) {
+            console.debug("[RetailLogHandler] Already processed this COMBATANT, skipping");
+            return;
+        }
+
         const teamID = parseInt(line.arg(2), 10);
         const specID = parseInt(line.arg(24), 10);
         let combatantInfo = new Combatant(GUID, teamID, specID);
-        this.combatantMap.set(GUID, combatantInfo);
+        this.activity.addCombatant(combatantInfo);
     }
 
     handleSpellAuraAppliedLine(line: LogLine) {
-        // do stuff
-    }
-
-    handleUnitDiedLine(line: LogLine) {
-        // do stuff
-    }
-
-    determineArenaMatchResult = (line: LogLine): any[] => {
-        if (this.player === undefined) return [undefined, undefined];
-        const teamID = this.player.teamID;
-        const indexForMMR = (teamID == 0) ? 3 : 4;
-        const MMR = parseInt(line.arg(indexForMMR), 10);
-        const winningTeamID = parseInt(line.arg(1), 10);
-        const win = (teamID === winningTeamID)
-        return [win, MMR];
-    }
-
-    getCombatantByGuid(guid: string): Combatant | undefined {
-        return this.combatantMap.get(guid);
-    }
-
-    forceStopRecording = () => {
-        this.videoStopDate = new Date();
-        const milliSeconds = (this.videoStopDate.getTime() - this.videoStartDate.getTime());
-        this.metadata.duration = Math.round(milliSeconds / 1000);
-    
-        // If a Keystone Dungeon is in progress, end it properly before we stop recording
-        if (this.activeChallengeMode) {
-            this.endChallengeModeDungeon();
+        if (!this.activity) {
+            console.error("[RetailLogHandler] No active activity");
+            return;
         }
-    
-        // Clear all kinds of stuff that would prevent the app from starting another
-        // recording
-        this.clearCombatants();
-    
-        // Regardless of what happens above these lines, _ensure_ that these variables
-        // are cleared.
-        this.activeChallengeMode = undefined;
 
-        // @@@
-        // testRunning = false;
-    
-        this.recorder.stop(this.metadata, 0);
+        if (this.activity.getPlayerGUID()) {
+            // Deliberately don't log anything here as we hit this a lot. 
+            return;
+        }
+
+        console.debug("[RetailLogHandler] Handling SPELL_AURA_APPLIED line:", line);
+        const srcGUID = line.arg(1);
+        const srcCombatant = this.activity.getCombatant(srcGUID);
+
+        if (srcCombatant === undefined) {
+            console.debug("[RetailLogHandler] Didn't find matching combatant");
+            return
+        };
+
+        const srcNameRealm = line.arg(2)
+        const srcFlags = parseInt(line.arg(3), 16);
+        const [srcName, srcRealm] = this.ambiguate(srcNameRealm);
+        srcCombatant.name = srcName;
+        srcCombatant.realm = srcRealm;
+
+        if (this.isUnitSelf(srcFlags)) {
+            this.activity.setPlayerGUID(srcGUID);
+        }
+    }
+
+    getRelativeTimestampForTimelineSegment(eventDate: Date) {
+        if (!this.activity) {
+            console.error("[RetailLogHandler] getRelativeTimestampForTimelineSegment called but no active activity");
+            return 0;
+        }
+
+        const activityStartDate = this.activity.getStartDate();
+        const relativeTime = (eventDate.getTime() - activityStartDate.getTime()) / 1000;
+        return relativeTime;
+    };
+
+    dataTimeout(ms: number) {
+        super.dataTimeout(ms);
+        const isDungeon = this.activity?.getCategory() === VideoCategory.MythicPlus;
+
+        if (isDungeon) {
+            this.forceStopRecording();
+            return;
+        }
+    }
+
+    battlegroundStart(line: LogLine): void {
+        if (this.activity) {
+            console.error("[RetailLogHandler] Another activity in progress, can't start battleground");
+            return;
+        }
+
+        const startTime = line.date();
+        const category = VideoCategory.Battlegrounds;
+        const zoneID = parseInt(line.arg(1), 10);
+        this.activity = new Battleground(startTime, category, zoneID);
+        this.startRecording(this.activity);
+    }
+
+    battlegroundEnd(line: LogLine): void {
+        if (!this.activity) {
+            console.error("[RetailLogHandler] Can't stop battleground as no active activity");
+            return;
+        }
+
+        const endTime = line.date();
+        this.activity.end(endTime, false);
+        this.endRecording(this.activity);
     }
 }
 

@@ -86,9 +86,9 @@ const months: string[] = [
 ];
 
 /**
- * Battlegrounds by ID. 
+ * Retail battlegrounds by ID. 
  */
- const battlegrounds: NumberKeyToStringValueMapType = {
+ const retailBattlegrounds: NumberKeyToStringValueMapType = {
   30:	  "Alterac Valley",
   2107: "Arathi Basin",
   1681: "Arathi Basin",
@@ -439,7 +439,7 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
-  ...battlegrounds,
+  ...retailBattlegrounds,
   ...arenas,
   ...dungeonsByZoneId,
 };
@@ -479,7 +479,7 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
 const zones: NumberKeyToStringValueMapType = {
     ...arenas,
     ...raidEncountersById,
-    ...battlegrounds,
+    ...retailBattlegrounds,
     ...dungeonsByZoneId,
 }
 
@@ -638,7 +638,7 @@ export {
     zones,
     arenas,
     raidEncountersById,
-    battlegrounds,
+    retailBattlegrounds,
     dungeonsByMapId,
     dungeonsByZoneId,
     instanceNamesByZoneId,

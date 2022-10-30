@@ -1,6 +1,8 @@
+import Activity from "../activitys/Activity";
 import { Size } from "electron";
-import { WoWProcessResultKey } from "./constants";
-import { Metadata } from "./logutils";
+import { VideoCategory, WoWProcessResultKey } from "./constants";
+import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
+import { ChallengeModeTimelineSegment } from "./keystone";
 
 /**
  * Application recording status.
@@ -157,6 +159,29 @@ interface ISettingsPanelProps {
     onChange: (event: IOurChangeEvent) => void,
 };
 
+/**
+ * Metadata type. 
+ */
+ type Metadata = {
+    name: string;
+    category: VideoCategory;
+    duration: number;
+    result: boolean;
+    zoneID?: number;
+    encounterID?: number;
+    difficultyID?: number;
+    playerName?: string;
+    playerRealm?: string;
+    playerSpecID?: number;
+    teamMMR?: number;
+    challengeMode?: ChallengeModeDungeon;
+    playerDeaths?: PlayerDeathType[];
+    chests?: number;
+    mapID?: number;
+    timeline?: ChallengeModeTimelineSegment[];
+    level?: number;
+}
+
 export {
     RecStatus,
     SaveStatus,
@@ -173,4 +198,5 @@ export {
     VideoQueueItem,
     FakeChangeEvent,
     ISettingsPanelProps,
+    Metadata,
 }

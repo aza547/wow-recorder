@@ -1,12 +1,12 @@
-import { Metadata } from './logutils';
 import { writeMetadataFile, runSizeMonitor,  deleteVideo, addColor, getSortedVideos, fixPathWhenPackaged, tryUnlinkSync } from './util';
 import { mainWindow }  from './main';
-import { RecStatus, SaveStatus, VideoQueueItem } from './types';
+import { Metadata, RecStatus, SaveStatus, VideoQueueItem } from './types';
 import { getDungeonByMapId, getEncounterNameById, getVideoResultText, getInstanceNameByZoneId, getRaidNameByEncounterId } from './helpers';
 import { VideoCategory } from './constants';
 import fs from 'fs';
 import { ChallengeModeDungeon } from './keystone';
 import path from 'path';
+import Activity from '../activitys/Activity';
 
 const atomicQueue = require('atomic-queue');
 const obsRecorder = require('./obsRecorder');
@@ -74,8 +74,10 @@ type RecorderOptionsType = {
      * Process an item from the video queue.
      */
     private async _processVideoQueueItem(data: VideoQueueItem, done: Function): Promise<void> {
-        const outputFilename = this.getFinalVideoFilename(data.metadata);
-        const videoPath = await this._cutVideo(data.bufferFile, this._options.storageDir, outputFilename, data.metadata.duration);
+        const outputFilename = this.getFinalVideoFilename(data);
+        const duration = data.metadata.duration;
+        const videoPath = await this._cutVideo(data.bufferFile, this._options.storageDir, outputFilename, duration);
+
         await writeMetadataFile(videoPath, data.metadata);
 
         // Delete the original buffer video
@@ -253,10 +255,9 @@ type RecorderOptionsType = {
      * @param {number} overrun how long to continue recording after stop is called
      * @param {boolean} closedWow if wow has just been closed
      */
-    stop = (metadata: Metadata, overrun: number = 0, closedWow: boolean = false) => {
+    stop = (activity: Activity, overrun: number = 0, closedWow: boolean = false) => {
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
-        console.info("[Recorder]" , JSON.stringify(metadata, null, 2));
 
         // Wait for a delay specificed by overrun. This lets us
         // capture the boss death animation/score screens.  
@@ -267,8 +268,15 @@ type RecorderOptionsType = {
             this._isRecording = false;
             this._isRecordingBuffer = false;
 
-            const isRaid = metadata.category == VideoCategory.Raids;
-            const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
+            const isRaid = activity.getCategory() == VideoCategory.Raids;
+            const duration = activity.getDuration();
+
+            if (duration === null) {
+                console.log("Null duration");
+                return;
+            }
+
+            const isLongEnough = (duration - overrun) >= this._options.minEncounterDuration;
 
             if (isRaid && !isLongEnough) {
                 console.info("[Recorder] Raid encounter was too short, discarding");
@@ -276,7 +284,8 @@ type RecorderOptionsType = {
                 const bufferFile = obsRecorder.getObsLastRecording();
 
                 if (bufferFile) {
-                    this.queueVideo(bufferFile, metadata);
+                    const metadata = activity.getMetadata();
+                    this.queueVideo(bufferFile, activity.getMetadata());
                 } else {
                     console.error("[Recorder] Unable to get the last recording from OBS. Can't process video.");
                 }
@@ -377,23 +386,26 @@ type RecorderOptionsType = {
      * to identify the video files on the filesystem and be able to tell what it
      * was about and the result of it.
      */
-    getFinalVideoFilename (metadata: Metadata): string {
+    getFinalVideoFilename (data: VideoQueueItem): string {
         let outputFilename = '';
-        const resultText = getVideoResultText(metadata.category, metadata.result);
 
-        switch (metadata.category) {
+        const category = data.metadata.category;
+        const result = data.metadata.result;
+        const resultText = getVideoResultText(category, result);
+
+        switch (category) {
             case VideoCategory.Raids:
-                const encounterName = getEncounterNameById(metadata.encounterID);
-                const raidName = getRaidNameByEncounterId(metadata.encounterID);
+                const encounterName = getEncounterNameById(data.metadata.encounterID);
+                const raidName = getRaidNameByEncounterId(data.metadata.encounterID);
                 outputFilename = `${raidName}, ${encounterName} (${resultText})`;
             break;
 
             case VideoCategory.MythicPlus:
-                outputFilename = this.getFinalVideoFilenameForCM(metadata.challengeMode);
+                outputFilename = this.getFinalVideoFilenameForCM(data.metadata.challengeMode);
             break;
 
             default:
-                const zoneName = getInstanceNameByZoneId(metadata.zoneID);
+                const zoneName = getInstanceNameByZoneId(data.metadata.encounterID);
                 outputFilename = zoneName;
                 if (resultText) {
                     outputFilename += ' (' + resultText + ')'
@@ -405,22 +417,30 @@ type RecorderOptionsType = {
             outputFilename = 'Unknown Content';
         }
 
-        return metadata.category + ' ' + outputFilename;
+        return category + ' ' + outputFilename;
     }
 
     /**
      * Construct a video filename for a Mythic Keystone dungeon with information
      * about level, keystone upgrade levels and what have we.
      */
-    getFinalVideoFilenameForCM(cm?: ChallengeModeDungeon): string {
-        if (!cm) {
-            return '';
+    // @@@ should be on ChallengeModeDungeon object
+    getFinalVideoFilenameForCM(dungeon: ChallengeModeDungeon): string {
+        let resultText: string;
+
+        if (!dungeon.result) {
+            resultText = 'Depleted';
+        } else if (!dungeon.chests) {
+            resultText = 'Timed';
+        } else {
+            resultText = "+" + dungeon.chests;
         }
 
-        const keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(cm.allottedTime, cm.duration);;
-        const resultText = cm?.timed ? '+' + keystoneUpgradeLevel : 'Depleted';
-
-        return `${getDungeonByMapId(cm.mapId)} +${cm.level} (${resultText})`;
+        // @@@ map ID bwards compatiblity
+        const dungeonName = getDungeonByMapId(dungeon.mapID);
+        const keystoneLevel = dungeon.level;
+        
+        return `${dungeonName} +${keystoneLevel} (${resultText})`;
     }
 
     /**

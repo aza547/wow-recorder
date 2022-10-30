@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
-import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, dungeonTimersByMapId }  from 'main/constants';
-import { TimelineSegmentType, ChallengeModeDungeon } from 'main/keystone';
+import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId }  from 'main/constants';
+import { ChallengeModeTimelineSegment, TimelineSegmentType } from 'main/keystone';
 import { getFormattedDuration, getVideoResult } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
@@ -49,7 +49,7 @@ export default function VideoButton(props: any) {
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
   const isBG = category === VideoCategory.Battlegrounds;
-  const isMythicPlus = (category == VideoCategory.MythicPlus && video.challengeMode !== undefined);
+  const isMythicPlus = (category === VideoCategory.MythicPlus);
   const isRaid = category === VideoCategory.Raids;
   const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
 
@@ -61,7 +61,8 @@ export default function VideoButton(props: any) {
       break;
 
     case VideoCategory.MythicPlus:
-      buttonImage = Images.dungeon[video.challengeMode.zoneId];
+      // @@@ bwards compatbility
+      buttonImage = Images.dungeon[video.zoneID];
       break;
 
     case VideoCategory.Battlegrounds:
@@ -122,8 +123,8 @@ export default function VideoButton(props: any) {
    * Generate the JSX for the timeline segments that are used in the context menu on
    * the VideoButton.
    */
-  const renderKeystoneTimelineSegments = (challengeMode: any): any[] => {
-    const timelineSegmentsMenuItems = challengeMode.timelineSegments.map((segment: any) => {
+  const renderKeystoneTimelineSegments = (timeline: ChallengeModeTimelineSegment[]): any[] => {
+    const timelineSegmentsMenuItems = timeline.map((segment: any) => {
       let timelineSegmentMenu;
       let segmentDurationText;
       const result = Boolean(segment.result);
@@ -168,32 +169,34 @@ export default function VideoButton(props: any) {
 
   const buttonClasses = ['videoButton'];
   let keystoneTimelineSegments = [];
-
+  
   if (isMythicPlus) {
+    console.log("ahk");
     buttonClasses.push('dungeon')
 
-    // If the video metadata doesn't contain its own alloted time array, we'll use whichever
-    // is current in the constants.
-    const keystoneAllottedTime = video.challengeMode.allottedTime ?? dungeonTimersByMapId[video.challengeMode.mapId];
-
-    // Calculate the upgrade levels of the keystone
-    const keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(
-      keystoneAllottedTime,
-      video.challengeMode.duration
-    );
-
     if (isGoodResult) {
-      resultText = '+' + keystoneUpgradeLevel;
+      resultText = '+' + video.chests;
     }
 
-    keystoneTimelineSegments = renderKeystoneTimelineSegments(video.challengeMode);
+    const timeline = video.timeline;
+
+    if (timeline) {
+      keystoneTimelineSegments = renderKeystoneTimelineSegments(video.timeline);
+    }
   }
+
+  console.log(state);
 
   return (
     <React.Fragment>
       <Tab 
         label={
-          <div id={ videoPath } className={ buttonClasses.join(' ') } style={{ backgroundImage: `url(${buttonImage})`}} onContextMenu={openMenu}>
+          <div 
+            id={ videoPath } 
+            className={ buttonClasses.join(' ') } 
+            style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "200px 100px"}} 
+            onContextMenu={openMenu}
+          >
             <div className='duration'>{ formattedDuration }</div>
             { isMythicPlus ||
               <div>
@@ -204,7 +207,7 @@ export default function VideoButton(props: any) {
             { isMythicPlus &&
               <div>
                 <div className='encounter'>
-                  { dungeonsByMapId[video.challengeMode.mapId] }
+                  { dungeonsByMapId[video.mapID] } 
                 </div>
                 <div className='instance-difficulty difficulty-mythic'>
                   +{ video.challengeMode.level }

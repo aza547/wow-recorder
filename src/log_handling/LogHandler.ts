@@ -1,240 +1,167 @@
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import ConfigService from "../main/configService";
-import { battlegrounds, categoryRecordingSettings, VideoCategory } from "../main/constants";
-import { ChallengeModeDungeon } from "main/keystone";
+import { categoryRecordingSettings, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
-import { PlayerDeathType, UnitFlags } from "../main/types";
-
-type EndRecordingOptionsType = {
-    result?: boolean,       // Success/Failure result for the overall activity
-    closedWow?: boolean,    // If the wow process just ended
-};
+import { UnitFlags } from "../main/types";
+import Activity from "../activitys/Activity";
+import RaidEncounter from "../activitys/RaidEncounter";
 
 /**
- * Metadata type. 
+ * Generic LogHandler class. Everything in this class must be valid for both
+ * classic and retail combat logs. 
+ * 
+ * If you need something flavour specific then put it in the appropriate 
+ * subclass; i.e. RetailLogHandler or ClassicLogHandler.
  */
- type Metadata = {
-    name: string;
-    category: VideoCategory;
-    zoneID?: number;
-    encounterID?: number;
-    difficultyID? : number;
-    duration: number;
-    result: boolean;
-    playerName?: string;
-    playerRealm?: string;
-    playerSpecID?: number;
-    teamMMR?: number;
-    challengeMode?: ChallengeModeDungeon;
-    playerDeaths: PlayerDeathType[];
-}
-
 export default class LogHandler {
     protected recorder;
     protected combatLogParser: CombatLogParser;
-    protected videoStartDate: Date;
-    protected videoStopDate: Date;
-    protected metadata: Metadata;
-    protected category: VideoCategory | undefined;
     protected player: Combatant | undefined;
-    protected combatantMap: Map<string, Combatant> = new Map();
     protected cfg: ConfigService;
+    protected activity?: Activity;
 
-    constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
+    constructor(recorder: Recorder, 
+                combatLogParser: CombatLogParser)
+    {
         this.recorder = recorder;
         this.combatLogParser = combatLogParser;
+        this.combatLogParser.on('DataTimeout', (ms: number) => { this.dataTimeout(ms)});
         this.cfg = ConfigService.getInstance();
-
-        // If we haven't received data in a while, we're probably AFK and should stop recording.
-        this.combatLogParser
-            .on('DataTimeout', (ms: number) => {
-                console.log(`[CombatLogParser] Haven't received data for combatlog in ${ms / 1000} seconds.`)
-
-                /**
-                 * End the current challenge mode dungeon and stop recording.
-                 * We'll keep the video.
-                 */
-                // @@@
-                // if (activeChallengeMode || currentActivity === VideoCategory.Battlegrounds) {
-                //     forceStopRecording();
-                //     return;
-                // }
-            }
-        );
     }
 
-    startRecording = (category: VideoCategory) => {
-        if (!this.allowRecordCategory(category)) {
-            console.info("[LogUtils] Not configured to record", category);
+    handleEncounterStartLine(line: LogLine) {
+        console.debug("[LogHandler] Handling ENCOUNTER_START line:", line);
+
+        const startDate = line.date();
+        const encounterID = parseInt(line.arg(1), 10)
+        const difficultyID = parseInt(line.arg(3), 10);
+        
+        this.activity = new RaidEncounter(startDate, 
+                                          VideoCategory.Raids, 
+                                          encounterID, 
+                                          difficultyID);
+
+        this.startRecording(this.activity);
+    } 
+
+    handleEncounterEndLine (line: LogLine): void {
+        console.debug("[LogHandler] Handling ENCOUNTER_END line:", line);
+
+        if (!this.activity) {
+            console.error("[LogHandler] Encounter stop with no active encounter");
             return;
-        } else if (this.recorder.isRecording || !this.recorder.isRecordingBuffer) {
-            console.error("[LogUtils] Avoiding error by not attempting to start recording",
+        }
+
+        const result = Boolean(parseInt(line.arg(5), 10));
+        this.activity.end(line.date(), result)
+        this.endRecording(this.activity);
+    }
+
+    handleUnitDiedLine (line: LogLine): void {
+        if (!this.activity) {
+            console.info("[LogHandler] Ignoring UNIT_DIED line as no active activity");
+            return;
+        }
+
+        console.debug("[RetailLogHandler] Handling UNIT_DIED line:", line);
+        const unitFlags = parseInt(line.arg(7), 16);
+
+        if (!this.isUnitPlayer(unitFlags)) {
+            console.info("[LogHandler] Ignoring UNIT_DIED line as non-player");
+            return;
+        }
+
+        const isUnitUnconsciousAtDeath = Boolean(parseInt(line.arg(9), 10));
+
+        if (isUnitUnconsciousAtDeath) {
+            console.info("[LogHandler] Ignoring UNIT_DIED line as not really dead");
+            return;
+        }
+    
+        const playerName = line.arg(6);
+        const playerGUID = line.arg(5);
+        const playerSpecId = this.activity.getCombatant(playerGUID)?.specID ?? 0;
+    
+        // Add player death and subtract 2 seconds from the time of death to allow the
+        // user to view a bit of the video before the death and not at the actual millisecond
+        // it happens.
+        const deathDate = (line.date().getTime() - 2) / 1000;
+        const activityStartDate = this.activity.getStartDate().getTime() / 1000;
+        const relativeTime = deathDate - activityStartDate;
+        
+        this.registerPlayerDeath(relativeTime, playerName, playerSpecId);
+    }
+
+    startRecording = (activity: Activity) => {
+        const category = activity.getCategory();
+        const allowed = this.allowRecordCategory(category);
+
+        if (!allowed) {
+            console.info("[LogHandler] Not configured to record", category);
+            return;
+        } 
+        
+        const recorderReady = (!this.recorder.isRecording) && (this.recorder.isRecordingBuffer);
+        
+        if (!recorderReady) {
+            console.error("[LogHandler] Avoiding error by not attempting to start recording",
                             this.recorder.isRecording,
                             this.recorder.isRecordingBuffer);
             return;
         }
 
         console.log(`[Logutils] Start recording a video for category: ${category}`)
-
-        // Ensure combatant map and player combatant is clean before
-        // starting a new recording.
-        this.clearCombatants();
-
-        this.category = category;
         this.recorder.start();
     };
 
-    endRecording = (options?: EndRecordingOptionsType) => {
-        if (!this.recorder.isRecording || !this.category) {
+    endRecording = (activity: Activity) => {
+        const isRecording = this.recorder.isRecording;
+
+        if (!isRecording) {
             console.error("[LogUtils] Avoiding error by not attempting to stop recording");
             return;
         }
 
-        if (!this.videoStopDate) {
-            this.videoStopDate = new Date();
-        }
+        const category = activity.getCategory();
+        const overrun = categoryRecordingSettings[category].videoOverrun;
 
-        const overrun = categoryRecordingSettings[this.category].videoOverrun;
-        const videoDuration = (this.videoStopDate.getTime() - this.videoStartDate.getTime());
-        const closedWow = options?.closedWow ?? false;
+        console.log(`[Logutils] Stop recording video for category: ${this.activity?.getCategory()}`)
 
-        this.metadata.duration = Math.round(videoDuration / 1000) + overrun;
-        this.metadata.result = options?.result ?? false;
-
-        console.log(`[Logutils] Stop recording video for category: ${this.category}`)
-
-        this.recorder.stop(this.metadata, overrun, closedWow);
-        this.category = undefined;
+        this.recorder.stop(activity, overrun, false);
+        this.activity = undefined;
     }
 
-    clearCombatants = () => {
-        this.combatantMap.clear();
-        this.player = undefined;
-    }
+    dataTimeout(ms: number) {
+        console.log(`[LogHandler] Haven't received data for combatlog in ${ms / 1000} seconds.`)
+        const isBattleground = (this.activity?.getCategory() === VideoCategory.Battlegrounds);
 
-    /**
-     * Check and return whether we're allowed to record a certain type of content
-     */
-    allowRecordCategory = (category: VideoCategory): boolean => {
-        const categoryConfig = categoryRecordingSettings[category];
-        const categoryAllowed = this.cfg.get<boolean>(categoryConfig.configKey);
-
-        if (!categoryAllowed) {
-            // @@@
-            // if (!testRunning) {
-            //     console.log("[Logutils] Configured to not record", category);
-            //     return false;
-            // }
-
-            console.log(`[Logutils] Configured to not record ${category}, but test is running so recording anyway.`);
-        };
-
-        return true;
-    };
-
-    handleEncounterStartLine(line: LogLine) {
-        const encounterID = parseInt(line.arg(1), 10)
-        const difficultyID = parseInt(line.arg(3), 10);
-        const eventDate = line.date();
-
-        this.videoStartDate = eventDate;
-
-        this.metadata = {
-            name: "name",
-            category: VideoCategory.Raids,
-            encounterID: encounterID,
-            difficultyID: difficultyID,
-            duration: 0,
-            result: false,
-            playerDeaths: [],
-        }
-
-        this.startRecording(VideoCategory.Raids);
-    } 
-
-    handleEncounterStopLine (line: LogLine): void {
-        const eventDate = line.date();
-        const result = Boolean(parseInt(line.arg(5), 10));
-        this.videoStopDate = eventDate;
-        this.endRecording({result});
-    }
-
-    handleZoneChange (line: LogLine): void {
-        console.log("[Logutils] Handling zone change", line);
-        const zoneID = parseInt(line.arg(1), 10);
-        const isNewZoneBG = battlegrounds.hasOwnProperty(zoneID);
-        const isRecording = this.recorder.isRecording;
-
-        let isRecordingBG = false;
-        let isRecordingArena = false;
-
-        if (this.metadata !== undefined) {
-            isRecordingBG = (this.metadata.category === VideoCategory.Battlegrounds);
-            isRecordingArena = (this.metadata.category === VideoCategory.TwoVTwo) ||
-                               (this.metadata.category === VideoCategory.ThreeVThree) ||
-                               (this.metadata.category === VideoCategory.SoloShuffle) ||
-                               (this.metadata.category === VideoCategory.Skirmish);
-        }
-
-        if (!isRecording && isNewZoneBG) {
-            console.log("[Logutils] ZONE_CHANGE into BG");
-            this.battlegroundStart(line);
-            return;
-        }
-
-        if (isRecording && isRecordingBG && !isNewZoneBG) {
-            console.log("[Logutils] ZONE_CHANGE out of BG, stop recording");
-            this.battlegroundStop(line);
-            return;
-        }
-
-        if (isRecording && isRecordingArena) {
-            console.log("[Logutils] ZONE_CHANGE out of arena, stop recording");
-            this.zoneChangeStop(line);
+        if (isBattleground) {
+            //this.forceStopRecording();
             return;
         }
     }
-
-    handleSpellAuraAppliedLine (line: LogLine): void {
-        if (this.player) return;
-        if (this.combatantMap.size === 0) return;
-
-        const srcGUID = line.arg(1);
-        const srcNameRealm = line.arg(2)
-        const srcFlags = parseInt(line.arg(3), 16);
-
-        const srcCombatant = this.combatantMap.get(srcGUID);
-        if (srcCombatant === undefined) return;
-
-        if (this.isUnitSelf(srcFlags)) {
-            const [srcName, srcRealm] = this.ambiguate(srcNameRealm);
-            srcCombatant.name = srcName;
-            srcCombatant.realm = srcRealm;
-            this.player = srcCombatant;
-
-            this.metadata.playerName = this.player.name;
-            this.metadata.playerRealm = this.player.realm;
-            this.metadata.playerSpecID = this.player.specID;
-        }
-    }
-
+    
+    // candidate for helper? 
     isUnitSelf = (flags: number): boolean => {
         const isFriendly = this.hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
         const isMine = this.hasFlag(flags, UnitFlags.AFFILIATION_MINE)
         return (isFriendly && isMine);
     }
 
+    // candidate for helper? 
     isUnitPlayer = (flags: number): boolean => {
-        const isPlayerControlled = this.hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
-        const isPlayerType = this.hasFlag(flags, UnitFlags.AFFILIATION_MINE);
+        const isPlayerControlled = this.hasFlag(flags, UnitFlags.CONTROL_PLAYER);
+        const isPlayerType = this.hasFlag(flags, UnitFlags.TYPE_PLAYER);
         return (isPlayerControlled && isPlayerType);
     }
 
+    // candidate for helper? 
     hasFlag = (flags: number, flag: number): boolean => {
         return (flags & flag) !== 0;
     }
 
+    // candidate for helper? 
     ambiguate = (nameRealm: string): string[] => {
         const split = nameRealm.split("-");
         const name = split[0];
@@ -243,82 +170,52 @@ export default class LogHandler {
     }
 
     registerPlayerDeath = (timestamp: number, name: string, specId: number): void => {
-        // Ensure a timestamp cannot be negative
-        timestamp = timestamp >= 0 ? timestamp : 0;
-        this.metadata.playerDeaths.push({ name, specId, timestamp });
-    }
-
-    battlegroundStart (line: LogLine): void {
-        const zoneID = parseInt(line.arg(1), 10);
-        const battlegroundName = battlegrounds[zoneID];
-
-        this.videoStartDate = line.date();
-
-        this.metadata = {
-            name: battlegroundName,
-            category: VideoCategory.Battlegrounds,
-            zoneID: zoneID,
-            duration: 0,
-            result: false,
-            playerDeaths: [],
-        }
-
-        this.startRecording(VideoCategory.Battlegrounds);
-    }
-
-    battlegroundStop (line: LogLine): void {
-        this.videoStopDate = line.date();
-        this.endRecording();
-    }
-
-    zoneChangeStop (line: LogLine): void {
-        this.videoStopDate = line.date();
-        this.endRecording();
-    }
-
-    handleUnitDiedLine (line: LogLine): void {
-        // Only handle UNIT_DIED if we have a videoStartDate AND we're recording
-        // We're not interested in player deaths outside of an active activity/recording.
-        if (!this.videoStartDate || !this.recorder.isRecording) {
+        if (!this.activity) {
+            console.info("[LogHandler] Can't register player death as no active activity");
             return;
         }
-    
-        const unitFlags = parseInt(line.arg(7), 16);
-        const isUnitUnconsciousAtDeath = Boolean(parseInt(line.arg(9), 10));
-    
-        // We only want player deaths and we don't want fake deaths,
-        // i.e. a hunter that feigned death
-        if (!this.isUnitPlayer(unitFlags) || isUnitUnconsciousAtDeath) {
-            return;
-        }
-    
-        const playerName = line.arg(6);
-        const playerGuid = line.arg(5);
 
-        // @@@
-        // const playerSpecId = this.getCombatantByGuid(playerGuid)?.specID ?? 0;
-    
-        // Add player death and subtract 2 seconds from the time of death to allow the
-        // user to view a bit of the video before the death and not at the actual millisecond
-        // it happens.
-        const relativeTimeStamp = ((line.date().getTime() - 2) - this.videoStartDate.getTime()) / 1000;
-        // @@@
-        //this.registerPlayerDeath(relativeTimeStamp, playerName, playerSpecId);
+        if (timestamp < 0) {
+            console.error("[LogHandler] Tried to set timestamp to", timestamp);
+            timestamp = 0;
+        }
+
+        this.activity.addPlayerDeath({ name, specId, timestamp });
     }
+
+    // candidate for helper? / logutils?
+    allowRecordCategory = (category: VideoCategory): boolean => {
+        const categoryConfig = categoryRecordingSettings[category];
+        const categoryAllowed = this.cfg.get<boolean>(categoryConfig.configKey);
+
+        if (!categoryAllowed) {
+            console.info("[LogHandler] Configured to not record:", category);
+            return false;
+        };
+
+        console.info("[LogHandler] Good to record:", category);
+        return true;
+    };
 
     forceStopRecording = () => {
-        this.videoStopDate = new Date();
-        const milliSeconds = (this.videoStopDate.getTime() - this.videoStartDate.getTime());
-        this.metadata.duration = Math.round(milliSeconds / 1000);
-    
-        // Clear all kinds of stuff that would prevent the app from starting another
-        // recording
-        this.clearCombatants();
-    
-        // @@@
-        //testRunning = false;
-    
-        this.recorder.stop(this.metadata, 0);
+        if (!this.activity) {
+            console.error("[RetailLogHandler] No active activity on force stop");
+            return;
+        }
+        
+        this.activity.end(new Date(), false);
+        this.endRecording(this.activity);
+    }
+
+    zoneChangeStop(line: LogLine) {
+        if (!this.activity) {
+            console.error("[RetailLogHandler] No active activity on force zone change stop");
+            return;
+        }
+
+        const endDate = line.date();
+        this.activity.end(endDate, false);
+        this.endRecording(this.activity);
     }
 }
 
