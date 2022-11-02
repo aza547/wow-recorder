@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+## [2.10.1] - 2022-11-02
+### Fixed
 - [Issue 57](https://github.com/aza547/wow-recorder/issues/57) - Only enable audio sources when recording buffer to avoid Windows not being able to go into sleep mode.
 - [Issue 218](https://github.com/aza547/wow-recorder/issues/218) - Fix solo shuffle on DF pre-patch.
+
 ## [2.10.0] - 2022-10-22
 ### Added
 - [Issue 211](https://github.com/aza547/wow-recorder/issues/211) - Validate combat log paths to avoid mistakes.
