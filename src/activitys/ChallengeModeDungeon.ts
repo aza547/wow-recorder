@@ -28,7 +28,6 @@ export default class ChallengeModeDungeon extends Activity {
     get timeline() { return this._timeline };
     get level() { return this._level };
     get mapID() { return this._mapID };
-
     set endDate(date) { this._endDate = date };
     set CMDuration(duration) { this._CMDuration = duration };
 
@@ -50,7 +49,7 @@ export default class ChallengeModeDungeon extends Activity {
         return 0;
     }
 
-    get currentSegment(): ChallengeModeTimelineSegment| undefined {
+    get currentSegment() {
         return this.timeline.at(-1);
     }
 
@@ -81,18 +80,12 @@ export default class ChallengeModeDungeon extends Activity {
         });
     }
 
-    /**
-     * End a timeline segment by setting its logEnd date.
-     */
     endCurrentTimelineSegment(date: Date) {
         if (this.currentSegment) {
             this.currentSegment.logEnd = date;
         }
     }
 
-    /**
-     * Pop the last timeline segment and discard it
-     */
     removeLastTimelineSegment() {
         this.timeline.pop();
     }

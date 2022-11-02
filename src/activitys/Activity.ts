@@ -35,7 +35,6 @@ export default abstract class Activity {
     get playerGUID() { return this._playerGUID };
     get endDate() { return this._endDate };
     get combatantMap() { return this._combatantMap };
-
     set zoneID(zoneID) { this._zoneID = zoneID };
     set result(result) { this._result = result };
     set playerGUID(guid) { this._playerGUID = guid };
