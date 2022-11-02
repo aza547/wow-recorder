@@ -86,14 +86,14 @@ export default class LogHandler {
         // user to view a bit of the video before the death and not at the actual millisecond
         // it happens.
         const deathDate = (line.date().getTime() - 2) / 1000;
-        const activityStartDate = this.activity.getStartDate().getTime() / 1000;
+        const activityStartDate = this.activity.startDate.getTime() / 1000;
         const relativeTime = deathDate - activityStartDate;
         
         this.registerPlayerDeath(relativeTime, playerName, playerSpecId);
     }
 
     startRecording = (activity: Activity) => {
-        const category = activity.getCategory();
+        const category = activity.category;
         const allowed = this.allowRecordCategory(category);
 
         if (!allowed) {
@@ -115,17 +115,15 @@ export default class LogHandler {
     };
 
     endRecording = (activity: Activity) => {
-        const isRecording = this.recorder.isRecording;
-
-        if (!isRecording) {
-            console.error("[LogUtils] Avoiding error by not attempting to stop recording");
+        if (!this.activity) {
+            console.error("[LogUtils] No active activity so can't stop");
             return;
         }
 
-        const category = activity.getCategory();
+        const category = activity.category;
         const overrun = categoryRecordingSettings[category].videoOverrun;
 
-        console.log(`[Logutils] Stop recording video for category: ${this.activity?.getCategory()}`)
+        console.log(`[Logutils] Stop recording video for category: ${this.activity.category}`)
 
         this.recorder.stop(activity, overrun, false);
         this.activity = undefined;
@@ -133,10 +131,15 @@ export default class LogHandler {
 
     dataTimeout(ms: number) {
         console.log(`[LogHandler] Haven't received data for combatlog in ${ms / 1000} seconds.`)
-        const isBattleground = (this.activity?.getCategory() === VideoCategory.Battlegrounds);
+
+        if (!this.activity) {
+            return;
+        }
+
+        const isBattleground = (this.activity.category === VideoCategory.Battlegrounds);
 
         if (isBattleground) {
-            //this.forceStopRecording();
+            //@@@this.forceStopRecording();
             return;
         }
     }
@@ -179,7 +182,7 @@ export default class LogHandler {
             timestamp = 0;
         }
 
-        this.activity.addPlayerDeath({ name, specId, timestamp });
+        this.activity.addDeath({ name, specId, timestamp });
     }
 
     // candidate for helper? / logutils?

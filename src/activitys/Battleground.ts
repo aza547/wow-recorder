@@ -15,14 +15,12 @@ export default class Battleground extends Activity {
     }
 
     getMetadata(): Metadata {
-        const metadata: Metadata = {
-            name: "some bg",
-            category: this.getCategory(),
-            zoneID: this.getZoneID(),
-            duration: this.getDuration(),
+        return {
+            category: this.category,
+            zoneID: this.zoneID,
+            duration: this.duration,
+            result: this.result,
         }
-
-        return metadata;
     }
 }
 

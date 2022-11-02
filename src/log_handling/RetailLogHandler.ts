@@ -41,8 +41,18 @@ export default class RetailLogHandler extends LogHandler {
         if (this.recorder.isRecording) return;
         
         const startTime = line.date();
-        const category = (line.arg(3) as VideoCategory);
         const zoneID = parseInt(line.arg(1), 10);
+
+        let category;
+        const arenaType = line.arg(3);
+    
+        // Dirty hack for now to fix solo shuffle as since DF prepatch it's
+        // either "Brawl Solo Shuffle" or "Rated Solo Shuffle".
+        if (arenaType.includes("Solo Shuffle")) {
+            category = VideoCategory.SoloShuffle;
+        } else {
+            category = (line.arg(3) as VideoCategory);
+        }
 
         this.activity = new ArenaMatch(startTime, category, zoneID);
         this.startRecording(this.activity);
@@ -59,7 +69,7 @@ export default class RetailLogHandler extends LogHandler {
         const arenaMatch = this.activity as ArenaMatch;
         const endTime = line.date();
         const winningTeamID = parseInt(line.arg(1), 10);
-        arenaMatch.endArenaMatch(endTime, winningTeamID);
+        arenaMatch.endArena(endTime, winningTeamID);
         this.endRecording(arenaMatch);
     }
 
@@ -70,7 +80,7 @@ export default class RetailLogHandler extends LogHandler {
         // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
         // is encountered. If any other activity is in progress, we will just exit.
         if (this.activity) {
-            const activeChallengeMode = (this.activity.getCategory() === VideoCategory.MythicPlus);
+            const activeChallengeMode = (this.activity.category === VideoCategory.MythicPlus);
 
             if (activeChallengeMode) {
                 console.warn("[RetailLogHandler] A challenge mode instance is already in progress; abandoning it.")
@@ -92,13 +102,12 @@ export default class RetailLogHandler extends LogHandler {
         const startTime = line.date();
         const zoneID = parseInt(line.arg(2), 10);
         const level = parseInt(line.arg(4), 10);
-        const dungeonAffixes = line.arg(5).map((v: string) => parseInt(v, 10));
 
-        this.activity = new ChallengeModeDungeon(startTime, zoneID, mapId, level, dungeonAffixes);
+        this.activity = new ChallengeModeDungeon(startTime, zoneID, mapId, level);
         const challengeModeActivity = (this.activity as ChallengeModeDungeon);
 
         challengeModeActivity.addTimelineSegment(new ChallengeModeTimelineSegment(
-            TimelineSegmentType.Trash, this.activity.getStartDate(), 0
+            TimelineSegmentType.Trash, this.activity.startDate, 0
         ));
 
         this.startRecording(this.activity);
@@ -131,7 +140,7 @@ export default class RetailLogHandler extends LogHandler {
             return;
         } 
 
-        const category = this.activity.getCategory();
+        const category = this.activity.category;
         const isChallengeMode = category === VideoCategory.MythicPlus;
 
         if (!isChallengeMode) {
@@ -162,7 +171,7 @@ export default class RetailLogHandler extends LogHandler {
             return;
         }
 
-        const category = this.activity.getCategory(); 
+        const category = this.activity.category; 
         const isChallengeMode = category === VideoCategory.MythicPlus;
 
         if (!isChallengeMode) {
@@ -174,7 +183,7 @@ export default class RetailLogHandler extends LogHandler {
             const eventDate = line.date();
             const result = Boolean(parseInt(line.arg(5), 10));
             const encounterID = parseInt(line.arg(1), 10);
-            const currentSegment = activeChallengeMode.getCurrentTimelineSegment();
+            const currentSegment = activeChallengeMode.currentSegment;
 
             if (currentSegment) {
                 currentSegment.result = result;
@@ -199,7 +208,7 @@ export default class RetailLogHandler extends LogHandler {
 
         if (this.activity) 
         {
-            const category = this.activity.getCategory();
+            const category = this.activity.category;
             const isActivityBG = (category === VideoCategory.Battlegrounds);
             const isActivityArena = 
                 (category === VideoCategory.TwoVTwo) ||
@@ -275,7 +284,7 @@ export default class RetailLogHandler extends LogHandler {
             return;
         }
 
-        if (this.activity.getPlayerGUID()) {
+        if (this.activity.playerGUID) {
             // Deliberately don't log anything here as we hit this a lot. 
             return;
         }
@@ -296,7 +305,7 @@ export default class RetailLogHandler extends LogHandler {
         srcCombatant.realm = srcRealm;
 
         if (this.isUnitSelf(srcFlags)) {
-            this.activity.setPlayerGUID(srcGUID);
+            this.activity.playerGUID = srcGUID;
         }
     }
 
@@ -306,14 +315,19 @@ export default class RetailLogHandler extends LogHandler {
             return 0;
         }
 
-        const activityStartDate = this.activity.getStartDate();
+        const activityStartDate = this.activity.startDate;
         const relativeTime = (eventDate.getTime() - activityStartDate.getTime()) / 1000;
         return relativeTime;
     };
 
     dataTimeout(ms: number) {
         super.dataTimeout(ms);
-        const isDungeon = this.activity?.getCategory() === VideoCategory.MythicPlus;
+
+        if (!this.activity) {
+            return;
+        }
+
+        const isDungeon = (this.activity.category === VideoCategory.MythicPlus);
 
         if (isDungeon) {
             this.forceStopRecording();
@@ -329,6 +343,7 @@ export default class RetailLogHandler extends LogHandler {
         const startTime = line.date();
         const category = VideoCategory.Battlegrounds;
         const zoneID = parseInt(line.arg(1), 10);
+
         this.activity = new Battleground(startTime, category, zoneID);
         this.startRecording(this.activity);
     }

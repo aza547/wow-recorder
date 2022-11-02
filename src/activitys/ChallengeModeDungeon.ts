@@ -4,63 +4,41 @@ import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keyst
 import Activity from "./Activity";
 
 export default class ChallengeModeDungeon extends Activity {
-    private mapID: number;
-    private level: number;
-    private affixes: number[];
-    private timings: number[];
-    private CMDuration: number = 0;
-    private upgradeLevel?: number;
-    private timelineSegments: ChallengeModeTimelineSegment[] = []
+    private _mapID: number;
+    private _level: number;
+    private _timings: number[];
+    private _CMDuration: number = 0;
+    private _timeline: ChallengeModeTimelineSegment[] = []
 
     constructor(startDate: Date, 
                 zoneID: number, 
                 mapID: number, 
-                level: number, 
-                affixes: number[])
+                level: number)
     {
         super(startDate, VideoCategory.MythicPlus);
-        this.zoneID = zoneID;
-        this.mapID = mapID;
-        this.level = level;
-        this.affixes = affixes; 
-        this.timings = dungeonTimersByMapId[mapID];
+        this._zoneID = zoneID;
+        this._mapID = mapID;
+        this._level = level;
+        this._timings = dungeonTimersByMapId[mapID];
     }
 
-    endChallengeMode(endDate: Date, CMDuration: number) {
-        this.endCurrentTimelineSegment(endDate);
+    get endDate() { return this._endDate };
+    get CMDuration() { return this._CMDuration };
+    get timings() { return this._timings };
+    get timeline() { return this._timeline };
+    get level() { return this._level };
+    get mapID() { return this._mapID };
 
-        // If last timeline segment is less than 10 seconds long, discard it.
-        // It's probably not useful
-        const lastTimelineSegment = this.getCurrentTimelineSegment();
+    set endDate(date) { this._endDate = date };
+    set CMDuration(duration) { this._CMDuration = duration };
 
-        if (lastTimelineSegment && lastTimelineSegment.length() < 10000) {
-            console.debug("[ChallengeModeDungeon] Removing last timeline segment because it's too short.");
-            this.removeLastTimelineSegment();
-        }
-
-        this.endDate = endDate;
-        this.CMDuration = CMDuration;
-        this.result = true; // @@@ is this OK or need to handle non completed better? 
-        this.upgradeLevel = this.calculateKeystoneUpgradeLevel();
-    }
-
-    /**
-     * Calculate the completion result of a ChallngeModeDungeon based on the
-     * duration of the dungeon tested against the dungeon timer values.
-     *
-     * Return value is a number between 0 and 3:
-     * -  0   = depleted
-     * -  1-3 = keystone upgrade levels
-     */
-    calculateKeystoneUpgradeLevel(): number {
+    get upgradeLevel(): number {
         if (!this.CMDuration) {
-            console.error("[ChallengeModeDungeon] Tried to get result of incomplete run.");
-            return 0;
+            throw new Error("Tried to get result of incomplete run.");
         }
 
         if (!this.timings) {
-            console.error("[ChallengeModeDungeon] Don't have timings data for this dungeon.");
-            return 0;
+            throw new Error("Don't have timings data for this dungeon.");
         }
 
         for (let i = (this.timings.length - 1); i >= 0; i--) {
@@ -72,33 +50,33 @@ export default class ChallengeModeDungeon extends Activity {
         return 0;
     }
 
-    /**
-     * Add a timeline segment, optionally ending the current one
-     *
-     * Given a date as endPrevious, that date is used as the logEnd for the
-     * current segment.
-     */
+    get currentSegment(): ChallengeModeTimelineSegment| undefined {
+        return this.timeline.at(-1);
+    }
+
+    endChallengeMode(endDate: Date, CMDuration: number) {
+        this.endCurrentTimelineSegment(endDate);
+        const lastSegment = this.currentSegment;
+
+        if (lastSegment && lastSegment.length() < 10000) {
+            console.debug("[ChallengeModeDungeon] Removing last timeline segment because it's too short.");
+            this.removeLastTimelineSegment();
+        }
+
+        this.CMDuration = CMDuration;
+        super.end(endDate, true); // @@@ is this OK or need to handle non completed better? 
+    }
+
     addTimelineSegment(segment: ChallengeModeTimelineSegment, endPrevious?: Date) {
         if (endPrevious) {
             this.endCurrentTimelineSegment(endPrevious);
         }
 
-        this.timelineSegments.push(segment);
+        this.timeline.push(segment);
     }
 
-    getTimelineSegments(): ChallengeModeTimelineSegment[] {
-        return this.timelineSegments;
-    }
-
-    getCurrentTimelineSegment(): ChallengeModeTimelineSegment | undefined {
-        return this.timelineSegments.at(-1);
-    }
-
-    /**
-     * Find and return the last timeline segment from a boss encounter
-     */
     getLastBossEncounter(): ChallengeModeTimelineSegment | undefined {
-        return this.timelineSegments.slice().reverse().find(v => {
+        return this.timeline.slice().reverse().find(v => {
             v.segmentType === TimelineSegmentType.BossEncounter;
         });
     }
@@ -106,10 +84,9 @@ export default class ChallengeModeDungeon extends Activity {
     /**
      * End a timeline segment by setting its logEnd date.
      */
-    endCurrentTimelineSegment(logDate: Date) {
-        const currentSegment = this.getCurrentTimelineSegment()
-        if (currentSegment) {
-            currentSegment.logEnd = logDate;
+    endCurrentTimelineSegment(date: Date) {
+        if (this.currentSegment) {
+            this.currentSegment.logEnd = date;
         }
     }
 
@@ -117,42 +94,21 @@ export default class ChallengeModeDungeon extends Activity {
      * Pop the last timeline segment and discard it
      */
     removeLastTimelineSegment() {
-        this.timelineSegments.pop();
-    }
-
-    getUpgradeLevel() {
-        return this.upgradeLevel;
-    }
-
-    getLevel() {
-        return this.level;
-    }
-
-    getMapID() {
-        return this.mapID;
-    }
-
-    getAllTimelineSegment() {
-        return this.timelineSegments;
+        this.timeline.pop();
     }
 
     getMetadata(): Metadata {
-        const metadata: Metadata = {
-            name: "a dungeon", // Instance name (e.g. "Operation: Mechagon")
+        return {
             category: VideoCategory.MythicPlus,
-            zoneID: this.getZoneID(),
-            mapID: this.getMapID(),
-            duration: this.getDuration(),
-            result: this.getResult(),
-            upgradeLevel: this.getUpgradeLevel(),            
-            playerName: this.getPlayerName(),
-            playerRealm: this.getPlayerRealm(),
-            playerSpecID: this.getPlayerSpecID(),
-            timeline: this.getTimelineSegments(),
-            level: this.getLevel(),
+            zoneID: this.zoneID,
+            mapID: this.mapID,
+            duration: this.duration,
+            result: this.result,
+            upgradeLevel: this.upgradeLevel,            
+            player: this.player,
+            timeline: this.timeline,
+            level: this.level,
             challengeMode: this, // @@@ remove this
         }
-
-        return metadata;
     }
 };

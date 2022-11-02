@@ -183,8 +183,6 @@ export default function VideoButton(props: any) {
     }
   }
 
-  console.log(state);
-
   return (
     <React.Fragment>
       <Tab 

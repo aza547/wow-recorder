@@ -3,6 +3,7 @@ import { Size } from "electron";
 import { VideoCategory, WoWProcessResultKey } from "./constants";
 import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment } from "./keystone";
+import { Combatant } from "./combatant";
 
 /**
  * Application recording status.
@@ -163,19 +164,16 @@ interface ISettingsPanelProps {
  * Metadata type. 
  */
  type Metadata = {
-    name: string;
     category: VideoCategory;
     duration: number;
     result: boolean;
     zoneID?: number;
     encounterID?: number;
     difficultyID?: number;
-    playerName?: string;
-    playerRealm?: string;
-    playerSpecID?: number;
+    player?: Combatant;
     teamMMR?: number;
     challengeMode?: ChallengeModeDungeon;
-    playerDeaths?: PlayerDeathType[];
+    deaths?: PlayerDeathType[];
     upgradeLevel?: number;
     mapID?: number;
     timeline?: ChallengeModeTimelineSegment[];

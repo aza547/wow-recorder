@@ -4,9 +4,9 @@ import { Metadata, RecStatus, SaveStatus, VideoQueueItem } from './types';
 import { getDungeonByMapId, getEncounterNameById, getVideoResultText, getInstanceNameByZoneId, getRaidNameByEncounterId } from './helpers';
 import { VideoCategory } from './constants';
 import fs from 'fs';
-import { ChallengeModeDungeon } from './keystone';
 import path from 'path';
 import Activity from '../activitys/Activity';
+import ChallengeModeDungeon from 'activitys/ChallengeModeDungeon';
 
 const atomicQueue = require('atomic-queue');
 const obsRecorder = require('./obsRecorder');
@@ -268,8 +268,8 @@ type RecorderOptionsType = {
             this._isRecording = false;
             this._isRecordingBuffer = false;
 
-            const isRaid = activity.getCategory() == VideoCategory.Raids;
-            const duration = activity.getDuration();
+            const isRaid = activity.category == VideoCategory.Raids;
+            const duration = activity.duration;
 
             if (duration === null) {
                 console.log("Null duration");

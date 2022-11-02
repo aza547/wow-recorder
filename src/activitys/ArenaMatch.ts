@@ -14,7 +14,7 @@ export default class ArenaMatch extends Activity {
         this.zoneID = zoneID;
     }
 
-    endArenaMatch(endDate: Date, winningTeamID: number) {
+    endArena(endDate: Date, winningTeamID: number) {
         const result = this.determineArenaMatchResult(winningTeamID);
         super.end(endDate, result);
     }
@@ -25,30 +25,25 @@ export default class ArenaMatch extends Activity {
             return false;
         };
 
-        const playerCombatant = this.getCombatant(this.playerGUID);
+        const player = this.getCombatant(this.playerGUID);
 
-        if (!playerCombatant) {
+        if (!player) {
             console.error("[RetailLogHandler] No player combatant so no results possible");
             return false;
         }
 
-        return (playerCombatant.teamID === winningTeamID);
+        return (player.teamID === winningTeamID);
     }
 
     getMetadata(): Metadata {
-        const metadata: Metadata = {
-            name: "some arena",
-            category: this.getCategory(),
-            zoneID: this.getZoneID(),
-            duration: this.getDuration(),
-            result: this.getResult(),
-            playerDeaths: this.getPlayerDeaths(),
-            playerName: this.getPlayerName(),
-            playerRealm: this.getPlayerRealm(),
-            playerSpecID: this.getPlayerSpecID(),
+        return {
+            category: this.category,
+            zoneID: this.zoneID,
+            duration: this.duration,
+            result: this.result,
+            deaths: this.deaths,
+            player: this.player,
         }
-
-        return metadata;
     }
 }
 

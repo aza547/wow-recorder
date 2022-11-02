@@ -6,23 +6,61 @@ import { VideoCategory } from "../main/constants";
  * Abstract activity class.
  */
 export default abstract class Activity {
-    protected category: VideoCategory;
-    protected result: boolean;
-    protected combatantMap: Map<string, Combatant>;
-    protected startDate: Date;
-    protected playerDeaths: PlayerDeathType[];
-    protected endDate?: Date;
-    protected zoneID?: number;
-    protected playerGUID?: string;
+    protected _category: VideoCategory;
+    protected _result: boolean;
+    protected _combatantMap: Map<string, Combatant>;
+    protected _startDate: Date;
+    protected _deaths: PlayerDeathType[];
+    protected _endDate?: Date;
+    protected _zoneID?: number;
+    protected _playerGUID?: string;
 
     constructor(startDate: Date, 
                 category: VideoCategory) 
     {
-        this.result = false;
-        this.combatantMap = new Map();
-        this.startDate = startDate;
-        this.category = category;
-        this.playerDeaths = [];
+        this._result = false;
+        this._combatantMap = new Map();
+        this._startDate = startDate;
+        this._category = category;
+        this._deaths = [];
+    }
+ 
+    abstract getMetadata(): Metadata;
+
+    get zoneID() { return this._zoneID };
+    get category() { return this._category };
+    get startDate() { return this._startDate };
+    get result() { return this._result };
+    get deaths() { return this._deaths };
+    get playerGUID() { return this._playerGUID };
+    get endDate() { return this._endDate };
+    get combatantMap() { return this._combatantMap };
+
+    set zoneID(zoneID) { this._zoneID = zoneID };
+    set result(result) { this._result = result };
+    set playerGUID(guid) { this._playerGUID = guid };
+    set endDate(date) { this._endDate = date };
+
+    get duration() { 
+        if (!this.endDate) {
+            throw new Error("Failed to get duration of in-progress activity");
+        }
+
+        return (this.endDate.getTime() - this._startDate.getTime()) / 1000;;
+    };
+
+    get player() {
+        if (!this.playerGUID) {
+            throw new Error("Failed to get player combatant, _playerGUID not set");
+        }
+
+        const player = this.getCombatant(this.playerGUID);
+
+        if (!player) {
+            throw new Error("Player not found in combatants");
+        }
+
+        return player;
     }
 
     end(endDate: Date, result: boolean) {
@@ -30,134 +68,16 @@ export default abstract class Activity {
         this.result = result;
     }
 
-    getZoneID() {
-        return this.zoneID;
-    }
-
-    setZoneID(zoneID: number) {
-        this.zoneID = zoneID; 
-    }
-
-    getDuration() {
-        if (!this.endDate) {
-            console.error("[Activity] Failed to get duration of in-progress activity");
-            throw new Error("[Activity] Failed to get duration of in-progress activity");
-        }
-
-        const duration = (this.endDate.getTime() - this.startDate.getTime()) / 1000;
-        return duration;
-    }
-
-    getCategory() {
-        return this.category;
-    }
-
-    getStartDate() {
-        return this.startDate;
-    }
-
-    getResult() {
-        return this.result;
-    }
-
-    setResult(result: boolean) {
-        this.result = result;
+    getCombatant(GUID: string) {
+        return this.combatantMap.get(GUID);
     }
 
     addCombatant(combatant: Combatant) {
         this.combatantMap.set(combatant.GUID, combatant);
     }
 
-    getCombatant(GUID: string) {
-        return this.combatantMap.get(GUID);
+    addDeath(death: PlayerDeathType) {
+        this.deaths.push(death);
     }
-
-    addPlayerDeath(death: PlayerDeathType) {
-        this.playerDeaths.push(death);
-    }
-
-    getPlayerDeaths() {
-        return this.playerDeaths;
-    }
-   
-
-    getPlayerGUID() {
-        return this.playerGUID; 
-    }
-
-    setPlayerGUID(guid: string) {
-        this.playerGUID = guid; 
-    }
-    
-    getPlayerName(): string {
-        if (!this.playerGUID) {
-            console.error("[Activity] No player GUID set.");
-            return "Unknown"
-        }
-
-        const playerCombatant = this.getCombatant(this.playerGUID);
-
-        if (!playerCombatant) {
-            console.error("[Activity] No playerCombatant found.");
-            return "Unknown"
-        }
-
-        const playerName = playerCombatant.name;
-
-        if (!playerName) {
-            console.error("[Activity] No playerName found.");
-            return "Unknown"
-        }
-
-        return playerName;
-    }
-
-    getPlayerRealm() {
-        if (!this.playerGUID) {
-            console.error("[Activity] No player GUID set.");
-            return "Unknown"
-        }
-
-        const playerCombatant = this.getCombatant(this.playerGUID);
-
-        if (!playerCombatant) {
-            console.error("[Activity] No playerCombatant found.");
-            return "Unknown"
-        }
-
-        const playerRealm = playerCombatant.realm;
-
-        if (!playerRealm) {
-            console.error("[Activity] No playerRealm found.");
-            return "Unknown"
-        }
-
-        return playerRealm;
-    }
-
-    getPlayerSpecID() {
-        if (!this.playerGUID) {
-            console.error("[Activity] No player GUID set.");
-            return 0;
-        }
-
-        const playerCombatant = this.getCombatant(this.playerGUID);
-
-        if (!playerCombatant) {
-            console.error("[Activity] No playerCombatant found.");
-            return 0;
-        }
-
-        const playerSpecID = playerCombatant.specID;
-
-        if (!playerSpecID) {
-            console.error("[Activity] No playerSpecID found.");
-            return 0;
-        }
-
-        return playerSpecID;
-    }
-
-    abstract getMetadata(): Metadata;
 }
 

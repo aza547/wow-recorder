@@ -6,55 +6,49 @@ import Activity from "./Activity";
  * Class representing a raid encounter.
  */
 export default class RaidEncounter extends Activity {
-    private difficultyID: number = 0;
-    private encounterID: number = 0;
+    private _difficultyID: number = 0;
+    private _encounterID: number = 0;
 
     constructor(startDate: Date, 
                 encounterID: number, 
                 difficultyID: number) 
     {
         super(startDate, VideoCategory.Raids);
-        this.difficultyID = difficultyID;
-        this.encounterID = encounterID;
-    }
 
-    getEncounterID() {
-        return this.encounterID;
+        this._difficultyID = difficultyID;
+        this._encounterID = encounterID;
     }
+    
+    get difficultyID() { return this._difficultyID };
+    get encounterID() { return this._encounterID };
 
-    getRaidEncounterName(): string {
-        if (!this.encounterID) {
-            console.error("[RaidEncounter] EncounterID not set, can't get name of encounter");
-            return "Unknown";
+    get encounterName() {
+        if (!this._encounterID) {
+            throw new Error("EncounterID not set, can't get name of encounter");
         }
 
-        return raidEncountersById[this.encounterID];
+        return raidEncountersById[this._encounterID];
     }
 
-    getRaidZoneID(): number {
+    get zoneID(): number {
         return 0; // @@@ TODO
     };
 
     getDifficultyID(): number {
-        return this.difficultyID;
+        return this._difficultyID;
     }
 
     getMetadata(): Metadata {
-        const metadata: Metadata = {
-            name: this.getRaidEncounterName(),
+        return { // @@@ encounter name? 
             category: VideoCategory.Raids,
-            zoneID: this.getRaidZoneID(),
-            encounterID: this.getEncounterID(),
-            difficultyID: this.getDifficultyID(),
-            duration: this.getDuration(),
-            result: this.getResult(),
-            playerDeaths: this.getPlayerDeaths(),
-            playerName: this.getPlayerName(),
-            playerRealm: this.getPlayerRealm(),
-            playerSpecID: this.getPlayerSpecID(),
+            zoneID: this.zoneID,
+            encounterID: this.encounterID,
+            difficultyID: this.difficultyID,
+            duration: this.duration,
+            result: this.result,
+            player: this.player,
+            deaths: this.deaths,
         }
-
-        return metadata;
     }
 }
 
