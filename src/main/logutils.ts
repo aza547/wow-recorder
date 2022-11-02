@@ -204,7 +204,17 @@ const endRecording = (options?: EndRecordingOptionsType) => {
  */
 function handleArenaStartLine (line: LogLine): void {
     if (recorder.isRecording) return;
-    const category = (line.arg(3) as VideoCategory);
+    
+    let category;
+    const type = line.arg(3);
+
+    // Dirty hack for now to fix solo shuffle as since DF prepatch it's
+    // either "Brawl Solo Shuffle" or "Rated Solo Shuffle".
+    if (type.includes("Solo Shuffle")) {
+        category = VideoCategory.SoloShuffle;
+    } else {
+        category = (line.arg(3) as VideoCategory);
+    }
 
     const zoneID = parseInt(line.arg(1), 10);
 
