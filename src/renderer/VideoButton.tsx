@@ -23,10 +23,9 @@ export default function VideoButton(props: any) {
   const video = state.videoState[category][videoIndex];
   const videoPath = video.fullPath;
 
-  const isGoodResult = getVideoResult(video);
   // Need to not be const as it will be modified later if the video is of a
   // Mythic Keystone dungeon.
-  let resultText = getVideoResultText(category, isGoodResult);
+  let resultText = getVideoResultText(category, video.result);
   const MMR = video.teamMMR ? ("MMR: " + video.teamMMR) : undefined;
 
   const isProtected = video.protected;
@@ -34,7 +33,7 @@ export default function VideoButton(props: any) {
   const duration = video.duration;
   const formattedDuration = getFormattedDuration(duration);
 
-  const resultClass: string = isGoodResult ? "goodResult" : "badResult";
+  const resultClass: string = video.result ? "goodResult" : "badResult";
   
   const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorElement);
@@ -171,11 +170,10 @@ export default function VideoButton(props: any) {
   let keystoneTimelineSegments = [];
   
   if (isMythicPlus) {
-    console.log("ahk");
     buttonClasses.push('dungeon')
 
-    if (isGoodResult) {
-      resultText = '+' + video.chests;
+    if (video.result) {
+      resultText = '+' + video.upgradeLevel;
     }
 
     const timeline = video.timeline;

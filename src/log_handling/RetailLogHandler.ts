@@ -33,7 +33,7 @@ export default class RetailLogHandler extends LogHandler {
 
     handleArenaStartLine(line: LogLine): void {
         if (this.activity) {
-            console.error("[RetailLogHandler] Another activity in progress, can't start arena");
+            console.error("[RetailLogHandler] Another activity in progress, can't start arena"); 
             return;
         }
 
@@ -104,9 +104,6 @@ export default class RetailLogHandler extends LogHandler {
         this.startRecording(this.activity);
     };
 
-    /**
-     * Handle a log line for CHALLENGE_MODE_END
-     */
     handleChallengeModeEndLine (line: LogLine): void {
         console.debug("[RetailLogHandler] Handling CHALLENGE_MODE_STOP line:", line);
 
@@ -131,60 +128,67 @@ export default class RetailLogHandler extends LogHandler {
 
         if (!this.activity) {
             super.handleEncounterStartLine(line);
-        } else {
-            const category = this.activity.getCategory();
-            const isChallengeMode = category === VideoCategory.MythicPlus;
+            return;
+        } 
 
-            if (isChallengeMode) {
-                const activeChallengeMode = this.activity as ChallengeModeDungeon;
-                const encounterID = parseInt(line.arg(1), 10)
-                const eventDate = line.date();
-                
-                const segment = new ChallengeModeTimelineSegment(
-                    TimelineSegmentType.BossEncounter,
-                    eventDate,
-                    this.getRelativeTimestampForTimelineSegment(eventDate),
-                    encounterID
-                );
-    
-                activeChallengeMode.addTimelineSegment(segment, eventDate);
-                console.debug(`[RetailLogHandler] Starting new boss encounter: ${dungeonEncounters[encounterID]}`)
-            }
+        const category = this.activity.getCategory();
+        const isChallengeMode = category === VideoCategory.MythicPlus;
+
+        if (!isChallengeMode) {
+            console.error(`[RetailLogHandler] Encounter is already in progress and not a ChallengeMode`);
+            return;
         }
+
+        const activeChallengeMode = this.activity as ChallengeModeDungeon;
+        const encounterID = parseInt(line.arg(1), 10)
+        const eventDate = line.date();
+        
+        const segment = new ChallengeModeTimelineSegment(
+            TimelineSegmentType.BossEncounter,
+            eventDate,
+            this.getRelativeTimestampForTimelineSegment(eventDate),
+            encounterID
+        );
+
+        activeChallengeMode.addTimelineSegment(segment, eventDate);
+        console.debug(`[RetailLogHandler] Starting new boss encounter: ${dungeonEncounters[encounterID]}`);
     }
 
     handleEncounterEndLine(line: LogLine) {
         console.debug("[RetailLogHandler] Handling ENCOUNTER_END line:", line);
 
-        if (this.activity) {
-            const category = this.activity.getCategory(); 
-            const isChallengeMode = category === VideoCategory.MythicPlus;
+        if (!this.activity) {
+            console.error("[RetailLogHandler] Encounter end event spotted but not in activity");
+            return;
+        }
 
-            if (!isChallengeMode) {
-                console.debug("[RetailLogHandler] Must be raid encounter, calling super method.");
-                super.handleEncounterEndLine(line);
-            } else {
-                console.debug("[RetailLogHandler] Challenge mode boss encounter.");
-                const activeChallengeMode = this.activity as ChallengeModeDungeon;
-                const eventDate = line.date();
-                const result = Boolean(parseInt(line.arg(5), 10));
-                const encounterID = parseInt(line.arg(1), 10);
-                const currentSegment = activeChallengeMode.getCurrentTimelineSegment();
+        const category = this.activity.getCategory(); 
+        const isChallengeMode = category === VideoCategory.MythicPlus;
 
-                if (currentSegment) {
-                    currentSegment.result = result;
-                }
+        if (!isChallengeMode) {
+            console.debug("[RetailLogHandler] Must be raid encounter, calling super method.");
+            super.handleEncounterEndLine(line);
+        } else {
+            console.debug("[RetailLogHandler] Challenge mode boss encounter.");
+            const activeChallengeMode = this.activity as ChallengeModeDungeon;
+            const eventDate = line.date();
+            const result = Boolean(parseInt(line.arg(5), 10));
+            const encounterID = parseInt(line.arg(1), 10);
+            const currentSegment = activeChallengeMode.getCurrentTimelineSegment();
 
-                const segment = new ChallengeModeTimelineSegment(
-                    TimelineSegmentType.Trash, 
-                    eventDate, 
-                    this.getRelativeTimestampForTimelineSegment(eventDate)
-                )
-
-                // Add a trash segment as the boss encounter ended
-                activeChallengeMode.addTimelineSegment(segment, eventDate);
-                console.debug(`[RetailLogHandler] Ending boss encounter: ${dungeonEncounters[encounterID]}`);
+            if (currentSegment) {
+                currentSegment.result = result;
             }
+
+            const segment = new ChallengeModeTimelineSegment(
+                TimelineSegmentType.Trash, 
+                eventDate, 
+                this.getRelativeTimestampForTimelineSegment(eventDate)
+            )
+
+            // Add a trash segment as the boss encounter ended
+            activeChallengeMode.addTimelineSegment(segment, eventDate);
+            console.debug(`[RetailLogHandler] Ending boss encounter: ${dungeonEncounters[encounterID]}`);
         }
     }
 
@@ -313,7 +317,6 @@ export default class RetailLogHandler extends LogHandler {
 
         if (isDungeon) {
             this.forceStopRecording();
-            return;
         }
     }
 

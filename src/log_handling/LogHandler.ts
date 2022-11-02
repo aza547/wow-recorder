@@ -37,8 +37,7 @@ export default class LogHandler {
         const encounterID = parseInt(line.arg(1), 10)
         const difficultyID = parseInt(line.arg(3), 10);
         
-        this.activity = new RaidEncounter(startDate, 
-                                          VideoCategory.Raids, 
+        this.activity = new RaidEncounter(startDate,
                                           encounterID, 
                                           difficultyID);
 

@@ -137,7 +137,7 @@ const getMetadataForVideo = (video: string) => {
 /**
  * Writes video metadata asynchronously and returns a Promise
  */
- const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
+ const writeMetadataFile = async (videoPath: string, metadata: any) => {
     const metadataFileName = getMetadataFileForVideo(videoPath);
     const jsonString = JSON.stringify(metadata, null, 2);
     
@@ -343,7 +343,8 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  * Put a save marker on a video, protecting it from the file monitor.
  */
  const toggleVideoProtected = (videoPath: string) => {
-    const metadata: Metadata = getMetadataForVideo(videoPath);
+    const metadata = getMetadataForVideo(videoPath);
+
     if (!metadata) {
         console.error(`[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`);
         return;

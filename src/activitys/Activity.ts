@@ -5,7 +5,7 @@ import { VideoCategory } from "../main/constants";
 /**
  * Abstract activity class.
  */
-export default class Activity {
+export default abstract class Activity {
     protected category: VideoCategory;
     protected result: boolean;
     protected combatantMap: Map<string, Combatant>;
@@ -79,15 +79,7 @@ export default class Activity {
     getPlayerDeaths() {
         return this.playerDeaths;
     }
-
-    // overriden by subclasses
-    getMetadata(): Metadata {
-        return { 
-            name: "abc", 
-            category: VideoCategory.TwoVTwo, 
-            duration: 0
-        };
-    }
+   
 
     getPlayerGUID() {
         return this.playerGUID; 
@@ -165,5 +157,7 @@ export default class Activity {
 
         return playerSpecID;
     }
+
+    abstract getMetadata(): Metadata;
 }
 

@@ -430,10 +430,10 @@ type RecorderOptionsType = {
 
         if (!dungeon.result) {
             resultText = 'Depleted';
-        } else if (!dungeon.chests) {
+        } else if (!dungeon.upgradeLevel) {
             resultText = 'Timed';
         } else {
-            resultText = "+" + dungeon.chests;
+            resultText = "+" + dungeon.upgradeLevel;
         }
 
         // @@@ map ID bwards compatiblity

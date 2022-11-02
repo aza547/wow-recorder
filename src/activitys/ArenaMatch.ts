@@ -32,9 +32,7 @@ export default class ArenaMatch extends Activity {
             return false;
         }
 
-        const teamID = playerCombatant.teamID;
-        const result = (teamID === winningTeamID);
-        return result;
+        return (playerCombatant.teamID === winningTeamID);
     }
 
     getMetadata(): Metadata {

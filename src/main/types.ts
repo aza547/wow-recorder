@@ -176,7 +176,7 @@ interface ISettingsPanelProps {
     teamMMR?: number;
     challengeMode?: ChallengeModeDungeon;
     playerDeaths?: PlayerDeathType[];
-    chests?: number;
+    upgradeLevel?: number;
     mapID?: number;
     timeline?: ChallengeModeTimelineSegment[];
     level?: number;

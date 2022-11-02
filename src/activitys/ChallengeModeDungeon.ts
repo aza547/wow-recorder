@@ -9,7 +9,7 @@ export default class ChallengeModeDungeon extends Activity {
     private affixes: number[];
     private timings: number[];
     private CMDuration: number = 0;
-    private chests?: number;
+    private upgradeLevel?: number;
     private timelineSegments: ChallengeModeTimelineSegment[] = []
 
     constructor(startDate: Date, 
@@ -41,7 +41,7 @@ export default class ChallengeModeDungeon extends Activity {
         this.endDate = endDate;
         this.CMDuration = CMDuration;
         this.result = true; // @@@ is this OK or need to handle non completed better? 
-        this.chests = this.calculateKeystoneUpgradeLevel();
+        this.upgradeLevel = this.calculateKeystoneUpgradeLevel();
     }
 
     /**
@@ -120,8 +120,8 @@ export default class ChallengeModeDungeon extends Activity {
         this.timelineSegments.pop();
     }
 
-    getChests() {
-        return this.chests;
+    getUpgradeLevel() {
+        return this.upgradeLevel;
     }
 
     getLevel() {
@@ -144,7 +144,7 @@ export default class ChallengeModeDungeon extends Activity {
             mapID: this.getMapID(),
             duration: this.getDuration(),
             result: this.getResult(),
-            chests: this.getChests(),            
+            upgradeLevel: this.getUpgradeLevel(),            
             playerName: this.getPlayerName(),
             playerRealm: this.getPlayerRealm(),
             playerSpecID: this.getPlayerSpecID(),

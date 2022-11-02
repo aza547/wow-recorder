@@ -10,11 +10,10 @@ export default class RaidEncounter extends Activity {
     private encounterID: number = 0;
 
     constructor(startDate: Date, 
-                category: VideoCategory, //wtf alex
                 encounterID: number, 
                 difficultyID: number) 
     {
-        super(startDate, category);
+        super(startDate, VideoCategory.Raids);
         this.difficultyID = difficultyID;
         this.encounterID = encounterID;
     }
