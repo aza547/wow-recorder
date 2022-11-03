@@ -274,7 +274,7 @@ export default class RetailLogHandler extends LogHandler {
 
         const teamID = parseInt(line.arg(2), 10);
         const specID = parseInt(line.arg(24), 10);
-        let combatantInfo = new Combatant(GUID, teamID, specID);
+        const combatantInfo = new Combatant(GUID, teamID, specID);
         this.activity.addCombatant(combatantInfo);
     }
 
