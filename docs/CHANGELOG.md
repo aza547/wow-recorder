@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+
+## [2.10.2] - 2022-11-04
+### Fixed
+- [Issue 220](https://github.com/aza547/wow-recorder/issues/220) - Revert audio sources muting to fix black screen recording bug. 
+
 ## [2.10.1] - 2022-11-02
 ### Fixed
 - [Issue 57](https://github.com/aza547/wow-recorder/issues/57) - Only enable audio sources when recording buffer to avoid Windows not being able to go into sleep mode.
