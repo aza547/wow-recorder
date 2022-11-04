@@ -9,7 +9,7 @@ Windows is currently the only supported operating system.
 ![](https://i.imgur.com/6GaC0bE.png)
 
 #  How to Use
-1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.2.9.0.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
+1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.2.10.2.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
 1. Launch the application and fill out the settings page.
 1. Enable combat logging.
     - Retail: Install and configure the SimpleCombatLogger addon ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
