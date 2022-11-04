@@ -1,54 +1,43 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { recorder }  from './main';
-import { wowExecutableFlavours }  from './constants';
+import { raidEncountersById, wowExecutableFlavours }  from './constants';
 import { IWoWProcessResult } from './types';
 import { CombatLogParser } from './combatLogParser';
 import { getSortedFiles } from './util';
 import ConfigService from './configService';
 import RetailLogHandler from '../log_handling/RetailLogHandler'
 import ClassicLogHandler from '../log_handling/ClassicLogHandler'
+import { Recorder } from './recorder';
 
 const cfg = ConfigService.getInstance();
 const tasklist = require('tasklist');
 let testRunning: boolean = false;
 
-/**
- * Parser and handler for WoW combat log files
- * If no data has been received for 'dataTimeout' milliseconds, an event
- * will be emitted ('DataTimeout') to be able to clean up whatever was going on.
- */
-const retailCombatLogParser = new CombatLogParser({
-    dataTimeout: 2 * 60 * 1000,
-    fileFinderFn: getSortedFiles,
-});
 
 /**
- * Parser and handler for WoW combat log files
- * If no data has been received for 'dataTimeout' milliseconds, an event
- * will be emitted ('DataTimeout') to be able to clean up whatever was going on.
+ * Setup retail log handler.
  */
- const classicCombatLogParser = new CombatLogParser({
-    dataTimeout: 2 * 60 * 1000,
-    fileFinderFn: getSortedFiles,
-});
+const makeRetailHandler = (recorder: Recorder, logPath: string): RetailLogHandler => {
+    const parser = new CombatLogParser({
+        dataTimeout: 2 * 60 * 1000,
+        fileFinderFn: getSortedFiles,
+    });
 
-/**
- * Setup log handlers.
- */
-const makeHandlers = () => {
-    const retailHandler = new RetailLogHandler(recorder, retailCombatLogParser);
-    const classicHandler = new ClassicLogHandler(recorder, classicCombatLogParser);
-    return [retailHandler, classicHandler]
+    parser.watchPath(logPath);
+    return new RetailLogHandler(recorder, parser);
 }
 
-
 /**
- * Watch the given directories for combat log changes.
+ * Setup classic log handler.
  */
- const watchLogs = () => {
-    // @@@
-    retailCombatLogParser.watchPath("D:\\World of Warcraft\\_retail_\\Logs");
-    classicCombatLogParser.watchPath("D:\\World of Warcraft\\_classic_\\Logs");
+const makeClassicHandler = (recorder: Recorder, logPath: string): ClassicLogHandler => {
+    const parser = new CombatLogParser({
+        dataTimeout: 2 * 60 * 1000,
+        fileFinderFn: getSortedFiles,
+    });
+
+    parser.watchPath(logPath);
+    return new ClassicLogHandler(recorder, parser);
 }
 
 /**
@@ -86,8 +75,7 @@ const wowProcessStopped = () => {
     wowProcessRunning = null;
 
     if (recorder.isRecording) {
-        // @@@
-        //endRecording({closedWow: true});
+        endRecording({closedWow: true});
     } else {
         recorder.stopBuffer();
     }
@@ -235,5 +223,6 @@ export {
     watchLogs,
     pollWowProcess,
     runRecordingTest,
-    makeHandlers,
+    makeRetailHandler,
+    makeClassicHandler,
 };

@@ -1,5 +1,5 @@
 import { Metadata } from "main/types";
-import { VideoCategory } from "../main/constants";
+import { arenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
 /**
@@ -11,7 +11,29 @@ export default class ArenaMatch extends Activity {
                 zoneID: number) 
     {
         super(startDate, category);
-        this.zoneID = zoneID;
+        this._zoneID = zoneID;
+    }
+
+    get zoneID() { return this._zoneID };
+
+    get resultInfo() {
+        if (!this.result) {
+            throw new Error("[ArenaMatch] Tried to get result info but no result");
+        }
+
+        if (this.result) {
+            return "Win";
+        }
+
+        return "Loss";
+    }
+
+    get zoneName() {
+        if (!this.zoneID) {
+            throw new Error("[ArenaMatch] Tried to get zoneName but no zoneID");
+        }
+
+        return arenas[this._zoneID as number]
     }
 
     endArena(endDate: Date, winningTeamID: number) {
@@ -39,11 +61,16 @@ export default class ArenaMatch extends Activity {
         return {
             category: this.category,
             zoneID: this.zoneID,
+            zoneName: this.zoneName,
             duration: this.duration,
             result: this.result,
             deaths: this.deaths,
             player: this.player,
         }
+    }
+
+    getFileName() {
+        return `${this.category} ${this.zoneName} (${this.resultInfo})`;
     }
 }
 

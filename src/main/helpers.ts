@@ -7,15 +7,15 @@
  * import a function that uses the 'fs' module. You'll very easily find out if what you
  * did was bad, because the render process will show its "Red Screen of Death".
  */
-import { dungeonsByMapId, instanceDifficulty, InstanceDifficultyType, instanceEncountersById, instanceNamesByZoneId, raidInstances, VideoCategory, zones } from "./constants";
-import { Metadata } from "./logutils";
+import { instanceDifficulty, InstanceDifficultyType, instanceEncountersById, instanceNamesByZoneId, raidInstances, VideoCategory, zones } from "./constants";
+import { Metadata } from "./types";
 import { RaidInstanceType } from "./types";
-import util from 'util';
 
 /**
  * Get a result text appropriate for the video category that signifies a
  * win or a loss, of some sort.
  */
+// @@@ move to class
 export const getVideoResultText = (category: VideoCategory, isGoodResult: boolean): string => {
 
     // Non-trivial to determine who won a BG/SoloShuffle so just don't report it.
@@ -36,19 +36,9 @@ export const getVideoResultText = (category: VideoCategory, isGoodResult: boolea
 };
 
 /**
- * Get the name of a dungeon by its map ID
- */
-export const getDungeonByMapId = (mapId?: number): string => {
-    if (mapId && dungeonsByMapId.hasOwnProperty(mapId)) {
-        return dungeonsByMapId[mapId];
-    }
-
-    return 'Unknown Dungeon';
-};
-
-/**
  * Get the name of a boss encounter based on its encounter ID
  */
+// @@@ move to class
 export const getEncounterNameById = (encounterId? : number): string => {
     if (encounterId && instanceEncountersById.hasOwnProperty(encounterId)) {
         return instanceEncountersById[encounterId];
@@ -60,6 +50,7 @@ export const getEncounterNameById = (encounterId? : number): string => {
 /**
  * Get the name of a zone in WoW based on its zone ID
  */
+// @@@ move to class
 export const getInstanceNameByZoneId = (zoneId?: number): string => {
     if (zoneId && instanceNamesByZoneId.hasOwnProperty(zoneId)) {
         return instanceNamesByZoneId[zoneId];
@@ -72,6 +63,7 @@ export const getInstanceNameByZoneId = (zoneId?: number): string => {
  * Get the difficulty of an instance based on its difficulty ID, as found in
  * `ENCOUNTER_START` log lines.
  */
+// @@@ move to class
 export const getInstanceDifficulty = (difficultyId: number): InstanceDifficultyType | null => {
     if (instanceDifficulty.hasOwnProperty(difficultyId)) {
         return instanceDifficulty[difficultyId];
@@ -83,6 +75,7 @@ export const getInstanceDifficulty = (difficultyId: number): InstanceDifficultyT
 /**
  * Get the zone name.
  */
+// @@@ move to class
 export const getVideoZone = (metadata: Metadata) => {
     const zoneID = metadata.zoneID;
     const encounterID = metadata.encounterID;
@@ -106,6 +99,7 @@ export const getVideoZone = (metadata: Metadata) => {
 /**
  * Get the raid name from the encounter ID.
  */
+// @@@ move to class
 export const getRaidNameByEncounterId = (encounterID?: number) => {
     const raid = getRaidByEncounterId(encounterID);
     if (!raid) {
@@ -118,6 +112,7 @@ export const getRaidNameByEncounterId = (encounterID?: number) => {
 /**
  * Get the raid instance from an encounter ID.
  */
+// @@@ move to class
 export const getRaidByEncounterId = (zoneID?: number): RaidInstanceType | undefined => {
     const raid = raidInstances.filter(r => zoneID && r.encounters.hasOwnProperty(zoneID))
 

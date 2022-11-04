@@ -1,5 +1,5 @@
 import { Metadata } from "main/types";
-import { VideoCategory } from "../main/constants";
+import { retailBattlegrounds, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
 /**
@@ -14,6 +14,18 @@ export default class Battleground extends Activity {
         this.zoneID = zoneID;
     }
 
+    get battlegroundName(): string {
+        if (!this.zoneID) {
+            throw new Error("zoneID not set, can't get battleground name");
+        }
+
+        if (retailBattlegrounds.hasOwnProperty(this.zoneID)) {
+            return retailBattlegrounds[this.zoneID];
+        }
+
+        return 'Unknown Battleground';
+    };
+
     getMetadata(): Metadata {
         return {
             category: this.category,
@@ -21,6 +33,10 @@ export default class Battleground extends Activity {
             duration: this.duration,
             result: this.result,
         }
+    }
+
+    getFileName(): string {
+        return `${this.battlegroundName}`;
     }
 }
 

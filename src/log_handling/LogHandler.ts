@@ -19,7 +19,7 @@ export default class LogHandler {
     protected combatLogParser: CombatLogParser;
     protected player: Combatant | undefined;
     protected cfg: ConfigService;
-    protected activity?: Activity;
+    protected _activity?: Activity;
 
     constructor(recorder: Recorder, 
                 combatLogParser: CombatLogParser)
@@ -29,6 +29,9 @@ export default class LogHandler {
         this.combatLogParser.on('DataTimeout', (ms: number) => { this.dataTimeout(ms)});
         this.cfg = ConfigService.getInstance();
     }
+
+    get activity() { return this._activity };
+    set activity(activity) { this._activity = activity };
 
     handleEncounterStartLine(line: LogLine) {
         console.debug("[LogHandler] Handling ENCOUNTER_START line:", line);
@@ -139,7 +142,7 @@ export default class LogHandler {
         const isBattleground = (this.activity.category === VideoCategory.Battlegrounds);
 
         if (isBattleground) {
-            //@@@this.forceStopRecording();
+            this.forceStopRecording();
             return;
         }
     }
@@ -201,12 +204,13 @@ export default class LogHandler {
 
     forceStopRecording = () => {
         if (!this.activity) {
-            console.error("[RetailLogHandler] No active activity on force stop");
+            this.recorder.forceStop();
             return;
         }
-        
+
         this.activity.end(new Date(), false);
         this.endRecording(this.activity);
+        this.activity = undefined
     }
 
     zoneChangeStop(line: LogLine) {

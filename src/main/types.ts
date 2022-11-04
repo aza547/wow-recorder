@@ -133,6 +133,7 @@ interface IWoWProcessResult {
 type VideoQueueItem = {
     bufferFile: string,
     metadata: Metadata,
+    filename: string,
 };
 
 interface IEventTarget {
@@ -178,6 +179,8 @@ interface ISettingsPanelProps {
     mapID?: number;
     timeline?: ChallengeModeTimelineSegment[];
     level?: number;
+    zoneName?: string;
+    encounterName?: string;
 }
 
 export {

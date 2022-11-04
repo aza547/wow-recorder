@@ -26,6 +26,7 @@ export default abstract class Activity {
     }
  
     abstract getMetadata(): Metadata;
+    abstract getFileName(): string;
 
     get zoneID() { return this._zoneID };
     get category() { return this._category };

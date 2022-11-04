@@ -220,11 +220,6 @@ export default class RetailLogHandler extends LogHandler {
             {
                 console.info("[RetailLogHandler] Internal BG zone change: ", zoneID);
             } 
-            else if (isZoneBG && !isActivityBG) 
-            {
-                // @@@
-                console.error("[RetailLogHandler] uh oh");
-            } 
             else if (!isZoneBG && isActivityBG) 
             {
                 console.error("[RetailLogHandler] Zone change out of BG");
@@ -235,10 +230,15 @@ export default class RetailLogHandler extends LogHandler {
                 console.error("[RetailLogHandler] ZONE_CHANGE out of arena");
                 this.zoneChangeStop(line);
             }
+            else if (isZoneBG && !isActivityBG) 
+            {
+                console.error("[RetailLogHandler] Zoned into BG but in a different activity");
+                this.forceStopRecording();
+            } 
             else 
             {
-                // @@@
-                console.error("[RetailLogHandler] uh oh 2");       
+                console.error("[RetailLogHandler] Error case: ", this.activity, zoneID);
+                this.forceStopRecording();      
             }
         } 
         else 

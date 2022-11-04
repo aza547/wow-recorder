@@ -60,7 +60,6 @@ export default function VideoButton(props: any) {
       break;
 
     case VideoCategory.MythicPlus:
-      // @@@ bwards compatbility
       buttonImage = Images.dungeon[video.zoneID];
       break;
 

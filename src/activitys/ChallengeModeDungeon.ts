@@ -1,5 +1,5 @@
 import { Metadata } from "main/types";
-import { dungeonTimersByMapId, VideoCategory } from "../main/constants";
+import { dungeonsByMapId, dungeonTimersByMapId, VideoCategory } from "../main/constants";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import Activity from "./Activity";
 
@@ -53,6 +53,30 @@ export default class ChallengeModeDungeon extends Activity {
         return this.timeline.at(-1);
     }
 
+    get dungeonName(): string {
+        if (!this.mapID) {
+            throw new Error("mapID not set, can't get dungeon name");
+        }
+
+        if (dungeonsByMapId.hasOwnProperty(this.mapID)) {
+            return dungeonsByMapId[this.mapID];
+        }
+
+        return 'Unknown Dungeon';
+    };
+
+    get resultInfo() {
+        if (!this.result) {
+            throw new Error("[RaidEncounter] Tried to get result info but no result");
+        }
+
+        if (this.result) {
+            return `+${this.upgradeLevel}`
+        }
+
+        return "Abandoned";
+    }
+
     endChallengeMode(endDate: Date, CMDuration: number) {
         this.endCurrentTimelineSegment(endDate);
         const lastSegment = this.currentSegment;
@@ -74,12 +98,6 @@ export default class ChallengeModeDungeon extends Activity {
         this.timeline.push(segment);
     }
 
-    getLastBossEncounter(): ChallengeModeTimelineSegment | undefined {
-        return this.timeline.slice().reverse().find(v => {
-            v.segmentType === TimelineSegmentType.BossEncounter;
-        });
-    }
-
     endCurrentTimelineSegment(date: Date) {
         if (this.currentSegment) {
             this.currentSegment.logEnd = date;
@@ -88,6 +106,12 @@ export default class ChallengeModeDungeon extends Activity {
 
     removeLastTimelineSegment() {
         this.timeline.pop();
+    }
+
+    getLastBossEncounter(): ChallengeModeTimelineSegment | undefined {
+        return this.timeline.slice().reverse().find(v => {
+            v.segmentType === TimelineSegmentType.BossEncounter;
+        });
     }
 
     getMetadata(): Metadata {
@@ -101,7 +125,10 @@ export default class ChallengeModeDungeon extends Activity {
             player: this.player,
             timeline: this.timeline,
             level: this.level,
-            challengeMode: this, // @@@ remove this
         }
+    }
+
+    getFileName(): string {
+        return `${this.dungeonName} ${this.level} (${this.resultInfo})`;
     }
 };
