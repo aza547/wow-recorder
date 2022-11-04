@@ -121,7 +121,7 @@ const setObsRecEncoder = (options: RecorderOptionsType): void => {
   let encoder = options.obsRecEncoder;
   let autoPickEncoder = (!encoder || encoder === 'auto');
 
-  console.debug("[OBS] Available encoders", inspectObject(availableEncoders));
+  console.debug("[OBS] Available encoders", availableEncoders);
 
   if (!autoPickEncoder && !availableEncoders.includes(encoder)) {
     console.debug(`[OBS] Configured encoder '${encoder}' is not available.`);
@@ -237,7 +237,7 @@ const setupScene = (options: RecorderOptionsType): IScene => {
   const sceneItem = scene.add(videoSource);
   sceneItem.scale = { x: 1.0, y: 1.0 };
 
-  console.log(`[OBS] Configured video input source with mode '${options.obsCaptureMode}'`, inspectObject(videoSource.settings))
+  console.log(`[OBS] Configured video input source with mode '${options.obsCaptureMode}'`, videoSource.settings)
 
   watchVideoSourceSize(sceneItem, videoSource, baseResolution);
 
@@ -310,7 +310,7 @@ const watchVideoSourceSize = (sceneItem: ISceneItem, videoSource: IInput, baseRe
       scale: sceneItem.scale,
     };
 
-    console.log("[OBS] Adjusting scene item scale due to video input source size change", inspectObject(logDetails));
+    console.log("[OBS] Adjusting scene item scale due to video input source size change", logDetails);
   }, 5000);
 };
 

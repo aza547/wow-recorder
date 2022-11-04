@@ -33,7 +33,7 @@ export default class ConfigService extends EventEmitter {
 
         this.cleanupStore();
 
-        console.log('[Config Service] Using configuration', inspectObject(this._store.store));
+        console.log('[Config Service] Using configuration', this._store.store);
 
         this._store.onDidAnyChange((newValue: any, oldValue: any) => {
             this.emit('configChanged', oldValue, newValue);
@@ -257,6 +257,6 @@ export default class ConfigService extends EventEmitter {
     }
 
     private logConfigChanged(newConfig: { [key: string ]: any }): void {
-        console.log('[Config Service] Configuration changed:', inspectObject(newConfig));
+        console.log('[Config Service] Configuration changed:', newConfig);
     }
 };

@@ -123,7 +123,3 @@ export const getRaidByEncounterId = (zoneID?: number): RaidInstanceType | undefi
 
     return raid.pop();
 };
-
-export const inspectObject = (value: any): string => {
-    return util.inspect(value, { colors: true, compact: false });
-}
