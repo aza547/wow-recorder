@@ -4,7 +4,7 @@ import os
 
 dirname = os.path.dirname(__file__)
 LOG_PATH = "D:/World of Warcraft/_retail_/Logs"
-SAMPLE_LOG = os.path.join(dirname, "../example-logs/dungeon.txt")
+SAMPLE_LOG = os.path.join(dirname, "../example-logs/retail/raid.txt")
 
 # Open a combat log ready for writing.
 randomNumber = random.random()
@@ -24,12 +24,9 @@ print("Starting")
 
 # Write each line from the example to the fake log.
 for line in sample_log_lines:
-    if "CHALLENGE_MODE_END" in line:
+    if "ENCOUNTER_END" in line:
         # Sleep before writing the end event so we actually record something. 
-        time.sleep(5)
-    elif "ENCOUNTER_END" in line:
-        time.sleep(2)
-
+        time.sleep(30)
     logFile.write(line)
 
 print("Done")

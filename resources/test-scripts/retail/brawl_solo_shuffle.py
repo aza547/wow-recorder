@@ -3,8 +3,8 @@ import random
 import os
 
 dirname = os.path.dirname(__file__)
-LOG_PATH = "D:/World of Warcraft/_classic_/Logs"
-SAMPLE_LOG = os.path.join(dirname, "../example-logs/classic/5v5-rated.txt")
+LOG_PATH = "D:/World of Warcraft/_retail_/Logs"
+SAMPLE_LOG = os.path.join(dirname, "../example-logs//retail/brawl_solo_shuffle.txt")
 
 # Open a combat log ready for writing.
 randomNumber = random.random()
@@ -24,10 +24,14 @@ print("Starting")
 
 # Write each line from the example to the fake log.
 for line in sample_log_lines:
-    if "ZONE_CHANGE" in line:
+    if "ARENA_MATCH_END" in line:
         # Sleep before writing the end event so we actually record something. 
-        time.sleep(5)
+        time.sleep(10)
     logFile.write(line)
 
 print("Done")
 logFile.close()
+
+
+
+
