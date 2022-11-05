@@ -53,7 +53,7 @@ export default class RetailLogHandler extends LogHandler {
             category = (line.arg(3) as VideoCategory);
         }
 
-        this.activity = new ArenaMatch(startTime, category, Flavour.Retail, zoneID);
+        this.activity = new ArenaMatch(startTime, category, zoneID, Flavour.Retail);
         this.startRecording(this.activity);
     };
 
@@ -335,7 +335,7 @@ export default class RetailLogHandler extends LogHandler {
         const category = VideoCategory.Battlegrounds;
         const zoneID = parseInt(line.arg(1), 10);
 
-        this.activity = new Battleground(startTime, category, zoneID);
+        this.activity = new Battleground(startTime, category, zoneID, Flavour.Retail);
         this.startRecording(this.activity);
     }
 

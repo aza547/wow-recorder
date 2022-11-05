@@ -45,8 +45,8 @@ const testRetailArena = (category: VideoCategory,
     
     const arenaMatch = new ArenaMatch(startDate, 
                                       category, 
-                                      Flavour.Retail, 
-                                      zoneID);
+                                      zoneID,
+                                      Flavour.Retail, );
 
     let expectedCombatantMap = new Map();
     let expectedDeaths = [];

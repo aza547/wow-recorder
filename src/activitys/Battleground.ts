@@ -8,8 +8,8 @@ import Activity from "./Activity";
 export default class Battleground extends Activity {
     constructor(startDate: Date, 
                 category: VideoCategory, 
-                flavour: Flavour,
-                zoneID: number) 
+                zoneID: number,
+                flavour: Flavour) 
     {
         super(startDate, category, flavour);
         this.zoneID = zoneID;

@@ -111,7 +111,7 @@ export default class ClassicLogHandler extends LogHandler {
         const zoneID = parseInt(line.arg(1), 10);
         let category = VideoCategory.TwoVTwo
 
-        this.activity = new ArenaMatch(startTime, category, Flavour.Classic, zoneID);
+        this.activity = new ArenaMatch(startTime, category, zoneID, Flavour.Classic);
         this.startRecording(this.activity);
     }
 
