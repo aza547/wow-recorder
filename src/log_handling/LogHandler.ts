@@ -3,7 +3,7 @@ import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import ConfigService from "../main/configService";
 import { categoryRecordingSettings, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
-import { Flavour, UnitFlags } from "../main/types";
+import { Flavour, PlayerDeathType, UnitFlags } from "../main/types";
 import Activity from "../activitys/Activity";
 import RaidEncounter from "../activitys/RaidEncounter";
 
@@ -92,9 +92,21 @@ export default class LogHandler {
         // it happens.
         const deathDate = (line.date().getTime() - 2) / 1000;
         const activityStartDate = this.activity.startDate.getTime() / 1000;
-        const relativeTime = deathDate - activityStartDate;
-        
-        this.registerPlayerDeath(relativeTime, playerName, playerSpecId);
+        let relativeTime = deathDate - activityStartDate;
+
+        if (relativeTime < 0) {
+            console.error("[LogHandler] Tried to set timestamp to", relativeTime);
+            relativeTime = 0;
+        }
+
+        const playerDeath: PlayerDeathType = {
+            name: playerName,
+            specId: playerSpecId,
+            timestamp: relativeTime,
+            friendly: this.isUnitFriendly(unitFlags),
+        }
+
+        this.activity.addDeath(playerDeath);
     }
 
     startRecording = (activity: Activity) => {
@@ -155,6 +167,11 @@ export default class LogHandler {
     }
     
     // @@@ candidate for helper? 
+    isUnitFriendly = (flags: number): boolean => {
+        return this.hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
+    }
+
+    // @@@ candidate for helper? 
     isUnitSelf = (flags: number): boolean => {
         const isFriendly = this.hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
         const isMine = this.hasFlag(flags, UnitFlags.AFFILIATION_MINE)
@@ -181,19 +198,6 @@ export default class LogHandler {
         return [name, realm];
     }
 
-    registerPlayerDeath = (timestamp: number, name: string, specId: number): void => {
-        if (!this.activity) {
-            console.info("[LogHandler] Can't register player death as no active activity");
-            return;
-        }
-
-        if (timestamp < 0) {
-            console.error("[LogHandler] Tried to set timestamp to", timestamp);
-            timestamp = 0;
-        }
-
-        this.activity.addDeath({ name, specId, timestamp });
-    }
 
     // @@@ candidate for helper? / logutils?
     allowRecordCategory = (category: VideoCategory): boolean => {

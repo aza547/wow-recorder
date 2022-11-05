@@ -4,6 +4,7 @@ import { NumberKeyToStringValueMapType, RaidInstanceType } from "./types";
 enum VideoCategory {
   TwoVTwo = '2v2',
   ThreeVThree = '3v3',
+  FiveVFive = '5v5',
   Skirmish = 'Skirmish',
   SoloShuffle = 'Solo Shuffle',
   MythicPlus = 'Mythic+',
@@ -14,6 +15,7 @@ enum VideoCategory {
 const categories: VideoCategory[] = [
   VideoCategory.TwoVTwo,
   VideoCategory.ThreeVThree,
+  VideoCategory.FiveVFive,
   VideoCategory.Skirmish,
   VideoCategory.SoloShuffle,
   VideoCategory.MythicPlus,
@@ -43,6 +45,10 @@ const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSet
   },
   [VideoCategory.ThreeVThree]: {
     configKey: 'recordThreeVThree',
+    videoOverrun: 3,
+  },
+  [VideoCategory.FiveVFive]: {
+    configKey: 'recordFiveVFive',
     videoOverrun: 3,
   },
   [VideoCategory.Skirmish]: {

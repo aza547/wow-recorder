@@ -45,7 +45,7 @@ export default abstract class Activity {
     set playerGUID(guid) { this._playerGUID = guid };
     set endDate(date) { this._endDate = date };
     set flavour(flavour) { this._flavour = flavour };
-
+    set category(category) { this._category = category };
 
     get duration() { 
         if (!this.endDate) {

@@ -13,9 +13,9 @@ const testCombatants = [
 ] 
 
 const testDeaths: PlayerDeathType[] = [
-    { name: "Alexsmite", specId: 253, timestamp: 290 },
-    { name: "Dogson", specId: 256, timestamp: 300 },
-    { name: "Anotherguy", specId: 256, timestamp: 300 },
+    { name: "Alexsmite", specId: 253, timestamp: 290, friendly: true },
+    { name: "Dogson", specId: 256, timestamp: 300, friendly: true },
+    { name: "Anotherguy", specId: 256, timestamp: 300, friendly: true },
 ]
 
 test('Test Retail 2v2', () => {

@@ -73,6 +73,7 @@ type PlayerDeathType = {
   name: string,
   specId: number,
   timestamp: number,
+  friendly: boolean,
 };
 
 /**

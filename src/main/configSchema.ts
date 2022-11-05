@@ -23,6 +23,7 @@ export type ConfigurationSchema = {
     recordDungeons: boolean,
     recordTwoVTwo: boolean,
     recordThreeVThree: boolean,
+    recordFiveVFive: boolean,
     recordSkirmish: boolean,
     recordSoloShuffle: boolean,
     recordBattlegrounds: boolean,
@@ -159,6 +160,11 @@ export const configSchema = {
     },
     recordThreeVThree: {
         description: 'Whether the application should record 3v3',
+        type: 'boolean',
+        default: true,
+    },
+    recordFiveVFive: {
+        description: 'Whether the application should record 5v5',
         type: 'boolean',
         default: true,
     },

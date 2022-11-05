@@ -79,6 +79,13 @@ class Combatant {
     set realm(value) {
         this._realm = value;
     }
+
+    /**
+     * Sets the teamID.
+     */
+    set teamID(value) {
+        this._teamID = value;
+    }
 }
 
 export {
