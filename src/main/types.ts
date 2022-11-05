@@ -8,8 +8,8 @@ import { Combatant } from "./combatant";
  * Application recording status.
  */
  enum Flavour {
-    Retail,
-    Classic,
+    Retail = "Retail",
+    Classic = "Classic",
 };
 
 /**

@@ -38,7 +38,6 @@ export default class RetailLogHandler extends LogHandler {
         }
 
         console.debug("[RetailLogHandler] Handling ARENA_MATCH_START line:", line);
-        if (this.recorder.isRecording) return;
         
         const startTime = line.date();
         const zoneID = parseInt(line.arg(1), 10);
@@ -137,7 +136,7 @@ export default class RetailLogHandler extends LogHandler {
         console.debug("[RetailLogHandler] Handling ENCOUNTER_START line:", line);
 
         if (!this.activity) {
-            super.handleEncounterStartLine(line);
+            super.handleEncounterStartLine(line, Flavour.Retail);
             return;
         } 
 
@@ -277,13 +276,8 @@ export default class RetailLogHandler extends LogHandler {
     }
 
     handleSpellAuraAppliedLine(line: LogLine) {
-        if (!this.activity) {
-            console.error("[RetailLogHandler] Ignoring SPELL_AURA_APPLIED line as no active activity");
-            return;
-        }
-
-        if (this.activity.playerGUID) {
-            // Deliberately don't log anything here as we hit this a lot. 
+        if (!this.activity || this.activity.playerGUID) {
+            // Deliberately don't log anything here as we hit this a lot
             return;
         }
 

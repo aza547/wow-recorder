@@ -52,12 +52,12 @@ export default abstract class Activity {
             throw new Error("Failed to get duration of in-progress activity");
         }
 
-        return (this.endDate.getTime() - this._startDate.getTime()) / 1000;;
+        return (this.endDate.getTime() - this.startDate.getTime()) / 1000;;
     };
 
     get player() {
         if (!this.playerGUID) {
-            throw new Error("Failed to get player combatant, _playerGUID not set");
+            throw new Error("Failed to get player combatant, playerGUID not set");
         }
 
         const player = this.getCombatant(this.playerGUID);

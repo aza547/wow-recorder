@@ -1,5 +1,5 @@
-import { Flavour, Metadata } from "main/types";
-import { retailArenas, VideoCategory } from "../main/constants";
+import { Flavour, Metadata } from "../main/types";
+import { classicArenas, retailArenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
 /**
@@ -34,7 +34,11 @@ export default class ArenaMatch extends Activity {
             throw new Error("[ArenaMatch] Tried to get zoneName but no zoneID");
         }
 
-        return retailArenas[this._zoneID as number]
+        if (this.flavour === Flavour.Retail) {
+            return retailArenas[this._zoneID as number]
+        }
+
+        return classicArenas[this._zoneID as number]
     }
 
     endArena(endDate: Date, winningTeamID: number) {
@@ -63,11 +67,11 @@ export default class ArenaMatch extends Activity {
             category: this.category,
             zoneID: this.zoneID,
             zoneName: this.zoneName,
+            flavour: this.flavour,
             duration: this.duration,
             result: this.result,
             deaths: this.deaths,
             player: this.player,
-            flavour: this.flavour,
         }
     }
 

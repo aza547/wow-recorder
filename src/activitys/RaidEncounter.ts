@@ -11,8 +11,8 @@ export default class RaidEncounter extends Activity {
 
     constructor(startDate: Date, 
                 encounterID: number, 
-                flavour: Flavour,
-                difficultyID: number) 
+                difficultyID: number,
+                flavour: Flavour,) 
     {
         super(startDate, VideoCategory.Raids, flavour);
 
@@ -94,6 +94,7 @@ export default class RaidEncounter extends Activity {
             category: VideoCategory.Raids,
             zoneID: this.zoneID,
             zoneName: this.raid.name,
+            flavour: this.flavour,
             encounterID: this.encounterID,
             encounterName: this.encounterName,
             difficultyID: this.difficultyID,
@@ -102,7 +103,6 @@ export default class RaidEncounter extends Activity {
             result: this.result,
             player: this.player,
             deaths: this.deaths,
-            flavour: this.flavour,
         }
     }
 

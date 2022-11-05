@@ -3,6 +3,8 @@ import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import { Recorder } from "../main/recorder";
 import LogHandler from "./LogHandler";
+import { Flavour } from "../main/types";
+import ArenaMatch from "../activitys/ArenaMatch";
 
 /**
  * Classic log handler class.
@@ -21,14 +23,15 @@ export default class ClassicLogHandler extends LogHandler {
             .on('UNIT_DIED',          (line: LogLine) => { this.handleUnitDiedLine(line) })
     }
 
-    handleSpellAuraAppliedLine(line: LogLine) {
-        if (!this.activity) {
-            console.error("[ClassicLogHandler] Ignoring SPELL_AURA_APPLIED line as no active activity");
-            return;
-        }
+    handleEncounterStartLine(line: LogLine) {
+        console.debug("[ClassicLogHandler] Handling ENCOUNTER_START line:", line);
+        super.handleEncounterStartLine(line, Flavour.Classic);
+        return;
+    } 
 
-        if (this.activity.playerGUID) {
-            // Deliberately don't log anything here as we hit this a lot. 
+    handleSpellAuraAppliedLine(line: LogLine) {
+        if (!this.activity || this.activity.playerGUID) {
+            // Deliberately don't log anything here as we hit this a lot
             return;
         }
 
@@ -49,7 +52,7 @@ export default class ClassicLogHandler extends LogHandler {
     }
 
     handleZoneChange(line: LogLine) {
-        console.info("[RetailLogHandler] Handling ZONE_CHANGE line:", line);
+        console.info("[ClassicLogHandler] Handling ZONE_CHANGE line:", line);
 
         const zoneID = parseInt(line.arg(1), 10);
         const isZoneArena = classicArenas.hasOwnProperty(zoneID);
@@ -57,7 +60,6 @@ export default class ClassicLogHandler extends LogHandler {
 
         if (this.activity)
         {
-            
             const category = this.activity.category;
             const isActivityBG = (category === VideoCategory.Battlegrounds);
             const isActivityArena = 
@@ -67,7 +69,8 @@ export default class ClassicLogHandler extends LogHandler {
                 (category === VideoCategory.SoloShuffle);
             
             if (isActivityArena) {
-                // @@@ stop the arena
+                console.info("[ClassicLogHandler] Zone change out of Arena");
+                this.endArena(line);
             }
 
             if (isActivityBG) {
@@ -79,18 +82,52 @@ export default class ClassicLogHandler extends LogHandler {
             if (isZoneBG) 
             {
                 // @@@
-                // console.info("[RetailLogHandler] Zone change into BG");
+                // console.info("[ClassicLogHandler] Zone change into BG");
                 // this.battlegroundStart(line);
             } 
             else if (isZoneArena)
             {
-                // @@@
+                console.info("[ClassicLogHandler] Zone change into Arena");
+                this.startArena(line);
             }
             else 
             {
-                console.info("[RetailLogHandler] Uninteresting zone change");
+                console.info("[ClassicLogHandler] Uninteresting zone change");
             }
         }
+    }
+
+    startArena(line: LogLine) {
+        if (this.activity) {
+            console.error("[ClassicLogHandler] Another activity in progress, can't start arena"); 
+            return;
+        }
+
+        console.debug("[ClassicLogHandler] Handling ZONE_CHANGE into arena:", line);
+        
+        // Add 60 seconds to skip the waiting room. 
+        const startTime = new Date(line.date().getTime() + 60000);
+
+        const zoneID = parseInt(line.arg(1), 10);
+        let category = VideoCategory.TwoVTwo
+
+        this.activity = new ArenaMatch(startTime, category, Flavour.Classic, zoneID);
+        this.startRecording(this.activity);
+    }
+
+    endArena(line: LogLine) {
+        console.debug("[ClassicLogHandler] Handling ZONE_CHANGE out of arena", line);
+
+        if (!this.activity) {
+            console.error("[ClassicLogHandler] Arena stop with no active arena match");
+            return;
+        }
+
+        const arenaMatch = this.activity as ArenaMatch;
+        const endTime = line.date();
+
+        arenaMatch.endArena(endTime, 0);
+        this.endRecording(arenaMatch);
     }
 }
 

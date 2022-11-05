@@ -6,7 +6,7 @@ interface imageObject {
 
 // Load the arena images. This expects files with the name <id>.jpg 
 // to exist in the appropriate assets folder. 
-const arenaIDs = [
+const retailArenaIDs = [
     1672, // Blade's Edge
     617,  // Dalaran
     1505, // Nagrand 
@@ -23,11 +23,11 @@ const arenaIDs = [
     2547  // Enigma Crucible
 ]
 
-let arena: imageObject = {};
+let retailArena: imageObject = {};
 
-for (const id of arenaIDs) {
+for (const id of retailArenaIDs) {
     try {
-        arena[id] = require(`../../assets/arena/${id}.jpg`);
+        retailArena[id] = require(`../../assets/arena/${id}.jpg`);
     }
     catch (e) {
         console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
@@ -231,6 +231,11 @@ for (const id of specIDs) {
     catch (e) {
         console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
+}
+
+const arena = {
+    ...retailArena,
+    ...classicArena,
 }
 
 export {

@@ -3,7 +3,7 @@ import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import ConfigService from "../main/configService";
 import { categoryRecordingSettings, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
-import { UnitFlags } from "../main/types";
+import { Flavour, UnitFlags } from "../main/types";
 import Activity from "../activitys/Activity";
 import RaidEncounter from "../activitys/RaidEncounter";
 
@@ -33,7 +33,7 @@ export default class LogHandler {
     get activity() { return this._activity };
     set activity(activity) { this._activity = activity };
 
-    handleEncounterStartLine(line: LogLine) {
+    handleEncounterStartLine(line: LogLine, flavour: Flavour) {
         console.debug("[LogHandler] Handling ENCOUNTER_START line:", line);
 
         const startDate = line.date();
@@ -42,7 +42,8 @@ export default class LogHandler {
         
         this.activity = new RaidEncounter(startDate,
                                           encounterID, 
-                                          difficultyID);
+                                          difficultyID,
+                                          flavour);
 
         this.startRecording(this.activity);
     } 
