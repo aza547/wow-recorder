@@ -2,11 +2,11 @@ import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
 import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId }  from 'main/constants';
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from 'main/keystone';
-import { getFormattedDuration, getVideoResult } from './rendererutils';
+import { getFormattedDuration } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
-import { getEncounterNameById, getInstanceDifficulty, getVideoResultText } from 'main/helpers';
+import { getEncounterNameById, getVideoResultText } from 'main/helpers';
 
 /**
  * For shorthand referencing. 
@@ -50,7 +50,7 @@ export default function VideoButton(props: any) {
   const isBG = category === VideoCategory.Battlegrounds;
   const isMythicPlus = (category === VideoCategory.MythicPlus);
   const isRaid = category === VideoCategory.Raids;
-  const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
+  const videoInstanceDifficulty = isRaid ? video.difficulty : null;
 
   let buttonImage;
 

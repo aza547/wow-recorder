@@ -1,4 +1,3 @@
-import Activity from "../activitys/Activity";
 import { Size } from "electron";
 import { VideoCategory, WoWProcessResultKey } from "./constants";
 import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
@@ -169,8 +168,10 @@ interface ISettingsPanelProps {
     duration: number;
     result: boolean;
     zoneID?: number;
+    zoneName?: string;
     encounterID?: number;
     difficultyID?: number;
+    difficulty?: string;
     player?: Combatant;
     teamMMR?: number;
     challengeMode?: ChallengeModeDungeon;
@@ -179,7 +180,6 @@ interface ISettingsPanelProps {
     mapID?: number;
     timeline?: ChallengeModeTimelineSegment[];
     level?: number;
-    zoneName?: string;
     encounterName?: string;
 }
 

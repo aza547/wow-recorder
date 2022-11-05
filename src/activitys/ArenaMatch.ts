@@ -17,7 +17,7 @@ export default class ArenaMatch extends Activity {
     get zoneID() { return this._zoneID };
 
     get resultInfo() {
-        if (!this.result) {
+        if (this.result === undefined) {
             throw new Error("[ArenaMatch] Tried to get result info but no result");
         }
 

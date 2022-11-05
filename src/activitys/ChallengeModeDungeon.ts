@@ -1,5 +1,5 @@
 import { Metadata } from "main/types";
-import { dungeonsByMapId, dungeonTimersByMapId, VideoCategory } from "../main/constants";
+import { dungeonTimersByMapId, instanceNamesByZoneId, VideoCategory } from "../main/constants";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import Activity from "./Activity";
 
@@ -54,19 +54,19 @@ export default class ChallengeModeDungeon extends Activity {
     }
 
     get dungeonName(): string {
-        if (!this.mapID) {
-            throw new Error("mapID not set, can't get dungeon name");
+        if (!this.zoneID) {
+            throw new Error("zoneID not set, can't get dungeon name");
         }
 
-        if (dungeonsByMapId.hasOwnProperty(this.mapID)) {
-            return dungeonsByMapId[this.mapID];
+        if (instanceNamesByZoneId.hasOwnProperty(this.zoneID)) {
+            return instanceNamesByZoneId[this.zoneID];
         }
 
         return 'Unknown Dungeon';
     };
 
     get resultInfo() {
-        if (!this.result) {
+        if (this.result === undefined) {
             throw new Error("[RaidEncounter] Tried to get result info but no result");
         }
 
@@ -77,7 +77,7 @@ export default class ChallengeModeDungeon extends Activity {
         return "Abandoned";
     }
 
-    endChallengeMode(endDate: Date, CMDuration: number) {
+    endChallengeMode(endDate: Date, CMDuration: number, result: boolean) {
         this.endCurrentTimelineSegment(endDate);
         const lastSegment = this.currentSegment;
 
@@ -87,7 +87,7 @@ export default class ChallengeModeDungeon extends Activity {
         }
 
         this.CMDuration = CMDuration;
-        super.end(endDate, true); // @@@ is this OK or need to handle non completed better? 
+        super.end(endDate, result);
     }
 
     addTimelineSegment(segment: ChallengeModeTimelineSegment, endPrevious?: Date) {
@@ -129,6 +129,6 @@ export default class ChallengeModeDungeon extends Activity {
     }
 
     getFileName(): string {
-        return `${this.dungeonName} ${this.level} (${this.resultInfo})`;
+        return `${this.dungeonName} +${this.level} (${this.resultInfo})`;
     }
 };

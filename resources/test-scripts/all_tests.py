@@ -13,8 +13,9 @@ tests = {
     "Mythic+": os.path.join(dirname, "./dungeon.py"),
     "Raid": os.path.join(dirname, "./raid.py"),
     "Raid Reset": os.path.join(dirname, "./raid-reset.py"),
+    "Classic Raid": os.path.join(dirname, "./raid-classic.py"),
     "Rated BG": os.path.join(dirname, "./rbg.py"),
-    "Zone Changes": os.path.join(dirname, "./zonechange.py")
+    "Zone Changes": os.path.join(dirname, "./zonechange.py"),
 }
 
 for test in tests:

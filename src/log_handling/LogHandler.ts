@@ -66,20 +66,21 @@ export default class LogHandler {
             return;
         }
 
-        console.debug("[RetailLogHandler] Handling UNIT_DIED line:", line);
         const unitFlags = parseInt(line.arg(7), 16);
 
         if (!this.isUnitPlayer(unitFlags)) {
-            console.info("[LogHandler] Ignoring UNIT_DIED line as non-player");
+            // Deliberatly not logging here as not interesting and frequent.
             return;
         }
 
         const isUnitUnconsciousAtDeath = Boolean(parseInt(line.arg(9), 10));
 
         if (isUnitUnconsciousAtDeath) {
-            console.info("[LogHandler] Ignoring UNIT_DIED line as not really dead");
+            // Deliberatly not logging here as not interesting and frequent.
             return;
         }
+
+        console.debug("[RetailLogHandler] Handling UNIT_DIED line:", line);
     
         const playerName = line.arg(6);
         const playerGUID = line.arg(5);
@@ -117,14 +118,19 @@ export default class LogHandler {
         this.recorder.start();
     };
 
-    endRecording = (activity: Activity) => {
+    endRecording = (activity: Activity, immediateStop = false) => {
         if (!this.activity) {
             console.error("[LogUtils] No active activity so can't stop");
             return;
         }
 
         const category = activity.category;
-        const overrun = categoryRecordingSettings[category].videoOverrun;
+
+        let overrun = 0;
+
+        if (!immediateStop) {
+            overrun = categoryRecordingSettings[category].videoOverrun;
+        }
 
         console.log(`[Logutils] Stop recording video for category: ${this.activity.category}`)
 
@@ -142,31 +148,31 @@ export default class LogHandler {
         const isBattleground = (this.activity.category === VideoCategory.Battlegrounds);
 
         if (isBattleground) {
-            this.forceStopRecording();
+            this.forceEndActivity();
             return;
         }
     }
     
-    // candidate for helper? 
+    // @@@ candidate for helper? 
     isUnitSelf = (flags: number): boolean => {
         const isFriendly = this.hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
         const isMine = this.hasFlag(flags, UnitFlags.AFFILIATION_MINE)
         return (isFriendly && isMine);
     }
 
-    // candidate for helper? 
+    // @@@ candidate for helper? 
     isUnitPlayer = (flags: number): boolean => {
         const isPlayerControlled = this.hasFlag(flags, UnitFlags.CONTROL_PLAYER);
         const isPlayerType = this.hasFlag(flags, UnitFlags.TYPE_PLAYER);
         return (isPlayerControlled && isPlayerType);
     }
 
-    // candidate for helper? 
+    // @@@ candidate for helper? 
     hasFlag = (flags: number, flag: number): boolean => {
         return (flags & flag) !== 0;
     }
 
-    // candidate for helper? 
+    // @@@ candidate for helper? 
     ambiguate = (nameRealm: string): string[] => {
         const split = nameRealm.split("-");
         const name = split[0];
@@ -188,7 +194,7 @@ export default class LogHandler {
         this.activity.addDeath({ name, specId, timestamp });
     }
 
-    // candidate for helper? / logutils?
+    // @@@ candidate for helper? / logutils?
     allowRecordCategory = (category: VideoCategory): boolean => {
         const categoryConfig = categoryRecordingSettings[category];
         const categoryAllowed = this.cfg.get<boolean>(categoryConfig.configKey);
@@ -202,14 +208,14 @@ export default class LogHandler {
         return true;
     };
 
-    forceStopRecording = () => {
+    forceEndActivity = () => {
         if (!this.activity) {
             this.recorder.forceStop();
             return;
         }
 
         this.activity.end(new Date(), false);
-        this.endRecording(this.activity);
+        this.endRecording(this.activity, true);
         this.activity = undefined
     }
 

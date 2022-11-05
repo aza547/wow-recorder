@@ -1,13 +1,13 @@
-import { Metadata } from "main/types";
-import { raidEncountersById, raidInstances, VideoCategory } from "../main/constants";
+import { Metadata, RaidInstanceType } from "main/types";
+import { instanceDifficulty, raidEncountersById, raidInstances, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
 /**
  * Class representing a raid encounter.
  */
 export default class RaidEncounter extends Activity {
-    private _difficultyID: number = 0;
-    private _encounterID: number = 0;
+    private _difficultyID: number;
+    private _encounterID: number;
 
     constructor(startDate: Date, 
                 encounterID: number, 
@@ -27,7 +27,11 @@ export default class RaidEncounter extends Activity {
             throw new Error("EncounterID not set, can't get name of encounter");
         }
 
-        return raidEncountersById[this._encounterID];
+        if (raidEncountersById.hasOwnProperty(this.encounterID)) {
+            return raidEncountersById[this.encounterID];
+        }
+
+        return "Unknown Encounter";
     }
 
     get zoneID(): number {
@@ -47,25 +51,23 @@ export default class RaidEncounter extends Activity {
         return zoneID; 
     };
 
-    get raidName(): string {
+    get raid(): RaidInstanceType {
         if (!this.encounterID) {
             throw new Error("EncounterID not set, can't get raid name");
         }
 
-        let raidName = "Unknown Raid";
+        const raids = raidInstances.filter(r => r.encounters.hasOwnProperty(this.encounterID));
+        const raid = raids.pop();
 
-        for (const raid of raidInstances) {
-            if (raid.encounters[this.encounterID]) {
-                raidName = raid.name;
-                break;
-            }
-        };
+        if (!raid) {
+            throw new Error("[RaidEncounter] No raids matched this encounterID.")
+        }
 
-        return raidName; 
+        return raid;
     };
 
     get resultInfo() {
-        if (!this.result) {
+        if (this.result === undefined) {
             throw new Error("[RaidEncounter] Tried to get result info but no result");
         }
 
@@ -76,18 +78,25 @@ export default class RaidEncounter extends Activity {
         return "Wipe";
     }
 
-    getDifficultyID(): number {
-        return this._difficultyID;
+    get difficulty() {
+        const recognisedID = instanceDifficulty.hasOwnProperty(this.difficultyID);
+
+        if (!recognisedID) {
+            throw new Error("[RaidEncounters] Unknown difficulty ID: " + this.difficultyID);
+        }
+    
+        return instanceDifficulty[this.difficultyID];
     }
 
     getMetadata(): Metadata {
         return {
             category: VideoCategory.Raids,
             zoneID: this.zoneID,
-            zoneName: this.raidName,
+            zoneName: this.raid.name,
             encounterID: this.encounterID,
             encounterName: this.encounterName,
             difficultyID: this.difficultyID,
+            difficulty: this.difficulty.difficulty,
             duration: this.duration,
             result: this.result,
             player: this.player,
@@ -96,7 +105,7 @@ export default class RaidEncounter extends Activity {
     }
 
     getFileName(): string {
-        return `${this.raidName}, ${this.encounterName} (${this.resultInfo})`;
+        return `${this.raid.name}, ${this.encounterName} (${this.resultInfo})`;
     }
 }
 

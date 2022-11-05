@@ -17,7 +17,6 @@ export default class RetailLogHandler extends LogHandler {
                 combatLogParser: CombatLogParser) 
     {
         super(recorder, combatLogParser);
-
         this.combatLogParser
             .on('ENCOUNTER_START',      (line: LogLine) => { this.handleEncounterStartLine(line) })
             .on('ENCOUNTER_END',        (line: LogLine) => { this.handleEncounterEndLine(line) })
@@ -114,7 +113,7 @@ export default class RetailLogHandler extends LogHandler {
     };
 
     handleChallengeModeEndLine (line: LogLine): void {
-        console.debug("[RetailLogHandler] Handling CHALLENGE_MODE_STOP line:", line);
+        console.debug("[RetailLogHandler] Handling CHALLENGE_MODE_END line:", line);
 
         if (!this.activity) {
             console.error("[RetailLogHandler] Challenge mode stop with no active ChallengeModeDungeon");
@@ -123,12 +122,13 @@ export default class RetailLogHandler extends LogHandler {
 
         const challengeModeActivity = this.activity as ChallengeModeDungeon;
         const endDate = line.date();
+        const result = Boolean(line.arg(2));
 
         // The actual log duration of the dungeon, from which keystone upgrade
         // levels can be calculated. This includes player death penalty. 
         const CMDuration = Math.round(parseInt(line.arg(4), 10) / 1000);
 
-        challengeModeActivity.endChallengeMode(endDate, CMDuration);
+        challengeModeActivity.endChallengeMode(endDate, CMDuration, result);
         this.endRecording(this.activity);
     };
 
@@ -172,7 +172,7 @@ export default class RetailLogHandler extends LogHandler {
         }
 
         const category = this.activity.category; 
-        const isChallengeMode = category === VideoCategory.MythicPlus;
+        const isChallengeMode = (category === VideoCategory.MythicPlus);
 
         if (!isChallengeMode) {
             console.debug("[RetailLogHandler] Must be raid encounter, calling super method.");
@@ -233,12 +233,11 @@ export default class RetailLogHandler extends LogHandler {
             else if (isZoneBG && !isActivityBG) 
             {
                 console.error("[RetailLogHandler] Zoned into BG but in a different activity");
-                this.forceStopRecording();
+                this.forceEndActivity();
             } 
             else 
             {
-                console.error("[RetailLogHandler] Error case: ", this.activity, zoneID);
-                this.forceStopRecording();      
+                console.info("[RetailLogHandler] Unknown zone change, no action taken: ", this.activity, zoneID);
             }
         } 
         else 
@@ -256,8 +255,6 @@ export default class RetailLogHandler extends LogHandler {
     }
 
     handleCombatantInfoLine (line: LogLine): void {
-        console.debug("[RetailLogHandler] Handling COMBATANT_INFO line:", line);
-
         if (!this.activity) {
             console.error("[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO");
             return;
@@ -280,7 +277,7 @@ export default class RetailLogHandler extends LogHandler {
 
     handleSpellAuraAppliedLine(line: LogLine) {
         if (!this.activity) {
-            console.error("[RetailLogHandler] No active activity");
+            console.error("[RetailLogHandler] Ignoring SPELL_AURA_APPLIED line as no active activity");
             return;
         }
 
@@ -289,7 +286,6 @@ export default class RetailLogHandler extends LogHandler {
             return;
         }
 
-        console.debug("[RetailLogHandler] Handling SPELL_AURA_APPLIED line:", line);
         const srcGUID = line.arg(1);
         const srcCombatant = this.activity.getCombatant(srcGUID);
 
@@ -330,7 +326,7 @@ export default class RetailLogHandler extends LogHandler {
         const isDungeon = (this.activity.category === VideoCategory.MythicPlus);
 
         if (isDungeon) {
-            this.forceStopRecording();
+            this.forceEndActivity();
         }
     }
 
