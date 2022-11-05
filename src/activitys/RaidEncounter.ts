@@ -1,4 +1,4 @@
-import { Metadata, RaidInstanceType } from "main/types";
+import { Flavour, Metadata, RaidInstanceType } from "main/types";
 import { instanceDifficulty, raidEncountersById, raidInstances, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
@@ -11,9 +11,10 @@ export default class RaidEncounter extends Activity {
 
     constructor(startDate: Date, 
                 encounterID: number, 
+                flavour: Flavour,
                 difficultyID: number) 
     {
-        super(startDate, VideoCategory.Raids);
+        super(startDate, VideoCategory.Raids, flavour);
 
         this._difficultyID = difficultyID;
         this._encounterID = encounterID;
@@ -101,6 +102,7 @@ export default class RaidEncounter extends Activity {
             result: this.result,
             player: this.player,
             deaths: this.deaths,
+            flavour: this.flavour,
         }
     }
 

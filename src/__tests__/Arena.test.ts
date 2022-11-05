@@ -1,7 +1,7 @@
 import { VideoCategory } from '../main/constants';
 import ArenaMatch from '../activitys/ArenaMatch';
 import { Combatant } from "../main/combatant";
-import { PlayerDeathType } from '../main/types';
+import { Flavour, PlayerDeathType } from '../main/types';
 
 const testCombatants = [
     new Combatant("Player-1092-0A70E103", 1, 557),
@@ -18,31 +18,36 @@ const testDeaths: PlayerDeathType[] = [
     { name: "Anotherguy", specId: 256, timestamp: 300 },
 ]
 
-test('Test 2v2', () => {
-    testArena(VideoCategory.TwoVTwo, 4, 2, 0);
-    testArena(VideoCategory.TwoVTwo, 4, 2, 0);
+test('Test Retail 2v2', () => {
+    testRetailArena(VideoCategory.TwoVTwo, 4, 2, 0);
+    testRetailArena(VideoCategory.TwoVTwo, 4, 2, 0);
 })
 
-test('Test 3v3', () => {
-    testArena(VideoCategory.ThreeVThree, 6, 3, 0);
-    testArena(VideoCategory.ThreeVThree, 6, 3, 1);
+test('Test Retail 3v3', () => {
+    testRetailArena(VideoCategory.ThreeVThree, 6, 3, 0);
+    testRetailArena(VideoCategory.ThreeVThree, 6, 3, 1);
 })
 
-test('Test Skirmish', () => {
-    testArena(VideoCategory.Skirmish, 4, 2, 0);
-    testArena(VideoCategory.Skirmish, 4, 1, 1);
-    testArena(VideoCategory.Skirmish, 6, 0, 0);
-    testArena(VideoCategory.Skirmish, 6, 0, 1);
+test('Test Retail Skirmish', () => {
+    testRetailArena(VideoCategory.Skirmish, 4, 2, 0);
+    testRetailArena(VideoCategory.Skirmish, 4, 1, 1);
+    testRetailArena(VideoCategory.Skirmish, 6, 0, 0);
+    testRetailArena(VideoCategory.Skirmish, 6, 0, 1);
 })
 
-const testArena = (category: VideoCategory, 
-                   numberCombatants: number, 
-                   numberDeaths: number, 
-                   winningTeamID: number) => 
+const testRetailArena = (category: VideoCategory, 
+                         numberCombatants: number, 
+                         numberDeaths: number, 
+                         winningTeamID: number) => 
 {
     const startDate = new Date('2022-12-25T12:00:00');
     const zoneID = 1672;
-    const arenaMatch = new ArenaMatch(startDate, category, zoneID);
+    
+    const arenaMatch = new ArenaMatch(startDate, 
+                                      category, 
+                                      Flavour.Retail, 
+                                      zoneID);
+
     let expectedCombatantMap = new Map();
     let expectedDeaths = [];
 

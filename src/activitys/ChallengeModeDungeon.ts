@@ -1,4 +1,4 @@
-import { Metadata } from "main/types";
+import { Flavour, Metadata } from "../main/types";
 import { dungeonTimersByMapId, instanceNamesByZoneId, VideoCategory } from "../main/constants";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import Activity from "./Activity";
@@ -11,11 +11,11 @@ export default class ChallengeModeDungeon extends Activity {
     private _timeline: ChallengeModeTimelineSegment[] = []
 
     constructor(startDate: Date, 
-                zoneID: number, 
+                zoneID: number,
                 mapID: number, 
                 level: number)
     {
-        super(startDate, VideoCategory.MythicPlus);
+        super(startDate, VideoCategory.MythicPlus, Flavour.Retail);
         this._zoneID = zoneID;
         this._mapID = mapID;
         this._level = level;
@@ -125,6 +125,7 @@ export default class ChallengeModeDungeon extends Activity {
             player: this.player,
             timeline: this.timeline,
             level: this.level,
+            flavour: this.flavour,
         }
     }
 

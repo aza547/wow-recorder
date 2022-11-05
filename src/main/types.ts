@@ -7,6 +7,14 @@ import { Combatant } from "./combatant";
 /**
  * Application recording status.
  */
+ enum Flavour {
+    Retail,
+    Classic,
+};
+
+/**
+ * Application recording status.
+ */
 enum RecStatus {
     WaitingForWoW,
     Recording,
@@ -167,6 +175,7 @@ interface ISettingsPanelProps {
     category: VideoCategory;
     duration: number;
     result: boolean;
+    flavour: WoWProcessResultKey;
     zoneID?: number;
     zoneName?: string;
     encounterID?: number;
@@ -200,4 +209,5 @@ export {
     FakeChangeEvent,
     ISettingsPanelProps,
     Metadata,
+    Flavour,
 }

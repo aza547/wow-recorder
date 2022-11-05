@@ -34,6 +34,26 @@ for (const id of arenaIDs) {
     };
 }
 
+// Load the classic arena images. This expects files with the name <id>.jpg 
+// to exist in the appropriate assets folder. 
+const classicArenaIDs = [
+    572,
+    559,
+    617,
+    562,
+]
+
+let classicArena: imageObject = {};
+
+for (const id of classicArenaIDs) {
+    try {
+        classicArena[id] = require(`../../assets/arena/${id}.jpg`);
+    }
+    catch (e) {
+        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+    };
+}
+
 const dungeonIDs = Object.keys(dungeonsByZoneId).map(v=> parseInt(v, 10))
 
 let dungeon: imageObject = {};

@@ -1,4 +1,4 @@
-import { Metadata, PlayerDeathType } from "main/types";
+import { Metadata, PlayerDeathType, Flavour } from "main/types";
 import { Combatant } from "../main/combatant";
 import { VideoCategory } from "../main/constants";
 
@@ -11,18 +11,21 @@ export default abstract class Activity {
     protected _combatantMap: Map<string, Combatant>;
     protected _startDate: Date;
     protected _deaths: PlayerDeathType[];
+    protected _flavour: Flavour;
     protected _endDate?: Date;
     protected _zoneID?: number;
     protected _playerGUID?: string;
 
     constructor(startDate: Date, 
-                category: VideoCategory) 
+                category: VideoCategory,
+                flavour: Flavour) 
     {
         this._result = false;
         this._combatantMap = new Map();
         this._startDate = startDate;
         this._category = category;
         this._deaths = [];
+        this._flavour = flavour;
     }
  
     abstract getMetadata(): Metadata;
@@ -36,10 +39,13 @@ export default abstract class Activity {
     get playerGUID() { return this._playerGUID };
     get endDate() { return this._endDate };
     get combatantMap() { return this._combatantMap };
+    get flavour() { return this._flavour };
     set zoneID(zoneID) { this._zoneID = zoneID };
     set result(result) { this._result = result };
     set playerGUID(guid) { this._playerGUID = guid };
     set endDate(date) { this._endDate = date };
+    set flavour(flavour) { this._flavour = flavour };
+
 
     get duration() { 
         if (!this.endDate) {

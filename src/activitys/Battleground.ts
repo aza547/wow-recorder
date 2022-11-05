@@ -1,4 +1,4 @@
-import { Metadata } from "main/types";
+import { Flavour, Metadata } from "main/types";
 import { retailBattlegrounds, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
@@ -8,9 +8,10 @@ import Activity from "./Activity";
 export default class Battleground extends Activity {
     constructor(startDate: Date, 
                 category: VideoCategory, 
+                flavour: Flavour,
                 zoneID: number) 
     {
-        super(startDate, category);
+        super(startDate, category, flavour);
         this.zoneID = zoneID;
     }
 
@@ -32,6 +33,7 @@ export default class Battleground extends Activity {
             zoneID: this.zoneID,
             duration: this.duration,
             result: this.result,
+            flavour: this.flavour,
         }
     }
 

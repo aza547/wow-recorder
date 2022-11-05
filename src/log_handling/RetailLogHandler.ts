@@ -7,6 +7,7 @@ import LogHandler from "./LogHandler";
 import Battleground from "../activitys/Battleground";
 import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
+import { Flavour } from "../main/types";
 
 /**
  * RetailLogHandler class. // @@@ make singleton
@@ -53,7 +54,7 @@ export default class RetailLogHandler extends LogHandler {
             category = (line.arg(3) as VideoCategory);
         }
 
-        this.activity = new ArenaMatch(startTime, category, zoneID);
+        this.activity = new ArenaMatch(startTime, category, Flavour.Retail, zoneID);
         this.startRecording(this.activity);
     };
 

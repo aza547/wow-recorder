@@ -1,4 +1,4 @@
-import { Metadata } from "main/types";
+import { Flavour, Metadata } from "main/types";
 import { retailArenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
@@ -8,9 +8,10 @@ import Activity from "./Activity";
 export default class ArenaMatch extends Activity {
     constructor(startDate: Date, 
                 category: VideoCategory, 
+                flavour: Flavour,
                 zoneID: number) 
     {
-        super(startDate, category);
+        super(startDate, category, flavour);
         this._zoneID = zoneID;
     }
 
@@ -66,6 +67,7 @@ export default class ArenaMatch extends Activity {
             result: this.result,
             deaths: this.deaths,
             player: this.player,
+            flavour: this.flavour,
         }
     }
 

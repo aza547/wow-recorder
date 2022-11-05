@@ -38,9 +38,19 @@ export default function VideoButton(props: any) {
   const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorElement);
 
-  const playerName = video.playerName;
-  const specIcon: string = Images.spec[video.playerSpecID] || Images.spec[0];
-  const playerClass = specializationById[video.playerSpecID]?.class ?? '';
+  let playerName;
+  let specIcon;
+  let playerClass;
+
+  if (video.player) {
+    playerName = video.player._name;
+    specIcon = Images.spec[video.player._specID] || Images.spec[0];
+    playerClass = specializationById[video.player._specID]?.class ?? "";
+  } else {
+    playerName = "";
+    specIcon = Images.spec[0];
+    playerClass = "";
+  }
   
   const dateDisplay: string = video.isFromToday ? video.time : video.date;
   const dateHoverText = video.date + " " + video.time;
