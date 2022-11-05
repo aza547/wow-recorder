@@ -196,7 +196,7 @@ export default function VideoButton(props: any) {
             { isMythicPlus ||
               <div>
                 <div className='encounter'>{ video.encounter }</div>
-                <div className='zone'>{ video.zone }</div>
+                <div className='zone'>{ video.zoneName }</div>
               </div>
             }
             { isMythicPlus &&
@@ -205,7 +205,7 @@ export default function VideoButton(props: any) {
                   { dungeonsByMapId[video.mapID] } 
                 </div>
                 <div className='instance-difficulty difficulty-mythic'>
-                  +{ video.challengeMode.level }
+                  +{ video.level }
                 </div>
               </div>
             }
