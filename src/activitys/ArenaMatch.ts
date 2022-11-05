@@ -1,5 +1,5 @@
 import { Metadata } from "main/types";
-import { arenas, VideoCategory } from "../main/constants";
+import { retailArenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
 /**
@@ -33,7 +33,7 @@ export default class ArenaMatch extends Activity {
             throw new Error("[ArenaMatch] Tried to get zoneName but no zoneID");
         }
 
-        return arenas[this._zoneID as number]
+        return retailArenas[this._zoneID as number]
     }
 
     endArena(endDate: Date, winningTeamID: number) {

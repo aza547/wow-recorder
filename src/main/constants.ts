@@ -108,9 +108,23 @@ const months: string[] = [
 }
 
 /**
- * Arenas by ID. 
+ * Classic battlegrounds by ID. This is probably totally wrong. 
  */
- const arenas: NumberKeyToStringValueMapType = {
+ const classicBattlegrounds: NumberKeyToStringValueMapType = {
+  30:	  "Alterac Valley",
+  2107: "Arathi Basin",
+  1681: "Arathi Basin",
+  566:  "Eye of the Storm",
+  968:  "Eye of the Storm",
+  607:  "Strand of the Ancients",
+  489:  "Warsong Gulch",
+  2106:  "Warsong Gulch"
+}
+
+/**
+ * Retail arenas by ID. 
+ */
+ const retailArenas: NumberKeyToStringValueMapType = {
   1672: "Blade's Edge",
   617: "Dalaran Sewers",
   1505: "Nagrand Arena",
@@ -125,6 +139,16 @@ const months: string[] = [
   1825: "Hook Point",
   2509: "Maldraxxus Coliseum",
   2547: "Enigma Crucible",
+}
+
+/**
+ * Classic arenas by ID. 
+ */
+ const classicArenas: NumberKeyToStringValueMapType = {
+  572: "Ruins of Lordaeron",
+  559: "Nagrand Arena",
+  617: "Dalaran Arena",
+  562: "Blade's Edge Arena",
 }
 
 /**
@@ -440,7 +464,9 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
   ...retailBattlegrounds,
-  ...arenas,
+  ...classicBattlegrounds,
+  ...retailArenas,
+  ...classicArenas,
   ...dungeonsByZoneId,
 };
 
@@ -477,9 +503,11 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
  * Zones by ID. 
  */
 const zones: NumberKeyToStringValueMapType = {
-    ...arenas,
+    ...retailArenas,
+    ...classicArenas,
     ...raidEncountersById,
     ...retailBattlegrounds,
+    ...classicBattlegrounds,
     ...dungeonsByZoneId,
 }
 
@@ -636,9 +664,11 @@ export {
     categoryTabsSx,
     videoButtonSx,
     zones,
-    arenas,
+    retailArenas,
+    classicArenas,
     raidEncountersById,
     retailBattlegrounds,
+    classicBattlegrounds,
     dungeonsByMapId,
     dungeonsByZoneId,
     instanceNamesByZoneId,

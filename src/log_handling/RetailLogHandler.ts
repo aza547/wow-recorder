@@ -9,7 +9,7 @@ import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 
 /**
- * RetailLogHandler class.
+ * RetailLogHandler class. // @@@ make singleton
  */
 export default class RetailLogHandler extends LogHandler {
     

@@ -1,11 +1,13 @@
+import { classicArenas, classicBattlegrounds, VideoCategory } from "../main/constants";
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import { Recorder } from "../main/recorder";
 import LogHandler from "./LogHandler";
 
 /**
- * export default class ClassicLogHandler extends LogHandler {
- class.
+ * Classic log handler class.
+ * // @@@ make singleton
+ * // @@@ consider 5v5 arena
  */
 export default class ClassicLogHandler extends LogHandler {
     
@@ -47,7 +49,48 @@ export default class ClassicLogHandler extends LogHandler {
     }
 
     handleZoneChange(line: LogLine) {
-        // @@@
+        console.info("[RetailLogHandler] Handling ZONE_CHANGE line:", line);
+
+        const zoneID = parseInt(line.arg(1), 10);
+        const isZoneArena = classicArenas.hasOwnProperty(zoneID);
+        const isZoneBG = classicBattlegrounds.hasOwnProperty(zoneID);
+
+        if (this.activity)
+        {
+            
+            const category = this.activity.category;
+            const isActivityBG = (category === VideoCategory.Battlegrounds);
+            const isActivityArena = 
+                (category === VideoCategory.TwoVTwo) ||
+                (category === VideoCategory.ThreeVThree) ||
+                (category === VideoCategory.Skirmish) ||
+                (category === VideoCategory.SoloShuffle);
+            
+            if (isActivityArena) {
+                // @@@ stop the arena
+            }
+
+            if (isActivityBG) {
+                // @@@ might be internal zone change, else stop
+            }
+        }
+        else 
+        {
+            if (isZoneBG) 
+            {
+                // @@@
+                // console.info("[RetailLogHandler] Zone change into BG");
+                // this.battlegroundStart(line);
+            } 
+            else if (isZoneArena)
+            {
+                // @@@
+            }
+            else 
+            {
+                console.info("[RetailLogHandler] Uninteresting zone change");
+            }
+        }
     }
 }
 

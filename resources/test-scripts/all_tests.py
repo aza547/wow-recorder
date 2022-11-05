@@ -4,8 +4,9 @@ import os
 dirname = os.path.dirname(__file__)
 
 tests = {
-    "2v2": os.path.join(dirname, "./2v2.py"),
-    "2v2-afk-out": os.path.join(dirname, "./2v2-afkout.py"),
+    "Rated 2v2": os.path.join(dirname, "./2v2.py"),
+    "Rated 2v2 AFK Out": os.path.join(dirname, "./2v2-afkout.py"),
+    "Classic Rated 2v2": os.path.join(dirname, "./classic-2v2.py"),
     "3v3": os.path.join(dirname, "./3v3.py"),
     "Skirmish": os.path.join(dirname, "./skirmish.py"),
     "Brawl Solo Shuffle": os.path.join(dirname, "./brawlsoloshuffle.py"),

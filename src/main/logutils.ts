@@ -220,7 +220,6 @@ const runRecordingTest = (endTest: boolean = true) => {
 }
 
 export {
-    watchLogs,
     pollWowProcess,
     runRecordingTest,
     makeRetailHandler,
