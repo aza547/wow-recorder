@@ -265,7 +265,7 @@ export default class RetailLogHandler extends LogHandler {
         // In Mythic+ we see COMBANTANT_INFO events for each encounter.
         // Don't bother overwriting them if we have them already. 
         if (this.activity.getCombatant(GUID)) {
-            console.debug("[RetailLogHandler] Already processed this COMBATANT, skipping");
+            console.debug("[RetailLogHandler] Already processed this combatant, skipping");
             return;
         }
 

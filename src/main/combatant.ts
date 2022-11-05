@@ -18,11 +18,11 @@ class Combatant {
     constructor(GUID: string, teamID?: number, specID?: number) {
         this._GUID = GUID;
 
-        if (this._teamID) {
+        if (teamID !== undefined) {
             this._teamID = teamID;
         }
 
-        if (this._specID) {
+        if (specID !== undefined) {
             this._specID = specID; 
         }
     }
