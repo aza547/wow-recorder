@@ -8,10 +8,20 @@ import ArenaMatch from "../activitys/ArenaMatch";
 
 /**
  * Classic log handler class.
- * // @@@ make singleton
- * // @@@ consider 5v5 arena
  */
 export default class ClassicLogHandler extends LogHandler {
+    // It's hard to end classic arenas on time due to log flushing and no
+    // ARENA_MATCH_END events. We start a 20s timer on a player death that 
+    // will end the game unless another death is seen in that 20s, in which 
+    // case we start the timer again.  
+    private _playerDiedTimeout?: NodeJS.Timeout;
+
+    // We mandate we see some data every 30 seconds whilst in an arena, 
+    // otherwise we assume the game is over. In practice we only refresh
+    // this timer on SPELL_AURA_APPLIED, but it's so common that should be
+    // fine.
+    private _dataTimeout?: NodeJS.Timer;
+
     constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
         super(recorder, combatLogParser);
         this.combatLogParser
@@ -33,6 +43,9 @@ export default class ClassicLogHandler extends LogHandler {
             // Deliberately don't log anything here as we hit this a lot
             return;
         }
+
+        // We've seen some data in the logs refresh the timeout. 
+        //@@@ this.refreshDataTimeout(30000);
 
         if (this.activity.deaths.length > 0) {
             // When exiting classic arena we get spammed with nearby players on
@@ -88,7 +101,7 @@ export default class ClassicLogHandler extends LogHandler {
             // of the activity we are in to avoid ending the arena on the duplicate event.
             if (isActivityArena && (zoneID !== this.activity.zoneID)) {
                 console.info("[ClassicLogHandler] Zone change out of Arena");
-                this.endArena(line);
+                this.endArena(line.date());
             }
 
             if (isActivityBG) {
@@ -106,7 +119,8 @@ export default class ClassicLogHandler extends LogHandler {
             else if (isZoneArena)
             {
                 console.info("[ClassicLogHandler] Zone change into Arena");
-                this.startArena(line);
+                const startDate = line.date();
+                this.startArena(startDate, zoneID);
             }
             else 
             {
@@ -115,34 +129,57 @@ export default class ClassicLogHandler extends LogHandler {
         }
     }
 
-    startArena(line: LogLine) {
+    handleUnitDiedLine(line: LogLine) {
+        if (!this.activity) {
+            console.info("[ClassicLogHandler] Ignoring UNIT_DIED line as no active activity");
+            return;
+        }
+
+        const unitFlags = parseInt(line.arg(7), 16);
+
+        if (!this.isUnitPlayer(unitFlags)) {
+            // Deliberatly not logging here as not interesting and frequent.
+            return;
+        }
+
+        if (!this._playerDiedTimeout) {
+            console.info("[ClassicLogHandler] A player died, clearing timeout");
+            clearTimeout(this._playerDiedTimeout);
+        }
+
+        this._playerDiedTimeout = setTimeout(() => {
+            console.info("[ClassicLogHandler] Player died, starting timeout");
+            this.endArena(new Date());
+        }, 20 * 1000);
+
+        this.setArenaTimeout(30000);
+        super.handleUnitDiedLine(line);
+    }
+
+    startArena(startDate: Date, zoneID: number) {
         if (this.activity) {
             console.error("[ClassicLogHandler] Another activity in progress, can't start arena"); 
             return;
         }
 
-        console.debug("[ClassicLogHandler] Handling ZONE_CHANGE into arena:", line);
-        
-        // Add 60 seconds to skip the waiting room. 
-        const startTime = new Date(line.date().getTime() + 60000);
-
-        const zoneID = parseInt(line.arg(1), 10);
+        console.debug("[ClassicLogHandler] Starting arena at date:", startDate);
         let category = VideoCategory.TwoVTwo
-
-        this.activity = new ArenaMatch(startTime, category, zoneID, Flavour.Classic);
+        this.activity = new ArenaMatch(startDate, category, zoneID, Flavour.Classic);
         this.startRecording(this.activity);
     }
 
-    endArena(line: LogLine) {
-        console.debug("[ClassicLogHandler] Handling ZONE_CHANGE out of arena", line);
+    endArena(endDate: Date) {
+        if (!this._playerDiedTimeout) {
+            clearTimeout(this._playerDiedTimeout);
+        }
 
         if (!this.activity) {
             console.error("[ClassicLogHandler] Arena stop with no active arena match");
             return;
         }
 
+        console.debug("[ClassicLogHandler] Stopping arena at date:", endDate);
         const arenaMatch = this.activity as ArenaMatch;
-        const endTime = line.date();
 
         // We decide at the end of the game what bracket it was by counting 
         // the players as classic logs don't tell us upfront. 
@@ -159,13 +196,32 @@ export default class ClassicLogHandler extends LogHandler {
         // We decide who won by counting the deaths. The winner is the 
         // team with the least deaths. Classic doesn't have team IDs
         // but we cheated a bit earlier always assigning the player as 
-        // team 1. So effectively 0 is a loss and 1 is a win here.      
+        // team 1. So effectively 0 is a loss and 1 is a win here.   
+        console.log("combatants", arenaMatch.combatantMap)   
         const friendsDead = arenaMatch.deaths.filter(d => d.friendly);
         const enemiesDead = arenaMatch.deaths.filter(d => !d.friendly);
         const result = (friendsDead < enemiesDead) ? 1 : 0;
         
-        arenaMatch.endArena(endTime, result);
+        arenaMatch.endArena(endDate, result);
+        this.clearArenaTimeout();
         this.endRecording(arenaMatch);
+    }
+
+    setArenaTimeout(ms: number) {
+        this._dataTimeout = setTimeout(() => {
+            this.endArena(new Date());
+        }, ms)
+    }
+
+    clearArenaTimeout() {
+        if (!this._dataTimeout) {
+            clearTimeout(this._dataTimeout);
+        }
+    }
+
+    refreshDataTimeout(ms: number) {
+        this.setArenaTimeout(ms)
+        this.clearArenaTimeout();
     }
 }
 

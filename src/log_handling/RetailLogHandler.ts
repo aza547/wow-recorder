@@ -10,7 +10,7 @@ import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keyst
 import { Flavour } from "../main/types";
 
 /**
- * RetailLogHandler class. // @@@ make singleton
+ * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
     
