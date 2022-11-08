@@ -530,10 +530,7 @@ const videoTabsSx = {
   bgcolor: '#272e48' ,
   textColor: 'secondary',
   overflow: 'visible',
-  borderTop: '1px solid',
-  borderBottom: '1px solid',
-  borderLeft: '1px solid',
-  borderRight: '1px solid'
+  borderTop: '2px solid',
 };
 
 const categoryTabSx = {
@@ -556,15 +553,25 @@ const categoryTabsSx = {
 
 const videoButtonSx = {
   padding: '0px', 
-  borderLeft: '1px solid black', 
-  borderRight: '1px solid black', 
+  margin: 0.5,
+  border: '2px solid black', 
   bgcolor: '#272e48', 
   color: 'white', 
   minHeight: '1px', 
   height: '100px', 
   width: '200px', 
-  opacity: 1 
+  opacity: 1,
+  borderRadius: 2,
 }
+
+const videoScrollButtonSx = {
+  bgcolor: '#272e48',
+  border: '2px solid black',
+  borderRadius: 2,
+  color: 'white',
+  margin: 0.5,
+  opacity: 1,
+};
 
 type WoWCharacterDamageType = 'melee' | 'ranged'
 type WoWCharacterRoleType = 'tank' | 'healer' | 'damage'
@@ -635,6 +642,7 @@ export {
     categoryTabSx,
     categoryTabsSx,
     videoButtonSx,
+    videoScrollButtonSx,
     zones,
     arenas,
     raidEncountersById,

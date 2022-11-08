@@ -4,7 +4,7 @@ import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { makeStyles } from 'tss-react/mui';
-import { categories, videoTabsSx, categoryTabSx, categoryTabsSx, VideoCategory }  from '../main/constants';
+import { categories, videoTabsSx, categoryTabSx, categoryTabsSx, VideoCategory, videoScrollButtonSx }  from '../main/constants';
 import VideoButton  from './VideoButton';
 
 /**
@@ -287,6 +287,7 @@ export default function Layout() {
           sx= {{ ...videoTabsSx }}
           className={ styles.tabs }
           TabIndicatorProps={{ style: { background:'#bb4220' } }}
+          TabScrollButtonProps={{ disabled: false, sx: videoScrollButtonSx }}
         >
         { categoryState.map((file: any) => {
             return(
