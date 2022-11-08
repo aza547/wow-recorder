@@ -4,7 +4,6 @@ import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from ".
 import { RecorderOptionsType } from "./recorder";
 import { Size } from "electron";
 import path from 'path';
-import { inspectObject } from "./helpers";
 import { ISceneItem, IScene, IInput, ISource } from "obs-studio-node";
 import { OurDisplayType } from "./types";
 const waitQueue = new WaitQueue<any>();
@@ -13,14 +12,20 @@ const { v4: uuid } = require('uuid');
 
 let obsInitialized = false;
 // Timer for periodically checking the size of the video source
-let timerVideoSourceSize: any;
+let timerVideoSourceSize: NodeJS.Timer;
 // Previous size of the video source as checked by checkVideoSourceSize()
-let lastVideoSourceSize: Size;
+let lastVideoSourceSize: Size | undefined;
 
 /*
 * Reconfigure the recorder without destroying it.
 */
 const reconfigure = (options: RecorderOptionsType) => {
+  console.info("[OBS] Reconfigure triggered with", options);
+  
+  // Important we reset this here to avoid scaling problems after
+  // a user settings update. See issue 221.
+  lastVideoSourceSize = undefined;
+
   configureOBS(options);
   const scene = setupScene(options);
   setupSources(scene, options.audioInputDeviceId, options.audioOutputDeviceId);
@@ -286,31 +291,39 @@ const createMonitorCaptureSource = (monitorIndex: number): IInput => {
  * @param sourceName      Video input source
  * @param baseResolution  Resolution used as base for scaling the video source
  */
-const watchVideoSourceSize = (sceneItem: ISceneItem, videoSource: IInput, baseResolution: Size): void => {
+const watchVideoSourceSize = (sceneItem: ISceneItem, 
+                              videoSource: IInput, 
+                              baseResolution: Size) => {
   clearInterval(timerVideoSourceSize);
+
   timerVideoSourceSize = setInterval(() => {
-    const result = { width: videoSource.width, height: videoSource.height };
+    const current = { 
+      width: videoSource.width, 
+      height: videoSource.height 
+    };
 
-    if (result.width === 0 || result.height === 0) {
+    if ((current.width === 0) ||
+        (current.height === 0)) {
       return;
     }
 
-    if (lastVideoSourceSize && result.width === lastVideoSourceSize.width && result.height === lastVideoSourceSize.height) {
+    if ((lastVideoSourceSize) && 
+        (current.width === lastVideoSourceSize.width) && 
+        (current.height === lastVideoSourceSize.height)) {
       return;
     }
 
-    lastVideoSourceSize = result;
-
-    const scaleFactor = baseResolution.width / result.width;
+    lastVideoSourceSize = current;
+    const scaleFactor = baseResolution.width / current.width;
     sceneItem.scale = { x: scaleFactor, y: scaleFactor };
 
     const logDetails = {
       base: baseResolution,
-      input: result,
+      input: current,
       scale: sceneItem.scale,
     };
 
-    console.log("[OBS] Adjusting scene item scale due to video input source size change", logDetails);
+    console.info("[OBS] Rescaled OBS scene: ", logDetails);
   }, 5000);
 };
 
