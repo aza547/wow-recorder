@@ -570,7 +570,7 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
 ipcMain.on('test', (_event, args) => {
   if (cfg.validate()) { 
     console.info("[Main] Config is good, running test!");
-    runRecordingTest(Boolean(args[0]));
+    runRecordingTest(retailHandler, Boolean(args[0]));
   } else {
     console.info("[Main] Config is bad, don't run test");
   }

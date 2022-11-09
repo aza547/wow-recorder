@@ -7,7 +7,7 @@
  * import a function that uses the 'fs' module. You'll very easily find out if what you
  * did was bad, because the render process will show its "Red Screen of Death".
  */
-import { instanceEncountersById, VideoCategory } from "./constants";
+import { instanceDifficulty, instanceEncountersById, VideoCategory } from "./constants";
 
 /**
  * Get a result text appropriate for the video category that signifies a
@@ -32,6 +32,16 @@ export const getVideoResultText = (category: VideoCategory,
         default:
             return isGoodResult ? "Win" : "Loss";
     }
+};
+
+export const getInstanceDifficulty = (id: number) => {
+    const knownDifficulty = instanceDifficulty.hasOwnProperty(id);
+
+    if (!knownDifficulty) {
+        return null;
+    }
+
+    return instanceDifficulty[id];
 };
 
 /**

@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
-import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId }  from 'main/constants';
+import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, InstanceDifficultyType, instanceDifficulty }  from 'main/constants';
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from 'main/keystone';
 import { getFormattedDuration } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
-import { getEncounterNameById, getVideoResultText } from 'main/helpers';
+import { getEncounterNameById, getInstanceDifficulty, getVideoResultText } from 'main/helpers';
 
 /**
  * For shorthand referencing. 
@@ -52,15 +52,12 @@ export default function VideoButton(props: any) {
     playerClass = "";
   }
   
-  const dateDisplay: string = video.isFromToday ? video.time : video.date;
-  const dateHoverText = video.date + " " + video.time;
-
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
   const isBG = category === VideoCategory.Battlegrounds;
   const isMythicPlus = (category === VideoCategory.MythicPlus);
   const isRaid = category === VideoCategory.Raids;
-  const videoInstanceDifficulty = isRaid ? video.difficulty : null;
+  const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
 
   let buttonImage;
 
@@ -192,6 +189,8 @@ export default function VideoButton(props: any) {
     }
   }
 
+
+
   return (
     <React.Fragment>
       <Tab 
@@ -224,7 +223,7 @@ export default function VideoButton(props: any) {
               </div>
             }
             { isRaid && videoInstanceDifficulty &&
-              <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId}>
+              <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId }>
                 { videoInstanceDifficulty.difficulty }
               </div>
             }

@@ -14,13 +14,7 @@ export default class ClassicLogHandler extends LogHandler {
     // ARENA_MATCH_END events. We start a 20s timer on a player death that 
     // will end the game unless another death is seen in that 20s, in which 
     // case we start the timer again.  
-    private _playerDiedTimeout?: NodeJS.Timeout;
-
-    // We mandate we see some data every 30 seconds whilst in an arena, 
-    // otherwise we assume the game is over. In practice we only refresh
-    // this timer on SPELL_AURA_APPLIED, but it's so common that should be
-    // fine.
-    private _dataTimeout?: NodeJS.Timer;
+    private _playerDeathTimeout?: NodeJS.Timeout;
 
     constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
         super(recorder, combatLogParser);
@@ -44,9 +38,6 @@ export default class ClassicLogHandler extends LogHandler {
             return;
         }
 
-        // We've seen some data in the logs refresh the timeout. 
-        //@@@ this.refreshDataTimeout(30000);
-
         if (this.activity.deaths.length > 0) {
             // When exiting classic arena we get spammed with nearby players on
             // zoning into the world. We avoid including them as combatants by
@@ -55,6 +46,14 @@ export default class ClassicLogHandler extends LogHandler {
         }
 
         const srcGUID = line.arg(1);
+
+        // Classic logs sometimes emit this GUID and we don't want to include it.
+        // No idea what causes it. Seems really common but not exlusive on 
+        // "Shadow Word: Death" casts. 
+        if (srcGUID === "0000000000000000") {
+            return;
+        }
+
         const srcFlags = parseInt(line.arg(3), 16);
 
         if (!this.isUnitPlayer(srcFlags)) {
@@ -65,14 +64,18 @@ export default class ClassicLogHandler extends LogHandler {
         { 
             const combatant = new Combatant(srcGUID);
             [combatant.name, combatant.realm] = this.ambiguate(line.arg(2));
-    
+
+            // Classic doesn't have team IDs, we cheat a bit here
+            // and always assign the player team 1 to share logic with
+            // retail. 
+            if (this.isUnitFriendly(srcFlags)) {
+                combatant.teamID = 1;
+            } else {
+                combatant.teamID = 0;
+            }
+
             if (this.isUnitSelf(srcFlags)) {
                 this.activity.playerGUID = srcGUID;
-
-                // Classic doesn't have team IDs, we cheat a bit here
-                // and always assign the player team 1 to share logic with
-                // retail. 
-                combatant.teamID = 1;
             }
 
             this.activity.addCombatant(combatant);
@@ -88,13 +91,8 @@ export default class ClassicLogHandler extends LogHandler {
 
         if (this.activity)
         {
-            const category = this.activity.category;
-            const isActivityBG = (category === VideoCategory.Battlegrounds);
-            const isActivityArena = 
-                (category === VideoCategory.TwoVTwo) ||
-                (category === VideoCategory.ThreeVThree) ||
-                (category === VideoCategory.Skirmish) ||
-                (category === VideoCategory.SoloShuffle);
+            const isActivityBG = this.isBattleground();
+            const isActivityArena = this.isArena();
             
             // Sometimes (maybe always) see a double ZONE_CHANGE fired on the way into arena.
             // Explicitly check here that the zoneID we're going to is different than that
@@ -131,7 +129,6 @@ export default class ClassicLogHandler extends LogHandler {
 
     handleUnitDiedLine(line: LogLine) {
         if (!this.activity) {
-            console.info("[ClassicLogHandler] Ignoring UNIT_DIED line as no active activity");
             return;
         }
 
@@ -141,19 +138,13 @@ export default class ClassicLogHandler extends LogHandler {
             // Deliberatly not logging here as not interesting and frequent.
             return;
         }
-
-        if (!this._playerDiedTimeout) {
-            console.info("[ClassicLogHandler] A player died, clearing timeout");
-            clearTimeout(this._playerDiedTimeout);
-        }
-
-        this._playerDiedTimeout = setTimeout(() => {
-            console.info("[ClassicLogHandler] Player died, starting timeout");
-            this.endArena(new Date());
-        }, 20 * 1000);
-
-        this.setArenaTimeout(30000);
+        
         super.handleUnitDiedLine(line);
+
+        if (this.isArena()){
+            this.processArenaDeath(line.date());
+        }
+        
     }
 
     startArena(startDate: Date, zoneID: number) {
@@ -169,10 +160,6 @@ export default class ClassicLogHandler extends LogHandler {
     }
 
     endArena(endDate: Date) {
-        if (!this._playerDiedTimeout) {
-            clearTimeout(this._playerDiedTimeout);
-        }
-
         if (!this.activity) {
             console.error("[ClassicLogHandler] Arena stop with no active arena match");
             return;
@@ -184,6 +171,7 @@ export default class ClassicLogHandler extends LogHandler {
         // We decide at the end of the game what bracket it was by counting 
         // the players as classic logs don't tell us upfront. 
         const combatantMapSize = arenaMatch.combatantMap.size;
+        console.info("[ClassicLogHandler] Number of combatants found: ", combatantMapSize);
 
         if (combatantMapSize < 5) {
             arenaMatch.category = VideoCategory.TwoVTwo;
@@ -193,35 +181,74 @@ export default class ClassicLogHandler extends LogHandler {
             arenaMatch.category = VideoCategory.FiveVFive;
         }
 
+        // Verbose logging to make it super obvious what's happened. 
+        console.info("[ClassicLogHandler] Logging combatants");
+        arenaMatch.combatantMap.forEach((k, v) => { console.log(k, v)});
+
         // We decide who won by counting the deaths. The winner is the 
         // team with the least deaths. Classic doesn't have team IDs
         // but we cheated a bit earlier always assigning the player as 
-        // team 1. So effectively 0 is a loss and 1 is a win here.   
-        console.log("combatants", arenaMatch.combatantMap)   
+        // team 1. So effectively 0 is a loss and 1 is a win here. 
         const friendsDead = arenaMatch.deaths.filter(d => d.friendly);
         const enemiesDead = arenaMatch.deaths.filter(d => !d.friendly);
+        console.info("[ClassicLogHandler] Friendly deaths: ", friendsDead);
+        console.info("[ClassicLogHandler] Enemy deaths: ", enemiesDead);
         const result = (friendsDead < enemiesDead) ? 1 : 0;
-        
+
         arenaMatch.endArena(endDate, result);
-        this.clearArenaTimeout();
+        this.clearDeathTimeout();
         this.endRecording(arenaMatch);
     }
 
-    setArenaTimeout(ms: number) {
-        this._dataTimeout = setTimeout(() => {
+    setDeathTimeout(ms: number) {
+        this.clearDeathTimeout();
+
+        this._playerDeathTimeout = setTimeout(() => {
             this.endArena(new Date());
         }, ms)
     }
 
-    clearArenaTimeout() {
-        if (!this._dataTimeout) {
-            clearTimeout(this._dataTimeout);
+    clearDeathTimeout() {
+        if (this._playerDeathTimeout) {
+            clearTimeout(this._playerDeathTimeout);
         }
     }
 
-    refreshDataTimeout(ms: number) {
-        this.setArenaTimeout(ms)
-        this.clearArenaTimeout();
+    processArenaDeath(deathDate: Date) {
+        if (!this.activity) {
+            return;
+        }
+
+        this.setDeathTimeout(20000);
+
+        let totalFriends = 0;
+        let totalEnemies = 0;
+
+        this.activity.combatantMap.forEach((combatant) => {
+            if (combatant.teamID === 1) {
+                totalFriends++;
+            } else {
+                totalEnemies++;
+            }
+        });
+
+        const deadFriends = this.activity.deaths.filter(d => d.friendly).length;
+        const aliveFriends = totalFriends - deadFriends;
+
+        if (aliveFriends < 1) {
+            console.info("[ClassicLogHandler] No friendly players left so ending game.");
+            this.endArena(deathDate);
+            return;
+        }
+
+        const deadEnemies = this.activity.deaths.filter(d => !d.friendly).length;        
+        const aliveEnemies = totalEnemies - deadEnemies;
+
+        if (aliveEnemies < 1) {
+            console.info("[ClassicLogHandler] No enemy players left so ending game.");
+            this.endArena(deathDate);
+            return;
+        }
     }
 }
 

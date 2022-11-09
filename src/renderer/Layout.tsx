@@ -225,6 +225,8 @@ export default function Layout() {
     const category = categories[tabIndex];
     const key = "tab" + tabIndex;
 
+    console.log("gen tab", tabIndex, category);
+
     return (
       <Tab key={ key } label={ category } {...a11yProps(tabIndex)} sx = {{ ...categoryTabSx }}/>
     )
@@ -321,7 +323,7 @@ export default function Layout() {
   const categoryIndex = state.categoryIndex;
 
   return (
-    <Box sx={{ width: '250px', height: '210px', display: 'flex' }}>
+    <Box sx={{ width: '250px', height: '240px', display: 'flex' }}>
       <Tabs
         orientation="vertical"
         variant="standard"

@@ -15,24 +15,29 @@ import RaidEncounter from "../activitys/RaidEncounter";
  * subclass; i.e. RetailLogHandler or ClassicLogHandler.
  */
 export default class LogHandler {
-    protected recorder;
-    protected combatLogParser: CombatLogParser;
-    protected player: Combatant | undefined;
-    protected cfg: ConfigService;
+    protected _recorder;
+    protected _combatLogParser: CombatLogParser;
+    protected _player: Combatant | undefined;
+    protected _cfg: ConfigService;
     protected _activity?: Activity;
 
     constructor(recorder: Recorder, 
                 combatLogParser: CombatLogParser)
     {
-        this.recorder = recorder;
-        this.combatLogParser = combatLogParser;
-        this.combatLogParser.on('DataTimeout', (ms: number) => { this.dataTimeout(ms)});
-        this.cfg = ConfigService.getInstance();
+        this._recorder = recorder;
+        this._combatLogParser = combatLogParser;
+        this._combatLogParser.on('DataTimeout', (ms: number) => { this.dataTimeout(ms)});
+        this._cfg = ConfigService.getInstance();
     }
 
     get activity() { return this._activity };
-    set activity(activity) { this._activity = activity };
+    get combatLogParser() { return this._combatLogParser };
+    get recorder() { return this._recorder };
+    get cfg() { return this._cfg };
+    get player() { return this._player };
 
+    set activity(activity) { this._activity = activity };
+    
     handleEncounterStartLine(line: LogLine, flavour: Flavour) {
         console.debug("[LogHandler] Handling ENCOUNTER_START line:", line);
 
@@ -66,6 +71,7 @@ export default class LogHandler {
             console.info("[LogHandler] Ignoring UNIT_DIED line as no active activity");
             return;
         }
+        
 
         const unitFlags = parseInt(line.arg(7), 16);
 
@@ -80,8 +86,6 @@ export default class LogHandler {
             // Deliberatly not logging here as not interesting and frequent.
             return;
         }
-
-        console.debug("[RetailLogHandler] Handling UNIT_DIED line:", line);
     
         const playerName = line.arg(6);
         const playerGUID = line.arg(5);
@@ -233,6 +237,29 @@ export default class LogHandler {
         const endDate = line.date();
         this.activity.end(endDate, false);
         this.endRecording(this.activity);
+    }
+
+    isArena() {
+        if (!this.activity) {
+            return false;
+        }
+
+        const category = this.activity.category;
+
+        return (category === VideoCategory.TwoVTwo) ||
+               (category === VideoCategory.ThreeVThree) ||
+               (category === VideoCategory.FiveVFive) ||
+               (category === VideoCategory.Skirmish) ||
+               (category === VideoCategory.SoloShuffle);
+    }
+
+    isBattleground() {
+        if (!this.activity) {
+            return false;
+        }
+
+        const category = this.activity.category;
+        return (category === VideoCategory.Battlegrounds);
     }
 }
 

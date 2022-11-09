@@ -93,7 +93,7 @@ export default class RaidEncounter extends Activity {
         return {
             category: VideoCategory.Raids,
             zoneID: this.zoneID,
-            zoneName: this.raid.name,
+            zoneName: this.raid.shortName,
             flavour: this.flavour,
             encounterID: this.encounterID,
             encounterName: this.encounterName,

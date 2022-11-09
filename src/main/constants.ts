@@ -105,7 +105,6 @@ const months: string[] = [
   628:  "Isle of Conquest",
   1803: "Seething Shore",
   727:  "Silvershard Mines",
-  //607:  "Strand of the Ancients",
   998:  "Temple of Kotmogu",
   761:  "The Battle for Gilneas",
   726:  "Twin Peaks",
@@ -117,14 +116,11 @@ const months: string[] = [
  * Classic battlegrounds by ID. This is probably totally wrong. 
  */
  const classicBattlegrounds: NumberKeyToStringValueMapType = {
-  30:	  "Alterac Valley",
-  2107: "Arathi Basin",
-  1681: "Arathi Basin",
-  566:  "Eye of the Storm",
-  968:  "Eye of the Storm",
-  607:  "Strand of the Ancients",
-  489:  "Warsong Gulch",
-  2106:  "Warsong Gulch"
+  30:	 "Alterac Valley",
+  529: "Arathi Basin",
+  566: "Eye of the Storm",
+  607: "Strand of the Ancients",
+  489: "Warsong Gulch",
 }
 
 /**
@@ -132,13 +128,13 @@ const months: string[] = [
  */
  const retailArenas: NumberKeyToStringValueMapType = {
   1672: "Blade's Edge",
-  617: "Dalaran Sewers",
+  617:  "Dalaran Sewers",
   1505: "Nagrand",
-  572: "Ruins of Lordaeron",
-  2167: "The Robodrome",
+  572:  "Ruins",
+  2167: "Robodrome",
   1134: "Tiger's Peak",
-  980: "Tol'Viron",
-  1504: "Black Rook Hold",
+  980:  "Tol'viron",
+  1504: "Black Rook",
   2373: "Empyrean Domain",
   1552: "Ashamane's Fall",
   1911: "Mugambala",
@@ -151,10 +147,10 @@ const months: string[] = [
  * Classic arenas by ID. 
  */
  const classicArenas: NumberKeyToStringValueMapType = {
-  572: "Ruins of Lordaeron",
-  559: "Nagrand Arena",
-  617: "Dalaran Arena",
-  562: "Blade's Edge Arena",
+  572: "Ruins",
+  559: "Nagrand",
+  617: "Dalaran",
+  562: "Blade's Edge",
 }
 
 /**
@@ -599,7 +595,7 @@ const videoTabsSx = {
   bgcolor: '#272e48' ,
   textColor: 'secondary',
   overflow: 'visible',
-  borderTop: '2px solid',
+  borderTop: '1px solid',
 };
 
 const categoryTabSx = {
@@ -623,7 +619,7 @@ const categoryTabsSx = {
 const videoButtonSx = {
   padding: '0px', 
   margin: 0.5,
-  border: '2px solid black', 
+  border: '1px solid black', 
   bgcolor: '#272e48', 
   color: 'white', 
   minHeight: '1px', 
@@ -635,7 +631,7 @@ const videoButtonSx = {
 
 const videoScrollButtonSx = {
   bgcolor: '#272e48',
-  border: '2px solid black',
+  border: '1px solid black',
   borderRadius: 2,
   color: 'white',
   margin: 0.5,
