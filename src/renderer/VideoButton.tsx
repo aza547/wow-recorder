@@ -195,6 +195,9 @@ export default function VideoButton(props: any) {
         label={
           <div id={ videoPath } className={ buttonClasses.join(' ') } style={{ backgroundImage: `url(${buttonImage})`}} onContextMenu={openMenu}>
             <div className='duration'>{ formattedDuration }</div>
+            <div className='date'>{ video.date }</div>
+            <div className='time'>{ video.time }</div>
+            <div className={'resultText ' + resultClass } title={ MMR }>{ resultText }</div>
             { isMythicPlus ||
               <div>
                 <div className='encounter'>{ video.encounter }</div>
@@ -211,7 +214,6 @@ export default function VideoButton(props: any) {
                 </div>
               </div>
             }
-            <div className='time' title={ dateHoverText }>{ dateDisplay }</div>    
             { isRaid && videoInstanceDifficulty &&
               <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId}>
                 { videoInstanceDifficulty.difficulty }
@@ -225,7 +227,6 @@ export default function VideoButton(props: any) {
                 <div className={ playerClass + ' name'}>{ playerName }</div>
               </div>
             }
-            <div className={ 'resultText ' + resultClass } title={ MMR }>{ resultText }</div>
           </div> 
         }
         key={ videoPath }

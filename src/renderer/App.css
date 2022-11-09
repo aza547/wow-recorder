@@ -154,6 +154,7 @@ h2:not(.MuiDialogTitle-root) {
 }
 
 .videoButton {
+  position: absolute;
   height: 100%;
   width: 100%;
   display: inline-block;
@@ -162,7 +163,7 @@ h2:not(.MuiDialogTitle-root) {
   text-transform: none;
   -webkit-text-stroke: 0.5px black;
   -webkit-text-fill-color: white;
-  font: bold 18px Arial Narrow;
+  font: bold 16px Arial Narrow;
   text-shadow:
     1px  1px 0 #000,
    -1px -1px 0 #000,
@@ -184,18 +185,21 @@ h2:not(.MuiDialogTitle-root) {
 } */
 
 .encounter {
-  font: bold 25px Arial Narrow;
+  font: bold 18px Arial Narrow;
   position: absolute;
-  top: 27px;
+  top: 30px;
   width: 100%;
+  height: 100%;
   text-align: center;
-  text-transform: uppercase;
+  vertical-align: middle;
+  justify-content: center;
+  align-items: center;
 }
 
 .zone {
-  font: bold 13px Arial Narrow;
+  font: bold 12px Arial Narrow;
   position: absolute;
-  top: 52px;
+  top: 50px;
   width: 100%;
   text-align: center;
 }
@@ -209,18 +213,28 @@ h2:not(.MuiDialogTitle-root) {
   height: 100%;
 }
 
-.time {
-  top: 5px;
+.duration {
+  top: 25px;
   left: 5px;
   position: absolute;
 }
 
-.instance-difficulty {
+.time {
   top: 5px;
-  position: relative;
-  /* Arial narrow font looks great except when stroked "+" characters           */
-  /* Deliberately avoid that for some fields which are likely to contain them.  */
-  font: bold 18px Arial;
+  right: 5px;
+  position: absolute;
+}
+
+.date {
+  top: 25px;
+  right: 5px;
+  position: absolute;
+}
+
+.instance-difficulty {
+  bottom: 5px;
+  right: 5px;
+  position: absolute;
 }
 
 .instance-difficulty.difficulty-normal {
@@ -233,13 +247,6 @@ h2:not(.MuiDialogTitle-root) {
 
 .instance-difficulty.difficulty-mythic {
   -webkit-text-fill-color: #ff8000;
-}
-
-.duration {
-  top: 7px;
-  right: 5px;
-  position: absolute;
-  text-align: right;
 }
 
 .name {
@@ -260,17 +267,13 @@ h2:not(.MuiDialogTitle-root) {
 }
 
 .resultText {
-  bottom: 7px;
-  right: 5px;
+  top: 5px;
+  left: 5px;
   position: absolute;
-  text-align: right;
-  /* Arial narrow font looks great except when stroked "+" characters           */
-  /* Deliberately avoid that for some fields which are likely to contain them.  */
-  font: bold 18px Arial;
 }
 
 .goodResult {
-  -webkit-text-fill-color: rgb(18, 211, 18);
+  -webkit-text-fill-color: #1eff00;
 }
 
 .badResult {
