@@ -18,7 +18,7 @@ export default function VersionUpdateWidget() {
   if(!downloadUrl) { return null; }
 
   return (
-    <div className={`version-update-widget`}>
+    <div className="version-update-widget">
       <div>
         <a href="#" onClick={openReleaseDownloadUrl}>
           New update available! Click here to download.

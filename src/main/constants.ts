@@ -133,7 +133,7 @@ const months: string[] = [
  const retailArenas: NumberKeyToStringValueMapType = {
   1672: "Blade's Edge",
   617: "Dalaran Sewers",
-  1505: "Nagrand Arena",
+  1505: "Nagrand",
   572: "Ruins of Lordaeron",
   2167: "The Robodrome",
   1134: "Tiger's Peak",
@@ -143,7 +143,7 @@ const months: string[] = [
   1552: "Ashamane's Fall",
   1911: "Mugambala",
   1825: "Hook Point",
-  2509: "Maldraxxus Coliseum",
+  2509: "Maldraxxus",
   2547: "Enigma Crucible",
 }
 
@@ -281,14 +281,49 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * can't rely on `ZONE_CHANGE` for this.
  */
 const raidInstances: RaidInstanceType[] = [
-  { zoneId: 13224, name: 'Castle Nathria', encounters: encountersNathria },
-  { zoneId: 13561, name: 'Sanctum of Domination', encounters: encountersSanctum },
-  { zoneId: 13742, name: 'Sepulcher of the First Ones', encounters: encountersSepulcher },
-  { zoneId: 14030, name: 'Vault of the Incarnates', encounters: encountersVOI },
-  { zoneId: 3456, name: 'Naxxramas', encounters: encountersClassicNaxxramas },
-  { zoneId: 4500, name: 'Eye of Eternity', encounters: encountersClassicEye },
-  { zoneId: 4493, name: 'Obsidian Sanctum', encounters: encountersClassicObsidian },
-  { zoneId: 4603, name: 'Vault of Archavon', encounters: encountersClassicVault },
+  { 
+    zoneId: 13224, 
+    name: 'Castle Nathria', 
+    shortName: 'Nathria', 
+    encounters: encountersNathria 
+  },
+  { 
+    zoneId: 13561, 
+    name: 'Sanctum of Domination', 
+    shortName: 'Sanctum', 
+    encounters: encountersSanctum 
+  },
+  { 
+    zoneId: 13742, 
+    name: 'Sepulcher of the First Ones', 
+    shortName: 'Sepulcher', 
+    encounters: encountersSepulcher 
+  },
+  { zoneId: 14030, 
+    name: 'Vault of the Incarnates', 
+    shortName: 'Vault', 
+    encounters: encountersVOI 
+  },
+  { zoneId: 3456, 
+    name: 'Naxxramas', 
+    shortName: 'Naxxramas', 
+    encounters: encountersClassicNaxxramas 
+  },
+  { zoneId: 4500, 
+    name: 'Eye of Eternity', 
+    shortName: 'EoE', 
+    encounters: encountersClassicEye 
+  },
+  { zoneId: 4493, 
+    name: 'Obsidian Sanctum', 
+    shortName: 'OS', 
+    encounters: encountersClassicObsidian 
+  },
+  { zoneId: 4603, 
+    name: 'Vault of Archavon', 
+    shortName: 'VoA', 
+    encounters: encountersClassicVault 
+  },
 ];
 
 /**
@@ -564,10 +599,7 @@ const videoTabsSx = {
   bgcolor: '#272e48' ,
   textColor: 'secondary',
   overflow: 'visible',
-  borderTop: '1px solid',
-  borderBottom: '1px solid',
-  borderLeft: '1px solid',
-  borderRight: '1px solid'
+  borderTop: '2px solid',
 };
 
 const categoryTabSx = {
@@ -590,15 +622,25 @@ const categoryTabsSx = {
 
 const videoButtonSx = {
   padding: '0px', 
-  borderLeft: '1px solid black', 
-  borderRight: '1px solid black', 
+  margin: 0.5,
+  border: '2px solid black', 
   bgcolor: '#272e48', 
   color: 'white', 
   minHeight: '1px', 
   height: '100px', 
   width: '200px', 
-  opacity: 1 
+  opacity: 1,
+  borderRadius: 2,
 }
+
+const videoScrollButtonSx = {
+  bgcolor: '#272e48',
+  border: '2px solid black',
+  borderRadius: 2,
+  color: 'white',
+  margin: 0.5,
+  opacity: 1,
+};
 
 type WoWCharacterDamageType = 'melee' | 'ranged'
 type WoWCharacterRoleType = 'tank' | 'healer' | 'damage'
@@ -669,6 +711,7 @@ export {
     categoryTabSx,
     categoryTabsSx,
     videoButtonSx,
+    videoScrollButtonSx,
     zones,
     retailArenas,
     classicArenas,
