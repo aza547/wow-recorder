@@ -161,7 +161,7 @@ h2:not(.MuiDialogTitle-root) {
   vertical-align: middle;
   line-height: 20px; /* <-- adjust this to spread out text */
   text-transform: none;
-  -webkit-text-stroke: 0.5px black;
+  -webkit-text-stroke: .35px black;
   -webkit-text-fill-color: white;
   font: bold 16px Arial Narrow;
   text-shadow:
@@ -172,36 +172,26 @@ h2:not(.MuiDialogTitle-root) {
     1px  1px 0 #000;
 }
 
+.videoButtonDarken {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
 .videoButton.dungeon {
   background-size: cover;
 }
 
-/* .sepulcherRaid{
-  background-image: url("../../assets/wow/sepulcher.jpg");
-}
-
-.tolvironArena{
-  background-image: url("../../assets/wow/tolviron-arena.png");
-} */
-
 .encounter {
   font: bold 18px Arial Narrow;
   position: absolute;
-  top: 30px;
+  top: 40px;
   width: 100%;
   height: 100%;
   text-align: center;
   vertical-align: middle;
   justify-content: center;
   align-items: center;
-}
-
-.zone {
-  font: bold 12px Arial Narrow;
-  position: absolute;
-  top: 50px;
-  width: 100%;
-  text-align: center;
 }
 
 .dungeon .encounter {
@@ -213,27 +203,64 @@ h2:not(.MuiDialogTitle-root) {
   height: 100%;
 }
 
-.duration {
-  top: 25px;
+.zone {
+  top: 5px;
   left: 5px;
   position: absolute;
 }
 
+.duration {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
+
 .time {
-  top: 5px;
+  top: 22.5px;
   right: 5px;
   position: absolute;
 }
 
 .date {
-  top: 25px;
+  top: 5px;
   right: 5px;
   position: absolute;
 }
 
-.instance-difficulty {
+.name {
   bottom: 5px;
+  left: 27.5px;
+  position: absolute;
+}
+
+.specIcon {
+  bottom: 0px;
+  left: 5px;
+  position: absolute;
+}
+
+.specIcon > img {
+  width: 20px;
+  height: 20px;
+}
+
+.resultText {
+  bottom: 22.5px;
   right: 5px;
+  position: absolute;
+}
+
+.goodResult {
+  -webkit-text-fill-color: #1eff00;
+}
+
+.badResult {
+  -webkit-text-fill-color: red;
+}
+
+.instance-difficulty {
+  top: 22.5px;
+  left: 5px;
   position: absolute;
 }
 
@@ -247,37 +274,6 @@ h2:not(.MuiDialogTitle-root) {
 
 .instance-difficulty.difficulty-mythic {
   -webkit-text-fill-color: #ff8000;
-}
-
-.name {
-  bottom: 7px;
-  left: 30px;
-  position: absolute;
-}
-
-.specIcon {
-  bottom: 1px;
-  left: 3px;
-  position: absolute;
-}
-
-.specIcon > img {
-  width: 25px;
-  height: 25px;
-}
-
-.resultText {
-  top: 5px;
-  left: 5px;
-  position: absolute;
-}
-
-.goodResult {
-  -webkit-text-fill-color: #1eff00;
-}
-
-.badResult {
-  -webkit-text-fill-color: red;
 }
 
 .segment-entry {

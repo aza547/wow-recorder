@@ -113,7 +113,7 @@ const months: string[] = [
  const arenas: NumberKeyToStringValueMapType = {
   1672: "Blade's Edge",
   617: "Dalaran Sewers",
-  1505: "Nagrand Arena",
+  1505: "Nagrand",
   572: "Ruins of Lordaeron",
   2167: "The Robodrome",
   1134: "Tiger's Peak",
@@ -123,7 +123,7 @@ const months: string[] = [
   1552: "Ashamane's Fall",
   1911: "Mugambala",
   1825: "Hook Point",
-  2509: "Maldraxxus Coliseum",
+  2509: "Maldraxxus",
   2547: "Enigma Crucible",
 }
 
@@ -251,14 +251,49 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * can't rely on `ZONE_CHANGE` for this.
  */
 const raidInstances: RaidInstanceType[] = [
-  { zoneId: 13224, name: 'Castle Nathria', encounters: encountersNathria },
-  { zoneId: 13561, name: 'Sanctum of Domination', encounters: encountersSanctum },
-  { zoneId: 13742, name: 'Sepulcher of the First Ones', encounters: encountersSepulcher },
-  { zoneId: 14030, name: 'Vault of the Incarnates', encounters: encountersVOI },
-  { zoneId: 3456, name: 'Naxxramas', encounters: encountersClassicNaxxramas },
-  { zoneId: 4500, name: 'Eye of Eternity', encounters: encountersClassicEye },
-  { zoneId: 4493, name: 'Obsidian Sanctum', encounters: encountersClassicObsidian },
-  { zoneId: 4603, name: 'Vault of Archavon', encounters: encountersClassicVault },
+  { 
+    zoneId: 13224, 
+    name: 'Castle Nathria', 
+    shortName: 'Nathria', 
+    encounters: encountersNathria 
+  },
+  { 
+    zoneId: 13561, 
+    name: 'Sanctum of Domination', 
+    shortName: 'Sanctum', 
+    encounters: encountersSanctum 
+  },
+  { 
+    zoneId: 13742, 
+    name: 'Sepulcher of the First Ones', 
+    shortName: 'Sepulcher', 
+    encounters: encountersSepulcher 
+  },
+  { zoneId: 14030, 
+    name: 'Vault of the Incarnates', 
+    shortName: 'Vault', 
+    encounters: encountersVOI 
+  },
+  { zoneId: 3456, 
+    name: 'Naxxramas', 
+    shortName: 'Naxxramas', 
+    encounters: encountersClassicNaxxramas 
+  },
+  { zoneId: 4500, 
+    name: 'Eye of Eternity', 
+    shortName: 'EoE', 
+    encounters: encountersClassicEye 
+  },
+  { zoneId: 4493, 
+    name: 'Obsidian Sanctum', 
+    shortName: 'OS', 
+    encounters: encountersClassicObsidian 
+  },
+  { zoneId: 4603, 
+    name: 'Vault of Archavon', 
+    shortName: 'VoA', 
+    encounters: encountersClassicVault 
+  },
 ];
 
 /**

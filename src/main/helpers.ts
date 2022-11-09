@@ -104,6 +104,29 @@ export const getVideoZone = (metadata: Metadata) => {
 }
 
 /**
+ * Get the short zone name.
+ */
+ export const getVideoZoneShortName = (metadata: Metadata) => {
+    const zoneID = metadata.zoneID;
+    const encounterID = metadata.encounterID;
+
+    switch (metadata.category) {
+        case VideoCategory.MythicPlus:
+            return getInstanceNameByZoneId(zoneID);
+
+        case VideoCategory.Raids:
+            return getRaidShortNameByEncounterId(encounterID);
+
+        default:
+            if (zoneID && zones.hasOwnProperty(zoneID)) {
+                return zones[zoneID];
+            }
+    }
+
+    return "Unknown Zone";
+}
+
+/**
  * Get the raid name from the encounter ID.
  */
 export const getRaidNameByEncounterId = (encounterID?: number) => {
@@ -113,6 +136,19 @@ export const getRaidNameByEncounterId = (encounterID?: number) => {
     }
 
     return raid.name;
+}
+
+/**
+ * Get the raid name from the encounter ID.
+ */
+ export const getRaidShortNameByEncounterId = (encounterID?: number) => {
+    const raid = getRaidByEncounterId(encounterID);
+    
+    if (!raid) {
+        return 'Unknown Raid';
+    }
+
+    return raid.shortName;
 }
 
 /**

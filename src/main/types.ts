@@ -113,6 +113,7 @@ type NumberKeyToStringValueMapType = {
 type RaidInstanceType = {
     zoneId: number;
     name: string;
+    shortName: string;
     encounters: NumberKeyToStringValueMapType,
 };
 

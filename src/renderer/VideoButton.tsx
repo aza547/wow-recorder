@@ -194,6 +194,7 @@ export default function VideoButton(props: any) {
       <Tab 
         label={
           <div id={ videoPath } className={ buttonClasses.join(' ') } style={{ backgroundImage: `url(${buttonImage})`}} onContextMenu={openMenu}>
+            <div className="videoButtonDarken"></div>
             <div className='duration'>{ formattedDuration }</div>
             <div className='date'>{ video.date }</div>
             <div className='time'>{ video.time }</div>
@@ -201,7 +202,7 @@ export default function VideoButton(props: any) {
             { isMythicPlus ||
               <div>
                 <div className='encounter'>{ video.encounter }</div>
-                <div className='zone'>{ video.zone }</div>
+                <div className='zone'>{ video.zoneShortName }</div>
               </div>
             }
             { isMythicPlus &&

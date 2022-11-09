@@ -20,7 +20,7 @@ import glob from 'glob';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { Display, screen } from 'electron';
-import { getVideoZone } from './helpers';
+import { getVideoZone, getVideoZoneShortName } from './helpers';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -103,6 +103,7 @@ const loadAllVideos = async (storageDir: any): Promise<any> => {
         fullPath: video.name,
         ...metadata,
         zone: getVideoZone(metadata),
+        zoneShortName: getVideoZoneShortName(metadata),
         encounter: getVideoEncounter(metadata),
         date: getVideoDate(videoDate),
         isFromToday: (today.toDateString() === videoDate.toDateString()),
