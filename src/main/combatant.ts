@@ -49,6 +49,13 @@ class Combatant {
     } 
 
     /**
+     * Sets the specID.
+     */
+     set specID(value) {
+        this._specID = value;
+    }
+
+    /**
      * Gets the name.
      * @apinote Name is in Name-Realm format
      */

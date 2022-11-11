@@ -36,6 +36,7 @@ for (const id of retailArenaIDs) {
 
 // Load the classic arena images. This expects files with the name <id>.jpg 
 // to exist in the appropriate assets folder. 
+// @@ classic arena images? i.e. blade's edge...
 const classicArenaIDs = [
     572,
     559,

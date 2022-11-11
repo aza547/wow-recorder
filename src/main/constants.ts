@@ -1,5 +1,5 @@
 import { ConfigurationSchemaKey } from "./configSchema";
-import { NumberKeyToStringValueMapType, RaidInstanceType } from "./types";
+import { NumberKeyToStringValueMapType, RaidInstanceType, StringKeyToNumberValueMapType } from "./types";
 
 enum VideoCategory {
   TwoVTwo = '2v2',
@@ -556,7 +556,7 @@ const instanceEncountersById: NumberKeyToStringValueMapType = {
 type InstanceDifficultyPartyType = 'party' | 'raid' | 'pvp'
 type ImstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp'
 type InstanceDifficultyType = {
-    difficultyId: ImstanceDifficultyIdType,
+    difficultyID: ImstanceDifficultyIdType,
     difficulty: string,
     partyType: InstanceDifficultyPartyType,
 };
@@ -565,25 +565,25 @@ type InstanceDifficultyObjectType = {
 };
 
 const instanceDifficulty: InstanceDifficultyObjectType = {
-  1: { difficultyId: 'normal', difficulty: 'N', partyType: 'party' },
-  2: { difficultyId: 'heroic', difficulty: 'HC', partyType: 'party' },
-  3: { difficultyId: 'normal', difficulty: '10N', partyType: 'raid' },
-  4: { difficultyId: 'normal', difficulty: '25N', partyType: 'raid' },
-  5: { difficultyId: 'heroic', difficulty: '10HC', partyType: 'raid' },
-  6: { difficultyId: 'heroic', difficulty: '25HC', partyType: 'raid' },
-  7: { difficultyId: 'lfr', difficulty: 'LFR', partyType: 'raid' },
-  8: { difficultyId: 'mythic', difficulty: 'Mythic Keystone', partyType: 'party' },
-  9: { difficultyId: 'normal', difficulty: '40', partyType: 'raid' },
-  14: { difficultyId: 'normal', difficulty: 'N', partyType: 'raid' },
-  15: { difficultyId: 'heroic', difficulty: 'HC', partyType: 'raid' },
-  16: { difficultyId: 'mythic', difficulty: 'M', partyType: 'raid' },
-  17: { difficultyId: 'lfr', difficulty: 'LFR', partyType: 'raid' },
-  23: { difficultyId: 'mythic', difficulty: 'M', partyType: 'party' },
-  24: { difficultyId: 'normal', difficulty: 'T', partyType: 'party' },
-  33: { difficultyId: 'normal', difficulty: 'T', partyType: 'raid' },
-  34: { difficultyId: 'pvp', difficulty: 'PvP', partyType: 'pvp' },
-  150: { difficultyId: 'normal', difficulty: 'N', partyType: 'party' },
-  151: { difficultyId: 'lfr', difficulty: 'T', partyType: 'raid' },
+  1: { difficultyID: 'normal', difficulty: 'N', partyType: 'party' },
+  2: { difficultyID: 'heroic', difficulty: 'HC', partyType: 'party' },
+  3: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
+  4: { difficultyID: 'normal', difficulty: '25N', partyType: 'raid' },
+  5: { difficultyID: 'heroic', difficulty: '10HC', partyType: 'raid' },
+  6: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
+  7: { difficultyID: 'lfr', difficulty: 'LFR', partyType: 'raid' },
+  8: { difficultyID: 'mythic', difficulty: 'Mythic Keystone', partyType: 'party' },
+  9: { difficultyID: 'normal', difficulty: '40', partyType: 'raid' },
+  14: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
+  15: { difficultyID: 'heroic', difficulty: 'HC', partyType: 'raid' },
+  16: { difficultyID: 'mythic', difficulty: 'M', partyType: 'raid' },
+  17: { difficultyID: 'lfr', difficulty: 'LFR', partyType: 'raid' },
+  23: { difficultyID: 'mythic', difficulty: 'M', partyType: 'party' },
+  24: { difficultyID: 'normal', difficulty: 'T', partyType: 'party' },
+  33: { difficultyID: 'normal', difficulty: 'T', partyType: 'raid' },
+  34: { difficultyID: 'pvp', difficulty: 'PvP', partyType: 'pvp' },
+  150: { difficultyID: 'normal', difficulty: 'N', partyType: 'party' },
+  151: { difficultyID: 'lfr', difficulty: 'T', partyType: 'raid' },
 }
 
 const videoTabsSx = {
@@ -700,6 +700,49 @@ const wowExecutableFlavours: { [key: string]: string } = {
 };
 type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
 
+// Need this only for BG spec detection in retail.
+// These spells should be common, and unique to a spec.
+// More than one may be added per spec to improve chance of identifying.
+const retailUniqueSpecSpells: StringKeyToNumberValueMapType = {
+  "Holy Shock": 65,
+}
+
+// Need this for any non-raid spec detection in classic.
+// These spells should be common, and unique to a spec.
+// More than one may be added per spec to improve chance of identifying.
+const classicUniqueSpecSpells: StringKeyToNumberValueMapType= {
+  "Heart Strike": 250,
+  "Howling Blast": 251,
+  "Summon Gargoyle": 252,
+  "Starfall": 102,
+  "Berserk": 103,
+  "Swiftmend": 105,
+  "Bestial Wrath": 253,
+  "Chimera Shot": 254,
+  "Explosive Shot": 255,
+  "Arcane Barrage": 62,
+  "Dragon's Breath": 63,
+  "Deep Freeze": 64,
+  "Holy Shock": 65,
+  "Avenger's Shield": 66,
+  "Crusader Strike": 67,
+  "Penance": 256,
+  "Guardian Spirit": 257,
+  "Dispersion": 258,
+  "Mutilate": 259,
+  "Killing Spree": 260, // might be wrong? assumed combatID === outlawID
+  "Shadow Dance": 261,
+  "Thunderstorm": 262,
+  "Feral Spirit": 263,
+  "Riptide": 264,
+  "Haunt": 265,
+  "Metamorphosis": 266,
+  "Chaos Bolt": 267,
+  "Bladestorm": 71,
+  "Bloodthirst": 72,
+  "Shockwave": 73,
+}
+
 export {
     categories,
     months,
@@ -729,4 +772,6 @@ export {
     categoryRecordingSettings,
     wowExecutableFlavours,
     WoWProcessResultKey,
+    classicUniqueSpecSpells,
+    retailUniqueSpecSpells,
 };

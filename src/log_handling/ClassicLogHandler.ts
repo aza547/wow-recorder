@@ -1,4 +1,4 @@
-import { classicArenas, classicBattlegrounds, VideoCategory } from "../main/constants";
+import { classicArenas, classicBattlegrounds, classicUniqueSpecSpells, VideoCategory } from "../main/constants";
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import { Recorder } from "../main/recorder";
@@ -25,6 +25,7 @@ export default class ClassicLogHandler extends LogHandler {
             .on('ZONE_CHANGE',        (line: LogLine) => { this.handleZoneChange(line) })
             .on('SPELL_AURA_APPLIED', (line: LogLine) => { this.handleSpellAuraAppliedLine(line) })
             .on('UNIT_DIED',          (line: LogLine) => { this.handleUnitDiedLine(line) })
+            .on('SPELL_CAST_SUCCESS', (line: LogLine) => { this.handleSpellCastSuccess(line) })
     }
 
     handleEncounterStartLine(line: LogLine) {
@@ -46,42 +47,9 @@ export default class ClassicLogHandler extends LogHandler {
         }
 
         const srcGUID = line.arg(1);
-
-        // Classic logs sometimes emit this GUID and we don't want to include it.
-        // No idea what causes it. Seems really common but not exlusive on 
-        // "Shadow Word: Death" casts. 
-        if (srcGUID === "0000000000000000") {
-            return;
-        }
-
         const srcFlags = parseInt(line.arg(3), 16);
-
-        if (!isUnitPlayer(srcFlags)) {
-            return;
-        }
-
-        if (this.activity.getCombatant(srcGUID))
-        { 
-            return;
-        }
-
-        const combatant = new Combatant(srcGUID);
-        [combatant.name, combatant.realm] = ambiguate(line.arg(2));
-
-        // Classic doesn't have team IDs, we cheat a bit here
-        // and always assign the player team 1 to share logic with
-        // retail. 
-        if (isUnitFriendly(srcFlags)) {
-            combatant.teamID = 1;
-        } else {
-            combatant.teamID = 0;
-        }
-
-        if (isUnitSelf(srcFlags)) {
-            this.activity.playerGUID = srcGUID;
-        }
-
-        this.activity.addCombatant(combatant);
+        const srcNameRealm = line.arg(2);
+        this.processCombatant(srcGUID, srcNameRealm, srcFlags);
     }
 
     handleZoneChange(line: LogLine) {
@@ -149,6 +117,33 @@ export default class ClassicLogHandler extends LogHandler {
         
     }
 
+    handleSpellCastSuccess(line: LogLine) {
+        if (!this.activity) { 
+            return;
+        }
+
+        const srcGUID = line.arg(1);
+        const srcNameRealm = line.arg(2);
+        const srcFlags = parseInt(line.arg(3), 16);
+        const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
+
+        if (!combatant) {
+            // We can't really hit this, just keeping TS happy. 
+            return;
+        }
+
+        if (combatant.specID !== undefined) {
+            // If we already have a specID for this combatant.
+            return;
+        }
+
+        const spellName = line.arg(10);
+
+        if (classicUniqueSpecSpells.hasOwnProperty(spellName)) {
+            combatant.specID = classicUniqueSpecSpells[spellName];
+        }
+    }
+
     startArena(startDate: Date, zoneID: number) {
         if (this.activity) {
             console.error("[ClassicLogHandler] Another activity in progress, can't start arena"); 
@@ -200,6 +195,46 @@ export default class ClassicLogHandler extends LogHandler {
         arenaMatch.endArena(endDate, result);
         this.clearDeathTimeout();
         this.endRecording(arenaMatch);
+    }
+
+    processCombatant(srcGUID: string, srcNameRealm: string, srcFlags: number) {
+        if (!this.activity) {
+            return;
+        }
+
+        // Classic logs sometimes emit this GUID and we don't want to include it.
+        // No idea what causes it. Seems really common but not exlusive on 
+        // "Shadow Word: Death" casts. 
+        if (srcGUID === "0000000000000000") {
+            return;
+        }
+
+        if (!isUnitPlayer(srcFlags)) {
+            return;
+        }
+
+        if (this.activity.getCombatant(srcGUID)) { 
+            return this.activity.getCombatant(srcGUID);
+        }
+
+        const combatant = new Combatant(srcGUID);
+        [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
+
+        // Classic doesn't have team IDs, we cheat a bit here
+        // and always assign the player team 1 to share logic with
+        // retail. 
+        if (isUnitFriendly(srcFlags)) {
+            combatant.teamID = 1;
+        } else {
+            combatant.teamID = 0;
+        }
+
+        if (isUnitSelf(srcFlags)) {
+            this.activity.playerGUID = srcGUID;
+        }
+
+        this.activity.addCombatant(combatant);
+        return combatant;
     }
 
     setDeathTimeout(ms: number) {

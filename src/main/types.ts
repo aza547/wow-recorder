@@ -121,6 +121,10 @@ type NumberKeyToStringValueMapType = {
     [id: number]: string;
 };
 
+type StringKeyToNumberValueMapType = {
+    [id: string]: number;
+};
+
 type RaidInstanceType = {
     zoneId: number;
     name: string;
@@ -192,7 +196,19 @@ interface ISettingsPanelProps {
     timeline?: ChallengeModeTimelineSegment[];
     level?: number;
     encounterName?: string;
+    protected?: boolean;
 }
+
+/**
+ * VideoData type. Unused for now.
+ */
+type VideoData = Metadata & {
+    date: string,
+    time: string,
+    path: string,
+    protected: boolean,
+}
+
 
 export {
     RecStatus,
@@ -203,6 +219,7 @@ export {
     FileSortDirection,
     OurDisplayType,
     NumberKeyToStringValueMapType,
+    StringKeyToNumberValueMapType,
     RaidInstanceType,
     FileInfo,
     FileFinderCallbackType,
@@ -211,5 +228,6 @@ export {
     FakeChangeEvent,
     ISettingsPanelProps,
     Metadata,
+    VideoData,
     Flavour,
 }
