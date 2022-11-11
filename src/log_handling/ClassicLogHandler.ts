@@ -5,6 +5,7 @@ import { Recorder } from "../main/recorder";
 import LogHandler from "./LogHandler";
 import { Flavour } from "../main/types";
 import ArenaMatch from "../activitys/ArenaMatch";
+import { ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
 
 /**
  * Classic log handler class.
@@ -34,11 +35,10 @@ export default class ClassicLogHandler extends LogHandler {
 
     handleSpellAuraAppliedLine(line: LogLine) {
         if (!this.activity) {
-            // Deliberately don't log anything here as we hit this a lot
             return;
         }
 
-        if (this.activity.deaths.length > 0) {
+        if (this.isArena() && this.activity.deaths.length > 0) {
             // When exiting classic arena we get spammed with nearby players on
             // zoning into the world. We avoid including them as combatants by
             // ignoring any new players introduced after the first player death. 
@@ -56,30 +56,32 @@ export default class ClassicLogHandler extends LogHandler {
 
         const srcFlags = parseInt(line.arg(3), 16);
 
-        if (!this.isUnitPlayer(srcFlags)) {
+        if (!isUnitPlayer(srcFlags)) {
             return;
         }
 
-        if (!this.activity.getCombatant(srcGUID))
+        if (this.activity.getCombatant(srcGUID))
         { 
-            const combatant = new Combatant(srcGUID);
-            [combatant.name, combatant.realm] = this.ambiguate(line.arg(2));
-
-            // Classic doesn't have team IDs, we cheat a bit here
-            // and always assign the player team 1 to share logic with
-            // retail. 
-            if (this.isUnitFriendly(srcFlags)) {
-                combatant.teamID = 1;
-            } else {
-                combatant.teamID = 0;
-            }
-
-            if (this.isUnitSelf(srcFlags)) {
-                this.activity.playerGUID = srcGUID;
-            }
-
-            this.activity.addCombatant(combatant);
+            return;
         }
+
+        const combatant = new Combatant(srcGUID);
+        [combatant.name, combatant.realm] = ambiguate(line.arg(2));
+
+        // Classic doesn't have team IDs, we cheat a bit here
+        // and always assign the player team 1 to share logic with
+        // retail. 
+        if (isUnitFriendly(srcFlags)) {
+            combatant.teamID = 1;
+        } else {
+            combatant.teamID = 0;
+        }
+
+        if (isUnitSelf(srcFlags)) {
+            this.activity.playerGUID = srcGUID;
+        }
+
+        this.activity.addCombatant(combatant);
     }
 
     handleZoneChange(line: LogLine) {
@@ -134,7 +136,7 @@ export default class ClassicLogHandler extends LogHandler {
 
         const unitFlags = parseInt(line.arg(7), 16);
 
-        if (!this.isUnitPlayer(unitFlags)) {
+        if (!isUnitPlayer(unitFlags)) {
             // Deliberatly not logging here as not interesting and frequent.
             return;
         }

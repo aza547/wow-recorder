@@ -3,9 +3,10 @@ import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import ConfigService from "../main/configService";
 import { categoryRecordingSettings, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
-import { Flavour, PlayerDeathType, UnitFlags } from "../main/types";
+import { Flavour, PlayerDeathType } from "../main/types";
 import Activity from "../activitys/Activity";
 import RaidEncounter from "../activitys/RaidEncounter";
+import { allowRecordCategory, isUnitFriendly, isUnitPlayer } from "../main/logutils";
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -75,7 +76,7 @@ export default class LogHandler {
 
         const unitFlags = parseInt(line.arg(7), 16);
 
-        if (!this.isUnitPlayer(unitFlags)) {
+        if (!isUnitPlayer(unitFlags)) {
             // Deliberatly not logging here as not interesting and frequent.
             return;
         }
@@ -107,7 +108,7 @@ export default class LogHandler {
             name: playerName,
             specId: playerSpecId,
             timestamp: relativeTime,
-            friendly: this.isUnitFriendly(unitFlags),
+            friendly: isUnitFriendly(unitFlags),
         }
 
         this.activity.addDeath(playerDeath);
@@ -115,7 +116,7 @@ export default class LogHandler {
 
     startRecording = (activity: Activity) => {
         const category = activity.category;
-        const allowed = this.allowRecordCategory(category);
+        const allowed = allowRecordCategory(category);
 
         if (!allowed) {
             console.info("[LogHandler] Not configured to record", category);
@@ -169,63 +170,16 @@ export default class LogHandler {
             return;
         }
     }
-    
-    // @@@ candidate for helper? 
-    isUnitFriendly = (flags: number): boolean => {
-        return this.hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
-    }
 
-    // @@@ candidate for helper? 
-    isUnitSelf = (flags: number): boolean => {
-        const isFriendly = this.hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
-        const isMine = this.hasFlag(flags, UnitFlags.AFFILIATION_MINE)
-        return (isFriendly && isMine);
-    }
-
-    // @@@ candidate for helper? 
-    isUnitPlayer = (flags: number): boolean => {
-        const isPlayerControlled = this.hasFlag(flags, UnitFlags.CONTROL_PLAYER);
-        const isPlayerType = this.hasFlag(flags, UnitFlags.TYPE_PLAYER);
-        return (isPlayerControlled && isPlayerType);
-    }
-
-    // @@@ candidate for helper? 
-    hasFlag = (flags: number, flag: number): boolean => {
-        return (flags & flag) !== 0;
-    }
-
-    // @@@ candidate for helper? 
-    ambiguate = (nameRealm: string): string[] => {
-        const split = nameRealm.split("-");
-        const name = split[0];
-        const realm = split[1];
-        return [name, realm];
-    }
-
-
-    // @@@ candidate for helper? / logutils?
-    allowRecordCategory = (category: VideoCategory): boolean => {
-        const categoryConfig = categoryRecordingSettings[category];
-        const categoryAllowed = this.cfg.get<boolean>(categoryConfig.configKey);
-
-        if (!categoryAllowed) {
-            console.info("[LogHandler] Configured to not record:", category);
-            return false;
-        };
-
-        console.info("[LogHandler] Good to record:", category);
-        return true;
-    };
-
-    forceEndActivity = () => {
+    forceEndActivity = async () => {
         if (!this.activity) {
-            this.recorder.forceStop();
+            await this.recorder.forceStop();
             return;
         }
 
         this.activity.end(new Date(), false);
         this.endRecording(this.activity, true);
-        this.activity = undefined
+        this.activity = undefined;
     }
 
     zoneChangeStop(line: LogLine) {

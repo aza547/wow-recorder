@@ -1,7 +1,7 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { recorder }  from './main';
-import { raidEncountersById, wowExecutableFlavours }  from './constants';
-import { IWoWProcessResult } from './types';
+import { categoryRecordingSettings, raidEncountersById, VideoCategory, wowExecutableFlavours }  from './constants';
+import { IWoWProcessResult, UnitFlags } from './types';
 import { CombatLogParser } from './combatLogParser';
 import { getSortedFiles } from './util';
 import ConfigService from './configService';
@@ -227,9 +227,56 @@ const runRecordingTest = (handler: LogHandler, endTest: boolean = true) => {
     }, 10 * 1000);
 }
 
+const isUnitFriendly = (flags: number) => {
+    return hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
+}
+
+
+const isUnitSelf = (flags: number) => {
+    const isFriendly = hasFlag(flags, UnitFlags.REACTION_FRIENDLY);
+    const isMine = hasFlag(flags, UnitFlags.AFFILIATION_MINE)
+    return (isFriendly && isMine);
+}
+
+const isUnitPlayer = (flags: number) => {
+    const isPlayerControlled = hasFlag(flags, UnitFlags.CONTROL_PLAYER);
+    const isPlayerType = hasFlag(flags, UnitFlags.TYPE_PLAYER);
+    return (isPlayerControlled && isPlayerType);
+}
+
+const hasFlag = (flags: number, flag: number) => {
+    return (flags & flag) !== 0;
+}
+
+const ambiguate = (nameRealm: string): string[] => {
+    const split = nameRealm.split("-");
+    const name = split[0];
+    const realm = split[1];
+    return [name, realm];
+}
+
+const allowRecordCategory = (category: VideoCategory) => {
+    const categoryConfig = categoryRecordingSettings[category];
+    const categoryAllowed = cfg.get<boolean>(categoryConfig.configKey);
+
+    if (!categoryAllowed) {
+        console.info("[LogHandler] Configured to not record:", category);
+        return false;
+    };
+
+    console.info("[LogHandler] Good to record:", category);
+    return true;
+};
+
 export {
     pollWowProcess,
     runRecordingTest,
     makeRetailHandler,
     makeClassicHandler,
+    isUnitFriendly,
+    isUnitSelf,
+    isUnitPlayer,
+    hasFlag,
+    ambiguate,
+    allowRecordCategory
 };

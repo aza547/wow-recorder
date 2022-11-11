@@ -18,7 +18,7 @@ tests = {
     "Retail: Zone Changes":       os.path.join(dirname, "./retail_zone_changes.py"),
 
     # Classic Tests
-    "Classic: Raid":     os.path.join(dirname,  "./classic_raid.py"),
+    "Classic: Raid":      os.path.join(dirname, "./classic_raid.py"),
     "Classic: Rated 2v2": os.path.join(dirname, "./classic_rated_2v2.py"),
     "Classic: Rated 5v5": os.path.join(dirname, "./classic_rated_5v5.py"),
 }

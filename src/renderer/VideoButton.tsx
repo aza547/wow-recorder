@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
-import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, InstanceDifficultyType, instanceDifficulty }  from 'main/constants';
+import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId }  from 'main/constants';
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from 'main/keystone';
 import { getFormattedDuration } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -189,8 +189,6 @@ export default function VideoButton(props: any) {
     }
   }
 
-
-
   return (
     <React.Fragment>
       <Tab 
@@ -198,6 +196,8 @@ export default function VideoButton(props: any) {
           <div 
             id={ videoPath } 
             className={ buttonClasses.join(' ') } 
+            // I think this is a performance bottleneck when switching categorties
+            // @@@
             style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "200px 100px"}} 
             onContextMenu={openMenu}
           >
@@ -206,12 +206,14 @@ export default function VideoButton(props: any) {
             <div className='date'>{ video.date }</div>
             <div className='time'>{ video.time }</div>
             <div className={'resultText ' + resultClass } title={ MMR }>{ resultText }</div>
+
             { isMythicPlus ||
               <div>
                 <div className='encounter'>{ video.encounter }</div>
                 <div className='zone'>{ video.zoneName }</div>
               </div>
             }
+
             { isMythicPlus &&
               <div>
                 <div className='encounter'>
@@ -222,11 +224,13 @@ export default function VideoButton(props: any) {
                 </div>
               </div>
             }
+
             { isRaid && videoInstanceDifficulty &&
               <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId }>
                 { videoInstanceDifficulty.difficulty }
               </div>
             }
+
             { isBG ||
               <div>
                 <div className='specIcon'>
@@ -235,6 +239,7 @@ export default function VideoButton(props: any) {
                 <div className={ playerClass + ' name'}>{ playerName }</div>
               </div>
             }
+
           </div> 
         }
         key={ videoPath }

@@ -8,6 +8,7 @@ import Battleground from "../activitys/Battleground";
 import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import { Flavour } from "../main/types";
+import { ambiguate, isUnitSelf } from "../main/logutils";
 
 /**
  * RetailLogHandler class.
@@ -291,11 +292,11 @@ export default class RetailLogHandler extends LogHandler {
 
         const srcNameRealm = line.arg(2)
         const srcFlags = parseInt(line.arg(3), 16);
-        const [srcName, srcRealm] = this.ambiguate(srcNameRealm);
+        const [srcName, srcRealm] = ambiguate(srcNameRealm);
         srcCombatant.name = srcName;
         srcCombatant.realm = srcRealm;
 
-        if (this.isUnitSelf(srcFlags)) {
+        if (isUnitSelf(srcFlags)) {
             this.activity.playerGUID = srcGUID;
         }
     }

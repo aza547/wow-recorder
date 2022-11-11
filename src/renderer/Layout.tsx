@@ -225,8 +225,6 @@ export default function Layout() {
     const category = categories[tabIndex];
     const key = "tab" + tabIndex;
 
-    console.log("gen tab", tabIndex, category);
-
     return (
       <Tab key={ key } label={ category } {...a11yProps(tabIndex)} sx = {{ ...categoryTabSx }}/>
     )
