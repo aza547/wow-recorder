@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
-import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId, dungeonTimersByMapId }  from 'main/constants';
-import { TimelineSegmentType, ChallengeModeDungeon } from 'main/keystone';
-import { getFormattedDuration, getVideoResult } from './rendererutils';
+import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId }  from 'main/constants';
+import { ChallengeModeTimelineSegment, TimelineSegmentType } from 'main/keystone';
+import { getFormattedDuration } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
@@ -23,10 +23,9 @@ export default function VideoButton(props: any) {
   const video = state.videoState[category][videoIndex];
   const videoPath = video.fullPath;
 
-  const isGoodResult = getVideoResult(video);
   // Need to not be const as it will be modified later if the video is of a
   // Mythic Keystone dungeon.
-  let resultText = getVideoResultText(category, isGoodResult);
+  let resultText = getVideoResultText(category, video.result);
   const MMR = video.teamMMR ? ("MMR: " + video.teamMMR) : undefined;
 
   const isProtected = video.protected;
@@ -34,22 +33,29 @@ export default function VideoButton(props: any) {
   const duration = video.duration;
   const formattedDuration = getFormattedDuration(duration);
 
-  const resultClass: string = isGoodResult ? "goodResult" : "badResult";
+  const resultClass: string = video.result ? "goodResult" : "badResult";
   
   const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorElement);
 
-  const playerName = video.playerName;
-  const specIcon: string = Images.spec[video.playerSpecID] || Images.spec[0];
-  const playerClass = specializationById[video.playerSpecID]?.class ?? '';
-  
-  const dateDisplay: string = video.isFromToday ? video.time : video.date;
-  const dateHoverText = video.date + " " + video.time;
+  let playerName;
+  let specIcon;
+  let playerClass;
 
+  if (video.player) {
+    playerName = video.player._name;
+    specIcon = Images.spec[video.player._specID] || Images.spec[0];
+    playerClass = specializationById[video.player._specID]?.class ?? "";
+  } else {
+    playerName = "";
+    specIcon = Images.spec[0];
+    playerClass = "";
+  }
+  
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
   const isBG = category === VideoCategory.Battlegrounds;
-  const isMythicPlus = (category == VideoCategory.MythicPlus && video.challengeMode !== undefined);
+  const isMythicPlus = (category === VideoCategory.MythicPlus);
   const isRaid = category === VideoCategory.Raids;
   const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
 
@@ -61,7 +67,7 @@ export default function VideoButton(props: any) {
       break;
 
     case VideoCategory.MythicPlus:
-      buttonImage = Images.dungeon[video.challengeMode.zoneId];
+      buttonImage = Images.dungeon[video.zoneID];
       break;
 
     case VideoCategory.Battlegrounds:
@@ -122,8 +128,8 @@ export default function VideoButton(props: any) {
    * Generate the JSX for the timeline segments that are used in the context menu on
    * the VideoButton.
    */
-  const renderKeystoneTimelineSegments = (challengeMode: any): any[] => {
-    const timelineSegmentsMenuItems = challengeMode.timelineSegments.map((segment: any) => {
+  const renderKeystoneTimelineSegments = (timeline: ChallengeModeTimelineSegment[]): any[] => {
+    const timelineSegmentsMenuItems = timeline.map((segment: any) => {
       let timelineSegmentMenu;
       let segmentDurationText;
       const result = Boolean(segment.result);
@@ -168,58 +174,63 @@ export default function VideoButton(props: any) {
 
   const buttonClasses = ['videoButton'];
   let keystoneTimelineSegments = [];
-
+  
   if (isMythicPlus) {
     buttonClasses.push('dungeon')
 
-    // If the video metadata doesn't contain its own alloted time array, we'll use whichever
-    // is current in the constants.
-    const keystoneAllottedTime = video.challengeMode.allottedTime ?? dungeonTimersByMapId[video.challengeMode.mapId];
-
-    // Calculate the upgrade levels of the keystone
-    const keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(
-      keystoneAllottedTime,
-      video.challengeMode.duration
-    );
-
-    if (isGoodResult) {
-      resultText = '+' + keystoneUpgradeLevel;
+    if (video.result) {
+      resultText = '+' + video.upgradeLevel;
     }
 
-    keystoneTimelineSegments = renderKeystoneTimelineSegments(video.challengeMode);
+    const timeline = video.timeline;
+
+    if (timeline) {
+      keystoneTimelineSegments = renderKeystoneTimelineSegments(video.timeline);
+    }
   }
 
   return (
     <React.Fragment>
       <Tab 
         label={
-          <div id={ videoPath } className={ buttonClasses.join(' ') } style={{ backgroundImage: `url(${buttonImage})`}} onContextMenu={openMenu}>
+          <div 
+            id={ videoPath } 
+            className={ buttonClasses.join(' ') } 
+            // I think this is a performance bottleneck when switching categorties
+            // @@@
+            style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "200px 100px"}} 
+            onContextMenu={openMenu}
+          >
             <div className="videoButtonDarken"></div>
             <div className='duration'>{ formattedDuration }</div>
             <div className='date'>{ video.date }</div>
             <div className='time'>{ video.time }</div>
             <div className={'resultText ' + resultClass } title={ MMR }>{ resultText }</div>
+
             { isMythicPlus ||
               <div>
                 <div className='encounter'>{ video.encounter }</div>
-                <div className='zone'>{ video.zoneShortName }</div>
+                <div className='zone'>{ video.zoneName }</div>
               </div>
             }
+
             { isMythicPlus &&
               <div>
                 <div className='encounter'>
-                  { dungeonsByMapId[video.challengeMode.mapId] }
+                  { dungeonsByMapId[video.mapID] } 
                 </div>
                 <div className='instance-difficulty difficulty-mythic'>
-                  +{ video.challengeMode.level }
+                  +{ video.level }
                 </div>
               </div>
             }
+
             { isRaid && videoInstanceDifficulty &&
-              <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId}>
+              <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId }>
                 { videoInstanceDifficulty.difficulty }
               </div>
             }
+
             { isBG ||
               <div>
                 <div className='specIcon'>
@@ -228,6 +239,7 @@ export default function VideoButton(props: any) {
                 <div className={ playerClass + ' name'}>{ playerName }</div>
               </div>
             }
+
           </div> 
         }
         key={ videoPath }

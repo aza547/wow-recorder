@@ -4,7 +4,7 @@ import os
 
 dirname = os.path.dirname(__file__)
 LOG_PATH = "D:/World of Warcraft/_retail_/Logs"
-SAMPLE_LOG = os.path.join(dirname, "../example-logs/brawlsoloshuffle.txt")
+SAMPLE_LOG = os.path.join(dirname, "../example-logs/retail/skirmish.txt")
 
 # Open a combat log ready for writing.
 randomNumber = random.random()

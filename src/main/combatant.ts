@@ -3,19 +3,28 @@
  */
 class Combatant {
     private _GUID: string;
-    private _teamID: number;
-    private _specID: number;
+    private _teamID?: number;
+    private _specID?: number;
     private _name?: string;
     private _realm?: string;
 
     /**
      * Constructs a new Combatant.
+     * 
+     * @param GUID the GUID of the combatant.
      * @param teamID the team the combatant belongs to.
+     * @param specID the specID of the combatant
      */
-    constructor(GUID: string, teamID: number, specID: number) {
+    constructor(GUID: string, teamID?: number, specID?: number) {
         this._GUID = GUID;
-        this._teamID = teamID;
-        this._specID = specID;
+
+        if (teamID !== undefined) {
+            this._teamID = teamID;
+        }
+
+        if (specID !== undefined) {
+            this._specID = specID; 
+        }
     }
 
     /**
@@ -69,6 +78,13 @@ class Combatant {
      */
     set realm(value) {
         this._realm = value;
+    }
+
+    /**
+     * Sets the teamID.
+     */
+    set teamID(value) {
+        this._teamID = value;
     }
 }
 

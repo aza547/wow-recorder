@@ -1,9 +1,5 @@
 const getVideoResult = (video: any): boolean => {
-    if (video.challengeMode !== undefined) {
-        return Boolean(video.challengeMode.timed)
-    }
-
-    return video.result
+    return video.result;
 }
 
 /**

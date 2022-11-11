@@ -4,17 +4,23 @@ import os
 dirname = os.path.dirname(__file__)
 
 tests = {
-    "2v2": os.path.join(dirname, "./2v2.py"),
-    "2v2-afk-out": os.path.join(dirname, "./2v2-afkout.py"),
-    "3v3": os.path.join(dirname, "./3v3.py"),
-    "Skirmish": os.path.join(dirname, "./skirmish.py"),
-    "Brawl Solo Shuffle": os.path.join(dirname, "./brawlsoloshuffle.py"),
-    "Rated Solo Shuffle": os.path.join(dirname, "./ratedsoloshuffle.py"),
-    "Mythic+": os.path.join(dirname, "./dungeon.py"),
-    "Raid": os.path.join(dirname, "./raid.py"),
-    "Raid Reset": os.path.join(dirname, "./raid-reset.py"),
-    "Rated BG": os.path.join(dirname, "./rbg.py"),
-    "Zone Changes": os.path.join(dirname, "./zonechange.py")
+    # Retail Tests
+    "Retail: Rated 2v2":          os.path.join(dirname, "./retail_rated_2v2.py"),
+    "Retail: Rated 2v2 AFK Out":  os.path.join(dirname, "./retail_rated_2v2_afk_out.py"),
+    "Retail: Rated 3v3":          os.path.join(dirname, "./retail_rated_3v3.py"),
+    "Retail: Skirmish":           os.path.join(dirname, "./retail_skirmish.py"),
+    "Retail: Brawl Solo Shuffle": os.path.join(dirname, "./retail_brawl_solo_shuffle.py"),
+    "Retail: Rated Solo Shuffle": os.path.join(dirname, "./retail_rated_solo_shuffle.py"),
+    "Retail: Mythic+":            os.path.join(dirname, "./retail_mythic_plus.py"),
+    "Retail: Raid":               os.path.join(dirname, "./retail_raid.py"),
+    "Retail: Raid Reset":         os.path.join(dirname, "./retail_raid_reset.py"),
+    "Retail: Rated BG":           os.path.join(dirname, "./retail_rated_battleground.py"),
+    "Retail: Zone Changes":       os.path.join(dirname, "./retail_zone_changes.py"),
+
+    # Classic Tests
+    "Classic: Raid":      os.path.join(dirname, "./classic_raid.py"),
+    "Classic: Rated 2v2": os.path.join(dirname, "./classic_rated_2v2.py"),
+    "Classic: Rated 5v5": os.path.join(dirname, "./classic_rated_5v5.py"),
 }
 
 for test in tests:

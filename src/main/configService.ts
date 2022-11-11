@@ -5,7 +5,6 @@ import { EventEmitter } from "stream";
 import { CombatLogParser } from "./combatLogParser";
 import { configSchema, ConfigurationSchema } from "./configSchema";
 import fs from 'fs';
-import { inspectObject } from "./helpers";
 
 export default class ConfigService extends EventEmitter {
     /**

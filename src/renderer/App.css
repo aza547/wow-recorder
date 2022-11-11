@@ -135,7 +135,7 @@ h2:not(.MuiDialogTitle-root) {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   width: 145px;
-  padding-top: 1rem;
+  padding-top: .5rem;
   padding-left: 0.25rem;
   justify-items: center;
   gap: .125rem 0rem;
@@ -315,7 +315,7 @@ h2:not(.MuiDialogTitle-root) {
 
 #saving-status{
   position:fixed;
-  bottom: 200px;
+  bottom: 225px;
   left: 50px;
   height: 50px;
   width: 50px;
@@ -325,7 +325,7 @@ h2:not(.MuiDialogTitle-root) {
 
 #small-rec-status{
   position:fixed;
-  bottom: 125px;
+  bottom: 150px;
   left: 55px;
   height: 50px;
   width: 50px;
@@ -335,7 +335,7 @@ h2:not(.MuiDialogTitle-root) {
 
 #big-rec-status{
   position:fixed;
-  bottom: 100px;
+  bottom: 125px;
   left: 40px;
   height: 80px;
   width: 80px;
@@ -417,7 +417,7 @@ h2:not(.MuiDialogTitle-root) {
   position:fixed;
   text-align: center;
   width: 130px;
-  top: 300px;
+  top: 325px;
   left: 9px;
   border-style: solid;
   border-color: #bb4220;

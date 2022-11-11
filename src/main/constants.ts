@@ -4,6 +4,7 @@ import { NumberKeyToStringValueMapType, RaidInstanceType } from "./types";
 enum VideoCategory {
   TwoVTwo = '2v2',
   ThreeVThree = '3v3',
+  FiveVFive = '5v5',
   Skirmish = 'Skirmish',
   SoloShuffle = 'Solo Shuffle',
   MythicPlus = 'Mythic+',
@@ -14,6 +15,7 @@ enum VideoCategory {
 const categories: VideoCategory[] = [
   VideoCategory.TwoVTwo,
   VideoCategory.ThreeVThree,
+  VideoCategory.FiveVFive,
   VideoCategory.Skirmish,
   VideoCategory.SoloShuffle,
   VideoCategory.MythicPlus,
@@ -39,19 +41,23 @@ interface ICategoryRecordingSettings {
 const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSettings } = {
   [VideoCategory.TwoVTwo]: {
     configKey: 'recordTwoVTwo',
-    videoOverrun: 4,
+    videoOverrun: 3,
   },
   [VideoCategory.ThreeVThree]: {
     configKey: 'recordThreeVThree',
-    videoOverrun: 4,
+    videoOverrun: 3,
+  },
+  [VideoCategory.FiveVFive]: {
+    configKey: 'recordFiveVFive',
+    videoOverrun: 3,
   },
   [VideoCategory.Skirmish]: {
     configKey: 'recordSkirmish',
-    videoOverrun: 4,
+    videoOverrun: 3,
   },
   [VideoCategory.SoloShuffle]: {
     configKey: 'recordSoloShuffle',
-    videoOverrun: 4,
+    videoOverrun: 3,
   },
   [VideoCategory.MythicPlus]:{
     configKey: 'recordDungeons',
@@ -86,9 +92,9 @@ const months: string[] = [
 ];
 
 /**
- * Battlegrounds by ID. 
+ * Retail battlegrounds by ID. 
  */
- const battlegrounds: NumberKeyToStringValueMapType = {
+ const retailBattlegrounds: NumberKeyToStringValueMapType = {
   30:	  "Alterac Valley",
   2107: "Arathi Basin",
   1681: "Arathi Basin",
@@ -99,7 +105,6 @@ const months: string[] = [
   628:  "Isle of Conquest",
   1803: "Seething Shore",
   727:  "Silvershard Mines",
-  //607:  "Strand of the Ancients",
   998:  "Temple of Kotmogu",
   761:  "The Battle for Gilneas",
   726:  "Twin Peaks",
@@ -108,23 +113,44 @@ const months: string[] = [
 }
 
 /**
- * Arenas by ID. 
+ * Classic battlegrounds by ID. This is probably totally wrong. 
  */
- const arenas: NumberKeyToStringValueMapType = {
+ const classicBattlegrounds: NumberKeyToStringValueMapType = {
+  30:	 "Alterac Valley",
+  529: "Arathi Basin",
+  566: "Eye of the Storm",
+  607: "Strand of the Ancients",
+  489: "Warsong Gulch",
+}
+
+/**
+ * Retail arenas by ID. 
+ */
+ const retailArenas: NumberKeyToStringValueMapType = {
   1672: "Blade's Edge",
-  617: "Dalaran Sewers",
+  617:  "Dalaran Sewers",
   1505: "Nagrand",
-  572: "Ruins of Lordaeron",
-  2167: "The Robodrome",
+  572:  "Ruins of Lordaeron",
+  2167: "Robodrome",
   1134: "Tiger's Peak",
-  980: "Tol'Viron",
-  1504: "Black Rook Hold",
+  980:  "Tol'viron",
+  1504: "Black Rook",
   2373: "Empyrean Domain",
   1552: "Ashamane's Fall",
   1911: "Mugambala",
   1825: "Hook Point",
   2509: "Maldraxxus",
   2547: "Enigma Crucible",
+}
+
+/**
+ * Classic arenas by ID. 
+ */
+ const classicArenas: NumberKeyToStringValueMapType = {
+  572: "Ruins of Lordaeron",
+  559: "Nagrand",
+  617: "Dalaran",
+  562: "Blade's Edge",
 }
 
 /**
@@ -474,8 +500,10 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
-  ...battlegrounds,
-  ...arenas,
+  ...retailBattlegrounds,
+  ...classicBattlegrounds,
+  ...retailArenas,
+  ...classicArenas,
   ...dungeonsByZoneId,
 };
 
@@ -512,9 +540,11 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
  * Zones by ID. 
  */
 const zones: NumberKeyToStringValueMapType = {
-    ...arenas,
+    ...retailArenas,
+    ...classicArenas,
     ...raidEncountersById,
-    ...battlegrounds,
+    ...retailBattlegrounds,
+    ...classicBattlegrounds,
     ...dungeonsByZoneId,
 }
 
@@ -565,7 +595,7 @@ const videoTabsSx = {
   bgcolor: '#272e48' ,
   textColor: 'secondary',
   overflow: 'visible',
-  borderTop: '2px solid',
+  borderTop: '1px solid',
 };
 
 const categoryTabSx = {
@@ -589,7 +619,7 @@ const categoryTabsSx = {
 const videoButtonSx = {
   padding: '0px', 
   margin: 0.5,
-  border: '2px solid black', 
+  border: '1px solid black', 
   bgcolor: '#272e48', 
   color: 'white', 
   minHeight: '1px', 
@@ -601,7 +631,7 @@ const videoButtonSx = {
 
 const videoScrollButtonSx = {
   bgcolor: '#272e48',
-  border: '2px solid black',
+  border: '1px solid black',
   borderRadius: 2,
   color: 'white',
   margin: 0.5,
@@ -679,9 +709,11 @@ export {
     videoButtonSx,
     videoScrollButtonSx,
     zones,
-    arenas,
+    retailArenas,
+    classicArenas,
     raidEncountersById,
-    battlegrounds,
+    retailBattlegrounds,
+    classicBattlegrounds,
     dungeonsByMapId,
     dungeonsByZoneId,
     instanceNamesByZoneId,

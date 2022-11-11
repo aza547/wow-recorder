@@ -26,6 +26,13 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
     1. Commit and push all changes.
 	1. Tag a release on GitHub and attach the executable (e.g. `./release/build/WarcraftRecorder Setup 1.0.2.exe`).
 
+## Tests
+1. Run `npm test` to run the UTs. 
+    1. These are `jest` based unit tests. 
+2. To run end-to-end tests (requires some hardcoded path updates):
+    * All tests: `python .\resources\test-scripts\all_tests.py`.
+    * Individual test: `python .\resources\test-scripts\2v2.py`.
+
 ## Debugging Mode
 You can use VSCode's JavaScript Debug terminal to step through the code, add breakpoints, view variables and the other IDE features.  
 

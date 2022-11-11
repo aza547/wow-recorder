@@ -2,7 +2,7 @@
 import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, dungeonsByMapId }  from './constants';
-import { Metadata }  from './logutils';
+import { Metadata }  from './types';
 const byteSize = require('byte-size')
 const chalk = require('chalk');
 
@@ -20,7 +20,6 @@ import glob from 'glob';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { Display, screen } from 'electron';
-import { getVideoZone, getVideoZoneShortName } from './helpers';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -102,8 +101,6 @@ const loadAllVideos = async (storageDir: any): Promise<any> => {
     return {
         fullPath: video.name,
         ...metadata,
-        zone: getVideoZone(metadata),
-        zoneShortName: getVideoZoneShortName(metadata),
         encounter: getVideoEncounter(metadata),
         date: getVideoDate(videoDate),
         isFromToday: (today.toDateString() === videoDate.toDateString()),
@@ -140,11 +137,10 @@ const getMetadataForVideo = (video: string) => {
  const writeMetadataFile = async (videoPath: string, metadata: any) => {
     const metadataFileName = getMetadataFileForVideo(videoPath);
     const jsonString = JSON.stringify(metadata, null, 2);
-
+    
     return await fspromise.writeFile(
         metadataFileName,
-        jsonString,
-        {
+        jsonString, {
             encoding: 'utf-8',
         }
     );
@@ -185,7 +181,7 @@ const getVideoTime = (date: Date) => {
  */
 const getVideoEncounter = (metadata: Metadata) => {
     if (metadata.challengeMode !== undefined) {
-        return dungeonsByMapId[metadata.challengeMode.mapId];
+        return dungeonsByMapId[metadata.challengeMode.mapID];
     }
 
     if (metadata.encounterID) {
@@ -344,6 +340,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
  */
  const toggleVideoProtected = (videoPath: string) => {
     const metadata = getMetadataForVideo(videoPath);
+
     if (!metadata) {
         console.error(`[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`);
         return;

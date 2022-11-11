@@ -317,11 +317,11 @@ export default function Layout() {
     return videoPanel(tabIndex);
   };
 
-  const tabNumbers = [...Array(7).keys()];
+  const tabNumbers = [...Array(8).keys()];
   const categoryIndex = state.categoryIndex;
 
   return (
-    <Box sx={{ width: '250px', height: '210px', display: 'flex' }}>
+    <Box sx={{ width: '250px', height: '240px', display: 'flex' }}>
       <Tabs
         orientation="vertical"
         variant="standard"

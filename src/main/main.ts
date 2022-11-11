@@ -32,9 +32,7 @@ log.transports.file.resolvePath = () => logPath;
 Object.assign(console, log.functions);
 console.log("[Main] App starting: version", app.getVersion());
 
-
-
-import { watchLogs, pollWowProcess, runRecordingTest, forceStopRecording } from './logutils';
+import { pollWowProcess, runRecordingTest, makeRetailHandler, makeClassicHandler } from './logutils';
 const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
@@ -42,6 +40,11 @@ import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
 import { CombatLogParser } from './combatLogParser';
 import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
+import RetailLogHandler from 'log_handling/RetailLogHandler';
+import ClassicLogHandler from 'log_handling/ClassicLogHandler';
+
+let retailHandler: RetailLogHandler;
+let classicHandler: ClassicLogHandler;
 
 let recorder: Recorder;
 
@@ -98,11 +101,7 @@ cfg.on('change', (key: string, value: any) => {
   }
 });
 
-// Collect the combat log paths
-let baseLogPaths: string[] = [
-  cfg.getPath('retailLogPath'),
-  cfg.getPath('classicLogPath'),
-].filter(v => v); // Remove any empty
+
 
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
@@ -225,9 +224,20 @@ const createWindow = async () => {
 
     if (!configOK) return;
 
-    makeRecorder(recorderOptions)
+    makeRecorder(recorderOptions);
+
+    const retailLogPath = cfg.getPath('retailLogPath');
+    const classicLogPath = cfg.getPath('classicLogPath');
+
+    if (retailLogPath) {
+      retailHandler = makeRetailHandler(recorder, retailLogPath);
+    }
+
+    if (classicLogPath) {
+      classicHandler = makeClassicHandler(recorder, classicLogPath);
+    }
+    
     pollWowProcess();
-    watchLogs(baseLogPaths);
     checkAppUpdate();
   });
 
@@ -406,12 +416,16 @@ ipcMain.on('settingsWindow', (event, args) => {
       recorderOptions = loadRecorderOptions(cfg);
       makeRecorder(recorderOptions);
 
-      baseLogPaths = [
-        cfg.getPath('retailLogPath'),
-        cfg.getPath('classicLogPath'),
-      ].filter(v => v); // Remove any empty
-      
-      watchLogs(baseLogPaths);
+      const retailLogPath = cfg.getPath('retailLogPath');
+      const classicLogPath = cfg.getPath('classicLogPath');
+
+      if (retailLogPath) {
+        retailHandler = makeRetailHandler(recorder, retailLogPath);
+      }
+
+      if (classicLogPath) {
+        classicHandler = makeClassicHandler(recorder, classicLogPath);
+      }
 
       pollWowProcess();
     })
@@ -556,19 +570,30 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
 ipcMain.on('test', (_event, args) => {
   if (cfg.validate()) { 
     console.info("[Main] Config is good, running test!");
-    runRecordingTest(Boolean(args[0]));
+    runRecordingTest(retailHandler, Boolean(args[0]));
   } else {
     console.info("[Main] Config is bad, don't run test");
   }
 });
 
 /**
- * Recorder IPC functions
+ * Handle when a user clicks the stop recording button. 
  */
 ipcMain.on('recorder', (_event, args) => {
   if (args[0] == 'stop') {
     console.log('[Main] Force stopping recording due to user request.')
-    forceStopRecording();
+
+    if (retailHandler.activity) {
+      retailHandler.forceEndActivity();
+      return;
+    }
+
+    if (classicHandler.activity) {
+      classicHandler.forceEndActivity();
+      return;
+    }
+
+    if (recorder) recorder.forceStop();
   }
 });
 

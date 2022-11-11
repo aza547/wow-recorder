@@ -1,12 +1,10 @@
-import { Metadata } from './logutils';
 import { writeMetadataFile, runSizeMonitor,  deleteVideo, addColor, getSortedVideos, fixPathWhenPackaged, tryUnlinkSync } from './util';
 import { mainWindow }  from './main';
-import { RecStatus, SaveStatus, VideoQueueItem } from './types';
-import { getDungeonByMapId, getEncounterNameById, getVideoResultText, getInstanceNameByZoneId, getRaidNameByEncounterId } from './helpers';
+import { Metadata, RecStatus, SaveStatus, VideoQueueItem } from './types';
 import { VideoCategory } from './constants';
 import fs from 'fs';
-import { ChallengeModeDungeon } from './keystone';
 import path from 'path';
+import Activity from '../activitys/Activity';
 
 const atomicQueue = require('atomic-queue');
 const obsRecorder = require('./obsRecorder');
@@ -74,8 +72,13 @@ type RecorderOptionsType = {
      * Process an item from the video queue.
      */
     private async _processVideoQueueItem(data: VideoQueueItem, done: Function): Promise<void> {
-        const outputFilename = this.getFinalVideoFilename(data.metadata);
-        const videoPath = await this._cutVideo(data.bufferFile, this._options.storageDir, outputFilename, data.metadata.duration);
+        const duration = data.metadata.duration;
+        
+        const videoPath = await this._cutVideo(data.bufferFile, 
+                                               this._options.storageDir, 
+                                               data.filename, 
+                                               duration);
+
         await writeMetadataFile(videoPath, data.metadata);
 
         // Delete the original buffer video
@@ -253,10 +256,9 @@ type RecorderOptionsType = {
      * @param {number} overrun how long to continue recording after stop is called
      * @param {boolean} closedWow if wow has just been closed
      */
-    stop = (metadata: Metadata, overrun: number = 0, closedWow: boolean = false) => {
+    stop = (activity: Activity, overrun: number = 0, closedWow: boolean = false) => {
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
         console.info("[Recorder] Overrun:", overrun);
-        console.info("[Recorder]" , JSON.stringify(metadata, null, 2));
 
         // Wait for a delay specificed by overrun. This lets us
         // capture the boss death animation/score screens.  
@@ -267,8 +269,15 @@ type RecorderOptionsType = {
             this._isRecording = false;
             this._isRecordingBuffer = false;
 
-            const isRaid = metadata.category == VideoCategory.Raids;
-            const isLongEnough = (metadata.duration - overrun) >= this._options.minEncounterDuration;
+            const isRaid = activity.category == VideoCategory.Raids;
+            const duration = activity.duration;
+
+            if (duration === null) {
+                console.log("Null duration");
+                return;
+            }
+
+            const isLongEnough = (duration - overrun) >= this._options.minEncounterDuration;
 
             if (isRaid && !isLongEnough) {
                 console.info("[Recorder] Raid encounter was too short, discarding");
@@ -276,7 +285,9 @@ type RecorderOptionsType = {
                 const bufferFile = obsRecorder.getObsLastRecording();
 
                 if (bufferFile) {
-                    this.queueVideo(bufferFile, metadata);
+                    this.queueVideo(bufferFile, 
+                                    activity.getMetadata(),
+                                    activity.getFileName());
                 } else {
                     console.error("[Recorder] Unable to get the last recording from OBS. Can't process video.");
                 }
@@ -298,17 +309,37 @@ type RecorderOptionsType = {
     }
 
     /**
+     * Force stop a recording, throwing it away entirely. 
+     */
+    forceStop = async () => {
+        if (!this._isRecording) return;
+        await obsRecorder.stop();
+        this._isRecording = false;
+        this._isRecordingBuffer = false;
+
+        // Refresh the GUI
+        if (mainWindow) mainWindow.webContents.send('refreshState');
+        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
+
+        // Restart the buffer recording ready for next game.
+        setTimeout(async () => {
+            this.startBuffer();
+        }, 5000)
+    }
+
+    /**
      * Queue the video for processing.
      * 
      * @param {Metadata} metadata the details of the recording
      */
-    queueVideo = async (bufferFile: string, metadata: Metadata): Promise<void> => {
+    queueVideo = async (bufferFile: string, metadata: Metadata, filename: string): Promise<void> => {
         // It's a bit hacky that we async wait for 2 seconds for OBS to
         // finish up with the video file. Maybe this can be done better.
         setTimeout(async () => {
             const queueItem: VideoQueueItem = {
                 bufferFile,
                 metadata,
+                filename,
             };
 
             console.log("[Recorder] Queuing video for processing", queueItem);
@@ -367,60 +398,6 @@ type RecorderOptionsType = {
 
         obsRecorder.reconfigure(this._options);
         if (mainWindow) mainWindow.webContents.send('refreshState');
-    }
-
-    /**
-     * Generate a filename for the final video of a recording according
-     * to its category, if possible.
-     *
-     * The final filename should contain adequate information to quickly be able
-     * to identify the video files on the filesystem and be able to tell what it
-     * was about and the result of it.
-     */
-    getFinalVideoFilename (metadata: Metadata): string {
-        let outputFilename = '';
-        const resultText = getVideoResultText(metadata.category, metadata.result);
-
-        switch (metadata.category) {
-            case VideoCategory.Raids:
-                const encounterName = getEncounterNameById(metadata.encounterID);
-                const raidName = getRaidNameByEncounterId(metadata.encounterID);
-                outputFilename = `${raidName}, ${encounterName} (${resultText})`;
-            break;
-
-            case VideoCategory.MythicPlus:
-                outputFilename = this.getFinalVideoFilenameForCM(metadata.challengeMode);
-            break;
-
-            default:
-                const zoneName = getInstanceNameByZoneId(metadata.zoneID);
-                outputFilename = zoneName;
-                if (resultText) {
-                    outputFilename += ' (' + resultText + ')'
-                }
-            break;
-        }
-
-        if (!outputFilename) {
-            outputFilename = 'Unknown Content';
-        }
-
-        return metadata.category + ' ' + outputFilename;
-    }
-
-    /**
-     * Construct a video filename for a Mythic Keystone dungeon with information
-     * about level, keystone upgrade levels and what have we.
-     */
-    getFinalVideoFilenameForCM(cm?: ChallengeModeDungeon): string {
-        if (!cm) {
-            return '';
-        }
-
-        const keystoneUpgradeLevel = ChallengeModeDungeon.calculateKeystoneUpgradeLevel(cm.allottedTime, cm.duration);;
-        const resultText = cm?.timed ? '+' + keystoneUpgradeLevel : 'Depleted';
-
-        return `${getDungeonByMapId(cm.mapId)} +${cm.level} (${resultText})`;
     }
 
     /**

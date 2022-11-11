@@ -1,6 +1,16 @@
 import { Size } from "electron";
-import { WoWProcessResultKey } from "./constants";
-import { Metadata } from "./logutils";
+import { VideoCategory, WoWProcessResultKey } from "./constants";
+import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
+import { ChallengeModeTimelineSegment } from "./keystone";
+import { Combatant } from "./combatant";
+
+/**
+ * Application recording status.
+ */
+ enum Flavour {
+    Retail = "Retail",
+    Classic = "Classic",
+};
 
 /**
  * Application recording status.
@@ -63,6 +73,7 @@ type PlayerDeathType = {
   name: string,
   specId: number,
   timestamp: number,
+  friendly: boolean,
 };
 
 /**
@@ -131,6 +142,7 @@ interface IWoWProcessResult {
 type VideoQueueItem = {
     bufferFile: string,
     metadata: Metadata,
+    filename: string,
 };
 
 interface IEventTarget {
@@ -158,6 +170,30 @@ interface ISettingsPanelProps {
     onChange: (event: IOurChangeEvent) => void,
 };
 
+/**
+ * Metadata type. 
+ */
+ type Metadata = {
+    category: VideoCategory;
+    duration: number;
+    result: boolean;
+    flavour: WoWProcessResultKey;
+    zoneID?: number;
+    zoneName?: string;
+    encounterID?: number;
+    difficultyID?: number;
+    difficulty?: string;
+    player?: Combatant;
+    teamMMR?: number;
+    challengeMode?: ChallengeModeDungeon;
+    deaths?: PlayerDeathType[];
+    upgradeLevel?: number;
+    mapID?: number;
+    timeline?: ChallengeModeTimelineSegment[];
+    level?: number;
+    encounterName?: string;
+}
+
 export {
     RecStatus,
     SaveStatus,
@@ -174,4 +210,6 @@ export {
     VideoQueueItem,
     FakeChangeEvent,
     ISettingsPanelProps,
+    Metadata,
+    Flavour,
 }

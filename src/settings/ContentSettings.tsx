@@ -40,6 +40,7 @@ export default function ContentSettings(props: ISettingsPanelProps) {
       <FormGroup sx={formGroupStyle}>
         <FormControlLabel control={getCheckBox("recordTwoVTwo")} label="2v2" style={formControlLabelStyle} />
         <FormControlLabel control={getCheckBox("recordThreeVThree")} label="3v3" style={formControlLabelStyle} />
+        <FormControlLabel control={getCheckBox("recordFiveVFive")} label="5v5" style={formControlLabelStyle} />
         <FormControlLabel control={getCheckBox("recordSkirmish")} label="Skirmish" style={formControlLabelStyle} />
         <FormControlLabel control={getCheckBox("recordSoloShuffle")} label="Solo Shuffle" style={formControlLabelStyle} />
         <FormControlLabel control={getCheckBox("recordBattlegrounds")} label="Battlegrounds" style={formControlLabelStyle} />

@@ -30,6 +30,7 @@ const configValues = {
   recordDungeons:       getConfigValue<boolean>('recordDungeons'),
   recordTwoVTwo:        getConfigValue<boolean>('recordTwoVTwo'),
   recordThreeVThree:    getConfigValue<boolean>('recordThreeVThree'),
+  recordFiveVFive:      getConfigValue<boolean>('recordFiveVFive'),
   recordSkirmish:       getConfigValue<boolean>('recordSkirmish'),
   recordSoloShuffle:    getConfigValue<boolean>('recordSoloShuffle'),
   recordBattlegrounds:  getConfigValue<boolean>('recordBattlegrounds'),
