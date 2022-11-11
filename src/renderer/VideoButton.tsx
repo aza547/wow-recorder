@@ -26,7 +26,6 @@ export default function VideoButton(props: any) {
   // Need to not be const as it will be modified later if the video is of a
   // Mythic Keystone dungeon.
   let resultText = getVideoResultText(category, video.result);
-  const MMR = video.teamMMR ? ("MMR: " + video.teamMMR) : undefined;
 
   const isProtected = video.protected;
 
@@ -207,11 +206,11 @@ export default function VideoButton(props: any) {
             <div className='duration'>{ formattedDuration }</div>
             <div className='date'>{ video.date }</div>
             <div className='time'>{ video.time }</div>
-            <div className={'resultText ' + resultClass } title={ MMR }>{ resultText }</div>
+            <div className={'result ' + resultClass }>{ resultText }</div>
 
             { isMythicPlus ||
               <div>
-                <div className='encounter'>{ video.encounter }</div>
+                <div className='encounter'>{ video.encounter.slice(0, 13) }</div>
                 <div className='zone'>{ video.zoneName }</div>
               </div>
             }
@@ -219,7 +218,7 @@ export default function VideoButton(props: any) {
             { isMythicPlus &&
               <div>
                 <div className='encounter'>
-                  { dungeonsByMapId[video.mapID] } 
+                  { dungeonsByMapId[video.mapID]?.slice(0, 13) } 
                 </div>
                 <div className='instance-difficulty difficulty-mythic'>
                   +{ video.level }
@@ -228,7 +227,7 @@ export default function VideoButton(props: any) {
             }
 
             { isRaid && videoInstanceDifficulty &&
-              <div className={ difficultyClass + ' difficulty-' + videoInstanceDifficulty.difficultyId }>
+              <div className={ difficultyClass + ' difficulty-' + videoInstanceDifficulty.difficultyID }>
                 { videoInstanceDifficulty.difficulty }
               </div>
             }
