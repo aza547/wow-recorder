@@ -189,6 +189,8 @@ export default function VideoButton(props: any) {
     }
   }
 
+  const difficultyClass = isMythicPlus ? "instance-difficulty" : "difficulty";
+
   return (
     <React.Fragment>
       <Tab 
@@ -226,7 +228,7 @@ export default function VideoButton(props: any) {
             }
 
             { isRaid && videoInstanceDifficulty &&
-              <div className={'instance-difficulty difficulty-' + videoInstanceDifficulty.difficultyId }>
+              <div className={ difficultyClass + ' difficulty-' + videoInstanceDifficulty.difficultyId }>
                 { videoInstanceDifficulty.difficulty }
               </div>
             }
