@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- [Issue 50](https://github.com/aza547/wow-recorder/issues/50) - Classic arena and battleground support. 
+
 ### Changed
 - [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Improve main window styling.
 
