@@ -130,7 +130,7 @@ const months: string[] = [
   1672: "Blade's Edge",
   617:  "Dalaran Sewers",
   1505: "Nagrand",
-  572:  "Ruins",
+  572:  "Ruins of Lordaeron",
   2167: "Robodrome",
   1134: "Tiger's Peak",
   980:  "Tol'viron",
@@ -147,7 +147,7 @@ const months: string[] = [
  * Classic arenas by ID. 
  */
  const classicArenas: NumberKeyToStringValueMapType = {
-  572: "Ruins",
+  572: "Ruins of Lordaeron",
   559: "Nagrand",
   617: "Dalaran",
   562: "Blade's Edge",

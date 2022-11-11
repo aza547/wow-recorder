@@ -31,6 +31,7 @@ export default class Battleground extends Activity {
         return {
             category: this.category,
             zoneID: this.zoneID,
+            // @@@ zone name? 
             duration: this.duration,
             result: this.result,
             flavour: this.flavour,

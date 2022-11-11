@@ -34,6 +34,7 @@ export default class RetailLogHandler extends LogHandler {
 
     handleArenaStartLine(line: LogLine): void {
         if (this.activity) {
+            // @@@ we hit this in solo shuffle, probably should handle cleaner
             console.error("[RetailLogHandler] Another activity in progress, can't start arena"); 
             return;
         }
@@ -286,6 +287,7 @@ export default class RetailLogHandler extends LogHandler {
         const srcCombatant = this.activity.getCombatant(srcGUID);
 
         if (srcCombatant === undefined) {
+            // @@@ hit this lots in rbgs - should be adding combatants
             console.debug("[RetailLogHandler] Didn't find matching combatant");
             return
         };
