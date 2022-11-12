@@ -6,10 +6,10 @@ Nothing magic happens here, the application watches the combat log file for even
 
 Windows is currently the only supported operating system. 
 
-![](https://i.imgur.com/6GaC0bE.png)
+![](https://i.imgur.com/S0t9kHU.png)
 
 #  How to Use
-1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.2.10.2.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
+1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.3.0.0.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
 1. Launch the application and fill out the settings page.
 1. Enable combat logging.
     - Retail: Install and configure the SimpleCombatLogger addon ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
@@ -19,7 +19,7 @@ An example of valid config can be found below.
 
 <img src="https://i.imgur.com/MTiLlOh.png" width="300">
 
-If you are an arena player, I also strongly recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon.
+If you are a retail arena player, I also strongly recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon.
 
 # Testing It Works
 
