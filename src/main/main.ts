@@ -273,7 +273,7 @@ const createSettingsWindow = async () => {
   settingsWindow = new BrowserWindow({
     show: false,
     width: 650,
-    height: 500,
+    height: 525,
     resizable: (process.env.NODE_ENV === 'production') ? false : true,
     icon: getAssetPath('./icon/settings-icon.svg'),
     frame: false,

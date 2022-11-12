@@ -6,8 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+
 ### Changed
 ### Fixed
+- [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Make settings window taller to avoid clipping content settings.
 
 ## [3.0.0] - 2022-11-12
 
