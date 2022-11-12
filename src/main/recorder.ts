@@ -340,8 +340,7 @@ type RecorderOptionsType = {
     queueVideo = async (bufferFile: string, 
                         metadata: Metadata, 
                         filename: string,
-                        relativeStart: number) => 
-    {
+                        relativeStart: number) => {
         // It's a bit hacky that we async wait for 2 seconds for OBS to
         // finish up with the video file. Maybe this can be done better.
         setTimeout(async () => {
