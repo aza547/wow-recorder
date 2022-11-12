@@ -49,6 +49,7 @@ export default class ClassicLogHandler extends LogHandler {
         const srcGUID = line.arg(1);
         const srcFlags = parseInt(line.arg(3), 16);
         const srcNameRealm = line.arg(2);
+        // Maybe if BG call minimal processCombatant -- i.e. only care about self? 
         this.processCombatant(srcGUID, srcNameRealm, srcFlags);
     }
 
@@ -190,6 +191,10 @@ export default class ClassicLogHandler extends LogHandler {
         console.info("[ClassicLogHandler] Friendly deaths: ", friendsDead);
         console.info("[ClassicLogHandler] Enemy deaths: ", enemiesDead);
         const result = (friendsDead < enemiesDead) ? 1 : 0;
+
+        // TODO:
+        // AV win/loss if we see enemy boss die, i.e.:
+        // 11/12 13:36:53.746  UNIT_DIED,0000000000000000,nil,0x80000000,0x80000000,Creature-0-4468-30-7750-11946-00006F9FFC,"Drek'Thar",0xa48,0x0,0
 
         arenaMatch.endArena(endDate, result);
         this.clearDeathTimeout();

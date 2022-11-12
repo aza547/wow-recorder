@@ -285,6 +285,7 @@ export default class RetailLogHandler extends LogHandler {
         const srcGUID = line.arg(1);
         const srcFlags = parseInt(line.arg(3), 16);
         const srcNameRealm = line.arg(2);
+        // Maybe if BG call minimal processCombatant -- i.e. only care about self? 
         this.processCombatant(srcGUID, srcNameRealm, srcFlags);
     }
 
