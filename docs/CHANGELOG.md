@@ -5,15 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+### Changed
+### Fixed
+
+## [3.0.0] - 2022-11-12
 
 ### Added
 - [Issue 50](https://github.com/aza547/wow-recorder/issues/50) - Classic arena and battleground support. 
-- [NO-ISSUE] - Functionality to have a good estimate at if a battlegrounde as a win or loss.
+- [NO-ISSUE] - Functionality to have a good estimate at if a battleground is a win or loss.
 - [NO-ISSUE] - Spec detection for all categories that lacked it. 
-- [NO-ISSUE] - Initial evoker handling.
+- [NO-ISSUE] - Initial Evoker class handling in preperation for Dragonflight.
 
 ### Changed
-- [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Improve main window styling.
+- [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Improve main window styling. This probably breaks backwards compatbility with previously recorded videos. I'm making no effort to fix this. 
 
 ### Fixed
 - [Issue 221](https://github.com/aza547/wow-recorder/issues/221) - Fix a bug where on some setups only a subsection of the game was recorded. 
