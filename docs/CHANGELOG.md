@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [Issue 50](https://github.com/aza547/wow-recorder/issues/50) - Classic arena and battleground support. 
+- [NO-ISSUE] - Functionality to have a good estimate at if a battlegrounde as a win or loss.
+- [NO-ISSUE] - Spec detection for all categories that lacked it. 
+- [NO-ISSUE] - Initial evoker handling.
 
 ### Changed
 - [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Improve main window styling.

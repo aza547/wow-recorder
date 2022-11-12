@@ -204,7 +204,6 @@ export default class ClassicLogHandler extends LogHandler {
         const combatant = super.processCombatant(srcGUID, srcNameRealm, srcFlags);
 
         if (!combatant){
-            // Can't really hit this, keeping TS happy. 
             return;
         }
 
