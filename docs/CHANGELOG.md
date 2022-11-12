@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- [Issue 228](https://github.com/aza547/wow-recorder/issues/228) - Clip activities better by not assuming buffer time is end of video.
 
 ### Changed
 ### Fixed

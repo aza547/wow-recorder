@@ -41,6 +41,7 @@ type RecorderOptionsType = {
     private _bufferStartTimeoutID?: any;
     private _options: RecorderOptionsType;
     private _videoQueue;
+    private _recorderStartDate = new Date();
 
     /**
      * Constructs a new Recorder.
@@ -72,12 +73,13 @@ type RecorderOptionsType = {
      * Process an item from the video queue.
      */
     private async _processVideoQueueItem(data: VideoQueueItem, done: Function): Promise<void> {
-        const duration = data.metadata.duration;
+
         
         const videoPath = await this._cutVideo(data.bufferFile, 
                                                this._options.storageDir, 
                                                data.filename, 
-                                               duration);
+                                               data.relativeStart,
+                                               data.metadata.duration);
 
         await writeMetadataFile(videoPath, data.metadata);
 
@@ -168,8 +170,8 @@ type RecorderOptionsType = {
         console.log(addColor("[Recorder] Start recording buffer", "cyan"));
         await obsRecorder.start();
         this._isRecordingBuffer = true;
+        this._recorderStartDate = new Date();
         if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.ReadyToRecord);
-    
 
         // We store off this timer as a member variable as we will cancel
         // it when a real game is detected. 
@@ -283,11 +285,14 @@ type RecorderOptionsType = {
                 console.info("[Recorder] Raid encounter was too short, discarding");
             } else {
                 const bufferFile = obsRecorder.getObsLastRecording();
+                const metadata = activity.getMetadata();
+                const relativeStart = (activity.startDate.getTime() - this._recorderStartDate.getTime()) / 1000;
 
                 if (bufferFile) {
                     this.queueVideo(bufferFile, 
-                                    activity.getMetadata(),
-                                    activity.getFileName());
+                                    metadata,
+                                    activity.getFileName(), 
+                                    relativeStart);
                 } else {
                     console.error("[Recorder] Unable to get the last recording from OBS. Can't process video.");
                 }
@@ -332,7 +337,11 @@ type RecorderOptionsType = {
      * 
      * @param {Metadata} metadata the details of the recording
      */
-    queueVideo = async (bufferFile: string, metadata: Metadata, filename: string): Promise<void> => {
+    queueVideo = async (bufferFile: string, 
+                        metadata: Metadata, 
+                        filename: string,
+                        relativeStart: number) => 
+    {
         // It's a bit hacky that we async wait for 2 seconds for OBS to
         // finish up with the video file. Maybe this can be done better.
         setTimeout(async () => {
@@ -340,6 +349,7 @@ type RecorderOptionsType = {
                 bufferFile,
                 metadata,
                 filename,
+                relativeStart,
             };
 
             console.log("[Recorder] Queuing video for processing", queueItem);
@@ -427,6 +437,7 @@ type RecorderOptionsType = {
         initialFile: string,
         finalDir: string,
         outputFilename: string | undefined,
+        relativeStart: number,
         desiredDuration: number
     ): Promise<string> {
 
@@ -437,66 +448,53 @@ type RecorderOptionsType = {
 
         return new Promise<string>((resolve) => {
 
-            // Use ffprobe to check the length of the initial file.
-            ffmpeg.ffprobe(initialFile, (err: any, data: any) => {
-                if (err) {
-                    console.log("[Recorder] FFprobe error: ", err);
-                    throw new Error("FFprobe error when cutting video");
-                }
+            // Defensively avoid a negative start time error case.
+            if (relativeStart < 0) {
+                console.log("[Recorder] Video start time was: ", relativeStart);
+                console.log("[Recorder] Avoiding error by not cutting video from start");
+                relativeStart = 0;
+            }
 
-                // Calculate the desired start time relative to the initial file.
-                const bufferedDuration = data.format.duration;
-                let startTime = Math.round(bufferedDuration - desiredDuration);
+            console.log("[Recorder] Desired duration:", desiredDuration,
+                        "Relative start time:", relativeStart);
 
-                // Defensively avoid a negative start time error case.
-                if (startTime < 0) {
-                    console.log("[Recorder] Video start time was: ", startTime);
-                    console.log("[Recorder] Avoiding error by not cutting video");
-                    startTime = 0;
-                }
+            // It's crucial that we don't re-encode the video here as that
+            // would spin the CPU and delay the replay being available. I
+            // did try this with re-encoding as it has compression benefits
+            // but took literally ages. My CPU was maxed out for nearly the
+            // same elapsed time as the recording.
+            //
+            // We ensure that we don't re-encode by passing the "-c copy"
+            // option to ffmpeg. Read about it here:
+            // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
+            //
+            // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
+            // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
+            ffmpeg(initialFile)
+                .inputOptions([ `-ss ${relativeStart}`, `-t ${desiredDuration}` ])
+                .outputOptions([ `-t ${desiredDuration}`, "-c:v copy", "-c:a copy", "-avoid_negative_ts make_zero" ])
+                .output(finalVideoPath)
 
-                console.log("[Recorder] Initial duration:", bufferedDuration,
-                            "Desired duration:", desiredDuration,
-                            "Calculated start time:", startTime);
+                // Handle the end of the FFmpeg cutting.
+                .on('end', async (err: any) => {
+                    if (err) {
+                        console.log('[Recorder] FFmpeg video cut error (1): ', err)
+                        throw new Error("FFmpeg error when cutting video (1)");
+                    }
+                    else {
+                        console.log("[Recorder] FFmpeg cut video succeeded");
+                        resolve(finalVideoPath);
+                    }
+                })
 
-                // It's crucial that we don't re-encode the video here as that
-                // would spin the CPU and delay the replay being available. I
-                // did try this with re-encoding as it has compression benefits
-                // but took literally ages. My CPU was maxed out for nearly the
-                // same elapsed time as the recording.
-                //
-                // We ensure that we don't re-encode by passing the "-c copy"
-                // option to ffmpeg. Read about it here:
-                // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
-                //
-                // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
-                // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
-                ffmpeg(initialFile)
-                    .inputOptions([ `-ss ${startTime}`, `-t ${desiredDuration}` ])
-                    .outputOptions([ `-t ${desiredDuration}`, "-c:v copy", "-c:a copy", "-avoid_negative_ts make_zero" ])
-                    .output(finalVideoPath)
-
-                    // Handle the end of the FFmpeg cutting.
-                    .on('end', async (err: any) => {
-                        if (err) {
-                            console.log('[Recorder] FFmpeg video cut error (1): ', err)
-                            throw new Error("FFmpeg error when cutting video (1)");
-                        }
-                        else {
-                            console.log("[Recorder] FFmpeg cut video succeeded");
-                            resolve(finalVideoPath);
-                        }
-                    })
-
-                    // Handle an error with the FFmpeg cutting. Not sure if we
-                    // need this as well as the above but being careful.
-                    .on('error', (err: any) => {
-                        console.log('[Recorder] FFmpeg video cut error (2): ', err)
-                        throw new Error("FFmpeg error when cutting video (2)");
-                    })
-                    .run()
-            })
-        });
+                // Handle an error with the FFmpeg cutting. Not sure if we
+                // need this as well as the above but being careful.
+                .on('error', (err: any) => {
+                    console.log('[Recorder] FFmpeg video cut error (2): ', err)
+                    throw new Error("FFmpeg error when cutting video (2)");
+                })
+                .run()
+        })
     }
 }
 

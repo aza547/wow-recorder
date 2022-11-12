@@ -147,6 +147,7 @@ type VideoQueueItem = {
     bufferFile: string,
     metadata: Metadata,
     filename: string,
+    relativeStart: number,
 };
 
 interface IEventTarget {

@@ -48,14 +48,14 @@ export default class ArenaMatch extends Activity {
 
     determineArenaMatchResult(winningTeamID: number): boolean {
         if (!this.playerGUID) {
-            console.error("[RetailLogHandler] Haven't identified player so no results possible");
+            console.error("[ArenaMatch] Haven't identified player so no results possible");
             return false;
         };
 
         const player = this.getCombatant(this.playerGUID);
 
         if (!player) {
-            console.error("[RetailLogHandler] No player combatant so no results possible");
+            console.error("[ArenaMatch] No player combatant so no results possible");
             return false;
         }
 
