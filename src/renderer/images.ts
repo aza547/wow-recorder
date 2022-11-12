@@ -215,7 +215,8 @@ const specIDs = [
     262, 263, 264,      // Shaman
     265, 266, 267,      // Warlock
     71, 72, 73,         // Warrior
-    0,                  // Classic fallback
+    1467, 1468,         // Evoker
+    0,                  // Fallback
 ]
 
 // Set a 'not found' icon for defaulting to if everything goes wrong.

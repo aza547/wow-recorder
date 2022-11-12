@@ -1,6 +1,6 @@
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
-import { dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, retailBattlegrounds, VideoCategory } from "../main/constants";
+import { dungeonEncounters, dungeonsByMapId, dungeonTimersByMapId, retailBattlegrounds, retailUniqueSpecSpells, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
 import ArenaMatch from "../activitys/ArenaMatch";
 import LogHandler from "./LogHandler";
@@ -8,7 +8,6 @@ import Battleground from "../activitys/Battleground";
 import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import { Flavour } from "../main/types";
-import { ambiguate, isUnitSelf } from "../main/logutils";
 
 /**
  * RetailLogHandler class.
@@ -29,13 +28,13 @@ export default class RetailLogHandler extends LogHandler {
             .on('ARENA_MATCH_END',      (line: LogLine) => { this.handleArenaEndLine(line) })
             .on('CHALLENGE_MODE_START', (line: LogLine) => { this.handleChallengeModeStartLine(line) })
             .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.handleChallengeModeEndLine(line) })
-            .on('COMBATANT_INFO',       (line: LogLine) => { this.handleCombatantInfoLine(line) });
+            .on('COMBATANT_INFO',       (line: LogLine) => { this.handleCombatantInfoLine(line) })
+            .on('SPELL_CAST_SUCCESS', (line: LogLine) =>   { this.handleSpellCastSuccess(line) });
     };
 
     handleArenaStartLine(line: LogLine): void {
         if (this.activity) {
-            // @@@ we hit this in solo shuffle, probably should handle cleaner
-            console.error("[RetailLogHandler] Another activity in progress, can't start arena"); 
+            // Solo shuffle hits this alot as it fires 6 START events and 1 END. 
             return;
         }
 
@@ -278,28 +277,40 @@ export default class RetailLogHandler extends LogHandler {
     }
 
     handleSpellAuraAppliedLine(line: LogLine) {
-        if (!this.activity || this.activity.playerGUID) {
+        if (!this.activity) {
             // Deliberately don't log anything here as we hit this a lot
             return;
         }
 
         const srcGUID = line.arg(1);
-        const srcCombatant = this.activity.getCombatant(srcGUID);
-
-        if (srcCombatant === undefined) {
-            // @@@ hit this lots in rbgs - should be adding combatants
-            console.debug("[RetailLogHandler] Didn't find matching combatant");
-            return
-        };
-
-        const srcNameRealm = line.arg(2)
         const srcFlags = parseInt(line.arg(3), 16);
-        const [srcName, srcRealm] = ambiguate(srcNameRealm);
-        srcCombatant.name = srcName;
-        srcCombatant.realm = srcRealm;
+        const srcNameRealm = line.arg(2);
+        this.processCombatant(srcGUID, srcNameRealm, srcFlags);
+    }
 
-        if (isUnitSelf(srcFlags)) {
-            this.activity.playerGUID = srcGUID;
+    handleSpellCastSuccess(line: LogLine) {
+        if (!this.activity) { 
+            return;
+        }
+
+        const srcGUID = line.arg(1);
+        const srcNameRealm = line.arg(2);
+        const srcFlags = parseInt(line.arg(3), 16);
+        const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
+
+        if (!combatant) {
+            return;
+        }
+
+        if (combatant.specID !== undefined) {
+            // If we already have a specID for this combatant.
+            return;
+        }
+
+        const spellName = line.arg(10);
+
+        if (retailUniqueSpecSpells.hasOwnProperty(spellName)) {
+            combatant.specID = retailUniqueSpecSpells[spellName];
         }
     }
 

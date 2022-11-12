@@ -53,7 +53,6 @@ export default function VideoButton(props: any) {
   
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
-  const isBG = category === VideoCategory.Battlegrounds;
   const isMythicPlus = (category === VideoCategory.MythicPlus);
   const isRaid = category === VideoCategory.Raids;
   const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
@@ -197,8 +196,6 @@ export default function VideoButton(props: any) {
           <div 
             id={ videoPath } 
             className={ buttonClasses.join(' ') } 
-            // I think this is a performance bottleneck when switching categorties
-            // @@@
             style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "200px 100px"}} 
             onContextMenu={openMenu}
           >
@@ -207,6 +204,8 @@ export default function VideoButton(props: any) {
             <div className='date'>{ video.date }</div>
             <div className='time'>{ video.time }</div>
             <div className={'result ' + resultClass }>{ resultText }</div>
+            <div className='specIcon'><img src={ specIcon } /></div>  
+            <div className={ playerClass + ' name'}>{ playerName }</div>
 
             { isMythicPlus ||
               <div>
@@ -229,15 +228,6 @@ export default function VideoButton(props: any) {
             { isRaid && videoInstanceDifficulty &&
               <div className={ difficultyClass + ' difficulty-' + videoInstanceDifficulty.difficultyID }>
                 { videoInstanceDifficulty.difficulty }
-              </div>
-            }
-
-            { isBG ||
-              <div>
-                <div className='specIcon'>
-                  <img src={ specIcon } />
-                </div>  
-                <div className={ playerClass + ' name'}>{ playerName }</div>
               </div>
             }
 

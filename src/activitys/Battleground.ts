@@ -27,19 +27,34 @@ export default class Battleground extends Activity {
         return 'Unknown Battleground';
     };
 
+    estimateResult() {
+        // We decide who won by counting the deaths. The winner is the 
+        // team with the least deaths. Obviously this is a best effort
+        // thing and might be wrong.
+        const friendsDead = this.deaths.filter(d => d.friendly).length;
+        const enemiesDead = this.deaths.filter(d => !d.friendly).length;
+        console.info("[Battleground] Friendly deaths: ", friendsDead);
+        console.info("[Battleground] Enemy deaths: ", enemiesDead);
+        const result = (friendsDead < enemiesDead) ? true : false;
+        this.result = result;
+        return result;
+    };
+
     getMetadata(): Metadata {
         return {
             category: this.category,
             zoneID: this.zoneID,
-            // @@@ zone name? 
+            zoneName: this.battlegroundName,
             duration: this.duration,
-            result: this.result,
+            result: this.estimateResult(),
             flavour: this.flavour,
+            player: this.player,
         }
     }
 
     getFileName(): string {
-        return `${this.battlegroundName}`;
+        const resultText = this.estimateResult() ? "Win" : "Loss";
+        return `${this.battlegroundName} (${resultText})`;
     }
 }
 

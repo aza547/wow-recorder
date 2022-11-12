@@ -1,11 +1,11 @@
 import { classicArenas, classicBattlegrounds, classicUniqueSpecSpells, VideoCategory } from "../main/constants";
-import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import { Recorder } from "../main/recorder";
 import LogHandler from "./LogHandler";
 import { Flavour } from "../main/types";
 import ArenaMatch from "../activitys/ArenaMatch";
-import { ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
+import { isUnitFriendly, isUnitPlayer } from "../main/logutils";
+import Battleground from "../activitys/Battleground";
 
 /**
  * Classic log handler class.
@@ -72,17 +72,17 @@ export default class ClassicLogHandler extends LogHandler {
                 this.endArena(line.date());
             }
 
-            if (isActivityBG) {
-                // @@@ might be internal zone change, else stop
+            if (isActivityBG && (zoneID !== this.activity.zoneID)) {
+                console.info("[ClassicLogHandler] Zone change out of battleground");
+                this.battlegroundEnd(line);
             }
         }
         else 
         {
             if (isZoneBG) 
             {
-                // @@@
-                // console.info("[ClassicLogHandler] Zone change into BG");
-                // this.battlegroundStart(line);
+                console.info("[ClassicLogHandler] Zone change into BG");
+                this.battlegroundStart(line);
             } 
             else if (isZoneArena)
             {
@@ -128,7 +128,6 @@ export default class ClassicLogHandler extends LogHandler {
         const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
 
         if (!combatant) {
-            // We can't really hit this, just keeping TS happy. 
             return;
         }
 
@@ -186,8 +185,8 @@ export default class ClassicLogHandler extends LogHandler {
         // team with the least deaths. Classic doesn't have team IDs
         // but we cheated a bit earlier always assigning the player as 
         // team 1. So effectively 0 is a loss and 1 is a win here. 
-        const friendsDead = arenaMatch.deaths.filter(d => d.friendly);
-        const enemiesDead = arenaMatch.deaths.filter(d => !d.friendly);
+        const friendsDead = arenaMatch.deaths.filter(d => d.friendly).length;
+        const enemiesDead = arenaMatch.deaths.filter(d => !d.friendly).length;
         console.info("[ClassicLogHandler] Friendly deaths: ", friendsDead);
         console.info("[ClassicLogHandler] Enemy deaths: ", enemiesDead);
         const result = (friendsDead < enemiesDead) ? 1 : 0;
@@ -202,23 +201,12 @@ export default class ClassicLogHandler extends LogHandler {
             return;
         }
 
-        // Classic logs sometimes emit this GUID and we don't want to include it.
-        // No idea what causes it. Seems really common but not exlusive on 
-        // "Shadow Word: Death" casts. 
-        if (srcGUID === "0000000000000000") {
+        const combatant = super.processCombatant(srcGUID, srcNameRealm, srcFlags);
+
+        if (!combatant){
+            // Can't really hit this, keeping TS happy. 
             return;
         }
-
-        if (!isUnitPlayer(srcFlags)) {
-            return;
-        }
-
-        if (this.activity.getCombatant(srcGUID)) { 
-            return this.activity.getCombatant(srcGUID);
-        }
-
-        const combatant = new Combatant(srcGUID);
-        [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
 
         // Classic doesn't have team IDs, we cheat a bit here
         // and always assign the player team 1 to share logic with
@@ -229,11 +217,6 @@ export default class ClassicLogHandler extends LogHandler {
             combatant.teamID = 0;
         }
 
-        if (isUnitSelf(srcFlags)) {
-            this.activity.playerGUID = srcGUID;
-        }
-
-        this.activity.addCombatant(combatant);
         return combatant;
     }
 
@@ -286,6 +269,31 @@ export default class ClassicLogHandler extends LogHandler {
             this.endArena(deathDate);
             return;
         }
+    }
+
+    battlegroundStart(line: LogLine): void {
+        if (this.activity) {
+            console.error("[ClassicLogHandler] Another activity in progress, can't start battleground");
+            return;
+        }
+
+        const startTime = line.date();
+        const category = VideoCategory.Battlegrounds;
+        const zoneID = parseInt(line.arg(1), 10);
+
+        this.activity = new Battleground(startTime, category, zoneID, Flavour.Classic);
+        this.startRecording(this.activity);
+    }
+
+    battlegroundEnd(line: LogLine): void {
+        if (!this.activity) {
+            console.error("[ClassicLogHandler] Can't stop battleground as no active activity");
+            return;
+        }
+
+        const endTime = line.date();
+        this.activity.end(endTime, false);
+        this.endRecording(this.activity);
     }
 }
 

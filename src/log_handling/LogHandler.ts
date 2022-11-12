@@ -6,7 +6,7 @@ import { Recorder } from "../main/recorder";
 import { Flavour, PlayerDeathType } from "../main/types";
 import Activity from "../activitys/Activity";
 import RaidEncounter from "../activitys/RaidEncounter";
-import { allowRecordCategory, isUnitFriendly, isUnitPlayer } from "../main/logutils";
+import { allowRecordCategory, ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -214,6 +214,37 @@ export default class LogHandler {
 
         const category = this.activity.category;
         return (category === VideoCategory.Battlegrounds);
+    }
+
+    processCombatant(srcGUID: string, srcNameRealm: string, srcFlags: number) {
+        if (!this.activity) {
+            return;
+        }
+
+        // Logs sometimes emit this GUID and we don't want to include it.
+        // No idea what causes it. Seems really common but not exlusive on 
+        // "Shadow Word: Death" casts. 
+        if (srcGUID === "0000000000000000") {
+            return;
+        }
+
+        if (!isUnitPlayer(srcFlags)) {
+            return;
+        }
+
+        if (this.activity.getCombatant(srcGUID)) { 
+            return this.activity.getCombatant(srcGUID);
+        }
+
+        const combatant = new Combatant(srcGUID);
+        [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
+
+        if (isUnitSelf(srcFlags)) {
+            this.activity.playerGUID = srcGUID;
+        }
+
+        this.activity.addCombatant(combatant);
+        return combatant;
     }
 }
 

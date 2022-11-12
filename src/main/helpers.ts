@@ -15,10 +15,9 @@ import { instanceDifficulty, instanceEncountersById, VideoCategory } from "./con
  */
 export const getVideoResultText = (category: VideoCategory, 
                                    isGoodResult: boolean): string => {
-    const isBattleground = (category == VideoCategory.Battlegrounds);
     const isSoloShuffle = (category == VideoCategory.SoloShuffle);
    
-    if (isBattleground || isSoloShuffle) {
+    if (isSoloShuffle) {
         return "";
     }
 

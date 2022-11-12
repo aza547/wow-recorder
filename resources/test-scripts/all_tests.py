@@ -20,10 +20,9 @@ tests = {
     # Classic Tests
     "Classic: Raid":      os.path.join(dirname, "./classic_raid.py"),
     "Classic: Rated 2v2": os.path.join(dirname, "./classic_rated_2v2.py"),
+    # @@@ "Classic: Rated 3v3": os.path.join(dirname, "./classic_rated_3v3.py"),
     "Classic: Rated 5v5": os.path.join(dirname, "./classic_rated_5v5.py"),
-
-    ## @@@
-    # TODO: 3v3 test, classic BG tests
+    "Classic: Battleground": os.path.join(dirname, "./classic_battleground.py"),
 }
 
 for test in tests:
