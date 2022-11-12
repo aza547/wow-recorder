@@ -170,7 +170,7 @@ for (const id of raidIDs) {
 // Some of these have two entries either because there is 
 // two versions of the map (EOTS casual vs rated) or for no 
 // reason other than I don't have a good exhaustive list. 
-const battlegroundIDs = [
+const retailBattlegroundIDs = [
     2107, // Arathi Basin
     1681, // Arathi Basin
     30,   // Alterac Valley
@@ -188,14 +188,39 @@ const battlegroundIDs = [
     2106, // Warsong Gulch
 ]
 
-let battleground: imageObject = {};
+let retailBattlegrounds: imageObject = {};
 
-for (const id of battlegroundIDs) {
+for (const id of retailBattlegroundIDs) {
     try {
-        battleground[id] = require(`../../assets/battlegrounds/${id}.jpg`);
+        retailBattlegrounds[id] = require(`../../assets/battlegrounds/${id}.jpg`);
     }
     catch (e) {
-        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+        console.error(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+    };
+}
+
+// Load the battleground images. This expects files with the 
+// name <id>.jpg to exist in the appropriate assets folder.
+
+// Some of these have two entries either because there is 
+// two versions of the map (EOTS casual vs rated) or for no 
+// reason other than I don't have a good exhaustive list. 
+const classicBattlegroundIDs = [
+    30,	// "Alterac Valley",
+    529, //"Arathi Basin",
+    566, //"Eye of the Storm",
+    607, //"Strand of the Ancients",
+    489, //"Warsong Gulch",
+]
+
+let classicBattlegrounds: imageObject = {};
+
+for (const id of classicBattlegroundIDs) {
+    try {
+        classicBattlegrounds[id] = require(`../../assets/battlegrounds/${id}.jpg`);
+    }
+    catch (e) {
+        console.error(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
 }
 
@@ -231,13 +256,18 @@ for (const id of specIDs) {
         spec[id] = require(`../../assets/specs/${id}.png`);
     }
     catch (e) {
-        console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
+        console.error(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
 }
 
 const arena = {
     ...retailArena,
     ...classicArena,
+}
+
+const battleground = {
+    ...retailBattlegrounds,
+    ...classicBattlegrounds,
 }
 
 export {

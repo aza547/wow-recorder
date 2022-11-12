@@ -232,11 +232,10 @@ export default class LogHandler {
             return;
         }
 
-        if (this.activity.getCombatant(srcGUID)) { 
-            return this.activity.getCombatant(srcGUID);
-        }
-
-        const combatant = new Combatant(srcGUID);
+        // Even if the combatant exists already we still update it with the info it 
+        // may not have yet. We can't tell the name, realm or if it's the player
+        // from COMBATANT_INFO events. 
+        const combatant = this.activity.getCombatant(srcGUID) || new Combatant(srcGUID);
         [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
 
         if (isUnitSelf(srcFlags)) {

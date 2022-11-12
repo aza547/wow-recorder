@@ -1,5 +1,5 @@
 import { Flavour, Metadata } from "main/types";
-import { retailBattlegrounds, VideoCategory } from "../main/constants";
+import { classicBattlegrounds, retailBattlegrounds, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 
 /**
@@ -22,6 +22,10 @@ export default class Battleground extends Activity {
 
         if (retailBattlegrounds.hasOwnProperty(this.zoneID)) {
             return retailBattlegrounds[this.zoneID];
+        }
+
+        if (classicBattlegrounds.hasOwnProperty(this.zoneID)) {
+            return classicBattlegrounds[this.zoneID];
         }
 
         return 'Unknown Battleground';
