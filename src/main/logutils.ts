@@ -1,6 +1,6 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { recorder }  from './main';
-import { categoryRecordingSettings, raidEncountersById, VideoCategory, wowExecutableFlavours }  from './constants';
+import { categoryRecordingSettings, VideoCategory, wowExecutableFlavours }  from './constants';
 import { IWoWProcessResult, UnitFlags } from './types';
 import { CombatLogParser } from './combatLogParser';
 import { getSortedFiles } from './util';
@@ -76,6 +76,7 @@ const wowProcessStopped = () => {
     wowProcessRunning = null;
 
     if (recorder.isRecording) {
+        // @@@
         endRecording({closedWow: true});
     } else {
         recorder.stopBuffer();
