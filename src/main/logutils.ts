@@ -25,7 +25,7 @@ const makeRetailHandler = (recorder: Recorder, logPath: string): RetailLogHandle
     });
 
     parser.watchPath(logPath);
-    return new RetailLogHandler(recorder, parser);
+    return RetailLogHandler.getInstance(recorder, parser);
 }
 
 /**
@@ -38,7 +38,7 @@ const makeClassicHandler = (recorder: Recorder, logPath: string): ClassicLogHand
     });
 
     parser.watchPath(logPath);
-    return new ClassicLogHandler(recorder, parser);
+    return ClassicLogHandler.getInstance(recorder, parser);
 }
 
 /**

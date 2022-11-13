@@ -13,7 +13,17 @@ import { Flavour } from "../main/types";
  * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
-    
+    // Singleton instance.
+    private static _instance: RetailLogHandler;
+
+    static getInstance(recorder: Recorder, combatLogParser: CombatLogParser) {
+        if (!RetailLogHandler._instance) {
+            RetailLogHandler._instance = new RetailLogHandler(recorder, combatLogParser);
+        }
+
+        return RetailLogHandler._instance;
+    }
+
     constructor(recorder: Recorder, 
                 combatLogParser: CombatLogParser) 
     {
@@ -29,7 +39,7 @@ export default class RetailLogHandler extends LogHandler {
             .on('CHALLENGE_MODE_START', (line: LogLine) => { this.handleChallengeModeStartLine(line) })
             .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.handleChallengeModeEndLine(line) })
             .on('COMBATANT_INFO',       (line: LogLine) => { this.handleCombatantInfoLine(line) })
-            .on('SPELL_CAST_SUCCESS', (line: LogLine) =>   { this.handleSpellCastSuccess(line) });
+            .on('SPELL_CAST_SUCCESS',   (line: LogLine) => { this.handleSpellCastSuccess(line) });
     };
 
     handleArenaStartLine(line: LogLine): void {

@@ -3,7 +3,7 @@ import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, dungeonsByMapId }  from './constants';
 import { Metadata }  from './types';
-const byteSize = require('byte-size')
+const byteSize = require('byte-size');
 const chalk = require('chalk');
 
 /**
