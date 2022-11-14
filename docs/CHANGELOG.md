@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [NO-ISSUE] - Initial Evoker class handling in preperation for Dragonflight.
 
 ### Changed
-- [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Improve main window styling. This probably breaks backwards compatbility with previously recorded videos. I'm making no effort to fix this. 
+- [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Improve main window styling. Bbreaks backwards compatbility with previously recorded videos.
 
 ### Fixed
 - [Issue 221](https://github.com/aza547/wow-recorder/issues/221) - Fix a bug where on some setups only a subsection of the game was recorded. 
