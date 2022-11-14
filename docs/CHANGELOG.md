@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [Issue 228](https://github.com/aza547/wow-recorder/issues/228) - Clip activities better by not assuming buffer time is end of video.
 
-### Changed
 ### Fixed
 - [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Make settings window taller to avoid clipping content settings.
 - [Issue 230](https://github.com/aza547/wow-recorder/issues/230) - Fix a bug where recordings after saving settings were broken. 
