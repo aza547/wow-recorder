@@ -211,8 +211,9 @@ type RecorderOptionsType = {
         await obsRecorder.stop();
 
         this._bufferStartTimeoutID = setTimeout(async () => {
-            this.isRecordingBuffer = true;
             await obsRecorder.start();
+            this.isRecordingBuffer = true;
+            this._recorderStartDate = new Date();
         }, 5000);
 
         this.cleanupBuffer(1);

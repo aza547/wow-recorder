@@ -400,6 +400,10 @@ h2:not(.MuiDialogTitle-root) {
   -webkit-text-fill-color: #C69B6D;
 }
 
+.EVOKER {
+  -webkit-text-fill-color: #33937F;
+}
+
 .hidden {
   display: none;
 }

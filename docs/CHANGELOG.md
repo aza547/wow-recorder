@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [3.0.2] - 2022-11-20
+### Fixed
+- [NO-ISSUE] - Fix a bug where videos were sometimes cut to wrong sizes.
+- [NO-ISSUE] - Fix a bug where Evoker class color wasn't displayed in the UI. 
+
 ## [3.0.1] - 2022-11-14
 ### Changed
 - [Issue 228](https://github.com/aza547/wow-recorder/issues/228) - Clip activities better by not assuming buffer time is end of video.

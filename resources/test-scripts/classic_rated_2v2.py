@@ -1,6 +1,16 @@
 import time
+import datetime
 import random
 import os
+
+
+def replace_date(line):
+    event_position = line.find("  ")
+    line_no_ts = line[event_position:]
+    new_date_string = datetime.datetime.now().strftime("%#m/%#d %H:%M:%S.%f")[:-3]
+    retstr = new_date_string + line_no_ts;
+    print (retstr)
+    return retstr
 
 dirname = os.path.dirname(__file__)
 LOG_PATH = "D:/World of Warcraft/_classic_/Logs"
@@ -24,10 +34,10 @@ print("Starting")
 
 # Write each line from the example to the fake log.
 for line in sample_log_lines:
-    if "ZONE_CHANGE" in line:
+    if ("ZONE_CHANGE" in line) or ("UNIT_DIED" in line):
         # Sleep before writing the end event so we actually record something. 
         time.sleep(5)
-    logFile.write(line)
+    logFile.write(replace_date(line))
 
 print("Done")
 logFile.close()

@@ -640,7 +640,7 @@ const videoScrollButtonSx = {
 
 type WoWCharacterDamageType = 'melee' | 'ranged'
 type WoWCharacterRoleType = 'tank' | 'healer' | 'damage'
-type WoWCharacterClassType = 'DEATHKNIGHT' | 'DEMONHUNTER' | 'DRUID' | 'HUNTER' | 'MAGE' | 'MONK' | 'PALADIN' | 'PRIEST' | 'ROGUE' | 'SHAMAN' | 'WARLOCK' | 'WARRIOR';
+type WoWCharacterClassType = 'DEATHKNIGHT' | 'DEMONHUNTER' | 'DRUID' | 'HUNTER' | 'MAGE' | 'MONK' | 'PALADIN' | 'PRIEST' | 'ROGUE' | 'SHAMAN' | 'WARLOCK' | 'WARRIOR' | 'EVOKER';
 
 type SpecializationObjectType = {
   type: WoWCharacterDamageType,
@@ -660,6 +660,8 @@ const specializationById: { [id: number]: SpecializationObjectType } = {
   103: { type: 'melee',  role: 'damage', class: 'DRUID',       label: 'Druid',        name: 'Feral' },
   104: { type: 'ranged', role: 'tank',   class: 'DRUID',       label: 'Druid',        name: 'Guardian' },
   105: { type: 'ranged', role: 'healer', class: 'DRUID',       label: 'Druid',        name: 'Restoration' },
+  1467:{ type: 'ranged', role: 'damage', class: 'EVOKER',      label: 'Evoker',       name: 'Devastation' },
+  1468:{ type: 'ranged', role: 'damage', class: 'EVOKER',      label: 'Evoker',       name: 'Preservation' },
   253: { type: 'ranged', role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Beast Mastery' },
   254: { type: 'ranged', role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Marksmanship' },
   255: { type: 'melee',  role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Survival' },
