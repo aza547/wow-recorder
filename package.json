@@ -244,7 +244,8 @@
     "tasklist": "^4.0.1",
     "tsc": "^2.0.4",
     "tss-react": "^4.1.1",
-    "wait-queue": "^1.1.4"
+    "wait-queue": "^1.1.4",
+    "wow-combat-log-parser": "^4.6.7"
   },
   "devEngines": {
     "node": ">=14.x",
