@@ -18,6 +18,7 @@ export default class RaidEncounter extends Activity {
 
         this._difficultyID = difficultyID;
         this._encounterID = encounterID;
+        this.overrun = 15;
     }
     
     get difficultyID() { return this._difficultyID };

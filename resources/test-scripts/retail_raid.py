@@ -1,6 +1,14 @@
 import time
+import datetime
 import random
 import os
+
+def replace_date(line):
+    event_position = line.find("  ")
+    line_no_ts = line[event_position:]
+    new_date_string = datetime.datetime.now().strftime("%#m/%#d %H:%M:%S.%f")[:-3]
+    retstr = new_date_string + line_no_ts;
+    return retstr
 
 dirname = os.path.dirname(__file__)
 LOG_PATH = "D:/World of Warcraft/_retail_/Logs"
@@ -27,7 +35,7 @@ for line in sample_log_lines:
     if "ENCOUNTER_END" in line:
         # Sleep before writing the end event so we actually record something. 
         time.sleep(30)
-    logFile.write(line)
+    logFile.write(replace_date(line))
 
 print("Done")
 logFile.close()

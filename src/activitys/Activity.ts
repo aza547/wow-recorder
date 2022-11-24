@@ -15,6 +15,7 @@ export default abstract class Activity {
     protected _endDate?: Date;
     protected _zoneID?: number;
     protected _playerGUID?: string;
+    protected _overrun: number = 0;
 
     constructor(startDate: Date, 
                 category: VideoCategory,
@@ -40,12 +41,14 @@ export default abstract class Activity {
     get endDate() { return this._endDate };
     get combatantMap() { return this._combatantMap };
     get flavour() { return this._flavour };
+    get overrun() { return this._overrun };
     set zoneID(zoneID) { this._zoneID = zoneID };
     set result(result) { this._result = result };
     set playerGUID(guid) { this._playerGUID = guid };
     set endDate(date) { this._endDate = date };
     set flavour(flavour) { this._flavour = flavour };
     set category(category) { this._category = category };
+    set overrun(s) {this._overrun = s}
 
     get duration() { 
         if (!this.endDate) {
@@ -70,6 +73,7 @@ export default abstract class Activity {
     }
 
     end(endDate: Date, result: boolean) {
+        endDate.setSeconds(endDate.getSeconds() + this.overrun);
         this.endDate = endDate;
         this.result = result;
     }

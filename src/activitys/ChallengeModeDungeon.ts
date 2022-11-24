@@ -20,6 +20,7 @@ export default class ChallengeModeDungeon extends Activity {
         this._mapID = mapID;
         this._level = level;
         this._timings = dungeonTimersByMapId[mapID];
+        this.overrun = 5;
     }
 
     get endDate() { return this._endDate };

@@ -74,7 +74,6 @@ type RecorderOptionsType = {
      */
     private async _processVideoQueueItem(data: VideoQueueItem, done: Function): Promise<void> {
 
-        
         const videoPath = await this._cutVideo(data.bufferFile, 
                                                this._options.storageDir, 
                                                data.filename, 
@@ -259,9 +258,9 @@ type RecorderOptionsType = {
      * @param {number} overrun how long to continue recording after stop is called
      * @param {boolean} closedWow if wow has just been closed
      */
-    stop = (activity: Activity, overrun: number = 0, closedWow: boolean = false) => {
+    stop = (activity: Activity, closedWow: boolean = false) => {
         console.log(addColor("[Recorder] Stop recording after overrun", "green"));
-        console.info("[Recorder] Overrun:", overrun);
+        console.info("[Recorder] Overrun:", activity.overrun);
 
         // Wait for a delay specificed by overrun. This lets us
         // capture the boss death animation/score screens.  
@@ -280,7 +279,7 @@ type RecorderOptionsType = {
                 return;
             }
 
-            const isLongEnough = (duration - overrun) >= this._options.minEncounterDuration;
+            const isLongEnough = (duration - activity.overrun) >= this._options.minEncounterDuration;
 
             if (isRaid && !isLongEnough) {
                 console.info("[Recorder] Raid encounter was too short, discarding");
@@ -311,7 +310,7 @@ type RecorderOptionsType = {
                 }, 5000)
             }
         },
-        overrun * 1000);
+        activity.overrun * 1000);
     }
 
     /**

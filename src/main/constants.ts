@@ -25,7 +25,6 @@ const categories: VideoCategory[] = [
 
 interface ICategoryRecordingSettings {
   configKey: ConfigurationSchemaKey,
-  videoOverrun: number,
 };
 
 /**
@@ -33,43 +32,31 @@ interface ICategoryRecordingSettings {
  *
  * `configKey`:    The configuration key name that specifies if we're allowed
  *                 to record content from that particular category.
- *
- * `videoOverrun`: Number of seconds of how long to keep recording after an
- *                 activity ends to ensure we don't miss any important stuff
- *                  at the end.
  */
 const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSettings } = {
   [VideoCategory.TwoVTwo]: {
     configKey: 'recordTwoVTwo',
-    videoOverrun: 3,
   },
   [VideoCategory.ThreeVThree]: {
     configKey: 'recordThreeVThree',
-    videoOverrun: 3,
   },
   [VideoCategory.FiveVFive]: {
     configKey: 'recordFiveVFive',
-    videoOverrun: 3,
   },
   [VideoCategory.Skirmish]: {
     configKey: 'recordSkirmish',
-    videoOverrun: 3,
   },
   [VideoCategory.SoloShuffle]: {
     configKey: 'recordSoloShuffle',
-    videoOverrun: 3,
   },
   [VideoCategory.MythicPlus]:{
     configKey: 'recordDungeons',
-    videoOverrun: 5, // For the whole dungeon
   },
   [VideoCategory.Raids]: {
     configKey: 'recordRaids',
-    videoOverrun: 15, // Per boss encounter
   },
   [VideoCategory.Battlegrounds]: {
     configKey: 'recordBattlegrounds',
-    videoOverrun: 3,
   },
 };
 

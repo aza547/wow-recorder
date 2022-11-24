@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [3.0.3] - 2022-11-24
+### Fixed
+- [NO-ISSUE] - Fix a bug where overrun isn't working as intended. Broke this in 3.0.1.
+
 ## [3.0.2] - 2022-11-20
 ### Fixed
 - [NO-ISSUE] - Fix a bug where videos were sometimes cut to wrong sizes.

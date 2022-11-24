@@ -136,23 +136,14 @@ export default class LogHandler {
         this.recorder.start();
     };
 
-    endRecording = (activity: Activity, immediateStop = false) => {
+    endRecording = (activity: Activity) => {
         if (!this.activity) {
             console.error("[LogUtils] No active activity so can't stop");
             return;
         }
-
-        const category = activity.category;
-
-        let overrun = 0;
-
-        if (!immediateStop) {
-            overrun = categoryRecordingSettings[category].videoOverrun;
-        }
-
         console.log(`[Logutils] Stop recording video for category: ${this.activity.category}`)
 
-        this.recorder.stop(activity, overrun, false);
+        this.recorder.stop(activity, false);
         this.activity = undefined;
     }
 
@@ -177,8 +168,9 @@ export default class LogHandler {
             return;
         }
 
+        this.activity.overrun = 0;
         this.activity.end(new Date(), false);
-        this.endRecording(this.activity, true);
+        this.endRecording(this.activity);
         this.activity = undefined;
     }
 

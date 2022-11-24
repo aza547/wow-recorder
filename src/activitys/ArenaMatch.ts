@@ -13,6 +13,7 @@ export default class ArenaMatch extends Activity {
     {
         super(startDate, category, flavour);
         this._zoneID = zoneID;
+        this.overrun = 3;
     }
 
     get zoneID() { return this._zoneID };

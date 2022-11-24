@@ -13,6 +13,7 @@ export default class Battleground extends Activity {
     {
         super(startDate, category, flavour);
         this.zoneID = zoneID;
+        this.overrun = 3;
     }
 
     get battlegroundName(): string {

@@ -3,13 +3,11 @@ import datetime
 import random
 import os
 
-
 def replace_date(line):
     event_position = line.find("  ")
     line_no_ts = line[event_position:]
     new_date_string = datetime.datetime.now().strftime("%#m/%#d %H:%M:%S.%f")[:-3]
     retstr = new_date_string + line_no_ts;
-    print (retstr)
     return retstr
 
 dirname = os.path.dirname(__file__)
