@@ -5,8 +5,8 @@ import test_utils
 from test_utils import replace_date as rd
 
 dirname = os.path.dirname(__file__)
-LOG_PATH = "D:/World of Warcraft/_retail_/Logs"
-SAMPLE_LOG = test_utils.RETAIL_LOG_PATH
+LOG_PATH = test_utils.RETAIL_LOG_PATH
+SAMPLE_LOG = os.path.join(dirname, "../example-logs/retail/raid_reset.txt")
 
 # Open a combat log ready for writing.
 randomNumber = random.random()
