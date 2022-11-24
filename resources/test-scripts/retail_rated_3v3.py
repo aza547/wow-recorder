@@ -1,9 +1,11 @@
 import time
 import random
 import os
+import test_utils
+from test_utils import replace_date as rd
 
 dirname = os.path.dirname(__file__)
-LOG_PATH = "D:/World of Warcraft/_retail_/Logs"
+LOG_PATH = test_utils.RETAIL_LOG_PATH
 SAMPLE_LOG = os.path.join(dirname, "../example-logs/retail/rated_3v3.txt")
 
 # Open a combat log ready for writing.
@@ -27,7 +29,7 @@ for line in sample_log_lines:
     if "ARENA_MATCH_END" in line:
         # Sleep before writing the end event so we actually record something. 
         time.sleep(10)
-    logFile.write(line)
+    logFile.write(rd(line))
 
 print("Done")
 logFile.close()
