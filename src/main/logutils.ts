@@ -1,5 +1,5 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
-import { recorder }  from './main';
+import { recorder, retailHandler, classicHandler }  from './main';
 import { categoryRecordingSettings, VideoCategory, wowExecutableFlavours }  from './constants';
 import { IWoWProcessResult, UnitFlags } from './types';
 import { CombatLogParser } from './combatLogParser';
@@ -75,9 +75,10 @@ const wowProcessStopped = () => {
     console.log(`[Logutils] Detected ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) not running`);
     wowProcessRunning = null;
 
-    if (recorder.isRecording) {
-        // @@@
-        endRecording({closedWow: true});
+    if (retailHandler.activity) {
+        retailHandler.forceEndActivity();
+    } else if (classicHandler.activity) {
+        retailHandler.forceEndActivity();
     } else {
         recorder.stopBuffer();
     }
@@ -261,11 +262,11 @@ const allowRecordCategory = (category: VideoCategory) => {
     const categoryAllowed = cfg.get<boolean>(categoryConfig.configKey);
 
     if (!categoryAllowed) {
-        console.info("[LogHandler] Configured to not record:", category);
+        console.info("[LogUtils] Configured to not record:", category);
         return false;
     };
 
-    console.info("[LogHandler] Good to record:", category);
+    console.info("[LogUtils] Good to record:", category);
     return true;
 };
 

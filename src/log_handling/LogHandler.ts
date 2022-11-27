@@ -15,7 +15,7 @@ import { allowRecordCategory, ambiguate, isUnitFriendly, isUnitPlayer, isUnitSel
  * If you need something flavour specific then put it in the appropriate 
  * subclass; i.e. RetailLogHandler or ClassicLogHandler.
  */
-export default class LogHandler {
+export default abstract class LogHandler {
     protected _recorder;
     protected _combatLogParser: CombatLogParser;
     protected _player: Combatant | undefined;

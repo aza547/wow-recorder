@@ -674,5 +674,7 @@ app
 
 export {
   mainWindow,
-  recorder
+  recorder,
+  retailHandler,
+  classicHandler,
 };
