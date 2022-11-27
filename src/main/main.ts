@@ -32,7 +32,7 @@ log.transports.file.resolvePath = () => logPath;
 Object.assign(console, log.functions);
 console.log("[Main] App starting: version", app.getVersion());
 
-import { pollWowProcess, runRecordingTest, makeRetailHandler, makeClassicHandler } from './logutils';
+import { pollWowProcess, runRetailRecordingTest, runClassicRecordingTest, makeRetailHandler, makeClassicHandler } from './logutils';
 const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
@@ -570,7 +570,14 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
 ipcMain.on('test', (_event, args) => {
   if (cfg.validate()) { 
     console.info("[Main] Config is good, running test!");
-    runRecordingTest(retailHandler, Boolean(args[0]));
+
+    if (retailHandler) {
+      console.info("[Main] Running retail test");
+      runRetailRecordingTest(Boolean(args[0]));
+    } else if (classicHandler) {
+      console.info("[Main] Running classic test");
+      runClassicRecordingTest(Boolean(args[0]));
+    }
   } else {
     console.info("[Main] Config is bad, don't run test");
   }
