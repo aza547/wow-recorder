@@ -33,12 +33,13 @@ export default class ChallengeModeDungeon extends Activity {
     set CMDuration(duration) { this._CMDuration = duration };
 
     get upgradeLevel(): number {
-        if (!this.CMDuration) {
-            throw new Error("Tried to get result of incomplete run.");
-        }
-
         if (!this.timings) {
             throw new Error("Don't have timings data for this dungeon.");
+        }
+
+        if (!this.CMDuration) {
+            console.log("[ChallengeModeDungeon] Run didn't complete (abandoned, not a deplete)");
+            return 0;
         }
 
         for (let i = (this.timings.length - 1); i >= 0; i--) {

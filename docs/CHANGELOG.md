@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [3.0.4] - 2022-11-26
+### Fixed
+- [Issue 235](https://github.com/aza547/wow-recorder/issues/235) - Fix a bug where abandoned M+ runs caused the app to crash. 
+
 ## [3.0.3] - 2022-11-24
 ### Fixed
 - [NO-ISSUE] - Fix a bug where overrun isn't working as intended. Broke this in 3.0.1.

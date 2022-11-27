@@ -157,19 +157,24 @@ export default class LogHandler {
         const isBattleground = (this.activity.category === VideoCategory.Battlegrounds);
 
         if (isBattleground) {
-            this.forceEndActivity();
+            this.forceEndActivity(-ms / 1000);
             return;
         }
     }
 
-    forceEndActivity = async () => {
+    forceEndActivity = async (timedelta: number = 0) => {
+        console.log("[LogHandler] Force ending activity with timedelta", timedelta);
+
         if (!this.activity) {
             await this.recorder.forceStop();
             return;
         }
-
+        
+        const endDate = new Date();
+        endDate.setSeconds(endDate.getSeconds() + timedelta);
         this.activity.overrun = 0;
-        this.activity.end(new Date(), false);
+        
+        this.activity.end(endDate, false);
         this.endRecording(this.activity);
         this.activity = undefined;
     }

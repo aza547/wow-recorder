@@ -31,8 +31,9 @@ for line in sample_log_lines:
         time.sleep(5)
     elif "ENCOUNTER_END" in line:
         time.sleep(2)
-
+        break
     logFile.write(rd(line))
+    
 
 print("Done")
 logFile.close()

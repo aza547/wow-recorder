@@ -346,7 +346,7 @@ export default class RetailLogHandler extends LogHandler {
         const isDungeon = (this.activity.category === VideoCategory.MythicPlus);
 
         if (isDungeon) {
-            this.forceEndActivity();
+            this.forceEndActivity(-ms / 1000);
         }
     }
 
