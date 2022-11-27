@@ -10,10 +10,8 @@ const atomicQueue = require('atomic-queue');
 const obsRecorder = require('./obsRecorder');
 
 const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
-const ffprobePath = fixPathWhenPackaged(require('@ffprobe-installer/ffprobe').path);
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
-ffmpeg.setFfprobePath(ffprobePath);
 
 type RecorderOptionsType = {
     storageDir: string;
