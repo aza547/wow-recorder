@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
-## [3.0.4] - 2022-11-26
+## [3.0.4] - 2022-11-27
 ### Fixed
 - [Issue 235](https://github.com/aza547/wow-recorder/issues/235) - Fix a bug where abandoned M+ runs caused the app to crash. 
 - [Issue 229](https://github.com/aza547/wow-recorder/issues/229) - Fix a bug where the test button didn't work without a retail log path configured.
