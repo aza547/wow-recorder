@@ -101,7 +101,7 @@ export default class ConfigService extends EventEmitter {
         });
     }
 
-    validate(): boolean {
+    validate(): void {
         const storagePath = this.get<string>('storagePath');
 
         if (storagePath) {
@@ -109,15 +109,15 @@ export default class ConfigService extends EventEmitter {
         }
 
         if (!this.get('storagePath') || !fs.existsSync(path.dirname(storagePath))) {
-            console.warn('[Config Service] Validation failed: `storagePath` is empty');
-            return false;
+            console.warn('[Config Service] Validation failed: `storagePath` is invalid');
+            throw new Error("Storage path is invalid");
         }
 
         const bufferStoragePath = this.get<string>('bufferStoragePath');
         
         if (!bufferStoragePath || (bufferStoragePath.length === 0) || !fs.existsSync(path.dirname(bufferStoragePath))) {
             console.warn('[Config Service] Validation failed: `bufferStoragePath` is invalid');
-            return false;
+            throw new Error("Buffer path is invalid");
         }
 
         // Check if the specified paths is a valid WoW Combat Log directory
@@ -143,9 +143,10 @@ export default class ConfigService extends EventEmitter {
 
         if (!hasValidCombatLogPath) {
             console.warn(`[Config Service] No valid WoW Combat Log directory has been configured.`)
+            throw new Error("No valid retail or classic log path found.");
         }
 
-        return hasValidCombatLogPath;
+        return;
     }
 
     has(key: keyof ConfigurationSchema): boolean {

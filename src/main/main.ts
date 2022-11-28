@@ -215,15 +215,13 @@ const createWindow = async () => {
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send('updateTitleBar', 'Warcraft Recorder v' + app.getVersion());
 
-    const configOK = cfg.validate();
     const cfgStartMinimized = cfg.get<boolean>('startMinimized');
 
     if (!cfgStartMinimized) {
       mainWindow.show();
     }
 
-    if (!configOK) return;
-
+    if (!checkConfig()) return;
     makeRecorder(recorderOptions);
 
     const retailLogPath = cfg.getPath('retailLogPath');
@@ -339,8 +337,16 @@ const checkConfig = () : boolean => {
   if (mainWindow === null) {
     return false;
   }
+
+  try {
+    cfg.validate();
+  } catch (err) {
+    // @@@ update with err text
+    console.info("[Main] Config is bad: ", err);
+    return false;
+  }  
   
-  return cfg.validate();
+  return true;
 }
 
 /**
@@ -568,18 +574,14 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  * Test button listener. 
  */
 ipcMain.on('test', (_event, args) => {
-  if (cfg.validate()) { 
-    console.info("[Main] Config is good, running test!");
+  if (!checkConfig()) return;
 
-    if (retailHandler) {
-      console.info("[Main] Running retail test");
-      runRetailRecordingTest(Boolean(args[0]));
-    } else if (classicHandler) {
-      console.info("[Main] Running classic test");
-      runClassicRecordingTest(Boolean(args[0]));
-    }
-  } else {
-    console.info("[Main] Config is bad, don't run test");
+  if (retailHandler) {
+    console.info("[Main] Running retail test");
+    runRetailRecordingTest(Boolean(args[0]));
+  } else if (classicHandler) {
+    console.info("[Main] Running classic test");
+    runClassicRecordingTest(Boolean(args[0]));
   }
 });
 
