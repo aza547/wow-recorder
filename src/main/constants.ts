@@ -310,9 +310,11 @@ const raidInstances: RaidInstanceType[] = [
 ];
 
 /**
- * Dungeons by zone ID.
+ * Dungeons by zone ID. This might technically be "instanceID". Get these from
+ * here: https://wowpedia.fandom.com/wiki/InstanceID.
  */
 const dungeonsByZoneId: NumberKeyToStringValueMapType = {
+  // Shadowlands
   1651: 'Return to Karazhan',
   1208: 'Grimrail Depot',
   1195: 'Iron Docks',
@@ -326,14 +328,25 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   2286: "The Necrotic Wake",
   2293: "Theater of Pain",
   2441: "Tazavesh the Veiled Market",
+
+  // Dragonflight S1
+  2521: "Ruby Life Pools",
+  2516: "The Nokhud Offensive",
+  2515: "The Azure Vault",
+  2526: "Algeth'ar Academy",
+  1477: "Halls of Valor",
+  1571: "Court of Stars",
+  1176: "Shadowmoon Burial Grounds",
+  960: "Temple of the Jade Serpent",
 }
 
 /**
- * Dungeons by map Id
- * Names have been shortened, or abbreviated due to size constraints in
- * <VideoButton/>
+ * Dungeons by MapID. Get this by going to the keystone page on wowhead, e.g.:
+ * https://www.wowhead.com/spell=393483/set-keystone-map-shadowmoon-burial-grounds
+ * and extracting the effect ID. 
  */
 const dungeonsByMapId: NumberKeyToStringValueMapType = {
+  // Shadowlands
   166: 'Grimrail Depot',
   169: 'Iron Docks',
   206: 'Neltharion\'s Lair',
@@ -351,6 +364,16 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   382: 'Theater of Pain',
   391: 'Tazavesh: Streets',
   392: 'Tazavesh: Gambit',
+
+  // Dragonflight S1
+  399: "Ruby Life Pools",
+  400: "The Nokhud Offensive",
+  401: "The Azure Vault",
+  402: "Algeth'ar Academy",
+  200: "Halls of Valor",
+  210: "Court of Stars",
+  165: "Shadowmoon Burial Grounds",
+  2:   "Temple of the Jade Serpent",
 }
 
 /**
@@ -364,6 +387,7 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
  * occasionally adjusts timers for a dungeon.
  */
 const dungeonTimersByMapId: { [id: number]: number[]; } = {
+  // Shadowlands
   206: [(40 * 60), (40 * 60), (40 * 60)],
   377: [(43 * 60), (34 * 60) + 25, (25 * 60) + 49],
   378: [(32 * 60), (25 * 60) + 36, (19 * 60) + 12],
@@ -381,6 +405,16 @@ const dungeonTimersByMapId: { [id: number]: number[]; } = {
   392: [(30 * 60), (24 * 60), (18 * 60)],
   169: [(30 * 60), (24 * 60), (18 * 60)],
   166: [(30 * 60), (24 * 60), (18 * 60)],
+
+  // Dragonflight S1
+  399:  [(40 * 60), (40 * 60), (40 * 60)], // @@@ TODO
+  400:  [(40 * 60), (40 * 60), (40 * 60)], // @@@ TODO
+  401:  [(40 * 60), (40 * 60), (40 * 60)], // @@@ TODO
+  402:  [(40 * 60), (40 * 60), (40 * 60)], // @@@ TODO
+  200:  [(40 * 60), (40 * 60), (40 * 60)], // @@@ TODO
+  210:  [(40 * 60), (40 * 60), (40 * 60)], // @@@ TODO
+  165:  [(40 * 60), (40 * 60), (40 * 60)], // @@@ TODO
+  2:    [(40 * 60), (40 * 60), (40 * 60)], // @@@ TODO
 }
 
 const dungeonEncounters: NumberKeyToStringValueMapType = {
@@ -484,6 +518,53 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   2441: 'The Grand Menagerie',
   2437: "So'azmi",
   2440: "Myza's Oasis",
+
+  // Ruby Life Pools
+  2609: "Melidrussa Chillworn",
+  2606: "Kokia Blazehoof",
+  2623: "Kyrakka and Erhkard Stormvein",
+
+  // The Nokhud Offensive
+  2637: "Granyth",
+  2636: "The Raging Tempest",
+  2581: "Teera and Maruuk",
+  2570: "Balakar Khan",
+
+  // The Azure Vault
+  2582: "Leymor",
+  2585: "Azureblade",
+  2583: "Telash Greywing",
+  2584: "Umbrelskul",
+
+  // Algeth'ar Acedemy
+  2562: "Vexamus",
+  2563: "Overgrown Ancient",
+  2564: "Crawth",
+  2565: "Echo of Doragosa",
+
+  // Halls of Valor
+  1805: "Hymdall", 
+	1806: "Hyrja",
+	1807: "Fenryr",
+	1808: "God-King Skovald",
+  1809: "Odyn",
+
+  // Court of Stars
+  1868: "Hymdall", 
+	1869: "Talixae Flamewreath",
+	1870: "Advisor Melandrus",
+
+  // Shadowmmon Burial Grounds
+  1677: "Sadana Bloodfury", 
+	1688: "Nhallish",
+	1679: "Bonemaw",
+	1682: "Ner'zhul",
+
+  // Temple of the Jade Serpent
+  1418: "Wise Mari", 
+	1417: "Lorewalker Stonestep",
+	1416: "Liu Flameheart",
+	1439: "Sha of Doubt",
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
