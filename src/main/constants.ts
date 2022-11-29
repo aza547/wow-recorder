@@ -542,29 +542,29 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   2564: "Crawth",
   2565: "Echo of Doragosa",
 
-  // Halls of Valor
+  // Halls of Valor  
   1805: "Hymdall", 
-	1806: "Hyrja",
-	1807: "Fenryr",
-	1808: "God-King Skovald",
+  1806: "Hyrja",
+  1807: "Fenryr",
+  1808: "God-King Skovald",
   1809: "Odyn",
 
   // Court of Stars
   1868: "Hymdall", 
-	1869: "Talixae Flamewreath",
-	1870: "Advisor Melandrus",
+  1869: "Talixae Flamewreath",
+  1870: "Advisor Melandrus",
 
   // Shadowmmon Burial Grounds
   1677: "Sadana Bloodfury", 
-	1688: "Nhallish",
-	1679: "Bonemaw",
-	1682: "Ner'zhul",
+  1688: "Nhallish",
+  1679: "Bonemaw",
+  1682: "Ner'zhul",
 
   // Temple of the Jade Serpent
   1418: "Wise Mari", 
-	1417: "Lorewalker Stonestep",
-	1416: "Liu Flameheart",
-	1439: "Sha of Doubt",
+  1417: "Lorewalker Stonestep",
+  1416: "Liu Flameheart",
+  1439: "Sha of Doubt",
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
