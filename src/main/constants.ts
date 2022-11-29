@@ -337,7 +337,7 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   1477: "Halls of Valor",
   1571: "Court of Stars",
   1176: "Shadowmoon Burial Grounds",
-  960: "Temple of the Jade Serpent",
+  960:  "Temple of the Jade Serpent",
 }
 
 /**
