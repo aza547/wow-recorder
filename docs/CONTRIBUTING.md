@@ -11,7 +11,7 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 1. Run `npm install` on the command line to install required node packages.
 1. Run `npm start` to launch the application.
 
-## Building and Packaging
+## Buildin, Packaging and Releasing
 1. Build the electron application.
     1. Update the version number in `./release/app/package.json` if appropriate.  
     1. Run `npm run package` to build the electron application. 
