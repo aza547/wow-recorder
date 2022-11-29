@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- [Issue 187](https://github.com/aza547/wow-recorder/issues/187) - Added the new M+ dungeons for Dragonflight S1.
+
 ### Changed
 ### Fixed
 
