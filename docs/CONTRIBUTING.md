@@ -13,7 +13,7 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 
 ## Building and Packaging
 1. Build the electron application.
-    1. Update the version number in `./release/app/package.json`. 
+    1. Update the version number in `./release/app/package.json` if appropriate.  
     1. Run `npm run package` to build the electron application. 
 1. Install the .exe and run the tests to make sure you've not broken something crass.
     1. With WarcraftRecorder open, run: `python .\resources\test-scripts\all_tests.py`.
