@@ -11,9 +11,9 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 1. Run `npm install` on the command line to install required node packages.
 1. Run `npm start` to launch the application.
 
-## Building and Packaging
+## Building, Packaging and Releasing
 1. Build the electron application.
-    1. Update the version number in `./release/app/package.json`. 
+    1. Update the version number in `./release/app/package.json` if appropriate.  
     1. Run `npm run package` to build the electron application. 
 1. Install the .exe and run the tests to make sure you've not broken something crass.
     1. With WarcraftRecorder open, run: `python .\resources\test-scripts\all_tests.py`.
@@ -27,11 +27,13 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 	1. Tag a release on GitHub and attach the executable (e.g. `./release/build/WarcraftRecorder Setup 1.0.2.exe`).
 
 ## Tests
+
 1. Run `npm test` to run the UTs. 
     1. These are `jest` based unit tests. 
+    2. Note: This is a WIP - the UTs currently are not useful.
 2. To run end-to-end tests (requires some hardcoded path updates):
     * All tests: `python .\resources\test-scripts\all_tests.py`.
-    * Individual test: `python .\resources\test-scripts\2v2.py`.
+    * Individual test: `python  .\resources\test-scripts\retail_mythic_plus.py`.
 
 ## Debugging Mode
 You can use VSCode's JavaScript Debug terminal to step through the code, add breakpoints, view variables and the other IDE features.  
