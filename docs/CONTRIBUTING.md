@@ -33,7 +33,7 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
     2. Note: This is a WIP - the UTs currently are not useful.
 2. To run end-to-end tests (requires some hardcoded path updates):
     * All tests: `python .\resources\test-scripts\all_tests.py`.
-    * Individual test: `python .\resources\test-scripts\2v2.py`.
+    * Individual test: `python  .\resources\test-scripts\retail_mythic_plus.py`.
 
 ## Debugging Mode
 You can use VSCode's JavaScript Debug terminal to step through the code, add breakpoints, view variables and the other IDE features.  
