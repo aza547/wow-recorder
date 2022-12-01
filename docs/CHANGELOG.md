@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 ### Fixed
+- [Issue 236](https://github.com/aza547/wow-recorder/issues/236) - Fix to ignore normal, heroic and m0 dungeon bosses. 
 
 ## [3.0.4] - 2022-11-27
 ### Fixed
