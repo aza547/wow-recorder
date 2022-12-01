@@ -145,22 +145,28 @@ export default class RetailLogHandler extends LogHandler {
 
     handleEncounterStartLine(line: LogLine) {
         console.debug("[RetailLogHandler] Handling ENCOUNTER_START line:", line);
+        const encounterID = parseInt(line.arg(1), 10);
 
         if (!this.activity) {
+            // For regular dungeon encounters (not M+), don't record
+            if (dungeonEncounters.hasOwnProperty(encounterID)) {
+                console.info("[RetailLogHandler] It's a regular dungeon encounter, don't record");
+                return;
+            }
+
             super.handleEncounterStartLine(line, Flavour.Retail);
             return;
         } 
 
         const category = this.activity.category;
-        const isChallengeMode = category === VideoCategory.MythicPlus;
+        const isChallengeMode = (category === VideoCategory.MythicPlus);
 
         if (!isChallengeMode) {
-            console.error(`[RetailLogHandler] Encounter is already in progress and not a ChallengeMode`);
+            console.error("[RetailLogHandler] Encounter is already in progress and not a ChallengeMode");
             return;
         }
 
         const activeChallengeMode = this.activity as ChallengeModeDungeon;
-        const encounterID = parseInt(line.arg(1), 10)
         const eventDate = line.date();
         
         const segment = new ChallengeModeTimelineSegment(
