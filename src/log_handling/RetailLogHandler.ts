@@ -148,7 +148,6 @@ export default class RetailLogHandler extends LogHandler {
         const encounterID = parseInt(line.arg(1), 10);
 
         if (!this.activity) {
-            // For regular dungeon encounters (not M+), don't record
             if (dungeonEncounters.hasOwnProperty(encounterID)) {
                 console.info("[RetailLogHandler] It's a regular dungeon encounter, don't record");
                 return;
