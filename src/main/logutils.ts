@@ -191,4 +191,5 @@ export {
     ambiguate,
     allowRecordCategory,
     filterFlavoursByConfig,
+    getAdjustedDate,
 };

@@ -1,6 +1,7 @@
 import { CombatLogParser } from '../main/combatLogParser';
 import RetailLogHandler from '../log_handling/RetailLogHandler';
 import { Recorder, RecorderOptionsType } from "../main/recorder";
+import { getAdjustedDate } from '../main/logutils';
 jest.mock('../main/recorder');
 
 const opts: RecorderOptionsType =  {
@@ -24,6 +25,8 @@ test('Test', () => {
     const parser = new CombatLogParser();
     const recorder = new Recorder(opts);
     RetailLogHandler.getInstance(recorder, parser);
-    parser.handleLogLine("retail", "line");
+
+    const line = getAdjustedDate() + "  ARENA_MATCH_START,2547,33,2v2,1";
+    parser.handleLogLine("retail", line);
 })
 
