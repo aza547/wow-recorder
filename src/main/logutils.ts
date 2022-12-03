@@ -1,146 +1,15 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
-import { recorder, retailHandler, classicHandler }  from './main';
-import { categoryRecordingSettings, VideoCategory, wowExecutableFlavours }  from './constants';
+import { categoryRecordingSettings, VideoCategory }  from './constants';
 import { IWoWProcessResult, UnitFlags } from './types';
 import { CombatLogParser } from './combatLogParser';
-import { getSortedFiles } from './util';
 import ConfigService from './configService';
-import RetailLogHandler from '../log_handling/RetailLogHandler'
-import ClassicLogHandler from '../log_handling/ClassicLogHandler'
-import { Recorder } from './recorder';
-import LogHandler from 'log_handling/LogHandler';
 
-const cfg = ConfigService.getInstance();
-const tasklist = require('tasklist');
 let testRunning: boolean = false;
-
-
-/**
- * Setup retail log handler.
- */
-const makeRetailHandler = (recorder: Recorder, logPath: string): RetailLogHandler => {
-    const parser = new CombatLogParser({
-        dataTimeout: 2 * 60 * 1000,
-        fileFinderFn: getSortedFiles,
-    });
-
-    parser.watchPath(logPath);
-    return RetailLogHandler.getInstance(recorder, parser);
-}
-
-/**
- * Setup classic log handler.
- */
-const makeClassicHandler = (recorder: Recorder, logPath: string): ClassicLogHandler => {
-    const parser = new CombatLogParser({
-        dataTimeout: 2 * 60 * 1000,
-        fileFinderFn: getSortedFiles,
-    });
-
-    parser.watchPath(logPath);
-    return ClassicLogHandler.getInstance(recorder, parser);
-}
-
-/**
- * Is wow running? Starts null but we'll check immediately on start-up.
- */
-let wowProcessRunning: IWoWProcessResult | null = null;
-
-const resetProcessTracking = () => {
-    wowProcessRunning = null;
-}
-
-/**
- * Timers for poll
- */
-let pollWowProcessInterval: NodeJS.Timer;
-
-/**
- * Handle WoW process starting.
- */
-const wowProcessStarted = (process: IWoWProcessResult) => {
-    wowProcessRunning = process;
-    console.log(`[Logutils] Detected ${process.exe} (${process.flavour}) running`);
-    recorder.startBuffer();
-};
-
-/**
- * Handle WoW process stopping.
- */
-const wowProcessStopped = () => {
-    if (!wowProcessRunning) {
-        return;
-    }
-
-    console.log(`[Logutils] Detected ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) not running`);
-    wowProcessRunning = null;
-
-    if (retailHandler.activity) {
-        retailHandler.forceEndActivity();
-    } else if (classicHandler.activity) {
-        retailHandler.forceEndActivity();
-    } else {
-        recorder.stopBuffer();
-    }
-};
-
-/**
- * Check Windows task list and find any WoW process.
- */
-const checkWoWProcess = async (): Promise<IWoWProcessResult[]> => {
-    const wowProcessRx = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
-    const taskList = await tasklist();
-
-    return taskList
-        // Map all processes found to check if they match `wowProcessRx`
-        .map((p: any) => p.imageName.match(wowProcessRx))
-        // Remove those that result in `null` (didn't match)
-        .filter((p: any) => p)
-        // Return an object suitable for `IWoWProcessResult`
-        .map((match: any): IWoWProcessResult => ({
-            exe: match[0],
-            flavour: wowExecutableFlavours[match[1].toLowerCase()]
-        }))
-    ;
-}
-
-/**
- * pollWoWProcessLogic
- */
-const pollWoWProcessLogic = async () => {
-    const wowProcesses = await checkWoWProcess();
-    const processesToRecord = wowProcesses.filter(filterFlavoursByConfig);
-    const firstProcessToRecord = processesToRecord.pop();
-
-    if ((wowProcessRunning === null) && firstProcessToRecord) {
-        wowProcessStarted(firstProcessToRecord);
-    } else if (wowProcessRunning !== null && !firstProcessToRecord) {
-        wowProcessStopped();
-    }
-}
-
-/**
- * pollWoWProcess
- */
-const pollWowProcess = () => {
-    // If we've re-called this we need to reset the current state of process 
-    // tracking. This is important for settings updates. 
-    resetProcessTracking();
-
-    // Run a check without waiting for the timeout. 
-    pollWoWProcessLogic();
-
-    if (pollWowProcessInterval) {
-        clearInterval(pollWowProcessInterval);
-    }
-
-    pollWowProcessInterval = setInterval(pollWoWProcessLogic, 5000);
-}
 
 /**
  * Filter out flavours that we are not configured to record. 
  */
-const filterFlavoursByConfig = (wowProcess: IWoWProcessResult) => {
+const filterFlavoursByConfig = (cfg: ConfigService, wowProcess: IWoWProcessResult) => {
     const wowFlavour = wowProcess.flavour;
 
     const recordClassic = cfg.get<boolean>("recordClassic");
@@ -175,10 +44,8 @@ const getAdjustedDate = (seconds: number = 0): string => {
  * Function to invoke if the user clicks the "run a test" button
  * in the GUI. Uses some sample log lines from 2v2.txt.
  */
-const runRetailRecordingTest = (endTest: boolean = true) => {
+const runRetailRecordingTest = (parser: CombatLogParser, endTest: boolean = true) => {
     console.log("[Logutils] User pressed the test button!");
-
-    const parser = retailHandler.combatLogParser;
 
     if (!endTest) {
         console.log("[Logutils] The test will NOT end on its own and needs to be stopped manually.");
@@ -186,11 +53,6 @@ const runRetailRecordingTest = (endTest: boolean = true) => {
 
     if (testRunning) {
         console.info("[Logutils] Test already running, not starting test.");
-        return;
-    }
-
-    if (wowProcessRunning === null) {
-        console.info("[Logutils] WoW isn't running, not starting test.");
         return;
     }
 
@@ -230,10 +92,8 @@ const runRetailRecordingTest = (endTest: boolean = true) => {
  * Function to invoke if the user clicks the "run a test" button
  * in the GUI. Uses some sample log lines from 2v2.txt.
  */
- const runClassicRecordingTest = (endTest: boolean = true) => {
+ const runClassicRecordingTest = (parser: CombatLogParser, endTest: boolean = true) => {
     console.log("[Logutils] User pressed the test button!");
-
-    const parser = classicHandler.combatLogParser;
 
     if (!endTest) {
         console.log("[Logutils] The test will NOT end on its own and needs to be stopped manually.");
@@ -241,11 +101,6 @@ const runRetailRecordingTest = (endTest: boolean = true) => {
 
     if (testRunning) {
         console.info("[Logutils] Test already running, not starting test.");
-        return;
-    }
-
-    if (wowProcessRunning === null) {
-        console.info("[Logutils] WoW isn't running, not starting test.");
         return;
     }
 
@@ -313,7 +168,7 @@ const ambiguate = (nameRealm: string): string[] => {
     return [name, realm];
 }
 
-const allowRecordCategory = (category: VideoCategory) => {
+const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
     const categoryConfig = categoryRecordingSettings[category];
     const categoryAllowed = cfg.get<boolean>(categoryConfig.configKey);
 
@@ -327,15 +182,13 @@ const allowRecordCategory = (category: VideoCategory) => {
 };
 
 export {
-    pollWowProcess,
     runRetailRecordingTest,
     runClassicRecordingTest,
-    makeRetailHandler,
-    makeClassicHandler,
     isUnitFriendly,
     isUnitSelf,
     isUnitPlayer,
     hasFlag,
     ambiguate,
-    allowRecordCategory
+    allowRecordCategory,
+    filterFlavoursByConfig,
 };

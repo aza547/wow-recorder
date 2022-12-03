@@ -24,9 +24,7 @@ export default class RetailLogHandler extends LogHandler {
         return RetailLogHandler._instance;
     }
 
-    constructor(recorder: Recorder, 
-                combatLogParser: CombatLogParser) 
-    {
+    constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
         super(recorder, combatLogParser);
         this.combatLogParser
             .on('ENCOUNTER_START',      (line: LogLine) => { this.handleEncounterStartLine(line) })

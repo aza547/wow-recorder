@@ -1,12 +1,11 @@
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
-import ConfigService from "../main/configService";
-import { categoryRecordingSettings, raidInstances, VideoCategory } from "../main/constants";
+import { raidInstances, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
 import { Flavour, PlayerDeathType } from "../main/types";
 import Activity from "../activitys/Activity";
 import RaidEncounter from "../activitys/RaidEncounter";
-import { allowRecordCategory, ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
+import { ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -19,22 +18,18 @@ export default abstract class LogHandler {
     protected _recorder;
     protected _combatLogParser: CombatLogParser;
     protected _player: Combatant | undefined;
-    protected _cfg: ConfigService;
     protected _activity?: Activity;
 
-    constructor(recorder: Recorder, 
-                combatLogParser: CombatLogParser)
+    constructor(recorder: Recorder, combatLogParser: CombatLogParser)
     {
         this._recorder = recorder;
         this._combatLogParser = combatLogParser;
         this._combatLogParser.on('DataTimeout', (ms: number) => { this.dataTimeout(ms)});
-        this._cfg = ConfigService.getInstance();
     }
 
     get activity() { return this._activity };
     get combatLogParser() { return this._combatLogParser };
     get recorder() { return this._recorder };
-    get cfg() { return this._cfg };
     get player() { return this._player };
 
     set activity(activity) { this._activity = activity };
@@ -122,7 +117,7 @@ export default abstract class LogHandler {
 
     startRecording = (activity: Activity) => {
         const category = activity.category;
-        const allowed = allowRecordCategory(category);
+        const allowed = true; //@@@allowRecordCategory(this.cfg, category);
 
         if (!allowed) {
             console.info("[LogHandler] Not configured to record", category);
