@@ -1,7 +1,7 @@
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import ConfigService from "../main/configService";
-import { categoryRecordingSettings, VideoCategory } from "../main/constants";
+import { categoryRecordingSettings, raidInstances, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
 import { Flavour, PlayerDeathType } from "../main/types";
 import Activity from "../activitys/Activity";
@@ -43,8 +43,14 @@ export default abstract class LogHandler {
         console.debug("[LogHandler] Handling ENCOUNTER_START line:", line);
 
         const startDate = line.date();
-        const encounterID = parseInt(line.arg(1), 10)
+        const encounterID = parseInt(line.arg(1), 10);   
         const difficultyID = parseInt(line.arg(3), 10);
+        const raids = raidInstances.filter(r => r.encounters.hasOwnProperty(encounterID));
+
+        if (!raids.pop()) {
+            console.debug("[LogHandler] Encounter ID not recognised, not recording");
+            return;
+        }
         
         this.activity = new RaidEncounter(startDate,
                                           encounterID, 
