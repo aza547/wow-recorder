@@ -19,12 +19,13 @@ type StatusMessageObjectType = {
 const statusMessages: { [key: number]: StatusMessageObjectType } = {
   [RecStatus.Recording]:     { style: 'big',   icon: recordIcon, title: 'Recording' },
   [RecStatus.WaitingForWoW]: { style: 'small', icon: eyeIcon,    title: 'Waiting for WoW to start' },
-  [RecStatus.InvalidConfig]: { style: 'small', icon: errorIcon,  title: 'Failed to launch, check config is valid' },
+  [RecStatus.InvalidConfig]: { style: 'small', icon: errorIcon,  title: 'Failed to start, check config is valid' },
   [RecStatus.ReadyToRecord]: { style: 'small', icon: watchIcon,  title: 'Ready and waiting'},
 };
 
 export default function RecorderStatus() {
   const [status, setStatus] = useState(RecStatus.WaitingForWoW);
+  const [invalidReason, setInvalidReason] = useState("");
   const [openDialog, setDialog] = useState(false);
 
   const closeDialog = () => setDialog(false);
@@ -40,13 +41,26 @@ export default function RecorderStatus() {
   };
 
   useEffect(() => {
-    window.electron.ipcRenderer.on('updateRecStatus', (status) => {
-    setStatus(status as RecStatus);
+    window.electron.ipcRenderer.on('updateRecStatus', (status, reason) => {
+      setStatus(status as RecStatus);
+
+      if (status === RecStatus.InvalidConfig){
+        setInvalidReason(reason as string);
+      }
     });
   }, []);
 
   const message = statusMessages[status];
   const isRecording = (status === RecStatus.Recording);
+  let mouseoverText;
+  
+  if (status === RecStatus.InvalidConfig) {
+    mouseoverText = message.title + ".\n" + invalidReason;
+  } else if (isRecording) {
+    mouseoverText = message.title + ".\nClick to stop recording.";
+  } else {
+    mouseoverText = message.title;
+  }
 
   return (
     <div id="status">
@@ -54,7 +68,7 @@ export default function RecorderStatus() {
         { isRecording ||
           <img 
             id={ message.style + '-rec-status' } 
-            title={ message.title } 
+            title={ mouseoverText } 
             alt="icon" 
             src={ message.icon }
           />
@@ -62,7 +76,7 @@ export default function RecorderStatus() {
         { isRecording &&
           <img
             id={ message.style + '-rec-status' }
-            title={ message.title + ' - Click to stop recording' }
+            title={ mouseoverText }
             onClick={confirmStopRecording}
             onMouseEnter={(e) => showIcon(e, stopRecordingIcon)}
             onMouseLeave={(e) => showIcon(e, message.icon)}

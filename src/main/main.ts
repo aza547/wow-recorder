@@ -340,8 +340,8 @@ const checkConfig = () : boolean => {
 
   try {
     cfg.validate();
-  } catch (err) {
-    // @@@ update with err text
+  } catch (err: any) {
+    updateRecStatus(RecStatus.InvalidConfig, err.toString());
     console.info("[Main] Config is bad: ", err);
     return false;
   }  
@@ -353,8 +353,10 @@ const checkConfig = () : boolean => {
  * Updates the status icon for the application.
  * @param status the status number
  */
-const updateRecStatus = (status: RecStatus) => {
-  if (mainWindow !== null) mainWindow.webContents.send('updateRecStatus', status);
+const updateRecStatus = (status: RecStatus, reason: string = "") => {
+  if (mainWindow !== null) {
+    mainWindow.webContents.send('updateRecStatus', status, reason);
+  }
 }
 
 /**
@@ -365,7 +367,6 @@ ipcMain.on('mainWindow', (_event, args) => {
 
   if (args[0] === "minimize") {
     console.log("[Main] User clicked minimize");
-    //mainWindow.minimize();
     mainWindow.hide();
   }
 
@@ -412,11 +413,7 @@ ipcMain.on('settingsWindow', (event, args) => {
     console.log("[Main] User updated settings");
     
     settingsWindow.once('closed', () => {
-      if (!checkConfig()) {
-        updateRecStatus(RecStatus.InvalidConfig);
-        return;
-      }
-
+      if (!checkConfig()) return;
       updateRecStatus(RecStatus.WaitingForWoW);
 
       recorderOptions = loadRecorderOptions(cfg);

@@ -110,14 +110,14 @@ export default class ConfigService extends EventEmitter {
 
         if (!this.get('storagePath') || !fs.existsSync(path.dirname(storagePath))) {
             console.warn('[Config Service] Validation failed: `storagePath` is invalid');
-            throw new Error("Storage path is invalid");
+            throw new Error("Storage path is invalid.");
         }
 
         const bufferStoragePath = this.get<string>('bufferStoragePath');
         
         if (!bufferStoragePath || (bufferStoragePath.length === 0) || !fs.existsSync(path.dirname(bufferStoragePath))) {
             console.warn('[Config Service] Validation failed: `bufferStoragePath` is invalid');
-            throw new Error("Buffer path is invalid");
+            throw new Error("Buffer path is invalid.");
         }
 
         // Check if the specified paths is a valid WoW Combat Log directory
