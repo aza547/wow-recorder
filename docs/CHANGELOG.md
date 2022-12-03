@@ -6,12 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+
+### Changed
+### Fixed
+ 
+## [3.1.0] - 2022-12-03
+### Added
 - [Issue 187](https://github.com/aza547/wow-recorder/issues/187) - Added the new M+ dungeons and arena for Dragonflight S1.
 - [Issue 237](https://github.com/aza547/wow-recorder/issues/237) - Show specifically what config is wrong when config is invalid. 
 
 ### Changed
 ### Fixed
-- [Issue 236](https://github.com/aza547/wow-recorder/issues/236) - Fix to ignore normal, heroic and m0 dungeon bosses. 
+- [Issue 236](https://github.com/aza547/wow-recorder/issues/236) - Fix to ignore normal, heroic and m0 dungeon bosses, as well as unknown encounters.  
 
 ## [3.0.4] - 2022-11-27
 ### Fixed
