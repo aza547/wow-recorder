@@ -17,7 +17,7 @@ Windows is currently the only supported operating system.
 
 An example of valid config can be found below.
 
-<img src="https://i.imgur.com/MTiLlOh.png" width="300">
+<img src="https://i.imgur.com/KHw04UH.png" width="300">
 
 If you are a retail arena player, I also strongly recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon.
 
