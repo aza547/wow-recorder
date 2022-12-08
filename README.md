@@ -2,7 +2,7 @@
 
 A desktop screen recorder application that records and saves videos of in-game events, and provides a graphical user interface to view the replays. 
 
-Nothing magic happens here, the application watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
+Warcraft Recorder watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
 
 Windows is currently the only supported operating system. 
 
