@@ -6,7 +6,7 @@ Nothing magic happens here, the application watches the combat log file for even
 
 Windows is currently the only supported operating system. 
 
-![](https://i.imgur.com/S0t9kHU.png)
+![](https://i.imgur.com/cYxXXtD.png)
 
 #  How to Use
 1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.3.0.0.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
