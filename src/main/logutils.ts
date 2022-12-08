@@ -8,7 +8,6 @@ import ConfigService from './configService';
 import RetailLogHandler from '../log_handling/RetailLogHandler'
 import ClassicLogHandler from '../log_handling/ClassicLogHandler'
 import { Recorder } from './recorder';
-import LogHandler from 'log_handling/LogHandler';
 
 const cfg = ConfigService.getInstance();
 const tasklist = require('tasklist');

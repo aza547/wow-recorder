@@ -213,10 +213,12 @@ const getFileInfo = async (filePath: string): Promise<FileInfo> => {
         sortDirection: FileSortDirection = FileSortDirection.NewestFirst
     ): Promise<FileInfo[]> => {
 
-    const files = (await globPromise(path.join(dir, pattern)))
-        .map(getFileInfo);
-    
-    const mappedFiles = await Promise.all(files);
+    const files = await globPromise(path.join(dir, pattern));
+    const mappedFiles: FileInfo[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+        mappedFiles.push(await getFileInfo(files[i]));
+    }
 
     if (sortDirection === FileSortDirection.NewestFirst) {
         return mappedFiles.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
