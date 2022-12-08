@@ -1,7 +1,7 @@
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
 import ConfigService from "../main/configService";
-import { categoryRecordingSettings, raidInstances, VideoCategory } from "../main/constants";
+import { raidInstances, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
 import { Flavour, PlayerDeathType } from "../main/types";
 import Activity from "../activitys/Activity";

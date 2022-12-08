@@ -315,6 +315,12 @@ const ambiguate = (nameRealm: string): string[] => {
 
 const allowRecordCategory = (category: VideoCategory) => {
     const categoryConfig = categoryRecordingSettings[category];
+
+    if (!categoryConfig) {
+        console.info("[LogUtils] Unrecognised category", category);
+        return false;
+    }
+
     const categoryAllowed = cfg.get<boolean>(categoryConfig.configKey);
 
     if (!categoryAllowed) {
