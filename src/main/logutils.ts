@@ -75,10 +75,10 @@ const wowProcessStopped = () => {
     console.log(`[Logutils] Detected ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) not running`);
     wowProcessRunning = null;
 
-    if (retailHandler.activity) {
+    if (retailHandler && retailHandler.activity) {
         retailHandler.forceEndActivity();
-    } else if (classicHandler.activity) {
-        retailHandler.forceEndActivity();
+    } else if (classicHandler && classicHandler.activity) {
+        classicHandler.forceEndActivity();
     } else {
         recorder.stopBuffer();
     }
