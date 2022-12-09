@@ -204,11 +204,11 @@ const createWindow = async () => {
     const classicLogPath = cfg.getPath('classicLogPath');
 
     if (retailLogPath) {
-      retailHandler = makeRetailHandler(recorder, retailLogPath);
+      retailHandler = makeRetailHandler(recorder, retailLogPath, cfg);
     }
 
     if (classicLogPath) {
-      classicHandler = makeClassicHandler(recorder, classicLogPath);
+      classicHandler = makeClassicHandler(recorder, classicLogPath, cfg);
     }
     
     pollWowProcess();

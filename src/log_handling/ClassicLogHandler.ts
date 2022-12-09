@@ -6,6 +6,7 @@ import { Flavour } from "../main/types";
 import ArenaMatch from "../activitys/ArenaMatch";
 import { isUnitFriendly, isUnitPlayer } from "../main/logutils";
 import Battleground from "../activitys/Battleground";
+import ConfigService from "main/configService";
 
 /**
  * Classic log handler class.
@@ -21,16 +22,16 @@ export default class ClassicLogHandler extends LogHandler {
     // case we start the timer again.  
     private _playerDeathTimeout?: NodeJS.Timeout;
 
-    static getInstance(recorder: Recorder, combatLogParser: CombatLogParser) {
+    static getInstance(recorder: Recorder, combatLogParser: CombatLogParser, cfg: ConfigService) {
         if (!ClassicLogHandler._instance) {
-            ClassicLogHandler._instance = new ClassicLogHandler(recorder, combatLogParser);
+            ClassicLogHandler._instance = new ClassicLogHandler(recorder, combatLogParser, cfg);
         }
 
         return ClassicLogHandler._instance;
     }
 
-    private constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
-        super(recorder, combatLogParser);
+    private constructor(recorder: Recorder, combatLogParser: CombatLogParser, cfg: ConfigService) {
+        super(recorder, combatLogParser, cfg);
         this.combatLogParser
             .on('ENCOUNTER_START',    (line: LogLine) => { this.handleEncounterStartLine(line) })
             .on('ENCOUNTER_END',      (line: LogLine) => { this.handleEncounterEndLine(line) })

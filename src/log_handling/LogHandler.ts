@@ -5,7 +5,8 @@ import { Recorder } from "../main/recorder";
 import { Flavour, PlayerDeathType } from "../main/types";
 import Activity from "../activitys/Activity";
 import RaidEncounter from "../activitys/RaidEncounter";
-import { ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
+import { allowRecordCategory, ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
+import ConfigService from "main/configService";
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -16,13 +17,15 @@ import { ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/log
  */
 export default abstract class LogHandler {
     protected _recorder;
+    protected _cfg;
     protected _combatLogParser: CombatLogParser;
     protected _player: Combatant | undefined;
     protected _activity?: Activity;
 
-    constructor(recorder: Recorder, combatLogParser: CombatLogParser)
+    constructor(recorder: Recorder, combatLogParser: CombatLogParser, cfg: ConfigService)
     {
         this._recorder = recorder;
+        this._cfg = cfg;
         this._combatLogParser = combatLogParser;
         this._combatLogParser.on('DataTimeout', (ms: number) => { this.dataTimeout(ms)});
     }
@@ -31,6 +34,7 @@ export default abstract class LogHandler {
     get combatLogParser() { return this._combatLogParser };
     get recorder() { return this._recorder };
     get player() { return this._player };
+    get cfg() { return this._cfg };
 
     set activity(activity) { this._activity = activity };
     
@@ -117,7 +121,7 @@ export default abstract class LogHandler {
 
     startRecording = (activity: Activity) => {
         const category = activity.category;
-        const allowed = true; //@@@allowRecordCategory(this.cfg, category);
+        const allowed = allowRecordCategory(this.cfg, category);
 
         if (!allowed) {
             console.info("[LogHandler] Not configured to record", category);
