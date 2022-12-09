@@ -55,7 +55,6 @@ const getEmptyState = () => {
  * Load videos from category folders in reverse chronological order.  
  */
 const loadAllVideos = async (storageDir: any): Promise<any> => {
-    console.log("ahk", storageDir);
     let videoState = getEmptyState();
     if (!storageDir) {
         return videoState;

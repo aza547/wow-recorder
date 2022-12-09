@@ -92,6 +92,8 @@ const videoPlayerSettings: VideoPlayerSettings = {
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let tray = null;
+let wowProcessRunning: IWoWProcessResult | null = null;
+let pollWowProcessInterval: NodeJS.Timer;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -658,100 +660,90 @@ app
   })
   .catch(console.log);
 
-  /**
- * Is wow running? Starts null but we'll check immediately on start-up.
- */
-let wowProcessRunning: IWoWProcessResult | null = null;
-
 const resetProcessTracking = () => {
-    wowProcessRunning = null;
+  wowProcessRunning = null;
 }
-
-/**
- * Timers for poll
- */
-let pollWowProcessInterval: NodeJS.Timer;
 
 /**
  * Handle WoW process starting.
  */
 const wowProcessStarted = (process: IWoWProcessResult) => {
-    wowProcessRunning = process;
-    console.log(`[Logutils] Detected ${process.exe} (${process.flavour}) running`);
-    recorder.startBuffer();
+  wowProcessRunning = process;
+  console.log(`[Logutils] Detected ${process.exe} (${process.flavour}) running`);
+  recorder.startBuffer();
 };
 
 /**
  * Handle WoW process stopping.
  */
 const wowProcessStopped = () => {
-    if (!wowProcessRunning) {
-        return;
-    }
+  if (!wowProcessRunning) {
+    return;
+  }
 
-    console.log(`[Logutils] Detected ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) not running`);
-    wowProcessRunning = null;
+  console.log(`[Logutils] Detected ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) not running`);
+  wowProcessRunning = null;
 
-    if (retailHandler.activity) {
-        retailHandler.forceEndActivity();
-    } else if (classicHandler.activity) {
-        retailHandler.forceEndActivity();
-    } else {
-        recorder.stopBuffer();
-    }
+  if (retailHandler.activity) {
+    retailHandler.forceEndActivity();
+  } else if (classicHandler.activity) {
+    retailHandler.forceEndActivity();
+  } else {
+    recorder.stopBuffer();
+  }
 };
 
 /**
  * Check Windows task list and find any WoW process.
  */
 const checkWoWProcess = async (): Promise<IWoWProcessResult[]> => {
-    const wowProcessRx = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
-    const taskList = await tasklist();
+  const wowProcessRx = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
+  const taskList = await tasklist();
 
-    return taskList
-        // Map all processes found to check if they match `wowProcessRx`
-        .map((p: any) => p.imageName.match(wowProcessRx))
-        // Remove those that result in `null` (didn't match)
-        .filter((p: any) => p)
-        // Return an object suitable for `IWoWProcessResult`
-        .map((match: any): IWoWProcessResult => ({
-            exe: match[0],
-            flavour: wowExecutableFlavours[match[1].toLowerCase()]
-        }))
-    ;
+  return taskList
+    // Map all processes found to check if they match `wowProcessRx`
+    .map((p: any) => p.imageName.match(wowProcessRx))
+    // Remove those that result in `null` (didn't match)
+    .filter((p: any) => p)
+    // Return an object suitable for `IWoWProcessResult`
+    .map((match: any): IWoWProcessResult => ({
+      exe: match[0],
+      flavour: wowExecutableFlavours[match[1].toLowerCase()]
+    }))
+  ;
 }
 
 /**
  * pollWoWProcessLogic
  */
 const pollWoWProcessLogic = async () => {
-    const wowProcesses = await checkWoWProcess();
-    const processesToRecord = wowProcesses.filter((e) => { filterFlavoursByConfig(cfg, e) });
-    const firstProcessToRecord = processesToRecord.pop();
+  const wowProcesses = await checkWoWProcess();
+  const processesToRecord = wowProcesses.filter((e) => { return filterFlavoursByConfig(cfg, e) });
+  const firstProcessToRecord = processesToRecord.pop();
 
-    if ((wowProcessRunning === null) && firstProcessToRecord) {
-        wowProcessStarted(firstProcessToRecord);
-    } else if (wowProcessRunning !== null && !firstProcessToRecord) {
-        wowProcessStopped();
-    }
+  if ((wowProcessRunning === null) && firstProcessToRecord) {
+    wowProcessStarted(firstProcessToRecord);
+  } else if (wowProcessRunning !== null && !firstProcessToRecord) {
+    wowProcessStopped();
+  }
 }
 
 /**
  * pollWoWProcess
  */
 const pollWowProcess = () => {
-    // If we've re-called this we need to reset the current state of process 
-    // tracking. This is important for settings updates. 
-    resetProcessTracking();
+  // If we've re-called this we need to reset the current state of process 
+  // tracking. This is important for settings updates. 
+  resetProcessTracking();
 
-    // Run a check without waiting for the timeout. 
-    pollWoWProcessLogic();
+  // Run a check without waiting for the timeout. 
+  pollWoWProcessLogic();
 
-    if (pollWowProcessInterval) {
-        clearInterval(pollWowProcessInterval);
-    }
+  if (pollWowProcessInterval) {
+    clearInterval(pollWowProcessInterval);
+  }
 
-    pollWowProcessInterval = setInterval(pollWoWProcessLogic, 5000);
+  pollWowProcessInterval = setInterval(pollWoWProcessLogic, 5000);
 }
 
 /**
