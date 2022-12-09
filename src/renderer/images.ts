@@ -5,11 +5,11 @@ interface imageObject {
 }
 
 const retailArenaIDs = Object.keys(retailArenas).map(v => parseInt(v, 10));
-const retailArena: imageObject = {};
+const retailArenaImages: imageObject = {};
 
 for (const id of retailArenaIDs) {
     try {
-        retailArena[id] = require(`../../assets/arena/${id}.jpg`);
+        retailArenaImages[id] = require(`../../assets/arena/${id}.jpg`);
     }
     catch (e) {
         console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
@@ -17,11 +17,11 @@ for (const id of retailArenaIDs) {
 }
 
 const classicArenaIDs = Object.keys(classicArenas).map(v => parseInt(v, 10));
-const classicArena: imageObject = {};
+const classicArenaImages: imageObject = {};
 
 for (const id of classicArenaIDs) {
     try {
-        classicArena[id] = require(`../../assets/arena/${id}.jpg`);
+        classicArenaImages[id] = require(`../../assets/arena/${id}.jpg`);
     }
     catch (e) {
         console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
@@ -29,11 +29,11 @@ for (const id of classicArenaIDs) {
 }
 
 const dungeonIDs = Object.keys(dungeonsByZoneId).map(v => parseInt(v, 10));
-let dungeon: imageObject = {};
+let dungeonImages: imageObject = {};
 
 for (const id of dungeonIDs) {
     try {
-        dungeon[id] = require(`../../assets/dungeon/${id}.jpg`);
+        dungeonImages[id] = require(`../../assets/dungeon/${id}.jpg`);
     }
     catch (e) {
         console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
@@ -41,11 +41,11 @@ for (const id of dungeonIDs) {
 }
 
 const raidIDs = Object.keys(raidEncountersById).map(v => parseInt(v, 10));
-const raid: imageObject = {};
+const raidImages: imageObject = {};
 
 for (const id of raidIDs) {
     try {
-        raid[id] = require(`../../assets/raid/${id}.jpg`);
+        raidImages[id] = require(`../../assets/raid/${id}.jpg`);
     }
     catch (e) {
         console.debug(`[Images] Unable to load image resource that was expected to exist.\n`, e)
@@ -77,33 +77,33 @@ for (const id of classicBattlegroundIDs) {
 }
 
 const specIDs = Object.keys(specializationById).map(v => parseInt(v, 10));
-const spec: imageObject = { 
+const specImages: imageObject = { 
     0: require("../../assets/icon/wowNotFound.png") 
 };
 
 for (const id of specIDs) {
     try {
-        spec[id] = require(`../../assets/specs/${id}.png`);
+        specImages[id] = require(`../../assets/specs/${id}.png`);
     }
     catch (e) {
         console.error(`[Images] Unable to load image resource that was expected to exist.\n`, e)
     };
 }
 
-const arena = {
-    ...retailArena,
-    ...classicArena,
+const arenaImages = {
+    ...retailArenaImages,
+    ...classicArenaImages,
 }
 
-const battleground = {
-    ...retailBattlegrounds,
-    ...classicBattlegrounds,
+const battlegroundImages = {
+    ...retailBattlegroundImages,
+    ...classicBattlegroundImages,
 }
 
 export {
-    arena,
-    dungeon,
-    raid,
-    battleground,
-    spec
+    arenaImages,
+    dungeonImages,
+    raidImages,
+    battlegroundImages,
+    specImages,
 }

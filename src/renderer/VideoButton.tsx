@@ -43,11 +43,11 @@ export default function VideoButton(props: any) {
 
   if (video.player) {
     playerName = video.player._name;
-    specIcon = Images.spec[video.player._specID] || Images.spec[0];
+    specIcon = Images.specImages[video.player._specID] || Images.specImages[0];
     playerClass = specializationById[video.player._specID]?.class ?? "";
   } else {
     playerName = "";
-    specIcon = Images.spec[0];
+    specIcon = Images.specImages[0];
     playerClass = "";
   }
   
@@ -61,19 +61,19 @@ export default function VideoButton(props: any) {
 
   switch (category) {
     case VideoCategory.Raids:
-      buttonImage = Images.raid[video.encounterID];
+      buttonImage = Images.raidImages[video.encounterID];
       break;
 
     case VideoCategory.MythicPlus:
-      buttonImage = Images.dungeon[video.zoneID];
+      buttonImage = Images.dungeonImages[video.zoneID];
       break;
 
     case VideoCategory.Battlegrounds:
-      buttonImage = Images.battleground[video.zoneID];
+      buttonImage = Images.battlegroundImages[video.zoneID];
       break;
 
     default:
-      buttonImage = Images.arena[video.zoneID];
+      buttonImage = Images.arenaImages[video.zoneID];
   }
 
   /**
