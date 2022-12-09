@@ -234,7 +234,7 @@ class CombatLogParser extends EventEmitter {
         super();
 
         const defaultOptions: CombatLogParserOptionsType = {
-            dataTimeout: 120,
+            dataTimeout: 120 * 1000,
             fileFinderFn: getSortedFiles,
         }
 
