@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - [Issue 239](https://github.com/aza547/wow-recorder/issues/239) - Fix app crashing when WoW closes if both log paths (retail and classic) are not configured. 
  - [Issue 238](https://github.com/aza547/wow-recorder/issues/238) - Don't crash on unrecognised video category, just don't record.
  - [NO-ISSUE] - Fix to log watching to make the UI more responsive.
+ - [NO-ISSUE] - Fix Nokhun Proving Grounds image and shorten name.
 
 ## [3.1.0] - 2022-12-03
 ### Added
