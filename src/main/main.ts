@@ -400,11 +400,11 @@ ipcMain.on('settingsWindow', (event, args) => {
       const classicLogPath = cfg.getPath('classicLogPath');
 
       if (retailLogPath) {
-        retailHandler = makeRetailHandler(recorder, retailLogPath);
+        retailHandler = makeRetailHandler(recorder, retailLogPath, cfg);
       }
 
       if (classicLogPath) {
-        classicHandler = makeClassicHandler(recorder, classicLogPath);
+        classicHandler = makeClassicHandler(recorder, classicLogPath, cfg);
       }
 
       pollWowProcess();
@@ -749,19 +749,19 @@ const pollWowProcess = () => {
 /**
  * Setup retail log handler.
  */
- const makeRetailHandler = (recorder: Recorder, logPath: string): RetailLogHandler => {
+ const makeRetailHandler = (recorder: Recorder, logPath: string, cfg: ConfigService): RetailLogHandler => {
   const parser = new CombatLogParser();
   parser.watchPath(logPath);
-  return RetailLogHandler.getInstance(recorder, parser);
+  return RetailLogHandler.getInstance(recorder, parser, cfg);
 }
 
 /**
 * Setup classic log handler.
 */
-const makeClassicHandler = (recorder: Recorder, logPath: string): ClassicLogHandler => {
+const makeClassicHandler = (recorder: Recorder, logPath: string, cfg: ConfigService): ClassicLogHandler => {
   const parser = new CombatLogParser();
   parser.watchPath(logPath);
-  return ClassicLogHandler.getInstance(recorder, parser);
+  return ClassicLogHandler.getInstance(recorder, parser, cfg);
 }
 
 
