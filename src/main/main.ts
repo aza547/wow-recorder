@@ -14,6 +14,7 @@ import {
   toggleVideoProtected,
   fixPathWhenPackaged,
   getAvailableDisplays,
+  loadRecorderOptions,
 } from './util';
 
 /**
@@ -41,13 +42,12 @@ import { IWoWProcessResult, RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
 import { CombatLogParser } from './combatLogParser';
 import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
-import RetailLogHandler from 'log_handling/RetailLogHandler';
-import ClassicLogHandler from 'log_handling/ClassicLogHandler';
+import RetailLogHandler from '../log_handling/RetailLogHandler';
+import ClassicLogHandler from '../log_handling/ClassicLogHandler';
 import { wowExecutableFlavours } from './constants';
 
 let retailHandler: RetailLogHandler;
 let classicHandler: ClassicLogHandler;
-
 let recorder: Recorder;
 
 /**
@@ -62,36 +62,12 @@ let recorder: Recorder;
 });
 
 /**
- * Load and return recorder options from the configuration store.
- * Does some basic sanity checking for default values.
- */
-const loadRecorderOptions = (window: BrowserWindow | null, cfg: ConfigService): RecorderOptionsType => {
-  return {
-    mainWindow:           window,
-    storageDir:           cfg.get<string>('storagePath'),
-    bufferStorageDir:     cfg.get<string>('bufferStoragePath'),
-    maxStorage:           cfg.get<number>('maxStorage'),
-    monitorIndex:         cfg.get<number>('monitorIndex'),
-    audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
-    audioOutputDeviceId:  cfg.get<string>('audioOutputDevice'),
-    minEncounterDuration: cfg.get<number>('minEncounterDuration'),
-    obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
-    obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
-    obsFPS:               cfg.get<number>('obsFPS'),
-    obsKBitRate:          cfg.get<number>('obsKBitRate'),
-    obsCaptureMode:       cfg.get<string>('obsCaptureMode'),
-    obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
-  };
-};
-
-/**
  * Create a settings store to handle the config.
  * This defaults to a path like: 
  *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v2.json"
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v2.json"
  */
 const cfg = ConfigService.getInstance();
-let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
 
 cfg.on('change', (key: string, value: any) => {
   if (key === 'startUp') {
@@ -103,8 +79,6 @@ cfg.on('change', (key: string, value: any) => {
     });
   }
 });
-
-
 
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
@@ -124,12 +98,8 @@ if (process.env.NODE_ENV === 'production') {
   sourceMapSupport.install();
 }
 
-const isDebug =
-  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
-
-if (isDebug) {
-  require('electron-debug')();
-}
+const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+if (isDebug) require('electron-debug')();
 
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
@@ -225,6 +195,7 @@ const createWindow = async () => {
     }
 
     if (!checkConfig()) return;
+    const recorderOptions: RecorderOptionsType = loadRecorderOptions(mainWindow, cfg);
     makeRecorder(recorderOptions);
 
     const retailLogPath = cfg.getPath('retailLogPath');
@@ -420,7 +391,7 @@ ipcMain.on('settingsWindow', (event, args) => {
       if (!checkConfig()) return;
       updateRecStatus(RecStatus.WaitingForWoW);
 
-      recorderOptions = loadRecorderOptions(cfg);
+      const recorderOptions = loadRecorderOptions(mainWindow, cfg);
       makeRecorder(recorderOptions);
 
       const retailLogPath = cfg.getPath('retailLogPath');
@@ -536,7 +507,7 @@ ipcMain.on('contextMenu', (_event, args) => {
 /**
  * Get the list of video files and their state.
  */
-ipcMain.handle('getVideoState', async () => loadAllVideos(recorderOptions.storageDir));
+ipcMain.handle('getVideoState', async () => loadAllVideos(cfg.get<string>('storagePath')));
 
 ipcMain.on('getAudioDevices', (event) => {
   // We can only get this information if the recorder (OBS) has been
@@ -598,12 +569,12 @@ ipcMain.on('recorder', (_event, args) => {
   if (args[0] == 'stop') {
     console.log('[Main] Force stopping recording due to user request.')
 
-    if (retailHandler.activity) {
+    if (retailHandler && retailHandler.activity) {
       retailHandler.forceEndActivity();
       return;
     }
 
-    if (classicHandler.activity) {
+    if (classicHandler && classicHandler.activity) {
       classicHandler.forceEndActivity();
       return;
     }

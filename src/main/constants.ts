@@ -128,7 +128,7 @@ const months: string[] = [
   1825: "Hook Point",
   2509: "Maldraxxus",
   2547: "Enigma Crucible",
-  2563: "Nokhudon Proving Grounds"
+  2563: "Nokhudon",
 }
 
 /**
