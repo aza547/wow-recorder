@@ -2,11 +2,11 @@
 
 A desktop screen recorder application that records and saves videos of in-game events, and provides a graphical user interface to view the replays. 
 
-Nothing magic happens here, the application watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
+Warcraft Recorder watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
 
 Windows is currently the only supported operating system. 
 
-![](https://i.imgur.com/S0t9kHU.png)
+![](https://i.imgur.com/cYxXXtD.png)
 
 #  How to Use
 1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.3.0.0.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
@@ -17,9 +17,9 @@ Windows is currently the only supported operating system.
 
 An example of valid config can be found below.
 
-<img src="https://i.imgur.com/MTiLlOh.png" width="300">
+<img src="https://i.imgur.com/KHw04UH.png" width="300">
 
-If you are a retail arena player, I also strongly recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon.
+If you are a retail arena player, I also recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon.
 
 # Testing It Works
 
