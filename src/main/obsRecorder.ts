@@ -80,7 +80,7 @@ const initOBS = () => {
 
     shutdown();
 
-    throw Error(errorMessage);
+    throw new Error(errorMessage);
   }
 
   osn.NodeObs.OBS_service_connectOutputSignals((signalInfo: any) => {
@@ -219,7 +219,7 @@ const setupScene = (options: RecorderOptionsType): IScene => {
       console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
       const selectedDisplay = displayInfo(monitorIndexFromZero);
       if (!selectedDisplay) {
-        throw Error(`[OBS] No such display with index: ${monitorIndexFromZero}.`)
+        throw new Error(`[OBS] No such display with index: ${monitorIndexFromZero}.`)
       }
 
       baseResolution = selectedDisplay.physicalSize;
@@ -233,7 +233,7 @@ const setupScene = (options: RecorderOptionsType): IScene => {
       break;
 
     default:
-      throw Error(`[OBS] Invalid capture mode: ${options.obsCaptureMode}`);
+      throw new Error(`[OBS] Invalid capture mode: ${options.obsCaptureMode}`);
   }
 
   setOBSVideoResolution(baseResolution, 'Base');
@@ -389,7 +389,7 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 * start
 */
 const start = async () => {
-  if (!obsInitialized) throw Error("OBS not initialised");
+  if (!obsInitialized) throw new Error("OBS not initialised");
   console.log("[OBS] obsRecorder: start");
   osn.NodeObs.OBS_service_startRecording();
   await assertNextSignal("start");
@@ -422,7 +422,7 @@ const shutdown = () => {
     osn.NodeObs.IPC.disconnect();
     obsInitialized = false;
   } catch(e) {
-    throw Error('Exception when shutting down OBS process' + e);
+    throw new Error('Exception when shutting down OBS process' + e);
   }
 
   console.debug('[OBS]  OBS shutdown successfully');
@@ -512,14 +512,14 @@ const assertNextSignal = async (value: string) => {
   if (signalInfo.type !== "recording") {
     console.error("[OBS] " + signalInfo);
     console.error("[OBS] OBS signal type unexpected", signalInfo.signal, value);
-    throw Error("OBS behaved unexpectedly (2)");
+    throw new Error("OBS behaved unexpectedly (2)");
   }
 
   // Assert the signal value is as expected.
   if (signalInfo.signal !== value) {
     console.error("[OBS] " + signalInfo);
     console.error("[OBS] OBS signal value unexpected", signalInfo.signal, value);
-    throw Error("OBS behaved unexpectedly (3)");
+    throw new Error("OBS behaved unexpectedly (3)");
   }
 
   console.debug("[OBS] Asserted OBS signal:", value);

@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
  - [NO-ISSUE] - Autoplay videos on selection.
- 
+ - [NO-ISSUE] - Display errors in a neater manner with suggestions on how to get help.
+
 ### Fixed
 
 ## [3.1.1] - 2022-12-09

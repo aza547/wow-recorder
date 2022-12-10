@@ -9,6 +9,11 @@ import VideoButton  from './VideoButton';
 import poster  from  "../../assets/poster/poster.png";
 import { VideoPlayerSettings } from 'main/types';
 import { getConfigValue, setConfigValue } from 'settings/useSettings';
+import InformationDialog from './InformationDialog';
+import { DialogContentText } from '@mui/material';
+import { CopyBlock, dracula } from "react-code-blocks";
+import LogButton from './LogButton';
+import DiscordButton from './DiscordButton';
 
 /**
  * For shorthand referencing.
@@ -97,6 +102,8 @@ export default function Layout() {
     videoMuted: videoPlayerSettings.muted,
     videoVolume: videoPlayerSettings.volume, // (Double) 0.00 - 1.00
     videoSeek: 0,
+    fatalError: false,
+    fatalErrorText: "",
   });
 
   const getVideoPlayer = () => {
@@ -172,6 +179,16 @@ export default function Layout() {
             ...prevState,
             autoPlay: false,
             videoState,
+          }
+        })
+      });
+
+      ipc.on('fatalError', async (stack) => {
+        setState(prevState => {
+          return {
+            ...prevState,
+            fatalError: true,
+            fatalErrorText: (stack as string),
           }
         })
       });
@@ -311,31 +328,63 @@ export default function Layout() {
     return videoPanel(tabIndex);
   };
 
+  const quitApplication = () => ipc.sendMessage('mainWindow', ['quit']);
+
   const tabNumbers = [...Array(8).keys()];
   const categoryIndex = state.categoryIndex;
 
   return (
-    <Box sx={{ width: '250px', height: '240px', display: 'flex' }}>
-      <Tabs
-        orientation="vertical"
-        variant="standard"
-        value={ categoryIndex }
-        onChange={ handleChangeCategory }
-        aria-label="Vertical tabs example"
-        sx={{ ...categoryTabsSx }}
-        className={ styles.tabs }
-        TabIndicatorProps={{style: { background:'#bb4220' }}}>
+    <React.Fragment>
+      <Box sx={{ width: '250px', height: '240px', display: 'flex' }}>
+        <Tabs
+          orientation="vertical"
+          variant="standard"
+          value={ categoryIndex }
+          onChange={ handleChangeCategory }
+          aria-label="Vertical tabs example"
+          sx={{ ...categoryTabsSx }}
+          className={ styles.tabs }
+          TabIndicatorProps={{style: { background:'#bb4220' }}}>
+
+          { tabNumbers.map((tabNumber: number) => {
+              return(generateTab(tabNumber));
+            })
+          }
+        </Tabs>
 
         { tabNumbers.map((tabNumber: number) => {
-            return(generateTab(tabNumber));
+            return(generateTabPanel(tabNumber));
           })
         }
-      </Tabs>
-
-      { tabNumbers.map((tabNumber: number) => {
-          return(generateTabPanel(tabNumber));
-        })
-      }
-    </Box>
+      </Box>
+      <InformationDialog
+          title='😭 Fatal Error'
+          open={state.fatalError}
+          buttons={['quit']}
+          onClose={quitApplication}
+        >
+          <DialogContentText component={'span'}>
+            Warcraft Recorder hit a problem it can't recover from and needs to close. 
+            <br></br>
+            <br></br>
+            To get help with this issue, please share the following in the Discord help channel:
+            <ul>
+              <li>The error text shown below</li>
+              <li>The application log, click the log button to find them</li>
+            </ul>
+            <CopyBlock
+              text={state.fatalErrorText}
+              language={"JavaScript"}
+              showLineNumbers={false}
+              theme={dracula}
+            />
+            <div className="app-buttons-fatal-error">
+              <LogButton />
+              <DiscordButton />
+            </div>
+          </DialogContentText>
+          
+      </InformationDialog>
+    </React.Fragment>
   );
 }

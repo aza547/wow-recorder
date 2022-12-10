@@ -3,9 +3,7 @@ import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import Container from '@mui/material/Container';
 import { makeStyles } from 'tss-react/mui';
 
 type ValidbuttonType = {
@@ -16,6 +14,7 @@ type ValidbuttonType = {
 const validButtons: { [key: string]: ValidbuttonType } = {
     'confirm': { label: 'Confirm', action: true },
     'yes':     { label: 'Yes',     action: true },
+    'quit':    { label: 'Quit',   action: true },
     'no':      { label: 'No',      action: false },
     'ok':      { label: 'OK',      action: false },
     'close':   { label: 'Close',   action: false },
@@ -39,6 +38,8 @@ const useStyles = makeStyles()({
     dialog: {
         '.MuiDialog-paper': {
             backgroundColor: '#272e48',
+            maxHeight: '750px',
+            maxWidth: '1250px',
             color: 'white',
             '.MuiTypography-root': {
                 color: 'white',
@@ -50,10 +51,10 @@ const useStyles = makeStyles()({
                 },
             },
             '.MuiDialogContent-root': {
-                padding: '8px 16px',
+                padding: '10px 25px',
             },
             '.MuiDialogContentText-root': {
-                padding: '8px 0px',
+                padding: '0px 0px',
             },
             '.MuiDialogActions-root': {
                 '.MuiButton-textPrimary': {
