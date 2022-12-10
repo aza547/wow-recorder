@@ -8,7 +8,6 @@ import Battleground from "../activitys/Battleground";
 import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import { Flavour } from "../main/types";
-import ConfigService from "main/configService";
 
 /**
  * RetailLogHandler class.
@@ -17,16 +16,18 @@ export default class RetailLogHandler extends LogHandler {
     // Singleton instance.
     private static _instance: RetailLogHandler;
 
-    static getInstance(recorder: Recorder, combatLogParser: CombatLogParser, cfg: ConfigService) {
+    static getInstance(recorder: Recorder, combatLogParser: CombatLogParser) {
         if (!RetailLogHandler._instance) {
-            RetailLogHandler._instance = new RetailLogHandler(recorder, combatLogParser, cfg);
+            RetailLogHandler._instance = new RetailLogHandler(recorder, combatLogParser);
         }
 
         return RetailLogHandler._instance;
     }
 
-    constructor(recorder: Recorder, combatLogParser: CombatLogParser, cfg: ConfigService) {
-        super(recorder, combatLogParser, cfg);
+    constructor(recorder: Recorder, 
+                combatLogParser: CombatLogParser) 
+    {
+        super(recorder, combatLogParser);
         this.combatLogParser
             .on('ENCOUNTER_START',      (line: LogLine) => { this.handleEncounterStartLine(line) })
             .on('ENCOUNTER_END',        (line: LogLine) => { this.handleEncounterEndLine(line) })

@@ -153,7 +153,7 @@ export default class ConfigService extends EventEmitter {
         return this._store.has(key);
     }
 
-    get<T extends string | number | boolean>(key: keyof ConfigurationSchema): T {
+    get<T>(key: keyof ConfigurationSchema): T {
         if (!configSchema[key]) {
             throw Error(`[Config Service] Attempted to get invalid configuration key '${key}'`)
         }
@@ -240,7 +240,7 @@ export default class ConfigService extends EventEmitter {
         if (key === 'storagePath') {
             configSchema['bufferStoragePath'].default = this.resolveBufferStoragePath(
                 newValue as string,
-                this.get<string>('bufferStoragePath')
+                this.get('bufferStoragePath')
             );
             return;
         }

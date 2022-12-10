@@ -3,7 +3,6 @@ import fs from "fs";
 import { EventEmitter } from "stream";
 import { setInterval, clearInterval } from 'timers';
 import { FileFinderCallbackType } from "./types";
-import { getSortedFiles } from "./util";
 
 const tail = require('tail').Tail;
 
@@ -230,15 +229,10 @@ class CombatLogParser extends EventEmitter {
         flushAtEOF: true
     };
 
-    constructor() {
+    constructor(options: CombatLogParserOptionsType) {
         super();
 
-        const defaultOptions: CombatLogParserOptionsType = {
-            dataTimeout: 120 * 1000,
-            fileFinderFn: getSortedFiles,
-        }
-
-        this._options = defaultOptions;
+        this._options = options;
     };
 
     /**

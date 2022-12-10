@@ -1,12 +1,12 @@
 import { Combatant } from "../main/combatant";
 import { CombatLogParser, LogLine } from "../main/combatLogParser";
+import ConfigService from "../main/configService";
 import { raidInstances, VideoCategory } from "../main/constants";
 import { Recorder } from "../main/recorder";
 import { Flavour, PlayerDeathType } from "../main/types";
 import Activity from "../activitys/Activity";
 import RaidEncounter from "../activitys/RaidEncounter";
 import { allowRecordCategory, ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
-import ConfigService from "main/configService";
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -17,24 +17,25 @@ import ConfigService from "main/configService";
  */
 export default abstract class LogHandler {
     protected _recorder;
-    protected _cfg;
     protected _combatLogParser: CombatLogParser;
     protected _player: Combatant | undefined;
+    protected _cfg: ConfigService;
     protected _activity?: Activity;
 
-    constructor(recorder: Recorder, combatLogParser: CombatLogParser, cfg: ConfigService)
+    constructor(recorder: Recorder, 
+                combatLogParser: CombatLogParser)
     {
         this._recorder = recorder;
-        this._cfg = cfg;
         this._combatLogParser = combatLogParser;
         this._combatLogParser.on('DataTimeout', (ms: number) => { this.dataTimeout(ms)});
+        this._cfg = ConfigService.getInstance();
     }
 
     get activity() { return this._activity };
     get combatLogParser() { return this._combatLogParser };
     get recorder() { return this._recorder };
-    get player() { return this._player };
     get cfg() { return this._cfg };
+    get player() { return this._player };
 
     set activity(activity) { this._activity = activity };
     
@@ -121,7 +122,7 @@ export default abstract class LogHandler {
 
     startRecording = (activity: Activity) => {
         const category = activity.category;
-        const allowed = allowRecordCategory(this.cfg, category);
+        const allowed = allowRecordCategory(category);
 
         if (!allowed) {
             console.info("[LogHandler] Not configured to record", category);
@@ -141,14 +142,14 @@ export default abstract class LogHandler {
         this.recorder.start();
     };
 
-    endRecording = (activity: Activity, closedWow: boolean = false) => {
+    endRecording = (activity: Activity) => {
         if (!this.activity) {
             console.error("[LogUtils] No active activity so can't stop");
             return;
         }
         console.log(`[Logutils] Stop recording video for category: ${this.activity.category}`)
 
-        this.recorder.stop(activity, closedWow);
+        this.recorder.stop(activity, false);
         this.activity = undefined;
     }
 
@@ -167,10 +168,8 @@ export default abstract class LogHandler {
         }
     }
 
-    forceEndActivity = async (timedelta: number = 0, closedWow: boolean = false) => {
-        console.log("[LogHandler] Force ending activity",
-                    "timedelta:", timedelta,
-                    "closedWow:", closedWow);
+    forceEndActivity = async (timedelta: number = 0) => {
+        console.log("[LogHandler] Force ending activity with timedelta", timedelta);
 
         if (!this.activity) {
             await this.recorder.forceStop();
@@ -182,7 +181,7 @@ export default abstract class LogHandler {
         this.activity.overrun = 0;
         
         this.activity.end(endDate, false);
-        this.endRecording(this.activity, closedWow);
+        this.endRecording(this.activity);
         this.activity = undefined;
     }
 
