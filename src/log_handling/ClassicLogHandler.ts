@@ -61,8 +61,25 @@ export default class ClassicLogHandler extends LogHandler {
         const srcGUID = line.arg(1);
         const srcFlags = parseInt(line.arg(3), 16);
         const srcNameRealm = line.arg(2);
+        const alreadyKnowCombatant = (this.activity.getCombatant(srcGUID) !== undefined);
+        
         // Maybe if BG call minimal processCombatant -- i.e. only care about self? 
-        this.processCombatant(srcGUID, srcNameRealm, srcFlags);
+        const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
+        if (!combatant) return;
+        const isEnemyCombatant = (combatant.teamID === 0);
+        
+        // If it's the first time we have spotted an enemy combatant in arena,
+        // then the gates have just opened. Adjust the activity start time.
+        if (this.isArena() && !alreadyKnowCombatant && isEnemyCombatant) {
+            const combatants = this.activity.combatantMap.values();
+            const enemyCombatants = [...combatants].filter(c => c.teamID === 0);
+
+            if (enemyCombatants.length === 1) {
+                const newStartDate = line.date();
+                console.log("[ClassicLogHandler] Adjusting game start date:", newStartDate);
+                this.activity.startDate = newStartDate;
+            }
+        }
     }
 
     handleZoneChange(line: LogLine) {

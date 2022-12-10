@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
  - [NO-ISSUE] - Autoplay videos on selection.
  - [NO-ISSUE] - Display errors in a neater manner with suggestions on how to get help.
+ - [NO-ISSUE] - Improve clipping of classic arenas to skip waiting room.
 
 ### Fixed
  - [NO-ISSUE] - Fix a bug where closing wow didn't stop the recorder if mid activity.

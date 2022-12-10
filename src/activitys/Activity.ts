@@ -45,6 +45,7 @@ export default abstract class Activity {
     set zoneID(zoneID) { this._zoneID = zoneID };
     set result(result) { this._result = result };
     set playerGUID(guid) { this._playerGUID = guid };
+    set startDate(date) { this._startDate = date};
     set endDate(date) { this._endDate = date };
     set flavour(flavour) { this._flavour = flavour };
     set category(category) { this._category = category };
