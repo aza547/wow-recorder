@@ -170,6 +170,7 @@ export default function Layout() {
         setState(prevState => {
           return {
             ...prevState,
+            autoPlay: false,
             videoState,
           }
         })
