@@ -90,6 +90,7 @@ let videoState: { [key: string]: any } = {}
 export default function Layout() {
 
   const [state, setState] = React.useState({
+    autoPlay: false,
     categoryIndex: selectedCategory,
     videoIndex: 0,
     videoState,
@@ -127,6 +128,7 @@ export default function Layout() {
     setState(prevState => {
       return {
         ...prevState,
+        autoPlay: false,
         categoryIndex: newValue,
         videoIndex: 0
       }
@@ -140,6 +142,7 @@ export default function Layout() {
     setState(prevState => {
       return {
         ...prevState,
+        autoPlay: true,
         videoIndex: newValue,
         videoSeek: 0,
       }
@@ -245,6 +248,7 @@ export default function Layout() {
    * Returns a video panel with videos.
    */
   const videoPanel = (index: number) => {
+    const autoPlay = state.autoPlay;
     const categoryIndex = state.categoryIndex;
     const videoIndex = state.videoIndex;
     const categoryState = state.videoState[category];
@@ -256,7 +260,8 @@ export default function Layout() {
     return (
       <TabPanel key={ key } value={ categoryIndex } index={ index }>
         <div className={ 'video-container' + (isMythicPlus ? ' mythic-keystone' : '')}>
-          <video
+          <video    
+            autoPlay={ autoPlay }        
             key={ videoFullPath }
             id='video-player'
             className="video"
