@@ -75,9 +75,9 @@ const wowProcessStopped = () => {
     wowProcessRunning = null;
 
     if (retailHandler && retailHandler.activity) {
-        retailHandler.forceEndActivity();
+        retailHandler.forceEndActivity(0, true);
     } else if (classicHandler && classicHandler.activity) {
-        classicHandler.forceEndActivity();
+        classicHandler.forceEndActivity(0, true);
     } else {
         recorder.stopBuffer();
     }
