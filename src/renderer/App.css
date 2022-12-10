@@ -153,6 +153,27 @@ h2:not(.MuiDialogTitle-root) {
   border-radius: 10px;
 }
 
+.app-buttons-fatal-error {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 75px;
+  padding-top: .5rem;
+  padding-left: 0.25rem;
+  gap: .125rem 0rem;
+}
+
+.app-buttons-fatal-error div button {
+  background-color: transparent;
+  border-width: 0px;
+  cursor: pointer;
+}
+
+.app-buttons-fatal-error div button:hover {
+  background-color: darkgrey;
+  border-width: 0px;
+  border-radius: 10px;
+}
+
 .videoButton {
   position: absolute;
   height: 100%;

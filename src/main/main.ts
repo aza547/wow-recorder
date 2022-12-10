@@ -56,9 +56,16 @@ let recorder: Recorder;
  * - https://nodejs.org/api/process.html#process_event_unhandledrejection. 
  * - https://nodejs.org/api/process.html#event-unhandledrejection
  */
- process.on('unhandledRejection', (reason: Error | any) => {
+process.on('unhandledRejection', (reason: Error | any) => {
   console.error("UnhandledPromiseRejectionWarning:", reason);
-  throw Error(reason);
+
+  // If the mainWindow exists, open a pretty dialog box.
+  // If not, throw it as a generic JavaScript error. 
+  if (mainWindow) {
+    mainWindow.webContents.send('fatalError', reason.stack);
+  } else {
+    throw new Error(reason);
+  }
 });
 
 /**
