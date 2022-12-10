@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - [NO-ISSUE] - Display errors in a neater manner with suggestions on how to get help.
 
 ### Fixed
+ - [NO-ISSUE] - Fix a bug where closing wow didn't stop the recorder if mid activity.
 
 ## [3.1.1] - 2022-12-09
 ### Fixed
