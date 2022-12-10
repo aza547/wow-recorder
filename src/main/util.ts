@@ -19,7 +19,9 @@ import { promises as fspromise } from 'fs';
 import glob from 'glob';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
-import { Display, screen } from 'electron';
+import { BrowserWindow, Display, screen } from 'electron';
+import ConfigService from './configService';
+import { RecorderOptionsType } from './recorder';
 const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
@@ -436,6 +438,29 @@ const getAvailableDisplays = (): OurDisplayType[] => {
     return ourDisplays;
 }
 
+/**
+ * Load and return recorder options from the configuration store.
+ * Does some basic sanity checking for default values.
+ */
+const loadRecorderOptions = (window: BrowserWindow | null, cfg: ConfigService): RecorderOptionsType => {
+    return {
+      mainWindow:           window,
+      storageDir:           cfg.get<string>('storagePath'),
+      bufferStorageDir:     cfg.get<string>('bufferStoragePath'),
+      maxStorage:           cfg.get<number>('maxStorage'),
+      monitorIndex:         cfg.get<number>('monitorIndex'),
+      audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
+      audioOutputDeviceId:  cfg.get<string>('audioOutputDevice'),
+      minEncounterDuration: cfg.get<number>('minEncounterDuration'),
+      obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
+      obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
+      obsFPS:               cfg.get<number>('obsFPS'),
+      obsKBitRate:          cfg.get<number>('obsKBitRate'),
+      obsCaptureMode:       cfg.get<string>('obsCaptureMode'),
+      obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
+    };
+  };
+
 export {
     loadAllVideos,
     writeMetadataFile,
@@ -449,4 +474,5 @@ export {
     getAvailableDisplays,
     getSortedFiles,
     tryUnlinkSync,
+    loadRecorderOptions,
 };

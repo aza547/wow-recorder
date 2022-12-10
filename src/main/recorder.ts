@@ -1,10 +1,10 @@
 import { writeMetadataFile, runSizeMonitor,  deleteVideo, addColor, getSortedVideos, fixPathWhenPackaged, tryUnlinkSync } from './util';
-import { mainWindow }  from './main';
 import { Metadata, RecStatus, SaveStatus, VideoQueueItem } from './types';
 import { VideoCategory } from './constants';
 import fs from 'fs';
 import path from 'path';
 import Activity from '../activitys/Activity';
+import { BrowserWindow } from 'electron';
 
 const atomicQueue = require('atomic-queue');
 const obsRecorder = require('./obsRecorder');
@@ -14,6 +14,7 @@ const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 type RecorderOptionsType = {
+    mainWindow: BrowserWindow | null;
     storageDir: string;
     bufferStorageDir: string;
     maxStorage: number;
@@ -64,7 +65,7 @@ type RecorderOptionsType = {
         }
 
         obsRecorder.initialize(options);
-        if (mainWindow) mainWindow.webContents.send('refreshState');
+        if (this._options.mainWindow) this._options.mainWindow.webContents.send('refreshState');
     }
 
     /**
@@ -100,18 +101,18 @@ type RecorderOptionsType = {
             // Run the size monitor to ensure we stay within size limit.
             runSizeMonitor(this._options.storageDir, this._options.maxStorage)
                 .then(() => {
-                    if (mainWindow) mainWindow.webContents.send('refreshState');
+                    if (this._options.mainWindow) this._options.mainWindow.webContents.send('refreshState');
                 });
         });
 
         this._videoQueue.pool.on('start', (data: VideoQueueItem) => {
             console.log("[Recorder] Processing video", data.bufferFile);
-            if (mainWindow) mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
+            if (this._options.mainWindow) this._options.mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
         });
 
         this._videoQueue.pool.on('finish', (_result: any, data: VideoQueueItem) => {
             console.log("[Recorder] Finished processing video", data.bufferFile);
-            if (mainWindow) mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
+            if (this._options.mainWindow) this._options.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
         });
     }
 
@@ -168,7 +169,7 @@ type RecorderOptionsType = {
         await obsRecorder.start();
         this._isRecordingBuffer = true;
         this._recorderStartDate = new Date();
-        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.ReadyToRecord);
+        if (this._options.mainWindow) this._options.mainWindow.webContents.send('updateRecStatus', RecStatus.ReadyToRecord);
 
         // We store off this timer as a member variable as we will cancel
         // it when a real game is detected. 
@@ -191,7 +192,7 @@ type RecorderOptionsType = {
             console.error("[Recorder] No buffer recording to stop.");
         }
 
-        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
+        if (this._options.mainWindow) this._options.mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
         this.cleanupBuffer(1);
     }
 
@@ -244,7 +245,7 @@ type RecorderOptionsType = {
         this.cancelBufferTimers(true, false);
         this._isRecordingBuffer = false;        
         this._isRecording = true;   
-        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
+        if (this._options.mainWindow) this._options.mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
     }
 
     /**
@@ -297,8 +298,8 @@ type RecorderOptionsType = {
             }
 
             // Refresh the GUI
-            if (mainWindow) mainWindow.webContents.send('refreshState');
-            if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
+            if (this._options.mainWindow) this._options.mainWindow.webContents.send('refreshState');
+            if (this._options.mainWindow) this._options.mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
 
             // Restart the buffer recording ready for next game. If this function
             // has been called due to the wow process ending, don't start the buffer.
@@ -321,8 +322,8 @@ type RecorderOptionsType = {
         this._isRecordingBuffer = false;
 
         // Refresh the GUI
-        if (mainWindow) mainWindow.webContents.send('refreshState');
-        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
+        if (this._options.mainWindow) this._options.mainWindow.webContents.send('refreshState');
+        if (this._options.mainWindow) this._options.mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
 
         // Restart the buffer recording ready for next game.
         setTimeout(async () => {
@@ -393,7 +394,7 @@ type RecorderOptionsType = {
         // User might just have shrunk the size, so run the size monitor.
         runSizeMonitor(this._options.storageDir, this._options.maxStorage)
         .then(() => {
-            if (mainWindow) mainWindow.webContents.send('refreshState');
+            if (this._options.mainWindow) this._options.mainWindow.webContents.send('refreshState');
         });
       
         if (this._isRecording) {
@@ -404,7 +405,7 @@ type RecorderOptionsType = {
         }
 
         obsRecorder.reconfigure(this._options);
-        if (mainWindow) mainWindow.webContents.send('refreshState');
+        if (this._options.mainWindow) this._options.mainWindow.webContents.send('refreshState');
     }
 
     /**

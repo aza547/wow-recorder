@@ -14,6 +14,7 @@ import {
   toggleVideoProtected,
   fixPathWhenPackaged,
   getAvailableDisplays,
+  loadRecorderOptions,
 } from './util';
 
 /**
@@ -32,20 +33,21 @@ log.transports.file.resolvePath = () => logPath;
 Object.assign(console, log.functions);
 console.log("[Main] App starting: version", app.getVersion());
 
-import { pollWowProcess, runRetailRecordingTest, runClassicRecordingTest, makeRetailHandler, makeClassicHandler } from './logutils';
+import { runRetailRecordingTest, runClassicRecordingTest, filterFlavoursByConfig } from './logutils';
 const obsRecorder = require('./obsRecorder');
+const tasklist = require('tasklist');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
-import { RecStatus, VideoPlayerSettings } from './types';
+import { IWoWProcessResult, RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
 import { CombatLogParser } from './combatLogParser';
 import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
-import RetailLogHandler from 'log_handling/RetailLogHandler';
-import ClassicLogHandler from 'log_handling/ClassicLogHandler';
+import RetailLogHandler from '../log_handling/RetailLogHandler';
+import ClassicLogHandler from '../log_handling/ClassicLogHandler';
+import { wowExecutableFlavours } from './constants';
 
 let retailHandler: RetailLogHandler;
 let classicHandler: ClassicLogHandler;
-
 let recorder: Recorder;
 
 /**
@@ -67,35 +69,12 @@ process.on('unhandledRejection', (reason: Error | any) => {
 });
 
 /**
- * Load and return recorder options from the configuration store.
- * Does some basic sanity checking for default values.
- */
-const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
-  return {
-    storageDir:           cfg.get<string>('storagePath'),
-    bufferStorageDir:     cfg.get<string>('bufferStoragePath'), // TODO this will resolve an empty string if not in cfg
-    maxStorage:           cfg.get<number>('maxStorage'),
-    monitorIndex:         cfg.get<number>('monitorIndex'),
-    audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
-    audioOutputDeviceId:  cfg.get<string>('audioOutputDevice'),
-    minEncounterDuration: cfg.get<number>('minEncounterDuration'),
-    obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
-    obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
-    obsFPS:               cfg.get<number>('obsFPS'),
-    obsKBitRate:          cfg.get<number>('obsKBitRate'),
-    obsCaptureMode:       cfg.get<string>('obsCaptureMode'),
-    obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
-  };
-};
-
-/**
  * Create a settings store to handle the config.
  * This defaults to a path like: 
  *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v2.json"
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v2.json"
  */
 const cfg = ConfigService.getInstance();
-let recorderOptions: RecorderOptionsType = loadRecorderOptions(cfg);
 
 cfg.on('change', (key: string, value: any) => {
   if (key === 'startUp') {
@@ -107,8 +86,6 @@ cfg.on('change', (key: string, value: any) => {
     });
   }
 });
-
-
 
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
@@ -122,18 +99,16 @@ const videoPlayerSettings: VideoPlayerSettings = {
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let tray = null;
+let wowProcessRunning: IWoWProcessResult | null = null;
+let pollWowProcessInterval: NodeJS.Timer;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
 }
 
-const isDebug =
-  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
-
-if (isDebug) {
-  require('electron-debug')();
-}
+const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+if (isDebug) require('electron-debug')();
 
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
@@ -229,17 +204,18 @@ const createWindow = async () => {
     }
 
     if (!checkConfig()) return;
+    const recorderOptions: RecorderOptionsType = loadRecorderOptions(mainWindow, cfg);
     makeRecorder(recorderOptions);
 
     const retailLogPath = cfg.getPath('retailLogPath');
     const classicLogPath = cfg.getPath('classicLogPath');
 
     if (retailLogPath) {
-      retailHandler = makeRetailHandler(recorder, retailLogPath);
+      retailHandler = makeRetailHandler(recorder, retailLogPath, cfg);
     }
 
     if (classicLogPath) {
-      classicHandler = makeClassicHandler(recorder, classicLogPath);
+      classicHandler = makeClassicHandler(recorder, classicLogPath, cfg);
     }
     
     pollWowProcess();
@@ -336,6 +312,7 @@ const openPathDialog = (event: any, args: any) => {
     console.log(err);
   })
 } 
+
 /**
  * Checks the app config.
  * @returns true if config is setup, false otherwise. 
@@ -389,7 +366,7 @@ ipcMain.on('mainWindow', (_event, args) => {
 })
 
 /**
- * Create or reconfigure the recorder instance
+ * Create or reconfigure the recorder instance.
  */
 const makeRecorder = (recorderOptions: RecorderOptionsType): void => {
   if (recorder) {
@@ -423,18 +400,18 @@ ipcMain.on('settingsWindow', (event, args) => {
       if (!checkConfig()) return;
       updateRecStatus(RecStatus.WaitingForWoW);
 
-      recorderOptions = loadRecorderOptions(cfg);
+      const recorderOptions = loadRecorderOptions(mainWindow, cfg);
       makeRecorder(recorderOptions);
 
       const retailLogPath = cfg.getPath('retailLogPath');
       const classicLogPath = cfg.getPath('classicLogPath');
 
       if (retailLogPath) {
-        retailHandler = makeRetailHandler(recorder, retailLogPath);
+        retailHandler = makeRetailHandler(recorder, retailLogPath, cfg);
       }
 
       if (classicLogPath) {
-        classicHandler = makeClassicHandler(recorder, classicLogPath);
+        classicHandler = makeClassicHandler(recorder, classicLogPath, cfg);
       }
 
       pollWowProcess();
@@ -494,7 +471,7 @@ ipcMain.on('settingsWindow', (event, args) => {
 /**
  * contextMenu event listeners.
  */
-ipcMain.on('contextMenu', (event, args) => {
+ipcMain.on('contextMenu', (_event, args) => {
   if (args[0] === "delete") {
     const videoForDeletion = args[1];
     deleteVideo(videoForDeletion);
@@ -522,7 +499,7 @@ ipcMain.on('contextMenu', (event, args) => {
 /**
  * logPath event listener.
  */
- ipcMain.on('logPath', (event, args) => {
+ ipcMain.on('logPath', (_event, args) => {
   if (args[0] === "open") {
     openSystemExplorer(logDir);
   }
@@ -539,7 +516,7 @@ ipcMain.on('contextMenu', (event, args) => {
 /**
  * Get the list of video files and their state.
  */
-ipcMain.handle('getVideoState', async () => loadAllVideos(recorderOptions.storageDir));
+ipcMain.handle('getVideoState', async () => loadAllVideos(cfg.get<string>('storagePath')));
 
 ipcMain.on('getAudioDevices', (event) => {
   // We can only get this information if the recorder (OBS) has been
@@ -579,13 +556,18 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  */
 ipcMain.on('test', (_event, args) => {
   if (!checkConfig()) return;
+  
+  if (wowProcessRunning === null) {
+    console.info("[Logutils] WoW isn't running, not starting test.");
+    return;
+  }
 
   if (retailHandler) {
     console.info("[Main] Running retail test");
-    runRetailRecordingTest(Boolean(args[0]));
+    runRetailRecordingTest(retailHandler.combatLogParser, Boolean(args[0]));
   } else if (classicHandler) {
     console.info("[Main] Running classic test");
-    runClassicRecordingTest(Boolean(args[0]));
+    runClassicRecordingTest(classicHandler.combatLogParser, Boolean(args[0]));
   }
 });
 
@@ -684,6 +666,111 @@ app
     }
   })
   .catch(console.log);
+
+const resetProcessTracking = () => {
+  wowProcessRunning = null;
+}
+
+/**
+ * Handle WoW process starting.
+ */
+const wowProcessStarted = (process: IWoWProcessResult) => {
+  wowProcessRunning = process;
+  console.log(`[Logutils] Detected ${process.exe} (${process.flavour}) running`);
+  recorder.startBuffer();
+};
+
+/**
+ * Handle WoW process stopping.
+ */
+const wowProcessStopped = () => {
+  if (!wowProcessRunning) {
+    return;
+  }
+
+  console.log(`[Logutils] Detected ${wowProcessRunning.exe} (${wowProcessRunning.flavour}) not running`);
+  wowProcessRunning = null;
+
+  if (retailHandler && retailHandler.activity) {
+    retailHandler.forceEndActivity(0, true);
+  } else if (classicHandler && classicHandler.activity) {
+    retailHandler.forceEndActivity(0, true);
+  } else {
+    recorder.stopBuffer();
+  }
+};
+
+/**
+ * Check Windows task list and find any WoW process.
+ */
+const checkWoWProcess = async (): Promise<IWoWProcessResult[]> => {
+  const wowProcessRx = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
+  const taskList = await tasklist();
+
+  return taskList
+    // Map all processes found to check if they match `wowProcessRx`
+    .map((p: any) => p.imageName.match(wowProcessRx))
+    // Remove those that result in `null` (didn't match)
+    .filter((p: any) => p)
+    // Return an object suitable for `IWoWProcessResult`
+    .map((match: any): IWoWProcessResult => ({
+      exe: match[0],
+      flavour: wowExecutableFlavours[match[1].toLowerCase()]
+    }))
+  ;
+}
+
+/**
+ * pollWoWProcessLogic
+ */
+const pollWoWProcessLogic = async () => {
+  const wowProcesses = await checkWoWProcess();
+  const processesToRecord = wowProcesses.filter((e) => { return filterFlavoursByConfig(cfg, e) });
+  const firstProcessToRecord = processesToRecord.pop();
+
+  if ((wowProcessRunning === null) && firstProcessToRecord) {
+    wowProcessStarted(firstProcessToRecord);
+  } else if (wowProcessRunning !== null && !firstProcessToRecord) {
+    wowProcessStopped();
+  }
+}
+
+/**
+ * pollWoWProcess
+ */
+const pollWowProcess = () => {
+  // If we've re-called this we need to reset the current state of process 
+  // tracking. This is important for settings updates. 
+  resetProcessTracking();
+
+  // Run a check without waiting for the timeout. 
+  pollWoWProcessLogic();
+
+  if (pollWowProcessInterval) {
+    clearInterval(pollWowProcessInterval);
+  }
+
+  pollWowProcessInterval = setInterval(pollWoWProcessLogic, 5000);
+}
+
+/**
+ * Setup retail log handler.
+ */
+ const makeRetailHandler = (recorder: Recorder, logPath: string, cfg: ConfigService): RetailLogHandler => {
+  const parser = new CombatLogParser();
+  parser.watchPath(logPath);
+  return RetailLogHandler.getInstance(recorder, parser, cfg);
+}
+
+/**
+* Setup classic log handler.
+*/
+const makeClassicHandler = (recorder: Recorder, logPath: string, cfg: ConfigService): ClassicLogHandler => {
+  const parser = new CombatLogParser();
+  parser.watchPath(logPath);
+  return ClassicLogHandler.getInstance(recorder, parser, cfg);
+}
+
 
 export {
   mainWindow,
