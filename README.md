@@ -41,4 +41,4 @@ This project is free and open source. It is built on the [electron-react-boilerp
 
 # Contributing
 
-If you're interested in getting involved please drop me a message on discord and I can give you access to our development channel. Also see [contributing](https://github.com/aza547/wow-recorder/blob/main/CONTRIBUTING.md) docs.
+If you're interested in getting involved please drop me a message on discord and I can give you access to our development channel. Also see [contributing](https://github.com/aza547/wow-recorder/blob/main/docs/CONTRIBUTING.md) docs.
