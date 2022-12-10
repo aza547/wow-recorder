@@ -597,12 +597,12 @@ ipcMain.on('recorder', (_event, args) => {
     console.log('[Main] Force stopping recording due to user request.')
 
     if (retailHandler && retailHandler.activity) {
-      retailHandler.forceEndActivity();
+      retailHandler.forceEndActivity(0, true);
       return;
     }
 
     if (classicHandler && classicHandler.activity) {
-      classicHandler.forceEndActivity();
+      classicHandler.forceEndActivity(0, true);
       return;
     }
 

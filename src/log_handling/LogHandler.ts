@@ -142,14 +142,14 @@ export default abstract class LogHandler {
         this.recorder.start();
     };
 
-    endRecording = (activity: Activity) => {
+    endRecording = (activity: Activity, closedWow: boolean = false) => {
         if (!this.activity) {
             console.error("[LogUtils] No active activity so can't stop");
             return;
         }
         console.log(`[Logutils] Stop recording video for category: ${this.activity.category}`)
 
-        this.recorder.stop(activity, false);
+        this.recorder.stop(activity, closedWow);
         this.activity = undefined;
     }
 
@@ -168,8 +168,10 @@ export default abstract class LogHandler {
         }
     }
 
-    forceEndActivity = async (timedelta: number = 0) => {
-        console.log("[LogHandler] Force ending activity with timedelta", timedelta);
+    forceEndActivity = async (timedelta: number = 0, closedWow: boolean = false) => {
+        console.log("[LogHandler] Force ending activity",
+                    "timedelta:", timedelta,
+                    "closedWow:", closedWow);
 
         if (!this.activity) {
             await this.recorder.forceStop();
@@ -181,7 +183,7 @@ export default abstract class LogHandler {
         this.activity.overrun = 0;
         
         this.activity.end(endDate, false);
-        this.endRecording(this.activity);
+        this.endRecording(this.activity, closedWow);
         this.activity = undefined;
     }
 
