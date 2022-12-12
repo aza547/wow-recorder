@@ -1,4 +1,4 @@
-const osn = require("obs-studio-node");
+import { InputFactory } from "obs-studio-node";
 
 class ObsAudioDevice {
   constructor (
@@ -11,7 +11,7 @@ class ObsAudioDevice {
 * getAudioDevices
 */
 const getAudioDevices = (type: any, subtype: any): ObsAudioDevice[] => {
-  const dummyDevice = osn.InputFactory.create(type, subtype, { device_id: 'does_not_exist' });
+  const dummyDevice = InputFactory.create(type, subtype, { device_id: 'does_not_exist' });
 
   const devices = dummyDevice.properties
     .get('device_id').details.items
