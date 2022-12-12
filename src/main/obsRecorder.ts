@@ -4,10 +4,9 @@ import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from ".
 import { RecorderOptionsType } from "./recorder";
 import { Size } from "electron";
 import path from 'path';
-import { ISceneItem, IScene, IInput, ISource, SceneFactory, InputFactory, Global } from "obs-studio-node";
+import { ISceneItem, IScene, IInput, ISource, SceneFactory, InputFactory, Global, NodeObs } from "obs-studio-node";
 import { OurDisplayType } from "./types";
 const waitQueue = new WaitQueue<any>();
-import { NodeObs } from "obs-studio-node";
 const { v4: uuid } = require('uuid');
 
 let obsInitialized = false;
