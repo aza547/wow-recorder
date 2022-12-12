@@ -4,10 +4,12 @@ import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from ".
 import { RecorderOptionsType } from "./recorder";
 import { Size } from "electron";
 import path from 'path';
-import { ISceneItem, IScene, IInput, ISource, SceneFactory, InputFactory, Global, NodeObs } from "obs-studio-node";
+import { ISceneItem, IScene, IInput, IIPC, ISource, SceneFactory, InputFactory, Global, NodeObs } from "obs-studio-node";
 import { OurDisplayType } from "./types";
 const waitQueue = new WaitQueue<any>();
 const { v4: uuid } = require('uuid');
+
+const NodeObsIPC = NodeObs.IPC as IIPC;
 
 let obsInitialized = false;
 // Timer for periodically checking the size of the video source
@@ -59,7 +61,7 @@ const initialize = (options: RecorderOptionsType) => {
 */
 const initOBS = () => {
   console.debug('[OBS] Initializing OBS...');
-  NodeObs.IPC.host(`warcraft-recorder-${uuid()}`);
+  NodeObsIPC.host(`warcraft-recorder-${uuid()}`);
   NodeObs.SetWorkingDirectory(fixPathWhenPackaged(path.join(__dirname,'../../', 'node_modules', 'obs-studio-node')));
 
   const obsDataPath = fixPathWhenPackaged(path.join(__dirname, 'osn-data')); // OBS Studio configs and logs
@@ -418,7 +420,7 @@ const shutdown = () => {
 
   try {
     NodeObs.OBS_service_removeCallback();
-    NodeObs.IPC.disconnect();
+    NodeObsIPC.disconnect();
     obsInitialized = false;
   } catch(e) {
     throw new Error('Exception when shutting down OBS process' + e);
