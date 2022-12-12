@@ -14,13 +14,10 @@ const chalk = require('chalk');
 }
 
 const { exec } = require('child_process');
-import util from 'util';
 import { promises as fspromise } from 'fs';
-import glob from 'glob';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { Display, screen } from 'electron';
-const globPromise = util.promisify(glob)
 
 let videoIndex: { [category: string]: number } = {};
 
@@ -204,8 +201,9 @@ const getFileInfo = async (filePath: string): Promise<FileInfo> => {
 };
 
 /**
- * Asynchronously find and return a list of files in the given directory, that matches
- * the given pattern (e.g '*.mp4'), sorted by modification time according to `sortDirection`.
+ * Asynchronously find and return a list of files in the given directory,
+ * that matches the given pattern sorted by modification time according
+ * to `sortDirection`. Ensure to properly escape patterns, e.g. ".*\\.mp4".
  */
  const getSortedFiles = async (
         dir: string,
@@ -213,25 +211,31 @@ const getFileInfo = async (filePath: string): Promise<FileInfo> => {
         sortDirection: FileSortDirection = FileSortDirection.NewestFirst
     ): Promise<FileInfo[]> => {
 
-    const files = await globPromise(path.join(dir, pattern));
-    const mappedFiles: FileInfo[] = [];
+    // We use fs.promises.readdir here instead of glob, which we used to
+    // use but it caused problems with NFS paths, see this issue:
+    // https://github.com/isaacs/node-glob/issues/74.
+    const files = (await fs.promises.readdir(dir))
+        .filter(f => f.match(new RegExp(pattern)))
+        .map(f => path.join(dir, f));
+
+    const mappedFileInfo: FileInfo[] = [];
 
     for (let i = 0; i < files.length; i++) {
-        mappedFiles.push(await getFileInfo(files[i]));
+        mappedFileInfo.push(await getFileInfo(files[i]));
     }
 
     if (sortDirection === FileSortDirection.NewestFirst) {
-        return mappedFiles.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
+        return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
     }
 
-    return mappedFiles.sort((A: FileInfo, B: FileInfo) => A.mtime - B.mtime);
+    return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => A.mtime - B.mtime);
 };
 
 /**
  * Get sorted video files. Shorthand for `getSortedFiles()` because it's used in quite a few places
  */
 const getSortedVideos = async (storageDir: string, sortDirection: FileSortDirection = FileSortDirection.NewestFirst): Promise<FileInfo[]> => {
-    return getSortedFiles(storageDir, '*.mp4', sortDirection);
+    return getSortedFiles(storageDir, '.*\\.mp4', sortDirection);
 }
 
 /**
