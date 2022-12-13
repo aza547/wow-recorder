@@ -4,11 +4,12 @@ import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from ".
 import { RecorderOptionsType } from "./recorder";
 import { Size } from "electron";
 import path from 'path';
-import { ISceneItem, IScene, IInput, ISource } from "obs-studio-node";
+import { ISceneItem, IScene, IInput, IIPC, ISource, SceneFactory, InputFactory, Global, NodeObs } from "obs-studio-node";
 import { OurDisplayType } from "./types";
 const waitQueue = new WaitQueue<any>();
-const osn = require("obs-studio-node");
 const { v4: uuid } = require('uuid');
+
+const NodeObsIPC = NodeObs.IPC as IIPC;
 
 let obsInitialized = false;
 // Timer for periodically checking the size of the video source
@@ -60,12 +61,12 @@ const initialize = (options: RecorderOptionsType) => {
 */
 const initOBS = () => {
   console.debug('[OBS] Initializing OBS...');
-  osn.NodeObs.IPC.host(`warcraft-recorder-${uuid()}`);
-  osn.NodeObs.SetWorkingDirectory(fixPathWhenPackaged(path.join(__dirname,'../../', 'node_modules', 'obs-studio-node')));
+  NodeObsIPC.host(`warcraft-recorder-${uuid()}`);
+  NodeObs.SetWorkingDirectory(fixPathWhenPackaged(path.join(__dirname,'../../', 'node_modules', 'obs-studio-node')));
 
   const obsDataPath = fixPathWhenPackaged(path.join(__dirname, 'osn-data')); // OBS Studio configs and logs
   // Arguments: locale, path to directory where configuration and logs will be stored, your application version
-  const initResult = osn.NodeObs.OBS_API_initAPI('en-US', obsDataPath, '1.0.0');
+  const initResult = NodeObs.OBS_API_initAPI('en-US', obsDataPath, '1.0.0');
 
   if (initResult !== 0) {
     const errorReasons = {
@@ -83,7 +84,7 @@ const initOBS = () => {
     throw new Error(errorMessage);
   }
 
-  osn.NodeObs.OBS_service_connectOutputSignals((signalInfo: any) => {
+  NodeObs.OBS_service_connectOutputSignals((signalInfo: any) => {
     waitQueue.push(signalInfo);
   });
 
@@ -238,7 +239,7 @@ const setupScene = (options: RecorderOptionsType): IScene => {
 
   setOBSVideoResolution(baseResolution, 'Base');
 
-  const scene: IScene = osn.SceneFactory.create('main');
+  const scene: IScene = SceneFactory.create('main');
   const sceneItem = scene.add(videoSource);
   sceneItem.scale = { x: 1.0, y: 1.0 };
 
@@ -253,7 +254,7 @@ const setupScene = (options: RecorderOptionsType): IScene => {
  * Create and return a game capture video source ('game_capture')
  */
 const createGameCaptureSource = (): IInput => {
-  const videoSource = osn.InputFactory.create('game_capture', 'Game Capture');
+  const videoSource = InputFactory.create('game_capture', 'Game Capture');
   const settings = videoSource.settings;
 
   settings['capture_cursor'] = true;
@@ -272,7 +273,7 @@ const createGameCaptureSource = (): IInput => {
  * Create and return a monitor capture video source ('monitor_capture')
  */
 const createMonitorCaptureSource = (monitorIndex: number): IInput => {
-  const videoSource = osn.InputFactory.create('monitor_capture', 'Monitor Capture');
+  const videoSource = InputFactory.create('monitor_capture', 'Monitor Capture');
   const settings = videoSource.settings;
 
   settings['monitor'] = monitorIndex;
@@ -333,31 +334,31 @@ const watchVideoSourceSize = (sceneItem: ISceneItem,
 const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceId: string ) => {
   clearSources();
 
-  osn.Global.setOutputSource(1, scene);
+  Global.setOutputSource(1, scene);
 
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
   let currentTrack = 2;
 
   getAvailableAudioInputDevices()
     .forEach(device => {
-      const source = osn.InputFactory.create('wasapi_input_capture', 'mic-audio', { device_id: device.id });
+      const source = InputFactory.create('wasapi_input_capture', 'mic-audio', { device_id: device.id });
       setSetting('Output', `Track${currentTrack}Name`, device.name);
       source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
       source.muted = audioInputDeviceId === 'none' || (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
       console.log(`[OBS] Selecting audio input device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
-      osn.Global.setOutputSource(currentTrack, source);
+      Global.setOutputSource(currentTrack, source);
       source.release()
       currentTrack++;
     });
 
   getAvailableAudioOutputDevices()
     .forEach(device => {
-      const source = osn.InputFactory.create('wasapi_output_capture', 'desktop-audio', { device_id: device.id });
+      const source = InputFactory.create('wasapi_output_capture', 'desktop-audio', { device_id: device.id });
       setSetting('Output', `Track${currentTrack}Name`, device.name);
       source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
       source.muted = audioOutputDeviceId === 'none' || (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
       console.log(`[OBS] Selecting audio output device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
-      osn.Global.setOutputSource(currentTrack, source);
+      Global.setOutputSource(currentTrack, source);
       source.release()
       currentTrack++;
     });
@@ -373,10 +374,10 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 
   // OBS allows a maximum of 64 output sources
   for (let index = 1; index < 64; index++) {
-    const src: ISource = osn.Global.getOutputSource(index);
+    const src: ISource = Global.getOutputSource(index);
     if (src !== undefined) {
       setSetting('Output', `Track${index}Name`, '');
-      osn.Global.setOutputSource(index, null);
+      Global.setOutputSource(index, null);
       src.release();
       src.remove();
     }
@@ -391,7 +392,7 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 const start = async () => {
   if (!obsInitialized) throw new Error("OBS not initialised");
   console.log("[OBS] obsRecorder: start");
-  osn.NodeObs.OBS_service_startRecording();
+  NodeObs.OBS_service_startRecording();
   await assertNextSignal("start");
 }
 
@@ -400,7 +401,7 @@ const start = async () => {
 */
 const stop = async () => {
   console.log("[OBS] obsRecorder: stop");
-  osn.NodeObs.OBS_service_stopRecording();
+  NodeObs.OBS_service_stopRecording();
   await assertNextSignal("stopping");
   await assertNextSignal("stop");
   await assertNextSignal("wrote");
@@ -418,8 +419,8 @@ const shutdown = () => {
   console.debug('[OBS]  Shutting down OBS...');
 
   try {
-    osn.NodeObs.OBS_service_removeCallback();
-    osn.NodeObs.IPC.disconnect();
+    NodeObs.OBS_service_removeCallback();
+    NodeObsIPC.disconnect();
     obsInitialized = false;
   } catch(e) {
     throw new Error('Exception when shutting down OBS process' + e);
@@ -439,7 +440,7 @@ const setSetting = (category: any, parameter: any, value: any) => {
   console.debug('[OBS] OBS: setSetting', category, parameter, value);
 
   // Getting settings container
-  const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
+  const settings = NodeObs.OBS_settings_getSettings(category).data;
 
   settings.forEach((subCategory: any) => {
     subCategory.parameters.forEach((param: any) => {
@@ -452,7 +453,7 @@ const setSetting = (category: any, parameter: any, value: any) => {
 
   // Saving updated settings container
   if (value != oldValue) {
-    osn.NodeObs.OBS_settings_saveSettings(category, settings);
+    NodeObs.OBS_settings_saveSettings(category, settings);
   }
 }
 
@@ -460,7 +461,7 @@ const setSetting = (category: any, parameter: any, value: any) => {
 * getAvailableValues
 */
 const getAvailableValues = (category: any, subcategory: any, parameter: any) => {
-  const categorySettings = osn.NodeObs.OBS_settings_getSettings(category).data;
+  const categorySettings = NodeObs.OBS_settings_getSettings(category).data;
 
   if (!categorySettings) {
     console.warn(`[OBS] There is no category ${category} in OBS settings`);
@@ -529,7 +530,7 @@ const assertNextSignal = async (value: string) => {
  * Return the full path of the file that was last recorded from OBS
  */
 const getObsLastRecording = (): string => {
-  return path.resolve(osn.NodeObs.OBS_service_getLastRecording());
+  return path.resolve(NodeObs.OBS_service_getLastRecording());
 };
 
 const getObsAvailableRecEncoders = (): string[] => {
