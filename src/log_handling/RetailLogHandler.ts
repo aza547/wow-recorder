@@ -253,7 +253,7 @@ export default class RetailLogHandler extends LogHandler {
             } 
             else 
             {
-                console.info("[RetailLogHandler] Unknown zone change, no action taken: ", this.activity, zoneID);
+                console.info("[RetailLogHandler] Unknown zone change, no action taken: ", zoneID);
             }
         } 
         else 
@@ -281,7 +281,6 @@ export default class RetailLogHandler extends LogHandler {
         // In Mythic+ we see COMBANTANT_INFO events for each encounter.
         // Don't bother overwriting them if we have them already. 
         if (this.activity.getCombatant(GUID)) {
-            console.debug("[RetailLogHandler] Already processed this combatant, skipping");
             return;
         }
 
