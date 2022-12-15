@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
  - [NO-ISSUE] - Fix a bug where closing wow didn't stop the recorder if mid activity.
  - [NO-ISSUE] - Fix a problem when saving videos to NFS mounts. 
+ - [Issue 187](https://github.com/aza547/wow-recorder/issues/187) - Add Dragonflight M+ timings.
 
 ## [3.1.1] - 2022-12-09
 ### Fixed
