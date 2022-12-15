@@ -113,7 +113,7 @@ const loadAllVideos = async (storageDir: any): Promise<any> => {
  * Get the date a video was recorded from the date object.
  */
 const getMetadataForVideo = (video: string) => {
-    const metadataFile = getMetadataFileForVideo(video)
+    const metadataFile = getMetadataFileNameForVideo(video)
 
     if (!fs.existsSync(metadataFile)) {
         console.error(`[Util] Metadata file does not exist: ${metadataFile}`);
@@ -132,7 +132,8 @@ const getMetadataForVideo = (video: string) => {
  * Writes video metadata asynchronously and returns a Promise
  */
  const writeMetadataFile = async (videoPath: string, metadata: any) => {
-    const metadataFileName = getMetadataFileForVideo(videoPath);
+    console.info("[Util] Write Metadata file", videoPath);
+    const metadataFileName = getMetadataFileNameForVideo(videoPath);
     const jsonString = JSON.stringify(metadata, null, 2);
     
     return await fspromise.writeFile(
@@ -146,7 +147,7 @@ const getMetadataForVideo = (video: string) => {
 /**
  * Get the filename for the metadata file associated with the given video file
  */
- const getMetadataFileForVideo = (video: string) => {
+ const getMetadataFileNameForVideo = (video: string) => {
     const videoFileName = path.basename(video, '.mp4');
     const videoDirName = path.dirname(video);
 
@@ -326,7 +327,7 @@ const runSizeMonitor = async (storageDir: string, maxStorageGB: number): Promise
         return;
     }
 
-    const metadataPath = getMetadataFileForVideo(videoPath);
+    const metadataPath = getMetadataFileNameForVideo(videoPath);
     if (fs.existsSync(metadataPath)) {
         tryUnlinkSync(metadataPath);
     }
