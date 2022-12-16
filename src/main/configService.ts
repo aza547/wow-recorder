@@ -120,6 +120,11 @@ export default class ConfigService extends EventEmitter {
             throw new Error("Buffer path is invalid.");
         }
 
+        if (storagePath === bufferStoragePath) {
+            console.warn('[Config Service] Validation failed: Storage Path is the same as Buffer Path');
+            throw new Error("Storage Path is the same as Buffer Path");
+        }
+
         // Check if the specified paths is a valid WoW Combat Log directory
         const combatLogPaths = ['retailLogPath', 'classicLogPath'];
         let hasValidCombatLogPath = false;

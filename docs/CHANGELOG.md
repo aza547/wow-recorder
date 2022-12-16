@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+ - [Issue 246](https://github.com/aza547/wow-recorder/issues/246) - Config check that storage path and buffer path are different.
+
 ### Changed
  - [NO-ISSUE] - Autoplay videos on selection.
  - [NO-ISSUE] - Display errors in a neater manner with suggestions on how to get help.
