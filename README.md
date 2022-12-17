@@ -35,10 +35,6 @@ Please create an issue, I will get to it eventually. Bear in mind maintaining th
 
 I've created a dedicated discord for this project, feel free to join [here](https://discord.gg/NPha7KdjVk).
 
-# Motivation
-
-This project is free and open source. It is built on the [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate) repository. It is released in the hope that it will be useful to other players.
-
 # Contributing
 
 If you're interested in getting involved please drop me a message on discord and I can give you access to our development channel. Also see [contributing](https://github.com/aza547/wow-recorder/blob/main/docs/CONTRIBUTING.md) docs.
