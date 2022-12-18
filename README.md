@@ -1,10 +1,14 @@
 # Warcraft Recorder
+![GitHub all releases](https://img.shields.io/github/downloads/aza547/wow-recorder/total)
+![Version](https://img.shields.io/github/package-json/v/aza547/wow-recorder?filename=release%2Fapp%2Fpackage.json)
+![Discord](https://img.shields.io/discord/1004860808737591326)
 
 A desktop screen recorder application that records and saves videos of in-game events, and provides a graphical user interface to view the replays. 
 
 Warcraft Recorder watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
 
 Windows is currently the only supported operating system. 
+
 
 ![](https://i.imgur.com/cYxXXtD.png)
 
@@ -34,10 +38,6 @@ This runs a 10 second test of the recording functionality by mimicing a 2v2 game
 Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
 
 I've created a dedicated discord for this project, feel free to join [here](https://discord.gg/NPha7KdjVk).
-
-# Motivation
-
-This project is free and open source. It is built on the [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate) repository. It is released in the hope that it will be useful to other players.
 
 # Contributing
 
