@@ -113,6 +113,7 @@ export default abstract class LogHandler {
         const playerDeath: PlayerDeathType = {
             name: playerName,
             specId: playerSpecId,
+            date: line.date(),
             timestamp: relativeTime,
             friendly: isUnitFriendly(unitFlags),
         }

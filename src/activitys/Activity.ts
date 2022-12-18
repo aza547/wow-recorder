@@ -50,6 +50,7 @@ export default abstract class Activity {
     set flavour(flavour) { this._flavour = flavour };
     set category(category) { this._category = category };
     set overrun(s) {this._overrun = s}
+    set combatantMap(cm) { this._combatantMap = cm };
 
     get duration() { 
         if (!this.endDate) {

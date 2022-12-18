@@ -26,9 +26,9 @@ print("Starting")
 
 # Write each line from the example to the fake log.
 for line in sample_log_lines:
-    if "ARENA_MATCH_END" in line:
-        # Sleep before writing the end event so we actually record something. 
-        time.sleep(10)
+    if "ARENA_MATCH_START" in line:
+        # Some gaps between rounds.
+        time.sleep(2)
     logFile.write(rd(line))
 
 print("Done")

@@ -72,6 +72,7 @@ enum UnitFlags {
 type PlayerDeathType = {
   name: string,
   specId: number,
+  date: Date,
   timestamp: number,
   friendly: boolean,
 };
@@ -198,6 +199,8 @@ interface ISettingsPanelProps {
     level?: number;
     encounterName?: string;
     protected?: boolean;
+    soloShuffleRoundsWon?: number;
+    soloShuffleRoundsPlayed?: number;
 }
 
 /**
