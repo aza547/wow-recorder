@@ -1,5 +1,6 @@
 # Warcraft Recorder
 ![GitHub all releases](https://img.shields.io/github/downloads/aza547/wow-recorder/total)
+![Version](https://img.shields.io/github/package-json/v/aza547/wow-recorder?filename=release%2Fapp%2Fpackage.json)
 ![Discord](https://img.shields.io/discord/1004860808737591326)
 
 A desktop screen recorder application that records and saves videos of in-game events, and provides a graphical user interface to view the replays. 
