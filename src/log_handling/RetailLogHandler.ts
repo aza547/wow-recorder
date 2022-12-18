@@ -8,6 +8,7 @@ import Battleground from "../activitys/Battleground";
 import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import { Flavour } from "../main/types";
+import SoloShuffle from "../activitys/SoloShuffle";
 
 /**
  * RetailLogHandler class.
@@ -43,8 +44,8 @@ export default class RetailLogHandler extends LogHandler {
     };
 
     handleArenaStartLine(line: LogLine): void {
-        if (this.activity) {
-            // Solo shuffle hits this alot as it fires 6 START events and 1 END. 
+        if (this.activity && (this.activity.category !== VideoCategory.SoloShuffle)) {
+            // @@@ Comment this
             return;
         }
 
@@ -55,17 +56,34 @@ export default class RetailLogHandler extends LogHandler {
 
         let category;
         const arenaType = line.arg(3);
-    
-        // Dirty hack for now to fix solo shuffle as since DF prepatch it's
-        // either "Brawl Solo Shuffle" or "Rated Solo Shuffle".
-        if (arenaType.includes("Solo Shuffle")) {
+        
+        if (arenaType === "Rated Solo Shuffle") {
+            // Brawl Solo Shuffle used to be a thing, but it isn't anymore. 
             category = VideoCategory.SoloShuffle;
+        } else if (arenaType === "2v2") {
+            category = VideoCategory.TwoVTwo;
+        } else if (arenaType === "3v3") {
+            category = VideoCategory.ThreeVThree;
+        } else if (arenaType === "Skirmish") {
+            category = VideoCategory.Skirmish;
         } else {
-            category = (line.arg(3) as VideoCategory);
+            console.error("[RetailLogHandler] Unrecognised arena category:", arenaType);
+            return;
         }
 
-        this.activity = new ArenaMatch(startTime, category, zoneID, Flavour.Retail);
-        this.startRecording(this.activity);
+        if (!this.activity && category == VideoCategory.SoloShuffle) {
+            console.info("[RetailLogHandler] Fresh Solo Shuffle game starting");
+            this.activity = new SoloShuffle(startTime, zoneID);
+            this.startRecording(this.activity);
+        } else if (this.activity && category === VideoCategory.SoloShuffle) {
+            console.info("[RetailLogHandler] New round of existing Solo Shuffle starting");
+            const soloShuffle = this.activity as SoloShuffle;
+            soloShuffle.startRound(startTime);
+        } else {
+            console.info("[RetailLogHandler] New", category, "arena starting");
+            this.activity = new ArenaMatch(startTime, category, zoneID, Flavour.Retail);
+            this.startRecording(this.activity);
+        }
     };
 
     handleArenaEndLine (line: LogLine): void {
@@ -76,11 +94,17 @@ export default class RetailLogHandler extends LogHandler {
             return;
         }
 
-        const arenaMatch = this.activity as ArenaMatch;
-        const endTime = line.date();
-        const winningTeamID = parseInt(line.arg(1), 10);
-        arenaMatch.endArena(endTime, winningTeamID);
-        this.endRecording(arenaMatch);
+        if (this.activity.category === VideoCategory.SoloShuffle) {
+            const soloShuffle = this.activity as SoloShuffle;
+            soloShuffle.endGame(line.date());
+            this.endRecording(soloShuffle);
+        } else {
+            const arenaMatch = this.activity as ArenaMatch;
+            const endTime = line.date();
+            const winningTeamID = parseInt(line.arg(1), 10);
+            arenaMatch.endArena(endTime, winningTeamID);
+            this.endRecording(arenaMatch);
+        }
     }
 
     handleChallengeModeStartLine (line: LogLine): void {
