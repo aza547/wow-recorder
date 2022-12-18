@@ -1,10 +1,13 @@
 # Warcraft Recorder
+![GitHub all releases](https://img.shields.io/github/downloads/aza547/wow-recorder/total?style=flat-square)
+![Discord](https://img.shields.io/discord/1004860808737591326)
 
 A desktop screen recorder application that records and saves videos of in-game events, and provides a graphical user interface to view the replays. 
 
 Warcraft Recorder watches the combat log file for events, records to disk and then plays back the recordings in the user interface.
 
 Windows is currently the only supported operating system. 
+
 
 ![](https://i.imgur.com/cYxXXtD.png)
 
