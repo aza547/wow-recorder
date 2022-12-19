@@ -380,7 +380,7 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
 /**
  * Alloted time for Mythic Keystone dungeons, in seconds, the format of:
  *
- * mapId: [3 chest, 2 chest, 1 chest]
+ * mapId: [1 chest, 2 chest, 3 chest]
  *
  * The last one is obviously also the one the determines if a key was timed or not.
  *
