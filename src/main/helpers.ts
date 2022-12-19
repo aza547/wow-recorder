@@ -11,22 +11,24 @@ import { instanceDifficulty, instanceEncountersById, VideoCategory } from "./con
 
 /**
  * Get a result text appropriate for the video category that signifies a
- * win or a loss, of some sort.
+ * win or a loss, of some sort. Must handle soloShuffle inputs being undefined.
  */
 export const getVideoResultText = (category: VideoCategory, 
-                                   isGoodResult: boolean): string => {
-    const isSoloShuffle = (category == VideoCategory.SoloShuffle);
-   
-    if (isSoloShuffle) {
-        return "";
-    }
-
+                                   isGoodResult: boolean, 
+                                   soloShuffleRoundsWon: number, 
+                                   soloShuffleRoundsPlayed: number): string => 
+{
     switch (category) {
         case VideoCategory.MythicPlus:
             return isGoodResult ? "Time" : "Depl";
 
         case VideoCategory.Raids:
             return isGoodResult ? "Kill" : "Wipe";
+
+        case VideoCategory.SoloShuffle:
+            const wins = soloShuffleRoundsWon;
+            const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
+            return `${wins}-${losses}`;
 
         default:
             return isGoodResult ? "Win" : "Loss";

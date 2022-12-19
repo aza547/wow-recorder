@@ -23,9 +23,11 @@ export default function VideoButton(props: any) {
   const video = state.videoState[category][videoIndex];
   const videoPath = video.fullPath;
 
-  // Need to not be const as it will be modified later if the video is of a
-  // Mythic Keystone dungeon.
-  let resultText = getVideoResultText(category, video.result);
+  // Need to not be const as it will be modified later if a Mythic+.
+  let resultText = getVideoResultText(category, 
+                                      video.result, 
+                                      video.soloShuffleRoundsWon, 
+                                      video.soloShuffleRoundsPlayed);
 
   const isProtected = video.protected;
 

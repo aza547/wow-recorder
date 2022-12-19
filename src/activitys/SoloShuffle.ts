@@ -2,9 +2,16 @@ import { Flavour, Metadata, PlayerDeathType } from "../main/types";
 import { classicArenas, retailArenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 import ArenaMatch from "./ArenaMatch";
+import { Combatant } from "main/combatant";
 
 /**
- * Arena match class.
+ * Class representing a Solo Shuffle. This is essentially a wrapper around
+ * a list of ArenaMatch objects, where the winner of the nested ArenaMatch
+ * objects are determined by whoever gets the first kill.  
+ * 
+ * @@@ TODO handle ressing holy priests
+ * @@@ TODO handle leaver teammates
+ * @@@ TODO handle leaver players
  */
 export default class SoloShuffle extends Activity {
     private rounds: ArenaMatch[] = [];
@@ -18,6 +25,8 @@ export default class SoloShuffle extends Activity {
     }
 
     get zoneID() { return this._zoneID };
+
+    get currentRound() { return this.rounds[this.rounds.length - 1] };
 
     get zoneName() {
         if (!this.zoneID) {
@@ -47,6 +56,33 @@ export default class SoloShuffle extends Activity {
         return `${win}-${loss}`;
     }
 
+    get playerGUID() { 
+        return this.currentRound.playerGUID;
+    };
+
+    get player() {
+        if (!this.playerGUID) {
+            throw new Error("Failed to get player combatant, playerGUID not set");
+        }
+
+        const player = this.currentRound.getCombatant(this.playerGUID);
+
+        if (!player) {
+            throw new Error("Player not found in combatants");
+        }
+
+        return player;
+    }
+
+    set playerGUID(GUID) { 
+        this.currentRound.playerGUID = GUID;
+    };
+
+    getCombatant(GUID: string) {
+        const currentRound = this.rounds[this.rounds.length - 1]; 
+        return currentRound.getCombatant(GUID);
+    }
+
     startRound(startDate: Date)
     {
         if (!this.zoneID) {
@@ -58,45 +94,52 @@ export default class SoloShuffle extends Activity {
                                         this.zoneID,
                                         Flavour.Retail);
 
-        newRound.combatantMap = this.combatantMap;
-        newRound.playerGUID = this.playerGUID;
-
         this.rounds.push(newRound);
     }
 
     endRound(endDate: Date, winningTeamID: number) {
-        const currentRound = this.rounds[this.rounds.length - 1];
-        currentRound.endArena(endDate, winningTeamID); 
+        this.currentRound.endArena(endDate, winningTeamID); 
     }
 
     addDeath(death: PlayerDeathType) {
         console.info("[Solo Shuffle] Adding death to solo shuffle", death);
         
-        if (!this.playerGUID) {
+        if (!this.player || this.player.teamID === undefined) {
+            console.error("[Solo Shuffle] Tried to add a death but don't know the player");
             return;
         }
 
-        const player = this.getCombatant(this.playerGUID);
-
-        if (!player || player.teamID === undefined) {
-            return;
-        }
-
-        const isEnemy = !death.friendly;
-        const playerTeamID = player.teamID;
         let winningTeamID;
 
-        if (isEnemy) {
-            winningTeamID = playerTeamID;
+        if (!death.friendly) {
+            console.info("[Solo Shuffle] Adding enemy death");
+            winningTeamID = this.player.teamID;
         } else {
-            (playerTeamID === 0) ? (winningTeamID = 1) : (winningTeamID = 0);
+            console.info("[Solo Shuffle] Adding friendly death");
+
+            if (this.player.teamID === 0) {
+                winningTeamID = 1;
+            } else {
+                winningTeamID = 0;
+            }
         }
-        
-        this.endRound(death.date, winningTeamID);
+
+        this.currentRound.addDeath(death);
+        this.endRound(death.date, winningTeamID);        
         super.addDeath(death);
     }
 
+    addCombatant(combatant: Combatant) {
+        this.currentRound.addCombatant(combatant);
+    }
+
     endGame(endDate: Date) {
+        console.info("[Solo Shuffle] Ending game");
+        
+        for (let i = 0; i < this.rounds.length; i++) {
+            console.info("[Solo Shuffle] Round", i, ":", this.rounds[i].resultInfo);
+        }
+
         super.end(endDate, true);
     }
 

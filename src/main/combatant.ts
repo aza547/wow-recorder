@@ -93,6 +93,15 @@ class Combatant {
     set teamID(value) {
         this._teamID = value;
     }
+
+    isFullyDefined() {
+        const hasGUID = (this.teamID !== undefined);
+        const hasName = (this.name !== undefined);
+        const hasRealm = (this.realm !== undefined);
+        const hasSpecID = (this.specID !== undefined);
+        const hasTeamID = (this.teamID !== undefined);
+        return (hasGUID && hasName && hasRealm && hasSpecID && hasTeamID); 
+    }
 }
 
 export {

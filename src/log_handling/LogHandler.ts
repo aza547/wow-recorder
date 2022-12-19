@@ -238,16 +238,21 @@ export default abstract class LogHandler {
             return;
         }
 
-        // Even if the combatant exists already we still update it with the info it 
-        // may not have yet. We can't tell the name, realm or if it's the player
-        // from COMBATANT_INFO events. 
-        const combatant = this.activity.getCombatant(srcGUID) || new Combatant(srcGUID);
-        [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
-
         if (isUnitSelf(srcFlags)) {
             this.activity.playerGUID = srcGUID;
         }
 
+        // Even if the combatant exists already we still update it with the info it 
+        // may not have yet. We can't tell the name, realm or if it's the player
+        // from COMBATANT_INFO events. 
+        const combatant = this.activity.getCombatant(srcGUID) || new Combatant(srcGUID);
+
+        // Can only hit this if we got a hit from the activity.getCombatant call above. 
+        if (combatant.isFullyDefined()) {
+            return;
+        }
+
+        [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
         this.activity.addCombatant(combatant);
         return combatant;
     }
