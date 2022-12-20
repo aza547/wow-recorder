@@ -154,7 +154,7 @@ export default function VideoButton(props: any) {
             <span>{ segmentDurationText }</span>: Boss: { getEncounterNameById(segment.encounterId) }
           </div>
           <div className={ 'segment-result ' + (result ? 'goodResult' : 'badResult') }>
-            { getVideoResultText(VideoCategory.Raids, result) }
+            { getVideoResultText(VideoCategory.Raids, result, 0, 0) }
           </div>
         </div>
       }
@@ -198,7 +198,7 @@ export default function VideoButton(props: any) {
           <div 
             id={ videoPath } 
             className={ buttonClasses.join(' ') } 
-            style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "200px 100px"}} 
+            style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "300px 150px"}} 
             onContextMenu={openMenu}
           >
             <div className="videoButtonDarken"></div>

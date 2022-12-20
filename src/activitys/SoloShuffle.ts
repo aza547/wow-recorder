@@ -10,7 +10,6 @@ import { Combatant } from "main/combatant";
  * objects are determined by whoever gets the first kill.  
  * 
  * @@@ TODO handle ressing holy priests
- * @@@ TODO handle leaver teammates
  * @@@ TODO handle leaver players
  */
 export default class SoloShuffle extends Activity {
