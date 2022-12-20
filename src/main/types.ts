@@ -201,6 +201,7 @@ interface ISettingsPanelProps {
     protected?: boolean;
     soloShuffleRoundsWon?: number;
     soloShuffleRoundsPlayed?: number;
+    combatants?: Combatant[];
 }
 
 /**

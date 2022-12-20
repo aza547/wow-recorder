@@ -660,6 +660,7 @@ const videoTabsSx = {
   bottom: '1px',
   left: '1px',
   width: '100%',
+  height: '160px',
   borderColor: '#000000',
   bgcolor: '#272e48' ,
   textColor: 'secondary',
@@ -692,8 +693,8 @@ const videoButtonSx = {
   bgcolor: '#272e48', 
   color: 'white', 
   minHeight: '1px', 
-  height: '100px', 
-  width: '200px', 
+  height: '150px', 
+  width: '300px', 
   opacity: 1,
   borderRadius: 2,
 }

@@ -15,7 +15,6 @@ import { Combatant } from "main/combatant";
  */
 export default class SoloShuffle extends Activity {
     private rounds: ArenaMatch[] = [];
-    private totalRounds: number = 6;
 
     constructor(startDate: Date, zoneID: number) {
         super(startDate, VideoCategory.SoloShuffle, Flavour.Retail);
@@ -52,7 +51,7 @@ export default class SoloShuffle extends Activity {
 
     get resultInfo() {
         const win = this.roundsWon;
-        const loss = this.totalRounds - this.roundsWon;
+        const loss = this.rounds.length - this.roundsWon;
         return `${win}-${loss}`;
     }
 
@@ -143,10 +142,6 @@ export default class SoloShuffle extends Activity {
         super.end(endDate, true);
     }
 
-    determineSoloShuffleResult(): boolean {
-        return true;
-    }
-
     getMetadata(): Metadata {
         return {
             category: this.category,
@@ -158,7 +153,8 @@ export default class SoloShuffle extends Activity {
             deaths: this.deaths,
             player: this.player,
             soloShuffleRoundsWon: this.roundsWon,
-            soloShuffleRoundsPlayed: this.totalRounds,
+            soloShuffleRoundsPlayed: this.rounds.length,
+            combatants: Array.from(this.currentRound.combatantMap.values()),
         }
     }
 
