@@ -7,6 +7,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
 import { getEncounterNameById, getInstanceDifficulty, getVideoResultText } from 'main/helpers';
+import { SoloShuffleTimelineSegment } from 'main/types';
 
 /**
  * For shorthand referencing. 
@@ -56,6 +57,7 @@ export default function VideoButton(props: any) {
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories. 
   const isMythicPlus = (category === VideoCategory.MythicPlus);
+  const isSoloShuffle = (category === VideoCategory.SoloShuffle);
   const isRaid = category === VideoCategory.Raids;
   const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
 
@@ -172,8 +174,52 @@ export default function VideoButton(props: any) {
     ];
   };
 
+  /**
+   * Generate the JSX for the timeline segments that are used in the context menu on
+   * the VideoButton.
+   */
+  const renderSoloShuffleTimelineSegments = (timeline: SoloShuffleTimelineSegment[]): any[] => {
+    const timelineSegmentsMenuItems = timeline.map((segment: any) => {
+      let timelineSegmentMenu;
+      let segmentDurationText;
+      const result = Boolean(segment.result);
+
+      // If the metadata for some reason gets a malformed timestamp, let's
+      // not make it break the whole UI but instead silently ignore it for now.
+      try {
+        segmentDurationText = getFormattedDuration(segment.timestamp);
+      } catch (e: any) {
+        console.error(e)
+        return;
+      }
+
+      timelineSegmentMenu = 
+        <div className='segment-entry'>
+          <div className='segment-type'>
+            <span>{ segmentDurationText }</span>: Round { segment.number }
+          </div>
+          <div className={ 'segment-result ' + (result ? 'goodResult' : 'badResult') }>
+            { getVideoResultText(VideoCategory.ThreeVThree, result, 0, 0) }
+          </div>
+        </div>
+
+
+      return (
+        <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(videoIndex, segment.timestamp)}>
+          { timelineSegmentMenu }
+        </MenuItem>
+      );
+    });
+
+    return [
+      ...timelineSegmentsMenuItems,
+      <Divider key='video-segments-end' />,
+    ];
+  };
+
   const buttonClasses = ['videoButton'];
   let keystoneTimelineSegments = [];
+  
   
   if (isMythicPlus) {
     buttonClasses.push('dungeon')
@@ -187,6 +233,12 @@ export default function VideoButton(props: any) {
     if (timeline) {
       keystoneTimelineSegments = renderKeystoneTimelineSegments(video.timeline);
     }
+  }
+
+  let soloShuffleTimelineSegments = [];
+
+  if (isSoloShuffle && (video.timeline !== undefined)) {
+    soloShuffleTimelineSegments = renderSoloShuffleTimelineSegments(video.timeline);
   }
 
   const difficultyClass = isMythicPlus ? "instance-difficulty" : "difficulty";
@@ -246,6 +298,7 @@ export default function VideoButton(props: any) {
         open={open} onClose={handleCloseMenu} 
         MenuListProps={{'aria-labelledby': 'basic-button'}}>
         { keystoneTimelineSegments.length > 0 && keystoneTimelineSegments }
+        { soloShuffleTimelineSegments.length > 0 && soloShuffleTimelineSegments }
         <MenuItem onClick={() => deleteVideo(videoPath)}>Delete</MenuItem>
         <MenuItem onClick={() => saveVideo(videoPath)}> 
           {isProtected &&

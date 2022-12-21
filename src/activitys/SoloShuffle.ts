@@ -1,4 +1,4 @@
-import { Flavour, Metadata, PlayerDeathType } from "../main/types";
+import { Flavour, Metadata, PlayerDeathType, SoloShuffleTimelineSegment } from "../main/types";
 import { classicArenas, retailArenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 import ArenaMatch from "./ArenaMatch";
@@ -9,7 +9,8 @@ import { Combatant } from "main/combatant";
  * a list of ArenaMatch objects, where the winner of the nested ArenaMatch
  * objects are determined by whoever gets the first kill.  
  * 
- * @@@ TODO handle ressing holy priests
+ * @@@ TODO handle color coding for result
+ * @@@ TODO handle multi death scenario neatly
  * @@@ TODO handle leaver players
  */
 export default class SoloShuffle extends Activity {
@@ -101,6 +102,11 @@ export default class SoloShuffle extends Activity {
 
     addDeath(death: PlayerDeathType) {
         console.info("[Solo Shuffle] Adding death to solo shuffle", death);
+
+        if (this.currentRound.deaths.length > 0) {
+            console.info("[Solo Shuffle] Already have a death in this round", this.currentRound.deaths);
+            return;
+        }
         
         if (!this.player || this.player.teamID === undefined) {
             console.error("[Solo Shuffle] Tried to add a death but don't know the player");
@@ -141,6 +147,22 @@ export default class SoloShuffle extends Activity {
         super.end(endDate, true);
     }
 
+    getTimelineSegments(): SoloShuffleTimelineSegment[] {
+        const segments = [];
+
+        for (let i = 0; i < this.rounds.length; i++) {
+            const segment = {
+                round: i + 1,
+                timestamp: (this.rounds[i].startDate.getSeconds() - this.startDate.getSeconds()),
+                result: this.rounds[i].result,
+            }
+
+            segments.push(segment);
+        }
+        
+        return segments;
+    }
+
     getMetadata(): Metadata {
         return {
             category: this.category,
@@ -153,6 +175,7 @@ export default class SoloShuffle extends Activity {
             player: this.player,
             soloShuffleRoundsWon: this.roundsWon,
             soloShuffleRoundsPlayed: this.rounds.length,
+            timeline: this.getTimelineSegments(),
             combatants: Array.from(this.currentRound.combatantMap.values()),
         }
     }
