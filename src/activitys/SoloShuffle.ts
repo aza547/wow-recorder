@@ -10,8 +10,7 @@ import { Combatant } from "main/combatant";
  * objects are determined by whoever gets the first kill.  
  * 
  * @@@ TODO handle color coding for result
- * @@@ TODO handle multi death scenario neatly
- * @@@ TODO handle leaver players
+ * @@@ TODO handle leaver players (i.e. self)
  */
 export default class SoloShuffle extends Activity {
     private rounds: ArenaMatch[] = [];
@@ -82,8 +81,7 @@ export default class SoloShuffle extends Activity {
         return currentRound.getCombatant(GUID);
     }
 
-    startRound(startDate: Date)
-    {
+    startRound(startDate: Date) {
         if (!this.zoneID) {
             throw new Error("[Solo Shuffle] No zoneID set");
         }
