@@ -29,7 +29,7 @@ div#root {
 }
 
 .video{
-  height: calc(100% - 200px);
+  height: calc(100% - 140px);
   top: 0px;
 }
 
@@ -326,7 +326,7 @@ h2:not(.MuiDialogTitle-root) {
 
 #saving-status{
   position:fixed;
-  bottom: 275px;
+  bottom: 225px;
   left: 50px;
   height: 50px;
   width: 50px;
@@ -336,7 +336,7 @@ h2:not(.MuiDialogTitle-root) {
 
 #small-rec-status{
   position:fixed;
-  bottom: 200px;
+  bottom: 150px;
   left: 55px;
   height: 50px;
   width: 50px;
@@ -346,7 +346,7 @@ h2:not(.MuiDialogTitle-root) {
 
 #big-rec-status{
   position:fixed;
-  bottom: 175px;
+  bottom: 125px;
   left: 40px;
   height: 80px;
   width: 80px;

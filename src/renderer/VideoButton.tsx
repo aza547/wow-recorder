@@ -250,7 +250,7 @@ export default function VideoButton(props: any) {
           <div 
             id={ videoPath } 
             className={ buttonClasses.join(' ') } 
-            style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "300px 150px"}} 
+            style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "200px 100px"}} 
             onContextMenu={openMenu}
           >
             <div className="videoButtonDarken"></div>
