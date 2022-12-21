@@ -3,7 +3,7 @@
 ![Version](https://img.shields.io/github/package-json/v/aza547/wow-recorder?filename=release%2Fapp%2Fpackage.json)
 ![Discord](https://img.shields.io/discord/1004860808737591326)
 
-Warcraft Recorder is a desktop application and screen recorder, it watches the WoW combat log file for interesting events events, and records them, and then plays back the recordings in the user interface.
+Warcraft Recorder is a desktop application and screen recorder, it watches the WoW combat log file for interesting events, records them, and presents a user interface in which the recordings can be viewed. 
 
 ![](https://i.imgur.com/cYxXXtD.png)
 
