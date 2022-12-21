@@ -29,7 +29,7 @@ div#root {
 }
 
 .video{
-  height: calc(100% - 140px);
+  height: calc(100% - 150px);
   top: 0px;
 }
 
