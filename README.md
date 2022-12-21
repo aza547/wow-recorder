@@ -20,9 +20,7 @@ If you are a retail arena player, I also recommend the [jaxSurrender](https://ww
 
 # Testing It Works
 
-You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above setup steps. 
-
-This runs a 10 second test of the recording functionality by mimicing a 2v2 game.
+You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above setup steps. This runs a 10 second test of the recording functionality by mimicing a 2v2 game.
 
 <img src="https://i.imgur.com/bwChWgI.png">
 
