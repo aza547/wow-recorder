@@ -16,10 +16,6 @@ Windows is currently the only supported operating system.
     - Retail: Install and configure the SimpleCombatLogger addon ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
     - Classic: Install and configure the AutoCombatLogger addon ([CurseForge](https://www.curseforge.com/wow/addons/autocombatlogger), [Wago](https://addons.wago.io/addons/autocombatlogger)). 
 
-An example of valid config can be found below.
-
-<img src="https://i.imgur.com/KHw04UH.png" width="300">
-
 If you are a retail arena player, I also recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon.
 
 # Testing It Works
