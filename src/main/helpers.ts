@@ -26,12 +26,57 @@ export const getVideoResultText = (category: VideoCategory,
             return isGoodResult ? "Kill" : "Wipe";
 
         case VideoCategory.SoloShuffle:
+            if (soloShuffleRoundsWon === undefined || soloShuffleRoundsPlayed === undefined) {
+                // For backwards compatibility with versions 3.1.2 and below. Can 
+                // probably remove some day.
+                return "";
+            }
+
             const wins = soloShuffleRoundsWon;
             const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
             return `${wins}-${losses}`;
 
         default:
             return isGoodResult ? "Win" : "Loss";
+    }
+};
+
+export const getVideoResultClass = (category: VideoCategory, 
+                                    isGoodResult: boolean, 
+                                    soloShuffleRoundsWon: number, 
+                                    soloShuffleRoundsPlayed: number): string => 
+{
+    switch (category) {
+        case VideoCategory.MythicPlus:
+            return isGoodResult ? "goodResult" : "badResult";
+
+    case VideoCategory.Raids:
+        return isGoodResult ? "goodResult" : "badResult";
+
+    case VideoCategory.SoloShuffle:
+        if (soloShuffleRoundsWon === undefined || soloShuffleRoundsPlayed === undefined) {
+        // For backwards compatibility with versions 3.1.2 and below. Can 
+        // probably remove some day.
+            return "";
+        }
+
+        // For solo shuffle "isGoodResult" is irrelevant. We do maths 
+        // instead of just counting the wins here as we don't want to
+        // assume the total number of rounds played.
+        if (soloShuffleRoundsWon > 0.7 * soloShuffleRoundsPlayed) {
+            return "goodResult";
+        } else if (soloShuffleRoundsWon > (0.5 * soloShuffleRoundsPlayed)) {
+            return "decentResult";
+        } else if (soloShuffleRoundsWon > (0.2 * soloShuffleRoundsPlayed)) {
+            return "moderateResult";
+        } else if (soloShuffleRoundsWon > 0) {
+            return "mehResult";
+        } else {
+            return "badResult";
+        }
+
+        default:
+            return isGoodResult ? "goodResult" : "badResult";
     }
 };
 

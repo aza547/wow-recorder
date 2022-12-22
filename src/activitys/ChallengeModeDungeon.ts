@@ -40,6 +40,8 @@ export default class ChallengeModeDungeon extends Activity {
         if (!this.CMDuration) {
             console.log("[ChallengeModeDungeon] Run didn't complete (abandoned, not a deplete)");
             return 0;
+        } else {
+            console.log("[ChallengeModeDungeon] CMDuration:", this.CMDuration);
         }
 
         for (let i = (this.timings.length - 1); i >= 0; i--) {

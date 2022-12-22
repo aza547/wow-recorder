@@ -180,7 +180,7 @@ export default abstract class LogHandler {
         }
         
         const endDate = new Date();
-        endDate.setSeconds(endDate.getSeconds() + timedelta);
+        endDate.setTime(endDate.getTime() + timedelta * 1000);
         this.activity.overrun = 0;
         
         this.activity.end(endDate, false);

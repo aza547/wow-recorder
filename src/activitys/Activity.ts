@@ -75,7 +75,7 @@ export default abstract class Activity {
     }
 
     end(endDate: Date, result: boolean) {
-        endDate.setSeconds(endDate.getSeconds() + this.overrun);
+        endDate.setTime(endDate.getTime() + this.overrun * 1000);
         this.endDate = endDate;
         this.result = result;
     }
