@@ -195,12 +195,13 @@ interface ISettingsPanelProps {
     deaths?: PlayerDeathType[];
     upgradeLevel?: number;
     mapID?: number;
-    timeline?: ChallengeModeTimelineSegment[];
+    timeline?: ChallengeModeTimelineSegment[] | SoloShuffleTimelineSegment[];
     level?: number;
     encounterName?: string;
     protected?: boolean;
     soloShuffleRoundsWon?: number;
     soloShuffleRoundsPlayed?: number;
+    combatants?: Combatant[];
 }
 
 /**
@@ -213,6 +214,11 @@ type VideoData = Metadata & {
     protected: boolean,
 }
 
+type SoloShuffleTimelineSegment = {
+    round: number;
+    timestamp: number;
+    result: boolean;
+}
 
 export {
     RecStatus,
@@ -234,4 +240,5 @@ export {
     Metadata,
     VideoData,
     Flavour,
+    SoloShuffleTimelineSegment,
 }

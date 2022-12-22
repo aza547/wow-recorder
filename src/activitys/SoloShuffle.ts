@@ -1,4 +1,4 @@
-import { Flavour, Metadata, PlayerDeathType } from "../main/types";
+import { Flavour, Metadata, PlayerDeathType, SoloShuffleTimelineSegment } from "../main/types";
 import { classicArenas, retailArenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 import ArenaMatch from "./ArenaMatch";
@@ -9,13 +9,10 @@ import { Combatant } from "main/combatant";
  * a list of ArenaMatch objects, where the winner of the nested ArenaMatch
  * objects are determined by whoever gets the first kill.  
  * 
- * @@@ TODO handle ressing holy priests
- * @@@ TODO handle leaver teammates
- * @@@ TODO handle leaver players
+ * @@@ TODO handle leaver players (i.e. self), might just need a test? 
  */
 export default class SoloShuffle extends Activity {
     private rounds: ArenaMatch[] = [];
-    private totalRounds: number = 6;
 
     constructor(startDate: Date, zoneID: number) {
         super(startDate, VideoCategory.SoloShuffle, Flavour.Retail);
@@ -52,7 +49,7 @@ export default class SoloShuffle extends Activity {
 
     get resultInfo() {
         const win = this.roundsWon;
-        const loss = this.totalRounds - this.roundsWon;
+        const loss = this.rounds.length - this.roundsWon;
         return `${win}-${loss}`;
     }
 
@@ -83,8 +80,7 @@ export default class SoloShuffle extends Activity {
         return currentRound.getCombatant(GUID);
     }
 
-    startRound(startDate: Date)
-    {
+    startRound(startDate: Date) {
         if (!this.zoneID) {
             throw new Error("[Solo Shuffle] No zoneID set");
         }
@@ -103,6 +99,11 @@ export default class SoloShuffle extends Activity {
 
     addDeath(death: PlayerDeathType) {
         console.info("[Solo Shuffle] Adding death to solo shuffle", death);
+
+        if (this.currentRound.deaths.length > 0) {
+            console.info("[Solo Shuffle] Already have a death in this round", this.currentRound.deaths);
+            return;
+        }
         
         if (!this.player || this.player.teamID === undefined) {
             console.error("[Solo Shuffle] Tried to add a death but don't know the player");
@@ -143,8 +144,20 @@ export default class SoloShuffle extends Activity {
         super.end(endDate, true);
     }
 
-    determineSoloShuffleResult(): boolean {
-        return true;
+    getTimelineSegments(): SoloShuffleTimelineSegment[] {
+        const segments = [];
+
+        for (let i = 0; i < this.rounds.length; i++) {
+            const segment = {
+                round: i + 1,
+                timestamp: ((this.rounds[i].startDate.getTime() - this.startDate.getTime()) / 1000),
+                result: this.rounds[i].result,
+            }
+
+            segments.push(segment);
+        }
+        
+        return segments;
     }
 
     getMetadata(): Metadata {
@@ -158,7 +171,9 @@ export default class SoloShuffle extends Activity {
             deaths: this.deaths,
             player: this.player,
             soloShuffleRoundsWon: this.roundsWon,
-            soloShuffleRoundsPlayed: this.totalRounds,
+            soloShuffleRoundsPlayed: this.rounds.length,
+            timeline: this.getTimelineSegments(),
+            combatants: Array.from(this.currentRound.combatantMap.values()),
         }
     }
 

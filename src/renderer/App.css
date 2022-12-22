@@ -26,11 +26,10 @@ div#root {
 .video-container {
   height: 100vh;
   width: 100%;
-  background-color: black;
 }
 
 .video{
-  height: calc(100% - 140px);
+  height: calc(100% - 150px);
   top: 0px;
 }
 
@@ -258,6 +257,18 @@ h2:not(.MuiDialogTitle-root) {
 
 .goodResult {
   -webkit-text-fill-color: #1eff00;
+}
+
+.decentResult {
+  -webkit-text-fill-color: #7fff00;
+}
+
+.moderateResult {
+  -webkit-text-fill-color: yellow;
+}
+
+.mehResult {
+  -webkit-text-fill-color: orange;
 }
 
 .badResult {

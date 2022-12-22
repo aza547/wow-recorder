@@ -73,6 +73,7 @@ export default class ArenaMatch extends Activity {
             result: this.result,
             deaths: this.deaths,
             player: this.player,
+            combatants: Array.from(this.combatantMap.values()),
         }
     }
 

@@ -660,6 +660,7 @@ const videoTabsSx = {
   bottom: '1px',
   left: '1px',
   width: '100%',
+  height: '110px',
   borderColor: '#000000',
   bgcolor: '#272e48' ,
   textColor: 'secondary',

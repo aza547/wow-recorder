@@ -30,3 +30,6 @@ npm-debug.log.*
 
 # OBS Stuff
 src/main/osn-data/*
+
+# Python crap
+*cpython*
