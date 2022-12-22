@@ -9,7 +9,6 @@ tests = {
     "Retail: Rated 2v2 AFK Out":  os.path.join(dirname, "./retail_rated_2v2_afk_out.py"),
     "Retail: Rated 3v3":          os.path.join(dirname, "./retail_rated_3v3.py"),
     "Retail: Skirmish":           os.path.join(dirname, "./retail_skirmish.py"),
-    "Retail: Brawl Solo Shuffle": os.path.join(dirname, "./retail_brawl_solo_shuffle.py"),
     "Retail: Rated Solo Shuffle": os.path.join(dirname, "./retail_rated_solo_shuffle.py"),
     "Retail: Mythic+":            os.path.join(dirname, "./retail_mythic_plus.py"),
     "Retail: Raid":               os.path.join(dirname, "./retail_raid.py"),
