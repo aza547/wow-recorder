@@ -9,6 +9,7 @@ import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import { Flavour } from "../main/types";
 import SoloShuffle from "../activitys/SoloShuffle";
+import { ICombatData } from "wow-combat-log-parser";
 
 /**
  * RetailLogHandler class.
@@ -36,7 +37,7 @@ export default class RetailLogHandler extends LogHandler {
             .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.handleSpellAuraAppliedLine(line) })
             .on('UNIT_DIED',            (line: LogLine) => { this.handleUnitDiedLine(line) })
             .on('ARENA_MATCH_START',    (line: LogLine) => { this.handleArenaStartLine(line) })
-            .on('ARENA_MATCH_END',      (line: LogLine) => { this.handleArenaEndLine(line) })
+            .on('arena_match_ended',      (combat: ICombatData) => { this.handleArenaEndLine(combat) })
             .on('CHALLENGE_MODE_START', (line: LogLine) => { this.handleChallengeModeStartLine(line) })
             .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.handleChallengeModeEndLine(line) })
             .on('COMBATANT_INFO',       (line: LogLine) => { this.handleCombatantInfoLine(line) })
@@ -86,8 +87,8 @@ export default class RetailLogHandler extends LogHandler {
         }
     };
 
-    handleArenaEndLine (line: LogLine): void {
-        console.debug("[RetailLogHandler] Handling ARENA_MATCH_END line:", line);
+    handleArenaEndLine (combat: ICombatData): void {
+        console.debug("[RetailLogHandler] Handling ARENA_MATCH_END line:", combat.rawLines[combat.rawLines.length - 1]);
 
         if (!this.activity) {
             console.error("[RetailLogHandler] Arena stop with no active arena match");

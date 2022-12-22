@@ -2,7 +2,8 @@ import path from "path";
 import fs from "fs";
 import { EventEmitter } from "stream";
 import { setInterval, clearInterval } from 'timers';
-import { FileFinderCallbackType } from "./types";
+import { FileFinderCallbackType, Flavour } from "./types";
+import { ICombatData, WoWCombatLogParser } from "wow-combat-log-parser";
 
 const tail = require('tail').Tail;
 
@@ -216,7 +217,8 @@ class LogLine {
 class CombatLogParser extends EventEmitter {
     private _options: CombatLogParserOptionsType;
     private _handlers: { [key: string]: CombatLogMonitorHandlerType } = {};
-
+    private _walParsers: Record<string, WoWCombatLogParser> = {};
+    
     /**
      * If set, any handler receiving data which _ISN'T_ the one
      * given here will be ignored. This is to avoid multiple log files receiving
@@ -235,6 +237,34 @@ class CombatLogParser extends EventEmitter {
         this._options = options;
     };
 
+    private registerWalParserForFlavour(flavour: Flavour) {
+      this._walParsers[flavour] = new WoWCombatLogParser(
+        flavour === Flavour.Retail ? 'shadowlands' : 'tbc' // TODO: update to new model
+      );
+  
+      // Re-emit WAL Parser events into the CombatLogParser output stream
+      // TODO: new output types model
+      this._walParsers[flavour].on('arena_match_ended', (com: ICombatData) => {
+        this.emit('arena_match_ended', com);
+      });
+      this._walParsers[flavour].on(
+        'solo_shuffle_round_ended',
+        (com: ICombatData) => {
+          this.emit('solo_shuffle_round_ended', com);
+        }
+      );
+      this._walParsers[flavour].on('solo_shuffle_ended', (com: ICombatData) => {
+        this.emit('solo_shuffle_ended', com);
+      });
+      this._walParsers[flavour].on(
+        'malformed_arena_match_detected',
+        (com: ICombatData) => {
+          this.emit('malformed_arena_match_detected', com);
+        }
+      );
+    }
+
+    
     /**
      * Start watching a path, if it's a valid WoW logs directory.
      * This is checked via `getWowFlavour()` which looks for the file '../.flavour.info'
@@ -299,6 +329,10 @@ class CombatLogParser extends EventEmitter {
         const logLine = new LogLine(line)
         const logEventType = logLine.type();
 
+        if (!this._walParsers[flavour]) {
+          this.registerWalParserForFlavour(flavour as Flavour); // TODO: When to use type vs string??
+        }
+        this._walParsers[flavour].parseLine(line);
         this.emit(logEventType, logLine, flavour);
     }
 

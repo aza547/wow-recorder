@@ -1,6 +1,7 @@
 import { Flavour, Metadata } from "../main/types";
 import { classicArenas, retailArenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
+import { CombatResult, ICombatData } from "wow-combat-log-parser";
 
 /**
  * Arena match class.
@@ -42,9 +43,9 @@ export default class ArenaMatch extends Activity {
         return classicArenas[this._zoneID as number]
     }
 
-    endArena(endDate: Date, winningTeamID: number) {
-        const result = this.determineArenaMatchResult(winningTeamID);
-        super.end(endDate, result);
+    endArena(combat: ICombatData) {
+        const result = combat.result === CombatResult.Win;
+        super.end(new Date(combat.endInfo.timestamp), result);
     }
 
     determineArenaMatchResult(winningTeamID: number): boolean {
