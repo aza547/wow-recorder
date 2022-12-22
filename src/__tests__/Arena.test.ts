@@ -2,6 +2,7 @@ import { VideoCategory } from '../main/constants';
 import ArenaMatch from '../activitys/ArenaMatch';
 import { Combatant } from "../main/combatant";
 import { Flavour, PlayerDeathType } from '../main/types';
+import { IArenaMatch } from 'wow-combat-log-parser';
 
 const testCombatants = [
     new Combatant("Player-1092-0A70E103", 1, 557),
@@ -64,7 +65,12 @@ const testRetailArena = (category: VideoCategory,
     }
 
     const endDate = new Date('2022-12-25T12:05:00');
-    arenaMatch.endArena(endDate, winningTeamID);
+    arenaMatch.endArena({
+        endTime: endDate.getDate(),
+        endInfo: {
+            winningTeamId: `${winningTeamID}`
+        } as any
+    } as IArenaMatch);
 
     const actualMetadata = arenaMatch.getMetadata();
     const expectedDuration = (endDate.getTime() - startDate.getTime()) / 1000;

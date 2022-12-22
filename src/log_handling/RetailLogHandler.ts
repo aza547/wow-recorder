@@ -9,7 +9,7 @@ import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
 import { ChallengeModeTimelineSegment, TimelineSegmentType } from "../main/keystone";
 import { Flavour } from "../main/types";
 import SoloShuffle from "../activitys/SoloShuffle";
-import { ICombatData } from "wow-combat-log-parser";
+import { IArenaMatch, IMalformedCombatData, IShuffleMatch } from "wow-combat-log-parser";
 
 /**
  * RetailLogHandler class.
@@ -37,7 +37,9 @@ export default class RetailLogHandler extends LogHandler {
             .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.handleSpellAuraAppliedLine(line) })
             .on('UNIT_DIED',            (line: LogLine) => { this.handleUnitDiedLine(line) })
             .on('ARENA_MATCH_START',    (line: LogLine) => { this.handleArenaStartLine(line) })
-            .on('arena_match_ended',      (combat: ICombatData) => { this.handleArenaEndLine(combat) })
+            .on('arena_match_ended',    (combat: IArenaMatch) => { this.handleArenaEnd(combat) })
+            .on('solo_shuffle_ended',   (combat: IShuffleMatch) => { this.handleShuffleMatchEnd(combat) })
+            .on('malformed_arena_match_detected',   (combat: IMalformedCombatData) => { this.handleParserMalformedCombat(combat) })
             .on('CHALLENGE_MODE_START', (line: LogLine) => { this.handleChallengeModeStartLine(line) })
             .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.handleChallengeModeEndLine(line) })
             .on('COMBATANT_INFO',       (line: LogLine) => { this.handleCombatantInfoLine(line) })
@@ -87,25 +89,43 @@ export default class RetailLogHandler extends LogHandler {
         }
     };
 
-    handleArenaEndLine (combat: ICombatData): void {
+    handleArenaEnd (combat: IArenaMatch): void {
         console.debug("[RetailLogHandler] Handling ARENA_MATCH_END line:", combat.rawLines[combat.rawLines.length - 1]);
 
         if (!this.activity) {
             console.error("[RetailLogHandler] Arena stop with no active arena match");
             return;
         }
+        const arenaMatch = this.activity as ArenaMatch;
+        arenaMatch.endArena(combat);
+        this.endRecording(arenaMatch);
+    }
 
-        if (this.activity.category === VideoCategory.SoloShuffle) {
-            const soloShuffle = this.activity as SoloShuffle;
-            soloShuffle.endGame(line.date());
-            this.endRecording(soloShuffle);
-        } else {
-            const arenaMatch = this.activity as ArenaMatch;
-            const endTime = line.date();
-            const winningTeamID = parseInt(line.arg(1), 10);
-            arenaMatch.endArena(endTime, winningTeamID);
-            this.endRecording(arenaMatch);
+    handleShuffleMatchEnd (combat: IShuffleMatch): void {
+        const lastRound = combat.rounds[5];
+
+        console.debug("[RetailLogHandler] Handling ARENA_MATCH_END line:", lastRound.rawLines[lastRound.rawLines.length - 1]);
+        console.debug("Score: ", lastRound.scoreboard);
+
+        // Note: should still look up the # of wins for the recording playerId to get match result
+        const didWin = (lastRound.scoreboard.find(s => s.unitId === lastRound.playerId) || 0) >= 3;
+        // as combat.result comes from ARENA_MATCH_END which isn't right for Solo Shufs
+        console.debug("Result win=", didWin);
+
+        if (!this.activity) {
+            console.error("[RetailLogHandler] Arena stop with no active arena match");
+            return;
         }
+
+        const soloShuffle = this.activity as SoloShuffle;
+        soloShuffle.endGame(new Date(combat.endTime));
+        this.endRecording(soloShuffle);
+    }
+
+    handleParserMalformedCombat(_combat: IMalformedCombatData) {
+        // Parsing detected a start->end combat that didn't make sense (wrong # of units, no deaths, etc)
+        console.error("[RetailLogHandler] Malformed log file detected, ending recording");
+        this.forceEndActivity();
     }
 
     handleChallengeModeStartLine (line: LogLine): void {
