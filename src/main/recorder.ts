@@ -272,8 +272,8 @@ type RecorderOptionsType = {
             const isRaid = activity.category == VideoCategory.Raids;
             const duration = activity.duration;
 
-            if (duration === null) {
-                console.log("Null duration");
+            if (duration === null || duration === undefined) {
+                console.error("[Recorder] Null or undefined duration");
                 return;
             }
 
