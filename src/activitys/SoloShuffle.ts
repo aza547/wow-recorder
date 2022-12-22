@@ -150,7 +150,7 @@ export default class SoloShuffle extends Activity {
         for (let i = 0; i < this.rounds.length; i++) {
             const segment = {
                 round: i + 1,
-                timestamp: (this.rounds[i].startDate.getSeconds() - this.startDate.getSeconds()),
+                timestamp: ((this.rounds[i].startDate.getTime() - this.startDate.getTime()) / 1000),
                 result: this.rounds[i].result,
             }
 

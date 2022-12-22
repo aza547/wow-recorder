@@ -16,7 +16,7 @@ import { instanceDifficulty, instanceEncountersById, VideoCategory } from "./con
 export const getVideoResultText = (category: VideoCategory, 
                                    isGoodResult: boolean, 
                                    soloShuffleRoundsWon: number, 
-                                   soloShuffleRoundsPlayed: number) => 
+                                   soloShuffleRoundsPlayed: number): string => 
 {
     switch (category) {
         case VideoCategory.MythicPlus:
@@ -44,7 +44,7 @@ export const getVideoResultText = (category: VideoCategory,
 export const getVideoResultClass = (category: VideoCategory, 
                                     isGoodResult: boolean, 
                                     soloShuffleRoundsWon: number, 
-                                    soloShuffleRoundsPlayed: number) => 
+                                    soloShuffleRoundsPlayed: number): string => 
 {
     switch (category) {
         case VideoCategory.MythicPlus:
