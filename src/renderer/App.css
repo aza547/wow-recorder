@@ -259,6 +259,18 @@ h2:not(.MuiDialogTitle-root) {
   -webkit-text-fill-color: #1eff00;
 }
 
+.decentResult {
+  -webkit-text-fill-color: #7fff00;
+}
+
+.moderateResult {
+  -webkit-text-fill-color: yellow;
+}
+
+.mehResult {
+  -webkit-text-fill-color: orange;
+}
+
 .badResult {
   -webkit-text-fill-color: red;
 }

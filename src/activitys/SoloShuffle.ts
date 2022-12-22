@@ -9,8 +9,7 @@ import { Combatant } from "main/combatant";
  * a list of ArenaMatch objects, where the winner of the nested ArenaMatch
  * objects are determined by whoever gets the first kill.  
  * 
- * @@@ TODO handle color coding for result
- * @@@ TODO handle leaver players (i.e. self)
+ * @@@ TODO handle leaver players (i.e. self), might just need a test? 
  */
 export default class SoloShuffle extends Activity {
     private rounds: ArenaMatch[] = [];

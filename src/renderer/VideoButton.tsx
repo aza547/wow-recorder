@@ -6,12 +6,10 @@ import { getFormattedDuration } from './rendererutils';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
 import * as Images from './images'
-import { getEncounterNameById, getInstanceDifficulty, getVideoResultText } from 'main/helpers';
+import { getEncounterNameById, getInstanceDifficulty, getVideoResultClass, getVideoResultText } from 'main/helpers';
 import { SoloShuffleTimelineSegment } from 'main/types';
 
-/**
- * For shorthand referencing. 
- */
+// For shorthand referencing. 
 const ipc = window.electron.ipcRenderer;
 
 export default function VideoButton(props: any) {
@@ -29,14 +27,17 @@ export default function VideoButton(props: any) {
                                       video.result, 
                                       video.soloShuffleRoundsWon, 
                                       video.soloShuffleRoundsPlayed);
+                                      
+  const resultClass = getVideoResultClass(category, 
+                                          video.result, 
+                                          video.soloShuffleRoundsWon, 
+                                          video.soloShuffleRoundsPlayed);
 
   const isProtected = video.protected;
 
   const duration = video.duration;
   const formattedDuration = getFormattedDuration(duration);
 
-  const resultClass: string = video.result ? "goodResult" : "badResult";
-  
   const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorElement);
 

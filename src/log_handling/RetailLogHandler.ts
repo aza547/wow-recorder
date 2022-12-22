@@ -44,21 +44,21 @@ export default class RetailLogHandler extends LogHandler {
     };
 
     handleArenaStartLine(line: LogLine): void {
+        console.debug("[RetailLogHandler] Handling ARENA_MATCH_START line:", line);
+
+        // Important we don't exit if we're in a Solo Shuffle, we use the ARENA_MATCH_START
+        // events to keep track of the rounds. 
         if (this.activity && (this.activity.category !== VideoCategory.SoloShuffle)) {
-            // @@@ Comment this
+            console.error("[RetailLogHandler] Another activity in progress and not a Solo Shuffle");
             return;
         }
-
-        console.debug("[RetailLogHandler] Handling ARENA_MATCH_START line:", line);
         
         const startTime = line.date();
         const zoneID = parseInt(line.arg(1), 10);
-
-        let category;
         const arenaType = line.arg(3);
+        let category;
         
         if (arenaType === "Rated Solo Shuffle") {
-            // Brawl Solo Shuffle used to be a thing, but it isn't anymore. 
             category = VideoCategory.SoloShuffle;
         } else if (arenaType === "2v2") {
             category = VideoCategory.TwoVTwo;
