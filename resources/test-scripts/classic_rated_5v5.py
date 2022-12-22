@@ -29,6 +29,11 @@ for line in sample_log_lines:
     if "ZONE_CHANGE" in line:
         # Sleep before writing the end event so we actually record something. 
         time.sleep(5)
+
+    if (("UNIT_DIED" in line)) and (("Flakestronk-Giantstalker" in line)):
+        # Sleep before writing deaths so we actually record something. 
+        time.sleep(5)
+
     logFile.write(rd(line))
 
 print("Done")

@@ -31,7 +31,7 @@ for line in sample_log_lines:
         time.sleep(5)
 
     if (("UNIT_DIED" in line)) and (("Hardehout-Firemaw" in line)):
-        # Sleep before writing the end event so we actually record something. 
+        # Sleep before writing deaths so we actually record something.
         time.sleep(5)
         
     logFile.write(rd(line))
