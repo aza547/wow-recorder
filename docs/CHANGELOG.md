@@ -6,9 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- [Issue 247](https://github.com/aza547/wow-recorder/issues/247) - Better handling for Solo Shuffle.
 
 ### Changed
+### Fixed
+
+## [3.2.0] - 2022-12-23
+### Added
+- [Issue 247](https://github.com/aza547/wow-recorder/issues/247) - Better handling for Solo Shuffle.
+
 ### Fixed
 - [Issue 257](https://github.com/aza547/wow-recorder/issues/257) - Improve right click menu responsiveness. 
 
