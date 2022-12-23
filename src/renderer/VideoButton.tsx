@@ -88,9 +88,7 @@ export default function VideoButton(props: any) {
   */
   const openMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorElement(event.currentTarget);
-
-    // No idea why -350 is required here but otherwise the menu is offset wrongly.
-    setMouseY(event.clientY - 350);
+    setMouseY(event.clientY);
     setMouseX(event.clientX);
   };
 
@@ -311,6 +309,7 @@ export default function VideoButton(props: any) {
         id={ videoPath } 
         anchorReference="anchorPosition"
         anchorPosition={{ top: mouseY, left: mouseX }}
+        transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         open={open} 
         onClose={handleCloseMenu} 
         MenuListProps={{ onMouseEnter: mouseEnterMenu,  onMouseLeave: mouseExitMenu }}>
