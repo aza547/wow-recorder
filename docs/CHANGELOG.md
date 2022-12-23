@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 ### Fixed
+- [Issue 257](https://github.com/aza547/wow-recorder/issues/257) - Improve right click menu responsiveness. 
 
 ## [3.1.2] - 2022-12-17
 ### Added

@@ -39,6 +39,8 @@ export default function VideoButton(props: any) {
   const formattedDuration = getFormattedDuration(duration);
 
   const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
+  const [mouseX, setMouseX] = React.useState<number>(0);
+  const [mouseY, setMouseY] = React.useState<number>(0);
   const open = Boolean(anchorElement);
 
   let playerName;
@@ -82,18 +84,31 @@ export default function VideoButton(props: any) {
   }
 
   /**
-  * Called when a right click on the video button occurs. 
+  * Functions to handle opening and closing of context menus.
   */
   const openMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorElement(event.currentTarget);
+
+    // No idea why -350 is required here but otherwise the menu is offset wrongly.
+    setMouseY(event.clientY - 350);
+    setMouseX(event.clientX);
   };
 
-  /**
-  *  Called when either a button is clicked or something else on the screen is. 
-  */
   const handleCloseMenu = () => {
     setAnchorElement(null);
   };
+
+  let closeMenuTimer: NodeJS.Timer;
+
+  const mouseEnterMenu = () => {
+    clearTimeout(closeMenuTimer);
+  };
+
+  const mouseExitMenu = () => {
+    clearTimeout(closeMenuTimer);
+    closeMenuTimer = setTimeout(() => setAnchorElement(null), 300);
+  };
+
 
   /**
   * Delete a video.
@@ -197,7 +212,7 @@ export default function VideoButton(props: any) {
       timelineSegmentMenu = 
         <div className='segment-entry'>
           <div className='segment-type'>
-            <span>{ segmentDurationText }</span>: Round { segment.number }
+            <span>{ segmentDurationText }</span>: Round { segment.round }
           </div>
           <div className={ 'segment-result ' + (result ? 'goodResult' : 'badResult') }>
             { getVideoResultText(VideoCategory.ThreeVThree, result, 0, 0) }
@@ -294,10 +309,11 @@ export default function VideoButton(props: any) {
       />
       <Menu 
         id={ videoPath } 
-        anchorEl={anchorElement} 
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} 
-        open={open} onClose={handleCloseMenu} 
-        MenuListProps={{'aria-labelledby': 'basic-button'}}>
+        anchorReference="anchorPosition"
+        anchorPosition={{ top: mouseY, left: mouseX }}
+        open={open} 
+        onClose={handleCloseMenu} 
+        MenuListProps={{ onMouseEnter: mouseEnterMenu,  onMouseLeave: mouseExitMenu }}>
         { keystoneTimelineSegments.length > 0 && keystoneTimelineSegments }
         { soloShuffleTimelineSegments.length > 0 && soloShuffleTimelineSegments }
         <MenuItem onClick={() => deleteVideo(videoPath)}>Delete</MenuItem>
