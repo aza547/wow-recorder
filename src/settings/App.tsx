@@ -3,15 +3,12 @@ import Settings from './Settings';
 import SettingsTitleBar from './SettingsTitleBar';
 import '../renderer/App.css';
 
-
-const Application = () => {
-  return (
-    <div className="App">
-      <SettingsTitleBar/>
-      <Settings />
-    </div>
-  );
-};
+const Application = () => (
+  <div className="App">
+    <SettingsTitleBar />
+    <Settings />
+  </div>
+);
 
 export default function App() {
   return (
@@ -22,5 +19,3 @@ export default function App() {
     </Router>
   );
 }
-
-

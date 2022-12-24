@@ -3,7 +3,6 @@ import icon from '../../assets/icon/settings-icon.png';
 const ipc = window.electron.ipcRenderer;
 
 export default function SettingsButton() {
-
   const openSettings = () => {
     ipc.sendMessage('settingsWindow', ['create']);
   };

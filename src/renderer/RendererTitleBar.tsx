@@ -4,7 +4,6 @@ import icon from '../../assets/icon/small-icon.png';
 const ipc = window.electron.ipcRenderer;
 
 export default function RendererTitleBar() {
-
   const clickedHide = () => {
     ipc.sendMessage('mainWindow', ['minimize']);
   };
@@ -17,8 +16,8 @@ export default function RendererTitleBar() {
     ipc.sendMessage('mainWindow', ['quit']);
   };
 
-  const [title, setTitle] = React.useState("Warcraft Recorder");
-  
+  const [title, setTitle] = React.useState('Warcraft Recorder');
+
   React.useEffect(() => {
     window.electron.ipcRenderer.on('updateTitleBar', (title) => {
       setTitle(title as string);
@@ -32,9 +31,15 @@ export default function RendererTitleBar() {
       </div>
       <div id="title">{title}</div>
       <div id="title-bar-btns">
-        <button id="min-btn"   onClick={clickedHide} >🗕</button>
-        <button id="max-btn"   onClick={clickedResize} >🗗</button>
-        <button id="close-btn" onClick={clickedQuit} >✖</button>
+        <button id="min-btn" onClick={clickedHide}>
+          🗕
+        </button>
+        <button id="max-btn" onClick={clickedResize}>
+          🗗
+        </button>
+        <button id="close-btn" onClick={clickedQuit}>
+          ✖
+        </button>
       </div>
     </div>
   );

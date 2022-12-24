@@ -1,25 +1,24 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 import { URL } from 'url';
 import path from 'path';
+import fs, { promises as fspromise } from 'fs';
+import { app, BrowserWindow, Display, net, screen } from 'electron';
+import { Metadata, FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { categories, months, zones, dungeonsByMapId } from './constants';
-import { Metadata } from './types';
+
 const byteSize = require('byte-size');
 const chalk = require('chalk');
 
 /**
  * When packaged, we need to fix some paths
  */
-const fixPathWhenPackaged = (path: string) => {
-  return path.replace('app.asar', 'app.asar.unpacked');
+const fixPathWhenPackaged = (pathSpec: string) => {
+  return pathSpec.replace('app.asar', 'app.asar.unpacked');
 };
 
 const { exec } = require('child_process');
-import { promises as fspromise } from 'fs';
-import fs from 'fs';
-import { FileInfo, FileSortDirection, OurDisplayType } from './types';
-import { app, BrowserWindow, Display, net, screen } from 'electron';
 
-let videoIndex: { [category: string]: number } = {};
+const videoIndex: { [category: string]: number } = {};
 
 export let resolveHtmlPath: (htmlFileName: string) => string;
 
@@ -40,8 +39,11 @@ if (process.env.NODE_ENV === 'development') {
  * Empty video state.
  */
 const getEmptyState = () => {
-  let videoState: { [category: string]: any[] } = {};
-  categories.forEach((category) => (videoState[category] = []));
+  const videoState: { [category: string]: any[] } = {};
+
+  categories.forEach((category) => {
+    videoState[category] = [];
+  });
 
   return videoState;
 };

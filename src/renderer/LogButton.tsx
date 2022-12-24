@@ -3,7 +3,6 @@ import icon from '../../assets/icon/log-icon.png';
 const ipc = window.electron.ipcRenderer;
 
 export default function SettingsButton() {
-
   const openLogPath = () => {
     ipc.sendMessage('logPath', ['open']);
   };
