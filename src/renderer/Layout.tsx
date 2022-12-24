@@ -82,12 +82,12 @@ const a11yProps = (index: number) => {
 /**
  * Get video player settings initially when the component is loaded. We store 
  * as a variable in main rather than in config It's fine if this is lost when
- * the app is restarted. 
+ * the app is restarted.
  */
 const videoPlayerSettings = (ipc.sendSync('videoPlayerSettings', ['get']) as VideoPlayerSettings);
 const selectedCategory = getConfigValue<number>('selectedCategory');
 
-let videoState: { [key: string]: any } = {}
+let videoState: { [key: string]: any } = {};
 
 /**
  * The GUI itself.

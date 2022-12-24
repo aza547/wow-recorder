@@ -1,90 +1,103 @@
-import { writeMetadataFile, runSizeMonitor,  deleteVideo, addColor, getSortedVideos, fixPathWhenPackaged, tryUnlinkSync } from './util';
-import { mainWindow }  from './main';
+import { BrowserWindow } from 'electron';
+import path from 'path';
+import fs from 'fs';
+
+import {
+  writeMetadataFile,
+  runSizeMonitor,
+  deleteVideo,
+  addColor,
+  getSortedVideos,
+  fixPathWhenPackaged,
+  tryUnlinkSync,
+} from './util';
+
 import { Metadata, RecStatus, SaveStatus, VideoQueueItem } from './types';
 import { VideoCategory } from './constants';
-import fs from 'fs';
-import path from 'path';
 import Activity from '../activitys/Activity';
 
 const atomicQueue = require('atomic-queue');
+const ffmpeg = require('fluent-ffmpeg');
 const obsRecorder = require('./obsRecorder');
 
-const ffmpegPath = fixPathWhenPackaged(require('@ffmpeg-installer/ffmpeg').path);
-const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = fixPathWhenPackaged(
+  require('@ffmpeg-installer/ffmpeg').path
+);
+
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 type RecorderOptionsType = {
-    storageDir: string;
-    bufferStorageDir: string;
-    maxStorage: number;
-    monitorIndex: number;
-    audioInputDeviceId: string;
-    audioOutputDeviceId: string;
-    minEncounterDuration: number;
-    obsBaseResolution: string,
-    obsOutputResolution: string,
-    obsFPS: number;
-    obsKBitRate: number;
-    obsCaptureMode: string;
-    obsRecEncoder: string,
+  storageDir: string;
+  bufferStorageDir: string;
+  maxStorage: number;
+  monitorIndex: number;
+  audioInputDeviceId: string;
+  audioOutputDeviceId: string;
+  minEncounterDuration: number;
+  obsBaseResolution: string;
+  obsOutputResolution: string;
+  obsFPS: number;
+  obsKBitRate: number;
+  obsCaptureMode: string;
+  obsRecEncoder: string;
 };
 
 /**
  * Represents an OBS recorder object.
  */
- class Recorder {
-    private _isRecording: boolean = false;
-    private _isRecordingBuffer: boolean = false;
-    private _bufferRestartIntervalID?: any;
-    private _bufferStartTimeoutID?: any;
-    private _options: RecorderOptionsType;
-    private _videoQueue;
-    private _recorderStartDate = new Date();
+class Recorder {
+  private _isRecording: boolean = false;
+  private _isRecordingBuffer: boolean = false;
+  private _bufferRestartIntervalID?: any;
+  private _bufferStartTimeoutID?: any;
+  private _options: RecorderOptionsType;
+  private _videoQueue;
+  private _recorderStartDate = new Date();
+  private _mainWindow: BrowserWindow;
 
-    /**
-     * Constructs a new Recorder.
-     */
-    constructor(options: RecorderOptionsType) {
-        this._options = options;
-        console.debug("[Recorder] Constructing recorder with: ", this._options);
+  constructor(mainWindow: BrowserWindow, options: RecorderOptionsType) {
+    this._mainWindow = mainWindow;
+    this._options = options;
 
-        this._videoQueue = atomicQueue(
-            this._processVideoQueueItem.bind(this),
-            { concurrency: 1 }
-        );
+    console.debug('[Recorder] Constructing recorder with: ', this._options);
 
-        this._setupVideoProcessingQueue();
+    this._videoQueue = atomicQueue(
+      this._processVideoQueueItem.bind(this),
+      { concurrency: 1 }
+    );
 
-        if (!fs.existsSync(this._options.bufferStorageDir)) {
-            console.log("[Recorder] Creating dir:", this._options.bufferStorageDir);
-            fs.mkdirSync(this._options.bufferStorageDir);
-        } else {
-            console.log("[Recorder] Clean out buffer")
-            this.cleanupBuffer(0);
-        }
+    this._setupVideoProcessingQueue();
 
-        obsRecorder.initialize(options);
-        if (mainWindow) mainWindow.webContents.send('refreshState');
+    if (!fs.existsSync(this._options.bufferStorageDir)) {
+      console.log("[Recorder] Creating dir:", this._options.bufferStorageDir);
+      fs.mkdirSync(this._options.bufferStorageDir);
+    } else {
+      console.log("[Recorder] Clean out buffer")
+      this.cleanupBuffer(0);
     }
 
-    /**
-     * Process an item from the video queue.
-     */
-    private async _processVideoQueueItem(data: VideoQueueItem, done: Function): Promise<void> {
+    obsRecorder.initialize(options);
+    mainWindow.webContents.send('refreshState');
+  }
 
-        const videoPath = await this._cutVideo(data.bufferFile, 
-                                               this._options.storageDir, 
-                                               data.filename, 
-                                               data.relativeStart,
-                                               data.metadata.duration);
+  get mainWindow() {
+    return this._mainWindow;
+  }
 
-        await writeMetadataFile(videoPath, data.metadata);
+  private async _processVideoQueueItem(data: VideoQueueItem, done: Function): Promise<void> {
+    const videoPath = await this._cutVideo(data.bufferFile, 
+                                            this._options.storageDir, 
+                                            data.filename, 
+                                            data.relativeStart,
+                                            data.metadata.duration);
 
-        // Delete the original buffer video
-        tryUnlinkSync(data.bufferFile);
+    await writeMetadataFile(videoPath, data.metadata);
 
-        done();
-    }
+    // Delete the original buffer video
+    tryUnlinkSync(data.bufferFile);
+
+    done();
+  }
 
     /**
      * Setup events on the videoQueue.
@@ -100,18 +113,18 @@ type RecorderOptionsType = {
             // Run the size monitor to ensure we stay within size limit.
             runSizeMonitor(this._options.storageDir, this._options.maxStorage)
                 .then(() => {
-                    if (mainWindow) mainWindow.webContents.send('refreshState');
+                    this.mainWindow.webContents.send('refreshState');
                 });
         });
 
         this._videoQueue.pool.on('start', (data: VideoQueueItem) => {
             console.log("[Recorder] Processing video", data.bufferFile);
-            if (mainWindow) mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
+            this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
         });
 
         this._videoQueue.pool.on('finish', (_result: any, data: VideoQueueItem) => {
             console.log("[Recorder] Finished processing video", data.bufferFile);
-            if (mainWindow) mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
+            this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
         });
     }
 
@@ -168,7 +181,7 @@ type RecorderOptionsType = {
         await obsRecorder.start();
         this._isRecordingBuffer = true;
         this._recorderStartDate = new Date();
-        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.ReadyToRecord);
+        this.mainWindow.webContents.send('updateRecStatus', RecStatus.ReadyToRecord);
 
         // We store off this timer as a member variable as we will cancel
         // it when a real game is detected. 
@@ -191,7 +204,7 @@ type RecorderOptionsType = {
             console.error("[Recorder] No buffer recording to stop.");
         }
 
-        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
+        this.mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
         this.cleanupBuffer(1);
     }
 
@@ -244,7 +257,7 @@ type RecorderOptionsType = {
         this.cancelBufferTimers(true, false);
         this._isRecordingBuffer = false;        
         this._isRecording = true;   
-        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
+        this.mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
     }
 
     /**
@@ -297,8 +310,8 @@ type RecorderOptionsType = {
             }
 
             // Refresh the GUI
-            if (mainWindow) mainWindow.webContents.send('refreshState');
-            if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
+            this.mainWindow.webContents.send('refreshState');
+            this.mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
 
             // Restart the buffer recording ready for next game. If this function
             // has been called due to the wow process ending, don't start the buffer.
@@ -321,8 +334,8 @@ type RecorderOptionsType = {
         this._isRecordingBuffer = false;
 
         // Refresh the GUI
-        if (mainWindow) mainWindow.webContents.send('refreshState');
-        if (mainWindow) mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
+        this.mainWindow.webContents.send('refreshState');
+        this.mainWindow.webContents.send('updateRecStatus', RecStatus.WaitingForWoW);
 
         // Restart the buffer recording ready for next game.
         setTimeout(async () => {
@@ -387,13 +400,14 @@ type RecorderOptionsType = {
     /**
      * Reconfigure the underlying obsRecorder. 
      */
-    reconfigure = async (options: RecorderOptionsType) => {
+    reconfigure = async (mainWindow: BrowserWindow, options: RecorderOptionsType) => {
+        this._mainWindow = mainWindow;
         this._options = options;
 
         // User might just have shrunk the size, so run the size monitor.
         runSizeMonitor(this._options.storageDir, this._options.maxStorage)
         .then(() => {
-            if (mainWindow) mainWindow.webContents.send('refreshState');
+          this.mainWindow.webContents.send('refreshState');
         });
       
         if (this._isRecording) {
@@ -404,7 +418,7 @@ type RecorderOptionsType = {
         }
 
         obsRecorder.reconfigure(this._options);
-        if (mainWindow) mainWindow.webContents.send('refreshState');
+        this.mainWindow.webContents.send('refreshState');
     }
 
     /**

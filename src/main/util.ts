@@ -1,4 +1,4 @@
-/* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
+/* eslint global-require: off, no-console: off, promise/always-return: off */
 import { URL } from 'url';
 import path from 'path';
 import { categories, months, zones, dungeonsByMapId }  from './constants';
@@ -17,7 +17,7 @@ const { exec } = require('child_process');
 import { promises as fspromise } from 'fs';
 import fs from 'fs';
 import { FileInfo, FileSortDirection, OurDisplayType } from './types';
-import { Display, screen } from 'electron';
+import { app, BrowserWindow, Display, net, screen } from 'electron';
 
 let videoIndex: { [category: string]: number } = {};
 
@@ -49,33 +49,37 @@ const getEmptyState = () => {
 /**
  * Load videos from category folders in reverse chronological order.  
  */
-const loadAllVideos = async (storageDir: any): Promise<any> => {
-    let videoState = getEmptyState();
-    if (!storageDir) {
-        return videoState;
-    }
+const loadAllVideos = async (storageDir: string) => {
+  console.log("ahk", storageDir);
+  const videoState = getEmptyState();
 
-    const videos = await getSortedVideos(storageDir)
-    if (videos.length == 0) {
-        return videoState;
-    }
-
-    categories.forEach(category => videoIndex[category] = 0);
-
-    videos.forEach(video => {
-        const details = loadVideoDetails(video);
-        if (!details) {
-            return;
-        }
-
-        const category = (details.category as string);
-        videoState[category].push({
-            index: videoIndex[category]++,
-            ...details,
-        });
-    });
-
+  if (!storageDir) {
     return videoState;
+  }
+  console.log("ahk1");
+  const videos = await getSortedVideos(storageDir);
+
+  if (videos.length === 0) {
+    return videoState;
+  }
+  console.log("ahk2");
+
+  categories.forEach(category => videoIndex[category] = 0);
+
+  videos.forEach(video => {
+    const details = loadVideoDetails(video);
+    if (!details) {
+      return;
+    }
+
+    const category = (details.category as string);
+    videoState[category].push({
+      index: videoIndex[category]++,
+      ...details,
+    });
+  });
+  console.log("ahk3", videoState);
+  return videoState;
 }
 
 /**
@@ -441,17 +445,71 @@ const getAvailableDisplays = (): OurDisplayType[] => {
     return ourDisplays;
 }
 
+/**
+ * Checks for updates from the releases page on github, and, if there is a
+ * new version, sends a message to the main window to display a notification.
+ */
+const checkAppUpdate = (mainWindow: BrowserWindow | null = null) => {
+  const options = {
+    hostname: 'api.github.com',
+    protocol: 'https:',
+    path: '/repos/aza547/wow-recorder/releases/latest',
+    method: 'GET',
+    headers: {
+      'User-Agent': 'wow-recorder',
+    },
+  };
+
+  const request = net.request(options);
+
+  request.on('response', (response) => {
+    let data = '';
+
+    response.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    response.on('end', () => {
+      if (response.statusCode !== 200) {
+        console.error(
+          `[Main] Failed to check for updates, status code: ${response.statusCode}`
+        );
+        return;
+      }
+
+      const release = JSON.parse(data);
+      const latestVersion = release.tag_name;
+      const downloadUrl = release.assets[0].browser_download_url;
+
+      if (latestVersion !== app.getVersion() && latestVersion && downloadUrl) {
+        console.log('[Main] New version available:', latestVersion);
+
+        if (mainWindow) {
+          mainWindow.webContents.send('updateAvailable', downloadUrl);
+        }
+      }
+    });
+  });
+
+  request.on('error', (error) => {
+    console.error(`[Main] ERROR, Failed to check for updates: ${error}`);
+  });
+
+  request.end();
+};
+
 export {
-    loadAllVideos,
-    writeMetadataFile,
-    runSizeMonitor, 
-    deleteVideo,
-    openSystemExplorer,
-    toggleVideoProtected,
-    fixPathWhenPackaged,
-    addColor,
-    getSortedVideos,
-    getAvailableDisplays,
-    getSortedFiles,
-    tryUnlinkSync,
+  loadAllVideos,
+  writeMetadataFile,
+  runSizeMonitor,
+  deleteVideo,
+  openSystemExplorer,
+  toggleVideoProtected,
+  fixPathWhenPackaged,
+  addColor,
+  getSortedVideos,
+  getAvailableDisplays,
+  getSortedFiles,
+  tryUnlinkSync,
+  checkAppUpdate,
 };
