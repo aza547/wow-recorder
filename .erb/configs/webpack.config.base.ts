@@ -53,8 +53,8 @@ const configuration: webpack.Configuration = {
       NODE_ENV: 'production',
     }),
     new webpack.DefinePlugin({
-      'process.env.FLUENTFFMPEG_COV': false
-    })
+      'process.env.FLUENTFFMPEG_COV': false,
+    }),
   ],
 };
 

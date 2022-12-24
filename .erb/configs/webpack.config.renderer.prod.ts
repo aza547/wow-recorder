@@ -33,12 +33,8 @@ const configuration: webpack.Configuration = {
   target: ['web', 'electron-renderer'],
 
   entry: {
-    mainWindow: [
-      path.join(webpackPaths.srcRendererPath, 'index.tsx')
-    ],
-    settings: [
-      path.join(webpackPaths.srcSettingsPath, 'index.tsx')
-    ],
+    mainWindow: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
+    settings: [path.join(webpackPaths.srcSettingsPath, 'index.tsx')],
   },
 
   output: {
@@ -143,7 +139,7 @@ const configuration: webpack.Configuration = {
       },
       isBrowser: false,
       isDevelopment: process.env.NODE_ENV !== 'production',
-    })    
+    }),
   ],
 };
 

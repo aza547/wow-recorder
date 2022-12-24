@@ -3,7 +3,6 @@ import icon from '../../assets/icon/test-icon.png';
 const ipc = window.electron.ipcRenderer;
 
 export default function TestButton() {
-
   const runTest = (event: any) => {
     // 'Click' will perform a normal test
     // 'Ctrl-Alt-Click' will initiate a test but won't finish it

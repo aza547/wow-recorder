@@ -56,8 +56,8 @@ const configuration: webpack.Configuration = {
       `webpack-dev-server/client?http://localhost:${port}/dist`,
       'webpack/hot/only-dev-server',
       path.join(webpackPaths.srcSettingsPath, 'index.tsx'),
-    ]
-  }, 
+    ],
+  },
 
   output: {
     path: webpackPaths.distRendererPath,

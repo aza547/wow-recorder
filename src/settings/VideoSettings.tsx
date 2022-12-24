@@ -5,10 +5,10 @@ import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import { OurDisplayType, ISettingsPanelProps } from 'main/types';
 import { Box, TextField } from '@mui/material';
-import { configSchema } from '../main/configSchema'
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import { configSchema } from '../main/configSchema'
 
 const ipc = window.electron.ipcRenderer;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
