@@ -1,5 +1,10 @@
-import { ConfigurationSchemaKey } from "./configSchema";
-import { NumberKeyToStringValueMapType, RaidInstanceType, StringKeyToNumberValueMapType } from "./types";
+import { ConfigurationSchemaKey } from './configSchema';
+
+import {
+  NumberKeyToStringValueMapType,
+  RaidInstanceType,
+  StringKeyToNumberValueMapType,
+} from './types';
 
 enum VideoCategory {
   TwoVTwo = '2v2',
@@ -10,7 +15,7 @@ enum VideoCategory {
   MythicPlus = 'Mythic+',
   Raids = 'Raids',
   Battlegrounds = 'Battlegrounds',
-};
+}
 
 const categories: VideoCategory[] = [
   VideoCategory.TwoVTwo,
@@ -24,8 +29,8 @@ const categories: VideoCategory[] = [
 ];
 
 interface ICategoryRecordingSettings {
-  configKey: ConfigurationSchemaKey,
-};
+  configKey: ConfigurationSchemaKey;
+}
 
 /**
  * Category specific settings for recording
@@ -33,7 +38,9 @@ interface ICategoryRecordingSettings {
  * `configKey`:    The configuration key name that specifies if we're allowed
  *                 to record content from that particular category.
  */
-const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSettings } = {
+const categoryRecordingSettings: {
+  [key in VideoCategory]: ICategoryRecordingSettings;
+} = {
   [VideoCategory.TwoVTwo]: {
     configKey: 'recordTwoVTwo',
   },
@@ -49,7 +56,7 @@ const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSet
   [VideoCategory.SoloShuffle]: {
     configKey: 'recordSoloShuffle',
   },
-  [VideoCategory.MythicPlus]:{
+  [VideoCategory.MythicPlus]: {
     configKey: 'recordDungeons',
   },
   [VideoCategory.Raids]: {
@@ -64,188 +71,187 @@ const categoryRecordingSettings: { [key in VideoCategory]: ICategoryRecordingSet
  * Months of the year.
  */
 const months: string[] = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 /**
- * Retail battlegrounds by ID. 
+ * Retail battlegrounds by ID.
  */
- const retailBattlegrounds: NumberKeyToStringValueMapType = {
-  30:	  "Alterac Valley",
-  2107: "Arathi Basin",
-  1681: "Arathi Basin",
-  1105: "Deepwind Gorge",
-  2245: "Deepwind Gorge",
-  566:  "Eye of the Storm",
-  968:  "Eye of the Storm",
-  628:  "Isle of Conquest",
-  1803: "Seething Shore",
-  727:  "Silvershard Mines",
-  998:  "Temple of Kotmogu",
-  761:  "The Battle for Gilneas",
-  726:  "Twin Peaks",
-  489:  "Warsong Gulch",
-  2106:  "Warsong Gulch"
-}
+const retailBattlegrounds: NumberKeyToStringValueMapType = {
+  30: 'Alterac Valley',
+  2107: 'Arathi Basin',
+  1681: 'Arathi Basin',
+  1105: 'Deepwind Gorge',
+  2245: 'Deepwind Gorge',
+  566: 'Eye of the Storm',
+  968: 'Eye of the Storm',
+  628: 'Isle of Conquest',
+  1803: 'Seething Shore',
+  727: 'Silvershard Mines',
+  998: 'Temple of Kotmogu',
+  761: 'The Battle for Gilneas',
+  726: 'Twin Peaks',
+  489: 'Warsong Gulch',
+  2106: 'Warsong Gulch',
+};
 
 /**
- * Classic battlegrounds by ID. This is probably totally wrong. 
+ * Classic battlegrounds by ID. This is probably totally wrong.
  */
- const classicBattlegrounds: NumberKeyToStringValueMapType = {
-  30:	 "Alterac Valley",
-  529: "Arathi Basin",
-  566: "Eye of the Storm",
-  607: "Strand of the Ancients",
-  489: "Warsong Gulch",
-}
+const classicBattlegrounds: NumberKeyToStringValueMapType = {
+  30: 'Alterac Valley',
+  529: 'Arathi Basin',
+  566: 'Eye of the Storm',
+  607: 'Strand of the Ancients',
+  489: 'Warsong Gulch',
+};
 
 /**
- * Retail arenas by ID. 
+ * Retail arenas by ID.
  */
- const retailArenas: NumberKeyToStringValueMapType = {
+const retailArenas: NumberKeyToStringValueMapType = {
   1672: "Blade's Edge",
-  617:  "Dalaran Sewers",
-  1505: "Nagrand",
-  572:  "Ruins of Lordaeron",
-  2167: "Robodrome",
+  617: 'Dalaran Sewers',
+  1505: 'Nagrand',
+  572: 'Ruins of Lordaeron',
+  2167: 'Robodrome',
   1134: "Tiger's Peak",
-  980:  "Tol'viron",
-  1504: "Black Rook",
-  2373: "Empyrean Domain",
+  980: "Tol'viron",
+  1504: 'Black Rook',
+  2373: 'Empyrean Domain',
   1552: "Ashamane's Fall",
-  1911: "Mugambala",
-  1825: "Hook Point",
-  2509: "Maldraxxus",
-  2547: "Enigma Crucible",
-  2563: "Nokhudon",
-}
+  1911: 'Mugambala',
+  1825: 'Hook Point',
+  2509: 'Maldraxxus',
+  2547: 'Enigma Crucible',
+  2563: 'Nokhudon',
+};
 
 /**
- * Classic arenas by ID. 
+ * Classic arenas by ID.
  */
- const classicArenas: NumberKeyToStringValueMapType = {
-  572: "Ruins of Lordaeron",
-  559: "Nagrand",
-  617: "Dalaran",
+const classicArenas: NumberKeyToStringValueMapType = {
+  572: 'Ruins of Lordaeron',
+  559: 'Nagrand',
+  617: 'Dalaran',
   562: "Blade's Edge",
-}
+};
 
 /**
  * Shadowlands Tier 1
  */
- const encountersNathria: NumberKeyToStringValueMapType = {
-  2398: "Shriekwing",
-  2418: "Huntsman",
-  2402: "Sun King",
+const encountersNathria: NumberKeyToStringValueMapType = {
+  2398: 'Shriekwing',
+  2418: 'Huntsman',
+  2402: 'Sun King',
   2405: "Xy'mox",
-  2383: "Hungering",
-  2406: "Inerva",
-  2412: "Council",
-  2399: "Sludgefist",
-  2417: "SLG",
-  2407: "Denathrius"
-}
+  2383: 'Hungering',
+  2406: 'Inerva',
+  2412: 'Council',
+  2399: 'Sludgefist',
+  2417: 'SLG',
+  2407: 'Denathrius',
+};
 
 /**
  * Shadowlands Tier 2
  */
 const encountersSanctum: NumberKeyToStringValueMapType = {
-  2523: "The Tarragrue",
+  2523: 'The Tarragrue',
   2433: "Jailer's Eye",
-  2429: "The Nine",
+  2429: 'The Nine',
   2432: "Ner'zhul",
-  2434: "Souldrender",
-  2430: "Painsmith",
-  2436: "Guardian",
-  2431: "Fatescribe",
+  2434: 'Souldrender',
+  2430: 'Painsmith',
+  2436: 'Guardian',
+  2431: 'Fatescribe',
   2422: "Kel'Thuzad",
-  2435: "Sylvanas",
-}
+  2435: 'Sylvanas',
+};
 
 /**
  * Shadowlands Tier 3
  */
- const encountersSepulcher: NumberKeyToStringValueMapType = {
-  2537: "Jailer",
-  2512: "Guardian",
-  2529: "Halondrus",
-  2539: "Lihuvim",
-  2540: "Dausegne",
-  2542: "Skolex",
-  2543: "Lords",
-  2544: "Pantheon",
-  2546: "Anduin",
-  2549: "Rygelon",
+const encountersSepulcher: NumberKeyToStringValueMapType = {
+  2537: 'Jailer',
+  2512: 'Guardian',
+  2529: 'Halondrus',
+  2539: 'Lihuvim',
+  2540: 'Dausegne',
+  2542: 'Skolex',
+  2543: 'Lords',
+  2544: 'Pantheon',
+  2546: 'Anduin',
+  2549: 'Rygelon',
   2553: "Xy'mox",
-}
+};
 
 /**
  * Dragonflight Tier 1
  */
 const encountersVOI: NumberKeyToStringValueMapType = {
-  2587: "Eranog",
-  2639: "Terros",
-  2590: "Primal",
-  2592: "Sennarth",
-  2635: "Dathea",
-  2605: "Kurog",
-  2614: "Diurna",
-  2607: "Raszageth",
-}
+  2587: 'Eranog',
+  2639: 'Terros',
+  2590: 'Primal',
+  2592: 'Sennarth',
+  2635: 'Dathea',
+  2605: 'Kurog',
+  2614: 'Diurna',
+  2607: 'Raszageth',
+};
 
 /**
  * WOTLK Classic Naxxrammas
  */
- const encountersClassicNaxxramas: NumberKeyToStringValueMapType = {
+const encountersClassicNaxxramas: NumberKeyToStringValueMapType = {
   1107: "Anub'Rekhan",
-  1110: "Faerlina",
-  1116: "Maexxna",
-  1118: "Patchwerk",
-  1117: "Noth",
-  1112: "Heigan",
-  1115: "Lotheb",
-  1113: "Razuvious",
-  1109: "Gothik",
-  1121: "Horsemen",
-  1119: "Sapphiron",
-  1120: "Thaddius",
+  1110: 'Faerlina',
+  1116: 'Maexxna',
+  1118: 'Patchwerk',
+  1117: 'Noth',
+  1112: 'Heigan',
+  1115: 'Lotheb',
+  1113: 'Razuvious',
+  1109: 'Gothik',
+  1121: 'Horsemen',
+  1119: 'Sapphiron',
+  1120: 'Thaddius',
   1114: "Kel'Thuzad",
-  1111: "Grobbulus",
-  1108: "Gluth",
-}
+  1111: 'Grobbulus',
+  1108: 'Gluth',
+};
 
 /**
  * WOTLK Classic Eye of Eternity
  */
- const encountersClassicEye: NumberKeyToStringValueMapType = {
-  734: "Malygos",
-}
+const encountersClassicEye: NumberKeyToStringValueMapType = {
+  734: 'Malygos',
+};
 
 /**
  * WOTLK Classic Obsidian Sanctum
  */
- const encountersClassicObsidian: NumberKeyToStringValueMapType = {
-  742: "Sartharion",
-}
+const encountersClassicObsidian: NumberKeyToStringValueMapType = {
+  742: 'Sartharion',
+};
 
 /**
  * WOTLK Classic Vault of Archavon
  */
- const encountersClassicVault: NumberKeyToStringValueMapType = {
-  772: "Archavon",
-}
-
+const encountersClassicVault: NumberKeyToStringValueMapType = {
+  772: 'Archavon',
+};
 
 const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersNathria,
@@ -256,7 +262,7 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersClassicEye,
   ...encountersClassicObsidian,
   ...encountersClassicVault,
-}
+};
 
 /**
  * List of raids and their encounters
@@ -265,48 +271,53 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * can't rely on `ZONE_CHANGE` for this.
  */
 const raidInstances: RaidInstanceType[] = [
-  { 
-    zoneId: 13224, 
-    name: 'Castle Nathria', 
-    shortName: 'Nathria', 
-    encounters: encountersNathria 
+  {
+    zoneId: 13224,
+    name: 'Castle Nathria',
+    shortName: 'Nathria',
+    encounters: encountersNathria,
   },
-  { 
-    zoneId: 13561, 
-    name: 'Sanctum of Domination', 
-    shortName: 'Sanctum', 
-    encounters: encountersSanctum 
+  {
+    zoneId: 13561,
+    name: 'Sanctum of Domination',
+    shortName: 'Sanctum',
+    encounters: encountersSanctum,
   },
-  { 
-    zoneId: 13742, 
-    name: 'Sepulcher of the First Ones', 
-    shortName: 'Sepulcher', 
-    encounters: encountersSepulcher 
+  {
+    zoneId: 13742,
+    name: 'Sepulcher of the First Ones',
+    shortName: 'Sepulcher',
+    encounters: encountersSepulcher,
   },
-  { zoneId: 14030, 
-    name: 'Vault of the Incarnates', 
-    shortName: 'Vault', 
-    encounters: encountersVOI 
+  {
+    zoneId: 14030,
+    name: 'Vault of the Incarnates',
+    shortName: 'Vault',
+    encounters: encountersVOI,
   },
-  { zoneId: 3456, 
-    name: 'Naxxramas', 
-    shortName: 'Naxxramas', 
-    encounters: encountersClassicNaxxramas 
+  {
+    zoneId: 3456,
+    name: 'Naxxramas',
+    shortName: 'Naxxramas',
+    encounters: encountersClassicNaxxramas,
   },
-  { zoneId: 4500, 
-    name: 'Eye of Eternity', 
-    shortName: 'EoE', 
-    encounters: encountersClassicEye 
+  {
+    zoneId: 4500,
+    name: 'Eye of Eternity',
+    shortName: 'EoE',
+    encounters: encountersClassicEye,
   },
-  { zoneId: 4493, 
-    name: 'Obsidian Sanctum', 
-    shortName: 'OS', 
-    encounters: encountersClassicObsidian 
+  {
+    zoneId: 4493,
+    name: 'Obsidian Sanctum',
+    shortName: 'OS',
+    encounters: encountersClassicObsidian,
   },
-  { zoneId: 4603, 
-    name: 'Vault of Archavon', 
-    shortName: 'VoA', 
-    encounters: encountersClassicVault 
+  {
+    zoneId: 4603,
+    name: 'Vault of Archavon',
+    shortName: 'VoA',
+    encounters: encountersClassicVault,
   },
 ];
 
@@ -319,38 +330,38 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   1651: 'Return to Karazhan',
   1208: 'Grimrail Depot',
   1195: 'Iron Docks',
-  2097: "Operation: Mechagon",
-  2291: "De Other Side",
-  2287: "Halls of Atonement",
-  2290: "Mists of Tirna Scithe",
-  2289: "Plaguefall",
-  2284: "Sanguine Depths",
-  2285: "Spires of Ascension",
-  2286: "The Necrotic Wake",
-  2293: "Theater of Pain",
-  2441: "Tazavesh the Veiled Market",
+  2097: 'Operation: Mechagon',
+  2291: 'De Other Side',
+  2287: 'Halls of Atonement',
+  2290: 'Mists of Tirna Scithe',
+  2289: 'Plaguefall',
+  2284: 'Sanguine Depths',
+  2285: 'Spires of Ascension',
+  2286: 'The Necrotic Wake',
+  2293: 'Theater of Pain',
+  2441: 'Tazavesh the Veiled Market',
 
   // Dragonflight S1
-  2521: "Ruby Life Pools",
-  2516: "The Nokhud Offensive",
-  2515: "The Azure Vault",
+  2521: 'Ruby Life Pools',
+  2516: 'The Nokhud Offensive',
+  2515: 'The Azure Vault',
   2526: "Algeth'ar Academy",
-  1477: "Halls of Valor",
-  1571: "Court of Stars",
-  1176: "Shadowmoon Burial Grounds",
-  960:  "Temple of the Jade Serpent",
-}
+  1477: 'Halls of Valor',
+  1571: 'Court of Stars',
+  1176: 'Shadowmoon Burial Grounds',
+  960: 'Temple of the Jade Serpent',
+};
 
 /**
  * Dungeons by MapID. Get this by going to the keystone page on wowhead, e.g.:
  * https://www.wowhead.com/spell=393483/set-keystone-map-shadowmoon-burial-grounds
- * and extracting the effect ID. 
+ * and extracting the effect ID.
  */
 const dungeonsByMapId: NumberKeyToStringValueMapType = {
   // Shadowlands
   166: 'Grimrail Depot',
   169: 'Iron Docks',
-  206: 'Neltharion\'s Lair',
+  206: "Neltharion's Lair",
   227: 'Karazhan: Lower',
   234: 'Karazhan: Upper',
   369: 'Mechagon: Junkyard',
@@ -367,15 +378,15 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   392: 'Tazavesh: Gambit',
 
   // Dragonflight S1
-  399: "Ruby Life Pools",
-  400: "The Nokhud Offensive",
-  401: "The Azure Vault",
+  399: 'Ruby Life Pools',
+  400: 'The Nokhud Offensive',
+  401: 'The Azure Vault',
   402: "Algeth'ar Academy",
-  200: "Halls of Valor",
-  210: "Court of Stars",
-  165: "Shadowmoon Burial Grounds",
-  2:   "Temple of the Jade Serpent",
-}
+  200: 'Halls of Valor',
+  210: 'Court of Stars',
+  165: 'Shadowmoon Burial Grounds',
+  2: 'Temple of the Jade Serpent',
+};
 
 /**
  * Alloted time for Mythic Keystone dungeons, in seconds, the format of:
@@ -387,36 +398,36 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
  * Tip: It's easier to keep them as a calculation here, for comparison when Blizzard
  * occasionally adjusts timers for a dungeon.
  */
-const dungeonTimersByMapId: { [id: number]: number[]; } = {
+const dungeonTimersByMapId: { [id: number]: number[] } = {
   // Shadowlands
-  206: [(40 * 60), (40 * 60), (40 * 60)],
-  377: [(43 * 60), (34 * 60) + 25, (25 * 60) + 49],
-  378: [(32 * 60), (25 * 60) + 36, (19 * 60) + 12],
-  375: [(30 * 60), (24 * 60), (18 * 60)],
-  379: [(38 * 60), (30 * 60) + 24, (22 * 60) + 38],
-  380: [(41 * 60), (32 * 60) + 48, (24 * 60) + 36],
-  381: [(39 * 60), (31 * 60) + 12, (23 * 60) + 24],
-  376: [(36 * 60), (28 * 60) + 48, (21 * 60) + 36],
-  382: [(38 * 60), (30 * 60) + 24, (22 * 60) + 38],
-  227: [(42 * 60), (33 * 60) + 36, (25 * 60) + 12],
-  234: [(35 * 60), (28 * 60), (21 * 60)],
-  369: [(38 * 60), (30 * 60) + 24, (22 * 60) + 38],
-  370: [(32 * 60), (25 * 60) + 36, (19 * 60) + 12],
-  391: [(39 * 60), (31 * 60) + 12, (23 * 60) + 24],
-  392: [(30 * 60), (24 * 60), (18 * 60)],
-  169: [(30 * 60), (24 * 60), (18 * 60)],
-  166: [(30 * 60), (24 * 60), (18 * 60)],
+  206: [40 * 60, 40 * 60, 40 * 60],
+  377: [43 * 60, 34 * 60 + 25, 25 * 60 + 49],
+  378: [32 * 60, 25 * 60 + 36, 19 * 60 + 12],
+  375: [30 * 60, 24 * 60, 18 * 60],
+  379: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
+  380: [41 * 60, 32 * 60 + 48, 24 * 60 + 36],
+  381: [39 * 60, 31 * 60 + 12, 23 * 60 + 24],
+  376: [36 * 60, 28 * 60 + 48, 21 * 60 + 36],
+  382: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
+  227: [42 * 60, 33 * 60 + 36, 25 * 60 + 12],
+  234: [35 * 60, 28 * 60, 21 * 60],
+  369: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
+  370: [32 * 60, 25 * 60 + 36, 19 * 60 + 12],
+  391: [39 * 60, 31 * 60 + 12, 23 * 60 + 24],
+  392: [30 * 60, 24 * 60, 18 * 60],
+  169: [30 * 60, 24 * 60, 18 * 60],
+  166: [30 * 60, 24 * 60, 18 * 60],
 
   // Dragonflight S1
-  399:  [(30 * 60), (24 * 60), (18 * 60)],
-  400:  [(40 * 60), (32 * 60), (24 * 60)],
-  401:  [(34 * 60), (27 * 60) + 12, (20 * 60) + 24],
-  402:  [(32 * 60), (25 * 60) + 36, (19 * 60) + 12],
-  200:  [(38 * 60), (30 * 60) + 24, (22 * 60) + 48],
-  210:  [(30 * 60), (24 * 60), (18 * 60)], 
-  165:  [(33 * 60), (26 * 60) + 24, (23 * 60) + 24], 
-  2:    [(30 * 60), (24 * 60), (18 * 60)], 
-}
+  399: [30 * 60, 24 * 60, 18 * 60],
+  400: [40 * 60, 32 * 60, 24 * 60],
+  401: [34 * 60, 27 * 60 + 12, 20 * 60 + 24],
+  402: [32 * 60, 25 * 60 + 36, 19 * 60 + 12],
+  200: [38 * 60, 30 * 60 + 24, 22 * 60 + 48],
+  210: [30 * 60, 24 * 60, 18 * 60],
+  165: [33 * 60, 26 * 60 + 24, 23 * 60 + 24],
+  2: [30 * 60, 24 * 60, 18 * 60],
+};
 
 const dungeonEncounters: NumberKeyToStringValueMapType = {
   // Grimrail Depot
@@ -521,51 +532,51 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   2440: "Myza's Oasis",
 
   // Ruby Life Pools
-  2609: "Melidrussa Chillworn",
-  2606: "Kokia Blazehoof",
-  2623: "Kyrakka and Erhkard Stormvein",
+  2609: 'Melidrussa Chillworn',
+  2606: 'Kokia Blazehoof',
+  2623: 'Kyrakka and Erhkard Stormvein',
 
   // The Nokhud Offensive
-  2637: "Granyth",
-  2636: "The Raging Tempest",
-  2581: "Teera and Maruuk",
-  2570: "Balakar Khan",
+  2637: 'Granyth',
+  2636: 'The Raging Tempest',
+  2581: 'Teera and Maruuk',
+  2570: 'Balakar Khan',
 
   // The Azure Vault
-  2582: "Leymor",
-  2585: "Azureblade",
-  2583: "Telash Greywing",
-  2584: "Umbrelskul",
+  2582: 'Leymor',
+  2585: 'Azureblade',
+  2583: 'Telash Greywing',
+  2584: 'Umbrelskul',
 
   // Algeth'ar Acedemy
-  2562: "Vexamus",
-  2563: "Overgrown Ancient",
-  2564: "Crawth",
-  2565: "Echo of Doragosa",
+  2562: 'Vexamus',
+  2563: 'Overgrown Ancient',
+  2564: 'Crawth',
+  2565: 'Echo of Doragosa',
 
-  // Halls of Valor  
-  1805: "Hymdall", 
-  1806: "Hyrja",
-  1807: "Fenryr",
-  1808: "God-King Skovald",
-  1809: "Odyn",
+  // Halls of Valor
+  1805: 'Hymdall',
+  1806: 'Hyrja',
+  1807: 'Fenryr',
+  1808: 'God-King Skovald',
+  1809: 'Odyn',
 
   // Court of Stars
-  1868: "Hymdall", 
-  1869: "Talixae Flamewreath",
-  1870: "Advisor Melandrus",
+  1868: 'Hymdall',
+  1869: 'Talixae Flamewreath',
+  1870: 'Advisor Melandrus',
 
   // Shadowmmon Burial Grounds
-  1677: "Sadana Bloodfury", 
-  1688: "Nhallish",
-  1679: "Bonemaw",
+  1677: 'Sadana Bloodfury',
+  1688: 'Nhallish',
+  1679: 'Bonemaw',
   1682: "Ner'zhul",
 
   // Temple of the Jade Serpent
-  1418: "Wise Mari", 
-  1417: "Lorewalker Stonestep",
-  1416: "Liu Flameheart",
-  1439: "Sha of Doubt",
+  1418: 'Wise Mari',
+  1417: 'Lorewalker Stonestep',
+  1416: 'Liu Flameheart',
+  1439: 'Sha of Doubt',
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
@@ -577,60 +588,60 @@ const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
 };
 
 const dungeonAffixesById: NumberKeyToStringValueMapType = {
-    1: 'Overflowing',
-    2: 'Skittish',
-    3: 'Volcanic',
-    4: 'Necrotic',
-    6: 'Raging',
-    7: 'Bolstering',
-    8: 'Sanguine',
-    9: 'Tyrannical',
-    10: 'Fortified',
-    11: 'Bursting',
-    12: 'Grievous',
-    13: 'Explosive',
-    14: 'Quaking',
-    122: 'Inspiring',
-    117: 'Reaping',
-    124: 'Storming',
-    123: 'Spiteful',
+  1: 'Overflowing',
+  2: 'Skittish',
+  3: 'Volcanic',
+  4: 'Necrotic',
+  6: 'Raging',
+  7: 'Bolstering',
+  8: 'Sanguine',
+  9: 'Tyrannical',
+  10: 'Fortified',
+  11: 'Bursting',
+  12: 'Grievous',
+  13: 'Explosive',
+  14: 'Quaking',
+  122: 'Inspiring',
+  117: 'Reaping',
+  124: 'Storming',
+  123: 'Spiteful',
 
-    // Seasonal
-    120: 'Awakened',
+  // Seasonal
+  120: 'Awakened',
 
-    // Seasonal, Shadowlands
-    121: 'Prideful',   // Season 1
-    128: 'Tormented',  // Season 2
-    130: 'Encrypted',  // Season 3
-    131: 'Shrouded',   // Season 4
+  // Seasonal, Shadowlands
+  121: 'Prideful', // Season 1
+  128: 'Tormented', // Season 2
+  130: 'Encrypted', // Season 3
+  131: 'Shrouded', // Season 4
 };
 
 /**
- * Zones by ID. 
+ * Zones by ID.
  */
 const zones: NumberKeyToStringValueMapType = {
-    ...retailArenas,
-    ...classicArenas,
-    ...raidEncountersById,
-    ...retailBattlegrounds,
-    ...classicBattlegrounds,
-    ...dungeonsByZoneId,
-}
+  ...retailArenas,
+  ...classicArenas,
+  ...raidEncountersById,
+  ...retailBattlegrounds,
+  ...classicBattlegrounds,
+  ...dungeonsByZoneId,
+};
 
 const instanceEncountersById: NumberKeyToStringValueMapType = {
   ...raidEncountersById,
   ...dungeonEncounters,
 };
 
-type InstanceDifficultyPartyType = 'party' | 'raid' | 'pvp'
-type ImstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp'
+type InstanceDifficultyPartyType = 'party' | 'raid' | 'pvp';
+type ImstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp';
 type InstanceDifficultyType = {
-    difficultyID: ImstanceDifficultyIdType,
-    difficulty: string,
-    partyType: InstanceDifficultyPartyType,
+  difficultyID: ImstanceDifficultyIdType;
+  difficulty: string;
+  partyType: InstanceDifficultyPartyType;
 };
 type InstanceDifficultyObjectType = {
-  [key: number]: InstanceDifficultyType
+  [key: number]: InstanceDifficultyType;
 };
 
 const instanceDifficulty: InstanceDifficultyObjectType = {
@@ -641,7 +652,11 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   5: { difficultyID: 'heroic', difficulty: '10HC', partyType: 'raid' },
   6: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
   7: { difficultyID: 'lfr', difficulty: 'LFR', partyType: 'raid' },
-  8: { difficultyID: 'mythic', difficulty: 'Mythic Keystone', partyType: 'party' },
+  8: {
+    difficultyID: 'mythic',
+    difficulty: 'Mythic Keystone',
+    partyType: 'party',
+  },
   9: { difficultyID: 'normal', difficulty: '40', partyType: 'raid' },
   14: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
   15: { difficultyID: 'heroic', difficulty: 'HC', partyType: 'raid' },
@@ -653,7 +668,7 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   34: { difficultyID: 'pvp', difficulty: 'PvP', partyType: 'pvp' },
   150: { difficultyID: 'normal', difficulty: 'N', partyType: 'party' },
   151: { difficultyID: 'lfr', difficulty: 'T', partyType: 'raid' },
-}
+};
 
 const videoTabsSx = {
   position: 'fixed',
@@ -662,42 +677,42 @@ const videoTabsSx = {
   width: '100%',
   height: '110px',
   borderColor: '#000000',
-  bgcolor: '#272e48' ,
+  bgcolor: '#272e48',
   textColor: 'secondary',
   overflow: 'visible',
   borderTop: '1px solid',
 };
 
 const categoryTabSx = {
-  padding:'12px', 
-  bgcolor: '#272e48', 
-  color: 'white', 
-  borderBottom: '1px solid', 
-  borderColor: 'black', 
-  minHeight: '1px', 
-  height: '30px'
-}
+  padding: '12px',
+  bgcolor: '#272e48',
+  color: 'white',
+  borderBottom: '1px solid',
+  borderColor: 'black',
+  minHeight: '1px',
+  height: '30px',
+};
 
 const categoryTabsSx = {
-  borderColor: '#000000', 
-  bgcolor: '#272e48', 
-  textColor: 'secondary', 
-  width: '175px', 
-  overflow: 'visible'
-}
+  borderColor: '#000000',
+  bgcolor: '#272e48',
+  textColor: 'secondary',
+  width: '175px',
+  overflow: 'visible',
+};
 
 const videoButtonSx = {
-  padding: '0px', 
+  padding: '0px',
   margin: 0.5,
-  border: '1px solid black', 
-  bgcolor: '#272e48', 
-  color: 'white', 
-  minHeight: '1px', 
-  height: '100px', 
-  width: '200px', 
+  border: '1px solid black',
+  bgcolor: '#272e48',
+  color: 'white',
+  minHeight: '1px',
+  height: '100px',
+  width: '200px',
   opacity: 1,
   borderRadius: 2,
-}
+};
 
 const videoScrollButtonSx = {
   bgcolor: '#272e48',
@@ -708,67 +723,308 @@ const videoScrollButtonSx = {
   opacity: 1,
 };
 
-type WoWCharacterDamageType = 'melee' | 'ranged'
-type WoWCharacterRoleType = 'tank' | 'healer' | 'damage'
-type WoWCharacterClassType = 'DEATHKNIGHT' | 'DEMONHUNTER' | 'DRUID' | 'HUNTER' | 'MAGE' | 'MONK' | 'PALADIN' | 'PRIEST' | 'ROGUE' | 'SHAMAN' | 'WARLOCK' | 'WARRIOR' | 'EVOKER';
+type WoWCharacterDamageType = 'melee' | 'ranged';
+type WoWCharacterRoleType = 'tank' | 'healer' | 'damage';
+type WoWCharacterClassType =
+  | 'DEATHKNIGHT'
+  | 'DEMONHUNTER'
+  | 'DRUID'
+  | 'HUNTER'
+  | 'MAGE'
+  | 'MONK'
+  | 'PALADIN'
+  | 'PRIEST'
+  | 'ROGUE'
+  | 'SHAMAN'
+  | 'WARLOCK'
+  | 'WARRIOR'
+  | 'EVOKER';
 
 type SpecializationObjectType = {
-  type: WoWCharacterDamageType,
-  role: WoWCharacterRoleType,
-  class: WoWCharacterClassType,
-  label: string,
-  name: string
+  type: WoWCharacterDamageType;
+  role: WoWCharacterRoleType;
+  class: WoWCharacterClassType;
+  label: string;
+  name: string;
 };
 
 const specializationById: { [id: number]: SpecializationObjectType } = {
-  250: { type: 'melee',  role: 'tank',   class: 'DEATHKNIGHT', label: 'Death Knight', name: 'Blood' },
-  251: { type: 'melee',  role: 'damage', class: 'DEATHKNIGHT', label: 'Death Knight', name: 'Frost' },
-  252: { type: 'melee',  role: 'damage', class: 'DEATHKNIGHT', label: 'Death Knight', name: 'Unholy' },
-  577: { type: 'melee',  role: 'damage', class: 'DEMONHUNTER', label: 'Demon Hunter', name: 'Havoc' },
-  581: { type: 'melee',  role: 'tank',   class: 'DEMONHUNTER', label: 'Demon Hunter', name: 'Vengeance' },
-  102: { type: 'ranged', role: 'damage', class: 'DRUID',       label: 'Druid',        name: 'Balance' },
-  103: { type: 'melee',  role: 'damage', class: 'DRUID',       label: 'Druid',        name: 'Feral' },
-  104: { type: 'ranged', role: 'tank',   class: 'DRUID',       label: 'Druid',        name: 'Guardian' },
-  105: { type: 'ranged', role: 'healer', class: 'DRUID',       label: 'Druid',        name: 'Restoration' },
-  1467:{ type: 'ranged', role: 'damage', class: 'EVOKER',      label: 'Evoker',       name: 'Devastation' },
-  1468:{ type: 'ranged', role: 'damage', class: 'EVOKER',      label: 'Evoker',       name: 'Preservation' },
-  253: { type: 'ranged', role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Beast Mastery' },
-  254: { type: 'ranged', role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Marksmanship' },
-  255: { type: 'melee',  role: 'damage', class: 'HUNTER',      label: 'Hunter',       name: 'Survival' },
-  62:  { type: 'ranged', role: 'damage', class: 'MAGE',        label: 'Mage',         name: 'Arcane' },
-  63:  { type: 'ranged', role: 'damage', class: 'MAGE',        label: 'Mage',         name: 'Fire' },
-  64:  { type: 'ranged', role: 'damage', class: 'MAGE',        label: 'Mage',         name: 'Frost' },
-  268: { type: 'melee',  role: 'tank',   class: 'MONK',        label: 'Monk',         name: 'Brewmaster' },
-  269: { type: 'melee',  role: 'damage', class: 'MONK',        label: 'Monk',         name: 'Windwalker' },
-  270: { type: 'melee',  role: 'healer', class: 'MONK',        label: 'Monk',         name: 'Mistweaver' },
-  65:  { type: 'melee',  role: 'healer', class: 'PALADIN',     label: 'Paladin',      name: 'Holy' },
-  66:  { type: 'melee',  role: 'tank',   class: 'PALADIN',     label: 'Paladin',      name: 'Protection' },
-  70:  { type: 'melee',  role: 'damage', class: 'PALADIN',     label: 'Paladin',      name: 'Retribution' },
-  256: { type: 'ranged', role: 'healer', class: 'PRIEST',      label: 'Priest',       name: 'Discipline' },
-  257: { type: 'ranged', role: 'healer', class: 'PRIEST',      label: 'Priest',       name: 'Holy' },
-  258: { type: 'ranged', role: 'damage', class: 'PRIEST',      label: 'Priest',       name: 'Shadow' },
-  259: { type: 'melee',  role: 'damage', class: 'ROGUE',       label: 'Rogue',        name: 'Assassination' },
-  260: { type: 'melee',  role: 'damage', class: 'ROGUE',       label: 'Rogue',        name: 'Outlaw' },
-  261: { type: 'melee',  role: 'damage', class: 'ROGUE',       label: 'Rogue',        name: 'Subtlety' },
-  262: { type: 'ranged', role: 'damage', class: 'SHAMAN',      label: 'Shaman',       name: 'Elemental' },
-  263: { type: 'melee',  role: 'damage', class: 'SHAMAN',      label: 'Shaman',       name: 'Enhancement' },
-  264: { type: 'ranged', role: 'healer', class: 'SHAMAN',      label: 'Shaman',       name: 'Restoration' },
-  265: { type: 'ranged', role: 'damage', class: 'WARLOCK',     label: 'Warlock',      name: 'Affliction' },
-  266: { type: 'ranged', role: 'damage', class: 'WARLOCK',     label: 'Warlock',      name: 'Demonology' },
-  267: { type: 'ranged', role: 'damage', class: 'WARLOCK',     label: 'Warlock',      name: 'Destruction' },
-  71:  { type: 'melee',  role: 'damage', class: 'WARRIOR',     label: 'Warrior',      name: 'Arms' },
-  72:  { type: 'melee',  role: 'damage', class: 'WARRIOR',     label: 'Warrior',      name: 'Fury' },
-  73:  { type: 'melee',  role: 'tank',   class: 'WARRIOR',     label: 'Warrior',      name: 'Protection' },
+  250: {
+    type: 'melee',
+    role: 'tank',
+    class: 'DEATHKNIGHT',
+    label: 'Death Knight',
+    name: 'Blood',
+  },
+  251: {
+    type: 'melee',
+    role: 'damage',
+    class: 'DEATHKNIGHT',
+    label: 'Death Knight',
+    name: 'Frost',
+  },
+  252: {
+    type: 'melee',
+    role: 'damage',
+    class: 'DEATHKNIGHT',
+    label: 'Death Knight',
+    name: 'Unholy',
+  },
+  577: {
+    type: 'melee',
+    role: 'damage',
+    class: 'DEMONHUNTER',
+    label: 'Demon Hunter',
+    name: 'Havoc',
+  },
+  581: {
+    type: 'melee',
+    role: 'tank',
+    class: 'DEMONHUNTER',
+    label: 'Demon Hunter',
+    name: 'Vengeance',
+  },
+  102: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'DRUID',
+    label: 'Druid',
+    name: 'Balance',
+  },
+  103: {
+    type: 'melee',
+    role: 'damage',
+    class: 'DRUID',
+    label: 'Druid',
+    name: 'Feral',
+  },
+  104: {
+    type: 'ranged',
+    role: 'tank',
+    class: 'DRUID',
+    label: 'Druid',
+    name: 'Guardian',
+  },
+  105: {
+    type: 'ranged',
+    role: 'healer',
+    class: 'DRUID',
+    label: 'Druid',
+    name: 'Restoration',
+  },
+  1467: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'EVOKER',
+    label: 'Evoker',
+    name: 'Devastation',
+  },
+  1468: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'EVOKER',
+    label: 'Evoker',
+    name: 'Preservation',
+  },
+  253: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'HUNTER',
+    label: 'Hunter',
+    name: 'Beast Mastery',
+  },
+  254: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'HUNTER',
+    label: 'Hunter',
+    name: 'Marksmanship',
+  },
+  255: {
+    type: 'melee',
+    role: 'damage',
+    class: 'HUNTER',
+    label: 'Hunter',
+    name: 'Survival',
+  },
+  62: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'MAGE',
+    label: 'Mage',
+    name: 'Arcane',
+  },
+  63: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'MAGE',
+    label: 'Mage',
+    name: 'Fire',
+  },
+  64: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'MAGE',
+    label: 'Mage',
+    name: 'Frost',
+  },
+  268: {
+    type: 'melee',
+    role: 'tank',
+    class: 'MONK',
+    label: 'Monk',
+    name: 'Brewmaster',
+  },
+  269: {
+    type: 'melee',
+    role: 'damage',
+    class: 'MONK',
+    label: 'Monk',
+    name: 'Windwalker',
+  },
+  270: {
+    type: 'melee',
+    role: 'healer',
+    class: 'MONK',
+    label: 'Monk',
+    name: 'Mistweaver',
+  },
+  65: {
+    type: 'melee',
+    role: 'healer',
+    class: 'PALADIN',
+    label: 'Paladin',
+    name: 'Holy',
+  },
+  66: {
+    type: 'melee',
+    role: 'tank',
+    class: 'PALADIN',
+    label: 'Paladin',
+    name: 'Protection',
+  },
+  70: {
+    type: 'melee',
+    role: 'damage',
+    class: 'PALADIN',
+    label: 'Paladin',
+    name: 'Retribution',
+  },
+  256: {
+    type: 'ranged',
+    role: 'healer',
+    class: 'PRIEST',
+    label: 'Priest',
+    name: 'Discipline',
+  },
+  257: {
+    type: 'ranged',
+    role: 'healer',
+    class: 'PRIEST',
+    label: 'Priest',
+    name: 'Holy',
+  },
+  258: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'PRIEST',
+    label: 'Priest',
+    name: 'Shadow',
+  },
+  259: {
+    type: 'melee',
+    role: 'damage',
+    class: 'ROGUE',
+    label: 'Rogue',
+    name: 'Assassination',
+  },
+  260: {
+    type: 'melee',
+    role: 'damage',
+    class: 'ROGUE',
+    label: 'Rogue',
+    name: 'Outlaw',
+  },
+  261: {
+    type: 'melee',
+    role: 'damage',
+    class: 'ROGUE',
+    label: 'Rogue',
+    name: 'Subtlety',
+  },
+  262: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'SHAMAN',
+    label: 'Shaman',
+    name: 'Elemental',
+  },
+  263: {
+    type: 'melee',
+    role: 'damage',
+    class: 'SHAMAN',
+    label: 'Shaman',
+    name: 'Enhancement',
+  },
+  264: {
+    type: 'ranged',
+    role: 'healer',
+    class: 'SHAMAN',
+    label: 'Shaman',
+    name: 'Restoration',
+  },
+  265: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'WARLOCK',
+    label: 'Warlock',
+    name: 'Affliction',
+  },
+  266: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'WARLOCK',
+    label: 'Warlock',
+    name: 'Demonology',
+  },
+  267: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'WARLOCK',
+    label: 'Warlock',
+    name: 'Destruction',
+  },
+  71: {
+    type: 'melee',
+    role: 'damage',
+    class: 'WARRIOR',
+    label: 'Warrior',
+    name: 'Arms',
+  },
+  72: {
+    type: 'melee',
+    role: 'damage',
+    class: 'WARRIOR',
+    label: 'Warrior',
+    name: 'Fury',
+  },
+  73: {
+    type: 'melee',
+    role: 'tank',
+    class: 'WARRIOR',
+    label: 'Warrior',
+    name: 'Protection',
+  },
 };
 
 /**
  * A map of WoW executable names to the appropriate WoW flavour
  */
 const wowExecutableFlavours: { [key: string]: string } = {
-  'wow':        'Retail',
-  'wowt':       'PTR',
-  'wowb':       'Beta',
-  'wowclassic': 'Classic',
+  wow: 'Retail',
+  wowt: 'PTR',
+  wowb: 'Beta',
+  wowclassic: 'Classic',
 };
 type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
 
@@ -776,111 +1032,111 @@ type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
 // These spells should be common, and unique to a spec.
 // More than one may be added per spec to improve chance of identifying.
 const retailUniqueSpecSpells: StringKeyToNumberValueMapType = {
-  "Heart Strike": 250,
-  "Frost Strike": 251,
-  "Festering Strike": 252,
-  "Eye Beam": 577,
-  "Fel Devastation": 581,
-  "Starfall": 102,
+  'Heart Strike': 250,
+  'Frost Strike': 251,
+  'Festering Strike': 252,
+  'Eye Beam': 577,
+  'Fel Devastation': 581,
+  Starfall: 102,
   "Tiger's Fury": 103,
-  "Maul": 104,
-  "Lifebloom": 105,
-  "Pyre": 1467,
-  "Echo": 1468,
-  "Cobra Shot": 253,
-  "Aimed Shot": 254,
-  "Raptor Strike": 255,
-  "Arcane Barrage": 62,
-  "Pyroblast": 63,
-  "Ice Lance": 64,
-  "Keg Smash": 268,
-  "Fists of Fury": 269,
-  "Enveloping Mist": 270,
-  "Holy Shock": 65,
+  Maul: 104,
+  Lifebloom: 105,
+  Pyre: 1467,
+  Echo: 1468,
+  'Cobra Shot': 253,
+  'Aimed Shot': 254,
+  'Raptor Strike': 255,
+  'Arcane Barrage': 62,
+  Pyroblast: 63,
+  'Ice Lance': 64,
+  'Keg Smash': 268,
+  'Fists of Fury': 269,
+  'Enveloping Mist': 270,
+  'Holy Shock': 65,
   "Avenger's Shield": 66,
-  "Blade of Justice": 67,
-  "Penance": 256,
-  "Holy Word: Serenity": 257,
-  "Devouring Plague": 258,
-  "Mutilate": 259,
-  "Sinister Strike": 260, 
-  "Shadow Dance": 261,
-  "Earth Shock": 262,
-  "Stormstrike": 263,
-  "Riptide": 264,
-  "Malefic Rapture": 265,
-  "Call Dreadstalkers": 266,
-  "Chaos Bolt": 267,
-  "Mortal Strike": 71,
-  "Bloodthirst": 72,
-  "Ignore Pain": 73,
-}
+  'Blade of Justice': 67,
+  Penance: 256,
+  'Holy Word: Serenity': 257,
+  'Devouring Plague': 258,
+  Mutilate: 259,
+  'Sinister Strike': 260,
+  'Shadow Dance': 261,
+  'Earth Shock': 262,
+  Stormstrike: 263,
+  Riptide: 264,
+  'Malefic Rapture': 265,
+  'Call Dreadstalkers': 266,
+  'Chaos Bolt': 267,
+  'Mortal Strike': 71,
+  Bloodthirst: 72,
+  'Ignore Pain': 73,
+};
 
 // Need this for any non-raid spec detection in classic.
 // These spells should be common, and unique to a spec.
 // More than one may be added per spec to improve chance of identifying.
-const classicUniqueSpecSpells: StringKeyToNumberValueMapType= {
-  "Heart Strike": 250,
-  "Howling Blast": 251,
-  "Summon Gargoyle": 252,
-  "Starfall": 102,
-  "Berserk": 103,
-  "Swiftmend": 105,
-  "Bestial Wrath": 253,
-  "Chimera Shot": 254,
-  "Explosive Shot": 255,
-  "Arcane Barrage": 62,
+const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
+  'Heart Strike': 250,
+  'Howling Blast': 251,
+  'Summon Gargoyle': 252,
+  Starfall: 102,
+  Berserk: 103,
+  Swiftmend: 105,
+  'Bestial Wrath': 253,
+  'Chimera Shot': 254,
+  'Explosive Shot': 255,
+  'Arcane Barrage': 62,
   "Dragon's Breath": 63,
-  "Deep Freeze": 64,
-  "Holy Shock": 65,
+  'Deep Freeze': 64,
+  'Holy Shock': 65,
   "Avenger's Shield": 66,
-  "Crusader Strike": 67,
-  "Penance": 256,
-  "Guardian Spirit": 257,
-  "Dispersion": 258,
-  "Mutilate": 259,
-  "Killing Spree": 260, // might be wrong? assumed combatID === outlawID
-  "Shadow Dance": 261,
-  "Thunderstorm": 262,
-  "Feral Spirit": 263,
-  "Riptide": 264,
-  "Haunt": 265,
-  "Metamorphosis": 266,
-  "Chaos Bolt": 267,
-  "Bladestorm": 71,
-  "Bloodthirst": 72,
-  "Shockwave": 73,
-}
+  'Crusader Strike': 67,
+  Penance: 256,
+  'Guardian Spirit': 257,
+  Dispersion: 258,
+  Mutilate: 259,
+  'Killing Spree': 260, // might be wrong? assumed combatID === outlawID
+  'Shadow Dance': 261,
+  Thunderstorm: 262,
+  'Feral Spirit': 263,
+  Riptide: 264,
+  Haunt: 265,
+  Metamorphosis: 266,
+  'Chaos Bolt': 267,
+  Bladestorm: 71,
+  Bloodthirst: 72,
+  Shockwave: 73,
+};
 
 export {
-    categories,
-    months,
-    videoTabsSx,
-    categoryTabSx,
-    categoryTabsSx,
-    videoButtonSx,
-    videoScrollButtonSx,
-    zones,
-    retailArenas,
-    classicArenas,
-    raidEncountersById,
-    retailBattlegrounds,
-    classicBattlegrounds,
-    dungeonsByMapId,
-    dungeonsByZoneId,
-    instanceNamesByZoneId,
-    dungeonTimersByMapId,
-    dungeonAffixesById,
-    dungeonEncounters,
-    specializationById,
-    instanceDifficulty,
-    instanceEncountersById,
-    InstanceDifficultyType,
-    VideoCategory,
-    raidInstances,
-    categoryRecordingSettings,
-    wowExecutableFlavours,
-    WoWProcessResultKey,
-    classicUniqueSpecSpells,
-    retailUniqueSpecSpells,
+  categories,
+  months,
+  videoTabsSx,
+  categoryTabSx,
+  categoryTabsSx,
+  videoButtonSx,
+  videoScrollButtonSx,
+  zones,
+  retailArenas,
+  classicArenas,
+  raidEncountersById,
+  retailBattlegrounds,
+  classicBattlegrounds,
+  dungeonsByMapId,
+  dungeonsByZoneId,
+  instanceNamesByZoneId,
+  dungeonTimersByMapId,
+  dungeonAffixesById,
+  dungeonEncounters,
+  specializationById,
+  instanceDifficulty,
+  instanceEncountersById,
+  InstanceDifficultyType,
+  VideoCategory,
+  raidInstances,
+  categoryRecordingSettings,
+  wowExecutableFlavours,
+  WoWProcessResultKey,
+  classicUniqueSpecSpells,
+  retailUniqueSpecSpells,
 };

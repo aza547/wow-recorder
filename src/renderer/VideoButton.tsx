@@ -1,41 +1,63 @@
 import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
-import { VideoCategory, categories, videoButtonSx, specializationById, dungeonsByMapId }  from 'main/constants';
-import { ChallengeModeTimelineSegment, TimelineSegmentType } from 'main/keystone';
-import { getFormattedDuration } from './rendererutils';
+
+import {
+  VideoCategory,
+  categories,
+  videoButtonSx,
+  specializationById,
+  dungeonsByMapId,
+} from 'main/constants';
+
+import {
+  ChallengeModeTimelineSegment,
+  TimelineSegmentType,
+} from 'main/keystone';
+
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
-import * as Images from './images'
-import { getEncounterNameById, getInstanceDifficulty, getVideoResultClass, getVideoResultText } from 'main/helpers';
-import { SoloShuffleTimelineSegment } from 'main/types';
 
-// For shorthand referencing. 
+import {
+  getEncounterNameById,
+  getInstanceDifficulty,
+  getVideoResultClass,
+  getVideoResultText,
+} from 'main/helpers';
+
+import { SoloShuffleTimelineSegment } from 'main/types';
+import * as Images from './images';
+import { getFormattedDuration } from './rendererutils';
+
+// For shorthand referencing.
 const ipc = window.electron.ipcRenderer;
 
 export default function VideoButton(props: any) {
-  const state = props.state;
-  const videoIndex = props.index;
+  const { state, index } = props;
 
-  const categoryIndex = state.categoryIndex;
+  const { categoryIndex } = state;
   const category = categories[categoryIndex] as VideoCategory;
 
-  const video = state.videoState[category][videoIndex];
+  const video = state.videoState[category][index];
   const videoPath = video.fullPath;
 
   // Need to not be const as it will be modified later if a Mythic+.
-  let resultText = getVideoResultText(category, 
-                                      video.result, 
-                                      video.soloShuffleRoundsWon, 
-                                      video.soloShuffleRoundsPlayed);
-                                      
-  const resultClass = getVideoResultClass(category, 
-                                          video.result, 
-                                          video.soloShuffleRoundsWon, 
-                                          video.soloShuffleRoundsPlayed);
+  let resultText = getVideoResultText(
+    category,
+    video.result,
+    video.soloShuffleRoundsWon,
+    video.soloShuffleRoundsPlayed
+  );
+
+  const resultClass = getVideoResultClass(
+    category,
+    video.result,
+    video.soloShuffleRoundsWon,
+    video.soloShuffleRoundsPlayed
+  );
 
   const isProtected = video.protected;
 
-  const duration = video.duration;
+  const { duration } = video;
   const formattedDuration = getFormattedDuration(duration);
 
   const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
@@ -135,8 +157,8 @@ export default function VideoButton(props: any) {
   /**
    * Seek the selected video to the specified relative timestamp
    */
-  const seekVideo = (videoIndex: number, timestamp: number) => {
-    ipc.sendMessage('contextMenu', ['seekVideo', videoIndex, timestamp])
+  const seekVideo = (index: number, timestamp: number) => {
+    ipc.sendMessage('contextMenu', ['seekVideo', index, timestamp])
     handleCloseMenu();
   };
 
@@ -176,7 +198,7 @@ export default function VideoButton(props: any) {
       }
 
       return (
-        <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(videoIndex, segment.timestamp)}>
+        <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(index, segment.timestamp)}>
           { timelineSegmentMenu }
         </MenuItem>
       );
@@ -219,7 +241,7 @@ export default function VideoButton(props: any) {
 
 
       return (
-        <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(videoIndex, segment.timestamp)}>
+        <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(index, segment.timestamp)}>
           { timelineSegmentMenu }
         </MenuItem>
       );

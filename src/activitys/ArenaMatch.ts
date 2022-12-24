@@ -1,84 +1,88 @@
-import { Flavour, Metadata } from "../main/types";
-import { classicArenas, retailArenas, VideoCategory } from "../main/constants";
-import Activity from "./Activity";
+import { Flavour, Metadata } from '../main/types';
+import { classicArenas, retailArenas, VideoCategory } from '../main/constants';
+import Activity from './Activity';
 
 /**
  * Arena match class.
  */
 export default class ArenaMatch extends Activity {
-    constructor(startDate: Date, 
-                category: VideoCategory, 
-                zoneID: number,
-                flavour: Flavour,) 
-    {
-        super(startDate, category, flavour);
-        this._zoneID = zoneID;
-        this.overrun = 3;
+  constructor(
+    startDate: Date,
+    category: VideoCategory,
+    zoneID: number,
+    flavour: Flavour
+  ) {
+    super(startDate, category, flavour);
+    this._zoneID = zoneID;
+    this.overrun = 3;
+  }
+
+  get zoneID() {
+    return this._zoneID;
+  }
+
+  get resultInfo() {
+    if (this.result === undefined) {
+      throw new Error('[ArenaMatch] Tried to get result info but no result');
     }
 
-    get zoneID() { return this._zoneID };
-
-    get resultInfo() {
-        if (this.result === undefined) {
-            throw new Error("[ArenaMatch] Tried to get result info but no result");
-        }
-
-        if (this.result) {
-            return "Win";
-        }
-
-        return "Loss";
+    if (this.result) {
+      return 'Win';
     }
 
-    get zoneName() {
-        if (!this.zoneID) {
-            throw new Error("[ArenaMatch] Tried to get zoneName but no zoneID");
-        }
+    return 'Loss';
+  }
 
-        if (this.flavour === Flavour.Retail) {
-            return retailArenas[this._zoneID as number]
-        }
-
-        return classicArenas[this._zoneID as number]
+  get zoneName() {
+    if (!this.zoneID) {
+      throw new Error('[ArenaMatch] Tried to get zoneName but no zoneID');
     }
 
-    endArena(endDate: Date, winningTeamID: number) {
-        const result = this.determineArenaMatchResult(winningTeamID);
-        super.end(endDate, result);
+    if (this.flavour === Flavour.Retail) {
+      return retailArenas[this._zoneID as number];
     }
 
-    determineArenaMatchResult(winningTeamID: number): boolean {
-        if (!this.playerGUID) {
-            console.error("[ArenaMatch] Haven't identified player so no results possible");
-            return false;
-        };
+    return classicArenas[this._zoneID as number];
+  }
 
-        const player = this.getCombatant(this.playerGUID);
+  endArena(endDate: Date, winningTeamID: number) {
+    const result = this.determineArenaMatchResult(winningTeamID);
+    super.end(endDate, result);
+  }
 
-        if (!player) {
-            console.error("[ArenaMatch] No player combatant so no results possible");
-            return false;
-        }
-
-        return (player.teamID === winningTeamID);
+  determineArenaMatchResult(winningTeamID: number): boolean {
+    if (!this.playerGUID) {
+      console.error(
+        "[ArenaMatch] Haven't identified player so no results possible"
+      );
+      return false;
     }
 
-    getMetadata(): Metadata {
-        return {
-            category: this.category,
-            zoneID: this.zoneID,
-            zoneName: this.zoneName,
-            flavour: this.flavour,
-            duration: this.duration,
-            result: this.result,
-            deaths: this.deaths,
-            player: this.player,
-            combatants: Array.from(this.combatantMap.values()),
-        }
+    const player = this.getCombatant(this.playerGUID);
+
+    if (!player) {
+      console.error('[ArenaMatch] No player combatant so no results possible');
+      return false;
     }
 
-    getFileName() {
-        return `${this.category} ${this.zoneName} (${this.resultInfo})`;
-    }
+    return player.teamID === winningTeamID;
+  }
+
+  getMetadata(): Metadata {
+    return {
+      category: this.category,
+      zoneID: this.zoneID,
+      zoneName: this.zoneName,
+      flavour: this.flavour,
+      duration: this.duration,
+      result: this.result,
+      deaths: this.deaths,
+      player: this.player,
+      combatants: Array.from(this.combatantMap.values()),
+    };
+  }
+
+  getFileName() {
+    return `${this.category} ${this.zoneName} (${this.resultInfo})`;
+  }
 }
-

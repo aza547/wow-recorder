@@ -1,80 +1,80 @@
-import { Size } from "electron";
-import { VideoCategory, WoWProcessResultKey } from "./constants";
-import ChallengeModeDungeon from "../activitys/ChallengeModeDungeon";
-import { ChallengeModeTimelineSegment } from "./keystone";
-import { Combatant } from "./combatant";
+import { Size } from 'electron';
+import { VideoCategory, WoWProcessResultKey } from './constants';
+import ChallengeModeDungeon from '../activitys/ChallengeModeDungeon';
+import { ChallengeModeTimelineSegment } from './keystone';
+import Combatant from './Combatant';
 
 /**
  * Application recording status.
  */
- enum Flavour {
-    Retail = "Retail",
-    Classic = "Classic",
-};
+enum Flavour {
+  Retail = 'Retail',
+  Classic = 'Classic',
+}
 
 /**
  * Application recording status.
  */
 enum RecStatus {
-    WaitingForWoW,
-    Recording,
-    InvalidConfig,
-    ReadyToRecord,
-};
+  WaitingForWoW,
+  Recording,
+  InvalidConfig,
+  ReadyToRecord,
+}
 
 /**
  * Application saving status.
  */
- enum SaveStatus {
-    Saving,
-    NotSaving,
-};
+enum SaveStatus {
+  Saving,
+  NotSaving,
+}
 
 /**
  * Unit flags from combat log events
  * See https://wowpedia.fandom.com/wiki/UnitFlag for more information
  */
 enum UnitFlags {
-    AFFILIATION_MINE = 0x00000001,
-    AFFILIATION_PARTY = 0x00000002,
-    AFFILIATION_RAID = 0x00000004,
-    AFFILIATION_OUTSIDER = 0x00000008,
-    AFFILIATION_MASK = 0x0000000F,
-    // Reaction
-    REACTION_FRIENDLY = 0x00000010,
-    REACTION_NEUTRAL = 0x00000020,
-    REACTION_HOSTILE = 0x00000040,
-    REACTION_MASK = 0x000000F0,
-    // Controller
-    CONTROL_PLAYER = 0x00000100,
-    CONTROL_NPC = 0x00000200,
-    CONTROL_MASK = 0x00000300,
-    // Type
-    TYPE_PLAYER = 0x00000400, // Units directly controlled by players.
-    TYPE_NPC = 0x00000800, // Units controlled by the server.
-    TYPE_PET = 0x00001000, // Pets are units controlled by a player or NPC, including via mind control.
-    TYPE_GUARDIAN = 0x00002000, // Units that are not controlled, but automatically defend their master.
-    TYPE_OBJECT = 0x00004000, // Objects are everything else, such as traps and totems.
-    TYPE_MASK = 0x0000FC00,
-    // Special cases (non-exclusive)
-    TARGET = 0x00010000,
-    FOCUS = 0x00020000,
-    MAINTANK = 0x00040000,
-    MAINASSIST = 0x00080000,
-    NONE = 0x80000000, // Whether the unit does not exist.
-    SPECIAL_MASK = 0xFFFF0000,
-};
+  AFFILIATION_MINE = 0x00000001,
+  AFFILIATION_PARTY = 0x00000002,
+  AFFILIATION_RAID = 0x00000004,
+  AFFILIATION_OUTSIDER = 0x00000008,
+  AFFILIATION_MASK = 0x0000000f,
+  // Reaction
+  REACTION_FRIENDLY = 0x00000010,
+  REACTION_NEUTRAL = 0x00000020,
+  REACTION_HOSTILE = 0x00000040,
+  REACTION_MASK = 0x000000f0,
+  // Controller
+  CONTROL_PLAYER = 0x00000100,
+  CONTROL_NPC = 0x00000200,
+  CONTROL_MASK = 0x00000300,
+  // Type
+  TYPE_PLAYER = 0x00000400, // Units directly controlled by players.
+  TYPE_NPC = 0x00000800, // Units controlled by the server.
+  TYPE_PET = 0x00001000, // Pets are units controlled by a player or NPC, including via mind control.
+  TYPE_GUARDIAN = 0x00002000, // Units that are not controlled, but automatically defend their master.
+  TYPE_OBJECT = 0x00004000, // Objects are everything else, such as traps and totems.
+  TYPE_MASK = 0x0000fc00,
+  // Special cases (non-exclusive)
+  TARGET = 0x00010000,
+  FOCUS = 0x00020000,
+  MAINTANK = 0x00040000,
+  MAINASSIST = 0x00080000,
+  NONE = 0x80000000, // Whether the unit does not exist.
+  SPECIAL_MASK = 0xffff0000,
+}
 
 /**
  * Type that describes the player deaths that are detected and stored
  * with the metadata for a video.
  */
 type PlayerDeathType = {
-  name: string,
-  specId: number,
-  date: Date,
-  timestamp: number,
-  friendly: boolean,
+  name: string;
+  specId: number;
+  date: Date;
+  timestamp: number;
+  friendly: boolean;
 };
 
 /**
@@ -82,23 +82,23 @@ type PlayerDeathType = {
  * across changes in the UI like selecting a new video, new category, etc.
  */
 type VideoPlayerSettings = {
-    muted: boolean;
-    volume: number;
+  muted: boolean;
+  volume: number;
 };
 
 enum FileSortDirection {
-    NewestFirst,
-    OldestFirst,
-};
+  NewestFirst,
+  OldestFirst,
+}
 
 /**
  * Signature for the file finder getSortedFiles() to be used as typing
  * for methods/classes that accept it being injected.
  */
 type FileFinderCallbackType = (
-    dir: string,
-    pattern: string,
-    sortDirection?: FileSortDirection
+  dir: string,
+  pattern: string,
+  sortDirection?: FileSortDirection
 ) => Promise<FileInfo[]>;
 
 /**
@@ -106,139 +106,139 @@ type FileFinderCallbackType = (
  * to the user.
  */
 type OurDisplayType = {
-    id: number,
-    index: number,
-    physicalPosition: string,
-    primary: boolean,
-    displayFrequency: number,
-    depthPerComponent: number,
-    size: Size,
-    physicalSize: Size,
-    aspectRatio: number,
-    scaleFactor: number,
+  id: number;
+  index: number;
+  physicalPosition: string;
+  primary: boolean;
+  displayFrequency: number;
+  depthPerComponent: number;
+  size: Size;
+  physicalSize: Size;
+  aspectRatio: number;
+  scaleFactor: number;
 };
 
 type NumberKeyToStringValueMapType = {
-    [id: number]: string;
+  [id: number]: string;
 };
 
 type StringKeyToNumberValueMapType = {
-    [id: string]: number;
+  [id: string]: number;
 };
 
 type RaidInstanceType = {
-    zoneId: number;
-    name: string;
-    shortName: string;
-    encounters: NumberKeyToStringValueMapType,
+  zoneId: number;
+  name: string;
+  shortName: string;
+  encounters: NumberKeyToStringValueMapType;
 };
 
 type FileInfo = {
-    name: string;
-    size: number;
-    mtime: number;
+  name: string;
+  size: number;
+  mtime: number;
 };
 
 interface IWoWProcessResult {
-    exe: string,
-    flavour: WoWProcessResultKey,
-};
+  exe: string;
+  flavour: WoWProcessResultKey;
+}
 
 type VideoQueueItem = {
-    bufferFile: string,
-    metadata: Metadata,
-    filename: string,
-    relativeStart: number,
+  bufferFile: string;
+  metadata: Metadata;
+  filename: string;
+  relativeStart: number;
 };
 
 interface IEventTarget {
-    name: string,
-    value: any,
-};
+  name: string;
+  value: any;
+}
 
 /**
  * Class to fake an event for onChange in `ISettingsPanelProps`
  */
 class FakeChangeEvent {
-    public target: IEventTarget;
+  public target: IEventTarget;
 
-    constructor(name: string, value: any) {
-        this.target = {name, value};
-    }
+  constructor(name: string, value: any) {
+    this.target = { name, value };
+  }
 }
 
 interface IOurChangeEvent {
-    target: IEventTarget;
-};
+  target: IEventTarget;
+}
 
 interface ISettingsPanelProps {
-    config: any,
-    onChange: (event: IOurChangeEvent) => void,
-};
+  config: any;
+  onChange: (event: IOurChangeEvent) => void;
+}
 
 /**
- * Metadata type. 
+ * Metadata type.
  */
- type Metadata = {
-    category: VideoCategory;
-    duration: number;
-    result: boolean;
-    flavour: WoWProcessResultKey;
-    zoneID?: number;
-    zoneName?: string;
-    encounterID?: number;
-    difficultyID?: number;
-    difficulty?: string;
-    player?: Combatant;
-    teamMMR?: number;
-    challengeMode?: ChallengeModeDungeon;
-    deaths?: PlayerDeathType[];
-    upgradeLevel?: number;
-    mapID?: number;
-    timeline?: ChallengeModeTimelineSegment[] | SoloShuffleTimelineSegment[];
-    level?: number;
-    encounterName?: string;
-    protected?: boolean;
-    soloShuffleRoundsWon?: number;
-    soloShuffleRoundsPlayed?: number;
-    combatants?: Combatant[];
-}
+type Metadata = {
+  category: VideoCategory;
+  duration: number;
+  result: boolean;
+  flavour: WoWProcessResultKey;
+  zoneID?: number;
+  zoneName?: string;
+  encounterID?: number;
+  difficultyID?: number;
+  difficulty?: string;
+  player?: Combatant;
+  teamMMR?: number;
+  challengeMode?: ChallengeModeDungeon;
+  deaths?: PlayerDeathType[];
+  upgradeLevel?: number;
+  mapID?: number;
+  timeline?: ChallengeModeTimelineSegment[] | SoloShuffleTimelineSegment[];
+  level?: number;
+  encounterName?: string;
+  protected?: boolean;
+  soloShuffleRoundsWon?: number;
+  soloShuffleRoundsPlayed?: number;
+  combatants?: Combatant[];
+};
 
 /**
  * VideoData type. Unused for now.
  */
 type VideoData = Metadata & {
-    date: string,
-    time: string,
-    path: string,
-    protected: boolean,
-}
+  date: string;
+  time: string;
+  path: string;
+  protected: boolean;
+};
 
 type SoloShuffleTimelineSegment = {
-    round: number;
-    timestamp: number;
-    result: boolean;
-}
+  round: number;
+  timestamp: number;
+  result: boolean;
+};
 
 export {
-    RecStatus,
-    SaveStatus,
-    UnitFlags,
-    PlayerDeathType,
-    VideoPlayerSettings,
-    FileSortDirection,
-    OurDisplayType,
-    NumberKeyToStringValueMapType,
-    StringKeyToNumberValueMapType,
-    RaidInstanceType,
-    FileInfo,
-    FileFinderCallbackType,
-    IWoWProcessResult,
-    VideoQueueItem,
-    FakeChangeEvent,
-    ISettingsPanelProps,
-    Metadata,
-    VideoData,
-    Flavour,
-    SoloShuffleTimelineSegment,
-}
+  RecStatus,
+  SaveStatus,
+  UnitFlags,
+  PlayerDeathType,
+  VideoPlayerSettings,
+  FileSortDirection,
+  OurDisplayType,
+  NumberKeyToStringValueMapType,
+  StringKeyToNumberValueMapType,
+  RaidInstanceType,
+  FileInfo,
+  FileFinderCallbackType,
+  IWoWProcessResult,
+  VideoQueueItem,
+  FakeChangeEvent,
+  ISettingsPanelProps,
+  Metadata,
+  VideoData,
+  Flavour,
+  SoloShuffleTimelineSegment,
+};

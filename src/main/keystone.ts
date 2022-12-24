@@ -1,31 +1,27 @@
 enum TimelineSegmentType {
-    BossEncounter = 'Boss',
-    Trash = 'Trash'
-};
+  BossEncounter = 'Boss',
+  Trash = 'Trash',
+}
 
 class ChallengeModeTimelineSegment {
-    logEnd: Date
-    result?: Boolean
+  logEnd: Date;
 
-    constructor(
-        public segmentType: TimelineSegmentType,
-        public logStart: Date,
-        public timestamp: number,
-        public encounterId?: number
-    ) {
-        // Initially, let's set this to log start date to avoid logEnd
-        // potentially being undefined.
-        this.logEnd = logStart
-    }
+  result?: boolean;
 
-    length (): number {
-        return (this.logEnd.getTime() - this.logStart.getTime())
-    }
-};
+  constructor(
+    public segmentType: TimelineSegmentType,
+    public logStart: Date,
+    public timestamp: number,
+    public encounterId?: number
+  ) {
+    // Initially, let's set this to log start date to avoid logEnd
+    // potentially being undefined.
+    this.logEnd = logStart;
+  }
 
-
-
-export {
-    TimelineSegmentType,
-    ChallengeModeTimelineSegment,
+  length(): number {
+    return this.logEnd.getTime() - this.logStart.getTime();
+  }
 }
+
+export { TimelineSegmentType, ChallengeModeTimelineSegment };
