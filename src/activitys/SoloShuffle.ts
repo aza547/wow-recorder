@@ -2,7 +2,7 @@ import { Flavour, Metadata, PlayerDeathType, SoloShuffleTimelineSegment } from "
 import { classicArenas, retailArenas, VideoCategory } from "../main/constants";
 import Activity from "./Activity";
 import ArenaMatch from "./ArenaMatch";
-import { Combatant } from "main/combatant";
+import Combatant from "main/Combatant";
 
 /**
  * Class representing a Solo Shuffle. This is essentially a wrapper around

@@ -1,260 +1,315 @@
-import { Combatant } from "../main/combatant";
-import { CombatLogParser, LogLine } from "../main/combatLogParser";
-import ConfigService from "../main/configService";
-import { raidInstances, VideoCategory } from "../main/constants";
-import { Recorder } from "../main/recorder";
-import { Flavour, PlayerDeathType } from "../main/types";
-import Activity from "../activitys/Activity";
-import RaidEncounter from "../activitys/RaidEncounter";
-import { allowRecordCategory, ambiguate, isUnitFriendly, isUnitPlayer, isUnitSelf } from "../main/logutils";
+import Combatant from '../main/Combatant';
+import CombatLogParser from './CombatLogParser';
+import ConfigService from '../main/configService';
+import { raidInstances, VideoCategory } from '../main/constants';
+import { Recorder } from '../main/recorder';
+import { Flavour, PlayerDeathType } from '../main/types';
+import Activity from '../activitys/Activity';
+import RaidEncounter from '../activitys/RaidEncounter';
+
+import {
+  allowRecordCategory,
+  ambiguate,
+  isUnitFriendly,
+  isUnitPlayer,
+  isUnitSelf,
+} from '../main/logutils';
+
+import LogLine from './LogLine';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
- * classic and retail combat logs. 
- * 
- * If you need something flavour specific then put it in the appropriate 
+ * classic and retail combat logs.
+ *
+ * If you need something flavour specific then put it in the appropriate
  * subclass; i.e. RetailLogHandler or ClassicLogHandler.
  */
 export default abstract class LogHandler {
-    protected _recorder;
-    protected _combatLogParser: CombatLogParser;
-    protected _player: Combatant | undefined;
-    protected _cfg: ConfigService;
-    protected _activity?: Activity;
+  protected _recorder;
 
-    constructor(recorder: Recorder, 
-                combatLogParser: CombatLogParser)
-    {
-        this._recorder = recorder;
-        this._combatLogParser = combatLogParser;
-        this._combatLogParser.on('DataTimeout', (ms: number) => { this.dataTimeout(ms)});
-        this._cfg = ConfigService.getInstance();
+  protected _combatLogParser: CombatLogParser;
+
+  protected _player: Combatant | undefined;
+
+  protected _cfg: ConfigService;
+
+  protected _activity?: Activity;
+
+  constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
+    this._recorder = recorder;
+    this._combatLogParser = combatLogParser;
+
+    this._combatLogParser.on('DataTimeout', (ms: number) => {
+      this.dataTimeout(ms);
+    });
+
+    this._cfg = ConfigService.getInstance();
+  }
+
+  get activity() {
+    return this._activity;
+  }
+
+  set activity(activity) {
+    this._activity = activity;
+  }
+
+  get combatLogParser() {
+    return this._combatLogParser;
+  }
+
+  get recorder() {
+    return this._recorder;
+  }
+
+  get cfg() {
+    return this._cfg;
+  }
+
+  get player() {
+    return this._player;
+  }
+
+  handleEncounterStartLine(line: LogLine, flavour: Flavour) {
+    console.debug('[LogHandler] Handling ENCOUNTER_START line:', line);
+
+    const startDate = line.date();
+    const encounterID = parseInt(line.arg(1), 10);
+    const difficultyID = parseInt(line.arg(3), 10);
+    const raids = raidInstances.filter((r) =>
+      r.encounters.hasOwnProperty(encounterID)
+    );
+
+    if (!raids.pop()) {
+      console.debug('[LogHandler] Encounter ID not recognised, not recording');
+      return;
     }
 
-    get activity() { return this._activity };
-    get combatLogParser() { return this._combatLogParser };
-    get recorder() { return this._recorder };
-    get cfg() { return this._cfg };
-    get player() { return this._player };
+    this.activity = new RaidEncounter(
+      startDate,
+      encounterID,
+      difficultyID,
+      flavour
+    );
 
-    set activity(activity) { this._activity = activity };
-    
-    handleEncounterStartLine(line: LogLine, flavour: Flavour) {
-        console.debug("[LogHandler] Handling ENCOUNTER_START line:", line);
+    this.startRecording(this.activity);
+  }
 
-        const startDate = line.date();
-        const encounterID = parseInt(line.arg(1), 10);   
-        const difficultyID = parseInt(line.arg(3), 10);
-        const raids = raidInstances.filter(r => r.encounters.hasOwnProperty(encounterID));
+  handleEncounterEndLine(line: LogLine): void {
+    console.debug('[LogHandler] Handling ENCOUNTER_END line:', line);
 
-        if (!raids.pop()) {
-            console.debug("[LogHandler] Encounter ID not recognised, not recording");
-            return;
-        }
-        
-        this.activity = new RaidEncounter(startDate,
-                                          encounterID, 
-                                          difficultyID,
-                                          flavour);
-
-        this.startRecording(this.activity);
-    } 
-
-    handleEncounterEndLine (line: LogLine): void {
-        console.debug("[LogHandler] Handling ENCOUNTER_END line:", line);
-
-        if (!this.activity) {
-            console.error("[LogHandler] Encounter stop with no active encounter");
-            return;
-        }
-
-        const result = Boolean(parseInt(line.arg(5), 10));
-        this.activity.end(line.date(), result)
-        this.endRecording(this.activity);
+    if (!this.activity) {
+      console.error('[LogHandler] Encounter stop with no active encounter');
+      return;
     }
 
-    handleUnitDiedLine (line: LogLine): void {
-        if (!this.activity) {
-            console.info("[LogHandler] Ignoring UNIT_DIED line as no active activity");
-            return;
-        }
-        
+    const result = Boolean(parseInt(line.arg(5), 10));
+    this.activity.end(line.date(), result);
+    this.endRecording(this.activity);
+  }
 
-        const unitFlags = parseInt(line.arg(7), 16);
-
-        if (!isUnitPlayer(unitFlags)) {
-            // Deliberatly not logging here as not interesting and frequent.
-            return;
-        }
-
-        const isUnitUnconsciousAtDeath = Boolean(parseInt(line.arg(9), 10));
-
-        if (isUnitUnconsciousAtDeath) {
-            // Deliberatly not logging here as not interesting and frequent.
-            return;
-        }
-    
-        const playerName = line.arg(6);
-        const playerGUID = line.arg(5);
-        const playerSpecId = this.activity.getCombatant(playerGUID)?.specID ?? 0;
-    
-        // Add player death and subtract 2 seconds from the time of death to allow the
-        // user to view a bit of the video before the death and not at the actual millisecond
-        // it happens.
-        const deathDate = (line.date().getTime() - 2) / 1000;
-        const activityStartDate = this.activity.startDate.getTime() / 1000;
-        let relativeTime = deathDate - activityStartDate;
-
-        if (relativeTime < 0) {
-            console.error("[LogHandler] Tried to set timestamp to", relativeTime);
-            relativeTime = 0;
-        }
-
-        const playerDeath: PlayerDeathType = {
-            name: playerName,
-            specId: playerSpecId,
-            date: line.date(),
-            timestamp: relativeTime,
-            friendly: isUnitFriendly(unitFlags),
-        }
-
-        this.activity.addDeath(playerDeath);
+  handleUnitDiedLine(line: LogLine): void {
+    if (!this.activity) {
+      console.info(
+        '[LogHandler] Ignoring UNIT_DIED line as no active activity'
+      );
+      return;
     }
 
-    startRecording = (activity: Activity) => {
-        const category = activity.category;
-        const allowed = allowRecordCategory(category);
+    const unitFlags = parseInt(line.arg(7), 16);
 
-        if (!allowed) {
-            console.info("[LogHandler] Not configured to record", category);
-            return;
-        } 
-        
-        const recorderReady = (!this.recorder.isRecording) && (this.recorder.isRecordingBuffer);
-        
-        if (!recorderReady) {
-            console.error("[LogHandler] Avoiding error by not attempting to start recording",
-                            this.recorder.isRecording,
-                            this.recorder.isRecordingBuffer);
-            return;
-        }
+    if (!isUnitPlayer(unitFlags)) {
+      // Deliberatly not logging here as not interesting and frequent.
+      return;
+    }
 
-        console.log(`[Logutils] Start recording a video for category: ${category}`)
-        this.recorder.start();
+    const isUnitUnconsciousAtDeath = Boolean(parseInt(line.arg(9), 10));
+
+    if (isUnitUnconsciousAtDeath) {
+      // Deliberatly not logging here as not interesting and frequent.
+      return;
+    }
+
+    const playerName = line.arg(6);
+    const playerGUID = line.arg(5);
+    const playerSpecId = this.activity.getCombatant(playerGUID)?.specID ?? 0;
+
+    // Add player death and subtract 2 seconds from the time of death to allow the
+    // user to view a bit of the video before the death and not at the actual millisecond
+    // it happens.
+    const deathDate = (line.date().getTime() - 2) / 1000;
+    const activityStartDate = this.activity.startDate.getTime() / 1000;
+    let relativeTime = deathDate - activityStartDate;
+
+    if (relativeTime < 0) {
+      console.error('[LogHandler] Tried to set timestamp to', relativeTime);
+      relativeTime = 0;
+    }
+
+    const playerDeath: PlayerDeathType = {
+      name: playerName,
+      specId: playerSpecId,
+      date: line.date(),
+      timestamp: relativeTime,
+      friendly: isUnitFriendly(unitFlags),
     };
 
-    endRecording = (activity: Activity, closedWow: boolean = false) => {
-        if (!this.activity) {
-            console.error("[LogUtils] No active activity so can't stop");
-            return;
-        }
-        console.log(`[Logutils] Stop recording video for category: ${this.activity.category}`)
+    this.activity.addDeath(playerDeath);
+  }
 
-        this.recorder.stop(activity, closedWow);
-        this.activity = undefined;
+  startRecording = (activity: Activity) => {
+    const { category } = activity;
+    const allowed = allowRecordCategory(category);
+
+    if (!allowed) {
+      console.info('[LogHandler] Not configured to record', category);
+      return;
     }
 
-    dataTimeout(ms: number) {
-        console.log(`[LogHandler] Haven't received data for combatlog in ${ms / 1000} seconds.`)
+    const recorderReady =
+      !this.recorder.isRecording && this.recorder.isRecordingBuffer;
 
-        if (!this.activity) {
-            return;
-        }
+    if (!recorderReady) {
+      console.error(
+        '[LogHandler] Avoiding error by not attempting to start recording',
+        this.recorder.isRecording,
+        this.recorder.isRecordingBuffer
+      );
 
-        const isBattleground = (this.activity.category === VideoCategory.Battlegrounds);
-
-        if (isBattleground) {
-            this.forceEndActivity(-ms / 1000);
-            return;
-        }
+      return;
     }
 
-    forceEndActivity = async (timedelta: number = 0, closedWow: boolean = false) => {
-        console.log("[LogHandler] Force ending activity",
-                    "timedelta:", timedelta,
-                    "closedWow:", closedWow);
+    console.log(`[Logutils] Start recording a video for category: ${category}`);
+    this.recorder.start();
+  };
 
-        if (!this.activity) {
-            await this.recorder.forceStop();
-            return;
-        }
-        
-        const endDate = new Date();
-        endDate.setTime(endDate.getTime() + timedelta * 1000);
-        this.activity.overrun = 0;
-        
-        this.activity.end(endDate, false);
-        this.endRecording(this.activity, closedWow);
-        this.activity = undefined;
+  endRecording = (activity: Activity, closedWow = false) => {
+    if (!this.activity) {
+      console.error("[LogUtils] No active activity so can't stop");
+      return;
+    }
+    console.log(
+      `[Logutils] Stop recording video for category: ${this.activity.category}`
+    );
+
+    this.recorder.stop(activity, closedWow);
+    this.activity = undefined;
+  };
+
+  dataTimeout(ms: number) {
+    console.log(
+      `[LogHandler] Haven't received data for combatlog in ${
+        ms / 1000
+      } seconds.`
+    );
+
+    if (!this.activity) {
+      return;
     }
 
-    zoneChangeStop(line: LogLine) {
-        if (!this.activity) {
-            console.error("[RetailLogHandler] No active activity on force zone change stop");
-            return;
-        }
+    const isBattleground =
+      this.activity.category === VideoCategory.Battlegrounds;
 
-        const endDate = line.date();
-        this.activity.end(endDate, false);
-        this.endRecording(this.activity);
+    if (isBattleground) {
+      this.forceEndActivity(-ms / 1000);
+    }
+  }
+
+  forceEndActivity = async (timedelta = 0, closedWow = false) => {
+    console.log(
+      '[LogHandler] Force ending activity',
+      'timedelta:',
+      timedelta,
+      'closedWow:',
+      closedWow
+    );
+
+    if (!this.activity) {
+      await this.recorder.forceStop();
+      return;
     }
 
-    isArena() {
-        if (!this.activity) {
-            return false;
-        }
+    const endDate = new Date();
+    endDate.setTime(endDate.getTime() + timedelta * 1000);
+    this.activity.overrun = 0;
 
-        const category = this.activity.category;
+    this.activity.end(endDate, false);
+    this.endRecording(this.activity, closedWow);
+    this.activity = undefined;
+  };
 
-        return (category === VideoCategory.TwoVTwo) ||
-               (category === VideoCategory.ThreeVThree) ||
-               (category === VideoCategory.FiveVFive) ||
-               (category === VideoCategory.Skirmish) ||
-               (category === VideoCategory.SoloShuffle);
+  zoneChangeStop(line: LogLine) {
+    if (!this.activity) {
+      console.error(
+        '[RetailLogHandler] No active activity on force zone change stop'
+      );
+
+      return;
     }
 
-    isBattleground() {
-        if (!this.activity) {
-            return false;
-        }
+    const endDate = line.date();
+    this.activity.end(endDate, false);
+    this.endRecording(this.activity);
+  }
 
-        const category = this.activity.category;
-        return (category === VideoCategory.Battlegrounds);
+  isArena() {
+    if (!this.activity) {
+      return false;
     }
 
-    processCombatant(srcGUID: string, srcNameRealm: string, srcFlags: number) {
-        if (!this.activity) {
-            return;
-        }
+    const { category } = this.activity;
 
-        // Logs sometimes emit this GUID and we don't want to include it.
-        // No idea what causes it. Seems really common but not exlusive on 
-        // "Shadow Word: Death" casts. 
-        if (srcGUID === "0000000000000000") {
-            return;
-        }
+    return (
+      category === VideoCategory.TwoVTwo ||
+      category === VideoCategory.ThreeVThree ||
+      category === VideoCategory.FiveVFive ||
+      category === VideoCategory.Skirmish ||
+      category === VideoCategory.SoloShuffle
+    );
+  }
 
-        if (!isUnitPlayer(srcFlags)) {
-            return;
-        }
-
-        if (isUnitSelf(srcFlags)) {
-            this.activity.playerGUID = srcGUID;
-        }
-
-        // Even if the combatant exists already we still update it with the info it 
-        // may not have yet. We can't tell the name, realm or if it's the player
-        // from COMBATANT_INFO events. 
-        const combatant = this.activity.getCombatant(srcGUID) || new Combatant(srcGUID);
-
-        // Can only hit this if we got a hit from the activity.getCombatant call above. 
-        if (combatant.isFullyDefined()) {
-            return;
-        }
-
-        [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
-        this.activity.addCombatant(combatant);
-        return combatant;
+  isBattleground() {
+    if (!this.activity) {
+      return false;
     }
+
+    const { category } = this.activity;
+    return category === VideoCategory.Battlegrounds;
+  }
+
+  processCombatant(srcGUID: string, srcNameRealm: string, srcFlags: number) {
+    if (!this.activity) {
+      return;
+    }
+
+    // Logs sometimes emit this GUID and we don't want to include it.
+    // No idea what causes it. Seems really common but not exlusive on
+    // "Shadow Word: Death" casts.
+    if (srcGUID === '0000000000000000') {
+      return;
+    }
+
+    if (!isUnitPlayer(srcFlags)) {
+      return;
+    }
+
+    if (isUnitSelf(srcFlags)) {
+      this.activity.playerGUID = srcGUID;
+    }
+
+    // Even if the combatant exists already we still update it with the info it
+    // may not have yet. We can't tell the name, realm or if it's the player
+    // from COMBATANT_INFO events.
+    const combatant =
+      this.activity.getCombatant(srcGUID) || new Combatant(srcGUID);
+
+    // Can only hit this if we got a hit from the activity.getCombatant call above.
+    if (combatant.isFullyDefined()) {
+      return;
+    }
+
+    [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
+    this.activity.addCombatant(combatant);
+    return combatant;
+  }
 }
-

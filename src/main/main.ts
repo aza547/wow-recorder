@@ -52,7 +52,7 @@ import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './configService';
-import { CombatLogParser } from './combatLogParser';
+import CombatLogParser from '../log_handling/CombatLogParser';
 import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
 import RetailLogHandler from 'log_handling/RetailLogHandler';
 import ClassicLogHandler from 'log_handling/ClassicLogHandler';
@@ -65,20 +65,20 @@ let settingsWindow: BrowserWindow | null = null;
 let tray = null;
 
 /**
- * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving 
+ * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving
  * as expected then it's better to crash the app. See:
- * - https://nodejs.org/api/process.html#process_event_unhandledrejection. 
+ * - https://nodejs.org/api/process.html#process_event_unhandledrejection.
  * - https://nodejs.org/api/process.html#event-unhandledrejection
  */
-process.on('unhandledRejection', (reason: Error | any) => {
+process.on('unhandledRejection', (reason: Error) => {
   console.error('UnhandledPromiseRejectionWarning:', reason);
 
   // If the mainWindow exists, open a pretty dialog box.
-  // If not, throw it as a generic JavaScript error. 
+  // If not, throw it as a generic JavaScript error.
   if (mainWindow) {
     mainWindow.webContents.send('fatalError', reason.stack);
   } else {
-    throw new Error(reason);
+    throw new Error(reason.toString());
   }
 });
 
@@ -235,9 +235,9 @@ const checkConfig = (): boolean => {
 
   try {
     cfg.validate();
-  } catch (err) {
-    updateRecStatus(RecStatus.InvalidConfig, err.toString());
-    console.info('[Main] Config is bad: ', err);
+  } catch (error) {
+    updateRecStatus(RecStatus.InvalidConfig, String(error));
+    console.info('[Main] Config is bad: ', String(error));
     return false;
   }
 

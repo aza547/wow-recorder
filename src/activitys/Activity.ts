@@ -1,5 +1,5 @@
 import { Metadata, PlayerDeathType, Flavour } from "main/types";
-import { Combatant } from "../main/combatant";
+import Combatant from "../main/Combatant";
 import { VideoCategory } from "../main/constants";
 
 /**
