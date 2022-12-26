@@ -150,6 +150,9 @@ export default class LogLine {
             value = listItems.pop();
             openListCount--;
             continue;
+
+          default:
+            console.error('[LogLine] Hit unexpected default case');
         }
       }
 

@@ -14,7 +14,7 @@ import { configSchema } from '../main/configSchema';
 const ipc = window.electron.ipcRenderer;
 
 export default function GeneralSettings(props: ISettingsPanelProps) {
-  const { config } = props;
+  const { config, onChange } = props;
   const audioDevices = ipc.sendSync('getAudioDevices', []);
 
   const availableAudioDevices = {
@@ -68,7 +68,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             id="audio-input-device"
             value={config.audioInputDevice}
             label="Input"
-            onChange={props.onChange}
+            onChange={onChange}
             sx={style}
           >
             {availableAudioDevices.input.map((device: ObsAudioDevice) => {
@@ -97,7 +97,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             id="audio-output-device"
             value={config.audioOutputDevice}
             label="Output"
-            onChange={props.onChange}
+            onChange={onChange}
             sx={style}
           >
             {availableAudioDevices.output.map((device: ObsAudioDevice) => {

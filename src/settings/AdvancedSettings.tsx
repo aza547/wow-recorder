@@ -17,7 +17,7 @@ const obsAvailableEncoders: string[] = ipc.sendSync('settingsWindow', [
 ]);
 
 export default function GeneralSettings(props: ISettingsPanelProps) {
-  const { config } = props;
+  const { config, onChange } = props;
 
   /**
    * Event handler when user selects an option in dialog window.
@@ -25,7 +25,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
   React.useEffect(() => {
     ipc.on('settingsWindow', (args: any) => {
       if (args[0] === 'pathSelected') {
-        props.onChange(new FakeChangeEvent(args[1], args[2]));
+        onChange(new FakeChangeEvent(args[1], args[2]));
       }
     });
   }, []);
@@ -83,7 +83,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
         <TextField
           name="minEncounterDuration"
           value={config.minEncounterDuration}
-          onChange={props.onChange}
+          onChange={onChange}
           id="max-storage"
           label="Min Encounter Duration (sec)"
           variant="outlined"
@@ -114,7 +114,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             id="obs-rec-encoder"
             value={config.obsRecEncoder}
             label="Video recording encoder"
-            onChange={props.onChange}
+            onChange={onChange}
             sx={style}
           >
             {obsAvailableEncoders.map((recEncoder: any) => (
