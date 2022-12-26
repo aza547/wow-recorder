@@ -198,7 +198,7 @@ const getVideoTime = (date: Date) => {
   const mins = date
     .getMinutes()
     .toLocaleString('en-US', { minimumIntegerDigits: 2 });
-  const timeAsString = hours + ':' + mins;
+  const timeAsString = `${hours}:${mins}`;
   return timeAsString;
 };
 
