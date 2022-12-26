@@ -1,8 +1,8 @@
 import { Size } from 'electron';
-import { VideoCategory, WoWProcessResultKey } from './constants';
-import ChallengeModeDungeon from '../activitys/ChallengeModeDungeon';
+import { WoWProcessResultKey } from './constants';
 import { ChallengeModeTimelineSegment } from './keystone';
 import Combatant from './Combatant';
+import { VideoCategory } from '../types/VideoCategory';
 
 /**
  * Application recording status.
@@ -191,7 +191,6 @@ type Metadata = {
   difficulty?: string;
   player?: Combatant;
   teamMMR?: number;
-  challengeMode?: ChallengeModeDungeon;
   deaths?: PlayerDeathType[];
   upgradeLevel?: number;
   mapID?: number;

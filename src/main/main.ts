@@ -51,11 +51,11 @@ const obsRecorder = require('./obsRecorder');
 import { Recorder, RecorderOptionsType } from './recorder';
 import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { RecStatus, VideoPlayerSettings } from './types';
-import ConfigService from './configService';
-import CombatLogParser from '../log_handling/CombatLogParser';
+import ConfigService from './ConfigService';
+import CombatLogParser from '../parsing/CombatLogParser';
 import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
-import RetailLogHandler from 'log_handling/RetailLogHandler';
-import ClassicLogHandler from 'log_handling/ClassicLogHandler';
+import RetailLogHandler from 'parsing/RetailLogHandler';
+import ClassicLogHandler from 'parsing/ClassicLogHandler';
 
 let retailHandler: RetailLogHandler;
 let classicHandler: ClassicLogHandler;

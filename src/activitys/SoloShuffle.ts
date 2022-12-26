@@ -6,9 +6,10 @@ import {
   SoloShuffleTimelineSegment,
 } from '../main/types';
 
-import { classicArenas, retailArenas, VideoCategory } from '../main/constants';
+import { classicArenas, retailArenas } from '../main/constants';
 import Activity from './Activity';
 import ArenaMatch from './ArenaMatch';
+import { VideoCategory } from '../types/VideoCategory';
 
 /**
  * Class representing a Solo Shuffle. This is essentially a wrapper around

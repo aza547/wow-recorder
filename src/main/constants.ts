@@ -1,3 +1,4 @@
+import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchemaKey } from './configSchema';
 
 import {
@@ -5,28 +6,6 @@ import {
   RaidInstanceType,
   StringKeyToNumberValueMapType,
 } from './types';
-
-enum VideoCategory {
-  TwoVTwo = '2v2',
-  ThreeVThree = '3v3',
-  FiveVFive = '5v5',
-  Skirmish = 'Skirmish',
-  SoloShuffle = 'Solo Shuffle',
-  MythicPlus = 'Mythic+',
-  Raids = 'Raids',
-  Battlegrounds = 'Battlegrounds',
-}
-
-const categories: VideoCategory[] = [
-  VideoCategory.TwoVTwo,
-  VideoCategory.ThreeVThree,
-  VideoCategory.FiveVFive,
-  VideoCategory.Skirmish,
-  VideoCategory.SoloShuffle,
-  VideoCategory.MythicPlus,
-  VideoCategory.Raids,
-  VideoCategory.Battlegrounds,
-];
 
 interface ICategoryRecordingSettings {
   configKey: ConfigurationSchemaKey;
@@ -1109,7 +1088,6 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
 };
 
 export {
-  categories,
   months,
   videoTabsSx,
   categoryTabSx,
@@ -1132,7 +1110,6 @@ export {
   instanceDifficulty,
   instanceEncountersById,
   InstanceDifficultyType,
-  VideoCategory,
   raidInstances,
   categoryRecordingSettings,
   wowExecutableFlavours,

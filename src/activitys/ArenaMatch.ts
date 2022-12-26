@@ -1,6 +1,7 @@
 import { Flavour, Metadata } from '../main/types';
-import { classicArenas, retailArenas, VideoCategory } from '../main/constants';
+import { classicArenas, retailArenas } from '../main/constants';
 import Activity from './Activity';
+import { VideoCategory } from '../types/VideoCategory';
 
 /**
  * Arena match class.

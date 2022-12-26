@@ -3,7 +3,7 @@ import { ipcMain } from 'electron';
 import path from 'path';
 import { EventEmitter } from 'stream';
 import fs from 'fs';
-import CombatLogParser from '../log_handling/CombatLogParser';
+import CombatLogParser from '../parsing/CombatLogParser';
 import { configSchema, ConfigurationSchema } from './configSchema';
 
 export default class ConfigService extends EventEmitter {
@@ -68,7 +68,8 @@ export default class ConfigService extends EventEmitter {
         }
 
         case 'set': {
-          const [_, key, value] = args;
+          const [key, value] = [args[1], args[2]];
+
           if (!this.configValueChanged(key, value)) {
             return;
           }
@@ -102,6 +103,12 @@ export default class ConfigService extends EventEmitter {
           ConfigService.logConfigChanged(newConfigValues);
 
           return;
+        }
+
+        default: {
+          console.error(
+            '[ConfigService] Unrecognised config call, should be one of get, set or set_values'
+          );
         }
       }
     });
@@ -170,8 +177,6 @@ export default class ConfigService extends EventEmitter {
       );
       throw new Error('No valid retail or classic log path found.');
     }
-
-    return;
   }
 
   has(key: keyof ConfigurationSchema): boolean {

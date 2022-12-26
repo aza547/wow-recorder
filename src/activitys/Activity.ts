@@ -1,6 +1,6 @@
-import { Metadata, PlayerDeathType, Flavour } from 'main/types';
+import { PlayerDeathType, Flavour, Metadata } from '../main/types';
 import Combatant from '../main/Combatant';
-import { VideoCategory } from '../main/constants';
+import { VideoCategory } from '../types/VideoCategory';
 
 /**
  * Abstract activity class.

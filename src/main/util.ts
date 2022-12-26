@@ -4,10 +4,13 @@ import path from 'path';
 import fs, { promises as fspromise } from 'fs';
 import { app, BrowserWindow, Display, net, screen } from 'electron';
 import { Metadata, FileInfo, FileSortDirection, OurDisplayType } from './types';
-import { categories, months, zones, dungeonsByMapId } from './constants';
+import { months, zones, dungeonsByMapId } from './constants';
+import { VideoCategory } from '../types/VideoCategory';
 
 const byteSize = require('byte-size');
 const chalk = require('chalk');
+
+const categories = Object.values(VideoCategory);
 
 /**
  * When packaged, we need to fix some paths

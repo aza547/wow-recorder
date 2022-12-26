@@ -1,11 +1,6 @@
 import { Flavour, Metadata } from 'main/types';
-
-import {
-  classicBattlegrounds,
-  retailBattlegrounds,
-  VideoCategory,
-} from '../main/constants';
-
+import { classicBattlegrounds, retailBattlegrounds } from '../main/constants';
+import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
 
 /**
@@ -28,11 +23,21 @@ export default class Battleground extends Activity {
       throw new Error("zoneID not set, can't get battleground name");
     }
 
-    if (retailBattlegrounds.hasOwnProperty(this.zoneID)) {
+    const isRetailBattleground = Object.prototype.hasOwnProperty.call(
+      retailBattlegrounds,
+      this.zoneID
+    );
+
+    if (isRetailBattleground) {
       return retailBattlegrounds[this.zoneID];
     }
 
-    if (classicBattlegrounds.hasOwnProperty(this.zoneID)) {
+    const isClassicBattleground = Object.prototype.hasOwnProperty.call(
+      classicBattlegrounds,
+      this.zoneID
+    );
+
+    if (isClassicBattleground) {
       return classicBattlegrounds[this.zoneID];
     }
 

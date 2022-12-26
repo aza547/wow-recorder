@@ -1,6 +1,6 @@
 import Combatant from '../main/Combatant';
 import CombatLogParser from './CombatLogParser';
-import ConfigService from '../main/configService';
+import ConfigService from '../main/ConfigService';
 import { raidInstances, VideoCategory } from '../main/constants';
 import { Recorder } from '../main/recorder';
 import { Flavour, PlayerDeathType } from '../main/types';

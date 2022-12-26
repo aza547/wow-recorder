@@ -1,19 +1,14 @@
 /* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { recorder, retailHandler, classicHandler } from './main';
-
-import {
-  categoryRecordingSettings,
-  VideoCategory,
-  wowExecutableFlavours,
-} from './constants';
-
+import { categoryRecordingSettings, wowExecutableFlavours } from './constants';
 import { IWoWProcessResult, UnitFlags } from './types';
-import CombatLogParser from '../log_handling/CombatLogParser';
+import CombatLogParser from '../parsing/CombatLogParser';
 import { getSortedFiles } from './util';
-import ConfigService from './configService';
-import RetailLogHandler from '../log_handling/RetailLogHandler';
-import ClassicLogHandler from '../log_handling/ClassicLogHandler';
+import ConfigService from './ConfigService';
+import RetailLogHandler from '../parsing/RetailLogHandler';
+import ClassicLogHandler from '../parsing/ClassicLogHandler';
 import { Recorder } from './recorder';
+import { VideoCategory } from '../types/VideoCategory';
 
 const cfg = ConfigService.getInstance();
 let testRunning = false;

@@ -1,10 +1,6 @@
 import { Flavour, Metadata } from '../main/types';
-
-import {
-  dungeonTimersByMapId,
-  instanceNamesByZoneId,
-  VideoCategory,
-} from '../main/constants';
+import { dungeonTimersByMapId, instanceNamesByZoneId } from '../main/constants';
+import { VideoCategory } from '../types/VideoCategory';
 
 import {
   ChallengeModeTimelineSegment,
@@ -97,7 +93,12 @@ export default class ChallengeModeDungeon extends Activity {
       throw new Error("zoneID not set, can't get dungeon name");
     }
 
-    if (instanceNamesByZoneId.hasOwnProperty(this.zoneID)) {
+    const isRecognisedMythicPlus = Object.prototype.hasOwnProperty.call(
+      instanceNamesByZoneId,
+      this.zoneID
+    );
+
+    if (isRecognisedMythicPlus) {
       return instanceNamesByZoneId[this.zoneID];
     }
 

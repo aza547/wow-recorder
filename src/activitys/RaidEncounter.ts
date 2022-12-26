@@ -4,9 +4,9 @@ import {
   instanceDifficulty,
   raidEncountersById,
   raidInstances,
-  VideoCategory,
 } from '../main/constants';
 
+import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
 
 /**
@@ -43,7 +43,12 @@ export default class RaidEncounter extends Activity {
       throw new Error("EncounterID not set, can't get name of encounter");
     }
 
-    if (raidEncountersById.hasOwnProperty(this.encounterID)) {
+    const isRecognisedRaidEncounter = Object.prototype.hasOwnProperty.call(
+      raidEncountersById,
+      this.encounterID
+    );
+
+    if (isRecognisedRaidEncounter) {
       return raidEncountersById[this.encounterID];
     }
 
@@ -75,8 +80,9 @@ export default class RaidEncounter extends Activity {
     }
 
     const raids = raidInstances.filter((raid) =>
-      raid.encounters.hasOwnProperty(this.encounterID)
+      Object.prototype.hasOwnProperty.call(raid, this.encounterID)
     );
+
     const raid = raids.pop();
 
     if (!raid) {
@@ -99,9 +105,12 @@ export default class RaidEncounter extends Activity {
   }
 
   get difficulty() {
-    const recognisedID = instanceDifficulty.hasOwnProperty(this.difficultyID);
+    const isRecognisedDifficulty = Object.prototype.hasOwnProperty.call(
+      instanceDifficulty,
+      this.difficultyID
+    );
 
-    if (!recognisedID) {
+    if (!isRecognisedDifficulty) {
       throw new Error(
         `[RaidEncounters] Unknown difficulty ID: ${this.difficultyID}`
       );
