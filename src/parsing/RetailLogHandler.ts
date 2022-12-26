@@ -239,10 +239,16 @@ export default class RetailLogHandler extends LogHandler {
     const encounterID = parseInt(line.arg(1), 10);
 
     if (!this.activity) {
-      if (dungeonEncounters.hasOwnProperty(encounterID)) {
+      const knownDungeonEncounter = Object.prototype.hasOwnProperty.call(
+        dungeonEncounters,
+        encounterID
+      );
+
+      if (knownDungeonEncounter) {
         console.info(
           "[RetailLogHandler] It's a regular dungeon encounter, don't record"
         );
+
         return;
       }
 
@@ -323,7 +329,11 @@ export default class RetailLogHandler extends LogHandler {
   handleZoneChange(line: LogLine) {
     console.info('[RetailLogHandler] Handling ZONE_CHANGE line:', line);
     const zoneID = parseInt(line.arg(1), 10);
-    const isZoneBG = retailBattlegrounds.hasOwnProperty(zoneID);
+
+    const isZoneBG = Object.prototype.hasOwnProperty.call(
+      retailBattlegrounds,
+      zoneID
+    );
 
     if (this.activity) {
       const { category } = this.activity;
@@ -417,7 +427,12 @@ export default class RetailLogHandler extends LogHandler {
 
     const spellName = line.arg(10);
 
-    if (retailUniqueSpecSpells.hasOwnProperty(spellName)) {
+    const knownSpell = Object.prototype.hasOwnProperty.call(
+      retailUniqueSpecSpells,
+      spellName
+    );
+
+    if (knownSpell) {
       combatant.specID = retailUniqueSpecSpells[spellName];
     }
   }

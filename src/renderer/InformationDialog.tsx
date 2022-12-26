@@ -69,24 +69,30 @@ const useStyles = makeStyles()({
 });
 
 export default function InformationDialog(props: ConfirmationDialogProps) {
-  const [open, setOpen] = React.useState(props.open);
+  const { open, onAction, onClose, title, children, buttons } = props;
+  const [isOpen, setIsOpen] = React.useState(open);
   const { classes: styles } = useStyles();
 
   const handleBtnClick = (button: ValidButtonKeyType) => {
-    if (validButtons.hasOwnProperty(button) && validButtons[button].action) {
-      if (props.onAction) {
-        props?.onAction(button);
+    const hasButton = Object.prototype.hasOwnProperty.call(
+      validButtons,
+      button
+    );
+
+    if (hasButton && validButtons[button].action) {
+      if (onAction) {
+        onAction(button);
       }
     }
 
-    props.onClose(button);
+    onClose(button);
   };
 
   const renderButton = (button: ValidButtonKeyType, autoFocus: boolean) => {
     return (
       <Button
         color={autoFocus ? 'primary' : 'secondary'}
-        key={'dialog-button-' + button}
+        key={`dialog-button-${button}`}
         onClick={() => handleBtnClick(button)}
         autoFocus={autoFocus}
       >
@@ -96,26 +102,21 @@ export default function InformationDialog(props: ConfirmationDialogProps) {
   };
 
   React.useEffect(() => {
-    setOpen(props.open);
-  }, [props.open]);
+    setIsOpen(open);
+  }, [open]);
 
   return (
     <Dialog
       className={styles.dialog}
-      open={open}
+      open={isOpen}
       aria-labelledby="dialog-title"
       aria-describedby="dialog-description"
     >
-      {props.title && (
-        <DialogTitle id="dialog-title">{props.title}</DialogTitle>
-      )}
-      <DialogContent id="dialog-description">{props.children}</DialogContent>
+      {title && <DialogTitle id="dialog-title">{title}</DialogTitle>}
+      <DialogContent id="dialog-description">{children}</DialogContent>
       <DialogActions>
-        {props.buttons.map((button) =>
-          renderButton(
-            button,
-            props.default === button || props.buttons.length == 1
-          )
+        {buttons.map((button) =>
+          renderButton(button, props.default === button || buttons.length === 1)
         )}
       </DialogActions>
     </Dialog>

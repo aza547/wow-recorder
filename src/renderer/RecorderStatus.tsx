@@ -90,15 +90,21 @@ export default function RecorderStatus() {
           />
         )}
         {isRecording && (
-          <img
-            id={`${message.style}-rec-status`}
-            title={mouseoverText}
+          <div
+            aria-hidden
             onClick={confirmStopRecording}
-            onMouseEnter={(e) => showIcon(e, stopRecordingIcon)}
-            onMouseLeave={(e) => showIcon(e, message.icon)}
-            alt="icon"
-            src={message.icon}
-          />
+            onKeyDown={() => {}}
+            role="button"
+          >
+            <img
+              id={`${message.style}-rec-status`}
+              title={mouseoverText}
+              onMouseEnter={(e) => showIcon(e, stopRecordingIcon)}
+              onMouseLeave={(e) => showIcon(e, message.icon)}
+              alt="icon"
+              src={message.icon}
+            />
+          </div>
         )}
         <InformationDialog
           title="⚠️ Stop recording?"

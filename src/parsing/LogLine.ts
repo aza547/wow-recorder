@@ -140,7 +140,7 @@ export default class LogLine {
           case ']':
           case ')':
             if (!listItems.length) {
-              throw `Unexpected ${char}. No list is open.`;
+              throw new Error(`Unexpected ${char}. No list is open.`);
             }
 
             if (value) {
@@ -152,7 +152,7 @@ export default class LogLine {
             continue;
 
           default:
-            console.error('[LogLine] Hit unexpected default case');
+          // Linter is upset without a default case so now we have one.
         }
       }
 

@@ -78,7 +78,7 @@ export default abstract class LogHandler {
     const encounterID = parseInt(line.arg(1), 10);
     const difficultyID = parseInt(line.arg(3), 10);
     const raids = raidInstances.filter((r) =>
-      r.encounters.hasOwnProperty(encounterID)
+      Object.prototype.hasOwnProperty.call(r, encounterID)
     );
 
     if (!raids.pop()) {

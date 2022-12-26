@@ -19,8 +19,8 @@ export default function RendererTitleBar() {
   const [title, setTitle] = React.useState('Warcraft Recorder');
 
   React.useEffect(() => {
-    window.electron.ipcRenderer.on('updateTitleBar', (title) => {
-      setTitle(title as string);
+    window.electron.ipcRenderer.on('updateTitleBar', (t) => {
+      setTitle(t as string);
     });
   }, []);
 
@@ -31,13 +31,13 @@ export default function RendererTitleBar() {
       </div>
       <div id="title">{title}</div>
       <div id="title-bar-btns">
-        <button id="min-btn" onClick={clickedHide}>
+        <button id="min-btn" type="button" onClick={clickedHide}>
           🗕
         </button>
-        <button id="max-btn" onClick={clickedResize}>
+        <button id="max-btn" type="button" onClick={clickedResize}>
           🗗
         </button>
-        <button id="close-btn" onClick={clickedQuit}>
+        <button id="close-btn" type="button" onClick={clickedQuit}>
           ✖
         </button>
       </div>

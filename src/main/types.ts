@@ -1,5 +1,4 @@
 import { Size } from 'electron';
-import { WoWProcessResultKey } from './constants';
 import { ChallengeModeTimelineSegment } from './keystone';
 import Combatant from './Combatant';
 import { VideoCategory } from '../types/VideoCategory';
@@ -139,8 +138,6 @@ type FileInfo = {
   mtime: number;
 };
 
-
-
 type VideoQueueItem = {
   bufferFile: string;
   metadata: Metadata;
@@ -180,7 +177,7 @@ type Metadata = {
   category: VideoCategory;
   duration: number;
   result: boolean;
-  flavour: WoWProcessResultKey;
+  flavour: Flavour;
   zoneID?: number;
   zoneName?: string;
   encounterID?: number;

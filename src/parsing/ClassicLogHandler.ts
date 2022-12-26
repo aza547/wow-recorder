@@ -64,7 +64,6 @@ export default class ClassicLogHandler extends LogHandler {
   handleEncounterStartLine(line: LogLine) {
     console.debug('[ClassicLogHandler] Handling ENCOUNTER_START line:', line);
     super.handleEncounterStartLine(line, Flavour.Classic);
-    return;
   }
 
   handleSpellAuraAppliedLine(line: LogLine) {
@@ -111,8 +110,16 @@ export default class ClassicLogHandler extends LogHandler {
     console.info('[ClassicLogHandler] Handling ZONE_CHANGE line:', line);
 
     const zoneID = parseInt(line.arg(1), 10);
-    const isZoneArena = classicArenas.hasOwnProperty(zoneID);
-    const isZoneBG = classicBattlegrounds.hasOwnProperty(zoneID);
+
+    const isZoneArena = Object.prototype.hasOwnProperty.call(
+      classicArenas,
+      zoneID
+    );
+
+    const isZoneBG = Object.prototype.hasOwnProperty.call(
+      classicBattlegrounds,
+      zoneID
+    );
 
     if (this.activity) {
       const isActivityBG = this.isBattleground();
@@ -182,7 +189,12 @@ export default class ClassicLogHandler extends LogHandler {
 
     const spellName = line.arg(10);
 
-    if (classicUniqueSpecSpells.hasOwnProperty(spellName)) {
+    const knownSpell = Object.prototype.hasOwnProperty.call(
+      classicUniqueSpecSpells,
+      spellName
+    );
+
+    if (knownSpell) {
       combatant.specID = classicUniqueSpecSpells[spellName];
     }
   }
@@ -332,7 +344,6 @@ export default class ClassicLogHandler extends LogHandler {
     if (aliveEnemies < 1) {
       console.info('[ClassicLogHandler] No enemy players left so ending game.');
       this.endArena(deathDate);
-      return;
     }
   }
 

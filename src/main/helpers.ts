@@ -97,8 +97,10 @@ export const getVideoResultClass = (
 };
 
 export const getInstanceDifficulty = (id: number) => {
-  const knownDifficulty = instanceDifficulty.hasOwnProperty(id);
-
+  const knownDifficulty = Object.prototype.hasOwnProperty.call(
+    instanceDifficulty,
+    id
+  );
   if (!knownDifficulty) {
     return null;
   }
@@ -112,7 +114,12 @@ export const getInstanceDifficulty = (id: number) => {
  * frontend.
  */
 export const getEncounterNameById = (encounterId: number): string => {
-  if (instanceEncountersById.hasOwnProperty(encounterId)) {
+  const recognisedEncounter = Object.prototype.hasOwnProperty.call(
+    instanceEncountersById,
+    encounterId
+  );
+
+  if (recognisedEncounter) {
     return instanceEncountersById[encounterId];
   }
 
