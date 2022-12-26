@@ -2,7 +2,6 @@ import {
   classicArenas,
   classicBattlegrounds,
   classicUniqueSpecSpells,
-  VideoCategory,
 } from '../main/constants';
 
 import CombatLogParser from './CombatLogParser';
@@ -13,6 +12,7 @@ import ArenaMatch from '../activitys/ArenaMatch';
 import { isUnitFriendly, isUnitPlayer } from '../main/logutils';
 import Battleground from '../activitys/Battleground';
 import LogLine from './LogLine';
+import { VideoCategory } from '../types/VideoCategory';
 
 /**
  * Classic log handler class.

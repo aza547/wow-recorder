@@ -7,7 +7,6 @@ import {
   dungeonTimersByMapId,
   retailBattlegrounds,
   retailUniqueSpecSpells,
-  VideoCategory,
 } from '../main/constants';
 
 import { Recorder } from '../main/recorder';
@@ -24,6 +23,7 @@ import {
 import { Flavour } from '../main/types';
 import SoloShuffle from '../activitys/SoloShuffle';
 import LogLine from './LogLine';
+import { VideoCategory } from '../types/VideoCategory';
 
 /**
  * RetailLogHandler class.

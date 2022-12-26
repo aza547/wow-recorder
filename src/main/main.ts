@@ -17,25 +17,13 @@ import {
   deleteVideo,
   openSystemExplorer,
   toggleVideoProtected,
-  fixPathWhenPackaged,
+  setupApplicationLogging,
   getAvailableDisplays,
   checkAppUpdate,
 } from './util';
 
-/**
- * Setup logging. It's important this is the first thing we do. This works by
- * overriding console log methods. All console log method will go to both the
- * console if it exists, and a file on disk. This only applies to main process
- * console logs, not the renderer logs.
- */
-const log = require('electron-log');
+const logDir = setupApplicationLogging();
 
-const date = new Date().toISOString().slice(0, 10);
-const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
-const logDir = path.dirname(logPath);
-log.transports.file.resolvePath = () => logPath;
-Object.assign(console, log.functions);
 console.log('[Main] App starting: version', app.getVersion());
 
 import {
