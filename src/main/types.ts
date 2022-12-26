@@ -1,8 +1,7 @@
 import { Size } from 'electron';
-import { VideoCategory, WoWProcessResultKey } from './constants';
-import ChallengeModeDungeon from '../activitys/ChallengeModeDungeon';
 import { ChallengeModeTimelineSegment } from './keystone';
 import Combatant from './Combatant';
+import { VideoCategory } from '../types/VideoCategory';
 
 /**
  * Application recording status.
@@ -139,11 +138,6 @@ type FileInfo = {
   mtime: number;
 };
 
-interface IWoWProcessResult {
-  exe: string;
-  flavour: WoWProcessResultKey;
-}
-
 type VideoQueueItem = {
   bufferFile: string;
   metadata: Metadata;
@@ -183,7 +177,7 @@ type Metadata = {
   category: VideoCategory;
   duration: number;
   result: boolean;
-  flavour: WoWProcessResultKey;
+  flavour: Flavour;
   zoneID?: number;
   zoneName?: string;
   encounterID?: number;
@@ -191,7 +185,6 @@ type Metadata = {
   difficulty?: string;
   player?: Combatant;
   teamMMR?: number;
-  challengeMode?: ChallengeModeDungeon;
   deaths?: PlayerDeathType[];
   upgradeLevel?: number;
   mapID?: number;
@@ -233,7 +226,6 @@ export {
   RaidInstanceType,
   FileInfo,
   FileFinderCallbackType,
-  IWoWProcessResult,
   VideoQueueItem,
   FakeChangeEvent,
   ISettingsPanelProps,

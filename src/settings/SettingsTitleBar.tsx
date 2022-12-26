@@ -14,7 +14,7 @@ export default function TitleBar() {
       </div>
       <div id="title">Warcraft Recorder</div>
       <div id="title-bar-btns">
-        <button id="close-btn" onClick={clickedQuit}>
+        <button id="close-btn" type="button" onClick={clickedQuit}>
           ✖
         </button>
       </div>

@@ -1,11 +1,29 @@
-import { fixPathWhenPackaged, getAvailableDisplays } from "./util";
 import WaitQueue from 'wait-queue';
-import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from "./obsAudioDeviceUtils";
-import { RecorderOptionsType } from "./recorder";
-import { Size } from "electron";
+import { Size } from 'electron';
 import path from 'path';
-import { ISceneItem, IScene, IInput, IIPC, ISource, SceneFactory, InputFactory, Global, NodeObs } from "obs-studio-node";
-import { OurDisplayType } from "./types";
+
+import {
+  ISceneItem,
+  IScene,
+  IInput,
+  IIPC,
+  ISource,
+  SceneFactory,
+  InputFactory,
+  Global,
+  NodeObs,
+} from 'obs-studio-node';
+
+import { fixPathWhenPackaged, getAvailableDisplays } from './util';
+
+import {
+  getAvailableAudioInputDevices,
+  getAvailableAudioOutputDevices,
+} from './obsAudioDeviceUtils';
+
+import { RecorderOptionsType } from './recorder';
+import { OurDisplayType } from './types';
+
 const waitQueue = new WaitQueue<any>();
 const { v4: uuid } = require('uuid');
 
@@ -18,11 +36,11 @@ let timerVideoSourceSize: NodeJS.Timer;
 let lastVideoSourceSize: Size | undefined;
 
 /*
-* Reconfigure the recorder without destroying it.
-*/
+ * Reconfigure the recorder without destroying it.
+ */
 const reconfigure = (options: RecorderOptionsType) => {
-  console.info("[OBS] Reconfigure triggered with", options);
-  
+  console.info('[OBS] Reconfigure triggered with', options);
+
   // Important we reset this here to avoid scaling problems after
   // a user settings update. See issue 221.
   lastVideoSourceSize = undefined;
@@ -30,39 +48,43 @@ const reconfigure = (options: RecorderOptionsType) => {
   configureOBS(options);
   const scene = setupScene(options);
   setupSources(scene, options.audioInputDeviceId, options.audioOutputDeviceId);
-}
+};
 
 /**
  * Parse a resolution string like '1920x1080' into a `Size` compatible
  * format.
  */
 const parseResolutionsString = (value: string): Size => {
-  const [width, height] = value.split('x').map(v => parseInt(v, 10));
+  const [width, height] = value.split('x').map((v) => parseInt(v, 10));
 
   return { width, height };
 };
 
 /*
-* Init the library, launch OBS Studio instance, configure it, set up sources and scene
-*/
+ * Init the library, launch OBS Studio instance, configure it, set up sources and scene
+ */
 const initialize = (options: RecorderOptionsType) => {
   if (obsInitialized) {
-    console.warn("[OBS] OBS is already initialized");
+    console.warn('[OBS] OBS is already initialized');
     return;
   }
 
   initOBS();
   reconfigure(options);
   obsInitialized = true;
-}
+};
 
 /*
-* initOBS
-*/
+ * initOBS
+ */
 const initOBS = () => {
   console.debug('[OBS] Initializing OBS...');
   NodeObsIPC.host(`warcraft-recorder-${uuid()}`);
-  NodeObs.SetWorkingDirectory(fixPathWhenPackaged(path.join(__dirname,'../../', 'node_modules', 'obs-studio-node')));
+  NodeObs.SetWorkingDirectory(
+    fixPathWhenPackaged(
+      path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
+    )
+  );
 
   const obsDataPath = fixPathWhenPackaged(path.join(__dirname, 'osn-data')); // OBS Studio configs and logs
   // Arguments: locale, path to directory where configuration and logs will be stored, your application version
@@ -72,10 +94,12 @@ const initOBS = () => {
     const errorReasons = {
       '-2': 'DirectX could not be found on your system. Please install the latest version of DirectX for your machine here <https://www.microsoft.com/en-us/download/details.aspx?id=35?> and try again.',
       '-5': 'Failed to initialize OBS. Your video drivers may be out of date, or Streamlabs OBS may not be supported on your system.',
-    }
+    };
 
     // @ts-ignore
-    const errorMessage = errorReasons[initResult.toString()] || `An unknown error #${initResult} was encountered while initializing OBS.`;
+    const errorMessage =
+      errorReasons[initResult.toString()] ||
+      `An unknown error #${initResult} was encountered while initializing OBS.`;
 
     console.error('[OBS] OBS init failure', errorMessage);
 
@@ -89,11 +113,11 @@ const initOBS = () => {
   });
 
   console.debug('[OBS] OBS initialized');
-}
+};
 
 /*
-* configureOBS
-*/
+ * configureOBS
+ */
 const configureOBS = (options: RecorderOptionsType) => {
   console.debug('[OBS] Configuring OBS');
   setSetting('Output', 'Mode', 'Advanced');
@@ -111,12 +135,12 @@ const configureOBS = (options: RecorderOptionsType) => {
 
   // Without this, we'll never exceed the default max which is 5000.
   setSetting('Output', 'Recmax_bitrate', 300000);
-  
-  // FPS for the output video file. 
+
+  // FPS for the output video file.
   setSetting('Video', 'FPSCommon', options.obsFPS);
 
   console.debug('[OBS] OBS Configured');
-}
+};
 
 /**
  * Configure the recording encoder for OBS
@@ -125,9 +149,9 @@ const setObsRecEncoder = (options: RecorderOptionsType): void => {
   const availableEncoders = getObsAvailableRecEncoders();
 
   let encoder = options.obsRecEncoder;
-  let autoPickEncoder = (!encoder || encoder === 'auto');
+  let autoPickEncoder = !encoder || encoder === 'auto';
 
-  console.debug("[OBS] Available encoders", availableEncoders);
+  console.debug('[OBS] Available encoders', availableEncoders);
 
   if (!autoPickEncoder && !availableEncoders.includes(encoder)) {
     console.debug(`[OBS] Configured encoder '${encoder}' is not available.`);
@@ -140,18 +164,18 @@ const setObsRecEncoder = (options: RecorderOptionsType): void => {
   }
 
   setSetting('Output', 'RecEncoder', encoder);
-}
+};
 
 /*
-* Get information about primary display
-* @param zero starting monitor index
-*/
+ * Get information about primary display
+ * @param zero starting monitor index
+ */
 const displayInfo = (displayIndex: number): OurDisplayType | undefined => {
   const displays = getAvailableDisplays();
-  console.info("[OBS] Displays:", displays);
+  console.info('[OBS] Displays:', displays);
 
-  return displays.find(d => d.index === displayIndex);
-}
+  return displays.find((d) => d.index === displayIndex);
+};
 
 /**
  * Find the resolution from `resolutions` which closest match the one given in
@@ -160,7 +184,7 @@ const displayInfo = (displayIndex: number): OurDisplayType | undefined => {
 const getClosestResolution = (resolutions: string[], target: Size): string => {
   // Split string like '2560x1440' into [2560, 1440]
   const numericResolutions = resolutions.map((v: string) => {
-    return v.split('x').map(v => parseInt(v, 10));
+    return v.split('x').map((w) => parseInt(w, 10));
   });
 
   // Create an array of values with the target resolution subtracted.
@@ -169,8 +193,8 @@ const getClosestResolution = (resolutions: string[], target: Size): string => {
   //
   // We multiply width/height by a different number to avoid having mirrored
   // resolutions (1080x1920 vs 1920x1080) have the same sorting value.
-  const indexArray = numericResolutions.map(v => {
-      return Math.abs(((target.width - v[0]) * 2) + ((target.height - v[1]) * 4));
+  const indexArray = numericResolutions.map((v) => {
+    return Math.abs((target.width - v[0]) * 2 + (target.height - v[1]) * 4);
   });
 
   // Find the minimum value from the indexing array. This value will
@@ -184,27 +208,31 @@ const getClosestResolution = (resolutions: string[], target: Size): string => {
 };
 
 /*
-* Given a none-whole monitor resolution, find the closest one that
-* OBS supports and set the corospoding setting in Video.Untitled.{paramString}
-*
-* @remarks
-* Useful when windows scaling is not set to 100% (125%, 150%, etc) on higher resolution monitors,
-* meaning electron screen.getAllDisplays() will return a none integer scaleFactor, causing
-* the calucated monitor resolution to be none-whole.
-*
-* @throws
-* Throws an error if no matching resolution is found.
-*/
+ * Given a none-whole monitor resolution, find the closest one that
+ * OBS supports and set the corospoding setting in Video.Untitled.{paramString}
+ *
+ * @remarks
+ * Useful when windows scaling is not set to 100% (125%, 150%, etc) on higher resolution monitors,
+ * meaning electron screen.getAllDisplays() will return a none integer scaleFactor, causing
+ * the calucated monitor resolution to be none-whole.
+ *
+ * @throws
+ * Throws an error if no matching resolution is found.
+ */
 const setOBSVideoResolution = (res: Size, paramString: string) => {
-  const availableResolutions = getAvailableValues('Video', 'Untitled', paramString);
+  const availableResolutions = getAvailableValues(
+    'Video',
+    'Untitled',
+    paramString
+  );
   const closestResolution = getClosestResolution(availableResolutions, res);
 
   setSetting('Video', paramString, closestResolution);
 };
 
 /*
-* setupScene
-*/
+ * setupScene
+ */
 const setupScene = (options: RecorderOptionsType): IScene => {
   const outputResolution = parseResolutionsString(options.obsOutputResolution);
   let baseResolution: Size;
@@ -217,10 +245,12 @@ const setupScene = (options: RecorderOptionsType): IScene => {
     case 'monitor_capture':
       // Correct the monitorIndex. In config we start a 1 so it's easy for users.
       const monitorIndexFromZero = options.monitorIndex - 1;
-      console.info("[OBS] monitorIndexFromZero:", monitorIndexFromZero);
+      console.info('[OBS] monitorIndexFromZero:', monitorIndexFromZero);
       const selectedDisplay = displayInfo(monitorIndexFromZero);
       if (!selectedDisplay) {
-        throw new Error(`[OBS] No such display with index: ${monitorIndexFromZero}.`)
+        throw new Error(
+          `[OBS] No such display with index: ${monitorIndexFromZero}.`
+        );
       }
 
       baseResolution = selectedDisplay.physicalSize;
@@ -243,25 +273,28 @@ const setupScene = (options: RecorderOptionsType): IScene => {
   const sceneItem = scene.add(videoSource);
   sceneItem.scale = { x: 1.0, y: 1.0 };
 
-  console.log(`[OBS] Configured video input source with mode '${options.obsCaptureMode}'`, videoSource.settings)
+  console.log(
+    `[OBS] Configured video input source with mode '${options.obsCaptureMode}'`,
+    videoSource.settings
+  );
 
   watchVideoSourceSize(sceneItem, videoSource, baseResolution);
 
   return scene;
-}
+};
 
 /**
  * Create and return a game capture video source ('game_capture')
  */
 const createGameCaptureSource = (): IInput => {
   const videoSource = InputFactory.create('game_capture', 'Game Capture');
-  const settings = videoSource.settings;
+  const { settings } = videoSource;
 
-  settings['capture_cursor'] = true;
-  settings['capture_mode'] = 'window';
-  settings['allow_transparency'] = true;
-  settings['priority'] = 1; // Window title must match
-  settings['window'] = 'World of Warcraft:GxWindowClass:Wow.exe';
+  settings.capture_cursor = true;
+  settings.capture_mode = 'window';
+  settings.allow_transparency = true;
+  settings.priority = 1; // Window title must match
+  settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
 
   videoSource.update(settings);
   videoSource.save();
@@ -274,9 +307,9 @@ const createGameCaptureSource = (): IInput => {
  */
 const createMonitorCaptureSource = (monitorIndex: number): IInput => {
   const videoSource = InputFactory.create('monitor_capture', 'Monitor Capture');
-  const settings = videoSource.settings;
+  const { settings } = videoSource;
 
-  settings['monitor'] = monitorIndex;
+  settings.monitor = monitorIndex;
 
   videoSource.update(settings);
   videoSource.save();
@@ -292,25 +325,28 @@ const createMonitorCaptureSource = (monitorIndex: number): IInput => {
  * @param sourceName      Video input source
  * @param baseResolution  Resolution used as base for scaling the video source
  */
-const watchVideoSourceSize = (sceneItem: ISceneItem, 
-                              videoSource: IInput, 
-                              baseResolution: Size) => {
+const watchVideoSourceSize = (
+  sceneItem: ISceneItem,
+  videoSource: IInput,
+  baseResolution: Size
+) => {
   clearInterval(timerVideoSourceSize);
 
   timerVideoSourceSize = setInterval(() => {
-    const current = { 
-      width: videoSource.width, 
-      height: videoSource.height 
+    const current = {
+      width: videoSource.width,
+      height: videoSource.height,
     };
 
-    if ((current.width === 0) ||
-        (current.height === 0)) {
+    if (current.width === 0 || current.height === 0) {
       return;
     }
 
-    if ((lastVideoSourceSize) && 
-        (current.width === lastVideoSourceSize.width) && 
-        (current.height === lastVideoSourceSize.height)) {
+    if (
+      lastVideoSourceSize &&
+      current.width === lastVideoSourceSize.width &&
+      current.height === lastVideoSourceSize.height
+    ) {
       return;
     }
 
@@ -324,14 +360,18 @@ const watchVideoSourceSize = (sceneItem: ISceneItem,
       scale: sceneItem.scale,
     };
 
-    console.info("[OBS] Rescaled OBS scene: ", logDetails);
+    console.info('[OBS] Rescaled OBS scene: ', logDetails);
   }, 5000);
 };
 
 /*
-* setupSources
-*/
-const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceId: string ) => {
+ * setupSources
+ */
+const setupSources = (
+  scene: any,
+  audioInputDeviceId: string,
+  audioOutputDeviceId: string
+) => {
   clearSources();
 
   Global.setOutputSource(1, scene);
@@ -339,38 +379,54 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
   setSetting('Output', 'Track1Name', 'Mixed: all sources');
   let currentTrack = 2;
 
-  getAvailableAudioInputDevices()
-    .forEach(device => {
-      const source = InputFactory.create('wasapi_input_capture', 'mic-audio', { device_id: device.id });
-      setSetting('Output', `Track${currentTrack}Name`, device.name);
-      source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
-      source.muted = audioInputDeviceId === 'none' || (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
-      console.log(`[OBS] Selecting audio input device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
-      Global.setOutputSource(currentTrack, source);
-      source.release()
-      currentTrack++;
+  getAvailableAudioInputDevices().forEach((device) => {
+    const source = InputFactory.create('wasapi_input_capture', 'mic-audio', {
+      device_id: device.id,
     });
+    setSetting('Output', `Track${currentTrack}Name`, device.name);
+    source.audioMixers = 1 | (1 << (currentTrack - 1)); // Bit mask to output to only tracks 1 and current track
+    source.muted =
+      audioInputDeviceId === 'none' ||
+      (audioInputDeviceId !== 'all' && device.id !== audioInputDeviceId);
+    console.log(
+      `[OBS] Selecting audio input device: ${device.name} ${
+        source.muted ? ' [MUTED]' : ''
+      }`
+    );
+    Global.setOutputSource(currentTrack, source);
+    source.release();
+    currentTrack++;
+  });
 
-  getAvailableAudioOutputDevices()
-    .forEach(device => {
-      const source = InputFactory.create('wasapi_output_capture', 'desktop-audio', { device_id: device.id });
-      setSetting('Output', `Track${currentTrack}Name`, device.name);
-      source.audioMixers = 1 | (1 << currentTrack-1); // Bit mask to output to only tracks 1 and current track
-      source.muted = audioOutputDeviceId === 'none' || (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
-      console.log(`[OBS] Selecting audio output device: ${device.name} ${source.muted ? ' [MUTED]' : ''}`)
-      Global.setOutputSource(currentTrack, source);
-      source.release()
-      currentTrack++;
-    });
+  getAvailableAudioOutputDevices().forEach((device) => {
+    const source = InputFactory.create(
+      'wasapi_output_capture',
+      'desktop-audio',
+      { device_id: device.id }
+    );
+    setSetting('Output', `Track${currentTrack}Name`, device.name);
+    source.audioMixers = 1 | (1 << (currentTrack - 1)); // Bit mask to output to only tracks 1 and current track
+    source.muted =
+      audioOutputDeviceId === 'none' ||
+      (audioOutputDeviceId !== 'all' && device.id !== audioOutputDeviceId);
+    console.log(
+      `[OBS] Selecting audio output device: ${device.name} ${
+        source.muted ? ' [MUTED]' : ''
+      }`
+    );
+    Global.setOutputSource(currentTrack, source);
+    source.release();
+    currentTrack++;
+  });
 
-  setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack-1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
-}
+  setSetting('Output', 'RecTracks', parseInt('1'.repeat(currentTrack - 1), 2)); // Bit mask of used tracks: 1111 to use first four (from available six)
+};
 
 /**
  * Clear all sources from the global output of OBS
  */
- const clearSources = (): void => {
-  console.log("[OBS] Removing all output sources")
+const clearSources = (): void => {
+  console.log('[OBS] Removing all output sources');
 
   // OBS allows a maximum of 64 output sources
   for (let index = 1; index < 64; index++) {
@@ -387,29 +443,29 @@ const setupSources = (scene: any, audioInputDeviceId: string, audioOutputDeviceI
 };
 
 /*
-* start
-*/
+ * start
+ */
 const start = async () => {
-  if (!obsInitialized) throw new Error("OBS not initialised");
-  console.log("[OBS] obsRecorder: start");
+  if (!obsInitialized) throw new Error('OBS not initialised');
+  console.log('[OBS] obsRecorder: start');
   NodeObs.OBS_service_startRecording();
-  await assertNextSignal("start");
-}
+  await assertNextSignal('start');
+};
 
 /*
-* stop
-*/
+ * stop
+ */
 const stop = async () => {
-  console.log("[OBS] obsRecorder: stop");
+  console.log('[OBS] obsRecorder: stop');
   NodeObs.OBS_service_stopRecording();
-  await assertNextSignal("stopping");
-  await assertNextSignal("stop");
-  await assertNextSignal("wrote");
-}
+  await assertNextSignal('stopping');
+  await assertNextSignal('stop');
+  await assertNextSignal('wrote');
+};
 
 /*
-* shutdown
-*/
+ * shutdown
+ */
 const shutdown = () => {
   if (!obsInitialized) {
     console.debug('[OBS]  OBS is already shut down!');
@@ -422,18 +478,18 @@ const shutdown = () => {
     NodeObs.OBS_service_removeCallback();
     NodeObsIPC.disconnect();
     obsInitialized = false;
-  } catch(e) {
-    throw new Error('Exception when shutting down OBS process' + e);
+  } catch (e) {
+    throw new Error(`Exception when shutting down OBS process${e}`);
   }
 
   console.debug('[OBS]  OBS shutdown successfully');
 
   return true;
-}
+};
 
 /*
-* setSetting
-*/
+ * setSetting
+ */
 const setSetting = (category: any, parameter: any, value: any) => {
   let oldValue;
 
@@ -444,7 +500,7 @@ const setSetting = (category: any, parameter: any, value: any) => {
 
   settings.forEach((subCategory: any) => {
     subCategory.parameters.forEach((param: any) => {
-      if (param.name === parameter) {        
+      if (param.name === parameter) {
         oldValue = param.currentValue;
         param.currentValue = value;
       }
@@ -455,12 +511,16 @@ const setSetting = (category: any, parameter: any, value: any) => {
   if (value != oldValue) {
     NodeObs.OBS_settings_saveSettings(category, settings);
   }
-}
+};
 
 /*
-* getAvailableValues
-*/
-const getAvailableValues = (category: any, subcategory: any, parameter: any) => {
+ * getAvailableValues
+ */
+const getAvailableValues = (
+  category: any,
+  subcategory: any,
+  parameter: any
+) => {
   const categorySettings = NodeObs.OBS_settings_getSettings(category).data;
 
   if (!categorySettings) {
@@ -468,63 +528,74 @@ const getAvailableValues = (category: any, subcategory: any, parameter: any) => 
     return;
   }
 
-  const subcategorySettings = categorySettings.find((sub: any) => sub.nameSubCategory === subcategory);
+  const subcategorySettings = categorySettings.find(
+    (sub: any) => sub.nameSubCategory === subcategory
+  );
 
   if (!subcategorySettings) {
-    console.warn(`[OBS] There is no subcategory ${subcategory} for OBS settings category ${category}`);
+    console.warn(
+      `[OBS] There is no subcategory ${subcategory} for OBS settings category ${category}`
+    );
     return;
   }
 
-  const parameterSettings = subcategorySettings.parameters.find((param: any) => param.name === parameter);
-  
+  const parameterSettings = subcategorySettings.parameters.find(
+    (param: any) => param.name === parameter
+  );
+
   if (!parameterSettings) {
-    console.warn(`[OBS] There is no parameter ${parameter} for OBS settings category ${category}.${subcategory}`);
+    console.warn(
+      `[OBS] There is no parameter ${parameter} for OBS settings category ${category}.${subcategory}`
+    );
     return;
   }
 
-  return parameterSettings.values.map( (value: any) => Object.values(value)[0]);
-}
+  return parameterSettings.values.map((value: any) => Object.values(value)[0]);
+};
 
 /**
  * Simply return a list of available resolutions from OBS for 'Base' and 'Output
  */
 const getObsResolutions = (): any => {
   return {
-    'Base':   getAvailableValues('Video', 'Untitled', 'Base'),
-    'Output': getAvailableValues('Video', 'Untitled', 'Output')
+    Base: getAvailableValues('Video', 'Untitled', 'Base'),
+    Output: getAvailableValues('Video', 'Untitled', 'Output'),
   };
-}
+};
 
 /*
-* Assert a signal from OBS is as expected, if it is not received
-* within 5 seconds or is not as expected then throw an error. 
-*/
+ * Assert a signal from OBS is as expected, if it is not received
+ * within 5 seconds or is not as expected then throw an error.
+ */
 const assertNextSignal = async (value: string) => {
-
   // Don't wait more than 5 seconds for the signal.
-  let signalInfo = await Promise.race([
-    waitQueue.shift(), 
+  const signalInfo = await Promise.race([
+    waitQueue.shift(),
     new Promise((_, reject) => {
-      setTimeout(reject, 5000, "OBS didn't signal " + value + " in time")}
-    )
+      setTimeout(reject, 5000, `OBS didn't signal ${value} in time`);
+    }),
   ]);
 
   // Assert the type is as expected.
-  if (signalInfo.type !== "recording") {
-    console.error("[OBS] " + signalInfo);
-    console.error("[OBS] OBS signal type unexpected", signalInfo.signal, value);
-    throw new Error("OBS behaved unexpectedly (2)");
+  if (signalInfo.type !== 'recording') {
+    console.error(`[OBS] ${signalInfo}`);
+    console.error('[OBS] OBS signal type unexpected', signalInfo.signal, value);
+    throw new Error('OBS behaved unexpectedly (2)');
   }
 
   // Assert the signal value is as expected.
   if (signalInfo.signal !== value) {
-    console.error("[OBS] " + signalInfo);
-    console.error("[OBS] OBS signal value unexpected", signalInfo.signal, value);
-    throw new Error("OBS behaved unexpectedly (3)");
+    console.error(`[OBS] ${signalInfo}`);
+    console.error(
+      '[OBS] OBS signal value unexpected',
+      signalInfo.signal,
+      value
+    );
+    throw new Error('OBS behaved unexpectedly (3)');
   }
 
-  console.debug("[OBS] Asserted OBS signal:", value);
-}
+  console.debug('[OBS] Asserted OBS signal:', value);
+};
 
 /**
  * Return the full path of the file that was last recorded from OBS
@@ -546,4 +617,4 @@ export {
   getObsResolutions,
   getObsLastRecording,
   getObsAvailableRecEncoders,
-}
+};

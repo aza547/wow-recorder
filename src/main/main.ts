@@ -11,51 +11,44 @@ import {
   Menu,
 } from 'electron';
 
+import RetailLogHandler from 'parsing/RetailLogHandler';
+import ClassicLogHandler from 'parsing/ClassicLogHandler';
+import Poller from '../utils/Poller';
+
 import {
   resolveHtmlPath,
   loadAllVideos,
   deleteVideo,
   openSystemExplorer,
   toggleVideoProtected,
-  fixPathWhenPackaged,
+  setupApplicationLogging,
   getAvailableDisplays,
   checkAppUpdate,
 } from './util';
 
-/**
- * Setup logging. It's important this is the first thing we do. This works by
- * overriding console log methods. All console log method will go to both the
- * console if it exists, and a file on disk. This only applies to main process
- * console logs, not the renderer logs.
- */
-const log = require('electron-log');
-
-const date = new Date().toISOString().slice(0, 10);
-const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
-const logDir = path.dirname(logPath);
-log.transports.file.resolvePath = () => logPath;
-Object.assign(console, log.functions);
-console.log('[Main] App starting: version', app.getVersion());
+import { Recorder, RecorderOptionsType } from './recorder';
 
 import {
-  pollWowProcess,
-  runRetailRecordingTest,
-  runClassicRecordingTest,
+  getAvailableAudioInputDevices,
+  getAvailableAudioOutputDevices,
+} from './obsAudioDeviceUtils';
+
+import { RecStatus, VideoPlayerSettings } from './types';
+import ConfigService from './ConfigService';
+import CombatLogParser from '../parsing/CombatLogParser';
+import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
+
+import {
   makeRetailHandler,
   makeClassicHandler,
-} from './logutils';
+} from '../parsing/HandlerFactory';
+
+import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
 
 const obsRecorder = require('./obsRecorder');
 
-import { Recorder, RecorderOptionsType } from './recorder';
-import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
-import { RecStatus, VideoPlayerSettings } from './types';
-import ConfigService from './configService';
-import CombatLogParser from '../log_handling/CombatLogParser';
-import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
-import RetailLogHandler from 'log_handling/RetailLogHandler';
-import ClassicLogHandler from 'log_handling/ClassicLogHandler';
+const logDir = setupApplicationLogging();
+console.log('[Main] App starting: version', app.getVersion());
 
 let retailHandler: RetailLogHandler;
 let classicHandler: ClassicLogHandler;
@@ -104,6 +97,23 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
     obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
     /* eslint-enable prettier/prettier */
   };
+};
+
+const wowProcessStarted = () => {
+  console.info('[Main] Detected WoW is running');
+  recorder.startBuffer();
+};
+
+const wowProcessStopped = () => {
+  console.info('[Main] Detected WoW is not running');
+
+  if (retailHandler && retailHandler.activity) {
+    retailHandler.forceEndActivity(0, true);
+  } else if (classicHandler && classicHandler.activity) {
+    classicHandler.forceEndActivity(0, true);
+  } else {
+    recorder.stopBuffer();
+  }
 };
 
 /**
@@ -308,7 +318,11 @@ const createWindow = async () => {
       classicHandler = makeClassicHandler(recorder, classicLogPath);
     }
 
-    pollWowProcess();
+    Poller.getInstance()
+      .on('wowProcessStart', wowProcessStarted)
+      .on('wowProcessStop', wowProcessStopped)
+      .start();
+
     checkAppUpdate(mainWindow);
   });
 
@@ -464,7 +478,10 @@ ipcMain.on('settingsWindow', (event, args) => {
         classicHandler = makeClassicHandler(recorder, classicLogPath);
       }
 
-      pollWowProcess();
+      Poller.getInstance()
+        .on('wowProcessStart', wowProcessStarted)
+        .on('wowProcessStop', wowProcessStopped)
+        .start();
     });
 
     settingsWindow.close();
@@ -621,10 +638,10 @@ ipcMain.on('test', (_event, args) => {
 
   if (retailHandler) {
     console.info('[Main] Running retail test');
-    runRetailRecordingTest(Boolean(args[0]));
+    runRetailRecordingTest(retailHandler.combatLogParser, Boolean(args[0]));
   } else if (classicHandler) {
     console.info('[Main] Running classic test');
-    runClassicRecordingTest(Boolean(args[0]));
+    runClassicRecordingTest(classicHandler.combatLogParser, Boolean(args[0]));
   }
 });
 
@@ -678,5 +695,3 @@ app
     }
   })
   .catch(console.log);
-
-export { recorder, retailHandler, classicHandler };

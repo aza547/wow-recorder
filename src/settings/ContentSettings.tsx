@@ -6,7 +6,7 @@ import FormLabel from '@mui/material/FormLabel';
 import { ISettingsPanelProps } from 'main/types';
 
 export default function ContentSettings(props: ISettingsPanelProps) {
-  const { config } = props;
+  const { config, onChange } = props;
   const checkBoxStyle = { color: '#bb4220', padding: 5 };
   const formControlLabelStyle = { color: 'white' };
   const formLabelStyle = { color: 'white' };
@@ -15,7 +15,7 @@ export default function ContentSettings(props: ISettingsPanelProps) {
   const getCheckBox = (preference: string) => (
     <Checkbox
       checked={Boolean(config[preference])}
-      onChange={props.onChange}
+      onChange={onChange}
       name={preference}
       style={checkBoxStyle}
     />

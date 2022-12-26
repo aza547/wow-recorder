@@ -2,6 +2,7 @@ import * as React from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
+
 import Box from '@mui/material/Box';
 import { makeStyles } from 'tss-react/mui';
 
@@ -11,14 +12,13 @@ import { DialogContentText } from '@mui/material';
 import { CopyBlock, dracula } from 'react-code-blocks';
 
 import {
-  categories,
   videoTabsSx,
   categoryTabSx,
   categoryTabsSx,
-  VideoCategory,
   videoScrollButtonSx,
 } from '../main/constants';
 
+import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
 import poster from '../../assets/poster/poster.png';
 import InformationDialog from './InformationDialog';
@@ -176,9 +176,7 @@ export default function Layout() {
     });
   };
 
-  /**
-   * State dependant variables.
-   */
+  const categories = Object.values(VideoCategory);
   const category = categories[state.categoryIndex];
 
   /**
@@ -194,7 +192,8 @@ export default function Layout() {
        * Refresh handler.
        */
       ipc.on('refreshState', async () => {
-        videoState = await ipc.invoke('getVideoState', categories);
+        videoState = await ipc.invoke('getVideoState', []);
+
         setState((prevState) => {
           return {
             ...prevState,
@@ -257,13 +256,12 @@ export default function Layout() {
    * Returns TSX for the tab buttons for category selection.
    */
   const generateTab = (tabIndex: number) => {
-    const category = categories[tabIndex];
     const key = `tab${tabIndex}`;
 
     return (
       <Tab
         key={key}
-        label={category}
+        label={categories[tabIndex]}
         {...a11yProps(tabIndex)}
         sx={{ ...categoryTabSx }}
       />
@@ -395,7 +393,7 @@ export default function Layout() {
         onClose={quitApplication}
       >
         <DialogContentText component="span">
-          Warcraft Recorder hit a problem it can't recover from and needs to
+          Warcraft Recorder hit a problem it can not recover from and needs to
           close.
           <br />
           <br />

@@ -63,6 +63,9 @@ export default function Settings() {
       case 'boolean':
         value = event.target.checked;
         break;
+
+      default:
+        console.error('Unexpected default case hit');
     }
 
     console.debug('Modify config', { setting, value });

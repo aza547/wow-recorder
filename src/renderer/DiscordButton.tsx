@@ -9,7 +9,12 @@ export default function DiscordButton() {
 
   return (
     <div id="discord-button-div">
-      <button id="discord-button" onClick={openDiscordURL} title="Join the discussion on Discord">
+      <button
+        id="discord-button"
+        type="button"
+        onClick={openDiscordURL}
+        title="Join the discussion on Discord"
+      >
         <img alt="icon" src={icon} height="25px" width="25px" />
       </button>
     </div>

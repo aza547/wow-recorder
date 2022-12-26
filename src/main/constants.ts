@@ -1,3 +1,4 @@
+import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchemaKey } from './configSchema';
 
 import {
@@ -5,28 +6,6 @@ import {
   RaidInstanceType,
   StringKeyToNumberValueMapType,
 } from './types';
-
-enum VideoCategory {
-  TwoVTwo = '2v2',
-  ThreeVThree = '3v3',
-  FiveVFive = '5v5',
-  Skirmish = 'Skirmish',
-  SoloShuffle = 'Solo Shuffle',
-  MythicPlus = 'Mythic+',
-  Raids = 'Raids',
-  Battlegrounds = 'Battlegrounds',
-}
-
-const categories: VideoCategory[] = [
-  VideoCategory.TwoVTwo,
-  VideoCategory.ThreeVThree,
-  VideoCategory.FiveVFive,
-  VideoCategory.Skirmish,
-  VideoCategory.SoloShuffle,
-  VideoCategory.MythicPlus,
-  VideoCategory.Raids,
-  VideoCategory.Battlegrounds,
-];
 
 interface ICategoryRecordingSettings {
   configKey: ConfigurationSchemaKey;
@@ -1017,17 +996,6 @@ const specializationById: { [id: number]: SpecializationObjectType } = {
   },
 };
 
-/**
- * A map of WoW executable names to the appropriate WoW flavour
- */
-const wowExecutableFlavours: { [key: string]: string } = {
-  wow: 'Retail',
-  wowt: 'PTR',
-  wowb: 'Beta',
-  wowclassic: 'Classic',
-};
-type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
-
 // Need this only for BG spec detection in retail.
 // These spells should be common, and unique to a spec.
 // More than one may be added per spec to improve chance of identifying.
@@ -1109,7 +1077,6 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
 };
 
 export {
-  categories,
   months,
   videoTabsSx,
   categoryTabSx,
@@ -1132,11 +1099,8 @@ export {
   instanceDifficulty,
   instanceEncountersById,
   InstanceDifficultyType,
-  VideoCategory,
   raidInstances,
   categoryRecordingSettings,
-  wowExecutableFlavours,
-  WoWProcessResultKey,
   classicUniqueSpecSpells,
   retailUniqueSpecSpells,
 };

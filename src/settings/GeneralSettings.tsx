@@ -17,7 +17,7 @@ import { openDirectorySelectorDialog } from './settingUtils';
 const ipc = window.electron.ipcRenderer;
 
 export default function GeneralSettings(props: ISettingsPanelProps) {
-  const { config } = props;
+  const { config, onChange } = props;
   const [openDialog, setDialog] = React.useState(false);
 
   const closeDialog = () => setDialog(false);
@@ -31,13 +31,13 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
 
       if (func === 'pathSelected') {
         if (setting === 'retailLogPath' || setting === 'classicLogPath') {
-          if (!Boolean(validationResult)) {
+          if (!validationResult) {
             setDialog(true);
             return;
           }
         }
 
-        props.onChange(new FakeChangeEvent(setting, value));
+        onChange(new FakeChangeEvent(setting, value));
       }
     });
   }, []);
@@ -59,7 +59,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
   const getCheckBox = (preference: string) => (
     <Checkbox
       checked={Boolean(config[preference])}
-      onChange={props.onChange}
+      onChange={onChange}
       name={preference}
       style={checkBoxStyle}
     />
@@ -147,7 +147,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
         <TextField
           name="maxStorage"
           value={config.maxStorage}
-          onChange={props.onChange}
+          onChange={onChange}
           id="max-storage"
           label="Max Storage (GB)"
           variant="outlined"

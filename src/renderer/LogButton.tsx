@@ -9,7 +9,12 @@ export default function SettingsButton() {
 
   return (
     <div id="log-button-div">
-      <button id="log-button" onClick={openLogPath} title="App logs">
+      <button
+        id="log-button"
+        type="button"
+        onClick={openLogPath}
+        title="App logs"
+      >
         <img alt="icon" src={icon} height="25px" width="25px" />
       </button>
     </div>

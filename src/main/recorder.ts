@@ -13,7 +13,7 @@ import {
 } from './util';
 
 import { Metadata, RecStatus, SaveStatus, VideoQueueItem } from './types';
-import { VideoCategory } from './constants';
+import { VideoCategory } from '../types/VideoCategory';
 import Activity from '../activitys/Activity';
 
 const atomicQueue = require('atomic-queue');

@@ -13,7 +13,12 @@ export default function TestButton() {
 
   return (
     <div id="test-button-div">
-      <button id="test-button" onClick={runTest} title="Run a test">
+      <button
+        id="test-button"
+        type="button"
+        onClick={runTest}
+        title="Run a test"
+      >
         <img alt="icon" src={icon} height="25px" width="25px" />
       </button>
     </div>

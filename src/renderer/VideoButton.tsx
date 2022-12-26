@@ -2,8 +2,6 @@ import * as React from 'react';
 import { Tab, Menu, MenuItem, Divider } from '@mui/material';
 
 import {
-  VideoCategory,
-  categories,
   videoButtonSx,
   specializationById,
   dungeonsByMapId,
@@ -27,9 +25,11 @@ import {
 import { SoloShuffleTimelineSegment } from 'main/types';
 import * as Images from './images';
 import { getFormattedDuration } from './rendererutils';
+import { VideoCategory } from '../types/VideoCategory';
 
 // For shorthand referencing.
 const ipc = window.electron.ipcRenderer;
+const categories = Object.values(VideoCategory);
 
 export default function VideoButton(props: any) {
   const { state, index } = props;
@@ -60,7 +60,9 @@ export default function VideoButton(props: any) {
   const { duration } = video;
   const formattedDuration = getFormattedDuration(duration);
 
-  const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(null);
+  const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(
+    null
+  );
   const [mouseX, setMouseX] = React.useState<number>(0);
   const [mouseY, setMouseY] = React.useState<number>(0);
   const open = Boolean(anchorElement);
@@ -72,19 +74,21 @@ export default function VideoButton(props: any) {
   if (video.player) {
     playerName = video.player._name;
     specIcon = Images.specImages[video.player._specID] || Images.specImages[0];
-    playerClass = specializationById[video.player._specID]?.class ?? "";
+    playerClass = specializationById[video.player._specID]?.class ?? '';
   } else {
-    playerName = "";
+    playerName = '';
     specIcon = Images.specImages[0];
-    playerClass = "";
+    playerClass = '';
   }
-  
+
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
-  // that we can for other categories. 
-  const isMythicPlus = (category === VideoCategory.MythicPlus);
-  const isSoloShuffle = (category === VideoCategory.SoloShuffle);
+  // that we can for other categories.
+  const isMythicPlus = category === VideoCategory.MythicPlus;
+  const isSoloShuffle = category === VideoCategory.SoloShuffle;
   const isRaid = category === VideoCategory.Raids;
-  const videoInstanceDifficulty = isRaid ? getInstanceDifficulty(video.difficultyID) : null;
+  const videoInstanceDifficulty = isRaid
+    ? getInstanceDifficulty(video.difficultyID)
+    : null;
 
   let buttonImage;
 
@@ -106,8 +110,8 @@ export default function VideoButton(props: any) {
   }
 
   /**
-  * Functions to handle opening and closing of context menus.
-  */
+   * Functions to handle opening and closing of context menus.
+   */
   const openMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     setAnchorElement(event.currentTarget);
     setMouseY(event.clientY);
@@ -129,28 +133,27 @@ export default function VideoButton(props: any) {
     closeMenuTimer = setTimeout(() => setAnchorElement(null), 300);
   };
 
-
   /**
-  * Delete a video.
-  */
+   * Delete a video.
+   */
   function deleteVideo(filePath: string) {
-    ipc.sendMessage('contextMenu', ['delete', filePath])
+    ipc.sendMessage('contextMenu', ['delete', filePath]);
     handleCloseMenu();
-  };
+  }
 
   /**
-  * Move a video to the permanently saved location. 
-  */
+   * Move a video to the permanently saved location.
+   */
   const saveVideo = (filePath: string) => {
-    ipc.sendMessage('contextMenu', ['save', filePath])
+    ipc.sendMessage('contextMenu', ['save', filePath]);
     handleCloseMenu();
   };
 
   /**
-  * Open the location of the video in file explorer.
-  */
+   * Open the location of the video in file explorer.
+   */
   const openLocation = (filePath: string) => {
-    ipc.sendMessage('contextMenu', ['open', filePath])
+    ipc.sendMessage('contextMenu', ['open', filePath]);
     handleCloseMenu();
   };
 
@@ -158,7 +161,7 @@ export default function VideoButton(props: any) {
    * Seek the selected video to the specified relative timestamp
    */
   const seekVideo = (index: number, timestamp: number) => {
-    ipc.sendMessage('contextMenu', ['seekVideo', index, timestamp])
+    ipc.sendMessage('contextMenu', ['seekVideo', index, timestamp]);
     handleCloseMenu();
   };
 
@@ -166,7 +169,9 @@ export default function VideoButton(props: any) {
    * Generate the JSX for the timeline segments that are used in the context menu on
    * the VideoButton.
    */
-  const renderKeystoneTimelineSegments = (timeline: ChallengeModeTimelineSegment[]): any[] => {
+  const renderKeystoneTimelineSegments = (
+    timeline: ChallengeModeTimelineSegment[]
+  ): any[] => {
     const timelineSegmentsMenuItems = timeline.map((segment: any) => {
       let timelineSegmentMenu;
       let segmentDurationText;
@@ -177,44 +182,54 @@ export default function VideoButton(props: any) {
       try {
         segmentDurationText = getFormattedDuration(segment.timestamp);
       } catch (e: any) {
-        console.error(e)
+        console.error(e);
         return;
       }
 
       if (segment.segmentType === TimelineSegmentType.Trash) {
-        timelineSegmentMenu = <div className='segment-type segment-type-trash'>
-          <span>{ segmentDurationText }</span>: Trash
-        </div>
-      } else
-      if (segment.segmentType == TimelineSegmentType.BossEncounter) {
-        timelineSegmentMenu = <div className='segment-entry'>
-          <div className='segment-type segment-type-boss'>
-            <span>{ segmentDurationText }</span>: Boss: { getEncounterNameById(segment.encounterId) }
+        timelineSegmentMenu = (
+          <div className="segment-type segment-type-trash">
+            <span>{segmentDurationText}</span>: Trash
           </div>
-          <div className={ 'segment-result ' + (result ? 'goodResult' : 'badResult') }>
-            { getVideoResultText(VideoCategory.Raids, result, 0, 0) }
+        );
+      } else if (segment.segmentType == TimelineSegmentType.BossEncounter) {
+        timelineSegmentMenu = (
+          <div className="segment-entry">
+            <div className="segment-type segment-type-boss">
+              <span>{segmentDurationText}</span>: Boss:{' '}
+              {getEncounterNameById(segment.encounterId)}
+            </div>
+            <div
+              className={
+                'segment-result ' + (result ? 'goodResult' : 'badResult')
+              }
+            >
+              {getVideoResultText(VideoCategory.Raids, result, 0, 0)}
+            </div>
           </div>
-        </div>
+        );
       }
 
       return (
-        <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(index, segment.timestamp)}>
-          { timelineSegmentMenu }
+        <MenuItem
+          key={'video-segment-' + segment.timestamp}
+          onClick={() => seekVideo(index, segment.timestamp)}
+        >
+          {timelineSegmentMenu}
         </MenuItem>
       );
     });
 
-    return [
-      ...timelineSegmentsMenuItems,
-      <Divider key='video-segments-end' />,
-    ];
+    return [...timelineSegmentsMenuItems, <Divider key="video-segments-end" />];
   };
 
   /**
    * Generate the JSX for the timeline segments that are used in the context menu on
    * the VideoButton.
    */
-  const renderSoloShuffleTimelineSegments = (timeline: SoloShuffleTimelineSegment[]): any[] => {
+  const renderSoloShuffleTimelineSegments = (
+    timeline: SoloShuffleTimelineSegment[]
+  ): any[] => {
     const timelineSegmentsMenuItems = timeline.map((segment: any) => {
       let timelineSegmentMenu;
       let segmentDurationText;
@@ -225,40 +240,43 @@ export default function VideoButton(props: any) {
       try {
         segmentDurationText = getFormattedDuration(segment.timestamp);
       } catch (e: any) {
-        console.error(e)
+        console.error(e);
         return;
       }
 
-      timelineSegmentMenu = 
-        <div className='segment-entry'>
-          <div className='segment-type'>
-            <span>{ segmentDurationText }</span>: Round { segment.round }
+      timelineSegmentMenu = (
+        <div className="segment-entry">
+          <div className="segment-type">
+            <span>{segmentDurationText}</span>: Round {segment.round}
           </div>
-          <div className={ 'segment-result ' + (result ? 'goodResult' : 'badResult') }>
-            { getVideoResultText(VideoCategory.ThreeVThree, result, 0, 0) }
+          <div
+            className={
+              'segment-result ' + (result ? 'goodResult' : 'badResult')
+            }
+          >
+            {getVideoResultText(VideoCategory.ThreeVThree, result, 0, 0)}
           </div>
         </div>
-
+      );
 
       return (
-        <MenuItem key={ 'video-segment-' + segment.timestamp } onClick={() => seekVideo(index, segment.timestamp)}>
-          { timelineSegmentMenu }
+        <MenuItem
+          key={'video-segment-' + segment.timestamp}
+          onClick={() => seekVideo(index, segment.timestamp)}
+        >
+          {timelineSegmentMenu}
         </MenuItem>
       );
     });
 
-    return [
-      ...timelineSegmentsMenuItems,
-      <Divider key='video-segments-end' />,
-    ];
+    return [...timelineSegmentsMenuItems, <Divider key="video-segments-end" />];
   };
 
   const buttonClasses = ['videoButton'];
   let keystoneTimelineSegments = [];
-  
-  
+
   if (isMythicPlus) {
-    buttonClasses.push('dungeon')
+    buttonClasses.push('dungeon');
 
     if (video.result) {
       resultText = '+' + video.upgradeLevel;
@@ -273,81 +291,99 @@ export default function VideoButton(props: any) {
 
   let soloShuffleTimelineSegments = [];
 
-  if (isSoloShuffle && (video.timeline !== undefined)) {
-    soloShuffleTimelineSegments = renderSoloShuffleTimelineSegments(video.timeline);
+  if (isSoloShuffle && video.timeline !== undefined) {
+    soloShuffleTimelineSegments = renderSoloShuffleTimelineSegments(
+      video.timeline
+    );
   }
 
-  const difficultyClass = isMythicPlus ? "instance-difficulty" : "difficulty";
+  const difficultyClass = isMythicPlus ? 'instance-difficulty' : 'difficulty';
 
   return (
-    <React.Fragment>
-      <Tab 
+    <>
+      <Tab
         label={
-          <div 
-            id={ videoPath } 
-            className={ buttonClasses.join(' ') } 
-            style={{ backgroundImage: `url(${buttonImage})`, backgroundSize: "200px 100px"}} 
+          <div
+            id={videoPath}
+            className={buttonClasses.join(' ')}
+            style={{
+              backgroundImage: `url(${buttonImage})`,
+              backgroundSize: '200px 100px',
+            }}
             onContextMenu={openMenu}
           >
             <div className="videoButtonDarken"></div>
-            <div className='duration'>{ formattedDuration }</div>
-            <div className='date'>{ video.date }</div>
-            <div className='time'>{ video.time }</div>
-            <div className={'result ' + resultClass }>{ resultText }</div>
-            <div className='specIcon'><img src={ specIcon } /></div>  
-            <div className={ playerClass + ' name'}>{ playerName }</div>
+            <div className="duration">{formattedDuration}</div>
+            <div className="date">{video.date}</div>
+            <div className="time">{video.time}</div>
+            <div className={'result ' + resultClass}>{resultText}</div>
+            <div className="specIcon">
+              <img src={specIcon} />
+            </div>
+            <div className={playerClass + ' name'}>{playerName}</div>
 
-            { isMythicPlus ||
+            {isMythicPlus || (
               <div>
-                <div className='encounter'>{ video.encounter.slice(0, 13) }</div>
-                <div className='zone'>{ video.zoneName }</div>
+                <div className="encounter">{video.encounter.slice(0, 13)}</div>
+                <div className="zone">{video.zoneName}</div>
               </div>
-            }
+            )}
 
-            { isMythicPlus &&
+            {isMythicPlus && (
               <div>
-                <div className='encounter'>
-                  { dungeonsByMapId[video.mapID]?.slice(0, 13) } 
+                <div className="encounter">
+                  {dungeonsByMapId[video.mapID]?.slice(0, 13)}
                 </div>
-                <div className='instance-difficulty difficulty-mythic'>
-                  +{ video.level }
+                <div className="instance-difficulty difficulty-mythic">
+                  +{video.level}
                 </div>
               </div>
-            }
+            )}
 
-            { isRaid && videoInstanceDifficulty &&
-              <div className={ difficultyClass + ' difficulty-' + videoInstanceDifficulty.difficultyID }>
-                { videoInstanceDifficulty.difficulty }
+            {isRaid && videoInstanceDifficulty && (
+              <div
+                className={
+                  difficultyClass +
+                  ' difficulty-' +
+                  videoInstanceDifficulty.difficultyID
+                }
+              >
+                {videoInstanceDifficulty.difficulty}
               </div>
-            }
-
-          </div> 
+            )}
+          </div>
         }
-        key={ videoPath }
-        sx = {{ ...videoButtonSx }}
+        key={videoPath}
+        sx={{ ...videoButtonSx }}
         {...props}
       />
-      <Menu 
-        id={ videoPath } 
+      <Menu
+        id={videoPath}
         anchorReference="anchorPosition"
         anchorPosition={{ top: mouseY, left: mouseX }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        open={open} 
-        onClose={handleCloseMenu} 
-        MenuListProps={{ onMouseEnter: mouseEnterMenu,  onMouseLeave: mouseExitMenu }}>
-        { keystoneTimelineSegments.length > 0 && keystoneTimelineSegments }
-        { soloShuffleTimelineSegments.length > 0 && soloShuffleTimelineSegments }
+        open={open}
+        onClose={handleCloseMenu}
+        MenuListProps={{
+          onMouseEnter: mouseEnterMenu,
+          onMouseLeave: mouseExitMenu,
+        }}
+      >
+        {keystoneTimelineSegments.length > 0 && keystoneTimelineSegments}
+        {soloShuffleTimelineSegments.length > 0 && soloShuffleTimelineSegments}
         <MenuItem onClick={() => deleteVideo(videoPath)}>Delete</MenuItem>
-        <MenuItem onClick={() => saveVideo(videoPath)}> 
-          {isProtected &&
+        <MenuItem onClick={() => saveVideo(videoPath)}>
+          {isProtected && (
             <ListItemIcon>
               <Check />
             </ListItemIcon>
-          }
+          )}
           Save
         </MenuItem>
-        <MenuItem onClick={() => openLocation(videoPath)}>Open Location</MenuItem>
+        <MenuItem onClick={() => openLocation(videoPath)}>
+          Open Location
+        </MenuItem>
       </Menu>
-    </React.Fragment>
+    </>
   );
 }
