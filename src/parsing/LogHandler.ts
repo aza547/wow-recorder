@@ -1,14 +1,13 @@
 import Combatant from '../main/Combatant';
 import CombatLogParser from './CombatLogParser';
 import ConfigService from '../main/ConfigService';
-import { raidInstances, VideoCategory } from '../main/constants';
+import { raidInstances } from '../main/constants';
 import { Recorder } from '../main/recorder';
 import { Flavour, PlayerDeathType } from '../main/types';
 import Activity from '../activitys/Activity';
 import RaidEncounter from '../activitys/RaidEncounter';
 
 import {
-  allowRecordCategory,
   ambiguate,
   isUnitFriendly,
   isUnitPlayer,
@@ -16,6 +15,8 @@ import {
 } from '../main/logutils';
 
 import LogLine from './LogLine';
+import { VideoCategory } from '../types/VideoCategory';
+import { allowRecordCategory } from '../utils/configUtils';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -159,7 +160,7 @@ export default abstract class LogHandler {
 
   startRecording = (activity: Activity) => {
     const { category } = activity;
-    const allowed = allowRecordCategory(category);
+    const allowed = allowRecordCategory(this.cfg, category);
 
     if (!allowed) {
       console.info('[LogHandler] Not configured to record', category);

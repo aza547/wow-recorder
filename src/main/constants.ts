@@ -996,17 +996,6 @@ const specializationById: { [id: number]: SpecializationObjectType } = {
   },
 };
 
-/**
- * A map of WoW executable names to the appropriate WoW flavour
- */
-const wowExecutableFlavours: { [key: string]: string } = {
-  wow: 'Retail',
-  wowt: 'PTR',
-  wowb: 'Beta',
-  wowclassic: 'Classic',
-};
-type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
-
 // Need this only for BG spec detection in retail.
 // These spells should be common, and unique to a spec.
 // More than one may be added per spec to improve chance of identifying.
@@ -1112,8 +1101,6 @@ export {
   InstanceDifficultyType,
   raidInstances,
   categoryRecordingSettings,
-  wowExecutableFlavours,
-  WoWProcessResultKey,
   classicUniqueSpecSpells,
   retailUniqueSpecSpells,
 };

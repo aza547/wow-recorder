@@ -92,6 +92,7 @@ export default class CombatLogParser extends EventEmitter {
     console.log(
       `[CombatLogParser] Start watching '${resolvedPath}' for '${wowFlavour}'`
     );
+
     this.watchLogDirectory(resolvedPath);
   }
 
@@ -289,7 +290,7 @@ export default class CombatLogParser extends EventEmitter {
         return;
       }
 
-      if (latestLogFile !== handler.currentLogFile) {
+      if (latestLogFile === handler.currentLogFile) {
         // Log file didn't change so no-op.
         return;
       }

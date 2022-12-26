@@ -139,10 +139,7 @@ type FileInfo = {
   mtime: number;
 };
 
-interface IWoWProcessResult {
-  exe: string;
-  flavour: WoWProcessResultKey;
-}
+
 
 type VideoQueueItem = {
   bufferFile: string;
@@ -232,7 +229,6 @@ export {
   RaidInstanceType,
   FileInfo,
   FileFinderCallbackType,
-  IWoWProcessResult,
   VideoQueueItem,
   FakeChangeEvent,
   ISettingsPanelProps,

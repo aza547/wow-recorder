@@ -11,6 +11,10 @@ import {
   Menu,
 } from 'electron';
 
+import RetailLogHandler from 'parsing/RetailLogHandler';
+import ClassicLogHandler from 'parsing/ClassicLogHandler';
+import Poller from '../utils/Poller';
+
 import {
   resolveHtmlPath,
   loadAllVideos,
@@ -22,28 +26,29 @@ import {
   checkAppUpdate,
 } from './util';
 
-const logDir = setupApplicationLogging();
-
-console.log('[Main] App starting: version', app.getVersion());
+import { Recorder, RecorderOptionsType } from './recorder';
 
 import {
-  pollWowProcess,
-  runRetailRecordingTest,
-  runClassicRecordingTest,
-  makeRetailHandler,
-  makeClassicHandler,
-} from './logutils';
+  getAvailableAudioInputDevices,
+  getAvailableAudioOutputDevices,
+} from './obsAudioDeviceUtils';
 
-const obsRecorder = require('./obsRecorder');
-
-import { Recorder, RecorderOptionsType } from './recorder';
-import { getAvailableAudioInputDevices, getAvailableAudioOutputDevices } from './obsAudioDeviceUtils';
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import CombatLogParser from '../parsing/CombatLogParser';
 import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
-import RetailLogHandler from 'parsing/RetailLogHandler';
-import ClassicLogHandler from 'parsing/ClassicLogHandler';
+
+import {
+  makeRetailHandler,
+  makeClassicHandler,
+} from '../parsing/HandlerFactory';
+
+import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
+
+const obsRecorder = require('./obsRecorder');
+
+const logDir = setupApplicationLogging();
+console.log('[Main] App starting: version', app.getVersion());
 
 let retailHandler: RetailLogHandler;
 let classicHandler: ClassicLogHandler;
@@ -92,6 +97,23 @@ const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
     obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
     /* eslint-enable prettier/prettier */
   };
+};
+
+const wowProcessStarted = () => {
+  console.info('[Main] Detected WoW is running');
+  recorder.startBuffer();
+};
+
+const wowProcessStopped = () => {
+  console.info('[Main] Detected WoW is not running');
+
+  if (retailHandler && retailHandler.activity) {
+    retailHandler.forceEndActivity(0, true);
+  } else if (classicHandler && classicHandler.activity) {
+    classicHandler.forceEndActivity(0, true);
+  } else {
+    recorder.stopBuffer();
+  }
 };
 
 /**
@@ -296,7 +318,11 @@ const createWindow = async () => {
       classicHandler = makeClassicHandler(recorder, classicLogPath);
     }
 
-    pollWowProcess();
+    Poller.getInstance()
+      .on('wowProcessStart', wowProcessStarted)
+      .on('wowProcessStop', wowProcessStopped)
+      .start();
+
     checkAppUpdate(mainWindow);
   });
 
@@ -452,7 +478,10 @@ ipcMain.on('settingsWindow', (event, args) => {
         classicHandler = makeClassicHandler(recorder, classicLogPath);
       }
 
-      pollWowProcess();
+      Poller.getInstance()
+        .on('wowProcessStart', wowProcessStarted)
+        .on('wowProcessStop', wowProcessStopped)
+        .start();
     });
 
     settingsWindow.close();
@@ -609,10 +638,10 @@ ipcMain.on('test', (_event, args) => {
 
   if (retailHandler) {
     console.info('[Main] Running retail test');
-    runRetailRecordingTest(Boolean(args[0]));
+    runRetailRecordingTest(retailHandler.combatLogParser, Boolean(args[0]));
   } else if (classicHandler) {
     console.info('[Main] Running classic test');
-    runClassicRecordingTest(Boolean(args[0]));
+    runClassicRecordingTest(classicHandler.combatLogParser, Boolean(args[0]));
   }
 });
 
@@ -666,5 +695,3 @@ app
     }
   })
   .catch(console.log);
-
-export { recorder, retailHandler, classicHandler };
