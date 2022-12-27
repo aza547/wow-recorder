@@ -1,6 +1,10 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
+import * as osn from 'obs-studio-node';
+import { IScene, ISettings } from 'obs-studio-node';
+import WaitQueue from 'wait-queue';
+import { ERecordingFormat } from './obsEnums';
 
 import {
   writeMetadataFile,
@@ -15,6 +19,8 @@ import {
 import { Metadata, RecStatus, SaveStatus, VideoQueueItem } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from '../activitys/Activity';
+
+const { v4: uuidfn } = require('uuid');
 
 const atomicQueue = require('atomic-queue');
 const ffmpeg = require('fluent-ffmpeg');
@@ -62,27 +68,17 @@ class Recorder {
 
   private _mainWindow: BrowserWindow;
 
+  private obsFactory: osn.IAdvancedRecording;
+
+  private waitQueue = new WaitQueue<any>();
+
   constructor(mainWindow: BrowserWindow, options: RecorderOptionsType) {
+    console.info('[Recorder] Constructing recorder with: ', options);
     this._mainWindow = mainWindow;
     this._options = options;
-
-    console.debug('[Recorder] Constructing recorder with: ', this._options);
-
-    this._videoQueue = atomicQueue(this._processVideoQueueItem.bind(this), {
-      concurrency: 1,
-    });
-
-    this._setupVideoProcessingQueue();
-
-    if (!fs.existsSync(this._options.bufferStorageDir)) {
-      console.log('[Recorder] Creating dir:', this._options.bufferStorageDir);
-      fs.mkdirSync(this._options.bufferStorageDir);
-    } else {
-      console.log('[Recorder] Clean out buffer');
-      this.cleanupBuffer(0);
-    }
-
-    obsRecorder.initialize(options);
+    this.setupVideoProcessingQueue();
+    this.createRecordingDirs();
+    this.initializeOBS();
     mainWindow.webContents.send('refreshState');
   }
 
@@ -90,7 +86,17 @@ class Recorder {
     return this._mainWindow;
   }
 
-  private async _processVideoQueueItem(
+  private createRecordingDirs() {
+    if (!fs.existsSync(this._options.bufferStorageDir)) {
+      console.log('[Recorder] Creating dir:', this._options.bufferStorageDir);
+      fs.mkdirSync(this._options.bufferStorageDir);
+    } else {
+      console.log('[Recorder] Clean out buffer');
+      this.cleanupBuffer(0);
+    }
+  }
+
+  private async processVideoQueueItem(
     data: VideoQueueItem,
     done: Function
   ): Promise<void> {
@@ -113,7 +119,11 @@ class Recorder {
   /**
    * Setup events on the videoQueue.
    */
-  private _setupVideoProcessingQueue(): void {
+  private setupVideoProcessingQueue(): void {
+    this._videoQueue = atomicQueue(this.processVideoQueueItem.bind(this), {
+      concurrency: 1,
+    });
+
     this._videoQueue.on('error', (err: any) => {
       console.error('[Recorder] Error occured during video processing', err);
     });
@@ -192,7 +202,7 @@ class Recorder {
     }
 
     console.log(addColor('[Recorder] Start recording buffer', 'cyan'));
-    await obsRecorder.start();
+    await this.startOBS();
     this._isRecordingBuffer = true;
     this._recorderStartDate = new Date();
     this.mainWindow.webContents.send(
@@ -216,7 +226,7 @@ class Recorder {
     if (this._isRecordingBuffer) {
       console.log(addColor('[Recorder] Stop recording buffer', 'cyan'));
       this._isRecordingBuffer = false;
-      await obsRecorder.stop();
+      await this.stopOBS();
     } else {
       console.error('[Recorder] No buffer recording to stop.');
     }
@@ -238,10 +248,10 @@ class Recorder {
   restartBuffer = async () => {
     console.log(addColor('[Recorder] Restart recording buffer', 'cyan'));
     this.isRecordingBuffer = false;
-    await obsRecorder.stop();
+    await this.stopOBS();
 
     this._bufferStartTimeoutID = setTimeout(async () => {
-      await obsRecorder.start();
+      await this.startOBS();
       this.isRecordingBuffer = true;
       this._recorderStartDate = new Date();
     }, 5000);
@@ -299,7 +309,7 @@ class Recorder {
    * @param {number} overrun how long to continue recording after stop is called
    * @param {boolean} closedWow if wow has just been closed
    */
-  stop = (activity: Activity, closedWow: boolean = false) => {
+  stop = (activity: Activity, closedWow = false) => {
     console.log(addColor('[Recorder] Stop recording after overrun', 'green'));
     console.info('[Recorder] Overrun:', activity.overrun);
 
@@ -308,7 +318,7 @@ class Recorder {
     setTimeout(async () => {
       // Take the actions to stop the recording.
       if (!this._isRecording) return;
-      await obsRecorder.stop();
+      await this.stopOBS();
       this._isRecording = false;
       this._isRecordingBuffer = false;
 
@@ -326,7 +336,7 @@ class Recorder {
       if (isRaid && !isLongEnough) {
         console.info('[Recorder] Raid encounter was too short, discarding');
       } else {
-        const bufferFile = obsRecorder.getObsLastRecording();
+        const bufferFile = this.obsFactory.lastFile();
         const metadata = activity.getMetadata();
         const relativeStart =
           (activity.startDate.getTime() - this._recorderStartDate.getTime()) /
@@ -368,7 +378,7 @@ class Recorder {
    */
   forceStop = async () => {
     if (!this._isRecording) return;
-    await obsRecorder.stop();
+    await this.stopOBS();
     this._isRecording = false;
     this._isRecordingBuffer = false;
 
@@ -430,7 +440,7 @@ class Recorder {
    */
   shutdown = async () => {
     if (this._isRecording) {
-      await obsRecorder.stop();
+      await this.stopOBS();
       this._isRecording = false;
     } else if (this._isRecordingBuffer) {
       this.stopBuffer();
@@ -457,7 +467,7 @@ class Recorder {
     );
 
     if (this._isRecording) {
-      await obsRecorder.stop();
+      await this.stopOBS();
       this._isRecording = false;
     } else if (this._isRecordingBuffer) {
       this.stopBuffer();
@@ -498,7 +508,7 @@ class Recorder {
     desiredDuration: number
   ): Promise<string> {
     const videoFileName = path.basename(initialFile, '.mp4');
-    const videoFilenameSuffix = outputFilename ? ` - ${  outputFilename}` : '';
+    const videoFilenameSuffix = outputFilename ? ` - ${outputFilename}` : '';
     const baseVideoFilename = this._sanitizeFilename(
       videoFileName + videoFilenameSuffix
     );
@@ -563,6 +573,151 @@ class Recorder {
         .run();
     });
   }
+
+  private initializeOBS() {
+    let initResult;
+    console.info('Initializing OBS');
+
+    try {
+      osn.NodeObs.IPC.host(uuidfn());
+
+      osn.NodeObs.SetWorkingDirectory(
+        path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
+      );
+
+      initResult = osn.NodeObs.OBS_API_initAPI(
+        'en-US',
+        path.join(path.normalize(__dirname), 'osn-data'),
+        '0.00.00-preview.0',
+        ''
+      );
+    } catch (e) {
+      throw new Error(`Exception when initializing OBS process: ${e}`);
+    }
+
+    if (initResult !== 0) {
+      throw new Error(
+        `OBS process initialization failed with code ${initResult}`
+      );
+    }
+
+    console.info('OBS started successfully');
+
+    osn.VideoFactory.videoContext = {
+      fpsNum: 60,
+      fpsDen: 1,
+      baseWidth: 1920,
+      baseHeight: 1080,
+      outputWidth: 1920,
+      outputHeight: 1080,
+      outputFormat: 2,
+      colorspace: 2,
+      range: 2,
+      scaleType: 3,
+      fpsType: 2,
+    };
+
+    this.obsFactory = osn.AdvancedRecordingFactory.create();
+    this.obsFactory.path = path.join(
+      path.normalize('D:/wow-recorder-files/.temp')
+    );
+
+    this.obsFactory.format = ERecordingFormat.MP4;
+    this.obsFactory.useStreamEncoders = false;
+
+    this.obsFactory.videoEncoder = osn.VideoEncoderFactory.create(
+      'obs_x264',
+      'video-encoder'
+    );
+
+    this.obsFactory.overwrite = false;
+    this.obsFactory.noSpace = false;
+    const track1 = osn.AudioTrackFactory.create(160, 'track1');
+    osn.AudioTrackFactory.setAtIndex(track1, 1);
+
+    this.obsFactory.signalHandler = (signal) => {
+      this.waitQueue.push(signal);
+    };
+
+    const settings: ISettings = {
+      allow_transparency: true,
+      anti_cheat_hook: true,
+      auto_capture_rules_path: '',
+      auto_fit_to_output: true,
+      auto_placeholder_image: '',
+      auto_placeholder_message: 'Looking for a game to capture',
+      capture_cursor: true,
+      capture_mode: 'window',
+      capture_overlays: false,
+      force_scaling: false,
+      hook_rate: 1,
+      limit_framerate: false,
+      priority: 2,
+      rgb10a2_space: 'srgb',
+      scale_res: '0x0',
+      sli_compatibility: false,
+      user_placeholder_image: '',
+      user_placeholder_use: false,
+      window: 'World of Warcraft:GxWindowClass:Wow.exe',
+    };
+
+    const videoSource = osn.InputFactory.create(
+      'game_capture',
+      'input',
+      settings
+    );
+
+    const scene: IScene = osn.SceneFactory.create('main');
+    scene.add(videoSource);
+
+    osn.Global.setOutputSource(1, scene);
+  }
+
+  private async startOBS() {
+    this.obsFactory.start();
+    await this.assertNextOBSSignal('start');
+  }
+
+  private async stopOBS() {
+    this.obsFactory.stop();
+    await this.assertNextOBSSignal('stopping');
+    await this.assertNextOBSSignal('stop');
+    await this.assertNextOBSSignal('wrote');
+  }
+
+  private assertNextOBSSignal = async (value: string) => {
+    // Don't wait more than 5 seconds for the signal.
+    const signalInfo = await Promise.race([
+      this.waitQueue.shift(),
+      new Promise((_, reject) => {
+        setTimeout(reject, 5000, `OBS didn't signal ${value} in time`);
+      }),
+    ]);
+
+    // Assert the type is as expected.
+    if (signalInfo.type !== 'recording') {
+      console.error(`[OBS] ${signalInfo}`);
+      console.error(
+        '[OBS] OBS signal type unexpected',
+        signalInfo.signal,
+        value
+      );
+      throw new Error('OBS behaved unexpectedly (2)');
+    }
+
+    // Assert the signal value is as expected.
+    if (signalInfo.signal !== value) {
+      console.error(`[OBS] ${signalInfo}`);
+      console.error(
+        '[OBS] OBS signal value unexpected',
+        signalInfo.signal,
+        value
+      );
+      throw new Error('OBS behaved unexpectedly (3)');
+    }
+
+    console.debug('[OBS] Asserted OBS signal:', value);
+  };
 }
 
 export { Recorder, RecorderOptionsType };
