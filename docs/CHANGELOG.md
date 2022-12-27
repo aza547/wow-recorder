@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- [NO-ISSUE] - Upgrade obs-studio-node to 0.23.59. 
+
 ### Fixed
 
 ## [3.2.0] - 2022-12-23

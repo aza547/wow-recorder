@@ -80,7 +80,7 @@ export default class RaidEncounter extends Activity {
     }
 
     const raids = raidInstances.filter((raid) =>
-      Object.prototype.hasOwnProperty.call(raid, this.encounterID)
+      Object.prototype.hasOwnProperty.call(raid.encounters, this.encounterID)
     );
 
     const raid = raids.pop();
