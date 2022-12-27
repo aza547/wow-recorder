@@ -2,7 +2,7 @@
 This is intended to be a quick reference to help understand the configuration we can apply to libobs via the obs-studio-node package. It's been collated using the following functions:
   - OBS_settings_getListCategories
   - OBS_settings_getSettings
-# Categories
+## Categories
 ```
 [
   'General',  
@@ -15,7 +15,7 @@ This is intended to be a quick reference to help understand the configuration we
 ]
 ```
 
-# General
+## General
 ```
 {
   data: [
@@ -234,7 +234,7 @@ This is intended to be a quick reference to help understand the configuration we
 }
 ```
 
-# Video
+## Video
 ```
 {
   data: [
@@ -336,7 +336,7 @@ This is intended to be a quick reference to help understand the configuration we
 }
 ```
 
-# Output
+## Output
 ```
 {
   data: [
@@ -1208,7 +1208,7 @@ This is intended to be a quick reference to help understand the configuration we
 }
 ```
 
-# Audio
+## Audio
 ```
 {
   data: [
@@ -1255,7 +1255,7 @@ This is intended to be a quick reference to help understand the configuration we
 }
 ```
 
-# Advanced
+## Advanced
 ```
 data: [
     {
