@@ -1,3 +1,238 @@
+# Settings Reference
+This is intended to be a quick reference to help understand the configuration we can apply to libobs via the obs-studio-node package. It's been collated using the following functions:
+  - OBS_settings_getListCategories
+  - OBS_settings_getSettings
+# Categories
+```
+[
+  'General',  
+  'Stream',
+  'Output',   
+  'Audio',
+  'Video',    
+  'Hotkeys',
+  'Advanced'
+]
+```
+
+# General
+```
+{
+  data: [
+    {
+      nameSubCategory: 'Output',
+      parameters: [
+        {
+          name: 'WarnBeforeStartingStream',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Show confirmation dialog when starting streams',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'WarnBeforeStoppingStream',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Show confirmation dialog when stopping streams',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'RecordWhenStreaming',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Automatically record when streaming',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'KeepRecordingWhenStreamStops',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Keep recording when stream stops',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'ReplayBufferWhileStreaming',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Automatically start replay buffer when streaming',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'KeepReplayBufferStreamStops',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Keep replay buffer active when stream stops',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Source Alignement Snapping',
+      parameters: [
+        {
+          name: 'SnappingEnabled',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Enable',
+          subType: '',
+          currentValue: true,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'SnapDistance',
+          type: 'OBS_PROPERTY_DOUBLE',
+          description: 'Snap Sensitivity',
+          subType: '',
+          currentValue: 10,
+          minVal: 0,
+          maxVal: 100,
+          stepVal: 0.5,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'ScreenSnapping',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Snap Sources to edge of screen',
+          subType: '',
+          currentValue: true,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'SourceSnapping',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Snap Sources to other sources',
+          subType: '',
+          currentValue: true,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'CenterSnapping',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Snap Sources to horizontal and vertical center',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Projectors',
+      parameters: [
+        {
+          name: 'HideProjectorCursor',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Hide cursor over projectors',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'ProjectorAlwaysOnTop',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Make projectors always on top',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'SaveProjectors',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Save projectors on exit',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'System Tray',
+      parameters: [
+        {
+          name: 'SysTrayEnabled',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Enable',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'SysTrayWhenStarted',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Minimize to system tray when started',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'SysTrayMinimizeToTray',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Always minimize to system tray instead of task bar',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    }
+  ],
+  type: 0
+}
+```
 
 # Video
 ```
@@ -970,5 +1205,409 @@
     }
   ],
   type: 1
+}
+```
+
+# Audio
+```
+{
+  data: [
+    {
+      nameSubCategory: 'Untitled',
+      parameters: [
+        {
+          name: 'SampleRate',
+          type: 'OBS_PROPERTY_LIST',
+          description: 'Sample Rate (requires a restart)',
+          subType: 'OBS_COMBO_FORMAT_INT',
+          currentValue: 44100,
+          minVal: -200,
+          maxVal: 200,
+          stepVal: 1,
+          values: [ { '44.1khz': 44100 }, { '48khz': 48000 } ],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'ChannelSetup',
+          type: 'OBS_PROPERTY_LIST',
+          description: 'Channels (requires a restart)',
+          subType: 'OBS_COMBO_FORMAT_STRING',
+          currentValue: 'Stereo',
+          values: [
+            { Mono: 'Mono' },
+            { Stereo: 'Stereo' },
+            { '2.1': '2.1' },
+            { '4.0': '4.0' },
+            { '4.1': '4.1' },
+            { '5.1': '5.1' },
+            { '7.1': '7.1' }
+          ],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    }
+  ],
+  type: 0
+}
+```
+
+# Advanced
+```
+data: [
+    {
+      nameSubCategory: 'General',
+      parameters: [
+        {
+          name: 'ProcessPriority',
+          type: 'OBS_PROPERTY_LIST',
+          description: 'Process Priority',
+          subType: 'OBS_COMBO_FORMAT_STRING',
+          currentValue: 'Normal',
+          values: [
+            { High: 'High' },
+            { 'Above Normal': 'AboveNormal' },
+            { Normal: 'Normal' },
+            { 'Below Normal': 'BelowNormal' },
+            { Idle: 'Idle' }
+          ],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Video',
+      parameters: [
+        {
+          name: 'ColorFormat',
+          type: 'OBS_PROPERTY_LIST',
+          description: 'Color Format',
+          subType: 'OBS_COMBO_FORMAT_STRING',
+          currentValue: 'NV12',
+          values: [
+            { NV12: 'NV12' },
+            { I420: 'I420' },
+            { I444: 'I444' },
+            { RGB: 'RGB' }
+          ],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'ColorSpace',
+          type: 'OBS_PROPERTY_LIST',
+          description: 'YUV Color Space',
+          subType: 'OBS_COMBO_FORMAT_STRING',
+          currentValue: '601',
+          values: [ { '601': '601' }, { '709': '709' } ],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'ColorRange',
+          type: 'OBS_PROPERTY_LIST',
+          description: 'YUV Color Range',
+          subType: 'OBS_COMBO_FORMAT_STRING',
+          currentValue: 'Partial',
+          values: [ { Partial: 'Partial' }, { Full: 'Full' } ],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'ForceGPUAsRenderDevice',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Force GPU as render device',
+          subType: '',
+          currentValue: true,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Audio',
+      parameters: [
+        {
+          name: 'MonitoringDeviceName',
+          type: 'OBS_PROPERTY_LIST',
+          description: 'Audio Monitoring Device',
+          subType: 'OBS_COMBO_FORMAT_STRING',
+          currentValue: 'Default',
+          values: [
+            { Default: 'Default' },
+            {
+              'BenQ GW2480 (NVIDIA High Definition Audio)': 'BenQ GW2480 (NVIDIA High Definition Audio)'
+            },
+            {
+              'Digital Audio (S/PDIF) (High Definition Audio Device)': 'Digital Audio (S/PDIF) (High Definition Audio Device)'
+            },
+            {
+              'Speakers (3- G533 Gaming Headset)': 'Speakers (3- G533 Gaming Headset)'
+            },
+            {
+              'BenQ GW2480 (NVIDIA High Definition Audio)': 'BenQ GW2480 (NVIDIA High Definition Audio)'
+            }
+          ],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'DisableAudioDucking',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Disable Windows audio ducking',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Recording',
+      parameters: [
+        {
+          name: 'FilenameFormatting',
+          type: 'OBS_PROPERTY_EDIT_TEXT',
+          description: 'Filename Formatting',
+          subType: '',
+          currentValue: '%CCYY-%MM-%DD %hh-%mm-%ss',
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'OverwriteIfExists',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Overwrite if file exists',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Replay Buffer',
+      parameters: [
+        {
+          name: 'RecRBPrefix',
+          type: 'OBS_PROPERTY_EDIT_TEXT',
+          description: 'Replay Buffer Filename Prefix',
+          subType: '',
+          currentValue: 'Replay',
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'RecRBSuffix',
+          type: 'OBS_PROPERTY_EDIT_TEXT',
+          description: 'Replay Buffer Filename Suffix',
+          subType: '',
+          currentValue: '',
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Stream Delay',
+      parameters: [
+        {
+          name: 'DelayEnable',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Enable',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'DelaySec',
+          type: 'OBS_PROPERTY_INT',
+          description: 'Duration (seconds)',
+          subType: '',
+          currentValue: 20,
+          minVal: 0,
+          maxVal: 1800,
+          stepVal: 0,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'DelayPreserve',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Preserved cutoff point (increase delay) when reconnecting',
+          subType: '',
+          currentValue: true,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Automatically Reconnect',
+      parameters: [
+        {
+          name: 'Reconnect',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Enable',
+          subType: '',
+          currentValue: true,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'RetryDelay',
+          type: 'OBS_PROPERTY_INT',
+          description: 'Retry Delay (seconds)',
+          subType: '',
+          currentValue: 10,
+          minVal: 0,
+          maxVal: 30,
+          stepVal: 0,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'MaxRetries',
+          type: 'OBS_PROPERTY_INT',
+          description: 'Maximum Retries',
+          subType: '',
+          currentValue: 20,
+          minVal: 0,
+          maxVal: 10000,
+          stepVal: 0,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Network',
+      parameters: [
+        {
+          name: 'BindIP',
+          type: 'OBS_PROPERTY_LIST',
+          description: 'Bind to IP',
+          subType: 'OBS_COMBO_FORMAT_STRING',
+          currentValue: 'default',
+          values: [
+            { Default: 'default' },
+            {
+              '[Ethernet] 2a00:23c8:75a6:ab01:bf7a:f4cf:9148:d7dc': '2a00:23c8:75a6:ab01:bf7a:f4cf:9148:d7dc'
+            },
+            {
+              '[Ethernet] 2a00:23c8:75a6:ab01:6963:4a2b:896d:8e2a': '2a00:23c8:75a6:ab01:6963:4a2b:896d:8e2a'
+            },
+            {
+              '[Ethernet] fe80::65b8:61b9:a3e6:17c6': 'fe80::65b8:61b9:a3e6:17c6'
+            },
+            { '[Ethernet] 192.168.1.108': '192.168.1.108' }
+          ],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'DynamicBitrate',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Dynamically change bitrate when dropping frames while streaming',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'NewSocketLoopEnable',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Enable new networking code',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        },
+        {
+          name: 'LowLatencyEnable',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Low latency mode',
+          subType: '',
+          currentValue: false,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Sources',
+      parameters: [
+        {
+          name: 'browserHWAccel',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Enable Browser Source Hardware Acceleration (requires a restart)',
+          subType: '',
+          currentValue: true,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    },
+    {
+      nameSubCategory: 'Media Files',
+      parameters: [
+        {
+          name: 'fileCaching',
+          type: 'OBS_PROPERTY_BOOL',
+          description: 'Enable media file caching',
+          subType: '',
+          currentValue: true,
+          values: [],
+          visible: true,
+          enabled: true,
+          masked: false
+        }
+      ]
+    }
+  ],
+  type: 0
 }
 ```
