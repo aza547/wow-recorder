@@ -47,7 +47,7 @@ You can use VSCode's JavaScript Debug terminal to step through the code, add bre
 <img src="https://i.imgur.com/zFIaGHa.png" width="200">
 
 ## Building OSN
-The [obs-studio-node](https://github.com/stream-labs/obs-studio-node) package we heavily rely on is not build by the developers, or uploaded to NPM. We have to build it and host the tarball ourselves if we want to have repeatable builds.
+The [obs-studio-node](https://github.com/stream-labs/obs-studio-node) package we heavily rely on is not build by the developers, or uploaded to NPM. We have to build it and host the tarball ourselves if we want to have repeatable builds. You only need to care about this section if you're taking OBS updates, which I expect to be rare.
 
 The build instructions on obs-studio-node's GitHub page are not perfect, there is a better set [here](https://github.com/Envek/obs-studio-node-example). I've pasted below and adapted for our use so we aren't relying on external links for our build process. 
 
@@ -64,7 +64,7 @@ The build instructions on obs-studio-node's GitHub page are not perfect, there i
     cmake --build . --config Release
     cpack -G TGZ
     ```
- 2. Host it on a file sharing platform of your choice so that it's downloadable via a URL. I've used Azure for this, for example I build 0.22.10 and hosted it [here](https://wowrecorder.blob.core.windows.net/wowrecorder/obs-studio-node-0.22.10-win64.tar.gz). 
+ 2. Host it on a file sharing platform of your choice so that it's downloadable via a URL. I've used Azure for this, for example I built 0.22.10 and hosted it [here](https://wowrecorder.blob.core.windows.net/wowrecorder/obs-studio-node-0.22.10-win64.tar.gz). 
  
  3. Place the URL to it to `package.json`. You should do this in both package.json files in the project, this is important for distributing. 
 
