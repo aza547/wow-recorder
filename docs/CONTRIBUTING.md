@@ -47,6 +47,9 @@ You can use VSCode's JavaScript Debug terminal to step through the code, add bre
 <img src="https://i.imgur.com/zFIaGHa.png" width="200">
 
 ## Building OSN
+> Note sure this is actually true. I think this is hosted by streamlabs here (note version number): 
+> - https://s3-us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/osn-0.23.59-release-win64.tar.gz
+
 The [obs-studio-node](https://github.com/stream-labs/obs-studio-node) package we heavily rely on is not build by the developers, or uploaded to NPM. We have to build it and host the tarball ourselves if we want to have repeatable builds. You only need to care about this section if you're taking OBS updates, which I expect to be rare.
 
 The build instructions on obs-studio-node's GitHub page are not perfect, there is a better set [here](https://github.com/Envek/obs-studio-node-example). I've pasted below and adapted for our use so we aren't relying on external links for our build process. 
