@@ -45,8 +45,6 @@ import {
 
 import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
 
-const obsRecorder = require('./obsRecorder');
-
 const logDir = setupApplicationLogging();
 console.log('[Main] App starting: version', app.getVersion());
 
@@ -104,16 +102,18 @@ const wowProcessStarted = () => {
   recorder.startBuffer();
 };
 
-const wowProcessStopped = () => {
+const wowProcessStopped = async () => {
   console.info('[Main] Detected WoW is not running');
 
   if (retailHandler && retailHandler.activity) {
-    retailHandler.forceEndActivity(0, true);
+    await retailHandler.forceEndActivity(0, true);
   } else if (classicHandler && classicHandler.activity) {
-    classicHandler.forceEndActivity(0, true);
+    await classicHandler.forceEndActivity(0, true);
   } else {
-    recorder.stopBuffer();
+    await recorder.stopBuffer();
   }
+
+  await recorder.shutdownOBS();
 };
 
 /**
@@ -672,7 +672,7 @@ ipcMain.on('recorder', (_event, args) => {
 app.on('window-all-closed', () => {
   console.log('[Main] User closed app');
   if (recorder) recorder.cleanupBuffer(0);
-  obsRecorder.shutdown();
+  recorder.shutdownOBS();
   app.quit();
 });
 

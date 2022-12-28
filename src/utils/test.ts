@@ -76,7 +76,7 @@ export const runRetailRecordingTest = (
   setTimeout(() => {
     sendTestCombatLogLine(parser, testArenaEndLine);
     testRunning = false;
-  }, 10 * 1000);
+  }, 5 * 1000);
 };
 
 /**
@@ -136,5 +136,5 @@ export const runClassicRecordingTest = (
   setTimeout(() => {
     sendTestCombatLogLine(parser, testArenaEndLine);
     testRunning = false;
-  }, 10 * 1000);
+  }, 5 * 1000);
 };

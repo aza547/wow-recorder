@@ -73,7 +73,7 @@ export default class VideoProcessQueue {
 
   private async processVideoQueueItem(
     data: VideoQueueItem,
-    done: Function
+    done: () => void
   ): Promise<void> {
     const videoPath = await VideoProcessQueue.cutVideo(
       data.bufferFile,
@@ -127,7 +127,7 @@ export default class VideoProcessQueue {
    */
   private static sanitizeFilename(filename: string): string {
     return filename
-      .replace(/[<>:"/\|?*]/g, ' ') // Replace all invalid characters with space
+      .replace(/[<>:"/|?*]/g, ' ') // Replace all invalid characters with space
       .replace(/ +/g, ' '); // Replace multiple spaces with a single space
   }
 
@@ -163,6 +163,7 @@ export default class VideoProcessQueue {
           relativeStart
         );
 
+        // eslint-disable-next-line no-param-reassign
         relativeStart = 0;
       }
 

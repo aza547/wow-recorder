@@ -44,11 +44,13 @@ class Recorder {
 
   private _mainWindow: BrowserWindow;
 
-  private obsFactory: osn.IAdvancedRecording;
+  private obsFactory: osn.IAdvancedRecording | undefined;
 
   private waitQueue = new WaitQueue<any>();
 
   private videoProcessQueue;
+
+  private obsInitialized = false;
 
   constructor(mainWindow: BrowserWindow, options: RecorderOptionsType) {
     console.info('[Recorder] Constructing recorder with: ', options);
@@ -56,8 +58,6 @@ class Recorder {
     this.videoProcessQueue = new VideoProcessQueue(mainWindow);
     this._options = options;
     this.createRecordingDirs();
-    this.initializeOBS();
-    mainWindow.webContents.send('refreshState');
   }
 
   get mainWindow() {
@@ -87,14 +87,19 @@ class Recorder {
    */
   startBuffer = async () => {
     // Guard against multiple buffer timers.
-    if (this._isRecordingBuffer) {
+    if (this.isRecordingBuffer) {
       console.error('[Recorder] Already recording a buffer');
       return;
     }
 
+    if (!this.obsInitialized) {
+      console.error('[Recorder] Need to initialize OBS before starting buffer');
+      this.initializeOBS();
+    }
+
     console.log(addColor('[Recorder] Start recording buffer', 'cyan'));
     await this.startOBS();
-    this._isRecordingBuffer = true;
+    this.isRecordingBuffer = true;
     this._recorderStartDate = new Date();
     this.mainWindow.webContents.send(
       'updateRecStatus',
@@ -126,7 +131,7 @@ class Recorder {
       'updateRecStatus',
       RecStatus.WaitingForWoW
     );
-    
+
     this.cleanupBuffer(1);
   };
 
@@ -312,8 +317,7 @@ class Recorder {
   }
 
   private initializeOBS() {
-    let initResult;
-    console.info('Initializing OBS');
+    console.info('[Recorder] Initializing OBS');
 
     try {
       osn.NodeObs.IPC.host(uuidfn());
@@ -322,23 +326,21 @@ class Recorder {
         path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
       );
 
-      initResult = osn.NodeObs.OBS_API_initAPI(
+      const initResult = osn.NodeObs.OBS_API_initAPI(
         'en-US',
         path.join(path.normalize(__dirname), 'osn-data'),
-        '0.00.00-preview.0',
+        '1.0.0',
         ''
       );
+
+      if (initResult !== 0) {
+        throw new Error(
+          `OBS process initialization failed with code ${initResult}`
+        );
+      }
     } catch (e) {
       throw new Error(`Exception when initializing OBS process: ${e}`);
     }
-
-    if (initResult !== 0) {
-      throw new Error(
-        `OBS process initialization failed with code ${initResult}`
-      );
-    }
-
-    console.info('OBS started successfully');
 
     osn.VideoFactory.videoContext = {
       fpsNum: 60,
@@ -376,6 +378,9 @@ class Recorder {
       this.waitQueue.push(signal);
     };
 
+    this.obsFactory.outputWidth = 1920;
+    this.obsFactory.outputHeight = 1080;
+
     const settings: ISettings = {
       allow_transparency: true,
       anti_cheat_hook: true,
@@ -406,8 +411,30 @@ class Recorder {
 
     const scene: IScene = osn.SceneFactory.create('main');
     scene.add(videoSource);
-
     osn.Global.setOutputSource(1, scene);
+
+    console.info(
+      `[Recorder] VideoSource is ${videoSource.width}x${videoSource.height}`
+    );
+
+    this.obsInitialized = true;
+    console.info('OBS initialized successfully');
+  }
+
+  async shutdownOBS() {
+    console.info('[Recorder] OBS shutting down');
+
+    try {
+      osn.NodeObs.InitShutdownSequence();
+      osn.NodeObs.RemoveSourceCallback();
+      osn.NodeObs.OBS_service_removeCallback();
+      osn.NodeObs.IPC.disconnect();
+    } catch (e) {
+      throw new Error(`Exception when shutting down OBS process: ${e}`);
+    }
+
+    this.obsInitialized = false;
+    console.info('[Recorder] OBS shut down successfully');
   }
 
   private async startOBS() {
@@ -426,7 +453,7 @@ class Recorder {
     // Don't wait more than 5 seconds for the signal.
     const signalInfo = await Promise.race([
       this.waitQueue.shift(),
-      new Promise((_, reject) => {
+      new Promise((_resolve, reject) => {
         setTimeout(reject, 5000, `OBS didn't signal ${value} in time`);
       }),
     ]);
