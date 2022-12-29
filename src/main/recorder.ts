@@ -29,6 +29,23 @@ type RecorderOptionsType = {
   obsRecEncoder: string;
 };
 
+interface IOBSDevice {
+  id: string;
+  description: string;
+}
+
+enum EDeviceType {
+  audioInput = 'audioInput',
+  audioOutput = 'audioOutput',
+  videoInput = 'videoInput',
+}
+
+interface IDevice {
+  id: string;
+  type: EDeviceType;
+  description: string;
+}
+
 class Recorder {
   private _isRecording: boolean = false;
 
@@ -50,7 +67,7 @@ class Recorder {
 
   private videoProcessQueue;
 
-  private obsInitialized = false;
+  obsInitialized = false;
 
   constructor(mainWindow: BrowserWindow, options: RecorderOptionsType) {
     console.info('[Recorder] Constructing recorder with: ', options);
@@ -482,6 +499,42 @@ class Recorder {
 
     console.debug('[OBS] Asserted OBS signal:', value);
   };
+
+  static getInputAudioDevices() {
+    // @@@ todo check init or fail
+    const inputDevices: IDevice[] = [];
+
+    (osn.NodeObs.OBS_settings_getInputAudioDevices() as IOBSDevice[]).forEach(
+      (device) => {
+        inputDevices.push({
+          id: device.id,
+          description: device.description,
+          type: EDeviceType.audioInput,
+        });
+      }
+    );
+
+    inputDevices.filter((v) => v.id !== 'default'); //@@@ this isn't working?
+    return inputDevices;
+  }
+
+  static getOutputAudioDevices() {
+    // @@@ todo check init or fail
+    const outputDevices: IDevice[] = [];
+
+    (osn.NodeObs.OBS_settings_getOutputAudioDevices() as IOBSDevice[]).forEach(
+      (device) => {
+        outputDevices.push({
+          id: device.id,
+          description: device.description,
+          type: EDeviceType.audioOutput,
+        });
+      }
+    );
+
+    outputDevices.filter((v) => v.id !== 'default'); //@@@ this isn't working?
+    return outputDevices;
+  }
 }
 
 export { Recorder, RecorderOptionsType };

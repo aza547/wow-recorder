@@ -28,15 +28,9 @@ import {
 
 import { Recorder, RecorderOptionsType } from './recorder';
 
-import {
-  getAvailableAudioInputDevices,
-  getAvailableAudioOutputDevices,
-} from './obsAudioDeviceUtils';
-
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import CombatLogParser from '../parsing/CombatLogParser';
-import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
 
 import {
   makeRetailHandler,
@@ -503,7 +497,7 @@ ipcMain.on('settingsWindow', (event, args) => {
       return;
     }
 
-    event.returnValue = getObsResolutions();
+    event.returnValue = {}; // @@@
     return;
   }
 
@@ -513,7 +507,7 @@ ipcMain.on('settingsWindow', (event, args) => {
       return;
     }
 
-    const obsEncoders = getObsAvailableRecEncoders();
+    const obsEncoders = []; // @@@
     const defaultEncoder = obsEncoders.at(-1);
     const encoderList = [{ id: 'auto', name: `Automatic (${defaultEncoder})` }];
 
@@ -597,14 +591,20 @@ ipcMain.on('getAudioDevices', (event) => {
   // We can only get this information if the recorder (OBS) has been
   // initialized and that only happens when the storage directory has
   // been configured.
-  if (!recorder) {
+  if (!recorder.obsInitialized) {
     event.returnValue = { input: [], output: [] };
     return;
   }
 
+  const inputDevices = Recorder.getInputAudioDevices();
+  const outputDevices = Recorder.getOutputAudioDevices();
+
+  console.info('[Main] Input devices:', inputDevices);
+  console.info('[Main] Output devices:', outputDevices);
+
   event.returnValue = {
-    input: getAvailableAudioInputDevices(),
-    output: getAvailableAudioOutputDevices(),
+    input: inputDevices,
+    output: outputDevices,
   };
 });
 

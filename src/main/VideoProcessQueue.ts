@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
-import ConfigService from './configService';
+import ConfigService from './ConfigService';
 import { Metadata, SaveStatus, VideoQueueItem } from './types';
 import {
   fixPathWhenPackaged,

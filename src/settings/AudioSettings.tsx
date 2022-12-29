@@ -19,16 +19,13 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
 
   const availableAudioDevices = {
     input: [
-      new ObsAudioDevice(
-        'none',
-        '(None: no microphone input will be recorded)'
-      ),
-      new ObsAudioDevice('all', '(All)'),
+      new ObsAudioDevice('none', '(None: no mic input will be recorded)'), // @@@ fix types
+      new ObsAudioDevice('all', '(All)'), // @@@ fix types
       ...audioDevices.input,
     ],
     output: [
-      new ObsAudioDevice('none', '(None: no sound will be recorded)'),
-      new ObsAudioDevice('all', '(All)'),
+      new ObsAudioDevice('none', '(None: no sound will be recorded)'),// @@@ fix types
+      new ObsAudioDevice('all', '(All)'), // @@@ fix types 
       ...audioDevices.output,
     ],
   };
@@ -71,10 +68,10 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             onChange={onChange}
             sx={style}
           >
-            {availableAudioDevices.input.map((device: ObsAudioDevice) => {
+            {availableAudioDevices.input.map((device: ObsAudioDevice) => { // @@@ fix types
               return (
                 <MenuItem key={`device_${device.id}`} value={device.id}>
-                  {device.name}
+                  {device.description}
                 </MenuItem>
               );
             })}
@@ -100,10 +97,10 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             onChange={onChange}
             sx={style}
           >
-            {availableAudioDevices.output.map((device: ObsAudioDevice) => {
+            {availableAudioDevices.output.map((device: ObsAudioDevice) => { // @@@ fix types
               return (
                 <MenuItem key={`device_${device.id}`} value={device.id}>
-                  {device.name}
+                  {device.description}
                 </MenuItem>
               );
             })}
