@@ -12,11 +12,11 @@ import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
 
-const util = require('util')
+const util = require('util');
 
 enum TAudioSourceType {
-  'wasapi_input_capture',
-  'wasapi_output_capture',
+  input = 'wasapi_input_capture',
+  output = 'wasapi_output_capture',
 }
 
 const { v4: uuidfn } = require('uuid');
@@ -45,9 +45,6 @@ export default class Recorder {
   private bufferStorageDir: string;
 
   private minEncounterDuration: number;
-
-  // This just for tracking purposes.
-  private audioDevices: IInput[] = [];
 
   obsInitialized = false;
 
@@ -418,20 +415,17 @@ export default class Recorder {
     );
 
     const audioInputDevice = Recorder.createOBSAudioSource(
-      'Microphone (3- G533 Gaming Headset)',
-      TAudioSourceType.wasapi_input_capture
+      this.cfg.get<string>('audioInputDevice'),
+      TAudioSourceType.input
     );
 
-    // const audioOutputDevice = Recorder.createOBSAudioSource(
-    //   this.cfg.get<string>('audioOutputDevice'),
-    //   TAudioSourceType.wasapi_output_capture
-    // );
+    const audioOutputDevice = Recorder.createOBSAudioSource(
+      this.cfg.get<string>('audioOutputDevice'),
+      TAudioSourceType.output
+    );
 
-    // this.addOBSAudioSource(audioInputDevice, 2);
-    // this.addOBSAudioSource(audioOutputDevice, 3);
-
-    // "audioInputDevice": "{0.0.1.00000000}.{87b0a1e2-5879-42b3-80bf-ffe0b7b0adcc}",
-    // "audioOutputDevice": "{0.0.0.00000000}.{acdfe8cf-77d5-4283-adc5-f586a32341d8}",
+    Recorder.addOBSAudioSource(audioInputDevice, 2);
+    Recorder.addOBSAudioSource(audioOutputDevice, 3);
 
     this.obsInitialized = true;
     console.info('OBS initialized successfully');
@@ -534,42 +528,62 @@ export default class Recorder {
   }
 
   private static createOBSAudioSource(id: string, type: TAudioSourceType) {
-    const settings = { device_id: id };
-    const obsInput = osn.InputFactory.create(type, 'mic-audio', settings);
-
-    // const dummyDevice = osn.InputFactory.create(
-    //   'wasapi_input_capture',
-    //   'mic-audio',
-    //   { device_id: 'does_not_exist' }
-    // );
-
-    // const a = dummyDevice.properties.get('device_id');
-    // const b = a.details.items;
-
-    // console.log(
-    //   util.inspect(dummyDevice, false, null, true /* enable colors */)
-    // );
-
-    // obsInput.muted = false;
-    // obsInput.volume = 1;
-    // obsInput.syncOffset = { sec: 0, nsec: 0 };
-    // return obsInput;
+    return osn.InputFactory.create(
+      type,
+      TAudioSourceType.input ? 'mic-audio' : 'desktop-audio',
+      { device_id: id }
+    );
   }
 
-  private addOBSAudioSource(obsInput: IInput, channel: number) {
-  //   const currentAudio = osn.AudioFactory.audioContext;
-  //   console.log(currentAudio);
+  private static addOBSAudioSource(obsInput: IInput, channel: number) {
+    if (channel <= 1 || channel >= 6) {
+      throw new Error('[Recorder] Invalid channel number');
+    }
 
-  //   // const track1 = osn.AudioTrackFactory.create(160, 'track1');
-  //   // console.log(track1);
-  //   // osn.AudioTrackFactory.setAtIndex(track1, 1);
-
-  //   if (channel <= 1 || channel >= 6) {
-  //     console.error('[Recorder] Invalid channel number', channel);
-  //     throw new Error('[Recorder] Invalid channel number');
-  //   }
-
-  //   osn.Global.setOutputSource(channel, obsInput);
-  //   this.audioDevices.push(obsInput);
+    osn.Global.setOutputSource(channel, obsInput);
   }
+
+  static getAvailableEncoders() {
+    return Recorder.getAvailableValues('Video', 'Recording', 'RecEncoder');
+  }
+
+  private static getAvailableValues = (
+    category: string,
+    subcategory: string,
+    parameter: string
+  ) => {
+    const categorySettings = osn.NodeObs.OBS_settings_getSettings(category).data;
+    console.log(util.inspect(categorySettings, false, null, true/* enable colors */))
+
+    if (!categorySettings) {
+      console.warn(`[OBS] There is no category ${category} in OBS settings`);
+      return;
+    }
+
+    const subcategorySettings = categorySettings.find(
+      (sub: any) => sub.nameSubCategory === subcategory
+    );
+
+    if (!subcategorySettings) {
+      console.warn(
+        `[OBS] There is no subcategory ${subcategory} for OBS settings category ${category}`
+      );
+      return;
+    }
+
+    const parameterSettings = subcategorySettings.parameters.find(
+      (param: any) => param.name === parameter
+    );
+
+    if (!parameterSettings) {
+      console.warn(
+        `[OBS] There is no parameter ${parameter} for OBS settings category ${category}.${subcategory}`
+      );
+      return;
+    }
+
+    return parameterSettings.values.map(
+      (value: string) => Object.values(value)[0]
+    );
+  };
 }

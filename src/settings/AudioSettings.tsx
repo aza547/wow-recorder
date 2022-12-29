@@ -19,29 +19,31 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
 
   const availableAudioDevices = {
     input: [
-      {
-        id: 'none',
-        description: 'None (no input audio devices will be recorded)',
-        type: EDeviceType.audioOutput,
-      },
-      {
-        id: 'all',
-        description: 'All (all input audio devices will be recorded)',
-        type: EDeviceType.audioOutput,
-      },
+      // @@@ TODO plumb these through
+      // {
+      //   id: 'none',
+      //   description: 'None (no input audio devices will be recorded)',
+      //   type: EDeviceType.audioOutput,
+      // },
+      // {
+      //   id: 'all',
+      //   description: 'All (all input audio devices will be recorded)',
+      //   type: EDeviceType.audioOutput,
+      // },
       ...audioDevices.input,
     ],
     output: [
-      {
-        id: 'none',
-        description: 'None (no output audio devices will be recorded)',
-        type: EDeviceType.audioOutput,
-      },
-      {
-        id: 'all',
-        description: 'All (all output audio devices will be recorded)',
-        type: EDeviceType.audioOutput,
-      },
+      // @@@ TODO plumb these through
+      // {
+      //   id: 'none',
+      //   description: 'None (no output audio devices will be recorded)',
+      //   type: EDeviceType.audioOutput,
+      // },
+      // {
+      //   id: 'all',
+      //   description: 'All (all output audio devices will be recorded)',
+      //   type: EDeviceType.audioOutput,
+      // },
       ...audioDevices.output,
     ],
   };

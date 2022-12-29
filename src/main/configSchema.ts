@@ -112,7 +112,7 @@ export const configSchema = {
   },
   obsOutputResolution: {
     description:
-      'Resolution of videos as saved on disk. Smaller resolution gives smaller video size, but can look grainy/pixelated.',
+      'Resolution of videos as saved on disk. Smaller resolution gives smaller video size, but can look grainy/pixelated. Typically just set this to the size of your WoW monitor',
     type: 'string',
     default: '1920x1080',
   },

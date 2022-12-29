@@ -466,23 +466,13 @@ ipcMain.on('settingsWindow', (event, args) => {
     return;
   }
 
-  if (args[0] === 'getObsAvailableResolutions') {
-    if (!recorder) {
-      event.returnValue = { Base: [], Output: [] };
-      return;
-    }
-
-    event.returnValue = {}; // @@@
-    return;
-  }
-
   if (args[0] === 'getObsAvailableRecEncoders') {
     if (!recorder) {
       event.returnValue = [];
       return;
     }
 
-    const obsEncoders = []; // @@@
+    const obsEncoders = Recorder.getAvailableEncoders();
     const defaultEncoder = obsEncoders.at(-1);
     const encoderList = [{ id: 'auto', name: `Automatic (${defaultEncoder})` }];
 

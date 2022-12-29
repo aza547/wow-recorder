@@ -12,12 +12,10 @@ import { configSchema } from '../main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
-const obsResolutions: any = ipc.sendSync('settingsWindow', [
-  'getObsAvailableResolutions',
-]);
-const { Output: outputResolutions } = obsResolutions;
 
+const outputResolutions = ['720p', '1080p', '1440p', '2160p'];
 const fpsOptions = ['10', '20', '30', '60'];
+
 const obsCaptureModes = {
   game_capture: 'Game Capture (Recommended)',
   monitor_capture: 'Monitor Capture',
