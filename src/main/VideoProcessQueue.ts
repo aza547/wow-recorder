@@ -107,9 +107,7 @@ export default class VideoProcessQueue {
   }
 
   private async videoQueueEmpty() {
-    console.log(
-      '[VideoProcessQueue] Video processing queue empty, running clean up.'
-    );
+    console.log('[VideoProcessQueue] Video processing queue empty');
 
     await runSizeMonitor(
       this.cfg.get<string>('storagePath'),

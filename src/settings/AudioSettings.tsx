@@ -8,7 +8,7 @@ import Box from '@mui/material/Box';
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import { ISettingsPanelProps } from 'main/types';
+import { EDeviceType, ISettingsPanelProps } from 'main/types';
 import { configSchema } from '../main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
@@ -19,13 +19,29 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
 
   const availableAudioDevices = {
     input: [
-      new ObsAudioDevice('none', '(None: no mic input will be recorded)'), // @@@ fix types
-      new ObsAudioDevice('all', '(All)'), // @@@ fix types
+      {
+        id: 'none',
+        description: 'None (no input audio devices will be recorded)',
+        type: EDeviceType.audioOutput,
+      },
+      {
+        id: 'all',
+        description: 'All (all input audio devices will be recorded)',
+        type: EDeviceType.audioOutput,
+      },
       ...audioDevices.input,
     ],
     output: [
-      new ObsAudioDevice('none', '(None: no sound will be recorded)'),// @@@ fix types
-      new ObsAudioDevice('all', '(All)'), // @@@ fix types 
+      {
+        id: 'none',
+        description: 'None (no output audio devices will be recorded)',
+        type: EDeviceType.audioOutput,
+      },
+      {
+        id: 'all',
+        description: 'All (all output audio devices will be recorded)',
+        type: EDeviceType.audioOutput,
+      },
       ...audioDevices.output,
     ],
   };

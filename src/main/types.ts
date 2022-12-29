@@ -213,6 +213,23 @@ type SoloShuffleTimelineSegment = {
   result: boolean;
 };
 
+enum EDeviceType {
+  audioInput = 'audioInput',
+  audioOutput = 'audioOutput',
+  videoInput = 'videoInput',
+}
+
+interface IOBSDevice {
+  id: string;
+  description: string;
+}
+
+interface IDevice {
+  id: string;
+  type: EDeviceType;
+  description: string;
+}
+
 export {
   RecStatus,
   SaveStatus,
@@ -233,4 +250,7 @@ export {
   VideoData,
   Flavour,
   SoloShuffleTimelineSegment,
+  EDeviceType,
+  IOBSDevice,
+  IDevice,
 };

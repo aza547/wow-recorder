@@ -2,60 +2,33 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { IScene, ISettings } from 'obs-studio-node';
+import { IInput, IScene, ISettings } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 import { ERecordingFormat } from './obsEnums';
 import { deleteVideo, addColor, getSortedVideos } from './util';
-import { RecStatus } from './types';
+import { EDeviceType, IOBSDevice, RecStatus, IDevice } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
+import ConfigService from './ConfigService';
+
+const util = require('util')
+
+enum TAudioSourceType {
+  'wasapi_input_capture',
+  'wasapi_output_capture',
+}
 
 const { v4: uuidfn } = require('uuid');
 
-type RecorderOptionsType = {
-  storageDir: string;
-  bufferStorageDir: string;
-  maxStorage: number;
-  monitorIndex: number;
-  audioInputDeviceId: string;
-  audioOutputDeviceId: string;
-  minEncounterDuration: number;
-  obsBaseResolution: string;
-  obsOutputResolution: string;
-  obsFPS: number;
-  obsKBitRate: number;
-  obsCaptureMode: string;
-  obsRecEncoder: string;
-};
-
-interface IOBSDevice {
-  id: string;
-  description: string;
-}
-
-enum EDeviceType {
-  audioInput = 'audioInput',
-  audioOutput = 'audioOutput',
-  videoInput = 'videoInput',
-}
-
-interface IDevice {
-  id: string;
-  type: EDeviceType;
-  description: string;
-}
-
-class Recorder {
+export default class Recorder {
   private _isRecording: boolean = false;
 
   private _isRecordingBuffer: boolean = false;
 
-  private _bufferRestartIntervalID?: any;
+  private _bufferRestartIntervalID?: NodeJS.Timer;
 
-  private _bufferStartTimeoutID?: any;
-
-  private _options: RecorderOptionsType;
+  private _bufferStartTimeoutID?: NodeJS.Timer;
 
   private _recorderStartDate = new Date();
 
@@ -63,17 +36,28 @@ class Recorder {
 
   private obsFactory: osn.IAdvancedRecording | undefined;
 
-  private waitQueue = new WaitQueue<any>();
+  private waitQueue = new WaitQueue<osn.EOutputSignal>();
 
   private videoProcessQueue;
 
+  private cfg: ConfigService;
+
+  private bufferStorageDir: string;
+
+  private minEncounterDuration: number;
+
+  // This just for tracking purposes.
+  private audioDevices: IInput[] = [];
+
   obsInitialized = false;
 
-  constructor(mainWindow: BrowserWindow, options: RecorderOptionsType) {
-    console.info('[Recorder] Constructing recorder with: ', options);
+  constructor(mainWindow: BrowserWindow) {
+    console.info('[Recorder] Constructing recorder');
+    this.cfg = ConfigService.getInstance();
+    this.bufferStorageDir = this.cfg.get<string>('bufferStoragePath');
+    this.minEncounterDuration = this.cfg.get<number>('minEncounterDuration');
     this._mainWindow = mainWindow;
     this.videoProcessQueue = new VideoProcessQueue(mainWindow);
-    this._options = options;
     this.createRecordingDirs();
   }
 
@@ -118,6 +102,7 @@ class Recorder {
     await this.startOBS();
     this.isRecordingBuffer = true;
     this._recorderStartDate = new Date();
+
     this.mainWindow.webContents.send(
       'updateRecStatus',
       RecStatus.ReadyToRecord
@@ -245,7 +230,7 @@ class Recorder {
       }
 
       const isLongEnough =
-        duration - activity.overrun >= this._options.minEncounterDuration;
+        duration - activity.overrun >= this.minEncounterDuration;
 
       if (isRaid && !isLongEnough) {
         console.info('[Recorder] Raid encounter was too short, discarding');
@@ -315,18 +300,16 @@ class Recorder {
    */
   cleanupBuffer = async (filesToLeave: number) => {
     // Sort newest to oldest
-    const videosToDelete = await getSortedVideos(
-      this._options.bufferStorageDir
-    );
+    const videosToDelete = await getSortedVideos(this.bufferStorageDir);
     if (!videosToDelete || videosToDelete.length === 0) return;
 
     videosToDelete.slice(filesToLeave).forEach((v) => deleteVideo(v.name));
   };
 
   private createRecordingDirs() {
-    if (!fs.existsSync(this._options.bufferStorageDir)) {
-      console.info('[Recorder] Creating dir:', this._options.bufferStorageDir);
-      fs.mkdirSync(this._options.bufferStorageDir);
+    if (!fs.existsSync(this.bufferStorageDir)) {
+      console.info('[Recorder] Creating dir:', this.bufferStorageDir);
+      fs.mkdirSync(this.bufferStorageDir);
     } else {
       console.info('[Recorder] Clean out buffer');
       this.cleanupBuffer(0);
@@ -434,6 +417,22 @@ class Recorder {
       `[Recorder] VideoSource is ${videoSource.width}x${videoSource.height}`
     );
 
+    const audioInputDevice = Recorder.createOBSAudioSource(
+      'Microphone (3- G533 Gaming Headset)',
+      TAudioSourceType.wasapi_input_capture
+    );
+
+    // const audioOutputDevice = Recorder.createOBSAudioSource(
+    //   this.cfg.get<string>('audioOutputDevice'),
+    //   TAudioSourceType.wasapi_output_capture
+    // );
+
+    // this.addOBSAudioSource(audioInputDevice, 2);
+    // this.addOBSAudioSource(audioOutputDevice, 3);
+
+    // "audioInputDevice": "{0.0.1.00000000}.{87b0a1e2-5879-42b3-80bf-ffe0b7b0adcc}",
+    // "audioOutputDevice": "{0.0.0.00000000}.{acdfe8cf-77d5-4283-adc5-f586a32341d8}",
+
     this.obsInitialized = true;
     console.info('OBS initialized successfully');
   }
@@ -514,8 +513,7 @@ class Recorder {
       }
     );
 
-    inputDevices.filter((v) => v.id !== 'default'); //@@@ this isn't working?
-    return inputDevices;
+    return inputDevices.filter((v) => v.id !== 'default');
   }
 
   static getOutputAudioDevices() {
@@ -532,9 +530,46 @@ class Recorder {
       }
     );
 
-    outputDevices.filter((v) => v.id !== 'default'); //@@@ this isn't working?
-    return outputDevices;
+    return outputDevices.filter((v) => v.id !== 'default');
+  }
+
+  private static createOBSAudioSource(id: string, type: TAudioSourceType) {
+    const settings = { device_id: id };
+    const obsInput = osn.InputFactory.create(type, 'mic-audio', settings);
+
+    // const dummyDevice = osn.InputFactory.create(
+    //   'wasapi_input_capture',
+    //   'mic-audio',
+    //   { device_id: 'does_not_exist' }
+    // );
+
+    // const a = dummyDevice.properties.get('device_id');
+    // const b = a.details.items;
+
+    // console.log(
+    //   util.inspect(dummyDevice, false, null, true /* enable colors */)
+    // );
+
+    // obsInput.muted = false;
+    // obsInput.volume = 1;
+    // obsInput.syncOffset = { sec: 0, nsec: 0 };
+    // return obsInput;
+  }
+
+  private addOBSAudioSource(obsInput: IInput, channel: number) {
+  //   const currentAudio = osn.AudioFactory.audioContext;
+  //   console.log(currentAudio);
+
+  //   // const track1 = osn.AudioTrackFactory.create(160, 'track1');
+  //   // console.log(track1);
+  //   // osn.AudioTrackFactory.setAtIndex(track1, 1);
+
+  //   if (channel <= 1 || channel >= 6) {
+  //     console.error('[Recorder] Invalid channel number', channel);
+  //     throw new Error('[Recorder] Invalid channel number');
+  //   }
+
+  //   osn.Global.setOutputSource(channel, obsInput);
+  //   this.audioDevices.push(obsInput);
   }
 }
-
-export { Recorder, RecorderOptionsType };

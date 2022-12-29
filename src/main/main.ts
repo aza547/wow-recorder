@@ -26,7 +26,7 @@ import {
   checkAppUpdate,
 } from './util';
 
-import { Recorder, RecorderOptionsType } from './recorder';
+import Recorder from './recorder';
 
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
@@ -66,30 +66,6 @@ process.on('unhandledRejection', (reason: Error) => {
     throw new Error(reason.toString());
   }
 });
-
-/**
- * Load and return recorder options from the configuration store.
- * Does some basic sanity checking for default values.
- */
-const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
-  return {
-    /* eslint-disable prettier/prettier */
-    storageDir:           cfg.get<string>('storagePath'),
-    bufferStorageDir:     cfg.get<string>('bufferStoragePath'),
-    maxStorage:           cfg.get<number>('maxStorage'),
-    monitorIndex:         cfg.get<number>('monitorIndex'),
-    audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
-    audioOutputDeviceId:  cfg.get<string>('audioOutputDevice'),
-    minEncounterDuration: cfg.get<number>('minEncounterDuration'),
-    obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
-    obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
-    obsFPS:               cfg.get<number>('obsFPS'),
-    obsKBitRate:          cfg.get<number>('obsKBitRate'),
-    obsCaptureMode:       cfg.get<string>('obsCaptureMode'),
-    obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
-    /* eslint-enable prettier/prettier */
-  };
-};
 
 const wowProcessStarted = () => {
   console.info('[Main] Detected WoW is running');
@@ -211,7 +187,7 @@ const updateRecStatus = (status: RecStatus, reason = '') => {
 };
 
 /**
- * Create or reconfigure the recorder instance
+ * Create or recreate the recorder instance.
  */
 const makeRecorder = (): void => {
   if (!mainWindow) {
@@ -219,13 +195,11 @@ const makeRecorder = (): void => {
     throw new Error('[Main] No mainWindow defined when creating recorder');
   }
 
-  const recorderOpts = loadRecorderOptions(cfg);
-
-  if (recorder) {
-    recorder.reconfigure(mainWindow, recorderOpts);
-  } else {
-    recorder = new Recorder(mainWindow, recorderOpts);
+  if (recorder && recorder.obsInitialized) {
+    recorder.shutdownOBS();
   }
+
+  recorder = new Recorder(mainWindow);
 };
 
 /**
@@ -299,6 +273,7 @@ const createWindow = async () => {
     }
 
     if (!checkConfig()) return;
+    mainWindow.webContents.send('refreshState');
     makeRecorder();
 
     const retailLogPath = cfg.getPath('retailLogPath');
