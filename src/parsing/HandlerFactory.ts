@@ -1,4 +1,4 @@
-import Recorder from '../main/recorder';
+import Recorder from '../main/Recorder';
 import { getSortedFiles } from '../main/util';
 import ClassicLogHandler from './ClassicLogHandler';
 import CombatLogParser from './CombatLogParser';

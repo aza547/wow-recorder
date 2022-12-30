@@ -9,7 +9,7 @@ import {
   retailUniqueSpecSpells,
 } from '../main/constants';
 
-import Recorder from '../main/recorder';
+import Recorder from '../main/Recorder';
 import ArenaMatch from '../activitys/ArenaMatch';
 import LogHandler from './LogHandler';
 import Battleground from '../activitys/Battleground';

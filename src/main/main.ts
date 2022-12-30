@@ -26,7 +26,7 @@ import {
   checkAppUpdate,
 } from './util';
 
-import Recorder from './recorder';
+import Recorder from './Recorder';
 
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';

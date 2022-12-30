@@ -2,7 +2,7 @@ import Combatant from '../main/Combatant';
 import CombatLogParser from './CombatLogParser';
 import ConfigService from '../main/ConfigService';
 import { raidInstances } from '../main/constants';
-import { Recorder } from '../main/recorder';
+import { Recorder } from '../main/Recorder';
 import { Flavour, PlayerDeathType } from '../main/types';
 import Activity from '../activitys/Activity';
 import RaidEncounter from '../activitys/RaidEncounter';

@@ -5,7 +5,7 @@ import {
 } from '../main/constants';
 
 import CombatLogParser from './CombatLogParser';
-import { Recorder } from '../main/recorder';
+import { Recorder } from '../main/Recorder';
 import LogHandler from './LogHandler';
 import { Flavour } from '../main/types';
 import ArenaMatch from '../activitys/ArenaMatch';

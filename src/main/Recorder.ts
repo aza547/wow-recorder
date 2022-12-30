@@ -17,6 +17,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
+import { obsResolutions } from './constants';
 
 const { v4: uuidfn } = require('uuid');
 
@@ -224,10 +225,10 @@ export default class Recorder {
       const { duration } = activity;
 
       if (duration === null || duration === undefined) {
-        console.error('[Recorder] Null or undefined duration');
-        return;
+        throw new Error('[Recorder] Null or undefined duration');
       }
 
+      // @@@ This logic would be better in the VideoProcessQueue
       const isLongEnough =
         duration - activity.overrun >= this.minEncounterDuration;
 
@@ -348,13 +349,20 @@ export default class Recorder {
   private configureOBS() {
     console.info('[Recorder] Configuring OBS', this.uuid);
 
+    const resolution = this.cfg.get<string>(
+      'obsOutputResolution'
+    ) as keyof typeof obsResolutions;
+
+    const { height, width } = obsResolutions[resolution];
+    const fps = this.cfg.get<number>('obsFPS');
+
     osn.VideoFactory.videoContext = {
-      fpsNum: this.cfg.get<number>('obsFPS'),
+      fpsNum: fps,
       fpsDen: 1,
-      baseWidth: 1920,
-      baseHeight: 1080,
-      outputWidth: 1920,
-      outputHeight: 1080,
+      baseWidth: width,
+      baseHeight: height,
+      outputWidth: width,
+      outputHeight: height,
       outputFormat: 2,
       colorspace: 2,
       range: 2,
@@ -363,8 +371,8 @@ export default class Recorder {
     };
 
     const recFactory = osn.AdvancedRecordingFactory.create();
-
-    recFactory.path = path.join(path.normalize('D:/wow-recorder-files/.temp'));
+    const bufferPath = this.cfg.getPath('bufferStoragePath');
+    recFactory.path = path.join(path.normalize(bufferPath));
 
     recFactory.format = ERecordingFormat.MP4;
     recFactory.useStreamEncoders = false;
