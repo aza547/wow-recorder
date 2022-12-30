@@ -4,11 +4,10 @@ import path from 'path';
 import fs, { promises as fspromise } from 'fs';
 import { app, BrowserWindow, Display, net, screen } from 'electron';
 import { Metadata, FileInfo, FileSortDirection, OurDisplayType } from './types';
-import { months, zones, dungeonsByMapId } from './constants';
+import { months, zones } from './constants';
 import { VideoCategory } from '../types/VideoCategory';
 
 const byteSize = require('byte-size');
-const chalk = require('chalk');
 
 const categories = Object.values(VideoCategory);
 
@@ -39,22 +38,23 @@ const setupApplicationLogging = () => {
 
 const { exec } = require('child_process');
 
-const videoIndex: { [category: string]: number } = {};
+const getResolvedHtmlPath = () => {
+  if (process.env.NODE_ENV === 'development') {
+    const port = process.env.PORT || 1212;
 
-export let resolveHtmlPath: (htmlFileName: string) => string;
+    return (htmlFileName: string) => {
+      const url = new URL(`http://localhost:${port}`);
+      url.pathname = htmlFileName;
+      return url.href;
+    };
+  }
 
-if (process.env.NODE_ENV === 'development') {
-  const port = process.env.PORT || 1212;
-  resolveHtmlPath = (htmlFileName: string) => {
-    const url = new URL(`http://localhost:${port}`);
-    url.pathname = htmlFileName;
-    return url.href;
-  };
-} else {
-  resolveHtmlPath = (htmlFileName: string) => {
+  return (htmlFileName: string) => {
     return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
   };
-}
+};
+
+export const resolveHtmlPath = getResolvedHtmlPath();
 
 /**
  * Empty video state.
@@ -70,43 +70,92 @@ const getEmptyState = () => {
 };
 
 /**
- * Load videos from category folders in reverse chronological order.
+ * Return information about a file needed for various parts of the application
  */
-const loadAllVideos = async (storageDir: string) => {
-  const videoState = getEmptyState();
+const getFileInfo = async (pathSpec: string): Promise<FileInfo> => {
+  const filePath = path.resolve(pathSpec);
+  const fstats = await fspromise.stat(filePath);
+  const mtime = fstats.mtime.getTime();
+  const { size } = fstats;
+  return { name: filePath, size, mtime };
+};
 
-  if (!storageDir) {
-    return videoState;
+/**
+ * Asynchronously find and return a list of files in the given directory,
+ * that matches the given pattern sorted by modification time according
+ * to `sortDirection`. Ensure to properly escape patterns, e.g. ".*\\.mp4".
+ */
+const getSortedFiles = async (
+  dir: string,
+  pattern: string,
+  sortDirection: FileSortDirection = FileSortDirection.NewestFirst
+): Promise<FileInfo[]> => {
+  // We use fs.promises.readdir here instead of glob, which we used to
+  // use but it caused problems with NFS paths, see this issue:
+  // https://github.com/isaacs/node-glob/issues/74.
+  const files = (await fs.promises.readdir(dir))
+    .filter((f) => f.match(new RegExp(pattern)))
+    .map((f) => path.join(dir, f));
+
+  const mappedFileInfoPromises: Promise<FileInfo>[] = [];
+
+  for (let i = 0; i < files.length; i++) {
+    mappedFileInfoPromises.push(getFileInfo(files[i]));
   }
 
-  const videos = await getSortedVideos(storageDir);
+  const mappedFileInfo = await Promise.all(mappedFileInfoPromises);
 
-  if (videos.length === 0) {
-    return videoState;
+  if (sortDirection === FileSortDirection.NewestFirst) {
+    return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
   }
 
-  categories.forEach((category) => (videoIndex[category] = 0));
+  return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => A.mtime - B.mtime);
+};
 
-  videos.forEach((video) => {
-    const details = loadVideoDetails(video);
-    if (!details) {
-      return;
-    }
+/**
+ * Get sorted video files. Shorthand for `getSortedFiles()` because it's used in quite a few places
+ */
+const getSortedVideos = async (
+  storageDir: string,
+  sortDirection: FileSortDirection = FileSortDirection.NewestFirst
+): Promise<FileInfo[]> => {
+  return getSortedFiles(storageDir, '.*\\.mp4', sortDirection);
+};
 
-    const category = details.category as string;
-    videoState[category].push({
-      index: videoIndex[category]++,
-      ...details,
-    });
-  });
+/**
+ * Get the filename for the metadata file associated with the given video file
+ */
+const getMetadataFileNameForVideo = (video: string) => {
+  const videoFileName = path.basename(video, '.mp4');
+  const videoDirName = path.dirname(video);
+  return path.join(videoDirName, `${videoFileName}.json`);
+};
 
-  return videoState;
+/**
+ * Get the date a video was recorded from the date object.
+ */
+const getMetadataForVideo = (video: string) => {
+  const metadataFile = getMetadataFileNameForVideo(video);
+
+  if (!fs.existsSync(metadataFile)) {
+    console.error(`[Util] Metadata file does not exist: ${metadataFile}`);
+    return undefined;
+  }
+
+  try {
+    const metadataJSON = fs.readFileSync(metadataFile);
+    return JSON.parse(metadataJSON.toString());
+  } catch (e) {
+    console.error(
+      `[Util] Unable to read and/or parse JSON from metadata file: ${metadataFile}`
+    );
+  }
 };
 
 /**
  * Load video details from the metadata and add it to videoState.
  */
-const loadVideoDetails = (video: FileInfo): any | undefined => {
+const loadVideoDetails = (video: FileInfo): any => {
   const metadata = getMetadataForVideo(video.name);
   if (metadata === undefined) {
     return;
@@ -135,24 +184,41 @@ const loadVideoDetails = (video: FileInfo): any | undefined => {
 };
 
 /**
- * Get the date a video was recorded from the date object.
+ * Load videos from category folders in reverse chronological order.
  */
-const getMetadataForVideo = (video: string) => {
-  const metadataFile = getMetadataFileNameForVideo(video);
+const loadAllVideos = async (storageDir: string) => {
+  const videoIndex: { [category: string]: number } = {};
 
-  if (!fs.existsSync(metadataFile)) {
-    console.error(`[Util] Metadata file does not exist: ${metadataFile}`);
-    return undefined;
+  categories.forEach((category) => {
+    videoIndex[category] = 0;
+  });
+
+  const videoState = getEmptyState();
+
+  if (!storageDir) {
+    return videoState;
   }
 
-  try {
-    const metadataJSON = fs.readFileSync(metadataFile);
-    return JSON.parse(metadataJSON.toString());
-  } catch (e) {
-    console.error(
-      `[Util] Unable to read and/or parse JSON from metadata file: ${metadataFile}`
-    );
+  const videos = await getSortedVideos(storageDir);
+
+  if (videos.length === 0) {
+    return videoState;
   }
+
+  videos.forEach((video) => {
+    const details = loadVideoDetails(video);
+    if (!details) {
+      return;
+    }
+
+    const category = details.category as string;
+    videoState[category].push({
+      index: videoIndex[category]++,
+      ...details,
+    });
+  });
+
+  return videoState;
 };
 
 /**
@@ -160,22 +226,13 @@ const getMetadataForVideo = (video: string) => {
  */
 const writeMetadataFile = async (videoPath: string, metadata: any) => {
   console.info('[Util] Write Metadata file', videoPath);
+
   const metadataFileName = getMetadataFileNameForVideo(videoPath);
   const jsonString = JSON.stringify(metadata, null, 2);
 
-  return await fspromise.writeFile(metadataFileName, jsonString, {
+  fspromise.writeFile(metadataFileName, jsonString, {
     encoding: 'utf-8',
   });
-};
-
-/**
- * Get the filename for the metadata file associated with the given video file
- */
-const getMetadataFileNameForVideo = (video: string) => {
-  const videoFileName = path.basename(video, '.mp4');
-  const videoDirName = path.dirname(video);
-
-  return path.join(videoDirName, videoFileName + '.json');
 };
 
 /**
@@ -184,7 +241,7 @@ const getMetadataFileNameForVideo = (video: string) => {
 const getVideoDate = (date: Date) => {
   const day = date.getDate();
   const month = months[date.getMonth()].slice(0, 3);
-  const dateAsString = day + ' ' + month;
+  const dateAsString = `${day} ${month}`;
   return dateAsString;
 };
 
@@ -206,10 +263,6 @@ const getVideoTime = (date: Date) => {
  * Get the encounter name.
  */
 const getVideoEncounter = (metadata: Metadata) => {
-  if (metadata.challengeMode !== undefined) {
-    return dungeonsByMapId[metadata.challengeMode.mapID];
-  }
-
   if (metadata.encounterID) {
     return zones[metadata.encounterID];
   }
@@ -218,93 +271,73 @@ const getVideoEncounter = (metadata: Metadata) => {
 };
 
 /**
- * Return information about a file needed for various parts of the application
+ * Try to unlink a file and return a boolean indicating the success
+ * Logs any errors to the console, if the file couldn't be deleted for some reason.
  */
-const getFileInfo = async (filePath: string): Promise<FileInfo> => {
-  filePath = path.resolve(filePath);
-  const fstats = await fspromise.stat(filePath);
-  const mtime = fstats.mtime.getTime();
-  const size = fstats.size;
-
-  return { name: filePath, size, mtime };
+const tryUnlinkSync = (file: string): boolean => {
+  try {
+    console.log(`[Util] Deleting: ${file}`);
+    fs.unlinkSync(file);
+    return true;
+  } catch (e) {
+    console.error(`[Util] Unable to delete file: ${file}.`);
+    console.error((e as Error).message);
+    return false;
+  }
 };
 
 /**
- * Asynchronously find and return a list of files in the given directory,
- * that matches the given pattern sorted by modification time according
- * to `sortDirection`. Ensure to properly escape patterns, e.g. ".*\\.mp4".
+ * Delete a video and its metadata file if it exists.
  */
-const getSortedFiles = async (
-  dir: string,
-  pattern: string,
-  sortDirection: FileSortDirection = FileSortDirection.NewestFirst
-): Promise<FileInfo[]> => {
-  // We use fs.promises.readdir here instead of glob, which we used to
-  // use but it caused problems with NFS paths, see this issue:
-  // https://github.com/isaacs/node-glob/issues/74.
-  const files = (await fs.promises.readdir(dir))
-    .filter((f) => f.match(new RegExp(pattern)))
-    .map((f) => path.join(dir, f));
-
-  const mappedFileInfo: FileInfo[] = [];
-
-  for (let i = 0; i < files.length; i++) {
-    mappedFileInfo.push(await getFileInfo(files[i]));
+const deleteVideo = (videoPath: string) => {
+  // If we can't delete the video file, make sure we don't delete the metadata
+  // file either, which would leave the video file dangling.
+  if (!tryUnlinkSync(videoPath)) {
+    return;
   }
 
-  if (sortDirection === FileSortDirection.NewestFirst) {
-    return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
+  const metadataPath = getMetadataFileNameForVideo(videoPath);
+  if (fs.existsSync(metadataPath)) {
+    tryUnlinkSync(metadataPath);
   }
-
-  return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => A.mtime - B.mtime);
-};
-
-/**
- * Get sorted video files. Shorthand for `getSortedFiles()` because it's used in quite a few places
- */
-const getSortedVideos = async (
-  storageDir: string,
-  sortDirection: FileSortDirection = FileSortDirection.NewestFirst
-): Promise<FileInfo[]> => {
-  return getSortedFiles(storageDir, '.*\\.mp4', sortDirection);
 };
 
 /**
  * Asynchronously delete the oldest, unprotected videos to ensure we don't store
  * more material than the user has allowed us.
+ * @@@ would be nice to split this out into a class.
  */
 const runSizeMonitor = async (
   storageDir: string,
   maxStorageGB: number
 ): Promise<void> => {
   let videoToDelete;
-  const maxStorageBytes = maxStorageGB * Math.pow(1024, 3);
+  const maxStorageBytes = maxStorageGB * 1024 ** 3;
+
   console.debug(
     `[Size Monitor] Running (max size = ${byteSize(maxStorageBytes)})`
   );
 
-  if (maxStorageGB == 0) {
+  if (maxStorageGB === 0) {
     console.debug(`[Size Monitor] Limitless storage, doing nothing`);
     return;
   }
 
-  let files = await getSortedVideos(storageDir);
+  const files = await getSortedVideos(storageDir);
 
-  files = files.map((file) => {
+  const filesAndMetadata = files.map((file) => {
     const metadata = getMetadataForVideo(file.name);
     return { ...file, metadata };
   });
 
   // Files without metadata are considered dangling and are cleaned up.
-  const danglingFiles = files.filter(
-    (file: any) => !file.hasOwnProperty('metadata') || !file.metadata
-  );
-  const unprotectedFiles = files.filter(
-    (file: any) =>
-      file.hasOwnProperty('metadata') &&
-      file.metadata &&
-      !Boolean(file.metadata.protected)
-  );
+  const danglingFiles = filesAndMetadata.filter((file: any) => !file.metadata);
+
+  const unprotectedFiles = filesAndMetadata.filter((file: any) => {
+    const hasMetadata = file.metadata;
+    const isProtected = file.metadata.protected;
+    return hasMetadata && !isProtected;
+  });
 
   if (danglingFiles.length !== 0) {
     console.log(
@@ -315,6 +348,7 @@ const runSizeMonitor = async (
       console.log(
         `[Size Monitor] Delete dangling video: ${videoToDelete.name}`
       );
+
       deleteVideo(videoToDelete.name);
     }
   }
@@ -358,43 +392,11 @@ const runSizeMonitor = async (
 };
 
 /**
- * Try to unlink a file and return a boolean indicating the success
- * Logs any errors to the console, if the file couldn't be deleted for some reason.
- */
-const tryUnlinkSync = (file: string): boolean => {
-  try {
-    console.log('[Util] Deleting: ' + file);
-    fs.unlinkSync(file);
-    return true;
-  } catch (e) {
-    console.error(`[Util] Unable to delete file: ${file}.`);
-    console.error((e as Error).message);
-    return false;
-  }
-};
-
-/**
- * Delete a video and its metadata file if it exists.
- */
-const deleteVideo = (videoPath: string) => {
-  // If we can't delete the video file, make sure we don't delete the metadata
-  // file either, which would leave the video file dangling.
-  if (!tryUnlinkSync(videoPath)) {
-    return;
-  }
-
-  const metadataPath = getMetadataFileNameForVideo(videoPath);
-  if (fs.existsSync(metadataPath)) {
-    tryUnlinkSync(metadataPath);
-  }
-};
-
-/**
  * Open a folder in system explorer.
  */
 const openSystemExplorer = (filePath: string) => {
   const windowsPath = filePath.replace(/\//g, '\\');
-  let cmd = 'explorer.exe /select,"' + windowsPath + '"';
+  const cmd = `explorer.exe /select,"${windowsPath}"`;
   exec(cmd, () => {});
 };
 
@@ -414,7 +416,7 @@ const toggleVideoProtected = (videoPath: string) => {
   if (metadata.protected === undefined) {
     metadata.protected = true;
   } else {
-    metadata.protected = !Boolean(metadata.protected);
+    metadata.protected = !metadata.protected;
   }
 
   writeMetadataFile(videoPath, metadata);
@@ -428,7 +430,7 @@ const getDisplayPhysicalPosition = (count: number, index: number): string => {
   if (index === 0) return 'Left';
   if (index === count - 1) return 'Right';
 
-  return 'Middle #' + index;
+  return `Middle #${index}`;
 };
 
 /**
@@ -447,9 +449,10 @@ const getAvailableDisplays = (): OurDisplayType[] => {
   // So we're can use that index later, after sorting the displays according
   // to their physical location.
   const displayIdToIndex: { [key: number]: number } = {};
-  allDisplays.forEach(
-    (display: Display, index: number) => (displayIdToIndex[display.id] = index)
-  );
+
+  allDisplays.forEach((display: Display, index: number) => {
+    displayIdToIndex[display.id] = index;
+  });
 
   // Iterate over all available displays and make our own list with the
   // relevant attributes and some extra stuff to make it easier for the

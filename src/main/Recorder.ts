@@ -483,14 +483,13 @@ export default class Recorder {
 
   private assertNextOBSSignal = async (value: string) => {
     // Don't wait more than 5 seconds for the signal.
-    const signalInfo = await Promise.race([
+    const signalInfo = (await Promise.race([
       Recorder.waitQueue.shift(),
       new Promise((_resolve, reject) => {
         setTimeout(reject, 5000, `OBS didn't signal ${value} in time`);
       }),
-    ]);
+    ])) as osn.EOutputSignal;
 
-    // Assert the type is as expected.
     if (signalInfo.type !== 'recording') {
       console.error(
         '[Recorder] OBS signal type unexpected, got:',
@@ -502,7 +501,6 @@ export default class Recorder {
       throw new Error('OBS behaved unexpectedly (2)');
     }
 
-    // Assert the signal value is as expected.
     if (signalInfo.signal !== value) {
       console.error(
         '[Recorder] OBS signal value unexpected, got:',
@@ -587,7 +585,7 @@ export default class Recorder {
     }
 
     if (channel <= 1 || channel >= 6) {
-      throw new Error('[Recorder] Invalid channel number');
+      throw new Error(`[Recorder] Invalid channel number ${channel}`);
     }
 
     osn.Global.setOutputSource(channel, obsInput);
@@ -600,6 +598,9 @@ export default class Recorder {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    return osn.VideoEncoderFactory.types();
+    const encoders = osn.VideoEncoderFactory.types();
+    console.info('[Recorder]', encoders);
+
+    return encoders;
   }
 }
