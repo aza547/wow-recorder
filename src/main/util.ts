@@ -97,13 +97,18 @@ const getSortedFiles = async (
     .filter((f) => f.match(new RegExp(pattern)))
     .map((f) => path.join(dir, f));
 
-  const mappedFileInfoPromises: Promise<FileInfo>[] = [];
+  const mappedFileInfo: FileInfo[] = [];
 
   for (let i = 0; i < files.length; i++) {
-    mappedFileInfoPromises.push(getFileInfo(files[i]));
+    // This loop can take a bit of time so we're deliberately
+    // awaiting inside the loop to not induce a 1000ms periodic
+    // freeze on the frontend. Probably can do better here,
+    // suspect something in getFileInfo isn't as async as it could be.
+    // If that can be solved, then we can drop the await here and then
+    // do an await Promises.all() on the following line.
+    // eslint-disable-next-line no-await-in-loop
+    mappedFileInfo.push(await getFileInfo(files[i]));
   }
-
-  const mappedFileInfo = await Promise.all(mappedFileInfoPromises);
 
   if (sortDirection === FileSortDirection.NewestFirst) {
     return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
