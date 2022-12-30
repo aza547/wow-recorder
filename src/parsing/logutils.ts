@@ -1,4 +1,4 @@
-import { UnitFlags } from './types';
+import { UnitFlags } from '../main/types';
 
 export const hasFlag = (flags: number, flag: number) => {
   // eslint-disable-next-line no-bitwise

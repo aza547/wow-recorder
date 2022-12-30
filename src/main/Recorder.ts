@@ -522,17 +522,8 @@ export default class Recorder {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    const inputDevices: IDevice[] = [];
-
-    (osn.NodeObs.OBS_settings_getInputAudioDevices() as IOBSDevice[]).forEach(
-      (device) => {
-        inputDevices.push({
-          id: device.id,
-          description: device.description,
-          type: EDeviceType.audioInput,
-        });
-      }
-    );
+    const inputDevices =
+      osn.NodeObs.OBS_settings_getInputAudioDevices() as IOBSDevice[];
 
     return inputDevices.filter((v) => v.id !== 'default');
   }
@@ -544,17 +535,8 @@ export default class Recorder {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    const outputDevices: IDevice[] = [];
-
-    (osn.NodeObs.OBS_settings_getOutputAudioDevices() as IOBSDevice[]).forEach(
-      (device) => {
-        outputDevices.push({
-          id: device.id,
-          description: device.description,
-          type: EDeviceType.audioOutput,
-        });
-      }
-    );
+    const outputDevices =
+      osn.NodeObs.OBS_settings_getOutputAudioDevices() as IOBSDevice[];
 
     return outputDevices.filter((v) => v.id !== 'default');
   }

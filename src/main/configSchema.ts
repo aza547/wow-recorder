@@ -31,7 +31,7 @@ export type ConfigurationSchema = {
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
 
 /**
- * Config schema.
+ * Config schema. The descriptions included here get displayed in the UI.
  */
 export const configSchema = {
   storagePath: {

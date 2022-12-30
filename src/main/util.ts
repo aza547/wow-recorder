@@ -534,7 +534,7 @@ const checkAppUpdate = (mainWindow: BrowserWindow | null = null) => {
   });
 
   request.on('error', (error) => {
-    console.error(`[Main] ERROR, Failed to check for updates: ${error}`);
+    console.error(`[Main] Failed to check for updates: ${error}`);
   });
 
   request.end();

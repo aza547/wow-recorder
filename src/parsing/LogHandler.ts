@@ -12,7 +12,7 @@ import {
   isUnitFriendly,
   isUnitPlayer,
   isUnitSelf,
-} from '../main/logutils';
+} from './logutils';
 
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';

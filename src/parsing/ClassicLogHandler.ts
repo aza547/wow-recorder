@@ -9,7 +9,7 @@ import { Recorder } from '../main/Recorder';
 import LogHandler from './LogHandler';
 import { Flavour } from '../main/types';
 import ArenaMatch from '../activitys/ArenaMatch';
-import { isUnitFriendly, isUnitPlayer } from '../main/logutils';
+import { isUnitFriendly, isUnitPlayer } from './logutils';
 import Battleground from '../activitys/Battleground';
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
