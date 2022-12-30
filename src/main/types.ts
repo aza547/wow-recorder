@@ -230,6 +230,11 @@ interface IDevice {
   description: string;
 }
 
+enum TAudioSourceType {
+  input = 'wasapi_input_capture',
+  output = 'wasapi_output_capture',
+}
+
 export {
   RecStatus,
   SaveStatus,
@@ -253,4 +258,5 @@ export {
   EDeviceType,
   IOBSDevice,
   IDevice,
+  TAudioSourceType,
 };

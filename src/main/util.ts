@@ -421,23 +421,6 @@ const toggleVideoProtected = (videoPath: string) => {
 };
 
 /**
- *  Add some escape characters to color text. Just return the string
- *  if production as don't want to litter real logs with this as it just
- *  looks messy.
- */
-const addColor = (s: string, color: string): string => {
-  if (process.env.NODE_ENV === 'production') return s;
-
-  if (color === 'cyan') {
-    return chalk.cyan(s);
-  } else if (color === 'green') {
-    return chalk.green(s);
-  } else {
-    return s;
-  }
-};
-
-/**
  * Get a text string that indicates the physical position of a display depending
  * on its index.
  */
@@ -563,7 +546,6 @@ export {
   openSystemExplorer,
   toggleVideoProtected,
   fixPathWhenPackaged,
-  addColor,
   getSortedVideos,
   getAvailableDisplays,
   getSortedFiles,

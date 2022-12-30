@@ -37,7 +37,6 @@ const configValues = {
   recordSkirmish: getConfigValue<boolean>('recordSkirmish'),
   recordSoloShuffle: getConfigValue<boolean>('recordSoloShuffle'),
   recordBattlegrounds: getConfigValue<boolean>('recordBattlegrounds'),
-  obsBaseResolution: getConfigValue<string>('obsBaseResolution'),
   obsOutputResolution: getConfigValue<string>('obsOutputResolution'),
   obsFPS: getConfigValue<number>('obsFPS'),
   obsKBitRate: getConfigValue<number>('obsKBitRate'),

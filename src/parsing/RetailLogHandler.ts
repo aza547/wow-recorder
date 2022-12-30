@@ -9,7 +9,7 @@ import {
   retailUniqueSpecSpells,
 } from '../main/constants';
 
-import { Recorder } from '../main/recorder';
+import Recorder from '../main/recorder';
 import ArenaMatch from '../activitys/ArenaMatch';
 import LogHandler from './LogHandler';
 import Battleground from '../activitys/Battleground';
@@ -29,20 +29,6 @@ import { VideoCategory } from '../types/VideoCategory';
  * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
-  // Singleton instance.
-  private static _instance: RetailLogHandler;
-
-  static getInstance(recorder: Recorder, combatLogParser: CombatLogParser) {
-    if (!RetailLogHandler._instance) {
-      RetailLogHandler._instance = new RetailLogHandler(
-        recorder,
-        combatLogParser
-      );
-    }
-
-    return RetailLogHandler._instance;
-  }
-
   constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
     super(recorder, combatLogParser);
 

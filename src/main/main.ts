@@ -33,8 +33,8 @@ import ConfigService from './ConfigService';
 import CombatLogParser from '../parsing/CombatLogParser';
 
 import {
-  makeRetailHandler,
-  makeClassicHandler,
+  createRetailHandler,
+  createClassicHandler,
 } from '../parsing/HandlerFactory';
 
 import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
@@ -44,7 +44,7 @@ console.log('[Main] App starting: version', app.getVersion());
 
 let retailHandler: RetailLogHandler;
 let classicHandler: ClassicLogHandler;
-let recorder: Recorder;
+let recorder: Recorder | undefined;
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let tray = null;
@@ -69,6 +69,15 @@ process.on('unhandledRejection', (reason: Error) => {
 
 const wowProcessStarted = () => {
   console.info('[Main] Detected WoW is running');
+
+  if (!mainWindow) {
+    throw new Error('[Main] mainWindow not defined');
+  }
+
+  if (!recorder) {
+    throw new Error('[Main] No recorder object');
+  }
+
   recorder.startBuffer();
 };
 
@@ -79,11 +88,11 @@ const wowProcessStopped = async () => {
     await retailHandler.forceEndActivity(0, true);
   } else if (classicHandler && classicHandler.activity) {
     await classicHandler.forceEndActivity(0, true);
-  } else {
-    await recorder.stopBuffer();
   }
 
-  await recorder.shutdownOBS();
+  if (recorder) {
+    await recorder.stopBuffer();
+  }
 };
 
 /**
@@ -187,22 +196,6 @@ const updateRecStatus = (status: RecStatus, reason = '') => {
 };
 
 /**
- * Create or recreate the recorder instance.
- */
-const makeRecorder = (): void => {
-  if (!mainWindow) {
-    console.error('[Main] No mainWindow defined when creating recorder');
-    throw new Error('[Main] No mainWindow defined when creating recorder');
-  }
-
-  if (recorder && recorder.obsInitialized) {
-    recorder.shutdownOBS();
-  }
-
-  recorder = new Recorder(mainWindow);
-};
-
-/**
  * Checks the app config.
  * @returns true if config is setup, false otherwise.
  */
@@ -274,17 +267,17 @@ const createWindow = async () => {
 
     if (!checkConfig()) return;
     mainWindow.webContents.send('refreshState');
-    makeRecorder();
+    recorder = new Recorder(mainWindow);
 
     const retailLogPath = cfg.getPath('retailLogPath');
     const classicLogPath = cfg.getPath('classicLogPath');
 
     if (retailLogPath) {
-      retailHandler = makeRetailHandler(recorder, retailLogPath);
+      retailHandler = createRetailHandler(recorder, retailLogPath);
     }
 
     if (classicLogPath) {
-      classicHandler = makeClassicHandler(recorder, classicLogPath);
+      classicHandler = createClassicHandler(recorder, classicLogPath);
     }
 
     Poller.getInstance()
@@ -431,26 +424,34 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (args[0] === 'update') {
     console.log('[Main] User updated settings');
 
-    settingsWindow.once('closed', () => {
+    settingsWindow.once('closed', async () => {
       if (!checkConfig()) return;
       updateRecStatus(RecStatus.WaitingForWoW);
-      makeRecorder();
 
-      const retailLogPath = cfg.getPath('retailLogPath');
-      const classicLogPath = cfg.getPath('classicLogPath');
-
-      if (retailLogPath) {
-        retailHandler = makeRetailHandler(recorder, retailLogPath);
+      if (!mainWindow) {
+        throw new Error('[Recorder] mainWindow not defined');
       }
 
-      if (classicLogPath) {
-        classicHandler = makeClassicHandler(recorder, classicLogPath);
-      }
+      if (recorder) {
+        await recorder.stopBuffer();
+        await recorder.shutdownOBS();
+        recorder = new Recorder(mainWindow);
 
-      Poller.getInstance()
-        .on('wowProcessStart', wowProcessStarted)
-        .on('wowProcessStop', wowProcessStopped)
-        .start();
+        const retailLogPath = cfg.getPath('retailLogPath');
+        const classicLogPath = cfg.getPath('classicLogPath');
+
+        if (retailLogPath) {
+          retailHandler = createRetailHandler(recorder, retailLogPath);
+        }
+
+        if (classicLogPath) {
+          classicHandler = createClassicHandler(recorder, classicLogPath);
+        }
+
+        if (Poller.getInstance().isWowRunning) {
+          wowProcessStarted();
+        }
+      }
     });
 
     settingsWindow.close();
@@ -472,7 +473,7 @@ ipcMain.on('settingsWindow', (event, args) => {
       return;
     }
 
-    const obsEncoders = Recorder.getAvailableEncoders();
+    const obsEncoders = recorder.getAvailableEncoders();
     const defaultEncoder = obsEncoders.at(-1);
     const encoderList = [{ id: 'auto', name: `Automatic (${defaultEncoder})` }];
 
@@ -553,16 +554,12 @@ ipcMain.handle('getVideoState', async () =>
 );
 
 ipcMain.on('getAudioDevices', (event) => {
-  // We can only get this information if the recorder (OBS) has been
-  // initialized and that only happens when the storage directory has
-  // been configured.
-  if (!recorder.obsInitialized) {
-    event.returnValue = { input: [], output: [] };
-    return;
+  if (!recorder || !recorder.obsInitialized) {
+    throw new Error('[Main] OBS not initialized');
   }
 
-  const inputDevices = Recorder.getInputAudioDevices();
-  const outputDevices = Recorder.getOutputAudioDevices();
+  const inputDevices = recorder.getInputAudioDevices();
+  const outputDevices = recorder.getOutputAudioDevices();
 
   console.info('[Main] Input devices:', inputDevices);
   console.info('[Main] Output devices:', outputDevices);

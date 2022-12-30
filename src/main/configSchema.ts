@@ -11,7 +11,6 @@ export type ConfigurationSchema = {
   minEncounterDuration: number;
   startUp: boolean;
   startMinimized: boolean;
-  obsBaseResolution: string;
   obsOutputResolution: string;
   obsFPS: number;
   obsKBitRate: number;
@@ -103,12 +102,6 @@ export const configSchema = {
     description: 'Open to the Windows system tray.',
     type: 'boolean',
     default: false,
-  },
-  obsBaseResolution: {
-    description:
-      'Base resolution for recording. Typically the same as the monitor you are recording.',
-    type: 'string',
-    default: '1920x1080',
   },
   obsOutputResolution: {
     description:

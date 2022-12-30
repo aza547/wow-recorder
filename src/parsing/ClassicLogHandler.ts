@@ -18,27 +18,13 @@ import { VideoCategory } from '../types/VideoCategory';
  * Classic log handler class.
  */
 export default class ClassicLogHandler extends LogHandler {
-  // Singleton instance.
-  private static _instance: ClassicLogHandler;
-
   // It's hard to end classic arenas on time due to log flushing and no
   // ARENA_MATCH_END events. We start a 20s timer on a player death that
   // will end the game unless another death is seen in that 20s, in which
   // case we start the timer again.
   private _playerDeathTimeout?: NodeJS.Timeout;
 
-  static getInstance(recorder: Recorder, combatLogParser: CombatLogParser) {
-    if (!ClassicLogHandler._instance) {
-      ClassicLogHandler._instance = new ClassicLogHandler(
-        recorder,
-        combatLogParser
-      );
-    }
-
-    return ClassicLogHandler._instance;
-  }
-
-  private constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
+  constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
     super(recorder, combatLogParser);
     this.combatLogParser
       .on('ENCOUNTER_START', (line: LogLine) => {
