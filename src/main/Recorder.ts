@@ -220,6 +220,9 @@ export default class Recorder {
     const metadata = activity.getMetadata();
     console.info('[Recorder] Over-running by', metadata.overrun, 'seconds');
 
+    // @@@ Neater to do something like:
+    // "await new Promise(r => setTimeout(r, 2000));"
+    // to avoid nesting here?
     setTimeout(async () => {
       if (!this.obsRecordingFactory) {
         throw new Error(
