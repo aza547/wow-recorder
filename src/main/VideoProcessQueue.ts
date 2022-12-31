@@ -1,6 +1,6 @@
-import RaidEncounter from 'activitys/RaidEncounter';
 import { BrowserWindow } from 'electron';
 import path from 'path';
+import RaidEncounter from '../activitys/RaidEncounter';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
 import { Metadata, SaveStatus, VideoQueueItem } from './types';
