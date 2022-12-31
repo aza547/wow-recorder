@@ -13,6 +13,7 @@ import {
 
 import RetailLogHandler from 'parsing/RetailLogHandler';
 import ClassicLogHandler from 'parsing/ClassicLogHandler';
+import os from 'os';
 import Poller from '../utils/Poller';
 
 import {
@@ -40,7 +41,9 @@ import {
 import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
 
 const logDir = setupApplicationLogging();
-console.log('[Main] App starting: version', app.getVersion());
+
+console.info('[Main] App starting, version:', app.getVersion());
+console.info('[Main] On OS:', os.platform(), os.release());
 
 let retailHandler: RetailLogHandler;
 let classicHandler: ClassicLogHandler;
