@@ -90,10 +90,14 @@ export default class VideoProcessQueue {
 
     if (isRaid) {
       const isLongEnough =
-        duration - RaidEncounter.overrun >= this.minEncounterDuration;
+        duration - data.metadata.overrun >= this.minEncounterDuration;
 
       if (!isLongEnough) {
-        console.info('[Recorder] Raid encounter was too short, discarding');
+        console.info(
+          '[VideoProcessQueue] Raid encounter was too short, discarding'
+        );
+
+        done();
         return;
       }
     }
@@ -103,7 +107,7 @@ export default class VideoProcessQueue {
       this.cfg.get<string>('storagePath'),
       data.filename,
       data.relativeStart,
-      data.metadata.duration
+      data.metadata.duration + data.metadata.overrun
     );
 
     await writeMetadataFile(videoPath, data.metadata);

@@ -66,6 +66,7 @@ export default class Battleground extends Activity {
       result: this.estimateResult(),
       flavour: this.flavour,
       player: this.player,
+      overrun: this.overrun,
     };
   }
 

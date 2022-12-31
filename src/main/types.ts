@@ -195,6 +195,7 @@ type Metadata = {
   soloShuffleRoundsWon?: number;
   soloShuffleRoundsPlayed?: number;
   combatants?: Combatant[];
+  overrun: number;
 };
 
 /**

@@ -80,6 +80,7 @@ export default class ArenaMatch extends Activity {
       deaths: this.deaths,
       player: this.player,
       combatants: Array.from(this.combatantMap.values()),
+      overrun: this.overrun,
     };
   }
 

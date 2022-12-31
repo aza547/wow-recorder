@@ -193,13 +193,14 @@ export default class Recorder {
    * this function, so I've included lots of comments. The ordering is also
    * important.
    *
-   * @param {Metadata} metadata the details of the recording
-   * @param {number} overrun how long to continue recording after stop is called
+   * @param {Activity} activity the details of the recording
    * @param {boolean} closedWow if wow has just been closed
    */
   stop = (activity: Activity, closedWow = false) => {
-    console.info('[Recorder] Stop recording after overrun');
-    console.info('[Recorder] Overrun:', activity.overrun);
+    console.info('[Recorder] Stop recording');
+
+    const metadata = activity.getMetadata();
+    console.info('[Recorder] Over-runing by', metadata.overrun, 'seconds');
 
     // Wait for a delay specificed by overrun. This lets us
     // capture the boss death animation/score screens.
@@ -218,7 +219,7 @@ export default class Recorder {
       if (bufferFile) {
         this.videoProcessQueue.queueVideo(
           bufferFile,
-          activity.getMetadata(),
+          metadata,
           activity.getFileName(),
           relativeStart
         );
@@ -242,7 +243,7 @@ export default class Recorder {
           this.startBuffer();
         }, 5000);
       }
-    }, activity.overrun * 1000);
+    }, metadata.overrun * 1000);
   };
 
   /**
