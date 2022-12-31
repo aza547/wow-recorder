@@ -200,26 +200,6 @@ const updateRecStatus = (status: RecStatus, reason = '') => {
 };
 
 /**
- * Checks the app config.
- * @returns true if config is setup, false otherwise.
- */
-const checkConfig = (): boolean => {
-  if (mainWindow === null) {
-    return false;
-  }
-
-  try {
-    cfg.validate();
-  } catch (error) {
-    updateRecStatus(RecStatus.InvalidConfig, String(error));
-    console.info('[Main] Config is bad: ', String(error));
-    return false;
-  }
-
-  return true;
-};
-
-/**
  * Creates the main window.
  */
 const createWindow = async () => {
@@ -251,11 +231,7 @@ const createWindow = async () => {
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');
 
-    const initialStatus = checkConfig()
-      ? RecStatus.WaitingForWoW
-      : RecStatus.InvalidConfig;
-
-    updateRecStatus(initialStatus);
+    checkAppUpdate(mainWindow);
 
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send(
@@ -263,15 +239,29 @@ const createWindow = async () => {
       `Warcraft Recorder v${appVersion}`
     );
 
-    const cfgStartMinimized = cfg.get<boolean>('startMinimized');
+    const startMinimized = cfg.get<boolean>('startMinimized');
 
-    if (!cfgStartMinimized) {
+    if (!startMinimized) {
       mainWindow.show();
     }
 
-    if (!checkConfig()) return;
-    mainWindow.webContents.send('refreshState');
     recorder = new Recorder(mainWindow);
+
+    Poller.getInstance()
+      .on('wowProcessStart', wowProcessStarted)
+      .on('wowProcessStop', wowProcessStopped);
+
+    try {
+      cfg.validate();
+      updateRecStatus(RecStatus.WaitingForWoW);
+    } catch (error) {
+      updateRecStatus(RecStatus.InvalidConfig, String(error));
+      return;
+    }
+
+    recorder.configure();
+    Poller.getInstance().start();
+    mainWindow.webContents.send('refreshState');
 
     const retailLogPath = cfg.getPath('retailLogPath');
     const classicLogPath = cfg.getPath('classicLogPath');
@@ -283,13 +273,6 @@ const createWindow = async () => {
     if (classicLogPath) {
       classicHandler = createClassicHandler(recorder, classicLogPath);
     }
-
-    Poller.getInstance()
-      .on('wowProcessStart', wowProcessStarted)
-      .on('wowProcessStop', wowProcessStopped)
-      .start();
-
-    checkAppUpdate(mainWindow);
   });
 
   mainWindow.on('closed', () => {
@@ -429,35 +412,43 @@ ipcMain.on('settingsWindow', (event, args) => {
     console.log('[Main] User updated settings');
 
     settingsWindow.once('closed', async () => {
-      if (!checkConfig()) return;
-      updateRecStatus(RecStatus.WaitingForWoW);
-
       if (!mainWindow) {
-        throw new Error('[Recorder] mainWindow not defined');
+        throw new Error('[Main] mainWindow not defined');
       }
+
+      mainWindow.webContents.send('refreshState');
 
       if (recorder) {
         await recorder.stopBuffer();
         await recorder.shutdownOBS();
-        recorder = new Recorder(mainWindow);
-
-        const retailLogPath = cfg.getPath('retailLogPath');
-        const classicLogPath = cfg.getPath('classicLogPath');
-
-        if (retailLogPath) {
-          retailHandler = createRetailHandler(recorder, retailLogPath);
-        }
-
-        if (classicLogPath) {
-          classicHandler = createClassicHandler(recorder, classicLogPath);
-        }
-
-        if (Poller.getInstance().isWowRunning) {
-          wowProcessStarted();
-        }
-
-        new SizeMonitor().run();
+        recorder = undefined;
       }
+
+      recorder = new Recorder(mainWindow);
+
+      try {
+        cfg.validate();
+        updateRecStatus(RecStatus.WaitingForWoW);
+      } catch (error) {
+        updateRecStatus(RecStatus.InvalidConfig, String(error));
+        return;
+      }
+
+      recorder.configure();
+      Poller.getInstance().start();
+
+      const retailLogPath = cfg.getPath('retailLogPath');
+      const classicLogPath = cfg.getPath('classicLogPath');
+
+      if (retailLogPath) {
+        retailHandler = createRetailHandler(recorder, retailLogPath);
+      }
+
+      if (classicLogPath) {
+        classicHandler = createClassicHandler(recorder, classicLogPath);
+      }
+
+      new SizeMonitor().run();
     });
 
     settingsWindow.close();
@@ -544,14 +535,18 @@ ipcMain.handle('getVideoState', async () =>
 
 ipcMain.on('getAudioDevices', (event) => {
   if (!recorder || !recorder.obsInitialized) {
-    throw new Error('[Main] OBS not initialized');
+    throw new Error('[Main] getAudioDevices called when OBS not initialized');
   }
 
   const inputDevices = recorder.getInputAudioDevices();
   const outputDevices = recorder.getOutputAudioDevices();
 
-  console.info('[Main] Input devices:', inputDevices);
-  console.info('[Main] Output devices:', outputDevices);
+  console.info(
+    '[Main] Input devices:',
+    inputDevices,
+    'Output devices:',
+    outputDevices
+  );
 
   event.returnValue = {
     input: inputDevices,
@@ -585,8 +580,6 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  * Test button listener.
  */
 ipcMain.on('test', (_event, args) => {
-  if (!checkConfig()) return;
-
   if (retailHandler) {
     console.info('[Main] Running retail test');
     runRetailRecordingTest(retailHandler.combatLogParser, Boolean(args[0]));
@@ -620,10 +613,14 @@ ipcMain.on('recorder', (_event, args) => {
 /**
  * Shutdown the app if all windows closed.
  */
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
   console.log('[Main] User closed app');
-  if (recorder) recorder.cleanupBuffer(0);
-  recorder.shutdownOBS();
+
+  if (recorder) {
+    await recorder.cleanupBuffer(0);
+    await recorder.shutdownOBS();
+  }
+
   app.quit();
 });
 

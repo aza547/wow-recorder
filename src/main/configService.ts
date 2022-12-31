@@ -268,11 +268,12 @@ export default class ConfigService extends EventEmitter {
 
   private updateDefaults(key: string, newValue: any): void {
     if (key === 'storagePath') {
-      configSchema.bufferStoragePath.default =
-        ConfigService.resolveBufferStoragePath(
-          newValue as string,
-          this.get('bufferStoragePath')
-        );
+      const bufferStoragePath = ConfigService.resolveBufferStoragePath(
+        newValue as string,
+        this.get('bufferStoragePath')
+      );
+
+      this.set('bufferStoragePath', bufferStoragePath);
     }
   }
 

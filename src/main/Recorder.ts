@@ -2,7 +2,7 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { IInput, IScene, ISettings } from 'obs-studio-node';
+import { IInput, IScene } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 import { ERecordingFormat } from './obsEnums';
 import { deleteVideo, fixPathWhenPackaged, getSortedVideos } from './util';
@@ -31,28 +31,25 @@ export default class Recorder {
 
   private _mainWindow: BrowserWindow;
 
-  private obsRecordingFactory: osn.IAdvancedRecording;
+  private obsRecordingFactory: osn.IAdvancedRecording | undefined;
 
   private videoProcessQueue: VideoProcessQueue;
 
   private cfg: ConfigService = ConfigService.getInstance();
 
-  private bufferStorageDir: string;
+  private bufferStorageDir: string | undefined;
 
   private uuid: string = uuidfn();
 
   obsInitialized = false;
 
+  obsConfigured = false;
+
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
-    this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
     this._mainWindow = mainWindow;
     this.videoProcessQueue = new VideoProcessQueue(mainWindow);
-    this.createRecordingDirs();
     this.initializeOBS();
-    this.obsRecordingFactory = this.configureOBS();
-    this.configureVideoOBS();
-    this.configureAudioOBS();
   }
 
   get mainWindow() {
@@ -73,6 +70,25 @@ export default class Recorder {
 
   set isRecordingBuffer(value) {
     this._isRecordingBuffer = value;
+  }
+
+  configure() {
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    try {
+      this.cfg.validate();
+    } catch (error) {
+      throw new Error('[Recorder] Configure called but config invalid');
+    }
+
+    this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
+    this.createRecordingDirs();
+    this.obsRecordingFactory = this.configureOBS();
+    this.configureVideoOBS();
+    this.configureAudioOBS();
+    this.obsConfigured = true;
   }
 
   /**
@@ -196,11 +212,21 @@ export default class Recorder {
   stop = (activity: Activity, closedWow = false) => {
     console.info('[Recorder] Stop called');
 
+    if (!this._isRecording) {
+      console.error('[Recorder] Stop recording called but not recording');
+      return;
+    }
+
     const metadata = activity.getMetadata();
     console.info('[Recorder] Over-runing by', metadata.overrun, 'seconds');
 
     setTimeout(async () => {
-      if (!this._isRecording) return;
+      if (!this.obsRecordingFactory) {
+        throw new Error(
+          '[Recorder] Stop recording called but no recording factory'
+        );
+      }
+
       await this.stopOBS();
       this._isRecording = false;
       this._isRecordingBuffer = false;
@@ -267,6 +293,11 @@ export default class Recorder {
    * @params Number of files to leave.
    */
   cleanupBuffer = async (filesToLeave: number) => {
+    if (!this.bufferStorageDir) {
+      console.info('[Recorder] Not attempting to clean-up');
+      return;
+    }
+
     // Sort newest to oldest
     const videosToDelete = await getSortedVideos(this.bufferStorageDir);
     if (!videosToDelete || videosToDelete.length === 0) return;
@@ -275,6 +306,10 @@ export default class Recorder {
   };
 
   private createRecordingDirs() {
+    if (!this.bufferStorageDir) {
+      throw new Error('[Recorder] bufferStorageDir not set');
+    }
+
     if (!fs.existsSync(this.bufferStorageDir)) {
       console.info('[Recorder] Creating dir:', this.bufferStorageDir);
       fs.mkdirSync(this.bufferStorageDir);
@@ -342,7 +377,7 @@ export default class Recorder {
 
     const recFactory = osn.AdvancedRecordingFactory.create();
     const bufferPath = this.cfg.getPath('bufferStoragePath');
-    recFactory.path = path.join(path.normalize(bufferPath));
+    recFactory.path = path.normalize(bufferPath);
 
     recFactory.format = ERecordingFormat.MP4;
     recFactory.useStreamEncoders = false;
@@ -452,6 +487,10 @@ export default class Recorder {
   async shutdownOBS() {
     console.info('[Recorder] OBS shutting down', this.uuid);
 
+    if (!this.obsInitialized) {
+      console.info('[Recorder] OBS not initialized so not attempting shutdown');
+    }
+
     try {
       osn.NodeObs.InitShutdownSequence();
       osn.NodeObs.RemoveSourceCallback();
@@ -462,15 +501,24 @@ export default class Recorder {
     }
 
     this.obsInitialized = false;
+    this.obsConfigured = false;
     console.info('[Recorder] OBS shut down successfully');
   }
 
   private async startOBS() {
+    if (!this.obsRecordingFactory) {
+      throw new Error('[Recorder] StartOBS called but no recording factory');
+    }
+
     this.obsRecordingFactory.start();
     await this.assertNextOBSSignal('start');
   }
 
   private async stopOBS() {
+    if (!this.obsRecordingFactory) {
+      throw new Error('[Recorder] stopOBS called but no recording factory');
+    }
+
     this.obsRecordingFactory.stop();
     await this.assertNextOBSSignal('stopping');
     await this.assertNextOBSSignal('stop');
@@ -546,7 +594,7 @@ export default class Recorder {
 
     return osn.InputFactory.create(
       type,
-      TAudioSourceType.input ? 'mic-audio' : 'desktop-audio',
+      type === TAudioSourceType.input ? 'mic-audio' : 'desktop-audio',
       { device_id: id }
     );
   }
