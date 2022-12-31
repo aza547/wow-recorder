@@ -218,7 +218,7 @@ export default class Recorder {
     }
 
     const metadata = activity.getMetadata();
-    console.info('[Recorder] Over-runing by', metadata.overrun, 'seconds');
+    console.info('[Recorder] Over-running by', metadata.overrun, 'seconds');
 
     setTimeout(async () => {
       if (!this.obsRecordingFactory) {
