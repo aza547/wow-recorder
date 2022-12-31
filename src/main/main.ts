@@ -39,6 +39,7 @@ import {
 } from '../parsing/HandlerFactory';
 
 import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
+import SizeMonitor from '../utils/SizeMonitor';
 
 const logDir = setupApplicationLogging();
 
@@ -454,6 +455,8 @@ ipcMain.on('settingsWindow', (event, args) => {
         if (Poller.getInstance().isWowRunning) {
           wowProcessStarted();
         }
+
+        new SizeMonitor().run();
       }
     });
 
@@ -476,28 +479,11 @@ ipcMain.on('settingsWindow', (event, args) => {
       return;
     }
 
-    const obsEncoders = recorder.getAvailableEncoders();
-    const defaultEncoder = obsEncoders.at(-1);
-    const encoderList = [{ id: 'auto', name: `Automatic (${defaultEncoder})` }];
+    const obsEncoders = recorder
+      .getAvailableEncoders()
+      .filter((encoder) => encoder !== 'none');
 
-    obsEncoders
-      // We don't want people to be able to select 'none'.
-      .filter((encoder) => encoder !== 'none')
-      .forEach((encoder) => {
-        const isHardwareEncoder =
-          encoder.includes('amd') ||
-          encoder.includes('nvenc') ||
-          encoder.includes('qsv');
-
-        const encoderType = isHardwareEncoder ? 'Hardware' : 'Software';
-
-        encoderList.push({
-          id: encoder,
-          name: `${encoderType} (${encoder})`,
-        });
-      });
-
-    event.returnValue = encoderList;
+    event.returnValue = obsEncoders;
   }
 });
 

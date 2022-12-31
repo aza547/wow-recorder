@@ -133,9 +133,9 @@ export const configSchema = {
   },
   obsRecEncoder: {
     description:
-      "The video encoder to use for creating video files. If you don't know what this means, leave it on 'Automatic' to select the best option automatically.",
+      'The video encoder to use. Hardware encoders are typically preferable, usually giving better performance but depend on your GPU',
     type: 'string',
-    default: 'auto',
+    default: 'obs_x264',
   },
   recordRetail: {
     description: 'Whether the application should record retail',
