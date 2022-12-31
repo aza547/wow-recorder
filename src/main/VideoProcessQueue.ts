@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
+import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
 import { Metadata, SaveStatus, VideoQueueItem } from './types';
 import {
@@ -25,9 +26,12 @@ export default class VideoProcessQueue {
 
   private cfg = ConfigService.getInstance();
 
+  private minEncounterDuration: number;
+
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow;
     this.setupVideoProcessingQueue();
+    this.minEncounterDuration = this.cfg.get<number>('minEncounterDuration');
   }
 
   private setupVideoProcessingQueue() {
@@ -75,6 +79,23 @@ export default class VideoProcessQueue {
     data: VideoQueueItem,
     done: () => void
   ): Promise<void> {
+    const { duration } = data.metadata;
+
+    if (duration === null || duration === undefined) {
+      throw new Error('[VideoProcessQueue] Null or undefined duration');
+    }
+
+    const isRaid = data.metadata.category === VideoCategory.Raids;
+
+    if (isRaid) {
+      const isLongEnough = duration >= this.minEncounterDuration;
+
+      if (!isLongEnough) {
+        console.info('[Recorder] Raid encounter was too short, discarding');
+        return;
+      }
+    }
+
     const videoPath = await VideoProcessQueue.cutVideo(
       data.bufferFile,
       this.cfg.get<string>('storagePath'),

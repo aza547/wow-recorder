@@ -6,14 +6,7 @@ import { IInput, IScene, ISettings } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 import { ERecordingFormat } from './obsEnums';
 import { deleteVideo, getSortedVideos } from './util';
-import {
-  EDeviceType,
-  IOBSDevice,
-  RecStatus,
-  IDevice,
-  TAudioSourceType,
-} from './types';
-import { VideoCategory } from '../types/VideoCategory';
+import { IOBSDevice, RecStatus, TAudioSourceType } from './types';
 import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
@@ -42,11 +35,9 @@ export default class Recorder {
 
   private videoProcessQueue: VideoProcessQueue;
 
-  private cfg: ConfigService;
+  private cfg: ConfigService = ConfigService.getInstance();
 
   private bufferStorageDir: string;
-
-  private minEncounterDuration: number;
 
   private uuid: string = uuidfn();
 
@@ -54,9 +45,7 @@ export default class Recorder {
 
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
-    this.cfg = ConfigService.getInstance();
     this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
-    this.minEncounterDuration = this.cfg.get<number>('minEncounterDuration');
     this._mainWindow = mainWindow;
     this.videoProcessQueue = new VideoProcessQueue(mainWindow);
     this.createRecordingDirs();
@@ -221,38 +210,22 @@ export default class Recorder {
       this._isRecording = false;
       this._isRecordingBuffer = false;
 
-      const isRaid = activity.category === VideoCategory.Raids;
-      const { duration } = activity;
+      const bufferFile = this.obsRecordingFactory.lastFile();
+      const relativeStart =
+        (activity.startDate.getTime() - this._recorderStartDate.getTime()) /
+        1000;
 
-      if (duration === null || duration === undefined) {
-        throw new Error('[Recorder] Null or undefined duration');
-      }
-
-      // @@@ This logic would be better in the VideoProcessQueue
-      const isLongEnough =
-        duration - activity.overrun >= this.minEncounterDuration;
-
-      if (isRaid && !isLongEnough) {
-        console.info('[Recorder] Raid encounter was too short, discarding');
+      if (bufferFile) {
+        this.videoProcessQueue.queueVideo(
+          bufferFile,
+          activity.getMetadata(),
+          activity.getFileName(),
+          relativeStart
+        );
       } else {
-        const bufferFile = this.obsRecordingFactory.lastFile();
-        const metadata = activity.getMetadata();
-        const relativeStart =
-          (activity.startDate.getTime() - this._recorderStartDate.getTime()) /
-          1000;
-
-        if (bufferFile) {
-          this.videoProcessQueue.queueVideo(
-            bufferFile,
-            metadata,
-            activity.getFileName(),
-            relativeStart
-          );
-        } else {
-          console.error(
-            "[Recorder] Unable to get the last recording from OBS. Can't process video."
-          );
-        }
+        console.error(
+          "[Recorder] Unable to get the last recording from OBS. Can't process video."
+        );
       }
 
       // Refresh the GUI
