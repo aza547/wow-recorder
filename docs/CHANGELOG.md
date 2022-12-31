@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [NO-ISSUE] - Upgrade obs-studio-node to 0.23.59. 
 
 ### Fixed
+- [Issue 264](https://github.com/aza547/wow-recorder/issues/264) - Attempt to fix some permissions problems on Windows 11.
 
 ## [3.2.0] - 2022-12-23
 ### Added
