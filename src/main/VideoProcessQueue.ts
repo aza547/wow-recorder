@@ -1,15 +1,10 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
-import RaidEncounter from '../activitys/RaidEncounter';
+import SizeMonitor from '../utils/SizeMonitor';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
 import { Metadata, SaveStatus, VideoQueueItem } from './types';
-import {
-  fixPathWhenPackaged,
-  runSizeMonitor,
-  tryUnlinkSync,
-  writeMetadataFile,
-} from './util';
+import { fixPathWhenPackaged, tryUnlinkSync, writeMetadataFile } from './util';
 
 const atomicQueue = require('atomic-queue');
 const ffmpeg = require('fluent-ffmpeg');
@@ -135,12 +130,7 @@ export default class VideoProcessQueue {
 
   private async videoQueueEmpty() {
     console.log('[VideoProcessQueue] Video processing queue empty');
-
-    await runSizeMonitor(
-      this.cfg.get<string>('storagePath'),
-      this.cfg.get<number>('maxStorage')
-    );
-
+    new SizeMonitor().run();
     this.mainWindow.webContents.send('refreshState');
   }
 

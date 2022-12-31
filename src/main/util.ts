@@ -7,8 +7,6 @@ import { Metadata, FileInfo, FileSortDirection, OurDisplayType } from './types';
 import { months, zones } from './constants';
 import { VideoCategory } from '../types/VideoCategory';
 
-const byteSize = require('byte-size');
-
 const categories = Object.values(VideoCategory);
 
 /**
@@ -139,36 +137,74 @@ const getMetadataFileNameForVideo = (video: string) => {
 /**
  * Get the date a video was recorded from the date object.
  */
-const getMetadataForVideo = (video: string) => {
+const getMetadataForVideo = (video: string): Metadata => {
   const metadataFile = getMetadataFileNameForVideo(video);
 
   if (!fs.existsSync(metadataFile)) {
-    console.error(`[Util] Metadata file does not exist: ${metadataFile}`);
-    return undefined;
+    throw new Error(`[Util] Metadata file does not exist: ${metadataFile}`);
   }
 
-  try {
-    const metadataJSON = fs.readFileSync(metadataFile);
-    return JSON.parse(metadataJSON.toString());
-  } catch (e) {
-    console.error(
-      `[Util] Unable to read and/or parse JSON from metadata file: ${metadataFile}`
-    );
+  const metadataJSON = fs.readFileSync(metadataFile);
+  const metadata = JSON.parse(metadataJSON.toString()) as Metadata;
+  return metadata;
+  // } catch (e) {
+  //   console.error(
+  //     `[Util] Unable to read and/or parse JSON from metadata file: ${metadataFile}`
+  //   );
+  // }
+};
+
+/**
+ * Get the encounter name.
+ */
+const getVideoEncounter = (metadata: Metadata) => {
+  if (metadata.encounterID) {
+    return zones[metadata.encounterID];
   }
+
+  return metadata.category;
+};
+
+/**
+ * Get the date a video was recorded from the date object.
+ */
+const getVideoDate = (date: Date) => {
+  const day = date.getDate();
+  const month = months[date.getMonth()].slice(0, 3);
+  const dateAsString = `${day} ${month}`;
+  return dateAsString;
+};
+
+/**
+ * Get the time a video was recorded from the date object.
+ */
+const getVideoTime = (date: Date) => {
+  const hours = date
+    .getHours()
+    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
+  const mins = date
+    .getMinutes()
+    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
+  const timeAsString = `${hours}:${mins}`;
+  return timeAsString;
 };
 
 /**
  * Load video details from the metadata and add it to videoState.
  */
 const loadVideoDetails = (video: FileInfo): any => {
-  const metadata = getMetadataForVideo(video.name);
-  if (metadata === undefined) {
-    return;
+  let metadata;
+
+  try {
+    metadata = getMetadataForVideo(video.name);
+  } catch {
+    // @@@ This is obviously awful.
+    return undefined;
   }
 
   // Hilariously 5v5 is still a war game mode that will break things without this.
   if (!categories.includes(metadata.category)) {
-    return;
+    return undefined;
   }
 
   const today = new Date();
@@ -182,9 +218,6 @@ const loadVideoDetails = (video: FileInfo): any => {
     isFromToday: today.toDateString() === videoDate.toDateString(),
     time: getVideoTime(videoDate),
     protected: Boolean(metadata.protected),
-    playerSpecID: metadata?.playerSpecID,
-    playerName: metadata?.playerName,
-    playerRealm: metadata?.playerRealm,
   };
 };
 
@@ -241,41 +274,6 @@ const writeMetadataFile = async (videoPath: string, metadata: any) => {
 };
 
 /**
- * Get the date a video was recorded from the date object.
- */
-const getVideoDate = (date: Date) => {
-  const day = date.getDate();
-  const month = months[date.getMonth()].slice(0, 3);
-  const dateAsString = `${day} ${month}`;
-  return dateAsString;
-};
-
-/**
- * Get the time a video was recorded from the date object.
- */
-const getVideoTime = (date: Date) => {
-  const hours = date
-    .getHours()
-    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
-  const mins = date
-    .getMinutes()
-    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
-  const timeAsString = `${hours}:${mins}`;
-  return timeAsString;
-};
-
-/**
- * Get the encounter name.
- */
-const getVideoEncounter = (metadata: Metadata) => {
-  if (metadata.encounterID) {
-    return zones[metadata.encounterID];
-  }
-
-  return metadata.category;
-};
-
-/**
  * Try to unlink a file and return a boolean indicating the success
  * Logs any errors to the console, if the file couldn't be deleted for some reason.
  */
@@ -295,6 +293,8 @@ const tryUnlinkSync = (file: string): boolean => {
  * Delete a video and its metadata file if it exists.
  */
 const deleteVideo = (videoPath: string) => {
+  console.info('[Util] Deleting video', videoPath);
+
   // If we can't delete the video file, make sure we don't delete the metadata
   // file either, which would leave the video file dangling.
   if (!tryUnlinkSync(videoPath)) {
@@ -304,95 +304,6 @@ const deleteVideo = (videoPath: string) => {
   const metadataPath = getMetadataFileNameForVideo(videoPath);
   if (fs.existsSync(metadataPath)) {
     tryUnlinkSync(metadataPath);
-  }
-};
-
-/**
- * Asynchronously delete the oldest, unprotected videos to ensure we don't store
- * more material than the user has allowed us.
- * @@@ would be nice to split this out into a class.
- */
-const runSizeMonitor = async (
-  storageDir: string,
-  maxStorageGB: number
-): Promise<void> => {
-  let videoToDelete;
-  const maxStorageBytes = maxStorageGB * 1024 ** 3;
-
-  console.debug(
-    `[Size Monitor] Running (max size = ${byteSize(maxStorageBytes)})`
-  );
-
-  if (maxStorageGB === 0) {
-    console.debug(`[Size Monitor] Limitless storage, doing nothing`);
-    return;
-  }
-
-  const files = await getSortedVideos(storageDir);
-
-  const filesAndMetadata = files.map((file) => {
-    const metadata = getMetadataForVideo(file.name);
-    return { ...file, metadata };
-  });
-
-  // Files without metadata are considered dangling and are cleaned up.
-  const danglingFiles = filesAndMetadata.filter((file: any) => !file.metadata);
-
-  const unprotectedFiles = filesAndMetadata.filter((file: any) => {
-    const hasMetadata = file.metadata;
-    const isProtected = file.metadata.protected;
-    return hasMetadata && !isProtected;
-  });
-
-  if (danglingFiles.length !== 0) {
-    console.log(
-      `[Size Monitor] Deleting ${danglingFiles.length} dangling video(s)`
-    );
-
-    while ((videoToDelete = danglingFiles.pop())) {
-      console.log(
-        `[Size Monitor] Delete dangling video: ${videoToDelete.name}`
-      );
-
-      deleteVideo(videoToDelete.name);
-    }
-  }
-
-  // Filter files that doesn't cause the total video file size to exceed the maximum
-  // as given by `maxStorageBytes`
-  let totalVideoFileSize = 0;
-
-  const filesOverMaxStorage = unprotectedFiles.filter((file: any) => {
-    totalVideoFileSize += file.size;
-    return totalVideoFileSize > maxStorageBytes;
-  });
-
-  // Calculate total file size of all unprotected files
-  totalVideoFileSize = unprotectedFiles
-    .map((file) => file.size)
-    .reduce((prev, curr) => prev + curr, 0);
-
-  console.log(
-    `[Size Monitor] Unprotected file(s) considered ${
-      unprotectedFiles.length
-    }, total size = ${byteSize(totalVideoFileSize)}`
-  );
-
-  if (filesOverMaxStorage.length === 0) {
-    return;
-  }
-
-  console.log(
-    `[Size Monitor] Deleting ${filesOverMaxStorage.length} old video(s)`
-  );
-
-  while ((videoToDelete = filesOverMaxStorage.pop())) {
-    console.log(
-      `[Size Monitor] Delete oldest video: ${videoToDelete.name} (${byteSize(
-        videoToDelete.size
-      )})`
-    );
-    deleteVideo(videoToDelete.name);
   }
 };
 
@@ -549,7 +460,6 @@ export {
   setupApplicationLogging,
   loadAllVideos,
   writeMetadataFile,
-  runSizeMonitor,
   deleteVideo,
   openSystemExplorer,
   toggleVideoProtected,
@@ -559,4 +469,5 @@ export {
   getSortedFiles,
   tryUnlinkSync,
   checkAppUpdate,
+  getMetadataForVideo,
 };

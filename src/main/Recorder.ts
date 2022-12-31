@@ -80,7 +80,7 @@ export default class Recorder {
    * to the buffer location.
    */
   startBuffer = async () => {
-    console.info('[Recorder] Start recording buffer', this.uuid);
+    console.info('[Recorder] Start recording buffer');
 
     if (!this.obsInitialized) {
       console.error('[Recorder] OBS not initialized');
@@ -109,17 +109,17 @@ export default class Recorder {
   };
 
   /**
-   * Stop recorder buffer. Called when WoW is closed.
+   * Stop recorder buffer.
    */
   stopBuffer = async () => {
     this.cancelBufferTimers(true, true);
 
     if (this._isRecordingBuffer) {
-      console.info('[Recorder] Stop recording buffer', this.uuid);
+      console.info('[Recorder] Stop recording buffer');
       this._isRecordingBuffer = false;
       await this.stopOBS();
     } else {
-      console.error('[Recorder] No buffer recording to stop', this.uuid);
+      console.error('[Recorder] No buffer recording to stop');
     }
 
     this.mainWindow.webContents.send(
@@ -138,7 +138,7 @@ export default class Recorder {
    * to; here be dragons.
    */
   restartBuffer = async () => {
-    console.log('[Recorder] Restart recording buffer', this.uuid);
+    console.log('[Recorder] Restart recording buffer');
     this.isRecordingBuffer = false;
     await this.stopOBS();
 
@@ -161,12 +161,12 @@ export default class Recorder {
     cancelStartTimeout: boolean
   ) => {
     if (cancelRestartInterval && this._bufferRestartIntervalID) {
-      console.info('[Recorder] Buffer restart interval cleared', this.uuid);
+      console.info('[Recorder] Buffer restart interval cleared');
       clearInterval(this._bufferRestartIntervalID);
     }
 
     if (cancelStartTimeout && this._bufferStartTimeoutID) {
-      console.info('[Recorder] Buffer start timeout cleared', this.uuid);
+      console.info('[Recorder] Buffer start timeout cleared');
       clearInterval(this._bufferStartTimeoutID);
     }
   };
@@ -178,10 +178,7 @@ export default class Recorder {
    * start if we hit this in the 2s restart window).
    */
   start = async () => {
-    console.info(
-      '[Recorder] Start recording by cancelling buffer restart',
-      this.uuid
-    );
+    console.info('[Recorder] Start recording by cancelling buffer restart');
     this.cancelBufferTimers(true, false);
     this._isRecordingBuffer = false;
     this._isRecording = true;
@@ -197,15 +194,12 @@ export default class Recorder {
    * @param {boolean} closedWow if wow has just been closed
    */
   stop = (activity: Activity, closedWow = false) => {
-    console.info('[Recorder] Stop recording');
+    console.info('[Recorder] Stop called');
 
     const metadata = activity.getMetadata();
     console.info('[Recorder] Over-runing by', metadata.overrun, 'seconds');
 
-    // Wait for a delay specificed by overrun. This lets us
-    // capture the boss death animation/score screens.
     setTimeout(async () => {
-      // Take the actions to stop the recording.
       if (!this._isRecording) return;
       await this.stopOBS();
       this._isRecording = false;
@@ -321,7 +315,7 @@ export default class Recorder {
   }
 
   private configureOBS() {
-    console.info('[Recorder] Configuring OBS', this.uuid);
+    console.info('[Recorder] Configuring OBS');
 
     const resolution = this.cfg.get<string>(
       'obsOutputResolution'
@@ -372,43 +366,69 @@ export default class Recorder {
   }
 
   private configureVideoOBS() {
-    console.info('[Recorder] Configuring OBS video', this.uuid);
+    console.info('[Recorder] Configuring OBS video');
 
-    const settings: ISettings = {
-      allow_transparency: true,
-      anti_cheat_hook: true,
-      auto_capture_rules_path: '',
-      auto_fit_to_output: true,
-      auto_placeholder_image: '',
-      auto_placeholder_message: 'Looking for a game to capture',
-      capture_cursor: true,
-      capture_mode: 'window',
-      capture_overlays: false,
-      force_scaling: false,
-      hook_rate: 1,
-      limit_framerate: false,
-      priority: 2,
-      rgb10a2_space: 'srgb',
-      scale_res: '0x0',
-      sli_compatibility: false,
-      user_placeholder_image: '',
-      user_placeholder_use: false,
-      window: 'World of Warcraft:GxWindowClass:Wow.exe',
-    };
+    let videoSource: IInput;
+    const captureMode = this.cfg.get<string>('obsCaptureMode');
 
-    const videoSource = osn.InputFactory.create(
-      'game_capture',
-      'input',
-      settings
-    );
+    switch (captureMode) {
+      case 'monitor_capture':
+        videoSource = this.createMonitorCaptureSource();
+        break;
 
-    const scene: IScene = osn.SceneFactory.create('main');
+      case 'game_capture':
+        videoSource = this.createGameCaptureSource();
+        break;
+
+      default:
+        throw new Error('[Recorder] Unexpected default case hit');
+    }
+
+    const scene: IScene = osn.SceneFactory.create('WR Scene');
     scene.add(videoSource);
     osn.Global.setOutputSource(1, scene);
   }
 
+  private createMonitorCaptureSource() {
+    console.info('[Recorder] Configuring OBS for Monitor Capture');
+
+    const monitorCaptureSource = osn.InputFactory.create(
+      'monitor_capture',
+      'WR Monitor Capture'
+    );
+
+    const { settings } = monitorCaptureSource;
+    settings.monitor = this.cfg.get<number>('monitorIndex') - 1;
+
+    monitorCaptureSource.update(settings);
+    monitorCaptureSource.save();
+
+    return monitorCaptureSource;
+  }
+
+  private createGameCaptureSource() {
+    console.info('[Recorder] Configuring OBS for Game Capture');
+
+    const gameCaptureSource = osn.InputFactory.create(
+      'game_capture',
+      'WR Game Capture'
+    );
+
+    const { settings } = gameCaptureSource;
+    settings.capture_cursor = true;
+    settings.capture_mode = 'window';
+    settings.allow_transparency = true;
+    settings.priority = 1;
+    settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
+
+    gameCaptureSource.update(settings);
+    gameCaptureSource.save();
+
+    return gameCaptureSource;
+  }
+
   private configureAudioOBS() {
-    console.info('[Recorder] Configuring OBS audio', this.uuid);
+    console.info('[Recorder] Configuring OBS audio');
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
