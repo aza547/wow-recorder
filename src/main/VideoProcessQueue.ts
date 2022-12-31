@@ -1,3 +1,4 @@
+import RaidEncounter from 'activitys/RaidEncounter';
 import { BrowserWindow } from 'electron';
 import path from 'path';
 import { VideoCategory } from '../types/VideoCategory';
@@ -88,7 +89,8 @@ export default class VideoProcessQueue {
     const isRaid = data.metadata.category === VideoCategory.Raids;
 
     if (isRaid) {
-      const isLongEnough = duration >= this.minEncounterDuration;
+      const isLongEnough =
+        duration - RaidEncounter.overrun >= this.minEncounterDuration;
 
       if (!isLongEnough) {
         console.info('[Recorder] Raid encounter was too short, discarding');

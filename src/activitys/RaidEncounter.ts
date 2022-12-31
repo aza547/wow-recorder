@@ -17,6 +17,8 @@ export default class RaidEncounter extends Activity {
 
   private _encounterID: number;
 
+  static overrun = 15;
+
   constructor(
     startDate: Date,
     encounterID: number,
@@ -27,7 +29,6 @@ export default class RaidEncounter extends Activity {
 
     this._difficultyID = difficultyID;
     this._encounterID = encounterID;
-    this.overrun = 15;
   }
 
   get difficultyID() {

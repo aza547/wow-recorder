@@ -198,7 +198,7 @@ export default class Recorder {
    * @param {boolean} closedWow if wow has just been closed
    */
   stop = (activity: Activity, closedWow = false) => {
-    console.log('[Recorder] Stop recording after overrun', this.uuid);
+    console.info('[Recorder] Stop recording after overrun');
     console.info('[Recorder] Overrun:', activity.overrun);
 
     // Wait for a delay specificed by overrun. This lets us
