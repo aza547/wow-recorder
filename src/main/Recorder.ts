@@ -5,7 +5,7 @@ import * as osn from 'obs-studio-node';
 import { IInput, IScene, ISettings } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 import { ERecordingFormat } from './obsEnums';
-import { deleteVideo, getSortedVideos } from './util';
+import { deleteVideo, fixPathWhenPackaged, getSortedVideos } from './util';
 import { IOBSDevice, RecStatus, TAudioSourceType } from './types';
 import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
@@ -291,12 +291,14 @@ export default class Recorder {
       osn.NodeObs.IPC.host(this.uuid);
 
       osn.NodeObs.SetWorkingDirectory(
-        path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
+        fixPathWhenPackaged(
+          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
+        )
       );
 
       const initResult = osn.NodeObs.OBS_API_initAPI(
         'en-US',
-        path.join(path.normalize(__dirname), 'osn-data'),
+        fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
         '1.0.0',
         ''
       );
