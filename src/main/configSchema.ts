@@ -133,7 +133,7 @@ export const configSchema = {
   },
   obsRecEncoder: {
     description:
-      'The video encoder to use. Hardware encoders are typically preferable, usually giving better performance but depend on your GPU',
+      'The video encoder to use. Hardware encoders are typically preferable, usually giving better performance, but are specific to your graphics card.',
     type: 'string',
     default: 'obs_x264',
   },
