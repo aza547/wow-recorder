@@ -228,7 +228,7 @@ const createWindow = async () => {
 
   mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
 
-  mainWindow.on('ready-to-show', () => {
+  mainWindow.on('ready-to-show', async () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');
 
     checkAppUpdate(mainWindow);
@@ -246,6 +246,7 @@ const createWindow = async () => {
     }
 
     recorder = new Recorder(mainWindow);
+    await recorder.initializeOBS();
 
     Poller.getInstance()
       .on('wowProcessStart', wowProcessStarted)

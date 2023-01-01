@@ -13,6 +13,7 @@ import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
 
 const { v4: uuidfn } = require('uuid');
+const { Worker } = require('worker_threads');
 
 export default class Recorder {
   /**
@@ -20,6 +21,7 @@ export default class Recorder {
    * symptom is OBS assertions failing because waitQueue returns things in the
    * wrong order. This is fine to be static so long as we only have one recorder
    * object in use at a time, which is the design.
+   * Might also consider https://github.com/sindresorhus/p-queue for this job.
    */
   private static waitQueue = new WaitQueue<osn.EOutputSignal>();
 
@@ -53,7 +55,6 @@ export default class Recorder {
     console.info('[Recorder] Constructing recorder:', this.uuid);
     this._mainWindow = mainWindow;
     this.videoProcessQueue = new VideoProcessQueue(mainWindow);
-    this.initializeOBS();
   }
 
   get mainWindow() {
@@ -324,33 +325,45 @@ export default class Recorder {
     }
   }
 
-  initializeOBS() {
+  async initializeOBS() {
     console.info('[Recorder] Initializing OBS', this.uuid);
 
-    try {
-      osn.NodeObs.IPC.host(this.uuid);
+    // try {
+    //   osn.NodeObs.IPC.host(this.uuid);
 
-      osn.NodeObs.SetWorkingDirectory(
-        fixPathWhenPackaged(
-          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
-        )
-      );
+    //   osn.NodeObs.SetWorkingDirectory(
+    //     fixPathWhenPackaged(
+    //       path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
+    //     )
+    //   );
 
-      const initResult = osn.NodeObs.OBS_API_initAPI(
-        'en-US',
-        fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
-        '1.0.0',
-        ''
-      );
+    //   const initResult = osn.NodeObs.OBS_API_initAPI(
+    //     'en-US',
+    //     fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
+    //     '1.0.0',
+    //     ''
+    //   );
 
-      if (initResult !== 0) {
-        throw new Error(
-          `OBS process initialization failed with code ${initResult}`
-        );
-      }
-    } catch (e) {
-      throw new Error(`Exception when initializing OBS process: ${e}`);
-    }
+    //   if (initResult !== 0) {
+    //     throw new Error(
+    //       `OBS process initialization failed with code ${initResult}`
+    //     );
+    //   }
+    // } catch (e) {
+    //   throw new Error(`Exception when initializing OBS process: ${e}`);
+    // }
+
+    console.log("spinning up");
+    const worker = new Worker('./src/main/worker.ts');
+    worker.postMessage('init');
+
+    worker.on('message', (result) => {
+      console.log(result);
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+
+    console.log("spinning down");
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
