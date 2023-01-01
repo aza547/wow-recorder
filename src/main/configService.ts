@@ -16,7 +16,7 @@ export default class ConfigService extends EventEmitter {
   // @ts-ignore 'schema' is "wrong", but it really isn't.
   private _store = new ElectronStore<ConfigurationSchema>({
     configSchema,
-    name: 'config-v2',
+    name: 'config-v3',
   });
 
   /**

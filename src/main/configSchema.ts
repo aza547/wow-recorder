@@ -6,8 +6,8 @@ export type ConfigurationSchema = {
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
-  audioInputDevice: string;
-  audioOutputDevice: string;
+  audioInputDevices: string;
+  audioOutputDevices: string;
   minEncounterDuration: number;
   startUp: boolean;
   startMinimized: boolean;
@@ -75,15 +75,15 @@ export const configSchema = {
     type: 'integer',
     default: 1,
   },
-  audioInputDevice: {
-    description: 'Audio input device to be included in the recording.',
+  audioInputDevices: {
+    description: 'Audio input devices to be included in the recording.',
     type: 'string',
-    default: 'all',
+    default: '',
   },
-  audioOutputDevice: {
-    description: 'Audio output device to be included in the recording.',
+  audioOutputDevices: {
+    description: 'Audio output devices to be included in the recording.',
     type: 'string',
-    default: 'all',
+    default: '',
   },
   minEncounterDuration: {
     description:

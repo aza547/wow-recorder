@@ -1,47 +1,93 @@
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
-import { ObsAudioDevice } from 'main/obsAudioDeviceUtils';
 import Box from '@mui/material/Box';
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import { ISettingsPanelProps } from 'main/types';
+import { IOBSDevice, ISettingsPanelProps } from 'main/types';
+import { Checkbox, Chip, ListItemText, OutlinedInput } from '@mui/material';
+import React from 'react';
 import { configSchema } from '../main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
 
 export default function GeneralSettings(props: ISettingsPanelProps) {
   const { config, onChange } = props;
-  const audioDevices = ipc.sendSync('getAudioDevices', []);
+
+  let initialInputs: string[];
+
+  if (config.audioInputDevices) {
+    initialInputs = String(config.audioInputDevices).split(',');
+  } else {
+    initialInputs = [];
+  }
+
+  let initialOutputs: string[];
+
+  if (config.audioOutputDevices) {
+    initialOutputs = String(config.audioOutputDevices).split(',');
+  } else {
+    initialOutputs = [];
+  }
+
+  const [input, setInput] = React.useState<string[]>(initialInputs);
+  const [output, setOutput] = React.useState<string[]>(initialOutputs);
+
+  const devices = ipc.sendSync('getAudioDevices', []);
+
+  const inputDevices: IOBSDevice[] = devices.input;
+  const outputDevices: IOBSDevice[] = devices.output;
+
+  enum DeviceType {
+    INPUT,
+    OUTPUT,
+  }
+
+  const handleMultiSelect = (
+    type: DeviceType,
+    event: SelectChangeEvent<string[]>
+  ) => {
+    const {
+      target: { value },
+    } = event;
+
+    if (type === DeviceType.INPUT) {
+      setInput(
+        // On autofill we get a stringified value.
+        typeof value === 'string' ? value.split(',') : value
+      );
+    } else {
+      setOutput(
+        // On autofill we get a stringified value.
+        typeof value === 'string' ? value.split(',') : value
+      );
+    }
+  };
 
   const availableAudioDevices = {
-    input: [
-      // @@@ TODO plumb these through
-      // {
-      //   id: 'none',
-      //   description: 'None (no input audio devices will be recorded)',
-      // },
-      // {
-      //   id: 'all',
-      //   description: 'All (all input audio devices will be recorded)',
-      // },
-      ...audioDevices.input,
-    ],
-    output: [
-      // @@@ TODO plumb these through
-      // {
-      //   id: 'none',
-      //   description: 'None (no output audio devices will be recorded)',
-      // },
-      // {
-      //   id: 'all',
-      //   description: 'All (all output audio devices will be recorded)',
-      // },
-      ...audioDevices.output,
-    ],
+    input: inputDevices,
+    output: outputDevices,
+  };
+
+  const getDeviceDescription = (id: string) => {
+    let result = 'Unknown';
+
+    availableAudioDevices.input.forEach((device) => {
+      if (device.id === id) {
+        result = device.description;
+      }
+    });
+
+    availableAudioDevices.output.forEach((device) => {
+      if (device.id === id) {
+        result = device.description;
+      }
+    });
+
+    return result;
   };
 
   const style = {
@@ -74,24 +120,51 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             Input
           </InputLabel>
           <Select
-            name="audioInputDevice"
-            labelId="demo-simple-select-label"
+            name="audioInputDevices"
+            labelId="select-audio-in-devices"
             id="audio-input-device"
-            value={config.audioInputDevice}
+            multiple
+            value={input}
             label="Input"
-            onChange={onChange}
+            onChange={(e) => {
+              handleMultiSelect(DeviceType.INPUT, e);
+              onChange(e);
+            }}
+            input={<OutlinedInput label="Tag" />}
+            renderValue={(selected) => {
+              return (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 0.5,
+                  }}
+                >
+                  {selected.map((value) => (
+                    <Chip
+                      sx={{
+                        bgcolor: 'white',
+                      }}
+                      key={getDeviceDescription(value)}
+                      label={getDeviceDescription(value)}
+                    />
+                  ))}
+                </Box>
+              );
+            }}
             sx={style}
           >
-            {availableAudioDevices.input.map((device: ObsAudioDevice) => { // @@@ fix types
+            {availableAudioDevices.input.map((device: IOBSDevice) => {
               return (
                 <MenuItem key={`device_${device.id}`} value={device.id}>
-                  {device.description}
+                  <Checkbox checked={input.indexOf(device.id) > -1} />
+                  <ListItemText primary={device.description} />
                 </MenuItem>
               );
             })}
           </Select>
         </FormControl>
-        <Tooltip title={configSchema.audioInputDevice.description}>
+        <Tooltip title={configSchema.audioInputDevices.description}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }} />
           </IconButton>
@@ -103,24 +176,49 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             Output
           </InputLabel>
           <Select
-            name="audioOutputDevice"
-            labelId="demo-simple-select-label"
+            name="audioOutputDevices"
+            labelId="select-audio-devices"
             id="audio-output-device"
-            value={config.audioOutputDevice}
+            multiple
+            value={output}
             label="Output"
-            onChange={onChange}
+            onChange={(e) => {
+              handleMultiSelect(DeviceType.OUTPUT, e);
+              onChange(e);
+            }}
+            input={<OutlinedInput label="Tag" />}
+            renderValue={(selected) => (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 0.5,
+                }}
+              >
+                {selected.map((value) => (
+                  <Chip
+                    sx={{
+                      bgcolor: 'white',
+                    }}
+                    key={getDeviceDescription(value)}
+                    label={getDeviceDescription(value)}
+                  />
+                ))}
+              </Box>
+            )}
             sx={style}
           >
-            {availableAudioDevices.output.map((device: ObsAudioDevice) => { // @@@ fix types
+            {availableAudioDevices.output.map((device: IOBSDevice) => {
               return (
                 <MenuItem key={`device_${device.id}`} value={device.id}>
-                  {device.description}
+                  <Checkbox checked={output.indexOf(device.id) > -1} />
+                  <ListItemText primary={device.description} />
                 </MenuItem>
               );
             })}
           </Select>
         </FormControl>
-        <Tooltip title={configSchema.audioOutputDevice.description}>
+        <Tooltip title={configSchema.audioOutputDevices.description}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }} />
           </IconButton>

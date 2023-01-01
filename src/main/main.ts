@@ -82,6 +82,9 @@ const wowProcessStarted = async () => {
     throw new Error('[Main] No recorder object');
   }
 
+  // We add the audio sources here so they are only held when WoW is
+  // open, holding an audio devices prevents Windows go to sleeping
+  // which we don't want to do if we can avoid it.
   recorder.addAudioSourcesOBS();
   await recorder.startBuffer();
 };
@@ -94,6 +97,8 @@ const wowProcessStopped = async () => {
     return;
   }
 
+  // Remove the audio sources when WoW stops to avoid preventing
+  // Windows going to sleep.
   if (recorder && retailHandler && retailHandler.activity) {
     await retailHandler.forceEndActivity(0, true);
     recorder.removeAudioSourcesOBS();
@@ -109,8 +114,8 @@ const wowProcessStopped = async () => {
 /**
  * Create a settings store to handle the config.
  * This defaults to a path like:
- *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v2.json"
- *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v2.json"
+ *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v3.json"
+ *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v3.json"
  */
 const cfg = ConfigService.getInstance();
 

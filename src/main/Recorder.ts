@@ -2,9 +2,8 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { IInput, IScene } from 'obs-studio-node';
+import { IInput, IScene, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
-import { ISource } from 'obs-studio-node';
 import { ERecordingFormat } from './obsEnums';
 import { deleteVideo, fixPathWhenPackaged, getSortedVideos } from './util';
 import { IOBSDevice, RecStatus, TAudioSourceType } from './types';
@@ -48,13 +47,13 @@ export default class Recorder {
 
   private videoChannel = 1;
 
-  private audioInputChannel = 2;
+  private audioInputChannels = [2, 3, 4];
 
-  private audioInputDevice: IInput | undefined;
+  private audioInputDevices: IInput[] = [];
 
-  private audioOutputChannel = 3;
+  private audioOutputChannels = [5, 6, 7, 8, 9];
 
-  private audioOutputDevice: IInput | undefined;
+  private audioOutputDevices: IInput[] = [];
 
   public obsInitialized = false;
 
@@ -102,7 +101,6 @@ export default class Recorder {
     this.createRecordingDirs();
     this.obsRecordingFactory = this.configureOBS();
     this.configureVideoOBS();
-    // this.addAudioSourcesOBS();
     this.obsConfigured = true;
   }
 
@@ -481,23 +479,44 @@ export default class Recorder {
   }
 
   public addAudioSourcesOBS() {
-    console.info('[Recorder] Configuring OBS audio');
+    console.info('[Recorder] Configuring OBS audio sources');
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
 
-    this.audioInputDevice = this.createOBSAudioSource(
-      this.cfg.get<string>('audioInputDevice'),
-      TAudioSourceType.input
-    );
+    this.cfg
+      .get<string>('audioInputDevices')
+      .split(',')
+      .filter((id) => id)
+      .forEach((id) => {
+        const obsSource = this.createOBSAudioSource(id, TAudioSourceType.input);
+        this.audioInputDevices.push(obsSource);
+      });
 
-    this.audioOutputDevice = this.createOBSAudioSource(
-      this.cfg.get<string>('audioOutputDevice'),
-      TAudioSourceType.output
-    );
+    this.audioInputDevices.forEach((device) => {
+      const index = this.audioInputDevices.indexOf(device);
+      const channel = this.audioInputChannels[index];
+      this.addAudioSourceOBS(device, channel);
+    });
 
-    this.addAudioSourceOBS(this.audioInputDevice, this.audioInputChannel);
-    this.addAudioSourceOBS(this.audioOutputDevice, this.audioOutputChannel);
+    this.cfg
+      .get<string>('audioOutputDevices')
+      .split(',')
+      .filter((id) => id)
+      .forEach((id) => {
+        const obsSource = this.createOBSAudioSource(
+          id,
+          TAudioSourceType.output
+        );
+
+        this.audioOutputDevices.push(obsSource);
+      });
+
+    this.audioOutputDevices.forEach((device) => {
+      const index = this.audioOutputDevices.indexOf(device);
+      const channel = this.audioOutputChannels[index];
+      this.addAudioSourceOBS(device, channel);
+    });
   }
 
   public removeAudioSourcesOBS() {
@@ -505,13 +524,17 @@ export default class Recorder {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    if (this.audioInputDevice) {
-      this.removeAudioSourceOBS(this.audioInputDevice, this.audioInputChannel);
-    }
+    this.audioInputDevices.forEach((device) => {
+      const index = this.audioInputDevices.indexOf(device);
+      const channel = this.audioInputChannels[index];
+      this.removeAudioSourceOBS(device, channel);
+    });
 
-    if (this.audioOutputDevice) {
-      this.removeAudioSourceOBS(this.audioOutputDevice, this.audioOutputChannel);
-    }
+    this.audioOutputDevices.forEach((device) => {
+      const index = this.audioOutputDevices.indexOf(device);
+      const channel = this.audioOutputChannels[index];
+      this.removeAudioSourceOBS(device, channel);
+    });
   }
 
   private addAudioSourceOBS(obsInput: IInput, channel: number) {
