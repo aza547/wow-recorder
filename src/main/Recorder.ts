@@ -4,6 +4,7 @@ import fs from 'fs';
 import * as osn from 'obs-studio-node';
 import { IInput, IScene } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
+import { ISource } from 'obs-studio-node';
 import { ERecordingFormat } from './obsEnums';
 import { deleteVideo, fixPathWhenPackaged, getSortedVideos } from './util';
 import { IOBSDevice, RecStatus, TAudioSourceType } from './types';
@@ -44,6 +45,16 @@ export default class Recorder {
   private bufferStorageDir: string | undefined;
 
   private uuid: string = uuidfn();
+
+  private videoChannel = 1;
+
+  private audioInputChannel = 2;
+
+  private audioInputDevice: IInput | undefined;
+
+  private audioOutputChannel = 3;
+
+  private audioOutputDevice: IInput | undefined;
 
   public obsInitialized = false;
 
@@ -91,7 +102,7 @@ export default class Recorder {
     this.createRecordingDirs();
     this.obsRecordingFactory = this.configureOBS();
     this.configureVideoOBS();
-    this.configureAudioOBS();
+    // this.addAudioSourcesOBS();
     this.obsConfigured = true;
   }
 
@@ -428,7 +439,7 @@ export default class Recorder {
 
     const scene: IScene = osn.SceneFactory.create('WR Scene');
     scene.add(videoSource);
-    osn.Global.setOutputSource(1, scene);
+    osn.Global.setOutputSource(this.videoChannel, scene);
   }
 
   private createMonitorCaptureSource() {
@@ -469,24 +480,72 @@ export default class Recorder {
     return gameCaptureSource;
   }
 
-  private configureAudioOBS() {
+  public addAudioSourcesOBS() {
     console.info('[Recorder] Configuring OBS audio');
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
 
-    const audioInputDevice = this.createOBSAudioSource(
+    this.audioInputDevice = this.createOBSAudioSource(
       this.cfg.get<string>('audioInputDevice'),
       TAudioSourceType.input
     );
 
-    const audioOutputDevice = this.createOBSAudioSource(
+    this.audioOutputDevice = this.createOBSAudioSource(
       this.cfg.get<string>('audioOutputDevice'),
       TAudioSourceType.output
     );
 
-    this.addOBSAudioSource(audioInputDevice, 2);
-    this.addOBSAudioSource(audioOutputDevice, 3);
+    this.addAudioSourceOBS(this.audioInputDevice, this.audioInputChannel);
+    this.addAudioSourceOBS(this.audioOutputDevice, this.audioOutputChannel);
+  }
+
+  public removeAudioSourcesOBS() {
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    if (this.audioInputDevice) {
+      this.removeAudioSourceOBS(this.audioInputDevice, this.audioInputChannel);
+    }
+
+    if (this.audioOutputDevice) {
+      this.removeAudioSourceOBS(this.audioOutputDevice, this.audioOutputChannel);
+    }
+  }
+
+  private addAudioSourceOBS(obsInput: IInput, channel: number) {
+    console.info(
+      '[Recorder] Adding OBS audio source',
+      obsInput.name,
+      obsInput.id
+    );
+
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    if (channel <= 1 || channel >= 64) {
+      throw new Error(`[Recorder] Invalid channel number ${channel}`);
+    }
+
+    osn.Global.setOutputSource(channel, obsInput);
+  }
+
+  private removeAudioSourceOBS(obsInput: IInput, channel: number) {
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    console.info(
+      '[Recorder] Removing OBS audio source',
+      obsInput.name,
+      obsInput.id
+    );
+
+    osn.Global.setOutputSource(channel, null as unknown as ISource);
+    obsInput.release();
+    obsInput.remove();
   }
 
   async shutdownOBS() {
@@ -602,24 +661,6 @@ export default class Recorder {
       type === TAudioSourceType.input ? 'mic-audio' : 'desktop-audio',
       { device_id: id }
     );
-  }
-
-  private addOBSAudioSource(obsInput: IInput, channel: number) {
-    console.info(
-      '[Recorder] Adding OBS audio source',
-      obsInput.name,
-      obsInput.id
-    );
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    if (channel <= 1 || channel >= 6) {
-      throw new Error(`[Recorder] Invalid channel number ${channel}`);
-    }
-
-    osn.Global.setOutputSource(channel, obsInput);
   }
 
   getAvailableEncoders() {

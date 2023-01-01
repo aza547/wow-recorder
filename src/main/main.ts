@@ -71,7 +71,7 @@ process.on('unhandledRejection', (reason: Error) => {
   }
 });
 
-const wowProcessStarted = () => {
+const wowProcessStarted = async () => {
   console.info('[Main] Detected WoW is running');
 
   if (!mainWindow) {
@@ -82,20 +82,27 @@ const wowProcessStarted = () => {
     throw new Error('[Main] No recorder object');
   }
 
-  recorder.startBuffer();
+  recorder.addAudioSourcesOBS();
+  await recorder.startBuffer();
 };
 
 const wowProcessStopped = async () => {
   console.info('[Main] Detected WoW is not running');
 
-  if (retailHandler && retailHandler.activity) {
-    await retailHandler.forceEndActivity(0, true);
-  } else if (classicHandler && classicHandler.activity) {
-    await classicHandler.forceEndActivity(0, true);
+  if (!recorder) {
+    console.info('[Main] No recorder object so no action taken');
+    return;
   }
 
-  if (recorder) {
+  if (recorder && retailHandler && retailHandler.activity) {
+    await retailHandler.forceEndActivity(0, true);
+    recorder.removeAudioSourcesOBS();
+  } else if (recorder && classicHandler && classicHandler.activity) {
+    await classicHandler.forceEndActivity(0, true);
+    recorder.removeAudioSourcesOBS();
+  } else {
     await recorder.stopBuffer();
+    recorder.removeAudioSourcesOBS();
   }
 };
 
