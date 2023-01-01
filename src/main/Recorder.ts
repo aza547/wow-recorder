@@ -428,6 +428,10 @@ export default class Recorder {
         this.audioInputDevices.push(obsSource);
       });
 
+    if (this.audioInputDevices.length > this.audioInputChannels.length) {
+      throw new Error('[Recorder] Too many audio input devices');
+    }
+
     this.audioInputDevices.forEach((device) => {
       const index = this.audioInputDevices.indexOf(device);
       const channel = this.audioInputChannels[index];
@@ -446,6 +450,10 @@ export default class Recorder {
 
         this.audioOutputDevices.push(obsSource);
       });
+
+    if (this.audioOutputDevices.length > this.audioOutputChannels.length) {
+      throw new Error('[Recorder] Too many audio input devices');
+    }
 
     this.audioOutputDevices.forEach((device) => {
       const index = this.audioOutputDevices.indexOf(device);
@@ -467,17 +475,20 @@ export default class Recorder {
       const index = this.audioInputDevices.indexOf(device);
       const channel = this.audioInputChannels[index];
       this.removeAudioSourceOBS(device, channel);
+      this.audioInputDevices.splice(index, 1);
     });
+
 
     this.audioOutputDevices.forEach((device) => {
       const index = this.audioOutputDevices.indexOf(device);
       const channel = this.audioOutputChannels[index];
       this.removeAudioSourceOBS(device, channel);
+      this.audioOutputDevices.splice(index, 1);
     });
   }
 
   /**
-   * Add a single audio source to the OBS scene. 
+   * Add a single audio source to the OBS scene.
    */
   private addAudioSourceOBS(obsInput: IInput, channel: number) {
     console.info(
@@ -821,7 +832,7 @@ export default class Recorder {
   };
 
   /**
-   * Get a list of the audio input devices. Used by the settings to populate 
+   * Get a list of the audio input devices. Used by the settings to populate
    * the list of devices for user selection.
    */
   public getInputAudioDevices() {
