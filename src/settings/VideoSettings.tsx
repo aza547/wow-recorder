@@ -9,11 +9,12 @@ import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import { configSchema } from '../main/configSchema';
+import { obsResolutions } from '../main/constants';
 
 const ipc = window.electron.ipcRenderer;
 const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
 
-const outputResolutions = ['720p', '1080p', '1440p', '2160p'];
+const outputResolutions = Object.keys(obsResolutions);
 const fpsOptions = ['10', '20', '30', '60'];
 
 const obsCaptureModes = {
