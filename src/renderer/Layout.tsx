@@ -308,6 +308,7 @@ export default function Layout() {
           <video
             autoPlay={autoPlay}
             key={videoFullPath}
+            preload="auto" 
             id="video-player"
             className="video"
             poster={poster}
