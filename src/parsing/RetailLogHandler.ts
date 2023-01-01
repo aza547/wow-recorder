@@ -9,7 +9,7 @@ import {
   retailUniqueSpecSpells,
 } from '../main/constants';
 
-import { Recorder } from '../main/recorder';
+import Recorder from '../main/Recorder';
 import ArenaMatch from '../activitys/ArenaMatch';
 import LogHandler from './LogHandler';
 import Battleground from '../activitys/Battleground';
@@ -29,32 +29,18 @@ import { VideoCategory } from '../types/VideoCategory';
  * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
-  // Singleton instance.
-  private static _instance: RetailLogHandler;
-
-  static getInstance(recorder: Recorder, combatLogParser: CombatLogParser) {
-    if (!RetailLogHandler._instance) {
-      RetailLogHandler._instance = new RetailLogHandler(
-        recorder,
-        combatLogParser
-      );
-    }
-
-    return RetailLogHandler._instance;
-  }
-
   constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
     super(recorder, combatLogParser);
 
     this.combatLogParser
-      .on('ENCOUNTER_START', (line: LogLine) => {
-        this.handleEncounterStartLine(line);
+      .on('ENCOUNTER_START', async (line: LogLine) => {
+        await this.handleEncounterStartLine(line);
       })
-      .on('ENCOUNTER_END', (line: LogLine) => {
-        this.handleEncounterEndLine(line);
+      .on('ENCOUNTER_END', async (line: LogLine) => {
+        await this.handleEncounterEndLine(line);
       })
-      .on('ZONE_CHANGE', (line: LogLine) => {
-        this.handleZoneChange(line);
+      .on('ZONE_CHANGE', async (line: LogLine) => {
+        await this.handleZoneChange(line);
       })
       .on('SPELL_AURA_APPLIED', (line: LogLine) => {
         this.handleSpellAuraAppliedLine(line);
@@ -65,24 +51,24 @@ export default class RetailLogHandler extends LogHandler {
       .on('ARENA_MATCH_START', (line: LogLine) => {
         this.handleArenaStartLine(line);
       })
-      .on('ARENA_MATCH_END', (line: LogLine) => {
-        this.handleArenaEndLine(line);
+      .on('ARENA_MATCH_END', async (line: LogLine) => {
+        await this.handleArenaEndLine(line);
       })
-      .on('CHALLENGE_MODE_START', (line: LogLine) => {
-        this.handleChallengeModeStartLine(line);
+      .on('CHALLENGE_MODE_START', async (line: LogLine) => {
+        await this.handleChallengeModeStartLine(line);
       })
-      .on('CHALLENGE_MODE_END', (line: LogLine) => {
-        this.handleChallengeModeEndLine(line);
+      .on('CHALLENGE_MODE_END', async (line: LogLine) => {
+        await this.handleChallengeModeEndLine(line);
       })
-      .on('COMBATANT_INFO', (line: LogLine) => {
-        this.handleCombatantInfoLine(line);
+      .on('COMBATANT_INFO', async (line: LogLine) => {
+        await this.handleCombatantInfoLine(line);
       })
-      .on('SPELL_CAST_SUCCESS', (line: LogLine) => {
-        this.handleSpellCastSuccess(line);
+      .on('SPELL_CAST_SUCCESS', async (line: LogLine) => {
+        await this.handleSpellCastSuccess(line);
       });
   }
 
-  handleArenaStartLine(line: LogLine): void {
+  private handleArenaStartLine(line: LogLine): void {
     console.debug('[RetailLogHandler] Handling ARENA_MATCH_START line:', line);
 
     // Important we don't exit if we're in a Solo Shuffle, we use the ARENA_MATCH_START
@@ -137,7 +123,7 @@ export default class RetailLogHandler extends LogHandler {
     }
   }
 
-  handleArenaEndLine(line: LogLine): void {
+  private async handleArenaEndLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ARENA_MATCH_END line:', line);
 
     if (!this.activity) {
@@ -148,17 +134,17 @@ export default class RetailLogHandler extends LogHandler {
     if (this.activity.category === VideoCategory.SoloShuffle) {
       const soloShuffle = this.activity as SoloShuffle;
       soloShuffle.endGame(line.date());
-      this.endRecording(soloShuffle);
+      await this.endRecording(soloShuffle);
     } else {
       const arenaMatch = this.activity as ArenaMatch;
       const endTime = line.date();
       const winningTeamID = parseInt(line.arg(1), 10);
       arenaMatch.endArena(endTime, winningTeamID);
-      this.endRecording(arenaMatch);
+      await this.endRecording(arenaMatch);
     }
   }
 
-  handleChallengeModeStartLine(line: LogLine): void {
+  private async handleChallengeModeStartLine(line: LogLine) {
     console.debug(
       '[RetailLogHandler] Handling CHALLENGE_MODE_START line:',
       line
@@ -209,10 +195,10 @@ export default class RetailLogHandler extends LogHandler {
       )
     );
 
-    this.startRecording(this.activity);
+    await this.startRecording(this.activity);
   }
 
-  handleChallengeModeEndLine(line: LogLine): void {
+  private async handleChallengeModeEndLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling CHALLENGE_MODE_END line:', line);
 
     if (!this.activity) {
@@ -231,10 +217,10 @@ export default class RetailLogHandler extends LogHandler {
     const CMDuration = Math.round(parseInt(line.arg(4), 10) / 1000);
 
     challengeModeActivity.endChallengeMode(endDate, CMDuration, result);
-    this.endRecording(this.activity);
+    await this.endRecording(this.activity);
   }
 
-  handleEncounterStartLine(line: LogLine) {
+  protected async handleEncounterStartLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ENCOUNTER_START line:', line);
     const encounterID = parseInt(line.arg(1), 10);
 
@@ -252,7 +238,7 @@ export default class RetailLogHandler extends LogHandler {
         return;
       }
 
-      super.handleEncounterStartLine(line, Flavour.Retail);
+      await super.handleEncounterStartLine(line, Flavour.Retail);
       return;
     }
 
@@ -282,13 +268,14 @@ export default class RetailLogHandler extends LogHandler {
     );
   }
 
-  handleEncounterEndLine(line: LogLine) {
+  protected async handleEncounterEndLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ENCOUNTER_END line:', line);
 
     if (!this.activity) {
       console.error(
         '[RetailLogHandler] Encounter end event spotted but not in activity'
       );
+
       return;
     }
 
@@ -299,7 +286,7 @@ export default class RetailLogHandler extends LogHandler {
       console.debug(
         '[RetailLogHandler] Must be raid encounter, calling super method.'
       );
-      super.handleEncounterEndLine(line);
+      await super.handleEncounterEndLine(line);
     } else {
       console.debug('[RetailLogHandler] Challenge mode boss encounter.');
       const activeChallengeMode = this.activity as ChallengeModeDungeon;
@@ -326,7 +313,7 @@ export default class RetailLogHandler extends LogHandler {
     }
   }
 
-  handleZoneChange(line: LogLine) {
+  private async handleZoneChange(line: LogLine) {
     console.info('[RetailLogHandler] Handling ZONE_CHANGE line:', line);
     const zoneID = parseInt(line.arg(1), 10);
 
@@ -338,25 +325,22 @@ export default class RetailLogHandler extends LogHandler {
     if (this.activity) {
       const { category } = this.activity;
       const isActivityBG = category === VideoCategory.Battlegrounds;
-      const isActivityArena =
-        category === VideoCategory.TwoVTwo ||
-        category === VideoCategory.ThreeVThree ||
-        category === VideoCategory.Skirmish ||
-        category === VideoCategory.SoloShuffle;
+      const isActivityArena = this.isArena();
 
       if (isZoneBG && isActivityBG) {
         console.info('[RetailLogHandler] Internal BG zone change: ', zoneID);
       } else if (!isZoneBG && isActivityBG) {
         console.error('[RetailLogHandler] Zone change out of BG');
-        this.battlegroundEnd(line);
+        await this.battlegroundEnd(line);
       } else if (isActivityArena) {
         console.error('[RetailLogHandler] ZONE_CHANGE out of arena');
-        this.zoneChangeStop(line);
+        await this.zoneChangeStop(line);
       } else if (isZoneBG && !isActivityBG) {
         console.error(
           '[RetailLogHandler] Zoned into BG but in a different activity'
         );
-        this.forceEndActivity();
+
+        await this.forceEndActivity();
       } else {
         console.info(
           '[RetailLogHandler] Unknown zone change, no action taken: ',
@@ -365,13 +349,13 @@ export default class RetailLogHandler extends LogHandler {
       }
     } else if (isZoneBG) {
       console.info('[RetailLogHandler] Zone change into BG');
-      this.battlegroundStart(line);
+      await this.battlegroundStart(line);
     } else {
       console.info('[RetailLogHandler] Uninteresting zone change');
     }
   }
 
-  handleCombatantInfoLine(line: LogLine): void {
+  private handleCombatantInfoLine(line: LogLine): void {
     if (!this.activity) {
       console.error(
         '[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO'
@@ -393,7 +377,7 @@ export default class RetailLogHandler extends LogHandler {
     this.activity.addCombatant(combatantInfo);
   }
 
-  handleSpellAuraAppliedLine(line: LogLine) {
+  private handleSpellAuraAppliedLine(line: LogLine) {
     if (!this.activity) {
       // Deliberately don't log anything here as we hit this a lot
       return;
@@ -406,7 +390,7 @@ export default class RetailLogHandler extends LogHandler {
     this.processCombatant(srcGUID, srcNameRealm, srcFlags);
   }
 
-  handleSpellCastSuccess(line: LogLine) {
+  private handleSpellCastSuccess(line: LogLine) {
     if (!this.activity) {
       return;
     }
@@ -437,11 +421,12 @@ export default class RetailLogHandler extends LogHandler {
     }
   }
 
-  getRelativeTimestampForTimelineSegment(eventDate: Date) {
+  private getRelativeTimestampForTimelineSegment(eventDate: Date) {
     if (!this.activity) {
       console.error(
         '[RetailLogHandler] getRelativeTimestampForTimelineSegment called but no active activity'
       );
+
       return 0;
     }
 
@@ -451,8 +436,8 @@ export default class RetailLogHandler extends LogHandler {
     return relativeTime;
   }
 
-  dataTimeout(ms: number) {
-    super.dataTimeout(ms);
+  protected async dataTimeout(ms: number) {
+    await super.dataTimeout(ms);
 
     if (!this.activity) {
       return;
@@ -461,11 +446,11 @@ export default class RetailLogHandler extends LogHandler {
     const isDungeon = this.activity.category === VideoCategory.MythicPlus;
 
     if (isDungeon) {
-      this.forceEndActivity(-ms / 1000);
+      await this.forceEndActivity(-ms / 1000);
     }
   }
 
-  battlegroundStart(line: LogLine): void {
+  private async battlegroundStart(line: LogLine) {
     if (this.activity) {
       console.error(
         "[RetailLogHandler] Another activity in progress, can't start battleground"
@@ -483,10 +468,11 @@ export default class RetailLogHandler extends LogHandler {
       zoneID,
       Flavour.Retail
     );
-    this.startRecording(this.activity);
+
+    await this.startRecording(this.activity);
   }
 
-  battlegroundEnd(line: LogLine): void {
+  private async battlegroundEnd(line: LogLine) {
     if (!this.activity) {
       console.error(
         "[RetailLogHandler] Can't stop battleground as no active activity"
@@ -496,6 +482,6 @@ export default class RetailLogHandler extends LogHandler {
 
     const endTime = line.date();
     this.activity.end(endTime, false);
-    this.endRecording(this.activity);
+    await this.endRecording(this.activity);
   }
 }

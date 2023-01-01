@@ -172,6 +172,7 @@ export default class ChallengeModeDungeon extends Activity {
       timeline: this.timeline,
       level: this.level,
       flavour: this.flavour,
+      overrun: this.overrun,
     };
   }
 

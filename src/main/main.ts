@@ -27,26 +27,19 @@ import {
   checkAppUpdate,
 } from './util';
 
-import { Recorder, RecorderOptionsType } from './recorder';
-
-import {
-  getAvailableAudioInputDevices,
-  getAvailableAudioOutputDevices,
-} from './obsAudioDeviceUtils';
+import Recorder from './Recorder';
 
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import CombatLogParser from '../parsing/CombatLogParser';
-import { getObsAvailableRecEncoders, getObsResolutions } from './obsRecorder';
 
 import {
-  makeRetailHandler,
-  makeClassicHandler,
+  createRetailHandler,
+  createClassicHandler,
 } from '../parsing/HandlerFactory';
 
 import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
-
-const obsRecorder = require('./obsRecorder');
+import SizeMonitor from '../utils/SizeMonitor';
 
 const logDir = setupApplicationLogging();
 
@@ -55,7 +48,7 @@ console.info('[Main] On OS:', os.platform(), os.release());
 
 let retailHandler: RetailLogHandler;
 let classicHandler: ClassicLogHandler;
-let recorder: Recorder;
+let recorder: Recorder | undefined;
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let tray = null;
@@ -78,52 +71,51 @@ process.on('unhandledRejection', (reason: Error) => {
   }
 });
 
-/**
- * Load and return recorder options from the configuration store.
- * Does some basic sanity checking for default values.
- */
-const loadRecorderOptions = (cfg: ConfigService): RecorderOptionsType => {
-  return {
-    /* eslint-disable prettier/prettier */
-    storageDir:           cfg.get<string>('storagePath'),
-    bufferStorageDir:     cfg.get<string>('bufferStoragePath'),
-    maxStorage:           cfg.get<number>('maxStorage'),
-    monitorIndex:         cfg.get<number>('monitorIndex'),
-    audioInputDeviceId:   cfg.get<string>('audioInputDevice'),
-    audioOutputDeviceId:  cfg.get<string>('audioOutputDevice'),
-    minEncounterDuration: cfg.get<number>('minEncounterDuration'),
-    obsBaseResolution:    cfg.get<string>('obsBaseResolution'),
-    obsOutputResolution:  cfg.get<string>('obsOutputResolution'),
-    obsFPS:               cfg.get<number>('obsFPS'),
-    obsKBitRate:          cfg.get<number>('obsKBitRate'),
-    obsCaptureMode:       cfg.get<string>('obsCaptureMode'),
-    obsRecEncoder:        cfg.get<string>('obsRecEncoder'),
-    /* eslint-enable prettier/prettier */
-  };
-};
-
-const wowProcessStarted = () => {
+const wowProcessStarted = async () => {
   console.info('[Main] Detected WoW is running');
-  recorder.startBuffer();
+
+  if (!mainWindow) {
+    throw new Error('[Main] mainWindow not defined');
+  }
+
+  if (!recorder) {
+    throw new Error('[Main] No recorder object');
+  }
+
+  // We add the audio sources here so they are only held when WoW is
+  // open, holding an audio devices prevents Windows go to sleeping
+  // which we don't want to do if we can avoid it.
+  recorder.addAudioSourcesOBS();
+  await recorder.startBuffer();
 };
 
-const wowProcessStopped = () => {
+const wowProcessStopped = async () => {
   console.info('[Main] Detected WoW is not running');
 
-  if (retailHandler && retailHandler.activity) {
-    retailHandler.forceEndActivity(0, true);
-  } else if (classicHandler && classicHandler.activity) {
-    classicHandler.forceEndActivity(0, true);
+  if (!recorder) {
+    console.info('[Main] No recorder object so no action taken');
+    return;
+  }
+
+  // Remove the audio sources when WoW stops to avoid preventing
+  // Windows going to sleep.
+  if (recorder && retailHandler && retailHandler.activity) {
+    await retailHandler.forceEndActivity(0, true);
+    recorder.removeAudioSourcesOBS();
+  } else if (recorder && classicHandler && classicHandler.activity) {
+    await classicHandler.forceEndActivity(0, true);
+    recorder.removeAudioSourcesOBS();
   } else {
-    recorder.stopBuffer();
+    await recorder.stopBuffer();
+    recorder.removeAudioSourcesOBS();
   }
 };
 
 /**
  * Create a settings store to handle the config.
  * This defaults to a path like:
- *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v2.json"
- *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v2.json"
+ *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v3.json"
+ *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v3.json"
  */
 const cfg = ConfigService.getInstance();
 
@@ -220,44 +212,6 @@ const updateRecStatus = (status: RecStatus, reason = '') => {
 };
 
 /**
- * Create or reconfigure the recorder instance
- */
-const makeRecorder = (): void => {
-  if (!mainWindow) {
-    console.error('[Main] No mainWindow defined when creating recorder');
-    throw new Error('[Main] No mainWindow defined when creating recorder');
-  }
-
-  const recorderOpts = loadRecorderOptions(cfg);
-
-  if (recorder) {
-    recorder.reconfigure(mainWindow, recorderOpts);
-  } else {
-    recorder = new Recorder(mainWindow, recorderOpts);
-  }
-};
-
-/**
- * Checks the app config.
- * @returns true if config is setup, false otherwise.
- */
-const checkConfig = (): boolean => {
-  if (mainWindow === null) {
-    return false;
-  }
-
-  try {
-    cfg.validate();
-  } catch (error) {
-    updateRecStatus(RecStatus.InvalidConfig, String(error));
-    console.info('[Main] Config is bad: ', String(error));
-    return false;
-  }
-
-  return true;
-};
-
-/**
  * Creates the main window.
  */
 const createWindow = async () => {
@@ -289,11 +243,7 @@ const createWindow = async () => {
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) throw new Error('"mainWindow" is not defined');
 
-    const initialStatus = checkConfig()
-      ? RecStatus.WaitingForWoW
-      : RecStatus.InvalidConfig;
-
-    updateRecStatus(initialStatus);
+    checkAppUpdate(mainWindow);
 
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send(
@@ -301,32 +251,40 @@ const createWindow = async () => {
       `Warcraft Recorder v${appVersion}`
     );
 
-    const cfgStartMinimized = cfg.get<boolean>('startMinimized');
+    const startMinimized = cfg.get<boolean>('startMinimized');
 
-    if (!cfgStartMinimized) {
+    if (!startMinimized) {
       mainWindow.show();
     }
 
-    if (!checkConfig()) return;
-    makeRecorder();
+    recorder = new Recorder(mainWindow);
+
+    Poller.getInstance()
+      .on('wowProcessStart', wowProcessStarted)
+      .on('wowProcessStop', wowProcessStopped);
+
+    try {
+      cfg.validate();
+      updateRecStatus(RecStatus.WaitingForWoW);
+    } catch (error) {
+      updateRecStatus(RecStatus.InvalidConfig, String(error));
+      return;
+    }
+
+    recorder.configure();
+    Poller.getInstance().start();
+    mainWindow.webContents.send('refreshState');
 
     const retailLogPath = cfg.getPath('retailLogPath');
     const classicLogPath = cfg.getPath('classicLogPath');
 
     if (retailLogPath) {
-      retailHandler = makeRetailHandler(recorder, retailLogPath);
+      retailHandler = createRetailHandler(recorder, retailLogPath);
     }
 
     if (classicLogPath) {
-      classicHandler = makeClassicHandler(recorder, classicLogPath);
+      classicHandler = createClassicHandler(recorder, classicLogPath);
     }
-
-    Poller.getInstance()
-      .on('wowProcessStart', wowProcessStarted)
-      .on('wowProcessStop', wowProcessStopped)
-      .start();
-
-    checkAppUpdate(mainWindow);
   });
 
   mainWindow.on('closed', () => {
@@ -465,26 +423,44 @@ ipcMain.on('settingsWindow', (event, args) => {
   if (args[0] === 'update') {
     console.log('[Main] User updated settings');
 
-    settingsWindow.once('closed', () => {
-      if (!checkConfig()) return;
-      updateRecStatus(RecStatus.WaitingForWoW);
-      makeRecorder();
+    settingsWindow.once('closed', async () => {
+      if (!mainWindow) {
+        throw new Error('[Main] mainWindow not defined');
+      }
+
+      mainWindow.webContents.send('refreshState');
+
+      if (recorder) {
+        await recorder.stopBuffer();
+        await recorder.shutdownOBS();
+        recorder = undefined;
+      }
+
+      recorder = new Recorder(mainWindow);
+
+      try {
+        cfg.validate();
+        updateRecStatus(RecStatus.WaitingForWoW);
+      } catch (error) {
+        updateRecStatus(RecStatus.InvalidConfig, String(error));
+        return;
+      }
+
+      recorder.configure();
+      Poller.getInstance().start();
 
       const retailLogPath = cfg.getPath('retailLogPath');
       const classicLogPath = cfg.getPath('classicLogPath');
 
       if (retailLogPath) {
-        retailHandler = makeRetailHandler(recorder, retailLogPath);
+        retailHandler = createRetailHandler(recorder, retailLogPath);
       }
 
       if (classicLogPath) {
-        classicHandler = makeClassicHandler(recorder, classicLogPath);
+        classicHandler = createClassicHandler(recorder, classicLogPath);
       }
 
-      Poller.getInstance()
-        .on('wowProcessStart', wowProcessStarted)
-        .on('wowProcessStop', wowProcessStopped)
-        .start();
+      new SizeMonitor().run();
     });
 
     settingsWindow.close();
@@ -500,44 +476,17 @@ ipcMain.on('settingsWindow', (event, args) => {
     return;
   }
 
-  if (args[0] === 'getObsAvailableResolutions') {
-    if (!recorder) {
-      event.returnValue = { Base: [], Output: [] };
-      return;
-    }
-
-    event.returnValue = getObsResolutions();
-    return;
-  }
-
   if (args[0] === 'getObsAvailableRecEncoders') {
     if (!recorder) {
       event.returnValue = [];
       return;
     }
 
-    const obsEncoders = getObsAvailableRecEncoders();
-    const defaultEncoder = obsEncoders.at(-1);
-    const encoderList = [{ id: 'auto', name: `Automatic (${defaultEncoder})` }];
+    const obsEncoders = recorder
+      .getAvailableEncoders()
+      .filter((encoder) => encoder !== 'none');
 
-    obsEncoders
-      // We don't want people to be able to select 'none'.
-      .filter((encoder) => encoder !== 'none')
-      .forEach((encoder) => {
-        const isHardwareEncoder =
-          encoder.includes('amd') ||
-          encoder.includes('nvenc') ||
-          encoder.includes('qsv');
-
-        const encoderType = isHardwareEncoder ? 'Hardware' : 'Software';
-
-        encoderList.push({
-          id: encoder,
-          name: `${encoderType} (${encoder})`,
-        });
-      });
-
-    event.returnValue = encoderList;
+    event.returnValue = obsEncoders;
   }
 });
 
@@ -597,17 +546,23 @@ ipcMain.handle('getVideoState', async () =>
 );
 
 ipcMain.on('getAudioDevices', (event) => {
-  // We can only get this information if the recorder (OBS) has been
-  // initialized and that only happens when the storage directory has
-  // been configured.
-  if (!recorder) {
-    event.returnValue = { input: [], output: [] };
-    return;
+  if (!recorder || !recorder.obsInitialized) {
+    throw new Error('[Main] getAudioDevices called when OBS not initialized');
   }
 
+  const inputDevices = recorder.getInputAudioDevices();
+  const outputDevices = recorder.getOutputAudioDevices();
+
+  console.info(
+    '[Main] Input devices:',
+    inputDevices,
+    'Output devices:',
+    outputDevices
+  );
+
   event.returnValue = {
-    input: getAvailableAudioInputDevices(),
-    output: getAvailableAudioOutputDevices(),
+    input: inputDevices,
+    output: outputDevices,
   };
 });
 
@@ -637,8 +592,6 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  * Test button listener.
  */
 ipcMain.on('test', (_event, args) => {
-  if (!checkConfig()) return;
-
   if (retailHandler) {
     console.info('[Main] Running retail test');
     runRetailRecordingTest(retailHandler.combatLogParser, Boolean(args[0]));
@@ -651,31 +604,35 @@ ipcMain.on('test', (_event, args) => {
 /**
  * Handle when a user clicks the stop recording button.
  */
-ipcMain.on('recorder', (_event, args) => {
+ipcMain.on('recorder', async (_event, args) => {
   if (args[0] === 'stop') {
     console.log('[Main] Force stopping recording due to user request.');
 
     if (retailHandler && retailHandler.activity) {
-      retailHandler.forceEndActivity(0, false);
+      await retailHandler.forceEndActivity(0, false);
       return;
     }
 
     if (classicHandler && classicHandler.activity) {
-      classicHandler.forceEndActivity(0, false);
+      await classicHandler.forceEndActivity(0, false);
       return;
     }
 
-    if (recorder) recorder.forceStop();
+    if (recorder) await recorder.forceStop();
   }
 });
 
 /**
  * Shutdown the app if all windows closed.
  */
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
   console.log('[Main] User closed app');
-  if (recorder) recorder.cleanupBuffer(0);
-  obsRecorder.shutdown();
+
+  if (recorder) {
+    await recorder.cleanupBuffer(0);
+    await recorder.shutdownOBS();
+  }
+
   app.quit();
 });
 

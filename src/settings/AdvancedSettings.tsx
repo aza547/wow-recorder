@@ -16,6 +16,18 @@ const obsAvailableEncoders: string[] = ipc.sendSync('settingsWindow', [
   'getObsAvailableRecEncoders',
 ]);
 
+const encoderMap = obsAvailableEncoders
+  .map((encoder) => {
+    const isHardwareEncoder =
+      encoder.includes('amd') ||
+      encoder.includes('nvenc') ||
+      encoder.includes('qsv');
+
+    const encoderType = isHardwareEncoder ? 'Hardware' : 'Software';
+    return { name: encoder, type: encoderType };
+  })
+  .sort((a, b) => a.type.localeCompare(b.type));
+
 export default function GeneralSettings(props: ISettingsPanelProps) {
   const { config, onChange } = props;
 
@@ -117,12 +129,12 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             onChange={onChange}
             sx={style}
           >
-            {obsAvailableEncoders.map((recEncoder: any) => (
+            {encoderMap.map((encoder: any) => (
               <MenuItem
-                key={`rec-encoder-${recEncoder.id}`}
-                value={recEncoder.id}
+                key={`rec-encoder-${encoder.name}`}
+                value={encoder.name}
               >
-                {recEncoder.name}
+                {`${encoder.type} (${encoder.name})`}
               </MenuItem>
             ))}
           </Select>

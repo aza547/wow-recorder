@@ -194,6 +194,7 @@ export default class SoloShuffle extends Activity {
       soloShuffleRoundsPlayed: this.rounds.length,
       timeline: this.getTimelineSegments(),
       combatants: Array.from(this.currentRound.combatantMap.values()),
+      overrun: this.overrun,
     };
   }
 

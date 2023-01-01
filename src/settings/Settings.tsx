@@ -64,6 +64,10 @@ export default function Settings() {
         value = event.target.checked;
         break;
 
+      case 'string':
+        value = String(value);
+        break;
+
       default:
         console.error('Unexpected default case hit');
     }

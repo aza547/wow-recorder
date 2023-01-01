@@ -24,7 +24,6 @@ export default class RaidEncounter extends Activity {
     flavour: Flavour
   ) {
     super(startDate, VideoCategory.Raids, flavour);
-
     this._difficultyID = difficultyID;
     this._encounterID = encounterID;
     this.overrun = 15;
@@ -133,6 +132,7 @@ export default class RaidEncounter extends Activity {
       result: this.result,
       player: this.player,
       deaths: this.deaths,
+      overrun: this.overrun,
     };
   }
 

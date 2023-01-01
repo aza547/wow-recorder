@@ -6,12 +6,11 @@ export type ConfigurationSchema = {
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
-  audioInputDevice: string;
-  audioOutputDevice: string;
+  audioInputDevices: string;
+  audioOutputDevices: string;
   minEncounterDuration: number;
   startUp: boolean;
   startMinimized: boolean;
-  obsBaseResolution: string;
   obsOutputResolution: string;
   obsFPS: number;
   obsKBitRate: number;
@@ -32,7 +31,7 @@ export type ConfigurationSchema = {
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
 
 /**
- * Config schema.
+ * Config schema. The descriptions included here get displayed in the UI.
  */
 export const configSchema = {
   storagePath: {
@@ -44,7 +43,6 @@ export const configSchema = {
     description:
       'Location to store temporary recordings. If left unset this will default to a temporary folder inside the Storage Path.',
     type: 'string',
-    default: '',
   },
   retailLogPath: {
     description:
@@ -77,15 +75,15 @@ export const configSchema = {
     type: 'integer',
     default: 1,
   },
-  audioInputDevice: {
-    description: 'Audio input device to be included in the recording.',
+  audioInputDevices: {
+    description: 'Audio input devices to be included in the recording.',
     type: 'string',
-    default: 'all',
+    default: '',
   },
-  audioOutputDevice: {
-    description: 'Audio output device to be included in the recording.',
+  audioOutputDevices: {
+    description: 'Audio output devices to be included in the recording.',
     type: 'string',
-    default: 'all',
+    default: '',
   },
   minEncounterDuration: {
     description:
@@ -104,17 +102,11 @@ export const configSchema = {
     type: 'boolean',
     default: false,
   },
-  obsBaseResolution: {
-    description:
-      'Base resolution for recording. Typically the same as the monitor you are recording.',
-    type: 'string',
-    default: '1920x1080',
-  },
   obsOutputResolution: {
     description:
-      'Resolution of videos as saved on disk. Smaller resolution gives smaller video size, but can look grainy/pixelated.',
+      'Resolution of videos as saved on disk. Smaller resolution gives smaller video size, but can look grainy/pixelated. Typically just set this to the size of your WoW monitor',
     type: 'string',
-    default: '1920x1080',
+    default: '1080p',
   },
   obsFPS: {
     description:
@@ -140,9 +132,9 @@ export const configSchema = {
   },
   obsRecEncoder: {
     description:
-      "The video encoder to use for creating video files. If you don't know what this means, leave it on 'Automatic' to select the best option automatically.",
+      'The video encoder to use. Hardware encoders are typically preferable, usually giving better performance, but are specific to your graphics card.',
     type: 'string',
-    default: 'auto',
+    default: 'obs_x264',
   },
   recordRetail: {
     description: 'Whether the application should record retail',

@@ -1,10 +1,10 @@
-import { Recorder } from '../main/recorder';
+import Recorder from '../main/Recorder';
 import { getSortedFiles } from '../main/util';
 import ClassicLogHandler from './ClassicLogHandler';
 import CombatLogParser from './CombatLogParser';
 import RetailLogHandler from './RetailLogHandler';
 
-export const makeRetailHandler = (
+const createRetailHandler = (
   rec: Recorder,
   logPath: string
 ): RetailLogHandler => {
@@ -19,10 +19,10 @@ export const makeRetailHandler = (
   });
 
   parser.watchPath(logPath);
-  return RetailLogHandler.getInstance(rec, parser);
+  return new RetailLogHandler(rec, parser);
 };
 
-export const makeClassicHandler = (
+const createClassicHandler = (
   rec: Recorder,
   logPath: string
 ): ClassicLogHandler => {
@@ -37,5 +37,7 @@ export const makeClassicHandler = (
   });
 
   parser.watchPath(logPath);
-  return ClassicLogHandler.getInstance(rec, parser);
+  return new ClassicLogHandler(rec, parser);
 };
+
+export { createRetailHandler, createClassicHandler };

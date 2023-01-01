@@ -16,7 +16,7 @@ export default class ConfigService extends EventEmitter {
   // @ts-ignore 'schema' is "wrong", but it really isn't.
   private _store = new ElectronStore<ConfigurationSchema>({
     configSchema,
-    name: 'config-v2',
+    name: 'config-v3',
   });
 
   /**
@@ -268,11 +268,12 @@ export default class ConfigService extends EventEmitter {
 
   private updateDefaults(key: string, newValue: any): void {
     if (key === 'storagePath') {
-      configSchema.bufferStoragePath.default =
-        ConfigService.resolveBufferStoragePath(
-          newValue as string,
-          this.get('bufferStoragePath')
-        );
+      const bufferStoragePath = ConfigService.resolveBufferStoragePath(
+        newValue as string,
+        this.get('bufferStoragePath')
+      );
+
+      this.set('bufferStoragePath', bufferStoragePath);
     }
   }
 

@@ -195,6 +195,7 @@ type Metadata = {
   soloShuffleRoundsWon?: number;
   soloShuffleRoundsPlayed?: number;
   combatants?: Combatant[];
+  overrun: number;
 };
 
 /**
@@ -212,6 +213,28 @@ type SoloShuffleTimelineSegment = {
   timestamp: number;
   result: boolean;
 };
+
+enum EDeviceType {
+  audioInput = 'audioInput',
+  audioOutput = 'audioOutput',
+  videoInput = 'videoInput',
+}
+
+interface IOBSDevice {
+  id: string;
+  description: string;
+}
+
+interface IDevice {
+  id: string;
+  type: EDeviceType;
+  description: string;
+}
+
+enum TAudioSourceType {
+  input = 'wasapi_input_capture',
+  output = 'wasapi_output_capture',
+}
 
 export {
   RecStatus,
@@ -233,4 +256,8 @@ export {
   VideoData,
   Flavour,
   SoloShuffleTimelineSegment,
+  EDeviceType,
+  IOBSDevice,
+  IDevice,
+  TAudioSourceType,
 };

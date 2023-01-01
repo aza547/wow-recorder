@@ -6,12 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- [Issue 245](https://github.com/aza547/wow-recorder/issues/245) - Ability to pick and chose any combination of audio devices to record.
 
 ### Changed
 - [NO-ISSUE] - Upgrade obs-studio-node to 0.23.59. 
 
 ### Fixed
 - [Issue 264](https://github.com/aza547/wow-recorder/issues/264) - Attempt to fix some permissions problems on Windows 11.
+- [Issue 223](https://github.com/aza547/wow-recorder/issues/223) - Make resolutions hardcoded so there can be no weird dissapearing of options. 
+- [Issue 256](https://github.com/aza547/wow-recorder/issues/256) - Fix bug where resolution was sometimes flipped. 
+- [Issue 57](https://github.com/aza547/wow-recorder/issues/57) - Fix a bug preventing windows from sleeping with WR open. 
 
 ## [3.2.0] - 2022-12-23
 ### Added

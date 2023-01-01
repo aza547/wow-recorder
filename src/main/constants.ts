@@ -7,6 +7,13 @@ import {
   StringKeyToNumberValueMapType,
 } from './types';
 
+const obsResolutions = {
+  '720p': { width: 1280, height: 720 },
+  '1080p': { width: 1920, height: 1080 },
+  '1440p': { width: 2560, height: 1440 },
+  '2160p': { width: 3840, height: 2160 },
+};
+
 interface ICategoryRecordingSettings {
   configKey: ConfigurationSchemaKey;
 }
@@ -1103,4 +1110,5 @@ export {
   categoryRecordingSettings,
   classicUniqueSpecSpells,
   retailUniqueSpecSpells,
+  obsResolutions,
 };
