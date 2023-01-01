@@ -2,7 +2,7 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { IInput, IScene, ISource } from 'obs-studio-node';
+import { IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 import { ERecordingFormat } from './obsEnums';
 import { deleteVideo, fixPathWhenPackaged, getSortedVideos } from './util';
@@ -14,8 +14,152 @@ import { obsResolutions } from './constants';
 
 const { v4: uuidfn } = require('uuid');
 
+/**
+ * Class for handing the interface between Warcraft Recorder and OBS.
+ *
+ * This works by constantly recording a "buffer" whenver WoW is open. If an
+ * interesting event is spotted in the combatlog (e.g. an ENCOUNTER_START
+ * event), the buffer becomes a real recording.
+ *
+ * This ensures we catch the start of activities, the fundamental problem
+ * here being that the combatlog doesn't write in real time, and we might
+ * actually see the ENCOUNTER_START event 20 seconds after it occured in
+ * game.
+ */
 export default class Recorder {
   /**
+   * For quickly checking if we're recording an activity or not.
+   */
+  private _isRecording: boolean = false;
+
+  /**
+   * For quickly checking if we're recording a buffer or not.
+   */
+  private _isRecordingBuffer: boolean = false;
+
+  /**
+   * Timer object to trigger a restart of the buffer. We do this on a 5
+   * minute interval so we aren't building up massive files.
+   */
+  private _bufferRestartIntervalID?: NodeJS.Timer;
+
+  /**
+   * Timer object for trigger a start of the buffer recording after a
+   * restart is triggered. I've never managed to find a way to manage
+   * without this. Simply stopping and starting OBS causes problems.
+   */
+  private _bufferStartTimeoutID?: NodeJS.Timer;
+
+  /**
+   * Date the recording started.
+   */
+  private _recorderStartDate = new Date();
+
+  /**
+   * Reference back to the mainWindow object for updating the app status icon.
+   */
+  private mainWindow: BrowserWindow;
+
+  /**
+   * Shiny new OSN API object for controlling OBS.
+   */
+  private obsRecordingFactory: osn.IAdvancedRecording | undefined;
+
+  /**
+   * ConfigService instance.
+   */
+  private cfg: ConfigService = ConfigService.getInstance();
+
+  /**
+   * Location to write all recording to. This is not the final location of
+   * the finalized video files.
+   */
+  private bufferStorageDir: string | undefined;
+
+  /**
+   * Once we have completed a recording, we throw it onto the
+   * VideoProcessQueue to handle cutting it to size, writing accompanying
+   * metadata and saving it to the final location for display in the GUI.
+   */
+  private videoProcessQueue: VideoProcessQueue;
+
+  /**
+   * On creation of the recorder we generate a UUID to identify the OBS
+   * server. On a change of settings, we destroy the recorder object and
+   * create a new one, with a different UUID.
+   */
+  private uuid: string = uuidfn();
+
+  /**
+   * OBS IScene object.
+   */
+  private scene: IScene | undefined;
+
+  /**
+   * ISceneItem object, useful to have handy for rescaling.
+   */
+  private sceneItem: ISceneItem | undefined;
+
+  /**
+   * Object representing the video source.
+   */
+  private videoSource: IInput | undefined;
+
+  /**
+   * Resolution selected by the user in settings. Defaults to 1080p for no
+   * good reason other than avoiding undefined. It quickly gets set to what
+   * the user configured.
+   */
+  private resolution: keyof typeof obsResolutions = '1080p';
+
+  /**
+   * Scale factor for resizing the video source if a user is running
+   * windowed mode and decides to resize their game. We can handle
+   * this cleanly, even mid-recording.
+   */
+  private videoScaleFactor: number = 1;
+
+  /**
+   * Timer object for checking the size of the game window and rescaling if
+   * required.
+   */
+  private videoSourceSizeInterval?: NodeJS.Timer;
+
+  /**
+   * Arbritrarily chosen channel numbers for video input. We only ever
+   * include one video source.
+   */
+  private videoChannel = 1;
+
+  /**
+   * Some arbritrarily chosen channel numbers we can use for adding input
+   * devices to the OBS scene. That is, adding microphone audio to the
+   * recordings.
+   */
+  private audioInputChannels = [2, 3, 4];
+
+  /**
+   * Array of input devices we are including in the source. This is not an
+   * array of all the devices we know about.
+   */
+  private audioInputDevices: IInput[] = [];
+
+  /**
+   * Some arbritrarily chosen channel numbers we can use for adding output
+   * devices to the OBS scene. That is, adding speaker audio to the
+   * recordings.
+   */
+  private audioOutputChannels = [5, 6, 7, 8, 9];
+
+  /**
+   * Array of output devices we are including in the source. This is not an
+   * array of all the devices we know about.
+   */
+  private audioOutputDevices: IInput[] = [];
+
+  /**
+   * WaitQueue object for storing signalling from OBS.
+   *
    * If this is not static the signalling goes wrong, I've no idea why. The
    * symptom is OBS assertions failing because waitQueue returns things in the
    * wrong order. This is fine to be static so long as we only have one recorder
@@ -23,51 +167,21 @@ export default class Recorder {
    */
   private static waitQueue = new WaitQueue<osn.EOutputSignal>();
 
-  private _isRecording: boolean = false;
-
-  private _isRecordingBuffer: boolean = false;
-
-  private _bufferRestartIntervalID?: NodeJS.Timer;
-
-  private _bufferStartTimeoutID?: NodeJS.Timer;
-
-  private _recorderStartDate = new Date();
-
-  private _mainWindow: BrowserWindow;
-
-  private obsRecordingFactory: osn.IAdvancedRecording | undefined;
-
-  private videoProcessQueue: VideoProcessQueue;
-
-  private cfg: ConfigService = ConfigService.getInstance();
-
-  private bufferStorageDir: string | undefined;
-
-  private uuid: string = uuidfn();
-
-  private videoChannel = 1;
-
-  private audioInputChannels = [2, 3, 4];
-
-  private audioInputDevices: IInput[] = [];
-
-  private audioOutputChannels = [5, 6, 7, 8, 9];
-
-  private audioOutputDevices: IInput[] = [];
-
+  /**
+   * For easy checking if OBS has been initialized.
+   */
   public obsInitialized = false;
 
+  /**
+   * For easy checking if OBS has been configured.
+   */
   public obsConfigured = false;
 
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
-    this._mainWindow = mainWindow;
+    this.mainWindow = mainWindow;
     this.videoProcessQueue = new VideoProcessQueue(mainWindow);
     this.initializeOBS();
-  }
-
-  get mainWindow() {
-    return this._mainWindow;
   }
 
   get isRecording() {
@@ -86,6 +200,13 @@ export default class Recorder {
     this._isRecordingBuffer = value;
   }
 
+  /**
+   * Configure OBS. This is split out of the constructor so that we can always
+   * initialize OBS upfront (without requiring any configuration from the
+   * user). That lets us populate all the options in settings that we depend
+   * on OBS to inform us of (encoders, audio devices). This doesn't attach
+   * audio devices, that's done seperately.
+   */
   configure() {
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
@@ -102,6 +223,322 @@ export default class Recorder {
     this.obsRecordingFactory = this.configureOBS();
     this.configureVideoOBS();
     this.obsConfigured = true;
+  }
+
+  /**
+   * Create the bufferStorageDir if it doesn't already exist. Also
+   * cleans it out for good measure.
+   */
+  private createRecordingDirs() {
+    if (!this.bufferStorageDir) {
+      throw new Error('[Recorder] bufferStorageDir not set');
+    }
+
+    if (!fs.existsSync(this.bufferStorageDir)) {
+      console.info('[Recorder] Creating dir:', this.bufferStorageDir);
+      fs.mkdirSync(this.bufferStorageDir);
+    } else {
+      console.info('[Recorder] Clean out buffer');
+      this.cleanupBuffer(0);
+    }
+  }
+
+  /**
+   * Call through OSN to initialize OBS. This is slow and synchronous,
+   * so use sparingly - it will block the main thread.
+   */
+  private initializeOBS() {
+    console.info('[Recorder] Initializing OBS', this.uuid);
+
+    try {
+      osn.NodeObs.IPC.host(this.uuid);
+
+      osn.NodeObs.SetWorkingDirectory(
+        fixPathWhenPackaged(
+          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
+        )
+      );
+
+      const initResult = osn.NodeObs.OBS_API_initAPI(
+        'en-US',
+        fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
+        '1.0.0',
+        ''
+      );
+
+      if (initResult !== 0) {
+        throw new Error(
+          `OBS process initialization failed with code ${initResult}`
+        );
+      }
+    } catch (e) {
+      throw new Error(`Exception when initializing OBS process: ${e}`);
+    }
+
+    this.obsInitialized = true;
+    console.info('[Recorder] OBS initialized successfully');
+  }
+
+  /**
+   * Configures OBS. This does a bunch of things that we need the
+   * user to have setup their config for, which is why it's split out.
+   */
+  private configureOBS() {
+    console.info('[Recorder] Configuring OBS');
+
+    this.resolution = this.cfg.get<string>(
+      'obsOutputResolution'
+    ) as keyof typeof obsResolutions;
+
+    const { height, width } = obsResolutions[this.resolution];
+    const fps = this.cfg.get<number>('obsFPS');
+
+    osn.VideoFactory.videoContext = {
+      fpsNum: fps,
+      fpsDen: 1,
+      baseWidth: width,
+      baseHeight: height,
+      outputWidth: width,
+      outputHeight: height,
+      outputFormat: 2,
+      colorspace: 2,
+      range: 2,
+      scaleType: 3,
+      fpsType: 2,
+    };
+
+    const recFactory = osn.AdvancedRecordingFactory.create();
+    const bufferPath = this.cfg.getPath('bufferStoragePath');
+    recFactory.path = path.normalize(bufferPath);
+
+    recFactory.format = ERecordingFormat.MP4;
+    recFactory.useStreamEncoders = false;
+
+    recFactory.videoEncoder = osn.VideoEncoderFactory.create(
+      this.cfg.get<string>('obsRecEncoder'),
+      'video-encoder'
+    );
+
+    recFactory.videoEncoder.update({
+      rate_control: 'VBR',
+      bitrate: 1000 * this.cfg.get<number>('obsKBitRate'),
+    });
+
+    recFactory.overwrite = false;
+    recFactory.noSpace = false;
+
+    recFactory.signalHandler = (signal) => {
+      Recorder.waitQueue.push(signal);
+    };
+
+    return recFactory;
+  }
+
+  /**
+   * Configures the video source in OBS. Also creates the scene.
+   */
+  private configureVideoOBS() {
+    console.info('[Recorder] Configuring OBS video');
+
+    const captureMode = this.cfg.get<string>('obsCaptureMode');
+
+    switch (captureMode) {
+      case 'monitor_capture':
+        this.videoSource = this.createMonitorCaptureSource();
+        break;
+
+      case 'game_capture':
+        this.videoSource = this.createGameCaptureSource();
+        break;
+
+      default:
+        throw new Error('[Recorder] Unexpected default case hit');
+    }
+
+    this.scene = osn.SceneFactory.create('WR Scene');
+    this.sceneItem = this.scene.add(this.videoSource);
+    osn.Global.setOutputSource(this.videoChannel, this.scene);
+
+    if (captureMode === 'game_capture') {
+      this.watchVideoSourceSize();
+    }
+  }
+
+  /**
+   * Creates a monitor capture source.
+   */
+  private createMonitorCaptureSource() {
+    console.info('[Recorder] Configuring OBS for Monitor Capture');
+
+    const monitorCaptureSource = osn.InputFactory.create(
+      'monitor_capture',
+      'WR Monitor Capture'
+    );
+
+    const { settings } = monitorCaptureSource;
+    settings.monitor = this.cfg.get<number>('monitorIndex') - 1;
+
+    monitorCaptureSource.update(settings);
+    monitorCaptureSource.save();
+
+    return monitorCaptureSource;
+  }
+
+  /**
+   * Creates a game capture source.
+   */
+  private createGameCaptureSource() {
+    console.info('[Recorder] Configuring OBS for Game Capture');
+
+    const gameCaptureSource = osn.InputFactory.create(
+      'game_capture',
+      'WR Game Capture'
+    );
+
+    const { settings } = gameCaptureSource;
+    settings.capture_cursor = true;
+    settings.capture_mode = 'window';
+    settings.allow_transparency = true;
+    settings.priority = 1;
+    settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
+
+    gameCaptureSource.update(settings);
+    gameCaptureSource.save();
+
+    return gameCaptureSource;
+  }
+
+  /**
+   * Add the configured audio sources ot the OBS scene. This is public
+   * so it can be called externally when WoW is opened - see the Poller
+   * class.
+   */
+  public addAudioSourcesOBS() {
+    console.info('[Recorder] Configuring OBS audio sources');
+
+    const track1 = osn.AudioTrackFactory.create(160, 'track1');
+    osn.AudioTrackFactory.setAtIndex(track1, 1);
+
+    this.cfg
+      .get<string>('audioInputDevices')
+      .split(',')
+      .filter((id) => id)
+      .forEach((id) => {
+        const obsSource = this.createOBSAudioSource(id, TAudioSourceType.input);
+        this.audioInputDevices.push(obsSource);
+      });
+
+    this.audioInputDevices.forEach((device) => {
+      const index = this.audioInputDevices.indexOf(device);
+      const channel = this.audioInputChannels[index];
+      this.addAudioSourceOBS(device, channel);
+    });
+
+    this.cfg
+      .get<string>('audioOutputDevices')
+      .split(',')
+      .filter((id) => id)
+      .forEach((id) => {
+        const obsSource = this.createOBSAudioSource(
+          id,
+          TAudioSourceType.output
+        );
+
+        this.audioOutputDevices.push(obsSource);
+      });
+
+    this.audioOutputDevices.forEach((device) => {
+      const index = this.audioOutputDevices.indexOf(device);
+      const channel = this.audioOutputChannels[index];
+      this.addAudioSourceOBS(device, channel);
+    });
+  }
+
+  /**
+   * Remove all audio sources from the OBS scene. This is public
+   * so it can be called externally when WoW is closed.
+   */
+  public removeAudioSourcesOBS() {
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    this.audioInputDevices.forEach((device) => {
+      const index = this.audioInputDevices.indexOf(device);
+      const channel = this.audioInputChannels[index];
+      this.removeAudioSourceOBS(device, channel);
+    });
+
+    this.audioOutputDevices.forEach((device) => {
+      const index = this.audioOutputDevices.indexOf(device);
+      const channel = this.audioOutputChannels[index];
+      this.removeAudioSourceOBS(device, channel);
+    });
+  }
+
+  /**
+   * Add a single audio source to the OBS scene. 
+   */
+  private addAudioSourceOBS(obsInput: IInput, channel: number) {
+    console.info(
+      '[Recorder] Adding OBS audio source',
+      obsInput.name,
+      obsInput.id
+    );
+
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    if (channel <= 1 || channel >= 64) {
+      throw new Error(`[Recorder] Invalid channel number ${channel}`);
+    }
+
+    osn.Global.setOutputSource(channel, obsInput);
+  }
+
+  /**
+   * Remove a single audio source to the OBS scene.
+   */
+  private removeAudioSourceOBS(obsInput: IInput, channel: number) {
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    console.info(
+      '[Recorder] Removing OBS audio source',
+      obsInput.name,
+      obsInput.id
+    );
+
+    osn.Global.setOutputSource(channel, null as unknown as ISource);
+    obsInput.release();
+    obsInput.remove();
+  }
+
+  async shutdownOBS() {
+    console.info('[Recorder] OBS shutting down', this.uuid);
+
+    if (!this.obsInitialized) {
+      console.info('[Recorder] OBS not initialized so not attempting shutdown');
+    }
+
+    if (this.videoSourceSizeInterval) {
+      clearInterval(this.videoSourceSizeInterval);
+    }
+
+    try {
+      osn.NodeObs.InitShutdownSequence();
+      osn.NodeObs.RemoveSourceCallback();
+      osn.NodeObs.OBS_service_removeCallback();
+      osn.NodeObs.IPC.disconnect();
+    } catch (e) {
+      throw new Error(`Exception shutting down OBS process: ${e}`);
+    }
+
+    this.obsInitialized = false;
+    this.obsConfigured = false;
+    console.info('[Recorder] OBS shut down successfully');
   }
 
   /**
@@ -162,9 +599,10 @@ export default class Recorder {
   /**
    * Restarts the buffer recording. Cleans the temp dir between stop/start.
    * We wait 5s here between the stop start. I don't know why, but if we
-   * don't then OBS becomes unresponsive. I spent a lot of time on this,
-   * trying all sorts of other solutions don't fuck with it unless you have
-   * to; here be dragons.
+   * don't then OBS becomes unresponsive.
+   *
+   * I spent a lot of time on this, trying all sorts of other solutions
+   * don't fuck with it unless you have to; here be dragons.
    */
   restartBuffer = async () => {
     console.log('[Recorder] Restart recording buffer');
@@ -204,7 +642,7 @@ export default class Recorder {
    * Start recording for real, this basically just cancels pending
    * buffer recording restarts. We don't need to actually start OBS
    * recording as it's should already be running (or just about to
-   * start if we hit this in the 2s restart window).
+   * start if we hit this in the restart window).
    */
   async start() {
     console.info('[Recorder] Start recording by cancelling buffer restart');
@@ -215,9 +653,7 @@ export default class Recorder {
   }
 
   /**
-   * Stop recording, no-op if not already recording. Quite a bit happens in
-   * this function, so I've included lots of comments. The ordering is also
-   * important.
+   * Stop recording, no-op if not already recording.
    *
    * @param {Activity} activity the details of the recording
    * @param {boolean} closedWow if wow has just been closed
@@ -283,7 +719,7 @@ export default class Recorder {
   /**
    * Force stop a recording, throwing it away entirely.
    */
-  forceStop = async () => {
+  async forceStop() {
     if (!this._isRecording) return;
     await this.stopOBS();
     this._isRecording = false;
@@ -300,13 +736,13 @@ export default class Recorder {
     setTimeout(async () => {
       this.startBuffer();
     }, 5000);
-  };
+  }
 
   /**
    * Clean-up the buffer directory.
    * @params Number of files to leave.
    */
-  cleanupBuffer = async (filesToLeave: number) => {
+  async cleanupBuffer(filesToLeave: number) {
     if (!this.bufferStorageDir) {
       console.info('[Recorder] Not attempting to clean-up');
       return;
@@ -317,281 +753,11 @@ export default class Recorder {
     if (!videosToDelete || videosToDelete.length === 0) return;
 
     videosToDelete.slice(filesToLeave).forEach((v) => deleteVideo(v.name));
-  };
-
-  private createRecordingDirs() {
-    if (!this.bufferStorageDir) {
-      throw new Error('[Recorder] bufferStorageDir not set');
-    }
-
-    if (!fs.existsSync(this.bufferStorageDir)) {
-      console.info('[Recorder] Creating dir:', this.bufferStorageDir);
-      fs.mkdirSync(this.bufferStorageDir);
-    } else {
-      console.info('[Recorder] Clean out buffer');
-      this.cleanupBuffer(0);
-    }
   }
 
-  initializeOBS() {
-    console.info('[Recorder] Initializing OBS', this.uuid);
-
-    try {
-      osn.NodeObs.IPC.host(this.uuid);
-
-      osn.NodeObs.SetWorkingDirectory(
-        fixPathWhenPackaged(
-          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
-        )
-      );
-
-      const initResult = osn.NodeObs.OBS_API_initAPI(
-        'en-US',
-        fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
-        '1.0.0',
-        ''
-      );
-
-      if (initResult !== 0) {
-        throw new Error(
-          `OBS process initialization failed with code ${initResult}`
-        );
-      }
-    } catch (e) {
-      throw new Error(`Exception when initializing OBS process: ${e}`);
-    }
-
-    this.obsInitialized = true;
-    console.info('[Recorder] OBS initialized successfully');
-  }
-
-  private configureOBS() {
-    console.info('[Recorder] Configuring OBS');
-
-    const resolution = this.cfg.get<string>(
-      'obsOutputResolution'
-    ) as keyof typeof obsResolutions;
-
-    const { height, width } = obsResolutions[resolution];
-    const fps = this.cfg.get<number>('obsFPS');
-
-    osn.VideoFactory.videoContext = {
-      fpsNum: fps,
-      fpsDen: 1,
-      baseWidth: width,
-      baseHeight: height,
-      outputWidth: width,
-      outputHeight: height,
-      outputFormat: 2,
-      colorspace: 2,
-      range: 2,
-      scaleType: 3,
-      fpsType: 2,
-    };
-
-    const recFactory = osn.AdvancedRecordingFactory.create();
-    const bufferPath = this.cfg.getPath('bufferStoragePath');
-    recFactory.path = path.normalize(bufferPath);
-
-    recFactory.format = ERecordingFormat.MP4;
-    recFactory.useStreamEncoders = false;
-
-    recFactory.videoEncoder = osn.VideoEncoderFactory.create(
-      this.cfg.get<string>('obsRecEncoder'),
-      'video-encoder'
-    );
-
-    recFactory.videoEncoder.update({
-      rate_control: 'VBR',
-      bitrate: 1000 * this.cfg.get<number>('obsKBitRate'),
-    });
-
-    recFactory.overwrite = false;
-    recFactory.noSpace = false;
-
-    recFactory.signalHandler = (signal) => {
-      Recorder.waitQueue.push(signal);
-    };
-
-    return recFactory;
-  }
-
-  private configureVideoOBS() {
-    console.info('[Recorder] Configuring OBS video');
-
-    let videoSource: IInput;
-    const captureMode = this.cfg.get<string>('obsCaptureMode');
-
-    switch (captureMode) {
-      case 'monitor_capture':
-        videoSource = this.createMonitorCaptureSource();
-        break;
-
-      case 'game_capture':
-        videoSource = this.createGameCaptureSource();
-        break;
-
-      default:
-        throw new Error('[Recorder] Unexpected default case hit');
-    }
-
-    const scene: IScene = osn.SceneFactory.create('WR Scene');
-    scene.add(videoSource);
-    osn.Global.setOutputSource(this.videoChannel, scene);
-  }
-
-  private createMonitorCaptureSource() {
-    console.info('[Recorder] Configuring OBS for Monitor Capture');
-
-    const monitorCaptureSource = osn.InputFactory.create(
-      'monitor_capture',
-      'WR Monitor Capture'
-    );
-
-    const { settings } = monitorCaptureSource;
-    settings.monitor = this.cfg.get<number>('monitorIndex') - 1;
-
-    monitorCaptureSource.update(settings);
-    monitorCaptureSource.save();
-
-    return monitorCaptureSource;
-  }
-
-  private createGameCaptureSource() {
-    console.info('[Recorder] Configuring OBS for Game Capture');
-
-    const gameCaptureSource = osn.InputFactory.create(
-      'game_capture',
-      'WR Game Capture'
-    );
-
-    const { settings } = gameCaptureSource;
-    settings.capture_cursor = true;
-    settings.capture_mode = 'window';
-    settings.allow_transparency = true;
-    settings.priority = 1;
-    settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
-
-    gameCaptureSource.update(settings);
-    gameCaptureSource.save();
-
-    return gameCaptureSource;
-  }
-
-  public addAudioSourcesOBS() {
-    console.info('[Recorder] Configuring OBS audio sources');
-
-    const track1 = osn.AudioTrackFactory.create(160, 'track1');
-    osn.AudioTrackFactory.setAtIndex(track1, 1);
-
-    this.cfg
-      .get<string>('audioInputDevices')
-      .split(',')
-      .filter((id) => id)
-      .forEach((id) => {
-        const obsSource = this.createOBSAudioSource(id, TAudioSourceType.input);
-        this.audioInputDevices.push(obsSource);
-      });
-
-    this.audioInputDevices.forEach((device) => {
-      const index = this.audioInputDevices.indexOf(device);
-      const channel = this.audioInputChannels[index];
-      this.addAudioSourceOBS(device, channel);
-    });
-
-    this.cfg
-      .get<string>('audioOutputDevices')
-      .split(',')
-      .filter((id) => id)
-      .forEach((id) => {
-        const obsSource = this.createOBSAudioSource(
-          id,
-          TAudioSourceType.output
-        );
-
-        this.audioOutputDevices.push(obsSource);
-      });
-
-    this.audioOutputDevices.forEach((device) => {
-      const index = this.audioOutputDevices.indexOf(device);
-      const channel = this.audioOutputChannels[index];
-      this.addAudioSourceOBS(device, channel);
-    });
-  }
-
-  public removeAudioSourcesOBS() {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    this.audioInputDevices.forEach((device) => {
-      const index = this.audioInputDevices.indexOf(device);
-      const channel = this.audioInputChannels[index];
-      this.removeAudioSourceOBS(device, channel);
-    });
-
-    this.audioOutputDevices.forEach((device) => {
-      const index = this.audioOutputDevices.indexOf(device);
-      const channel = this.audioOutputChannels[index];
-      this.removeAudioSourceOBS(device, channel);
-    });
-  }
-
-  private addAudioSourceOBS(obsInput: IInput, channel: number) {
-    console.info(
-      '[Recorder] Adding OBS audio source',
-      obsInput.name,
-      obsInput.id
-    );
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    if (channel <= 1 || channel >= 64) {
-      throw new Error(`[Recorder] Invalid channel number ${channel}`);
-    }
-
-    osn.Global.setOutputSource(channel, obsInput);
-  }
-
-  private removeAudioSourceOBS(obsInput: IInput, channel: number) {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    console.info(
-      '[Recorder] Removing OBS audio source',
-      obsInput.name,
-      obsInput.id
-    );
-
-    osn.Global.setOutputSource(channel, null as unknown as ISource);
-    obsInput.release();
-    obsInput.remove();
-  }
-
-  async shutdownOBS() {
-    console.info('[Recorder] OBS shutting down', this.uuid);
-
-    if (!this.obsInitialized) {
-      console.info('[Recorder] OBS not initialized so not attempting shutdown');
-    }
-
-    try {
-      osn.NodeObs.InitShutdownSequence();
-      osn.NodeObs.RemoveSourceCallback();
-      osn.NodeObs.OBS_service_removeCallback();
-      osn.NodeObs.IPC.disconnect();
-    } catch (e) {
-      throw new Error(`Exception shutting down OBS process: ${e}`);
-    }
-
-    this.obsInitialized = false;
-    this.obsConfigured = false;
-    console.info('[Recorder] OBS shut down successfully');
-  }
-
+  /**
+   * Tell OBS to start recording, and assert it signals that it has.
+   */
   private async startOBS() {
     if (!this.obsRecordingFactory) {
       throw new Error('[Recorder] StartOBS called but no recording factory');
@@ -601,6 +767,9 @@ export default class Recorder {
     await this.assertNextOBSSignal('start');
   }
 
+  /**
+   * Tell OBS to stop recording, and assert it signals that it has.
+   */
   private async stopOBS() {
     if (!this.obsRecordingFactory) {
       throw new Error('[Recorder] stopOBS called but no recording factory');
@@ -612,6 +781,11 @@ export default class Recorder {
     await this.assertNextOBSSignal('wrote');
   }
 
+  /**
+   * Check the next signal OBS puts onto the WaitQueue matches the
+   * input. If we don't get the correct signal, or we don't get any
+   * signal for 5 seconds then throw an error.
+   */
   private assertNextOBSSignal = async (value: string) => {
     // Don't wait more than 5 seconds for the signal.
     const signalInfo = (await Promise.race([
@@ -646,7 +820,11 @@ export default class Recorder {
     console.debug('[Recorder] Asserted OBS signal:', value);
   };
 
-  getInputAudioDevices() {
+  /**
+   * Get a list of the audio input devices. Used by the settings to populate 
+   * the list of devices for user selection.
+   */
+  public getInputAudioDevices() {
     console.info('[Recorder] Getting available input devices');
 
     if (!this.obsInitialized) {
@@ -659,6 +837,10 @@ export default class Recorder {
     return inputDevices.filter((v) => v.id !== 'default');
   }
 
+  /**
+   * Get a list of the audio output devices. Used by the settings to populate
+   * the list of devices for user selection.
+   */
   getOutputAudioDevices() {
     console.info('[Recorder] Getting available output devices');
 
@@ -672,6 +854,9 @@ export default class Recorder {
     return outputDevices.filter((v) => v.id !== 'default');
   }
 
+  /**
+   * Create an OBS audio source.
+   */
   private createOBSAudioSource(id: string, type: TAudioSourceType) {
     console.info('[Recorder] Creating OBS audio source', id, type);
 
@@ -686,7 +871,10 @@ export default class Recorder {
     );
   }
 
-  getAvailableEncoders() {
+  /**
+   * Return an array of all the encoders available to OBS.
+   */
+  public getAvailableEncoders() {
     console.info('[Recorder] Getting available encoders');
 
     if (!this.obsInitialized) {
@@ -697,5 +885,59 @@ export default class Recorder {
     console.info('[Recorder]', encoders);
 
     return encoders;
+  }
+
+  /**
+   * Set up an interval to run the scaleVideoSourceSize function.
+   */
+  private watchVideoSourceSize() {
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    if (this.videoSourceSizeInterval) {
+      clearInterval(this.videoSourceSizeInterval);
+    }
+
+    this.videoSourceSizeInterval = setInterval(() => {
+      this.scaleVideoSourceSize();
+    }, 5000);
+  }
+
+  /**
+   * Watch the video input source for size changes. This only matters for
+   * doing game capture on a windowed instance of WoW, such that we'll scale
+   * it to the size of the output video if it's resized by the player.
+   */
+  private scaleVideoSourceSize() {
+    if (!this.videoSource) {
+      throw new Error('[Recorder] videoSource was undefined');
+    }
+
+    if (!this.sceneItem) {
+      throw new Error('[Recorder] sceneItem was undefined');
+    }
+
+    if (this.videoSource.width === 0) {
+      // This happens often, suspect it's before OBS gets a hook into a game capture process.
+      return;
+    }
+
+    const { width } = obsResolutions[this.resolution];
+
+    const scaleFactor =
+      Math.round((width / this.videoSource.width) * 100) / 100;
+
+    if (scaleFactor !== this.videoScaleFactor) {
+      console.info(
+        '[Recorder] Rescaling OBS video from',
+        this.videoScaleFactor,
+        'to',
+        scaleFactor
+      );
+
+      this.videoScaleFactor = scaleFactor;
+      this.sceneItem.scale = { x: scaleFactor, y: scaleFactor };
+    }
   }
 }
