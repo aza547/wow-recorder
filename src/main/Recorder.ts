@@ -15,8 +15,12 @@ import { obsResolutions } from './constants';
 const { v4: uuidfn } = require('uuid');
 
 export default class Recorder {
-  // if this is not static it all goes wrong idk why
-  // saw some really weird behaviour from waitQueue returning events in the wrong order
+  /**
+   * If this is not static the signalling goes wrong, I've no idea why. The
+   * symptom is OBS assertions failing because waitQueue returns things in the
+   * wrong order. This is fine to be static so long as we only have one recorder
+   * object in use at a time, which is the design.
+   */
   private static waitQueue = new WaitQueue<osn.EOutputSignal>();
 
   private _isRecording: boolean = false;
@@ -41,9 +45,9 @@ export default class Recorder {
 
   private uuid: string = uuidfn();
 
-  obsInitialized = false;
+  public obsInitialized = false;
 
-  obsConfigured = false;
+  public obsConfigured = false;
 
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
@@ -199,7 +203,7 @@ export default class Recorder {
     this._isRecordingBuffer = false;
     this._isRecording = true;
     this.mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
-  };
+  }
 
   /**
    * Stop recording, no-op if not already recording. Quite a bit happens in
@@ -265,7 +269,7 @@ export default class Recorder {
         this.startBuffer();
       }, 5000);
     }
-  };
+  }
 
   /**
    * Force stop a recording, throwing it away entirely.
