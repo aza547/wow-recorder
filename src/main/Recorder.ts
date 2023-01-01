@@ -478,7 +478,6 @@ export default class Recorder {
       this.audioInputDevices.splice(index, 1);
     });
 
-
     this.audioOutputDevices.forEach((device) => {
       const index = this.audioOutputDevices.indexOf(device);
       const channel = this.audioOutputChannels[index];
