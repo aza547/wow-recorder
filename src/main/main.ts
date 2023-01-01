@@ -592,21 +592,21 @@ ipcMain.on('test', (_event, args) => {
 /**
  * Handle when a user clicks the stop recording button.
  */
-ipcMain.on('recorder', (_event, args) => {
+ipcMain.on('recorder', async (_event, args) => {
   if (args[0] === 'stop') {
     console.log('[Main] Force stopping recording due to user request.');
 
     if (retailHandler && retailHandler.activity) {
-      retailHandler.forceEndActivity(0, false);
+      await retailHandler.forceEndActivity(0, false);
       return;
     }
 
     if (classicHandler && classicHandler.activity) {
-      classicHandler.forceEndActivity(0, false);
+      await classicHandler.forceEndActivity(0, false);
       return;
     }
 
-    if (recorder) recorder.forceStop();
+    if (recorder) await recorder.forceStop();
   }
 });
 

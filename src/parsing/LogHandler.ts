@@ -40,8 +40,8 @@ export default abstract class LogHandler {
     this._recorder = recorder;
     this._combatLogParser = combatLogParser;
 
-    this._combatLogParser.on('DataTimeout', (ms: number) => {
-      this.dataTimeout(ms);
+    this._combatLogParser.on('DataTimeout', async (ms: number) => {
+      await this.dataTimeout(ms);
     });
 
     this._cfg = ConfigService.getInstance();
@@ -71,7 +71,7 @@ export default abstract class LogHandler {
     return this._player;
   }
 
-  handleEncounterStartLine(line: LogLine, flavour: Flavour) {
+  protected async handleEncounterStartLine(line: LogLine, flavour: Flavour) {
     console.debug('[LogHandler] Handling ENCOUNTER_START line:', line);
 
     const startDate = line.date();
@@ -94,10 +94,10 @@ export default abstract class LogHandler {
       flavour
     );
 
-    this.startRecording(this.activity);
+    await this.startRecording(this.activity);
   }
 
-  handleEncounterEndLine(line: LogLine): void {
+  protected async handleEncounterEndLine(line: LogLine) {
     console.debug('[LogHandler] Handling ENCOUNTER_END line:', line);
 
     if (!this.activity) {
@@ -107,10 +107,10 @@ export default abstract class LogHandler {
 
     const result = Boolean(parseInt(line.arg(5), 10));
     this.activity.end(line.date(), result);
-    this.endRecording(this.activity);
+    await this.endRecording(this.activity);
   }
 
-  handleUnitDiedLine(line: LogLine): void {
+  protected handleUnitDiedLine(line: LogLine): void {
     if (!this.activity) {
       console.info(
         '[LogHandler] Ignoring UNIT_DIED line as no active activity'
@@ -159,7 +159,7 @@ export default abstract class LogHandler {
     this.activity.addDeath(playerDeath);
   }
 
-  startRecording = (activity: Activity) => {
+  protected async startRecording(activity: Activity) {
     const { category } = activity;
     const allowed = allowRecordCategory(this.cfg, category);
 
@@ -182,10 +182,10 @@ export default abstract class LogHandler {
     }
 
     console.log(`[Logutils] Start recording a video for category: ${category}`);
-    this.recorder.start();
-  };
+    await this.recorder.start();
+  }
 
-  endRecording = (activity: Activity, closedWow = false) => {
+  protected async endRecording(activity: Activity, closedWow = false) {
     if (!this.activity) {
       console.error("[LogUtils] No active activity so can't stop");
       return;
@@ -194,11 +194,11 @@ export default abstract class LogHandler {
       `[Logutils] Stop recording video for category: ${this.activity.category}`
     );
 
-    this.recorder.stop(activity, closedWow);
+    await this.recorder.stop(activity, closedWow);
     this.activity = undefined;
-  };
+  }
 
-  dataTimeout(ms: number) {
+  protected async dataTimeout(ms: number) {
     console.log(
       `[LogHandler] Haven't received data for combatlog in ${
         ms / 1000
@@ -213,11 +213,11 @@ export default abstract class LogHandler {
       this.activity.category === VideoCategory.Battlegrounds;
 
     if (isBattleground) {
-      this.forceEndActivity(-ms / 1000);
+      await this.forceEndActivity(-ms / 1000);
     }
   }
 
-  forceEndActivity = async (timedelta = 0, closedWow = false) => {
+  public async forceEndActivity(timedelta = 0, closedWow = false) {
     console.log(
       '[LogHandler] Force ending activity',
       'timedelta:',
@@ -236,11 +236,11 @@ export default abstract class LogHandler {
     this.activity.overrun = 0;
 
     this.activity.end(endDate, false);
-    this.endRecording(this.activity, closedWow);
+    await this.endRecording(this.activity, closedWow);
     this.activity = undefined;
-  };
+  }
 
-  zoneChangeStop(line: LogLine) {
+  protected async zoneChangeStop(line: LogLine) {
     if (!this.activity) {
       console.error(
         '[RetailLogHandler] No active activity on force zone change stop'
@@ -251,10 +251,10 @@ export default abstract class LogHandler {
 
     const endDate = line.date();
     this.activity.end(endDate, false);
-    this.endRecording(this.activity);
+    await this.endRecording(this.activity);
   }
 
-  isArena() {
+  protected isArena() {
     if (!this.activity) {
       return false;
     }
@@ -270,7 +270,7 @@ export default abstract class LogHandler {
     );
   }
 
-  isBattleground() {
+  protected isBattleground() {
     if (!this.activity) {
       return false;
     }
@@ -279,7 +279,11 @@ export default abstract class LogHandler {
     return category === VideoCategory.Battlegrounds;
   }
 
-  processCombatant(srcGUID: string, srcNameRealm: string, srcFlags: number) {
+  protected processCombatant(
+    srcGUID: string,
+    srcNameRealm: string,
+    srcFlags: number
+  ) {
     if (!this.activity) {
       return;
     }

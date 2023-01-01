@@ -193,7 +193,7 @@ export default class Recorder {
    * recording as it's should already be running (or just about to
    * start if we hit this in the 2s restart window).
    */
-  start = async () => {
+  async start() {
     console.info('[Recorder] Start recording by cancelling buffer restart');
     this.cancelBufferTimers(true, false);
     this._isRecordingBuffer = false;
@@ -209,7 +209,7 @@ export default class Recorder {
    * @param {Activity} activity the details of the recording
    * @param {boolean} closedWow if wow has just been closed
    */
-  stop = (activity: Activity, closedWow = false) => {
+  async stop(activity: Activity, closedWow = false) {
     console.info('[Recorder] Stop called');
 
     if (!this._isRecording) {
@@ -220,53 +220,51 @@ export default class Recorder {
     const metadata = activity.getMetadata();
     console.info('[Recorder] Over-running by', metadata.overrun, 'seconds');
 
-    // @@@ Neater to do something like:
-    // "await new Promise(r => setTimeout(r, 2000));"
-    // to avoid nesting here?
-    setTimeout(async () => {
-      if (!this.obsRecordingFactory) {
-        throw new Error(
-          '[Recorder] Stop recording called but no recording factory'
-        );
-      }
-
-      await this.stopOBS();
-      this._isRecording = false;
-      this._isRecordingBuffer = false;
-
-      const bufferFile = this.obsRecordingFactory.lastFile();
-      const relativeStart =
-        (activity.startDate.getTime() - this._recorderStartDate.getTime()) /
-        1000;
-
-      if (bufferFile) {
-        this.videoProcessQueue.queueVideo(
-          bufferFile,
-          metadata,
-          activity.getFileName(),
-          relativeStart
-        );
-      } else {
-        console.error(
-          "[Recorder] Unable to get the last recording from OBS. Can't process video."
-        );
-      }
-
-      // Refresh the GUI
-      this.mainWindow.webContents.send('refreshState');
-      this.mainWindow.webContents.send(
-        'updateRecStatus',
-        RecStatus.WaitingForWoW
+    if (!this.obsRecordingFactory) {
+      throw new Error(
+        '[Recorder] Stop recording called but no recording factory'
       );
+    }
 
-      // Restart the buffer recording ready for next game. If this function
-      // has been called due to the wow process ending, don't start the buffer.
-      if (!closedWow) {
-        setTimeout(async () => {
-          this.startBuffer();
-        }, 5000);
-      }
-    }, metadata.overrun * 1000);
+    await new Promise((resolve) =>
+      setTimeout(resolve, metadata.overrun * 1000)
+    );
+
+    await this.stopOBS();
+    this._isRecording = false;
+    this._isRecordingBuffer = false;
+
+    const bufferFile = this.obsRecordingFactory.lastFile();
+    const relativeStart =
+      (activity.startDate.getTime() - this._recorderStartDate.getTime()) / 1000;
+
+    if (bufferFile) {
+      this.videoProcessQueue.queueVideo(
+        bufferFile,
+        metadata,
+        activity.getFileName(),
+        relativeStart
+      );
+    } else {
+      console.error(
+        "[Recorder] Unable to get the last recording from OBS. Can't process video."
+      );
+    }
+
+    // Refresh the GUI
+    this.mainWindow.webContents.send('refreshState');
+    this.mainWindow.webContents.send(
+      'updateRecStatus',
+      RecStatus.WaitingForWoW
+    );
+
+    // Restart the buffer recording ready for next game. If this function
+    // has been called due to the wow process ending, don't start the buffer.
+    if (!closedWow) {
+      setTimeout(async () => {
+        this.startBuffer();
+      }, 5000);
+    }
   };
 
   /**
