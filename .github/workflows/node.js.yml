@@ -23,3 +23,8 @@ jobs:
         cache: 'npm'
     - run: npm install
     - run: npm run package
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: WarcraftRecorderSetup
+        path: release/build/*.exe
