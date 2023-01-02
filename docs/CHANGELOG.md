@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [3.3.1] - 2023-01-02
+### Fixed
+- [NO-ISSUE]- Fix crass default resolution bug.
+- 
 ## [3.3.0] - 2023-01-01
 ### Added
 - [Issue 245](https://github.com/aza547/wow-recorder/issues/245) - Ability to pick and chose any combination of audio devices to record.
