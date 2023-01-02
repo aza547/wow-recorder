@@ -7,6 +7,9 @@ import {
   StringKeyToNumberValueMapType,
 } from './types';
 
+/**
+ * The set of resolutions we allow users to select.
+ */
 const obsResolutions = {
   /* eslint-disable prettier/prettier */
   '1024x768':  { width: 1024, height: 768 },
@@ -24,6 +27,7 @@ const obsResolutions = {
   '2560x1440': { width: 2560, height: 1440 },
   '2560x1600': { width: 2560, height: 1600 },
   '3440x1440': { width: 3440, height: 1440 },
+  '3840x1080': { width: 3840, height: 1080 },
   '3840x1440': { width: 3840, height: 1440 },
   '3840x2160': { width: 3840, height: 2160 },
   // eslint-enable prettier/prettier */
