@@ -801,7 +801,7 @@ export default class Recorder {
     const signalInfo = (await Promise.race([
       Recorder.waitQueue.shift(),
       new Promise((_resolve, reject) => {
-        setTimeout(reject, 5000, `OBS didn't signal ${value} in time`);
+        setTimeout(reject, 30000, `OBS didn't signal ${value} in time`);
       }),
     ])) as osn.EOutputSignal;
 

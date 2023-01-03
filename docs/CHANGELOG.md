@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 271](https://github.com/aza547/wow-recorder/issues/271) - Allow OBS more time to signal.
 
 ## [3.3.1] - 2023-01-02
 ### Fixed
