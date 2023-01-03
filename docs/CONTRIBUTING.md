@@ -12,6 +12,7 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 1. Run `npm start` to launch the application.
 
 ## Building, Packaging and Releasing
+> As of 3.3.1, we have CI builds for all commits to main.
 1. Build the electron application.
     1. Update the version number in `./release/app/package.json` if appropriate.  
     1. Run `npm run package` to build the electron application. 
