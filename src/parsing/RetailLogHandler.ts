@@ -330,11 +330,19 @@ export default class RetailLogHandler extends LogHandler {
       if (isZoneBG && isActivityBG) {
         console.info('[RetailLogHandler] Internal BG zone change: ', zoneID);
       } else if (!isZoneBG && isActivityBG) {
-        console.error('[RetailLogHandler] Zone change out of BG');
+        console.info('[RetailLogHandler] Zone change out of BG');
         await this.battlegroundEnd(line);
       } else if (isActivityArena) {
-        console.error('[RetailLogHandler] ZONE_CHANGE out of arena');
-        await this.zoneChangeStop(line);
+        if (zoneID === this.activity.zoneID) {
+          console.info(
+            '[RetailLogHandler] ZONE_CHANGE within arena, no action taken'
+          );
+        } else {
+          console.info(
+            '[RetailLogHandler] ZONE_CHANGE out of arena, ending match'
+          );
+          await this.zoneChangeStop(line);
+        }
       } else if (isZoneBG && !isActivityBG) {
         console.error(
           '[RetailLogHandler] Zoned into BG but in a different activity'
