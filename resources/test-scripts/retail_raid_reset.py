@@ -28,7 +28,7 @@ print("Starting")
 for line in sample_log_lines:
     if "ENCOUNTER_END" in line:
         # Sleep before writing the end event so we actually record something. 
-        time.sleep(5)
+        time.sleep(1)
     logFile.write(rd(line))
 
 print("Done")

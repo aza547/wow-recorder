@@ -147,7 +147,7 @@ const getMetadataForVideo = (video: string): Metadata => {
   const metadataJSON = fs.readFileSync(metadataFile);
   const metadata = JSON.parse(metadataJSON.toString()) as Metadata;
   return metadata;
-  // } catch (e) {
+  // @@@ } catch (e) {
   //   console.error(
   //     `[Util] Unable to read and/or parse JSON from metadata file: ${metadataFile}`
   //   );

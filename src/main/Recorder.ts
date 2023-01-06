@@ -6,7 +6,7 @@ import { IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 import { ERecordingFormat } from './obsEnums';
 import { deleteVideo, fixPathWhenPackaged, getSortedVideos } from './util';
-import { IOBSDevice, RecStatus, TAudioSourceType } from './types';
+import { IOBSDevice, Metadata, RecStatus, TAudioSourceType } from './types';
 import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
@@ -676,38 +676,56 @@ export default class Recorder {
       return;
     }
 
-    const metadata = activity.getMetadata();
-    console.info('[Recorder] Over-running by', metadata.overrun, 'seconds');
-
     if (!this.obsRecordingFactory) {
       throw new Error(
         '[Recorder] Stop recording called but no recording factory'
       );
     }
 
-    await new Promise((resolve) =>
-      setTimeout(resolve, metadata.overrun * 1000)
-    );
+    let metadata: Metadata | undefined;
+
+    try {
+      metadata = activity.getMetadata();
+    } catch (error) {
+      // We've failed to get the Metadata from the activity. Throw away the
+      // video and log why. Example of when we hit this is on raid resets
+      // where we don't have long enough to get a GUID for the player.
+      let message;
+
+      if (error instanceof Error) {
+        message = error.message;
+      } else {
+        message = String(error);
+      }
+
+      console.info(
+        '[Recorder] Discarding video as failed to get Metadata:',
+        message
+      );
+    }
 
     await this.stopOBS();
     this._isRecording = false;
     this._isRecordingBuffer = false;
 
-    const bufferFile = this.obsRecordingFactory.lastFile();
-    const relativeStart =
-      (activity.startDate.getTime() - this._recorderStartDate.getTime()) / 1000;
+    if (metadata !== undefined) {
+      const bufferFile = this.obsRecordingFactory.lastFile();
+      const relativeStart =
+        (activity.startDate.getTime() - this._recorderStartDate.getTime()) /
+        1000;
 
-    if (bufferFile) {
-      this.videoProcessQueue.queueVideo(
-        bufferFile,
-        metadata,
-        activity.getFileName(),
-        relativeStart
-      );
-    } else {
-      console.error(
-        "[Recorder] Unable to get the last recording from OBS. Can't process video."
-      );
+      if (bufferFile) {
+        this.videoProcessQueue.queueVideo(
+          bufferFile,
+          metadata,
+          activity.getFileName(),
+          relativeStart
+        );
+      } else {
+        console.error(
+          "[Recorder] Unable to get the last recording from OBS. Can't process video."
+        );
+      }
     }
 
     // Refresh the GUI
