@@ -10,7 +10,7 @@ Warcraft Recorder is a desktop screen recorder. It watches the WoW combat log fi
 Windows is currently the only supported operating system. 
 
 #  How to Use
-1. Download and run the most recent installer (e.g WarcraftRecorder.Setup.3.1.2.exe) from the [releases](https://github.com/aza547/wow-recorder/releases) section.
+1. Download and run the most recent installer from the [releases](https://github.com/aza547/wow-recorder/releases) section.
 1. Launch the application and fill out the settings page.
 1. Enable combat logging.
     - Retail: Install and configure the SimpleCombatLogger addon ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
