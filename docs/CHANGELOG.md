@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+
+## [3.3.2] - 2023-01-08
+### Fixed
 - [Issue 273](https://github.com/aza547/wow-recorder/issues/273) - Fix a bug where raid resets could crash the app.
 - [Issue 271](https://github.com/aza547/wow-recorder/issues/271) - Allow OBS more time to signal.
 - [Issue 274](https://github.com/aza547/wow-recorder/issues/274) - Fix bug when sometimes an internal arena zone change would crash the app.
