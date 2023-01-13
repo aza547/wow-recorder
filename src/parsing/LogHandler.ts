@@ -181,17 +181,32 @@ export default abstract class LogHandler {
       return;
     }
 
-    console.log(`[Logutils] Start recording a video for category: ${category}`);
+    console.log(
+      `[LogHandler] Start recording a video for category: ${category}`
+    );
     await this.recorder.start();
   }
 
+  /**
+   * End the recording after the overrun has elasped. Every single activity
+   * ending comes through this function.
+   */
   protected async endRecording(activity: Activity, closedWow = false) {
     if (!this.activity) {
-      console.error("[LogUtils] No active activity so can't stop");
+      console.error("[LogHandler] No active activity so can't stop");
       return;
     }
-    console.log(
-      `[Logutils] Stop recording video for category: ${this.activity.category}`
+
+    console.info(
+      `[LogHandler] Ending recording video for category: ${this.activity.category}`
+    );
+
+    const { overrun } = this.activity;
+
+    console.info(`[LogHandler] Stop recording after: ${overrun}s`);
+
+    await new Promise((resolve, _reject) =>
+      setTimeout(resolve, 1000 * overrun)
     );
 
     await this.recorder.stop(activity, closedWow);
