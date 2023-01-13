@@ -11,9 +11,9 @@ import {
   Menu,
 } from 'electron';
 
-import RetailLogHandler from 'parsing/RetailLogHandler';
-import ClassicLogHandler from 'parsing/ClassicLogHandler';
 import os from 'os';
+import RetailLogHandler from '../parsing/RetailLogHandler';
+import ClassicLogHandler from '../parsing/ClassicLogHandler';
 import Poller from '../utils/Poller';
 
 import {
@@ -32,12 +32,6 @@ import Recorder from './Recorder';
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import CombatLogParser from '../parsing/CombatLogParser';
-
-import {
-  createRetailHandler,
-  createClassicHandler,
-} from '../parsing/HandlerFactory';
-
 import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
 import SizeMonitor from '../utils/SizeMonitor';
 
@@ -65,7 +59,7 @@ process.on('unhandledRejection', (reason: Error) => {
   // If the mainWindow exists, open a pretty dialog box.
   // If not, throw it as a generic JavaScript error.
   if (mainWindow) {
-    mainWindow.webContents.send('fatalError', reason.stack);
+    mainWindow.webContents.send('fatalError', reason);
   } else {
     throw new Error(reason.toString());
   }
@@ -91,6 +85,10 @@ const wowProcessStarted = async () => {
 
 const wowProcessStopped = async () => {
   console.info('[Main] Detected WoW is not running');
+
+  if (!mainWindow) {
+    throw new Error('[Main] mainWindow not defined');
+  }
 
   if (!recorder) {
     console.info('[Main] No recorder object so no action taken');
@@ -279,11 +277,11 @@ const createWindow = async () => {
     const classicLogPath = cfg.getPath('classicLogPath');
 
     if (retailLogPath) {
-      retailHandler = createRetailHandler(recorder, retailLogPath);
+      retailHandler = new RetailLogHandler(recorder, retailLogPath);
     }
 
     if (classicLogPath) {
-      classicHandler = createClassicHandler(recorder, classicLogPath);
+      classicHandler = new ClassicLogHandler(recorder, classicLogPath);
     }
   });
 
@@ -431,12 +429,10 @@ ipcMain.on('settingsWindow', (event, args) => {
       mainWindow.webContents.send('refreshState');
 
       if (recorder) {
-        await recorder.stopBuffer();
-        await recorder.shutdownOBS();
-        recorder = undefined;
+        await recorder.reconfigure(mainWindow);
+      } else {
+        recorder = new Recorder(mainWindow);
       }
-
-      recorder = new Recorder(mainWindow);
 
       try {
         cfg.validate();
@@ -453,11 +449,11 @@ ipcMain.on('settingsWindow', (event, args) => {
       const classicLogPath = cfg.getPath('classicLogPath');
 
       if (retailLogPath) {
-        retailHandler = createRetailHandler(recorder, retailLogPath);
+        retailHandler.reconfigure(recorder, retailLogPath);
       }
 
       if (classicLogPath) {
-        classicHandler = createClassicHandler(recorder, classicLogPath);
+        classicHandler.reconfigure(recorder, classicLogPath);
       }
 
       new SizeMonitor().run();
@@ -630,7 +626,7 @@ app.on('window-all-closed', async () => {
 
   if (recorder) {
     await recorder.cleanupBuffer(0);
-    await recorder.shutdownOBS();
+    recorder.shutdownOBS();
   }
 
   app.quit();

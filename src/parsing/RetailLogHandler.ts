@@ -1,6 +1,6 @@
 import Combatant from '../main/Combatant';
 import CombatLogParser from './CombatLogParser';
-
+import { getSortedFiles } from '../main/util';
 import {
   dungeonEncounters,
   dungeonsByMapId,
@@ -29,8 +29,8 @@ import { VideoCategory } from '../types/VideoCategory';
  * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
-  constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
-    super(recorder, combatLogParser);
+  constructor(recorder: Recorder, logPath: string) {
+    super(recorder, logPath);
 
     this.combatLogParser
       .on('ENCOUNTER_START', async (line: LogLine) => {

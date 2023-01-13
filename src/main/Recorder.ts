@@ -4,7 +4,11 @@ import fs from 'fs';
 import * as osn from 'obs-studio-node';
 import { IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
-import { ERecordingFormat } from './obsEnums';
+import {
+  EOBSOutputSignal,
+  ERecordingFormat,
+  ERecordingState,
+} from './obsEnums';
 import { deleteVideo, fixPathWhenPackaged, getSortedVideos } from './util';
 import { IOBSDevice, Metadata, RecStatus, TAudioSourceType } from './types';
 import Activity from '../activitys/Activity';
@@ -28,14 +32,10 @@ const { v4: uuidfn } = require('uuid');
  */
 export default class Recorder {
   /**
-   * For quickly checking if we're recording an activity or not.
+   * For quickly checking if we're recording an activity or not. This is
+   * not the same as the OBS state.
    */
   private _isRecording: boolean = false;
-
-  /**
-   * For quickly checking if we're recording a buffer or not.
-   */
-  private _isRecordingBuffer: boolean = false;
 
   /**
    * Timer object to trigger a restart of the buffer. We do this on a 5
@@ -106,11 +106,11 @@ export default class Recorder {
   private videoSource: IInput | undefined;
 
   /**
-   * Resolution selected by the user in settings. Defaults to 1080p for no
-   * good reason other than avoiding undefined. It quickly gets set to what
-   * the user configured.
+   * Resolution selected by the user in settings. Defaults to 1920x1080 for
+   * no good reason other than avoiding undefined. It quickly gets set to
+   * what the user configured.
    */
-  private resolution: keyof typeof obsResolutions = '1080p';
+  private resolution: keyof typeof obsResolutions = '1920x1080';
 
   /**
    * Scale factor for resizing the video source if a user is running
@@ -158,14 +158,20 @@ export default class Recorder {
   private audioOutputDevices: IInput[] = [];
 
   /**
-   * WaitQueue object for storing signalling from OBS.
+   * WaitQueue object for storing signalling from OBS. We only care about
+   * wrote signals which indicate the video file has been written.
    *
    * If this is not static the signalling goes wrong, I've no idea why. The
    * symptom is OBS assertions failing because waitQueue returns things in the
    * wrong order. This is fine to be static so long as we only have one recorder
    * object in use at a time, which is the design.
    */
-  private static waitQueue = new WaitQueue<osn.EOutputSignal>();
+  private wroteQueue = new WaitQueue<osn.EOutputSignal>();
+
+  /**
+   * The state of OBS according to its signalling.
+   */
+  public obsState: ERecordingState = ERecordingState.Offline;
 
   /**
    * For easy checking if OBS has been initialized.
@@ -184,20 +190,26 @@ export default class Recorder {
     this.initializeOBS();
   }
 
+  async reconfigure(mainWindow: BrowserWindow) {
+    console.info('[Recorder] Reconfigure recorder');
+
+    // Stop and shutdown the old instance.
+    await this.stopBuffer();
+    this.shutdownOBS();
+
+    // Create a new uuid and re-initialize OBS. 
+    this.uuid = uuidfn();
+    this.mainWindow = mainWindow;
+    this.videoProcessQueue = new VideoProcessQueue(mainWindow);
+    this.initializeOBS();
+  }
+
   get isRecording() {
     return this._isRecording;
   }
 
   set isRecording(value) {
     this._isRecording = value;
-  }
-
-  get isRecordingBuffer() {
-    return this._isRecordingBuffer;
-  }
-
-  set isRecordingBuffer(value) {
-    this._isRecordingBuffer = value;
   }
 
   /**
@@ -328,10 +340,51 @@ export default class Recorder {
     recFactory.noSpace = false;
 
     recFactory.signalHandler = (signal) => {
-      Recorder.waitQueue.push(signal);
+      this.handleSignal(signal);
     };
 
     return recFactory;
+  }
+
+  private handleSignal(obsSignal: osn.EOutputSignal) {
+    console.info('[Recorder] Got signal:', obsSignal);
+
+    if (obsSignal.type !== 'recording') {
+      console.info('[Recorder] No action needed on this signal');
+      return;
+    }
+
+    switch (obsSignal.signal) {
+      case EOBSOutputSignal.Start:
+        this.obsState = ERecordingState.Recording;
+        this.updateStatusIcon(RecStatus.ReadyToRecord);
+        break;
+
+      case EOBSOutputSignal.Starting:
+        this.obsState = ERecordingState.Starting;
+        this.updateStatusIcon(RecStatus.ReadyToRecord);
+        break;
+
+      case EOBSOutputSignal.Stop:
+        this.obsState = ERecordingState.Offline;
+        this.updateStatusIcon(RecStatus.WaitingForWoW);
+        break;
+
+      case EOBSOutputSignal.Stopping:
+        this.obsState = ERecordingState.Stopping;
+        this.updateStatusIcon(RecStatus.WaitingForWoW);
+        break;
+
+      case EOBSOutputSignal.Wrote:
+        this.wroteQueue.push(obsSignal);
+        break;
+
+      default:
+        console.info('[Recorder] No action needed on this signal');
+        break;
+    }
+
+    console.info('[Recorder] State is now: ', this.obsState);
   }
 
   /**
@@ -526,7 +579,7 @@ export default class Recorder {
     obsInput.remove();
   }
 
-  async shutdownOBS() {
+  shutdownOBS() {
     console.info('[Recorder] OBS shutting down', this.uuid);
 
     if (!this.obsInitialized) {
@@ -538,6 +591,8 @@ export default class Recorder {
     }
 
     try {
+      this.wroteQueue.empty();
+      this.wroteQueue.clearListeners();
       osn.NodeObs.InitShutdownSequence();
       osn.NodeObs.RemoveSourceCallback();
       osn.NodeObs.OBS_service_removeCallback();
@@ -563,19 +618,8 @@ export default class Recorder {
       return;
     }
 
-    if (this.isRecordingBuffer) {
-      console.error('[Recorder] Already recording a buffer');
-      return;
-    }
-
-    await this.startOBS();
-    this.isRecordingBuffer = true;
+    this.startOBS();
     this._recorderStartDate = new Date();
-
-    this.mainWindow.webContents.send(
-      'updateRecStatus',
-      RecStatus.ReadyToRecord
-    );
 
     // We store off this timer as a member variable as we will cancel
     // it when a real game is detected.
@@ -588,21 +632,9 @@ export default class Recorder {
    * Stop recorder buffer.
    */
   stopBuffer = async () => {
+    console.info('[Recorder] Stop recording buffer');
     this.cancelBufferTimers(true, true);
-
-    if (this._isRecordingBuffer) {
-      console.info('[Recorder] Stop recording buffer');
-      this._isRecordingBuffer = false;
-      await this.stopOBS();
-    } else {
-      console.error('[Recorder] No buffer recording to stop');
-    }
-
-    this.mainWindow.webContents.send(
-      'updateRecStatus',
-      RecStatus.WaitingForWoW
-    );
-
+    await this.stopOBS();
     this.cleanupBuffer(1);
   };
 
@@ -616,12 +648,10 @@ export default class Recorder {
    */
   restartBuffer = async () => {
     console.log('[Recorder] Restart recording buffer');
-    this.isRecordingBuffer = false;
     await this.stopOBS();
 
     this._bufferStartTimeoutID = setTimeout(async () => {
-      await this.startOBS();
-      this.isRecordingBuffer = true;
+      this.startOBS();
       this._recorderStartDate = new Date();
     }, 5000);
 
@@ -656,10 +686,9 @@ export default class Recorder {
    */
   async start() {
     console.info('[Recorder] Start recording by cancelling buffer restart');
+    this.updateStatusIcon(RecStatus.Recording);
     this.cancelBufferTimers(true, false);
-    this._isRecordingBuffer = false;
     this._isRecording = true;
-    this.mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
   }
 
   /**
@@ -706,7 +735,6 @@ export default class Recorder {
 
     await this.stopOBS();
     this._isRecording = false;
-    this._isRecordingBuffer = false;
 
     if (metadata !== undefined) {
       const bufferFile = this.obsRecordingFactory.lastFile();
@@ -728,13 +756,6 @@ export default class Recorder {
       }
     }
 
-    // Refresh the GUI
-    this.mainWindow.webContents.send('refreshState');
-    this.mainWindow.webContents.send(
-      'updateRecStatus',
-      RecStatus.WaitingForWoW
-    );
-
     // Restart the buffer recording ready for next game. If this function
     // has been called due to the wow process ending, don't start the buffer.
     if (!closedWow) {
@@ -751,14 +772,6 @@ export default class Recorder {
     if (!this._isRecording) return;
     await this.stopOBS();
     this._isRecording = false;
-    this._isRecordingBuffer = false;
-
-    // Refresh the GUI
-    this.mainWindow.webContents.send('refreshState');
-    this.mainWindow.webContents.send(
-      'updateRecStatus',
-      RecStatus.WaitingForWoW
-    );
 
     // Restart the buffer recording ready for next game.
     setTimeout(async () => {
@@ -786,67 +799,53 @@ export default class Recorder {
   /**
    * Tell OBS to start recording, and assert it signals that it has.
    */
-  private async startOBS() {
+  private startOBS() {
+    console.info('[Recorder] Start OBS called');
+
     if (!this.obsRecordingFactory) {
       throw new Error('[Recorder] StartOBS called but no recording factory');
     }
 
+    if (this.obsState !== ERecordingState.Offline) {
+      throw new Error(`[Recorder] Wrong state to start: ${this.obsState}`);
+    }
+
     this.obsRecordingFactory.start();
-    await this.assertNextOBSSignal('start');
   }
 
   /**
    * Tell OBS to stop recording, and assert it signals that it has.
    */
   private async stopOBS() {
+    console.info('[Recorder] Stop OBS called');
+
     if (!this.obsRecordingFactory) {
       throw new Error('[Recorder] stopOBS called but no recording factory');
     }
 
+    if (this.obsState !== ERecordingState.Recording) {
+      console.info(
+        `[Recorder] OBS can't stop as not recording, current state is: ${this.obsState}`
+      );
+      return;
+    }
+
     this.obsRecordingFactory.stop();
-    await this.assertNextOBSSignal('stopping');
-    await this.assertNextOBSSignal('stop');
-    await this.assertNextOBSSignal('wrote');
+
+    // Wait up to 30 seconds for OBS to signal it has wrote the file,
+    // otherwise, throw an exception.
+    await Promise.race([
+      this.wroteQueue.shift(),
+      new Promise((_resolve, reject) =>
+        setTimeout(reject, 30000, '[Recorder] OBS timeout')
+      ),
+    ]);
+
+    // Empty the queue for good measure.
+    this.wroteQueue.empty();
+
+    console.info('[Recorder] Wrote signal received from signal queue');
   }
-
-  /**
-   * Check the next signal OBS puts onto the WaitQueue matches the
-   * input. If we don't get the correct signal, or we don't get any
-   * signal for 5 seconds then throw an error.
-   */
-  private assertNextOBSSignal = async (value: string) => {
-    // Don't wait more than 5 seconds for the signal.
-    const signalInfo = (await Promise.race([
-      Recorder.waitQueue.shift(),
-      new Promise((_resolve, reject) => {
-        setTimeout(reject, 30000, `OBS didn't signal ${value} in time`);
-      }),
-    ])) as osn.EOutputSignal;
-
-    if (signalInfo.type !== 'recording') {
-      console.error(
-        '[Recorder] OBS signal type unexpected, got:',
-        signalInfo.signal,
-        'but expected:',
-        value
-      );
-
-      throw new Error('OBS behaved unexpectedly (2)');
-    }
-
-    if (signalInfo.signal !== value) {
-      console.error(
-        '[Recorder] OBS signal value unexpected, got:',
-        signalInfo.signal,
-        'but expected:',
-        value
-      );
-
-      throw new Error('OBS behaved unexpectedly (3)');
-    }
-
-    console.debug('[Recorder] Asserted OBS signal:', value);
-  };
 
   /**
    * Get a list of the audio input devices. Used by the settings to populate
@@ -967,5 +966,9 @@ export default class Recorder {
       this.videoScaleFactor = scaleFactor;
       this.sceneItem.scale = { x: scaleFactor, y: scaleFactor };
     }
+  }
+
+  private updateStatusIcon(status: RecStatus) {
+    this.mainWindow.webContents.send('updateRecStatus', status);
   }
 }

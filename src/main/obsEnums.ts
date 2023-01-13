@@ -5,6 +5,13 @@ export const enum EOBSOutputType {
   ReplayBuffer = 'replay-buffer',
 }
 
+export const enum ERecordingState {
+  Offline = 'offline',
+  Starting = 'starting',
+  Recording = 'recording',
+  Stopping = 'stopping',
+}
+
 export const enum EOBSOutputSignal {
   Starting = 'starting',
   Start = 'start',
