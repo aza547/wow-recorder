@@ -585,9 +585,16 @@ export default class Recorder {
       clearInterval(this.videoSourceSizeInterval);
     }
 
+    if (this.videoSource) {
+      osn.Global.setOutputSource(1, null as unknown as ISource);
+      this.videoSource.release();
+      this.videoSource.remove();
+    }
+
+    this.wroteQueue.empty();
+    this.wroteQueue.clearListeners();
+
     try {
-      this.wroteQueue.empty();
-      this.wroteQueue.clearListeners();
       osn.NodeObs.InitShutdownSequence();
       osn.NodeObs.RemoveSourceCallback();
       osn.NodeObs.OBS_service_removeCallback();
@@ -715,9 +722,8 @@ export default class Recorder {
     }
 
     if (!this.obsRecordingFactory) {
-      throw new Error(
-        '[Recorder] Stop recording called but no recording factory'
-      );
+      console.warn('[Recorder] Stop called but no recording factory');
+      return;
     }
 
     await this.stopOBS();
@@ -812,7 +818,8 @@ export default class Recorder {
     console.info('[Recorder] Start OBS called');
 
     if (!this.obsRecordingFactory) {
-      throw new Error('[Recorder] StartOBS called but no recording factory');
+      console.warn('[Recorder] StartOBS called but no recording factory');
+      return;
     }
 
     if (this.obsState !== ERecordingState.Offline) {
@@ -832,7 +839,8 @@ export default class Recorder {
     console.info('[Recorder] Stop OBS called');
 
     if (!this.obsRecordingFactory) {
-      throw new Error('[Recorder] stopOBS called but no recording factory');
+      console.warn('[Recorder] stopOBS called but no recording factory');
+      return;
     }
 
     if (this.obsState !== ERecordingState.Recording) {
