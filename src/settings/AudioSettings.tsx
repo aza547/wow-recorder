@@ -7,12 +7,17 @@ import Box from '@mui/material/Box';
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import { IOBSDevice, ISettingsPanelProps } from 'main/types';
+import { FakeChangeEvent, IOBSDevice, ISettingsPanelProps } from 'main/types';
 import { Checkbox, Chip, ListItemText, OutlinedInput } from '@mui/material';
 import React from 'react';
 import { configSchema } from '../main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
+
+enum DeviceType {
+  INPUT,
+  OUTPUT,
+}
 
 export default function GeneralSettings(props: ISettingsPanelProps) {
   const { config, onChange } = props;
@@ -41,10 +46,10 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
   const inputDevices: IOBSDevice[] = devices.input;
   const outputDevices: IOBSDevice[] = devices.output;
 
-  enum DeviceType {
-    INPUT,
-    OUTPUT,
-  }
+  const availableAudioDevices = {
+    input: inputDevices,
+    output: outputDevices,
+  };
 
   const handleMultiSelect = (
     type: DeviceType,
@@ -67,11 +72,6 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
     }
   };
 
-  const availableAudioDevices = {
-    input: inputDevices,
-    output: outputDevices,
-  };
-
   const getDeviceDescription = (id: string) => {
     let result = 'Unknown';
 
@@ -89,6 +89,27 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
 
     return result;
   };
+
+  const isKnownDevice = (id: string) => {
+    if (getDeviceDescription(id) === 'Unknown') {
+      return false;
+    }
+
+    return true;
+  };
+
+  // Remove any unknown devices from the list, and the state variables. That
+  // means if the user presses save, even without any changes, the unknown
+  // devices will be removed from config.
+  React.useEffect(() => {
+    const knownInputs = input.filter(isKnownDevice);
+    setInput(knownInputs);
+    onChange(new FakeChangeEvent('audioInputDevices', knownInputs));
+
+    const knownOutputs = output.filter(isKnownDevice);
+    setOutput(knownOutputs);
+    onChange(new FakeChangeEvent('audioOutputDevices', knownOutputs));
+  }, []);
 
   const style = {
     width: '405px',
