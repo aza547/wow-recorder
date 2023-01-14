@@ -5,7 +5,7 @@ let testRunning = false;
 
 const sendTestCombatLogLine = (parser: CombatLogParser, line: string): void => {
   console.debug(
-    '[Logutils] Sending test combat log line to the Combat Log Parser',
+    '[test] Sending test combat log line to the Combat Log Parser',
     line
   );
 
@@ -31,25 +31,25 @@ export const runRetailRecordingTest = (
   parser: CombatLogParser,
   endTest = true
 ) => {
-  console.log('[Logutils] User pressed the test button!');
+  console.log('[test] User pressed the test button!');
 
   if (!endTest) {
     console.log(
-      '[Logutils] The test will NOT end on its own and needs to be stopped manually.'
+      '[test] The test will NOT end on its own and needs to be stopped manually.'
     );
   }
 
   if (testRunning) {
-    console.info('[Logutils] Test already running, not starting test.');
+    console.info('[test] Test already running, not starting test.');
     return;
   }
 
   if (!Poller.getInstance().isWowRunning) {
-    console.info("[Logutils] WoW isn't running, not starting test.");
+    console.info("[test] WoW isn't running, not starting test.");
     return;
   }
 
-  console.info('[Logutils] WoW is running, starting test.');
+  console.info('[test] WoW is running, starting test.');
   testRunning = true;
 
   // This inserts a test date so that the recorder doesn't confuse itself with
@@ -87,25 +87,25 @@ export const runClassicRecordingTest = (
   parser: CombatLogParser,
   endTest = true
 ) => {
-  console.log('[Logutils] User pressed the test button!');
+  console.log('[test] User pressed the test button!');
 
   if (!endTest) {
     console.log(
-      '[Logutils] The test will NOT end on its own and needs to be stopped manually.'
+      '[test] The test will NOT end on its own and needs to be stopped manually.'
     );
   }
 
   if (testRunning) {
-    console.info('[Logutils] Test already running, not starting test.');
+    console.info('[test] Test already running, not starting test.');
     return;
   }
 
   if (!Poller.getInstance().isWowRunning) {
-    console.info("[Logutils] WoW isn't running, not starting test.");
+    console.info("[test] WoW isn't running, not starting test.");
     return;
   }
 
-  console.info('[Logutils] WoW is running, starting test.');
+  console.info('[test] WoW is running, starting test.');
   testRunning = true;
 
   // This inserts a test date so that the recorder doesn't confuse itself with

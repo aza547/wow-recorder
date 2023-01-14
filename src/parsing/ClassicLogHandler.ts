@@ -24,8 +24,9 @@ export default class ClassicLogHandler extends LogHandler {
   // case we start the timer again.
   private _playerDeathTimeout?: NodeJS.Timeout;
 
-  constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
-    super(recorder, combatLogParser);
+  constructor(recorder: Recorder, logPath: string) {
+    super(recorder, logPath);
+
     this.combatLogParser
       .on('ENCOUNTER_START', async (line: LogLine) => {
         await this.handleEncounterStartLine(line);

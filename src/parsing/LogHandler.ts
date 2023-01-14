@@ -1,3 +1,4 @@
+import { getSortedFiles } from '../main/util';
 import Combatant from '../main/Combatant';
 import CombatLogParser from './CombatLogParser';
 import ConfigService from '../main/ConfigService';
@@ -17,6 +18,7 @@ import {
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
 import { allowRecordCategory } from '../utils/configUtils';
+import { ERecordingState } from '../main/obsEnums';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -26,7 +28,7 @@ import { allowRecordCategory } from '../utils/configUtils';
  * subclass; i.e. RetailLogHandler or ClassicLogHandler.
  */
 export default abstract class LogHandler {
-  protected _recorder;
+  protected recorder: Recorder;
 
   protected _combatLogParser: CombatLogParser;
 
@@ -36,15 +38,26 @@ export default abstract class LogHandler {
 
   protected _activity?: Activity;
 
-  constructor(recorder: Recorder, combatLogParser: CombatLogParser) {
-    this._recorder = recorder;
-    this._combatLogParser = combatLogParser;
+  constructor(recorder: Recorder, logPath: string) {
+    this.recorder = recorder;
+
+    this._combatLogParser = new CombatLogParser({
+      dataTimeout: 2 * 60 * 1000,
+      fileFinderFn: getSortedFiles,
+    });
+
+    this._combatLogParser.watchPath(logPath);
 
     this._combatLogParser.on('DataTimeout', async (ms: number) => {
       await this.dataTimeout(ms);
     });
 
     this._cfg = ConfigService.getInstance();
+  }
+
+  reconfigure(logPath: string) {
+    this._combatLogParser.unwatchPath(logPath);
+    this._combatLogParser.watchPath(logPath);
   }
 
   get activity() {
@@ -57,10 +70,6 @@ export default abstract class LogHandler {
 
   get combatLogParser() {
     return this._combatLogParser;
-  }
-
-  get recorder() {
-    return this._recorder;
   }
 
   get cfg() {
@@ -168,23 +177,11 @@ export default abstract class LogHandler {
       return;
     }
 
-    const recorderReady =
-      !this.recorder.isRecording && this.recorder.isRecordingBuffer;
-
-    if (!recorderReady) {
-      console.error(
-        '[LogHandler] Avoiding error by not attempting to start recording',
-        this.recorder.isRecording,
-        this.recorder.isRecordingBuffer
-      );
-
-      return;
-    }
-
     console.log(
       `[LogHandler] Start recording a video for category: ${category}`
     );
-    await this.recorder.start();
+
+    this.recorder.start();
   }
 
   /**
