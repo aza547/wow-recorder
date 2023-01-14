@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [NO-ISSUE] - Fix a bug where we didn't respect the overrun.
 - [Issue 279](https://github.com/aza547/wow-recorder/issues/279) - Improve signalling robustness.
 - [Issue 276](https://github.com/aza547/wow-recorder/issues/276) - Reconfiguring settings doesn't result in a blank screen with game capture.
+- [Issue 280](https://github.com/aza547/wow-recorder/issues/280) - Handle unplugged audio devices better in the config.
 
 ## [3.3.2] - 2023-01-08
 ### Fixed
