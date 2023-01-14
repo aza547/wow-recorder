@@ -91,6 +91,10 @@ export default class RetailLogHandler extends LogHandler {
       category = VideoCategory.TwoVTwo;
     } else if (arenaType === '3v3') {
       category = VideoCategory.ThreeVThree;
+    } else if (arenaType === '5v5') {
+      // For some bizzare reason, 3v3 retail war games are logged as 5v5.
+      // Thanks Blizz - https://github.com/aza547/wow-recorder/issues/285.
+      category = VideoCategory.ThreeVThree;
     } else if (arenaType === 'Skirmish') {
       category = VideoCategory.Skirmish;
     } else {

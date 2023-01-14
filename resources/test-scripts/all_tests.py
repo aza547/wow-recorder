@@ -15,6 +15,7 @@ tests = {
     "Retail: Raid Reset":         os.path.join(dirname, "./retail_raid_reset.py"),
     "Retail: Rated BG":           os.path.join(dirname, "./retail_rated_battleground.py"),
     "Retail: Zone Changes":       os.path.join(dirname, "./retail_zone_changes.py"),
+    "Retail: 3v3 War Game":       os.path.join(dirname, "./retail_wargame_3v3.py"),
 
     # Classic Tests
     "Classic: Raid":          os.path.join(dirname, "./classic_raid.py"),
