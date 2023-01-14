@@ -18,7 +18,6 @@ import {
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
 import { allowRecordCategory } from '../utils/configUtils';
-import { ERecordingState } from '../main/obsEnums';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -38,11 +37,11 @@ export default abstract class LogHandler {
 
   protected _activity?: Activity;
 
-  constructor(recorder: Recorder, logPath: string) {
+  constructor(recorder: Recorder, logPath: string, dataTimeout: number) {
     this.recorder = recorder;
 
     this._combatLogParser = new CombatLogParser({
-      dataTimeout: 2 * 60 * 1000,
+      dataTimeout: dataTimeout * 60 * 1000,
       fileFinderFn: getSortedFiles,
     });
 
@@ -56,7 +55,7 @@ export default abstract class LogHandler {
   }
 
   reconfigure(logPath: string) {
-    this._combatLogParser.unwatchPath(logPath);
+    this._combatLogParser.unwatch();
     this._combatLogParser.watchPath(logPath);
   }
 

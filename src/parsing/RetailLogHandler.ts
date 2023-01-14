@@ -30,7 +30,7 @@ import { VideoCategory } from '../types/VideoCategory';
  */
 export default class RetailLogHandler extends LogHandler {
   constructor(recorder: Recorder, logPath: string) {
-    super(recorder, logPath);
+    super(recorder, logPath, 10);
 
     this.combatLogParser
       .on('ENCOUNTER_START', async (line: LogLine) => {
