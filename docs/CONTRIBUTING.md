@@ -48,53 +48,17 @@ You can use VSCode's JavaScript Debug terminal to step through the code, add bre
 <img src="https://i.imgur.com/zFIaGHa.png" width="200">
 
 ## Building OSN
-> Note sure this is actually true. I think this is hosted by streamlabs here (note version number): 
+> Advice is not to build this and just get it from the folks at Streamlabs. I built it once, it was a total faff.
+> If you really need to build it, you can probably find some useful notes in the history of this doc. 
+> This is hosted by streamlabs here (note version number): 
 > - https://s3-us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/osn-0.23.59-release-win64.tar.gz
-
-The [obs-studio-node](https://github.com/stream-labs/obs-studio-node) package we heavily rely on is not build by the developers, or uploaded to NPM. We have to build it and host the tarball ourselves if we want to have repeatable builds. You only need to care about this section if you're taking OBS updates, which I expect to be rare.
-
-The build instructions on obs-studio-node's GitHub page are not perfect, there is a better set [here](https://github.com/Envek/obs-studio-node-example). I've pasted below and adapted for our use so we aren't relying on external links for our build process. 
-
- 1. Build it somewhere ([look at the docs first](https://github.com/stream-labs/obs-studio-node#building))
-
-    ```sh
-    git clone https://github.com/stream-labs/obs-studio-node.git
-    cd obs-studio-node
-    yarn install
-    git submodule update --init --recursive
-    mkdir build
-    cd build
-    cmake .. -G"Visual Studio 15 2017" -A x64 -DCMAKE_INSTALL_PREFIX="SOME_WRITABLE_PATH"
-    cmake --build . --config Release
-    cpack -G TGZ
-    ```
- 2. Host it on a file sharing platform of your choice so that it's downloadable via a URL. I've used Azure for this, for example I built 0.22.10 and hosted it [here](https://wowrecorder.blob.core.windows.net/wowrecorder/obs-studio-node-0.22.10-win64.tar.gz). 
- 
- 3. Place the URL to it to `package.json`. You should do this in both package.json files in the project, this is important for distributing. 
-
-    ```json
-    {
-        "devDependencies": {
-            "obs-studio-node": "https://wowrecorder.blob.core.windows.net/wowrecorder/obs-studio-node-0.22.10-win64.tar.gz"
-        }
-    }
-
- 4. If desperate to include it as a file without hosting on the web you can:
-
-    ```json
-    {
-        "devDependencies": {
-            "obs-studio-node": "file://C:/where/you/cloned/obs-studio-node/build/obs-studio-node-1.2.3-win64.tar.gz"
-        }
-    }
-
- 5. Build the application with `npm run package`. 
 
 Below are various additional OSN resources:
 - [Example](https://github.com/Envek/obs-studio-node-example)
 - [Community Docs](https://github.com/hrueger/obs-studio-node-docs)
 - [Streamlabs Desktop](https://github.com/stream-labs/desktop)
-- [Enlyo Recorder](https://github.com/Enlyo/enlyo-recorder)
+- [AdvancedRecordingFactory API](https://github.com/stream-labs/obs-studio-node/pull/1128)
+- [OSN Tests](https://github.com/stream-labs/obs-studio-node/tree/staging/tests/osn-tests/src)
 
 ## Microsoft Stamp of Approval
 If we just build a .exe and release it Windows will warn it may be dangerous. Could resolve this buy purchasing a certificate from a CA, but it costs a fortune. Read more about it in this [issue](https://github.com/aza547/wow-recorder/issues/11).
