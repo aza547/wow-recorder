@@ -160,11 +160,6 @@ export default class Recorder {
   /**
    * WaitQueue object for storing signalling from OBS. We only care about
    * wrote signals which indicate the video file has been written.
-   *
-   * If this is not static the signalling goes wrong, I've no idea why. The
-   * symptom is OBS assertions failing because waitQueue returns things in the
-   * wrong order. This is fine to be static so long as we only have one recorder
-   * object in use at a time, which is the design.
    */
   private wroteQueue = new WaitQueue<osn.EOutputSignal>();
 
@@ -197,7 +192,7 @@ export default class Recorder {
     await this.stopBuffer();
     this.shutdownOBS();
 
-    // Create a new uuid and re-initialize OBS. 
+    // Create a new uuid and re-initialize OBS.
     this.uuid = uuidfn();
     this.mainWindow = mainWindow;
     this.videoProcessQueue = new VideoProcessQueue(mainWindow);
@@ -684,8 +679,22 @@ export default class Recorder {
    * recording as it's should already be running (or just about to
    * start if we hit this in the restart window).
    */
-  async start() {
+  start() {
     console.info('[Recorder] Start recording by cancelling buffer restart');
+
+    const ready =
+      !this.isRecording && this.obsState === ERecordingState.Recording;
+
+    if (!ready) {
+      console.warn(
+        '[LogHandler] Not ready to record an activity, no-op',
+        this.isRecording,
+        this.obsState
+      );
+
+      return;
+    }
+
     this.updateStatusIcon(RecStatus.Recording);
     this.cancelBufferTimers(true, false);
     this._isRecording = true;
@@ -701,7 +710,7 @@ export default class Recorder {
     console.info('[Recorder] Stop called');
 
     if (!this._isRecording) {
-      console.error('[Recorder] Stop recording called but not recording');
+      console.warn('[Recorder] Stop recording called but not recording');
       return;
     }
 
@@ -711,6 +720,8 @@ export default class Recorder {
       );
     }
 
+    await this.stopOBS();
+    this._isRecording = false;
     let metadata: Metadata | undefined;
 
     try {
@@ -727,14 +738,11 @@ export default class Recorder {
         message = String(error);
       }
 
-      console.info(
+      console.warn(
         '[Recorder] Discarding video as failed to get Metadata:',
         message
       );
     }
-
-    await this.stopOBS();
-    this._isRecording = false;
 
     if (metadata !== undefined) {
       const bufferFile = this.obsRecordingFactory.lastFile();
@@ -742,18 +750,19 @@ export default class Recorder {
         (activity.startDate.getTime() - this._recorderStartDate.getTime()) /
         1000;
 
-      if (bufferFile) {
-        this.videoProcessQueue.queueVideo(
-          bufferFile,
-          metadata,
-          activity.getFileName(),
-          relativeStart
-        );
-      } else {
+      if (!bufferFile) {
         console.error(
           "[Recorder] Unable to get the last recording from OBS. Can't process video."
         );
+        return;
       }
+
+      this.videoProcessQueue.queueVideo(
+        bufferFile,
+        metadata,
+        activity.getFileName(),
+        relativeStart
+      );
     }
 
     // Restart the buffer recording ready for next game. If this function
@@ -807,7 +816,10 @@ export default class Recorder {
     }
 
     if (this.obsState !== ERecordingState.Offline) {
-      throw new Error(`[Recorder] Wrong state to start: ${this.obsState}`);
+      console.warn(
+        `[Recorder] OBS can't start, current state is: ${this.obsState}`
+      );
+      return;
     }
 
     this.obsRecordingFactory.start();
@@ -824,8 +836,8 @@ export default class Recorder {
     }
 
     if (this.obsState !== ERecordingState.Recording) {
-      console.info(
-        `[Recorder] OBS can't stop as not recording, current state is: ${this.obsState}`
+      console.warn(
+        `[Recorder] OBS can't stop, current state is: ${this.obsState}`
       );
       return;
     }
@@ -837,7 +849,11 @@ export default class Recorder {
     await Promise.race([
       this.wroteQueue.shift(),
       new Promise((_resolve, reject) =>
-        setTimeout(reject, 30000, '[Recorder] OBS timeout')
+        setTimeout(
+          reject,
+          30000,
+          '[Recorder] OBS timeout waiting for video file'
+        )
       ),
     ]);
 

@@ -40,8 +40,8 @@ const logDir = setupApplicationLogging();
 console.info('[Main] App starting, version:', app.getVersion());
 console.info('[Main] On OS:', os.platform(), os.release());
 
-let retailHandler: RetailLogHandler;
-let classicHandler: ClassicLogHandler;
+let retailHandler: RetailLogHandler | undefined;
+let classicHandler: ClassicLogHandler | undefined;
 let recorder: Recorder | undefined;
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
@@ -449,11 +449,19 @@ ipcMain.on('settingsWindow', (event, args) => {
       const classicLogPath = cfg.getPath('classicLogPath');
 
       if (retailLogPath) {
-        retailHandler.reconfigure(recorder, retailLogPath);
+        if (retailHandler) {
+          retailHandler.reconfigure(retailLogPath);
+        } else {
+          retailHandler = new RetailLogHandler(recorder, retailLogPath);
+        }
       }
 
       if (classicLogPath) {
-        classicHandler.reconfigure(recorder, classicLogPath);
+        if (classicHandler) {
+          classicHandler.reconfigure(classicLogPath);
+        } else {
+          classicHandler = new ClassicLogHandler(recorder, classicLogPath);
+        }
       }
 
       new SizeMonitor().run();

@@ -55,8 +55,7 @@ export default abstract class LogHandler {
     this._cfg = ConfigService.getInstance();
   }
 
-  reconfigure(recorder: Recorder, logPath: string) {
-    this.recorder = recorder;
+  reconfigure(logPath: string) {
     this._combatLogParser.unwatchPath(logPath);
     this._combatLogParser.watchPath(logPath);
   }
@@ -178,24 +177,11 @@ export default abstract class LogHandler {
       return;
     }
 
-    const recorderReady =
-      !this.recorder.isRecording &&
-      this.recorder.obsState === ERecordingState.Recording;
-
-    if (!recorderReady) {
-      console.error(
-        '[LogHandler] Avoiding error by not attempting to start recording',
-        this.recorder.isRecording,
-        this.recorder.obsState
-      );
-
-      return;
-    }
-
     console.log(
       `[LogHandler] Start recording a video for category: ${category}`
     );
-    await this.recorder.start();
+
+    this.recorder.start();
   }
 
   /**
