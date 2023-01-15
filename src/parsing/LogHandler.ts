@@ -216,14 +216,7 @@ export default abstract class LogHandler {
       } seconds.`
     );
 
-    if (!this.activity) {
-      return;
-    }
-
-    const isBattleground =
-      this.activity.category === VideoCategory.Battlegrounds;
-
-    if (isBattleground) {
+    if (this.activity) {
       await this.forceEndActivity(-ms / 1000);
     }
   }

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 - [Issue 285](https://github.com/aza547/wow-recorder/issues/285) - Fix bug that prevented retail recording of retail war games. 
+- [NO-ISSUE] - Log timeout now applies to all content types (10min for retail, 2min for classic).
 
 ## [3.3.3] - 2023-01-14
 ### Fixed

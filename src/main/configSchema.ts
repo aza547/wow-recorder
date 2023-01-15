@@ -58,7 +58,7 @@ export const configSchema = {
   },
   maxStorage: {
     description:
-      'Maximum allowed storage that the application will consume for video files. Set to 0 to signify unlimited.',
+      'Maximum allowed storage that the application will consume for video files. The oldest videos will be deleted one by one to remain under the limit. Recording will not stop. Set to 0 to signify unlimited.',
     type: 'integer',
     default: 0,
     minimum: 0,

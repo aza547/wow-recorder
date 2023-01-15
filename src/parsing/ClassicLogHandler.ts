@@ -4,7 +4,6 @@ import {
   classicUniqueSpecSpells,
 } from '../main/constants';
 
-import CombatLogParser from './CombatLogParser';
 import Recorder from '../main/Recorder';
 import LogHandler from './LogHandler';
 import { Flavour } from '../main/types';

@@ -448,20 +448,6 @@ export default class RetailLogHandler extends LogHandler {
     return relativeTime;
   }
 
-  protected async dataTimeout(ms: number) {
-    await super.dataTimeout(ms);
-
-    if (!this.activity) {
-      return;
-    }
-
-    const isDungeon = this.activity.category === VideoCategory.MythicPlus;
-
-    if (isDungeon) {
-      await this.forceEndActivity(-ms / 1000);
-    }
-  }
-
   private async battlegroundStart(line: LogLine) {
     if (this.activity) {
       console.error(
