@@ -32,7 +32,10 @@ import Recorder from './Recorder';
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import CombatLogParser from '../parsing/CombatLogParser';
-import { runClassicRecordingTest, runRetailRecordingTest } from '../utils/test';
+import {
+  runClassicRecordingTest,
+  runRetailRecordingTest,
+} from '../utils/testButtonUtils';
 import SizeMonitor from '../utils/SizeMonitor';
 
 const logDir = setupApplicationLogging();
