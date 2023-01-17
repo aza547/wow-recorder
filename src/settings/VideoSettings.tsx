@@ -25,10 +25,6 @@ const obsCaptureModes = {
 export default function VideoSettings(props: ISettingsPanelProps) {
   const { config, onChange } = props;
 
-  if (!fpsOptions.includes(config.obsFPS)) {
-    config.obsFPS = fpsOptions.at(-1);
-  }
-
   const style = {
     width: '405px',
     color: 'white',
