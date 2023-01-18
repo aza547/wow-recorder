@@ -324,16 +324,14 @@ export default function VideoButton(props: any) {
 
             {isMythicPlus || (
               <div>
-                <div className="encounter">{video.encounter.slice(0, 13)}</div>
+                <div className="encounter">{video.encounter}</div>
                 <div className="zone">{video.zoneName}</div>
               </div>
             )}
 
             {isMythicPlus && (
               <div>
-                <div className="encounter">
-                  {dungeonsByMapId[video.mapID]?.slice(0, 13)}
-                </div>
+                <div className="encounter">{dungeonsByMapId[video.mapID]}</div>
                 <div className="instance-difficulty difficulty-mythic">
                   +{video.level}
                 </div>

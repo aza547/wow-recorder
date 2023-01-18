@@ -192,6 +192,13 @@ h2:not(.MuiDialogTitle-root) {
     1px  1px 0 #000;
 }
 
+.videoButton div {
+  max-width: 120px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .darken {
   width: 100%;
   height: 100%;
