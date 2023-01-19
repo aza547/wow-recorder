@@ -500,7 +500,7 @@ export default class Recorder {
       });
 
     if (this.audioOutputDevices.length > this.audioOutputChannels.length) {
-      throw new Error('[Recorder] Too many audio input devices');
+      throw new Error('[Recorder] Too many audio output devices');
     }
 
     this.audioOutputDevices.forEach((device) => {
