@@ -138,7 +138,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
       <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{ my: 1 }}>
           <InputLabel id="demo-simple-select-label" sx={style}>
-            Input
+            In
           </InputLabel>
           <Select
             name="audioInputDevices"
@@ -176,9 +176,18 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             sx={style}
           >
             {availableAudioDevices.input.map((device: IOBSDevice) => {
+              // We arbitrarily limit input devices to 3.
+              // See Recorder.audioInputChannels.
+              const tooManySelected = input.length > 3;
+              const isSelected = input.indexOf(device.id) > -1;
+
               return (
-                <MenuItem key={`device_${device.id}`} value={device.id}>
-                  <Checkbox checked={input.indexOf(device.id) > -1} />
+                <MenuItem
+                  disabled={tooManySelected && !isSelected}
+                  key={`device_${device.id}`}
+                  value={device.id}
+                >
+                  <Checkbox checked={isSelected} />
                   <ListItemText primary={device.description} />
                 </MenuItem>
               );
@@ -194,7 +203,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
       <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{ my: 1 }}>
           <InputLabel id="demo-simple-select-label" sx={style}>
-            Output
+            Out
           </InputLabel>
           <Select
             name="audioOutputDevices"
@@ -230,9 +239,18 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             sx={style}
           >
             {availableAudioDevices.output.map((device: IOBSDevice) => {
+              // We arbitrarily limit output devices to 5.
+              // See Recorder.audioOutputChannels.
+              const tooManySelected = output.length > 5;
+              const isSelected = output.indexOf(device.id) > -1;
+
               return (
-                <MenuItem key={`device_${device.id}`} value={device.id}>
-                  <Checkbox checked={output.indexOf(device.id) > -1} />
+                <MenuItem
+                  disabled={tooManySelected && !isSelected}
+                  key={`device_${device.id}`}
+                  value={device.id}
+                >
+                  <Checkbox checked={isSelected} />
                   <ListItemText primary={device.description} />
                 </MenuItem>
               );
