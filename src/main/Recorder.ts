@@ -472,6 +472,7 @@ export default class Recorder {
       .split(',')
       .filter((id) => id)
       .forEach((id) => {
+        console.info('[Recorder] Adding input source', id);
         const obsSource = this.createOBSAudioSource(id, TAudioSourceType.input);
         this.audioInputDevices.push(obsSource);
       });
@@ -491,6 +492,8 @@ export default class Recorder {
       .split(',')
       .filter((id) => id)
       .forEach((id) => {
+        console.info('[Recorder] Adding output source', id);
+
         const obsSource = this.createOBSAudioSource(
           id,
           TAudioSourceType.output
