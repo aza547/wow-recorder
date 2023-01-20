@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- [Issue 296](https://github.com/aza547/wow-recorder/issues/296) - Add Ulduar classic support.
+
 ### Changed
 ### Fixed
 - [Issue 285](https://github.com/aza547/wow-recorder/issues/285) - Fix bug that prevented retail recording of retail war games. 

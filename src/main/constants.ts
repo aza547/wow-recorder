@@ -258,6 +258,26 @@ const encountersClassicVault: NumberKeyToStringValueMapType = {
   772: 'Archavon',
 };
 
+/**
+ * WOTLK Classic Ulduar
+ */
+const encountersClassicUlduar: NumberKeyToStringValueMapType = {
+  1130: "Algalon",
+  1131: 'Auriaya',
+  1132: 'Flame Leviathan',
+  1133: 'Freya',
+  1134: 'General Vezax',
+  1135: 'Hodir',
+  1136: 'Ignis',
+  1137: 'Kologarn',
+  1138: 'Mimiron',
+  1139: 'Razorscale',
+  1140: 'Assembly of Iron',
+  1141: 'Thorim',
+  1142: "XT-002",
+  1143: 'Yogg-Saron',
+};
+
 const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersNathria,
   ...encountersSanctum,
@@ -267,6 +287,7 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersClassicEye,
   ...encountersClassicObsidian,
   ...encountersClassicVault,
+  ...encountersClassicUlduar,
 };
 
 /**
@@ -324,6 +345,12 @@ const raidInstances: RaidInstanceType[] = [
     shortName: 'VoA',
     encounters: encountersClassicVault,
   },
+  {
+    zoneId: 4273,
+    name: 'Ulduar',
+    shortName: 'Ulduar',
+    encounters: encountersClassicUlduar,
+  }
 ];
 
 /**
