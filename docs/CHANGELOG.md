@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 275](https://github.com/aza547/wow-recorder/issues/275) - Increase retail log timeout for better handling of M+.
 - [Issue 251](https://github.com/aza547/wow-recorder/issues/251) - Fix text overflow clipping in video selection buttons.
 - [Issue 293](https://github.com/aza547/wow-recorder/issues/293) - Fix to prevent adding too many audio devices in the settings.
+- [Issue 294](https://github.com/aza547/wow-recorder/issues/294) - Remove a bunch of encoders that don't work with WR. 
 
 ## [3.3.3] - 2023-01-14
 ### Fixed

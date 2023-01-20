@@ -17,6 +17,9 @@ const obsAvailableEncoders: string[] = ipc.sendSync('settingsWindow', [
 ]);
 
 const encoderMap = obsAvailableEncoders
+  .filter((encoder) => !encoder.includes('hevc'))
+  .filter((encoder) => !encoder.includes('svt'))
+  .filter((encoder) => !encoder.includes('aom'))
   .map((encoder) => {
     const isHardwareEncoder =
       encoder.includes('amd') ||
@@ -26,7 +29,8 @@ const encoderMap = obsAvailableEncoders
     const encoderType = isHardwareEncoder ? 'Hardware' : 'Software';
     return { name: encoder, type: encoderType };
   })
-  .sort((a, b) => a.type.localeCompare(b.type));
+  .sort((a, b) => a.type.localeCompare(b.type))
+  
 
 export default function GeneralSettings(props: ISettingsPanelProps) {
   const { config, onChange } = props;
