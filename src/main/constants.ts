@@ -666,9 +666,9 @@ const instanceEncountersById: NumberKeyToStringValueMapType = {
 };
 
 type InstanceDifficultyPartyType = 'party' | 'raid' | 'pvp';
-type ImstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp';
+type InstanceDifficultyIdType = 'lfr' | 'normal' | 'heroic' | 'mythic' | 'pvp';
 type InstanceDifficultyType = {
-  difficultyID: ImstanceDifficultyIdType;
+  difficultyID: InstanceDifficultyIdType;
   difficulty: string;
   partyType: InstanceDifficultyPartyType;
 };

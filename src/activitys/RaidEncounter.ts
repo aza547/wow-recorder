@@ -137,6 +137,6 @@ export default class RaidEncounter extends Activity {
   }
 
   getFileName(): string {
-    return `${this.raid.name}, ${this.encounterName} (${this.resultInfo})`;
+    return `${this.raid.name}, ${this.encounterName} [${this.difficulty.difficulty}] (${this.resultInfo})`;
   }
 }
