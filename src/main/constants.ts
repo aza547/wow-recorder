@@ -676,6 +676,7 @@ type InstanceDifficultyObjectType = {
   [key: number]: InstanceDifficultyType;
 };
 
+// See https://wowpedia.fandom.com/wiki/DifficultyID.
 const instanceDifficulty: InstanceDifficultyObjectType = {
   1: { difficultyID: 'normal', difficulty: 'N', partyType: 'party' },
   2: { difficultyID: 'heroic', difficulty: 'HC', partyType: 'party' },
@@ -701,6 +702,9 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   150: { difficultyID: 'normal', difficulty: 'N', partyType: 'party' },
   151: { difficultyID: 'lfr', difficulty: 'T', partyType: 'raid' },
   175: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
+  176: { difficultyID: 'normal', difficulty: '25N', partyType: 'raid' },
+  193: { difficultyID: 'heroic', difficulty: '10HC', partyType: 'raid' },
+  194: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
 };
 
 const videoTabsSx = {
