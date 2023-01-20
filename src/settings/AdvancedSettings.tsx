@@ -17,6 +17,9 @@ const obsAvailableEncoders: string[] = ipc.sendSync('settingsWindow', [
 ]);
 
 const encoderMap = obsAvailableEncoders
+  .filter((encoder) => !encoder.includes('hevc'))
+  .filter((encoder) => !encoder.includes('svt'))
+  .filter((encoder) => !encoder.includes('aom'))
   .map((encoder) => {
     const isHardwareEncoder =
       encoder.includes('amd') ||
