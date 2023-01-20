@@ -259,7 +259,7 @@ const encountersClassicVault: NumberKeyToStringValueMapType = {
 };
 
 /**
- * WOTLK Classic Naxxrammas
+ * WOTLK Classic Ulduar
  */
 const encountersClassicUlduar: NumberKeyToStringValueMapType = {
   1130: "Algalon",
