@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [Issue 296](https://github.com/aza547/wow-recorder/issues/296) - Add Ulduar classic support.
+- [Issue 300](https://github.com/aza547/wow-recorder/issues/300) - Add difficulty to raid file names.
 
 ### Changed
 ### Fixed
