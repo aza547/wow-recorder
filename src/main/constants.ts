@@ -262,20 +262,20 @@ const encountersClassicVault: NumberKeyToStringValueMapType = {
  * WOTLK Classic Ulduar
  */
 const encountersClassicUlduar: NumberKeyToStringValueMapType = {
-  1130: "Algalon",
-  1131: 'Auriaya',
-  1132: 'Flame Leviathan',
-  1133: 'Freya',
-  1134: 'General Vezax',
-  1135: 'Hodir',
-  1136: 'Ignis',
-  1137: 'Kologarn',
-  1138: 'Mimiron',
-  1139: 'Razorscale',
-  1140: 'Assembly of Iron',
-  1141: 'Thorim',
-  1142: "XT-002",
-  1143: 'Yogg-Saron',
+  744: 'Flame Leviathan',
+  745: 'Ignis',
+  746: 'Razorscale',
+  747: "XT-002",
+  748: 'Assembly of Iron',
+  749: 'Kologarn',
+  750: 'Auriaya',
+  751: 'Hodir',
+  752: 'Thorim',
+  753: 'Freya',
+  754: 'Mimiron',
+  755: 'General Vezax',
+  756: 'Yogg-Saron',
+  757: "Algalon",
 };
 
 const raidEncountersById: NumberKeyToStringValueMapType = {
@@ -700,6 +700,7 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   34: { difficultyID: 'pvp', difficulty: 'PvP', partyType: 'pvp' },
   150: { difficultyID: 'normal', difficulty: 'N', partyType: 'party' },
   151: { difficultyID: 'lfr', difficulty: 'T', partyType: 'raid' },
+  175: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
 };
 
 const videoTabsSx = {
