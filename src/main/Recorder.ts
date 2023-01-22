@@ -192,6 +192,10 @@ export default class Recorder {
     await this.stopBuffer();
     this.shutdownOBS();
 
+    // Clear any audio devices.
+    this.audioOutputDevices = [];
+    this.audioInputDevices = [];
+
     // Create a new uuid and re-initialize OBS.
     this.uuid = uuidfn();
     this.mainWindow = mainWindow;
