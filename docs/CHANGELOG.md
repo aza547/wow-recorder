@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+### Changed
+### Fixed
+
+## [3.4.0] - 2023-01-22
+### Added
 - [Issue 296](https://github.com/aza547/wow-recorder/issues/296) - Add Ulduar classic support.
 - [Issue 300](https://github.com/aza547/wow-recorder/issues/300) - Add difficulty to raid file names.
 
-### Changed
 ### Fixed
 - [Issue 285](https://github.com/aza547/wow-recorder/issues/285) - Fix bug that prevented retail recording of retail war games. 
 - [Issue 288](https://github.com/aza547/wow-recorder/issues/288) - Fix bug that prevented changing the FPS setting.
