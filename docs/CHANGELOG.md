@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 - [Issue 293](https://github.com/aza547/wow-recorder/issues/293) - Fix a backend bug where reconfiguring would leak audio device references.
-- [NO-ISSUE] - Fix error handling so that we don't get a blank screen if something goes wrong, but instead display the error.
+- [Issue 303](https://github.com/aza547/wow-recorder/issues/303) - Fix error handling so that we don't get a blank screen if something goes wrong.
 
 ## [3.4.0] - 2023-01-22
 ### Added
