@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.1.2] - 2022-12-17
 ### Added
 - [Issue 246](https://github.com/aza547/wow-recorder/issues/246) - Config check that storage path and buffer path are different.
+- [Issue 282](https://github.com/aza547/wow-recorder/issues/282) - Added config toggle switch to force input audio to mono.
 
 ### Changed
 - [NO-ISSUE] - Autoplay videos on selection.

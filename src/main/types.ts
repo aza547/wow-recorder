@@ -2,6 +2,7 @@ import { Size } from 'electron';
 import { ChallengeModeTimelineSegment } from './keystone';
 import Combatant from './Combatant';
 import { VideoCategory } from '../types/VideoCategory';
+import { ConfigurationSchema } from './configSchema';
 
 /**
  * Application recording status.
@@ -166,7 +167,7 @@ interface IOurChangeEvent {
 }
 
 interface ISettingsPanelProps {
-  config: any;
+  config: ConfigurationSchema;
   onChange: (event: IOurChangeEvent) => void;
 }
 

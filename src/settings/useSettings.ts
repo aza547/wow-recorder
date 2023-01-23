@@ -39,6 +39,7 @@ const configValues = {
   recordBattlegrounds: getConfigValue<boolean>('recordBattlegrounds'),
   obsOutputResolution: getConfigValue<string>('obsOutputResolution'),
   obsFPS: getConfigValue<number>('obsFPS'),
+  obsForceMono: getConfigValue<boolean>('obsForceMono'),
   obsKBitRate: getConfigValue<number>('obsKBitRate'),
   obsCaptureMode: getConfigValue<string>('obsCaptureMode'),
   obsRecEncoder: getConfigValue<string>('obsRecEncoder'),
