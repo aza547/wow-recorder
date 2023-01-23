@@ -56,15 +56,15 @@ let tray = null;
  * - https://nodejs.org/api/process.html#process_event_unhandledrejection.
  * - https://nodejs.org/api/process.html#event-unhandledrejection
  */
-process.on('unhandledRejection', (reason: Error) => {
-  console.error('UnhandledPromiseRejectionWarning:', reason);
+process.on('unhandledRejection', (error: Error) => {
+  console.error('UnhandledPromiseRejectionWarning:', error);
 
-  // If the mainWindow exists, open a pretty dialog box.
-  // If not, throw it as a generic JavaScript error.
   if (mainWindow) {
-    mainWindow.webContents.send('fatalError', reason);
-  } else {
-    throw new Error(reason.toString());
+    mainWindow.webContents.send('fatalError', error.message);
+  }
+
+  if (recorder) {
+    recorder.shutdownOBS();
   }
 });
 
