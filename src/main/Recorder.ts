@@ -350,6 +350,14 @@ export default class Recorder {
       return;
     }
 
+    if (obsSignal.code !== 0) {
+      console.error('[Recorder] OBS returned an error signal:', obsSignal);
+
+      throw new Error(
+        `[Recorder] OBS returned an error signal${obsSignal.error}`
+      );
+    }
+
     switch (obsSignal.signal) {
       case EOBSOutputSignal.Start:
         this.obsState = ERecordingState.Recording;
