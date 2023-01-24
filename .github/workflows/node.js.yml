@@ -21,11 +21,19 @@ jobs:
       with:
         node-version: '16.17.0'
         cache: 'npm'
-    - run: npm install
-    - run: npm run package
-    - name: run unit tests 
+
+    - name: Install deps
+      run: npm install
+
+    - name: Build the exe
+      run: npm run package
+
+    - name: Run unit tests 
       run: npm test
-    - run: mv ./release/build/WarcraftRecorder*.exe ./release/build/WarcraftRecorder-$env:GITHUB_RUN_ID.exe
+
+    - name: Rename exe to be unique
+      run: mv ./release/build/WarcraftRecorder*.exe ./release/build/WarcraftRecorder-$env:GITHUB_RUN_ID.exe
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
