@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- [Issue 34](https://github.com/aza547/wow-recorder/issues/34) - Add unit test infrastructure.
+
 ### Changed
 ### Fixed
 - [Issue 293](https://github.com/aza547/wow-recorder/issues/293) - Fix a backend bug where reconfiguring would leak audio device references.
