@@ -2,29 +2,35 @@ import { PlayerDeathType } from 'main/types';
 import SoloShuffle from '../../activitys/SoloShuffle';
 import Combatant from '../../main/Combatant';
 
-const getPlayerDeath = (deathDate: Date, rel: number) => {
+const getPlayerDeath = (deathDate: Date, rel: number, isFriendly: boolean) => {
   const playerDeath: PlayerDeathType = {
     name: 'Alexsmite',
     specId: 253,
     date: deathDate,
     timestamp: rel,
-    friendly: true,
+    friendly: isFriendly,
   };
 
   return playerDeath;
 };
 
-// @@@ TODO lots of stuff here, it's still very rough and crap
-test('Basic Solo SHuffle', () => {
+const getRelativeDate = (initialDate: Date, secs: number) => {
+  return new Date(initialDate.getTime() + 1000 * secs);
+};
+
+test('Basic Solo Shuffle', () => {
   const startDate = new Date('2022-12-25T12:00:00');
-  const endDate = new Date('2022-12-25T12:06:00');
+  const endDate = getRelativeDate(startDate, 6 * 60);
+
+  console.log(startDate);
+  console.log(endDate);
 
   const roundStartDates = [
-    new Date('2022-12-25T12:01:00'),
-    new Date('2022-12-25T12:02:00'),
-    new Date('2022-12-25T12:03:00'),
-    new Date('2022-12-25T12:04:00'),
-    new Date('2022-12-25T12:05:00'),
+    getRelativeDate(startDate, 1 * 60),
+    getRelativeDate(startDate, 2 * 60),
+    getRelativeDate(startDate, 3 * 60),
+    getRelativeDate(startDate, 4 * 60),
+    getRelativeDate(startDate, 5 * 60),
   ];
 
   const testCombatants = [
@@ -38,8 +44,8 @@ test('Basic Solo SHuffle', () => {
 
   const soloShuffle = new SoloShuffle(startDate, 1672);
 
-  // First round stuff
-  let death = getPlayerDeath(new Date('2022-12-25T12:00:45'), 45);
+  // First round
+  let death = getPlayerDeath(getRelativeDate(startDate, 45), 45, false);
 
   for (let j = 0; j < testCombatants.length; j++) {
     soloShuffle.addCombatant(testCombatants[j]);
@@ -57,7 +63,7 @@ test('Basic Solo SHuffle', () => {
     }
 
     soloShuffle.playerGUID = testCombatants[0].GUID;
-    death = getPlayerDeath(new Date('2022-12-25T12:01:45'), 45);
+    death = getPlayerDeath(getRelativeDate(startDate, 45 + i * 60), 45, true);
     soloShuffle.addDeath(death);
   }
 
@@ -66,4 +72,8 @@ test('Basic Solo SHuffle', () => {
   const expectedDuration = (endDate.getTime() - startDate.getTime()) / 1000;
 
   expect(soloShuffle.duration).toBe(expectedDuration);
+  expect(soloShuffle.getFileName()).toBe("Solo Shuffle Blade's Edge (1-5)");
+  expect(soloShuffle.resultInfo).toBe('1-5');
+  expect(soloShuffle.roundsWon).toBe(1);
+  expect(soloShuffle.zoneName).toBe("Blade's Edge");
 });
