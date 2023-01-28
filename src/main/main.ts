@@ -39,9 +39,7 @@ import {
 import SizeMonitor from '../utils/SizeMonitor';
 
 const logDir = setupApplicationLogging();
-
-console.info('[Main] App starting, version:', app.getVersion());
-console.info('[Main] On OS:', os.platform(), os.release());
+console.log('[Main] App starting: version', app.getVersion());
 
 let retailHandler: RetailLogHandler | undefined;
 let classicHandler: ClassicLogHandler | undefined;

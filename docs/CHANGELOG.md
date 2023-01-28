@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 34](https://github.com/aza547/wow-recorder/issues/34) - Add unit test infrastructure.
 
 ### Changed
+- [Issue 272](https://github.com/aza547/wow-recorder/issues/272) - Revert request for elevated permissions preventing running on startup. 
 ### Fixed
 - [Issue 293](https://github.com/aza547/wow-recorder/issues/293) - Fix a backend bug where reconfiguring would leak audio device references.
 - [Issue 303](https://github.com/aza547/wow-recorder/issues/303) - Fix error handling so that we don't get a blank screen if something goes wrong.
