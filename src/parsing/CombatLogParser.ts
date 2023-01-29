@@ -48,7 +48,7 @@ export default class CombatLogParser extends EventEmitter {
    */
   private _handlerLock?: CombatLogMonitorHandlerType;
 
-  private _handlerLockTimeout: any;
+  private _handlerLockTimeout: NodeJS.Timer | undefined;
 
   private readonly _tailOptions = {
     flushAtEOF: true,
