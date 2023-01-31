@@ -779,20 +779,24 @@ export default class Recorder {
     const relativeStart =
       (activity.startDate.getTime() - this._recorderStartDate.getTime()) / 1000;
 
-    // Now we can allow any queued calls to start recording to proceed.
+    // Restart the buffer, it's important that we do this before we resolve the
+    // overrun promise else we'll fail to start the following recording.
     if (!closedWow) {
+      console.info('[Recorder] WoW not closed, so starting buffer');
       await this.startBuffer();
     }
 
     // Finally we can resolve the overrunPromise and allow any pending calls to
-    // start() to go ahead.
+    // start() to go ahead by resolving the overrun promise.
     resolveHelper();
     this.isOverruning = false;
 
+    // The remaining logic in this function adds the video to the process
+    // queue. This should probably be run async so we can allow a pending
+    // recording to start first, but it's a minor benefit so not bothering
+    // just now.
     let metadata: Metadata | undefined;
 
-    // This block should probably be run async so we can allow a pending recording to
-    // start first, but it's a minor benefit so not bothering just now.
     try {
       metadata = activity.getMetadata();
     } catch (error) {

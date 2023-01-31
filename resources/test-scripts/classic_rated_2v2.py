@@ -26,7 +26,7 @@ print("Starting")
 
 # Write each line from the example to the fake log.
 for line in sample_log_lines:
-    if ("UNIT_DIED" in line):
+    if ("ZONE_CHANGE" in line) or ("UNIT_DIED" in line):
         # Sleep before writing the end event so we actually record something. 
         time.sleep(5)
     logFile.write(rd(line))
