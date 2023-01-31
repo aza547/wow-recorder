@@ -456,6 +456,18 @@ const checkAppUpdate = (mainWindow: BrowserWindow | null = null) => {
   request.end();
 };
 
+const deferredPromiseHelper = <T>() => {
+  let resolveHelper!: (value: T | PromiseLike<T>) => void;
+  let rejectHelper!: (reason?: any) => void;
+
+  const promise = new Promise<T>((resolve, reject) => {
+    resolveHelper = resolve;
+    rejectHelper = reject;
+  });
+
+  return { resolveHelper, rejectHelper, promise };
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -470,4 +482,5 @@ export {
   tryUnlinkSync,
   checkAppUpdate,
   getMetadataForVideo,
+  deferredPromiseHelper,
 };

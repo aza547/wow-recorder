@@ -4,9 +4,12 @@ import os
 import test_utils
 from test_utils import replace_date as rd
 
+# Tests we can run back to back recording if there is no gap in end/start events.
+# See here for context why this matters: https://github.com/aza547/wow-recorder/issues/291 
+
 dirname = os.path.dirname(__file__)
 LOG_PATH = test_utils.CLASSIC_LOG_PATH
-SAMPLE_LOG = os.path.join(dirname, "../example-logs/classic/rated_2v2.txt")
+SAMPLE_LOG = os.path.join(dirname, "../example-logs/classic/double_rated_2v2.txt")
 
 # Open a combat log ready for writing.
 randomNumber = random.random()
