@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [Issue 34](https://github.com/aza547/wow-recorder/issues/34) - Add unit test infrastructure.
+- [Issue 312](https://github.com/aza547/wow-recorder/issues/312) - Add a bookmark icon for protected videos.
 
 ### Changed
 - [Issue 272](https://github.com/aza547/wow-recorder/issues/272) - Revert request for elevated permissions preventing running on startup. 

@@ -199,12 +199,6 @@ h2:not(.MuiDialogTitle-root) {
   text-overflow: ellipsis;
 }
 
-.darken {
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.25);
-}
-
 .videoButton.dungeon {
   background-size: cover;
 }

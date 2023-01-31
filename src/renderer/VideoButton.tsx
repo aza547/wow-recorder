@@ -14,6 +14,7 @@ import {
 
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Check from '@mui/icons-material/Check';
+import Protected from '@mui/icons-material/BookmarkAdded';
 
 import {
   getEncounterNameById,
@@ -200,9 +201,9 @@ export default function VideoButton(props: any) {
               {getEncounterNameById(segment.encounterId)}
             </div>
             <div
-              className={
-                'segment-result ' + (result ? 'goodResult' : 'badResult')
-              }
+              className={`segment-result ${
+                result ? 'goodResult' : 'badResult'
+              }`}
             >
               {getVideoResultText(VideoCategory.Raids, result, 0, 0)}
             </div>
@@ -212,7 +213,7 @@ export default function VideoButton(props: any) {
 
       return (
         <MenuItem
-          key={'video-segment-' + segment.timestamp}
+          key={`video-segment-${segment.timestamp}`}
           onClick={() => seekVideo(index, segment.timestamp)}
         >
           {timelineSegmentMenu}
@@ -250,9 +251,7 @@ export default function VideoButton(props: any) {
             <span>{segmentDurationText}</span>: Round {segment.round}
           </div>
           <div
-            className={
-              'segment-result ' + (result ? 'goodResult' : 'badResult')
-            }
+            className={`segment-result ${result ? 'goodResult' : 'badResult'}`}
           >
             {getVideoResultText(VideoCategory.ThreeVThree, result, 0, 0)}
           </div>
@@ -261,7 +260,7 @@ export default function VideoButton(props: any) {
 
       return (
         <MenuItem
-          key={'video-segment-' + segment.timestamp}
+          key={`video-segment-${segment.timestamp}`}
           onClick={() => seekVideo(index, segment.timestamp)}
         >
           {timelineSegmentMenu}
@@ -279,10 +278,10 @@ export default function VideoButton(props: any) {
     buttonClasses.push('dungeon');
 
     if (video.result) {
-      resultText = '+' + video.upgradeLevel;
+      resultText = `+${video.upgradeLevel}`;
     }
 
-    const timeline = video.timeline;
+    const { timeline } = video;
 
     if (timeline) {
       keystoneTimelineSegments = renderKeystoneTimelineSegments(video.timeline);
@@ -307,20 +306,22 @@ export default function VideoButton(props: any) {
             id={videoPath}
             className={buttonClasses.join(' ')}
             style={{
-              backgroundImage: `url(${buttonImage})`,
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url(${buttonImage})`,
               backgroundSize: '200px 100px',
             }}
             onContextMenu={openMenu}
           >
-            <div className="videoButtonDarken"></div>
             <div className="duration">{formattedDuration}</div>
             <div className="date">{video.date}</div>
             <div className="time">{video.time}</div>
-            <div className={'result ' + resultClass}>{resultText}</div>
-            <div className="specIcon">
-              <img src={specIcon} />
+            <div className={`result ${resultClass}`}>
+              {isProtected && <Protected sx={{ color: 'white' }} />}
+              {resultText}
             </div>
-            <div className={playerClass + ' name'}>{playerName}</div>
+            <div className="specIcon">
+              <img src={specIcon} alt="spec icon" />
+            </div>
+            <div className={`${playerClass} name`}>{playerName}</div>
 
             {isMythicPlus || (
               <div>
@@ -340,11 +341,7 @@ export default function VideoButton(props: any) {
 
             {isRaid && videoInstanceDifficulty && (
               <div
-                className={
-                  difficultyClass +
-                  ' difficulty-' +
-                  videoInstanceDifficulty.difficultyID
-                }
+                className={`${difficultyClass} difficulty-${videoInstanceDifficulty.difficultyID}`}
               >
                 {videoInstanceDifficulty.difficulty}
               </div>
