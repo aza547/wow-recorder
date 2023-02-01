@@ -25,7 +25,7 @@ tests = {
     "Classic: Battleground":  os.path.join(dirname, "./classic_battleground.py"),
 
     # Tests we can run back to back recording if there is no gap in end/start events.
-    "Classic: Double Rated 2v2":     os.path.join(dirname, "./classic_rated_2v2.py"),
+    "Classic: Double Rated 2v2":     os.path.join(dirname, "./double_classic_rated_2v2.py"),
 }
 
 for test in tests:
