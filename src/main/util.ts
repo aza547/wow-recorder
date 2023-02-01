@@ -135,23 +135,14 @@ const getMetadataFileNameForVideo = (video: string) => {
 };
 
 /**
- * Get the date a video was recorded from the date object.
+ * Get the metadata object for a video from the accompanying JSON file.
  */
-const getMetadataForVideo = (video: string): Metadata => {
-  const metadataFile = getMetadataFileNameForVideo(video);
-
-  if (!fs.existsSync(metadataFile)) {
-    throw new Error(`[Util] Metadata file does not exist: ${metadataFile}`);
-  }
-
-  const metadataJSON = fs.readFileSync(metadataFile);
+const getMetadataForVideo = async (video: string) => {
+  const metadataFilePath = getMetadataFileNameForVideo(video);
+  await fspromise.access(metadataFilePath);
+  const metadataJSON = await fspromise.readFile(metadataFilePath);
   const metadata = JSON.parse(metadataJSON.toString()) as Metadata;
   return metadata;
-  // @@@ } catch (e) {
-  //   console.error(
-  //     `[Util] Unable to read and/or parse JSON from metadata file: ${metadataFile}`
-  //   );
-  // }
 };
 
 /**
@@ -192,21 +183,8 @@ const getVideoTime = (date: Date) => {
 /**
  * Load video details from the metadata and add it to videoState.
  */
-const loadVideoDetails = (video: FileInfo): any => {
-  let metadata;
-
-  try {
-    metadata = getMetadataForVideo(video.name);
-  } catch {
-    // @@@ This is obviously awful.
-    return undefined;
-  }
-
-  // Hilariously 5v5 is still a war game mode that will break things without this.
-  if (!categories.includes(metadata.category)) {
-    return undefined;
-  }
-
+const loadVideoDetails = async (video: FileInfo) => {
+  const metadata = await getMetadataForVideo(video.name);
   const today = new Date();
   const videoDate = new Date(video.mtime);
 
@@ -243,13 +221,17 @@ const loadAllVideos = async (storageDir: string) => {
     return videoState;
   }
 
-  videos.forEach((video) => {
-    const details = loadVideoDetails(video);
-    if (!details) {
-      return;
-    }
+  const videoDetailPromises = videos.map((video) => loadVideoDetails(video));
 
+  // Await all the videoDetailsPromises to settle, and then remove any
+  // that were rejected. This can happen if there is a missing metadata file.
+  const videoDetail = (
+    await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
+  ).filter((result) => !(result instanceof Error));
+
+  videoDetail.forEach((details) => {
     const category = details.category as string;
+
     videoState[category].push({
       index: videoIndex[category]++,
       ...details,
@@ -319,23 +301,31 @@ const openSystemExplorer = (filePath: string) => {
 /**
  * Put a save marker on a video, protecting it from the file monitor.
  */
-const toggleVideoProtected = (videoPath: string) => {
-  const metadata = getMetadataForVideo(videoPath);
+const toggleVideoProtected = async (videoPath: string) => {
+  let metadata;
 
-  if (!metadata) {
+  try {
+    metadata = await getMetadataForVideo(videoPath);
+  } catch (err) {
     console.error(
       `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`
     );
+
     return;
   }
 
   if (metadata.protected === undefined) {
+    console.info(`[Util] User protected ${videoPath}`);
     metadata.protected = true;
   } else {
     metadata.protected = !metadata.protected;
+
+    console.info(
+      `[Util] User toggled protection on ${videoPath}, now ${metadata.protected}`
+    );
   }
 
-  writeMetadataFile(videoPath, metadata);
+  await writeMetadataFile(videoPath, metadata);
 };
 
 /**

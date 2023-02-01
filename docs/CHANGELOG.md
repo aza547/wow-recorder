@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 303](https://github.com/aza547/wow-recorder/issues/303) - Fix error handling so that we don't get a blank screen if something goes wrong.
 - [Issue 306](https://github.com/aza547/wow-recorder/issues/306) - Pass up errors returned by OBS signalling.
 - [Issue 291](https://github.com/aza547/wow-recorder/issues/291) - Improve activity and recorder logic to prevent classic double stop issue. 
+- [Issue 314](https://github.com/aza547/wow-recorder/issues/314) - Make size monitor more async to avoid app lag on game ending.
 
 ## [3.4.0] - 2023-01-22
 ### Added

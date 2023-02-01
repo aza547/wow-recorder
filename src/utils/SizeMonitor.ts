@@ -34,9 +34,9 @@ export default class SizeMonitor {
 
     const files = await getSortedVideos(this.storageDir);
 
-    const unprotectedFiles = files.filter((file) => {
+    const unprotectedFiles = files.filter(async (file) => {
       try {
-        const metadata = getMetadataForVideo(file.name);
+        const metadata = await getMetadataForVideo(file.name);
         const isProtected = metadata.protected || false;
         return !isProtected;
       } catch {
