@@ -883,8 +883,8 @@ export default class Recorder {
       ),
     ]);
 
-    // Empty the queue for good measure.
     this.startQueue.empty();
+    console.info('[Recorder] Start signal received from signal queue');
   }
 
   /**
@@ -920,9 +920,7 @@ export default class Recorder {
       ),
     ]);
 
-    // Empty the queue for good measure.
     this.wroteQueue.empty();
-
     console.info('[Recorder] Wrote signal received from signal queue');
   }
 
