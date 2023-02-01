@@ -13,6 +13,7 @@ export type ConfigurationSchema = {
   startMinimized: boolean;
   obsOutputResolution: string;
   obsFPS: number;
+  obsForceMono: boolean;
   obsKBitRate: number;
   obsCaptureMode: string; // 'game_capture' or 'monitor_capture'
   obsRecEncoder: string;
@@ -108,6 +109,7 @@ export const configSchema = {
     type: 'string',
     default: '1920x1080',
   },
+
   obsFPS: {
     description:
       'The number of frames per second to record the video at. Lower FPS gives smaller video size, but also more choppy playback.',
@@ -115,6 +117,12 @@ export const configSchema = {
     default: 60,
     minimum: 15,
     maximum: 60,
+  },
+  obsForceMono: {
+    description:
+      'Whether to force the audio of your input device to mono. Enable if your microphone audio is only playing out of one stereo channel.',
+    type: 'boolean',
+    default: true,
   },
   obsKBitRate: {
     description:
