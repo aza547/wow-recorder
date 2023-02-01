@@ -115,7 +115,7 @@ export default abstract class LogHandler {
 
     const result = Boolean(parseInt(line.arg(5), 10));
     this.activity.end(line.date(), result);
-    await this.endRecording(this.activity);
+    await this.endRecording();
   }
 
   protected handleUnitDiedLine(line: LogLine): void {
@@ -180,14 +180,14 @@ export default abstract class LogHandler {
       `[LogHandler] Start recording a video for category: ${category}`
     );
 
-    this.recorder.start();
+    await this.recorder.start();
   }
 
   /**
    * End the recording after the overrun has elasped. Every single activity
    * ending comes through this function.
    */
-  protected async endRecording(activity: Activity, closedWow = false) {
+  protected async endRecording(closedWow = false) {
     if (!this.activity) {
       console.error("[LogHandler] No active activity so can't stop");
       return;
@@ -197,16 +197,12 @@ export default abstract class LogHandler {
       `[LogHandler] Ending recording video for category: ${this.activity.category}`
     );
 
-    const { overrun } = this.activity;
-
-    console.info(`[LogHandler] Stop recording after: ${overrun}s`);
-
-    await new Promise((resolve, _reject) =>
-      setTimeout(resolve, 1000 * overrun)
-    );
-
-    await this.recorder.stop(activity, closedWow);
+    // It's important we clear the activity before we call stop as stop will
+    // await for the overrun, and we might do weird things if the player
+    // immediately starts a new activity while we're awaiting. See issue 291.
+    const lastActivity = this.activity;
     this.activity = undefined;
+    await this.recorder.stop(lastActivity, closedWow);
   }
 
   protected async dataTimeout(ms: number) {
@@ -240,7 +236,7 @@ export default abstract class LogHandler {
     this.activity.overrun = 0;
 
     this.activity.end(endDate, false);
-    await this.endRecording(this.activity, closedWow);
+    await this.endRecording(closedWow);
     this.activity = undefined;
   }
 
@@ -255,7 +251,7 @@ export default abstract class LogHandler {
 
     const endDate = line.date();
     this.activity.end(endDate, false);
-    await this.endRecording(this.activity);
+    await this.endRecording();
   }
 
   protected isArena() {

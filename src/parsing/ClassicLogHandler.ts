@@ -255,7 +255,7 @@ export default class ClassicLogHandler extends LogHandler {
 
     arenaMatch.endArena(endDate, result);
     this.clearDeathTimeout();
-    await this.endRecording(arenaMatch);
+    await this.endRecording();
   }
 
   protected processCombatant(
@@ -369,6 +369,6 @@ export default class ClassicLogHandler extends LogHandler {
 
     const endTime = line.date();
     this.activity.end(endTime, false);
-    await this.endRecording(this.activity);
+    await this.endRecording();
   }
 }

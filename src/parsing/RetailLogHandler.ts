@@ -1,6 +1,5 @@
 import Combatant from '../main/Combatant';
-import CombatLogParser from './CombatLogParser';
-import { getSortedFiles } from '../main/util';
+
 import {
   dungeonEncounters,
   dungeonsByMapId,
@@ -48,8 +47,8 @@ export default class RetailLogHandler extends LogHandler {
       .on('UNIT_DIED', (line: LogLine) => {
         this.handleUnitDiedLine(line);
       })
-      .on('ARENA_MATCH_START', (line: LogLine) => {
-        this.handleArenaStartLine(line);
+      .on('ARENA_MATCH_START', async (line: LogLine) => {
+        await this.handleArenaStartLine(line);
       })
       .on('ARENA_MATCH_END', async (line: LogLine) => {
         await this.handleArenaEndLine(line);
@@ -61,14 +60,14 @@ export default class RetailLogHandler extends LogHandler {
         await this.handleChallengeModeEndLine(line);
       })
       .on('COMBATANT_INFO', async (line: LogLine) => {
-        await this.handleCombatantInfoLine(line);
+        this.handleCombatantInfoLine(line);
       })
       .on('SPELL_CAST_SUCCESS', async (line: LogLine) => {
-        await this.handleSpellCastSuccess(line);
+        this.handleSpellCastSuccess(line);
       });
   }
 
-  private handleArenaStartLine(line: LogLine): void {
+  private async handleArenaStartLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ARENA_MATCH_START line:', line);
 
     // Important we don't exit if we're in a Solo Shuffle, we use the ARENA_MATCH_START
@@ -108,7 +107,7 @@ export default class RetailLogHandler extends LogHandler {
     if (!this.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
       this.activity = new SoloShuffle(startTime, zoneID);
-      this.startRecording(this.activity);
+      await this.startRecording(this.activity);
     } else if (this.activity && category === VideoCategory.SoloShuffle) {
       console.info(
         '[RetailLogHandler] New round of existing Solo Shuffle starting'
@@ -123,7 +122,8 @@ export default class RetailLogHandler extends LogHandler {
         zoneID,
         Flavour.Retail
       );
-      this.startRecording(this.activity);
+
+      await this.startRecording(this.activity);
     }
   }
 
@@ -138,13 +138,13 @@ export default class RetailLogHandler extends LogHandler {
     if (this.activity.category === VideoCategory.SoloShuffle) {
       const soloShuffle = this.activity as SoloShuffle;
       soloShuffle.endGame(line.date());
-      await this.endRecording(soloShuffle);
+      await this.endRecording();
     } else {
       const arenaMatch = this.activity as ArenaMatch;
       const endTime = line.date();
       const winningTeamID = parseInt(line.arg(1), 10);
       arenaMatch.endArena(endTime, winningTeamID);
-      await this.endRecording(arenaMatch);
+      await this.endRecording();
     }
   }
 
@@ -221,7 +221,7 @@ export default class RetailLogHandler extends LogHandler {
     const CMDuration = Math.round(parseInt(line.arg(4), 10) / 1000);
 
     challengeModeActivity.endChallengeMode(endDate, CMDuration, result);
-    await this.endRecording(this.activity);
+    await this.endRecording();
   }
 
   protected async handleEncounterStartLine(line: LogLine) {
@@ -480,6 +480,6 @@ export default class RetailLogHandler extends LogHandler {
 
     const endTime = line.date();
     this.activity.end(endTime, false);
-    await this.endRecording(this.activity);
+    await this.endRecording();
   }
 }
