@@ -47,6 +47,13 @@ export const enum EOBSInputTypes {
   CoreAudioOutput = 'coreaudio_output_capture',
 }
 
+export const ESourceFlags = {
+  // eslint-disable-next-line no-bitwise
+  Unbuffered: 1 << 0,
+  // eslint-disable-next-line no-bitwise
+  ForceMono: 1 << 1,
+};
+
 export const enum EOBSFilterTypes {
   FaceMask = 'face_mask_filter',
   Mask = 'mask_filter',

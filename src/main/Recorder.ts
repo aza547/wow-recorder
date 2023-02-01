@@ -8,6 +8,7 @@ import {
   EOBSOutputSignal,
   ERecordingFormat,
   ERecordingState,
+  ESourceFlags,
 } from './obsEnums';
 
 import {
@@ -506,6 +507,11 @@ export default class Recorder {
     this.audioInputDevices.forEach((device) => {
       const index = this.audioInputDevices.indexOf(device);
       const channel = this.audioInputChannels[index];
+
+      if (this.cfg.get('obsForceMono')) {
+        device.flags = ESourceFlags.ForceMono;
+      }
+
       this.addAudioSourceOBS(device, channel);
     });
 

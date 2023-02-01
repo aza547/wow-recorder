@@ -7,10 +7,16 @@ import Box from '@mui/material/Box';
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import { FakeChangeEvent, IOBSDevice, ISettingsPanelProps } from 'main/types';
-import { Checkbox, Chip, ListItemText, OutlinedInput } from '@mui/material';
+import { IOBSDevice, ISettingsPanelProps } from 'main/types';
+import {
+  Checkbox,
+  Chip,
+  FormControlLabel,
+  ListItemText,
+  Switch,
+} from '@mui/material';
 import React from 'react';
-import { configSchema } from '../main/configSchema';
+import { configSchema, ConfigurationSchemaKey } from '../main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -21,55 +27,12 @@ enum DeviceType {
 
 export default function GeneralSettings(props: ISettingsPanelProps) {
   const { config, onChange } = props;
-
-  let initialInputs: string[];
-
-  if (config.audioInputDevices) {
-    initialInputs = String(config.audioInputDevices).split(',');
-  } else {
-    initialInputs = [];
-  }
-
-  let initialOutputs: string[];
-
-  if (config.audioOutputDevices) {
-    initialOutputs = String(config.audioOutputDevices).split(',');
-  } else {
-    initialOutputs = [];
-  }
-
-  const [input, setInput] = React.useState<string[]>(initialInputs);
-  const [output, setOutput] = React.useState<string[]>(initialOutputs);
-
   const devices = ipc.sendSync('getAudioDevices', []);
-
   const inputDevices: IOBSDevice[] = devices.input;
   const outputDevices: IOBSDevice[] = devices.output;
-
   const availableAudioDevices = {
     input: inputDevices,
     output: outputDevices,
-  };
-
-  const handleMultiSelect = (
-    type: DeviceType,
-    event: SelectChangeEvent<string[]>
-  ) => {
-    const {
-      target: { value },
-    } = event;
-
-    if (type === DeviceType.INPUT) {
-      setInput(
-        // On autofill we get a stringified value.
-        typeof value === 'string' ? value.split(',') : value
-      );
-    } else {
-      setOutput(
-        // On autofill we get a stringified value.
-        typeof value === 'string' ? value.split(',') : value
-      );
-    }
   };
 
   const getDeviceDescription = (id: string) => {
@@ -98,21 +61,52 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
     return true;
   };
 
-  // Remove any unknown devices from the list, and the state variables. That
-  // means if the user presses save, even without any changes, the unknown
-  // devices will be removed from config.
-  React.useEffect(() => {
-    const knownInputs = input.filter(isKnownDevice);
-    setInput(knownInputs);
-    onChange(new FakeChangeEvent('audioInputDevices', knownInputs));
+  /**
+   * Standardizes device names to an array of strings and filters by known devices.
+   *
+   * @param deviceNames the device names to standardize
+   * @returns the standardized device names
+   */
+  const standardizeDeviceNames = (deviceNames: string[] | string): string[] => {
+    let normalizedDeviceNames: string[];
 
-    const knownOutputs = output.filter(isKnownDevice);
-    setOutput(knownOutputs);
-    onChange(new FakeChangeEvent('audioOutputDevices', knownOutputs));
-  }, []);
+    if (typeof deviceNames === 'string') {
+      normalizedDeviceNames = deviceNames.split(',');
+    } else {
+      normalizedDeviceNames = deviceNames;
+    }
 
-  const style = {
-    width: '405px',
+    return normalizedDeviceNames.filter(isKnownDevice);
+  };
+
+  const initialInputs = standardizeDeviceNames(config.audioInputDevices);
+  const initialOutputs = standardizeDeviceNames(config.audioOutputDevices);
+  const initialForceMono = config.obsForceMono;
+
+  const [input, setInput] = React.useState<string[]>(initialInputs);
+  const [output, setOutput] = React.useState<string[]>(initialOutputs);
+  const [forceMono, setForceMono] = React.useState<boolean>(initialForceMono);
+
+  const forceMonoConfigKey: ConfigurationSchemaKey = 'obsForceMono';
+
+  const handleMultiSelect = (
+    type: DeviceType,
+    event: SelectChangeEvent<string[]>
+  ) => {
+    const {
+      target: { value },
+    } = event;
+    const standardizedValue: string[] = standardizeDeviceNames(value);
+
+    if (type === DeviceType.INPUT) {
+      setInput(standardizedValue);
+    } else {
+      setOutput(standardizedValue);
+    }
+    onChange(event);
+  };
+
+  const selectStyle = {
     color: 'white',
     '& .MuiOutlinedInput-notchedOutline': {
       borderColor: 'black',
@@ -125,33 +119,47 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
       color: '#bb4220',
     },
   };
+  const formControlStyle = { my: 1, width: '450px' };
+  const switchStyle = {
+    '& .MuiSwitch-switchBase': {
+      '&.Mui-checked': {
+        color: '#fff',
+        '+.MuiSwitch-track': {
+          backgroundColor: '#bb4220',
+          opacity: 1.0,
+        },
+      },
+      '&.Mui-disabled + .MuiSwitch-track': {
+        opacity: 0.5,
+      },
+    },
+  };
 
   return (
     <Stack
       component="form"
       sx={{
-        '& > :not(style)': { m: 0, width: '50ch' },
+        '& > :not(style)': { width: '50ch' },
       }}
       noValidate
       autoComplete="off"
     >
       <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
-        <FormControl sx={{ my: 1 }}>
-          <InputLabel id="demo-simple-select-label" sx={style}>
-            In
+        <FormControl variant="outlined" sx={formControlStyle}>
+          <InputLabel id="input-label" sx={selectStyle}>
+            Input Devices
           </InputLabel>
           <Select
             name="audioInputDevices"
-            labelId="select-audio-in-devices"
+            labelId="input-label"
             id="audio-input-device"
             multiple
             value={input}
-            label="Input"
+            label="Input Devices"
+            sx={selectStyle}
             onChange={(e) => {
               handleMultiSelect(DeviceType.INPUT, e);
-              onChange(e);
             }}
-            input={<OutlinedInput label="Tag" />}
             renderValue={(selected) => {
               return (
                 <Box
@@ -173,7 +181,6 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
                 </Box>
               );
             }}
-            sx={style}
           >
             {availableAudioDevices.input.map((device: IOBSDevice) => {
               // We arbitrarily limit input devices to 3.
@@ -201,22 +208,45 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
         </Tooltip>
       </Box>
       <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
-        <FormControl sx={{ my: 1 }}>
-          <InputLabel id="demo-simple-select-label" sx={style}>
-            Out
+        <FormControlLabel
+          control={
+            <Switch
+              sx={switchStyle}
+              checked={forceMono}
+              name={forceMonoConfigKey}
+              onChange={(isForceMono) => {
+                setForceMono(Boolean(isForceMono.target.checked));
+                onChange(isForceMono);
+              }}
+            />
+          }
+          label="Mono Input"
+          sx={{
+            color: 'white',
+          }}
+        />
+        <Tooltip title={configSchema.obsForceMono.description}>
+          <IconButton>
+            <InfoIcon sx={{ color: 'white' }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+      <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+        <FormControl sx={formControlStyle}>
+          <InputLabel id="ouput-label" sx={selectStyle}>
+            Output Devices
           </InputLabel>
           <Select
             name="audioOutputDevices"
-            labelId="select-audio-devices"
+            labelId="output-label"
             id="audio-output-device"
             multiple
             value={output}
-            label="Output"
+            label="Output Devices"
+            sx={selectStyle}
             onChange={(e) => {
               handleMultiSelect(DeviceType.OUTPUT, e);
-              onChange(e);
             }}
-            input={<OutlinedInput label="Tag" />}
             renderValue={(selected) => (
               <Box
                 sx={{
@@ -236,7 +266,6 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
                 ))}
               </Box>
             )}
-            sx={style}
           >
             {availableAudioDevices.output.map((device: IOBSDevice) => {
               // We arbitrarily limit output devices to 5.
