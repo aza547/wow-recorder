@@ -29,6 +29,7 @@ const obsResolutions = {
   '3440x1440': { width: 3440, height: 1440 },
   '3840x1080': { width: 3840, height: 1080 },
   '3840x1440': { width: 3840, height: 1440 },
+  '3840x1600': { width: 3840, height: 1600 },
   '3840x2160': { width: 3840, height: 2160 },
   // eslint-enable prettier/prettier */
 };
