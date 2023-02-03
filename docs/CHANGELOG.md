@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+### Changed
+### Fixed
+
+## [3.5.0] - 2023-02-03
+### Added
 - [Issue 34](https://github.com/aza547/wow-recorder/issues/34) - Add unit test infrastructure.
 - [Issue 312](https://github.com/aza547/wow-recorder/issues/312) - Add a bookmark icon for protected videos.
 
@@ -16,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 293](https://github.com/aza547/wow-recorder/issues/293) - Fix a backend bug where reconfiguring would leak audio device references.
 - [Issue 303](https://github.com/aza547/wow-recorder/issues/303) - Fix error handling so that we don't get a blank screen if something goes wrong.
-- [Issue 306](https://github.com/aza547/wow-recorder/issues/306) - Pass up errors returned by OBS signalling.
 - [Issue 291](https://github.com/aza547/wow-recorder/issues/291) - Improve activity and recorder logic to prevent classic double stop issue. 
 - [Issue 314](https://github.com/aza547/wow-recorder/issues/314) - Make size monitor more async to avoid app lag on game ending.
 
