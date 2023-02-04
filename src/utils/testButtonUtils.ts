@@ -4,13 +4,17 @@ import Poller from './Poller';
 
 let testRunning = false;
 
-const sendTestCombatLogLine = (parser: CombatLogParser, line: string): void => {
+const sendTestCombatLogLine = (
+  parser: CombatLogParser,
+  line: string,
+  flavour: Flavour
+): void => {
   console.debug(
     '[test] Sending test combat log line to the Combat Log Parser',
     line
   );
 
-  parser.handleLogLine(Flavour.Retail, line);
+  parser.handleLogLine(flavour, line);
 };
 
 /**
@@ -73,7 +77,9 @@ export const runRetailRecordingTest = (
     `${startDate}  UNIT_DIED,Player-1084-08A89572,"Alexsmite-TarrenMill",0x80000000,0x80000000,Player-1084-08A89572,"Alexsmite-TarrenMill",0x2111,0x0,0`,
   ];
 
-  testLines.forEach((line) => sendTestCombatLogLine(parser, line));
+  testLines.forEach((line) =>
+    sendTestCombatLogLine(parser, line, Flavour.Retail)
+  );
 
   if (!endTest) {
     return;
@@ -82,7 +88,7 @@ export const runRetailRecordingTest = (
   const testArenaEndLine = `${endDate}  ARENA_MATCH_END,0,8,1673,1668`;
 
   setTimeout(() => {
-    sendTestCombatLogLine(parser, testArenaEndLine);
+    sendTestCombatLogLine(parser, testArenaEndLine, Flavour.Retail);
     testRunning = false;
   }, 5 * 1000);
 };
@@ -133,7 +139,9 @@ export const runClassicRecordingTest = (
     `${startDate}  UNIT_DIED,0000000000000000,nil,0x80000000,0x80000000,Player-4476-043F3626,"Jungledck-Gehennas",0x548,0x0`,
   ];
 
-  testLines.forEach((line) => sendTestCombatLogLine(parser, line));
+  testLines.forEach((line) =>
+    sendTestCombatLogLine(parser, line, Flavour.Classic)
+  );
 
   if (!endTest) {
     return;
@@ -142,7 +150,7 @@ export const runClassicRecordingTest = (
   const testArenaEndLine = `${endDate}  UNIT_DIED,0000000000000000,nil,0x80000000,0x80000000,Player-4476-045C7252,"Notyourlock-Gehennas",0x10548,0x0`;
 
   setTimeout(() => {
-    sendTestCombatLogLine(parser, testArenaEndLine);
+    sendTestCombatLogLine(parser, testArenaEndLine, Flavour.Classic);
     testRunning = false;
   }, 5 * 1000);
 };

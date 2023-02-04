@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
-- [Issue 319](https://github.com/aza547/wow-recorder/issues/319) - https://github.com/aza547/wow-recorder/issues/319
+- [Issue 319](https://github.com/aza547/wow-recorder/issues/319) - Use the [WAL](https://wowarenalogs.com/) parser to process arena games.
 
 ### Changed
 ### Fixed
