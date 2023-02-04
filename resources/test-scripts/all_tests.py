@@ -31,6 +31,6 @@ tests = {
 for test in tests:
     print(f"Running {test}")
     exec(open(tests[test]).read())
-    time.sleep(30)
+    time.sleep(5)
 
 print("Done!")
