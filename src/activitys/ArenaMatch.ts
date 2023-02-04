@@ -1,4 +1,3 @@
-import { CombatResult, IArenaMatch } from 'wow-combat-log-parser';
 import { Flavour, Metadata } from '../main/types';
 import { classicArenas, retailArenas } from '../main/constants';
 import Activity from './Activity';
