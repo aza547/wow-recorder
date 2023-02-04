@@ -66,6 +66,9 @@ export default class RetailLogHandler extends LogHandler {
       .on('ARENA_MATCH_START', async (line: LogLine) => {
         await this.handleArenaStartLine(line);
       })
+      .on('ARENA_MATCH_END', async (line: LogLine) => {
+        await this.handleArenaEndLine(line);
+      })
       .on('CHALLENGE_MODE_START', async (line: LogLine) => {
         await this.handleChallengeModeStartLine(line);
       })
