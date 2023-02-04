@@ -1,3 +1,8 @@
+import {
+  IArenaMatch,
+  IMalformedCombatData,
+  IShuffleMatch,
+} from 'wow-combat-log-parser';
 import Combatant from '../main/Combatant';
 
 import {
@@ -50,9 +55,9 @@ export default class RetailLogHandler extends LogHandler {
       .on('ARENA_MATCH_START', async (line: LogLine) => {
         await this.handleArenaStartLine(line);
       })
-      .on('ARENA_MATCH_END', async (line: LogLine) => {
-        await this.handleArenaEndLine(line);
-      })
+      // .on('ARENA_MATCH_END', async (line: LogLine) => {
+      //   await this.handleArenaEndLine(line);
+      // })
       .on('CHALLENGE_MODE_START', async (line: LogLine) => {
         await this.handleChallengeModeStartLine(line);
       })
@@ -64,6 +69,15 @@ export default class RetailLogHandler extends LogHandler {
       })
       .on('SPELL_CAST_SUCCESS', async (line: LogLine) => {
         this.handleSpellCastSuccess(line);
+      })
+      .on('WAL_ARENA_END', (event: IArenaMatch) => {
+        this.handleWALArenaEnd(event);
+      })
+      .on('WAL_SHUFFLE_END', (event: IShuffleMatch) => {
+        this.handleWALShuffleMatchEnd(event);
+      })
+      .on('WAL_MALFORMED', (event: IMalformedCombatData) => {
+        this.handleWALParserMalformed(event);
       });
   }
 
@@ -481,5 +495,30 @@ export default class RetailLogHandler extends LogHandler {
     const endTime = line.date();
     this.activity.end(endTime, false);
     await this.endRecording();
+  }
+
+  private async handleWALArenaEnd(event: IArenaMatch) {
+    console.info('[RetailLogHandler] Got IArenaMatch event from WAL');
+    console.info(event);
+    const endLine = new LogLine(event.rawLines[event.rawLines.length - 1]);
+    await this.handleArenaEndLine(endLine);
+  }
+
+  private async handleWALShuffleMatchEnd(event: IShuffleMatch) {
+    console.info('[RetailLogHandler] Got IShuffleMatch event from WAL');
+    console.info(event);
+    const lastRound = event.rounds[5];
+
+    const endLine = new LogLine(
+      lastRound.rawLines[lastRound.rawLines.length - 1]
+    );
+
+    await this.handleArenaEndLine(endLine);
+  }
+
+  private async handleWALParserMalformed(event: IMalformedCombatData) {
+    console.warn('[RetailLogHandler] Got IMalformedCombatData event from WAL');
+    console.warn(event);
+    await this.forceEndActivity();
   }
 }

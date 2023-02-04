@@ -2,7 +2,15 @@ import path from 'path';
 import fs from 'fs';
 import { EventEmitter } from 'stream';
 import { setInterval, clearInterval } from 'timers';
-import { FileFinderCallbackType } from '../main/types';
+
+import {
+  IArenaMatch,
+  IMalformedCombatData,
+  IShuffleMatch,
+  WoWCombatLogParser,
+} from 'wow-combat-log-parser';
+
+import { FileFinderCallbackType, Flavour } from '../main/types';
 import LogLine from './LogLine';
 
 const { Tail } = require('tail');
@@ -54,10 +62,30 @@ export default class CombatLogParser extends EventEmitter {
     flushAtEOF: true,
   };
 
+  private walParser: WoWCombatLogParser;
+
   constructor(options: CombatLogParserOptionsType) {
     super();
-
+    this.walParser = new WoWCombatLogParser();
+    this.setupWAL();
     this._options = options;
+  }
+
+  private setupWAL() {
+    this.walParser.on('arena_match_ended', (e: IArenaMatch) => {
+      this.emit('WAL_ARENA_END', e);
+    });
+
+    this.walParser.on('solo_shuffle_ended', (e: IShuffleMatch) => {
+      this.emit('WAL_SHUFFLE_END', e);
+    });
+
+    this.walParser.on(
+      'malformed_arena_match_detected',
+      (e: IMalformedCombatData) => {
+        this.emit('WAL_MALFORMED', e);
+      }
+    );
   }
 
   /**
@@ -131,6 +159,11 @@ export default class CombatLogParser extends EventEmitter {
     const logLine = new LogLine(line);
     const logEventType = logLine.type();
 
+    // @@@ todo fix so we don't need the ||
+    if (flavour === Flavour.Retail || flavour === 'retail') {
+      this.walParser.parseLine(line);
+    }
+
     this.emit(logEventType, logLine, flavour);
   }
 
@@ -154,6 +187,8 @@ export default class CombatLogParser extends EventEmitter {
   /**
    * Find and return the flavour of WoW that the log directory
    * belongs to by means of the '.flavor.info' file.
+   * 
+   * @@@ should return type Flavour
    */
   static getWowFlavour(pathSpec: string): string {
     const flavourInfoFile = path.normalize(
