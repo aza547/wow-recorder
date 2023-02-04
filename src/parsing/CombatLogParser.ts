@@ -54,9 +54,28 @@ export default class CombatLogParser extends EventEmitter {
     flushAtEOF: true,
   };
 
+  private walParser: WoWCombatLogParser;
+
   constructor(options: CombatLogParserOptionsType) {
     super();
     this._options = options;
+  }
+
+  private setupWAL() {
+    this.walParser.on('arena_match_ended', (e: IArenaMatch) => {
+      this.emit('WAL_ARENA_END', e);
+    });
+
+    this.walParser.on('solo_shuffle_ended', (e: IShuffleMatch) => {
+      this.emit('WAL_SHUFFLE_END', e);
+    });
+
+    this.walParser.on(
+      'malformed_arena_match_detected',
+      (e: IMalformedCombatData) => {
+        this.emit('WAL_MALFORMED', e);
+      }
+    );
   }
 
   /**
@@ -122,6 +141,10 @@ export default class CombatLogParser extends EventEmitter {
   handleLogLine(flavour: string, line: string) {
     const logLine = new LogLine(line);
     const logEventType = logLine.type();
+
+    if (flavour === Flavour.Retail) {
+      this.walParser.parseLine(line);
+    }
 
     this.emit(logEventType, logLine, flavour);
 
