@@ -105,13 +105,6 @@ export default class CombatLogParser extends EventEmitter {
 
     const wowFlavour = CombatLogParser.getWowFlavour(resolvedPath);
 
-    if (wowFlavour === 'unknown') {
-      console.warn(
-        `[CombatLogParser] Ignoring non-WoW combat log directory '${resolvedPath}'`
-      );
-      return;
-    }
-
     this._handlers[resolvedPath] = {
       wowFlavour,
       path: resolvedPath,
@@ -159,8 +152,7 @@ export default class CombatLogParser extends EventEmitter {
     const logLine = new LogLine(line);
     const logEventType = logLine.type();
 
-    // @@@ todo fix so we don't need the ||
-    if (flavour === Flavour.Retail || flavour === 'retail') {
+    if (flavour === Flavour.Retail) {
       this.walParser.parseLine(line);
     }
 
@@ -173,36 +165,44 @@ export default class CombatLogParser extends EventEmitter {
   static validateLogPath(pathSpec: string): boolean {
     const resolvePath = path.resolve(pathSpec);
 
-    // Check if the leaf node of the path is actually 'logs',
-    // which _all_ WoW flavours use for logs.
     const pathLeaf = path.basename(resolvePath).toLowerCase();
     if (pathLeaf !== 'logs') {
       return false;
     }
 
-    // Check if the parent directory has a WoW flavour info file
-    return CombatLogParser.getWowFlavour(resolvePath) !== 'unknown';
+    try {
+      CombatLogParser.getWowFlavour(resolvePath);
+      return true;
+    } catch {
+      console.warn('[CombatLogParser] Not a log path');
+      return false;
+    }
   }
 
   /**
    * Find and return the flavour of WoW that the log directory
    * belongs to by means of the '.flavor.info' file.
-   * 
-   * @@@ should return type Flavour
    */
-  static getWowFlavour(pathSpec: string): string {
+  static getWowFlavour(pathSpec: string): Flavour {
     const flavourInfoFile = path.normalize(
       path.join(pathSpec, '../.flavor.info')
     );
 
-    // If this file doesn't exist, it's not a subdirectory of a WoW flavour.
     if (!fs.existsSync(flavourInfoFile)) {
-      return 'unknown';
+      throw new Error(`[CombatLogParser] No flavor file`);
     }
 
-    const content = fs.readFileSync(flavourInfoFile).toString().split('\n');
+    const content = fs.readFileSync(flavourInfoFile).toString().split('\n')[1];
 
-    return content.length > 1 ? content[1] : 'unknown';
+    if (content === 'wow') {
+      return Flavour.Retail;
+    };
+
+    if (content === 'wow_classic') {
+      return Flavour.Classic;
+    }
+
+    throw new Error(`[CombatLogParser] Unknown flavour ${content[1]}`);
   }
 
   /**

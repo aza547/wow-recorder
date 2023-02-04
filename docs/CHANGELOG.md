@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- [Issue 319](https://github.com/aza547/wow-recorder/issues/319) - https://github.com/aza547/wow-recorder/issues/319
+
 ### Changed
 ### Fixed
 
