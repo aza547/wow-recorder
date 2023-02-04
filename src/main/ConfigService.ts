@@ -159,15 +159,7 @@ export default class ConfigService extends EventEmitter {
         return;
       }
 
-      const wowFlavour = CombatLogParser.getWowFlavour(logPath);
-
-      if (wowFlavour === 'unknown') {
-        console.warn(
-          `[Config Service] Ignoring invalid combat log directory '${logPath}' for '${configKey}'.`
-        );
-        return;
-      }
-
+      CombatLogParser.getWowFlavour(logPath);
       hasValidCombatLogPath = true;
     });
 

@@ -2,7 +2,15 @@ import path from 'path';
 import fs from 'fs';
 import { EventEmitter } from 'stream';
 import { setInterval, clearInterval } from 'timers';
-import { FileFinderCallbackType } from '../main/types';
+
+import {
+  IArenaMatch,
+  IMalformedCombatData,
+  IShuffleMatch,
+  WoWCombatLogParser,
+} from 'wow-combat-log-parser';
+
+import { FileFinderCallbackType, Flavour } from '../main/types';
 import LogLine from './LogLine';
 
 const { Tail } = require('tail');
@@ -54,10 +62,30 @@ export default class CombatLogParser extends EventEmitter {
     flushAtEOF: true,
   };
 
+  private walParser: WoWCombatLogParser;
+
   constructor(options: CombatLogParserOptionsType) {
     super();
-
+    this.walParser = new WoWCombatLogParser();
+    this.setupWAL();
     this._options = options;
+  }
+
+  private setupWAL() {
+    this.walParser.on('arena_match_ended', (e: IArenaMatch) => {
+      this.emit('WAL_ARENA_END', e);
+    });
+
+    this.walParser.on('solo_shuffle_ended', (e: IShuffleMatch) => {
+      this.emit('WAL_SHUFFLE_END', e);
+    });
+
+    this.walParser.on(
+      'malformed_arena_match_detected',
+      (e: IMalformedCombatData) => {
+        this.emit('WAL_MALFORMED', e);
+      }
+    );
   }
 
   /**
@@ -76,13 +104,6 @@ export default class CombatLogParser extends EventEmitter {
     }
 
     const wowFlavour = CombatLogParser.getWowFlavour(resolvedPath);
-
-    if (wowFlavour === 'unknown') {
-      console.warn(
-        `[CombatLogParser] Ignoring non-WoW combat log directory '${resolvedPath}'`
-      );
-      return;
-    }
 
     this._handlers[resolvedPath] = {
       wowFlavour,
@@ -131,6 +152,10 @@ export default class CombatLogParser extends EventEmitter {
     const logLine = new LogLine(line);
     const logEventType = logLine.type();
 
+    if (flavour === Flavour.Retail) {
+      this.walParser.parseLine(line);
+    }
+
     this.emit(logEventType, logLine, flavour);
   }
 
@@ -140,34 +165,44 @@ export default class CombatLogParser extends EventEmitter {
   static validateLogPath(pathSpec: string): boolean {
     const resolvePath = path.resolve(pathSpec);
 
-    // Check if the leaf node of the path is actually 'logs',
-    // which _all_ WoW flavours use for logs.
     const pathLeaf = path.basename(resolvePath).toLowerCase();
     if (pathLeaf !== 'logs') {
       return false;
     }
 
-    // Check if the parent directory has a WoW flavour info file
-    return CombatLogParser.getWowFlavour(resolvePath) !== 'unknown';
+    try {
+      CombatLogParser.getWowFlavour(resolvePath);
+      return true;
+    } catch {
+      console.warn('[CombatLogParser] Not a log path');
+      return false;
+    }
   }
 
   /**
    * Find and return the flavour of WoW that the log directory
    * belongs to by means of the '.flavor.info' file.
    */
-  static getWowFlavour(pathSpec: string): string {
+  static getWowFlavour(pathSpec: string): Flavour {
     const flavourInfoFile = path.normalize(
       path.join(pathSpec, '../.flavor.info')
     );
 
-    // If this file doesn't exist, it's not a subdirectory of a WoW flavour.
     if (!fs.existsSync(flavourInfoFile)) {
-      return 'unknown';
+      throw new Error(`[CombatLogParser] No flavor file`);
     }
 
-    const content = fs.readFileSync(flavourInfoFile).toString().split('\n');
+    const content = fs.readFileSync(flavourInfoFile).toString().split('\n')[1];
 
-    return content.length > 1 ? content[1] : 'unknown';
+    if (content === 'wow') {
+      return Flavour.Retail;
+    };
+
+    if (content === 'wow_classic') {
+      return Flavour.Classic;
+    }
+
+    throw new Error(`[CombatLogParser] Unknown flavour ${content[1]}`);
   }
 
   /**
