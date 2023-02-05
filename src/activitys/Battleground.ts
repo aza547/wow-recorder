@@ -72,6 +72,7 @@ export default class Battleground extends Activity {
 
   getFileName(): string {
     const resultText = this.estimateResult() ? 'Win' : 'Loss';
-    return `${this.battlegroundName} (${resultText})`;
+    // eslint-disable-next-line prettier/prettier
+    return `${this.getConciseDate()} - ${this.battlegroundName} (${resultText})`;
   }
 }

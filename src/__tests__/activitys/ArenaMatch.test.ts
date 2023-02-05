@@ -37,5 +37,8 @@ test('Basic Arena Match', () => {
   expect(arenaMatch.result).toBe(expectedResult);
   expect(arenaMatch.resultInfo).toBe('Win');
   expect(arenaMatch.zoneName).toBe("Blade's Edge");
-  expect(arenaMatch.getFileName()).toBe("2v2 Blade's Edge (Win)");
+
+  expect(arenaMatch.getFileName()).toBe(
+    "2022-12-25 12-00-00 - 2v2 Blade's Edge (Win)"
+  );
 });

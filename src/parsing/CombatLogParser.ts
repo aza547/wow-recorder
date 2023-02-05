@@ -2,14 +2,6 @@ import path from 'path';
 import fs from 'fs';
 import { EventEmitter } from 'stream';
 import { setInterval, clearInterval } from 'timers';
-
-import {
-  IArenaMatch,
-  IMalformedCombatData,
-  IShuffleMatch,
-  WoWCombatLogParser,
-} from 'wow-combat-log-parser';
-
 import { FileFinderCallbackType, Flavour } from '../main/types';
 import LogLine from './LogLine';
 
@@ -62,30 +54,9 @@ export default class CombatLogParser extends EventEmitter {
     flushAtEOF: true,
   };
 
-  private walParser: WoWCombatLogParser;
-
   constructor(options: CombatLogParserOptionsType) {
     super();
-    this.walParser = new WoWCombatLogParser();
-    this.setupWAL();
     this._options = options;
-  }
-
-  private setupWAL() {
-    this.walParser.on('arena_match_ended', (e: IArenaMatch) => {
-      this.emit('WAL_ARENA_END', e);
-    });
-
-    this.walParser.on('solo_shuffle_ended', (e: IShuffleMatch) => {
-      this.emit('WAL_SHUFFLE_END', e);
-    });
-
-    this.walParser.on(
-      'malformed_arena_match_detected',
-      (e: IMalformedCombatData) => {
-        this.emit('WAL_MALFORMED', e);
-      }
-    );
   }
 
   /**
@@ -152,11 +123,11 @@ export default class CombatLogParser extends EventEmitter {
     const logLine = new LogLine(line);
     const logEventType = logLine.type();
 
-    if (flavour === Flavour.Retail) {
-      this.walParser.parseLine(line);
-    }
-
     this.emit(logEventType, logLine, flavour);
+
+    if (flavour === Flavour.Retail) {
+      this.emit('SEND_TO_WAL', line);
+    }
   }
 
   /**
@@ -196,7 +167,7 @@ export default class CombatLogParser extends EventEmitter {
 
     if (content === 'wow') {
       return Flavour.Retail;
-    };
+    }
 
     if (content === 'wow_classic') {
       return Flavour.Classic;

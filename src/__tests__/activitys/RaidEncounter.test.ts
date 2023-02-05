@@ -38,7 +38,7 @@ test('Basic Raid Encounter', () => {
 
   expect(raidEncounter.duration).toBe(600);
   expect(raidEncounter.getFileName()).toBe(
-    'Vault of the Incarnates, Raszageth [M] (Kill)'
+    '2022-12-25 12-00-00 - Vault of the Incarnates, Raszageth [M] (Kill)'
   );
 
   expect(raidEncounter.difficulty).toStrictEqual({

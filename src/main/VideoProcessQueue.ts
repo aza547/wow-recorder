@@ -160,15 +160,12 @@ export default class VideoProcessQueue {
   private static async cutVideo(
     initialFile: string,
     finalDir: string,
-    outputFilename: string | undefined,
+    outputFilename: string,
     relativeStart: number,
     desiredDuration: number
   ): Promise<string> {
-    const videoFileName = path.basename(initialFile, '.mp4');
-    const videoFilenameSuffix = outputFilename ? ` - ${outputFilename}` : '';
-    const baseVideoFilename = VideoProcessQueue.sanitizeFilename(
-      videoFileName + videoFilenameSuffix
-    );
+    const baseVideoFilename =
+      VideoProcessQueue.sanitizeFilename(outputFilename);
     const finalVideoPath = path.join(finalDir, `${baseVideoFilename}.mp4`);
 
     return new Promise<string>((resolve) => {

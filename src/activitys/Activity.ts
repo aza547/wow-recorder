@@ -153,4 +153,38 @@ export default abstract class Activity {
   addDeath(death: PlayerDeathType) {
     this.deaths.push(death);
   }
+
+  getConciseDate() {
+    const day = this.startDate.getDate().toLocaleString('en-US', {
+      minimumIntegerDigits: 2,
+      useGrouping: false,
+    });
+
+    const month = (this.startDate.getMonth() + 1).toLocaleString('en-US', {
+      minimumIntegerDigits: 2,
+      useGrouping: false,
+    });
+
+    const year = this.startDate.getFullYear().toLocaleString('en-US', {
+      minimumIntegerDigits: 4,
+      useGrouping: false,
+    });
+
+    const min = this.startDate.getMinutes().toLocaleString('en-US', {
+      minimumIntegerDigits: 2,
+      useGrouping: false,
+    });
+
+    const hour = this.startDate.getHours().toLocaleString('en-US', {
+      minimumIntegerDigits: 2,
+      useGrouping: false,
+    });
+
+    const second = this.startDate.getSeconds().toLocaleString('en-US', {
+      minimumIntegerDigits: 2,
+      useGrouping: false,
+    });
+
+    return `${year}-${month}-${day} ${hour}-${min}-${second}`;
+  }
 }

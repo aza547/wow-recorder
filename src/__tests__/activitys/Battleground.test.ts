@@ -36,6 +36,10 @@ test('Basic Battleground', () => {
 
   expect(battleground.duration).toBe(expectedDuration);
   expect(battleground.battlegroundName).toBe('The Battle for Gilneas');
-  expect(battleground.getFileName()).toBe('The Battle for Gilneas (Win)');
+
+  expect(battleground.getFileName()).toBe(
+    '2022-12-25 12-00-00 - The Battle for Gilneas (Win)'
+  );
+
   expect(battleground.estimateResult()).toBe(true);
 });

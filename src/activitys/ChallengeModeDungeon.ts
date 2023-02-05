@@ -177,6 +177,7 @@ export default class ChallengeModeDungeon extends Activity {
   }
 
   getFileName(): string {
-    return `${this.dungeonName} +${this.level} (${this.resultInfo})`;
+    // eslint-disable-next-line prettier/prettier
+    return `${this.getConciseDate()} - ${this.dungeonName} +${this.level} (${this.resultInfo})`;
   }
 }

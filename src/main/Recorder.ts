@@ -763,9 +763,7 @@ export default class Recorder {
     this.isOverruning = true;
 
     // Await for the specified overrun.
-    await new Promise((resolve, _reject) =>
-      setTimeout(resolve, 1000 * overrun)
-    );
+    await new Promise((resolve) => setTimeout(resolve, 1000 * overrun));
 
     // The ordering is crucial here, we don't want to call stopOBS more
     // than once in a row else we will crash the app. See issue 291.

@@ -1,8 +1,3 @@
-import {
-  IArenaMatch,
-  IMalformedCombatData,
-  IShuffleMatch,
-} from 'wow-combat-log-parser';
 import Combatant from '../main/Combatant';
 
 import {
@@ -28,11 +23,14 @@ import { Flavour } from '../main/types';
 import SoloShuffle from '../activitys/SoloShuffle';
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
+import WALHandler from './WALHandler';
 
 /**
  * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
+  private walHandler: WALHandler | undefined;
+
   constructor(recorder: Recorder, logPath: string) {
     super(recorder, logPath, 10);
 
@@ -55,6 +53,9 @@ export default class RetailLogHandler extends LogHandler {
       .on('ARENA_MATCH_START', async (line: LogLine) => {
         await this.handleArenaStartLine(line);
       })
+      .on('ARENA_MATCH_END', async (line: LogLine) => {
+        await this.handleArenaEndLine(line);
+      })
       .on('CHALLENGE_MODE_START', async (line: LogLine) => {
         await this.handleChallengeModeStartLine(line);
       })
@@ -67,14 +68,8 @@ export default class RetailLogHandler extends LogHandler {
       .on('SPELL_CAST_SUCCESS', async (line: LogLine) => {
         this.handleSpellCastSuccess(line);
       })
-      .on('WAL_ARENA_END', async (event: IArenaMatch) => {
-        await this.handleWALArenaEnd(event);
-      })
-      .on('WAL_SHUFFLE_END', async (event: IShuffleMatch) => {
-        await this.handleWALShuffleMatchEnd(event);
-      })
-      .on('WAL_MALFORMED', async (event: IMalformedCombatData) => {
-        await this.handleWALParserMalformed(event);
+      .on('SEND_TO_WAL', (line: string) => {
+        this.sendToWALParser(line);
       });
   }
 
@@ -118,11 +113,10 @@ export default class RetailLogHandler extends LogHandler {
     if (!this.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
       this.activity = new SoloShuffle(startTime, zoneID);
+      this.walHandler = new WALHandler(this.activity);
       await this.startRecording(this.activity);
     } else if (this.activity && category === VideoCategory.SoloShuffle) {
-      console.info(
-        '[RetailLogHandler] New round of existing Solo Shuffle starting'
-      );
+      console.info('[RetailLogHandler] New round of Solo Shuffle starting');
       const soloShuffle = this.activity as SoloShuffle;
       soloShuffle.startRound(startTime);
     } else {
@@ -134,6 +128,7 @@ export default class RetailLogHandler extends LogHandler {
         Flavour.Retail
       );
 
+      this.walHandler = new WALHandler(this.activity);
       await this.startRecording(this.activity);
     }
   }
@@ -144,6 +139,14 @@ export default class RetailLogHandler extends LogHandler {
     if (!this.activity) {
       console.error('[RetailLogHandler] Arena stop with no active arena match');
       return;
+    }
+
+    // We're about to close off the activity so WAL won't see the end line unless
+    // we send it here as we only forward log lines while in an arena.
+    if (this.walHandler) {
+      this.walHandler.parse(line.original);
+      this.walHandler.unregister();
+      this.walHandler = undefined;
     }
 
     if (this.activity.category === VideoCategory.SoloShuffle) {
@@ -494,29 +497,9 @@ export default class RetailLogHandler extends LogHandler {
     await this.endRecording();
   }
 
-  private async handleWALArenaEnd(event: IArenaMatch) {
-    console.info('[RetailLogHandler] Got IArenaMatch event from WAL');
-
-    // The last line from the WAL event is the ARENA_MATCH_END line.
-    const endLine = new LogLine(event.rawLines[event.rawLines.length - 1]);
-    await this.handleArenaEndLine(endLine);
-  }
-
-  private async handleWALShuffleMatchEnd(event: IShuffleMatch) {
-    console.info('[RetailLogHandler] Got IShuffleMatch event from WAL');
-
-    // The last line from the WAL event is the ARENA_MATCH_END line.
-    const lastRound = event.rounds[5];
-    const endLine = new LogLine(
-      lastRound.rawLines[lastRound.rawLines.length - 1]
-    );
-
-    await this.handleArenaEndLine(endLine);
-  }
-
-  private async handleWALParserMalformed(event: IMalformedCombatData) {
-    console.warn('[RetailLogHandler] Got IMalformedCombatData event from WAL');
-    console.warn(event);
-    await this.forceEndActivity();
+  private sendToWALParser(line: string) {
+    if (this.walHandler) {
+      this.walHandler.parse(line);
+    }
   }
 }
