@@ -1,12 +1,3 @@
-import {
-  IArenaMatch,
-  IMalformedCombatData,
-  IShuffleMatch,
-  WoWCombatLogParser,
-} from 'wow-combat-log-parser';
-
-import { promises as fspromise } from 'fs';
-import path from 'path';
 import Combatant from '../main/Combatant';
 
 import {
@@ -32,20 +23,16 @@ import { Flavour } from '../main/types';
 import SoloShuffle from '../activitys/SoloShuffle';
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
+import WALHandler from './WALHandler';
 
 /**
  * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
-  private walParser: WoWCombatLogParser;
-
-  private walParserOutputFile: string | undefined;
+  private walHandler: WALHandler | undefined;
 
   constructor(recorder: Recorder, logPath: string) {
     super(recorder, logPath, 10);
-
-    this.walParser = new WoWCombatLogParser();
-    this.setupWAL();
 
     this.combatLogParser
       .on('ENCOUNTER_START', async (line: LogLine) => {
@@ -86,23 +73,6 @@ export default class RetailLogHandler extends LogHandler {
       });
   }
 
-  private setupWAL() {
-    this.walParser
-      .on('arena_match_ended', async (e: IArenaMatch) => {
-        await this.writeWALFile(e);
-      })
-      .on('solo_shuffle_ended', async (e: IShuffleMatch) => {
-        await this.writeWALFile(e);
-      });
-  }
-
-  private resetWAL() {
-    this.walParser.removeAllListeners();
-    this.walParser.flush();
-    this.walParser = new WoWCombatLogParser();
-    this.setupWAL();
-  }
-
   private async handleArenaStartLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ARENA_MATCH_START line:', line);
 
@@ -113,11 +83,6 @@ export default class RetailLogHandler extends LogHandler {
         '[RetailLogHandler] Another activity in progress and not a Solo Shuffle'
       );
       return;
-    }
-
-    // Reset the WAL parser on new game.
-    if (!this.activity) {
-      this.resetWAL();
     }
 
     const startTime = line.date();
@@ -148,11 +113,8 @@ export default class RetailLogHandler extends LogHandler {
     if (!this.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
       this.activity = new SoloShuffle(startTime, zoneID);
-      await this.startRecording(this.activity);
     } else if (this.activity && category === VideoCategory.SoloShuffle) {
-      console.info(
-        '[RetailLogHandler] New round of existing Solo Shuffle starting'
-      );
+      console.info('[RetailLogHandler] New round of Solo Shuffle starting');
       const soloShuffle = this.activity as SoloShuffle;
       soloShuffle.startRound(startTime);
     } else {
@@ -164,6 +126,7 @@ export default class RetailLogHandler extends LogHandler {
         Flavour.Retail
       );
 
+      this.walHandler = new WALHandler(this.activity);
       await this.startRecording(this.activity);
     }
   }
@@ -176,17 +139,13 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
-    // Set up the path for writing the WAL file before we forget the activity.
-    const storagePath = this.cfg.get<string>('storagePath');
-
-    this.walParserOutputFile = path.join(
-      storagePath,
-      `${this.activity.getFileName()}.wal`
-    );
-
     // We're about to close off the activity so WAL won't see the end line unless
     // we send it here as we only forward log lines while in an arena.
-    this.walParser.parseLine(line.original);
+    if (this.walHandler) {
+      this.walHandler.parse(line.original);
+      this.walHandler.unregister();
+      this.walHandler = undefined;
+    }
 
     if (this.activity.category === VideoCategory.SoloShuffle) {
       const soloShuffle = this.activity as SoloShuffle;
@@ -537,26 +496,8 @@ export default class RetailLogHandler extends LogHandler {
   }
 
   private sendToWALParser(line: string) {
-    if (this.isArena()) {
-      this.walParser.parseLine(line);
+    if (this.walHandler) {
+      this.walHandler.parse(line);
     }
-  }
-
-  private async writeWALFile(
-    event: IArenaMatch | IShuffleMatch | IMalformedCombatData
-  ) {
-    if (!this.walParserOutputFile) {
-      console.error("[RetailLogHandler] Can't write WAL file as no path");
-      return;
-    }
-
-    console.info('[RetailLogHandler] Writing WAL file');
-    const jsonString = JSON.stringify(event, null, 2);
-
-    fspromise.writeFile(this.walParserOutputFile, jsonString, {
-      encoding: 'utf-8',
-    });
-
-    this.walParserOutputFile = undefined;
   }
 }
