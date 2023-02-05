@@ -113,6 +113,8 @@ export default class RetailLogHandler extends LogHandler {
     if (!this.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
       this.activity = new SoloShuffle(startTime, zoneID);
+      this.walHandler = new WALHandler(this.activity);
+      await this.startRecording(this.activity);
     } else if (this.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] New round of Solo Shuffle starting');
       const soloShuffle = this.activity as SoloShuffle;

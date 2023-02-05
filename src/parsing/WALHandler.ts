@@ -37,13 +37,10 @@ export default class WALHandler {
       })
       .on('solo_shuffle_ended', async (e: IShuffleMatch) => {
         await this.updateMetadata(e);
-      })
-      .on('solo_shuffle_round_ended', async (e: IShuffleRound) => {
-        await this.updateMetadata(e);
       });
   }
 
-  private async updateMetadata(e: IArenaMatch | IShuffleMatch | IShuffleRound) {
+  private async updateMetadata(e: IArenaMatch | IShuffleMatch) {
     const storagePath = this.cfg.get<string>('storagePath');
     const videoName = this.activity.getFileName();
     const metadataFile = path.join(storagePath, `${videoName}.json`);
