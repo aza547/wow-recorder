@@ -197,6 +197,7 @@ export default class SoloShuffle extends Activity {
   }
 
   getFileName() {
-    return `${this.category} ${this.zoneName} (${this.resultInfo})`;
+    // eslint-disable-next-line prettier/prettier
+    return `${this.getConciseDate()} - ${this.category} ${this.zoneName} (${this.resultInfo})`;
   }
 }

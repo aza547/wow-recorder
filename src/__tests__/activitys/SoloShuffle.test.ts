@@ -72,7 +72,11 @@ test('Basic Solo Shuffle', () => {
   const expectedDuration = (endDate.getTime() - startDate.getTime()) / 1000;
 
   expect(soloShuffle.duration).toBe(expectedDuration);
-  expect(soloShuffle.getFileName()).toBe("Solo Shuffle Blade's Edge (1-5)");
+
+  expect(soloShuffle.getFileName()).toBe(
+    "2022-12-25 12-00-00 - Solo Shuffle Blade's Edge (1-5)"
+  );
+
   expect(soloShuffle.resultInfo).toBe('1-5');
   expect(soloShuffle.roundsWon).toBe(1);
   expect(soloShuffle.zoneName).toBe("Blade's Edge");

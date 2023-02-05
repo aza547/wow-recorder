@@ -137,6 +137,7 @@ export default class RaidEncounter extends Activity {
   }
 
   getFileName(): string {
-    return `${this.raid.name}, ${this.encounterName} [${this.difficulty.difficulty}] (${this.resultInfo})`;
+    // eslint-disable-next-line prettier/prettier
+    return `${this.getConciseDate()} - ${this.raid.name}, ${this.encounterName} [${this.difficulty.difficulty}] (${this.resultInfo})`;
   }
 }

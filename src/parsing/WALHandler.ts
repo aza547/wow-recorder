@@ -1,7 +1,6 @@
 import {
   IArenaMatch,
   IShuffleMatch,
-  IShuffleRound,
   WoWCombatLogParser,
 } from 'wow-combat-log-parser';
 
