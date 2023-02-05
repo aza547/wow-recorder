@@ -168,8 +168,6 @@ export default class VideoProcessQueue {
       VideoProcessQueue.sanitizeFilename(outputFilename);
     const finalVideoPath = path.join(finalDir, `${baseVideoFilename}.mp4`);
 
-    console.log("ahk" , finalVideoPath);
-
     return new Promise<string>((resolve) => {
       if (relativeStart < 0) {
         console.log(

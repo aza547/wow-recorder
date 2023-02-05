@@ -1,6 +1,7 @@
 import {
   IArenaMatch,
   IShuffleMatch,
+  IShuffleRound,
   WoWCombatLogParser,
 } from 'wow-combat-log-parser';
 
@@ -36,14 +37,19 @@ export default class WALHandler {
       })
       .on('solo_shuffle_ended', async (e: IShuffleMatch) => {
         await this.updateMetadata(e);
+      })
+      .on('solo_shuffle_round_ended', async (e: IShuffleRound) => {
+        await this.updateMetadata(e);
       });
   }
 
-  private async updateMetadata(e: IArenaMatch | IShuffleMatch) {
+  private async updateMetadata(e: IArenaMatch | IShuffleMatch | IShuffleRound) {
     const storagePath = this.cfg.get<string>('storagePath');
     const videoName = this.activity.getFileName();
     const metadataFile = path.join(storagePath, `${videoName}.json`);
     console.log('[WALHandler] Have WAL event for', metadataFile);
     // @@@ TODO actually update metadata
+    // Need to wait on it to exist first? Recorder is going to create it but we don't know when currently
+    // Maybe better to create it and then modify the recorder so it's updated rather than overwritten? 
   }
 }
