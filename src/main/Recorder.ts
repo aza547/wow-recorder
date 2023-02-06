@@ -348,11 +348,6 @@ export default class Recorder {
       'video-encoder'
     );
 
-    recFactory.videoEncoder.update({
-      rate_control: 'VBR',
-      bitrate: 1000 * this.cfg.get<number>('obsKBitRate'),
-    });
-
     recFactory.overwrite = false;
     recFactory.noSpace = false;
 
@@ -876,6 +871,14 @@ export default class Recorder {
       );
       return;
     }
+
+    // If we don't do this here, the bitrate somehow gets forgotten after the
+    // first recording and we default to 5000 kbps, which is obviously bad.
+    // See issue 321.
+    this.obsRecordingFactory.videoEncoder.update({
+      rate_control: 'VBR',
+      bitrate: 1000 * this.cfg.get<number>('obsKBitRate'),
+    });
 
     this.obsRecordingFactory.start();
 
