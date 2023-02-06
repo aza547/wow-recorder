@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 321](https://github.com/aza547/wow-recorder/issues/321) - Fix so that bitrate settings are remembered after first recording.
 
 ## [3.5.0] - 2023-02-03
 ### Added
