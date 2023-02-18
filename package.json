@@ -42,7 +42,7 @@
   "build": {
     "productName": "WarcraftRecorder",
     "appId": "org.WarcraftRecorder",
-    "asar": true,
+    "asar": false,
     "asarUnpack": "**\\**",
     "files": [
       "dist",
