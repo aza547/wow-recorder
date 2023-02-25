@@ -27,6 +27,7 @@ export type ConfigurationSchema = {
   recordSkirmish: boolean;
   recordSoloShuffle: boolean;
   recordBattlegrounds: boolean;
+  captureCursor: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -193,5 +194,10 @@ export const configSchema = {
     description: 'Whether the application should record battlegrounds',
     type: 'boolean',
     default: true,
+  },
+  captureCursor: {
+    description: 'Whether the cursor should be included in recordings',
+    type: 'boolean',
+    default: false,
   },
 };

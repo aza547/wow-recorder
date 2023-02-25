@@ -443,6 +443,7 @@ export default class Recorder {
 
     const { settings } = monitorCaptureSource;
     settings.monitor = this.cfg.get<number>('monitorIndex') - 1;
+    settings.capture_cursor = this.cfg.get<boolean>('captureCursor');
 
     monitorCaptureSource.update(settings);
     monitorCaptureSource.save();
@@ -462,10 +463,10 @@ export default class Recorder {
     );
 
     const { settings } = gameCaptureSource;
-    settings.capture_cursor = true;
     settings.capture_mode = 'window';
     settings.allow_transparency = true;
     settings.priority = 1;
+    settings.capture_cursor = this.cfg.get<boolean>('captureCursor');
     settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
 
     gameCaptureSource.update(settings);
