@@ -187,6 +187,17 @@ export default class RetailLogHandler extends LogHandler {
     const startTime = line.date();
     const zoneID = parseInt(line.arg(2), 10);
     const level = parseInt(line.arg(4), 10);
+    const minLevelToRecord = this.cfg.get<number>('minKeystoneLevel');
+
+    if (level < minLevelToRecord) {
+      console.info(
+        '[RetailLogHandler] Ignoring key of level:',
+        level,
+        '. Threshold to record is: ',
+        minLevelToRecord
+      );
+      return;
+    }
 
     this.activity = new ChallengeModeDungeon(startTime, zoneID, mapId, level);
     const challengeModeActivity = this.activity as ChallengeModeDungeon;
@@ -235,8 +246,12 @@ export default class RetailLogHandler extends LogHandler {
       );
 
       if (knownDungeonEncounter) {
+        // We can hit this branch due to a few cases:
+        //   - It's a regular dungeon, we don't record those
+        //   - It's a M+ below the recording threshold
+        //   - It's a boss we don't recognise the ID for (could be beta/PTR)?
         console.info(
-          "[RetailLogHandler] It's a regular dungeon encounter, don't record"
+          '[RetailLogHandler] Unknown encounter and not in M+, not recording'
         );
 
         return;

@@ -28,6 +28,7 @@ export type ConfigurationSchema = {
   recordSoloShuffle: boolean;
   recordBattlegrounds: boolean;
   captureCursor: boolean;
+  minKeystoneLevel: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -73,7 +74,7 @@ export const configSchema = {
     maximum: 4,
   },
   selectedCategory: {
-    description: 'Last selected video category in the UI',
+    description: 'Last selected video category in the UI.',
     type: 'integer',
     default: 1,
   },
@@ -110,7 +111,6 @@ export const configSchema = {
     type: 'string',
     default: '1920x1080',
   },
-
   obsFPS: {
     description:
       'The number of frames per second to record the video at. Lower FPS gives smaller video size, but also more choppy playback.',
@@ -146,58 +146,63 @@ export const configSchema = {
     default: 'obs_x264',
   },
   recordRetail: {
-    description: 'Whether the application should record retail',
+    description: 'Whether the application should record retail.',
     type: 'boolean',
     default: true,
   },
   recordClassic: {
-    description: 'Whether the application should record classic',
+    description: 'Whether the application should record classic.',
     type: 'boolean',
     default: true,
   },
   recordRaids: {
-    description: 'Whether the application should record raids',
+    description: 'Whether the application should record raids.',
     type: 'boolean',
     default: true,
   },
   recordDungeons: {
-    description: 'Whether the application should record Mythic+',
+    description: 'Whether the application should record Mythic+.',
     type: 'boolean',
     default: true,
   },
   recordTwoVTwo: {
-    description: 'Whether the application should record 2v2',
+    description: 'Whether the application should record 2v2.',
     type: 'boolean',
     default: true,
   },
   recordThreeVThree: {
-    description: 'Whether the application should record 3v3',
+    description: 'Whether the application should record 3v3.',
     type: 'boolean',
     default: true,
   },
   recordFiveVFive: {
-    description: 'Whether the application should record 5v5',
+    description: 'Whether the application should record 5v5.',
     type: 'boolean',
     default: true,
   },
   recordSkirmish: {
-    description: 'Whether the application should record skirmishes',
+    description: 'Whether the application should record skirmishes.',
     type: 'boolean',
     default: true,
   },
   recordSoloShuffle: {
-    description: 'Whether the application should record solo shuffle',
+    description: 'Whether the application should record solo shuffle.',
     type: 'boolean',
     default: true,
   },
   recordBattlegrounds: {
-    description: 'Whether the application should record battlegrounds',
+    description: 'Whether the application should record battlegrounds.',
     type: 'boolean',
     default: true,
   },
   captureCursor: {
-    description: 'Whether the cursor should be included in recordings',
+    description: 'Whether the cursor should be included in recordings.',
     type: 'boolean',
     default: false,
+  },
+  minKeystoneLevel: {
+    description: 'The minimum keystone level to record.',
+    type: 'integer',
+    default: 1,
   },
 };

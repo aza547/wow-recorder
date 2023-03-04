@@ -99,19 +99,43 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
           name="minEncounterDuration"
           value={config.minEncounterDuration}
           onChange={onChange}
-          id="max-storage"
+          id="min-encounter-duration"
           label="Min Encounter Duration (sec)"
           variant="outlined"
           type="number"
           error={config.minEncounterDuration < 1}
           helperText={
-            config.minEncounterDuration < 1 ? 'Must be positive' : ' '
+            config.minEncounterDuration < 1 ? 'Must be 1 or greater' : ' '
           }
           InputLabelProps={{ shrink: true }}
           sx={{ ...style, my: 1 }}
           inputProps={{ style: { color: 'white' } }}
         />
         <Tooltip title={configSchema.minEncounterDuration.description}>
+          <IconButton>
+            <InfoIcon style={{ color: 'white' }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+        <TextField
+          name="minKeystoneLevel"
+          value={config.minKeystoneLevel}
+          onChange={onChange}
+          id="min-keystone-level"
+          label="Min Keystone Level"
+          variant="outlined"
+          type="number"
+          error={config.minKeystoneLevel < 1}
+          helperText={
+            config.minKeystoneLevel < 1 ? 'Must be 1 or greater' : ' '
+          }
+          InputLabelProps={{ shrink: true }}
+          sx={{ ...style, my: 1 }}
+          inputProps={{ style: { color: 'white' } }}
+        />
+        <Tooltip title={configSchema.minKeystoneLevel.description}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }} />
           </IconButton>

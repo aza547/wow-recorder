@@ -43,6 +43,7 @@ const configValues = {
   obsKBitRate: getConfigValue<number>('obsKBitRate'),
   obsCaptureMode: getConfigValue<string>('obsCaptureMode'),
   obsRecEncoder: getConfigValue<string>('obsRecEncoder'),
+  minKeystoneLevel: getConfigValue<number>('minKeystoneLevel'),
 };
 
 export default function useSettings() {
