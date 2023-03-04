@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.6.0] - 2023-03-04
 ### Added
 - [Issue 329](https://github.com/aza547/wow-recorder/issues/329) - Option to hide cursor. 
+- [Issue 326](https://github.com/aza547/wow-recorder/issues/326) - Option to ignore M+ below a certain level.
 
 ### Fixed
 - [Issue 323](https://github.com/aza547/wow-recorder/issues/329) - Fix bug where size monitor was deleting protected videos.
