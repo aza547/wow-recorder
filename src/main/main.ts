@@ -466,7 +466,7 @@ ipcMain.on('settingsWindow', (event, args) => {
         }
       }
 
-      new SizeMonitor().run();
+      if (mainWindow) new SizeMonitor(mainWindow).run();
     });
 
     settingsWindow.close();

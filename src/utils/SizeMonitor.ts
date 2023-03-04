@@ -1,9 +1,20 @@
+import { BrowserWindow } from 'electron';
+import { FileInfo } from 'main/types';
 import ConfigService from '../main/ConfigService';
 import {
   deleteVideo,
   getMetadataForVideo,
   getSortedVideos,
 } from '../main/util';
+
+// Had a bug here where we used filter with an async function but that isn't
+// valid as it just returns a truthy promise. See issue 323. To get around
+// this we do some creative stuff from here:
+// https://advancedweb.hu/how-to-use-async-functions-with-array-filter-in-javascript/
+const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
+  const results = await Promise.all(fileStream.map(filter));
+  return fileStream.filter((_, index) => results[index]);
+};
 
 export default class SizeMonitor {
   private cfg = ConfigService.getInstance();
@@ -14,10 +25,13 @@ export default class SizeMonitor {
 
   private maxStorageBytes: number;
 
-  constructor() {
+  private mainWindow: BrowserWindow;
+
+  constructor(mainWindow: BrowserWindow) {
     this.storageDir = this.cfg.get<string>('storagePath');
     this.maxStorageGB = this.cfg.get<number>('maxStorage');
     this.maxStorageBytes = this.maxStorageGB * 1024 ** 3;
+    this.mainWindow = mainWindow;
   }
 
   async run() {
@@ -34,17 +48,28 @@ export default class SizeMonitor {
 
     const files = await getSortedVideos(this.storageDir);
 
-    const unprotectedFiles = files.filter(async (file) => {
-      try {
-        const metadata = await getMetadataForVideo(file.name);
-        const isProtected = metadata.protected || false;
-        return !isProtected;
-      } catch {
-        console.error('[SizeMonitor] Failed to get metadata for', file.name);
-        deleteVideo(file.name);
-        return false;
+    const unprotectedFiles = await asyncFilter(
+      files,
+      async (file: FileInfo) => {
+        try {
+          const metadata = await getMetadataForVideo(file.name);
+          const isUnprotected = !(metadata.protected || false);
+
+          if (!isUnprotected) {
+            console.info(
+              '[SizeMonitor] Will not delete protected video',
+              file.name
+            );
+          }
+
+          return isUnprotected;
+        } catch {
+          console.error('[SizeMonitor] Failed to get metadata for', file.name);
+          deleteVideo(file.name);
+          return false;
+        }
       }
-    });
+    );
 
     let totalVideoFileSize = 0;
 
@@ -60,5 +85,7 @@ export default class SizeMonitor {
     filesForDeletion.forEach((file) => {
       deleteVideo(file.name);
     });
+
+    this.mainWindow.webContents.send('refreshState');
   }
 }

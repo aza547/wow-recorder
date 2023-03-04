@@ -5,12 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+### Changed
+### Fixed
 
+## [3.6.0] - 2023-03-04
 ### Added
 - [Issue 329](https://github.com/aza547/wow-recorder/issues/329) - Option to hide cursor. 
 
-### Changed
 ### Fixed
+- [Issue 323](https://github.com/aza547/wow-recorder/issues/329) - Fix bug where size monitor was deleting protected videos.
 
 ## [3.5.1] - 2023-02-07
 ### Fixed

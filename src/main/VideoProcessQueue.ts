@@ -130,8 +130,7 @@ export default class VideoProcessQueue {
 
   private async videoQueueEmpty() {
     console.log('[VideoProcessQueue] Video processing queue empty');
-    new SizeMonitor().run();
-    this.mainWindow.webContents.send('refreshState');
+    new SizeMonitor().run(this.mainWindow);
   }
 
   /**
