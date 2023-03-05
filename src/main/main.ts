@@ -39,7 +39,7 @@ import {
 import SizeMonitor from '../utils/SizeMonitor';
 
 const logDir = setupApplicationLogging();
-console.info('[Main] App starting, version:', app.getVersion());	
+console.info('[Main] App starting, version:', app.getVersion());
 console.info('[Main] On OS:', os.platform(), os.release());
 
 let retailHandler: RetailLogHandler | undefined;
@@ -48,6 +48,10 @@ let recorder: Recorder | undefined;
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let tray = null;
+
+// Issue 332. Need to call this before the app is ready.
+// https://www.electronjs.org/docs/latest/api/app#appdisablehardwareacceleration
+app.disableHardwareAcceleration();
 
 /**
  * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving
