@@ -126,6 +126,7 @@ export default class VideoProcessQueue {
     );
 
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
+    this.mainWindow.webContents.send('refreshState');
   }
 
   private async videoQueueEmpty() {
