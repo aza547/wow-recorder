@@ -54,6 +54,13 @@ export default class CombatLogParser extends EventEmitter {
     flushAtEOF: true,
   };
 
+  /**
+   * Did we see any logs on the last check? Helper variable so we only log
+   * on the first instance of finding no logs in a directory once rather
+   * than spamming the log file every second.
+   */
+  private noLogsFound = false;
+
   constructor(options: CombatLogParserOptionsType) {
     super();
 
@@ -236,10 +243,15 @@ export default class CombatLogParser extends EventEmitter {
     );
 
     if (logs.length === 0) {
-      console.error(`[CombatLogParser] No combat logs found in ${pathSpec}`);
+      if (!this.noLogsFound) {
+        console.error(`[CombatLogParser] No combat logs found in ${pathSpec}`);
+        this.noLogsFound = true;
+      }
+
       throw new Error(`[CombatLogParser] No combat logs found in ${pathSpec}`);
     }
 
+    this.noLogsFound = false;
     return logs[0].name;
   }
 
@@ -286,7 +298,6 @@ export default class CombatLogParser extends EventEmitter {
       try {
         latestLogFile = await this.getLatestLog(pathSpec);
       } catch {
-        console.error('[CombatLogParser] Did not find any logs to watch');
         return;
       }
 

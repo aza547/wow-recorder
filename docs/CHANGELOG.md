@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 332](https://github.com/aza547/wow-recorder/issues/332) - Disable hardware accelerated rendering of the app.
 - [Issue 336](https://github.com/aza547/wow-recorder/issues/336) - Fix a bug where we sometimes didn't refresh the GUI after a video was recorded. 
+- [Issue 337](https://github.com/aza547/wow-recorder/issues/337) - Fix a spammy log if there is an empty WoW log dir. 
 
 ## [3.6.0] - 2023-03-04
 ### Added
