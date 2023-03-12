@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 ### Changed
+- [NO-ISSUE] Upgrade OSN from 0.23.59 to 0.23.71. 
 ### Fixed
 - [Issue 325](https://github.com/aza547/wow-recorder/issues/325) - Fix the OBS process not closing correctly on quitting.
 - [Issue 338](https://github.com/aza547/wow-recorder/issues/338) - Resolve a problem when upgrading the app wouldn't shutdown OBS. 
