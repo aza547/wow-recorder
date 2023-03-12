@@ -618,14 +618,16 @@ export default class Recorder {
       this.videoSource.remove();
     }
 
+    if (this.obsRecordingFactory) {
+      osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
+    }
+
     this.wroteQueue.empty();
     this.wroteQueue.clearListeners();
     this.startQueue.empty();
     this.startQueue.clearListeners();
 
     try {
-      osn.NodeObs.InitShutdownSequence();
-      osn.NodeObs.RemoveSourceCallback();
       osn.NodeObs.OBS_service_removeCallback();
       osn.NodeObs.IPC.disconnect();
     } catch (e) {

@@ -636,14 +636,23 @@ ipcMain.on('recorder', async (_event, args) => {
  * Shutdown the app if all windows closed.
  */
 app.on('window-all-closed', async () => {
-  console.log('[Main] User closed app');
+  console.info('[Main] User closed app');
+  app.quit();
+});
+
+/**
+ * Important we shutdown OBS on the before-quit event as if we get closed by
+ * the installer we want to ensure we shutdown OBS, this is common when
+ * upgrading the app. See issue 325 and 338.
+ */
+app.on('before-quit', () => {
+  console.info('[Main] Running before-quit actions');
 
   if (recorder) {
-    await recorder.cleanupBuffer(0);
+    console.info('[Main] Shutting down OBS before quit');
     recorder.shutdownOBS();
+    recorder = undefined;
   }
-
-  app.quit();
 });
 
 /**
