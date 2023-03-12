@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 ### Changed
+### Fixed
+
+## [3.6.2] - 2023-03-12
+### Changed
 - [NO-ISSUE] Upgrade OSN from 0.23.59 to 0.23.71. 
 ### Fixed
 - [Issue 287](https://github.com/aza547/wow-recorder/issues/287) - Fix some ugly icons to look better. Thanks to Oliver for helping here. 
