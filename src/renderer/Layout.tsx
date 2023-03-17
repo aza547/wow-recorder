@@ -10,6 +10,8 @@ import { VideoPlayerSettings } from 'main/types';
 import { getConfigValue, setConfigValue } from 'settings/useSettings';
 import { DialogContentText } from '@mui/material';
 import { CopyBlock, dracula } from 'react-code-blocks';
+import Player from 'video.js/dist/types/player';
+import { VideoJS } from './VideoJS';
 
 import {
   videoTabsSx,
@@ -100,14 +102,16 @@ const a11yProps = (index: number) => {
 const videoPlayerSettings = ipc.sendSync('videoPlayerSettings', [
   'get',
 ]) as VideoPlayerSettings;
-const selectedCategory = getConfigValue<number>('selectedCategory');
 
+const selectedCategory = getConfigValue<number>('selectedCategory');
 let videoState: { [key: string]: any } = {};
 
 /**
  * The GUI itself.
  */
 export default function Layout() {
+  const videoPlayerRef: any = React.useRef(null);
+
   const [state, setState] = React.useState({
     autoPlay: false,
     categoryIndex: selectedCategory,
@@ -120,24 +124,31 @@ export default function Layout() {
     fatalErrorText: '',
   });
 
-  const getVideoPlayer = () => {
-    return document.getElementById('video-player') as HTMLMediaElement;
+  /**
+   * Used so we can have a handle to the player for things like seeking.
+   */
+  const onVideoPlayerReady = (player: Player) => {
+    videoPlayerRef.current = player;
   };
 
   /**
    * Read and store the video player state of 'volume' and 'muted' so that we may
    * restore it when selecting a different video.
    */
-  const handleVideoPlayerVolumeChange = (event: any) => {
-    const videoPlayerSettings = {
-      muted: event.target.muted,
-      volume: event.target.volume,
-    };
+  const handleVideoPlayerVolumeChange = (volume: number, muted: boolean) => {
+    state.videoVolume = volume;
+    state.videoMuted = muted;
+    const soundSettings: VideoPlayerSettings = { volume, muted };
+    ipc.sendMessage('videoPlayerSettings', ['set', soundSettings]);
+  };
 
-    state.videoMuted = videoPlayerSettings.muted;
-    state.videoVolume = videoPlayerSettings.volume;
-
-    ipc.sendMessage('videoPlayerSettings', ['set', videoPlayerSettings]);
+  /**
+   * Seek to a point in the video.
+   */
+  const videoSeek = (sec: number) => {
+    if (videoPlayerRef.current) {
+      videoPlayerRef.current.currentTime(sec);
+    }
   };
 
   /**
@@ -234,22 +245,8 @@ export default function Layout() {
     []
   );
 
-  /**
-   * When a new video is selected, let's set the video player volume and mute state
-   */
   React.useEffect(() => {
-    const video = getVideoPlayer();
-    if (video) {
-      video.muted = state.videoMuted;
-      video.volume = state.videoVolume;
-    }
-  }, [state.videoIndex]);
-
-  React.useEffect(() => {
-    const videoPlayer = getVideoPlayer();
-    if (videoPlayer) {
-      videoPlayer.currentTime = state.videoSeek;
-    }
+    videoSeek(state.videoSeek);
   }, [state.videoSeek]);
 
   /**
@@ -277,10 +274,15 @@ export default function Layout() {
 
     return (
       <TabPanel key={key} value={categoryIndex} index={index}>
-        <div className="video-container">
-          <video key="None" className="video" poster={poster} />
-        </div>
-        <div className="noVideos" />
+        <Box>
+          <VideoJS
+            options={{ poster, fill: true }}
+            onVolumeChange={handleVideoPlayerVolumeChange}
+            volume={state.videoVolume}
+            muted={state.videoMuted}
+            onReady={onVideoPlayerReady}
+          />
+        </Box>
       </TabPanel>
     );
   };
@@ -289,56 +291,63 @@ export default function Layout() {
    * Returns a video panel with videos.
    */
   const videoPanel = (index: number) => {
-    const { autoPlay } = state;
-    const { categoryIndex } = state;
-    const { videoIndex } = state;
+    const { autoPlay, categoryIndex, videoIndex } = state;
     const categoryState = state.videoState[category];
     const video = state.videoState[category][state.videoIndex];
     const videoFullPath = video.fullPath;
     const key = `videoPanel${index}`;
-    const isMythicPlus =
-      video.category === VideoCategory.MythicPlus &&
-      video.challengeMode !== undefined;
+
+    const videoJsOptions = {
+      autoplay: autoPlay,
+      controls: true,
+      responsive: true,
+      preload: 'auto',
+      fill: true,
+      playbackRates: [0.25, 0.5, 1, 1.5, 2],
+      sources: [
+        {
+          src: videoFullPath,
+          type: 'video/mp4',
+        },
+      ],
+    };
 
     return (
       <TabPanel key={key} value={categoryIndex} index={index}>
-        <div
-          className={`video-container${isMythicPlus ? ' mythic-keystone' : ''}`}
-        >
-          <video
-            autoPlay={autoPlay}
-            key={videoFullPath}
-            preload="auto" 
+        <Box>
+          <VideoJS
             id="video-player"
-            className="video"
-            poster={poster}
+            key={videoFullPath}
+            options={videoJsOptions}
             onVolumeChange={handleVideoPlayerVolumeChange}
-            controls
+            volume={state.videoVolume}
+            muted={state.videoMuted}
+            onReady={onVideoPlayerReady}
+          />
+        </Box>
+        <Box>
+          <Tabs
+            value={videoIndex}
+            onChange={handleChangeVideo}
+            variant="scrollable"
+            scrollButtons="auto"
+            aria-label="scrollable auto tabs example"
+            sx={{ ...videoTabsSx }}
+            className={styles.tabs}
+            TabIndicatorProps={{ style: { background: '#bb4220' } }}
+            TabScrollButtonProps={{ disabled: false, sx: videoScrollButtonSx }}
           >
-            <source src={videoFullPath} />
-          </video>
-        </div>
-        <Tabs
-          value={videoIndex}
-          onChange={handleChangeVideo}
-          variant="scrollable"
-          scrollButtons="auto"
-          aria-label="scrollable auto tabs example"
-          sx={{ ...videoTabsSx }}
-          className={styles.tabs}
-          TabIndicatorProps={{ style: { background: '#bb4220' } }}
-          TabScrollButtonProps={{ disabled: false, sx: videoScrollButtonSx }}
-        >
-          {categoryState.map((file: any) => {
-            return (
-              <VideoButton
-                key={file.fullPath}
-                state={state}
-                index={file.index}
-              />
-            );
-          })}
-        </Tabs>
+            {categoryState.map((file: any) => {
+              return (
+                <VideoButton
+                  key={file.fullPath}
+                  state={state}
+                  index={file.index}
+                />
+              );
+            })}
+          </Tabs>
+        </Box>
       </TabPanel>
     );
   };
@@ -367,7 +376,7 @@ export default function Layout() {
 
   return (
     <>
-      <Box sx={{ width: '250px', height: '240px', display: 'flex' }}>
+      <Box sx={{ display: 'flex' }}>
         <Tabs
           orientation="vertical"
           variant="standard"
