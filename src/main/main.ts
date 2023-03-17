@@ -403,8 +403,15 @@ ipcMain.on('mainWindow', (_event, args) => {
   }
 
   if (args[0] === 'quit') {
-    console.log('[Main] User clicked quit');
-    mainWindow.close();
+    console.log('[Main] User clicked quit button');
+
+    if (cfg.get<boolean>('minimizeOnQuit')) {
+      console.log('[Main] Hiding main window');
+      mainWindow.hide();
+    } else {
+      console.log('[Main] Closing main window');
+      mainWindow.close();
+    }
   }
 });
 

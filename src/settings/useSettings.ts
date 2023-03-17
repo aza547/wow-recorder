@@ -44,6 +44,7 @@ const configValues = {
   obsCaptureMode: getConfigValue<string>('obsCaptureMode'),
   obsRecEncoder: getConfigValue<string>('obsRecEncoder'),
   minKeystoneLevel: getConfigValue<number>('minKeystoneLevel'),
+  minimizeOnQuit: getConfigValue<number>('minimizeOnQuit'),
 };
 
 export default function useSettings() {

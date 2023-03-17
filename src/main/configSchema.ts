@@ -29,6 +29,7 @@ export type ConfigurationSchema = {
   recordBattlegrounds: boolean;
   captureCursor: boolean;
   minKeystoneLevel: number;
+  minimizeOnQuit: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -204,5 +205,10 @@ export const configSchema = {
     description: 'The minimum keystone level to record.',
     type: 'integer',
     default: 1,
+  },
+  minimizeOnQuit: {
+    description: 'Whether the close button should minimize rather than quit.',
+    type: 'boolean',
+    default: true,
   },
 };

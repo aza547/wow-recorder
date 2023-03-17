@@ -203,6 +203,25 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
           </IconButton>
         </Tooltip>
       </Box>
+
+      <Box component="span">
+        <FormGroup sx={formGroupStyle}>
+          <FormControlLabel
+            control={getCheckBox('minimizeOnQuit')}
+            label="Minimize on quit"
+            style={formControlLabelStyle}
+          />
+        </FormGroup>
+        <Tooltip
+          title={configSchema.minimizeOnQuit.description}
+          sx={{ position: 'fixed', left: '320px', top: '447px' }}
+        >
+          <IconButton>
+            <InfoIcon style={{ color: 'white' }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
       <InformationDialog
         title="🚫 Not a combat log directory"
         open={openDialog}
