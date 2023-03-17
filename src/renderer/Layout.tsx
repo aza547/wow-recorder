@@ -27,8 +27,6 @@ import InformationDialog from './InformationDialog';
 import LogButton from './LogButton';
 import DiscordButton from './DiscordButton';
 
-import 'video.js/dist/video-js.css';
-
 /**
  * For shorthand referencing.
  */
@@ -125,19 +123,6 @@ export default function Layout() {
   });
 
   const playerRef = React.useRef(null);
-
-  const handlePlayerReady = (player) => {
-    playerRef.current = player;
-
-    // You can handle player events here, for example:
-    player.on('waiting', () => {
-      console.log('player is waiting');
-    });
-
-    player.on('dispose', () => {
-      console.log('player will dispose');
-    });
-  };
 
   const getVideoPlayer = () => {
     return document.getElementById('video-player') as HTMLMediaElement;
@@ -296,15 +281,9 @@ export default function Layout() {
 
     return (
       <TabPanel key={key} value={categoryIndex} index={index}>
-        <div className="video-container">
-          <video
-            key="None"
-            className="video-js"
-            data-setup="{}"
-            poster={poster}
-          />
-        </div>
-        <div className="noVideos" />
+        <Box>
+          <VideoJS options={{ poster, fill: true }} />
+        </Box>
       </TabPanel>
     );
   };
@@ -313,9 +292,7 @@ export default function Layout() {
    * Returns a video panel with videos.
    */
   const videoPanel = (index: number) => {
-    const { autoPlay } = state;
-    const { categoryIndex } = state;
-    const { videoIndex } = state;
+    const { autoPlay, categoryIndex, videoIndex } = state;
     const categoryState = state.videoState[category];
     const video = state.videoState[category][state.videoIndex];
     const videoFullPath = video.fullPath;
@@ -338,8 +315,8 @@ export default function Layout() {
 
     return (
       <TabPanel key={key} value={categoryIndex} index={index}>
-        <Box sx={{ width: 1, height: 1 }}>
-          <VideoJS options={videoJsOptions} onReady={handlePlayerReady} />
+        <Box>
+          <VideoJS options={videoJsOptions} />
         </Box>
         <Box>
           <Tabs
