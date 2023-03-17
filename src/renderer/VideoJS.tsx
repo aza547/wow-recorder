@@ -5,26 +5,32 @@ import 'video.js/dist/video-js.css';
 export const VideoJS = (props) => {
   const videoRef: any = React.useRef(null);
   const playerRef: any = React.useRef(null);
-  const { options } = props;
+  const { options, onVolumeChange, onReady, volume, muted } = props;
 
   React.useEffect(() => {
     if (!playerRef.current) {
       const videoElement = document.createElement('video-js');
-
       videoElement.classList.add('vjs-big-play-centered');
       videoRef.current.appendChild(videoElement);
 
       playerRef.current = videojs(videoElement, options);
+
+      playerRef.current.on('ready', () => {
+        playerRef.current.muted(muted);
+        playerRef.current.volume(volume);
+        onReady(playerRef.current);
+      });
+
+      playerRef.current.on('volumechange', () => {
+        onVolumeChange(playerRef.current.volume(), playerRef.current.muted());
+      });
     }
-  }, [options, videoRef]);
+  }, [muted, onReady, onVolumeChange, options, videoRef, volume]);
 
-  // Dispose the Video.js player when the functional component unmounts
   React.useEffect(() => {
-    const player = playerRef.current;
-
     return () => {
-      if (player && !player.isDisposed()) {
-        player.dispose();
+      if (playerRef.current && !playerRef.current.isDisposed()) {
+        playerRef.current.dispose();
         playerRef.current = null;
       }
     };

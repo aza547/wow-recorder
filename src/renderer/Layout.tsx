@@ -10,6 +10,7 @@ import { VideoPlayerSettings } from 'main/types';
 import { getConfigValue, setConfigValue } from 'settings/useSettings';
 import { DialogContentText } from '@mui/material';
 import { CopyBlock, dracula } from 'react-code-blocks';
+import Player from 'video.js/dist/types/player';
 import { VideoJS } from './VideoJS';
 
 import {
@@ -109,6 +110,8 @@ let videoState: { [key: string]: any } = {};
  * The GUI itself.
  */
 export default function Layout() {
+  const videoPlayerRef: any = React.useRef(null);
+
   const [state, setState] = React.useState({
     autoPlay: false,
     categoryIndex: selectedCategory,
@@ -121,24 +124,31 @@ export default function Layout() {
     fatalErrorText: '',
   });
 
-  const getVideoPlayer = () => {
-    return document.getElementById('video-player') as HTMLMediaElement;
+  /**
+   * Used so we can have a handle
+   */
+  const onVideoPlayerReady = (player: Player) => {
+    videoPlayerRef.current = player;
   };
 
   /**
    * Read and store the video player state of 'volume' and 'muted' so that we may
    * restore it when selecting a different video.
    */
-  const handleVideoPlayerVolumeChange = (event: any) => {
-    const videoPlayerSettings = {
-      muted: event.target.muted,
-      volume: event.target.volume,
-    };
+  const handleVideoPlayerVolumeChange = (volume: number, muted: boolean) => {
+    state.videoVolume = volume;
+    state.videoMuted = muted;
+    const soundSettings: VideoPlayerSettings = { volume, muted };
+    ipc.sendMessage('videoPlayerSettings', ['set', soundSettings]);
+  };
 
-    state.videoMuted = videoPlayerSettings.muted;
-    state.videoVolume = videoPlayerSettings.volume;
-
-    ipc.sendMessage('videoPlayerSettings', ['set', videoPlayerSettings]);
+  /**
+   * Seek to a point in the video.
+   */
+  const videoSeek = (sec: number) => {
+    if (videoPlayerRef.current) {
+      videoPlayerRef.current.currentTime(sec);
+    }
   };
 
   /**
@@ -235,22 +245,8 @@ export default function Layout() {
     []
   );
 
-  /**
-   * When a new video is selected, let's set the video player volume and mute state
-   */
   React.useEffect(() => {
-    const video = getVideoPlayer();
-    if (video) {
-      video.muted = state.videoMuted;
-      video.volume = state.videoVolume;
-    }
-  }, [state.videoIndex]);
-
-  React.useEffect(() => {
-    const videoPlayer = getVideoPlayer();
-    if (videoPlayer) {
-      videoPlayer.currentTime = state.videoSeek;
-    }
+    videoSeek(state.videoSeek);
   }, [state.videoSeek]);
 
   /**
@@ -279,7 +275,13 @@ export default function Layout() {
     return (
       <TabPanel key={key} value={categoryIndex} index={index}>
         <Box>
-          <VideoJS options={{ poster, fill: true }} />
+          <VideoJS
+            options={{ poster, fill: true }}
+            onVolumeChange={handleVideoPlayerVolumeChange}
+            volume={state.videoVolume}
+            muted={state.videoMuted}
+            onReady={onVideoPlayerReady}
+          />
         </Box>
       </TabPanel>
     );
@@ -313,7 +315,15 @@ export default function Layout() {
     return (
       <TabPanel key={key} value={categoryIndex} index={index}>
         <Box>
-          <VideoJS options={videoJsOptions} />
+          <VideoJS
+            id="video-player"
+            key={videoFullPath}
+            options={videoJsOptions}
+            onVolumeChange={handleVideoPlayerVolumeChange}
+            volume={state.videoVolume}
+            muted={state.videoMuted}
+            onReady={onVideoPlayerReady}
+          />
         </Box>
         <Box>
           <Tabs

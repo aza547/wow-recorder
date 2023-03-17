@@ -577,7 +577,7 @@ ipcMain.on('getAudioDevices', (event) => {
 });
 
 /**
- * Set/Get global video player settings
+ * Set/get global video player settings
  */
 ipcMain.on('videoPlayerSettings', (event, args) => {
   switch (args[0]) {
