@@ -138,6 +138,8 @@ h2:not(.MuiDialogTitle-root) {
   padding-left: 0.25rem;
   justify-items: center;
   gap: .125rem 0rem;
+  position: fixed;
+  top: 275px;
 }
 
 .app-buttons div button {
