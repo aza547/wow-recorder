@@ -10,8 +10,7 @@ import { VideoPlayerSettings } from 'main/types';
 import { getConfigValue, setConfigValue } from 'settings/useSettings';
 import { DialogContentText } from '@mui/material';
 import { CopyBlock, dracula } from 'react-code-blocks';
-
-import VideoJS from './VideoJS';
+import { VideoJS } from './VideoJS';
 
 import {
   videoTabsSx,
@@ -102,8 +101,8 @@ const a11yProps = (index: number) => {
 const videoPlayerSettings = ipc.sendSync('videoPlayerSettings', [
   'get',
 ]) as VideoPlayerSettings;
-const selectedCategory = getConfigValue<number>('selectedCategory');
 
+const selectedCategory = getConfigValue<number>('selectedCategory');
 let videoState: { [key: string]: any } = {};
 
 /**
@@ -121,8 +120,6 @@ export default function Layout() {
     fatalError: false,
     fatalErrorText: '',
   });
-
-  const playerRef = React.useRef(null);
 
   const getVideoPlayer = () => {
     return document.getElementById('video-player') as HTMLMediaElement;
