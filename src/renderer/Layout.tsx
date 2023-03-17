@@ -125,7 +125,7 @@ export default function Layout() {
   });
 
   /**
-   * Used so we can have a handle
+   * Used so we can have a handle to the player for things like seeking.
    */
   const onVideoPlayerReady = (player: Player) => {
     videoPlayerRef.current = player;
