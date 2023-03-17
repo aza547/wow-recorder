@@ -11,6 +11,8 @@ import { getConfigValue, setConfigValue } from 'settings/useSettings';
 import { DialogContentText } from '@mui/material';
 import { CopyBlock, dracula } from 'react-code-blocks';
 
+import VideoJS from './VideoJS';
+
 import {
   videoTabsSx,
   categoryTabSx,
@@ -24,6 +26,8 @@ import poster from '../../assets/poster/poster.png';
 import InformationDialog from './InformationDialog';
 import LogButton from './LogButton';
 import DiscordButton from './DiscordButton';
+
+import 'video.js/dist/video-js.css';
 
 /**
  * For shorthand referencing.
@@ -119,6 +123,21 @@ export default function Layout() {
     fatalError: false,
     fatalErrorText: '',
   });
+
+  const playerRef = React.useRef(null);
+
+  const handlePlayerReady = (player) => {
+    playerRef.current = player;
+
+    // You can handle player events here, for example:
+    player.on('waiting', () => {
+      console.log('player is waiting');
+    });
+
+    player.on('dispose', () => {
+      console.log('player will dispose');
+    });
+  };
 
   const getVideoPlayer = () => {
     return document.getElementById('video-player') as HTMLMediaElement;
@@ -278,7 +297,12 @@ export default function Layout() {
     return (
       <TabPanel key={key} value={categoryIndex} index={index}>
         <div className="video-container">
-          <video key="None" className="video" poster={poster} />
+          <video
+            key="None"
+            className="video-js"
+            data-setup="{}"
+            poster={poster}
+          />
         </div>
         <div className="noVideos" />
       </TabPanel>
@@ -296,49 +320,50 @@ export default function Layout() {
     const video = state.videoState[category][state.videoIndex];
     const videoFullPath = video.fullPath;
     const key = `videoPanel${index}`;
-    const isMythicPlus =
-      video.category === VideoCategory.MythicPlus &&
-      video.challengeMode !== undefined;
+
+    const videoJsOptions = {
+      autoplay: autoPlay,
+      controls: true,
+      responsive: true,
+      preload: 'auto',
+      fill: true,
+      playbackRates: [0.25, 0.5, 1, 1.5, 2],
+      sources: [
+        {
+          src: videoFullPath,
+          type: 'video/mp4',
+        },
+      ],
+    };
 
     return (
       <TabPanel key={key} value={categoryIndex} index={index}>
-        <div
-          className={`video-container${isMythicPlus ? ' mythic-keystone' : ''}`}
-        >
-          <video
-            autoPlay={autoPlay}
-            key={videoFullPath}
-            preload="auto" 
-            id="video-player"
-            className="video"
-            poster={poster}
-            onVolumeChange={handleVideoPlayerVolumeChange}
-            controls
+        <Box sx={{ width: 1, height: 1 }}>
+          <VideoJS options={videoJsOptions} onReady={handlePlayerReady} />
+        </Box>
+        <Box>
+          <Tabs
+            value={videoIndex}
+            onChange={handleChangeVideo}
+            variant="scrollable"
+            scrollButtons="auto"
+            aria-label="scrollable auto tabs example"
+            sx={{ ...videoTabsSx }}
+            className={styles.tabs}
+            TabIndicatorProps={{ style: { background: '#bb4220' } }}
+            TabScrollButtonProps={{ disabled: false, sx: videoScrollButtonSx }}
           >
-            <source src={videoFullPath} />
-          </video>
-        </div>
-        <Tabs
-          value={videoIndex}
-          onChange={handleChangeVideo}
-          variant="scrollable"
-          scrollButtons="auto"
-          aria-label="scrollable auto tabs example"
-          sx={{ ...videoTabsSx }}
-          className={styles.tabs}
-          TabIndicatorProps={{ style: { background: '#bb4220' } }}
-          TabScrollButtonProps={{ disabled: false, sx: videoScrollButtonSx }}
-        >
-          {categoryState.map((file: any) => {
-            return (
-              <VideoButton
-                key={file.fullPath}
-                state={state}
-                index={file.index}
-              />
-            );
-          })}
-        </Tabs>
+            {categoryState.map((file: any) => {
+              return (
+                <VideoButton
+                  key={file.fullPath}
+                  state={state}
+                  index={file.index}
+                />
+              );
+            })}
+          </Tabs>
+        </Box>
       </TabPanel>
     );
   };
@@ -367,7 +392,7 @@ export default function Layout() {
 
   return (
     <>
-      <Box sx={{ width: '250px', height: '240px', display: 'flex' }}>
+      <Box sx={{ display: 'flex' }}>
         <Tabs
           orientation="vertical"
           variant="standard"
