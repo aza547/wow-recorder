@@ -54,7 +54,7 @@ const getChallengeModeVideoMarkers = (video: any) => {
   const videoMarkers: any[] = [];
 
   video.timeline.forEach((segment: any) => {
-    const markerText = segment.SegmentType;
+    const markerText = segment.segmentType;
     const type = segment.segmentType as TimelineSegmentType;
     let markerClass: string;
 
