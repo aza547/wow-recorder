@@ -245,6 +245,7 @@
     "tsc": "^2.0.4",
     "tss-react": "^4.1.1",
     "video.js": "^8.0.4",
+    "videojs-markers": "^1.0.1",
     "wait-queue": "^1.1.4"
   },
   "devEngines": {

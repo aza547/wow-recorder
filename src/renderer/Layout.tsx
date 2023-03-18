@@ -26,6 +26,7 @@ import poster from '../../assets/poster/poster.png';
 import InformationDialog from './InformationDialog';
 import LogButton from './LogButton';
 import DiscordButton from './DiscordButton';
+import { addVideoMarkers } from './rendererutils';
 
 /**
  * For shorthand referencing.
@@ -124,11 +125,21 @@ export default function Layout() {
     fatalErrorText: '',
   });
 
+  const categories = Object.values(VideoCategory);
+  const category = categories[state.categoryIndex];
+
   /**
    * Used so we can have a handle to the player for things like seeking.
    */
   const onVideoPlayerReady = (player: Player) => {
     videoPlayerRef.current = player;
+
+    // Don't want to try call addVideoMarkers before we've loaded the
+    // video state.
+    if (state.videoState[category]) {
+      const video = state.videoState[category][state.videoIndex];
+      addVideoMarkers(video, player);
+    }
   };
 
   /**
@@ -186,9 +197,6 @@ export default function Layout() {
       };
     });
   };
-
-  const categories = Object.values(VideoCategory);
-  const category = categories[state.categoryIndex];
 
   /**
    * MUI styles.

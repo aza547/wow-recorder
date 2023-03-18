@@ -1183,3 +1183,27 @@ input[type=reset].btn-block,
 input[type=submit].btn-block {
   width: 100%
 }
+
+.red-video-marker {
+  background-color: red !important;
+  width: 10px !important;
+  border-radius: 0% !important;
+} 
+
+.green-video-marker {
+  background-color: #1eff00 !important;
+  width: 10px !important;
+  border-radius: 0% !important;
+} 
+
+.purple-video-marker {
+  background-color: #a335ee !important;
+  width: 10px !important;
+  border-radius: 0% !important;
+} 
+
+.orange-video-marker {
+  background-color: #ff8000 !important;
+  width: 10px !important;
+  border-radius: 0% !important;
+} 

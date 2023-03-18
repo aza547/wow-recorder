@@ -1,6 +1,8 @@
 import React from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
+import 'videojs-markers/dist/videojs-markers';
+import 'videojs-markers/dist/videojs.markers.css';
 
 export const VideoJS = (props) => {
   const videoRef: any = React.useRef(null);
