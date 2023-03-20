@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [Issue 340](https://github.com/aza547/wow-recorder/issues/340) - Option to minimize on clicking quit button.
 - [Issue 144](https://github.com/aza547/wow-recorder/issues/144) - Add video timeline markers for solo shuffle and mythic+.
+- [NO-ISSUE](https://github.com/aza547/wow-recorder/issues/144) - Add 5120x1440 resolution.
 
 ### Changed
 - [Issue 144](https://github.com/aza547/wow-recorder/issues/144) - Use the VideoJS player for playback.
