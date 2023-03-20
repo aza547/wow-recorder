@@ -28,12 +28,14 @@ const getShuffleVideoMarkers = (video: any) => {
   const videoMarkers: any[] = [];
 
   video.timeline.forEach((segment: any) => {
-    const markerText = `Round: ${segment.round}`;
+    let markerText = `Round ${segment.round}`;
     let markerClass: string;
 
     if (segment.result) {
+      markerText = `${markerText} (Win)`;
       markerClass = 'green-video-marker';
     } else {
+      markerText = `${markerText} (Loss)`;
       markerClass = 'red-video-marker';
     }
 

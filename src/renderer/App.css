@@ -38,7 +38,20 @@ div#root {
 }
 
 .vjs-marker {
-  z-index: 0;
+  z-index: 1;
+}
+
+.video-js .vjs-play-progress:before {
+  z-index: 2;
+}
+
+.vjs-tip {
+  bottom: 40px;
+}
+
+.vjs-tip .vjs-tip-inner{
+  background-color: white;
+  color: black;
 }
 
 .App {
