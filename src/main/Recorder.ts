@@ -4,6 +4,7 @@ import fs from 'fs';
 import * as osn from 'obs-studio-node';
 import { IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
+
 import {
   EOBSOutputSignal,
   ERecordingFormat,
@@ -342,14 +343,23 @@ export default class Recorder {
 
     recFactory.format = ERecordingFormat.MP4;
     recFactory.useStreamEncoders = false;
+    recFactory.overwrite = false;
+    recFactory.noSpace = false;
 
     recFactory.videoEncoder = osn.VideoEncoderFactory.create(
       this.cfg.get<string>('obsRecEncoder'),
       'video-encoder'
     );
 
-    recFactory.overwrite = false;
-    recFactory.noSpace = false;
+    const kBitRate = 1000 * this.cfg.get<number>('obsKBitRate');
+
+    recFactory.videoEncoder.update({
+      rate_control: 'VBR',
+      bitrate: kBitRate,
+      max_bitrate: kBitRate,
+    });
+
+    console.info('Video encoder settings:', recFactory.videoEncoder.settings);
 
     recFactory.signalHandler = (signal) => {
       this.handleSignal(signal);
@@ -876,14 +886,6 @@ export default class Recorder {
       );
       return;
     }
-
-    // If we don't do this here, the bitrate somehow gets forgotten after the
-    // first recording and we default to 5000 kbps, which is obviously bad.
-    // See issue 321.
-    this.obsRecordingFactory.videoEncoder.update({
-      rate_control: 'VBR',
-      bitrate: 1000 * this.cfg.get<number>('obsKBitRate'),
-    });
 
     this.obsRecordingFactory.start();
 
