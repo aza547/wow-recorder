@@ -33,6 +33,14 @@ div#root {
   top: 0px;
 }
 
+.video-js .vjs-tech {
+  height: calc(100% - 30px);
+}
+
+.vjs-marker {
+  z-index: 0;
+}
+
 .App {
   height: 100%;
   width: 100%;

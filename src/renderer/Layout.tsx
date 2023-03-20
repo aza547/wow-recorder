@@ -311,6 +311,7 @@ export default function Layout() {
       responsive: true,
       preload: 'auto',
       fill: true,
+      inactivityTimeout: 0,
       playbackRates: [0.25, 0.5, 1, 1.5, 2],
       sources: [
         {
