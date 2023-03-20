@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 144](https://github.com/aza547/wow-recorder/issues/144) - Use the VideoJS player for playback.
 
 ### Fixed
+[Issue 334](https://github.com/aza547/wow-recorder/issues/344) - Remove some unsupported AMD encoders.
 
 ## [3.6.2] - 2023-03-12
 ### Changed

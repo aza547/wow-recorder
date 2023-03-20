@@ -20,9 +20,13 @@ const encoderMap = obsAvailableEncoders
   .filter((encoder) => !encoder.includes('hevc'))
   .filter((encoder) => !encoder.includes('svt'))
   .filter((encoder) => !encoder.includes('aom'))
+  .filter((encoder) => !encoder.includes('265'))
+  .filter((encoder) => !encoder.includes('fallback'))
+  .filter((encoder) => !encoder.includes('texture'))
   .map((encoder) => {
     const isHardwareEncoder =
       encoder.includes('amd') ||
+      encoder.includes('amf') ||
       encoder.includes('nvenc') ||
       encoder.includes('qsv');
 
@@ -145,14 +149,14 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
       <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
         <FormControl sx={{ my: 1 }}>
           <InputLabel id="obs-rec-encoder-label" sx={style}>
-            Video recording encoder
+            Video Encoder
           </InputLabel>
           <Select
             name="obsRecEncoder"
             labelId="obs-rec-encoder-label"
             id="obs-rec-encoder"
             value={config.obsRecEncoder}
-            label="Video recording encoder"
+            label="Video Encoder"
             onChange={onChange}
             sx={style}
           >
