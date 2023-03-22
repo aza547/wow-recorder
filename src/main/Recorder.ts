@@ -348,20 +348,32 @@ export default class Recorder {
 
     const encoder = this.cfg.get<string>('obsRecEncoder');
 
+    // This function is defined here:
+    //   (client) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-client/source/video-encoder.cpp
+    //   (server) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-server/source/osn-video-encoder.cpp
+    //
+    // Ideally we'd pass the 3rd arg with all the settings, but it seems that
+    // hasn't been implemented so we instead call .update() shortly after.
     recFactory.videoEncoder = osn.VideoEncoderFactory.create(
       encoder,
-      'video-encoder'
+      'WR-video-encoder',
+      {}
     );
 
     const kBitRate = 1000 * this.cfg.get<number>('obsKBitRate');
 
+    // Not totally clear why AMF is a special case here. Theory is that it is
+    // a plugin to OBS (it's a seperate github repo), and the likes of the
+    // nvenc/x264 encoders are native to OBS so have homogenized settings.
     if (encoder === 'amd_amf_h264') {
-      // See https://github.com/obsproject/obs-amd-encoder/blob/master/include/amf-encoder.hpp.
       recFactory.videoEncoder.update({
+        // Strings defined here: https://github.com/obsproject/obs-amd-encoder/blob/master/include/strings.hpp
+        // Defaults set here: https://github.com/obsproject/obs-amd-encoder/blob/master/source/enc-h264.cpp
         'Bitrate.Target': kBitRate,
         'Bitrate.Peak': 1.5 * kBitRate,
-        RateControlMethod: 3,
-        QualityPreset: 3,
+        // Below enums are defined here: https://github.com/obsproject/obs-amd-encoder/blob/master/include/amf-encoder.hpp
+        RateControlMethod: 3, // "PeakConstrainedVariableBitrate"
+        QualityPreset: 3, // "Quality"; but not sure if this is actually doing anything given the other settings.
       });
     } else {
       recFactory.videoEncoder.update({
