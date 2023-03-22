@@ -346,18 +346,30 @@ export default class Recorder {
     recFactory.overwrite = false;
     recFactory.noSpace = false;
 
+    const encoder = this.cfg.get<string>('obsRecEncoder');
+
     recFactory.videoEncoder = osn.VideoEncoderFactory.create(
-      this.cfg.get<string>('obsRecEncoder'),
+      encoder,
       'video-encoder'
     );
 
     const kBitRate = 1000 * this.cfg.get<number>('obsKBitRate');
 
-    recFactory.videoEncoder.update({
-      rate_control: 'VBR',
-      bitrate: kBitRate,
-      max_bitrate: kBitRate,
-    });
+    if (encoder === 'amd_amf_h264') {
+      // See https://github.com/obsproject/obs-amd-encoder/blob/master/include/amf-encoder.hpp.
+      recFactory.videoEncoder.update({
+        'Bitrate.Target': kBitRate,
+        'Bitrate.Peak': 1.5 * kBitRate,
+        RateControlMethod: 3,
+        QualityPreset: 3,
+      });
+    } else {
+      recFactory.videoEncoder.update({
+        rate_control: 'VBR',
+        bitrate: kBitRate,
+        max_bitrate: kBitRate,
+      });
+    }
 
     console.info('Video encoder settings:', recFactory.videoEncoder.settings);
 
