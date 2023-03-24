@@ -367,13 +367,10 @@ export default class Recorder {
     // nvenc/x264 encoders are native to OBS so have homogenized settings.
     if (encoder === 'amd_amf_h264') {
       recFactory.videoEncoder.update({
-        // Strings defined here: https://github.com/obsproject/obs-amd-encoder/blob/master/include/strings.hpp
-        // Defaults set here: https://github.com/obsproject/obs-amd-encoder/blob/master/source/enc-h264.cpp
-        'Bitrate.Target': kBitRate,
-        'Bitrate.Peak': 1.5 * kBitRate,
-        // Below enums are defined here: https://github.com/obsproject/obs-amd-encoder/blob/master/include/amf-encoder.hpp
-        RateControlMethod: 3, // "PeakConstrainedVariableBitrate"
-        QualityPreset: 3, // "Quality"; but not sure if this is actually doing anything given the other settings.
+        rate_control: 'VBR',
+        bitrate: kBitRate,
+        max_bitrate: kBitRate,
+        'Bitrate.Peak': kBitRate,
       });
     } else {
       recFactory.videoEncoder.update({
