@@ -6,15 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+
+### Fixed
+## [3.7.0] - 2023-03-24
+### Added
 - [Issue 340](https://github.com/aza547/wow-recorder/issues/340) - Option to minimize on clicking quit button.
 - [Issue 144](https://github.com/aza547/wow-recorder/issues/144) - Add video timeline markers for solo shuffle and mythic+.
 - [NO-ISSUE](https://github.com/aza547/wow-recorder/issues/144) - Add 5120x1440 resolution.
 
 ### Changed
-- [Issue 144](https://github.com/aza547/wow-recorder/issues/144) - Use the VideoJS player for playback.
+- [Issue 144](https://github.com/aza547/wow-recorder/issues/144) - Use the Video JS player for playback.
 
 ### Fixed
-[Issue 334](https://github.com/aza547/wow-recorder/issues/344) - Remove some unsupported AMD encoders.
+- [Issue 334](https://github.com/aza547/wow-recorder/issues/344) - Fix bitrate for AMD GPUs, signficantly improving video quality.
+- [Issue 334](https://github.com/aza547/wow-recorder/issues/344) - Remove some unsupported encoders.
 
 ## [3.6.2] - 2023-03-12
 ### Changed
