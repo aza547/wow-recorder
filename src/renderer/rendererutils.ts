@@ -1,4 +1,5 @@
 import { TimelineSegmentType } from 'main/keystone';
+import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import Player from 'video.js/dist/types/player';
 
@@ -19,6 +20,33 @@ const getFormattedDuration = (duration: number) => {
   durationDate.setTime(duration * 1000);
   const formattedDuration = durationDate.toISOString().substr(14, 5);
   return formattedDuration;
+};
+
+/**
+ * Return death markers for a video.
+ */
+const getDeathMarkers = (video: any) => {
+  const videoMarkers: any[] = [];
+
+  video.deaths.forEach((death: any) => {
+    const [name] = ambiguate(death.name);
+    const markerText = `Death (${name})`;
+    let markerClass: string;
+
+    if (death.friendly) {
+      markerClass = 'red-video-marker-wide';
+    } else {
+      markerClass = 'green-video-marker-wide';
+    }
+
+    videoMarkers.push({
+      time: death.timestamp,
+      text: markerText,
+      class: markerClass,
+    });
+  });
+
+  return videoMarkers;
 };
 
 /**
@@ -89,7 +117,7 @@ const addVideoMarkers = (video: any, player: Player) => {
   } else if (category === VideoCategory.MythicPlus) {
     videoMarkers = getChallengeModeVideoMarkers(video);
   } else {
-    return;
+    videoMarkers = getDeathMarkers(video);
   }
 
   player.markers({

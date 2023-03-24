@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { FakeChangeEvent, ISettingsPanelProps } from 'main/types';
+import { ESupportedEncoders } from 'main/obsEnums';
 import { configSchema } from '../main/configSchema';
 import { openDirectorySelectorDialog } from './settingUtils';
 
@@ -16,23 +17,20 @@ const obsAvailableEncoders: string[] = ipc.sendSync('settingsWindow', [
   'getObsAvailableRecEncoders',
 ]);
 
-const encoderMap = obsAvailableEncoders
-  .filter((encoder) => !encoder.includes('hevc'))
-  .filter((encoder) => !encoder.includes('svt'))
-  .filter((encoder) => !encoder.includes('aom'))
-  .filter((encoder) => !encoder.includes('265'))
-  .filter((encoder) => !encoder.includes('fallback'))
-  .filter((encoder) => !encoder.includes('texture'))
-  .map((encoder) => {
-    const isHardwareEncoder =
-      encoder.includes('amd') ||
-      encoder.includes('amf') ||
-      encoder.includes('nvenc') ||
-      encoder.includes('qsv');
+const encoderFilter = (enc: string) => {
+  return Object.values(ESupportedEncoders).includes(enc as ESupportedEncoders);
+};
 
-    const encoderType = isHardwareEncoder ? 'Hardware' : 'Software';
-    return { name: encoder, type: encoderType };
-  })
+const mapEncoderTypes = (enc: string) => {
+  const encoder = enc as ESupportedEncoders;
+  const isHardwareEncoder = encoder !== ESupportedEncoders.OBS_X264;
+  const encoderType = isHardwareEncoder ? 'Hardware' : 'Software';
+  return { name: enc, type: encoderType };
+};
+
+const encoderMap = obsAvailableEncoders
+  .filter(encoderFilter)
+  .map(mapEncoderTypes)
   .sort((a, b) => a.type.localeCompare(b.type));
 
 export default function GeneralSettings(props: ISettingsPanelProps) {

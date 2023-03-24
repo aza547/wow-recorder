@@ -1217,6 +1217,18 @@ input[type=submit].btn-block {
   border-radius: 0% !important;
 } 
 
+.red-video-marker-wide {
+  background-color: red !important;
+  width: 25px !important;
+  border-radius: 0% !important;
+} 
+
+.green-video-marker-wide {
+  background-color: #1eff00 !important;
+  width: 25px !important;
+  border-radius: 0% !important;
+} 
+
 .purple-video-marker {
   background-color: #a335ee !important;
   width: 10px !important;

@@ -10,6 +10,7 @@ import {
   ERecordingFormat,
   ERecordingState,
   ESourceFlags,
+  ESupportedEncoders,
 } from './obsEnums';
 
 import {
@@ -346,7 +347,7 @@ export default class Recorder {
     recFactory.overwrite = false;
     recFactory.noSpace = false;
 
-    const encoder = this.cfg.get<string>('obsRecEncoder');
+    const encoder = this.cfg.get<string>('obsRecEncoder') as ESupportedEncoders;
 
     // This function is defined here:
     //   (client) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-client/source/video-encoder.cpp
@@ -362,21 +363,18 @@ export default class Recorder {
 
     const kBitRate = 1000 * this.cfg.get<number>('obsKBitRate');
 
-    // Not totally clear why AMF is a special case here. Theory is that it is
-    // a plugin to OBS (it's a seperate github repo), and the likes of the
+    recFactory.videoEncoder.update({
+      rate_control: 'VBR',
+      bitrate: kBitRate,
+      max_bitrate: kBitRate,
+    });
+
+    // Not totally clear why AMF is a special case here. Theory is that as it
+    // is a plugin to OBS (it's a seperate github repo), and the likes of the
     // nvenc/x264 encoders are native to OBS so have homogenized settings.
-    if (encoder === 'amd_amf_h264') {
+    if (encoder === ESupportedEncoders.AMD_AMF_H264) {
       recFactory.videoEncoder.update({
-        rate_control: 'VBR',
-        bitrate: kBitRate,
-        max_bitrate: kBitRate,
         'Bitrate.Peak': kBitRate,
-      });
-    } else {
-      recFactory.videoEncoder.update({
-        rate_control: 'VBR',
-        bitrate: kBitRate,
-        max_bitrate: kBitRate,
       });
     }
 

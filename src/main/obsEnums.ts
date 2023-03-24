@@ -109,3 +109,10 @@ export const enum ERecordingFormat {
   TS = 'ts',
   M3M8 = 'm3m8',
 }
+
+export enum ESupportedEncoders {
+  AMD_AMF_H264 = 'amd_amf_h264',
+  FFMPEG_NVENC = 'ffmpeg_nvenc',
+  JIM_NVENC = 'jim_nvenc',
+  OBS_X264 = 'obs_x264',
+}
