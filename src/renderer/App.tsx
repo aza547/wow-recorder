@@ -1,19 +1,33 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { TNavigatorState } from 'main/types';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
-import VersionUpdateWidget from './VersionUpdateWidget';
-import SavingStatus from './SavingStatus';
-import RecorderStatus from './RecorderStatus';
-
-import './App.css';
 import BottomStatusBar from './BottomStatusBar';
+import './App.css';
 
 const Application = () => {
+  const [navigation, setNavigationState] = React.useState<TNavigatorState>(
+    {
+      // @@@ TODO get selectedCategory config?
+      categoryIndex: -1,
+      videoIndex: -1,
+    }
+  );
+
+  console.log(navigation);
+
   return (
     <div className="App">
       <RendererTitleBar />
-      <Layout />
-      <BottomStatusBar />
+      <Layout
+        navigation={navigation}
+        setNavigationState={setNavigationState}
+      />
+      <BottomStatusBar
+        navigation={navigation}
+        setNavigationState={setNavigationState}
+      />
     </div>
   );
 };

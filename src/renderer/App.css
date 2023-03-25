@@ -150,10 +150,10 @@ h2:not(.MuiDialogTitle-root) {
   font-family: sans-serif;
 }
 
-#status-text {
+#navigator {
   display: fixed;
   position: absolute;
-  left: 200px;
+  left: 500px;
   bottom: 7px;
   color: white;
 }

@@ -237,6 +237,15 @@ enum TAudioSourceType {
   output = 'wasapi_output_capture',
 }
 
+/**
+ * Tracks the position of the app and the navigator component. A value
+ * of -1 for either of the fields here indicates no selection for the field.
+ */
+type TNavigatorState = {
+  categoryIndex: number;
+  videoIndex: number;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -261,4 +270,5 @@ export {
   IOBSDevice,
   IDevice,
   TAudioSourceType,
+  TNavigatorState,
 };

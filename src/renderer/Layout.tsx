@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { VideoPlayerSettings } from 'main/types';
+import { TNavigatorState, VideoPlayerSettings } from 'main/types';
 import { getConfigValue, setConfigValue } from 'settings/useSettings';
 
 import {
@@ -19,6 +19,12 @@ import InformationDialog from './InformationDialog';
 import LogButton from './LogButton';
 import DiscordButton from './DiscordButton';
 import { addVideoMarkers } from './rendererutils';
+import HomePage from './HomePage';
+
+interface IProps {
+  navigation: TNavigatorState;
+  setNavigationState: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+}
 
 /**
  * For shorthand referencing.
@@ -40,13 +46,14 @@ let videoState: { [key: string]: any } = {};
 /**
  * The GUI itself.
  */
-export default function Layout() {
+const Layout: React.FC<IProps> = (props: IProps) => {
+  const { navigation, setNavigationState } = props;
+  const { categoryIndex, videoIndex } = navigation;
+
   const videoPlayerRef: any = React.useRef(null);
 
   const [state, setState] = React.useState({
     autoPlay: false,
-    categoryIndex: selectedCategory,
-    videoIndex: -1,
     videoState,
     videoMuted: videoPlayerSettings.muted,
     videoVolume: videoPlayerSettings.volume, // (Double) 0.00 - 1.00
@@ -56,7 +63,7 @@ export default function Layout() {
   });
 
   const categories = Object.values(VideoCategory);
-  const category = categories[state.categoryIndex];
+  const category = categories[categoryIndex];
 
   /**
    * Used so we can have a handle to the player for things like seeking.
@@ -67,7 +74,7 @@ export default function Layout() {
     // Don't want to try call addVideoMarkers before we've loaded the
     // video state.
     if (state.videoState[category]) {
-      const video = state.videoState[category][state.videoIndex];
+      const video = state.videoState[category][videoIndex];
       addVideoMarkers(video, player);
     }
   };
@@ -93,34 +100,13 @@ export default function Layout() {
   };
 
   /**
-   * Update the state variable following a change of selected category.
-   */
-  const handleChangeCategory = (
-    _event: React.SyntheticEvent,
-    newValue: number
-  ) => {
-    setConfigValue('selectedCategory', newValue);
-
-    setState((prevState) => {
-      return {
-        ...prevState,
-        autoPlay: false,
-        categoryIndex: newValue,
-        videoIndex: -1,
-      };
-    });
-  };
-
-  /**
    * Update the state variable following a change of selected video.
    */
   const handleChangeVideo = (index: number) => {
-    setState((prevState) => {
+    setNavigationState((prevState) => {
       return {
         ...prevState,
-        autoPlay: true,
         videoIndex: index,
-        videoSeek: 0,
       };
     });
   };
@@ -158,13 +144,7 @@ export default function Layout() {
        * Attach listener for seeking in the video on load/unload
        */
       ipc.on('seekVideo', (vIndex, vSeekTime) => {
-        setState((prevState) => {
-          return {
-            ...prevState,
-            videoIndex: parseInt(vIndex as string, 10),
-            videoSeek: parseInt(vSeekTime as string, 10),
-          };
-        });
+        // @@@ TODO fix this
       });
     },
     // From React documentation:
@@ -182,8 +162,8 @@ export default function Layout() {
   /**
    * Returns a video panel with videos.
    */
-  const videoPanel = () => {
-    const { autoPlay, videoIndex } = state;
+  const getVideoPanel = () => {
+    const { autoPlay } = state;
     const video = state.videoState[category][videoIndex];
     const videoFullPath = video.fullPath;
 
@@ -243,6 +223,7 @@ export default function Layout() {
                       <VideoButton
                         key={video.fullPath}
                         state={state}
+                        navigation={navigation}
                         index={video.index}
                       />
                     </ListItemButton>
@@ -255,47 +236,18 @@ export default function Layout() {
     );
   };
 
-  const getContent = () => {
-    if (state.videoIndex !== undefined && state.videoIndex >= 0) {
-      return videoPanel();
-    }
-    return getVideoSelection();
-  };
-
   const quitApplication = () => ipc.sendMessage('mainWindow', ['quit']);
 
-  return (
-    <>
-      {getContent()}
-      <InformationDialog
-        title="😭 Fatal Error"
-        open={state.fatalError}
-        buttons={['quit']}
-        onClose={quitApplication}
-      >
-        <DialogContentText component="span">
-          Warcraft Recorder hit a problem it can not recover from and needs to
-          close.
-          <br />
-          <br />
-          To get help with this issue, please share the following in the Discord
-          help channel:
-          <ul>
-            <li>The error text shown below</li>
-            <li>The application log, click the log button to find them</li>
-          </ul>
-          <CopyBlock
-            text={state.fatalErrorText}
-            language="JavaScript"
-            showLineNumbers={false}
-            theme={dracula}
-          />
-          <div className="app-buttons-fatal-error">
-            <LogButton />
-            <DiscordButton />
-          </div>
-        </DialogContentText>
-      </InformationDialog>
-    </>
-  );
-}
+  // @@@ TODO fix up error prompt I deleted here
+  if (categoryIndex < 0) {
+    return <HomePage setNavigationState={setNavigationState} />;
+  }
+
+  if (videoIndex < 0) {
+    return getVideoSelection();
+  }
+
+  return getVideoPanel();
+};
+
+export default Layout;

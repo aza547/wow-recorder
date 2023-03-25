@@ -33,11 +33,9 @@ const ipc = window.electron.ipcRenderer;
 const categories = Object.values(VideoCategory);
 
 export default function VideoButton(props: any) {
-  const { state, index } = props;
-
-  const { categoryIndex } = state;
+  const { state, index, navigation } = props;
+  const { categoryIndex } = navigation;
   const category = categories[categoryIndex] as VideoCategory;
-
   const video = state.videoState[category][index];
   const videoPath = video.fullPath;
 
@@ -162,8 +160,9 @@ export default function VideoButton(props: any) {
    * Seek the selected video to the specified relative timestamp
    */
   const seekVideo = (index: number, timestamp: number) => {
-    ipc.sendMessage('contextMenu', ['seekVideo', index, timestamp]);
-    handleCloseMenu();
+    // @@@ TODO FIX
+    // ipc.sendMessage('contextMenu', ['seekVideo', index, timestamp]);
+    // handleCloseMenu();
   };
 
   /**
