@@ -709,19 +709,6 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   194: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
 };
 
-const videoTabsSx = {
-  position: 'fixed',
-  bottom: '1px',
-  left: '1px',
-  width: '100%',
-  height: '110px',
-  borderColor: '#000000',
-  bgcolor: '#272e48',
-  textColor: 'secondary',
-  overflow: 'visible',
-  borderTop: '1px solid',
-};
-
 const categoryTabSx = {
   padding: '12px',
   bgcolor: '#272e48',
@@ -753,14 +740,6 @@ const videoButtonSx = {
   borderRadius: 2,
 };
 
-const videoScrollButtonSx = {
-  bgcolor: '#272e48',
-  border: '1px solid black',
-  borderRadius: 2,
-  color: 'white',
-  margin: 0.5,
-  opacity: 1,
-};
 
 type WoWCharacterDamageType = 'melee' | 'ranged';
 type WoWCharacterRoleType = 'tank' | 'healer' | 'damage';
@@ -1138,11 +1117,9 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
 
 export {
   months,
-  videoTabsSx,
   categoryTabSx,
   categoryTabsSx,
   videoButtonSx,
-  videoScrollButtonSx,
   zones,
   retailArenas,
   classicArenas,

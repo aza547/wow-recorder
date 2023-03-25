@@ -1,28 +1,20 @@
 import * as React from 'react';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
-
 import Box from '@mui/material/Box';
-import { makeStyles } from 'tss-react/mui';
-
 import { VideoPlayerSettings } from 'main/types';
 import { getConfigValue, setConfigValue } from 'settings/useSettings';
-import { DialogContentText } from '@mui/material';
+
+import {
+  DialogContentText,
+  List,
+  ListItem,
+  ListItemButton,
+} from '@mui/material';
+
 import { CopyBlock, dracula } from 'react-code-blocks';
 import Player from 'video.js/dist/types/player';
 import { VideoJS } from './VideoJS';
-
-import {
-  videoTabsSx,
-  categoryTabSx,
-  categoryTabsSx,
-  videoScrollButtonSx,
-} from '../main/constants';
-
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
-import poster from '../../assets/poster/poster.png';
 import InformationDialog from './InformationDialog';
 import LogButton from './LogButton';
 import DiscordButton from './DiscordButton';
@@ -32,68 +24,6 @@ import { addVideoMarkers } from './rendererutils';
  * For shorthand referencing.
  */
 const ipc = window.electron.ipcRenderer;
-
-/**
- * Needed to style the tabs with the right color.
- */
-const useStyles = makeStyles()({
-  tabs: {
-    '& .MuiTab-root.Mui-selected': {
-      color: '#bb4220',
-    },
-    scrollButtons: {
-      // this does nothing atm
-      '&.Mui-disabled': {
-        opacity: 1,
-      },
-    },
-  },
-});
-
-/**
- * TabPanelProps
- */
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-/**
- * MUI TabPanel
- */
-const TabPanel = (props: TabPanelProps) => {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      className="TabPanel"
-      role="tabpanel"
-      hidden={value !== index}
-      id={`vertical-tabpanel-${index}`}
-      aria-labelledby={`vertical-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 0, width: '100%' }}>
-          <Typography component="span" sx={{ width: '100%' }}>
-            {children}
-          </Typography>
-        </Box>
-      )}
-    </div>
-  );
-};
-
-/**
- * Some MUI specific props.
- */
-const a11yProps = (index: number) => {
-  return {
-    id: `vertical-tab-${index}`,
-    'aria-controls': `vertical-tabpanel-${index}`,
-  };
-};
 
 /**
  * Get video player settings initially when the component is loaded. We store
@@ -116,7 +46,7 @@ export default function Layout() {
   const [state, setState] = React.useState({
     autoPlay: false,
     categoryIndex: selectedCategory,
-    videoIndex: 0,
+    videoIndex: -1,
     videoState,
     videoMuted: videoPlayerSettings.muted,
     videoVolume: videoPlayerSettings.volume, // (Double) 0.00 - 1.00
@@ -176,7 +106,7 @@ export default function Layout() {
         ...prevState,
         autoPlay: false,
         categoryIndex: newValue,
-        videoIndex: 0,
+        videoIndex: -1,
       };
     });
   };
@@ -184,24 +114,16 @@ export default function Layout() {
   /**
    * Update the state variable following a change of selected video.
    */
-  const handleChangeVideo = (
-    _event: React.SyntheticEvent,
-    newValue: number
-  ) => {
+  const handleChangeVideo = (index: number) => {
     setState((prevState) => {
       return {
         ...prevState,
         autoPlay: true,
-        videoIndex: newValue,
+        videoIndex: index,
         videoSeek: 0,
       };
     });
   };
-
-  /**
-   * MUI styles.
-   */
-  const { classes: styles } = useStyles();
 
   // This is effectively equivalent to componentDidMount() in
   // React Component classes
@@ -258,52 +180,12 @@ export default function Layout() {
   }, [state.videoSeek]);
 
   /**
-   * Returns TSX for the tab buttons for category selection.
-   */
-  const generateTab = (tabIndex: number) => {
-    const key = `tab${tabIndex}`;
-
-    return (
-      <Tab
-        key={key}
-        label={categories[tabIndex]}
-        {...a11yProps(tabIndex)}
-        sx={{ ...categoryTabSx }}
-      />
-    );
-  };
-
-  /**
-   * Returns a video panel where no videos are present.
-   */
-  const noVideoPanel = (index: number) => {
-    const { categoryIndex } = state;
-    const key = `noVideoPanel${index}`;
-
-    return (
-      <TabPanel key={key} value={categoryIndex} index={index}>
-        <Box>
-          <VideoJS
-            options={{ poster, fill: true }}
-            onVolumeChange={handleVideoPlayerVolumeChange}
-            volume={state.videoVolume}
-            muted={state.videoMuted}
-            onReady={onVideoPlayerReady}
-          />
-        </Box>
-      </TabPanel>
-    );
-  };
-
-  /**
    * Returns a video panel with videos.
    */
-  const videoPanel = (index: number) => {
-    const { autoPlay, categoryIndex, videoIndex } = state;
-    const categoryState = state.videoState[category];
-    const video = state.videoState[category][state.videoIndex];
+  const videoPanel = () => {
+    const { autoPlay, videoIndex } = state;
+    const video = state.videoState[category][videoIndex];
     const videoFullPath = video.fullPath;
-    const key = `videoPanel${index}`;
 
     const videoJsOptions = {
       autoplay: autoPlay,
@@ -322,8 +204,8 @@ export default function Layout() {
     };
 
     return (
-      <TabPanel key={key} value={categoryIndex} index={index}>
-        <Box>
+      <>
+        <Box sx={{ display: 'flex', height: 'calc(100% - 70px)' }}>
           <VideoJS
             id="video-player"
             key={videoFullPath}
@@ -334,77 +216,57 @@ export default function Layout() {
             onReady={onVideoPlayerReady}
           />
         </Box>
-        <Box>
-          <Tabs
-            value={videoIndex}
-            onChange={handleChangeVideo}
-            variant="scrollable"
-            scrollButtons="auto"
-            aria-label="scrollable auto tabs example"
-            sx={{ ...videoTabsSx }}
-            className={styles.tabs}
-            TabIndicatorProps={{ style: { background: '#bb4220' } }}
-            TabScrollButtonProps={{ disabled: false, sx: videoScrollButtonSx }}
-          >
-            {categoryState.map((file: any) => {
-              return (
-                <VideoButton
-                  key={file.fullPath}
-                  state={state}
-                  index={file.index}
-                />
-              );
-            })}
-          </Tabs>
-        </Box>
-      </TabPanel>
+      </>
     );
   };
 
-  /**
-   * Returns TSX for the video player and video selection tabs.
-   */
-  const generateTabPanel = (tabIndex: number) => {
-    if (!(category in state.videoState)) {
-      return noVideoPanel(tabIndex);
+  const getVideoSelection = () => {
+    const categoryState = state.videoState[category];
+
+    return (
+      <>
+        <Box
+          sx={{
+            display: 'flex',
+            height: 'calc(100% - 70px)',
+            overflowY: 'scroll',
+          }}
+        >
+          <List>
+            {categoryState &&
+              categoryState.map((video: any) => {
+                return (
+                  <ListItem disablePadding key={video.fullPath}>
+                    <ListItemButton
+                      onClick={() => handleChangeVideo(video.index)}
+                    >
+                      <VideoButton
+                        key={video.fullPath}
+                        state={state}
+                        index={video.index}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+          </List>
+        </Box>
+      </>
+    );
+  };
+
+  const getContent = () => {
+    if (state.videoIndex !== undefined && state.videoIndex >= 0) {
+      return videoPanel();
     }
-
-    const haveVideos = state.videoState[category][state.videoIndex];
-
-    if (!haveVideos) {
-      return noVideoPanel(tabIndex);
-    }
-
-    return videoPanel(tabIndex);
+    return getVideoSelection();
   };
 
   const quitApplication = () => ipc.sendMessage('mainWindow', ['quit']);
 
-  const tabNumbers = [...Array(8).keys()];
-  const { categoryIndex } = state;
-
   return (
     <>
-      <Box sx={{ display: 'flex' }}>
-        <Tabs
-          orientation="vertical"
-          variant="standard"
-          value={categoryIndex}
-          onChange={handleChangeCategory}
-          aria-label="Vertical tabs example"
-          sx={{ ...categoryTabsSx }}
-          className={styles.tabs}
-          TabIndicatorProps={{ style: { background: '#bb4220' } }}
-        >
-          {tabNumbers.map((tabNumber: number) => {
-            return generateTab(tabNumber);
-          })}
-        </Tabs>
-
-        {tabNumbers.map((tabNumber: number) => {
-          return generateTabPanel(tabNumber);
-        })}
-      </Box>
+      {getContent()}
       <InformationDialog
         title="😭 Fatal Error"
         open={state.fatalError}

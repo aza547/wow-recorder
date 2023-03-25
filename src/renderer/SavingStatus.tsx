@@ -12,17 +12,15 @@ export default function SavingStatus() {
   }, []);
 
   return (
-    <div id="saving-status">
-      <div>
-        {status === SaveStatus.Saving && (
-          <img
-            id="saving-icon"
-            title="Saving a recording..."
-            alt="icon"
-            src={savingIcon}
-          />
-        )}
-      </div>
+    <div id="saving-button-div">
+      <button
+        id="rec-status-button"
+        type="button"
+        // onClick={openDiscordURL}
+        title="Status"
+      >
+        <img alt="icon" src={savingIcon} height="25px" width="25px" />
+      </button>
     </div>
   );
 }

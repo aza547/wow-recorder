@@ -1,29 +1,35 @@
 import React from 'react';
+import icon from '../../assets/icon/update.png';
 
 const ipc = window.electron.ipcRenderer;
 
 export default function VersionUpdateWidget() {
+  const [downloadUrl, setDownloadUrl] = React.useState<string>('');
+
   const openReleaseDownloadUrl = () => {
     ipc.sendMessage('openURL', [downloadUrl]);
   };
 
-  const [downloadUrl, setDownloadUrl] = React.useState<string>('');
-
   React.useEffect(() => {
-    ipc.on('updateAvailable', (downloadUrl) => {
-      setDownloadUrl(downloadUrl as string);
+    ipc.on('updateAvailable', (url) => {
+      setDownloadUrl(url as string);
     });
   }, []);
-  
-  if(!downloadUrl) { return null; }
+
+  if (!downloadUrl) {
+    return null;
+  }
 
   return (
-    <div className="version-update-widget">
-      <div>
-        <a href="#" onClick={openReleaseDownloadUrl}>
-          New update available! Click here to download.
-        </a>
-      </div>
+    <div id="version-update-widget">
+      <button
+        id="update-button"
+        type="button"
+        onClick={openReleaseDownloadUrl}
+        title="New update available, click here to download!"
+      >
+        <img alt="icon" src={icon} height="25px" width="25px" />
+      </button>
     </div>
   );
 }
