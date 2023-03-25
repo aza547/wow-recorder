@@ -6,27 +6,38 @@ import RendererTitleBar from './RendererTitleBar';
 import BottomStatusBar from './BottomStatusBar';
 import './App.css';
 
+const ipc = window.electron.ipcRenderer;
+
 const Application = () => {
-  const [navigation, setNavigationState] = React.useState<TNavigatorState>(
-    {
-      // @@@ TODO get selectedCategory config?
-      categoryIndex: -1,
-      videoIndex: -1,
-    }
-  );
+  const [navigation, setNavigation] = React.useState<TNavigatorState>({
+    categoryIndex: -1,
+    videoIndex: -1,
+  });
+
+  const [videoState, setVideoState] = React.useState<any>({});
 
   console.log(navigation);
+  console.log(videoState);
+
+  React.useEffect(() => {
+    ipc.on('refreshState', async () => {
+      setVideoState(await ipc.invoke('getVideoState', []));
+    });
+  }, []);
 
   return (
     <div className="App">
       <RendererTitleBar />
       <Layout
         navigation={navigation}
-        setNavigationState={setNavigationState}
+        setNavigation={setNavigation}
+        videoState={videoState}
+        setVideoState={setVideoState}
       />
       <BottomStatusBar
         navigation={navigation}
-        setNavigationState={setNavigationState}
+        setNavigation={setNavigation}
+        videostate={videoState}
       />
     </div>
   );

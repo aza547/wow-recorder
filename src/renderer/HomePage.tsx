@@ -8,14 +8,14 @@ import { TNavigatorState } from 'main/types';
 const categories = Object.values(VideoCategory);
 
 interface IProps {
-  setNavigationState: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
-  const { setNavigationState } = props;
+  const { setNavigation } = props;
 
   const handleClick = (category: VideoCategory) => {
-    setNavigationState({
+    setNavigation({
       categoryIndex: categories.indexOf(category),
       videoIndex: -1,
     });

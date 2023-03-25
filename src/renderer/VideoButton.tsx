@@ -23,20 +23,26 @@ import {
   getVideoResultText,
 } from 'main/helpers';
 
-import { SoloShuffleTimelineSegment } from 'main/types';
+import { SoloShuffleTimelineSegment, TNavigatorState } from 'main/types';
 import * as Images from './images';
 import { getFormattedDuration } from './rendererutils';
 import { VideoCategory } from '../types/VideoCategory';
+
+interface IProps {
+  index: number;
+  navigation: TNavigatorState;
+  videostate: any;
+}
 
 // For shorthand referencing.
 const ipc = window.electron.ipcRenderer;
 const categories = Object.values(VideoCategory);
 
-export default function VideoButton(props: any) {
-  const { state, index, navigation } = props;
+export default function VideoButton(props: IProps) {
+  const { index, navigation, videostate } = props;
   const { categoryIndex } = navigation;
   const category = categories[categoryIndex] as VideoCategory;
-  const video = state.videoState[category][index];
+  const video = videostate[category][index];
   const videoPath = video.fullPath;
 
   // Need to not be const as it will be modified later if a Mythic+.

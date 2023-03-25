@@ -10,11 +10,12 @@ import Navigator from './Navigator';
 
 interface IProps {
   navigation: TNavigatorState;
-  setNavigationState: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  videostate: any;
 }
 
 const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigationState } = props;
+  const { navigation, setNavigation, videostate } = props;
 
   return (
     <div id="status-bar">
@@ -26,7 +27,8 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
       <div id="navigator">
         <Navigator
           navigation={navigation}
-          setNavigationState={setNavigationState}
+          setNavigation={setNavigation}
+          videostate={videostate}
         />
       </div>
       <div className="app-buttons">

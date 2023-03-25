@@ -1,29 +1,19 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import { TNavigatorState, VideoPlayerSettings } from 'main/types';
-import { getConfigValue, setConfigValue } from 'settings/useSettings';
-
-import {
-  DialogContentText,
-  List,
-  ListItem,
-  ListItemButton,
-} from '@mui/material';
-
-import { CopyBlock, dracula } from 'react-code-blocks';
+import { List, ListItem, ListItemButton } from '@mui/material';
 import Player from 'video.js/dist/types/player';
 import { VideoJS } from './VideoJS';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
-import InformationDialog from './InformationDialog';
-import LogButton from './LogButton';
-import DiscordButton from './DiscordButton';
 import { addVideoMarkers } from './rendererutils';
 import HomePage from './HomePage';
 
 interface IProps {
   navigation: TNavigatorState;
-  setNavigationState: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  videoState: any;
+  setVideoState: React.Dispatch<React.SetStateAction<any>>;
 }
 
 /**
@@ -40,21 +30,17 @@ const videoPlayerSettings = ipc.sendSync('videoPlayerSettings', [
   'get',
 ]) as VideoPlayerSettings;
 
-const selectedCategory = getConfigValue<number>('selectedCategory');
-let videoState: { [key: string]: any } = {};
-
 /**
  * The GUI itself.
  */
 const Layout: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigationState } = props;
+  const { navigation, setNavigation, videoState, setVideoState } = props;
   const { categoryIndex, videoIndex } = navigation;
 
   const videoPlayerRef: any = React.useRef(null);
 
   const [state, setState] = React.useState({
     autoPlay: false,
-    videoState,
     videoMuted: videoPlayerSettings.muted,
     videoVolume: videoPlayerSettings.volume, // (Double) 0.00 - 1.00
     videoSeek: 0,
@@ -73,8 +59,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
     // Don't want to try call addVideoMarkers before we've loaded the
     // video state.
-    if (state.videoState[category]) {
-      const video = state.videoState[category][videoIndex];
+    if (videoState[category]) {
+      const video = videoState[category][videoIndex];
       addVideoMarkers(video, player);
     }
   };
@@ -103,7 +89,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
    * Update the state variable following a change of selected video.
    */
   const handleChangeVideo = (index: number) => {
-    setNavigationState((prevState) => {
+    setNavigation((prevState) => {
       return {
         ...prevState,
         videoIndex: index,
@@ -115,21 +101,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   // React Component classes
   React.useEffect(
     () => {
-      /**
-       * Refresh handler.
-       */
-      ipc.on('refreshState', async () => {
-        videoState = await ipc.invoke('getVideoState', []);
-
-        setState((prevState) => {
-          return {
-            ...prevState,
-            autoPlay: false,
-            videoState,
-          };
-        });
-      });
-
       ipc.on('fatalError', async (stack) => {
         setState((prevState) => {
           return {
@@ -164,7 +135,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
    */
   const getVideoPanel = () => {
     const { autoPlay } = state;
-    const video = state.videoState[category][videoIndex];
+    const video = videoState[category][videoIndex];
     const videoFullPath = video.fullPath;
 
     const videoJsOptions = {
@@ -201,7 +172,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const getVideoSelection = () => {
-    const categoryState = state.videoState[category];
+    const categoryState = videoState[category];
 
     return (
       <>
@@ -222,8 +193,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                     >
                       <VideoButton
                         key={video.fullPath}
-                        state={state}
                         navigation={navigation}
+                        videostate={videoState}
                         index={video.index}
                       />
                     </ListItemButton>
@@ -240,7 +211,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
   // @@@ TODO fix up error prompt I deleted here
   if (categoryIndex < 0) {
-    return <HomePage setNavigationState={setNavigationState} />;
+    return <HomePage setNavigation={setNavigation} />;
   }
 
   if (videoIndex < 0) {

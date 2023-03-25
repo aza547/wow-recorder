@@ -6,13 +6,14 @@ import { VideoCategory } from 'types/VideoCategory';
 
 interface IProps {
   navigation: TNavigatorState;
-  setNavigationState: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  videostate: any;
 }
 
 const categories = Object.values(VideoCategory);
 
 const Navigator: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigationState } = props;
+  const { navigation, setNavigation, videostate} = props;
 
   const [categoryMenuAnchor, setCategoryMenuAnchor] =
     React.useState<null | HTMLElement>(null);
@@ -24,7 +25,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
   };
 
   const goHome = () => {
-    setNavigationState({
+    setNavigation({
       categoryIndex: -1,
       videoIndex: -1,
     });
@@ -35,9 +36,8 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
   };
 
   const selectCategory = (category: VideoCategory) => {
-    // @@@ TODO update selectedCategory config?
     setCategoryMenuAnchor(null);
-    setNavigationState({
+    setNavigation({
       categoryIndex: categories.indexOf(category),
       videoIndex: -1,
     });
@@ -49,6 +49,16 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
     }
 
     return categories[navigation.categoryIndex];
+  };
+
+  const getVideoButtonText = (): string => {
+    if (navigation.videoIndex < 0) {
+      return 'Video';
+    }
+
+    const category = categories[navigation.categoryIndex];
+    const video = videostate[category][navigation.videoIndex];
+    return `${category} - ${video.date} - ${video.time}`;
   };
 
   return (
@@ -98,7 +108,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
             borderRadius: '1',
           }}
         >
-          Video
+          {getVideoButtonText()}
         </Button>
       </Stack>
     </>
