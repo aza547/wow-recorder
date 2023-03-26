@@ -151,10 +151,6 @@ h2:not(.MuiDialogTitle-root) {
 }
 
 #navigator {
-  display: fixed;
-  position: absolute;
-  left: 500px;
-  bottom: 7px;
   color: white;
 }
 
@@ -291,58 +287,11 @@ h2:not(.MuiDialogTitle-root) {
   background-size: cover;
 }
 
-.encounter {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-}
-
-.zone {
-  top: 22.5px;
-  left: 5px;
-  position: absolute;
-}
-
-.duration {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-}
-
-.time {
-  top: 22.5px;
-  right: 5px;
-  position: absolute;
-}
-
-.date {
-  top: 5px;
-  right: 5px;
-  position: absolute;
-}
-
-.name {
-  bottom: 5px;
-  left: 27.5px;
-  position: absolute;
-}
-
-.specIcon {
-  bottom: 0px;
-  left: 5px;
-  position: absolute;
-}
-
-.specIcon > img {
+#spec-icon {
   width: 20px;
   height: 20px;
 }
 
-.result {
-  bottom: 22.5px;
-  right: 5px;
-  position: absolute;
-}
 
 .goodResult {
   -webkit-text-fill-color: #1eff00;
@@ -362,18 +311,6 @@ h2:not(.MuiDialogTitle-root) {
 
 .badResult {
   -webkit-text-fill-color: red;
-}
-
-.difficulty {
-  top: 40px;
-  left: 5px;
-  position: absolute;
-}
-
-.instance-difficulty {
-  top: 22.5px;
-  left: 5px;
-  position: absolute;
 }
 
 .difficulty-normal {

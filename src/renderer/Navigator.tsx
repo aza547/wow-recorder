@@ -1,5 +1,5 @@
-import { Home } from '@mui/icons-material';
-import { Button, IconButton, Menu, MenuItem, Stack } from '@mui/material';
+import { Home, KeyboardDoubleArrowUp } from '@mui/icons-material';
+import { Box, Button, IconButton, Menu, MenuItem, Stack } from '@mui/material';
 import { TNavigatorState } from 'main/types';
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
@@ -13,7 +13,7 @@ interface IProps {
 const categories = Object.values(VideoCategory);
 
 const Navigator: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigation, videostate} = props;
+  const { navigation, setNavigation, videostate } = props;
 
   const [categoryMenuAnchor, setCategoryMenuAnchor] =
     React.useState<null | HTMLElement>(null);
@@ -51,7 +51,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
     return categories[navigation.categoryIndex];
   };
 
-  const getVideoButtonText = (): string => {
+  const getVideoNavButtonText = (): string => {
     if (navigation.videoIndex < 0) {
       return 'Video';
     }
@@ -63,54 +63,62 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
 
   return (
     <>
-      <Stack spacing={1} direction="row" sx={{ height: '20px' }}>
-        <IconButton
-          component="label"
-          onClick={goHome}
-          sx={{
-            color: 'white',
-          }}
-        >
-          <Home />
-        </IconButton>
-        <Button
-          variant="contained"
-          onClick={toggleCategoryMenu}
-          sx={{
-            bgcolor: '#272e48',
-            border: '1px solid black',
-            borderRadius: '1',
-          }}
-        >
-          {getCategoryButtonText()}
-        </Button>
-        <Menu
-          id="categories-menu"
-          anchorEl={categoryMenuAnchor}
-          open={categoryMenuOpen}
-          onClose={handleClose}
-          MenuListProps={{
-            'aria-labelledby': 'basic-button',
-          }}
-        >
-          {categories.map((category: VideoCategory) => (
-            <MenuItem key={category} onClick={() => selectCategory(category)}>
-              {category}
-            </MenuItem>
-          ))}
-        </Menu>
-        <Button
-          variant="contained"
-          sx={{
-            bgcolor: '#272e48',
-            color: 'white',
-            border: '1px solid black',
-            borderRadius: '1',
-          }}
-        >
-          {getVideoButtonText()}
-        </Button>
-      </Stack>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        sx={{ height: '35px' }}
+      >
+        <Stack spacing={1} direction="row" sx={{ height: '25px' }}>
+          <IconButton
+            component="label"
+            onClick={goHome}
+            sx={{
+              color: 'white',
+            }}
+          >
+            <Home />
+          </IconButton>
+          <Button
+            variant="contained"
+            onClick={toggleCategoryMenu}
+            startIcon={<KeyboardDoubleArrowUp />}
+            sx={{
+              bgcolor: '#272e48',
+              border: '1px solid black',
+              borderRadius: '1',
+            }}
+          >
+            {getCategoryButtonText()}
+          </Button>
+          <Menu
+            id="categories-menu"
+            anchorEl={categoryMenuAnchor}
+            open={categoryMenuOpen}
+            onClose={handleClose}
+            MenuListProps={{
+              'aria-labelledby': 'basic-button',
+            }}
+          >
+            {categories.map((category: VideoCategory) => (
+              <MenuItem key={category} onClick={() => selectCategory(category)}>
+                {category}
+              </MenuItem>
+            ))}
+          </Menu>
+          <Button
+            variant="contained"
+            sx={{
+              bgcolor: '#272e48',
+              color: 'white',
+              border: '1px solid black',
+              borderRadius: '1',
+            }}
+          >
+            {getVideoNavButtonText()}
+          </Button>
+        </Stack>
+      </Box>
     </>
   );
 };

@@ -1,5 +1,17 @@
 import * as React from 'react';
-import { Tab, Menu, MenuItem, Divider } from '@mui/material';
+import {
+  Tab,
+  Menu,
+  MenuItem,
+  Divider,
+  List,
+  Box,
+  CardMedia,
+  Card,
+  Typography,
+  CardContent,
+  Grid,
+} from '@mui/material';
 
 import {
   videoButtonSx,
@@ -27,6 +39,7 @@ import { SoloShuffleTimelineSegment, TNavigatorState } from 'main/types';
 import * as Images from './images';
 import { getFormattedDuration } from './rendererutils';
 import { VideoCategory } from '../types/VideoCategory';
+import { border } from '@mui/system';
 
 interface IProps {
   index: number;
@@ -304,86 +317,94 @@ export default function VideoButton(props: IProps) {
   const difficultyClass = isMythicPlus ? 'instance-difficulty' : 'difficulty';
 
   return (
-    <>
-      <Tab
-        label={
-          <div
-            id={videoPath}
-            className={buttonClasses.join(' ')}
-            style={{
-              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url(${buttonImage})`,
-              backgroundSize: '200px 100px',
-            }}
-            onContextMenu={openMenu}
-          >
-            <div className="duration">{formattedDuration}</div>
-            <div className="date">{video.date}</div>
-            <div className="time">{video.time}</div>
-            <div className={`result ${resultClass}`}>
-              {isProtected && <Protected sx={{ color: 'white' }} />}
-              {resultText}
-            </div>
-            <div className="specIcon">
-              <img src={specIcon} alt="spec icon" />
-            </div>
-            <div className={`${playerClass} name`}>{playerName}</div>
-
-            {isMythicPlus || (
-              <div>
-                <div className="encounter">{video.encounter}</div>
-                <div className="zone">{video.zoneName}</div>
-              </div>
-            )}
-
-            {isMythicPlus && (
-              <div>
-                <div className="encounter">{dungeonsByMapId[video.mapID]}</div>
-                <div className="instance-difficulty difficulty-mythic">
-                  +{video.level}
-                </div>
-              </div>
-            )}
-
-            {isRaid && videoInstanceDifficulty && (
-              <div
-                className={`${difficultyClass} difficulty-${videoInstanceDifficulty.difficultyID}`}
-              >
-                {videoInstanceDifficulty.difficulty}
-              </div>
-            )}
-          </div>
-        }
-        key={videoPath}
-        sx={{ ...videoButtonSx }}
-        {...props}
-      />
-      <Menu
-        id={videoPath}
-        anchorReference="anchorPosition"
-        anchorPosition={{ top: mouseY, left: mouseX }}
-        transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        open={open}
-        onClose={handleCloseMenu}
-        MenuListProps={{
-          onMouseEnter: mouseEnterMenu,
-          onMouseLeave: mouseExitMenu,
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        width: '100%',
+      }}
+    >
+      <Card
+        sx={{
+          height: '50px',
+          width: '100px',
+          border: '1px solid black',
+          borderRadius: '1%',
         }}
       >
-        {keystoneTimelineSegments.length > 0 && keystoneTimelineSegments}
-        {soloShuffleTimelineSegments.length > 0 && soloShuffleTimelineSegments}
-        <MenuItem onClick={() => deleteVideo(videoPath)}>Delete</MenuItem>
-        <MenuItem onClick={() => saveVideo(videoPath)}>
-          {isProtected && (
-            <ListItemIcon>
-              <Check />
-            </ListItemIcon>
+        <CardMedia
+          component="img"
+          image={buttonImage}
+          sx={{ objectFit: 'cover', height: '50px', width: '100px' }}
+        />
+      </Card>
+      <Card
+        sx={{
+          minWidth: 700,
+          border: '1px solid black',
+          borderRadius: '1%',
+          bgcolor: '#1A233A',
+          ml: 2,
+        }}
+      >
+        <CardContent
+          sx={{
+            p: 0,
+            '&:last-child': { pb: 0 },
+            m: 1,
+            position: 'absolute',
+            color: 'white',
+          }}
+        >
+          <Box sx={{ position: 'absolute', top: '0px', left: '0px' }}>
+            <img id="spec-icon" src={specIcon} alt="spec icon" />
+          </Box>
+
+          <Box sx={{ position: 'absolute', top: '0px', left: '22.5px' }}>
+            <div className={`${playerClass}`}>{playerName}</div>
+          </Box>
+
+          <Box sx={{ position: 'absolute', top: '0px', left: '100px' }}>
+            {formattedDuration}
+          </Box>
+
+          <Box sx={{ position: 'absolute', top: '0px', left: '200px' }}>
+            {video.date}
+          </Box>
+
+          <Box sx={{ position: 'absolute', top: '0px', left: '300px' }}>
+            {video.time}
+          </Box>
+
+          {isMythicPlus || (
+            <>
+              <Box sx={{ position: 'absolute', top: '0px', left: '400px' }}>
+                {video.encounter}
+              </Box>
+              <Box sx={{ position: 'absolute', top: '0px', left: '500px' }}>
+                {video.zoneName}
+              </Box>
+            </>
           )}
-          Save
-        </MenuItem>
-        <MenuItem onClick={() => openLocation(videoPath)}>
-          Open Location
-        </MenuItem>
-      </Menu>
-    </>
+
+          {isMythicPlus && (
+            <>
+              <Box sx={{ position: 'absolute', top: '0px', left: '400px' }}>
+                {dungeonsByMapId[video.mapID]}
+              </Box>
+              <Box sx={{ position: 'absolute', top: '0px', left: '500px' }}>
+                <div className="difficulty-mythic">+{video.level}</div>
+              </Box>
+            </>
+          )}
+
+          {isRaid && videoInstanceDifficulty && (
+            <Box sx={{ position: 'absolute', top: '0px', left: '600px' }}>
+              {videoInstanceDifficulty.difficulty}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
