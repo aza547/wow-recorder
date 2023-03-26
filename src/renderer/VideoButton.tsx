@@ -27,6 +27,7 @@ import { SoloShuffleTimelineSegment, TNavigatorState } from 'main/types';
 import * as Images from './images';
 import { getFormattedDuration, getWoWClassColor } from './rendererutils';
 import { VideoCategory } from '../types/VideoCategory';
+import ArenaCompDisplay from './ArenaCompDisplay';
 
 interface IProps {
   index: number;
@@ -360,18 +361,24 @@ export default function VideoButton(props: IProps) {
             justifyContent: 'left',
             color: playerClassColor,
             fontWeight: '750',
-            fontFamily:
-              '"Arial Narrow","Roboto","Helvetica","Arial",sans-serif',
+            fontFamily: '"Arial Narrow","Arial",sans-serif',
           }}
         >
           {playerName}
         </Typography>
+
+        <ArenaCompDisplay
+          combatants={video.combatants}
+          playerTeamID={video.player._teamID}
+        />
 
         <Typography
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            fontWeight: '750',
+            fontFamily: '"Arial Narrow","Arial",sans-serif',
           }}
         >
           {formattedDuration}
@@ -382,6 +389,8 @@ export default function VideoButton(props: IProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            fontWeight: '750',
+            fontFamily: '"Arial Narrow","Arial",sans-serif',
           }}
         >
           {video.time} {video.date}
@@ -394,6 +403,8 @@ export default function VideoButton(props: IProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                fontWeight: '750',
+                fontFamily: '"Arial Narrow","Arial",sans-serif',
               }}
             >
               {video.encounter}
@@ -404,6 +415,8 @@ export default function VideoButton(props: IProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                fontWeight: '750',
+                fontFamily: '"Arial Narrow","Arial",sans-serif',
               }}
             >
               {video.zoneName}
@@ -418,6 +431,8 @@ export default function VideoButton(props: IProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                fontWeight: '750',
+                fontFamily: '"Arial Narrow","Arial",sans-serif',
               }}
             >
               {dungeonsByMapId[video.mapID]}
@@ -427,6 +442,8 @@ export default function VideoButton(props: IProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                fontWeight: '750',
+                fontFamily: '"Arial Narrow","Arial",sans-serif',
               }}
             >
               +{video.level}
@@ -440,6 +457,8 @@ export default function VideoButton(props: IProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              fontWeight: '750',
+              fontFamily: '"Arial Narrow","Arial",sans-serif',
             }}
           >
             {videoInstanceDifficulty.difficulty}
@@ -451,6 +470,8 @@ export default function VideoButton(props: IProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            fontWeight: '750',
+            fontFamily: '"Arial Narrow","Arial",sans-serif',
           }}
         >
           {resultText}
