@@ -1,3 +1,4 @@
+import { Box } from '@mui/material';
 import React from 'react';
 import icon from '../../assets/icon/small-icon.png';
 
@@ -25,7 +26,16 @@ export default function RendererTitleBar() {
   }, []);
 
   return (
-    <div id="title-bar">
+    <Box
+      id="title-bar"
+      sx={{
+        position: 'absolute',
+        borderBottom: '1px solid black',
+        height: '35px',
+        width: '100%',
+        top: '0px',
+      }}
+    >
       <div id="logo">
         <img alt="icon" src={icon} height="25px" width="25px" />
       </div>
@@ -41,6 +51,6 @@ export default function RendererTitleBar() {
           ✖
         </button>
       </div>
-    </div>
+    </Box>
   );
 }

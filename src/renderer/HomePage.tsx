@@ -1,9 +1,10 @@
 import List from '@mui/material/List';
 import ListItemText from '@mui/material/ListItemText';
 import WorkIcon from '@mui/icons-material/Work';
-import { Box, ListItemButton, ListItemIcon } from '@mui/material';
+import { Box, ListItemButton, ListItemIcon, Typography } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
 import { TNavigatorState } from 'main/types';
+import icon from '../../assets/icon/large-icon.png';
 
 const categories = Object.values(VideoCategory);
 
@@ -36,24 +37,44 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
   };
 
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      sx={{
-        width: '100%',
-        height: 'calc(100% - 70px)',
-        padding: '0',
-        color: 'white',
-      }}
-    >
-      <List
-        component="nav"
-        sx={{ border: '1px solid black', borderRadius: '1%' }}
+    <>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          flexDirection: 'column',
+        }}
       >
-        {categories.map(getCategoryListItem)}
-      </List>
-    </Box>
+        <Box
+          component="img"
+          src={icon}
+          sx={{
+            height: '100px',
+            width: '100px',
+            objectFit: 'cover',
+          }}
+        />
+        <Typography variant="h1">Warcraft Recorder</Typography>
+        <Typography variant="h3">Welcome!</Typography>
+      </Box>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        sx={{
+          width: '100%',
+          padding: '0',
+          color: 'white',
+        }}
+      >
+        <List
+          component="nav"
+          sx={{ border: '1px solid black', borderRadius: '1%' }}
+        >
+          {categories.map(getCategoryListItem)}
+        </List>
+      </Box>
+    </>
   );
 };
 

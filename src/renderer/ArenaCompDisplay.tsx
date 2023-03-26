@@ -22,6 +22,10 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
     return <></>;
   }
 
+  if (enemy.length !== friendly.length) {
+    return <></>;
+  }
+
   const renderCombatant = (c: any) => {
     const specID = c._specID;
     const specIcon = Images.specImages[specID] || Images.specImages[0];

@@ -1,6 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
 import { TNavigatorState } from 'main/types';
+import Box from '@mui/material/Box';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import BottomStatusBar from './BottomStatusBar';
@@ -26,7 +27,15 @@ const Application = () => {
   }, []);
 
   return (
-    <div className="App">
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        justifyContent: 'space-evenly',
+      }}
+    >
       <RendererTitleBar />
       <Layout
         navigation={navigation}
@@ -39,7 +48,7 @@ const Application = () => {
         setNavigation={setNavigation}
         videostate={videoState}
       />
-    </div>
+    </Box>
   );
 };
 

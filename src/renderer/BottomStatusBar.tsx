@@ -7,6 +7,7 @@ import SettingsButton from './SettingsButton';
 import TestButton from './TestButton';
 import VersionUpdateWidget from './VersionUpdateWidget';
 import Navigator from './Navigator';
+import Box from '@mui/material/Box';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -18,7 +19,15 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
   const { navigation, setNavigation, videostate } = props;
 
   return (
-    <div id="status-bar">
+    <Box
+      sx={{
+        position: 'absolute',
+        border: '1px solid black',
+        height: '35px',
+        width: '100%',
+        bottom: '0px',
+      }}
+    >
       <div id="status-buttons" className="status-buttons">
         <RecorderStatus />
         <VersionUpdateWidget />
@@ -37,7 +46,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
         <DiscordButton />
         <TestButton />
       </div>
-    </div>
+    </Box>
   );
 };
 

@@ -336,7 +336,7 @@ export default function VideoButton(props: IProps) {
           ml: 2,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'space-evenly',
           flex: 1,
         }}
       >
@@ -356,9 +356,6 @@ export default function VideoButton(props: IProps) {
 
         <Typography
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'left',
             color: playerClassColor,
             fontWeight: '750',
             fontFamily: '"Arial Narrow","Arial",sans-serif',
@@ -374,9 +371,6 @@ export default function VideoButton(props: IProps) {
 
         <Typography
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             fontWeight: '750',
             fontFamily: '"Arial Narrow","Arial",sans-serif',
           }}
@@ -386,9 +380,6 @@ export default function VideoButton(props: IProps) {
 
         <Typography
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             fontWeight: '750',
             fontFamily: '"Arial Narrow","Arial",sans-serif',
           }}
@@ -400,9 +391,6 @@ export default function VideoButton(props: IProps) {
           <>
             <Typography
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 fontWeight: '750',
                 fontFamily: '"Arial Narrow","Arial",sans-serif',
               }}
@@ -412,9 +400,6 @@ export default function VideoButton(props: IProps) {
             <Typography
               display="inline"
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 fontWeight: '750',
                 fontFamily: '"Arial Narrow","Arial",sans-serif',
               }}
@@ -428,9 +413,6 @@ export default function VideoButton(props: IProps) {
           <>
             <Typography
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 fontWeight: '750',
                 fontFamily: '"Arial Narrow","Arial",sans-serif',
               }}
@@ -439,9 +421,6 @@ export default function VideoButton(props: IProps) {
             </Typography>
             <Typography
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 fontWeight: '750',
                 fontFamily: '"Arial Narrow","Arial",sans-serif',
               }}
@@ -454,9 +433,6 @@ export default function VideoButton(props: IProps) {
         {isRaid && videoInstanceDifficulty && (
           <Typography
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
               fontWeight: '750',
               fontFamily: '"Arial Narrow","Arial",sans-serif',
             }}
@@ -467,9 +443,6 @@ export default function VideoButton(props: IProps) {
 
         <Typography
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             fontWeight: '750',
             fontFamily: '"Arial Narrow","Arial",sans-serif',
           }}
