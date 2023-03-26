@@ -1,3 +1,4 @@
+import { WoWCharacterClassType, WoWClassColor } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -131,4 +132,13 @@ const addVideoMarkers = (video: any, player: Player) => {
   });
 };
 
-export { getFormattedDuration, getVideoResult, addVideoMarkers };
+const getWoWClassColor = (unitClass: string) => {
+  return WoWClassColor[unitClass];
+};
+
+export {
+  getFormattedDuration,
+  getVideoResult,
+  addVideoMarkers,
+  getWoWClassColor,
+};

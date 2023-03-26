@@ -1,32 +1,20 @@
 import * as React from 'react';
 import {
-  Tab,
-  Menu,
   MenuItem,
   Divider,
-  List,
   Box,
   CardMedia,
   Card,
-  Typography,
   CardContent,
-  Grid,
+  Typography,
 } from '@mui/material';
 
-import {
-  videoButtonSx,
-  specializationById,
-  dungeonsByMapId,
-} from 'main/constants';
+import { specializationById, dungeonsByMapId } from 'main/constants';
 
 import {
   ChallengeModeTimelineSegment,
   TimelineSegmentType,
 } from 'main/keystone';
-
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Check from '@mui/icons-material/Check';
-import Protected from '@mui/icons-material/BookmarkAdded';
 
 import {
   getEncounterNameById,
@@ -37,9 +25,8 @@ import {
 
 import { SoloShuffleTimelineSegment, TNavigatorState } from 'main/types';
 import * as Images from './images';
-import { getFormattedDuration } from './rendererutils';
+import { getFormattedDuration, getWoWClassColor } from './rendererutils';
 import { VideoCategory } from '../types/VideoCategory';
-import { border } from '@mui/system';
 
 interface IProps {
   index: number;
@@ -56,7 +43,8 @@ export default function VideoButton(props: IProps) {
   const { categoryIndex } = navigation;
   const category = categories[categoryIndex] as VideoCategory;
   const video = videostate[category][index];
-  const videoPath = video.fullPath;
+
+  let resultColor = 'rgb(156, 21, 21, 0.3)';
 
   // Need to not be const as it will be modified later if a Mythic+.
   let resultText = getVideoResultText(
@@ -66,12 +54,9 @@ export default function VideoButton(props: IProps) {
     video.soloShuffleRoundsPlayed
   );
 
-  const resultClass = getVideoResultClass(
-    category,
-    video.result,
-    video.soloShuffleRoundsWon,
-    video.soloShuffleRoundsPlayed
-  );
+  if (video.result) {
+    resultColor = 'rgb(53, 164, 50, 0.3)';
+  }
 
   const isProtected = video.protected;
 
@@ -98,6 +83,10 @@ export default function VideoButton(props: IProps) {
     specIcon = Images.specImages[0];
     playerClass = '';
   }
+
+  const playerClassColor = getWoWClassColor(playerClass);
+  console.log(playerClass);
+  console.log(playerClassColor);
 
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories.
@@ -297,6 +286,7 @@ export default function VideoButton(props: IProps) {
 
     if (video.result) {
       resultText = `+${video.upgradeLevel}`;
+      resultColor = '#1eff00';
     }
 
     const { timeline } = video;
@@ -320,91 +310,152 @@ export default function VideoButton(props: IProps) {
     <Box
       sx={{
         display: 'flex',
-        flexWrap: 'wrap',
         width: '100%',
       }}
     >
-      <Card
+      <Box
+        component="img"
+        src={buttonImage}
         sx={{
-          height: '50px',
-          width: '100px',
           border: '1px solid black',
           borderRadius: '1%',
+          boxSizing: 'border-box',
+          display: 'flex',
+          height: '75px',
+          flex: '0 0 150px',
+          objectFit: 'cover',
         }}
-      >
-        <CardMedia
-          component="img"
-          image={buttonImage}
-          sx={{ objectFit: 'cover', height: '50px', width: '100px' }}
-        />
-      </Card>
-      <Card
+      />
+      <Box
         sx={{
-          minWidth: 700,
           border: '1px solid black',
           borderRadius: '1%',
-          bgcolor: '#1A233A',
+          boxSizing: 'border-box',
+          bgcolor: resultColor,
           ml: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flex: 1,
         }}
       >
-        <CardContent
+        <Box
+          component="img"
+          src={specIcon}
           sx={{
-            p: 0,
-            '&:last-child': { pb: 0 },
+            height: '50px',
+            width: '50px',
+            border: '1px solid black',
+            borderRadius: '15%',
+            boxSizing: 'border-box',
+            objectFit: 'cover',
             m: 1,
-            position: 'absolute',
-            color: 'white',
+          }}
+        />
+
+        <Typography
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'left',
+            color: playerClassColor,
+            fontWeight: '750',
+            fontFamily:
+              '"Arial Narrow","Roboto","Helvetica","Arial",sans-serif',
           }}
         >
-          <Box sx={{ position: 'absolute', top: '0px', left: '0px' }}>
-            <img id="spec-icon" src={specIcon} alt="spec icon" />
-          </Box>
+          {playerName}
+        </Typography>
 
-          <Box sx={{ position: 'absolute', top: '0px', left: '22.5px' }}>
-            <div className={`${playerClass}`}>{playerName}</div>
-          </Box>
+        <Typography
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {formattedDuration}
+        </Typography>
 
-          <Box sx={{ position: 'absolute', top: '0px', left: '100px' }}>
-            {formattedDuration}
-          </Box>
+        <Typography
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {video.time} {video.date}
+        </Typography>
 
-          <Box sx={{ position: 'absolute', top: '0px', left: '200px' }}>
-            {video.date}
-          </Box>
+        {isMythicPlus || (
+          <>
+            <Typography
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {video.encounter}
+            </Typography>
+            <Typography
+              display="inline"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {video.zoneName}
+            </Typography>
+          </>
+        )}
 
-          <Box sx={{ position: 'absolute', top: '0px', left: '300px' }}>
-            {video.time}
-          </Box>
+        {isMythicPlus && (
+          <>
+            <Typography
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {dungeonsByMapId[video.mapID]}
+            </Typography>
+            <Typography
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              +{video.level}
+            </Typography>
+          </>
+        )}
 
-          {isMythicPlus || (
-            <>
-              <Box sx={{ position: 'absolute', top: '0px', left: '400px' }}>
-                {video.encounter}
-              </Box>
-              <Box sx={{ position: 'absolute', top: '0px', left: '500px' }}>
-                {video.zoneName}
-              </Box>
-            </>
-          )}
+        {isRaid && videoInstanceDifficulty && (
+          <Typography
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {videoInstanceDifficulty.difficulty}
+          </Typography>
+        )}
 
-          {isMythicPlus && (
-            <>
-              <Box sx={{ position: 'absolute', top: '0px', left: '400px' }}>
-                {dungeonsByMapId[video.mapID]}
-              </Box>
-              <Box sx={{ position: 'absolute', top: '0px', left: '500px' }}>
-                <div className="difficulty-mythic">+{video.level}</div>
-              </Box>
-            </>
-          )}
-
-          {isRaid && videoInstanceDifficulty && (
-            <Box sx={{ position: 'absolute', top: '0px', left: '600px' }}>
-              {videoInstanceDifficulty.difficulty}
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+        <Typography
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {resultText}
+        </Typography>
+      </Box>
     </Box>
   );
 }

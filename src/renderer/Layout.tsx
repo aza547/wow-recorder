@@ -183,11 +183,15 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             overflowY: 'scroll',
           }}
         >
-          <List>
+          <List sx={{ width: '100%' }}>
             {categoryState &&
               categoryState.map((video: any) => {
                 return (
-                  <ListItem disablePadding key={video.fullPath}>
+                  <ListItem
+                    disablePadding
+                    key={video.fullPath}
+                    sx={{ width: '100%' }}
+                  >
                     <ListItemButton
                       onClick={() => handleChangeVideo(video.index)}
                     >

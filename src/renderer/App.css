@@ -74,8 +74,6 @@ div#root {
 }
 
 .MuiBox-root {
-  height: 100%;
-  width: 100%;
   margin: 0px;
   padding: 0px;
   background-color: #272e48;
@@ -257,41 +255,10 @@ h2:not(.MuiDialogTitle-root) {
   border-radius: 10px;
 }
 
-.videoButton {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  display: inline-block;
-  vertical-align: middle;
-  line-height: 20px; /* <-- adjust this to spread out text */
-  text-transform: none;
-  -webkit-text-stroke: .35px black;
-  -webkit-text-fill-color: white;
-  font: bold 16px Arial Narrow;
-  text-shadow:
-    1px  1px 0 #000,
-   -1px -1px 0 #000,
-    1px -1px 0 #000,
-   -1px  1px 0 #000,
-    1px  1px 0 #000;
-}
-
-.videoButton div {
-  max-width: 120px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.videoButton.dungeon {
-  background-size: cover;
-}
-
 #spec-icon {
   width: 20px;
   height: 20px;
 }
-
 
 .goodResult {
   -webkit-text-fill-color: #1eff00;
@@ -360,24 +327,6 @@ h2:not(.MuiDialogTitle-root) {
   100% {
       opacity: 1;
   }
-}
-
-.noVideos{
-  -webkit-text-stroke: 0.5px black;
-  -webkit-text-fill-color: white;
-  font: bold 18px Arial Narrow;
-  text-shadow:
-    1px  1px 0 #000,
-   -1px -1px 0 #000,
-    1px -1px 0 #000,
-   -1px  1px 0 #000,
-    1px  1px 0 #000;
-  height: 100px;
-  width: 200%;
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  background-color: #272e48;
 }
 
 .DEATHKNIGHT {
