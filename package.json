@@ -241,6 +241,7 @@
     "react-code-blocks": "^0.0.9-0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.3.0",
+    "recharts": "^2.5.0",
     "tail": "^2.2.4",
     "tasklist": "^4.0.1",
     "tsc": "^2.0.4",

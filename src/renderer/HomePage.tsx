@@ -3,6 +3,7 @@ import prettyBytes from 'pretty-bytes';
 import icon from '../../assets/icon/large-icon.png';
 import { getNumVideos, getTotalDuration, getTotalUsage } from './rendererutils';
 import useSettings from '../settings/useSettings';
+import { Legend, Pie, PieChart } from 'recharts';
 
 interface IProps {
   videoState: any;
@@ -13,10 +14,50 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
   const [config] = useSettings();
   console.log(videoState);
 
-  const storageUsage = getTotalUsage(videoState);
-  const maxUsage = config.maxStorage * 1024 ** 3;
+  const storageUsage = Math.round(getTotalUsage(videoState) / 1024 ** 3);
+  const maxUsage = Math.round(config.maxStorage);
   const numVideos = getNumVideos(videoState);
   const totalDurationHours = Math.round(getTotalDuration(videoState) / 60 ** 2);
+
+  const data = [
+    {
+      name: 'Used',
+      value: storageUsage,
+      fill: 'darkgrey',
+    },
+    {
+      name: 'Available',
+      value: maxUsage - storageUsage,
+      fill: '#bb4220',
+    },
+  ];
+
+  const RADIAN = Math.PI / 180;
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+    index,
+  }) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? 'start' : 'end'}
+        dominantBaseline="central"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
 
   return (
     <>
@@ -48,19 +89,67 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         <Typography variant="h5">Welcome!</Typography>
       </Box>
       <Box
-        component="span"
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          flexDirection: 'column',
+          flexDirection: 'row',
         }}
       >
-        <Box>You have {numVideos} videos saved.</Box>
-        <Box>
-          You are using {prettyBytes(storageUsage)} of {prettyBytes(maxUsage)}.
+        <Box sx={{ margin: '20px' }}>
+          <PieChart
+            width={250}
+            height={250}
+            margin={{ top: 15, right: 15, bottom: 15, left: 15 }}
+          >
+            <Legend layout="vertical" verticalAlign="top" align="center" />
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={75}
+              labelLine={false}
+              label={renderCustomizedLabel}
+            />
+          </PieChart>
+          <Typography align="center">Disk Usage</Typography>
         </Box>
-        <Box>That's {totalDurationHours} hours of footage</Box>
+        <Box sx={{ margin: '20px' }}>
+          <PieChart width={200} height={200}>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={35}
+              outerRadius={50}
+              label
+            />
+          </PieChart>
+          <Typography align="center">
+            You have {numVideos} videos saved.
+          </Typography>
+        </Box>
+        <Box sx={{ margin: '20px' }}>
+          <PieChart width={200} height={200}>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={35}
+              outerRadius={50}
+              label
+            />
+          </PieChart>
+          <Typography align="center">
+            That's {totalDurationHours} hours of footage.
+          </Typography>
+        </Box>
       </Box>
     </>
   );
