@@ -136,9 +136,49 @@ const getWoWClassColor = (unitClass: string) => {
   return WoWClassColor[unitClass];
 };
 
+const getTotalUsage = (videoState: any) => {
+  let totalUsage = 0;
+
+  Object.values(videoState).forEach((category: any) => {
+    Object.values(category).forEach((video: any) => {
+      totalUsage += video.size;
+    });
+  });
+
+  return totalUsage;
+};
+
+const getNumVideos = (videoState: any) => {
+  let numVideos = 0;
+
+  Object.values(videoState).forEach((category: any) => {
+    Object.values(category).forEach((video: any) => {
+      numVideos += 1;
+    });
+  });
+
+  return numVideos;
+};
+
+const getTotalDuration = (videoState: any) => {
+  let totalDuration = 0;
+
+  Object.values(videoState).forEach((category: any) => {
+    Object.values(category).forEach((video: any) => {
+      totalDuration += video.duration;
+      totalDuration += video.overrun;
+    });
+  });
+
+  return totalDuration;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
   addVideoMarkers,
   getWoWClassColor,
+  getTotalUsage,
+  getNumVideos,
+  getTotalDuration,
 };

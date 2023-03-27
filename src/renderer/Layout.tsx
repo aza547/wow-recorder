@@ -215,7 +215,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
   // @@@ TODO fix up error prompt I deleted here
   if (categoryIndex < 0) {
-    return <HomePage setNavigation={setNavigation} />;
+    return <HomePage videoState={videoState} />;
   }
 
   if (videoIndex < 0) {

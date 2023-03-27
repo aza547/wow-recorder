@@ -1,4 +1,5 @@
 import { TNavigatorState } from 'main/types';
+import Box from '@mui/material/Box';
 import DiscordButton from './DiscordButton';
 import LogButton from './LogButton';
 import RecorderStatus from './RecorderStatus';
@@ -7,7 +8,6 @@ import SettingsButton from './SettingsButton';
 import TestButton from './TestButton';
 import VersionUpdateWidget from './VersionUpdateWidget';
 import Navigator from './Navigator';
-import Box from '@mui/material/Box';
 
 interface IProps {
   navigation: TNavigatorState;

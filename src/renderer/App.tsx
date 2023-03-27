@@ -17,9 +17,6 @@ const Application = () => {
 
   const [videoState, setVideoState] = React.useState<any>({});
 
-  console.log(navigation);
-  console.log(videoState);
-
   React.useEffect(() => {
     ipc.on('refreshState', async () => {
       setVideoState(await ipc.invoke('getVideoState', []));

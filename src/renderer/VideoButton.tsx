@@ -86,8 +86,6 @@ export default function VideoButton(props: IProps) {
   }
 
   const playerClassColor = getWoWClassColor(playerClass);
-  console.log(playerClass);
-  console.log(playerClassColor);
 
   // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
   // that we can for other categories.

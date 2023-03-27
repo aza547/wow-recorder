@@ -1,40 +1,22 @@
-import List from '@mui/material/List';
-import ListItemText from '@mui/material/ListItemText';
-import WorkIcon from '@mui/icons-material/Work';
-import { Box, ListItemButton, ListItemIcon, Typography } from '@mui/material';
-import { VideoCategory } from 'types/VideoCategory';
-import { TNavigatorState } from 'main/types';
+import { Box, Divider, Typography } from '@mui/material';
+import prettyBytes from 'pretty-bytes';
 import icon from '../../assets/icon/large-icon.png';
-
-const categories = Object.values(VideoCategory);
+import { getNumVideos, getTotalDuration, getTotalUsage } from './rendererutils';
+import useSettings from '../settings/useSettings';
 
 interface IProps {
-  setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  videoState: any;
 }
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
-  const { setNavigation } = props;
+  const { videoState } = props;
+  const [config] = useSettings();
+  console.log(videoState);
 
-  const handleClick = (category: VideoCategory) => {
-    setNavigation({
-      categoryIndex: categories.indexOf(category),
-      videoIndex: -1,
-    });
-  };
-
-  const getCategoryListItem = (category: string) => {
-    return (
-      <ListItemButton
-        key={category}
-        onClick={() => handleClick(category as VideoCategory)}
-      >
-        <ListItemIcon>
-          <WorkIcon />
-        </ListItemIcon>
-        <ListItemText primary={category} />
-      </ListItemButton>
-    );
-  };
+  const storageUsage = getTotalUsage(videoState);
+  const maxUsage = config.maxStorage * 1024 ** 3;
+  const numVideos = getNumVideos(videoState);
+  const totalDurationHours = Math.round(getTotalDuration(videoState) / 60 ** 2);
 
   return (
     <>
@@ -54,25 +36,31 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             objectFit: 'cover',
           }}
         />
-        <Typography variant="h1">Warcraft Recorder</Typography>
-        <Typography variant="h3">Welcome!</Typography>
+        <Typography
+          variant="h1"
+          sx={{
+            color: 'white',
+            fontFamily: '"Arial Narrow","Arial",sans-serif',
+          }}
+        >
+          Warcraft Recorder
+        </Typography>
+        <Typography variant="h5">Welcome!</Typography>
       </Box>
       <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
+        component="span"
         sx={{
-          width: '100%',
-          padding: '0',
-          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
         }}
       >
-        <List
-          component="nav"
-          sx={{ border: '1px solid black', borderRadius: '1%' }}
-        >
-          {categories.map(getCategoryListItem)}
-        </List>
+        <Box>You have {numVideos} videos saved.</Box>
+        <Box>
+          You are using {prettyBytes(storageUsage)} of {prettyBytes(maxUsage)}.
+        </Box>
+        <Box>That's {totalDurationHours} hours of footage</Box>
       </Box>
     </>
   );
