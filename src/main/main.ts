@@ -39,6 +39,7 @@ import {
 } from '../utils/testButtonUtils';
 import SizeMonitor from '../utils/SizeMonitor';
 import { configSchema } from './configSchema';
+import VideoProcessQueue from './VideoProcessQueue';
 
 const logDir = setupApplicationLogging();
 console.info('[Main] App starting, version:', app.getVersion());
@@ -277,7 +278,7 @@ const createWindow = async () => {
       return;
     }
 
-    //recorder.configure();
+    // recorder.configure();
 
     Poller.getInstance().start();
     mainWindow.webContents.send('refreshState');
@@ -564,6 +565,13 @@ ipcMain.on('openURL', (event, args) => {
 ipcMain.handle('getVideoState', async () =>
   loadAllVideos(cfg.get<string>('storagePath'))
 );
+
+/**
+ * Prepare a video thumbnail, called when refreshing the home page.
+ */
+ipcMain.on('prepareThumbnail', async (_event, args) => {
+  await VideoProcessQueue.getThumbnail(args[0], cfg.get<string>('storagePath'));
+});
 
 ipcMain.on('getAudioDevices', (event) => {
   if (!recorder || !recorder.obsInitialized) {

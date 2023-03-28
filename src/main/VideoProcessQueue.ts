@@ -234,4 +234,35 @@ export default class VideoProcessQueue {
         .run();
     });
   }
+
+  /**
+   * Takes an input video file and writes a screenshot a second into the
+   * video to disk.
+   *
+   * @param {string} video path to initial MP4 file
+   * @param {string} output path to output directory
+   */
+  static async getThumbnail(video: string, output: string) {
+    return new Promise<void>((resolve) => {
+      ffmpeg(video)
+        .on('end', () => {
+          console.info('[VideoProcessQueue] Got thumbnail for', video);
+          resolve();
+        })
+        .on('error', (err: any) => {
+          console.error(
+            '[VideoProcessQueue] Error getting thumbnail for',
+            video,
+            err
+          );
+
+          throw new Error(err);
+        })
+        .screenshots({
+          timestamps: [0],
+          folder: output,
+          filename: 'thumbnail.png',
+        });
+    });
+  }
 }

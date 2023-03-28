@@ -11,7 +11,8 @@ export type Channels =
   | 'getAudioDevices'
   | 'videoPlayerSettings'
   | 'recorder'
-  | 'config';
+  | 'config'
+  | 'prepareThumbnail';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

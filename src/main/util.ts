@@ -230,6 +230,9 @@ const loadAllVideos = async (storageDir: string) => {
     await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
   ).filter((result) => !(result instanceof Error));
 
+  // Pass through the latest category, we already know it is index 0.
+  videoState.latestCategory = videoDetail[0].category;
+
   videoDetail.forEach((details) => {
     const category = details.category as string;
 
