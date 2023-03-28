@@ -15,6 +15,8 @@ const Application = () => {
     videoIndex: -1,
   });
 
+  console.log(navigation);
+
   const [videoState, setVideoState] = React.useState<any>({});
 
   React.useEffect(() => {

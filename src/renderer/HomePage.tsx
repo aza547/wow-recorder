@@ -1,25 +1,27 @@
 import { Box, Typography } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
 import { Bar, BarChart, Legend, Pie, PieChart } from 'recharts';
+import { TNavigatorState } from 'main/types';
 import icon from '../../assets/icon/large-icon.png';
 import { getNumVideos, getTotalDuration, getTotalUsage } from './rendererutils';
 import useSettings from '../settings/useSettings';
+import React from 'react';
 
 interface IProps {
   videoState: any;
+  setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
-  const { videoState } = props;
+  const { videoState, setNavigation } = props;
   const [config] = useSettings();
   console.log(videoState);
 
   // Bit hacky
-  let latestVideoPath;
-
+  let latestCategory;
   if (videoState.latestCategory !== undefined) {
-    const latestCategory = videoState.latestCategory as VideoCategory;
-    latestVideoPath = videoState[latestCategory][0].fullPath;
+    latestCategory = videoState.latestCategory as VideoCategory;
+    const latestVideoPath = videoState[latestCategory][0].fullPath;
 
     window.electron.ipcRenderer.sendMessage('prepareThumbnail', [
       latestVideoPath,
@@ -28,6 +30,18 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
 
   // Even more hacky, but having the latestCategory field breaks the next stats functions.
   delete videoState.latestCategory;
+
+  const goToLatestVideo = () => {
+    const categories = Object.values(VideoCategory);
+    const categoryIndex = categories.indexOf(latestCategory as VideoCategory);
+
+    // @@@ TODO fix, this gets reset when state is refreshed and we lose the latestCategory?
+    // SO when we click this button twice we hit an error.
+    setNavigation({
+      categoryIndex,
+      videoIndex: 0,
+    });
+  };
 
   const storageUsage = Math.round(getTotalUsage(videoState) / 1024 ** 3);
   const maxUsage = Math.round(config.maxStorage);
@@ -179,6 +193,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           <Box
             component="img"
             src={`${config.storagePath}/thumbnail.png`}
+            onClick={goToLatestVideo}
             sx={{
               border: '1px solid black',
               borderRadius: '1%',
