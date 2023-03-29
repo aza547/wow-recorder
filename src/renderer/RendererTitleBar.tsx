@@ -29,11 +29,10 @@ export default function RendererTitleBar() {
     <Box
       id="title-bar"
       sx={{
-        position: 'absolute',
         borderBottom: '1px solid black',
         height: '35px',
         width: '100%',
-        top: '0px',
+        boxSizing: 'border-box',
       }}
     >
       <div id="logo">

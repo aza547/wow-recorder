@@ -21,11 +21,10 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
   return (
     <Box
       sx={{
-        position: 'absolute',
         border: '1px solid black',
         height: '35px',
         width: '100%',
-        bottom: '0px',
+        boxSizing: 'border-box',
       }}
     >
       <div id="status-buttons" className="status-buttons">

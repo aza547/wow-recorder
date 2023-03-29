@@ -1,11 +1,17 @@
 import { Box, Typography } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
-import { Bar, BarChart, Legend, Pie, PieChart } from 'recharts';
+import {
+  Bar,
+  BarChart,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+} from 'recharts';
 import { TNavigatorState } from 'main/types';
 import icon from '../../assets/icon/large-icon.png';
 import { getNumVideos, getTotalDuration, getTotalUsage } from './rendererutils';
 import useSettings from '../settings/useSettings';
-import React from 'react';
 
 interface IProps {
   videoState: any;
@@ -138,7 +144,9 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         sx={{
           display: 'flex',
           alignItems: 'center',
+          justifyContet: 'center',
           flexDirection: 'column',
+          margin: 2,
         }}
       >
         <Box
@@ -153,13 +161,21 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         <Typography
           variant="h1"
           sx={{
-            color: 'white',
-            fontFamily: '"Arial Narrow","Arial",sans-serif',
+            color: '#bb4220',
+            fontFamily: '"Arial",sans-serif',
           }}
         >
           Warcraft Recorder
         </Typography>
-        <Typography variant="h5">You have {numVideos} videos saved.</Typography>
+        <Typography
+          variant="h5"
+          sx={{
+            color: 'white',
+            fontFamily: '"Arial",sans-serif',
+          }}
+        >
+          You have {numVideos} videos saved.
+        </Typography>
       </Box>
       <Box
         sx={{
@@ -167,50 +183,110 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'row',
+          height: '100%',
         }}
       >
-        <Box sx={{ margin: '20px' }}>
-          <PieChart
-            width={250}
-            height={250}
-            margin={{ top: 15, right: 15, bottom: 15, left: 15 }}
+        <Box
+          sx={{
+            margin: '30px',
+            width: '35%',
+            height: '35%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+          }}
+        >
+          <ResponsiveContainer>
+            <PieChart>
+              <Legend layout="vertical" verticalAlign="top" align="center" />
+              <Pie
+                data={storageData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={renderCustomizedLabel}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          <Typography
+            align="center"
+            variant="h5"
+            sx={{
+              color: 'white',
+              fontFamily: '"Arial","Arial",sans-serif',
+            }}
           >
-            <Legend layout="vertical" verticalAlign="top" align="center" />
-            <Pie
-              data={storageData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={75}
-              labelLine={false}
-              label={renderCustomizedLabel}
-            />
-          </PieChart>
-          <Typography align="center">Disk Usage</Typography>
+            Disk Usage
+          </Typography>
         </Box>
-        <Box sx={{ margin: '20px' }}>
+        <Box
+          sx={{
+            margin: '30px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            width: '100%',
+          }}
+        >
           <Box
             component="img"
             src={`${config.storagePath}/thumbnail.png`}
             onClick={goToLatestVideo}
             sx={{
               border: '1px solid black',
-              borderRadius: '1%',
+              borderRadius: 0,
               boxSizing: 'border-box',
               display: 'flex',
-              height: '250px',
-              width: '250px',
+              width: '100%',
               objectFit: 'cover',
+              '&:hover': {
+                border: '1px solid #bb4420',
+                color: 'gray',
+                backgroundColor: 'lightblue',
+              },
             }}
           />
-          <Typography align="center">Latest Video</Typography>
+          <Typography
+            align="center"
+            variant="h5"
+            sx={{
+              color: 'white',
+              fontFamily: '"Arial",sans-serif',
+            }}
+          >
+            Latest Video
+          </Typography>
         </Box>
-        <Box sx={{ margin: '20px' }}>
-          <BarChart width={250} height={250} data={activityData}>
-            <Bar dataKey="uv" fill="#8884d8" />
-          </BarChart>
-          <Typography align="center">Recent Activity</Typography>
+        <Box
+          sx={{
+            margin: '30px',
+            width: '35%',
+            height: '35%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+          }}
+        >
+          <ResponsiveContainer>
+            <BarChart data={activityData}>
+              <Bar dataKey="uv" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+          <Typography
+            align="center"
+            variant="h5"
+            sx={{
+              color: 'white',
+              fontFamily: '"Arial",sans-serif',
+            }}
+          >
+            Recent Activity
+          </Typography>
         </Box>
       </Box>
     </>
