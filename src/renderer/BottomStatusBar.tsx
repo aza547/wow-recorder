@@ -12,16 +12,15 @@ import Navigator from './Navigator';
 interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
-  videostate: any;
 }
 
 const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigation, videostate } = props;
+  const { navigation, setNavigation } = props;
 
   return (
     <Box
       sx={{
-        border: '1px solid black',
+        borderTop: '1px solid black',
         height: '35px',
         width: '100%',
         boxSizing: 'border-box',
@@ -33,11 +32,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
         <SavingStatus />
       </div>
       <div id="navigator">
-        <Navigator
-          navigation={navigation}
-          setNavigation={setNavigation}
-          videostate={videostate}
-        />
+        <Navigator navigation={navigation} setNavigation={setNavigation} />
       </div>
       <div className="app-buttons">
         <SettingsButton />

@@ -7,16 +7,49 @@ import {
   Pie,
   PieChart,
   ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
 import { TNavigatorState } from 'main/types';
 import icon from '../../assets/icon/large-icon.png';
-import { getNumVideos, getTotalDuration, getTotalUsage } from './rendererutils';
+import {
+  getNumVideos,
+  getRecentActivityStats,
+  getTotalUsage,
+} from './rendererutils';
 import useSettings from '../settings/useSettings';
 
 interface IProps {
   videoState: any;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
+
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  index,
+}) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180);
+  const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
   const { videoState, setNavigation } = props;
@@ -34,9 +67,6 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     ]);
   }
 
-  // Even more hacky, but having the latestCategory field breaks the next stats functions.
-  delete videoState.latestCategory;
-
   const goToLatestVideo = () => {
     const categories = Object.values(VideoCategory);
     const categoryIndex = categories.indexOf(latestCategory as VideoCategory);
@@ -52,91 +82,19 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
   const storageUsage = Math.round(getTotalUsage(videoState) / 1024 ** 3);
   const maxUsage = Math.round(config.maxStorage);
   const numVideos = getNumVideos(videoState);
-  const totalDurationHours = Math.round(getTotalDuration(videoState) / 60 ** 2);
 
   const storageData = [
     {
       name: 'Used',
       value: storageUsage,
-      fill: 'darkgrey',
+      fill: '#bb4220',
     },
     {
       name: 'Available',
       value: maxUsage - storageUsage,
-      fill: '#bb4220',
+      fill: 'grey',
     },
   ];
-
-  const activityData = [
-    {
-      name: 'Page A',
-      uv: 4000,
-      pv: 2400,
-      amt: 2400,
-    },
-    {
-      name: 'Page B',
-      uv: 3000,
-      pv: 1398,
-      amt: 2210,
-    },
-    {
-      name: 'Page C',
-      uv: 2000,
-      pv: 9800,
-      amt: 2290,
-    },
-    {
-      name: 'Page D',
-      uv: 2780,
-      pv: 3908,
-      amt: 2000,
-    },
-    {
-      name: 'Page E',
-      uv: 1890,
-      pv: 4800,
-      amt: 2181,
-    },
-    {
-      name: 'Page F',
-      uv: 2390,
-      pv: 3800,
-      amt: 2500,
-    },
-    {
-      name: 'Page G',
-      uv: 3490,
-      pv: 4300,
-      amt: 2100,
-    },
-  ];
-
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-    index,
-  }) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180);
-    const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
 
   return (
     <>
@@ -198,7 +156,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           }}
         >
           <ResponsiveContainer>
-            <PieChart>
+            <PieChart margin={{ bottom: 20, top: 20, left: 20, right: 20 }}>
               <Legend layout="vertical" verticalAlign="top" align="center" />
               <Pie
                 data={storageData}
@@ -209,6 +167,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
                 labelLine={false}
                 label={renderCustomizedLabel}
               />
+              <Tooltip />
             </PieChart>
           </ResponsiveContainer>
           <Typography
@@ -238,7 +197,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             onClick={goToLatestVideo}
             sx={{
               border: '1px solid black',
-              borderRadius: 0,
+              borderRadius: 5,
               boxSizing: 'border-box',
               display: 'flex',
               width: '100%',
@@ -273,8 +232,14 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           }}
         >
           <ResponsiveContainer>
-            <BarChart data={activityData}>
-              <Bar dataKey="uv" fill="#8884d8" />
+            <BarChart
+              data={getRecentActivityStats(videoState)}
+              margin={{ bottom: 20, top: 20, left: 20, right: 20 }}
+            >
+              <Bar dataKey="Recordings" fill="#bb4420" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
+              <YAxis interval={0} />
+              <Tooltip />
             </BarChart>
           </ResponsiveContainer>
           <Typography

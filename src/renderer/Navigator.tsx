@@ -1,28 +1,30 @@
-import { Home, KeyboardDoubleArrowUp } from '@mui/icons-material';
-import { Box, Button, IconButton, Menu, MenuItem, Stack } from '@mui/material';
+import { Home } from '@mui/icons-material';
+import { Box, Chip, IconButton, Stack } from '@mui/material';
 import { TNavigatorState } from 'main/types';
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
+import Select from 'react-select';
 
 interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
-  videostate: any;
 }
 
 const categories = Object.values(VideoCategory);
 
 const Navigator: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigation, videostate } = props;
+  const { navigation, setNavigation } = props;
 
-  const [categoryMenuAnchor, setCategoryMenuAnchor] =
-    React.useState<null | HTMLElement>(null);
+  let categorySelectValue;
 
-  const categoryMenuOpen = Boolean(categoryMenuAnchor);
-
-  const handleClose = () => {
-    setCategoryMenuAnchor(null);
-  };
+  if (navigation.categoryIndex === -1) {
+    categorySelectValue = null;
+  } else {
+    categorySelectValue = {
+      value: categories[navigation.categoryIndex] as string,
+      label: categories[navigation.categoryIndex] as string,
+    };
+  }
 
   const goHome = () => {
     setNavigation({
@@ -31,45 +33,91 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
     });
   };
 
-  const toggleCategoryMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setCategoryMenuAnchor(event.currentTarget);
+  const options = categories.map((c) => ({ value: c, label: c }));
+
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      background: '#fff',
+      borderColor: '#9e9e9e',
+      minHeight: '25px',
+      height: '25px',
+      boxShadow: state.isFocused ? null : null,
+    }),
+
+    valueContainer: (provided, state) => ({
+      ...provided,
+      height: '25px',
+      padding: '0 6px',
+    }),
+
+    input: (provided, state) => ({
+      ...provided,
+      margin: '0px',
+    }),
+    indicatorSeparator: (state) => ({
+      display: 'none',
+    }),
+    indicatorsContainer: (provided, state) => ({
+      ...provided,
+      height: '25px',
+    }),
   };
 
-  const selectCategory = (category: VideoCategory) => {
-    setCategoryMenuAnchor(null);
-    setNavigation({
-      categoryIndex: categories.indexOf(category),
-      videoIndex: -1,
+  const goToSelection = (e) => {
+    setNavigation((prevState) => {
+      return {
+        ...prevState,
+        videoIndex: -1,
+      };
     });
   };
 
-  const getCategoryButtonText = (): string => {
-    if (navigation.categoryIndex < 0) {
-      return 'Category';
+  const onSelect = (event) => {
+    let categoryIndex: number;
+
+    if (event === null) {
+      categoryIndex = -1;
+    } else {
+      categoryIndex = categories.indexOf(event.value);
     }
 
-    return categories[navigation.categoryIndex];
+    setNavigation((prevState) => {
+      return {
+        ...prevState,
+        categoryIndex,
+      };
+    });
   };
 
-  const getVideoNavButtonText = (): string => {
-    if (navigation.videoIndex < 0) {
-      return 'Video';
-    }
-
-    const category = categories[navigation.categoryIndex];
-    const video = videostate[category][navigation.videoIndex];
-    return `${category} - ${video.date} - ${video.time}`;
-  };
+  const selectionChip = () => (
+    <Chip
+      label={categories[navigation.categoryIndex]}
+      onClick={goToSelection}
+      sx={{
+        height: '20px',
+        bottom: '16px',
+        color: 'white',
+        bgcolor: '#bb4420',
+      }}
+    />
+  );
 
   return (
     <>
       <Box
         display="flex"
-        justifyContent="center"
-        alignItems="center"
-        sx={{ height: '35px' }}
+        sx={{
+          height: '35px',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
-        <Stack spacing={1} direction="row" sx={{ height: '25px' }}>
+        <Stack
+          spacing={1}
+          direction="row"
+          sx={{ height: '25px', color: 'black' }}
+        >
           <IconButton
             component="label"
             onClick={goHome}
@@ -79,44 +127,28 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
           >
             <Home />
           </IconButton>
-          <Button
-            variant="contained"
-            onClick={toggleCategoryMenu}
-            startIcon={<KeyboardDoubleArrowUp />}
-            sx={{
-              bgcolor: '#272e48',
-              border: '1px solid black',
-              borderRadius: '1',
-            }}
-          >
-            {getCategoryButtonText()}
-          </Button>
-          <Menu
-            id="categories-menu"
-            anchorEl={categoryMenuAnchor}
-            open={categoryMenuOpen}
-            onClose={handleClose}
-            MenuListProps={{
-              'aria-labelledby': 'basic-button',
-            }}
-          >
-            {categories.map((category: VideoCategory) => (
-              <MenuItem key={category} onClick={() => selectCategory(category)}>
-                {category}
-              </MenuItem>
-            ))}
-          </Menu>
-          <Button
-            variant="contained"
-            sx={{
-              bgcolor: '#272e48',
-              color: 'white',
-              border: '1px solid black',
-              borderRadius: '1',
-            }}
-          >
-            {getVideoNavButtonText()}
-          </Button>
+          <Select
+            options={options}
+            isClearable
+            escapeClearsValue
+            menuPlacement="top"
+            styles={customSelectStyles}
+            components={{ SingleValue: selectionChip }}
+            openMenuOnClick={false}
+            isSearchable={false}
+            onChange={onSelect}
+            value={categorySelectValue}
+            theme={(theme) => ({
+              ...theme,
+              colors: {
+                ...theme.colors,
+                primary: '#bb4420',
+                primary75: '#bb4420',
+                primary50: '#bb4420',
+                primary25: '#bb4420',
+              },
+            })}
+          />
         </Stack>
       </Box>
     </>

@@ -1,4 +1,4 @@
-import { WoWCharacterClassType, WoWClassColor } from 'main/constants';
+import { WoWClassColor, daysOfWeek } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -137,6 +137,7 @@ const getWoWClassColor = (unitClass: string) => {
 };
 
 const getTotalUsage = (videoState: any) => {
+  delete videoState.latestCategory;
   let totalUsage = 0;
 
   Object.values(videoState).forEach((category: any) => {
@@ -149,6 +150,7 @@ const getTotalUsage = (videoState: any) => {
 };
 
 const getNumVideos = (videoState: any) => {
+  delete videoState.latestCategory;
   let numVideos = 0;
 
   Object.values(videoState).forEach((category: any) => {
@@ -161,6 +163,7 @@ const getNumVideos = (videoState: any) => {
 };
 
 const getTotalDuration = (videoState: any) => {
+  delete videoState.latestCategory;
   let totalDuration = 0;
 
   Object.values(videoState).forEach((category: any) => {
@@ -173,6 +176,45 @@ const getTotalDuration = (videoState: any) => {
   return totalDuration;
 };
 
+/**
+ * This might be the worst code I've ever written. I'm going to fix it later.
+ */
+const getRecentActivityStats = (videoState: any) => {
+  delete videoState.latestCategory;
+  const currentDate = new Date();
+  const todayIndex = currentDate.getDay();
+  const activityStats = [];
+  const range = [...Array(7).keys()];
+  const oneDay = 24 * 60 * 60 * 1000;
+
+  range.forEach((i: number) => {
+    let offsetDayIndex = todayIndex - i;
+
+    if (offsetDayIndex < 0) {
+      offsetDayIndex += 6;
+    }
+
+    activityStats.push({
+      name: daysOfWeek[offsetDayIndex].slice(0, 3),
+      Recordings: 0,
+    });
+  });
+
+  Object.values(videoState).forEach((category: any) => {
+    Object.values(category).forEach((video: any) => {
+      const diffDays = Math.round(
+        Math.abs((currentDate - video.dateObject) / oneDay)
+      );
+
+      if (diffDays >= 0 && diffDays <= 6) {
+        activityStats[diffDays].Recordings++;
+      }
+    });
+  });
+
+  return activityStats.reverse();
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -181,4 +223,5 @@ export {
   getTotalUsage,
   getNumVideos,
   getTotalDuration,
+  getRecentActivityStats,
 };

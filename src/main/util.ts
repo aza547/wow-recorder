@@ -197,6 +197,7 @@ const loadVideoDetails = async (video: FileInfo) => {
     time: getVideoTime(videoDate),
     protected: Boolean(metadata.protected),
     size: video.size,
+    dateObject: videoDate,
   };
 };
 

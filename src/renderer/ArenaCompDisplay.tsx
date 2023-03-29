@@ -32,6 +32,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
 
     return (
       <Box
+        key={c._GUID}
         component="img"
         src={specIcon}
         sx={{
@@ -48,11 +49,11 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
 
   return (
     <>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+      <Box key="enemies" sx={{ display: 'flex', flexWrap: 'wrap' }}>
         {enemy.map(renderCombatant)}
       </Box>
       <CloseIcon />
-      <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+      <Box key="friendlies" sx={{ display: 'flex', flexWrap: 'wrap' }}>
         {friendly.map(renderCombatant)}
       </Box>
     </>
