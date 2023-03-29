@@ -25,32 +25,6 @@ interface IProps {
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
-const renderCustomizedLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
-  index,
-}) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180);
-  const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180);
-
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="white"
-      textAnchor={x > cx ? 'start' : 'end'}
-      dominantBaseline="central"
-    >
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
-  );
-};
-
 const HomePage: React.FC<IProps> = (props: IProps) => {
   const { videoState, setNavigation } = props;
   const [config] = useSettings();
@@ -156,7 +130,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           }}
         >
           <ResponsiveContainer>
-            <PieChart margin={{ bottom: 20, top: 20, left: 20, right: 20 }}>
+            <PieChart margin={{ bottom: 0, top: 0, left: 0, right: 0 }}>
               <Legend layout="vertical" verticalAlign="top" align="center" />
               <Pie
                 data={storageData}
@@ -164,10 +138,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={renderCustomizedLabel}
               />
-              <Tooltip />
+              <Tooltip formatter={(label) => `${label}GB`} />
             </PieChart>
           </ResponsiveContainer>
           <Typography
