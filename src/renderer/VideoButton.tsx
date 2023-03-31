@@ -24,6 +24,10 @@ import {
 } from 'main/helpers';
 
 import { SoloShuffleTimelineSegment, TNavigatorState } from 'main/types';
+import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import EventIcon from '@mui/icons-material/Event';
+import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import * as Images from './images';
 import { getFormattedDuration, getWoWClassColor } from './rendererutils';
 import { VideoCategory } from '../types/VideoCategory';
@@ -74,13 +78,16 @@ export default function VideoButton(props: IProps) {
   let playerName;
   let specIcon;
   let playerClass;
+  let playerRealm;
 
   if (video.player) {
     playerName = video.player._name;
+    playerRealm = video.player._realm;
     specIcon = Images.specImages[video.player._specID] || Images.specImages[0];
     playerClass = specializationById[video.player._specID]?.class ?? '';
   } else {
     playerName = '';
+    playerRealm = '';
     specIcon = Images.specImages[0];
     playerClass = '';
   }
@@ -332,65 +339,149 @@ export default function VideoButton(props: IProps) {
           boxSizing: 'border-box',
           bgcolor: resultColor,
           ml: 2,
-          display: 'flex',
+          width: '100%',
+          display: 'grid',
+          gridTemplateColumns: '15% 15% 25% 15% 15% 15%',
           alignItems: 'center',
-          justifyContent: 'space-evenly',
-          flex: 1,
         }}
       >
         <Box
-          component="img"
-          src={specIcon}
           sx={{
-            height: '50px',
-            width: '50px',
-            border: '1px solid black',
-            borderRadius: '15%',
-            boxSizing: 'border-box',
-            objectFit: 'cover',
-            m: 1,
-          }}
-        />
-
-        <Typography
-          sx={{
-            color: playerClassColor,
-            fontWeight: '750',
-            fontFamily: '"Arial Narrow","Arial",sans-serif',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
           }}
         >
-          {playerName}
-        </Typography>
+          <Box
+            component="img"
+            src={specIcon}
+            sx={{
+              height: '25px',
+              width: '25px',
+              border: '1px solid black',
+              borderRadius: '15%',
+              boxSizing: 'border-box',
+              objectFit: 'cover',
+            }}
+          />
 
-        <ArenaCompDisplay
-          combatants={video.combatants}
-          playerTeamID={video.player._teamID}
-        />
+          <Typography
+            sx={{
+              color: playerClassColor,
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+            }}
+          >
+            {playerName}
+          </Typography>
 
-        <Typography
+          <Typography
+            sx={{
+              color: 'white',
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+              fontSize: '0.7rem',
+            }}
+          >
+            {playerRealm}
+          </Typography>
+        </Box>
+
+        <Box
           sx={{
-            fontWeight: '750',
-            fontFamily: '"Arial Narrow","Arial",sans-serif',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gridColumnStart: 2,
+            gridColumnEnd: 3,
           }}
         >
-          {formattedDuration}
-        </Typography>
+          <HourglassBottomIcon sx={{ color: 'white' }} />
+          <Typography
+            sx={{
+              color: 'white',
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+            }}
+          >
+            {formattedDuration}
+          </Typography>
+        </Box>
 
-        <Typography
+        <Box
           sx={{
-            fontWeight: '750',
-            fontFamily: '"Arial Narrow","Arial",sans-serif',
+            gridColumnStart: 3,
+            gridColumnEnd: 4,
           }}
         >
-          {video.time} {video.date}
-        </Typography>
+          <ArenaCompDisplay
+            combatants={video.combatants}
+            playerTeamID={video.player._teamID}
+          />
+        </Box>
 
-        {isMythicPlus || (
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gridColumnStart: 4,
+            gridColumnEnd: 5,
+          }}
+        >
+          <AccessTimeIcon sx={{ color: 'white' }} />
+          <Typography
+            sx={{
+              color: 'white',
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+            }}
+          >
+            {video.time}
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gridColumnStart: 5,
+            gridColumnEnd: 6,
+          }}
+        >
+          <EventIcon sx={{ color: 'white' }} />
+          <Typography
+            sx={{
+              color: 'white',
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+            }}
+          >
+            {video.date}
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gridColumnStart: 6,
+            gridColumnEnd: 7,
+          }}
+        >
+          <BookmarksIcon sx={{ color: 'white' }} />
+        </Box>
+
+        {/* {isMythicPlus || (
           <>
             <Typography
               sx={{
-                fontWeight: '750',
-                fontFamily: '"Arial Narrow","Arial",sans-serif',
+                fontWeight: '600',
+                fontFamily: '"Arial",sans-serif',
+                gridColumnStart: 6,
+                gridColumnEnd: 7,
               }}
             >
               {video.encounter}
@@ -398,8 +489,10 @@ export default function VideoButton(props: IProps) {
             <Typography
               display="inline"
               sx={{
-                fontWeight: '750',
-                fontFamily: '"Arial Narrow","Arial",sans-serif',
+                fontWeight: '600',
+                fontFamily: '"Arial",sans-serif',
+                gridColumnStart: 7,
+                gridColumnEnd: 8,
               }}
             >
               {video.zoneName}
@@ -411,16 +504,20 @@ export default function VideoButton(props: IProps) {
           <>
             <Typography
               sx={{
-                fontWeight: '750',
-                fontFamily: '"Arial Narrow","Arial",sans-serif',
+                fontWeight: '600',
+                fontFamily: '"Arial",sans-serif',
+                gridColumnStart: 6,
+                gridColumnEnd: 7,
               }}
             >
               {dungeonsByMapId[video.mapID]}
             </Typography>
             <Typography
               sx={{
-                fontWeight: '750',
-                fontFamily: '"Arial Narrow","Arial",sans-serif',
+                fontWeight: '600',
+                fontFamily: '"Arial",sans-serif',
+                gridColumnStart: 6,
+                gridColumnEnd: 7,
               }}
             >
               +{video.level}
@@ -431,8 +528,10 @@ export default function VideoButton(props: IProps) {
         {isRaid && videoInstanceDifficulty && (
           <Typography
             sx={{
-              fontWeight: '750',
-              fontFamily: '"Arial Narrow","Arial",sans-serif',
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+              gridColumnStart: 6,
+              gridColumnEnd: 7,
             }}
           >
             {videoInstanceDifficulty.difficulty}
@@ -441,12 +540,14 @@ export default function VideoButton(props: IProps) {
 
         <Typography
           sx={{
-            fontWeight: '750',
-            fontFamily: '"Arial Narrow","Arial",sans-serif',
+            fontWeight: '600',
+            fontFamily: '"Arial",sans-serif',
+            gridColumnStart: 8,
+            gridColumnEnd: 9,
           }}
         >
           {resultText}
-        </Typography>
+        </Typography> */}
       </Box>
     </Box>
   );
