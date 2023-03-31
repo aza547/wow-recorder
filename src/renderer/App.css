@@ -54,10 +54,6 @@ div#root {
   color: black;
 }
 
-.MuiBox-root {
-  background-color: #272e48;
-}
-
 #title-bar {
   -webkit-app-region: drag;
 }

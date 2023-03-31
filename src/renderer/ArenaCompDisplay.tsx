@@ -8,12 +8,10 @@ import { specializationById } from 'main/constants';
 interface IProps {
   combatants: any;
   playerTeamID: number;
-  bgColor: string;
 }
 
 const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
-  const { combatants, playerTeamID, bgColor } = props;
-  console.log(bgColor);
+  const { combatants, playerTeamID } = props;
 
   const friendly = combatants.filter((c: any) => c._teamID !== playerTeamID);
   const enemy = combatants.filter((c: any) => c._teamID === playerTeamID);
@@ -49,7 +47,6 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
           flexDirection: 'row',
           alignItems: 'flex-end',
           justifyContent: 'end',
-          bgcolor: bgColor,
         }}
       >
         <Typography
@@ -99,7 +96,6 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
           flexDirection: 'row',
           alignItems: 'flex-end',
           justifyContent: 'start',
-          bgcolor: bgColor,
         }}
       >
         <Box
@@ -131,7 +127,16 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   };
 
   return (
-    <>
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        flexDirection: 'row',
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       <Box
         key="enemies"
         sx={{
@@ -153,7 +158,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
       >
         {friendly.map(renderFriendlyCombatant)}
       </Box>
-    </>
+    </Box>
   );
 };
 
