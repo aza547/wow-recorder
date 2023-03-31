@@ -365,6 +365,7 @@ export default function VideoButton(props: IProps) {
         <ArenaCompDisplay
           combatants={video.combatants}
           playerTeamID={video.player._teamID}
+          bgColor={resultColor}
         />
 
         <Typography
