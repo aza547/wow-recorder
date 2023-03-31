@@ -173,6 +173,7 @@ export default class ChallengeModeDungeon extends Activity {
       level: this.level,
       flavour: this.flavour,
       overrun: this.overrun,
+      combatants: Array.from(this.combatantMap.values()),
     };
   }
 

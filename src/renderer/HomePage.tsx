@@ -168,14 +168,14 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             src={`${config.storagePath}/thumbnail.png`}
             onClick={goToLatestVideo}
             sx={{
-              border: '1px solid black',
-              borderRadius: 5,
+              border: '3px solid grey',
+              borderRadius: 0,
               boxSizing: 'border-box',
               display: 'flex',
               width: '100%',
               objectFit: 'cover',
               '&:hover': {
-                border: '1px solid #bb4420',
+                border: '3px solid #bb4420',
                 color: 'gray',
                 backgroundColor: 'lightblue',
               },

@@ -133,6 +133,7 @@ export default class RaidEncounter extends Activity {
       player: this.player,
       deaths: this.deaths,
       overrun: this.overrun,
+      combatants: Array.from(this.combatantMap.values()),
     };
   }
 

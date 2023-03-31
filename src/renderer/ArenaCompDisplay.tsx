@@ -1,9 +1,9 @@
 import { Box, Typography } from '@mui/material';
 import React from 'react';
 import CloseIcon from '@mui/icons-material/Close';
+import { specializationById } from 'main/constants';
 import * as Images from './images';
 import { getWoWClassColor } from './rendererutils';
-import { specializationById } from 'main/constants';
 
 interface IProps {
   combatants: any;
@@ -65,8 +65,8 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
           component="img"
           src={specIcon}
           sx={{
-            height: '20px',
-            width: '20px',
+            height: '18px',
+            width: '18px',
             border: '1px solid black',
             borderRadius: '15%',
             boxSizing: 'border-box',
@@ -103,8 +103,8 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
           component="img"
           src={specIcon}
           sx={{
-            height: '20px',
-            width: '20px',
+            height: '18px',
+            width: '18px',
             border: '1px solid black',
             borderRadius: '15%',
             boxSizing: 'border-box',
@@ -147,7 +147,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
       >
         {enemy.map(renderEnemyCombatant)}
       </Box>
-      <CloseIcon />
+      <CloseIcon sx={{ color: 'white' }} />
       <Box
         key="friendlies"
         sx={{

@@ -1,5 +1,5 @@
 import { Home } from '@mui/icons-material';
-import { Box, Chip, IconButton, Stack } from '@mui/material';
+import { Box, Chip, IconButton, Stack, Tooltip } from '@mui/material';
 import { TNavigatorState } from 'main/types';
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
@@ -118,15 +118,17 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
           direction="row"
           sx={{ height: '25px', color: 'black' }}
         >
-          <IconButton
-            component="label"
-            onClick={goHome}
-            sx={{
-              color: 'white',
-            }}
-          >
-            <Home />
-          </IconButton>
+          <Tooltip title="Home">
+            <IconButton
+              component="label"
+              onClick={goHome}
+              sx={{
+                color: 'white',
+              }}
+            >
+              <Home />
+            </IconButton>
+          </Tooltip>
           <Select
             options={options}
             isClearable

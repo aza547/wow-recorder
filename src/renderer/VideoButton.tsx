@@ -1,37 +1,20 @@
-import * as React from 'react';
-import {
-  MenuItem,
-  Divider,
-  Box,
-  CardMedia,
-  Card,
-  CardContent,
-  Typography,
-} from '@mui/material';
-
-import { specializationById, dungeonsByMapId } from 'main/constants';
-
-import {
-  ChallengeModeTimelineSegment,
-  TimelineSegmentType,
-} from 'main/keystone';
-
-import {
-  getEncounterNameById,
-  getInstanceDifficulty,
-  getVideoResultClass,
-  getVideoResultText,
-} from 'main/helpers';
-
-import { SoloShuffleTimelineSegment, TNavigatorState } from 'main/types';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { specializationById } from 'main/constants';
+import { getInstanceDifficulty, getVideoResultText } from 'main/helpers';
+import { TNavigatorState } from 'main/types';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventIcon from '@mui/icons-material/Event';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import FolderIcon from '@mui/icons-material/Folder';
 import * as Images from './images';
 import { getFormattedDuration, getWoWClassColor } from './rendererutils';
 import { VideoCategory } from '../types/VideoCategory';
 import ArenaCompDisplay from './ArenaCompDisplay';
+import DungeonCompDisplay from './DungeonCompDisplay';
+import RaidEncounterInfo from './RaidEncounterInfo';
+import React from 'react';
 
 interface IProps {
   index: number;
@@ -39,8 +22,6 @@ interface IProps {
   videostate: any;
 }
 
-// For shorthand referencing.
-const ipc = window.electron.ipcRenderer;
 const categories = Object.values(VideoCategory);
 
 export default function VideoButton(props: IProps) {
@@ -49,289 +30,147 @@ export default function VideoButton(props: IProps) {
   const category = categories[categoryIndex] as VideoCategory;
   const video = videostate[category][index];
 
+  const isMythicPlus = category === VideoCategory.MythicPlus;
+  const isRaid = category === VideoCategory.Raids;
+  const isBattleground = category === VideoCategory.Battlegrounds;
+  const isArena = !isMythicPlus && !isRaid && !isBattleground;
+  const isSoloShuffle = category === VideoCategory.SoloShuffle;
+
+  const {
+    duration,
+    result,
+    isProtected,
+    player,
+    difficultyID,
+    encounterID,
+    zoneID,
+    fullPath,
+  } = video;
+
+  const bookmarkOpacity = isProtected ? 1 : 0.2;
+
   let resultColor = 'rgb(156, 21, 21, 0.3)';
 
-  // Need to not be const as it will be modified later if a Mythic+.
-  let resultText = getVideoResultText(
-    category,
-    video.result,
-    video.soloShuffleRoundsWon,
-    video.soloShuffleRoundsPlayed
-  );
-
-  if (video.result) {
+  if (result) {
     resultColor = 'rgb(53, 164, 50, 0.3)';
   }
 
-  const isProtected = video.protected;
-
-  const { duration } = video;
   const formattedDuration = getFormattedDuration(duration);
 
-  const [anchorElement, setAnchorElement] = React.useState<null | HTMLElement>(
-    null
-  );
-  const [mouseX, setMouseX] = React.useState<number>(0);
-  const [mouseY, setMouseY] = React.useState<number>(0);
-  const open = Boolean(anchorElement);
-
   let playerName;
+  let playerRealm;
   let specIcon;
   let playerClass;
-  let playerRealm;
+  let playerClassColor;
 
-  if (video.player) {
-    playerName = video.player._name;
-    playerRealm = video.player._realm;
-    specIcon = Images.specImages[video.player._specID] || Images.specImages[0];
-    playerClass = specializationById[video.player._specID]?.class ?? '';
+  if (player) {
+    playerName = player._name;
+    playerRealm = player._realm;
+    specIcon = Images.specImages[player._specID] || Images.specImages[0];
+    playerClass = specializationById[player._specID]?.class ?? '';
+    playerClassColor = getWoWClassColor(playerClass);
   } else {
     playerName = '';
     playerRealm = '';
     specIcon = Images.specImages[0];
     playerClass = '';
+    playerClassColor = 'black';
   }
-
-  const playerClassColor = getWoWClassColor(playerClass);
-
-  // BGs don't log COMBATANT_INFO events so we can't display a lot of stuff
-  // that we can for other categories.
-  const isMythicPlus = category === VideoCategory.MythicPlus;
-  const isSoloShuffle = category === VideoCategory.SoloShuffle;
-  const isRaid = category === VideoCategory.Raids;
-  const videoInstanceDifficulty = isRaid
-    ? getInstanceDifficulty(video.difficultyID)
-    : null;
 
   let buttonImage;
 
-  switch (category) {
-    case VideoCategory.Raids:
-      buttonImage = Images.raidImages[video.encounterID];
-      break;
-
-    case VideoCategory.MythicPlus:
-      buttonImage = Images.dungeonImages[video.zoneID];
-      break;
-
-    case VideoCategory.Battlegrounds:
-      buttonImage = Images.battlegroundImages[video.zoneID];
-      break;
-
-    default:
-      buttonImage = Images.arenaImages[video.zoneID];
+  if (category === VideoCategory.Raids) {
+    buttonImage = Images.raidImages[encounterID];
+  } else {
+    buttonImage = Images.arenaImages[zoneID];
   }
 
-  /**
-   * Functions to handle opening and closing of context menus.
-   */
-  const openMenu = (event: React.MouseEvent<HTMLDivElement>) => {
-    setAnchorElement(event.currentTarget);
-    setMouseY(event.clientY);
-    setMouseX(event.clientX);
-  };
+  let resultText;
 
-  const handleCloseMenu = () => {
-    setAnchorElement(null);
-  };
+  if (isMythicPlus) {
+    if (video.result) {
+      resultText = `+${video.upgradeLevel}`;
+      resultColor = 'rgb(53, 164, 50, 0.3)';
+    }
+  }
 
-  let closeMenuTimer: NodeJS.Timer;
-
-  const mouseEnterMenu = () => {
-    clearTimeout(closeMenuTimer);
-  };
-
-  const mouseExitMenu = () => {
-    clearTimeout(closeMenuTimer);
-    closeMenuTimer = setTimeout(() => setAnchorElement(null), 300);
-  };
+  const videoInstanceDifficulty = isRaid
+    ? getInstanceDifficulty(difficultyID)
+    : null;
 
   /**
    * Delete a video.
    */
-  function deleteVideo(filePath: string) {
-    ipc.sendMessage('contextMenu', ['delete', filePath]);
-    handleCloseMenu();
-  }
+  const deleteVideo = (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+    window.electron.ipcRenderer.sendMessage('contextMenu', [
+      'delete',
+      fullPath,
+    ]);
+  };
 
   /**
    * Move a video to the permanently saved location.
    */
-  const saveVideo = (filePath: string) => {
-    ipc.sendMessage('contextMenu', ['save', filePath]);
-    handleCloseMenu();
+  const saveVideo = (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+    window.electron.ipcRenderer.sendMessage('contextMenu', ['save', fullPath]);
   };
 
   /**
    * Open the location of the video in file explorer.
    */
-  const openLocation = (filePath: string) => {
-    ipc.sendMessage('contextMenu', ['open', filePath]);
-    handleCloseMenu();
+  const openLocation = (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+    window.electron.ipcRenderer.sendMessage('contextMenu', ['open', fullPath]);
   };
-
-  /**
-   * Seek the selected video to the specified relative timestamp
-   */
-  const seekVideo = (index: number, timestamp: number) => {
-    // @@@ TODO FIX
-    // ipc.sendMessage('contextMenu', ['seekVideo', index, timestamp]);
-    // handleCloseMenu();
-  };
-
-  /**
-   * Generate the JSX for the timeline segments that are used in the context menu on
-   * the VideoButton.
-   */
-  const renderKeystoneTimelineSegments = (
-    timeline: ChallengeModeTimelineSegment[]
-  ): any[] => {
-    const timelineSegmentsMenuItems = timeline.map((segment: any) => {
-      let timelineSegmentMenu;
-      let segmentDurationText;
-      const result = Boolean(segment.result);
-
-      // If the metadata for some reason gets a malformed timestamp, let's
-      // not make it break the whole UI but instead silently ignore it for now.
-      try {
-        segmentDurationText = getFormattedDuration(segment.timestamp);
-      } catch (e: any) {
-        console.error(e);
-        return;
-      }
-
-      if (segment.segmentType === TimelineSegmentType.Trash) {
-        timelineSegmentMenu = (
-          <div className="segment-type segment-type-trash">
-            <span>{segmentDurationText}</span>: Trash
-          </div>
-        );
-      } else if (segment.segmentType == TimelineSegmentType.BossEncounter) {
-        timelineSegmentMenu = (
-          <div className="segment-entry">
-            <div className="segment-type segment-type-boss">
-              <span>{segmentDurationText}</span>: Boss:{' '}
-              {getEncounterNameById(segment.encounterId)}
-            </div>
-            <div
-              className={`segment-result ${
-                result ? 'goodResult' : 'badResult'
-              }`}
-            >
-              {getVideoResultText(VideoCategory.Raids, result, 0, 0)}
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <MenuItem
-          key={`video-segment-${segment.timestamp}`}
-          onClick={() => seekVideo(index, segment.timestamp)}
-        >
-          {timelineSegmentMenu}
-        </MenuItem>
-      );
-    });
-
-    return [...timelineSegmentsMenuItems, <Divider key="video-segments-end" />];
-  };
-
-  /**
-   * Generate the JSX for the timeline segments that are used in the context menu on
-   * the VideoButton.
-   */
-  const renderSoloShuffleTimelineSegments = (
-    timeline: SoloShuffleTimelineSegment[]
-  ): any[] => {
-    const timelineSegmentsMenuItems = timeline.map((segment: any) => {
-      let timelineSegmentMenu;
-      let segmentDurationText;
-      const result = Boolean(segment.result);
-
-      // If the metadata for some reason gets a malformed timestamp, let's
-      // not make it break the whole UI but instead silently ignore it for now.
-      try {
-        segmentDurationText = getFormattedDuration(segment.timestamp);
-      } catch (e: any) {
-        console.error(e);
-        return;
-      }
-
-      timelineSegmentMenu = (
-        <div className="segment-entry">
-          <div className="segment-type">
-            <span>{segmentDurationText}</span>: Round {segment.round}
-          </div>
-          <div
-            className={`segment-result ${result ? 'goodResult' : 'badResult'}`}
-          >
-            {getVideoResultText(VideoCategory.ThreeVThree, result, 0, 0)}
-          </div>
-        </div>
-      );
-
-      return (
-        <MenuItem
-          key={`video-segment-${segment.timestamp}`}
-          onClick={() => seekVideo(index, segment.timestamp)}
-        >
-          {timelineSegmentMenu}
-        </MenuItem>
-      );
-    });
-
-    return [...timelineSegmentsMenuItems, <Divider key="video-segments-end" />];
-  };
-
-  const buttonClasses = ['videoButton'];
-  let keystoneTimelineSegments = [];
-
-  if (isMythicPlus) {
-    buttonClasses.push('dungeon');
-
-    if (video.result) {
-      resultText = `+${video.upgradeLevel}`;
-      resultColor = '#1eff00';
-    }
-
-    const { timeline } = video;
-
-    if (timeline) {
-      keystoneTimelineSegments = renderKeystoneTimelineSegments(video.timeline);
-    }
-  }
-
-  let soloShuffleTimelineSegments = [];
-
-  if (isSoloShuffle && video.timeline !== undefined) {
-    soloShuffleTimelineSegments = renderSoloShuffleTimelineSegments(
-      video.timeline
-    );
-  }
-
-  const difficultyClass = isMythicPlus ? 'instance-difficulty' : 'difficulty';
 
   return (
     <Box
       sx={{
         display: 'flex',
         width: '100%',
+        height: '100px',
       }}
     >
       <Box
-        component="img"
-        src={buttonImage}
         sx={{
-          border: '1px solid black',
-          borderRadius: '1%',
-          boxSizing: 'border-box',
-          display: 'flex',
-          height: '75px',
-          flex: '0 0 150px',
-          objectFit: 'cover',
+          height: '100px',
+          width: '200px',
         }}
-      />
+      >
+        <Box
+          component="img"
+          src={buttonImage}
+          sx={{
+            border: '1px solid black',
+            borderRadius: '1%',
+            boxSizing: 'border-box',
+            height: '100px',
+            width: '200px',
+            objectFit: 'cover',
+          }}
+        />
+
+        {(isSoloShuffle || isMythicPlus) && (
+          <Typography
+            align="center"
+            sx={{
+              position: 'relative',
+              bottom: '75px',
+              left: '0px',
+              color: 'white',
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+              fontSize: '2rem',
+              WebkitTextStroke: '2px black',
+            }}
+          >
+            4-2
+          </Typography>
+        )}
+      </Box>
+
       <Box
         sx={{
           border: '1px solid black',
@@ -414,10 +253,14 @@ export default function VideoButton(props: IProps) {
             gridColumnEnd: 4,
           }}
         >
-          <ArenaCompDisplay
-            combatants={video.combatants}
-            playerTeamID={video.player._teamID}
-          />
+          {isArena && (
+            <ArenaCompDisplay
+              combatants={video.combatants}
+              playerTeamID={video.player._teamID}
+            />
+          )}
+          {isMythicPlus && <DungeonCompDisplay combatants={video.combatants} />}
+          {isRaid && <RaidEncounterInfo video={video} />}
         </Box>
 
         <Box
@@ -465,13 +308,31 @@ export default function VideoButton(props: IProps) {
         <Box
           sx={{
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             alignItems: 'center',
             gridColumnStart: 6,
             gridColumnEnd: 7,
           }}
         >
-          <BookmarksIcon sx={{ color: 'white' }} />
+          <Tooltip title="Save this video, protecting it from being aged out.">
+            <IconButton onClick={saveVideo}>
+              <BookmarksIcon
+                sx={{ color: 'white', opacity: bookmarkOpacity }}
+              />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Open folder in system explorer.">
+            <IconButton onClick={openLocation}>
+              <FolderIcon sx={{ color: 'white' }} />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Permanently delete this video.">
+            <IconButton onClick={deleteVideo}>
+              <DeleteForeverIcon sx={{ color: 'white' }} />
+            </IconButton>
+          </Tooltip>
         </Box>
 
         {/* {isMythicPlus || (

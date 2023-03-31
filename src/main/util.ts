@@ -195,7 +195,7 @@ const loadVideoDetails = async (video: FileInfo) => {
     date: getVideoDate(videoDate),
     isFromToday: today.toDateString() === videoDate.toDateString(),
     time: getVideoTime(videoDate),
-    protected: Boolean(metadata.protected),
+    isProtected: Boolean(metadata.protected),
     size: video.size,
     dateObject: videoDate,
   };
