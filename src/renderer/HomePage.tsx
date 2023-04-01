@@ -1,24 +1,9 @@
 import { Box, Typography } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
-import {
-  Bar,
-  BarChart,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { TNavigatorState } from 'main/types';
+import React from 'react';
 import icon from '../../assets/icon/large-icon.png';
-import {
-  getNumVideos,
-  getRecentActivityStats,
-  getTotalUsage,
-} from './rendererutils';
-import useSettings from '../settings/useSettings';
+import { getLatestCategory, getNumVideos } from './rendererutils';
 
 interface IProps {
   videoState: any;
@@ -27,48 +12,25 @@ interface IProps {
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
   const { videoState, setNavigation } = props;
-  const [config] = useSettings();
-  console.log(videoState);
+  const latestCategory = getLatestCategory(videoState);
 
-  // Bit hacky
-  let latestCategory;
-  if (videoState.latestCategory !== undefined) {
-    latestCategory = videoState.latestCategory as VideoCategory;
-    const latestVideoPath = videoState[latestCategory][0].fullPath;
+  let thumbnailPath: string | undefined;
 
-    window.electron.ipcRenderer.sendMessage('prepareThumbnail', [
-      latestVideoPath,
-    ]);
+  if (latestCategory !== undefined) {
+    thumbnailPath = videoState[latestCategory][0].thumbnail;
   }
 
   const goToLatestVideo = () => {
     const categories = Object.values(VideoCategory);
-    const categoryIndex = categories.indexOf(latestCategory as VideoCategory);
+    const categoryIndex = categories.indexOf(
+      getLatestCategory(videoState) as VideoCategory
+    );
 
-    // @@@ TODO fix, this gets reset when state is refreshed and we lose the latestCategory?
-    // SO when we click this button twice we hit an error.
     setNavigation({
       categoryIndex,
       videoIndex: 0,
     });
   };
-
-  const storageUsage = Math.round(getTotalUsage(videoState) / 1024 ** 3);
-  const maxUsage = Math.round(config.maxStorage);
-  const numVideos = getNumVideos(videoState);
-
-  const storageData = [
-    {
-      name: 'Used',
-      value: storageUsage,
-      fill: '#bb4220',
-    },
-    {
-      name: 'Available',
-      value: maxUsage - storageUsage,
-      fill: 'grey',
-    },
-  ];
 
   return (
     <Box
@@ -77,6 +39,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         alignItems: 'center',
         justifyContet: 'center',
         flexDirection: 'column',
+        width: '100%',
+        height: '100%',
       }}
     >
       <Box
@@ -104,7 +68,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           fontFamily: '"Arial",sans-serif',
         }}
       >
-        You have {numVideos} videos saved.
+        You have {getNumVideos(videoState)} videos saved.
       </Typography>
 
       <Box
@@ -113,66 +77,38 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'row',
+          width: '100%',
+          height: '100%',
         }}
       >
         <Box
           sx={{
             display: 'flex',
+            width: '50%',
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
           }}
         >
-          <ResponsiveContainer>
-            <PieChart margin={{ bottom: 0, top: 0, left: 0, right: 0 }}>
-              <Legend layout="vertical" verticalAlign="top" align="center" />
-              <Pie
-                data={storageData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-              />
-              <Tooltip formatter={(label) => `${label}GB`} />
-            </PieChart>
-          </ResponsiveContainer>
-          <Typography
-            align="center"
-            variant="h5"
-            sx={{
-              color: 'white',
-              fontFamily: '"Arial","Arial",sans-serif',
-            }}
-          >
-            Disk Usage
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            margin: '30px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-          }}
-        >
-          {/* <Box
+          <Box
             component="img"
-            src={`${config.storagePath}/thumbnail.png`}
+            src={thumbnailPath}
             onClick={goToLatestVideo}
             sx={{
-              border: '3px solid grey',
+              border: '1px solid white',
               borderRadius: 0,
               boxSizing: 'border-box',
               display: 'flex',
+              height: '100%',
+              width: '100%',
               objectFit: 'cover',
               '&:hover': {
-                border: '3px solid #bb4420',
+                border: '1px solid #bb4420',
                 color: 'gray',
                 backgroundColor: 'lightblue',
               },
             }}
-          /> */}
+          />
           <Typography
             align="center"
             variant="h5"
@@ -182,33 +118,6 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             }}
           >
             Latest Video
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-          }}
-        >
-          <ResponsiveContainer>
-            <BarChart data={getRecentActivityStats(videoState)}>
-              <Bar dataKey="Recordings" fill="#bb4420" />
-              <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
-              <YAxis interval={0} />
-              <Tooltip />
-            </BarChart>
-          </ResponsiveContainer>
-          <Typography
-            align="center"
-            variant="h5"
-            sx={{
-              color: 'white',
-              fontFamily: '"Arial",sans-serif',
-            }}
-          >
-            Recent Activity
           </Typography>
         </Box>
       </Box>

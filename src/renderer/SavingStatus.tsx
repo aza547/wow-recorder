@@ -1,7 +1,18 @@
 import { IconButton } from '@mui/material';
 import SaveAsIcon from '@mui/icons-material/SaveAs';
+import { SaveStatus } from 'main/types';
 
-export default function SavingStatus() {
+interface IProps {
+  savingStatus: SaveStatus;
+}
+
+export default function SavingStatus(props: IProps) {
+  const { savingStatus } = props;
+
+  if (savingStatus === SaveStatus.NotSaving) {
+    return <></>;
+  }
+
   return (
     <IconButton
       id="saving-icon"

@@ -213,9 +213,8 @@ const setupTray = () => {
  * @param status the status number
  */
 const updateRecStatus = (status: RecStatus, reason = '') => {
-  if (mainWindow !== null) {
-    mainWindow.webContents.send('updateRecStatus', status, reason);
-  }
+  if (mainWindow === null) return;
+  mainWindow.webContents.send('updateRecStatus', status, reason);
 };
 
 /**
@@ -264,7 +263,7 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    // recorder = new Recorder(mainWindow);
+    recorder = new Recorder(mainWindow);
 
     Poller.getInstance()
       .on('wowProcessStart', wowProcessStarted)
@@ -278,7 +277,7 @@ const createWindow = async () => {
       return;
     }
 
-    // recorder.configure();
+    recorder.configure();
 
     Poller.getInstance().start();
     mainWindow.webContents.send('refreshState');
@@ -286,13 +285,13 @@ const createWindow = async () => {
     const retailLogPath = cfg.getPath('retailLogPath');
     const classicLogPath = cfg.getPath('classicLogPath');
 
-    // if (retailLogPath) {
-    //   retailHandler = new RetailLogHandler(recorder, retailLogPath);
-    // }
+    if (retailLogPath) {
+      retailHandler = new RetailLogHandler(recorder, retailLogPath);
+    }
 
-    // if (classicLogPath) {
-    //   classicHandler = new ClassicLogHandler(recorder, classicLogPath);
-    // }
+    if (classicLogPath) {
+      classicHandler = new ClassicLogHandler(recorder, classicLogPath);
+    }
   });
 
   mainWindow.on('closed', () => {
@@ -565,13 +564,6 @@ ipcMain.on('openURL', (event, args) => {
 ipcMain.handle('getVideoState', async () =>
   loadAllVideos(cfg.get<string>('storagePath'))
 );
-
-/**
- * Prepare a video thumbnail, called when refreshing the home page.
- */
-ipcMain.on('prepareThumbnail', async (_event, args) => {
-  await VideoProcessQueue.getThumbnail(args[0], cfg.get<string>('storagePath'));
-});
 
 ipcMain.on('getAudioDevices', (event) => {
   if (!recorder || !recorder.obsInitialized) {

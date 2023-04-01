@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import { Button, Tooltip } from '@mui/material';
 import icon from '../../assets/icon/discord-icon.png';
 
 const ipc = window.electron.ipcRenderer;
@@ -9,14 +9,15 @@ export default function DiscordButton() {
   };
 
   return (
-    <Button
-      id="log-button"
-      type="button"
-      onClick={openDiscordURL}
-      title="Logs"
-      sx={{ padding: '2px', minWidth: '25px' }}
-    >
-      <img alt="icon" src={icon} height="25px" width="25px" />
-    </Button>
+    <Tooltip title="Discord">
+      <Button
+        id="discord-button"
+        type="button"
+        onClick={openDiscordURL}
+        sx={{ padding: '2px', minWidth: '25px' }}
+      >
+        <img alt="icon" src={icon} height="25px" width="25px" />
+      </Button>
+    </Tooltip>
   );
 }

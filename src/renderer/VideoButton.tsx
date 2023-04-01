@@ -314,7 +314,7 @@ export default function VideoButton(props: IProps) {
             gridColumnEnd: 7,
           }}
         >
-          <Tooltip title="Save this video, protecting it from being aged out.">
+          <Tooltip title="Never age out">
             <IconButton onClick={saveVideo}>
               <BookmarksIcon
                 sx={{ color: 'white', opacity: bookmarkOpacity }}
@@ -322,13 +322,13 @@ export default function VideoButton(props: IProps) {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Open folder in system explorer.">
+          <Tooltip title="Open location">
             <IconButton onClick={openLocation}>
               <FolderIcon sx={{ color: 'white' }} />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Permanently delete this video.">
+          <Tooltip title="Delete">
             <IconButton onClick={deleteVideo}>
               <DeleteForeverIcon sx={{ color: 'white' }} />
             </IconButton>

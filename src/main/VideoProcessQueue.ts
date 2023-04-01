@@ -4,7 +4,12 @@ import SizeMonitor from '../utils/SizeMonitor';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
 import { Metadata, SaveStatus, VideoQueueItem } from './types';
-import { fixPathWhenPackaged, tryUnlinkSync, writeMetadataFile } from './util';
+import {
+  fixPathWhenPackaged,
+  tryUnlinkSync,
+  writeMetadataFile,
+  getThumbnailFileNameForVideo,
+} from './util';
 
 const atomicQueue = require('atomic-queue');
 const ffmpeg = require('fluent-ffmpeg');
@@ -107,6 +112,9 @@ export default class VideoProcessQueue {
 
     await writeMetadataFile(videoPath, data.metadata);
     tryUnlinkSync(data.bufferFile);
+
+    await VideoProcessQueue.getThumbnail(videoPath);
+
     done();
   }
 
@@ -237,12 +245,17 @@ export default class VideoProcessQueue {
 
   /**
    * Takes an input video file and writes a screenshot a second into the
-   * video to disk.
+   * video to disk. Going further into the file seems computationally
+   * expensive, so we avoid that.
    *
-   * @param {string} video path to initial MP4 file
+   * @param {string} video full path to initial MP4 file
    * @param {string} output path to output directory
    */
-  static async getThumbnail(video: string, output: string) {
+  private static async getThumbnail(video: string) {
+    const thumbnailPath = getThumbnailFileNameForVideo(video);
+    const thumbnailFile = path.basename(thumbnailPath);
+    const thumbnailDir = path.dirname(thumbnailPath);
+
     return new Promise<void>((resolve) => {
       ffmpeg(video)
         .on('end', () => {
@@ -260,8 +273,8 @@ export default class VideoProcessQueue {
         })
         .screenshots({
           timestamps: [0],
-          folder: output,
-          filename: 'thumbnail.png',
+          folder: thumbnailDir,
+          filename: thumbnailFile,
         });
     });
   }

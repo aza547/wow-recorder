@@ -12,10 +12,19 @@ import Navigator from './Navigator';
 interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  recorderStatus: any;
+  upgradeStatus: any;
+  savingStatus: any;
 }
 
 const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigation } = props;
+  const {
+    navigation,
+    setNavigation,
+    recorderStatus,
+    upgradeStatus,
+    savingStatus,
+  } = props;
 
   return (
     <Box
@@ -23,6 +32,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
         borderTop: '1px solid black',
         height: '35px',
         boxSizing: 'border-box',
+        alignItems: 'flex-end',
       }}
     >
       <Box
@@ -44,9 +54,9 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
             justifyContent: 'flex-start',
           }}
         >
-          <RecorderStatus />
-          <VersionUpdateWidget />
-          <SavingStatus />
+          <RecorderStatus recorderStatus={recorderStatus}/>
+          <VersionUpdateWidget upgradeStatus={upgradeStatus}/>
+          <SavingStatus savingStatus={savingStatus}/>
         </Box>
 
         <Navigator navigation={navigation} setNavigation={setNavigation} />

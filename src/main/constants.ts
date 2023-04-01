@@ -711,7 +711,6 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
 
 const categoryTabSx = {
   padding: '12px',
-  bgcolor: '#272e48',
   color: 'white',
   borderBottom: '1px solid',
   borderColor: 'black',
@@ -721,7 +720,6 @@ const categoryTabSx = {
 
 const categoryTabsSx = {
   borderColor: '#000000',
-  bgcolor: '#272e48',
   textColor: 'secondary',
   width: '175px',
   overflow: 'visible',
@@ -731,7 +729,6 @@ const videoButtonSx = {
   padding: '0px',
   margin: 0.5,
   border: '1px solid black',
-  bgcolor: '#272e48',
   color: 'white',
   minHeight: '1px',
   height: '100px',
@@ -1130,16 +1127,6 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   Bloodthirst: 72,
   Shockwave: 73,
 };
-
-const daysOfWeek: NumberKeyToStringValueMapType = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-}
 
 export {
   months,

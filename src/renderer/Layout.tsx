@@ -99,32 +99,17 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
   // This is effectively equivalent to componentDidMount() in
   // React Component classes
-  React.useEffect(
-    () => {
-      ipc.on('fatalError', async (stack) => {
-        setState((prevState) => {
-          return {
-            ...prevState,
-            fatalError: true,
-            fatalErrorText: stack as string,
-          };
-        });
+  React.useEffect(() => {
+    ipc.on('fatalError', async (stack) => {
+      setState((prevState) => {
+        return {
+          ...prevState,
+          fatalError: true,
+          fatalErrorText: stack as string,
+        };
       });
-
-      /**
-       * Attach listener for seeking in the video on load/unload
-       */
-      ipc.on('seekVideo', (vIndex, vSeekTime) => {
-        // @@@ TODO fix this
-      });
-    },
-    // From React documentation:
-    //
-    // > It's important to note the empty array as second argument for the
-    // > Effect Hook which makes sure to trigger the effect only on component
-    // > load (mount) and component unload (unmount).
-    []
-  );
+    });
+  }, []);
 
   React.useEffect(() => {
     videoSeek(state.videoSeek);
@@ -180,6 +165,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           sx={{
             display: 'flex',
             overflowY: 'scroll',
+            height: '100%',
+            width: '100%',
           }}
         >
           <List sx={{ width: '100%' }}>
@@ -215,7 +202,17 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   // @@@ TODO fix up error prompt I deleted here
   if (categoryIndex < 0) {
     return (
-      <Box sx={{ width: '100%', flexGrow: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexGrow: 1,
+          alignItems: 'center',
+          justifyContet: 'center',
+          flexDirection: 'column',
+          width: '100%',
+          height: '100%',
+        }}
+      >
         <HomePage videoState={videoState} setNavigation={setNavigation} />
       </Box>
     );

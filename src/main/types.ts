@@ -31,6 +31,14 @@ enum SaveStatus {
 }
 
 /**
+ * Application saving status.
+ */
+type UpgradeStatus = {
+  available: boolean;
+  link: string | undefined;
+};
+
+/**
  * Unit flags from combat log events
  * See https://wowpedia.fandom.com/wiki/UnitFlag for more information
  */
@@ -249,6 +257,7 @@ type TNavigatorState = {
 export {
   RecStatus,
   SaveStatus,
+  UpgradeStatus,
   UnitFlags,
   PlayerDeathType,
   VideoPlayerSettings,

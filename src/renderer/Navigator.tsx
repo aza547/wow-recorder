@@ -4,6 +4,7 @@ import { TNavigatorState } from 'main/types';
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
 import Select from 'react-select';
+import ReplyIcon from '@mui/icons-material/Reply';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -31,6 +32,19 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       categoryIndex: -1,
       videoIndex: -1,
     });
+  };
+
+  const goBack = () => {
+    const { categoryIndex, videoIndex } = navigation;
+
+    if (videoIndex !== -1) {
+      setNavigation({
+        categoryIndex,
+        videoIndex: -1,
+      });
+    } else {
+      goHome();
+    }
   };
 
   const options = categories.map((c) => ({ value: c, label: c }));
@@ -151,6 +165,17 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
               },
             })}
           />
+          <Tooltip title="Back">
+            <IconButton
+              component="label"
+              onClick={goBack}
+              sx={{
+                color: 'white',
+              }}
+            >
+              <ReplyIcon />
+            </IconButton>
+          </Tooltip>
         </Stack>
       </Box>
     </>

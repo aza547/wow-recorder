@@ -84,7 +84,6 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
             onClick={toggleCategoryMenu}
             startIcon={<KeyboardDoubleArrowUp />}
             sx={{
-              bgcolor: '#272e48',
               border: '1px solid black',
               borderRadius: '1',
             }}
@@ -109,7 +108,6 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
           <Button
             variant="contained"
             sx={{
-              bgcolor: '#272e48',
               color: 'white',
               border: '1px solid black',
               borderRadius: '1',

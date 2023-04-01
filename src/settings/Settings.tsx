@@ -102,7 +102,6 @@ export default function Settings() {
 
   const categoryTabsSx = {
     borderColor: '#000000',
-    bgcolor: '#272e48',
     textColor: 'secondary',
     overflow: 'visible',
     borderRight: '1px solid',
@@ -110,7 +109,6 @@ export default function Settings() {
 
   const categoryTabSx = {
     padding: '12px',
-    bgcolor: '#272e48',
     color: 'white',
     borderBottom: '1px solid',
     borderColor: 'black',
@@ -145,7 +143,6 @@ export default function Settings() {
     <Box
       sx={{
         flexGrow: 1,
-        bgcolor: 'background.paper',
         display: 'flex',
         height: '100%',
       }}

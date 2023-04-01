@@ -1,6 +1,11 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
-import { TNavigatorState } from 'main/types';
+import {
+  RecStatus,
+  SaveStatus,
+  TNavigatorState,
+  UpgradeStatus,
+} from 'main/types';
 import Box from '@mui/material/Box';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
@@ -10,18 +15,47 @@ import './App.css';
 const ipc = window.electron.ipcRenderer;
 
 const Application = () => {
+  const [recorderStatus, setRecorderStatus] = React.useState<RecStatus>(
+    RecStatus.InvalidConfig
+  );
+
+  const [upgradeStatus, setUpgradeStatus] = React.useState<UpgradeStatus>({
+    available: false,
+    link: undefined,
+  });
+
+  const [savingStatus, setSavingStatus] = React.useState<SaveStatus>(
+    SaveStatus.NotSaving
+  );
+
+  const [videoState, setVideoState] = React.useState<any>({});
   const [navigation, setNavigation] = React.useState<TNavigatorState>({
     categoryIndex: -1,
     videoIndex: -1,
   });
 
-  console.log(navigation);
-
-  const [videoState, setVideoState] = React.useState<any>({});
-
   React.useEffect(() => {
     ipc.on('refreshState', async () => {
       setVideoState(await ipc.invoke('getVideoState', []));
+    });
+
+    ipc.on('updateRecStatus', (status, reason) => {
+      setRecorderStatus(status as RecStatus);
+
+      // if (newStatus === RecStatus.InvalidConfig) {
+      //   setInvalidReason(reason as string);
+      // }
+    });
+
+    ipc.on('updateSaveStatus', (status) => {
+      setSavingStatus(status as SaveStatus);
+    });
+
+    ipc.on('updateUpgradeStatus', (available, link) => {
+      setUpgradeStatus({
+        available: available as boolean,
+        link: link as string,
+      });
     });
   }, []);
 
@@ -41,7 +75,13 @@ const Application = () => {
         videoState={videoState}
         setVideoState={setVideoState}
       />
-      <BottomStatusBar navigation={navigation} setNavigation={setNavigation} />
+      <BottomStatusBar
+        navigation={navigation}
+        setNavigation={setNavigation}
+        recorderStatus={recorderStatus}
+        upgradeStatus={upgradeStatus}
+        savingStatus={savingStatus}
+      />
     </Box>
   );
 };

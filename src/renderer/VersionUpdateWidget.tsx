@@ -1,23 +1,22 @@
-import React from 'react';
 import UpgradeIcon from '@mui/icons-material/Upgrade';
 import { IconButton, Tooltip } from '@mui/material';
+import { UpgradeStatus } from 'main/types';
 
 const ipc = window.electron.ipcRenderer;
 
-export default function VersionUpdateWidget() {
-  const [downloadUrl, setDownloadUrl] = React.useState<string>('');
+interface IProps {
+  upgradeStatus: UpgradeStatus;
+}
+
+export default function VersionUpdateWidget(props: IProps) {
+  const { upgradeStatus } = props;
+  const { available, link } = upgradeStatus;
 
   const openReleaseDownloadUrl = () => {
-    ipc.sendMessage('openURL', [downloadUrl]);
+    ipc.sendMessage('openURL', [link]);
   };
 
-  React.useEffect(() => {
-    ipc.on('updateAvailable', (url) => {
-      setDownloadUrl(url as string);
-    });
-  }, []);
-
-  if (!downloadUrl) {
+  if (!available) {
     return <></>;
   }
 
