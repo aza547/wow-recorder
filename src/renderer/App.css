@@ -29,7 +29,7 @@ div#root {
 }
 
 .video{
-  height: calc(100% - 150px);
+  height: 100%;
   top: 0px;
 }
 
@@ -68,60 +68,8 @@ div#root {
   height: .7em;
 }
 
-.App {
-  height: 100%;
-  width: 100%;
-}
-
-.TabPanel {
-  height: 100%;
-  width: 100%;
-  background-color: #272e48;
-  padding: 0;
-}
-
-.MuiTypography-root:not(.MuiDialogTitle-root) {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.MuiBox-root {
-  height: 100%;
-  width: 100%;
-  margin: 0px;
-  padding: 0px;
-  background-color: #272e48;
-}
-
-.MuiTabScrollButton-root {
-  opacity: 1;
-  border-top: 1px solid black;
-}
-
-.MuiButtonBase-root {
-  padding: 0;
-}
-
-h1 {text-align: center;}
-h2:not(.MuiDialogTitle-root) {
-  width: 100%;
-  height: 100%;
-  padding: 0px;
-  text-align: center;
-  background: #1abc9c;
-  color: rgb(0, 0, 0);
-  font-size: 30px;
-}
-
 #title-bar {
   -webkit-app-region: drag;
-  height: 35px;
-  padding: 0px;
-  margin: 0px;
-  border-bottom: 1px solid black;
-  font-family: sans-serif;
 }
 
 #title {
@@ -154,6 +102,10 @@ h2:not(.MuiDialogTitle-root) {
   outline: none;
 }
 
+#navigator {
+  color: white;
+}
+
 .center {
   border: 5px solid #FFFF00;
   text-align: center;
@@ -165,6 +117,52 @@ h2:not(.MuiDialogTitle-root) {
   left: 5px;
 }
 
+.status-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 108.75px;
+  padding-top: .5rem;
+  padding-left: 0.25rem;
+  justify-items: center;
+  gap: .125rem 0rem;
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+}
+
+.status-buttons div button {
+  background-color: transparent;
+  border-width: 0px;
+  cursor: pointer;
+}
+
+.status-buttons div button:hover {
+  background-color: darkgrey;
+  border-width: 0px;
+  border-radius: 10px;
+}
+
+.status-buttons-fatal-error {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 75px;
+  padding-top: .5rem;
+  padding-left: 0.25rem;
+  gap: .125rem 0rem;
+}
+
+.status-buttons-fatal-error div button {
+  background-color: transparent;
+  border-width: 0px;
+  cursor: pointer;
+}
+
+.status-buttons-fatal-error div button:hover {
+  background-color: darkgrey;
+  border-width: 0px;
+  border-radius: 10px;
+}
+
 .app-buttons {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -174,7 +172,8 @@ h2:not(.MuiDialogTitle-root) {
   justify-items: center;
   gap: .125rem 0rem;
   position: fixed;
-  top: 275px;
+  bottom: 0px;
+  right: 0px;
 }
 
 .app-buttons div button {
@@ -210,87 +209,9 @@ h2:not(.MuiDialogTitle-root) {
   border-radius: 10px;
 }
 
-.videoButton {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  display: inline-block;
-  vertical-align: middle;
-  line-height: 20px; /* <-- adjust this to spread out text */
-  text-transform: none;
-  -webkit-text-stroke: .35px black;
-  -webkit-text-fill-color: white;
-  font: bold 16px Arial Narrow;
-  text-shadow:
-    1px  1px 0 #000,
-   -1px -1px 0 #000,
-    1px -1px 0 #000,
-   -1px  1px 0 #000,
-    1px  1px 0 #000;
-}
-
-.videoButton div {
-  max-width: 120px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.videoButton.dungeon {
-  background-size: cover;
-}
-
-.encounter {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-}
-
-.zone {
-  top: 22.5px;
-  left: 5px;
-  position: absolute;
-}
-
-.duration {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-}
-
-.time {
-  top: 22.5px;
-  right: 5px;
-  position: absolute;
-}
-
-.date {
-  top: 5px;
-  right: 5px;
-  position: absolute;
-}
-
-.name {
-  bottom: 5px;
-  left: 27.5px;
-  position: absolute;
-}
-
-.specIcon {
-  bottom: 0px;
-  left: 5px;
-  position: absolute;
-}
-
-.specIcon > img {
+#spec-icon {
   width: 20px;
   height: 20px;
-}
-
-.result {
-  bottom: 22.5px;
-  right: 5px;
-  position: absolute;
 }
 
 .goodResult {
@@ -311,18 +232,6 @@ h2:not(.MuiDialogTitle-root) {
 
 .badResult {
   -webkit-text-fill-color: red;
-}
-
-.difficulty {
-  top: 40px;
-  left: 5px;
-  position: absolute;
-}
-
-.instance-difficulty {
-  top: 22.5px;
-  left: 5px;
-  position: absolute;
 }
 
 .difficulty-normal {
@@ -372,54 +281,6 @@ h2:not(.MuiDialogTitle-root) {
   100% {
       opacity: 1;
   }
-}
-
-#saving-status{
-  position:fixed;
-  bottom: 225px;
-  left: 50px;
-  height: 50px;
-  width: 50px;
-  animation: blink 2s;
-  animation-iteration-count: infinite;
-}
-
-#small-rec-status{
-  position:fixed;
-  bottom: 150px;
-  left: 55px;
-  height: 50px;
-  width: 50px;
-  animation: blink 2s;
-  animation-iteration-count: infinite;
-}
-
-#big-rec-status{
-  position:fixed;
-  bottom: 125px;
-  left: 40px;
-  height: 80px;
-  width: 80px;
-  animation: blink 2s;
-  animation-iteration-count: infinite;
-}
-
-.noVideos{
-  -webkit-text-stroke: 0.5px black;
-  -webkit-text-fill-color: white;
-  font: bold 18px Arial Narrow;
-  text-shadow:
-    1px  1px 0 #000,
-   -1px -1px 0 #000,
-    1px -1px 0 #000,
-   -1px  1px 0 #000,
-    1px  1px 0 #000;
-  height: 100px;
-  width: 200%;
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  background-color: #272e48;
 }
 
 .DEATHKNIGHT {

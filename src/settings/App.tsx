@@ -2,12 +2,20 @@ import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import Settings from './Settings';
 import SettingsTitleBar from './SettingsTitleBar';
 import '../renderer/App.css';
+import { Box } from '@mui/material';
 
 const Application = () => (
-  <div className="App">
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      width: '100%',
+    }}
+  >
     <SettingsTitleBar />
     <Settings />
-  </div>
+  </Box>
 );
 
 export default function App() {

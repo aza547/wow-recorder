@@ -1,4 +1,5 @@
-import icon from '../../assets/icon/settings-icon.png';
+import { Button, Tooltip } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -8,15 +9,15 @@ export default function SettingsButton() {
   };
 
   return (
-    <div id="settings">
-      <button
+    <Tooltip title="Settings">
+      <Button
         id="settings-cog"
         type="button"
         onClick={openSettings}
-        title="Settings"
+        sx={{ padding: '2px', minWidth: '25px' }}
       >
-        <img alt="icon" src={icon} height="25px" width="25px" />
-      </button>
-    </div>
+        <SettingsIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
+      </Button>
+    </Tooltip>
   );
 }

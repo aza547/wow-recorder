@@ -1,4 +1,5 @@
-import icon from '../../assets/icon/test-icon.png';
+import { Button, Tooltip } from '@mui/material';
+import BiotechIcon from '@mui/icons-material/Biotech';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -12,15 +13,15 @@ export default function TestButton() {
   };
 
   return (
-    <div id="test-button-div">
-      <button
+    <Tooltip title="Test">
+      <Button
         id="test-button"
         type="button"
         onClick={runTest}
-        title="Run a test"
+        sx={{ padding: '2px', minWidth: '25px' }}
       >
-        <img alt="icon" src={icon} height="25px" width="25px" />
-      </button>
-    </div>
+        <BiotechIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
+      </Button>
+    </Tooltip>
   );
 }

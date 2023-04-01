@@ -126,13 +126,23 @@ const getSortedVideos = async (
 };
 
 /**
- * Get the filename for the metadata file associated with the given video file
+ * Get the filename for the metadata file associated with the given video file.
  */
 const getMetadataFileNameForVideo = (video: string) => {
   const videoFileName = path.basename(video, '.mp4');
   const videoDirName = path.dirname(video);
   return path.join(videoDirName, `${videoFileName}.json`);
 };
+
+/**
+ * Get the filename for the thumbnail file associated with the given video file.
+ */
+const getThumbnailFileNameForVideo = (video: string) => {
+  const videoFileName = path.basename(video, '.mp4');
+  const videoDirName = path.dirname(video);
+  return path.join(videoDirName, `${videoFileName}.png`);
+};
+
 
 /**
  * Get the metadata object for a video from the accompanying JSON file.
@@ -187,6 +197,7 @@ const loadVideoDetails = async (video: FileInfo) => {
   const metadata = await getMetadataForVideo(video.name);
   const today = new Date();
   const videoDate = new Date(video.mtime);
+  const thumbnailPath = getThumbnailFileNameForVideo(video.name);
 
   return {
     fullPath: video.name,
@@ -195,7 +206,10 @@ const loadVideoDetails = async (video: FileInfo) => {
     date: getVideoDate(videoDate),
     isFromToday: today.toDateString() === videoDate.toDateString(),
     time: getVideoTime(videoDate),
-    protected: Boolean(metadata.protected),
+    isProtected: Boolean(metadata.protected),
+    size: video.size,
+    dateObject: videoDate,
+    thumbnail: thumbnailPath,
   };
 };
 
@@ -286,6 +300,11 @@ const deleteVideo = (videoPath: string) => {
   const metadataPath = getMetadataFileNameForVideo(videoPath);
   if (fs.existsSync(metadataPath)) {
     tryUnlinkSync(metadataPath);
+  }
+
+  const thumbnailPath = getThumbnailFileNameForVideo(videoPath);
+  if (fs.existsSync(thumbnailPath)) {
+    tryUnlinkSync(thumbnailPath);
   }
 };
 
@@ -427,14 +446,12 @@ const checkAppUpdate = (mainWindow: BrowserWindow | null = null) => {
 
       const release = JSON.parse(data);
       const latestVersion = release.tag_name;
-      const downloadUrl = release.assets[0].browser_download_url;
+      const link = release.assets[0].browser_download_url;
 
-      if (latestVersion !== app.getVersion() && latestVersion && downloadUrl) {
-        console.log('[Main] New version available:', latestVersion);
-
-        if (mainWindow) {
-          mainWindow.webContents.send('updateAvailable', downloadUrl);
-        }
+      if (latestVersion !== app.getVersion() && latestVersion && link) {
+        console.log('[Util] New version available:', latestVersion);
+        if (mainWindow === null) return;
+        mainWindow.webContents.send('updateUpgradeStatus', true, link);
       }
     });
   });
@@ -473,4 +490,5 @@ export {
   checkAppUpdate,
   getMetadataForVideo,
   deferredPromiseHelper,
+  getThumbnailFileNameForVideo,
 };

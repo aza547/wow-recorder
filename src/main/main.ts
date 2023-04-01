@@ -210,9 +210,8 @@ const setupTray = () => {
  * @param status the status number
  */
 const updateRecStatus = (status: RecStatus, reason = '') => {
-  if (mainWindow !== null) {
-    mainWindow.webContents.send('updateRecStatus', status, reason);
-  }
+  if (mainWindow === null) return;
+  mainWindow.webContents.send('updateRecStatus', status, reason);
 };
 
 /**
@@ -276,6 +275,7 @@ const createWindow = async () => {
     }
 
     recorder.configure();
+
     Poller.getInstance().start();
     mainWindow.webContents.send('refreshState');
 

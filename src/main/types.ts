@@ -31,6 +31,14 @@ enum SaveStatus {
 }
 
 /**
+ * Application saving status.
+ */
+type UpgradeStatus = {
+  available: boolean;
+  link: string | undefined;
+};
+
+/**
  * Unit flags from combat log events
  * See https://wowpedia.fandom.com/wiki/UnitFlag for more information
  */
@@ -237,9 +245,19 @@ enum TAudioSourceType {
   output = 'wasapi_output_capture',
 }
 
+/**
+ * Tracks the position of the app and the navigator component. A value
+ * of -1 for either of the fields here indicates no selection for the field.
+ */
+type TNavigatorState = {
+  categoryIndex: number;
+  videoIndex: number;
+};
+
 export {
   RecStatus,
   SaveStatus,
+  UpgradeStatus,
   UnitFlags,
   PlayerDeathType,
   VideoPlayerSettings,
@@ -261,4 +279,5 @@ export {
   IOBSDevice,
   IDevice,
   TAudioSourceType,
+  TNavigatorState,
 };

@@ -1,3 +1,4 @@
+import { Box } from '@mui/material';
 import icon from '../../assets/icon/small-icon.png';
 
 const ipc = window.electron.ipcRenderer;
@@ -8,7 +9,15 @@ export default function TitleBar() {
   };
 
   return (
-    <div id="title-bar">
+    <Box
+      id="title-bar"
+      sx={{
+        borderBottom: '1px solid black',
+        height: '35px',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}
+    >
       <div id="logo">
         <img alt="icon" src={icon} height="25px" width="25px" />
       </div>
@@ -18,6 +27,6 @@ export default function TitleBar() {
           ✖
         </button>
       </div>
-    </div>
+    </Box>
   );
 }

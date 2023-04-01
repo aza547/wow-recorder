@@ -1,3 +1,4 @@
+import { WoWClassColor } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
 import { Flavour } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
@@ -142,4 +143,61 @@ const addVideoMarkers = (video: any, player: Player) => {
   });
 };
 
-export { getFormattedDuration, getVideoResult, addVideoMarkers };
+const getWoWClassColor = (unitClass: string) => {
+  return WoWClassColor[unitClass];
+};
+
+const getNumVideos = (videoState: any) => {
+  let numVideos = 0;
+
+  Object.values(videoState).forEach((category: any) => {
+    Object.values(category).forEach(() => {
+      numVideos += 1;
+    });
+  });
+
+  return numVideos;
+};
+
+const getTotalDuration = (videoState: any) => {
+  let totalDuration = 0;
+
+  Object.values(videoState).forEach((category: any) => {
+    Object.values(category).forEach((video: any) => {
+      totalDuration += video.duration;
+      totalDuration += video.overrun;
+    });
+  });
+
+  return totalDuration;
+};
+
+const getLatestCategory = (videoState: any) => {
+  let latestDate = new Date(2000, 1, 1);
+  let latestCategory: VideoCategory | undefined;
+
+  Object.keys(videoState).forEach((category: any) => {
+    const date = videoState[category][0].dateObject;
+
+    if (date === undefined) {
+      return;
+    }
+
+    if (date.getTime() > latestDate.getTime()) {
+      latestDate = date;
+      latestCategory = category as VideoCategory;
+    }
+  });
+
+  return latestCategory;
+};
+
+export {
+  getFormattedDuration,
+  getVideoResult,
+  addVideoMarkers,
+  getWoWClassColor,
+  getNumVideos,
+  getTotalDuration,
+  getLatestCategory,
+};

@@ -4,7 +4,12 @@ import SizeMonitor from '../utils/SizeMonitor';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
 import { Metadata, SaveStatus, VideoQueueItem } from './types';
-import { fixPathWhenPackaged, tryUnlinkSync, writeMetadataFile } from './util';
+import {
+  fixPathWhenPackaged,
+  tryUnlinkSync,
+  writeMetadataFile,
+  getThumbnailFileNameForVideo,
+} from './util';
 
 const atomicQueue = require('atomic-queue');
 const ffmpeg = require('fluent-ffmpeg');
@@ -107,6 +112,9 @@ export default class VideoProcessQueue {
 
     await writeMetadataFile(videoPath, data.metadata);
     tryUnlinkSync(data.bufferFile);
+
+    await VideoProcessQueue.getThumbnail(videoPath);
+
     done();
   }
 
@@ -232,6 +240,42 @@ export default class VideoProcessQueue {
           throw new Error('FFmpeg error when cutting video (2)');
         })
         .run();
+    });
+  }
+
+  /**
+   * Takes an input video file and writes a screenshot a second into the
+   * video to disk. Going further into the file seems computationally
+   * expensive, so we avoid that.
+   *
+   * @param {string} video full path to initial MP4 file
+   * @param {string} output path to output directory
+   */
+  private static async getThumbnail(video: string) {
+    const thumbnailPath = getThumbnailFileNameForVideo(video);
+    const thumbnailFile = path.basename(thumbnailPath);
+    const thumbnailDir = path.dirname(thumbnailPath);
+
+    return new Promise<void>((resolve) => {
+      ffmpeg(video)
+        .on('end', () => {
+          console.info('[VideoProcessQueue] Got thumbnail for', video);
+          resolve();
+        })
+        .on('error', (err: any) => {
+          console.error(
+            '[VideoProcessQueue] Error getting thumbnail for',
+            video,
+            err
+          );
+
+          throw new Error(err);
+        })
+        .screenshots({
+          timestamps: [0],
+          folder: thumbnailDir,
+          filename: thumbnailFile,
+        });
     });
   }
 }

@@ -1,126 +1,132 @@
-import { useState, useEffect } from 'react';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import { Box, IconButton, Popover, Popper, Tooltip, Typography } from '@mui/material';
 import { RecStatus } from 'main/types';
-import { DialogContentText } from '@mui/material';
-import recordIcon from '../../assets/icon/record-icon.png';
-import eyeIcon from '../../assets/icon/sleep-icon.png';
-import errorIcon from '../../assets/icon/error-icon.png';
-import watchIcon from '../../assets/icon/watch-icon.png';
-import stopRecordingIcon from '../../assets/icon/stop-recording.png';
-import InformationDialog from './InformationDialog';
+import React from 'react';
 
-type IconStyle = 'small' | 'big';
+interface IProps {
+  recorderStatus: RecStatus;
+  configError: string;
+}
 
-type StatusMessageObjectType = {
-  title: string;
-  style: IconStyle;
-  icon: string;
-};
+export default function RecorderStatus(props: IProps) {
+  const { recorderStatus, configError } = props;
 
-const statusMessages: { [key: number]: StatusMessageObjectType } = {
-  [RecStatus.Recording]: {
-    style: 'big',
-    icon: recordIcon,
-    title: 'Recording',
-  },
-  [RecStatus.WaitingForWoW]: {
-    style: 'small',
-    icon: eyeIcon,
-    title: 'Waiting for WoW to start',
-  },
-  [RecStatus.InvalidConfig]: {
-    style: 'small',
-    icon: errorIcon,
-    title: 'Failed to start, check config is valid',
-  },
-  [RecStatus.ReadyToRecord]: {
-    style: 'small',
-    icon: watchIcon,
-    title: 'Ready and waiting',
-  },
-};
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
 
-export default function RecorderStatus() {
-  const [status, setStatus] = useState(RecStatus.WaitingForWoW);
-  const [invalidReason, setInvalidReason] = useState('');
-  const [openDialog, setDialog] = useState(false);
-
-  const closeDialog = () => setDialog(false);
-  const confirmStopRecording = () => setDialog(true);
-
-  const stopRecording = () => {
-    closeDialog();
-    window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(anchorEl ? null : event.currentTarget);
   };
 
-  const showIcon = (event: any, icon: string) => {
-    event.target.src = icon;
+  const handleClose = () => {
+    setAnchorEl(null);
   };
 
-  useEffect(() => {
-    window.electron.ipcRenderer.on('updateRecStatus', (newStatus, reason) => {
-      setStatus(newStatus as RecStatus);
+  const getStatusSummary = () => {
+    if (recorderStatus === RecStatus.Recording) {
+      return (
+        <Typography sx={{ color: 'white' }}>
+          Warcraft Recorder is currently recording.
+        </Typography>
+      );
+    }
 
-      if (newStatus === RecStatus.InvalidConfig) {
-        setInvalidReason(reason as string);
-      }
-    });
-  }, []);
+    if (recorderStatus === RecStatus.ReadyToRecord) {
+      return (
+        <Typography sx={{ color: 'white' }}>
+          Warcraft Recorder is ready to record and is waiting for a recordable
+          event to appear in the combat log.
+        </Typography>
+      );
+    }
 
-  const message = statusMessages[status];
-  const isRecording = status === RecStatus.Recording;
-  let mouseoverText;
+    if (recorderStatus === RecStatus.WaitingForWoW) {
+      return (
+        <Typography sx={{ color: 'white' }}>
+          Warcraft Recorder has valid configuration, and is waiting for World of
+          Warcraft to be launched.
+        </Typography>
+      );
+    }
 
-  if (status === RecStatus.InvalidConfig) {
-    mouseoverText = `${message.title}.\n${invalidReason}`;
-  } else if (isRecording) {
-    mouseoverText = `${message.title}.\nClick to stop recording.`;
-  } else {
-    mouseoverText = message.title;
-  }
+    return (
+      <>
+        <Typography sx={{ color: 'white' }}>
+          Warcraft Recorder is incorrectly configured, please resolve the below
+          error.
+        </Typography>
+        <Typography sx={{ color: 'red' }}>{configError}</Typography>
+      </>
+    );
+  };
+
+  const getAppropriateIcon = () => {
+    if (recorderStatus === RecStatus.Recording) {
+      return <FiberManualRecordIcon sx={{ width: '25px', height: '25px' }} />;
+    }
+
+    if (recorderStatus === RecStatus.ReadyToRecord) {
+      return <VisibilityIcon sx={{ width: '25px', height: '25px' }} />;
+    }
+
+    if (recorderStatus === RecStatus.WaitingForWoW) {
+      return <VisibilityOffIcon sx={{ width: '25px', height: '25px' }} />;
+    }
+
+    return <ReportProblemIcon sx={{ width: '25px', height: '25px' }} />;
+  };
+
+  const getAppropriateColor = () => {
+    if (recorderStatus === RecStatus.Recording) {
+      return 'red';
+    }
+
+    if (recorderStatus === RecStatus.InvalidConfig) {
+      return 'yellow';
+    }
+
+    return 'white';
+  };
 
   return (
-    <div id="status">
-      <div>
-        {isRecording || (
-          <img
-            id={`${message.style}-rec-status`}
-            title={mouseoverText}
-            alt="icon"
-            src={message.icon}
-          />
-        )}
-        {isRecording && (
-          <div
-            aria-hidden
-            onClick={confirmStopRecording}
-            onKeyDown={() => {}}
-            role="button"
-          >
-            <img
-              id={`${message.style}-rec-status`}
-              title={mouseoverText}
-              onMouseEnter={(e) => showIcon(e, stopRecordingIcon)}
-              onMouseLeave={(e) => showIcon(e, message.icon)}
-              alt="icon"
-              src={message.icon}
-            />
-          </div>
-        )}
-        <InformationDialog
-          title="⚠️ Stop recording?"
-          open={openDialog}
-          buttons={['confirm', 'close']}
-          default="close"
-          onAction={stopRecording}
-          onClose={closeDialog}
+    <>
+      <Tooltip title="Status">
+        <IconButton
+          id="rec-status-button"
+          type="button"
+          onClick={handleClick}
+          sx={{
+            padding: '2px',
+            minWidth: '25px',
+            color: getAppropriateColor(),
+          }}
         >
-          <DialogContentText>
-            Manually stopping the recording is not usually a great idea, but it
-            can be necessary if there is a bug that prevents it from stopping on
-            its own.
-          </DialogContentText>
-        </InformationDialog>
-      </div>
-    </div>
+          {getAppropriateIcon()}
+        </IconButton>
+      </Tooltip>
+      <Popover
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+      >
+        <Box
+          sx={{
+            border: '1px solid #bb4420',
+            p: 1,
+            width: '400px',
+            bgcolor: '#272e48',
+          }}
+        >
+          {getStatusSummary()}
+        </Box>
+      </Popover>
+    </>
   );
 }

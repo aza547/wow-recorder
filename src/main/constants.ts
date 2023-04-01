@@ -709,22 +709,8 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   194: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
 };
 
-const videoTabsSx = {
-  position: 'fixed',
-  bottom: '1px',
-  left: '1px',
-  width: '100%',
-  height: '110px',
-  borderColor: '#000000',
-  bgcolor: '#272e48',
-  textColor: 'secondary',
-  overflow: 'visible',
-  borderTop: '1px solid',
-};
-
 const categoryTabSx = {
   padding: '12px',
-  bgcolor: '#272e48',
   color: 'white',
   borderBottom: '1px solid',
   borderColor: 'black',
@@ -734,7 +720,6 @@ const categoryTabSx = {
 
 const categoryTabsSx = {
   borderColor: '#000000',
-  bgcolor: '#272e48',
   textColor: 'secondary',
   width: '175px',
   overflow: 'visible',
@@ -744,7 +729,6 @@ const videoButtonSx = {
   padding: '0px',
   margin: 0.5,
   border: '1px solid black',
-  bgcolor: '#272e48',
   color: 'white',
   minHeight: '1px',
   height: '100px',
@@ -753,14 +737,6 @@ const videoButtonSx = {
   borderRadius: 2,
 };
 
-const videoScrollButtonSx = {
-  bgcolor: '#272e48',
-  border: '1px solid black',
-  borderRadius: 2,
-  color: 'white',
-  margin: 0.5,
-  opacity: 1,
-};
 
 type WoWCharacterDamageType = 'melee' | 'ranged';
 type WoWCharacterRoleType = 'tank' | 'healer' | 'damage';
@@ -778,6 +754,22 @@ type WoWCharacterClassType =
   | 'WARLOCK'
   | 'WARRIOR'
   | 'EVOKER';
+
+const WoWClassColor = {
+  DEATHKNIGHT: "#C41E3A",
+  DEMONHUNTER: '#A330C9',
+  DRUID: '#FF7C0A',
+  HUNTER: '#AAD372',
+  MAGE: '#3FC7EB',
+  MONK: '#00FF98',
+  PALADIN: '#F48CBA',
+  PRIEST: '#FFFFFF',
+  ROGUE: '#FFF468',
+  SHAMAN: '#0070DD',
+  WARLOCK: '#8788EE',
+  WARRIOR: '#C69B6D',
+  EVOKER: '#33937F',
+}
 
 type SpecializationObjectType = {
   type: WoWCharacterDamageType;
@@ -1138,11 +1130,9 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
 
 export {
   months,
-  videoTabsSx,
   categoryTabSx,
   categoryTabsSx,
   videoButtonSx,
-  videoScrollButtonSx,
   zones,
   retailArenas,
   classicArenas,
@@ -1164,4 +1154,7 @@ export {
   classicUniqueSpecSpells,
   retailUniqueSpecSpells,
   obsResolutions,
+  WoWCharacterClassType,
+  WoWClassColor,
+  daysOfWeek,
 };

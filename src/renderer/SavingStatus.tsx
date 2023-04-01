@@ -1,28 +1,26 @@
-import { useState, useEffect } from 'react';
+import { IconButton } from '@mui/material';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 import { SaveStatus } from 'main/types';
-import savingIcon from '../../assets/icon/saving-icon.png';
 
-export default function SavingStatus() {
-  const [status, setStatus] = useState(SaveStatus.NotSaving);
+interface IProps {
+  savingStatus: SaveStatus;
+}
 
-  useEffect(() => {
-    window.electron.ipcRenderer.on('updateSaveStatus', (newSaveStatus) => {
-      setStatus(newSaveStatus as SaveStatus);
-    });
-  }, []);
+export default function SavingStatus(props: IProps) {
+  const { savingStatus } = props;
+
+  if (savingStatus === SaveStatus.NotSaving) {
+    return <></>;
+  }
 
   return (
-    <div id="saving-status">
-      <div>
-        {status === SaveStatus.Saving && (
-          <img
-            id="saving-icon"
-            title="Saving a recording..."
-            alt="icon"
-            src={savingIcon}
-          />
-        )}
-      </div>
-    </div>
+    <IconButton
+      id="saving-icon"
+      type="button"
+      disabled
+      sx={{ padding: '2px', minWidth: '25px', color: 'white' }}
+    >
+      <SaveAsIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
+    </IconButton>
   );
 }

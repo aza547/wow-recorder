@@ -683,6 +683,11 @@ export default class Recorder {
     await this.startOBS();
     this._recorderStartDate = new Date();
 
+    // Some very specific timings can cause us to end up here with an
+    // active timer, and we don't want to end up with two at all costs.
+    // So cancel any. See issue 350.
+    this.cancelBufferTimers();
+
     // We store off this timer as a member variable as we will cancel
     // it when a real game is detected.
     this._bufferRestartIntervalID = setInterval(() => {
@@ -702,11 +707,6 @@ export default class Recorder {
 
   /**
    * Restarts the buffer recording. Cleans the temp dir between stop/start.
-   * We wait 5s here between the stop start. I don't know why, but if we
-   * don't then OBS becomes unresponsive.
-   *
-   * I spent a lot of time on this, trying all sorts of other solutions
-   * don't fuck with it unless you have to; here be dragons.
    */
   restartBuffer = async () => {
     console.log('[Recorder] Restart recording buffer');
@@ -780,8 +780,8 @@ export default class Recorder {
       return;
     }
 
-    // Set-up some state in preparating for awaiting out the overrun. This is
-    // all to allow us to asynchronous delay an incoming start() call until we
+    // Set-up some state in preparation for awaiting out the overrun. This is
+    // all to allow us to asynchronously delay an incoming start() call until we
     // are finished with the previous recording.
     const { overrun } = activity;
     console.info(`[Recorder] Stop recording after overrun: ${overrun}s`);
