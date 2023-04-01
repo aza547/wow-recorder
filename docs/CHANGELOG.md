@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- [Issue 350](https://github.com/aza547/wow-recorder/issues/350) - Fix a bug where videos could be cut wrongly after using the stop recording button.
+
 ## [3.7.0] - 2023-03-24
 ### Added
 - [Issue 340](https://github.com/aza547/wow-recorder/issues/340) - Option to minimize on clicking quit button.
