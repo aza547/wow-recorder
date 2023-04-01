@@ -177,7 +177,7 @@ const getLatestCategory = (videoState: any) => {
       latestCategory = category as VideoCategory;
     }
   });
-  
+
   return latestCategory;
 };
 
