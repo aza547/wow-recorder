@@ -13,6 +13,7 @@ interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
   recorderStatus: any;
+  configError: string;
   upgradeStatus: any;
   savingStatus: any;
 }
@@ -22,6 +23,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
     navigation,
     setNavigation,
     recorderStatus,
+    configError,
     upgradeStatus,
     savingStatus,
   } = props;
@@ -54,9 +56,12 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
             justifyContent: 'flex-start',
           }}
         >
-          <RecorderStatus recorderStatus={recorderStatus}/>
-          <VersionUpdateWidget upgradeStatus={upgradeStatus}/>
-          <SavingStatus savingStatus={savingStatus}/>
+          <RecorderStatus
+            recorderStatus={recorderStatus}
+            configError={configError}
+          />
+          <VersionUpdateWidget upgradeStatus={upgradeStatus} />
+          <SavingStatus savingStatus={savingStatus} />
         </Box>
 
         <Navigator navigation={navigation} setNavigation={setNavigation} />

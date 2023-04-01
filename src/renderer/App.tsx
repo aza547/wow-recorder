@@ -19,6 +19,8 @@ const Application = () => {
     RecStatus.InvalidConfig
   );
 
+  const [configError, setConfigError] = React.useState<string>('');
+
   const [upgradeStatus, setUpgradeStatus] = React.useState<UpgradeStatus>({
     available: false,
     link: undefined,
@@ -39,12 +41,12 @@ const Application = () => {
       setVideoState(await ipc.invoke('getVideoState', []));
     });
 
-    ipc.on('updateRecStatus', (status, reason) => {
+    ipc.on('updateRecStatus', (status, error) => {
       setRecorderStatus(status as RecStatus);
 
-      // if (newStatus === RecStatus.InvalidConfig) {
-      //   setInvalidReason(reason as string);
-      // }
+      if (status === RecStatus.InvalidConfig) {
+        setConfigError(error as string);
+      }
     });
 
     ipc.on('updateSaveStatus', (status) => {
@@ -61,6 +63,7 @@ const Application = () => {
 
   return (
     <Box
+      id="main-box"
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -79,6 +82,7 @@ const Application = () => {
         navigation={navigation}
         setNavigation={setNavigation}
         recorderStatus={recorderStatus}
+        configError={configError}
         upgradeStatus={upgradeStatus}
         savingStatus={savingStatus}
       />

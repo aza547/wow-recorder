@@ -301,6 +301,11 @@ const deleteVideo = (videoPath: string) => {
   if (fs.existsSync(metadataPath)) {
     tryUnlinkSync(metadataPath);
   }
+
+  const thumbnailPath = getThumbnailFileNameForVideo(videoPath);
+  if (fs.existsSync(thumbnailPath)) {
+    tryUnlinkSync(thumbnailPath);
+  }
 };
 
 /**
