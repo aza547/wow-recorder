@@ -25,7 +25,6 @@ import {
   setupApplicationLogging,
   getAvailableDisplays,
   checkAppUpdate,
-  getVideoStats,
 } from './util';
 
 import Recorder from './Recorder';
@@ -38,8 +37,6 @@ import {
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
 import SizeMonitor from '../utils/SizeMonitor';
-import { configSchema } from './configSchema';
-import VideoProcessQueue from './VideoProcessQueue';
 
 const logDir = setupApplicationLogging();
 console.info('[Main] App starting, version:', app.getVersion());

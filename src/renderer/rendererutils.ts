@@ -1,5 +1,6 @@
 import { WoWClassColor } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
+import { Flavour } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import Player from 'video.js/dist/types/player';
@@ -110,6 +111,16 @@ const getChallengeModeVideoMarkers = (video: any) => {
  */
 const addVideoMarkers = (video: any, player: Player) => {
   const category = video.category as VideoCategory;
+  const flavour = video.flavour as Flavour;
+
+  if (flavour === Flavour.Classic || category === VideoCategory.Battlegrounds) {
+    // Battlegrounds: Lots of deaths so don't bother making a mess of the UI
+    //                and trying to display them all.
+    // Classic:       Video durations are less accurate so high chance markers
+    //                are misplaced, as the marker timestamps are accurate to
+    //                combat log time.
+    return;
+  }
 
   let videoMarkers;
 
