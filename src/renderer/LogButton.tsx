@@ -1,4 +1,5 @@
-import icon from '../../assets/icon/log-icon.png';
+import { Button } from '@mui/material';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -8,15 +9,14 @@ export default function SettingsButton() {
   };
 
   return (
-    <div id="log-button-div">
-      <button
-        id="log-button"
-        type="button"
-        onClick={openLogPath}
-        title="App logs"
-      >
-        <img alt="icon" src={icon} height="25px" width="25px" />
-      </button>
-    </div>
+    <Button
+      id="log-button"
+      type="button"
+      onClick={openLogPath}
+      title="Logs"
+      sx={{ padding: '2px', minWidth: '25px' }}
+    >
+      <DescriptionIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
+    </Button>
   );
 }

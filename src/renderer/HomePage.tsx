@@ -71,58 +71,52 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
   ];
 
   return (
-    <>
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContet: 'center',
+        flexDirection: 'column',
+      }}
+    >
       <Box
+        component="img"
+        src={icon}
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContet: 'center',
-          flexDirection: 'column',
-          margin: 2,
+          height: '100px',
+          width: '100px',
+          objectFit: 'cover',
+        }}
+      />
+      <Typography
+        variant="h1"
+        sx={{
+          color: '#bb4220',
+          fontFamily: '"Arial",sans-serif',
         }}
       >
-        <Box
-          component="img"
-          src={icon}
-          sx={{
-            height: '100px',
-            width: '100px',
-            objectFit: 'cover',
-          }}
-        />
-        <Typography
-          variant="h1"
-          sx={{
-            color: '#bb4220',
-            fontFamily: '"Arial",sans-serif',
-          }}
-        >
-          Warcraft Recorder
-        </Typography>
-        <Typography
-          variant="h5"
-          sx={{
-            color: 'white',
-            fontFamily: '"Arial",sans-serif',
-          }}
-        >
-          You have {numVideos} videos saved.
-        </Typography>
-      </Box>
+        Warcraft Recorder
+      </Typography>
+      <Typography
+        variant="h5"
+        sx={{
+          color: 'white',
+          fontFamily: '"Arial",sans-serif',
+        }}
+      >
+        You have {numVideos} videos saved.
+      </Typography>
+
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexDirection: 'row',
-          height: '100%',
         }}
       >
         <Box
           sx={{
-            margin: '30px',
-            width: '35%',
-            height: '35%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -160,10 +154,9 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
-            width: '100%',
           }}
         >
-          <Box
+          {/* <Box
             component="img"
             src={`${config.storagePath}/thumbnail.png`}
             onClick={goToLatestVideo}
@@ -172,7 +165,6 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
               borderRadius: 0,
               boxSizing: 'border-box',
               display: 'flex',
-              width: '100%',
               objectFit: 'cover',
               '&:hover': {
                 border: '3px solid #bb4420',
@@ -180,7 +172,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
                 backgroundColor: 'lightblue',
               },
             }}
-          />
+          /> */}
           <Typography
             align="center"
             variant="h5"
@@ -194,9 +186,6 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         </Box>
         <Box
           sx={{
-            margin: '30px',
-            width: '35%',
-            height: '35%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -204,10 +193,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           }}
         >
           <ResponsiveContainer>
-            <BarChart
-              data={getRecentActivityStats(videoState)}
-              margin={{ bottom: 20, top: 20, left: 20, right: 20 }}
-            >
+            <BarChart data={getRecentActivityStats(videoState)}>
               <Bar dataKey="Recordings" fill="#bb4420" />
               <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
               <YAxis interval={0} />
@@ -226,7 +212,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           </Typography>
         </Box>
       </Box>
-    </>
+    </Box>
   );
 };
 

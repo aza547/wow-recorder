@@ -30,8 +30,8 @@ const Application = () => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        width: '100%',
         height: '100%',
+        width: '100%',
       }}
     >
       <RendererTitleBar />
@@ -41,11 +41,7 @@ const Application = () => {
         videoState={videoState}
         setVideoState={setVideoState}
       />
-      <BottomStatusBar
-        navigation={navigation}
-        setNavigation={setNavigation}
-        videostate={videoState}
-      />
+      <BottomStatusBar navigation={navigation} setNavigation={setNavigation} />
     </Box>
   );
 };

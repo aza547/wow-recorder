@@ -1,16 +1,22 @@
-import watchIcon from '../../assets/icon/watch-icon.png';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import { IconButton, Tooltip } from '@mui/material';
 
+// @@@ TODO make on click
+// @@@ TODO change icon with state
 export default function RecorderStatus() {
   return (
-    <div id="recstatus-button-div">
-    <button
-      id="rec-status-button"
-      type="button"
-      // onClick={openDiscordURL}
-      title="Status"
-    >
-      <img alt="icon" src={watchIcon} height="25px" width="25px" />
-    </button>
-  </div>
+    <Tooltip title="View status">
+      <IconButton
+        id="test-button"
+        type="button"
+        // onClick={runTest}
+        sx={{ padding: '2px', minWidth: '25px', color: 'white' }}
+      >
+        <VisibilityIcon sx={{ width: '25px', height: '25px' }} />
+      </IconButton>
+    </Tooltip>
   );
 }

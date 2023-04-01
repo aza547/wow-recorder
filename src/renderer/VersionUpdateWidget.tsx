@@ -1,5 +1,6 @@
 import React from 'react';
-import icon from '../../assets/icon/update.png';
+import UpgradeIcon from '@mui/icons-material/Upgrade';
+import { IconButton, Tooltip } from '@mui/material';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -17,19 +18,19 @@ export default function VersionUpdateWidget() {
   }, []);
 
   if (!downloadUrl) {
-    return null;
+    return <></>;
   }
 
   return (
-    <div id="version-update-widget">
-      <button
-        id="update-button"
+    <Tooltip title="Upgrade available, click to download">
+      <IconButton
+        id="test-button"
         type="button"
         onClick={openReleaseDownloadUrl}
-        title="New update available, click here to download!"
+        sx={{ padding: '2px', minWidth: '25px', color: 'white' }}
       >
-        <img alt="icon" src={icon} height="25px" width="25px" />
-      </button>
-    </div>
+        <UpgradeIcon sx={{ width: '25px', height: '25px' }} />
+      </IconButton>
+    </Tooltip>
   );
 }

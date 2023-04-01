@@ -1,4 +1,6 @@
+import { Button } from '@mui/material';
 import icon from '../../assets/icon/test-icon.png';
+import BugReportIcon from '@mui/icons-material/BugReport';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -12,15 +14,14 @@ export default function TestButton() {
   };
 
   return (
-    <div id="test-button-div">
-      <button
-        id="test-button"
-        type="button"
-        onClick={runTest}
-        title="Run a test"
-      >
-        <img alt="icon" src={icon} height="25px" width="25px" />
-      </button>
-    </div>
+    <Button
+      id="test-button"
+      type="button"
+      onClick={runTest}
+      title="Test"
+      sx={{ padding: '2px', minWidth: '25px' }}
+    >
+      <BugReportIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
+    </Button>
   );
 }

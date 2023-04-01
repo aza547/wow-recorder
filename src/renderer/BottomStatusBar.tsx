@@ -22,24 +22,50 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
       sx={{
         borderTop: '1px solid black',
         height: '35px',
-        width: '100%',
         boxSizing: 'border-box',
       }}
     >
-      <div id="status-buttons" className="status-buttons">
-        <RecorderStatus />
-        <VersionUpdateWidget />
-        <SavingStatus />
-      </div>
-      <div id="navigator">
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          ml: 1,
+          mr: 1,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+          }}
+        >
+          <RecorderStatus />
+          <VersionUpdateWidget />
+          <SavingStatus />
+        </Box>
+
         <Navigator navigation={navigation} setNavigation={setNavigation} />
-      </div>
-      <div className="app-buttons">
-        <SettingsButton />
-        <LogButton />
-        <DiscordButton />
-        <TestButton />
-      </div>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <SettingsButton />
+          <LogButton />
+          <TestButton />
+          <DiscordButton />
+        </Box>
+      </Box>
     </Box>
   );
 };

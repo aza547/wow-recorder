@@ -1,3 +1,4 @@
+import { Button } from '@mui/material';
 import icon from '../../assets/icon/discord-icon.png';
 
 const ipc = window.electron.ipcRenderer;
@@ -8,15 +9,14 @@ export default function DiscordButton() {
   };
 
   return (
-    <div id="discord-button-div">
-      <button
-        id="discord-button"
-        type="button"
-        onClick={openDiscordURL}
-        title="Join the discussion on Discord"
-      >
-        <img alt="icon" src={icon} height="25px" width="25px" />
-      </button>
-    </div>
+    <Button
+      id="log-button"
+      type="button"
+      onClick={openDiscordURL}
+      title="Logs"
+      sx={{ padding: '2px', minWidth: '25px' }}
+    >
+      <img alt="icon" src={icon} height="25px" width="25px" />
+    </Button>
   );
 }

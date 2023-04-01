@@ -156,7 +156,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
     return (
       <>
-        <Box sx={{ display: 'flex', height: 'calc(100% - 70px)' }}>
+        <Box sx={{ display: 'flex', height: '100%' }}>
           <VideoJS
             id="video-player"
             key={videoFullPath}
@@ -179,7 +179,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         <Box
           sx={{
             display: 'flex',
-            height: 'calc(100% - 70px)',
             overflowY: 'scroll',
           }}
         >
@@ -215,7 +214,11 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
   // @@@ TODO fix up error prompt I deleted here
   if (categoryIndex < 0) {
-    return <HomePage videoState={videoState} setNavigation={setNavigation} />;
+    return (
+      <Box sx={{ width: '100%', flexGrow: 1 }}>
+        <HomePage videoState={videoState} setNavigation={setNavigation} />
+      </Box>
+    );
   }
 
   if (videoIndex < 0) {
