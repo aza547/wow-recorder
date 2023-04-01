@@ -596,7 +596,7 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1809: 'Odyn',
 
   // Court of Stars
-  1868: 'Hymdall',
+  1868: 'Patrol Captain Gerdo',
   1869: 'Talixae Flamewreath',
   1870: 'Advisor Melandrus',
 
