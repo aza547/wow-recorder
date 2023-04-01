@@ -177,6 +177,12 @@ const getLatestCategory = (videoState: any) => {
   let latestCategory: VideoCategory | undefined;
 
   Object.keys(videoState).forEach((category: any) => {
+    const video = videoState[category][0];
+
+    if (video === undefined) {
+      return;
+    }
+
     const date = videoState[category][0].dateObject;
 
     if (date === undefined) {
