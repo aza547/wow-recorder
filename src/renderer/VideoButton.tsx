@@ -1,5 +1,9 @@
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import { soloShuffleResultColors, specializationById } from 'main/constants';
+import {
+  dungeonsByMapId,
+  soloShuffleResultColors,
+  specializationById,
+} from 'main/constants';
 import { getInstanceDifficulty, getVideoResultText } from 'main/helpers';
 import { TNavigatorState } from 'main/types';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
@@ -8,13 +12,13 @@ import EventIcon from '@mui/icons-material/Event';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';
+import React from 'react';
 import * as Images from './images';
 import { getFormattedDuration, getWoWClassColor } from './rendererutils';
 import { VideoCategory } from '../types/VideoCategory';
 import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
 import RaidEncounterInfo from './RaidEncounterInfo';
-import React from 'react';
 
 interface IProps {
   index: number;
@@ -54,9 +58,7 @@ export default function VideoButton(props: IProps) {
   let resultColor = 'rgb(156, 21, 21, 0.3)';
 
   if (category === VideoCategory.SoloShuffle) {
-    console.log("a", soloShuffleRoundsWon);
     if (soloShuffleRoundsWon >= 0 && soloShuffleRoundsWon <= 6) {
-      console.log("b", resultColor);
       resultColor = soloShuffleResultColors[soloShuffleRoundsWon];
     }
   } else {
@@ -105,10 +107,6 @@ export default function VideoButton(props: IProps) {
     soloShuffleRoundsPlayed
   );
 
-  const videoInstanceDifficulty = isRaid
-    ? getInstanceDifficulty(difficultyID)
-    : null;
-
   /**
    * Delete a video.
    */
@@ -154,6 +152,7 @@ export default function VideoButton(props: IProps) {
           component="img"
           src={buttonImage}
           sx={{
+            opacity: '70%',
             border: '1px solid black',
             borderRadius: '1%',
             boxSizing: 'border-box',
@@ -163,7 +162,7 @@ export default function VideoButton(props: IProps) {
           }}
         />
 
-        {(isSoloShuffle || isMythicPlus) && (
+        {isSoloShuffle && (
           <Typography
             align="center"
             sx={{
@@ -174,7 +173,64 @@ export default function VideoButton(props: IProps) {
               fontWeight: '600',
               fontFamily: '"Arial",sans-serif',
               fontSize: '2rem',
-              WebkitTextStroke: '2px black',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+            }}
+          >
+            {resultText}
+          </Typography>
+        )}
+
+        {isMythicPlus && (
+          <>
+            <Typography
+              align="center"
+              sx={{
+                position: 'relative',
+                bottom: '75px',
+                left: '0px',
+                color: 'white',
+                fontWeight: '600',
+                fontFamily: '"Arial",sans-serif',
+                fontSize: '1rem',
+                textShadow:
+                  '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+              }}
+            >
+              {resultText}
+            </Typography>
+            <Typography
+              align="center"
+              sx={{
+                position: 'relative',
+                bottom: '75px',
+                left: '0px',
+                color: 'white',
+                fontWeight: '600',
+                fontFamily: '"Arial",sans-serif',
+                fontSize: '1rem',
+                textShadow:
+                  '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+              }}
+            >
+              {dungeonsByMapId[video.mapID]}
+            </Typography>
+          </>
+        )}
+
+        {!isSoloShuffle && !isMythicPlus && !isBattleground && (
+          <Typography
+            align="center"
+            sx={{
+              position: 'relative',
+              bottom: '75px',
+              left: '0px',
+              color: 'white',
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+              fontSize: '2rem',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
             {resultText}
@@ -220,6 +276,8 @@ export default function VideoButton(props: IProps) {
               color: playerClassColor,
               fontWeight: '600',
               fontFamily: '"Arial",sans-serif',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
             {playerName}
@@ -231,6 +289,8 @@ export default function VideoButton(props: IProps) {
               fontWeight: '600',
               fontFamily: '"Arial",sans-serif',
               fontSize: '0.7rem',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
             {playerRealm}
@@ -252,6 +312,8 @@ export default function VideoButton(props: IProps) {
               color: 'white',
               fontWeight: '600',
               fontFamily: '"Arial",sans-serif',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
             {formattedDuration}
@@ -289,6 +351,8 @@ export default function VideoButton(props: IProps) {
               color: 'white',
               fontWeight: '600',
               fontFamily: '"Arial",sans-serif',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
             {video.time}
@@ -310,6 +374,8 @@ export default function VideoButton(props: IProps) {
               color: 'white',
               fontWeight: '600',
               fontFamily: '"Arial",sans-serif',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
             {video.date}

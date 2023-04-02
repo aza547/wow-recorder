@@ -260,7 +260,7 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    recorder = new Recorder(mainWindow);
+    // recorder = new Recorder(mainWindow);
 
     Poller.getInstance()
       .on('wowProcessStart', wowProcessStarted)
@@ -274,7 +274,7 @@ const createWindow = async () => {
       return;
     }
 
-    recorder.configure();
+    // recorder.configure();
 
     Poller.getInstance().start();
     mainWindow.webContents.send('refreshState');
@@ -282,13 +282,13 @@ const createWindow = async () => {
     const retailLogPath = cfg.getPath('retailLogPath');
     const classicLogPath = cfg.getPath('classicLogPath');
 
-    if (retailLogPath) {
-      retailHandler = new RetailLogHandler(recorder, retailLogPath);
-    }
+    // if (retailLogPath) {
+    //   retailHandler = new RetailLogHandler(recorder, retailLogPath);
+    // }
 
-    if (classicLogPath) {
-      classicHandler = new ClassicLogHandler(recorder, classicLogPath);
-    }
+    // if (classicLogPath) {
+    //   classicHandler = new ClassicLogHandler(recorder, classicLogPath);
+    // }
   });
 
   mainWindow.on('closed', () => {

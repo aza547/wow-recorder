@@ -22,7 +22,12 @@ export const getVideoResultText = (
   soloShuffleRoundsPlayed: number
 ): string => {
   if (category === VideoCategory.MythicPlus) {
-    return isGoodResult ? `+${keyUpgradeLevel}` : 'Depleted';
+    if (isGoodResult) {
+      if (keyUpgradeLevel === undefined) return '';
+      return `+${keyUpgradeLevel}`;
+    }
+
+    return 'Depleted';
   }
 
   if (category === VideoCategory.Raids) {
@@ -30,61 +35,15 @@ export const getVideoResultText = (
   }
 
   if (category === VideoCategory.SoloShuffle) {
+    if (soloShuffleRoundsWon === undefined) return '';
+    if (soloShuffleRoundsPlayed === undefined) return '';
+
     const wins = soloShuffleRoundsWon;
     const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
     return `${wins}-${losses}`;
   }
 
   return isGoodResult ? 'Win' : 'Loss';
-};
-
-export const getVideoResultClass = (
-  category: VideoCategory,
-  isGoodResult: boolean,
-  soloShuffleRoundsWon: number,
-  soloShuffleRoundsPlayed: number
-): string => {
-  switch (category) {
-    case VideoCategory.MythicPlus:
-      return isGoodResult ? 'goodResult' : 'badResult';
-
-    case VideoCategory.Raids:
-      return isGoodResult ? 'goodResult' : 'badResult';
-
-    case VideoCategory.SoloShuffle:
-      if (
-        soloShuffleRoundsWon === undefined ||
-        soloShuffleRoundsPlayed === undefined
-      ) {
-        // For backwards compatibility with versions 3.1.2 and below. Can
-        // probably remove some day.
-        return '';
-      }
-
-      // For solo shuffle "isGoodResult" is irrelevant. We do maths
-      // instead of just counting the wins here as we don't want to
-      // assume the total number of rounds played.
-      if (soloShuffleRoundsWon > 0.7 * soloShuffleRoundsPlayed) {
-        return 'goodResult';
-      }
-
-      if (soloShuffleRoundsWon > 0.5 * soloShuffleRoundsPlayed) {
-        return 'decentResult';
-      }
-
-      if (soloShuffleRoundsWon > 0.2 * soloShuffleRoundsPlayed) {
-        return 'moderateResult';
-      }
-
-      if (soloShuffleRoundsWon > 0) {
-        return 'mehResult';
-      }
-
-      return 'badResult';
-
-    default:
-      return isGoodResult ? 'goodResult' : 'badResult';
-  }
 };
 
 export const getInstanceDifficulty = (id: number) => {

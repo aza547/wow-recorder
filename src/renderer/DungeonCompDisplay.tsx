@@ -68,6 +68,8 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
             ml: '2px',
             fontSize: '0.75rem',
             fontWeight: 700,
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
         >
           {c._name}
