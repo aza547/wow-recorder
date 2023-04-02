@@ -12,39 +12,30 @@ import { VideoCategory } from '../types/VideoCategory';
 
 /**
  * Get a result text appropriate for the video category that signifies a
- * win or a loss, of some sort. Must handle soloShuffle inputs being undefined.
+ * win or a loss, of some sort.
  */
 export const getVideoResultText = (
   category: VideoCategory,
   isGoodResult: boolean,
+  keyUpgradeLevel: number,
   soloShuffleRoundsWon: number,
   soloShuffleRoundsPlayed: number
 ): string => {
-  switch (category) {
-    case VideoCategory.MythicPlus:
-      return isGoodResult ? 'Time' : 'Depl';
-
-    case VideoCategory.Raids:
-      return isGoodResult ? 'Kill' : 'Wipe';
-
-    case VideoCategory.SoloShuffle:
-      if (
-        soloShuffleRoundsWon === undefined ||
-        soloShuffleRoundsPlayed === undefined
-      ) {
-        // For backwards compatibility with versions 3.1.2 and below. Can
-        // probably remove some day.
-        return '';
-      }
-      {
-        const wins = soloShuffleRoundsWon;
-        const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
-        return `${wins}-${losses}`;
-      }
-
-    default:
-      return isGoodResult ? 'Win' : 'Loss';
+  if (category === VideoCategory.MythicPlus) {
+    return isGoodResult ? `+${keyUpgradeLevel}` : 'Depleted';
   }
+
+  if (category === VideoCategory.Raids) {
+    return isGoodResult ? 'Kill' : 'Wipe';
+  }
+
+  if (category === VideoCategory.SoloShuffle) {
+    const wins = soloShuffleRoundsWon;
+    const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
+    return `${wins}-${losses}`;
+  }
+
+  return isGoodResult ? 'Win' : 'Loss';
 };
 
 export const getVideoResultClass = (

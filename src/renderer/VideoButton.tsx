@@ -1,5 +1,5 @@
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import { specializationById } from 'main/constants';
+import { soloShuffleResultColors, specializationById } from 'main/constants';
 import { getInstanceDifficulty, getVideoResultText } from 'main/helpers';
 import { TNavigatorState } from 'main/types';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
@@ -45,13 +45,21 @@ export default function VideoButton(props: IProps) {
     encounterID,
     zoneID,
     fullPath,
+    upgradeLevel,
+    soloShuffleRoundsWon,
+    soloShuffleRoundsPlayed,
   } = video;
 
   const bookmarkOpacity = isProtected ? 1 : 0.2;
-
   let resultColor = 'rgb(156, 21, 21, 0.3)';
 
-  if (result) {
+  if (category === VideoCategory.SoloShuffle) {
+    console.log("a", soloShuffleRoundsWon);
+    if (soloShuffleRoundsWon >= 0 && soloShuffleRoundsWon <= 6) {
+      console.log("b", resultColor);
+      resultColor = soloShuffleResultColors[soloShuffleRoundsWon];
+    }
+  } else {
     resultColor = 'rgb(53, 164, 50, 0.3)';
   }
 
@@ -81,18 +89,21 @@ export default function VideoButton(props: IProps) {
 
   if (category === VideoCategory.Raids) {
     buttonImage = Images.raidImages[encounterID];
+  } else if (category === VideoCategory.MythicPlus) {
+    buttonImage = Images.dungeonImages[video.zoneID];
+  } else if (category === VideoCategory.Battlegrounds) {
+    buttonImage = Images.battlegroundImages[video.zoneID];
   } else {
     buttonImage = Images.arenaImages[zoneID];
   }
 
-  let resultText;
-
-  if (isMythicPlus) {
-    if (video.result) {
-      resultText = `+${video.upgradeLevel}`;
-      resultColor = 'rgb(53, 164, 50, 0.3)';
-    }
-  }
+  const resultText = getVideoResultText(
+    category,
+    result,
+    upgradeLevel,
+    soloShuffleRoundsWon,
+    soloShuffleRoundsPlayed
+  );
 
   const videoInstanceDifficulty = isRaid
     ? getInstanceDifficulty(difficultyID)
@@ -166,7 +177,7 @@ export default function VideoButton(props: IProps) {
               WebkitTextStroke: '2px black',
             }}
           >
-            4-2
+            {resultText}
           </Typography>
         )}
       </Box>

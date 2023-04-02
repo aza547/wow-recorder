@@ -1,3 +1,4 @@
+import { orange, yellow } from '@mui/material/colors';
 import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchemaKey } from './configSchema';
 
@@ -1128,6 +1129,19 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   Shockwave: 73,
 };
 
+// This is linear gradient from red to green, in RBG format as I don't know
+// a better way to pass it through. Generated with: https://cssgradient.io/.
+// The key is the number of wins. 
+const soloShuffleResultColors = {
+  6: 'rgb(0,   255, 42, 0.3)', 
+  5: 'rgb(34,  255,  0, 0.3)', 
+  4: 'rgb(150, 255,  0, 0.3)', 
+  3: 'rgb(255, 218,  0, 0.3)', 
+  2: 'rgb(255, 105,  0, 0.3)', 
+  1: 'rgb(255,  45,  0, 0.3)', 
+  0: 'rgb(255,   0,  0, 0.3)', 
+}
+
 export {
   months,
   categoryTabSx,
@@ -1156,5 +1170,5 @@ export {
   obsResolutions,
   WoWCharacterClassType,
   WoWClassColor,
-  daysOfWeek,
+  soloShuffleResultColors,
 };
