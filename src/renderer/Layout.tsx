@@ -182,7 +182,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         }}
       >
         <Button
-          key="show-more-button-box"
+          key="show-more-button"
           variant="outlined"
           onClick={loadMoreVideos}
           sx={{
