@@ -16,11 +16,11 @@ import React from 'react';
 
 interface IProps {
   recorderStatus: RecStatus;
-  configError: string;
+  error: string;
 }
 
 export default function RecorderStatus(props: IProps) {
-  const { recorderStatus, configError } = props;
+  const { recorderStatus, error } = props;
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -90,13 +90,29 @@ export default function RecorderStatus(props: IProps) {
       );
     }
 
+    if (recorderStatus === RecStatus.FatalError) {
+      return (
+        <>
+          <Typography sx={{ color: 'white' }}>
+            Warcraft Recorder has hit a fatal error. Please restart the
+            application.
+          </Typography>
+          <Typography sx={{ color: 'red' }}>{error}</Typography>
+          <Typography sx={{ color: 'white' }}>
+            If this problem is recurring, please ask for help in discord. See
+            the pins in the #help channel for advice on getting help.
+          </Typography>
+        </>
+      );
+    }
+
     return (
       <>
         <Typography sx={{ color: 'white' }}>
           Warcraft Recorder is incorrectly configured, please resolve the below
           error.
         </Typography>
-        <Typography sx={{ color: 'red' }}>{configError}</Typography>
+        <Typography sx={{ color: 'red' }}>{error}</Typography>
       </>
     );
   };
@@ -118,7 +134,10 @@ export default function RecorderStatus(props: IProps) {
   };
 
   const getAppropriateColor = () => {
-    if (recorderStatus === RecStatus.Recording) {
+    if (
+      recorderStatus === RecStatus.Recording ||
+      recorderStatus === RecStatus.FatalError
+    ) {
       return 'red';
     }
 

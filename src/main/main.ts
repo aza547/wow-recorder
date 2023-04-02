@@ -55,6 +55,16 @@ let tray = null;
 app.disableHardwareAcceleration();
 
 /**
+ * Updates the status icon for the application.
+ * @param status the status number
+ */
+const updateRecStatus = (status: RecStatus, reason = '') => {
+  console.info('[Main] Updating status with:', status, reason);
+  if (mainWindow === null) return;
+  mainWindow.webContents.send('updateRecStatus', status, reason);
+};
+
+/**
  * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving
  * as expected then it's better to crash the app. See:
  * - https://nodejs.org/api/process.html#process_event_unhandledrejection.
@@ -63,13 +73,11 @@ app.disableHardwareAcceleration();
 process.on('unhandledRejection', (error: Error) => {
   console.error('UnhandledPromiseRejectionWarning:', error);
 
-  if (mainWindow) {
-    mainWindow.webContents.send('fatalError', error.message);
-  }
-
   if (recorder) {
     recorder.shutdownOBS();
   }
+
+  updateRecStatus(RecStatus.FatalError, String(error));
 });
 
 const wowProcessStarted = async () => {
@@ -204,15 +212,6 @@ const setupTray = () => {
     console.log('[Main] User double clicked tray icon');
     if (mainWindow) mainWindow.show();
   });
-};
-
-/**
- * Updates the status icon for the application.
- * @param status the status number
- */
-const updateRecStatus = (status: RecStatus, reason = '') => {
-  if (mainWindow === null) return;
-  mainWindow.webContents.send('updateRecStatus', status, reason);
 };
 
 /**

@@ -19,7 +19,7 @@ const Application = () => {
     RecStatus.InvalidConfig
   );
 
-  const [configError, setConfigError] = React.useState<string>('');
+  const [error, setError] = React.useState<string>('');
 
   const [upgradeStatus, setUpgradeStatus] = React.useState<UpgradeStatus>({
     available: false,
@@ -41,11 +41,14 @@ const Application = () => {
       setVideoState(await ipc.invoke('getVideoState', []));
     });
 
-    ipc.on('updateRecStatus', (status, error) => {
+    ipc.on('updateRecStatus', (status, err) => {
       setRecorderStatus(status as RecStatus);
 
-      if (status === RecStatus.InvalidConfig) {
-        setConfigError(error as string);
+      if (
+        status === RecStatus.InvalidConfig ||
+        status === RecStatus.FatalError
+      ) {
+        setError(err as string);
       }
     });
 
@@ -82,7 +85,7 @@ const Application = () => {
         navigation={navigation}
         setNavigation={setNavigation}
         recorderStatus={recorderStatus}
-        configError={configError}
+        error={error}
         upgradeStatus={upgradeStatus}
         savingStatus={savingStatus}
       />

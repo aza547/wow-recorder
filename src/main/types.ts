@@ -20,6 +20,7 @@ enum RecStatus {
   Recording,
   InvalidConfig,
   ReadyToRecord,
+  FatalError,
 }
 
 /**
