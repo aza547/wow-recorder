@@ -86,6 +86,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             sx={{
               color: 'white',
               fontFamily: '"Arial",sans-serif',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
             Latest Video
@@ -120,6 +122,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         sx={{
           color: '#bb4220',
           fontFamily: '"Arial",sans-serif',
+          textShadow:
+            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
         Warcraft Recorder
@@ -129,6 +133,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         sx={{
           color: 'white',
           fontFamily: '"Arial",sans-serif',
+          textShadow:
+            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
         You have {numVideos} videos saved.

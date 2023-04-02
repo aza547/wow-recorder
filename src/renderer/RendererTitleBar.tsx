@@ -33,6 +33,7 @@ export default function RendererTitleBar() {
         height: '35px',
         width: '100%',
         boxSizing: 'border-box',
+        backgroundColor: '#182035',
       }}
     >
       <div id="logo">

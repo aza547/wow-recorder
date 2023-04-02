@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import { TNavigatorState, VideoPlayerSettings } from 'main/types';
-import { List, ListItem, ListItemButton } from '@mui/material';
+import { Button, List, ListItem, ListItemButton } from '@mui/material';
 import Player from 'video.js/dist/types/player';
 import { VideoJS } from './VideoJS';
 import { VideoCategory } from '../types/VideoCategory';
@@ -47,6 +47,11 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     fatalError: false,
     fatalErrorText: '',
   });
+
+  // Limit the number of videos displayed for performance. User can load more
+  // by clicking the button, but mainline case will be to watch back recent
+  // videos.
+  const [numVideosDisplayed, setNumVideosDisplayed] = React.useState(10);
 
   const categories = Object.values(VideoCategory);
   const category = categories[categoryIndex];
@@ -95,6 +100,10 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         videoIndex: index,
       };
     });
+  };
+
+  const loadMoreVideos = () => {
+    setNumVideosDisplayed(numVideosDisplayed + 10);
   };
 
   // This is effectively equivalent to componentDidMount() in
@@ -156,8 +165,31 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const getHomePage = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexGrow: 1,
+          alignItems: 'center',
+          justifyContet: 'center',
+          flexDirection: 'column',
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        <HomePage videoState={videoState} setNavigation={setNavigation} />
+      </Box>
+    );
+  };
+
   const getVideoSelection = () => {
     const categoryState = videoState[category];
+    if (!categoryState) return <></>;
+    const slicedCategoryState = categoryState.slice(0, numVideosDisplayed);
+
+    const moreVideosRemain =
+      slicedCategoryState.length !== categoryState.length;
 
     return (
       <>
@@ -183,52 +215,58 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           }}
         >
           <List sx={{ width: '100%' }}>
-            {categoryState &&
-              categoryState.map((video: any) => {
-                return (
-                  <ListItem
-                    disablePadding
-                    key={video.fullPath}
-                    sx={{ width: '100%' }}
+            {slicedCategoryState.map((video: any) => {
+              return (
+                <ListItem
+                  disablePadding
+                  key={video.fullPath}
+                  sx={{ width: '100%' }}
+                >
+                  <ListItemButton
+                    onClick={() => handleChangeVideo(video.index)}
                   >
-                    <ListItemButton
-                      onClick={() => handleChangeVideo(video.index)}
-                    >
-                      <VideoButton
-                        key={video.fullPath}
-                        navigation={navigation}
-                        videostate={videoState}
-                        index={video.index}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                );
-              })}
+                    <VideoButton
+                      key={video.fullPath}
+                      navigation={navigation}
+                      videostate={videoState}
+                      index={video.index}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                height: '50px',
+              }}
+            >
+              <Button
+                variant="outlined"
+                onClick={loadMoreVideos}
+                sx={{
+                  color: 'white',
+                  borderColor: 'white',
+                  ':hover': {
+                    color: '#bb4420',
+                    borderColor: '#bb4420',
+                  },
+                }}
+              >
+                Load More
+              </Button>
+            </Box>
           </List>
         </Box>
       </>
     );
   };
 
-  const quitApplication = () => ipc.sendMessage('mainWindow', ['quit']);
-
-  // @@@ TODO fix up error prompt I deleted here
   if (categoryIndex < 0) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexGrow: 1,
-          alignItems: 'center',
-          justifyContet: 'center',
-          flexDirection: 'column',
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <HomePage videoState={videoState} setNavigation={setNavigation} />
-      </Box>
-    );
+    return getHomePage();
   }
 
   if (videoIndex < 0) {
