@@ -172,6 +172,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const getShowMoreButton = () => {
     return (
       <Box
+        key="show-more-button-box"
         sx={{
           display: 'flex',
           justifyContent: 'center',
@@ -181,6 +182,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         }}
       >
         <Button
+          key="show-more-button-box"
           variant="outlined"
           onClick={loadMoreVideos}
           sx={{

@@ -56,11 +56,11 @@ export default function VideoButton(props: IProps) {
   const bookmarkOpacity = isProtected ? 1 : 0.2;
   let resultColor = 'rgb(156, 21, 21, 0.3)';
 
-  if (category === VideoCategory.SoloShuffle) {
+  if (isSoloShuffle) {
     if (soloShuffleRoundsWon >= 0 && soloShuffleRoundsWon <= 6) {
       resultColor = soloShuffleResultColors[soloShuffleRoundsWon];
     }
-  } else {
+  } else if (result) {
     resultColor = 'rgb(53, 164, 50, 0.3)';
   }
 

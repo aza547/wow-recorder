@@ -40,7 +40,7 @@ export const getVideoResultText = (
 
     const wins = soloShuffleRoundsWon;
     const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
-    return `${wins}-${losses}`;
+    return `${wins} - ${losses}`;
   }
 
   return isGoodResult ? 'Win' : 'Loss';
