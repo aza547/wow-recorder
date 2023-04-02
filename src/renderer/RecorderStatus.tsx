@@ -2,7 +2,15 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import { Box, IconButton, Popover, Popper, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  IconButton,
+  Popover,
+  Popper,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { RecStatus } from 'main/types';
 import React from 'react';
 
@@ -25,12 +33,42 @@ export default function RecorderStatus(props: IProps) {
     setAnchorEl(null);
   };
 
+  const stopRecording = () => {
+    window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
+  };
+
   const getStatusSummary = () => {
     if (recorderStatus === RecStatus.Recording) {
       return (
-        <Typography sx={{ color: 'white' }}>
-          Warcraft Recorder is currently recording.
-        </Typography>
+        <>
+          <Typography sx={{ color: 'white' }}>
+            Warcraft Recorder is currently recording. You can force the
+            recording to end, but this should never be required.
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Button
+              variant="outlined"
+              onClick={stopRecording}
+              sx={{
+                m: 2,
+                color: 'white',
+                borderColor: 'white',
+                ':hover': {
+                  color: '#bb4420',
+                  borderColor: '#bb4420',
+                },
+              }}
+            >
+              Force Stop
+            </Button>
+          </Box>
+        </>
       );
     }
 
