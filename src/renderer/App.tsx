@@ -36,6 +36,11 @@ const Application = () => {
     videoIndex: -1,
   });
 
+  // Limit the number of videos displayed for performance. User can load more
+  // by clicking the button, but mainline case will be to watch back recent
+  // videos.
+  const [numVideosDisplayed, setNumVideosDisplayed] = React.useState(10);
+
   React.useEffect(() => {
     ipc.on('refreshState', async () => {
       setVideoState(await ipc.invoke('getVideoState', []));
@@ -79,7 +84,8 @@ const Application = () => {
         navigation={navigation}
         setNavigation={setNavigation}
         videoState={videoState}
-        setVideoState={setVideoState}
+        numVideosDisplayed={numVideosDisplayed}
+        setNumVideosDisplayed={setNumVideosDisplayed}
       />
       <BottomStatusBar
         navigation={navigation}
@@ -88,6 +94,7 @@ const Application = () => {
         error={error}
         upgradeStatus={upgradeStatus}
         savingStatus={savingStatus}
+        setNumVideosDisplayed={setNumVideosDisplayed}
       />
     </Box>
   );

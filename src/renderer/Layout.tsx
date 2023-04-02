@@ -13,7 +13,8 @@ interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
   videoState: any;
-  setVideoState: React.Dispatch<React.SetStateAction<any>>;
+  numVideosDisplayed: number;
+  setNumVideosDisplayed: React.Dispatch<React.SetStateAction<number>>;
 }
 
 /**
@@ -34,9 +35,15 @@ const videoPlayerSettings = ipc.sendSync('videoPlayerSettings', [
  * The GUI itself.
  */
 const Layout: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigation, videoState, setVideoState } = props;
-  const { categoryIndex, videoIndex } = navigation;
+  const {
+    navigation,
+    setNavigation,
+    videoState,
+    numVideosDisplayed,
+    setNumVideosDisplayed,
+  } = props;
 
+  const { categoryIndex, videoIndex } = navigation;
   const videoPlayerRef: any = React.useRef(null);
 
   const [state, setState] = React.useState({
@@ -46,11 +53,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     fatalError: false,
     fatalErrorText: '',
   });
-
-  // Limit the number of videos displayed for performance. User can load more
-  // by clicking the button, but mainline case will be to watch back recent
-  // videos.
-  const [numVideosDisplayed, setNumVideosDisplayed] = React.useState(10);
 
   const categories = Object.values(VideoCategory);
   const category = categories[categoryIndex];

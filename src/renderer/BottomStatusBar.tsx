@@ -1,4 +1,9 @@
-import { TNavigatorState } from 'main/types';
+import {
+  RecStatus,
+  SaveStatus,
+  TNavigatorState,
+  UpgradeStatus,
+} from 'main/types';
 import Box from '@mui/material/Box';
 import DiscordButton from './DiscordButton';
 import LogButton from './LogButton';
@@ -12,10 +17,11 @@ import Navigator from './Navigator';
 interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
-  recorderStatus: any;
+  recorderStatus: RecStatus;
   error: string;
-  upgradeStatus: any;
-  savingStatus: any;
+  upgradeStatus: UpgradeStatus;
+  savingStatus: SaveStatus;
+  setNumVideosDisplayed: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
@@ -26,6 +32,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
     error,
     upgradeStatus,
     savingStatus,
+    setNumVideosDisplayed,
   } = props;
 
   return (
@@ -62,7 +69,11 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
           <SavingStatus savingStatus={savingStatus} />
         </Box>
 
-        <Navigator navigation={navigation} setNavigation={setNavigation} />
+        <Navigator
+          navigation={navigation}
+          setNavigation={setNavigation}
+          setNumVideosDisplayed={setNumVideosDisplayed}
+        />
 
         <Box
           sx={{

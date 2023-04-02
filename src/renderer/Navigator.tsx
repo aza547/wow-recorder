@@ -9,12 +9,13 @@ import ReplyIcon from '@mui/icons-material/Reply';
 interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  setNumVideosDisplayed: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const categories = Object.values(VideoCategory);
 
 const Navigator: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigation } = props;
+  const { navigation, setNavigation, setNumVideosDisplayed } = props;
 
   let categorySelectValue;
 
@@ -38,6 +39,8 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       categoryIndex: -1,
       videoIndex: -1,
     });
+
+    setNumVideosDisplayed(10);
   };
 
   const goBack = () => {
@@ -94,14 +97,12 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
   };
 
   const onSelect = (event) => {
-    let categoryIndex: number;
-
     if (event === null) {
-      categoryIndex = -1;
-    } else {
-      categoryIndex = categories.indexOf(event.value);
+      goHome();
+      return;
     }
 
+    const categoryIndex = categories.indexOf(event.value);
     setNavigation((prevState) => {
       return {
         ...prevState,
