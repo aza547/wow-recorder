@@ -1,4 +1,3 @@
-import { orange, yellow } from '@mui/material/colors';
 import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchemaKey } from './configSchema';
 
