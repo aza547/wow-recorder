@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 350](https://github.com/aza547/wow-recorder/issues/350) - Fix a bug where videos could be cut wrongly after using the stop recording button.
-- [NO-ISSUE] Corrected first boss name in Court of Stars.
+- [NO-ISSUE] - Corrected first boss name in Court of Stars.
 - [Issue 144](https://github.com/aza547/wow-recorder/issues/144) - Hide markers for some categories/flavours.
 
 ## [3.7.0] - 2023-03-24

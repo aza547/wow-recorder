@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
 import { TNavigatorState } from 'main/types';
 import React from 'react';
@@ -33,6 +33,12 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
       categoryIndex,
       videoIndex: 0,
     });
+  };
+
+  const openSetupInstructions = () => {
+    window.electron.ipcRenderer.sendMessage('openURL', [
+      'https://github.com/aza547/wow-recorder#readme',
+    ]);
   };
 
   const setFallbackImage = (event: any) => {
@@ -82,7 +88,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           />
           <Typography
             align="center"
-            variant="h5"
+            variant="h6"
             sx={{
               color: 'white',
               fontFamily: '"Arial",sans-serif',
@@ -93,6 +99,52 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             Latest Video
           </Typography>
         </Box>
+      </Box>
+    );
+  };
+
+  const renderFirstTimeUserPrompt = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          width: '50%',
+          height: '50%',
+        }}
+      >
+        <Typography
+          align="center"
+          variant="h6"
+          sx={{
+            color: 'white',
+            fontFamily: '"Arial",sans-serif',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          It looks like it might be first time here! Setup instructions can be
+          found at the link below. If you have problems, please use the Discord
+          #help channel to get support.
+        </Typography>
+        <Button
+          key="setup-button"
+          variant="outlined"
+          onClick={openSetupInstructions}
+          sx={{
+            color: 'white',
+            borderColor: 'white',
+            m: 2,
+            ':hover': {
+              color: '#bb4420',
+              borderColor: '#bb4420',
+            },
+          }}
+        >
+          Setup Instructions
+        </Button>
       </Box>
     );
   };
@@ -129,7 +181,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         Warcraft Recorder
       </Typography>
       <Typography
-        variant="h5"
+        variant="h6"
         sx={{
           color: 'white',
           fontFamily: '"Arial",sans-serif',
@@ -141,6 +193,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
       </Typography>
 
       {haveVideos && renderLatestVideo()}
+      {haveVideos || renderFirstTimeUserPrompt()}
     </Box>
   );
 };

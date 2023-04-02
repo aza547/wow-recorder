@@ -99,7 +99,7 @@ export default function RecorderStatus(props: IProps) {
           </Typography>
           <Typography sx={{ color: 'red' }}>{error}</Typography>
           <Typography sx={{ color: 'white' }}>
-            If this problem is recurring, please ask for help in discord. See
+            If this problem is recurring, please ask for help in Discord. See
             the pins in the #help channel for advice on getting help.
           </Typography>
         </>
@@ -175,7 +175,8 @@ export default function RecorderStatus(props: IProps) {
       >
         <Box
           sx={{
-            border: '1px solid #bb4420',
+            border: '1px solid white',
+            borderRadius: '3%',
             p: 1,
             width: '400px',
             bgcolor: '#272e48',
