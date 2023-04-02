@@ -188,6 +188,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           variant="outlined"
           onClick={loadMoreVideos}
           sx={{
+            mb: 1,
             color: 'white',
             borderColor: 'white',
             ':hover': {
