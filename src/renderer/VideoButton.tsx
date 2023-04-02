@@ -4,7 +4,7 @@ import {
   soloShuffleResultColors,
   specializationById,
 } from 'main/constants';
-import { getInstanceDifficulty, getVideoResultText } from 'main/helpers';
+import { getVideoResultText } from 'main/helpers';
 import { TNavigatorState } from 'main/types';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -45,7 +45,6 @@ export default function VideoButton(props: IProps) {
     result,
     isProtected,
     player,
-    difficultyID,
     encounterID,
     zoneID,
     fullPath,

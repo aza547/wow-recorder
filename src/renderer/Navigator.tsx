@@ -27,6 +27,12 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
     };
   }
 
+  let disableBackButton = false;
+
+  if (navigation.categoryIndex === -1 && navigation.videoIndex === -1) {
+    disableBackButton = true;
+  }
+
   const goHome = () => {
     setNavigation({
       categoryIndex: -1,
@@ -169,6 +175,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
             <IconButton
               component="label"
               onClick={goBack}
+              disabled={disableBackButton}
               sx={{
                 color: 'white',
               }}
