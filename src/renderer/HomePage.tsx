@@ -193,7 +193,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
       </Typography>
 
       {haveVideos && renderLatestVideo()}
-      {haveVideos || renderFirstTimeUserPrompt()}
+      {!haveVideos && renderFirstTimeUserPrompt()}
     </Box>
   );
 };
