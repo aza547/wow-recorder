@@ -1,5 +1,14 @@
+import { VideoCategory } from '../types/VideoCategory';
 import CombatLogParser from '../parsing/CombatLogParser';
 import Poller from './Poller';
+import {
+  testData2v2,
+  testData3v3,
+  testDataSoloShuffle,
+  testDataRaid,
+  testDataBattleground,
+  testDataDungeon,
+} from './testButtonData';
 
 let testRunning = false;
 
@@ -28,6 +37,7 @@ const getAdjustedDate = (seconds = 0): string => {
  * in the GUI. Uses some sample log lines from 2v2.txt.
  */
 export const runRetailRecordingTest = (
+  category: VideoCategory,
   parser: CombatLogParser,
   endTest = true
 ) => {
@@ -51,27 +61,38 @@ export const runRetailRecordingTest = (
 
   console.info('[test] WoW is running, starting test.');
   testRunning = true;
-
-  // This inserts a test date so that the recorder doesn't confuse itself with
-  // dates too far in the past. This happens when a recording doesn't end on its own
-  // and we forcibly stop it using `new Date()` instead of the date from a log line
-  // that ends an activity.
   const startDate = getAdjustedDate();
-  const endDate = getAdjustedDate(10);
+  const endDate = getAdjustedDate(5);
 
-  const testLines = [
-    `${startDate}  ARENA_MATCH_START,2547,33,2v2,1`,
-    `${startDate}  COMBATANT_INFO,Player-1084-08A89569,0,194,452,3670,2353,0,0,0,111,111,111,0,0,632,632,632,0,345,1193,1193,1193,779,256,(102351,102401,197491,5211,158478,203651,155675),(0,203553,203399,353114),[4,4,[],[(1123),(1124),(1129),(1135),(1136),(1819),(1122),(1126),(1128),(1820)],[(256,200),(278,200),(276,200),(275,200),(271,200)]],[(188847,265,(),(7578,8151,7899,1472,6646),()),(186787,265,(),(7578,7893,1524,6646),()),(172319,291,(),(7098,7882,8156,6649,6650,1588),()),(44693,1,(),(),()),(188849,265,(),(8153,7899,1472,6646),()),(186819,265,(),(8136,8137,7578,7896,1524,6646),()),(188848,265,(),(8155,7899,1472,6646),()),(186809,265,(),(8136,8137,7896,1524,6646),()),(186820,265,(),(8136,8138,7578,7893,1524,6646),()),(188853,265,(),(8154,7896,1472,6646),()),(178926,291,(),(8121,7882,8156,6649,6650,1588,6935),()),(186786,265,(),(7579,7893,1524,6646),()),(185304,233,(),(7305,1492,6646),()),(186868,262,(),(7534,1521,6646),()),(186782,265,(),(8136,8138,7893,1524,6646),()),(186865,275,(),(7548,6652,1534,6646),()),(0,0,(),(),()),(147336,37,(),(),())],[Player-1084-08A89569,768,Player-1084-08A89569,5225],327,33,767,1`,
-    `${startDate}  SPELL_AURA_APPLIED,Player-1084-08A89569,"Alexsmite-TarrenMill",0x511,0x0,Player-1084-08A89569,"Alexsmite-TarrenMill",0x511,0x0,110310,"Dampening",0x1,DEBUFF`,
-  ];
+  let testLines: string[];
 
-  testLines.forEach((line) => sendTestCombatLogLine(parser, line));
+  if (category === VideoCategory.TwoVTwo) {
+    testLines = testData2v2;
+  } else if (category === VideoCategory.ThreeVThree) {
+    testLines = testData3v3;
+  } else if (category === VideoCategory.SoloShuffle) {
+    testLines = testDataSoloShuffle;
+  } else if (category === VideoCategory.Raids) {
+    testLines = testDataRaid;
+  } else if (category === VideoCategory.Battlegrounds) {
+    testLines = testDataBattleground;
+  } else if (category === VideoCategory.MythicPlus) {
+    testLines = testDataDungeon;
+  } else {
+    testLines = [];
+  }
+
+  const testArenaEndLine = `${endDate}  ${testLines[testLines.length - 1]}`;
+  testLines.pop();
+
+  testLines.forEach((line) => {
+    const lineWithDate = `${startDate}  ${line}`;
+    sendTestCombatLogLine(parser, lineWithDate);
+  });
 
   if (!endTest) {
     return;
   }
-
-  const testArenaEndLine = `${endDate}  ARENA_MATCH_END,0,8,1673,1668`;
 
   setTimeout(() => {
     sendTestCombatLogLine(parser, testArenaEndLine);

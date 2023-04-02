@@ -37,6 +37,7 @@ import {
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
 import SizeMonitor from '../utils/SizeMonitor';
+import { VideoCategory } from '../types/VideoCategory';
 
 const logDir = setupApplicationLogging();
 console.info('[Main] App starting, version:', app.getVersion());
@@ -260,7 +261,7 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    // recorder = new Recorder(mainWindow);
+    recorder = new Recorder(mainWindow);
 
     Poller.getInstance()
       .on('wowProcessStart', wowProcessStarted)
@@ -274,7 +275,7 @@ const createWindow = async () => {
       return;
     }
 
-    // recorder.configure();
+    recorder.configure();
 
     Poller.getInstance().start();
     mainWindow.webContents.send('refreshState');
@@ -282,13 +283,13 @@ const createWindow = async () => {
     const retailLogPath = cfg.getPath('retailLogPath');
     const classicLogPath = cfg.getPath('classicLogPath');
 
-    // if (retailLogPath) {
-    //   retailHandler = new RetailLogHandler(recorder, retailLogPath);
-    // }
+    if (retailLogPath) {
+      retailHandler = new RetailLogHandler(recorder, retailLogPath);
+    }
 
-    // if (classicLogPath) {
-    //   classicHandler = new ClassicLogHandler(recorder, classicLogPath);
-    // }
+    if (classicLogPath) {
+      classicHandler = new ClassicLogHandler(recorder, classicLogPath);
+    }
   });
 
   mainWindow.on('closed', () => {
@@ -611,7 +612,12 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
 ipcMain.on('test', (_event, args) => {
   if (retailHandler) {
     console.info('[Main] Running retail test');
-    runRetailRecordingTest(retailHandler.combatLogParser, Boolean(args[0]));
+
+    runRetailRecordingTest(
+      VideoCategory.TwoVTwo,
+      retailHandler.combatLogParser,
+      Boolean(args[0])
+    );
   } else if (classicHandler) {
     console.info('[Main] Running classic test');
     runClassicRecordingTest(classicHandler.combatLogParser, Boolean(args[0]));
