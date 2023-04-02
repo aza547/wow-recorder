@@ -43,7 +43,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     autoPlay: false,
     videoMuted: videoPlayerSettings.muted,
     videoVolume: videoPlayerSettings.volume, // (Double) 0.00 - 1.00
-    videoSeek: 0,
     fatalError: false,
     fatalErrorText: '',
   });
@@ -82,15 +81,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   /**
-   * Seek to a point in the video.
-   */
-  const videoSeek = (sec: number) => {
-    if (videoPlayerRef.current) {
-      videoPlayerRef.current.currentTime(sec);
-    }
-  };
-
-  /**
    * Update the state variable following a change of selected video.
    */
   const handleChangeVideo = (index: number) => {
@@ -119,10 +109,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       });
     });
   }, []);
-
-  React.useEffect(() => {
-    videoSeek(state.videoSeek);
-  }, [state.videoSeek]);
 
   /**
    * Returns a video panel with videos.
@@ -183,6 +169,35 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const getShowMoreButton = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          height: '50px',
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={loadMoreVideos}
+          sx={{
+            color: 'white',
+            borderColor: 'white',
+            ':hover': {
+              color: '#bb4420',
+              borderColor: '#bb4420',
+            },
+          }}
+        >
+          Load More
+        </Button>
+      </Box>
+    );
+  };
+
   const getVideoSelection = () => {
     const categoryState = videoState[category];
     if (!categoryState) return <></>;
@@ -235,30 +250,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                 </ListItem>
               );
             })}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '100%',
-                height: '50px',
-              }}
-            >
-              <Button
-                variant="outlined"
-                onClick={loadMoreVideos}
-                sx={{
-                  color: 'white',
-                  borderColor: 'white',
-                  ':hover': {
-                    color: '#bb4420',
-                    borderColor: '#bb4420',
-                  },
-                }}
-              >
-                Load More
-              </Button>
-            </Box>
+            {moreVideosRemain && getShowMoreButton()}
           </List>
         </Box>
       </>
