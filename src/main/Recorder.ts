@@ -910,9 +910,7 @@ export default class Recorder {
 
     // Wait up to 30 seconds for OBS to signal it has started recording.
     await Promise.race([
-      new Promise((_resolve, reject) =>
-        setTimeout(reject, 110000, '[Recorder] OBS timeout waiting for start')
-      ),
+      this.startQueue.shift(),
       new Promise((_resolve, reject) =>
         setTimeout(reject, 10000, '[Recorder] OBS timeout waiting for start')
       ),
