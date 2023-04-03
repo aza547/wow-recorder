@@ -66,18 +66,20 @@ export const runRetailRecordingTest = (
 
   let testLines: string[];
 
+  // We need to use slice here or we end up with a reference and we lose a
+  // line on each subsequent .pop() and click of the test button.
   if (category === VideoCategory.TwoVTwo) {
-    testLines = testData2v2;
+    testLines = testData2v2.slice();
   } else if (category === VideoCategory.ThreeVThree) {
-    testLines = testData3v3;
+    testLines = testData3v3.slice();
   } else if (category === VideoCategory.SoloShuffle) {
-    testLines = testDataSoloShuffle;
+    testLines = testDataSoloShuffle.slice();
   } else if (category === VideoCategory.Raids) {
-    testLines = testDataRaid;
+    testLines = testDataRaid.slice();
   } else if (category === VideoCategory.Battlegrounds) {
-    testLines = testDataBattleground;
+    testLines = testDataBattleground.slice();
   } else if (category === VideoCategory.MythicPlus) {
-    testLines = testDataDungeon;
+    testLines = testDataDungeon.slice();
   } else {
     testLines = [];
   }
