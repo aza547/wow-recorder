@@ -125,9 +125,9 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
         >
-          It looks like it might be first time here! Setup instructions can be
-          found at the link below. If you have problems, please use the Discord
-          #help channel to get support.
+          It looks like it might be your first time here! Setup instructions can
+          be found at the link below. If you have problems, please use the
+          Discord #help channel to get support.
         </Typography>
         <Button
           key="setup-button"
@@ -171,6 +171,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
       />
       <Typography
         variant="h1"
+        align="center"
         sx={{
           color: '#bb4220',
           fontFamily: '"Arial",sans-serif',
@@ -182,6 +183,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
       </Typography>
       <Typography
         variant="h6"
+        align="center"
         sx={{
           color: 'white',
           fontFamily: '"Arial",sans-serif',

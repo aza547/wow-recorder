@@ -11,6 +11,7 @@ import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import BottomStatusBar from './BottomStatusBar';
 import './App.css';
+import { getEmptyState } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -30,7 +31,7 @@ const Application = () => {
     SaveStatus.NotSaving
   );
 
-  const [videoState, setVideoState] = React.useState<any>({});
+  const [videoState, setVideoState] = React.useState<any>(getEmptyState());
   const [navigation, setNavigation] = React.useState<TNavigatorState>({
     categoryIndex: -1,
     videoIndex: -1,

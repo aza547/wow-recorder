@@ -198,6 +198,22 @@ const getLatestCategory = (videoState: any) => {
   return latestCategory;
 };
 
+/**
+ * Get empty video state. This is duplicated here because we can't access
+ * it in utils.ts on the frontend.
+ */
+const getEmptyState = () => {
+  const videoState: { [category: string]: any[] } = {};
+
+  const categories = Object.values(VideoCategory);
+
+  categories.forEach((category) => {
+    videoState[category] = [];
+  });
+
+  return videoState;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -206,4 +222,5 @@ export {
   getNumVideos,
   getTotalDuration,
   getLatestCategory,
+  getEmptyState,
 };
