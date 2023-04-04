@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+### Fixed
 
+## [3.8.0] - 2023-04-04
 ### Changed
 - [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Totally redesign the user interface.
 - [Issue 348](https://github.com/aza547/wow-recorder/issues/348) - Changed CSS for Seek Bar to make it taller.
