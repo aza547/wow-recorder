@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Totally redesign the user interface.
 - [Issue 348](https://github.com/aza547/wow-recorder/issues/348) - Changed CSS for Seek Bar to make it taller.
+- [NO-ISSUE] - Adjusted video marker duration for M+ to account for segment duration.
 
 ### Fixed
 - [Issue 350](https://github.com/aza547/wow-recorder/issues/350) - Fix a bug where videos could be cut wrongly after using the stop recording button.
