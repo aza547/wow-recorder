@@ -4,6 +4,7 @@ import { TNavigatorState, VideoPlayerSettings } from 'main/types';
 import { Button, List, ListItem, ListItemButton } from '@mui/material';
 import Player from 'video.js/dist/types/player';
 import { VideoJS } from './VideoJS';
+import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
 import { addVideoMarkers } from './rendererutils';
@@ -128,6 +129,21 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       fill: true,
       inactivityTimeout: 0,
       playbackRates: [0.25, 0.5, 1, 1.5, 2],
+      plugins: {
+        hotkeys: {
+          seekStep: 10,
+          enableModifiersForNumbers: false,
+          forwardKey(event: { which: number }) {
+            return event.which === 76 || event.which === 39;
+          },
+          rewindKey(event: { which: number }) {
+            return event.which === 74 || event.which === 37;
+          },
+          playPauseKey(event: { which: number }) {
+            return event.which === 32 || event.which === 75;
+          },
+        },
+      },
       sources: [
         {
           src: videoFullPath,
