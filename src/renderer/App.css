@@ -1112,6 +1112,9 @@ input[type='submit'].btn-block {
 
 .orange-video-marker {
   background-color: #ff8000 !important;
-  z-index: 2;
   border-radius: 0% !important;
+}
+
+.orange-video-marker:hover {
+  z-index: 2;
 }
