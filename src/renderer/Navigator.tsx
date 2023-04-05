@@ -103,9 +103,9 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
     }
 
     const categoryIndex = categories.indexOf(event.value);
-    setNavigation((prevState) => {
+    setNavigation(() => {
       return {
-        ...prevState,
+        videoIndex: -1,
         categoryIndex,
       };
     });

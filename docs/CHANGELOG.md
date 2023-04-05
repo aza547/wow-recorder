@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [NO-ISSUE] Fixed a bug where the app would sometimes crash on selecting a category with no videos.
 
 ## [3.8.0] - 2023-04-04
 ### Changed
