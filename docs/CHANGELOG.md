@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.8.0] - 2023-04-04
 ### Changed
+- [NO-ISSUE] - Adjusted M+ markers to be based on segment duration
+- [NO-ISSUE] - Adjusted M+ marker mouseover tips to be boss names instead of just 'Boss'
+
+### Fixed
+
+## [3.8.0] - 2023-04-04
+### Changed
 - [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Totally redesign the user interface.
 - [Issue 348](https://github.com/aza547/wow-recorder/issues/348) - Changed CSS for Seek Bar to make it taller.
 
