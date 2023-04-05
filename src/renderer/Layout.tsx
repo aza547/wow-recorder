@@ -133,19 +133,14 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         hotkeys: {
           seekStep: 10,
           enableModifiersForNumbers: false,
-
-          /* KeyboardEvent codes: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode
-           * These are overides so we add the original key codes as well.
-           * 76 = L, 39 = right arrow, 74 = J, 37 = left arrow, 75 = K, 32 = space
-           */
-          forwardKey(event: { which: number }) {
-            return event.which === 76 || event.which === 39;
+          forwardKey(event: { code: string }) {
+            return event.code === 'KeyL' || event.code === 'ArrowRight';
           },
-          rewindKey(event: { which: number }) {
-            return event.which === 74 || event.which === 37;
+          rewindKey(event: { code: string }) {
+            return event.code === 'KeyJ' || event.code === 'ArrowLeft';
           },
-          playPauseKey(event: { which: number }) {
-            return event.which === 75 || event.which === 32;
+          playPauseKey(event: { code: string }) {
+            return event.code === 'KeyK' || event.code === 'Space';
           },
         },
       },
