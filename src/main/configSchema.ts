@@ -204,7 +204,7 @@ export const configSchema = {
   minKeystoneLevel: {
     description: 'The minimum keystone level to record.',
     type: 'integer',
-    default: 1,
+    default: 2,
   },
   minimizeOnQuit: {
     description: 'Whether the close button should minimize rather than quit.',
