@@ -5,23 +5,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
 ### Added
-- [Issue 334](https://github.com/aza547/wow-recorder/issues/334) - JKL hotkeys to video player
+### Changed
+### Fixed
+
+## [3.9.0] - 2023-04-07
+### Added
+- [Issue 334](https://github.com/aza547/wow-recorder/issues/334) - Add JKL, arrows and space hotkeys to video player for seeking.
 
 ### Changed
-- [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Improvements to the home page.
+- [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Improvements to the home page aesthetics.
+- [NO-ISSUE] - Adjusted M+ markers to be based on segment duration.
+- [NO-ISSUE] - Adjusted M+ marker mouseover tips to be boss names instead of just 'Boss'.
 
 ### Fixed
 - [NO-ISSUE] Fixed a bug where the app would sometimes crash on selecting a category with no videos.
-- [Issue 362](https://github.com/aza547/wow-recorder/issues/362) - Include the M+ keystone level in the GUI. 
-
-## [3.8.0] - 2023-04-04
-### Changed
-- [NO-ISSUE] - Adjusted M+ markers to be based on segment duration
-- [NO-ISSUE] - Adjusted M+ marker mouseover tips to be boss names instead of just 'Boss'
-- 
-### Fixed
-- [NO-ISSUE] - Fixed a bug where the app would sometimes crash on selecting a category with no videos.
 - [Issue 362](https://github.com/aza547/wow-recorder/issues/362) - Include the M+ keystone level in the GUI. 
 
 ## [3.8.0] - 2023-04-04
