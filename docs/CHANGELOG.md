@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- [Issue 334](https://github.com/aza547/wow-recorder/issues/334) - JKL hotkeys to video player
 ### Changed
 ### Fixed
 - [NO-ISSUE] Fixed a bug where the app would sometimes crash on selecting a category with no videos.
