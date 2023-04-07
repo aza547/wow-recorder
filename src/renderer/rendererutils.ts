@@ -1,4 +1,4 @@
-import { WoWClassColor } from 'main/constants';
+import { dungeonEncounters, WoWClassColor } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
 import { Flavour } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
@@ -86,20 +86,26 @@ const getChallengeModeVideoMarkers = (video: any) => {
   const videoMarkers: any[] = [];
 
   video.timeline.forEach((segment: any) => {
-    const markerText = segment.segmentType;
+    const segmentDuration =
+      Date.parse(segment.logEnd) - Date.parse(segment.logStart);
+    const encounterDuration = Math.floor(segmentDuration / 1000);
     const type = segment.segmentType as TimelineSegmentType;
     let markerClass: string;
+    let markerText: string;
 
     if (type === TimelineSegmentType.BossEncounter) {
       markerClass = 'orange-video-marker';
+      markerText = dungeonEncounters[segment.encounterId] || 'Boss';
     } else {
       markerClass = 'purple-video-marker';
+      markerText = segment.segmentType;
     }
 
     videoMarkers.push({
       time: segment.timestamp,
       text: markerText,
       class: markerClass,
+      duration: encounterDuration,
     });
   });
 
