@@ -1,39 +1,32 @@
-import { Box, Button, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  List,
+  ListItem,
+  ListItemButton,
+  Typography,
+} from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
-import { TNavigatorState } from 'main/types';
 import React from 'react';
+import { TNavigatorState } from 'main/types';
 import icon from '../../assets/icon/large-icon.png';
-import poster from '../../assets/poster/poster.png';
 import { getLatestCategory, getNumVideos } from './rendererutils';
+import { VideoJS } from './VideoJS';
+import VideoButton from './VideoButton';
 
 interface IProps {
   videoState: any;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
+const categories = Object.values(VideoCategory);
+
 const HomePage: React.FC<IProps> = (props: IProps) => {
   const { videoState, setNavigation } = props;
   const latestCategory = getLatestCategory(videoState);
+  const categoryIndex = categories.indexOf(latestCategory);
   const numVideos = getNumVideos(videoState);
   const haveVideos = numVideos > 0;
-
-  let thumbnailPath: string | undefined;
-
-  if (latestCategory !== undefined) {
-    thumbnailPath = videoState[latestCategory][0].thumbnail;
-  }
-
-  const goToLatestVideo = () => {
-    const categories = Object.values(VideoCategory);
-    const categoryIndex = categories.indexOf(
-      getLatestCategory(videoState) as VideoCategory
-    );
-
-    setNavigation({
-      categoryIndex,
-      videoIndex: 0,
-    });
-  };
 
   const openSetupInstructions = () => {
     window.electron.ipcRenderer.sendMessage('openURL', [
@@ -41,63 +34,64 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     ]);
   };
 
-  const setFallbackImage = (event: any) => {
-    event.target.src = poster;
+  const goToLatestVideo = () => {
+    setNavigation({
+      categoryIndex,
+      videoIndex: 0,
+    });
+  };
+
+  const getLatestVideoPanel = () => {
+    const video = videoState[latestCategory][0];
+    const videoFullPath = video.fullPath;
+    return <VideoJS id="video-player" key={videoFullPath} video={video} />;
   };
 
   const renderLatestVideo = () => {
     return (
       <Box
         sx={{
+          width: '100%',
+          height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          flexDirection: 'row',
-          width: '100%',
-          height: '100%',
+          flexDirection: 'column',
         }}
       >
         <Box
           sx={{
-            display: 'flex',
-            width: '50%',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
+            height: '100%',
+            width: '75%',
+            margin: 2,
+            border: '1px solid black',
+            borderRadius: '0%',
+            boxShadow: '5px 10px 8px 10px black',
           }}
         >
-          <Box
-            component="img"
-            src={thumbnailPath}
-            onError={setFallbackImage}
-            onClick={goToLatestVideo}
-            sx={{
-              border: '1px solid white',
-              borderRadius: 0,
-              boxSizing: 'border-box',
-              display: 'flex',
-              height: '100%',
-              width: '100%',
-              objectFit: 'cover',
-              '&:hover': {
-                border: '1px solid #bb4420',
-                color: 'gray',
-                backgroundColor: 'lightblue',
-              },
-            }}
-          />
-          <Typography
-            align="center"
-            variant="h6"
-            sx={{
-              color: 'white',
-              fontFamily: '"Arial",sans-serif',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-            }}
-          >
-            Latest Video
-          </Typography>
+          {getLatestVideoPanel()}
+        </Box>
+        <Box
+          sx={{
+            width: '100%',
+          }}
+        >
+          <List sx={{ width: '100%' }}>
+            <ListItem
+              disablePadding
+              key={videoState[latestCategory][0].fullPath}
+              sx={{ width: '100%' }}
+            >
+              <ListItemButton onClick={goToLatestVideo}>
+                <VideoButton
+                  key={videoState[latestCategory][0].fullPath}
+                  videostate={videoState}
+                  categoryIndex={categoryIndex}
+                  videoIndex={videoState[latestCategory][0].index}
+                />
+              </ListItemButton>
+            </ListItem>
+          </List>
         </Box>
       </Box>
     );

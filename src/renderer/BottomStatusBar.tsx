@@ -1,6 +1,7 @@
 import {
   RecStatus,
   SaveStatus,
+  TAppState,
   TNavigatorState,
   UpgradeStatus,
 } from 'main/types';
@@ -21,7 +22,7 @@ interface IProps {
   error: string;
   upgradeStatus: UpgradeStatus;
   savingStatus: SaveStatus;
-  setNumVideosDisplayed: React.Dispatch<React.SetStateAction<number>>;
+  setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
 }
 
 const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
@@ -32,7 +33,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
     error,
     upgradeStatus,
     savingStatus,
-    setNumVideosDisplayed,
+    setAppState,
   } = props;
 
   return (
@@ -72,7 +73,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
         <Navigator
           navigation={navigation}
           setNavigation={setNavigation}
-          setNumVideosDisplayed={setNumVideosDisplayed}
+          setAppState={setAppState}
         />
 
         <Box

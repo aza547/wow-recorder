@@ -180,9 +180,9 @@ const getTotalDuration = (videoState: any) => {
 
 const getLatestCategory = (videoState: any) => {
   let latestDate = new Date(2000, 1, 1);
-  let latestCategory: VideoCategory | undefined;
+  let latestCategory = VideoCategory.TwoVTwo;
 
-  Object.keys(videoState).forEach((category: any) => {
+  Object.keys(videoState).forEach((category: string) => {
     const video = videoState[category][0];
 
     if (video === undefined) {

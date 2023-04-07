@@ -3,6 +3,7 @@ import React from 'react';
 import {
   RecStatus,
   SaveStatus,
+  TAppState,
   TNavigatorState,
   UpgradeStatus,
 } from 'main/types';
@@ -32,15 +33,22 @@ const Application = () => {
   );
 
   const [videoState, setVideoState] = React.useState<any>(getEmptyState());
+
   const [navigation, setNavigation] = React.useState<TNavigatorState>({
     categoryIndex: -1,
     videoIndex: -1,
   });
 
-  // Limit the number of videos displayed for performance. User can load more
-  // by clicking the button, but mainline case will be to watch back recent
-  // videos.
-  const [numVideosDisplayed, setNumVideosDisplayed] = React.useState(10);
+  const [appState, setAppState] = React.useState<TAppState>({
+    // If the app hits a fatal error, we set this to true and provide a reason.
+    fatalError: false,
+    fatalErrorText: '',
+
+    // Limit the number of videos displayed for performance. User can load more
+    // by clicking the button, but mainline case will be to watch back recent
+    // videos.
+    numVideosDisplayed: 10,
+  });
 
   React.useEffect(() => {
     ipc.on('refreshState', async () => {
@@ -85,8 +93,8 @@ const Application = () => {
         navigation={navigation}
         setNavigation={setNavigation}
         videoState={videoState}
-        numVideosDisplayed={numVideosDisplayed}
-        setNumVideosDisplayed={setNumVideosDisplayed}
+        appState={appState}
+        setAppState={setAppState}
       />
       <BottomStatusBar
         navigation={navigation}
@@ -95,7 +103,7 @@ const Application = () => {
         error={error}
         upgradeStatus={upgradeStatus}
         savingStatus={savingStatus}
-        setNumVideosDisplayed={setNumVideosDisplayed}
+        setAppState={setAppState}
       />
     </Box>
   );

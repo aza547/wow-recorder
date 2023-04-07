@@ -5,7 +5,6 @@ import {
   specializationById,
 } from 'main/constants';
 import { getVideoResultText } from 'main/helpers';
-import { TNavigatorState } from 'main/types';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventIcon from '@mui/icons-material/Event';
@@ -21,18 +20,17 @@ import DungeonCompDisplay from './DungeonCompDisplay';
 import RaidEncounterInfo from './RaidEncounterInfo';
 
 interface IProps {
-  index: number;
-  navigation: TNavigatorState;
+  categoryIndex: number;
+  videoIndex: number;
   videostate: any;
 }
 
 const categories = Object.values(VideoCategory);
 
 export default function VideoButton(props: IProps) {
-  const { index, navigation, videostate } = props;
-  const { categoryIndex } = navigation;
+  const { videoIndex, categoryIndex, videostate } = props;
   const category = categories[categoryIndex] as VideoCategory;
-  const video = videostate[category][index];
+  const video = videostate[category][videoIndex];
 
   const isMythicPlus = category === VideoCategory.MythicPlus;
   const isRaid = category === VideoCategory.Raids;

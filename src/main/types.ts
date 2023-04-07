@@ -255,6 +255,15 @@ type TNavigatorState = {
   videoIndex: number;
 };
 
+/**
+ * Some bits of application state.
+ */
+type TAppState = {
+  fatalError: boolean;
+  fatalErrorText: string;
+  numVideosDisplayed: number;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -281,4 +290,5 @@ export {
   IDevice,
   TAudioSourceType,
   TNavigatorState,
+  TAppState,
 };

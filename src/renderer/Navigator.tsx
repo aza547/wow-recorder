@@ -1,6 +1,6 @@
 import { Home } from '@mui/icons-material';
 import { Box, Chip, IconButton, Stack, Tooltip } from '@mui/material';
-import { TNavigatorState } from 'main/types';
+import { TAppState, TNavigatorState } from 'main/types';
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
 import Select from 'react-select';
@@ -9,13 +9,13 @@ import ReplyIcon from '@mui/icons-material/Reply';
 interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
-  setNumVideosDisplayed: React.Dispatch<React.SetStateAction<number>>;
+  setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
 }
 
 const categories = Object.values(VideoCategory);
 
 const Navigator: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigation, setNumVideosDisplayed } = props;
+  const { navigation, setNavigation, setAppState } = props;
 
   let categorySelectValue;
 
@@ -40,7 +40,12 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       videoIndex: -1,
     });
 
-    setNumVideosDisplayed(10);
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        numVideosDisplayed: 10,
+      };
+    });
   };
 
   const goBack = () => {
