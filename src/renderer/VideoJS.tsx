@@ -1,6 +1,7 @@
 import { VideoPlayerSettings } from 'main/types';
 import React from 'react';
 import videojs from 'video.js';
+import 'videojs-hotkeys';
 import 'video.js/dist/video-js.css';
 import 'videojs-markers/dist/videojs-markers';
 import 'videojs-markers/dist/videojs.markers.css';
@@ -60,6 +61,21 @@ export const VideoJS = (props: IProps) => {
         fill: true,
         inactivityTimeout: 0,
         playbackRates: [0.25, 0.5, 1, 1.5, 2],
+        plugins: {
+          hotkeys: {
+            seekStep: 10,
+            enableModifiersForNumbers: false,
+            forwardKey(event: { code: string }) {
+              return event.code === 'KeyL' || event.code === 'ArrowRight';
+            },
+            rewindKey(event: { code: string }) {
+              return event.code === 'KeyJ' || event.code === 'ArrowLeft';
+            },
+            playPauseKey(event: { code: string }) {
+              return event.code === 'KeyK' || event.code === 'Space';
+            },
+          },
+        },
         sources: [
           {
             src: video.fullPath,

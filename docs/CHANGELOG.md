@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- [Issue 334](https://github.com/aza547/wow-recorder/issues/334) - JKL hotkeys to video player
+
 ### Changed
 - [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Improvements to the home page.
 
@@ -17,8 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - [NO-ISSUE] - Adjusted M+ markers to be based on segment duration
 - [NO-ISSUE] - Adjusted M+ marker mouseover tips to be boss names instead of just 'Boss'
-
+- 
 ### Fixed
+- [NO-ISSUE] - Fixed a bug where the app would sometimes crash on selecting a category with no videos.
+- [Issue 362](https://github.com/aza547/wow-recorder/issues/362) - Include the M+ keystone level in the GUI. 
 
 ## [3.8.0] - 2023-04-04
 ### Changed

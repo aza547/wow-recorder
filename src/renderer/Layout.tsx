@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import { TAppState, TNavigatorState } from 'main/types';
 import { Button, List, ListItem, ListItemButton } from '@mui/material';
 import { VideoJS } from './VideoJS';
+import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
 import HomePage from './HomePage';

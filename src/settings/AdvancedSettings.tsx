@@ -135,7 +135,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
           }
           InputLabelProps={{ shrink: true }}
           sx={{ ...style, my: 1 }}
-          inputProps={{ style: { color: 'white' } }}
+          inputProps={{ style: { color: 'white' }, min: 2 }}
         />
         <Tooltip title={configSchema.minKeystoneLevel.description}>
           <IconButton>
