@@ -161,80 +161,94 @@ export default function VideoButton(props: IProps) {
           }}
         />
 
-        {isSoloShuffle && (
-          <Typography
-            align="center"
-            sx={{
-              position: 'relative',
-              bottom: '75px',
-              left: '0px',
-              color: 'white',
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              fontSize: '2rem',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-            }}
-          >
-            {resultText}
-          </Typography>
-        )}
-
-        {isMythicPlus && (
-          <>
+        <Box
+          sx={{
+            position: 'relative',
+            bottom: '100px',
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {isSoloShuffle && (
             <Typography
               align="center"
               sx={{
-                position: 'relative',
-                bottom: '75px',
-                left: '0px',
                 color: 'white',
                 fontWeight: '600',
                 fontFamily: '"Arial",sans-serif',
-                fontSize: '1rem',
+                fontSize: '2rem',
                 textShadow:
                   '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
               }}
             >
               {resultText}
             </Typography>
+          )}
+
+          {isMythicPlus && (
+            <>
+              <Typography
+                align="center"
+                sx={{
+                  color: 'white',
+                  fontWeight: '600',
+                  fontFamily: '"Arial",sans-serif',
+                  fontSize: '1rem',
+                  textShadow:
+                    '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+                }}
+              >
+                {resultText}
+              </Typography>
+              <Typography
+                align="center"
+                sx={{
+                  color: 'white',
+                  fontWeight: '600',
+                  fontFamily: '"Arial",sans-serif',
+                  fontSize: '1rem',
+                  textShadow:
+                    '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+                }}
+              >
+                {dungeonsByMapId[video.mapID]}
+              </Typography>
+              <Typography
+                align="center"
+                sx={{
+                  color: '#ff8000',
+                  fontWeight: '600',
+                  fontFamily: '"Arial",sans-serif',
+                  fontSize: '1rem',
+                  textShadow:
+                    '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+                }}
+              >
+                +{video.level}
+              </Typography>
+            </>
+          )}
+
+          {!isSoloShuffle && !isMythicPlus && !isBattleground && (
             <Typography
               align="center"
               sx={{
-                position: 'relative',
-                bottom: '75px',
-                left: '0px',
                 color: 'white',
                 fontWeight: '600',
                 fontFamily: '"Arial",sans-serif',
-                fontSize: '1rem',
+                fontSize: '2rem',
                 textShadow:
                   '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
               }}
             >
-              {dungeonsByMapId[video.mapID]}
+              {resultText}
             </Typography>
-          </>
-        )}
-
-        {!isSoloShuffle && !isMythicPlus && !isBattleground && (
-          <Typography
-            align="center"
-            sx={{
-              position: 'relative',
-              bottom: '75px',
-              left: '0px',
-              color: 'white',
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              fontSize: '2rem',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-            }}
-          >
-            {resultText}
-          </Typography>
-        )}
+          )}
+        </Box>
       </Box>
 
       <Box
@@ -410,81 +424,6 @@ export default function VideoButton(props: IProps) {
             </IconButton>
           </Tooltip>
         </Box>
-
-        {/* {isMythicPlus || (
-          <>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontFamily: '"Arial",sans-serif',
-                gridColumnStart: 6,
-                gridColumnEnd: 7,
-              }}
-            >
-              {video.encounter}
-            </Typography>
-            <Typography
-              display="inline"
-              sx={{
-                fontWeight: '600',
-                fontFamily: '"Arial",sans-serif',
-                gridColumnStart: 7,
-                gridColumnEnd: 8,
-              }}
-            >
-              {video.zoneName}
-            </Typography>
-          </>
-        )}
-
-        {isMythicPlus && (
-          <>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontFamily: '"Arial",sans-serif',
-                gridColumnStart: 6,
-                gridColumnEnd: 7,
-              }}
-            >
-              {dungeonsByMapId[video.mapID]}
-            </Typography>
-            <Typography
-              sx={{
-                fontWeight: '600',
-                fontFamily: '"Arial",sans-serif',
-                gridColumnStart: 6,
-                gridColumnEnd: 7,
-              }}
-            >
-              +{video.level}
-            </Typography>
-          </>
-        )}
-
-        {isRaid && videoInstanceDifficulty && (
-          <Typography
-            sx={{
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              gridColumnStart: 6,
-              gridColumnEnd: 7,
-            }}
-          >
-            {videoInstanceDifficulty.difficulty}
-          </Typography>
-        )}
-
-        <Typography
-          sx={{
-            fontWeight: '600',
-            fontFamily: '"Arial",sans-serif',
-            gridColumnStart: 8,
-            gridColumnEnd: 9,
-          }}
-        >
-          {resultText}
-        </Typography> */}
       </Box>
     </Box>
   );

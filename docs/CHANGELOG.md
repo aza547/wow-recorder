@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 - [NO-ISSUE] Fixed a bug where the app would sometimes crash on selecting a category with no videos.
+- [Issue 362](https://github.com/aza547/wow-recorder/issues/362) - Include the M+ keystone level in the GUI. 
 
 ## [3.8.0] - 2023-04-04
 ### Changed
