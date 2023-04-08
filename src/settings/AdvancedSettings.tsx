@@ -33,6 +33,8 @@ const encoderMap = obsAvailableEncoders
   .map(mapEncoderTypes)
   .sort((a, b) => a.type.localeCompare(b.type));
 
+const raidDifficultyOptions = ['LFR', 'Normal', 'Heroic', 'Mythic'];
+
 export default function GeneralSettings(props: ISettingsPanelProps) {
   const { config, onChange } = props;
 
@@ -102,7 +104,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
           value={config.minEncounterDuration}
           onChange={onChange}
           id="min-encounter-duration"
-          label="Min Encounter Duration (sec)"
+          label="Minimum Encounter Duration (sec)"
           variant="outlined"
           type="number"
           error={config.minEncounterDuration < 1}
@@ -126,7 +128,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
           value={config.minKeystoneLevel}
           onChange={onChange}
           id="min-keystone-level"
-          label="Min Keystone Level"
+          label="Minimum Keystone Level"
           variant="outlined"
           type="number"
           error={config.minKeystoneLevel < 1}
@@ -138,6 +140,37 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
           inputProps={{ style: { color: 'white' }, min: 2 }}
         />
         <Tooltip title={configSchema.minKeystoneLevel.description}>
+          <IconButton>
+            <InfoIcon style={{ color: 'white' }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
+        <FormControl sx={{ my: 1 }}>
+          <InputLabel id="min-raid-difficulty" sx={style}>
+            Minimum Raid Difficulty
+          </InputLabel>
+          <Select
+            name="minRaidDifficulty"
+            labelId="min-raid-difficulty"
+            id="min-raid-difficulty"
+            value={config.minRaidDifficulty}
+            label="Minimum Raid Difficulty"
+            onChange={onChange}
+            sx={style}
+          >
+            {raidDifficultyOptions.map((difficulty: string) => (
+              <MenuItem
+                key={`raid-difficulty-${difficulty}`}
+                value={difficulty}
+              >
+                {difficulty}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <Tooltip title={configSchema.minRaidDifficulty.description}>
           <IconButton>
             <InfoIcon style={{ color: 'white' }} />
           </IconButton>

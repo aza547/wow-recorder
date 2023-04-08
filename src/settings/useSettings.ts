@@ -45,6 +45,7 @@ const configValues = {
   obsRecEncoder: getConfigValue<string>('obsRecEncoder'),
   minKeystoneLevel: getConfigValue<number>('minKeystoneLevel'),
   minimizeOnQuit: getConfigValue<number>('minimizeOnQuit'),
+  minRaidDifficulty: getConfigValue<string>('minRaidDifficulty'),
 };
 
 export default function useSettings() {

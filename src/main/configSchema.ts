@@ -29,6 +29,7 @@ export type ConfigurationSchema = {
   recordBattlegrounds: boolean;
   captureCursor: boolean;
   minKeystoneLevel: number;
+  minRaidDifficulty: string;
   minimizeOnQuit: boolean;
 };
 
@@ -205,6 +206,12 @@ export const configSchema = {
     description: 'The minimum keystone level to record.',
     type: 'integer',
     default: 2,
+  },
+  minRaidDifficulty: {
+    description:
+      'The minimum raid difficulty to record, this setting only applies to retail.',
+    type: 'string',
+    default: 'LFR',
   },
   minimizeOnQuit: {
     description: 'Whether the close button should minimize rather than quit.',

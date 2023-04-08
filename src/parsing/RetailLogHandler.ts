@@ -4,6 +4,7 @@ import {
   dungeonEncounters,
   dungeonsByMapId,
   dungeonTimersByMapId,
+  instanceDifficulty,
   retailBattlegrounds,
   retailUniqueSpecSpells,
 } from '../main/constants';
@@ -249,11 +250,30 @@ export default class RetailLogHandler extends LogHandler {
         // We can hit this branch due to a few cases:
         //   - It's a regular dungeon, we don't record those
         //   - It's a M+ below the recording threshold
-        //   - It's a boss we don't recognise the ID for (could be beta/PTR)?
         console.info(
-          '[RetailLogHandler] Unknown encounter and not in M+, not recording'
+          '[RetailLogHandler] Known dungeon encounter and not in M+, not recording'
         );
 
+        return;
+      }
+
+      const logDifficultyID = parseInt(line.arg(3), 10);
+      const { difficultyID } = instanceDifficulty[logDifficultyID];
+      const orderedDifficulty = ['lfr', 'normal', 'heroic', 'mythic'];
+
+      const minDifficultyToRecord = this.cfg
+        .get<string>('minRaidDifficulty')
+        .toLowerCase();
+
+      const actualIndex = orderedDifficulty.indexOf(difficultyID);
+      const configuredIndex = orderedDifficulty.indexOf(minDifficultyToRecord);
+
+      if (actualIndex < configuredIndex) {
+        console.info(
+          '[RetailLogHandler] Not recording as threshold not met by',
+          actualIndex,
+          configuredIndex
+        );
         return;
       }
 

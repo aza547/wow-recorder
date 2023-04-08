@@ -693,10 +693,13 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
     partyType: 'party',
   },
   9: { difficultyID: 'normal', difficulty: '40', partyType: 'raid' },
+
+  // Retail raids
   14: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
   15: { difficultyID: 'heroic', difficulty: 'HC', partyType: 'raid' },
   16: { difficultyID: 'mythic', difficulty: 'M', partyType: 'raid' },
   17: { difficultyID: 'lfr', difficulty: 'LFR', partyType: 'raid' },
+  
   23: { difficultyID: 'mythic', difficulty: 'M', partyType: 'party' },
   24: { difficultyID: 'normal', difficulty: 'T', partyType: 'party' },
   33: { difficultyID: 'normal', difficulty: 'T', partyType: 'raid' },

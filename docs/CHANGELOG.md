@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- [Issue 358](https://github.com/aza547/wow-recorder/issues/358) - Option to set threshold for raid difficulty recordings.
+
 ### Changed
 - [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Improvements to the home page aesthetics.
 - [Issue 347](https://github.com/aza547/wow-recorder/issues/347) - Only overrun in raids on kills.
