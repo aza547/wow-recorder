@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [Issue 358](https://github.com/aza547/wow-recorder/issues/358) - Option to set threshold for raid difficulty recordings.
+- [Issue 177](https://github.com/aza547/wow-recorder/issues/177) - Allow picking a category when using the test button.
 
 ### Changed
 - [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Improvements to the home page aesthetics.

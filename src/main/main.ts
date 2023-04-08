@@ -613,9 +613,9 @@ ipcMain.on('test', (_event, args) => {
     console.info('[Main] Running retail test');
 
     runRetailRecordingTest(
-      VideoCategory.TwoVTwo,
+      args[0] as VideoCategory,
       retailHandler.combatLogParser,
-      Boolean(args[0])
+      Boolean(args[1])
     );
   } else if (classicHandler) {
     console.info('[Main] Running classic test');

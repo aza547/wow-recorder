@@ -65,6 +65,7 @@ export const runRetailRecordingTest = (
   const endDate = getAdjustedDate(5);
 
   let testLines: string[];
+  let testDuration = 5;
 
   // We need to use slice here or we end up with a reference and we lose a
   // line on each subsequent .pop() and click of the test button.
@@ -75,6 +76,8 @@ export const runRetailRecordingTest = (
   } else if (category === VideoCategory.SoloShuffle) {
     testLines = testDataSoloShuffle.slice();
   } else if (category === VideoCategory.Raids) {
+    // Run a longer test as the default is to throw away a raid encounter < 15s.
+    testDuration = 20;
     testLines = testDataRaid.slice();
   } else if (category === VideoCategory.Battlegrounds) {
     testLines = testDataBattleground.slice();
@@ -99,7 +102,7 @@ export const runRetailRecordingTest = (
   setTimeout(() => {
     sendTestCombatLogLine(parser, testArenaEndLine);
     testRunning = false;
-  }, 5 * 1000);
+  }, testDuration * 1000);
 };
 
 /**

@@ -7,7 +7,6 @@ import {
   Button,
   IconButton,
   Popover,
-  Popper,
   Tooltip,
   Typography,
 } from '@mui/material';
