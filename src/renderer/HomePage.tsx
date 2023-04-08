@@ -63,7 +63,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           sx={{
             height: '100%',
             width: '75%',
-            margin: 2,
+            mt: 2,
+            mb: 2,
             border: '1px solid black',
             borderRadius: '0%',
             boxShadow: '5px 10px 8px 10px black',
@@ -73,7 +74,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         </Box>
         <Box
           sx={{
-            width: '100%',
+            width: '75%',
           }}
         >
           <List sx={{ width: '100%' }}>
