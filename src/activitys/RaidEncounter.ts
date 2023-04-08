@@ -26,7 +26,7 @@ export default class RaidEncounter extends Activity {
     super(startDate, VideoCategory.Raids, flavour);
     this._difficultyID = difficultyID;
     this._encounterID = encounterID;
-    this.overrun = 15;
+    this.overrun = 0;
   }
 
   get difficultyID() {
@@ -116,6 +116,15 @@ export default class RaidEncounter extends Activity {
     }
 
     return instanceDifficulty[this.difficultyID];
+  }
+
+  end(endDate: Date, result: boolean) {
+    if (result) {
+      console.log('[RaidEncounter] Adding overrun as this was a kill');
+      this.overrun = 15;
+    }
+
+    super.end(endDate, result);
   }
 
   getMetadata(): Metadata {
