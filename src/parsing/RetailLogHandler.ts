@@ -226,7 +226,9 @@ export default class RetailLogHandler extends LogHandler {
 
     const challengeModeActivity = this.activity as ChallengeModeDungeon;
     const endDate = line.date();
-    const result = Boolean(line.arg(2));
+
+    // Need to convert to int here as "0" evaluates to truthy.
+    const result = Boolean(parseInt(line.arg(2), 10));
 
     // The actual log duration of the dungeon, from which keystone upgrade
     // levels can be calculated. This includes player death penalty.

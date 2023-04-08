@@ -299,7 +299,11 @@ export default abstract class LogHandler {
       return;
     }
 
-    if (isUnitSelf(srcFlags)) {
+    // We check if we already know the playerGUID here, no point updating it
+    // because it can't change, unless the user changes characters mid
+    // recording like in issue 355, in which case better to retain the initial
+    // character details.
+    if (!this.activity.playerGUID && isUnitSelf(srcFlags)) {
       this.activity.playerGUID = srcGUID;
     }
 

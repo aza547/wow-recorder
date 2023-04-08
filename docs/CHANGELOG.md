@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 347](https://github.com/aza547/wow-recorder/issues/347) - Only overrun in raids on kills.
 
 ### Fixed
+- [Issue 355](https://github.com/aza547/wow-recorder/issues/355) - Fixed an issue where swapping characters can confuse the parser.
+- [Issue 355](https://github.com/aza547/wow-recorder/issues/355) - Fixed an issue where we were incorrectly marking abandoned M+ as completed.
 
 ## [3.9.0] - 2023-04-07
 ### Added
