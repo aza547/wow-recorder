@@ -526,7 +526,15 @@ export default class Recorder {
       });
 
     if (this.audioInputDevices.length > this.audioInputChannels.length) {
-      throw new Error('[Recorder] Too many audio input devices');
+      console.warn(
+        '[Recorder] Too many audio input devices, configuring first',
+        this.audioInputChannels.length
+      );
+
+      this.audioInputDevices = this.audioInputDevices.slice(
+        0,
+        this.audioInputChannels.length
+      );
     }
 
     this.audioInputDevices.forEach((device) => {
@@ -556,7 +564,15 @@ export default class Recorder {
       });
 
     if (this.audioOutputDevices.length > this.audioOutputChannels.length) {
-      throw new Error('[Recorder] Too many audio output devices');
+      console.warn(
+        '[Recorder] Too many audio output devices, configuring first',
+        this.audioOutputChannels.length
+      );
+
+      this.audioOutputDevices = this.audioOutputDevices.slice(
+        0,
+        this.audioOutputChannels.length
+      );
     }
 
     this.audioOutputDevices.forEach((device) => {

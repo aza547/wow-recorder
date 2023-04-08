@@ -185,7 +185,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             {availableAudioDevices.input.map((device: IOBSDevice) => {
               // We arbitrarily limit input devices to 3.
               // See Recorder.audioInputChannels.
-              const tooManySelected = input.length > 3;
+              const tooManySelected = input.length >= 3;
               const isSelected = input.indexOf(device.id) > -1;
 
               return (
@@ -270,7 +270,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
             {availableAudioDevices.output.map((device: IOBSDevice) => {
               // We arbitrarily limit output devices to 5.
               // See Recorder.audioOutputChannels.
-              const tooManySelected = output.length > 5;
+              const tooManySelected = output.length >= 5;
               const isSelected = output.indexOf(device.id) > -1;
 
               return (
