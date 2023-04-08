@@ -157,6 +157,11 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
+// OBS doesn't play all that nicely with the dev tools, so we can call
+// "npm run start-ui-only" to skip using OBS entirely if doing UI work.
+const noObsDev =
+  process.env.NODE_ENV === 'development' && process.env.INIT_OBS === 'false';
+
 if (isDebug) {
   require('electron-debug')();
 }
@@ -260,7 +265,9 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    recorder = new Recorder(mainWindow);
+    if (!noObsDev) {
+      recorder = new Recorder(mainWindow);
+    }
 
     Poller.getInstance()
       .on('wowProcessStart', wowProcessStarted)
@@ -274,7 +281,9 @@ const createWindow = async () => {
       return;
     }
 
-    recorder.configure();
+    if (!noObsDev && recorder) {
+      recorder.configure();
+    }
 
     Poller.getInstance().start();
     mainWindow.webContents.send('refreshState');
@@ -282,12 +291,14 @@ const createWindow = async () => {
     const retailLogPath = cfg.getPath('retailLogPath');
     const classicLogPath = cfg.getPath('classicLogPath');
 
-    if (retailLogPath) {
-      retailHandler = new RetailLogHandler(recorder, retailLogPath);
-    }
+    if (!noObsDev && recorder) {
+      if (retailLogPath) {
+        retailHandler = new RetailLogHandler(recorder, retailLogPath);
+      }
 
-    if (classicLogPath) {
-      classicHandler = new ClassicLogHandler(recorder, classicLogPath);
+      if (classicLogPath) {
+        classicHandler = new ClassicLogHandler(recorder, classicLogPath);
+      }
     }
   });
 

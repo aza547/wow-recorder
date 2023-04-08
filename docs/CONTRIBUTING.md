@@ -9,7 +9,7 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 1. Clone a copy of the [wow-recorder](https://github.com/aza547/wow-recorder) codebase.
 1. Change into the checkout directory. 
 1. Run `npm install` on the command line to install required node packages.
-1. Run `npm start` to launch the application.
+1. Run `npm start` to launch the application in development mode, alternatively use `npm run start-ui-only` to start the UI without the recorder backend.
 
 ## Building, Packaging and Releasing
 > As of 3.3.1, we have CI builds for all commits to main.
