@@ -164,7 +164,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        Warcraft Recorder
+        Welcome!
       </Typography>
       <Typography
         variant="h6"
