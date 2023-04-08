@@ -192,7 +192,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             <ListItem disablePadding key="search-bar" sx={{ width: '100%' }}>
               <TextField
                 fullWidth
-                placeholder="Filter suggestions: wins, losses, druid, affliction, today, yesterday"
+                placeholder="Filter suggestions: wins, losses, today, yesterday"
                 id="search-bar"
                 onChange={debouncedFilter}
                 sx={{
