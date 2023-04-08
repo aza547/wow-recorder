@@ -159,10 +159,17 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     const categoryState = videoState[category];
     if (!categoryState) return <></>;
 
-    const slicedCategoryState = categoryState.slice(0, numVideosDisplayed);
+    const filteredCategoryState = categoryState.filter((video: any) =>
+      filterVideos(video, videoFilters)
+    );
+
+    const slicedCategoryState = filteredCategoryState.slice(
+      0,
+      numVideosDisplayed
+    );
 
     const moreVideosRemain =
-      slicedCategoryState.length !== categoryState.length;
+      slicedCategoryState.length !== filteredCategoryState.length;
 
     return (
       <>
@@ -192,7 +199,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             <ListItem disablePadding key="search-bar" sx={{ width: '100%' }}>
               <TextField
                 fullWidth
-                placeholder="Filter suggestions: wins, losses, today, yesterday"
+                placeholder="Suggestions: wins, losses, today, yesterday"
                 id="search-bar"
                 onChange={debouncedFilter}
                 sx={{
@@ -212,28 +219,26 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                 inputProps={{ style: { color: 'white' } }}
               />
             </ListItem>
-            {slicedCategoryState
-              .filter((video: any) => filterVideos(video, videoFilters))
-              .map((video: any) => {
-                return (
-                  <ListItem
-                    disablePadding
-                    key={video.fullPath}
-                    sx={{ width: '100%' }}
+            {slicedCategoryState.map((video: any) => {
+              return (
+                <ListItem
+                  disablePadding
+                  key={video.fullPath}
+                  sx={{ width: '100%' }}
+                >
+                  <ListItemButton
+                    onClick={() => handleChangeVideo(video.index)}
                   >
-                    <ListItemButton
-                      onClick={() => handleChangeVideo(video.index)}
-                    >
-                      <VideoButton
-                        key={video.fullPath}
-                        videostate={videoState}
-                        categoryIndex={categoryIndex}
-                        videoIndex={video.index}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                );
-              })}
+                    <VideoButton
+                      key={video.fullPath}
+                      videostate={videoState}
+                      categoryIndex={categoryIndex}
+                      videoIndex={video.index}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
             {moreVideosRemain && getShowMoreButton()}
           </List>
         </Box>
