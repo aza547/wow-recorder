@@ -258,7 +258,7 @@ export default function VideoButton(props: IProps) {
           ml: 2,
           width: '100%',
           display: 'grid',
-          gridTemplateColumns: '15% 13% 25% 13% 13% 26%',
+          gridTemplateColumns: '15% 13% 25% 13% 13% 21%',
           alignItems: 'center',
         }}
       >

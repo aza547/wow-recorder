@@ -48,6 +48,9 @@ const Application = () => {
     // by clicking the button, but mainline case will be to watch back recent
     // videos.
     numVideosDisplayed: 10,
+
+    // Any text applied in the filter bar gets translated into a filter here.
+    videoFilters: [],
   });
 
   React.useEffect(() => {

@@ -1,12 +1,19 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import { TAppState, TNavigatorState } from 'main/types';
-import { Button, List, ListItem, ListItemButton } from '@mui/material';
+import {
+  Button,
+  List,
+  ListItem,
+  ListItemButton,
+  TextField,
+} from '@mui/material';
 import { VideoJS } from './VideoJS';
 import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
 import HomePage from './HomePage';
+import { filterVideos, parseVideoFilters } from './rendererutils';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -16,10 +23,8 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
 }
 
-/**
- * For shorthand referencing.
- */
 const ipc = window.electron.ipcRenderer;
+let debounceSearchTimer: NodeJS.Timer;
 
 /**
  * The GUI itself.
@@ -28,6 +33,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const { navigation, setNavigation, videoState, appState, setAppState } =
     props;
   const { categoryIndex, videoIndex } = navigation;
+  const { numVideosDisplayed, videoFilters } = appState;
   const categories = Object.values(VideoCategory);
   const category = categories[categoryIndex];
 
@@ -65,6 +71,26 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       });
     });
   }, []);
+
+  const debouncedFilter = (event: React.BaseSyntheticEvent) => {
+    const filterText = event.target.value;
+
+    if (debounceSearchTimer) {
+      clearTimeout(debounceSearchTimer);
+    }
+
+    debounceSearchTimer = setTimeout(() => {
+      const filters = parseVideoFilters(filterText);
+      console.log('Set filters', filters);
+
+      setAppState((prevState) => {
+        return {
+          ...prevState,
+          videoFilters: filters,
+        };
+      });
+    }, 750);
+  };
 
   /**
    * Returns a video panel with videos.
@@ -133,10 +159,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     const categoryState = videoState[category];
     if (!categoryState) return <></>;
 
-    const slicedCategoryState = categoryState.slice(
-      0,
-      appState.numVideosDisplayed
-    );
+    const slicedCategoryState = categoryState.slice(0, numVideosDisplayed);
 
     const moreVideosRemain =
       slicedCategoryState.length !== categoryState.length;
@@ -146,6 +169,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         <Box
           sx={{
             display: 'flex',
+            flexDirection: 'column',
             overflowY: 'scroll',
             height: '100%',
             width: '100%',
@@ -165,26 +189,51 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           }}
         >
           <List sx={{ width: '100%' }}>
-            {slicedCategoryState.map((video: any) => {
-              return (
-                <ListItem
-                  disablePadding
-                  key={video.fullPath}
-                  sx={{ width: '100%' }}
-                >
-                  <ListItemButton
-                    onClick={() => handleChangeVideo(video.index)}
+            <ListItem disablePadding key="search-bar" sx={{ width: '100%' }}>
+              <TextField
+                fullWidth
+                placeholder="Filter suggestions: wins, losses, druid, affliction, today, yesterday"
+                id="search-bar"
+                onChange={debouncedFilter}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&.Mui-focused fieldset': { borderColor: '#bb4220' },
+                    '& > fieldset': { borderColor: 'darkgrey' },
+                    '&:hover fieldset': {
+                      borderColor: '#bb4220',
+                    },
+                  },
+                  '& label.Mui-focused': { color: '#bb4220' },
+                  mt: 2,
+                  ml: 2,
+                  mr: 2,
+                  input: { color: 'white' },
+                }}
+                inputProps={{ style: { color: 'white' } }}
+              />
+            </ListItem>
+            {slicedCategoryState
+              .filter((video: any) => filterVideos(video, videoFilters))
+              .map((video: any) => {
+                return (
+                  <ListItem
+                    disablePadding
+                    key={video.fullPath}
+                    sx={{ width: '100%' }}
                   >
-                    <VideoButton
-                      key={video.fullPath}
-                      videostate={videoState}
-                      categoryIndex={categoryIndex}
-                      videoIndex={video.index}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
+                    <ListItemButton
+                      onClick={() => handleChangeVideo(video.index)}
+                    >
+                      <VideoButton
+                        key={video.fullPath}
+                        videostate={videoState}
+                        categoryIndex={categoryIndex}
+                        videoIndex={video.index}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
             {moreVideosRemain && getShowMoreButton()}
           </List>
         </Box>

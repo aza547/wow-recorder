@@ -1,6 +1,10 @@
-import { dungeonEncounters, WoWClassColor } from 'main/constants';
+import {
+  dungeonEncounters,
+  videoFilterData,
+  WoWClassColor,
+} from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
-import { Flavour } from 'main/types';
+import { Flavour, VideoListFilters } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import Player from 'video.js/dist/types/player';
@@ -220,6 +224,78 @@ const getEmptyState = () => {
   return videoState;
 };
 
+const parseVideoFilters = (filterText: string) => {
+  const filterArray = filterText.split(' ').map((f) => f.toLowerCase());
+  const filters: VideoListFilters[] = [];
+
+  if (filterText === '') {
+    return filters;
+  }
+
+  // Loop through the filter data and check for all the filters
+  // we know about and their synonyms.
+  Object.keys(videoFilterData).forEach((key) => {
+    videoFilterData[key].forEach((synonym: string) => {
+      if (filterArray.includes(synonym)) {
+        filters.push(key as VideoListFilters);
+        filterArray.splice(filterArray.indexOf(synonym), 1);
+      }
+    });
+  });
+
+  // If we've not recognised all the filters, add the invalid filter.
+  // This will remove all the videos and prompt the user to re-evaluate
+  // their query.
+  if (filterArray.length > 0) {
+    filters.push(VideoListFilters.Invalid);
+  }
+
+  return filters;
+};
+
+const filterVideos = (video: any, filters: VideoListFilters[]) => {
+  console.log(video);
+  const currentDate = new Date();
+
+  if (filters.includes(VideoListFilters.Invalid)) {
+    return false;
+  }
+
+  if (filters.includes(VideoListFilters.Win) && !video.result) {
+    return false;
+  }
+
+  if (filters.includes(VideoListFilters.Loss) && video.result) {
+    return false;
+  }
+
+  if (filters.includes(VideoListFilters.Today)) {
+    const videoDate: Date = video.dateObject;
+    const isFromToday =
+      videoDate.getDay() === currentDate.getDay() &&
+      videoDate.getMonth() === currentDate.getMonth() &&
+      videoDate.getFullYear() === currentDate.getFullYear();
+
+    if (!isFromToday) {
+      return false;
+    }
+  }
+
+  if (filters.includes(VideoListFilters.Yesterday)) {
+    const videoDate: Date = video.dateObject;
+    const isFromYesterday =
+      videoDate.getDay() === currentDate.getDay() - 1 &&
+      videoDate.getMonth() === currentDate.getMonth() &&
+      videoDate.getFullYear() === currentDate.getFullYear();
+
+    if (!isFromYesterday) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -229,4 +305,6 @@ export {
   getTotalDuration,
   getLatestCategory,
   getEmptyState,
+  parseVideoFilters,
+  filterVideos,
 };

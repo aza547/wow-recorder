@@ -262,7 +262,19 @@ type TAppState = {
   fatalError: boolean;
   fatalErrorText: string;
   numVideosDisplayed: number;
+  videoFilters: VideoListFilters[];
 };
+
+// TODO Add more of these. Ideas:
+//   class, spec, dungeon, encounter, wipe, kill, depleted, keystone
+//   result, keystone level, date, player name, combatant name, arena map
+enum VideoListFilters {
+  Win = 'Win',
+  Loss = 'Loss',
+  Today = 'Today',
+  Yesterday = 'Yesterday',
+  Invalid = 'Invalid',
+}
 
 export {
   RecStatus,
@@ -291,4 +303,5 @@ export {
   TAudioSourceType,
   TNavigatorState,
   TAppState,
+  VideoListFilters,
 };
