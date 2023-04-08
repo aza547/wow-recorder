@@ -154,17 +154,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         height: '100%',
       }}
     >
-      <Box
-        component="img"
-        src={icon}
-        sx={{
-          height: '100px',
-          width: '100px',
-          objectFit: 'cover',
-        }}
-      />
       <Typography
-        variant="h1"
+        variant="h2"
         align="center"
         sx={{
           color: '#bb4220',
@@ -185,7 +176,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        You have {numVideos} videos saved.
+        You have {numVideos} videos saved, view the latest below or select a
+        category.
       </Typography>
 
       {haveVideos && renderLatestVideo()}
