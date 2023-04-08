@@ -1145,15 +1145,6 @@ const soloShuffleResultColors = {
   0: 'rgb(255,   0,  0, 0.3)', 
 }
 
-// We don't need to worry about case as we're going lower case everything the
-// user inputs.
-const videoFilterData: { [filter: string]: string[] } = {
-  [VideoListFilters.Win]: ['win', 'wins', 'won'],
-  [VideoListFilters.Loss]: ['loss', 'lose', 'losses', 'lost'],
-  [VideoListFilters.Today]: ['today'],
-  [VideoListFilters.Yesterday]: ['yesterday'],
-};
-
 export {
   months,
   categoryTabSx,
@@ -1183,5 +1174,4 @@ export {
   WoWCharacterClassType,
   WoWClassColor,
   soloShuffleResultColors,
-  videoFilterData,
 };

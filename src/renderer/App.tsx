@@ -50,7 +50,7 @@ const Application = () => {
     numVideosDisplayed: 10,
 
     // Any text applied in the filter bar gets translated into a filter here.
-    videoFilters: [],
+    videoFilterQuery: '',
   });
 
   React.useEffect(() => {

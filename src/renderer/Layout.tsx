@@ -13,7 +13,7 @@ import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
 import HomePage from './HomePage';
-import { filterVideos, parseVideoFilters } from './rendererutils';
+import VideoFilter from './VideoFilter';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -33,7 +33,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const { navigation, setNavigation, videoState, appState, setAppState } =
     props;
   const { categoryIndex, videoIndex } = navigation;
-  const { numVideosDisplayed, videoFilters } = appState;
+  const { numVideosDisplayed, videoFilterQuery } = appState;
   const categories = Object.values(VideoCategory);
   const category = categories[categoryIndex];
 
@@ -80,13 +80,10 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     }
 
     debounceSearchTimer = setTimeout(() => {
-      const filters = parseVideoFilters(filterText);
-      console.log('Set filters', filters);
-
       setAppState((prevState) => {
         return {
           ...prevState,
-          videoFilters: filters,
+          videoFilterQuery: filterText,
         };
       });
     }, 750);
@@ -158,9 +155,10 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const getVideoSelection = () => {
     const categoryState = videoState[category];
     if (!categoryState) return <></>;
+    const videoFilter = new VideoFilter(videoFilterQuery);
 
     const filteredCategoryState = categoryState.filter((video: any) =>
-      filterVideos(video, videoFilters)
+      videoFilter.filter(video)
     );
 
     const slicedCategoryState = filteredCategoryState.slice(
