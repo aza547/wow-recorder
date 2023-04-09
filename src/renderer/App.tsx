@@ -56,6 +56,8 @@ const Application = () => {
     videoFilterQuery: '',
   });
 
+  console.log(videoState);
+
   React.useEffect(() => {
     ipc.on('refreshState', async () => {
       setVideoState(

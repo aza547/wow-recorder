@@ -251,8 +251,7 @@ type RendererVideo = {
   soloShuffleRoundsPlayed?: number;
   combatants?: RendererCombatant[];
   overrun: number;
-  date: string;
-  time: string;
+  mtime: number;
   fullPath: string;
   isProtected: boolean;
   size: number;

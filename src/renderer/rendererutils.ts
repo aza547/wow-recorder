@@ -12,6 +12,7 @@ import {
   dungeonsByMapId,
   instanceDifficulty,
   instanceEncountersById,
+  months,
   specializationById,
   WoWCharacterClassType,
   WoWClassColor,
@@ -219,29 +220,22 @@ const getTotalDuration = (videoState: RendererVideoState) => {
 };
 
 const getLatestCategory = (videoState: RendererVideoState) => {
-  let latestDate = new Date(2000, 1, 1);
-  let latestCategory = VideoCategory.TwoVTwo;
+  const categories = Object.values(VideoCategory);
+  const latestVideoDate: number[] = [];
 
-  Object.values(VideoCategory).forEach((category: VideoCategory) => {
-    const video = videoState[category][0];
+  categories.forEach((category) => {
+    const firstVideo = videoState[category][0];
 
-    if (video === undefined) {
-      return;
-    }
-
-    const date = new Date(video.time);
-
-    if (date === undefined) {
-      return;
-    }
-
-    if (date.getTime() > latestDate.getTime()) {
-      latestDate = date;
-      latestCategory = category as VideoCategory;
+    if (firstVideo !== undefined) {
+      latestVideoDate.push(firstVideo.mtime);
+    } else {
+      latestVideoDate.push(0);
     }
   });
 
-  return latestCategory;
+  const latestDate = Math.max(...latestVideoDate);
+  const latestDateIndex = latestVideoDate.indexOf(latestDate);
+  return categories[latestDateIndex];
 };
 
 /**
@@ -516,6 +510,31 @@ const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
   return specializationById[player._specID].class;
 };
 
+const getVideoTime = (video: RendererVideo) => {
+  const { mtime } = video;
+  const date = new Date(mtime);
+
+  const hours = date
+    .getHours()
+    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
+
+  const mins = date
+    .getMinutes()
+    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
+
+  const timeAsString = `${hours}:${mins}`;
+  return timeAsString;
+};
+
+const getVideoDate = (video: RendererVideo) => {
+  const { mtime } = video;
+  const date = new Date(mtime);
+  const day = date.getDate();
+  const month = months[date.getMonth()].slice(0, 3);
+  const dateAsString = `${day} ${month}`;
+  return dateAsString;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -541,4 +560,6 @@ export {
   getPlayerSpecID,
   getPlayerTeamID,
   getPlayerClass,
+  getVideoTime,
+  getVideoDate,
 };

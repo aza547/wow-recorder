@@ -23,6 +23,8 @@ import {
   isSoloShuffleUtil,
   getFormattedDuration,
   getWoWClassColor,
+  getVideoTime,
+  getVideoDate,
 } from './rendererutils';
 import * as Images from './images';
 import ArenaCompDisplay from './ArenaCompDisplay';
@@ -51,6 +53,8 @@ export default function VideoButton(props: IProps) {
   const playerClass = getPlayerClass(video);
   const playerClassColor = getWoWClassColor(playerClass);
   const playerSpecID = getPlayerSpecID(video);
+  const videoTime = getVideoTime(video);
+  const videoDate = getVideoDate(video);
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
 
@@ -302,7 +306,7 @@ export default function VideoButton(props: IProps) {
                 '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
-            {video.time}
+            {videoTime}
           </Typography>
         </Box>
 
@@ -325,7 +329,7 @@ export default function VideoButton(props: IProps) {
                 '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             }}
           >
-            {video.date}
+            {videoDate}
           </Typography>
         </Box>
 

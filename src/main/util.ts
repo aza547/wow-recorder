@@ -166,41 +166,16 @@ const getMetadataForVideo = async (video: string) => {
   return metadata;
 };
 
-/**
- * Get the date a video was recorded from the date object.
- */
-const getVideoDate = (date: Date) => {
-  const day = date.getDate();
-  const month = months[date.getMonth()].slice(0, 3);
-  const dateAsString = `${day} ${month}`;
-  return dateAsString;
-};
-
-/**
- * Get the time a video was recorded from the date object.
- */
-const getVideoTime = (date: Date) => {
-  const hours = date
-    .getHours()
-    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
-  const mins = date
-    .getMinutes()
-    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
-  const timeAsString = `${hours}:${mins}`;
-  return timeAsString;
-};
 
 /**
  * Load video details from the metadata and add it to videoState.
  */
 const loadVideoDetails = async (video: FileInfo): Promise<RendererVideo> => {
   const metadata = await getMetadataForVideo(video.name);
-  const videoDate = new Date(video.mtime);
 
   return {
     ...metadata,
-    date: getVideoDate(videoDate),
-    time: getVideoTime(videoDate),
+    mtime: video.mtime,
     fullPath: video.name,
     isProtected: Boolean(metadata.protected),
     size: video.size,
