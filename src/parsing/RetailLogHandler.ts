@@ -416,12 +416,22 @@ export default class RetailLogHandler extends LogHandler {
 
     // In Mythic+ we see COMBANTANT_INFO events for each encounter.
     // Don't bother overwriting them if we have them already.
-    if (this.activity.getCombatant(GUID)) {
+    const combatant = this.activity.getCombatant(GUID);
+
+    if (combatant && combatant.isFullyDefined()) {
       return;
     }
 
     const teamID = parseInt(line.arg(2), 10);
     const specID = parseInt(line.arg(24), 10);
+
+    console.info(
+      '[RetailLogHandler] Adding combatant from COMBATANT_INFO',
+      GUID,
+      teamID,
+      specID
+    );
+
     const combatantInfo = new Combatant(GUID, teamID, specID);
     this.activity.addCombatant(combatantInfo);
   }
