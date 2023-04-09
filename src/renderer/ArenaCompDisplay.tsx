@@ -34,9 +34,12 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
     let specIcon = Images.specImages[0];
 
     if (specID !== undefined) {
-      specIcon = Images.specImages[specID];
+      specIcon = Images.specImages[specID] || Images.specImages[0];
       const spec = specializationById[c._specID];
-      nameColor = getWoWClassColor(spec.class);
+
+      if (spec !== undefined) {
+        nameColor = getWoWClassColor(spec.class);
+      }
     }
 
     return (

@@ -19,13 +19,21 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
     return <></>;
   }
 
-  const tanksAndHeals = combatants.filter(
-    (c: any) => specializationById[c._specID].role !== 'damage'
-  );
+  const tanksAndHeals = combatants.filter((c: any) => {
+    if (specializationById[c._specID] === undefined) {
+      return false;
+    }
 
-  const dps = combatants.filter(
-    (c: any) => specializationById[c._specID].role === 'damage'
-  );
+    return specializationById[c._specID].role !== 'damage';
+  });
+
+  const dps = combatants.filter((c: any) => {
+    if (specializationById[c._specID] === undefined) {
+      return false;
+    }
+
+    return specializationById[c._specID].role === 'damage';
+  });
 
   const renderCombatant = (c: any) => {
     const specID = c._specID;

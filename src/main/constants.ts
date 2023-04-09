@@ -856,7 +856,7 @@ const specializationById: { [id: number]: SpecializationObjectType } = {
   },
   1468: {
     type: 'ranged',
-    role: 'damage',
+    role: 'healer',
     class: 'EVOKER',
     label: 'Evoker',
     name: 'Preservation',
