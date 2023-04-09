@@ -454,6 +454,12 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
+    if (this.activity.category !== VideoCategory.Battlegrounds) {
+      // We're always going to have COMBATANT_INFO in all categories
+      // but battlegrounds in retail.
+      return;
+    }
+
     const srcGUID = line.arg(1);
     const srcNameRealm = line.arg(2);
     const srcFlags = parseInt(line.arg(3), 16);
