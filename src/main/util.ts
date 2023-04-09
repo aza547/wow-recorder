@@ -3,7 +3,7 @@ import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
 import { app, BrowserWindow, Display, net, screen } from 'electron';
-import { Metadata, FileInfo, FileSortDirection, OurDisplayType } from './types';
+import { Metadata, FileInfo, FileSortDirection, OurDisplayType, RendererVideo } from './types';
 import { months, zones } from './constants';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -57,8 +57,8 @@ export const resolveHtmlPath = getResolvedHtmlPath();
 /**
  * Empty video state.
  */
-const getEmptyState = () => {
-  const videoState: { [category: string]: any[] } = {};
+const getEmptyState = (): { [category: string]: RendererVideo[] } => {
+  const videoState: { [category: string]: RendererVideo[] } = {};
 
   categories.forEach((category) => {
     videoState[category] = [];
@@ -193,30 +193,26 @@ const getVideoTime = (date: Date) => {
 /**
  * Load video details from the metadata and add it to videoState.
  */
-const loadVideoDetails = async (video: FileInfo) => {
+const loadVideoDetails = async (video: FileInfo): Promise<RendererVideo> => {
   const metadata = await getMetadataForVideo(video.name);
-  const today = new Date();
   const videoDate = new Date(video.mtime);
-  const thumbnailPath = getThumbnailFileNameForVideo(video.name);
 
   return {
-    fullPath: video.name,
     ...metadata,
-    encounter: getVideoEncounter(metadata),
     date: getVideoDate(videoDate),
-    isFromToday: today.toDateString() === videoDate.toDateString(),
     time: getVideoTime(videoDate),
+    fullPath: video.name,
     isProtected: Boolean(metadata.protected),
     size: video.size,
-    dateObject: videoDate,
-    thumbnail: thumbnailPath,
   };
 };
 
 /**
  * Load videos from category folders in reverse chronological order.
  */
-const loadAllVideos = async (storageDir: string) => {
+const loadAllVideos = async (
+  storageDir: string
+): Promise<{ [category: string]: RendererVideo[] }> => {
   const videoIndex: { [category: string]: number } = {};
 
   categories.forEach((category) => {

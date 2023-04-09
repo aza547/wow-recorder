@@ -8,14 +8,13 @@ import {
 } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
 import React from 'react';
-import { TNavigatorState } from 'main/types';
-import icon from '../../assets/icon/large-icon.png';
+import { RendererVideoState, TNavigatorState } from 'main/types';
 import { getLatestCategory, getNumVideos } from './rendererutils';
 import { VideoJS } from './VideoJS';
 import VideoButton from './VideoButton';
 
 interface IProps {
-  videoState: any;
+  videoState: RendererVideoState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 

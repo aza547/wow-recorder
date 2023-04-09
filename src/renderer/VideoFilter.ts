@@ -6,7 +6,14 @@ export default class VideoFilter {
 
   private goodResultFilters = ['win', 'wins', 'won', 'victory', 'success'];
 
-  private badResultFilters = ['loss', 'lose', 'losses', 'lost'];
+  private badResultFilters = [
+    'loss',
+    'lose',
+    'losses',
+    'lost',
+    'fail',
+    'failure',
+  ];
 
   private todayFilters = ['today'];
 

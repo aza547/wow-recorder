@@ -2,11 +2,12 @@ import { Box, Typography } from '@mui/material';
 import React from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { specializationById } from 'main/constants';
+import Combatant from 'main/Combatant';
 import * as Images from './images';
 import { getWoWClassColor } from './rendererutils';
 
 interface IProps {
-  combatants: any;
+  combatants: Combatant[];
   playerTeamID: number;
 }
 

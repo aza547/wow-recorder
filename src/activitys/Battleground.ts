@@ -67,6 +67,7 @@ export default class Battleground extends Activity {
       flavour: this.flavour,
       player: this.player,
       overrun: this.overrun,
+      combatants: [],
     };
   }
 

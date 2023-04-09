@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { TAppState, TNavigatorState } from 'main/types';
+import { RendererVideoState, TAppState, TNavigatorState } from 'main/types';
 import {
   Button,
   List,
@@ -18,7 +18,7 @@ import VideoFilter from './VideoFilter';
 interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
-  videoState: any;
+  videoState: RendererVideoState;
   appState: TAppState;
   setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
 }
@@ -70,7 +70,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         };
       });
     });
-  }, []);
+  });
 
   const debouncedFilter = (event: React.BaseSyntheticEvent) => {
     const filterText = event.target.value;
@@ -154,10 +154,9 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
   const getVideoSelection = () => {
     const categoryState = videoState[category];
-    if (!categoryState) return <></>;
     const videoFilter = new VideoFilter(videoFilterQuery);
 
-    const filteredCategoryState = categoryState.filter((video: any) =>
+    const filteredCategoryState = categoryState.filter((video) =>
       videoFilter.filter(video)
     );
 
@@ -217,7 +216,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                 inputProps={{ style: { color: 'white' } }}
               />
             </ListItem>
-            {slicedCategoryState.map((video: any) => {
+            {slicedCategoryState.map((video) => {
               return (
                 <ListItem
                   disablePadding
@@ -225,13 +224,15 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                   sx={{ width: '100%' }}
                 >
                   <ListItemButton
-                    onClick={() => handleChangeVideo(video.index)}
+                    onClick={() =>
+                      handleChangeVideo(categoryState.indexOf(video))
+                    }
                   >
                     <VideoButton
                       key={video.fullPath}
                       videostate={videoState}
                       categoryIndex={categoryIndex}
-                      videoIndex={video.index}
+                      videoIndex={categoryState.indexOf(video)}
                     />
                   </ListItemButton>
                 </ListItem>

@@ -2,6 +2,7 @@ import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
 import {
   RecStatus,
+  RendererVideoState,
   SaveStatus,
   TAppState,
   TNavigatorState,
@@ -32,7 +33,9 @@ const Application = () => {
     SaveStatus.NotSaving
   );
 
-  const [videoState, setVideoState] = React.useState<any>(getEmptyState());
+  const [videoState, setVideoState] = React.useState<RendererVideoState>(
+    getEmptyState()
+  );
 
   const [navigation, setNavigation] = React.useState<TNavigatorState>({
     categoryIndex: -1,
@@ -55,7 +58,9 @@ const Application = () => {
 
   React.useEffect(() => {
     ipc.on('refreshState', async () => {
-      setVideoState(await ipc.invoke('getVideoState', []));
+      setVideoState(
+        (await ipc.invoke('getVideoState', [])) as RendererVideoState
+      );
     });
 
     ipc.on('updateRecStatus', (status, err) => {

@@ -1,10 +1,4 @@
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import {
-  dungeonsByMapId,
-  soloShuffleResultColors,
-  specializationById,
-} from 'main/constants';
-import { getVideoResultText } from 'main/helpers';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventIcon from '@mui/icons-material/Event';
@@ -12,101 +6,56 @@ import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';
 import React from 'react';
+import { RendererVideo } from 'main/types';
+import {
+  getDungeonName,
+  getPlayerClass,
+  getPlayerName,
+  getPlayerRealm,
+  getPlayerSpecID,
+  getPlayerTeamID,
+  getResultColor,
+  getVideoImage,
+  getVideoResultText,
+  isArenaUtil,
+  isBattlegroundUtil,
+  isMythicPlusUtil,
+  isRaidUtil,
+  isSoloShuffleUtil,
+  getFormattedDuration,
+  getWoWClassColor,
+} from './rendererutils';
 import * as Images from './images';
-import { getFormattedDuration, getWoWClassColor } from './rendererutils';
-import { VideoCategory } from '../types/VideoCategory';
 import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
 import RaidEncounterInfo from './RaidEncounterInfo';
 
 interface IProps {
-  categoryIndex: number;
-  videoIndex: number;
-  videostate: any;
+  video: RendererVideo;
 }
 
-const categories = Object.values(VideoCategory);
-
 export default function VideoButton(props: IProps) {
-  const { videoIndex, categoryIndex, videostate } = props;
-  const category = categories[categoryIndex] as VideoCategory;
-  const video = videostate[category][videoIndex];
-
-  const isMythicPlus = category === VideoCategory.MythicPlus;
-  const isRaid = category === VideoCategory.Raids;
-  const isBattleground = category === VideoCategory.Battlegrounds;
-  const isArena = !isMythicPlus && !isRaid && !isBattleground;
-  const isSoloShuffle = category === VideoCategory.SoloShuffle;
-
-  const {
-    duration,
-    result,
-    isProtected,
-    player,
-    encounterID,
-    zoneID,
-    fullPath,
-    upgradeLevel,
-    soloShuffleRoundsWon,
-    soloShuffleRoundsPlayed,
-  } = video;
-
+  const { video } = props;
+  const { isProtected, fullPath, combatants } = video;
+  const formattedDuration = getFormattedDuration(video);
+  const dungeonName = getDungeonName(video);
+  const buttonImage = getVideoImage(video);
+  const resultText = getVideoResultText(video);
+  const isMythicPlus = isMythicPlusUtil(video);
+  const isRaid = isRaidUtil(video);
+  const isBattleground = isBattlegroundUtil(video);
+  const isArena = isArenaUtil(video);
+  const isSoloShuffle = isSoloShuffleUtil(video);
+  const resultColor = getResultColor(video);
+  const playerName = getPlayerName(video);
+  const playerRealm = getPlayerRealm(video);
+  const playerClass = getPlayerClass(video);
+  const playerClassColor = getWoWClassColor(playerClass);
+  const playerTeamID = getPlayerTeamID(video);
+  const playerSpecID = getPlayerSpecID(video);
+  const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
-  let resultColor = 'rgb(156, 21, 21, 0.3)';
 
-  if (isSoloShuffle) {
-    if (soloShuffleRoundsWon >= 0 && soloShuffleRoundsWon <= 6) {
-      resultColor = soloShuffleResultColors[soloShuffleRoundsWon];
-    }
-  } else if (result) {
-    resultColor = 'rgb(53, 164, 50, 0.3)';
-  }
-
-  const formattedDuration = getFormattedDuration(duration);
-
-  let playerName;
-  let playerRealm;
-  let specIcon;
-  let playerClass;
-  let playerClassColor;
-
-  if (player) {
-    playerName = player._name;
-    playerRealm = player._realm;
-    specIcon = Images.specImages[player._specID] || Images.specImages[0];
-    playerClass = specializationById[player._specID]?.class ?? '';
-    playerClassColor = getWoWClassColor(playerClass);
-  } else {
-    playerName = '';
-    playerRealm = '';
-    specIcon = Images.specImages[0];
-    playerClass = '';
-    playerClassColor = 'black';
-  }
-
-  let buttonImage;
-
-  if (category === VideoCategory.Raids) {
-    buttonImage = Images.raidImages[encounterID];
-  } else if (category === VideoCategory.MythicPlus) {
-    buttonImage = Images.dungeonImages[video.zoneID];
-  } else if (category === VideoCategory.Battlegrounds) {
-    buttonImage = Images.battlegroundImages[video.zoneID];
-  } else {
-    buttonImage = Images.arenaImages[zoneID];
-  }
-
-  const resultText = getVideoResultText(
-    category,
-    result,
-    upgradeLevel,
-    soloShuffleRoundsWon,
-    soloShuffleRoundsPlayed
-  );
-
-  /**
-   * Delete a video.
-   */
   const deleteVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
     window.electron.ipcRenderer.sendMessage('contextMenu', [
@@ -115,17 +64,11 @@ export default function VideoButton(props: IProps) {
     ]);
   };
 
-  /**
-   * Move a video to the permanently saved location.
-   */
-  const saveVideo = (event: React.SyntheticEvent) => {
+  const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
     window.electron.ipcRenderer.sendMessage('contextMenu', ['save', fullPath]);
   };
 
-  /**
-   * Open the location of the video in file explorer.
-   */
   const openLocation = (event: React.SyntheticEvent) => {
     event.stopPropagation();
     window.electron.ipcRenderer.sendMessage('contextMenu', ['open', fullPath]);
@@ -213,7 +156,7 @@ export default function VideoButton(props: IProps) {
                     '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
                 }}
               >
-                {dungeonsByMapId[video.mapID]}
+                {dungeonName}
               </Typography>
               <Typography
                 align="center"
@@ -339,11 +282,11 @@ export default function VideoButton(props: IProps) {
         >
           {isArena && (
             <ArenaCompDisplay
-              combatants={video.combatants}
-              playerTeamID={video.player._teamID}
+              combatants={combatants}
+              playerTeamID={playerTeamID}
             />
           )}
-          {isMythicPlus && <DungeonCompDisplay combatants={video.combatants} />}
+          {isMythicPlus && <DungeonCompDisplay combatants={combatants} />}
           {isRaid && <RaidEncounterInfo video={video} />}
         </Box>
 
@@ -404,7 +347,7 @@ export default function VideoButton(props: IProps) {
           }}
         >
           <Tooltip title="Never age out">
-            <IconButton onClick={saveVideo}>
+            <IconButton onClick={protectVideo}>
               <BookmarksIcon
                 sx={{ color: 'white', opacity: bookmarkOpacity }}
               />

@@ -204,18 +204,27 @@ type Metadata = {
   protected?: boolean;
   soloShuffleRoundsWon?: number;
   soloShuffleRoundsPlayed?: number;
-  combatants?: Combatant[];
+  combatants: Combatant[];
   overrun: number;
 };
 
-/**
- * VideoData type. Unused for now.
- */
-type VideoData = Metadata & {
+type RendererVideo = Metadata & {
   date: string;
   time: string;
-  path: string;
-  protected: boolean;
+  fullPath: string;
+  isProtected: boolean;
+  size: number;
+};
+
+type RendererVideoState = {
+  [VideoCategory.TwoVTwo]: RendererVideo[];
+  [VideoCategory.ThreeVThree]: RendererVideo[];
+  [VideoCategory.FiveVFive]: RendererVideo[];
+  [VideoCategory.Skirmish]: RendererVideo[];
+  [VideoCategory.SoloShuffle]: RendererVideo[];
+  [VideoCategory.MythicPlus]: RendererVideo[];
+  [VideoCategory.Raids]: RendererVideo[];
+  [VideoCategory.Battlegrounds]: RendererVideo[];
 };
 
 type SoloShuffleTimelineSegment = {
@@ -283,7 +292,8 @@ export {
   FakeChangeEvent,
   ISettingsPanelProps,
   Metadata,
-  VideoData,
+  RendererVideo,
+  RendererVideoState,
   Flavour,
   SoloShuffleTimelineSegment,
   EDeviceType,
