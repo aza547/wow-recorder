@@ -5,7 +5,6 @@ import {
   NumberKeyToStringValueMapType,
   RaidInstanceType,
   StringKeyToNumberValueMapType,
-  VideoListFilters,
 } from './types';
 
 /**

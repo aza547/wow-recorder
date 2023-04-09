@@ -292,5 +292,4 @@ export {
   TAudioSourceType,
   TNavigatorState,
   TAppState,
-  VideoListFilters,
 };
