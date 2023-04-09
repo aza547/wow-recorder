@@ -1079,7 +1079,7 @@ const retailUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Enveloping Mist': 270,
   'Holy Shock': 65,
   "Avenger's Shield": 66,
-  'Blade of Justice': 67,
+  'Blade of Justice': 70,
   Penance: 256,
   'Holy Word: Serenity': 257,
   'Devouring Plague': 258,

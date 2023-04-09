@@ -85,9 +85,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
               <ListItemButton onClick={goToLatestVideo}>
                 <VideoButton
                   key={videoState[latestCategory][0].fullPath}
-                  videostate={videoState}
-                  categoryIndex={categoryIndex}
-                  videoIndex={videoState[latestCategory][0].index}
+                  video={videoState[latestCategory][0]}
                 />
               </ListItemButton>
             </ListItem>

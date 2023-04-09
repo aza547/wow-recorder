@@ -1,15 +1,17 @@
 import { Box, Typography } from '@mui/material';
 import React from 'react';
 import { specializationById } from 'main/constants';
+import { RendererCombatant, RendererVideo } from 'main/types';
 import * as Images from './images';
 import { getWoWClassColor } from './rendererutils';
 
 interface IProps {
-  combatants: any;
+  video: RendererVideo;
 }
 
 const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
-  const { combatants } = props;
+  const { video } = props;
+  const { combatants } = video;
 
   if (combatants === undefined) {
     return <></>;
@@ -19,36 +21,44 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
     return <></>;
   }
 
-  const tanksAndHeals = combatants.filter((c: any) => {
-    if (specializationById[c._specID] === undefined) {
+  const tanksAndHeals = combatants.filter((combatant: RendererCombatant) => {
+    if (combatant._specID === undefined) {
       return false;
     }
 
-    return specializationById[c._specID].role !== 'damage';
-  });
-
-  const dps = combatants.filter((c: any) => {
-    if (specializationById[c._specID] === undefined) {
+    if (specializationById[combatant._specID] === undefined) {
       return false;
     }
 
-    return specializationById[c._specID].role === 'damage';
+    return specializationById[combatant._specID].role !== 'damage';
   });
 
-  const renderCombatant = (c: any) => {
-    const specID = c._specID;
-    let nameColor = 'black';
+  const dps = combatants.filter((combatant: RendererCombatant) => {
+    if (combatant._specID === undefined) {
+      return false;
+    }
+
+    if (specializationById[combatant._specID] === undefined) {
+      return false;
+    }
+
+    return specializationById[combatant._specID].role === 'damage';
+  });
+
+  const renderCombatant = (combatant: RendererCombatant) => {
+    const specID = combatant._specID;
+    let nameColor = 'grey';
     let specIcon = Images.specImages[0];
 
     if (specID !== undefined) {
       specIcon = Images.specImages[specID];
-      const spec = specializationById[c._specID];
+      const spec = specializationById[specID];
       nameColor = getWoWClassColor(spec.class);
     }
 
     return (
       <Box
-        key={c._name}
+        key={combatant._name}
         sx={{
           display: 'flex',
           flexDirection: 'row',
@@ -57,7 +67,7 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
         }}
       >
         <Box
-          key={c._GUID}
+          key={combatant._GUID}
           component="img"
           src={specIcon}
           sx={{
@@ -80,7 +90,7 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
         >
-          {c._name}
+          {combatant._name}
         </Typography>
       </Box>
     );

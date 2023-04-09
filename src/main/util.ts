@@ -3,8 +3,15 @@ import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
 import { app, BrowserWindow, Display, net, screen } from 'electron';
-import { Metadata, FileInfo, FileSortDirection, OurDisplayType, RendererVideo } from './types';
-import { months, zones } from './constants';
+import {
+  Metadata,
+  FileInfo,
+  FileSortDirection,
+  OurDisplayType,
+  RendererVideo,
+  RendererVideoState,
+} from './types';
+import { months } from './constants';
 import { VideoCategory } from '../types/VideoCategory';
 
 const categories = Object.values(VideoCategory);
@@ -57,12 +64,17 @@ export const resolveHtmlPath = getResolvedHtmlPath();
 /**
  * Empty video state.
  */
-const getEmptyState = (): { [category: string]: RendererVideo[] } => {
-  const videoState: { [category: string]: RendererVideo[] } = {};
-
-  categories.forEach((category) => {
-    videoState[category] = [];
-  });
+const getEmptyState = () => {
+  const videoState: RendererVideoState = {
+    [VideoCategory.TwoVTwo]: [],
+    [VideoCategory.ThreeVThree]: [],
+    [VideoCategory.FiveVFive]: [],
+    [VideoCategory.Skirmish]: [],
+    [VideoCategory.SoloShuffle]: [],
+    [VideoCategory.MythicPlus]: [],
+    [VideoCategory.Raids]: [],
+    [VideoCategory.Battlegrounds]: [],
+  };
 
   return videoState;
 };
@@ -143,7 +155,6 @@ const getThumbnailFileNameForVideo = (video: string) => {
   return path.join(videoDirName, `${videoFileName}.png`);
 };
 
-
 /**
  * Get the metadata object for a video from the accompanying JSON file.
  */
@@ -153,17 +164,6 @@ const getMetadataForVideo = async (video: string) => {
   const metadataJSON = await fspromise.readFile(metadataFilePath);
   const metadata = JSON.parse(metadataJSON.toString()) as Metadata;
   return metadata;
-};
-
-/**
- * Get the encounter name.
- */
-const getVideoEncounter = (metadata: Metadata) => {
-  if (metadata.encounterID) {
-    return zones[metadata.encounterID];
-  }
-
-  return metadata.category;
 };
 
 /**

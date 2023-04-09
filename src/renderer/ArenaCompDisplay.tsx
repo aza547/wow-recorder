@@ -2,20 +2,31 @@ import { Box, Typography } from '@mui/material';
 import React from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { specializationById } from 'main/constants';
-import Combatant from 'main/Combatant';
+import { RendererCombatant, RendererVideo } from 'main/types';
 import * as Images from './images';
-import { getWoWClassColor } from './rendererutils';
+import { getPlayerTeamID, getWoWClassColor } from './rendererutils';
 
 interface IProps {
-  combatants: Combatant[];
-  playerTeamID: number;
+  video: RendererVideo;
 }
 
 const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
-  const { combatants, playerTeamID } = props;
+  const { video } = props;
+  const { combatants } = video;
 
-  const friendly = combatants.filter((c: any) => c._teamID !== playerTeamID);
-  const enemy = combatants.filter((c: any) => c._teamID === playerTeamID);
+  if (combatants === undefined) {
+    return <></>;
+  }
+
+  const playerTeamID = getPlayerTeamID(video);
+
+  const friendly = combatants.filter(
+    (combatant: RendererCombatant) => combatant._teamID !== playerTeamID
+  );
+
+  const enemy = combatants.filter(
+    (combatant: RendererCombatant) => combatant._teamID === playerTeamID
+  );
 
   if (friendly.length > 5 || friendly.length === 0) {
     return <></>;
@@ -29,14 +40,15 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
     return <></>;
   }
 
-  const renderEnemyCombatant = (c: any) => {
-    const specID = c._specID;
-    let nameColor = 'black';
+  const renderEnemyCombatant = (combatant: RendererCombatant) => {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { _specID } = combatant;
+    let nameColor = 'grey';
     let specIcon = Images.specImages[0];
 
-    if (specID !== undefined) {
-      specIcon = Images.specImages[specID] || Images.specImages[0];
-      const spec = specializationById[c._specID];
+    if (_specID !== undefined) {
+      specIcon = Images.specImages[_specID] || Images.specImages[0];
+      const spec = specializationById[_specID];
 
       if (spec !== undefined) {
         nameColor = getWoWClassColor(spec.class);
@@ -45,7 +57,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
 
     return (
       <Box
-        key={c._name}
+        key={combatant._name}
         sx={{
           display: 'flex',
           flexDirection: 'row',
@@ -64,10 +76,10 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
         >
-          {c._name}
+          {combatant._name}
         </Typography>
         <Box
-          key={c._GUID}
+          key={combatant._GUID}
           component="img"
           src={specIcon}
           sx={{
@@ -83,20 +95,21 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const renderFriendlyCombatant = (c: any) => {
-    const specID = c._specID;
-    let nameColor = 'black';
+  const renderFriendlyCombatant = (combatant: RendererCombatant) => {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { _specID } = combatant;
+    let nameColor = 'grey';
     let specIcon = Images.specImages[0];
 
-    if (specID !== undefined) {
-      specIcon = Images.specImages[specID];
-      const spec = specializationById[c._specID];
+    if (_specID !== undefined) {
+      specIcon = Images.specImages[_specID];
+      const spec = specializationById[_specID];
       nameColor = getWoWClassColor(spec.class);
     }
 
     return (
       <Box
-        key={c._name}
+        key={combatant._name}
         sx={{
           display: 'flex',
           flexDirection: 'row',
@@ -105,7 +118,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
         }}
       >
         <Box
-          key={c._GUID}
+          key={combatant._GUID}
           component="img"
           src={specIcon}
           sx={{
@@ -128,7 +141,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
         >
-          {c._name}
+          {combatant._name}
         </Typography>
       </Box>
     );

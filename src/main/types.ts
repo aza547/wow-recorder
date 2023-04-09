@@ -181,7 +181,7 @@ interface ISettingsPanelProps {
 }
 
 /**
- * Metadata type.
+ * Backend metadata type. This is what we write to the .json files.
  */
 type Metadata = {
   category: VideoCategory;
@@ -198,7 +198,8 @@ type Metadata = {
   deaths?: PlayerDeathType[];
   upgradeLevel?: number;
   mapID?: number;
-  timeline?: ChallengeModeTimelineSegment[] | SoloShuffleTimelineSegment[];
+  challengeModeTimeline?: ChallengeModeTimelineSegment[];
+  soloShuffleTimeline?: SoloShuffleTimelineSegment[];
   level?: number;
   encounterName?: string;
   protected?: boolean;
@@ -208,7 +209,48 @@ type Metadata = {
   overrun: number;
 };
 
-type RendererVideo = Metadata & {
+type RendererCombatant = {
+  _GUID?: string;
+  _teamID?: number;
+  _specID?: number;
+  _name?: string;
+  _realm?: string;
+};
+
+/**
+ * Frontend metadata type.
+ *
+ * We cast to this to allow typescript to point out when we're forgetting
+ * to check for undefined.
+ *
+ * This is required as we lose the ability to hold onto the type when we read
+ * from the metadata file and send it over the IPC pipe, and that the nested
+ * classes in the Metadata don't play nicely when casting the json data.
+ */
+type RendererVideo = {
+  category: VideoCategory;
+  duration: number;
+  result: boolean;
+  flavour: Flavour;
+  zoneID?: number;
+  zoneName?: string;
+  encounterID?: number;
+  difficultyID?: number;
+  difficulty?: string;
+  player?: RendererCombatant;
+  teamMMR?: number;
+  deaths?: PlayerDeathType[];
+  upgradeLevel?: number;
+  mapID?: number;
+  challengeModeTimeline?: ChallengeModeTimelineSegment[];
+  soloShuffleTimeline?: SoloShuffleTimelineSegment[];
+  level?: number;
+  encounterName?: string;
+  protected?: boolean;
+  soloShuffleRoundsWon?: number;
+  soloShuffleRoundsPlayed?: number;
+  combatants?: RendererCombatant[];
+  overrun: number;
   date: string;
   time: string;
   fullPath: string;
@@ -302,4 +344,5 @@ export {
   TAudioSourceType,
   TNavigatorState,
   TAppState,
+  RendererCombatant,
 };

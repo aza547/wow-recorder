@@ -13,7 +13,6 @@ import {
   getPlayerName,
   getPlayerRealm,
   getPlayerSpecID,
-  getPlayerTeamID,
   getResultColor,
   getVideoImage,
   getVideoResultText,
@@ -36,7 +35,7 @@ interface IProps {
 
 export default function VideoButton(props: IProps) {
   const { video } = props;
-  const { isProtected, fullPath, combatants } = video;
+  const { isProtected, fullPath } = video;
   const formattedDuration = getFormattedDuration(video);
   const dungeonName = getDungeonName(video);
   const buttonImage = getVideoImage(video);
@@ -51,7 +50,6 @@ export default function VideoButton(props: IProps) {
   const playerRealm = getPlayerRealm(video);
   const playerClass = getPlayerClass(video);
   const playerClassColor = getWoWClassColor(playerClass);
-  const playerTeamID = getPlayerTeamID(video);
   const playerSpecID = getPlayerSpecID(video);
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
@@ -280,13 +278,8 @@ export default function VideoButton(props: IProps) {
             gridColumnEnd: 4,
           }}
         >
-          {isArena && (
-            <ArenaCompDisplay
-              combatants={combatants}
-              playerTeamID={playerTeamID}
-            />
-          )}
-          {isMythicPlus && <DungeonCompDisplay combatants={combatants} />}
+          {isArena && <ArenaCompDisplay video={video} />}
+          {isMythicPlus && <DungeonCompDisplay video={video} />}
           {isRaid && <RaidEncounterInfo video={video} />}
         </Box>
 

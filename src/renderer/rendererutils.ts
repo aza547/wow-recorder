@@ -1,5 +1,5 @@
 /**
- * Please keep this file FREE from any filesystem/Node JS process related code as it
+ * Please keep this file FREE from filesystem/Node JS process related code as it
  * is used in both the backend and the frontend, and the frontend does not have
  * access to import 'fs', for example.
  *
@@ -16,24 +16,28 @@ import {
   WoWCharacterClassType,
   WoWClassColor,
 } from 'main/constants';
-import { TimelineSegmentType } from 'main/keystone';
-import { Flavour, RendererVideo, RendererVideoState } from 'main/types';
+import {
+  ChallengeModeTimelineSegment,
+  TimelineSegmentType,
+} from 'main/keystone';
+import {
+  Flavour,
+  PlayerDeathType,
+  RendererVideo,
+  RendererVideoState,
+  SoloShuffleTimelineSegment,
+} from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import Player from 'video.js/dist/types/player';
 import * as Images from './images';
 
-/**
- * Get the result of a video.
- */
-const getVideoResult = (video: any): boolean => {
+const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
 };
 
 /**
- * getFormattedDuration
- *
- * returns a string of the form MM:SS.
+ * Returns a string of the form MM:SS.
  */
 const getFormattedDuration = (video: RendererVideo) => {
   const { duration } = video;
@@ -44,12 +48,16 @@ const getFormattedDuration = (video: RendererVideo) => {
 };
 
 /**
- * Return death markers for a video.
+ * Return an array of death markers for a video.
  */
-const getDeathMarkers = (video: any) => {
+const getDeathMarkers = (video: RendererVideo) => {
   const videoMarkers: any[] = [];
 
-  video.deaths.forEach((death: any) => {
+  if (video.deaths === undefined) {
+    return videoMarkers;
+  }
+
+  video.deaths.forEach((death: PlayerDeathType) => {
     const [name] = ambiguate(death.name);
     const markerText = `Death (${name})`;
     let markerClass: string;
@@ -71,12 +79,17 @@ const getDeathMarkers = (video: any) => {
 };
 
 /**
- * Get a variable describing the video markers for a given solo shuffle.
+ * Return an array of markers for a solo shuffle. This is markers for each
+ * round, colored green for wins or red for losses.
  */
-const getShuffleVideoMarkers = (video: any) => {
+const getShuffleVideoMarkers = (video: RendererVideo) => {
   const videoMarkers: any[] = [];
 
-  video.timeline.forEach((segment: any) => {
+  if (video.soloShuffleTimeline === undefined) {
+    return videoMarkers;
+  }
+
+  video.soloShuffleTimeline.forEach((segment: SoloShuffleTimelineSegment) => {
     let markerText = `Round ${segment.round}`;
     let markerClass: string;
 
@@ -99,34 +112,42 @@ const getShuffleVideoMarkers = (video: any) => {
 };
 
 /**
- * Get a variable describing the video markers for a given challenge mode.
+ * Return an array of markers for a challenge mode, this highlights the boss
+ * encounters as orange and the trash as purple.
  */
-const getChallengeModeVideoMarkers = (video: any) => {
+const getChallengeModeVideoMarkers = (video: RendererVideo) => {
   const videoMarkers: any[] = [];
 
-  video.timeline.forEach((segment: any) => {
-    const segmentDuration =
-      Date.parse(segment.logEnd) - Date.parse(segment.logStart);
-    const encounterDuration = Math.floor(segmentDuration / 1000);
-    const type = segment.segmentType as TimelineSegmentType;
-    let markerClass: string;
-    let markerText: string;
+  if (video.challengeModeTimeline === undefined) {
+    return videoMarkers;
+  }
 
-    if (type === TimelineSegmentType.BossEncounter) {
-      markerClass = 'orange-video-marker';
-      markerText = dungeonEncounters[segment.encounterId] || 'Boss';
-    } else {
-      markerClass = 'purple-video-marker';
-      markerText = segment.segmentType;
+  video.challengeModeTimeline.forEach(
+    (segment: ChallengeModeTimelineSegment) => {
+      let markerClass = 'purple-video-marker';
+      let markerText = segment.segmentType as string;
+      const type = segment.segmentType as TimelineSegmentType;
+
+      const segmentDuration = Math.floor(
+        segment.logEnd.getTime() - segment.logStart.getTime()
+      );
+
+      if (type === TimelineSegmentType.BossEncounter) {
+        markerClass = 'orange-video-marker';
+
+        if (segment.encounterId !== undefined) {
+          markerText = dungeonEncounters[segment.encounterId];
+        }
+      }
+
+      videoMarkers.push({
+        time: segment.timestamp,
+        text: markerText,
+        class: markerClass,
+        duration: segmentDuration,
+      });
     }
-
-    videoMarkers.push({
-      time: segment.timestamp,
-      text: markerText,
-      class: markerClass,
-      duration: encounterDuration,
-    });
-  });
+  );
 
   return videoMarkers;
 };
@@ -134,7 +155,7 @@ const getChallengeModeVideoMarkers = (video: any) => {
 /**
  * Add markers to a videoJS player.
  */
-const addVideoMarkers = (video: any, player: Player) => {
+const addVideoMarkers = (video: RendererVideo, player: Player) => {
   const category = video.category as VideoCategory;
   const flavour = video.flavour as Flavour;
 
@@ -172,11 +193,11 @@ const getWoWClassColor = (unitClass: WoWCharacterClassType) => {
   return WoWClassColor[unitClass];
 };
 
-const getNumVideos = (videoState: any) => {
+const getNumVideos = (videoState: RendererVideoState) => {
   let numVideos = 0;
 
-  Object.values(videoState).forEach((category: any) => {
-    Object.values(category).forEach(() => {
+  Object.values(videoState).forEach((videoList: RendererVideo[]) => {
+    Object.values(videoList).forEach(() => {
       numVideos += 1;
     });
   });
@@ -184,11 +205,11 @@ const getNumVideos = (videoState: any) => {
   return numVideos;
 };
 
-const getTotalDuration = (videoState: any) => {
+const getTotalDuration = (videoState: RendererVideoState) => {
   let totalDuration = 0;
 
-  Object.values(videoState).forEach((category: any) => {
-    Object.values(category).forEach((video: any) => {
+  Object.values(videoState).forEach((videoList: RendererVideo[]) => {
+    Object.values(videoList).forEach((video: RendererVideo) => {
       totalDuration += video.duration;
       totalDuration += video.overrun;
     });
@@ -197,18 +218,18 @@ const getTotalDuration = (videoState: any) => {
   return totalDuration;
 };
 
-const getLatestCategory = (videoState: any) => {
+const getLatestCategory = (videoState: RendererVideoState) => {
   let latestDate = new Date(2000, 1, 1);
   let latestCategory = VideoCategory.TwoVTwo;
 
-  Object.keys(videoState).forEach((category: string) => {
+  Object.values(VideoCategory).forEach((category: VideoCategory) => {
     const video = videoState[category][0];
 
     if (video === undefined) {
       return;
     }
 
-    const date = videoState[category][0].dateObject;
+    const date = new Date(video.time);
 
     if (date === undefined) {
       return;
@@ -287,16 +308,23 @@ const getVideoResultText = (video: RendererVideo): string => {
   return result ? 'Win' : 'Loss';
 };
 
-const getInstanceDifficulty = (id: number) => {
-  const knownDifficulty = Object.prototype.hasOwnProperty.call(
-    instanceDifficulty,
-    id
-  );
-  if (!knownDifficulty) {
-    return null;
+const getInstanceDifficultyText = (video: RendererVideo) => {
+  const { difficultyID } = video;
+
+  if (difficultyID === undefined) {
+    return '';
   }
 
-  return instanceDifficulty[id];
+  const knownDifficulty = Object.prototype.hasOwnProperty.call(
+    instanceDifficulty,
+    difficultyID
+  );
+
+  if (!knownDifficulty) {
+    return '';
+  }
+
+  return instanceDifficulty[difficultyID].difficulty;
 };
 
 /**
@@ -421,11 +449,11 @@ const getPlayerName = (video: RendererVideo) => {
     return '';
   }
 
-  if (player.name === undefined) {
+  if (player._name === undefined) {
     return '';
   }
 
-  return player.name;
+  return player._name;
 };
 
 const getPlayerRealm = (video: RendererVideo) => {
@@ -435,11 +463,11 @@ const getPlayerRealm = (video: RendererVideo) => {
     return '';
   }
 
-  if (player.realm === undefined) {
+  if (player._realm === undefined) {
     return '';
   }
 
-  return player.realm;
+  return player._realm;
 };
 
 const getPlayerSpecID = (video: RendererVideo) => {
@@ -449,11 +477,11 @@ const getPlayerSpecID = (video: RendererVideo) => {
     return 0;
   }
 
-  if (player.specID === undefined) {
+  if (player._specID === undefined) {
     return 0;
   }
 
-  return player.specID;
+  return player._specID;
 };
 
 const getPlayerTeamID = (video: RendererVideo) => {
@@ -463,11 +491,11 @@ const getPlayerTeamID = (video: RendererVideo) => {
     return 0;
   }
 
-  if (player.teamID === undefined) {
+  if (player._teamID === undefined) {
     return 0;
   }
 
-  return player.teamID;
+  return player._teamID;
 };
 
 const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
@@ -477,15 +505,15 @@ const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
     return 'UNKNOWN';
   }
 
-  if (player.specID === undefined) {
+  if (player._specID === undefined) {
     return 'UNKNOWN';
   }
 
-  if (specializationById[player.specID] === undefined) {
+  if (specializationById[player._specID] === undefined) {
     return 'UNKNOWN';
   }
 
-  return specializationById[player.specID].class;
+  return specializationById[player._specID].class;
 };
 
 export {
@@ -498,7 +526,7 @@ export {
   getLatestCategory,
   getEmptyState,
   getVideoResultText,
-  getInstanceDifficulty,
+  getInstanceDifficultyText,
   getEncounterNameById,
   getVideoImage,
   getDungeonName,

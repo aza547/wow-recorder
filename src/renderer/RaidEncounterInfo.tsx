@@ -1,22 +1,17 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
-import { getInstanceDifficulty } from 'main/helpers';
+import { RendererVideo } from 'main/types';
+import { getInstanceDifficultyText } from './rendererutils';
 
 interface IProps {
-  video: any;
+  video: RendererVideo;
 }
 
 const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
   const { video } = props;
-  const { encounterName, zoneName, difficultyID } = video;
-  const videoInstanceDifficulty = getInstanceDifficulty(difficultyID);
-
-  let difficultyText = '-';
-
-  if (videoInstanceDifficulty) {
-    difficultyText = videoInstanceDifficulty.difficulty;
-  }
+  const { encounterName, zoneName } = video;
+  const difficultyText = getInstanceDifficultyText(video);
 
   return (
     <Box

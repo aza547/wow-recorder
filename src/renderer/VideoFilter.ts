@@ -1,3 +1,5 @@
+import { RendererVideo } from 'main/types';
+
 /**
  * VideoFilter class.
  */
@@ -71,7 +73,7 @@ export default class VideoFilter {
     });
   }
 
-  filter(video: any) {
+  filter(video: RendererVideo) {
     if (this.invalid) {
       return false;
     }
@@ -108,7 +110,7 @@ export default class VideoFilter {
     this.invalid = true;
   }
 
-  private filterResult(video: any) {
+  private filterResult(video: RendererVideo) {
     if (this.resultFilter === undefined) {
       return true;
     }
@@ -122,12 +124,12 @@ export default class VideoFilter {
     return true;
   }
 
-  private filterToday(video: any) {
+  private filterToday(video: RendererVideo) {
     if (this.todayFilter === undefined) {
       return true;
     }
 
-    const videoDate: Date = video.dateObject;
+    const videoDate = new Date(video.time);
 
     const isFromToday =
       videoDate.getDay() === this.currentDate.getDay() &&
@@ -141,12 +143,12 @@ export default class VideoFilter {
     return false;
   }
 
-  private filterYesterday(video: any) {
+  private filterYesterday(video: RendererVideo) {
     if (this.yesterdayFilter === undefined) {
       return true;
     }
 
-    const videoDate: Date = video.dateObject;
+    const videoDate = new Date(video.time);
 
     const isFromToday =
       videoDate.getDay() === this.currentDate.getDay() &&
@@ -160,12 +162,16 @@ export default class VideoFilter {
     return false;
   }
 
-  private filterKeystoneLevel(video: any) {
+  private filterKeystoneLevel(video: RendererVideo) {
     if (this.keystoneLevelFilter === undefined) {
       return true;
     }
 
     const { level } = video;
+
+    if (level === undefined) {
+      return false;
+    }
 
     if (level > this.keystoneLevelFilter) {
       return false;

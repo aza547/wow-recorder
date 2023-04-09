@@ -70,7 +70,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         };
       });
     });
-  });
+  }, []);
 
   const debouncedFilter = (event: React.BaseSyntheticEvent) => {
     const filterText = event.target.value;
@@ -228,12 +228,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                       handleChangeVideo(categoryState.indexOf(video))
                     }
                   >
-                    <VideoButton
-                      key={video.fullPath}
-                      videostate={videoState}
-                      categoryIndex={categoryIndex}
-                      videoIndex={categoryState.indexOf(video)}
-                    />
+                    <VideoButton key={video.fullPath} video={video} />
                   </ListItemButton>
                 </ListItem>
               );
