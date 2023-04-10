@@ -431,7 +431,7 @@ const getResultColor = (video: RendererVideo) => {
         'rgb(255, 105,  0, 0.3)',
         'rgb(255,  45,  0, 0.3)',
         'rgb(255,   0,  0, 0.3)',
-      ];
+      ].reverse();
 
       return soloShuffleResultColors[soloShuffleRoundsWon];
     }

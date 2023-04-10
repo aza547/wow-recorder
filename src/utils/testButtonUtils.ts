@@ -62,8 +62,6 @@ export const runRetailRecordingTest = (
   console.info('[test] WoW is running, starting test.');
   testRunning = true;
   const startDate = getAdjustedDate();
-  const endDate = getAdjustedDate(5);
-
   let testLines: string[];
   let testDuration = 5;
 
@@ -87,6 +85,7 @@ export const runRetailRecordingTest = (
     testLines = [];
   }
 
+  const endDate = getAdjustedDate(testDuration);
   const testArenaEndLine = `${endDate}  ${testLines[testLines.length - 1]}`;
   testLines.pop();
 
