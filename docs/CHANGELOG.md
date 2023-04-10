@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 355](https://github.com/aza547/wow-recorder/issues/355) - Fixed an issue where swapping characters can confuse the parser.
 - [Issue 355](https://github.com/aza547/wow-recorder/issues/355) - Fixed an issue where we were incorrectly marking abandoned M+ as completed.
 - [Issue 356](https://github.com/aza547/wow-recorder/issues/356) - Fixed an issue where adding too many audio devices wasn't handled well.
-- [Issue 365](https://github.com/aza547/wow-recorder/issues/365) - Fixed an where an unknown specID would crash the app.
+- [Issue 365](https://github.com/aza547/wow-recorder/issues/365) - Fixed an issue where an unknown specID would crash the app.
 - [Issue 367](https://github.com/aza547/wow-recorder/issues/367) - Fixed an issue where Mythic+ COMBATANT_INFO events weren't getting handled appropriately. 
 - [Issue 368](https://github.com/aza547/wow-recorder/issues/368) - Fixed an issue where comps don't display correctly in some retail content.
 
