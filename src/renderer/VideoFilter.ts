@@ -1,8 +1,5 @@
 import { RendererVideo } from 'main/types';
 
-/**
- * VideoFilter class.
- */
 export default class VideoFilter {
   private currentDate = new Date();
 
@@ -11,6 +8,7 @@ export default class VideoFilter {
     'wins',
     'won',
     'victory',
+    'time',
     'timed',
     'kill',
     'killed',
@@ -21,6 +19,7 @@ export default class VideoFilter {
     'lose',
     'losses',
     'lost',
+    'deplete',
     'depleted',
     'wipe',
     'wiped',
@@ -182,7 +181,7 @@ export default class VideoFilter {
       return false;
     }
 
-    if (level > this.keystoneLevelFilter) {
+    if (level !== this.keystoneLevelFilter) {
       return false;
     }
 
