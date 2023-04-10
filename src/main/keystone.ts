@@ -35,8 +35,8 @@ class ChallengeModeTimelineSegment {
   getRaw(): RawChallengeModeTimelineSegment {
     const rawSegment: RawChallengeModeTimelineSegment = {
       segmentType: this.segmentType,
-      logStart: this.logStart.toString(),
-      logEnd: this.logEnd.toString(),
+      logStart: this.logStart.toISOString(),
+      logEnd: this.logEnd.toISOString(),
       timestamp: this.timestamp,
     };
 

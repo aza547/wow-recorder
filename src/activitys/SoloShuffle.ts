@@ -181,9 +181,10 @@ export default class SoloShuffle extends Activity {
   }
 
   getMetadata(): Metadata {
-    const rawCombatants = Array.from(this.combatantMap.values()).map(
-      (combatant: Combatant) => combatant.getRaw()
-    );
+    const rawCombatants = Array.from(
+      // Just use the combatants from the final round.
+      this.currentRound.combatantMap.values()
+    ).map((combatant: Combatant) => combatant.getRaw());
 
     return {
       category: this.category,
@@ -196,7 +197,7 @@ export default class SoloShuffle extends Activity {
       player: this.player.getRaw(),
       soloShuffleRoundsWon: this.roundsWon,
       soloShuffleRoundsPlayed: this.rounds.length,
-      timeline: this.getTimelineSegments(),
+      soloShuffleTimeline: this.getTimelineSegments(),
       combatants: rawCombatants,
       overrun: this.overrun,
     };

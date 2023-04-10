@@ -432,8 +432,8 @@ export default class RetailLogHandler extends LogHandler {
       specID
     );
 
-    const combatantInfo = new Combatant(GUID, teamID, specID);
-    this.activity.addCombatant(combatantInfo);
+    const newCombatant = new Combatant(GUID, teamID, specID);
+    this.activity.addCombatant(newCombatant);
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {

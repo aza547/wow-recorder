@@ -138,7 +138,7 @@ const getChallengeModeVideoMarkers = (video: RendererVideo) => {
       const segmentStart = new Date(segment.logStart);
 
       const segmentDuration = Math.floor(
-        segmentEnd.getTime() - segmentStart.getTime()
+        (segmentEnd.getTime() - segmentStart.getTime()) / 1000
       );
 
       if (segment.segmentType === TimelineSegmentType.BossEncounter) {

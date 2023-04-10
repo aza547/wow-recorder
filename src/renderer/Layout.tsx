@@ -198,7 +198,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Suggestions: wins, losses, today, yesterday"
+                placeholder={VideoFilter.getSuggestions()}
                 id="search-bar"
                 onChange={debouncedFilter}
                 sx={{

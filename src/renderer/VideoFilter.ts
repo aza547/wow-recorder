@@ -6,20 +6,29 @@ import { RendererVideo } from 'main/types';
 export default class VideoFilter {
   private currentDate = new Date();
 
-  private goodResultFilters = ['win', 'wins', 'won', 'victory', 'success'];
+  private static goodResultFilters = [
+    'win',
+    'wins',
+    'won',
+    'victory',
+    'timed',
+    'kill',
+    'killed',
+  ];
 
-  private badResultFilters = [
+  private static badResultFilters = [
     'loss',
     'lose',
     'losses',
     'lost',
-    'fail',
-    'failure',
+    'depleted',
+    'wipe',
+    'wiped',
   ];
 
-  private todayFilters = ['today'];
+  private static todayFilters = ['today'];
 
-  private yesterdayFilters = ['yesterday'];
+  private static yesterdayFilters = ['yesterday'];
 
   private resultFilter: boolean | undefined;
 
@@ -39,22 +48,22 @@ export default class VideoFilter {
     const filterArray = query.split(' ').map((f) => f.toLowerCase());
 
     filterArray.forEach((filter: string) => {
-      if (this.goodResultFilters.includes(filter)) {
+      if (VideoFilter.goodResultFilters.includes(filter)) {
         this.addResultFilter(true);
         return;
       }
 
-      if (this.badResultFilters.includes(filter)) {
+      if (VideoFilter.badResultFilters.includes(filter)) {
         this.addResultFilter(false);
         return;
       }
 
-      if (this.todayFilters.includes(filter)) {
+      if (VideoFilter.todayFilters.includes(filter)) {
         this.addTodayFilter();
         return;
       }
 
-      if (this.yesterdayFilters.includes(filter)) {
+      if (VideoFilter.yesterdayFilters.includes(filter)) {
         this.addYesterdayFilter();
         return;
       }
@@ -132,7 +141,7 @@ export default class VideoFilter {
     const videoDate = new Date(video.mtime);
 
     const isFromToday =
-      videoDate.getDay() === this.currentDate.getDay() &&
+      videoDate.getDate() === this.currentDate.getDate() &&
       videoDate.getMonth() === this.currentDate.getMonth() &&
       videoDate.getFullYear() === this.currentDate.getFullYear();
 
@@ -151,7 +160,7 @@ export default class VideoFilter {
     const videoDate = new Date(video.mtime);
 
     const isFromToday =
-      videoDate.getDay() === this.currentDate.getDay() &&
+      videoDate.getDate() === this.currentDate.getDate() - 1 &&
       videoDate.getMonth() === this.currentDate.getMonth() &&
       videoDate.getFullYear() === this.currentDate.getFullYear();
 
@@ -178,5 +187,28 @@ export default class VideoFilter {
     }
 
     return true;
+  }
+
+  static getSuggestions() {
+    const allValidFilters = [
+      ...this.goodResultFilters,
+      ...this.badResultFilters,
+      ...this.todayFilters,
+      ...this.yesterdayFilters,
+      '+15',
+    ];
+
+    const suggestions: string[] = [];
+
+    while (suggestions.length < 5) {
+      const randomIndex = Math.floor(Math.random() * allValidFilters.length);
+      const randomSelection = allValidFilters[randomIndex];
+
+      if (!suggestions.includes(randomSelection)) {
+        suggestions.push(randomSelection);
+      }
+    }
+
+    return `Suggestions: ${suggestions.join(', ')}`;
   }
 }
