@@ -129,7 +129,7 @@ export default class VideoFilter {
       return true;
     }
 
-    const videoDate = new Date(video.time);
+    const videoDate = new Date(video.mtime);
 
     const isFromToday =
       videoDate.getDay() === this.currentDate.getDay() &&
@@ -148,7 +148,7 @@ export default class VideoFilter {
       return true;
     }
 
-    const videoDate = new Date(video.time);
+    const videoDate = new Date(video.mtime);
 
     const isFromToday =
       videoDate.getDay() === this.currentDate.getDay() &&

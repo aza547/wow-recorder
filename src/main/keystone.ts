@@ -3,6 +3,15 @@ enum TimelineSegmentType {
   Trash = 'Trash',
 }
 
+type RawChallengeModeTimelineSegment = {
+  segmentType?: TimelineSegmentType;
+  logStart?: string;
+  timestamp?: number;
+  encounterId?: number;
+  logEnd?: string;
+  result?: string;
+};
+
 class ChallengeModeTimelineSegment {
   logEnd: Date;
 
@@ -22,6 +31,25 @@ class ChallengeModeTimelineSegment {
   length(): number {
     return this.logEnd.getTime() - this.logStart.getTime();
   }
+
+  getRaw(): RawChallengeModeTimelineSegment {
+    const rawSegment: RawChallengeModeTimelineSegment = {
+      segmentType: this.segmentType,
+      logStart: this.logStart.toString(),
+      logEnd: this.logEnd.toString(),
+      timestamp: this.timestamp,
+    };
+
+    if (this.encounterId !== undefined) {
+      rawSegment.encounterId = this.encounterId;
+    }
+
+    return rawSegment;
+  }
 }
 
-export { TimelineSegmentType, ChallengeModeTimelineSegment };
+export {
+  TimelineSegmentType,
+  ChallengeModeTimelineSegment,
+  RawChallengeModeTimelineSegment,
+};

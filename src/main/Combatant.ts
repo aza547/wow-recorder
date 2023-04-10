@@ -1,4 +1,4 @@
-import { RawCombatant } from "./types";
+import { RawCombatant } from './types';
 
 /**
  * Represents an arena combatant.
@@ -117,9 +117,8 @@ export default class Combatant {
   }
 
   getRaw(): RawCombatant {
-    const rawCombatant: RawCombatant = {};
+    const rawCombatant: RawCombatant = { _GUID: this.GUID };
 
-    if (this.GUID !== undefined) rawCombatant._GUID = this.GUID;
     if (this.teamID !== undefined) rawCombatant._teamID = this.teamID;
     if (this.specID !== undefined) rawCombatant._specID = this.specID;
     if (this.name !== undefined) rawCombatant._name = this.name;

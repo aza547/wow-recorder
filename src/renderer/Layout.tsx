@@ -209,7 +209,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                     },
                   },
                   '& label.Mui-focused': { color: '#bb4220' },
-                  mt: 2,
                   ml: 2,
                   mr: 2,
                   input: { color: 'white' },

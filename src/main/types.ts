@@ -1,5 +1,5 @@
 import { Size } from 'electron';
-import { TimelineSegmentType } from './keystone';
+import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchema } from './configSchema';
 
@@ -221,15 +221,6 @@ type RawCombatant = {
   _specID?: number;
   _name?: string;
   _realm?: string;
-};
-
-type RawChallengeModeTimelineSegment = {
-  segmentType?: TimelineSegmentType;
-  logStart?: string;
-  timestamp?: number;
-  encounterId?: number;
-  logEnd?: string;
-  result?: string;
 };
 
 /**

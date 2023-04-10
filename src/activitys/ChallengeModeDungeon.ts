@@ -1,3 +1,4 @@
+import Combatant from 'main/Combatant';
 import { Flavour, Metadata } from '../main/types';
 import { dungeonTimersByMapId, instanceNamesByZoneId } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
@@ -8,7 +9,6 @@ import {
 } from '../main/keystone';
 
 import Activity from './Activity';
-import Combatant from 'main/Combatant';
 
 export default class ChallengeModeDungeon extends Activity {
   private _mapID: number;
@@ -166,6 +166,10 @@ export default class ChallengeModeDungeon extends Activity {
       (combatant: Combatant) => combatant.getRaw()
     );
 
+    const rawSegments = this.timeline.map(
+      (segment: ChallengeModeTimelineSegment) => segment.getRaw()
+    );
+
     return {
       category: VideoCategory.MythicPlus,
       zoneID: this.zoneID,
@@ -174,7 +178,7 @@ export default class ChallengeModeDungeon extends Activity {
       result: this.result,
       upgradeLevel: this.upgradeLevel,
       player: this.player.getRaw(),
-      timeline: this.timeline,
+      challengeModeTimeline: rawSegments,
       level: this.level,
       flavour: this.flavour,
       overrun: this.overrun,
