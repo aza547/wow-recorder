@@ -8,6 +8,7 @@ import {
 
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
+import Combatant from 'main/Combatant';
 
 /**
  * Class representing a raid encounter.
@@ -128,6 +129,10 @@ export default class RaidEncounter extends Activity {
   }
 
   getMetadata(): Metadata {
+    const rawCombatants = Array.from(this.combatantMap.values()).map(
+      (combatant: Combatant) => combatant.getRaw()
+    );
+
     return {
       category: VideoCategory.Raids,
       zoneID: this.zoneID,
@@ -139,10 +144,10 @@ export default class RaidEncounter extends Activity {
       difficulty: this.difficulty.difficulty,
       duration: this.duration,
       result: this.result,
-      player: this.player,
+      player: this.player.getRaw(),
       deaths: this.deaths,
       overrun: this.overrun,
-      combatants: Array.from(this.combatantMap.values()),
+      combatants: rawCombatants,
     };
   }
 

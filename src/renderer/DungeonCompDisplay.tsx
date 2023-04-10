@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
 import React from 'react';
 import { specializationById } from 'main/constants';
-import { RendererCombatant, RendererVideo } from 'main/types';
+import { RawCombatant, RendererVideo } from 'main/types';
 import * as Images from './images';
 import { getWoWClassColor } from './rendererutils';
 
@@ -21,7 +21,7 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
     return <></>;
   }
 
-  const tanksAndHeals = combatants.filter((combatant: RendererCombatant) => {
+  const tanksAndHeals = combatants.filter((combatant: RawCombatant) => {
     if (combatant._specID === undefined) {
       return false;
     }
@@ -33,7 +33,7 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
     return specializationById[combatant._specID].role !== 'damage';
   });
 
-  const dps = combatants.filter((combatant: RendererCombatant) => {
+  const dps = combatants.filter((combatant: RawCombatant) => {
     if (combatant._specID === undefined) {
       return false;
     }
@@ -45,7 +45,7 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
     return specializationById[combatant._specID].role === 'damage';
   });
 
-  const renderCombatant = (combatant: RendererCombatant) => {
+  const renderCombatant = (combatant: RawCombatant) => {
     const specID = combatant._specID;
     let nameColor = 'grey';
     let specIcon = Images.specImages[0];

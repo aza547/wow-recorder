@@ -1,3 +1,5 @@
+import { RawCombatant } from "./types";
+
 /**
  * Represents an arena combatant.
  */
@@ -112,5 +114,17 @@ export default class Combatant {
     const hasSpecID = this.specID !== undefined;
     const hasTeamID = this.teamID !== undefined;
     return hasGUID && hasName && hasRealm && hasSpecID && hasTeamID;
+  }
+
+  getRaw(): RawCombatant {
+    const rawCombatant: RawCombatant = {};
+
+    if (this.GUID !== undefined) rawCombatant._GUID = this.GUID;
+    if (this.teamID !== undefined) rawCombatant._teamID = this.teamID;
+    if (this.specID !== undefined) rawCombatant._specID = this.specID;
+    if (this.name !== undefined) rawCombatant._name = this.name;
+    if (this.realm !== undefined) rawCombatant._realm = this.realm;
+
+    return rawCombatant;
   }
 }

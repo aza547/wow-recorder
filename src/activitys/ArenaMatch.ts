@@ -2,6 +2,7 @@ import { Flavour, Metadata } from '../main/types';
 import { classicArenas, retailArenas } from '../main/constants';
 import Activity from './Activity';
 import { VideoCategory } from '../types/VideoCategory';
+import Combatant from 'main/Combatant';
 
 /**
  * Arena match class.
@@ -70,6 +71,10 @@ export default class ArenaMatch extends Activity {
   }
 
   getMetadata(): Metadata {
+    const rawCombatants = Array.from(this.combatantMap.values()).map(
+      (combatant: Combatant) => combatant.getRaw()
+    );
+
     return {
       category: this.category,
       zoneID: this.zoneID,
@@ -78,8 +83,8 @@ export default class ArenaMatch extends Activity {
       duration: this.duration,
       result: this.result,
       deaths: this.deaths,
-      player: this.player,
-      combatants: Array.from(this.combatantMap.values()),
+      player: this.player.getRaw(),
+      combatants: rawCombatants,
       overrun: this.overrun,
     };
   }

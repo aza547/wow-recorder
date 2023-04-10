@@ -11,7 +11,6 @@ import {
   RendererVideo,
   RendererVideoState,
 } from './types';
-import { months } from './constants';
 import { VideoCategory } from '../types/VideoCategory';
 
 const categories = Object.values(VideoCategory);
@@ -166,7 +165,6 @@ const getMetadataForVideo = async (video: string) => {
   return metadata;
 };
 
-
 /**
  * Load video details from the metadata and add it to videoState.
  */
@@ -210,17 +208,13 @@ const loadAllVideos = async (
 
   // Await all the videoDetailsPromises to settle, and then remove any
   // that were rejected. This can happen if there is a missing metadata file.
-  const videoDetail = (
+  const videoDetail: RendererVideo[] = (
     await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
   ).filter((result) => !(result instanceof Error));
 
   videoDetail.forEach((details) => {
-    const category = details.category as string;
-
-    videoState[category].push({
-      index: videoIndex[category]++,
-      ...details,
-    });
+    const { category } = details;
+    videoState[category].push(details);
   });
 
   return videoState;
@@ -229,7 +223,7 @@ const loadAllVideos = async (
 /**
  * Writes video metadata asynchronously and returns a Promise
  */
-const writeMetadataFile = async (videoPath: string, metadata: any) => {
+const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
   console.info('[Util] Write Metadata file', videoPath);
 
   const metadataFileName = getMetadataFileNameForVideo(videoPath);

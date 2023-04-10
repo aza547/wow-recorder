@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import React from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { specializationById } from 'main/constants';
-import { RendererCombatant, RendererVideo } from 'main/types';
+import { RawCombatant, RendererVideo } from 'main/types';
 import * as Images from './images';
 import { getPlayerTeamID, getWoWClassColor } from './rendererutils';
 
@@ -21,11 +21,11 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   const playerTeamID = getPlayerTeamID(video);
 
   const friendly = combatants.filter(
-    (combatant: RendererCombatant) => combatant._teamID !== playerTeamID
+    (combatant: RawCombatant) => combatant._teamID !== playerTeamID
   );
 
   const enemy = combatants.filter(
-    (combatant: RendererCombatant) => combatant._teamID === playerTeamID
+    (combatant: RawCombatant) => combatant._teamID === playerTeamID
   );
 
   if (friendly.length > 5 || friendly.length === 0) {
@@ -40,17 +40,19 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
     return <></>;
   }
 
-  const renderEnemyCombatant = (combatant: RendererCombatant) => {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const { _specID } = combatant;
+  const renderEnemyCombatant = (combatant: RawCombatant) => {
     let nameColor = 'grey';
     let specIcon = Images.specImages[0];
 
-    if (_specID !== undefined) {
-      specIcon = Images.specImages[_specID] || Images.specImages[0];
-      const spec = specializationById[_specID];
+    if (combatant._specID !== undefined) {
+      const knownSpec = Object.prototype.hasOwnProperty.call(
+        specializationById,
+        combatant._specID
+      );
 
-      if (spec !== undefined) {
+      if (knownSpec) {
+        specIcon = Images.specImages[combatant._specID];
+        const spec = specializationById[combatant._specID];
         nameColor = getWoWClassColor(spec.class);
       }
     }
@@ -95,16 +97,21 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const renderFriendlyCombatant = (combatant: RendererCombatant) => {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const { _specID } = combatant;
+  const renderFriendlyCombatant = (combatant: RawCombatant) => {
     let nameColor = 'grey';
     let specIcon = Images.specImages[0];
 
-    if (_specID !== undefined) {
-      specIcon = Images.specImages[_specID];
-      const spec = specializationById[_specID];
-      nameColor = getWoWClassColor(spec.class);
+    if (combatant._specID !== undefined) {
+      const knownSpec = Object.prototype.hasOwnProperty.call(
+        specializationById,
+        combatant._specID
+      );
+
+      if (knownSpec) {
+        specIcon = Images.specImages[combatant._specID];
+        const spec = specializationById[combatant._specID];
+        nameColor = getWoWClassColor(spec.class);
+      }
     }
 
     return (

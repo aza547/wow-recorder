@@ -181,6 +181,10 @@ export default class SoloShuffle extends Activity {
   }
 
   getMetadata(): Metadata {
+    const rawCombatants = Array.from(this.combatantMap.values()).map(
+      (combatant: Combatant) => combatant.getRaw()
+    );
+
     return {
       category: this.category,
       zoneID: this.zoneID,
@@ -189,11 +193,11 @@ export default class SoloShuffle extends Activity {
       duration: this.duration,
       result: this.result,
       deaths: this.deaths,
-      player: this.player,
+      player: this.player.getRaw(),
       soloShuffleRoundsWon: this.roundsWon,
       soloShuffleRoundsPlayed: this.rounds.length,
       timeline: this.getTimelineSegments(),
-      combatants: Array.from(this.currentRound.combatantMap.values()),
+      combatants: rawCombatants,
       overrun: this.overrun,
     };
   }

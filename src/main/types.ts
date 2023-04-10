@@ -1,6 +1,5 @@
 import { Size } from 'electron';
-import { ChallengeModeTimelineSegment } from './keystone';
-import Combatant from './Combatant';
+import { TimelineSegmentType } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchema } from './configSchema';
 
@@ -181,7 +180,9 @@ interface ISettingsPanelProps {
 }
 
 /**
- * Backend metadata type. This is what we write to the .json files.
+ * This is what we write to the .json files. We use "raw" subtypes here to
+ * represent any classes as writing entire classes to JSON files causes
+ * problems on the frontend.
  */
 type Metadata = {
   category: VideoCategory;
@@ -193,23 +194,28 @@ type Metadata = {
   encounterID?: number;
   difficultyID?: number;
   difficulty?: string;
-  player?: Combatant;
+  player?: RawCombatant;
   teamMMR?: number;
   deaths?: PlayerDeathType[];
   upgradeLevel?: number;
   mapID?: number;
-  challengeModeTimeline?: ChallengeModeTimelineSegment[];
+  challengeModeTimeline?: RawChallengeModeTimelineSegment[];
   soloShuffleTimeline?: SoloShuffleTimelineSegment[];
   level?: number;
   encounterName?: string;
   protected?: boolean;
   soloShuffleRoundsWon?: number;
   soloShuffleRoundsPlayed?: number;
-  combatants: Combatant[];
+  combatants: RawCombatant[];
   overrun: number;
 };
 
-type RendererCombatant = {
+/**
+ * All fields in the raw type can be undefined to force us to check them
+ * before use. In theory anything can be present or not present in the
+ * metadata files.
+ */
+type RawCombatant = {
   _GUID?: string;
   _teamID?: number;
   _specID?: number;
@@ -217,40 +223,20 @@ type RendererCombatant = {
   _realm?: string;
 };
 
+type RawChallengeModeTimelineSegment = {
+  segmentType?: TimelineSegmentType;
+  logStart?: string;
+  timestamp?: number;
+  encounterId?: number;
+  logEnd?: string;
+  result?: string;
+};
+
 /**
- * Frontend metadata type.
- *
- * We cast to this to allow typescript to point out when we're forgetting
- * to check for undefined.
- *
- * This is required as we lose the ability to hold onto the type when we read
- * from the metadata file and send it over the IPC pipe, and that the nested
- * classes in the Metadata don't play nicely when casting the json data.
+ * Frontend metadata type, this is Metadata above plus a bunch of fields we
+ * add when reading the file.
  */
-type RendererVideo = {
-  category: VideoCategory;
-  duration: number;
-  result: boolean;
-  flavour: Flavour;
-  zoneID?: number;
-  zoneName?: string;
-  encounterID?: number;
-  difficultyID?: number;
-  difficulty?: string;
-  player?: RendererCombatant;
-  teamMMR?: number;
-  deaths?: PlayerDeathType[];
-  upgradeLevel?: number;
-  mapID?: number;
-  challengeModeTimeline?: ChallengeModeTimelineSegment[];
-  soloShuffleTimeline?: SoloShuffleTimelineSegment[];
-  level?: number;
-  encounterName?: string;
-  protected?: boolean;
-  soloShuffleRoundsWon?: number;
-  soloShuffleRoundsPlayed?: number;
-  combatants?: RendererCombatant[];
-  overrun: number;
+type RendererVideo = Metadata & {
   mtime: number;
   fullPath: string;
   isProtected: boolean;
@@ -343,5 +329,6 @@ export {
   TAudioSourceType,
   TNavigatorState,
   TAppState,
-  RendererCombatant,
+  RawCombatant,
+  RawChallengeModeTimelineSegment,
 };

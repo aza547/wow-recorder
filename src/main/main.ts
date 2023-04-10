@@ -232,7 +232,7 @@ const createWindow = async () => {
   mainWindow = new BrowserWindow({
     show: false,
     height: 1020 * 0.75,
-    width: 1980 * 0.65,
+    width: 1980 * 0.75,
     icon: getAssetPath('./icon/small-icon.png'),
     frame: false,
     title: `Warcraft Recorder v${appVersion}`,

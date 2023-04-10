@@ -8,6 +8,7 @@ import {
 } from '../main/keystone';
 
 import Activity from './Activity';
+import Combatant from 'main/Combatant';
 
 export default class ChallengeModeDungeon extends Activity {
   private _mapID: number;
@@ -161,6 +162,10 @@ export default class ChallengeModeDungeon extends Activity {
   }
 
   getMetadata(): Metadata {
+    const rawCombatants = Array.from(this.combatantMap.values()).map(
+      (combatant: Combatant) => combatant.getRaw()
+    );
+
     return {
       category: VideoCategory.MythicPlus,
       zoneID: this.zoneID,
@@ -168,12 +173,12 @@ export default class ChallengeModeDungeon extends Activity {
       duration: this.duration,
       result: this.result,
       upgradeLevel: this.upgradeLevel,
-      player: this.player,
+      player: this.player.getRaw(),
       timeline: this.timeline,
       level: this.level,
       flavour: this.flavour,
       overrun: this.overrun,
-      combatants: Array.from(this.combatantMap.values()),
+      combatants: rawCombatants,
     };
   }
 

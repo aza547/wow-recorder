@@ -17,13 +17,11 @@ import {
   WoWCharacterClassType,
   WoWClassColor,
 } from 'main/constants';
-import {
-  ChallengeModeTimelineSegment,
-  TimelineSegmentType,
-} from 'main/keystone';
+import { TimelineSegmentType } from 'main/keystone';
 import {
   Flavour,
   PlayerDeathType,
+  RawChallengeModeTimelineSegment,
   RendererVideo,
   RendererVideoState,
   SoloShuffleTimelineSegment,
@@ -124,16 +122,26 @@ const getChallengeModeVideoMarkers = (video: RendererVideo) => {
   }
 
   video.challengeModeTimeline.forEach(
-    (segment: ChallengeModeTimelineSegment) => {
+    (segment: RawChallengeModeTimelineSegment) => {
+      if (
+        segment.logEnd === undefined ||
+        segment.logStart === undefined ||
+        segment.segmentType === undefined
+      ) {
+        return;
+      }
+
       let markerClass = 'purple-video-marker';
       let markerText = segment.segmentType as string;
-      const type = segment.segmentType as TimelineSegmentType;
+
+      const segmentEnd = new Date(segment.logEnd);
+      const segmentStart = new Date(segment.logStart);
 
       const segmentDuration = Math.floor(
-        segment.logEnd.getTime() - segment.logStart.getTime()
+        segmentEnd.getTime() - segmentStart.getTime()
       );
 
-      if (type === TimelineSegmentType.BossEncounter) {
+      if (segment.segmentType === TimelineSegmentType.BossEncounter) {
         markerClass = 'orange-video-marker';
 
         if (segment.encounterId !== undefined) {
@@ -472,6 +480,15 @@ const getPlayerSpecID = (video: RendererVideo) => {
   }
 
   if (player._specID === undefined) {
+    return 0;
+  }
+
+  const knownSpec = Object.prototype.hasOwnProperty.call(
+    specializationById,
+    player._specID
+  );
+
+  if (!knownSpec) {
     return 0;
   }
 
