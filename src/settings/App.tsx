@@ -1,8 +1,8 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
+import { Box } from '@mui/material';
 import Settings from './Settings';
 import SettingsTitleBar from './SettingsTitleBar';
 import '../renderer/App.css';
-import { Box } from '@mui/material';
 
 const Application = () => (
   <Box

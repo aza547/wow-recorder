@@ -70,6 +70,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         };
       });
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const debouncedFilter = (event: React.BaseSyntheticEvent) => {

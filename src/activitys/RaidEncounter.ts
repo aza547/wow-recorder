@@ -1,5 +1,6 @@
 import { Flavour, Metadata, RaidInstanceType } from 'main/types';
 
+import Combatant from 'main/Combatant';
 import {
   instanceDifficulty,
   raidEncountersById,
@@ -8,7 +9,6 @@ import {
 
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
-import Combatant from 'main/Combatant';
 
 /**
  * Class representing a raid encounter.

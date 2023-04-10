@@ -47,6 +47,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
         onChange(new FakeChangeEvent(args[1], args[2]));
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const style = {

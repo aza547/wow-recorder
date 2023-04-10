@@ -1,4 +1,4 @@
-import { VideoPlayerSettings } from 'main/types';
+import { RendererVideo, VideoPlayerSettings } from 'main/types';
 import React from 'react';
 import videojs from 'video.js';
 import 'videojs-hotkeys';
@@ -13,7 +13,7 @@ interface IProps {
   id: string;
   // eslint-disable-next-line react/no-unused-prop-types
   key: string;
-  video: any;
+  video: RendererVideo;
 }
 
 const ipc = window.electron.ipcRenderer;

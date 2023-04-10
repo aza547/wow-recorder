@@ -74,26 +74,26 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       boxShadow: state.isFocused ? null : null,
     }),
 
-    valueContainer: (provided, state) => ({
+    valueContainer: (provided) => ({
       ...provided,
       height: '25px',
       padding: '0 6px',
     }),
 
-    input: (provided, state) => ({
+    input: (provided) => ({
       ...provided,
       margin: '0px',
     }),
-    indicatorSeparator: (state) => ({
+    indicatorSeparator: () => ({
       display: 'none',
     }),
-    indicatorsContainer: (provided, state) => ({
+    indicatorsContainer: (provided) => ({
       ...provided,
       height: '25px',
     }),
   };
 
-  const goToSelection = (e) => {
+  const goToSelection = () => {
     setNavigation((prevState) => {
       return {
         ...prevState,

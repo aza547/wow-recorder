@@ -1,8 +1,8 @@
+import Combatant from 'main/Combatant';
 import { Flavour, Metadata } from '../main/types';
 import { classicArenas, retailArenas } from '../main/constants';
 import Activity from './Activity';
 import { VideoCategory } from '../types/VideoCategory';
-import Combatant from 'main/Combatant';
 
 /**
  * Arena match class.
