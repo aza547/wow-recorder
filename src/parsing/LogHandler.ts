@@ -282,21 +282,24 @@ export default abstract class LogHandler {
   protected processCombatant(
     srcGUID: string,
     srcNameRealm: string,
-    srcFlags: number
+    srcFlags: number,
+    allowNew: boolean
   ) {
+    let combatant: Combatant | undefined;
+
     if (!this.activity) {
-      return;
+      return combatant;
     }
 
     // Logs sometimes emit this GUID and we don't want to include it.
     // No idea what causes it. Seems really common but not exlusive on
     // "Shadow Word: Death" casts.
     if (srcGUID === '0000000000000000') {
-      return;
+      return combatant;
     }
 
     if (!isUnitPlayer(srcFlags)) {
-      return;
+      return combatant;
     }
 
     // We check if we already know the playerGUID here, no point updating it
@@ -310,12 +313,19 @@ export default abstract class LogHandler {
     // Even if the combatant exists already we still update it with the info it
     // may not have yet. We can't tell the name, realm or if it's the player
     // from COMBATANT_INFO events.
-    const combatant =
-      this.activity.getCombatant(srcGUID) || new Combatant(srcGUID);
+    combatant = this.activity.getCombatant(srcGUID);
 
-    // Can only hit this if we got a hit from the activity.getCombatant call above.
+    if (allowNew && combatant === undefined) {
+      // We've failed to get a pre-existing combatant, but we are allowed to add it.
+      combatant = new Combatant(srcGUID);
+    } else if (combatant === undefined) {
+      // We've failed to get a pre-existing combatant, and we're not allowed to add it.
+      return combatant;
+    }
+
     if (combatant.isFullyDefined()) {
-      return;
+      // No point doing anything more here, we already know all the details.
+      return combatant;
     }
 
     [combatant.name, combatant.realm] = ambiguate(srcNameRealm);

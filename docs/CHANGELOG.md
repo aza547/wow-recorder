@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 373](https://github.com/aza547/wow-recorder/issues/373) - Fixed an issue where the Mythic+ UI didn't display correctly due to combatant bleed.
 
 ## [3.10.0] - 2023-04-10
 ### Added

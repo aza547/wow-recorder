@@ -445,8 +445,13 @@ export default class RetailLogHandler extends LogHandler {
     const srcGUID = line.arg(1);
     const srcFlags = parseInt(line.arg(3), 16);
     const srcNameRealm = line.arg(2);
-    // Maybe if BG call minimal processCombatant -- i.e. only care about self?
-    this.processCombatant(srcGUID, srcNameRealm, srcFlags);
+
+    this.processCombatant(
+      srcGUID,
+      srcNameRealm,
+      srcFlags,
+      this.isBattleground()
+    );
   }
 
   private handleSpellCastSuccess(line: LogLine) {
@@ -454,23 +459,26 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
-    if (this.activity.category !== VideoCategory.Battlegrounds) {
-      // We're always going to have COMBATANT_INFO in all categories
-      // but battlegrounds in retail.
-      return;
-    }
-
     const srcGUID = line.arg(1);
     const srcNameRealm = line.arg(2);
     const srcFlags = parseInt(line.arg(3), 16);
-    const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
 
-    if (!combatant) {
-      return;
-    }
+    const combatant = this.processCombatant(
+      srcGUID,
+      srcNameRealm,
+      srcFlags,
+      this.isBattleground()
+    );
 
-    if (combatant.specID !== undefined) {
-      // If we already have a specID for this combatant.
+    if (
+      combatant === undefined ||
+      combatant.specID !== undefined ||
+      !this.isBattleground()
+    ) {
+      // Nothing to do here either of:
+      //   - No combatant was processed (e.g. it's not a player)
+      //   - We already know their spec (we've already processed them)
+      //   - It's not a BG (every other retail activity fires COMBATANT_INFO)
       return;
     }
 

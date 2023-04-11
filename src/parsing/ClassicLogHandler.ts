@@ -70,9 +70,13 @@ export default class ClassicLogHandler extends LogHandler {
     const alreadyKnowCombatant =
       this.activity.getCombatant(srcGUID) !== undefined;
 
-    // Maybe if BG call minimal processCombatant -- i.e. only care about self?
     const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
-    if (!combatant) return;
+
+    if (combatant === undefined) {
+      // It's not an event we want to add a combatant for.
+      return;
+    }
+
     const isEnemyCombatant = combatant.teamID === 0;
 
     // If it's the first time we have spotted an enemy combatant in arena,
@@ -164,12 +168,13 @@ export default class ClassicLogHandler extends LogHandler {
     const srcFlags = parseInt(line.arg(3), 16);
     const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
 
-    if (!combatant) {
+    if (combatant === undefined) {
+      // Not an event we can add a combatant for.
       return;
     }
 
     if (combatant.specID !== undefined) {
-      // If we already have a specID for this combatant.
+      // If we already have a specID for this combatant, no point continuing.
       return;
     }
 
@@ -264,18 +269,22 @@ export default class ClassicLogHandler extends LogHandler {
     srcFlags: number
   ) {
     if (!this.activity) {
-      return;
+      return undefined;
     }
 
-    const combatant = super.processCombatant(srcGUID, srcNameRealm, srcFlags);
+    const combatant = super.processCombatant(
+      srcGUID,
+      srcNameRealm,
+      srcFlags,
+      true
+    );
 
-    if (!combatant) {
-      return;
+    if (combatant === undefined) {
+      return combatant;
     }
 
-    // Classic doesn't have team IDs, we cheat a bit here
-    // and always assign the player team 1 to share logic with
-    // retail.
+    // Classic doesn't have team IDs, we cheat a bit here and always assign
+    // the player team 1 to share logic with retail.
     if (isUnitFriendly(srcFlags)) {
       combatant.teamID = 1;
     } else {

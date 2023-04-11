@@ -11,14 +11,17 @@ interface IProps {
 
 const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
   const { video } = props;
-  const { combatants } = video;
+  let { combatants } = video;
 
-  if (combatants === undefined) {
+  if (combatants === undefined || combatants.length === 0) {
     return <></>;
   }
 
-  if (combatants.length > 5 || combatants.length === 0) {
-    return <></>;
+  if (combatants.length > 5) {
+    // Handle the case that there is somehow extra combatants by just taking
+    // the first 5. This shouldn't really happen, but initially had problems
+    // with outsiders bleeding into the run.
+    combatants = combatants.slice(0, 5);
   }
 
   const tanksAndHeals = combatants.filter((combatant: RawCombatant) => {
