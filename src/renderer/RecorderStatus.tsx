@@ -40,9 +40,13 @@ export default function RecorderStatus(props: IProps) {
     if (recorderStatus === RecStatus.Recording) {
       return (
         <>
-          <Typography sx={{ color: 'white' }}>
-            Warcraft Recorder is currently recording. You can force the
-            recording to end, but this should never be required.
+          <Typography sx={{ color: '#bb4420', m: 1 }}>
+            Warcraft Recorder is currently recording.
+          </Typography>
+          <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
+            You can force the recording to end. Normally this should not be
+            required. This can help end a failed Mythic+ run that would
+            otherwise need a few minutes to wrap up.
           </Typography>
           <Box
             sx={{
@@ -175,7 +179,7 @@ export default function RecorderStatus(props: IProps) {
         <Box
           sx={{
             border: '1px solid white',
-            borderRadius: '3%',
+            borderRadius: '1%',
             p: 1,
             width: '400px',
             bgcolor: '#272e48',
