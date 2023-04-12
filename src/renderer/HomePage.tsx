@@ -8,8 +8,12 @@ import {
 } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
 import React from 'react';
-import { RendererVideoState, TNavigatorState } from 'main/types';
-import { getLatestCategory, getNumVideos } from './rendererutils';
+import { RendererVideo, RendererVideoState, TNavigatorState } from 'main/types';
+import {
+  getLatestCategory,
+  getNumVideos,
+  getRecentVideos,
+} from './rendererutils';
 import { VideoJS } from './VideoJS';
 import VideoButton from './VideoButton';
 
@@ -23,9 +27,9 @@ const categories = Object.values(VideoCategory);
 const HomePage: React.FC<IProps> = (props: IProps) => {
   const { videoState, setNavigation } = props;
   const latestCategory = getLatestCategory(videoState);
-  const categoryIndex = categories.indexOf(latestCategory);
   const numVideos = getNumVideos(videoState);
   const haveVideos = numVideos > 0;
+  const recentVideos = getRecentVideos(videoState);
 
   const openSetupInstructions = () => {
     window.electron.ipcRenderer.sendMessage('openURL', [
@@ -33,10 +37,14 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     ]);
   };
 
-  const goToLatestVideo = () => {
+  const handleSelectVideo = (video: RendererVideo) => {
+    const { category } = video;
+    const categoryIndex = categories.indexOf(category);
+    const videoIndex = videoState[category].indexOf(video);
+
     setNavigation({
       categoryIndex,
-      videoIndex: 0,
+      videoIndex,
     });
   };
 
@@ -44,6 +52,51 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     const video = videoState[latestCategory][0];
     const videoFullPath = video.fullPath;
     return <VideoJS id="video-player" key={videoFullPath} video={video} />;
+  };
+
+  const renderRecentVideoList = () => {
+    return (
+      <Box
+        sx={{
+          m: 2,
+          width: '75%',
+          height: '300px',
+          overflowY: 'scroll',
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': {
+            width: '1em',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: '#888',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#555',
+          },
+        }}
+      >
+        <List sx={{ width: '100%', p: 0 }}>
+          {recentVideos.map((video) => {
+            return (
+              <ListItem
+                disablePadding
+                key={video.fullPath}
+                sx={{ width: '100%' }}
+              >
+                <ListItemButton
+                  onClick={() => handleSelectVideo(video)}
+                  sx={{ width: '100%', pt: '2px', pb: '2px' }}
+                >
+                  <VideoButton key={video.fullPath} video={video} />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+      </Box>
+    );
   };
 
   const renderLatestVideo = () => {
@@ -62,35 +115,15 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           sx={{
             height: '100%',
             width: '75%',
-            mt: 2,
-            mb: 2,
+            mt: 1,
             border: '1px solid black',
             borderRadius: '0%',
-            boxShadow: '5px 10px 8px 10px black',
+            boxShadow: '-3px -3px 5px 5px black',
           }}
         >
           {getLatestVideoPanel()}
         </Box>
-        <Box
-          sx={{
-            width: '75%',
-          }}
-        >
-          <List sx={{ width: '100%' }}>
-            <ListItem
-              disablePadding
-              key={videoState[latestCategory][0].fullPath}
-              sx={{ width: '100%' }}
-            >
-              <ListItemButton onClick={goToLatestVideo}>
-                <VideoButton
-                  key={videoState[latestCategory][0].fullPath}
-                  video={videoState[latestCategory][0]}
-                />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Box>
+        {renderRecentVideoList()}
       </Box>
     );
   };
@@ -153,29 +186,18 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
       }}
     >
       <Typography
-        variant="h2"
-        align="center"
-        sx={{
-          color: '#bb4220',
-          fontFamily: '"Arial",sans-serif',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
-        Welcome!
-      </Typography>
-      <Typography
         variant="h6"
         align="center"
         sx={{
           color: 'white',
           fontFamily: '"Arial",sans-serif',
+          m: 1,
           textShadow:
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        You have {numVideos} videos saved, view the latest below or select a
-        category.
+        You have {numVideos} videos saved, view the most recent below or select
+        a category.
       </Typography>
 
       {haveVideos && renderLatestVideo()}

@@ -246,6 +246,27 @@ const getLatestCategory = (videoState: RendererVideoState) => {
   return categories[latestDateIndex];
 };
 
+const getRecentVideos = (videoState: RendererVideoState) => {
+  const categories = Object.values(VideoCategory);
+  const allVideos: RendererVideo[] = [];
+
+  categories.forEach((category) => {
+    videoState[category].forEach((vid) => {
+      allVideos.push(vid);
+    });
+  });
+
+  // Sort in reverse chronological order.
+  const sortedVideos = allVideos.sort((a, b) => {
+    const dateA = a.mtime;
+    const dateB = b.mtime;
+    return dateA > dateB ? -1 : 1;
+  });
+
+  // Return most recent 10 videos.
+  return sortedVideos.slice(0, 10);
+};
+
 /**
  * Get empty video state. This is duplicated here because we can't access
  * it in utils.ts on the frontend.
@@ -560,6 +581,7 @@ export {
   getNumVideos,
   getTotalDuration,
   getLatestCategory,
+  getRecentVideos,
   getEmptyState,
   getVideoResultText,
   getInstanceDifficultyText,
