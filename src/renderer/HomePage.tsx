@@ -9,12 +9,7 @@ import {
 import { VideoCategory } from 'types/VideoCategory';
 import React from 'react';
 import { RendererVideo, RendererVideoState, TNavigatorState } from 'main/types';
-import {
-  getLatestCategory,
-  getNumVideos,
-  getRecentVideos,
-} from './rendererutils';
-import { VideoJS } from './VideoJS';
+import { getNumVideos, getRecentVideos } from './rendererutils';
 import VideoButton from './VideoButton';
 
 interface IProps {
@@ -26,7 +21,6 @@ const categories = Object.values(VideoCategory);
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
   const { videoState, setNavigation } = props;
-  const latestCategory = getLatestCategory(videoState);
   const numVideos = getNumVideos(videoState);
   const haveVideos = numVideos > 0;
   const recentVideos = getRecentVideos(videoState);
@@ -48,83 +42,26 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     });
   };
 
-  const getLatestVideoPanel = () => {
-    const video = videoState[latestCategory][0];
-    const videoFullPath = video.fullPath;
-    return <VideoJS id="video-player" key={videoFullPath} video={video} />;
-  };
-
   const renderRecentVideoList = () => {
     return (
-      <Box
-        sx={{
-          m: 2,
-          width: '75%',
-          height: '300px',
-          overflowY: 'scroll',
-          scrollbarWidth: 'thin',
-          '&::-webkit-scrollbar': {
-            width: '1em',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: '#f1f1f1',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: '#888',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: '#555',
-          },
-        }}
-      >
-        <List sx={{ width: '100%', p: 0 }}>
-          {recentVideos.map((video) => {
-            return (
-              <ListItem
-                disablePadding
-                key={video.fullPath}
+      <List sx={{ width: '100%' }}>
+        {recentVideos.map((video) => {
+          return (
+            <ListItem
+              disablePadding
+              key={video.fullPath}
+              sx={{ width: '100%' }}
+            >
+              <ListItemButton
+                onClick={() => handleSelectVideo(video)}
                 sx={{ width: '100%' }}
               >
-                <ListItemButton
-                  onClick={() => handleSelectVideo(video)}
-                  sx={{ width: '100%', pt: '2px', pb: '2px' }}
-                >
-                  <VideoButton key={video.fullPath} video={video} />
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
-        </List>
-      </Box>
-    );
-  };
-
-  const renderLatestVideo = () => {
-    return (
-      <Box
-        sx={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-        }}
-      >
-        <Box
-          sx={{
-            height: '100%',
-            width: '75%',
-            mt: 1,
-            border: '1px solid black',
-            borderRadius: '0%',
-            boxShadow: '-3px -3px 5px 5px black',
-          }}
-        >
-          {getLatestVideoPanel()}
-        </Box>
-        {renderRecentVideoList()}
-      </Box>
+                <VideoButton key={video.fullPath} video={video} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
     );
   };
 
@@ -175,34 +112,25 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContet: 'center',
-        flexDirection: 'column',
-        width: '100%',
-        height: '100%',
-      }}
-    >
+    <>
       <Typography
         variant="h6"
         align="center"
         sx={{
           color: 'white',
           fontFamily: '"Arial",sans-serif',
-          m: 1,
+          mt: 1,
           textShadow:
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        You have {numVideos} videos saved, view the most recent below or select
-        a category.
+        You have {numVideos} videos saved, select from the most recent below or
+        choose a category.
       </Typography>
 
-      {haveVideos && renderLatestVideo()}
+      {haveVideos && renderRecentVideoList()}
       {!haveVideos && renderFirstTimeUserPrompt()}
-    </Box>
+    </>
   );
 };
 

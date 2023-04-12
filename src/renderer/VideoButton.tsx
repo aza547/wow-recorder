@@ -123,7 +123,7 @@ export default function VideoButton(props: IProps) {
                 color: 'white',
                 fontWeight: '600',
                 fontFamily: '"Arial",sans-serif',
-                fontSize: '2rem',
+                fontSize: '1rem',
                 textShadow:
                   '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
               }}
@@ -183,7 +183,7 @@ export default function VideoButton(props: IProps) {
                 color: 'white',
                 fontWeight: '600',
                 fontFamily: '"Arial",sans-serif',
-                fontSize: '2rem',
+                fontSize: '1rem',
                 textShadow:
                   '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
               }}
