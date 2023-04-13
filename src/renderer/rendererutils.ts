@@ -246,7 +246,7 @@ const getLatestCategory = (videoState: RendererVideoState) => {
   return categories[latestDateIndex];
 };
 
-const getRecentVideos = (videoState: RendererVideoState) => {
+const getSortedVideos = (videoState: RendererVideoState) => {
   const categories = Object.values(VideoCategory);
   const allVideos: RendererVideo[] = [];
 
@@ -263,8 +263,7 @@ const getRecentVideos = (videoState: RendererVideoState) => {
     return dateA > dateB ? -1 : 1;
   });
 
-  // Return most recent 10 videos.
-  return sortedVideos.slice(0, 10);
+  return sortedVideos;
 };
 
 /**
@@ -445,13 +444,13 @@ const getResultColor = (video: RendererVideo) => {
       // a better way to pass it through. Generated with: https://cssgradient.io/.
       // The key is the number of wins.
       const soloShuffleResultColors = [
-        'rgb(0,   255, 42, 0.3)',
-        'rgb(34,  255,  0, 0.3)',
-        'rgb(150, 255,  0, 0.3)',
-        'rgb(255, 218,  0, 0.3)',
-        'rgb(255, 105,  0, 0.3)',
-        'rgb(255,  45,  0, 0.3)',
-        'rgb(255,   0,  0, 0.3)',
+        'rgb(53,  164, 50, 0.3)',
+        'rgb(46,  171, 27, 0.3)',
+        'rgb(112, 170, 30, 0.3)',
+        'rgb(171, 150, 30, 0.3)',
+        'rgb(171, 86,  26, 0.3)',
+        'rgb(175, 50,  23, 0.3)',
+        'rgb(156, 21,  21, 0.3)',
       ].reverse();
 
       return soloShuffleResultColors[soloShuffleRoundsWon];
@@ -581,7 +580,7 @@ export {
   getNumVideos,
   getTotalDuration,
   getLatestCategory,
-  getRecentVideos,
+  getSortedVideos,
   getEmptyState,
   getVideoResultText,
   getInstanceDifficultyText,

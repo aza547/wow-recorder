@@ -8,27 +8,78 @@ import {
 } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
 import React from 'react';
-import { RendererVideo, RendererVideoState, TNavigatorState } from 'main/types';
-import { getNumVideos, getRecentVideos } from './rendererutils';
+import {
+  RendererVideo,
+  RendererVideoState,
+  TAppState,
+  TNavigatorState,
+} from 'main/types';
+import { getNumVideos, getSortedVideos } from './rendererutils';
 import VideoButton from './VideoButton';
 
 interface IProps {
   videoState: RendererVideoState;
+  appState: TAppState;
+  setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
 const categories = Object.values(VideoCategory);
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
-  const { videoState, setNavigation } = props;
+  const { videoState, setNavigation, appState, setAppState } = props;
+  const { numVideosDisplayed } = appState;
   const numVideos = getNumVideos(videoState);
   const haveVideos = numVideos > 0;
-  const recentVideos = getRecentVideos(videoState);
+  const recentVideos = getSortedVideos(videoState);
+  const slicedVideos = recentVideos.slice(0, numVideosDisplayed);
+  const moreVideosRemain = slicedVideos.length !== recentVideos.length;
 
   const openSetupInstructions = () => {
     window.electron.ipcRenderer.sendMessage('openURL', [
       'https://github.com/aza547/wow-recorder#readme',
     ]);
+  };
+
+  const loadMoreVideos = () => {
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        numVideosDisplayed: prevState.numVideosDisplayed + 10,
+      };
+    });
+  };
+
+  const getShowMoreButton = () => {
+    return (
+      <Box
+        key="show-more-button-box"
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          height: '50px',
+        }}
+      >
+        <Button
+          key="show-more-button"
+          variant="outlined"
+          onClick={loadMoreVideos}
+          sx={{
+            mb: 1,
+            color: 'white',
+            borderColor: 'white',
+            ':hover': {
+              color: '#bb4420',
+              borderColor: '#bb4420',
+            },
+          }}
+        >
+          Load More
+        </Button>
+      </Box>
+    );
   };
 
   const handleSelectVideo = (video: RendererVideo) => {
@@ -42,10 +93,29 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     });
   };
 
+  const renderVideoCountText = () => {
+    return (
+      <Typography
+        variant="h6"
+        align="center"
+        sx={{
+          color: 'white',
+          fontFamily: '"Arial",sans-serif',
+          mt: 1,
+          textShadow:
+            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+        }}
+      >
+        You have {numVideos} videos saved, select from the most recent below or
+        choose a category.
+      </Typography>
+    );
+  };
+
   const renderRecentVideoList = () => {
     return (
       <List sx={{ width: '100%' }}>
-        {recentVideos.map((video) => {
+        {slicedVideos.map((video) => {
           return (
             <ListItem
               disablePadding
@@ -61,6 +131,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
             </ListItem>
           );
         })}
+        {moreVideosRemain && getShowMoreButton()}
       </List>
     );
   };
@@ -113,21 +184,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
 
   return (
     <>
-      <Typography
-        variant="h6"
-        align="center"
-        sx={{
-          color: 'white',
-          fontFamily: '"Arial",sans-serif',
-          mt: 1,
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
-        You have {numVideos} videos saved, select from the most recent below or
-        choose a category.
-      </Typography>
-
+      {haveVideos && renderVideoCountText()}
       {haveVideos && renderRecentVideoList()}
       {!haveVideos && renderFirstTimeUserPrompt()}
     </>

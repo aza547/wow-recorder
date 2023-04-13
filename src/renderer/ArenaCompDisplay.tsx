@@ -3,6 +3,7 @@ import React from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { specializationById } from 'main/constants';
 import { RawCombatant, RendererVideo } from 'main/types';
+import { VideoCategory } from 'types/VideoCategory';
 import * as Images from './images';
 import { getPlayerTeamID, getWoWClassColor } from './rendererutils';
 
@@ -12,7 +13,8 @@ interface IProps {
 
 const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   const { video } = props;
-  const { combatants } = video;
+  const { combatants, category } = video;
+  const isSoloShuffle = category === VideoCategory.SoloShuffle;
 
   if (combatants === undefined) {
     return <></>;
@@ -39,6 +41,14 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   if (enemy.length !== friendly.length) {
     return <></>;
   }
+
+  const maybeIncludeVersus = () => {
+    if (isSoloShuffle) {
+      return <></>;
+    }
+
+    return <CloseIcon sx={{ color: 'white' }} />;
+  };
 
   const renderEnemyCombatant = (combatant: RawCombatant) => {
     let nameColor = 'grey';
@@ -175,7 +185,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
       >
         {enemy.map(renderEnemyCombatant)}
       </Box>
-      <CloseIcon sx={{ color: 'white' }} />
+      {maybeIncludeVersus()}
       <Box
         key="friendlies"
         sx={{

@@ -109,6 +109,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         sx={{
           display: 'flex',
           flexDirection: 'column',
+          alignItems: 'center',
           overflowY: 'scroll',
           height: '100%',
           width: '100%',
@@ -127,7 +128,12 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           },
         }}
       >
-        <HomePage videoState={videoState} setNavigation={setNavigation} />
+        <HomePage
+          videoState={videoState}
+          appState={appState}
+          setAppState={setAppState}
+          setNavigation={setNavigation}
+        />
       </Box>
     );
   };
