@@ -228,6 +228,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
         buttons={['close']}
         default="close"
         onClose={closeDialog}
+        sx={{backgroundColor: '#1c1f27'}}
       >
         <DialogContentText>
           The directory you picked does not look like a directory for World of
