@@ -37,6 +37,7 @@ type ConfirmationDialogProps = {
 const useStyles = makeStyles()({
   dialog: {
     '.MuiDialog-paper': {
+      backgroundColor: '#1a233a',
       maxHeight: '750px',
       maxWidth: '1250px',
       color: 'white',
