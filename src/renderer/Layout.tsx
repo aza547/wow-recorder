@@ -172,7 +172,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
   const getVideoSelection = () => {
     const categoryState = videoState[category];
-    const videoFilter = new VideoFilter(videoFilterQuery);
+    const videoFilter = new VideoFilter(category, videoFilterQuery);
 
     const filteredCategoryState = categoryState.filter((video) =>
       videoFilter.filter(video)
@@ -215,7 +215,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder={VideoFilter.getSuggestions()}
+                placeholder={VideoFilter.getSuggestions(category)}
                 id="search-bar"
                 onChange={debouncedFilter}
                 sx={{
