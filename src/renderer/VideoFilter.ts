@@ -125,7 +125,17 @@ export default class VideoFilter {
    * Set arena filters.
    */
   private setArenaFilters() {
-    if (this.video.result) {
+    if (this.video.category === VideoCategory.SoloShuffle) {
+      const wins = this.video.soloShuffleRoundsWon;
+      const played = this.video.soloShuffleRoundsPlayed;
+
+      if (wins !== undefined && played !== undefined) {
+        const losses = played - wins;
+        this.addStringFilter(`${wins}-${losses}}`);
+        this.addStringFilter(`${wins}/${losses}}`);
+        this.addStringFilter(`${wins}:${losses}}`);
+      }
+    } else if (this.video.result) {
       this.addStringFilter('win');
     } else {
       this.addStringFilter('loss');
@@ -269,6 +279,10 @@ export default class VideoFilter {
 
     if (category === VideoCategory.Battlegrounds) {
       return 'Suggestions: warsong gulch';
+    }
+
+    if (category === VideoCategory.SoloShuffle) {
+      return 'Suggestions: dalaran 6:0';
     }
 
     return 'Suggestions: win enigma crucible arcane';

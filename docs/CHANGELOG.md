@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 370](https://github.com/aza547/wow-recorder/issues/370) - Show more than the most recent video on home page.
 - [Issue 371](https://github.com/aza547/wow-recorder/issues/371) - Include Battleground names in the UI.
 - [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Change the home page to be less fancy and more functional.
+- [Issue 359](https://github.com/aza547/wow-recorder/issues/359) - Add lots of support querys to the filter bar.
 
 ### Fixed
 
