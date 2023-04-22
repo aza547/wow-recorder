@@ -173,14 +173,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const getVideoSelection = () => {
     const categoryState = videoState[category];
 
-    const videoFilter = new VideoFilter(
-      category,
-      categoryState,
-      videoFilterQuery
-    );
-
     const filteredCategoryState = categoryState.filter((video) =>
-      videoFilter.filter(video)
+      new VideoFilter(videoFilterQuery, video).filter()
     );
 
     const slicedCategoryState = filteredCategoryState.slice(
