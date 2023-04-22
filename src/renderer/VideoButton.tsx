@@ -30,6 +30,7 @@ import * as Images from './images';
 import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
 import RaidEncounterInfo from './RaidEncounterInfo';
+import BattlegroundInfo from './BattlegroundInfo';
 
 interface IProps {
   video: RendererVideo;
@@ -285,6 +286,7 @@ export default function VideoButton(props: IProps) {
           {isArena && <ArenaCompDisplay video={video} />}
           {isMythicPlus && <DungeonCompDisplay video={video} />}
           {isRaid && <RaidEncounterInfo video={video} />}
+          {isBattleground && <BattlegroundInfo video={video} />}
         </Box>
 
         <Box

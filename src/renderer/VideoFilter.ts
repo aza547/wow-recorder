@@ -3,6 +3,8 @@ import {
   raidEncountersById,
   raidInstances,
   retailArenas,
+  retailBattlegrounds,
+  specializationById,
 } from 'main/constants';
 import { RendererVideo } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
@@ -20,9 +22,6 @@ type FilterType = {
  * VideoFilter class.
  *
  * TO DO:
- * - Filters player names
- * - Filters for spec names
- * - Filters for BG names
  * - Improve suggestions / autogenerate them
  * - Write UTs (lol)
  */
@@ -112,6 +111,81 @@ export default class VideoFilter {
   };
 
   /*
+   * Filter fn for player names.
+   */
+  private static playerNameFilterFn = (name: string) => {
+    return (video: RendererVideo) => {
+      if (video.combatants === undefined) {
+        return false;
+      }
+
+      return video.combatants
+        .map((combatant) => combatant._name?.toLowerCase())
+        .includes(name);
+    };
+  };
+
+  /*
+   * Filter fn for combatant realms.
+   */
+  private static playerRealmFilterFn = (realm: string) => {
+    return (video: RendererVideo) => {
+      if (video.combatants === undefined) {
+        return false;
+      }
+
+      return video.combatants
+        .map((combatant) => combatant._realm?.toLowerCase())
+        .includes(realm);
+    };
+  };
+
+  /*
+   * Filter fn for combatant spec.
+   */
+  private static playerSpecFilterFn = (specID: number) => {
+    return (video: RendererVideo) => {
+      if (video.combatants === undefined) {
+        return false;
+      }
+
+      return video.combatants
+        .map((combatant) => combatant._specID)
+        .includes(specID);
+    };
+  };
+
+  /*
+   * Filters for specs.
+   */
+  private static specFilter: FilterType[] = Object.keys(specializationById)
+    .map((specID) => parseInt(specID, 10))
+    .map((specID) => {
+      const specObject = specializationById[specID];
+
+      return {
+        base: specObject.name.toLowerCase(),
+        values: specObject.name.toLowerCase().split(' '),
+        fn: VideoFilter.playerSpecFilterFn(specID),
+      };
+    });
+
+  /*
+   * Filters for classes.
+   */
+  private static classFilter: FilterType[] = Object.keys(specializationById)
+    .map((specID) => parseInt(specID, 10))
+    .map((specID) => {
+      const specObject = specializationById[specID];
+
+      return {
+        base: specObject.label.toLowerCase(),
+        values: specObject.label.toLowerCase().split(' '),
+        fn: VideoFilter.playerSpecFilterFn(specID),
+      };
+    });
+
+  /*
    * Filters for dungeon names.
    */
   private static dungeonNameFilters: FilterType[] = Object.values(
@@ -144,6 +218,44 @@ export default class VideoFilter {
 
           const knownDungeonName = dungeonsByZoneId[video.zoneID].toLowerCase();
           return knownDungeonName === dungeonName;
+        },
+      };
+    });
+
+  /*
+   * Filters for battleground names.
+   */
+  private static battlegroundNameFilters: FilterType[] = Object.values(
+    retailBattlegrounds
+  )
+    .map((s) => s.toLowerCase())
+    .map((battlegroundName) => {
+      // Convert the dungeon name to individual words and strip out
+      // common words that are unhelpfully ambigous.
+      const values = battlegroundName
+        .split(' ')
+        .filter((s) => !['of', 'the', 'to', 'the'].includes(s));
+
+      return {
+        base: battlegroundName,
+        values,
+        fn: (video: RendererVideo) => {
+          if (video.zoneID === undefined) {
+            return false;
+          }
+
+          const knownBattleground = Object.prototype.hasOwnProperty.call(
+            retailBattlegrounds,
+            video.zoneID
+          );
+
+          if (!knownBattleground) {
+            return false;
+          }
+
+          const knownDungeonName =
+            retailBattlegrounds[video.zoneID].toLowerCase();
+          return knownDungeonName === battlegroundName;
         },
       };
     });
@@ -339,10 +451,40 @@ export default class VideoFilter {
    * @param category category the user has selected
    * @param query string the user inputs
    */
-  constructor(category: VideoCategory, query: string) {
+  constructor(
+    category: VideoCategory,
+    categoryState: RendererVideo[],
+    query: string
+  ) {
+    console.log(categoryState);
+
     if (query === '') {
       return;
     }
+
+    const combatantNamesForFilters: string[] = [];
+    const combatantRealmsForFilters: string[] = [];
+
+    categoryState.forEach((video) => {
+      if (video.combatants === undefined) {
+        // No combatants in battlegrounds
+        return;
+      }
+
+      video.combatants.forEach((combatant) => {
+        const name = combatant._name?.toLowerCase();
+
+        if (name !== undefined && !combatantNamesForFilters.includes(name)) {
+          combatantNamesForFilters.push(name);
+        }
+
+        const realm = combatant._realm?.toLowerCase();
+
+        if (realm !== undefined && !combatantRealmsForFilters.includes(realm)) {
+          combatantRealmsForFilters.push(realm);
+        }
+      });
+    });
 
     // Split the input query but space and lowercase it.
     const filterArray = query
@@ -352,8 +494,6 @@ export default class VideoFilter {
 
     // Loop through all the possible filters.
     filterArray.forEach((filter: string) => {
-      const initialFilterLength = this.filters.length;
-
       if (category === VideoCategory.Raids) {
         if (VideoFilter.raidKillFilter.values.includes(filter)) {
           this.filters.push(VideoFilter.raidKillFilter);
@@ -452,6 +592,16 @@ export default class VideoFilter {
         });
       }
 
+      if (category === VideoCategory.Battlegrounds) {
+        VideoFilter.battlegroundNameFilters.forEach((battlegroundNameFilter) =>
+          battlegroundNameFilter.values.forEach((s) => {
+            if (s.includes(filter)) {
+              this.filters.push(battlegroundNameFilter);
+            }
+          })
+        );
+      }
+
       if (VideoFilter.todayFilters.values.includes(filter)) {
         this.filters.push(VideoFilter.todayFilters);
       }
@@ -460,8 +610,48 @@ export default class VideoFilter {
         this.filters.push(VideoFilter.yesterdayFilters);
       }
 
-      if (initialFilterLength === this.filters.length) {
-        // Filters haven't changed so the user must have typed something invalid.
+      VideoFilter.specFilter.forEach((specFilter) =>
+        specFilter.values.forEach((s) => {
+          if (s.includes(filter)) {
+            this.filters.push(specFilter);
+          }
+        })
+      );
+
+      VideoFilter.classFilter.forEach((classFilter) =>
+        classFilter.values.forEach((s) => {
+          if (s.includes(filter)) {
+            this.filters.push(classFilter);
+          }
+        })
+      );
+
+      combatantNamesForFilters
+        .filter((name) => name.includes(filter))
+        .forEach((name) => {
+          const nameFilter: FilterType = {
+            base: name,
+            values: [name],
+            fn: VideoFilter.playerNameFilterFn(name),
+          };
+
+          this.filters.push(nameFilter);
+        });
+
+      combatantRealmsForFilters
+        .filter((realm) => realm.includes(filter))
+        .forEach((realm) => {
+          const nameFilter: FilterType = {
+            base: realm,
+            values: [realm],
+            fn: VideoFilter.playerRealmFilterFn(realm),
+          };
+
+          this.filters.push(nameFilter);
+        });
+
+      if (this.filters.length === 0) {
+        // User typed something invalid
         this.invalid = true;
       }
     });
@@ -478,11 +668,11 @@ export default class VideoFilter {
       return true;
     }
 
-    let show = true;
+    let show = false;
 
     this.filters.forEach((filter) => {
-      if (!filter.fn(video)) {
-        show = false;
+      if (filter.fn(video)) {
+        show = true;
       }
     });
 
@@ -491,13 +681,13 @@ export default class VideoFilter {
 
   static getSuggestions(category: VideoCategory) {
     if (category === VideoCategory.MythicPlus) {
-      return 'Suggestions: timed temple yesterday +18';
+      return 'Suggestions: timed temple yesterday +18 priest';
     }
 
     if (category === VideoCategory.Raids) {
-      return 'Suggestions: kill today mythic';
+      return 'Suggestions: kill today mythic destruction';
     }
 
-    return 'Suggestions: win enigma crucible';
+    return 'Suggestions: win enigma crucible arcane';
   }
 }
