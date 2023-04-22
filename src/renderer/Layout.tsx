@@ -110,22 +110,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          overflowY: 'scroll',
-          height: '100%',
+          height: 'calc(100% - 70px)',
           width: '100%',
-          scrollbarWidth: 'thin',
-          '&::-webkit-scrollbar': {
-            width: '1em',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: '#f1f1f1',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: '#888',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: '#555',
-          },
         }}
       >
         <HomePage

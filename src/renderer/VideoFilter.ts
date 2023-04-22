@@ -282,7 +282,7 @@ export default class VideoFilter {
     }
 
     if (category === VideoCategory.SoloShuffle) {
-      return 'Suggestions: dalaran 6:0';
+      return 'Suggestions: dalaran 6-0';
     }
 
     return 'Suggestions: win enigma crucible arcane';

@@ -16,6 +16,7 @@ import {
 } from 'main/types';
 import { getNumVideos, getSortedVideos } from './rendererutils';
 import VideoButton from './VideoButton';
+import { VideoJS } from './VideoJS';
 
 interface IProps {
   videoState: RendererVideoState;
@@ -28,6 +29,7 @@ const categories = Object.values(VideoCategory);
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
   const { videoState, setNavigation, appState, setAppState } = props;
+  const [recentIndex, setRecentIndex] = React.useState<number>(0);
   const { numVideosDisplayed } = appState;
   const numVideos = getNumVideos(videoState);
   const haveVideos = numVideos > 0;
@@ -82,57 +84,85 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const handleSelectVideo = (video: RendererVideo) => {
-    const { category } = video;
-    const categoryIndex = categories.indexOf(category);
-    const videoIndex = videoState[category].indexOf(video);
+  const handleSelectVideo = (video: RendererVideo, doubleClick: boolean) => {
+    if (doubleClick) {
+      const { category } = video;
+      const categoryIndex = categories.indexOf(category);
+      const videoIndex = videoState[category].indexOf(video);
 
-    setNavigation({
-      categoryIndex,
-      videoIndex,
-    });
+      setNavigation({
+        categoryIndex,
+        videoIndex,
+      });
+    } else {
+      setRecentIndex(slicedVideos.indexOf(video));
+    }
   };
 
   const renderVideoCountText = () => {
     return (
-      <Typography
-        variant="h6"
-        align="center"
-        sx={{
-          color: 'white',
-          fontFamily: '"Arial",sans-serif',
-          mt: 1,
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
-        You have {numVideos} videos saved, select from the most recent below or
-        choose a category.
-      </Typography>
+      <Box sx={{ height: '5%', width: '100%' }}>
+        <Typography
+          variant="h6"
+          align="center"
+          sx={{
+            color: 'white',
+            fontFamily: '"Arial",sans-serif',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          You have {numVideos} videos saved, select from the most recent below
+          or choose a category.
+        </Typography>
+      </Box>
     );
   };
 
   const renderRecentVideoList = () => {
     return (
-      <List sx={{ width: '100%' }}>
-        {slicedVideos.map((video) => {
-          return (
-            <ListItem
-              disablePadding
-              key={video.fullPath}
-              sx={{ width: '100%' }}
-            >
-              <ListItemButton
-                onClick={() => handleSelectVideo(video)}
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          overflowY: 'scroll',
+          mt: 1,
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': {
+            width: '1em',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: '#888',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#555',
+          },
+        }}
+      >
+        <List sx={{ width: '100%' }}>
+          {slicedVideos.map((video) => {
+            return (
+              <ListItem
+                disablePadding
+                key={video.fullPath}
                 sx={{ width: '100%' }}
               >
-                <VideoButton key={video.fullPath} video={video} />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-        {moreVideosRemain && getShowMoreButton()}
-      </List>
+                <ListItemButton
+                  onClick={() => handleSelectVideo(video, false)}
+                  onDoubleClick={() => handleSelectVideo(video, true)}
+                  sx={{ width: '100%' }}
+                >
+                  <VideoButton key={video.fullPath} video={video} />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+          <ListItem>{moreVideosRemain && getShowMoreButton()}</ListItem>
+        </List>
+      </Box>
     );
   };
 
@@ -182,8 +212,31 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const getVideoPanel = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          height: '150%',
+          width: '90%',
+          m: 2,
+          border: '1px solid black',
+          borderRadius: '0%',
+          boxShadow: '0px 0px 2px 2px black',
+        }}
+      >
+        <VideoJS
+          id="video-player"
+          key={slicedVideos[recentIndex].fullPath}
+          video={slicedVideos[recentIndex]}
+        />
+      </Box>
+    );
+  };
+
   return (
     <>
+      {haveVideos && getVideoPanel()}
       {haveVideos && renderVideoCountText()}
       {haveVideos && renderRecentVideoList()}
       {!haveVideos && renderFirstTimeUserPrompt()}
