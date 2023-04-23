@@ -195,6 +195,7 @@ const addVideoMarkers = (video: RendererVideo, player: Player) => {
       },
     },
     markers: videoMarkers,
+    onMarkerClick: () => false,
   });
 };
 

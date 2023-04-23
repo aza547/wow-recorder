@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 376](https://github.com/aza547/wow-recorder/issues/376) - Change seeking so clicking a video marker won't go to the start but to where the user clicked.
 
 ## [3.10.1] - 2023-04-11
 ### Changed
