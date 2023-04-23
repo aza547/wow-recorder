@@ -1,4 +1,4 @@
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Button, IconButton, Popover, Tooltip, Typography } from '@mui/material';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventIcon from '@mui/icons-material/Event';
@@ -59,7 +59,20 @@ export default function VideoButton(props: IProps) {
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
 
-  const deleteVideo = (event: React.SyntheticEvent) => {
+  const [deletePopoverAnchor, setDeletePopoverAnchor] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(deletePopoverAnchor);
+
+  const openDeletePopover = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setDeletePopoverAnchor(deletePopoverAnchor ? null : event.currentTarget);
+  };
+
+  const handleClose = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setDeletePopoverAnchor(null);
+  };
+
+  const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     window.electron.ipcRenderer.sendMessage('contextMenu', [
       'delete',
@@ -360,10 +373,51 @@ export default function VideoButton(props: IProps) {
           </Tooltip>
 
           <Tooltip title="Delete">
-            <IconButton onClick={deleteVideo}>
+            <IconButton onClick={openDeletePopover}>
               <DeleteForeverIcon sx={{ color: 'white' }} />
             </IconButton>
           </Tooltip>
+          <Popover
+            anchorEl={deletePopoverAnchor}
+            open={open}
+            onClose={handleClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                border: '1px solid white',
+                borderRadius: '1%',
+                p: 1,
+                width: '250px',
+                bgcolor: '#272e48',
+              }}
+            >
+              <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
+                Are you sure you want to permanently delete this video?
+              </Typography>
+              <Button
+                key="delete-video-button"
+                variant="outlined"
+                onClick={deleteVideo}
+                sx={{
+                  m: '4px',
+                  color: 'white',
+                  borderColor: 'white',
+                  ':hover': {
+                    color: '#bb4420',
+                    borderColor: '#bb4420',
+                  },
+                }}
+              >
+                I'm sure
+              </Button>
+            </Box>
+          </Popover>
         </Box>
       </Box>
     </Box>

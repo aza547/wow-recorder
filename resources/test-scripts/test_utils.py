@@ -1,7 +1,7 @@
 import datetime
 
-RETAIL_LOG_PATH = "D:/World of Warcraft/_retail_/Logs"
-CLASSIC_LOG_PATH = "D:/World of Warcraft/_classic_/Logs"
+RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs" 
+CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
 
 def replace_date(line):
     event_position = line.find("  ")

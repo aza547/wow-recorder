@@ -126,6 +126,9 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           width: '100%',
           height: '100%',
           overflowY: 'scroll',
+          display: 'flex',
+          alignContent: 'center',
+          justifyContent: 'center',
           mt: 1,
           scrollbarWidth: 'thin',
           '&::-webkit-scrollbar': {
@@ -142,7 +145,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           },
         }}
       >
-        <List sx={{ width: '100%' }}>
+        <List sx={{ width: '90%' }}>
           {slicedVideos.map((video) => {
             return (
               <ListItem
