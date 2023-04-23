@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
-## [3.10.1] - 2023-04-23
+## [3.10.2] - 2023-04-23
 ### Changed
 - [Issue 370](https://github.com/aza547/wow-recorder/issues/370) - Show more than the most recent video on home page.
 - [Issue 371](https://github.com/aza547/wow-recorder/issues/371) - Include Battleground names in the UI.
