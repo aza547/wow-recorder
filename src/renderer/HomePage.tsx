@@ -115,6 +115,20 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           You have {numVideos} videos saved, select from the most recent below
           or choose a category.
         </Typography>
+        <Typography
+          variant="h6"
+          align="center"
+          sx={{
+            color: 'white',
+            fontSize: '0.75rem',
+            fontFamily: '"Arial",sans-serif',
+            fontStyle: 'italic',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          Hint: double click to go full screen.
+        </Typography>
       </Box>
     );
   };
@@ -129,7 +143,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
           display: 'flex',
           alignContent: 'center',
           justifyContent: 'center',
-          mt: 1,
+          mt: 2,
           scrollbarWidth: 'thin',
           '&::-webkit-scrollbar': {
             width: '1em',
