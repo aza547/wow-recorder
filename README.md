@@ -35,3 +35,9 @@ I've created a dedicated discord for this project, feel free to join [here](http
 # Contributing
 
 If you're interested in getting involved please drop me a message on discord and I can give you access to our development channel. Also see [contributing](https://github.com/aza547/wow-recorder/blob/main/docs/CONTRIBUTING.md) docs.
+
+# Mentions
+
+The recording done by Warcraft Recorder is made possible by packaging up [OBS](https://obsproject.com/). We wouldn't stand a chance at providing something useful without it. Big thanks to the OBS developers.
+
+This application is also heavily reliant on the [OBS Studio Node Packge](https://github.com/stream-labs/obs-studio-node) to provide bindings to libOBS. Special mention for the folks over at [Streamlabs](https://streamlabs.com/) for open-sourcing the project. 

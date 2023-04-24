@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [3.10.3] - 2023-04-24
+### Fixed
+- [Issue 328](https://github.com/aza547/wow-recorder/issues/328) - Fix a bug where the installer didn't automatically install the Visual C++ Redistributable package from Microsoft.
+
 ## [3.10.2] - 2023-04-23
 ### Changed
 - [Issue 370](https://github.com/aza547/wow-recorder/issues/370) - Show more than the most recent video on home page.
