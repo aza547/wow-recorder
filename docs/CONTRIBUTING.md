@@ -47,6 +47,11 @@ You can use VSCode's JavaScript Debug terminal to step through the code, add bre
 
 <img src="https://i.imgur.com/zFIaGHa.png" width="200">
 
+## Debugging in Production with Dev Tools
+From [here](https://electron-react-boilerplate.js.org/docs/packaging).
+
+`npx cross-env DEBUG_PROD=true npm run package`
+
 ## Building OSN
 > Advice is not to build this and just get it from the folks at Streamlabs. I built it once, it was a total faff.
 > If you really need to build it, you can probably find some useful notes in the history of this doc. 
