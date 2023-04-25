@@ -6,8 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- [Issue 381](https://github.com/aza547/wow-recorder/issues/381) - Add "bookmarked" as a filter option.
+
 ### Changed
+
 ### Fixed
+- [Issue 381](https://github.com/aza547/wow-recorder/issues/381) - Fix a bug where the search bar query isn't cleared. 
 
 ## [3.10.3] - 2023-04-24
 ### Fixed

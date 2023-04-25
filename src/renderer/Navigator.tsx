@@ -44,7 +44,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       return {
         ...prevState,
         numVideosDisplayed: 10,
-        videoFilters: [],
+        videoFilterQuery: '',
       };
     });
   };

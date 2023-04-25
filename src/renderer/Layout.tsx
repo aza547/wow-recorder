@@ -38,13 +38,21 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const category = categories[categoryIndex];
 
   /**
-   * Update the state variable following a change of selected video.
+   * Update state variables following a change of selected video.
    */
   const handleChangeVideo = (index: number) => {
     setNavigation((prevState) => {
       return {
         ...prevState,
         videoIndex: index,
+      };
+    });
+
+    // Forget the query, the text field will reset on its own.
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        videoFilterQuery: '',
       };
     });
   };

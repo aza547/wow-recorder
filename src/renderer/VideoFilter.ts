@@ -119,6 +119,13 @@ export default class VideoFilter {
     } else if (isYesterday) {
       this.addStringFilter('yesterday');
     }
+
+    if (this.video.isProtected) {
+      this.addStringFilter('bookmarked');
+      this.addStringFilter('saved');
+      this.addStringFilter('protected');
+      this.addStringFilter('favourited favorited');
+    }
   }
 
   /**
@@ -270,21 +277,21 @@ export default class VideoFilter {
    */
   static getSuggestions(category: VideoCategory) {
     if (category === VideoCategory.MythicPlus) {
-      return 'Suggestions: timed temple yesterday +18 priest';
+      return 'Suggestions: timed temple yesterday +18 priest bookmarked';
     }
 
     if (category === VideoCategory.Raids) {
-      return 'Suggestions: kill today mythic destruction';
+      return 'Suggestions: kill today mythic destruction bookmarked';
     }
 
     if (category === VideoCategory.Battlegrounds) {
-      return 'Suggestions: warsong gulch';
+      return 'Suggestions: warsong gulch bookmarked';
     }
 
     if (category === VideoCategory.SoloShuffle) {
-      return 'Suggestions: dalaran 6-0';
+      return 'Suggestions: dalaran 6-0 bookmarked';
     }
 
-    return 'Suggestions: win enigma crucible arcane';
+    return 'Suggestions: win enigma crucible arcane bookmarked';
   }
 }
