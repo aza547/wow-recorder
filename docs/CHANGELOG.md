@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
-- [Issue 381](https://github.com/aza547/wow-recorder/issues/381) - Fix a bug where the search bar query isn't cleared. 
+- [Issue 381](https://github.com/aza547/wow-recorder/issues/381) - Fix a bug where the search bar query isn't cleared.
+- [Issue 383](https://github.com/aza547/wow-recorder/issues/383) - Remove some options from the installer that didn't work. 
 
 ## [3.10.3] - 2023-04-24
 ### Fixed
