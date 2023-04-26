@@ -42,6 +42,10 @@ import { VideoCategory } from '../types/VideoCategory';
 const logDir = setupApplicationLogging();
 console.info('[Main] App starting, version:', app.getVersion());
 console.info('[Main] On OS:', os.platform(), os.release());
+console.info(
+  '[Main] In timezone:',
+  Intl.DateTimeFormat().resolvedOptions().timeZone
+);
 
 let retailHandler: RetailLogHandler | undefined;
 let classicHandler: ClassicLogHandler | undefined;
