@@ -22,7 +22,7 @@ If you are a retail arena player, I also recommend the [jaxSurrender](https://ww
 
 # Testing It Works
 
-You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above setup steps. This runs a 10 second test of the recording functionality by mimicing a 2v2 game.
+You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above setup steps. This runs a short test of the recording function.
 
 <img src="https://i.imgur.com/Nk4OCf6.png">
 
@@ -40,4 +40,4 @@ If you're interested in getting involved please drop me a message on discord and
 
 The recording done by Warcraft Recorder is made possible by packaging up [OBS](https://obsproject.com/). We wouldn't stand a chance at providing something useful without it. Big thanks to the OBS developers.
 
-This application is also heavily reliant on the [OBS Studio Node Packge](https://github.com/stream-labs/obs-studio-node) to provide bindings to libOBS. Special mention for the folks over at [Streamlabs](https://streamlabs.com/) for open-sourcing the project. 
+This application is also heavily reliant on [OBS Studio Node](https://github.com/stream-labs/obs-studio-node) to provide bindings to libOBS. Special mention for the folks over at [Streamlabs](https://streamlabs.com/) for open-sourcing the project. 
