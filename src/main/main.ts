@@ -525,7 +525,7 @@ ipcMain.on('settingsWindow', (event, args) => {
 /**
  * contextMenu event listeners.
  */
-ipcMain.on('contextMenu', (_event, args) => {
+ipcMain.on('contextMenu', async (_event, args) => {
   if (args[0] === 'delete') {
     const videoForDeletion = args[1];
     deleteVideo(videoForDeletion);
@@ -539,7 +539,7 @@ ipcMain.on('contextMenu', (_event, args) => {
 
   if (args[0] === 'save') {
     const videoToToggle = args[1];
-    toggleVideoProtected(videoToToggle);
+    await toggleVideoProtected(videoToToggle);
     if (mainWindow) mainWindow.webContents.send('refreshState');
   }
 

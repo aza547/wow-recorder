@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 381](https://github.com/aza547/wow-recorder/issues/381) - Fix a bug where the search bar query isn't cleared.
 - [Issue 383](https://github.com/aza547/wow-recorder/issues/383) - Remove some options from the installer that didn't work. 
+- [Issue 382](https://github.com/aza547/wow-recorder/issues/383) - Fix a bug where toggling bookmark on a video could make it vanish from the UI.
 
 ## [3.10.3] - 2023-04-24
 ### Fixed
