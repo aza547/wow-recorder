@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+### Fixed
+
+## [3.10.4] - 2023-04-26
+### Added
 - [Issue 381](https://github.com/aza547/wow-recorder/issues/381) - Add "bookmarked" as a filter option.
 
 ### Changed
