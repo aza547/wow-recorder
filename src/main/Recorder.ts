@@ -1097,4 +1097,24 @@ export default class Recorder {
   private updateStatusIcon(status: RecStatus) {
     this.mainWindow.webContents.send('updateRecStatus', status);
   }
+
+  getPreview(win: BrowserWindow) {
+    console.log('getting');
+
+    if (this.scene === undefined) return;
+    console.log(win.getNativeWindowHandle());
+    console.log(this.scene.name);
+
+    osn.NodeObs.OBS_content_createDisplay(
+      win.getNativeWindowHandle(),
+      "test",
+      2
+    );
+
+    osn.NodeObs.OBS_content_setShouldDrawUI('display1', false);
+    osn.NodeObs.OBS_content_setPaddingSize('display1', 0);
+    osn.NodeObs.OBS_content_setPaddingColor('display1', 255, 255, 255);
+
+    console.log('got');
+  }
 }

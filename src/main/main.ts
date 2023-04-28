@@ -698,6 +698,20 @@ app
       app.quit();
     } else {
       createWindow();
+
+      const win = new BrowserWindow({
+        width: 800,
+        height: 600,
+        autoHideMenuBar: true,
+        webPreferences: {
+          nodeIntegration: true,
+          webSecurity: false,
+        },
+      });
+
+      win.loadURL(resolveHtmlPath('settings.index.html'));
+
+      setTimeout(() => recorder.getPreview(win), 20000);
     }
   })
   .catch(console.log);
