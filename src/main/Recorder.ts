@@ -1136,8 +1136,6 @@ export default class Recorder {
   }
 
   hidePreview() {
-    console.info('[Recorder] Hiding preview');
-
     if (!this.previewCreated) {
       console.warn('[Recorder] Preview display not created');
       return;
@@ -1149,8 +1147,6 @@ export default class Recorder {
   }
 
   showPreview(width: number, height: number, xPos: number, yPos: number) {
-    console.info('[Recorder] Showing preview');
-
     if (!this.previewCreated) {
       console.warn('[Recorder] Preview display not yet created, creating...');
       this.createPreview();
