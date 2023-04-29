@@ -187,6 +187,16 @@ export default class Recorder {
   private wroteQueue = new WaitQueue<osn.EOutputSignal>();
 
   /**
+   * Name we use to create and reference the preview display.
+   */
+  private previewName = 'preview';
+
+  /**
+   * Bool tracking if the preview exists yet.
+   */
+  private previewCreated = false;
+
+  /**
    * The state of OBS according to its signalling.
    */
   public obsState: ERecordingState = ERecordingState.Offline;
@@ -199,7 +209,7 @@ export default class Recorder {
   /**
    * For easy checking if OBS has been configured.
    */
-  public obsConfigured = false;
+  public obsConfigured = false; 
 
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
@@ -254,6 +264,7 @@ export default class Recorder {
     this.obsRecordingFactory = this.configureOBS();
     this.configureVideoOBS();
     this.obsConfigured = true;
+    this.createPreview();
   }
 
   /**
@@ -1096,5 +1107,57 @@ export default class Recorder {
 
   private updateStatusIcon(status: RecStatus) {
     this.mainWindow.webContents.send('updateRecStatus', status);
+  }
+
+  createPreview() {
+    console.info('[Recorder] Creating preview');
+
+    if (this.scene === undefined) {
+      console.error('[Recorder] Scene undefined so not creating preview');
+      return;
+    }
+
+    if (this.previewCreated) {
+      console.warn('[Recorder] Preview display already exists');
+      return;
+    }
+
+    osn.NodeObs.OBS_content_createSourcePreviewDisplay(
+      this.mainWindow.getNativeWindowHandle(),
+      this.scene.name,
+      this.previewName
+    );
+
+    osn.NodeObs.OBS_content_setShouldDrawUI(this.previewName, false);
+    osn.NodeObs.OBS_content_setPaddingSize(this.previewName, 0);
+    osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
+
+    this.previewCreated = true;
+  }
+
+  hidePreview() {
+    if (!this.previewCreated) {
+      console.warn('[Recorder] Preview display not created');
+      return;
+    }
+
+    // I'd love to make OBS_content_destroyDisplay work here but I've not managed
+    // so far. This is a hack to "hide" it by moving it off screen.
+    osn.NodeObs.OBS_content_moveDisplay(this.previewName, 50000 * 1, 50000 * 1);
+  }
+
+  showPreview(width: number, height: number, xPos: number, yPos: number) {
+    if (!this.previewCreated) {
+      console.warn('[Recorder] Preview display not yet created, creating...');
+      this.createPreview();
+    }
+
+    if (!this.previewCreated) {
+      console.error('[Recorder] Preview display still does not exist');
+      return;
+    }
+
+    osn.NodeObs.OBS_content_resizeDisplay(this.previewName, width, height);
+    osn.NodeObs.OBS_content_moveDisplay(this.previewName, xPos, yPos);
   }
 }

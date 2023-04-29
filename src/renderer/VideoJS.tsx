@@ -1,4 +1,4 @@
-import { RendererVideo, VideoPlayerSettings } from 'main/types';
+import { RendererVideo, TAppState, VideoPlayerSettings } from 'main/types';
 import React from 'react';
 import videojs from 'video.js';
 import 'videojs-hotkeys';
@@ -14,6 +14,7 @@ interface IProps {
   // eslint-disable-next-line react/no-unused-prop-types
   key: string;
   video: RendererVideo;
+  setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -21,7 +22,7 @@ const ipc = window.electron.ipcRenderer;
 export const VideoJS = (props: IProps) => {
   const videoRef: any = React.useRef(null);
   const playerRef: any = React.useRef(null);
-  const { video } = props;
+  const { video, setAppState } = props;
 
   /**
    * Get video player settings initially when the component is loaded. We store
@@ -98,7 +99,17 @@ export const VideoJS = (props: IProps) => {
           playerRef.current.muted()
         );
       });
+
+      playerRef.current.on('fullscreenchange', () => {
+        setAppState((prevState) => {
+          return {
+            ...prevState,
+            videoFullScreen: playerRef.current.isFullscreen(),
+          };
+        });
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   React.useEffect(() => {

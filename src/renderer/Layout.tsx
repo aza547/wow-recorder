@@ -14,6 +14,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
 import HomePage from './HomePage';
 import VideoFilter from './VideoFilter';
+import RecorderPreview from './RecorderPreview';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -32,7 +33,7 @@ let debounceSearchTimer: NodeJS.Timer;
 const Layout: React.FC<IProps> = (props: IProps) => {
   const { navigation, setNavigation, videoState, appState, setAppState } =
     props;
-  const { categoryIndex, videoIndex } = navigation;
+  const { previewPage, categoryIndex, videoIndex } = navigation;
   const { numVideosDisplayed, videoFilterQuery } = appState;
   const categories = Object.values(VideoCategory);
   const category = categories[categoryIndex];
@@ -106,7 +107,12 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     const videoFullPath = video.fullPath;
     return (
       <Box sx={{ display: 'flex', height: '100%' }}>
-        <VideoJS id="video-player" key={videoFullPath} video={video} />
+        <VideoJS
+          id="video-player"
+          key={videoFullPath}
+          video={video}
+          setAppState={setAppState}
+        />
       </Box>
     );
   };
@@ -250,6 +256,14 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       </>
     );
   };
+
+  const getPreviewPage = () => {
+    return <RecorderPreview />;
+  };
+
+  if (previewPage) {
+    return getPreviewPage();
+  }
 
   if (categoryIndex < 0) {
     return getHomePage();

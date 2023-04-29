@@ -30,7 +30,11 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
 
   let disableBackButton = false;
 
-  if (navigation.categoryIndex === -1 && navigation.videoIndex === -1) {
+  if (
+    navigation.categoryIndex === -1 &&
+    navigation.videoIndex === -1 &&
+    !navigation.previewPage
+  ) {
     disableBackButton = true;
   }
 
@@ -38,6 +42,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
     setNavigation({
       categoryIndex: -1,
       videoIndex: -1,
+      previewPage: false,
     });
 
     setAppState((prevState) => {
@@ -56,6 +61,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       setNavigation({
         categoryIndex,
         videoIndex: -1,
+        previewPage: false,
       });
     } else {
       goHome();
@@ -113,6 +119,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       return {
         videoIndex: -1,
         categoryIndex,
+        previewPage: false,
       };
     });
   };

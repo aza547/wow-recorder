@@ -280,6 +280,7 @@ enum TAudioSourceType {
 type TNavigatorState = {
   categoryIndex: number;
   videoIndex: number;
+  previewPage: boolean;
 };
 
 /**
@@ -290,6 +291,7 @@ type TAppState = {
   fatalErrorText: string;
   numVideosDisplayed: number;
   videoFilterQuery: string;
+  videoFullScreen: boolean;
 };
 
 export {

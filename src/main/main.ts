@@ -571,6 +571,21 @@ ipcMain.on('openURL', (event, args) => {
 });
 
 /**
+ * Preview event listener.
+ */
+ipcMain.on('preview', (_event, args) => {
+  if (!recorder) {
+    return;
+  }
+
+  if (args[0] === 'show') {
+    recorder.showPreview(args[1], args[2], args[3], args[4]);
+  } else if (args[0] === 'hide') {
+    recorder.hidePreview();
+  }
+});
+
+/**
  * Get the list of video files and their state.
  */
 ipcMain.handle('getVideoState', async () =>

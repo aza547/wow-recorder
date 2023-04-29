@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- [Issue 354](https://github.com/aza547/wow-recorder/issues/354) - Add a scene preview.
+
 ### Changed
 ### Fixed
 

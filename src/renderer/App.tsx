@@ -40,6 +40,7 @@ const Application = () => {
   const [navigation, setNavigation] = React.useState<TNavigatorState>({
     categoryIndex: -1,
     videoIndex: -1,
+    previewPage: false,
   });
 
   const [appState, setAppState] = React.useState<TAppState>({
@@ -54,6 +55,9 @@ const Application = () => {
 
     // Any text applied in the filter bar gets translated into a filter here.
     videoFilterQuery: '',
+
+    // We use this to conditionally hide the recording preview.
+    videoFullScreen: false,
   });
 
   React.useEffect(() => {

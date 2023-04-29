@@ -12,7 +12,8 @@ export type Channels =
   | 'videoPlayerSettings'
   | 'recorder'
   | 'config'
-  | 'prepareThumbnail';
+  | 'prepareThumbnail'
+  | 'preview';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
