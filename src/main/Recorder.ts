@@ -2,7 +2,7 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
+import { IInput, IScene, ISceneItem, ISceneItemInfo, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
 import {
@@ -209,7 +209,7 @@ export default class Recorder {
   /**
    * For easy checking if OBS has been configured.
    */
-  public obsConfigured = false; 
+  public obsConfigured = false;
 
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
@@ -263,6 +263,7 @@ export default class Recorder {
     this.createRecordingDirs();
     this.obsRecordingFactory = this.configureOBS();
     this.configureVideoOBS();
+    this.createImageSource();
     this.obsConfigured = true;
     this.createPreview();
   }
@@ -462,7 +463,30 @@ export default class Recorder {
     }
 
     this.scene = osn.SceneFactory.create('WR Scene');
+
     this.sceneItem = this.scene.add(this.videoSource);
+
+    const overlaySettings: ISceneItemInfo = {
+      name: 'overlay',
+      crop: {
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+      },
+      scaleX: 1.5,
+      scaleY: 1.5,
+      visible: true,
+      x: 0,
+      y: 875,
+      rotation: 0,
+      streamVisible: true,
+      recordingVisible: true,
+      scaleFilter: 0,
+      blendingMode: 0,
+    };
+
+    this.sceneItem = this.scene.add(this.createImageSource(), overlaySettings);
     osn.Global.setOutputSource(this.videoChannel, this.scene);
 
     if (captureMode === 'game_capture') {
@@ -513,6 +537,26 @@ export default class Recorder {
     gameCaptureSource.save();
 
     return gameCaptureSource;
+  }
+
+  /**
+   * Creates a game capture source.
+   */
+  private createImageSource() {
+    console.info('[Recorder] Configuring an image source for chat overlay');
+
+    const settings = {
+      file: 'D:\\checkouts\\warcraft-recorder\\resources\\chat-cover.png',
+    };
+
+    const imageSource = osn.InputFactory.create(
+      'image_source',
+      'WR Chat Overlay',
+      settings
+    );
+
+    console.log(imageSource.settings);
+    return imageSource;
   }
 
   /**
