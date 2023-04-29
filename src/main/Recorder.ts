@@ -187,6 +187,16 @@ export default class Recorder {
   private wroteQueue = new WaitQueue<osn.EOutputSignal>();
 
   /**
+   * Name we use to create and reference the preview display.
+   */
+  private previewName = 'preview';
+
+  /**
+   * Bool tracking if the preview exists yet.
+   */
+  private previewCreated = false;
+
+  /**
    * The state of OBS according to its signalling.
    */
   public obsState: ERecordingState = ERecordingState.Offline;
@@ -199,7 +209,7 @@ export default class Recorder {
   /**
    * For easy checking if OBS has been configured.
    */
-  public obsConfigured = false;
+  public obsConfigured = false; 
 
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
@@ -254,6 +264,7 @@ export default class Recorder {
     this.obsRecordingFactory = this.configureOBS();
     this.configureVideoOBS();
     this.obsConfigured = true;
+    this.createPreview();
   }
 
   /**
@@ -1098,26 +1109,59 @@ export default class Recorder {
     this.mainWindow.webContents.send('updateRecStatus', status);
   }
 
-  getPreview(win: BrowserWindow) {
-    console.log('getting');
+  createPreview() {
+    console.info('[Recorder] Creating preview');
 
-    if (this.scene === undefined) return;
-    console.log(win.getNativeWindowHandle());
-    console.log(this.scene.name);
+    if (this.scene === undefined) {
+      console.error('[Recorder] Scene undefined so not creating preview');
+      return;
+    }
+
+    if (this.previewCreated) {
+      console.warn('[Recorder] Preview display already exists');
+      return;
+    }
 
     osn.NodeObs.OBS_content_createSourcePreviewDisplay(
-      win.getNativeWindowHandle(),
+      this.mainWindow.getNativeWindowHandle(),
       this.scene.name,
-      'display1'
+      this.previewName
     );
 
-    osn.NodeObs.OBS_content_setShouldDrawUI('display1', false);
-    osn.NodeObs.OBS_content_setPaddingSize('display1', 0);
-    osn.NodeObs.OBS_content_setPaddingColor('display1', 255, 255, 255);
+    osn.NodeObs.OBS_content_setShouldDrawUI(this.previewName, false);
+    osn.NodeObs.OBS_content_setPaddingSize(this.previewName, 0);
+    osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
 
-    osn.NodeObs.OBS_content_resizeDisplay('display1', 500 * 1, 500 * 1);
-    osn.NodeObs.OBS_content_moveDisplay('display1', 0 * 1, 0 * 1);
+    this.previewCreated = true;
+  }
 
-    console.log('got');
+  hidePreview() {
+    console.info('[Recorder] Hiding preview');
+
+    if (!this.previewCreated) {
+      console.warn('[Recorder] Preview display not created');
+      return;
+    }
+
+    // I'd love to make OBS_content_destroyDisplay work here but I've not managed
+    // so far. This is a hack to "hide" it by moving it off screen.
+    osn.NodeObs.OBS_content_moveDisplay(this.previewName, 50000 * 1, 50000 * 1);
+  }
+
+  showPreview(width: number, height: number, xPos: number, yPos: number) {
+    console.info('[Recorder] Showing preview');
+
+    if (!this.previewCreated) {
+      console.warn('[Recorder] Preview display not yet created, creating...');
+      this.createPreview();
+    }
+
+    if (!this.previewCreated) {
+      console.error('[Recorder] Preview display still does not exist');
+      return;
+    }
+
+    osn.NodeObs.OBS_content_resizeDisplay(this.previewName, width, height);
+    osn.NodeObs.OBS_content_moveDisplay(this.previewName, xPos, yPos);
   }
 }

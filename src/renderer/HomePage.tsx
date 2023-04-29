@@ -17,6 +17,7 @@ import {
 import { getNumVideos, getSortedVideos } from './rendererutils';
 import VideoButton from './VideoButton';
 import { VideoJS } from './VideoJS';
+import RecorderPreview from './RecorderPreview';
 
 interface IProps {
   videoState: RendererVideoState;
@@ -93,6 +94,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
       setNavigation({
         categoryIndex,
         videoIndex,
+        previewPage: false,
       });
     } else {
       setRecentIndex(slicedVideos.indexOf(video));
@@ -232,21 +234,43 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
   const getVideoPanel = () => {
     return (
       <Box
+        id="video-panel"
         sx={{
           display: 'flex',
           height: '150%',
           width: '90%',
           m: 2,
-          border: '1px solid black',
-          borderRadius: '0%',
-          boxShadow: '0px 0px 2px 2px black',
         }}
       >
-        <VideoJS
-          id="video-player"
-          key={slicedVideos[recentIndex].fullPath}
-          video={slicedVideos[recentIndex]}
-        />
+        <Box
+          sx={{
+            width: '50%',
+            height: '100%',
+            border: '2px solid black',
+            boxSizing: 'border-box',
+            ml: 2,
+            mr: 2,
+          }}
+        >
+          <VideoJS
+            id="video-player"
+            key={slicedVideos[recentIndex].fullPath}
+            video={slicedVideos[recentIndex]}
+            setAppState={setAppState}
+          />
+        </Box>
+        {appState.videoFullScreen || (
+          <Box
+            sx={{
+              width: '50%',
+              height: '100%',
+              ml: 2,
+              mr: 2,
+            }}
+          >
+            <RecorderPreview />
+          </Box>
+        )}
       </Box>
     );
   };
