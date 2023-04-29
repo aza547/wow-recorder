@@ -711,7 +711,9 @@ app
 
       win.loadURL(resolveHtmlPath('settings.index.html'));
 
-      setTimeout(() => recorder.getPreview(win), 20000);
+      setTimeout(() => {
+        recorder.getPreview(win);
+      }, 20000);
     }
   })
   .catch(console.log);

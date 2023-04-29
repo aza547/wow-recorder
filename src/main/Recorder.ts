@@ -1105,15 +1105,18 @@ export default class Recorder {
     console.log(win.getNativeWindowHandle());
     console.log(this.scene.name);
 
-    osn.NodeObs.OBS_content_createDisplay(
+    osn.NodeObs.OBS_content_createSourcePreviewDisplay(
       win.getNativeWindowHandle(),
-      "test",
-      2
+      this.scene.name,
+      'display1'
     );
 
     osn.NodeObs.OBS_content_setShouldDrawUI('display1', false);
     osn.NodeObs.OBS_content_setPaddingSize('display1', 0);
     osn.NodeObs.OBS_content_setPaddingColor('display1', 255, 255, 255);
+
+    osn.NodeObs.OBS_content_resizeDisplay('display1', 500 * 1, 500 * 1);
+    osn.NodeObs.OBS_content_moveDisplay('display1', 0 * 1, 0 * 1);
 
     console.log('got');
   }
