@@ -586,6 +586,17 @@ ipcMain.on('preview', (_event, args) => {
 });
 
 /**
+ * Chat overlay event listener.
+ */
+ipcMain.on('overlay', (_event, args) => {
+  console.info('[Main] Applying overlay with coordinates', args);
+
+  if (recorder) {
+    recorder.applyOverlay(args[0], args[1], args[2], args[3], args[4]);
+  }
+});
+
+/**
  * Get the list of video files and their state.
  */
 ipcMain.handle('getVideoState', async () =>

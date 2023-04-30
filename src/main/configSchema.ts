@@ -31,6 +31,11 @@ export type ConfigurationSchema = {
   minKeystoneLevel: number;
   minRaidDifficulty: string;
   minimizeOnQuit: boolean;
+  chatOverlayEnabled: boolean;
+  chatOverlayWidth: number;
+  chatOverlayHeight: number;
+  chatOverlayXPosition: number;
+  chatOverlayYPosition: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -217,5 +222,30 @@ export const configSchema = {
     description: 'Whether the close button should minimize rather than quit.',
     type: 'boolean',
     default: true,
+  },
+  chatOverlayEnabled: {
+    description: 'If a chat overlay should be added to the scene.',
+    type: 'boolean',
+    default: false,
+  },
+  chatOverlayWidth: {
+    description: 'The width of the chat overlay.',
+    type: 'integer',
+    default: 700,
+  },
+  chatOverlayHeight: {
+    description: 'The height of the chat overlay.',
+    type: 'integer',
+    default: 230,
+  },
+  chatOverlayXPosition: {
+    description: 'The x-position of the chat overlay.',
+    type: 'integer',
+    default: 0,
+  },
+  chatOverlayYPosition: {
+    description: 'The y-position of the chat overlay.',
+    type: 'integer',
+    default: 870,
   },
 };

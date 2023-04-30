@@ -10,7 +10,7 @@ import VideoSettings from './VideoSettings';
 import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
 import ContentSettings from './ContentSettings';
-import useSettings, { setConfigValues } from './useSettings';
+import { useSettings, setConfigValues } from './useSettings';
 
 const ipc = window.electron.ipcRenderer;
 
