@@ -574,7 +574,7 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   2637: 'Granyth',
   2636: 'The Raging Tempest',
   2581: 'Teera and Maruuk',
-  2570: 'Balakar Khan',
+  2580: 'Balakar Khan',
 
   // The Azure Vault
   2582: 'Leymor',
