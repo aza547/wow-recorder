@@ -5,13 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
 ### Added
-- [Issue 354](https://github.com/aza547/wow-recorder/issues/354) - Add a scene preview.
+### Changed
+### Fixed
+
+## [3.11.0] - 2023-04-30
+### Added
+- [Issue 354](https://github.com/aza547/wow-recorder/issues/354) - Add a scene preview to the home page.
 - [Issue 354](https://github.com/aza547/wow-recorder/issues/354) - Add a scene editor page.
 - [Issue 46](https://github.com/aza547/wow-recorder/issues/46) - Add the ability to use a chat overlay.
 
 ### Changed
-- [NO-ISSUE] - Restyle some buttons in the settings as switches for continuity. 
+- [NO-ISSUE] - Restyle some checkboxes in the settings as switches, for continuity. 
 
 ### Fixed
 - [Issue 384](https://github.com/aza547/wow-recorder/issues/384) - Fix Balakar Khan encounter ID.
