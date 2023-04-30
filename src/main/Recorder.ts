@@ -737,11 +737,17 @@ export default class Recorder {
       clearInterval(this.videoSourceSizeInterval);
     }
 
+    if (this.overlayImageSource) {
+      this.overlayImageSource.release();
+      this.overlayImageSource.remove();
+    }
+
     if (this.videoSource) {
-      osn.Global.setOutputSource(1, null as unknown as ISource);
       this.videoSource.release();
       this.videoSource.remove();
     }
+
+    osn.Global.setOutputSource(1, null as unknown as ISource);
 
     if (this.obsRecordingFactory) {
       osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
