@@ -105,83 +105,106 @@ const SceneEditor: React.FC = () => {
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
+          justifyContent: 'center',
           alignItems: 'center',
           width: '100%',
           height: '12%',
         }}
       >
-        <FormControlLabel
-          control={
-            <Switch
-              sx={switchStyle}
-              checked={overlayConfig.chatOverlayEnabled}
-              onChange={setEnabled}
-            />
-          }
-          label="Chat Overlay"
-          labelPlacement="bottom"
-          sx={{ color: 'white' }}
-        />
-
-        <FormControlLabel
-          control={
-            <ChatOverlaySlider
-              value={overlayConfig.chatOverlayWidth}
-              disabled={!overlayConfig.chatOverlayEnabled}
-              setValue={setWidth}
-              max={2000}
-            />
-          }
-          label="Width"
-          labelPlacement="bottom"
-          sx={{ color: 'white' }}
-        />
-        <FormControlLabel
-          control={
-            <ChatOverlaySlider
-              value={overlayConfig.chatOverlayHeight}
-              disabled={!overlayConfig.chatOverlayEnabled}
-              setValue={setHeight}
-              max={1000}
-            />
-          }
-          label="Height"
-          labelPlacement="bottom"
-          sx={{ color: 'white' }}
-        />
-        <FormControlLabel
-          control={
-            <ChatOverlaySlider
-              value={overlayConfig.chatOverlayXPosition}
-              disabled={!overlayConfig.chatOverlayEnabled}
-              setValue={setXPosition}
-              max={xRes}
-            />
-          }
-          label="Horizonal Position"
-          labelPlacement="bottom"
+        <Box
           sx={{
-            color: 'white',
-            '&.Mui-disabled': {
-              color: 'white',
-            },
+            display: 'flex',
+            justifyContent: 'space-evenly',
+            alignItems: 'center',
+            width: '75%',
           }}
-        />
-        <FormControlLabel
-          control={
-            <ChatOverlaySlider
-              value={overlayConfig.chatOverlayYPosition}
-              disabled={!overlayConfig.chatOverlayEnabled}
-              setValue={setYPosition}
-              max={yRes}
-            />
-          }
-          label="Vertical Position"
-          labelPlacement="bottom"
-          sx={{ color: 'white' }}
-        />
+        >
+          <FormControlLabel
+            control={
+              <Switch
+                sx={switchStyle}
+                checked={overlayConfig.chatOverlayEnabled}
+                onChange={setEnabled}
+              />
+            }
+            label="Chat Overlay"
+            labelPlacement="bottom"
+            sx={{ color: 'white' }}
+          />
+
+          <FormControlLabel
+            control={
+              <ChatOverlaySlider
+                value={overlayConfig.chatOverlayWidth}
+                disabled={!overlayConfig.chatOverlayEnabled}
+                setValue={setWidth}
+                max={2000}
+              />
+            }
+            label="Width"
+            labelPlacement="bottom"
+            sx={{
+              color: 'white',
+              '& .MuiFormControlLabel-label.Mui-disabled': {
+                color: 'white',
+              },
+            }}
+          />
+          <FormControlLabel
+            control={
+              <ChatOverlaySlider
+                value={overlayConfig.chatOverlayHeight}
+                disabled={!overlayConfig.chatOverlayEnabled}
+                setValue={setHeight}
+                max={1000}
+              />
+            }
+            label="Height"
+            labelPlacement="bottom"
+            sx={{
+              color: 'white',
+              '& .MuiFormControlLabel-label.Mui-disabled': {
+                color: 'white',
+              },
+            }}
+          />
+          <FormControlLabel
+            control={
+              <ChatOverlaySlider
+                value={overlayConfig.chatOverlayXPosition}
+                disabled={!overlayConfig.chatOverlayEnabled}
+                setValue={setXPosition}
+                max={xRes}
+              />
+            }
+            label="Horizonal Position"
+            labelPlacement="bottom"
+            sx={{
+              color: 'white',
+              '& .MuiFormControlLabel-label.Mui-disabled': {
+                color: 'white',
+              },
+            }}
+          />
+          <FormControlLabel
+            control={
+              <ChatOverlaySlider
+                value={overlayConfig.chatOverlayYPosition}
+                disabled={!overlayConfig.chatOverlayEnabled}
+                setValue={setYPosition}
+                max={yRes}
+              />
+            }
+            label="Vertical Position"
+            labelPlacement="bottom"
+            sx={{
+              color: 'white',
+              '& .MuiFormControlLabel-label.Mui-disabled': {
+                color: 'white',
+              },
+            }}
+          />
+        </Box>
       </Box>
     </Box>
   );
