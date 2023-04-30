@@ -294,6 +294,13 @@ type TAppState = {
   videoFullScreen: boolean;
 };
 
+type TPreviewPosition = {
+  width: number;
+  height: number;
+  xPos: number;
+  yPos: number;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -324,4 +331,5 @@ export {
   TAppState,
   RawCombatant,
   RawChallengeModeTimelineSegment,
+  TPreviewPosition,
 };

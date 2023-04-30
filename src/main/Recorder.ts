@@ -2,7 +2,13 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
+import {
+  IInput,
+  IScene,
+  ISceneItem,
+  ISceneItemInfo,
+  ISource,
+} from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
 import {
@@ -17,10 +23,17 @@ import {
   deferredPromiseHelper,
   deleteVideo,
   fixPathWhenPackaged,
+  getAssetPath,
   getSortedVideos,
 } from './util';
 
-import { IOBSDevice, Metadata, RecStatus, TAudioSourceType } from './types';
+import {
+  IOBSDevice,
+  Metadata,
+  RecStatus,
+  TAudioSourceType,
+  TPreviewPosition,
+} from './types';
 import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
@@ -113,7 +126,7 @@ export default class Recorder {
   private scene: IScene | undefined;
 
   /**
-   * ISceneItem object, useful to have handy for rescaling.
+   * ISceneItem object for the video feed, useful to have handy for rescaling.
    */
   private sceneItem: ISceneItem | undefined;
 
@@ -197,6 +210,23 @@ export default class Recorder {
   private previewCreated = false;
 
   /**
+   * Exists across a reconfigure.
+   */
+  private previewLocation: TPreviewPosition | undefined;
+
+  /**
+   * The image source to be used for the overlay, we create this
+   * ahead of time regardless of if the user has the overlay enabled.
+   */
+  private overlayImageSource: IInput | undefined;
+
+  /**
+   * Handle to the scene item for the overlay source. Handy for adding
+   * and removing it later.
+   */
+  private overlaySceneItem: ISceneItem | undefined;
+
+  /**
    * The state of OBS according to its signalling.
    */
   public obsState: ERecordingState = ERecordingState.Offline;
@@ -209,7 +239,7 @@ export default class Recorder {
   /**
    * For easy checking if OBS has been configured.
    */
-  public obsConfigured = false; 
+  public obsConfigured = false;
 
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
@@ -225,6 +255,7 @@ export default class Recorder {
     await this.stopBuffer();
     this.removeAudioSourcesOBS();
     this.shutdownOBS();
+    this.previewCreated = false;
 
     // Create a new uuid and re-initialize OBS.
     this.uuid = uuidfn();
@@ -263,8 +294,25 @@ export default class Recorder {
     this.createRecordingDirs();
     this.obsRecordingFactory = this.configureOBS();
     this.configureVideoOBS();
-    this.obsConfigured = true;
+    this.createImageSource();
     this.createPreview();
+
+    this.applyOverlay(
+      this.cfg.get<boolean>('chatOverlayEnabled'),
+      this.cfg.get<number>('chatOverlayWidth'),
+      this.cfg.get<number>('chatOverlayHeight'),
+      this.cfg.get<number>('chatOverlayXPosition'),
+      this.cfg.get<number>('chatOverlayYPosition')
+    );
+
+    if (this.previewLocation !== undefined) {
+      // If this is a reconfigure, we won't get an IPC kick from the frontned
+      // to re-show the preview. So just remember the location and do it here.
+      const { width, height, xPos, yPos } = this.previewLocation;
+      this.showPreview(width, height, xPos, yPos);
+    }
+
+    this.obsConfigured = true;
   }
 
   /**
@@ -516,6 +564,27 @@ export default class Recorder {
   }
 
   /**
+   * Creates a game capture source.
+   */
+  private createImageSource() {
+    console.info('[Recorder] Create image source for chat overlay');
+
+    const settings = {
+      file: getAssetPath('poster', 'chat-cover.png'),
+    };
+
+    this.overlayImageSource = osn.InputFactory.create(
+      'image_source',
+      'WR Chat Overlay',
+      settings
+    );
+
+    if (this.overlayImageSource === null) {
+      console.error('[Recorder] Failed to create image source');
+    }
+  }
+
+  /**
    * Add the configured audio sources ot the OBS scene. This is public
    * so it can be called externally when WoW is opened - see the Poller
    * class.
@@ -668,11 +737,17 @@ export default class Recorder {
       clearInterval(this.videoSourceSizeInterval);
     }
 
+    if (this.overlayImageSource) {
+      this.overlayImageSource.release();
+      this.overlayImageSource.remove();
+    }
+
     if (this.videoSource) {
-      osn.Global.setOutputSource(1, null as unknown as ISource);
       this.videoSource.release();
       this.videoSource.remove();
     }
+
+    osn.Global.setOutputSource(1, null as unknown as ISource);
 
     if (this.obsRecordingFactory) {
       osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
@@ -1143,7 +1218,7 @@ export default class Recorder {
 
     // I'd love to make OBS_content_destroyDisplay work here but I've not managed
     // so far. This is a hack to "hide" it by moving it off screen.
-    osn.NodeObs.OBS_content_moveDisplay(this.previewName, 50000 * 1, 50000 * 1);
+    osn.NodeObs.OBS_content_moveDisplay(this.previewName, 50000, 50000);
   }
 
   showPreview(width: number, height: number, xPos: number, yPos: number) {
@@ -1157,7 +1232,68 @@ export default class Recorder {
       return;
     }
 
+    this.previewLocation = { width, height, xPos, yPos };
+
     osn.NodeObs.OBS_content_resizeDisplay(this.previewName, width, height);
     osn.NodeObs.OBS_content_moveDisplay(this.previewName, xPos, yPos);
+  }
+
+  applyOverlay(
+    enabled: boolean,
+    width: number,
+    height: number,
+    xPos: number,
+    yPos: number
+  ) {
+    if (this.scene === undefined || this.overlayImageSource === undefined) {
+      console.error(
+        '[Recorder] Not applying overlay as scene or image source undefined',
+        this.scene,
+        this.overlayImageSource
+      );
+
+      return;
+    }
+
+    if (this.overlaySceneItem !== undefined) {
+      this.overlaySceneItem.remove();
+    }
+
+    if (!enabled) {
+      return;
+    }
+
+    // This is the height of the chat overlay image, a bit ugly
+    // to have it hardcoded here, but whatever.
+    const baseWidth = 5000;
+    const baseHeight = 2000;
+
+    const toCropX = (baseWidth - width) / 2;
+    const toCropY = (baseHeight - height) / 2;
+
+    const overlaySettings: ISceneItemInfo = {
+      name: 'overlay',
+      crop: {
+        left: toCropX,
+        right: toCropX,
+        top: toCropY,
+        bottom: toCropY,
+      },
+      scaleX: 1,
+      scaleY: 1,
+      visible: true,
+      x: xPos,
+      y: yPos,
+      rotation: 0,
+      streamVisible: true,
+      recordingVisible: true,
+      scaleFilter: 0,
+      blendingMode: 0,
+    };
+
+    this.overlaySceneItem = this.scene.add(
+      this.overlayImageSource,
+      overlaySettings
+    );
   }
 }

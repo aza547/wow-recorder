@@ -48,6 +48,18 @@ const configValues = {
   minRaidDifficulty: getConfigValue<string>('minRaidDifficulty'),
 };
 
-export default function useSettings() {
+export const useOverlaySettings = () => {
+  const overlayConfigValues = {
+    chatOverlayEnabled: getConfigValue<boolean>('chatOverlayEnabled'),
+    chatOverlayWidth: getConfigValue<number>('chatOverlayWidth'),
+    chatOverlayHeight: getConfigValue<number>('chatOverlayHeight'),
+    chatOverlayXPosition: getConfigValue<number>('chatOverlayXPosition'),
+    chatOverlayYPosition: getConfigValue<number>('chatOverlayYPosition'),
+  };
+
+  return React.useState(overlayConfigValues);
+};
+
+export const useSettings = () => {
   return React.useState(configValues);
-}
+};

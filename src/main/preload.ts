@@ -13,7 +13,8 @@ export type Channels =
   | 'recorder'
   | 'config'
   | 'prepareThumbnail'
-  | 'preview';
+  | 'preview'
+  | 'overlay';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
