@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 46](https://github.com/aza547/wow-recorder/issues/46) - Add the ability to use a chat overlay.
 
 ### Changed
+
 ### Fixed
 - [Issue 384](https://github.com/aza547/wow-recorder/issues/384) - Fix Balakar Khan encounter ID.
+- [Issue 391](https://github.com/aza547/wow-recorder/issues/391) - Bump electron version to ^24.0.0 to fix Mexico timezone bug.
 
 ## [3.10.4] - 2023-04-26
 ### Added
