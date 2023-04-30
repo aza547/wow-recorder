@@ -25,6 +25,7 @@ import {
   setupApplicationLogging,
   getAvailableDisplays,
   checkAppUpdate,
+  getAssetPath,
 } from './util';
 
 import Recorder from './Recorder';
@@ -181,14 +182,6 @@ const installExtensions = async () => {
       forceDownload
     )
     .catch(console.log);
-};
-
-const RESOURCES_PATH = app.isPackaged
-  ? path.join(process.resourcesPath, 'assets')
-  : path.join(__dirname, '../../assets');
-
-const getAssetPath = (...paths: string[]): string => {
-  return path.join(RESOURCES_PATH, ...paths);
 };
 
 /**
@@ -589,8 +582,6 @@ ipcMain.on('preview', (_event, args) => {
  * Chat overlay event listener.
  */
 ipcMain.on('overlay', (_event, args) => {
-  console.info('[Main] Applying overlay with coordinates', args);
-
   if (recorder) {
     recorder.applyOverlay(args[0], args[1], args[2], args[3], args[4]);
   }

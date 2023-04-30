@@ -26,7 +26,7 @@ const switchStyle = {
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timer | undefined;
 
-const RecorderPreviewPage: React.FC = () => {
+const SceneEditor: React.FC = () => {
   const [overlayConfig, setOverlayConfig] = useOverlaySettings();
   const resolution = getConfigValue<string>('obsOutputResolution');
   const [xRes, yRes] = resolution.split('x').map((s) => parseInt(s, 10));
@@ -109,7 +109,7 @@ const RecorderPreviewPage: React.FC = () => {
           justifyContent: 'space-evenly',
           alignItems: 'center',
           width: '100%',
-          height: '15%',
+          height: '12%',
         }}
       >
         <FormControlLabel
@@ -187,4 +187,4 @@ const RecorderPreviewPage: React.FC = () => {
   );
 };
 
-export default RecorderPreviewPage;
+export default SceneEditor;

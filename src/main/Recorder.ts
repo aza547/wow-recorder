@@ -23,6 +23,7 @@ import {
   deferredPromiseHelper,
   deleteVideo,
   fixPathWhenPackaged,
+  getAssetPath,
   getSortedVideos,
 } from './util';
 
@@ -568,16 +569,8 @@ export default class Recorder {
   private createImageSource() {
     console.info('[Recorder] Create image source for chat overlay');
 
-    const overlayImageFilePath = path.join(
-      __dirname,
-      '../../',
-      'assets',
-      'poster',
-      'chat-cover.png'
-    );
-
     const settings = {
-      file: overlayImageFilePath,
+      file: getAssetPath('poster', 'chat-cover.png'),
     };
 
     this.overlayImageSource = osn.InputFactory.create(

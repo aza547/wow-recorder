@@ -14,7 +14,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
 import HomePage from './HomePage';
 import VideoFilter from './VideoFilter';
-import RecorderPreviewPage from './RecorderPreviewPage';
+import SceneEditor from './SceneEditor';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -258,7 +258,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const getPreviewPage = () => {
-    return <RecorderPreviewPage />;
+    return <SceneEditor />;
   };
 
   if (previewPage) {
