@@ -1,7 +1,6 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
-import Checkbox from '@mui/material/Checkbox';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import InfoIcon from '@mui/icons-material/Info';
@@ -9,7 +8,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import { FakeChangeEvent, ISettingsPanelProps } from 'main/types';
-import { DialogContentText } from '@mui/material';
+import { DialogContentText, Switch } from '@mui/material';
 import { configSchema } from '../main/configSchema';
 import InformationDialog from '../renderer/InformationDialog';
 import { openDirectorySelectorDialog } from './settingUtils';
@@ -40,6 +39,7 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
         onChange(new FakeChangeEvent(setting, value));
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const style = {
@@ -52,16 +52,30 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
     '& label.Mui-focused': { color: '#bb4220' },
   };
 
-  const checkBoxStyle = { color: '#bb4220' };
   const formControlLabelStyle = { color: 'white' };
   const formGroupStyle = { width: '48ch' };
 
-  const getCheckBox = (preference: string) => (
-    <Checkbox
+  const switchStyle = {
+    '& .MuiSwitch-switchBase': {
+      '&.Mui-checked': {
+        color: '#fff',
+        '+.MuiSwitch-track': {
+          backgroundColor: '#bb4220',
+          opacity: 1.0,
+        },
+      },
+      '&.Mui-disabled + .MuiSwitch-track': {
+        opacity: 0.5,
+      },
+    },
+  };
+
+  const getSwitch = (preference: string) => (
+    <Switch
+      sx={switchStyle}
       checked={Boolean(config[preference])}
-      onChange={onChange}
       name={preference}
-      style={checkBoxStyle}
+      onChange={onChange}
     />
   );
 
@@ -171,14 +185,14 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
       <Box component="span">
         <FormGroup sx={formGroupStyle}>
           <FormControlLabel
-            control={getCheckBox('startUp')}
+            control={getSwitch('startUp')}
             label="Run on startup"
             style={formControlLabelStyle}
           />
         </FormGroup>
         <Tooltip
           title={configSchema.startUp.description}
-          sx={{ position: 'fixed', left: '310px', top: '363px' }}
+          sx={{ position: 'fixed', left: '320px', top: '360px' }}
         >
           <IconButton>
             <InfoIcon style={{ color: 'white' }} />
@@ -189,14 +203,14 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
       <Box component="span">
         <FormGroup sx={formGroupStyle}>
           <FormControlLabel
-            control={getCheckBox('startMinimized')}
+            control={getSwitch('startMinimized')}
             label="Start minimized"
             style={formControlLabelStyle}
           />
         </FormGroup>
         <Tooltip
           title={configSchema.startMinimized.description}
-          sx={{ position: 'fixed', left: '315px', top: '405px' }}
+          sx={{ position: 'fixed', left: '325px', top: '398px' }}
         >
           <IconButton>
             <InfoIcon style={{ color: 'white' }} />
@@ -207,14 +221,14 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
       <Box component="span">
         <FormGroup sx={formGroupStyle}>
           <FormControlLabel
-            control={getCheckBox('minimizeOnQuit')}
+            control={getSwitch('minimizeOnQuit')}
             label="Minimize on quit"
             style={formControlLabelStyle}
           />
         </FormGroup>
         <Tooltip
           title={configSchema.minimizeOnQuit.description}
-          sx={{ position: 'fixed', left: '320px', top: '447px' }}
+          sx={{ position: 'fixed', left: '330px', top: '437px' }}
         >
           <IconButton>
             <InfoIcon style={{ color: 'white' }} />
