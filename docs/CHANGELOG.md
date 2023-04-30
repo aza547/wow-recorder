@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 46](https://github.com/aza547/wow-recorder/issues/46) - Add the ability to use a chat overlay.
 
 ### Changed
+- [NO-ISSUE] - Restyle some buttons in the settings as switches for continuity. 
 
 ### Fixed
 - [Issue 384](https://github.com/aza547/wow-recorder/issues/384) - Fix Balakar Khan encounter ID.
