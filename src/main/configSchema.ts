@@ -31,6 +31,7 @@ export type ConfigurationSchema = {
   minKeystoneLevel: number;
   minRaidDifficulty: string;
   minimizeOnQuit: boolean;
+  minimizeToTray: boolean;
   chatOverlayEnabled: boolean;
   chatOverlayWidth: number;
   chatOverlayHeight: number;
@@ -220,6 +221,12 @@ export const configSchema = {
   },
   minimizeOnQuit: {
     description: 'Whether the close button should minimize rather than quit.',
+    type: 'boolean',
+    default: true,
+  },
+  minimizeToTray: {
+    description:
+      'Whether the minimize button should minimize to the system tray or the taskbar.',
     type: 'boolean',
     default: true,
   },

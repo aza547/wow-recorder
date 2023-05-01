@@ -397,7 +397,14 @@ ipcMain.on('mainWindow', (_event, args) => {
 
   if (args[0] === 'minimize') {
     console.log('[Main] User clicked minimize');
-    mainWindow.hide();
+
+    if (cfg.get<boolean>('minimizeToTray')) {
+      console.log('[Main] Minimize main window to tray');
+      mainWindow.hide();
+    } else {
+      console.log('[Main] Minimize main window to taskbar');
+      mainWindow.minimize();
+    }
   }
 
   if (args[0] === 'resize') {

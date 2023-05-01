@@ -236,6 +236,24 @@ export default function GeneralSettings(props: ISettingsPanelProps) {
         </Tooltip>
       </Box>
 
+      <Box component="span">
+        <FormGroup sx={formGroupStyle}>
+          <FormControlLabel
+            control={getSwitch('minimizeToTray')}
+            label="Minimize to tray"
+            style={formControlLabelStyle}
+          />
+        </FormGroup>
+        <Tooltip
+          title={configSchema.minimizeToTray.description}
+          sx={{ position: 'fixed', left: '327px', top: '475px' }}
+        >
+          <IconButton>
+            <InfoIcon style={{ color: 'white' }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
       <InformationDialog
         title="🚫 Not a combat log directory"
         open={openDialog}

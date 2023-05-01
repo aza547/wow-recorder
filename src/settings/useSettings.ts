@@ -15,39 +15,6 @@ export function setConfigValues(dict: { [key: string]: any }): void {
   window.electron.ipcRenderer.sendMessage('config', ['set_values', dict]);
 }
 
-const configValues = {
-  storagePath: getConfigValue<string>('storagePath'),
-  bufferStoragePath: getConfigValue<string>('bufferStoragePath'),
-  retailLogPath: getConfigValue<string>('retailLogPath'),
-  classicLogPath: getConfigValue<string>('classicLogPath'),
-  maxStorage: getConfigValue<number>('maxStorage'),
-  minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
-  monitorIndex: getConfigValue<number>('monitorIndex'),
-  audioInputDevices: getConfigValue<string>('audioInputDevices'),
-  audioOutputDevices: getConfigValue<string>('audioOutputDevices'),
-  startUp: getConfigValue<boolean>('startUp'),
-  startMinimized: getConfigValue<boolean>('startMinimized'),
-  recordRetail: getConfigValue<boolean>('recordRetail'),
-  recordClassic: getConfigValue<boolean>('recordClassic'),
-  recordRaids: getConfigValue<boolean>('recordRaids'),
-  recordDungeons: getConfigValue<boolean>('recordDungeons'),
-  recordTwoVTwo: getConfigValue<boolean>('recordTwoVTwo'),
-  recordThreeVThree: getConfigValue<boolean>('recordThreeVThree'),
-  recordFiveVFive: getConfigValue<boolean>('recordFiveVFive'),
-  recordSkirmish: getConfigValue<boolean>('recordSkirmish'),
-  recordSoloShuffle: getConfigValue<boolean>('recordSoloShuffle'),
-  recordBattlegrounds: getConfigValue<boolean>('recordBattlegrounds'),
-  obsOutputResolution: getConfigValue<string>('obsOutputResolution'),
-  obsFPS: getConfigValue<number>('obsFPS'),
-  obsForceMono: getConfigValue<boolean>('obsForceMono'),
-  obsKBitRate: getConfigValue<number>('obsKBitRate'),
-  obsCaptureMode: getConfigValue<string>('obsCaptureMode'),
-  obsRecEncoder: getConfigValue<string>('obsRecEncoder'),
-  minKeystoneLevel: getConfigValue<number>('minKeystoneLevel'),
-  minimizeOnQuit: getConfigValue<number>('minimizeOnQuit'),
-  minRaidDifficulty: getConfigValue<string>('minRaidDifficulty'),
-};
-
 export const useOverlaySettings = () => {
   const overlayConfigValues = {
     chatOverlayEnabled: getConfigValue<boolean>('chatOverlayEnabled'),
@@ -61,5 +28,39 @@ export const useOverlaySettings = () => {
 };
 
 export const useSettings = () => {
+  const configValues = {
+    storagePath: getConfigValue<string>('storagePath'),
+    bufferStoragePath: getConfigValue<string>('bufferStoragePath'),
+    retailLogPath: getConfigValue<string>('retailLogPath'),
+    classicLogPath: getConfigValue<string>('classicLogPath'),
+    maxStorage: getConfigValue<number>('maxStorage'),
+    minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
+    monitorIndex: getConfigValue<number>('monitorIndex'),
+    audioInputDevices: getConfigValue<string>('audioInputDevices'),
+    audioOutputDevices: getConfigValue<string>('audioOutputDevices'),
+    startUp: getConfigValue<boolean>('startUp'),
+    startMinimized: getConfigValue<boolean>('startMinimized'),
+    recordRetail: getConfigValue<boolean>('recordRetail'),
+    recordClassic: getConfigValue<boolean>('recordClassic'),
+    recordRaids: getConfigValue<boolean>('recordRaids'),
+    recordDungeons: getConfigValue<boolean>('recordDungeons'),
+    recordTwoVTwo: getConfigValue<boolean>('recordTwoVTwo'),
+    recordThreeVThree: getConfigValue<boolean>('recordThreeVThree'),
+    recordFiveVFive: getConfigValue<boolean>('recordFiveVFive'),
+    recordSkirmish: getConfigValue<boolean>('recordSkirmish'),
+    recordSoloShuffle: getConfigValue<boolean>('recordSoloShuffle'),
+    recordBattlegrounds: getConfigValue<boolean>('recordBattlegrounds'),
+    obsOutputResolution: getConfigValue<string>('obsOutputResolution'),
+    obsFPS: getConfigValue<number>('obsFPS'),
+    obsForceMono: getConfigValue<boolean>('obsForceMono'),
+    obsKBitRate: getConfigValue<number>('obsKBitRate'),
+    obsCaptureMode: getConfigValue<string>('obsCaptureMode'),
+    obsRecEncoder: getConfigValue<string>('obsRecEncoder'),
+    minKeystoneLevel: getConfigValue<number>('minKeystoneLevel'),
+    minimizeOnQuit: getConfigValue<boolean>('minimizeOnQuit'),
+    minimizeToTray: getConfigValue<boolean>('minimizeToTray'),
+    minRaidDifficulty: getConfigValue<string>('minRaidDifficulty'),
+  };
+
   return React.useState(configValues);
 };

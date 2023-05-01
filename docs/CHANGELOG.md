@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- [Issue 386](https://github.com/aza547/wow-recorder/issues/386) - Option to disable minimize to tray.
+
 ### Changed
 ### Fixed
 
