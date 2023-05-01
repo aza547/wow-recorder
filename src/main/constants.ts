@@ -219,6 +219,13 @@ const encountersVOI: NumberKeyToStringValueMapType = {
 };
 
 /**
+ * Dragonflight Tier 2
+ * // TODO @@@ Add these
+ */
+const encountersAberrus: NumberKeyToStringValueMapType = {
+};
+
+/**
  * WOTLK Classic Naxxrammas
  */
 const encountersClassicNaxxramas: NumberKeyToStringValueMapType = {
@@ -285,6 +292,7 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersSanctum,
   ...encountersSepulcher,
   ...encountersVOI,
+  ...encountersAberrus,
   ...encountersClassicNaxxramas,
   ...encountersClassicEye,
   ...encountersClassicObsidian,
@@ -322,6 +330,12 @@ const raidInstances: RaidInstanceType[] = [
     name: 'Vault of the Incarnates',
     shortName: 'Vault',
     encounters: encountersVOI,
+  },
+  {
+    zoneId: 14663,
+    name: 'Aberrus, the Shadowed Crucible',
+    shortName: 'Aberrus',
+    encounters: encountersAberrus,
   },
   {
     zoneId: 3456,
