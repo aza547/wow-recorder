@@ -220,9 +220,17 @@ const encountersVOI: NumberKeyToStringValueMapType = {
 
 /**
  * Dragonflight Tier 2
- * // TODO @@@ Add these
  */
 const encountersAberrus: NumberKeyToStringValueMapType = {
+  2688: "Kazzara",
+  2687: "Amalgamation Chamber",
+  2693: "Experimentation of the Dracthy",
+  2682: "Zaqali Invasion",
+  2680: "Rashok",
+  2689: "Zskarn",
+  2683: "Magmorax",
+  2684: "Echo of Neltharion",
+  2685: "Scalecommander Sarkareth"
 };
 
 /**
