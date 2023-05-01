@@ -395,7 +395,6 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   // Shadowlands
   166: 'Grimrail Depot',
   169: 'Iron Docks',
-  206: "Neltharion's Lair",
   227: 'Karazhan: Lower',
   234: 'Karazhan: Upper',
   369: 'Mechagon: Junkyard',
@@ -420,6 +419,16 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   210: 'Court of Stars',
   165: 'Shadowmoon Burial Grounds',
   2: 'Temple of the Jade Serpent',
+
+  // Dragonflight S2
+  405: 'Brackenhide Hollow',
+  406: 'Halls of Infusion',
+  403: 'Uldaman: Legacy of Tyr',
+  404: "Neltharus",
+  245: 'Freehold',
+  251: 'The Underrot',
+  206: "Neltharion's Lair",
+  438: 'The Vortex Pinnacle',
 };
 
 /**
@@ -427,14 +436,13 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
  *
  * mapId: [1 chest, 2 chest, 3 chest]
  *
- * The last one is obviously also the one the determines if a key was timed or not.
+ * The first is obviously also the one the determines if a key was timed or not.
  *
  * Tip: It's easier to keep them as a calculation here, for comparison when Blizzard
  * occasionally adjusts timers for a dungeon.
  */
 const dungeonTimersByMapId: { [id: number]: number[] } = {
   // Shadowlands
-  206: [40 * 60, 40 * 60, 40 * 60],
   377: [43 * 60, 34 * 60 + 25, 25 * 60 + 49],
   378: [32 * 60, 25 * 60 + 36, 19 * 60 + 12],
   375: [30 * 60, 24 * 60, 18 * 60],
@@ -461,6 +469,18 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   210: [30 * 60, 24 * 60, 18 * 60],
   165: [33 * 60, 26 * 60 + 24, 23 * 60 + 24],
   2: [30 * 60, 24 * 60, 18 * 60],
+
+  // Dragonflight S2
+  // Not sure on the exact timers here beyond the first value.
+  // TODO: @@@ FIX 1 chest / 2 chest timers.
+  405: [36 * 60, 24 * 60, 18 * 60],
+  406: [38 * 60, 32 * 60, 24 * 60],
+  403: [40 * 60, 27 * 60 + 12, 20 * 60 + 24],
+  404: [35 * 60, 25 * 60 + 36, 19 * 60 + 12],
+  245: [33 * 60, 30 * 60 + 24, 22 * 60 + 48],
+  251: [33 * 60, 24 * 60, 18 * 60],
+  206: [33 * 60, 40 * 60, 40 * 60],
+  438: [30 * 60, 26 * 60 + 24, 23 * 60 + 24],
 };
 
 const dungeonEncounters: NumberKeyToStringValueMapType = {
@@ -474,12 +494,6 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1749: "Fleshrender Nok'gar",
   1750: 'Oshir',
   1754: 'Skulloc, Son of Gruul',
-
-  // Nelthairon's Lair
-  1790: 'Rokmora',
-  1791: 'Ularogg Cragshaper',
-  1792: 'Naraxas',
-  1793: 'Dargrul the Underking',
 
   // Return to Karazhan: Lower
   1954: 'Maiden of Virtue',
@@ -611,6 +625,55 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1417: 'Lorewalker Stonestep',
   1416: 'Liu Flameheart',
   1439: 'Sha of Doubt',
+
+  // Bracken Hollow
+  2570: "Hackclaw's War-Band",
+  2567: "Gutshot",
+  2568: "Treemouth",
+  2569: "Decatriarch Wratheye",
+
+  // Halls of Infusion
+  2615: "Watcher Irideus",
+  2616: "Gulping Goliath",
+  2617: "Khajin the Unyielding",
+  2618: "Primal Tsunami",
+
+  // Uldaman: Legacy of Tyr
+  2555: "The Lost Dwarves",
+  2556: "Bromach",
+  2557: "Sentinel Talondras",
+  2558: "Emberon",
+  2559: "Chrono-Lord Deios",
+  
+  // Neltharus
+  2610: "Magmatusk",
+  2611: "Warlord Sargha",
+  2612: "Forgemaster Gorek",
+  2613: "Chargath, Bane of Scales",
+
+  // Freehold
+  2093: "Skycap'n Kragg",
+  2094: "Council o' Captains",
+  2095: "Ring of Booty",
+  2096: "Harlan Sweete",
+
+  // The Underrot
+  2111: "Elder Leaxa",
+  2118: "Cragmaw the Infested",
+  2112: "Sporecaller Zancha",
+  2123: "Unbound Abomination",
+
+  // Neltharion's Lair
+  1790: 'Rokmora',
+  1791: 'Ularogg Cragshaper',
+  1792: 'Naraxas',
+  1793: 'Dargrul the Underking',
+
+  // The Vortex Pinnacle
+  1041: "Altairus",
+  1042: "Asaad, Caliph of Zephyrs",
+  1043: "Grand Vizier Ertan",
+
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
