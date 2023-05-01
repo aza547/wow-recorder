@@ -452,8 +452,6 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   165: 'Shadowmoon Burial Grounds',
   2: 'Temple of the Jade Serpent',
 
-  
-
   // Dragonflight S2
   405: 'Brackenhide Hollow',
   406: 'Halls of Infusion',
@@ -660,7 +658,7 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1416: 'Liu Flameheart',
   1439: 'Sha of Doubt',
 
-  // Bracken Hollow
+  // Brackenhide Hollow
   2570: "Hackclaw's War-Band",
   2567: "Gutshot",
   2568: "Treemouth",
