@@ -25,6 +25,7 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
       }}
     >
       <Typography
+        align="center"
         sx={{
           color: 'white',
           fontFamily: '"Arial",sans-serif',
@@ -38,11 +39,12 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
       </Typography>
 
       <Typography
+        align="center"
         sx={{
           color: 'white',
           fontFamily: '"Arial",sans-serif',
           fontWeight: 700,
-          fontSize: '1.5rem',
+          fontSize: '1.25rem',
           textShadow:
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
@@ -51,6 +53,7 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
       </Typography>
 
       <Typography
+        align="center"
         sx={{
           color: 'white',
           fontFamily: '"Arial",sans-serif',

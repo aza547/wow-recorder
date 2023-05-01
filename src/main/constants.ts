@@ -224,7 +224,7 @@ const encountersVOI: NumberKeyToStringValueMapType = {
 const encountersAberrus: NumberKeyToStringValueMapType = {
   2688: "Kazzara",
   2687: "Amalgamation Chamber",
-  2693: "Experimentation of the Dracthy",
+  2693: "Experimentation of the Dracthyr",
   2682: "Zaqali Invasion",
   2680: "Rashok",
   2689: "Zskarn",
@@ -406,6 +406,16 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   1571: 'Court of Stars',
   1176: 'Shadowmoon Burial Grounds',
   960: 'Temple of the Jade Serpent',
+
+  // Dragonflight S2
+  2520: 'Brackenhide Hollow',
+  2527: 'Halls of Infusion',
+  2451: 'Uldaman: Legacy of Tyr',
+  2519: "Neltharus",
+  1754: 'Freehold',
+  1841: 'The Underrot',
+  1458: "Neltharion's Lair",
+  657: 'The Vortex Pinnacle',
 };
 
 /**
@@ -441,6 +451,8 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   210: 'Court of Stars',
   165: 'Shadowmoon Burial Grounds',
   2: 'Temple of the Jade Serpent',
+
+  
 
   // Dragonflight S2
   405: 'Brackenhide Hollow',
