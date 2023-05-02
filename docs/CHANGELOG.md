@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 ### Fixed
+- [Issue 397](https://github.com/aza547/wow-recorder/issues/397) - Fix issue where scene preview may not position correctly.
 
 ## [3.11.0] - 2023-04-30
 ### Added

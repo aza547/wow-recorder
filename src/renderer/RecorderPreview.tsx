@@ -8,7 +8,6 @@ const RecorderPreview: React.FC = () => {
 
   const show = () => {
     const previewBox = document.getElementById('preview-box');
-    console.log("AHK", previewBox.getBoundingClientRect())
 
     if (previewBox) {
       const { width, height, x, y } = previewBox.getBoundingClientRect();

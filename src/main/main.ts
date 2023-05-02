@@ -299,6 +299,10 @@ const createWindow = async () => {
     }
   });
 
+  mainWindow.on('moved', () => {
+    if (recorder) recorder.showPreviewMemory();
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

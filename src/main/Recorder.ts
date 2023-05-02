@@ -305,13 +305,7 @@ export default class Recorder {
       this.cfg.get<number>('chatOverlayYPosition')
     );
 
-    if (this.previewLocation !== undefined) {
-      // If this is a reconfigure, we won't get an IPC kick from the frontned
-      // to re-show the preview. So just remember the location and do it here.
-      const { width, height, xPos, yPos } = this.previewLocation;
-      this.showPreview(width, height, xPos, yPos);
-    }
-
+    this.showPreviewMemory();
     this.obsConfigured = true;
   }
 
@@ -1221,6 +1215,10 @@ export default class Recorder {
     osn.NodeObs.OBS_content_moveDisplay(this.previewName, 50000, 50000);
   }
 
+  /**
+   * Show the scene preview on the UI, taking the location and dimensions as
+   * input. We scale for window size here.
+   */
   showPreview(width: number, height: number, xPos: number, yPos: number) {
     if (!this.previewCreated) {
       console.warn('[Recorder] Preview display not yet created, creating...');
@@ -1234,25 +1232,20 @@ export default class Recorder {
 
     const winBounds = this.mainWindow.getBounds();
 
-    const distScreen = screen.getDisplayNearestPoint({
+    const currentScreen = screen.getDisplayNearestPoint({
       x: winBounds.x,
       y: winBounds.y,
     });
 
-    const { scaleFactor } = distScreen;
-
-    this.previewLocation = {
-      width: width * scaleFactor,
-      height: height * scaleFactor,
-      xPos: xPos * scaleFactor,
-      yPos: yPos * scaleFactor,
-    };
+    const { scaleFactor } = currentScreen;
+    this.previewLocation = { width, height, xPos, yPos };
 
     osn.NodeObs.OBS_content_resizeDisplay(
       this.previewName,
       width * scaleFactor,
       height * scaleFactor
     );
+
     osn.NodeObs.OBS_content_moveDisplay(
       this.previewName,
       xPos * scaleFactor,
@@ -1260,6 +1253,20 @@ export default class Recorder {
     );
   }
 
+  /**
+   * Show the preview on the UI, only if we already know the location and
+   * dimensions.
+   */
+  showPreviewMemory() {
+    if (this.previewLocation !== undefined) {
+      const { width, height, xPos, yPos } = this.previewLocation;
+      this.showPreview(width, height, xPos, yPos);
+    }
+  }
+
+  /**
+   * Apply a chat overlay to the scene.
+   */
   applyOverlay(
     enabled: boolean,
     width: number,
