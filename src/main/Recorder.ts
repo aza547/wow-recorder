@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
@@ -1231,20 +1231,33 @@ export default class Recorder {
       console.error('[Recorder] Preview display still does not exist');
       return;
     }
-    const { screen } = require('electron');
-    const winBounds = this.mainWindow.getBounds();
-    const distScreen = screen.getDisplayNearestPoint({x: winBounds.x, y: winBounds.y})
-    console.log("ahk2", distScreen);
-    const sf = distScreen.scaleFactor;
 
-    this.previewLocation = { width, height, xPos, yPos };
+    const winBounds = this.mainWindow.getBounds();
+
+    const distScreen = screen.getDisplayNearestPoint({
+      x: winBounds.x,
+      y: winBounds.y,
+    });
+
+    const { scaleFactor } = distScreen;
+
+    this.previewLocation = {
+      width: width * scaleFactor,
+      height: height * scaleFactor,
+      xPos: xPos * scaleFactor,
+      yPos: yPos * scaleFactor,
+    };
 
     osn.NodeObs.OBS_content_resizeDisplay(
       this.previewName,
-      width * sf,
-      height * sf
+      width * scaleFactor,
+      height * scaleFactor
     );
-    osn.NodeObs.OBS_content_moveDisplay(this.previewName, xPos * sf, yPos * sf);
+    osn.NodeObs.OBS_content_moveDisplay(
+      this.previewName,
+      xPos * scaleFactor,
+      yPos * scaleFactor
+    );
   }
 
   applyOverlay(
