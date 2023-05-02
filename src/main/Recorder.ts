@@ -1217,7 +1217,8 @@ export default class Recorder {
 
   /**
    * Show the scene preview on the UI, taking the location and dimensions as
-   * input. We scale for window size here.
+   * input. We scale to match the monitor scaling here too else the preview
+   * will be misplaced (see issue 397).
    */
   showPreview(width: number, height: number, xPos: number, yPos: number) {
     if (!this.previewCreated) {
