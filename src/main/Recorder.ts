@@ -1231,11 +1231,20 @@ export default class Recorder {
       console.error('[Recorder] Preview display still does not exist');
       return;
     }
+    const { screen } = require('electron');
+    const winBounds = this.mainWindow.getBounds();
+    const distScreen = screen.getDisplayNearestPoint({x: winBounds.x, y: winBounds.y})
+    console.log("ahk2", distScreen);
+    const sf = distScreen.scaleFactor;
 
     this.previewLocation = { width, height, xPos, yPos };
 
-    osn.NodeObs.OBS_content_resizeDisplay(this.previewName, width, height);
-    osn.NodeObs.OBS_content_moveDisplay(this.previewName, xPos, yPos);
+    osn.NodeObs.OBS_content_resizeDisplay(
+      this.previewName,
+      width * sf,
+      height * sf
+    );
+    osn.NodeObs.OBS_content_moveDisplay(this.previewName, xPos * sf, yPos * sf);
   }
 
   applyOverlay(
