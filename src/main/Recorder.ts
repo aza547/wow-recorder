@@ -212,7 +212,12 @@ export default class Recorder {
   /**
    * Exists across a reconfigure.
    */
-  private previewLocation: TPreviewPosition | undefined;
+  private previewLocation: TPreviewPosition = {
+    width: 0,
+    height: 0,
+    xPos: 0,
+    yPos: 0,
+  };
 
   /**
    * The image source to be used for the overlay, we create this
@@ -1212,7 +1217,14 @@ export default class Recorder {
 
     // I'd love to make OBS_content_destroyDisplay work here but I've not managed
     // so far. This is a hack to "hide" it by moving it off screen.
-    osn.NodeObs.OBS_content_moveDisplay(this.previewName, 50000, 50000);
+    this.previewLocation.xPos = 50000;
+    this.previewLocation.yPos = 50000;
+
+    osn.NodeObs.OBS_content_moveDisplay(
+      this.previewName,
+      this.previewLocation.xPos,
+      this.previewLocation.yPos
+    );
   }
 
   /**
