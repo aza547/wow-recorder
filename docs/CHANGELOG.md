@@ -5,12 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+### Added
+### Changed
 
+## [3.12.0] - 2023-05-03
 ### Added
 - [Issue 386](https://github.com/aza547/wow-recorder/issues/386) - Option to disable minimize to tray.
 - [Issue 394](https://github.com/aza547/wow-recorder/issues/394) - Updates for Dragonflight season 2 content.
 
-### Changed
 ### Fixed
 - [Issue 397](https://github.com/aza547/wow-recorder/issues/397) - Fix issue where scene preview may not position correctly.
 
