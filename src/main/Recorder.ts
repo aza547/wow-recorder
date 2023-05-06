@@ -246,6 +246,11 @@ export default class Recorder {
    */
   public obsConfigured = false;
 
+  /**
+   * Contructor.
+   *
+   * @param mainWindow main app window for IPC interaction
+   */
   constructor(mainWindow: BrowserWindow) {
     console.info('[Recorder] Constructing recorder:', this.uuid);
     this.mainWindow = mainWindow;
@@ -298,7 +303,9 @@ export default class Recorder {
     this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
     this.createRecordingDirs();
     this.obsRecordingFactory = this.configureOBS();
+
     this.scene = osn.SceneFactory.create('WR Scene');
+    osn.Global.setOutputSource(this.videoChannel, this.scene);
 
     const captureMode = this.cfg.get<string>('obsCaptureMode');
     const monitorIndex = this.cfg.get<number>('monitorIndex');
@@ -505,7 +512,6 @@ export default class Recorder {
     if (this.videoSource) {
       this.videoSource.release();
       this.videoSource.remove();
-      osn.Global.setOutputSource(1, null as unknown as ISource);
     }
 
     switch (captureMode) {
@@ -522,7 +528,6 @@ export default class Recorder {
     }
 
     this.videoSceneItem = this.scene.add(this.videoSource);
-    osn.Global.setOutputSource(this.videoChannel, this.scene);
 
     if (this.videoSourceSizeInterval) {
       clearInterval(this.videoSourceSizeInterval);

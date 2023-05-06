@@ -155,7 +155,7 @@ const SceneEditor: React.FC = () => {
         height: '100%',
       }}
     >
-      <Box sx={{ width: '100%', height: '100%' }}>
+      <Box sx={{ width: '100%', height: '75%' }}>
         <RecorderPreview />
       </Box>
       <Box
@@ -164,7 +164,7 @@ const SceneEditor: React.FC = () => {
           justifyContent: 'center',
           alignItems: 'center',
           width: '100%',
-          height: '12%',
+          height: '25%',
           mb: 2,
           mt: 2,
         }}
