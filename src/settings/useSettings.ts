@@ -15,18 +15,6 @@ export function setConfigValues(dict: { [key: string]: any }): void {
   window.electron.ipcRenderer.sendMessage('config', ['set_values', dict]);
 }
 
-export const useOverlaySettings = () => {
-  const overlayConfigValues = {
-    chatOverlayEnabled: getConfigValue<boolean>('chatOverlayEnabled'),
-    chatOverlayWidth: getConfigValue<number>('chatOverlayWidth'),
-    chatOverlayHeight: getConfigValue<number>('chatOverlayHeight'),
-    chatOverlayXPosition: getConfigValue<number>('chatOverlayXPosition'),
-    chatOverlayYPosition: getConfigValue<number>('chatOverlayYPosition'),
-  };
-
-  return React.useState(overlayConfigValues);
-};
-
 export const useSettings = () => {
   const configValues = {
     storagePath: getConfigValue<string>('storagePath'),
@@ -60,6 +48,11 @@ export const useSettings = () => {
     minimizeOnQuit: getConfigValue<boolean>('minimizeOnQuit'),
     minimizeToTray: getConfigValue<boolean>('minimizeToTray'),
     minRaidDifficulty: getConfigValue<string>('minRaidDifficulty'),
+    chatOverlayEnabled: getConfigValue<boolean>('chatOverlayEnabled'),
+    chatOverlayWidth: getConfigValue<number>('chatOverlayWidth'),
+    chatOverlayHeight: getConfigValue<number>('chatOverlayHeight'),
+    chatOverlayXPosition: getConfigValue<number>('chatOverlayXPosition'),
+    chatOverlayYPosition: getConfigValue<number>('chatOverlayYPosition'),
   };
 
   return React.useState(configValues);

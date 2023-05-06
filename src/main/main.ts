@@ -590,6 +590,13 @@ ipcMain.on('preview', (_event, args) => {
 });
 
 /**
+ * Get all displays.
+ */
+ipcMain.on('getAllDisplays', (event) => {
+  event.returnValue = getAvailableDisplays();
+});
+
+/**
  * Chat overlay event listener.
  */
 ipcMain.on('overlay', (_event, args) => {
@@ -684,6 +691,13 @@ ipcMain.on('recorder', async (_event, args) => {
     }
 
     if (recorder) await recorder.forceStop();
+    return;
+  }
+
+  if (args[0] === 'scene') {
+    if (recorder !== undefined) {
+      recorder.configureVideoOBS(args[1] as string, args[2] as number);
+    }
   }
 });
 

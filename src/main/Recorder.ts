@@ -128,7 +128,7 @@ export default class Recorder {
   /**
    * ISceneItem object for the video feed, useful to have handy for rescaling.
    */
-  private sceneItem: ISceneItem | undefined;
+  private videoSceneItem: ISceneItem | undefined;
 
   /**
    * Object representing the video source.
@@ -298,7 +298,12 @@ export default class Recorder {
     this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
     this.createRecordingDirs();
     this.obsRecordingFactory = this.configureOBS();
-    this.configureVideoOBS();
+    this.scene = osn.SceneFactory.create('WR Scene');
+
+    const captureMode = this.cfg.get<string>('obsCaptureMode');
+    const monitorIndex = this.cfg.get<number>('monitorIndex');
+    this.configureVideoOBS(captureMode, monitorIndex);
+
     this.createImageSource();
     this.createPreview();
 
@@ -490,14 +495,22 @@ export default class Recorder {
   /**
    * Configures the video source in OBS. Also creates the scene.
    */
-  private configureVideoOBS() {
-    console.info('[Recorder] Configuring OBS video');
+  configureVideoOBS(captureMode: string, monitorIndex: number) {
+    console.info('[Recorder] Configuring OBS video', captureMode, monitorIndex);
 
-    const captureMode = this.cfg.get<string>('obsCaptureMode');
+    if (this.scene === undefined || this.scene === null) {
+      throw new Error('[Recorder] No scene');
+    }
+
+    if (this.videoSource) {
+      this.videoSource.release();
+      this.videoSource.remove();
+      osn.Global.setOutputSource(1, null as unknown as ISource);
+    }
 
     switch (captureMode) {
       case 'monitor_capture':
-        this.videoSource = this.createMonitorCaptureSource();
+        this.videoSource = this.createMonitorCaptureSource(monitorIndex);
         break;
 
       case 'game_capture':
@@ -505,12 +518,15 @@ export default class Recorder {
         break;
 
       default:
-        throw new Error('[Recorder] Unexpected default case hit');
+        throw new Error(`[Recorder] Unexpected default case hit${captureMode}`);
     }
 
-    this.scene = osn.SceneFactory.create('WR Scene');
-    this.sceneItem = this.scene.add(this.videoSource);
+    this.videoSceneItem = this.scene.add(this.videoSource);
     osn.Global.setOutputSource(this.videoChannel, this.scene);
+
+    if (this.videoSourceSizeInterval) {
+      clearInterval(this.videoSourceSizeInterval);
+    }
 
     if (captureMode === 'game_capture') {
       this.watchVideoSourceSize();
@@ -520,7 +536,7 @@ export default class Recorder {
   /**
    * Creates a monitor capture source.
    */
-  private createMonitorCaptureSource() {
+  private createMonitorCaptureSource(monitorIndex: number) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
 
     const monitorCaptureSource = osn.InputFactory.create(
@@ -529,7 +545,7 @@ export default class Recorder {
     );
 
     const { settings } = monitorCaptureSource;
-    settings.monitor = this.cfg.get<number>('monitorIndex') - 1;
+    settings.monitor = monitorIndex;
     settings.capture_cursor = this.cfg.get<boolean>('captureCursor');
 
     monitorCaptureSource.update(settings);
@@ -1152,8 +1168,8 @@ export default class Recorder {
       throw new Error('[Recorder] videoSource was undefined');
     }
 
-    if (!this.sceneItem) {
-      throw new Error('[Recorder] sceneItem was undefined');
+    if (!this.videoSceneItem) {
+      throw new Error('[Recorder] videoSceneItem was undefined');
     }
 
     if (this.videoSource.width === 0) {
@@ -1175,7 +1191,7 @@ export default class Recorder {
       );
 
       this.videoScaleFactor = scaleFactor;
-      this.sceneItem.scale = { x: scaleFactor, y: scaleFactor };
+      this.videoSceneItem.scale = { x: scaleFactor, y: scaleFactor };
     }
   }
 

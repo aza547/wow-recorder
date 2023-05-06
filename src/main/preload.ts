@@ -9,6 +9,7 @@ export type Channels =
   | 'openURL'
   | 'test'
   | 'getAudioDevices'
+  | 'getAllDisplays'
   | 'videoPlayerSettings'
   | 'recorder'
   | 'config'
