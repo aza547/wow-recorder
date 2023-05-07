@@ -126,13 +126,11 @@ const getChallengeModeVideoMarkers = (video: RendererVideo) => {
       if (
         segment.logEnd === undefined ||
         segment.logStart === undefined ||
-        segment.segmentType === undefined
+        segment.segmentType === undefined ||
+        segment.segmentType !== TimelineSegmentType.BossEncounter
       ) {
         return;
       }
-
-      let markerClass = 'purple-video-marker';
-      let markerText = segment.segmentType as string;
 
       const segmentEnd = new Date(segment.logEnd);
       const segmentStart = new Date(segment.logStart);
@@ -141,18 +139,16 @@ const getChallengeModeVideoMarkers = (video: RendererVideo) => {
         (segmentEnd.getTime() - segmentStart.getTime()) / 1000
       );
 
-      if (segment.segmentType === TimelineSegmentType.BossEncounter) {
-        markerClass = 'orange-video-marker';
+      let markerText = '';
 
-        if (segment.encounterId !== undefined) {
-          markerText = dungeonEncounters[segment.encounterId];
-        }
+      if (segment.encounterId !== undefined) {
+        markerText = dungeonEncounters[segment.encounterId];
       }
 
       videoMarkers.push({
         time: segment.timestamp,
         text: markerText,
-        class: markerClass,
+        class: 'purple-video-marker',
         duration: segmentDuration,
       });
     }
