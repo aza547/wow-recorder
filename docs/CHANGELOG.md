@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 ### Changed
+- [NO-ISSUE] - Move some settings to the scene editor.
 
 ## [3.12.0] - 2023-05-03
 ### Added
