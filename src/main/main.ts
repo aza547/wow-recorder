@@ -614,7 +614,12 @@ ipcMain.handle('getVideoState', async () =>
 
 ipcMain.on('getAudioDevices', (event) => {
   if (!recorder || !recorder.obsInitialized) {
-    throw new Error('[Main] getAudioDevices called when OBS not initialized');
+    event.returnValue = {
+      input: [],
+      output: [],
+    };
+
+    return;
   }
 
   const inputDevices = recorder.getInputAudioDevices();

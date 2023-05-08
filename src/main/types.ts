@@ -301,6 +301,11 @@ type TPreviewPosition = {
   yPos: number;
 };
 
+enum DeviceType {
+  INPUT,
+  OUTPUT,
+}
+
 export {
   RecStatus,
   SaveStatus,
@@ -332,4 +337,5 @@ export {
   RawCombatant,
   RawChallengeModeTimelineSegment,
   TPreviewPosition,
+  DeviceType,
 };

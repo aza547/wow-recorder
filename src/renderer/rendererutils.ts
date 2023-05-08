@@ -20,6 +20,7 @@ import {
 import { TimelineSegmentType } from 'main/keystone';
 import {
   Flavour,
+  IOBSDevice,
   PlayerDeathType,
   RawChallengeModeTimelineSegment,
   RendererVideo,
@@ -569,6 +570,75 @@ const getVideoDate = (video: RendererVideo) => {
   return dateAsString;
 };
 
+/**
+ * Get the human readable description of a device from its id. Returns
+ * unknown if not an available device.
+ *
+ * @param id the device id
+ * @param availableAudioDevices list of available sources from OBS
+ */
+const getAudioDeviceDescription = (
+  id: string,
+  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] }
+) => {
+  let result = 'Unknown';
+
+  availableAudioDevices.input.forEach((device) => {
+    if (device.id === id) {
+      result = device.description;
+    }
+  });
+
+  availableAudioDevices.output.forEach((device) => {
+    if (device.id === id) {
+      result = device.description;
+    }
+  });
+
+  return result;
+};
+
+/**
+ * Check if an id represents an available audio device.
+ *
+ * @param id the device id
+ * @param availableAudioDevices list of available sources from OBS
+ */
+const isKnownAudioDevice = (
+  id: string,
+  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] }
+) => {
+  if (getAudioDeviceDescription(id, availableAudioDevices) === 'Unknown') {
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Standardizes device names to an array of strings and filters by known devices.
+ *
+ * @param deviceNames the device names to standardize
+ * @param availableAudioDevices list of available sources from OBS
+ * @returns the standardized device names
+ */
+const standardizeAudioDeviceNames = (
+  deviceNames: string[] | string,
+  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] }
+): string[] => {
+  let normalizedDeviceNames: string[];
+
+  if (typeof deviceNames === 'string') {
+    normalizedDeviceNames = deviceNames.split(',');
+  } else {
+    normalizedDeviceNames = deviceNames;
+  }
+
+  return normalizedDeviceNames.filter((id) =>
+    isKnownAudioDevice(id, availableAudioDevices)
+  );
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -597,4 +667,7 @@ export {
   getPlayerClass,
   getVideoTime,
   getVideoDate,
+  getAudioDeviceDescription,
+  isKnownAudioDevice,
+  standardizeAudioDeviceNames,
 };
