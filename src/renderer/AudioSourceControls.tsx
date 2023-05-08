@@ -9,22 +9,25 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
+  Slider,
+  Stack,
   Switch,
 } from '@mui/material';
 import { DeviceType, IOBSDevice } from 'main/types';
 import React from 'react';
 import { useSettings, setConfigValues } from 'settings/useSettings';
+import { VolumeDown, VolumeUp } from '@mui/icons-material';
 import {
   getAudioDeviceDescription,
   standardizeAudioDeviceNames,
 } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
+let debounceTimer: NodeJS.Timer | undefined;
 
 const AudioSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const availableAudioDevices = ipc.sendSync('getAudioDevices', []);
-  setConfigValues(config);
 
   const input = standardizeAudioDeviceNames(
     config.audioInputDevices,
@@ -67,15 +70,33 @@ const AudioSourceControls: React.FC = () => {
   };
 
   React.useEffect(() => {
-    ipc.sendMessage('recorder', [
-      'audio',
-      config.audioOutputDevices,
-      config.audioInputDevices,
-      config.obsForceMono,
-    ]);
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    debounceTimer = setTimeout(() => {
+      setConfigValues({
+        audioOutputDevices: config.audioOutputDevices,
+        speakerVolume: config.speakerVolume,
+        audioInputDevices: config.audioInputDevices,
+        micVolume: config.micVolume,
+        obsForceMono: config.obsForceMono,
+      });
+
+      ipc.sendMessage('recorder', [
+        'audio',
+        config.audioOutputDevices,
+        config.speakerVolume,
+        config.audioInputDevices,
+        config.micVolume,
+        config.obsForceMono,
+      ]);
+    }, 500);
   }, [
     config.audioOutputDevices,
+    config.speakerVolume,
     config.audioInputDevices,
+    config.micVolume,
     config.obsForceMono,
   ]);
 
@@ -93,9 +114,25 @@ const AudioSourceControls: React.FC = () => {
     },
   };
 
-  const formControlStyle = { m: 1, width: '200px' };
+  const sliderSx = {
+    '& .MuiSlider-thumb': {
+      color: 'white',
+    },
+    '& .MuiSlider-track': {
+      color: '#bb4220',
+    },
+    '& .MuiSlider-rail': {
+      color: '#bb4220',
+    },
+    '& .MuiSlider-active': {
+      color: '#bb4220',
+    },
+  };
+
+  const formControlStyle = { m: 1, width: '100%' };
 
   const switchStyle = {
+    mx: 2,
     '& .MuiSwitch-switchBase': {
       '&.Mui-checked': {
         color: '#fff',
@@ -189,6 +226,35 @@ const AudioSourceControls: React.FC = () => {
     );
   };
 
+  const setSpeakerVolume = (_event: Event, newValue: number | number[]) => {
+    if (typeof newValue !== 'number') {
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        speakerVolume: newValue / 100,
+      };
+    });
+  };
+
+  const getSpeakerVolume = () => {
+    return (
+      <Box sx={{ width: '100%' }}>
+        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+          <VolumeDown sx={{ color: 'white' }} />
+          <Slider
+            sx={sliderSx}
+            value={config.speakerVolume * 100}
+            onChange={setSpeakerVolume}
+          />
+          <VolumeUp sx={{ color: 'white' }} />
+        </Stack>
+      </Box>
+    );
+  };
+
   const getMicSelect = () => {
     return (
       <FormControl size="small" variant="outlined" sx={formControlStyle}>
@@ -206,6 +272,35 @@ const AudioSourceControls: React.FC = () => {
           {availableAudioDevices.input.map(getInputMenuItem)}
         </Select>
       </FormControl>
+    );
+  };
+
+  const setMicVolume = (_event: Event, newValue: number | number[]) => {
+    if (typeof newValue !== 'number') {
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        micVolume: newValue / 100,
+      };
+    });
+  };
+
+  const getMicVolume = () => {
+    return (
+      <Box sx={{ width: '100%' }}>
+        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+          <VolumeDown sx={{ color: 'white' }} />
+          <Slider
+            sx={sliderSx}
+            value={config.micVolume * 100}
+            onChange={setMicVolume}
+          />
+          <VolumeUp sx={{ color: 'white' }} />
+        </Stack>
+      </Box>
     );
   };
 
@@ -229,6 +324,7 @@ const AudioSourceControls: React.FC = () => {
           />
         }
         label="Mono Input"
+        labelPlacement="top"
         sx={{
           color: 'white',
         }}
@@ -247,8 +343,32 @@ const AudioSourceControls: React.FC = () => {
         m: 2,
       }}
     >
-      {getSpeakerSelect()}
-      {getMicSelect()}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          m: 2,
+        }}
+      >
+        {getSpeakerSelect()}
+        {getSpeakerVolume()}
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+        }}
+      >
+        {getMicSelect()}
+        {getMicVolume()}
+      </Box>
+
       {getMonoSwitch()}
     </Box>
   );

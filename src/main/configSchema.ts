@@ -37,6 +37,8 @@ export type ConfigurationSchema = {
   chatOverlayHeight: number;
   chatOverlayXPosition: number;
   chatOverlayYPosition: number;
+  speakerVolume: number;
+  micVolume: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -254,5 +256,15 @@ export const configSchema = {
     description: 'The y-position of the chat overlay.',
     type: 'integer',
     default: 870,
+  },
+  speakerVolume: {
+    description: 'The volume of your speakers in the recording, from 0 to 1.',
+    type: 'integer',
+    default: 1,
+  },
+  micVolume: {
+    description: 'The volume of your mic in the recording, from 0 to 1.',
+    type: 'integer',
+    default: 1,
   },
 };

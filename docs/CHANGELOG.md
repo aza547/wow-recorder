@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 387](https://github.com/aza547/wow-recorder/issues/387) - Fix to Mythic+ video markers UX.
 
 ### Added
+- [Issue 216](https://github.com/aza547/wow-recorder/issues/216) - Add volume controls for audio sources.
+
 ### Changed
 - [NO-ISSUE] - Move some settings to the scene editor.
 

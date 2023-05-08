@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
 import {
+  IFader,
   IInput,
   IScene,
   ISceneItem,
@@ -224,6 +225,13 @@ export default class Recorder {
    * ahead of time regardless of if the user has the overlay enabled.
    */
   private overlayImageSource: IInput | undefined;
+
+  /**
+   * Faders are used to modify the volume of an input source. We keep a list
+   * of them here as we need a fader per audio source so it's handy to have a
+   * list for cleaning them up.
+   */
+  private faders: IFader[] = [];
 
   /**
    * Handle to the scene item for the overlay source. Handy for adding
@@ -623,21 +631,38 @@ export default class Recorder {
   }
 
   /**
-   * Add the configured audio sources ot the OBS scene. This is public
+   * Set the configured audio sources ot the OBS scene. This is public
    * so it can be called externally when WoW is opened - see the Poller
-   * class.
+   * class. This removes any previously configured sources.
+   *
+   * @param speakers comma seperated string of speaker device IDs
+   * @param speakerMultiplier value from 0 to 1 to multiply speaker volume
+   * @param mic comma seperated string of mic device IDs
+   * @param micMultiplier value from 0 to 1 to multiply mic volume
+   * @param forceMono true if mic input should be mono
    */
-  public addAudioSourcesOBS(
+  public setAudioSourcesOBS(
     speakers: string,
+    speakerMultiplier: number,
     mics: string,
+    micMultiplier: number,
     forceMono: boolean
   ) {
     console.info(
-      '[Recorder] Configuring OBS audio sources',
+      '[Recorder] Configuring OBS audio sources...',
+      'speakers:',
       speakers,
+      'speakerMultiplier:',
+      speakerMultiplier,
+      'mics:',
       mics,
+      'micMultiplier:',
+      micMultiplier,
+      'forceMono:',
       forceMono
     );
+
+    this.removeAudioSourcesOBS();
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
@@ -648,6 +673,12 @@ export default class Recorder {
       .forEach((id) => {
         console.info('[Recorder] Adding input source', id);
         const obsSource = this.createOBSAudioSource(id, TAudioSourceType.input);
+
+        const micFader = osn.FaderFactory.create(0);
+        micFader.attach(obsSource);
+        micFader.mul = micMultiplier;
+        this.faders.push(micFader);
+
         this.audioInputDevices.push(obsSource);
       });
 
@@ -685,6 +716,10 @@ export default class Recorder {
           TAudioSourceType.output
         );
 
+        const speakerFader = osn.FaderFactory.create(0);
+        speakerFader.attach(obsSource);
+        speakerFader.mul = speakerMultiplier;
+        this.faders.push(speakerFader);
         this.audioOutputDevices.push(obsSource);
       });
 
@@ -715,6 +750,13 @@ export default class Recorder {
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }
+
+    this.faders.forEach((fader) => {
+      fader.detach();
+      fader.destroy();
+    });
+
+    this.faders = [];
 
     this.audioInputDevices.forEach((device) => {
       const index = this.audioInputDevices.indexOf(device);
@@ -1109,8 +1151,6 @@ export default class Recorder {
    * the list of devices for user selection.
    */
   public getInputAudioDevices() {
-    console.info('[Recorder] Getting available input devices');
-
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }
@@ -1126,8 +1166,6 @@ export default class Recorder {
    * the list of devices for user selection.
    */
   getOutputAudioDevices() {
-    console.info('[Recorder] Getting available output devices');
-
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }

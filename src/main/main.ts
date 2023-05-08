@@ -118,10 +118,20 @@ const wowProcessStarted = async () => {
   // We add the audio sources here so they are only held when WoW is
   // open, holding an audio devices prevents Windows go to sleeping
   // which we don't want to do if we can avoid it.
-  const mics = cfg.get<string>('audioInputDevices');
   const speakers = cfg.get<string>('audioOutputDevices');
+  const speakerVolume = cfg.get<number>('speakerVolume');
+  const mics = cfg.get<string>('audioInputDevices');
+  const micVolume = cfg.get<number>('micVolume');
   const forceMono = cfg.get<boolean>('obsForceMono');
-  recorder.addAudioSourcesOBS(speakers, mics, forceMono);
+
+  recorder.setAudioSourcesOBS(
+    speakers,
+    speakerVolume,
+    mics,
+    micVolume,
+    forceMono
+  );
+
   await recorder.startBuffer();
 };
 
@@ -630,13 +640,6 @@ ipcMain.on('getAudioDevices', (event) => {
   const inputDevices = recorder.getInputAudioDevices();
   const outputDevices = recorder.getOutputAudioDevices();
 
-  console.info(
-    '[Main] Input devices:',
-    inputDevices,
-    'Output devices:',
-    outputDevices
-  );
-
   event.returnValue = {
     input: inputDevices,
     output: outputDevices,
@@ -716,11 +719,12 @@ ipcMain.on('recorder', async (_event, args) => {
 
   if (args[0] === 'audio') {
     if (recorder !== undefined) {
-      recorder.removeAudioSourcesOBS();
-      recorder.addAudioSourcesOBS(
+      recorder.setAudioSourcesOBS(
         args[1] as string,
-        args[2] as string,
-        args[3] as boolean
+        args[2] as number,
+        args[3] as string,
+        args[4] as number,
+        args[5] as boolean
       );
     }
   }

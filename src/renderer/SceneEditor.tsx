@@ -37,10 +37,18 @@ const SceneEditor: React.FC = () => {
           }}
         >
           <VideoSourceControls />
-          <Divider flexItem orientation="vertical" sx={{ borderColor: 'black' }} />
+          <Divider
+            flexItem
+            orientation="vertical"
+            sx={{ borderColor: 'black' }}
+          />
           <AudioSourceControls />
         </Box>
-        <Divider flexItem orientation="horizontal" sx={{ borderColor: 'black' }} />
+        <Divider
+          flexItem
+          orientation="horizontal"
+          sx={{ borderColor: 'black' }}
+        />
         <Box
           sx={{
             display: 'flex',
@@ -50,7 +58,11 @@ const SceneEditor: React.FC = () => {
           }}
         >
           <Box sx={{ width: '100%', m: 2 }}>ABC</Box>
-          <Divider flexItem orientation="vertical" sx={{ borderColor: 'black' }} />
+          <Divider
+            flexItem
+            orientation="vertical"
+            sx={{ borderColor: 'black' }}
+          />
           <ChatOverlayControls />
         </Box>
       </Box>

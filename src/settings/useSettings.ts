@@ -54,6 +54,8 @@ export const useSettings = () => {
     chatOverlayXPosition: getConfigValue<number>('chatOverlayXPosition'),
     chatOverlayYPosition: getConfigValue<number>('chatOverlayYPosition'),
     captureCursor: getConfigValue<boolean>('captureCursor'),
+    speakerVolume: getConfigValue<number>('speakerVolume'),
+    micVolume: getConfigValue<number>('micVolume'),
   };
 
   return React.useState(configValues);
