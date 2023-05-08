@@ -7,7 +7,6 @@ import { makeStyles } from 'tss-react/mui';
 import { configSchema } from 'main/configSchema';
 import GeneralSettings from './GeneralSettings';
 import VideoSettings from './VideoSettings';
-import AudioSettings from './AudioSettings';
 import AdvancedSettings from './AdvancedSettings';
 import ContentSettings from './ContentSettings';
 import { useSettings, setConfigValues } from './useSettings';
@@ -160,7 +159,6 @@ export default function Settings() {
         <Tab label="General" {...a11yProps(0)} sx={{ ...categoryTabSx }} />
         <Tab label="Content" {...a11yProps(1)} sx={{ ...categoryTabSx }} />
         <Tab label="Video" {...a11yProps(2)} sx={{ ...categoryTabSx }} />
-        <Tab label="Audio" {...a11yProps(3)} sx={{ ...categoryTabSx }} />
         <Tab label="Advanced" {...a11yProps(4)} sx={{ ...categoryTabSx }} />
       </Tabs>
       <TabPanel value={tabIndex} index={0}>
@@ -171,9 +169,6 @@ export default function Settings() {
       </TabPanel>
       <TabPanel value={tabIndex} index={2}>
         <VideoSettings config={config} onChange={modifyConfig} />
-      </TabPanel>
-      <TabPanel value={tabIndex} index={3}>
-        <AudioSettings config={config} onChange={modifyConfig} />
       </TabPanel>
       <TabPanel value={tabIndex} index={4}>
         <AdvancedSettings config={config} onChange={modifyConfig} />

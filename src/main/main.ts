@@ -85,6 +85,25 @@ process.on('unhandledRejection', (error: Error) => {
   updateRecStatus(RecStatus.FatalError, String(error));
 });
 
+/**
+ * Create a settings store to handle the config.
+ * This defaults to a path like:
+ *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v3.json"
+ *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v3.json"
+ */
+const cfg = ConfigService.getInstance();
+
+cfg.on('change', (key: string, value: any) => {
+  if (key === 'startUp') {
+    const isStartUp = value === true;
+    console.log('[Main] OS level set start-up behaviour:', isStartUp);
+
+    app.setLoginItemSettings({
+      openAtLogin: isStartUp,
+    });
+  }
+});
+
 const wowProcessStarted = async () => {
   console.info('[Main] Detected WoW is running');
 
@@ -99,7 +118,10 @@ const wowProcessStarted = async () => {
   // We add the audio sources here so they are only held when WoW is
   // open, holding an audio devices prevents Windows go to sleeping
   // which we don't want to do if we can avoid it.
-  recorder.addAudioSourcesOBS();
+  const mics = cfg.get<string>('audioInputDevices');
+  const speakers = cfg.get<string>('audioOutputDevices');
+  const forceMono = cfg.get<boolean>('obsForceMono');
+  recorder.addAudioSourcesOBS(speakers, mics, forceMono);
   await recorder.startBuffer();
 };
 
@@ -129,24 +151,7 @@ const wowProcessStopped = async () => {
   }
 };
 
-/**
- * Create a settings store to handle the config.
- * This defaults to a path like:
- *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v3.json"
- *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v3.json"
- */
-const cfg = ConfigService.getInstance();
 
-cfg.on('change', (key: string, value: any) => {
-  if (key === 'startUp') {
-    const isStartUp = value === true;
-    console.log('[Main] OS level set start-up behaviour:', isStartUp);
-
-    app.setLoginItemSettings({
-      openAtLogin: isStartUp,
-    });
-  }
-});
 
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
@@ -699,11 +704,22 @@ ipcMain.on('recorder', async (_event, args) => {
     return;
   }
 
-  if (args[0] === 'scene') {
+  if (args[0] === 'video') {
     if (recorder !== undefined) {
       recorder.configureVideoOBS(
         args[1] as string,
         args[2] as number,
+        args[3] as boolean
+      );
+    }
+  }
+
+  if (args[0] === 'audio') {
+    if (recorder !== undefined) {
+      recorder.removeAudioSourcesOBS();
+      recorder.addAudioSourcesOBS(
+        args[1] as string,
+        args[2] as string,
         args[3] as boolean
       );
     }

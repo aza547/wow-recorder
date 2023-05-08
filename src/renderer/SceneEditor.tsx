@@ -3,6 +3,7 @@ import React from 'react';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
 import VideoSourceControls from './VideoSourceControls';
+import AudioSourceControls from './AudioSourceControls';
 
 const SceneEditor: React.FC = () => {
   return (
@@ -24,10 +25,11 @@ const SceneEditor: React.FC = () => {
           justifyContent: 'space-evenly',
           alignItems: 'center',
           width: '100%',
-          height: '30%',
+          height: '40%',
         }}
       >
         <VideoSourceControls />
+        <AudioSourceControls />
         <ChatOverlayControls />
       </Box>
     </Box>

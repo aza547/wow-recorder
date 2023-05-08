@@ -1,20 +1,13 @@
 import {
   Box,
-  FormControl,
   FormControlLabel,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Switch,
   ToggleButton,
   ToggleButtonGroup,
-  Tooltip,
 } from '@mui/material';
 import React from 'react';
 import { useSettings, setConfigValues } from 'settings/useSettings';
 import { OurDisplayType } from 'main/types';
-import { configSchema } from 'main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -36,7 +29,6 @@ const switchStyle = {
 const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const displayConfiguration = ipc.sendSync('getAllDisplays', []);
-  const availableAudioDevices = ipc.sendSync('getAudioDevices', []);
   setConfigValues(config);
 
   const setOBSCaptureMode = (
@@ -82,7 +74,7 @@ const VideoSourceControls: React.FC = () => {
 
   React.useEffect(() => {
     ipc.sendMessage('recorder', [
-      'scene',
+      'video',
       config.obsCaptureMode,
       config.monitorIndex,
       config.captureCursor,

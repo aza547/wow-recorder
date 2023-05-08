@@ -627,14 +627,22 @@ export default class Recorder {
    * so it can be called externally when WoW is opened - see the Poller
    * class.
    */
-  public addAudioSourcesOBS() {
-    console.info('[Recorder] Configuring OBS audio sources');
+  public addAudioSourcesOBS(
+    speakers: string,
+    mics: string,
+    forceMono: boolean
+  ) {
+    console.info(
+      '[Recorder] Configuring OBS audio sources',
+      speakers,
+      mics,
+      forceMono
+    );
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
 
-    this.cfg
-      .get<string>('audioInputDevices')
+    mics
       .split(',')
       .filter((id) => id)
       .forEach((id) => {
@@ -659,15 +667,14 @@ export default class Recorder {
       const index = this.audioInputDevices.indexOf(device);
       const channel = this.audioInputChannels[index];
 
-      if (this.cfg.get('obsForceMono')) {
+      if (forceMono) {
         device.flags = ESourceFlags.ForceMono;
       }
 
       this.addAudioSourceOBS(device, channel);
     });
 
-    this.cfg
-      .get<string>('audioOutputDevices')
+    speakers
       .split(',')
       .filter((id) => id)
       .forEach((id) => {
