@@ -309,7 +309,8 @@ export default class Recorder {
 
     const captureMode = this.cfg.get<string>('obsCaptureMode');
     const monitorIndex = this.cfg.get<number>('monitorIndex');
-    this.configureVideoOBS(captureMode, monitorIndex);
+    const captureCursor = this.cfg.get<boolean>('captureCursor');
+    this.configureVideoOBS(captureMode, monitorIndex, captureCursor);
 
     this.createImageSource();
     this.createPreview();
@@ -502,8 +503,17 @@ export default class Recorder {
   /**
    * Configures the video source in OBS. Also creates the scene.
    */
-  configureVideoOBS(captureMode: string, monitorIndex: number) {
-    console.info('[Recorder] Configuring OBS video', captureMode, monitorIndex);
+  configureVideoOBS(
+    captureMode: string,
+    monitorIndex: number,
+    captureCursor: boolean
+  ) {
+    console.info(
+      '[Recorder] Configuring OBS video',
+      captureMode,
+      monitorIndex,
+      captureCursor
+    );
 
     if (this.scene === undefined || this.scene === null) {
       throw new Error('[Recorder] No scene');
@@ -516,15 +526,20 @@ export default class Recorder {
 
     switch (captureMode) {
       case 'monitor_capture':
-        this.videoSource = this.createMonitorCaptureSource(monitorIndex);
+        this.videoSource = Recorder.createMonitorCaptureSource(
+          monitorIndex,
+          captureCursor
+        );
         break;
 
       case 'game_capture':
-        this.videoSource = this.createGameCaptureSource();
+        this.videoSource = Recorder.createGameCaptureSource(captureCursor);
         break;
 
       default:
-        throw new Error(`[Recorder] Unexpected default case hit${captureMode}`);
+        throw new Error(
+          `[Recorder] Unexpected default case hit ${captureMode}`
+        );
     }
 
     this.videoSceneItem = this.scene.add(this.videoSource);
@@ -541,7 +556,10 @@ export default class Recorder {
   /**
    * Creates a monitor capture source.
    */
-  private createMonitorCaptureSource(monitorIndex: number) {
+  private static createMonitorCaptureSource(
+    monitorIndex: number,
+    captureCursor: boolean
+  ) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
 
     const monitorCaptureSource = osn.InputFactory.create(
@@ -551,7 +569,7 @@ export default class Recorder {
 
     const { settings } = monitorCaptureSource;
     settings.monitor = monitorIndex;
-    settings.capture_cursor = this.cfg.get<boolean>('captureCursor');
+    settings.capture_cursor = captureCursor;
 
     monitorCaptureSource.update(settings);
     monitorCaptureSource.save();
@@ -562,7 +580,7 @@ export default class Recorder {
   /**
    * Creates a game capture source.
    */
-  private createGameCaptureSource() {
+  private static createGameCaptureSource(captureCursor: boolean) {
     console.info('[Recorder] Configuring OBS for Game Capture');
 
     const gameCaptureSource = osn.InputFactory.create(
@@ -574,7 +592,7 @@ export default class Recorder {
     settings.capture_mode = 'window';
     settings.allow_transparency = true;
     settings.priority = 1;
-    settings.capture_cursor = this.cfg.get<boolean>('captureCursor');
+    settings.capture_cursor = captureCursor;
     settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
 
     gameCaptureSource.update(settings);

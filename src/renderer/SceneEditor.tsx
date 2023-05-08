@@ -2,8 +2,7 @@ import { Box } from '@mui/material';
 import React from 'react';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
-import VideoSourceControls from './VideoSourceControls';
-import AudioSourceControls from './AudioSourceControls';
+import SourceControls from './SourceControls';
 
 const SceneEditor: React.FC = () => {
   return (
@@ -21,27 +20,14 @@ const SceneEditor: React.FC = () => {
       <Box
         sx={{
           display: 'flex',
-          justifyContent: 'center',
+          flexDirection: 'column',
+          justifyContent: 'space-evenly',
           alignItems: 'center',
           width: '100%',
-          height: '25%',
-          mb: 2,
-          mt: 2,
+          height: '30%',
         }}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-evenly',
-            alignItems: 'center',
-            width: '100%',
-            height: '100%',
-          }}
-        >
-          <VideoSourceControls />
-          <AudioSourceControls />
-        </Box>
+        <SourceControls />
         <ChatOverlayControls />
       </Box>
     </Box>

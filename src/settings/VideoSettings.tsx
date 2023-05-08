@@ -3,32 +3,19 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
-import { OurDisplayType, ISettingsPanelProps } from 'main/types';
-import { Box, FormControlLabel, Switch, TextField } from '@mui/material';
+import { ISettingsPanelProps } from 'main/types';
+import { Box, TextField } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import React from 'react';
-import { configSchema, ConfigurationSchemaKey } from '../main/configSchema';
+import { configSchema } from '../main/configSchema';
 import { obsResolutions } from '../main/constants';
-
-const ipc = window.electron.ipcRenderer;
-const displayConfiguration = ipc.sendSync('settingsWindow', ['getAllDisplays']);
 
 const outputResolutions = Object.keys(obsResolutions);
 const fpsOptions = ['10', '20', '30', '60'];
 
-const obsCaptureModes = {
-  game_capture: 'Game Capture (Recommended)',
-  monitor_capture: 'Monitor Capture',
-};
-
 export default function VideoSettings(props: ISettingsPanelProps) {
   const { config, onChange } = props;
-
-  const initialCaptureCursor = config.captureCursor;
-  const [captureCursor, setCaptureCursor] =
-    React.useState<boolean>(initialCaptureCursor);
 
   const style = {
     width: '405px',
@@ -85,22 +72,6 @@ export default function VideoSettings(props: ISettingsPanelProps) {
     );
   };
 
-  const captureCursorConfigKey: ConfigurationSchemaKey = 'captureCursor';
-
-  const switchStyle = {
-    '& .MuiSwitch-switchBase': {
-      '&.Mui-checked': {
-        color: '#fff',
-        '+.MuiSwitch-track': {
-          backgroundColor: '#bb4220',
-          opacity: 1.0,
-        },
-      },
-      '&.Mui-disabled + .MuiSwitch-track': {
-        opacity: 0.5,
-      },
-    },
-  };
   return (
     <Stack
       component="form"
@@ -191,30 +162,6 @@ export default function VideoSettings(props: ISettingsPanelProps) {
         >
           <IconButton>
             <InfoIcon style={{ color: 'white' }} />
-          </IconButton>
-        </Tooltip>
-      </Box>
-      <Box component="span" sx={{ display: 'flex', alignItems: 'center' }}>
-        <FormControlLabel
-          control={
-            <Switch
-              sx={switchStyle}
-              checked={captureCursor}
-              name={captureCursorConfigKey}
-              onChange={(isCaptureCursor) => {
-                setCaptureCursor(Boolean(isCaptureCursor.target.checked));
-                onChange(isCaptureCursor);
-              }}
-            />
-          }
-          label="Capture Cursor"
-          sx={{
-            color: 'white',
-          }}
-        />
-        <Tooltip title={configSchema.captureCursor.description}>
-          <IconButton>
-            <InfoIcon sx={{ color: 'white' }} />
           </IconButton>
         </Tooltip>
       </Box>

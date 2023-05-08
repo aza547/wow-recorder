@@ -1,18 +1,38 @@
 import {
   Box,
   FormControlLabel,
+  IconButton,
+  Switch,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
 } from '@mui/material';
 import React from 'react';
 import { useSettings, setConfigValues } from 'settings/useSettings';
 import { OurDisplayType } from 'main/types';
+import { configSchema } from 'main/configSchema';
 
 const ipc = window.electron.ipcRenderer;
 
-const VideoSourceControls: React.FC = () => {
+const switchStyle = {
+  '& .MuiSwitch-switchBase': {
+    '&.Mui-checked': {
+      color: '#fff',
+      '+.MuiSwitch-track': {
+        backgroundColor: '#bb4220',
+        opacity: 1.0,
+      },
+    },
+    '&.Mui-disabled + .MuiSwitch-track': {
+      opacity: 0.5,
+    },
+  },
+};
+
+const SourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const displayConfiguration = ipc.sendSync('getAllDisplays', []);
+  const availableAudioDevices = ipc.sendSync('getAudioDevices', []);
   setConfigValues(config);
 
   const setOBSCaptureMode = (
@@ -47,6 +67,24 @@ const VideoSourceControls: React.FC = () => {
     });
   };
 
+  const setCaptureCursor = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        captureCursor: event.target.checked,
+      };
+    });
+  };
+
+  React.useEffect(() => {
+    ipc.sendMessage('recorder', [
+      'scene',
+      config.obsCaptureMode,
+      config.monitorIndex,
+      config.captureCursor,
+    ]);
+  }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
+
   return (
     <Box
       sx={{
@@ -68,6 +106,7 @@ const VideoSourceControls: React.FC = () => {
           >
             <ToggleButton
               value="game_capture"
+              key="game_capture"
               sx={{
                 color: 'white',
                 height: '30px',
@@ -81,6 +120,7 @@ const VideoSourceControls: React.FC = () => {
             </ToggleButton>
             <ToggleButton
               value="monitor_capture"
+              key="monitor_capture"
               sx={{
                 color: 'white',
                 height: '30px',
@@ -98,7 +138,6 @@ const VideoSourceControls: React.FC = () => {
         labelPlacement="top"
         sx={{ color: 'white' }}
       />
-
       {config.obsCaptureMode === 'monitor_capture' && (
         <FormControlLabel
           control={
@@ -111,6 +150,7 @@ const VideoSourceControls: React.FC = () => {
               {displayConfiguration.map((display: OurDisplayType) => (
                 <ToggleButton
                   value={display.index}
+                  key={display.index}
                   sx={{
                     color: 'white',
                     height: '30px',
@@ -130,8 +170,23 @@ const VideoSourceControls: React.FC = () => {
           sx={{ color: 'white' }}
         />
       )}
+
+      <FormControlLabel
+        control={
+          <Switch
+            sx={switchStyle}
+            checked={config.captureCursor}
+            onChange={setCaptureCursor}
+          />
+        }
+        label="Capture Cursor"
+        labelPlacement="top"
+        sx={{
+          color: 'white',
+        }}
+      />
     </Box>
   );
 };
 
-export default VideoSourceControls;
+export default SourceControls;

@@ -53,6 +53,7 @@ export const useSettings = () => {
     chatOverlayHeight: getConfigValue<number>('chatOverlayHeight'),
     chatOverlayXPosition: getConfigValue<number>('chatOverlayXPosition'),
     chatOverlayYPosition: getConfigValue<number>('chatOverlayYPosition'),
+    captureCursor: getConfigValue<boolean>('captureCursor'),
   };
 
   return React.useState(configValues);

@@ -701,7 +701,11 @@ ipcMain.on('recorder', async (_event, args) => {
 
   if (args[0] === 'scene') {
     if (recorder !== undefined) {
-      recorder.configureVideoOBS(args[1] as string, args[2] as number);
+      recorder.configureVideoOBS(
+        args[1] as string,
+        args[2] as number,
+        args[3] as boolean
+      );
     }
   }
 });
