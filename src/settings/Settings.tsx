@@ -170,7 +170,7 @@ export default function Settings() {
       <TabPanel value={tabIndex} index={2}>
         <VideoSettings config={config} onChange={modifyConfig} />
       </TabPanel>
-      <TabPanel value={tabIndex} index={4}>
+      <TabPanel value={tabIndex} index={3}>
         <AdvancedSettings config={config} onChange={modifyConfig} />
       </TabPanel>
       <div style={{ position: 'fixed', bottom: '10px', left: '12px' }}>

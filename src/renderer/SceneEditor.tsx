@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Divider } from '@mui/material';
 import React from 'react';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
@@ -28,9 +28,31 @@ const SceneEditor: React.FC = () => {
           height: '40%',
         }}
       >
-        <VideoSourceControls />
-        <AudioSourceControls />
-        <ChatOverlayControls />
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <VideoSourceControls />
+          <Divider flexItem orientation="vertical" sx={{ borderColor: 'black' }} />
+          <AudioSourceControls />
+        </Box>
+        <Divider flexItem orientation="horizontal" sx={{ borderColor: 'black' }} />
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Box sx={{ width: '100%', m: 2 }}>ABC</Box>
+          <Divider flexItem orientation="vertical" sx={{ borderColor: 'black' }} />
+          <ChatOverlayControls />
+        </Box>
       </Box>
     </Box>
   );

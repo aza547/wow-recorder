@@ -243,6 +243,8 @@ const AudioSourceControls: React.FC = () => {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        width: '100%',
+        m: 2,
       }}
     >
       {getSpeakerSelect()}

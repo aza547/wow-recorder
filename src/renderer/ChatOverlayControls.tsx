@@ -104,8 +104,7 @@ const ChatOverlayControls: React.FC = () => {
         justifyContent: 'space-evenly',
         alignItems: 'center',
         width: '100%',
-        ml: 1,
-        mr: 1,
+        m: 2,
       }}
     >
       <FormControlLabel
