@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { RendererVideoState, TAppState, TNavigatorState } from 'main/types';
+import { Pages, RendererVideoState, TAppState, TNavigatorState } from 'main/types';
 import {
   Button,
   List,
@@ -33,7 +33,7 @@ let debounceSearchTimer: NodeJS.Timer;
 const Layout: React.FC<IProps> = (props: IProps) => {
   const { navigation, setNavigation, videoState, appState, setAppState } =
     props;
-  const { previewPage, categoryIndex, videoIndex } = navigation;
+  const { page, categoryIndex, videoIndex } = navigation;
   const { numVideosDisplayed, videoFilterQuery } = appState;
   const categories = Object.values(VideoCategory);
   const category = categories[categoryIndex];
@@ -257,12 +257,12 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const getPreviewPage = () => {
+  const getSceneEditor = () => {
     return <SceneEditor />;
   };
 
-  if (previewPage) {
-    return getPreviewPage();
+  if (page === Pages.SceneEditor) {
+    return getSceneEditor();
   }
 
   if (categoryIndex < 0) {

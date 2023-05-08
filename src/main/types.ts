@@ -273,6 +273,11 @@ enum TAudioSourceType {
   output = 'wasapi_output_capture',
 }
 
+enum Pages {
+  'None',
+  'SceneEditor',
+  'Settings',
+}
 /**
  * Tracks the position of the app and the navigator component. A value
  * of -1 for either of the fields here indicates no selection for the field.
@@ -280,7 +285,7 @@ enum TAudioSourceType {
 type TNavigatorState = {
   categoryIndex: number;
   videoIndex: number;
-  previewPage: boolean;
+  page: Pages;
 };
 
 /**
@@ -338,4 +343,5 @@ export {
   RawChallengeModeTimelineSegment,
   TPreviewPosition,
   DeviceType,
+  Pages,
 };

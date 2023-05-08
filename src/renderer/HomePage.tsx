@@ -9,6 +9,7 @@ import {
 import { VideoCategory } from 'types/VideoCategory';
 import React from 'react';
 import {
+  Pages,
   RendererVideo,
   RendererVideoState,
   TAppState,
@@ -94,7 +95,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
       setNavigation({
         categoryIndex,
         videoIndex,
-        previewPage: false,
+        page: Pages.None,
       });
     } else {
       setRecentIndex(slicedVideos.indexOf(video));

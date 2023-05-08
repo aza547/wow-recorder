@@ -1,6 +1,6 @@
 import { Home } from '@mui/icons-material';
 import { Box, Chip, IconButton, Stack, Tooltip } from '@mui/material';
-import { TAppState, TNavigatorState } from 'main/types';
+import { Pages, TAppState, TNavigatorState } from 'main/types';
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
 import Select from 'react-select';
@@ -33,7 +33,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
   if (
     navigation.categoryIndex === -1 &&
     navigation.videoIndex === -1 &&
-    !navigation.previewPage
+    navigation.page === Pages.None
   ) {
     disableBackButton = true;
   }
@@ -42,7 +42,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
     setNavigation({
       categoryIndex: -1,
       videoIndex: -1,
-      previewPage: false,
+      page: Pages.None,
     });
 
     setAppState((prevState) => {
@@ -61,7 +61,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       setNavigation({
         categoryIndex,
         videoIndex: -1,
-        previewPage: false,
+        page: Pages.None,
       });
     } else {
       goHome();
@@ -119,7 +119,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       return {
         videoIndex: -1,
         categoryIndex,
-        previewPage: false,
+        page: Pages.None,
       };
     });
   };

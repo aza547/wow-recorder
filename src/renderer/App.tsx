@@ -1,6 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
 import {
+  Pages,
   RecStatus,
   RendererVideoState,
   SaveStatus,
@@ -40,7 +41,7 @@ const Application = () => {
   const [navigation, setNavigation] = React.useState<TNavigatorState>({
     categoryIndex: -1,
     videoIndex: -1,
-    previewPage: false,
+    page: Pages.None,
   });
 
   const [appState, setAppState] = React.useState<TAppState>({

@@ -1,19 +1,19 @@
 import { Button, Tooltip } from '@mui/material';
 import PreviewIcon from '@mui/icons-material/Preview';
-import { TNavigatorState } from 'main/types';
+import { Pages, TNavigatorState } from 'main/types';
 
 interface IProps {
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
-export default function PreviewButton(props: IProps) {
+export default function SceneEditorButton(props: IProps) {
   const { setNavigation } = props;
 
-  const goToPreviewPage = () => {
+  const goToSceneEditor = () => {
     setNavigation((prevState) => {
       return {
         ...prevState,
-        previewPage: true,
+        page: Pages.SceneEditor,
       };
     });
   };
@@ -23,7 +23,7 @@ export default function PreviewButton(props: IProps) {
       <Button
         id="preview-icon"
         type="button"
-        onClick={goToPreviewPage}
+        onClick={goToSceneEditor}
         sx={{ padding: '2px', minWidth: '25px' }}
       >
         <PreviewIcon sx={{ width: '25px', height: '25px', color: 'white' }} />

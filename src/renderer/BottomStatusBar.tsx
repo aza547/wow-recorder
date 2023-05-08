@@ -6,7 +6,7 @@ import {
   UpgradeStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
-import PreviewButton from 'renderer/PreviewButton';
+import SceneEditorButton from 'renderer/SceneEditorButton';
 import DiscordButton from './DiscordButton';
 import LogButton from './LogButton';
 import RecorderStatus from './RecorderStatus';
@@ -87,8 +87,8 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
           }}
         >
           <SettingsButton />
+          <SceneEditorButton setNavigation={setNavigation} />
           <LogButton />
-          <PreviewButton setNavigation={setNavigation} />
           <TestButton />
           <DiscordButton />
         </Box>
