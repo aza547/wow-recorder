@@ -1,6 +1,11 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { Pages, RendererVideoState, TAppState, TNavigatorState } from 'main/types';
+import {
+  Pages,
+  RendererVideoState,
+  TAppState,
+  TNavigatorState,
+} from 'main/types';
 import {
   Button,
   List,

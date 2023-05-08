@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import React from 'react';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
-import SourceControls from './SourceControls';
+import VideoSourceControls from './VideoSourceControls';
 
 const SceneEditor: React.FC = () => {
   return (
@@ -27,7 +27,7 @@ const SceneEditor: React.FC = () => {
           height: '30%',
         }}
       >
-        <SourceControls />
+        <VideoSourceControls />
         <ChatOverlayControls />
       </Box>
     </Box>

@@ -1,7 +1,11 @@
 import {
   Box,
+  FormControl,
   FormControlLabel,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   Switch,
   ToggleButton,
   ToggleButtonGroup,
@@ -29,7 +33,7 @@ const switchStyle = {
   },
 };
 
-const SourceControls: React.FC = () => {
+const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const displayConfiguration = ipc.sendSync('getAllDisplays', []);
   const availableAudioDevices = ipc.sendSync('getAudioDevices', []);
@@ -189,4 +193,4 @@ const SourceControls: React.FC = () => {
   );
 };
 
-export default SourceControls;
+export default VideoSourceControls;

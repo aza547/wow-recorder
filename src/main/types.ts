@@ -273,19 +273,25 @@ enum TAudioSourceType {
   output = 'wasapi_output_capture',
 }
 
+/**
+ * If we should be showing a certain page. This always takes priority over anything
+ * else in TNavigatorState.
+ */
 enum Pages {
   'None',
   'SceneEditor',
   'Settings',
 }
+
 /**
  * Tracks the position of the app and the navigator component. A value
- * of -1 for either of the fields here indicates no selection for the field.
+ * of -1 for either of the number fields here indicates no selection for the 
+ * field.
  */
 type TNavigatorState = {
+  page: Pages;
   categoryIndex: number;
   videoIndex: number;
-  page: Pages;
 };
 
 /**
