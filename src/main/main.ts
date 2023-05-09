@@ -603,7 +603,7 @@ ipcMain.on('getAllDisplays', (event) => {
  * Chat overlay event listener.
  */
 ipcMain.on('overlay', () => {
-  if (recorder) recorder.addOverlay();
+  if (recorder) recorder.addOverlaySource();
 });
 
 /**
