@@ -105,6 +105,7 @@ const Application = () => {
       <Layout
         navigation={navigation}
         setNavigation={setNavigation}
+        recorderStatus={recorderStatus}
         videoState={videoState}
         appState={appState}
         setAppState={setAppState}

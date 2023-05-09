@@ -34,7 +34,6 @@ const configuration: webpack.Configuration = {
 
   entry: {
     mainWindow: [path.join(webpackPaths.srcRendererPath, 'index.tsx')],
-    settings: [path.join(webpackPaths.srcSettingsPath, 'index.tsx')],
   },
 
   output: {
@@ -119,19 +118,6 @@ const configuration: webpack.Configuration = {
       filename: 'mainWindow.index.html',
       template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
       chunks: ['mainWindow'],
-      minify: {
-        collapseWhitespace: true,
-        removeAttributeQuotes: true,
-        removeComments: true,
-      },
-      isBrowser: false,
-      isDevelopment: process.env.NODE_ENV !== 'production',
-    }),
-
-    new HtmlWebpackPlugin({
-      filename: 'settings.index.html',
-      template: path.join(webpackPaths.srcSettingsPath, 'index.ejs'),
-      chunks: ['settings'],
       minify: {
         collapseWhitespace: true,
         removeAttributeQuotes: true,

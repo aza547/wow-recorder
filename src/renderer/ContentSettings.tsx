@@ -1,11 +1,11 @@
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Divider from '@mui/material/Divider';
 import FormLabel from '@mui/material/FormLabel';
-import { ISettingsPanelProps } from 'main/types';
 import { Box, Switch } from '@mui/material';
+import { useSettings } from './useSettings';
 
-export default function ContentSettings(props: ISettingsPanelProps) {
-  const { config, onChange } = props;
+const ContentSettings: React.FC = () => {
+  const [config, setConfig] = useSettings();
+
   const formControlLabelStyle = { color: 'white' };
   const formLabelStyle = { color: 'white' };
 
@@ -24,12 +24,13 @@ export default function ContentSettings(props: ISettingsPanelProps) {
     },
   };
 
+  // @@@ TODO
   const getSwitch = (preference: string) => (
     <Switch
       sx={switchStyle}
-      checked={Boolean(config[preference])}
+      // checked={true}
       name={preference}
-      onChange={onChange}
+      // onChange={}
     />
   );
 
@@ -38,7 +39,7 @@ export default function ContentSettings(props: ISettingsPanelProps) {
       <FormLabel id="radios" sx={formLabelStyle}>
         Game Type
       </FormLabel>
-      <Divider color="black" />
+
       <Box
         sx={{
           display: 'flex',
@@ -64,7 +65,7 @@ export default function ContentSettings(props: ISettingsPanelProps) {
       <FormLabel id="radios" sx={formLabelStyle}>
         PvE
       </FormLabel>
-      <Divider color="black" />
+
       <Box
         sx={{
           display: 'flex',
@@ -90,7 +91,7 @@ export default function ContentSettings(props: ISettingsPanelProps) {
       <FormLabel id="radios" sx={formLabelStyle}>
         PvP
       </FormLabel>
-      <Divider color="black" />
+
       <Box
         sx={{
           display: 'flex',
@@ -139,4 +140,6 @@ export default function ContentSettings(props: ISettingsPanelProps) {
       </Box>
     </>
   );
-}
+};
+
+export default ContentSettings;

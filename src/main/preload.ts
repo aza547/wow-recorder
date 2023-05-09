@@ -4,7 +4,7 @@ export type Channels =
   | 'mainWindow'
   | 'settingsWindow'
   | 'getVideoState'
-  | 'contextMenu'
+  | 'videoButton'
   | 'logPath'
   | 'openURL'
   | 'test'

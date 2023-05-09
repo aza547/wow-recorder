@@ -1,10 +1,6 @@
 import { Box, FormControlLabel, Switch } from '@mui/material';
 import React, { ChangeEvent } from 'react';
-import {
-  useSettings,
-  setConfigValues,
-  getConfigValue,
-} from 'settings/useSettings';
+import { useSettings, setConfigValues, getConfigValue } from './useSettings';
 import ChatOverlaySlider from './ChatOverlaySlider';
 
 const switchStyle = {

@@ -74,7 +74,7 @@ export default function VideoButton(props: IProps) {
 
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
-    window.electron.ipcRenderer.sendMessage('contextMenu', [
+    window.electron.ipcRenderer.sendMessage('videoButton', [
       'delete',
       fullPath,
     ]);
@@ -82,12 +82,12 @@ export default function VideoButton(props: IProps) {
 
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
-    window.electron.ipcRenderer.sendMessage('contextMenu', ['save', fullPath]);
+    window.electron.ipcRenderer.sendMessage('videoButton', ['save', fullPath]);
   };
 
   const openLocation = (event: React.SyntheticEvent) => {
     event.stopPropagation();
-    window.electron.ipcRenderer.sendMessage('contextMenu', ['open', fullPath]);
+    window.electron.ipcRenderer.sendMessage('videoButton', ['open', fullPath]);
   };
 
   return (

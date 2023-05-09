@@ -15,8 +15,8 @@ import {
 } from '@mui/material';
 import { DeviceType, IOBSDevice } from 'main/types';
 import React from 'react';
-import { useSettings, setConfigValues } from 'settings/useSettings';
 import { VolumeDown, VolumeUp } from '@mui/icons-material';
+import { useSettings, setConfigValues } from './useSettings';
 import {
   getAudioDeviceDescription,
   standardizeAudioDeviceNames,

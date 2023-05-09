@@ -310,7 +310,8 @@ export default class Recorder {
 
     this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
     this.createRecordingDirs();
-    this.obsRecordingFactory = this.configureOBS();
+
+    this.configureBase();
 
     this.scene = osn.SceneFactory.create('WR Scene');
     osn.Global.setOutputSource(this.videoChannel, this.scene);
@@ -384,8 +385,12 @@ export default class Recorder {
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
-  private configureOBS() {
+  configureBase() {
     console.info('[Recorder] Configuring OBS');
+
+    if (this.obsState !== ERecordingState.Offline) {
+      throw new Error('[Recorder] OBS must be offline to do this');
+    }
 
     this.resolution = this.cfg.get<string>(
       'obsOutputResolution'
@@ -408,14 +413,18 @@ export default class Recorder {
       fpsType: 2,
     };
 
-    const recFactory = osn.AdvancedRecordingFactory.create();
-    const bufferPath = this.cfg.getPath('bufferStoragePath');
-    recFactory.path = path.normalize(bufferPath);
+    if (this.obsRecordingFactory) {
+      osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
+    }
 
-    recFactory.format = ERecordingFormat.MP4;
-    recFactory.useStreamEncoders = false;
-    recFactory.overwrite = false;
-    recFactory.noSpace = false;
+    this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
+    const bufferPath = this.cfg.getPath('bufferStoragePath');
+    this.obsRecordingFactory.path = path.normalize(bufferPath);
+
+    this.obsRecordingFactory.format = ERecordingFormat.MP4;
+    this.obsRecordingFactory.useStreamEncoders = false;
+    this.obsRecordingFactory.overwrite = false;
+    this.obsRecordingFactory.noSpace = false;
 
     const encoder = this.cfg.get<string>('obsRecEncoder') as ESupportedEncoders;
 
@@ -425,7 +434,7 @@ export default class Recorder {
     //
     // Ideally we'd pass the 3rd arg with all the settings, but it seems that
     // hasn't been implemented so we instead call .update() shortly after.
-    recFactory.videoEncoder = osn.VideoEncoderFactory.create(
+    this.obsRecordingFactory.videoEncoder = osn.VideoEncoderFactory.create(
       encoder,
       'WR-video-encoder',
       {}
@@ -433,7 +442,7 @@ export default class Recorder {
 
     const kBitRate = 1000 * this.cfg.get<number>('obsKBitRate');
 
-    recFactory.videoEncoder.update({
+    this.obsRecordingFactory.videoEncoder.update({
       rate_control: 'VBR',
       bitrate: kBitRate,
       max_bitrate: kBitRate,
@@ -443,18 +452,21 @@ export default class Recorder {
     // is a plugin to OBS (it's a seperate github repo), and the likes of the
     // nvenc/x264 encoders are native to OBS so have homogenized settings.
     if (encoder === ESupportedEncoders.AMD_AMF_H264) {
-      recFactory.videoEncoder.update({
+      this.obsRecordingFactory.videoEncoder.update({
         'Bitrate.Peak': kBitRate,
       });
     }
 
-    console.info('Video encoder settings:', recFactory.videoEncoder.settings);
+    console.info(
+      'Video encoder settings:',
+      this.obsRecordingFactory.videoEncoder.settings
+    );
 
-    recFactory.signalHandler = (signal) => {
+    this.obsRecordingFactory.signalHandler = (signal) => {
       this.handleSignal(signal);
     };
 
-    return recFactory;
+    return this.obsRecordingFactory;
   }
 
   private handleSignal(obsSignal: osn.EOutputSignal) {

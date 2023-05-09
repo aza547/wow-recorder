@@ -6,8 +6,8 @@ import {
   ToggleButtonGroup,
 } from '@mui/material';
 import React from 'react';
-import { useSettings, setConfigValues } from 'settings/useSettings';
 import { OurDisplayType } from 'main/types';
+import { useSettings, setConfigValues } from './useSettings';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -81,16 +81,27 @@ const VideoSourceControls: React.FC = () => {
     ipc.sendMessage('recorder', ['video']);
   }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
 
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-        m: 2,
-      }}
-    >
+  const getToggleButton = (value: string, display: string) => {
+    return (
+      <ToggleButton
+        value={value}
+        key={value}
+        sx={{
+          color: 'white',
+          height: '30px',
+          '&.Mui-selected, &.Mui-selected:hover': {
+            color: 'white',
+            backgroundColor: '#bb4420',
+          },
+        }}
+      >
+        {display}
+      </ToggleButton>
+    );
+  };
+
+  const getCaptureModeToggle = () => {
+    return (
       <FormControlLabel
         control={
           <ToggleButtonGroup
@@ -99,73 +110,48 @@ const VideoSourceControls: React.FC = () => {
             onChange={setOBSCaptureMode}
             sx={{ border: '1px solid white' }}
           >
-            <ToggleButton
-              value="game_capture"
-              key="game_capture"
-              sx={{
-                color: 'white',
-                height: '30px',
-                '&.Mui-selected, &.Mui-selected:hover': {
-                  color: 'white',
-                  backgroundColor: '#bb4420',
-                },
-              }}
-            >
-              Game
-            </ToggleButton>
-            <ToggleButton
-              value="monitor_capture"
-              key="monitor_capture"
-              sx={{
-                color: 'white',
-                height: '30px',
-                '&.Mui-selected, &.Mui-selected:hover': {
-                  color: 'white',
-                  backgroundColor: '#bb4420',
-                },
-              }}
-            >
-              Monitor
-            </ToggleButton>
+            {getToggleButton('game_capture', 'game')}
+            {getToggleButton('monitor_capture', 'monitor')}
           </ToggleButtonGroup>
         }
         label="Capture Mode"
         labelPlacement="top"
         sx={{ color: 'white' }}
       />
-      {config.obsCaptureMode === 'monitor_capture' && (
-        <FormControlLabel
-          control={
-            <ToggleButtonGroup
-              value={config.monitorIndex}
-              exclusive
-              onChange={setMonitor}
-              sx={{ border: '1px solid white' }}
-            >
-              {displayConfiguration.map((display: OurDisplayType) => (
-                <ToggleButton
-                  value={display.index}
-                  key={display.index}
-                  sx={{
-                    color: 'white',
-                    height: '30px',
-                    '&.Mui-selected, &.Mui-selected:hover': {
-                      color: 'white',
-                      backgroundColor: '#bb4420',
-                    },
-                  }}
-                >
-                  {display.index + 1}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-          }
-          label="Monitor"
-          labelPlacement="top"
-          sx={{ color: 'white' }}
-        />
-      )}
+    );
+  };
 
+  const getMonitorToggle = () => {
+    if (config.obsCaptureMode === 'game_capture') {
+      return <></>;
+    }
+
+    return (
+      <FormControlLabel
+        control={
+          <ToggleButtonGroup
+            value={config.monitorIndex}
+            exclusive
+            onChange={setMonitor}
+            sx={{ border: '1px solid white' }}
+          >
+            {displayConfiguration.map((display: OurDisplayType) =>
+              getToggleButton(
+                display.index.toString(),
+                (display.index + 1).toString()
+              )
+            )}
+          </ToggleButtonGroup>
+        }
+        label="Monitor"
+        labelPlacement="top"
+        sx={{ color: 'white' }}
+      />
+    );
+  };
+
+  const getCursorToggle = () => {
+    return (
       <FormControlLabel
         control={
           <Switch
@@ -180,6 +166,22 @@ const VideoSourceControls: React.FC = () => {
           color: 'white',
         }}
       />
+    );
+  };
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '100%',
+        m: 2,
+      }}
+    >
+      {getCaptureModeToggle()}
+      {getMonitorToggle()}
+      {getCursorToggle()}
     </Box>
   );
 };

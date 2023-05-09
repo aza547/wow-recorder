@@ -39,6 +39,7 @@ import {
 } from '../utils/testButtonUtils';
 import SizeMonitor from '../utils/SizeMonitor';
 import { VideoCategory } from '../types/VideoCategory';
+import { ERecordingState } from './obsEnums';
 
 const logDir = setupApplicationLogging();
 console.info('[Main] App starting, version:', app.getVersion());
@@ -52,7 +53,6 @@ let retailHandler: RetailLogHandler | undefined;
 let classicHandler: ClassicLogHandler | undefined;
 let recorder: Recorder | undefined;
 let mainWindow: BrowserWindow | null = null;
-let settingsWindow: BrowserWindow | null = null;
 let tray = null;
 
 // Issue 332. Need to call this before the app is ready.
@@ -319,60 +319,12 @@ const createWindow = async () => {
   });
 };
 
-/**
- * Creates the settings window, called on clicking the settings cog.
- */
-const createSettingsWindow = async () => {
-  if (isDebug) {
-    await installExtensions();
-  }
-
-  settingsWindow = new BrowserWindow({
-    show: false,
-    width: 650,
-    height: 525,
-    resizable: process.env.NODE_ENV !== 'production',
-    icon: getAssetPath('./icon/settings-icon.svg'),
-    frame: false,
-    webPreferences: {
-      webSecurity: false,
-      // devTools: false,
-      preload: app.isPackaged
-        ? path.join(__dirname, 'preload.js')
-        : path.join(__dirname, '../../.erb/dll/preload.js'),
-    },
-  });
-
-  settingsWindow.loadURL(resolveHtmlPath('settings.index.html'));
-
-  settingsWindow.on('ready-to-show', () => {
-    if (!settingsWindow) {
-      throw new Error('"settingsWindow" is not defined');
-    }
-    if (process.env.START_MINIMIZED) {
-      settingsWindow.minimize();
-    } else {
-      settingsWindow.show();
-    }
-  });
-
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
-  });
-
-  // Open urls in the user's browser
-  settingsWindow.webContents.setWindowOpenHandler((edata) => {
-    shell.openExternal(edata.url);
-    return { action: 'deny' };
-  });
-};
-
 const openPathDialog = (event: any, args: any) => {
-  if (!settingsWindow) return;
+  if (!mainWindow) return;
   const setting = args[1];
 
   dialog
-    .showOpenDialog(settingsWindow, { properties: ['openDirectory'] })
+    .showOpenDialog(mainWindow, { properties: ['openDirectory'] })
     .then((result) => {
       if (!result.canceled) {
         const selectedPath = result.filePaths[0];
@@ -383,7 +335,7 @@ const openPathDialog = (event: any, args: any) => {
           validationResult = CombatLogParser.validateLogPath(selectedPath);
         }
 
-        event.reply('settingsWindow', [
+        event.reply('mainWindow', [
           'pathSelected',
           setting,
           selectedPath,
@@ -438,101 +390,9 @@ ipcMain.on('mainWindow', (_event, args) => {
 });
 
 /**
- * settingsWindow event listeners.
+ * VideoButton event listeners.
  */
-ipcMain.on('settingsWindow', (event, args) => {
-  if (args[0] === 'create') {
-    console.log('[Main] User clicked open settings');
-    if (!settingsWindow) createSettingsWindow();
-  }
-
-  if (settingsWindow === null) return;
-
-  if (args[0] === 'quit') {
-    console.log('[Main] User closed settings');
-    settingsWindow.close();
-  }
-
-  if (args[0] === 'update') {
-    console.log('[Main] User updated settings');
-
-    settingsWindow.once('closed', async () => {
-      if (!mainWindow) {
-        throw new Error('[Main] mainWindow not defined');
-      }
-
-      mainWindow.webContents.send('refreshState');
-
-      if (recorder) {
-        await recorder.reconfigure(mainWindow);
-      } else {
-        recorder = new Recorder(mainWindow);
-      }
-
-      try {
-        cfg.validate();
-        updateRecStatus(RecStatus.WaitingForWoW);
-      } catch (error) {
-        updateRecStatus(RecStatus.InvalidConfig, String(error));
-        return;
-      }
-
-      recorder.configure();
-      Poller.getInstance().start();
-
-      const retailLogPath = cfg.getPath('retailLogPath');
-      const classicLogPath = cfg.getPath('classicLogPath');
-
-      if (retailLogPath) {
-        if (retailHandler) {
-          retailHandler.reconfigure(retailLogPath);
-        } else {
-          retailHandler = new RetailLogHandler(recorder, retailLogPath);
-        }
-      }
-
-      if (classicLogPath) {
-        if (classicHandler) {
-          classicHandler.reconfigure(classicLogPath);
-        } else {
-          classicHandler = new ClassicLogHandler(recorder, classicLogPath);
-        }
-      }
-
-      if (mainWindow) new SizeMonitor(mainWindow).run();
-    });
-
-    settingsWindow.close();
-  }
-
-  if (args[0] === 'openPathDialog') {
-    openPathDialog(event, args);
-    return;
-  }
-
-  if (args[0] === 'getAllDisplays') {
-    event.returnValue = getAvailableDisplays();
-    return;
-  }
-
-  if (args[0] === 'getObsAvailableRecEncoders') {
-    if (!recorder) {
-      event.returnValue = [];
-      return;
-    }
-
-    const obsEncoders = recorder
-      .getAvailableEncoders()
-      .filter((encoder) => encoder !== 'none');
-
-    event.returnValue = obsEncoders;
-  }
-});
-
-/**
- * contextMenu event listeners.
- */
-ipcMain.on('contextMenu', async (_event, args) => {
+ipcMain.on('videoButton', async (_event, args) => {
   if (args[0] === 'delete') {
     const videoForDeletion = args[1];
     deleteVideo(videoForDeletion);
@@ -699,6 +559,35 @@ ipcMain.on('recorder', async (_event, args) => {
 
   if (args[0] === 'audio') {
     if (recorder) recorder.addAudioSourcesOBS();
+  }
+
+  if (args[0] === 'base') {
+    if (!recorder) return;
+
+    if (recorder.isRecording) {
+      // We can hit this if the user opens the scene editor mid encounter.
+      return;
+    }
+
+    if (recorder.obsState === ERecordingState.Recording) {
+      // We can't change this config if OBS is recording. If it is recording
+      // but the recorder isn't, that means it's a buffer recording. Stop it
+      // briefly to change the config and start it after. Deliberately
+      // checking the OBS state and not the recorder state here.
+      await recorder.stopBuffer();
+      recorder.configureBase();
+      await recorder.startBuffer();
+      return;
+    }
+
+    if (recorder.obsState === ERecordingState.Offline) {
+      recorder.configureBase();
+      return;
+    }
+
+    // OBS can briefly be in a starting/stopping state.
+    // Surely it's fast enough that this is basically never hit.
+    console.warn('[Main] This is unexpected...');
   }
 });
 

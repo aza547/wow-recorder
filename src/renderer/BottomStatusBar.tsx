@@ -86,7 +86,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
             justifyContent: 'flex-end',
           }}
         >
-          <SettingsButton />
+          <SettingsButton setNavigation={setNavigation} />
           <SceneEditorButton setNavigation={setNavigation} />
           <LogButton />
           <TestButton />

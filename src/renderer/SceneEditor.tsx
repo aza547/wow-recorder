@@ -1,11 +1,19 @@
 import { Box, Divider } from '@mui/material';
 import React from 'react';
+import { RecStatus } from 'main/types';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
 import VideoSourceControls from './VideoSourceControls';
 import AudioSourceControls from './AudioSourceControls';
+import VideoBaseControls from './VideoBaseControls';
 
-const SceneEditor: React.FC = () => {
+interface IProps {
+  recorderStatus: RecStatus;
+}
+
+const SceneEditor: React.FC<IProps> = (props: IProps) => {
+  const { recorderStatus } = props;
+
   return (
     <Box
       sx={{
@@ -57,7 +65,7 @@ const SceneEditor: React.FC = () => {
             width: '100%',
           }}
         >
-          <Box sx={{ width: '100%', m: 2 }}>ABC</Box>
+          <VideoBaseControls recorderStatus={recorderStatus} />
           <Divider
             flexItem
             orientation="vertical"
