@@ -118,19 +118,7 @@ const wowProcessStarted = async () => {
   // We add the audio sources here so they are only held when WoW is
   // open, holding an audio devices prevents Windows go to sleeping
   // which we don't want to do if we can avoid it.
-  const speakers = cfg.get<string>('audioOutputDevices');
-  const speakerVolume = cfg.get<number>('speakerVolume');
-  const mics = cfg.get<string>('audioInputDevices');
-  const micVolume = cfg.get<number>('micVolume');
-  const forceMono = cfg.get<boolean>('obsForceMono');
-
-  recorder.setAudioSourcesOBS(
-    speakers,
-    speakerVolume,
-    mics,
-    micVolume,
-    forceMono
-  );
+  recorder.addAudioSourcesOBS();
 
   await recorder.startBuffer();
 };
@@ -614,10 +602,8 @@ ipcMain.on('getAllDisplays', (event) => {
 /**
  * Chat overlay event listener.
  */
-ipcMain.on('overlay', (_event, args) => {
-  if (recorder) {
-    recorder.applyOverlay(args[0], args[1], args[2], args[3], args[4]);
-  }
+ipcMain.on('overlay', () => {
+  if (recorder) recorder.addOverlay();
 });
 
 /**
@@ -708,25 +694,11 @@ ipcMain.on('recorder', async (_event, args) => {
   }
 
   if (args[0] === 'video') {
-    if (recorder !== undefined) {
-      recorder.configureVideoOBS(
-        args[1] as string,
-        args[2] as number,
-        args[3] as boolean
-      );
-    }
+    if (recorder) recorder.addVideoSourcesOBS();
   }
 
   if (args[0] === 'audio') {
-    if (recorder !== undefined) {
-      recorder.setAudioSourcesOBS(
-        args[1] as string,
-        args[2] as number,
-        args[3] as string,
-        args[4] as number,
-        args[5] as boolean
-      );
-    }
+    if (recorder) recorder.addAudioSourcesOBS();
   }
 });
 

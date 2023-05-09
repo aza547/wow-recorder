@@ -1,19 +1,19 @@
 import * as React from 'react';
 
-export function getConfigValue<T>(configKey: string): T {
+export const getConfigValue = <T>(configKey: string): T => {
   return window.electron.ipcRenderer.sendSync('config', [
     'get',
     configKey,
   ]) as T;
-}
+};
 
-export function setConfigValue(configKey: string, value: any): void {
+export const setConfigValue = (configKey: string, value: any): void => {
   window.electron.ipcRenderer.sendMessage('config', ['set', configKey, value]);
-}
+};
 
-export function setConfigValues(dict: { [key: string]: any }): void {
+export const setConfigValues = (dict: { [key: string]: any }): void => {
   window.electron.ipcRenderer.sendMessage('config', ['set_values', dict]);
-}
+};
 
 export const useSettings = () => {
   const configValues = {

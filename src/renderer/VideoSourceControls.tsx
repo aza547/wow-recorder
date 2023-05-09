@@ -29,7 +29,6 @@ const switchStyle = {
 const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const displayConfiguration = ipc.sendSync('getAllDisplays', []);
-  setConfigValues(config);
 
   const setOBSCaptureMode = (
     _event: React.MouseEvent<HTMLElement>,
@@ -73,12 +72,13 @@ const VideoSourceControls: React.FC = () => {
   };
 
   React.useEffect(() => {
-    ipc.sendMessage('recorder', [
-      'video',
-      config.obsCaptureMode,
-      config.monitorIndex,
-      config.captureCursor,
-    ]);
+    setConfigValues({
+      obsCaptureMode: config.obsCaptureMode,
+      monitorIndex: config.monitorIndex,
+      captureCursor: config.captureCursor,
+    });
+
+    ipc.sendMessage('recorder', ['video']);
   }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
 
   return (

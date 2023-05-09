@@ -315,23 +315,14 @@ export default class Recorder {
     this.scene = osn.SceneFactory.create('WR Scene');
     osn.Global.setOutputSource(this.videoChannel, this.scene);
 
-    const captureMode = this.cfg.get<string>('obsCaptureMode');
-    const monitorIndex = this.cfg.get<number>('monitorIndex');
-    const captureCursor = this.cfg.get<boolean>('captureCursor');
-    this.configureVideoOBS(captureMode, monitorIndex, captureCursor);
+    this.addVideoSourcesOBS();
 
-    this.createImageSource();
+    this.createOverlayImageSource();
+    this.addOverlaySource();
+
     this.createPreview();
-
-    this.applyOverlay(
-      this.cfg.get<boolean>('chatOverlayEnabled'),
-      this.cfg.get<number>('chatOverlayWidth'),
-      this.cfg.get<number>('chatOverlayHeight'),
-      this.cfg.get<number>('chatOverlayXPosition'),
-      this.cfg.get<number>('chatOverlayYPosition')
-    );
-
     this.showPreviewMemory();
+
     this.obsConfigured = true;
   }
 
@@ -509,19 +500,10 @@ export default class Recorder {
   }
 
   /**
-   * Configures the video source in OBS. Also creates the scene.
+   * Configures the video source in OBS.
    */
-  configureVideoOBS(
-    captureMode: string,
-    monitorIndex: number,
-    captureCursor: boolean
-  ) {
-    console.info(
-      '[Recorder] Configuring OBS video',
-      captureMode,
-      monitorIndex,
-      captureCursor
-    );
+  addVideoSourcesOBS() {
+    console.info('[Recorder] Configuring OBS video');
 
     if (this.scene === undefined || this.scene === null) {
       throw new Error('[Recorder] No scene');
@@ -532,16 +514,15 @@ export default class Recorder {
       this.videoSource.remove();
     }
 
+    const captureMode = this.cfg.get<string>('obsCaptureMode');
+
     switch (captureMode) {
       case 'monitor_capture':
-        this.videoSource = Recorder.createMonitorCaptureSource(
-          monitorIndex,
-          captureCursor
-        );
+        this.videoSource = this.createMonitorCaptureSource();
         break;
 
       case 'game_capture':
-        this.videoSource = Recorder.createGameCaptureSource(captureCursor);
+        this.videoSource = this.createGameCaptureSource();
         break;
 
       default:
@@ -564,11 +545,11 @@ export default class Recorder {
   /**
    * Creates a monitor capture source.
    */
-  private static createMonitorCaptureSource(
-    monitorIndex: number,
-    captureCursor: boolean
-  ) {
+  private createMonitorCaptureSource() {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
+
+    const monitorIndex = this.cfg.get<number>('monitorIndex');
+    const captureCursor = this.cfg.get<boolean>('captureCursor');
 
     const monitorCaptureSource = osn.InputFactory.create(
       'monitor_capture',
@@ -588,8 +569,10 @@ export default class Recorder {
   /**
    * Creates a game capture source.
    */
-  private static createGameCaptureSource(captureCursor: boolean) {
+  private createGameCaptureSource() {
     console.info('[Recorder] Configuring OBS for Game Capture');
+
+    const captureCursor = this.cfg.get<boolean>('captureCursor');
 
     const gameCaptureSource = osn.InputFactory.create(
       'game_capture',
@@ -610,9 +593,9 @@ export default class Recorder {
   }
 
   /**
-   * Creates a game capture source.
+   * Creates an image source.
    */
-  private createImageSource() {
+  private createOverlayImageSource() {
     console.info('[Recorder] Create image source for chat overlay');
 
     const settings = {
@@ -634,35 +617,16 @@ export default class Recorder {
    * Set the configured audio sources ot the OBS scene. This is public
    * so it can be called externally when WoW is opened - see the Poller
    * class. This removes any previously configured sources.
-   *
-   * @param speakers comma seperated string of speaker device IDs
-   * @param speakerMultiplier value from 0 to 1 to multiply speaker volume
-   * @param mic comma seperated string of mic device IDs
-   * @param micMultiplier value from 0 to 1 to multiply mic volume
-   * @param forceMono true if mic input should be mono
    */
-  public setAudioSourcesOBS(
-    speakers: string,
-    speakerMultiplier: number,
-    mics: string,
-    micMultiplier: number,
-    forceMono: boolean
-  ) {
-    console.info(
-      '[Recorder] Configuring OBS audio sources...',
-      'speakers:',
-      speakers,
-      'speakerMultiplier:',
-      speakerMultiplier,
-      'mics:',
-      mics,
-      'micMultiplier:',
-      micMultiplier,
-      'forceMono:',
-      forceMono
-    );
-
+  public addAudioSourcesOBS() {
+    console.info('[Recorder] Adding OBS audio sources...');
     this.removeAudioSourcesOBS();
+
+    const speakers = this.cfg.get<string>('audioOutputDevices');
+    const speakerMultiplier = this.cfg.get<number>('speakerVolume');
+    const mics = this.cfg.get<string>('audioInputDevices');
+    const micMultiplier = this.cfg.get<number>('micVolume');
+    const forceMono = this.cfg.get<boolean>('obsForceMono');
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
@@ -1364,13 +1328,7 @@ export default class Recorder {
   /**
    * Apply a chat overlay to the scene.
    */
-  applyOverlay(
-    enabled: boolean,
-    width: number,
-    height: number,
-    xPos: number,
-    yPos: number
-  ) {
+  addOverlaySource() {
     if (this.scene === undefined || this.overlayImageSource === undefined) {
       console.error(
         '[Recorder] Not applying overlay as scene or image source undefined',
@@ -1385,9 +1343,16 @@ export default class Recorder {
       this.overlaySceneItem.remove();
     }
 
-    if (!enabled) {
+    const overlayEnabled = this.cfg.get<boolean>('chatOverlayEnabled');
+
+    if (!overlayEnabled) {
       return;
     }
+
+    const width = this.cfg.get<number>('chatOverlayWidth');
+    const height = this.cfg.get<number>('chatOverlayHeight');
+    const xPos = this.cfg.get<number>('chatOverlayXPosition');
+    const yPos = this.cfg.get<number>('chatOverlayYPosition');
 
     // This is the height of the chat overlay image, a bit ugly
     // to have it hardcoded here, but whatever.

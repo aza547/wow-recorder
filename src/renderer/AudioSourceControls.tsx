@@ -23,7 +23,6 @@ import {
 } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
-let debounceTimer: NodeJS.Timer | undefined;
 
 const AudioSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
@@ -70,28 +69,15 @@ const AudioSourceControls: React.FC = () => {
   };
 
   React.useEffect(() => {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
+    setConfigValues({
+      audioOutputDevices: config.audioOutputDevices,
+      speakerVolume: config.speakerVolume,
+      audioInputDevices: config.audioInputDevices,
+      micVolume: config.micVolume,
+      obsForceMono: config.obsForceMono,
+    });
 
-    debounceTimer = setTimeout(() => {
-      setConfigValues({
-        audioOutputDevices: config.audioOutputDevices,
-        speakerVolume: config.speakerVolume,
-        audioInputDevices: config.audioInputDevices,
-        micVolume: config.micVolume,
-        obsForceMono: config.obsForceMono,
-      });
-
-      ipc.sendMessage('recorder', [
-        'audio',
-        config.audioOutputDevices,
-        config.speakerVolume,
-        config.audioInputDevices,
-        config.micVolume,
-        config.obsForceMono,
-      ]);
-    }, 500);
+    ipc.sendMessage('recorder', ['audio']);
   }, [
     config.audioOutputDevices,
     config.speakerVolume,

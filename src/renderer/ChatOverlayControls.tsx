@@ -23,7 +23,6 @@ const switchStyle = {
 };
 
 const ipc = window.electron.ipcRenderer;
-let debounceTimer: NodeJS.Timer | undefined;
 
 const ChatOverlayControls: React.FC = () => {
   const [config, setConfig] = useSettings();
@@ -31,13 +30,15 @@ const ChatOverlayControls: React.FC = () => {
   const [xRes, yRes] = resolution.split('x').map((s) => parseInt(s, 10));
 
   React.useEffect(() => {
-    ipc.sendMessage('overlay', [
-      config.chatOverlayEnabled,
-      config.chatOverlayWidth,
-      config.chatOverlayHeight,
-      config.chatOverlayXPosition,
-      config.chatOverlayYPosition,
-    ]);
+    setConfigValues({
+      chatOverlayEnabled: config.chatOverlayEnabled,
+      chatOverlayHeight: config.chatOverlayHeight,
+      chatOverlayWidth: config.chatOverlayWidth,
+      chatOverlayXPosition: config.chatOverlayXPosition,
+      chatOverlayYPosition: config.chatOverlayYPosition,
+    });
+
+    ipc.sendMessage('overlay', []);
   }, [
     config.chatOverlayEnabled,
     config.chatOverlayHeight,
@@ -45,12 +46,6 @@ const ChatOverlayControls: React.FC = () => {
     config.chatOverlayXPosition,
     config.chatOverlayYPosition,
   ]);
-
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
-  }
-
-  debounceTimer = setTimeout(() => setConfigValues(config), 1000);
 
   const setOverlayEnabled = (event: ChangeEvent<HTMLInputElement>) => {
     setConfig((prevState) => {
