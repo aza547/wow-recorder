@@ -277,7 +277,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const getSettingsPage = () => {
-    return <SettingsPage />;
+    return <SettingsPage recorderStatus={recorderStatus} />;
   };
 
   if (page === Pages.SceneEditor) {

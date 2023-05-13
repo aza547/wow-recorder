@@ -21,8 +21,15 @@ const switchStyle = {
 
 const WindowsSettings = () => {
   const [config, setConfig] = useSettings();
+  const initialRender = React.useRef(true);
 
   React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
     setConfigValues({
       startUp: config.startUp,
       startMinimized: config.startMinimized,

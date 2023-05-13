@@ -1,6 +1,5 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 import path from 'path';
-
 import {
   app,
   BrowserWindow,
@@ -10,12 +9,10 @@ import {
   Tray,
   Menu,
 } from 'electron';
-
 import os from 'os';
 import RetailLogHandler from '../parsing/RetailLogHandler';
 import ClassicLogHandler from '../parsing/ClassicLogHandler';
 import Poller from '../utils/Poller';
-
 import {
   resolveHtmlPath,
   loadAllVideos,
@@ -26,18 +23,15 @@ import {
   getAvailableDisplays,
   checkAppUpdate,
   getAssetPath,
+  validateLogPath,
 } from './util';
-
 import Recorder from './Recorder';
-
-import { RecStatus, VideoPlayerSettings } from './types';
+import { Flavour, RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
-import CombatLogParser from '../parsing/CombatLogParser';
 import {
   runClassicRecordingTest,
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
-import SizeMonitor from '../utils/SizeMonitor';
 import { VideoCategory } from '../types/VideoCategory';
 import { ERecordingState } from './obsEnums';
 
@@ -402,7 +396,7 @@ ipcMain.handle('selectPath', async () => {
   });
 
   if (result.canceled) {
-    console.info('User cancelled path selection');
+    console.info('[Main] User cancelled path selection');
     return '';
   }
 
@@ -415,6 +409,41 @@ ipcMain.handle('selectPath', async () => {
 ipcMain.on('logPath', (_event, args) => {
   if (args[0] === 'open') {
     openSystemExplorer(logDir);
+  }
+});
+
+/**
+ * If flavour settings change we need to destroy and recreate the log handlers.
+ */
+ipcMain.on('flavourSettingChange', () => {
+  console.info('[Main] Flavour settings change event');
+
+  if (retailHandler) {
+    retailHandler.destroy();
+    retailHandler = undefined;
+  }
+
+  if (classicHandler) {
+    classicHandler.destroy();
+    classicHandler = undefined;
+  }
+
+  const recordRetail = cfg.get<boolean>('recordRetail');
+  const retailLogPath = cfg.get<string>('retailLogPath');
+  const validRetailLogPath = validateLogPath(retailLogPath, Flavour.Retail);
+
+  if (recordRetail && recorder && validRetailLogPath) {
+    console.info('[Main] Create RetailLogHandler object with', retailLogPath);
+    retailHandler = new RetailLogHandler(recorder, retailLogPath);
+  }
+
+  const recordClassic = cfg.get<boolean>('recordClassic');
+  const classicLogPath = cfg.get<string>('classicLogPath');
+  const validClassicLogPath = validateLogPath(classicLogPath, Flavour.Classic);
+
+  if (recorder && recordClassic && validClassicLogPath) {
+    console.info('[Main] Create ClassicLogHandler object with', classicLogPath);
+    classicHandler = new ClassicLogHandler(recorder, classicLogPath);
   }
 });
 

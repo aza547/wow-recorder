@@ -2,19 +2,26 @@ import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Box from '@mui/material/Box';
-import { Switch } from '@mui/material';
+import { Switch, Typography } from '@mui/material';
 import { ConfigurationSchema } from 'main/configSchema';
+import { RecStatus } from 'main/types';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
 
 const style = {
-  width: '450px',
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': { borderColor: '#bb4220' },
-    '& > fieldset': { borderColor: 'black' },
+  width: '300px',
+  color: 'white',
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'white',
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: '#bb4220',
+  },
+  '&.Mui-focused': {
+    borderColor: '#bb4220',
+    color: '#bb4220',
   },
   '& .MuiInputLabel-root': { color: 'white' },
-  '& label.Mui-focused': { color: '#bb4220' },
 };
 
 const formControlLabelStyle = { color: 'white' };
@@ -34,25 +41,47 @@ const switchStyle = {
   },
 };
 
-const GeneralSettings = () => {
+interface IProps {
+  recorderStatus: RecStatus;
+}
+
+const ipc = window.electron.ipcRenderer;
+
+const GeneralSettings: React.FC<IProps> = (props: IProps) => {
+  const { recorderStatus } = props;
   const [config, setConfig] = useSettings();
+  const initialRender = React.useRef(true);
 
   React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
     setConfigValues({
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
-      seperateBufferPath: config.seperateBufferPath,
+      separateBufferPath: config.separateBufferPath,
+      maxStorage: config.maxStorage,
     });
-  }, [config.seperateBufferPath, config.storagePath, config.bufferStoragePath]);
 
-  const setSeperateBufferPath = (
+    ipc.sendMessage('recorder', ['base']);
+  }, [
+    config.separateBufferPath,
+    config.storagePath,
+    config.bufferStoragePath,
+    config.maxStorage,
+  ]);
+
+  const setseparateBufferPath = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setConfig((prevState) => {
       return {
         ...prevState,
         bufferStoragePath: '',
-        seperateBufferPath: event.target.checked,
+        separateBufferPath: event.target.checked,
       };
     });
   };
@@ -69,6 +98,33 @@ const GeneralSettings = () => {
     />
   );
 
+  const isComponentDisabled = () => {
+    return recorderStatus === RecStatus.Recording;
+  };
+
+  const getDisabledText = () => {
+    if (!isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <Typography
+        variant="h6"
+        sx={{
+          color: 'white',
+          fontSize: '1rem',
+          fontFamily: '"Arial",sans-serif',
+          fontStyle: 'italic',
+          m: 1,
+          textShadow:
+            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+        }}
+      >
+        These settings can not be modified whilst a recording is active.
+      </Typography>
+    );
+  };
+
   const setStoragePath = async () => {
     const newPath = await pathSelect();
 
@@ -80,6 +136,23 @@ const GeneralSettings = () => {
     });
   };
 
+  const validateStoragePath = () => {
+    // todo validate this
+    if (config.storagePath === '') {
+      return false;
+    }
+
+    return true;
+  };
+
+  const storagePathHelperText = () => {
+    if (validateStoragePath()) {
+      return '';
+    }
+
+    return 'Invalid storage path';
+  };
+
   const getStoragePathField = () => {
     return (
       <Box>
@@ -89,8 +162,11 @@ const GeneralSettings = () => {
           label="Storage Path"
           variant="outlined"
           onClick={setStoragePath}
+          error={!validateStoragePath()}
+          disabled={isComponentDisabled()}
+          helperText={storagePathHelperText()}
           InputLabelProps={{ shrink: true }}
-          sx={{ ...style, my: 1 }}
+          sx={{ ...style, my: 1, width: '600px' }}
           inputProps={{ style: { color: 'white' } }}
         />
       </Box>
@@ -108,26 +184,37 @@ const GeneralSettings = () => {
     });
   };
 
-  const getBufferPathField = () => {
+  const getBufferSwitch = () => {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box>
+        <FormControlLabel
+          control={getSwitch('separateBufferPath', setseparateBufferPath)}
+          label="Separate Buffer Path"
+          labelPlacement="top"
+          style={formControlLabelStyle}
+          disabled={isComponentDisabled()}
+        />
+      </Box>
+    );
+  };
+
+  const getBufferPathField = () => {
+    if (!config.separateBufferPath) {
+      return <></>;
+    }
+
+    return (
+      <Box>
         <TextField
           name="bufferStoragePath"
           value={config.bufferStoragePath}
           label="Buffer Path"
           variant="outlined"
-          disabled={!config.seperateBufferPath}
-          // TODO: onClick still fires when disabled, restyle as button? https://github.com/mui/material-ui/issues/32560
           onClick={setBufferPath}
+          disabled={isComponentDisabled()}
           InputLabelProps={{ shrink: true }}
-          sx={{ ...style, my: 1 }}
+          sx={{ ...style, my: 1, width: '600px' }}
           inputProps={{ style: { color: 'white' } }}
-        />
-        <FormControlLabel
-          control={getSwitch('seperateBufferPath', setSeperateBufferPath)}
-          label="Seperate Buffer Path"
-          labelPlacement="top"
-          style={formControlLabelStyle}
         />
       </Box>
     );
@@ -146,27 +233,27 @@ const GeneralSettings = () => {
     return (
       <Box>
         <TextField
-          name="maxStorage"
           value={config.maxStorage}
           onChange={setMaxStorage}
           label="Max Storage (GB)"
           variant="outlined"
+          disabled={isComponentDisabled()}
           type="number"
-          error={config.maxStorage < 0}
-          helperText={config.maxStorage < 0 ? 'Must be positive' : ' '}
           InputLabelProps={{ shrink: true }}
           sx={{ ...style, my: 1 }}
-          inputProps={{ style: { color: 'white' } }}
+          inputProps={{ min: 0, style: { color: 'white' } }}
         />
       </Box>
     );
   };
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      {getDisabledText()}
       {getStoragePathField()}
-      {getBufferPathField()}
       {getMaxStorageField()}
+      {getBufferSwitch()}
+      {getBufferPathField()}
     </Box>
   );
 };

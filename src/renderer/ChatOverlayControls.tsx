@@ -22,10 +22,17 @@ const ipc = window.electron.ipcRenderer;
 
 const ChatOverlayControls: React.FC = () => {
   const [config, setConfig] = useSettings();
+  const initialRender = React.useRef(true);
   const resolution = getConfigValue<string>('obsOutputResolution');
   const [xRes, yRes] = resolution.split('x').map((s) => parseInt(s, 10));
 
   React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
     setConfigValues({
       chatOverlayEnabled: config.chatOverlayEnabled,
       chatOverlayHeight: config.chatOverlayHeight,

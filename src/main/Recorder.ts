@@ -308,14 +308,10 @@ export default class Recorder {
       throw new Error('[Recorder] Configure called but config invalid');
     }
 
-    this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
-    this.createRecordingDirs();
-
-    this.configureBase();
-
     this.scene = osn.SceneFactory.create('WR Scene');
     osn.Global.setOutputSource(this.videoChannel, this.scene);
 
+    this.configureBase();
     this.addVideoSourcesOBS();
 
     this.createOverlayImageSource();
@@ -392,6 +388,19 @@ export default class Recorder {
       throw new Error('[Recorder] OBS must be offline to do this');
     }
 
+    const seperateBufferPath = this.cfg.getPath('separateBufferPath');
+
+    if (seperateBufferPath) {
+      this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
+    } else {
+      this.bufferStorageDir = path.join(
+        this.cfg.getPath('storagePath'),
+        '.temp'
+      );
+    }
+
+    this.createRecordingDirs();
+
     this.resolution = this.cfg.get<string>(
       'obsOutputResolution'
     ) as keyof typeof obsResolutions;
@@ -418,8 +427,7 @@ export default class Recorder {
     }
 
     this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
-    const bufferPath = this.cfg.getPath('bufferStoragePath');
-    this.obsRecordingFactory.path = path.normalize(bufferPath);
+    this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
 
     this.obsRecordingFactory.format = ERecordingFormat.MP4;
     this.obsRecordingFactory.useStreamEncoders = false;

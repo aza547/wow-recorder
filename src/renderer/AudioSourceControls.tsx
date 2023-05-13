@@ -22,12 +22,90 @@ import {
   standardizeAudioDeviceNames,
 } from './rendererutils';
 
+const selectStyle = {
+  color: 'white',
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'white',
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: '#bb4220',
+  },
+  '&.Mui-focused': {
+    borderColor: '#bb4220',
+    color: '#bb4220',
+  },
+};
+
+const sliderSx = {
+  '& .MuiSlider-thumb': {
+    color: 'white',
+  },
+  '& .MuiSlider-track': {
+    color: '#bb4220',
+  },
+  '& .MuiSlider-rail': {
+    color: '#bb4220',
+  },
+  '& .MuiSlider-active': {
+    color: '#bb4220',
+  },
+};
+
+const formControlStyle = { m: 1, width: '100%' };
+
+const switchStyle = {
+  mx: 2,
+  '& .MuiSwitch-switchBase': {
+    '&.Mui-checked': {
+      color: '#fff',
+      '+.MuiSwitch-track': {
+        backgroundColor: '#bb4220',
+        opacity: 1.0,
+      },
+    },
+    '&.Mui-disabled + .MuiSwitch-track': {
+      opacity: 0.5,
+    },
+  },
+};
+
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timer | undefined;
 
 const AudioSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
+  const initialRender = React.useRef(true);
   const availableAudioDevices = ipc.sendSync('getAudioDevices', []);
+
+  React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    debounceTimer = setTimeout(() => {
+      setConfigValues({
+        audioOutputDevices: config.audioOutputDevices,
+        speakerVolume: config.speakerVolume,
+        audioInputDevices: config.audioInputDevices,
+        micVolume: config.micVolume,
+        obsForceMono: config.obsForceMono,
+      });
+
+      ipc.sendMessage('recorder', ['audio']);
+    }, 500);
+  }, [
+    config.audioOutputDevices,
+    config.speakerVolume,
+    config.audioInputDevices,
+    config.micVolume,
+    config.obsForceMono,
+  ]);
 
   const input = standardizeAudioDeviceNames(
     config.audioInputDevices,
@@ -67,77 +145,6 @@ const AudioSourceControls: React.FC = () => {
         };
       });
     }
-  };
-
-  React.useEffect(() => {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
-    debounceTimer = setTimeout(() => {
-      setConfigValues({
-        audioOutputDevices: config.audioOutputDevices,
-        speakerVolume: config.speakerVolume,
-        audioInputDevices: config.audioInputDevices,
-        micVolume: config.micVolume,
-        obsForceMono: config.obsForceMono,
-      });
-
-      ipc.sendMessage('recorder', ['audio']);
-    }, 500);
-  }, [
-    config.audioOutputDevices,
-    config.speakerVolume,
-    config.audioInputDevices,
-    config.micVolume,
-    config.obsForceMono,
-  ]);
-
-  const selectStyle = {
-    color: 'white',
-    '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: 'white',
-    },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#bb4220',
-    },
-    '&.Mui-focused': {
-      borderColor: '#bb4220',
-      color: '#bb4220',
-    },
-  };
-
-  const sliderSx = {
-    '& .MuiSlider-thumb': {
-      color: 'white',
-    },
-    '& .MuiSlider-track': {
-      color: '#bb4220',
-    },
-    '& .MuiSlider-rail': {
-      color: '#bb4220',
-    },
-    '& .MuiSlider-active': {
-      color: '#bb4220',
-    },
-  };
-
-  const formControlStyle = { m: 1, width: '100%' };
-
-  const switchStyle = {
-    mx: 2,
-    '& .MuiSwitch-switchBase': {
-      '&.Mui-checked': {
-        color: '#fff',
-        '+.MuiSwitch-track': {
-          backgroundColor: '#bb4220',
-          opacity: 1.0,
-        },
-      },
-      '&.Mui-disabled + .MuiSwitch-track': {
-        opacity: 0.5,
-      },
-    },
   };
 
   const getSelectedChip = (id: string) => {

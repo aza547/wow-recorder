@@ -10,6 +10,7 @@ import {
   OurDisplayType,
   RendererVideo,
   RendererVideoState,
+  Flavour,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -448,6 +449,36 @@ const getAssetPath = (...paths: string[]): string => {
   return path.join(RESOURCES_PATH, ...paths);
 };
 
+/**
+ * Find and return the flavour of WoW that the log directory
+ * belongs to by means of the '.flavor.info' file.
+ */
+const getWowFlavour = (pathSpec: string): string => {
+  const flavourInfoFile = path.normalize(
+    path.join(pathSpec, '../.flavor.info')
+  );
+
+  // If this file doesn't exist, it's not a subdirectory of a WoW flavour.
+  if (!fs.existsSync(flavourInfoFile)) {
+    return 'unknown';
+  }
+
+  const content = fs.readFileSync(flavourInfoFile).toString().split('\n');
+
+  return content.length > 1 ? content[1] : 'unknown';
+};
+
+const validateLogPath = (logPath: string, flavour: Flavour) => {
+  const pathFlavour = getWowFlavour(logPath);
+  console.log('flav', pathFlavour, flavour);
+
+  if (flavour === Flavour.Retail) {
+    return pathFlavour === 'wow';
+  }
+
+  return pathFlavour === 'wow_classic';
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -465,4 +496,6 @@ export {
   deferredPromiseHelper,
   getThumbnailFileNameForVideo,
   getAssetPath,
+  getWowFlavour,
+  validateLogPath,
 };

@@ -2,33 +2,20 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import {
   Box,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Select,
   SelectChangeEvent,
   Switch,
   TextField,
-  Tooltip,
 } from '@mui/material';
-import { ConfigurationSchema, configSchema } from 'main/configSchema';
-import InfoIcon from '@mui/icons-material/Info';
+import { ConfigurationSchema } from 'main/configSchema';
 import React from 'react';
 import { setConfigValues, useSettings } from './useSettings';
 
+const formControlStyle = { m: 1, width: '200px' };
+
 const style = {
-  width: '450px',
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': { borderColor: '#bb4220' },
-    '& > fieldset': { borderColor: 'black' },
-  },
-  '& .MuiInputLabel-root': { color: 'white' },
-  '& label.Mui-focused': { color: '#bb4220' },
-};
-
-const formControlStyle = { m: 1, width: '100%' };
-
-const selectStyle = {
   color: 'white',
   '& .MuiOutlinedInput-notchedOutline': {
     borderColor: 'white',
@@ -39,6 +26,18 @@ const selectStyle = {
   '&.Mui-focused': {
     borderColor: '#bb4220',
     color: '#bb4220',
+  },
+  '& .MuiInputLabel-root': { color: 'white' },
+  '& .MuiOutlinedInput-root': {
+    '& fieldset': {
+      borderColor: 'white',
+    },
+    '&:hover fieldset': {
+      borderColor: '#bb4220',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#bb4220',
+    },
   },
 };
 
@@ -61,8 +60,15 @@ const raidDifficultyOptions = ['LFR', 'Normal', 'Heroic', 'Mythic'];
 
 const PVESettings: React.FC = () => {
   const [config, setConfig] = useSettings();
+  const initialRender = React.useRef(true);
 
   React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
     setConfigValues({
       recordRaids: config.recordRaids,
       minEncounterDuration: config.minEncounterDuration,
@@ -103,9 +109,9 @@ const PVESettings: React.FC = () => {
     return (
       <FormControlLabel
         control={getSwitch('recordRaids', setRecordRaids)}
-        label="Raids"
+        label="Record Raids"
         labelPlacement="top"
-        style={{ color: 'white' }}
+        style={{ color: 'white', width: '200px' }}
       />
     );
   };
@@ -122,29 +128,22 @@ const PVESettings: React.FC = () => {
   };
 
   const getMinEncounterDurationField = () => {
+    if (!config.recordRaids) {
+      return <></>;
+    }
+
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <TextField
-          value={config.minEncounterDuration}
-          label="Minimum Encounter Duration"
-          disabled={!config.recordRaids}
-          onChange={setMinEncounterDuration}
-          variant="outlined"
-          type="number"
-          error={config.minEncounterDuration < 1}
-          helperText={
-            config.minEncounterDuration < 1 ? 'Must be 1 or greater' : ' '
-          }
-          InputLabelProps={{ shrink: true }}
-          sx={{ ...style }}
-          inputProps={{ style: { color: 'white' } }}
-        />
-        <Tooltip title={configSchema.minEncounterDuration.description}>
-          <IconButton>
-            <InfoIcon style={{ color: 'white' }} />
-          </IconButton>
-        </Tooltip>
-      </Box>
+      <TextField
+        value={config.minEncounterDuration}
+        label="Minimum Encounter Duration (secs)"
+        disabled={!config.recordRaids}
+        onChange={setMinEncounterDuration}
+        variant="outlined"
+        type="number"
+        InputLabelProps={{ shrink: true }}
+        sx={style}
+        inputProps={{ min: 0, style: { color: 'white' } }}
+      />
     );
   };
 
@@ -162,30 +161,28 @@ const PVESettings: React.FC = () => {
   };
 
   const getMinRaidDifficultySelect = () => {
+    if (!config.recordRaids) {
+      return <></>;
+    }
+
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <FormControl size="small" sx={formControlStyle}>
-          <InputLabel sx={selectStyle}>Minimum Raid Difficulty</InputLabel>
-          <Select
-            value={config.minRaidDifficulty}
-            disabled={!config.recordRaids}
-            label="Minimum Raid Difficulty"
-            onChange={setMinRaidDifficulty}
-            sx={selectStyle}
-          >
-            {raidDifficultyOptions.map((difficulty: string) => (
-              <MenuItem key={difficulty} value={difficulty}>
-                {difficulty}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Tooltip title={configSchema.minRaidDifficulty.description}>
-          <IconButton>
-            <InfoIcon style={{ color: 'white' }} />
-          </IconButton>
-        </Tooltip>
-      </Box>
+      <FormControl sx={formControlStyle}>
+        <InputLabel sx={style}>Minimum Raid Difficulty</InputLabel>
+        <Select
+          value={config.minRaidDifficulty}
+          disabled={!config.recordRaids}
+          label="Minimum Raid Difficulty"
+          variant="outlined"
+          onChange={setMinRaidDifficulty}
+          sx={style}
+        >
+          {raidDifficultyOptions.map((difficulty: string) => (
+            <MenuItem key={difficulty} value={difficulty}>
+              {difficulty}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
     );
   };
 
@@ -202,9 +199,9 @@ const PVESettings: React.FC = () => {
     return (
       <FormControlLabel
         control={getSwitch('recordDungeons', setRecordDungeons)}
-        label="Mythic+"
+        label="Record Mythic+"
         labelPlacement="top"
-        style={{ color: 'white' }}
+        style={{ color: 'white', width: '200px' }}
       />
     );
   };
@@ -219,29 +216,23 @@ const PVESettings: React.FC = () => {
   };
 
   const getMinKeystoneLevelField = () => {
+    if (!config.recordDungeons) {
+      return <></>;
+    }
+
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <TextField
-          value={config.minKeystoneLevel}
-          onChange={setMinKeystoneLevel}
-          disabled={!config.recordDungeons}
-          label="Minimum Keystone Level"
-          variant="outlined"
-          type="number"
-          error={config.minKeystoneLevel < 1}
-          helperText={
-            config.minKeystoneLevel < 1 ? 'Must be 1 or greater' : ' '
-          }
-          InputLabelProps={{ shrink: true }}
-          sx={{ ...style }}
-          inputProps={{ style: { color: 'white' }, min: 2 }}
-        />
-        <Tooltip title={configSchema.minKeystoneLevel.description}>
-          <IconButton>
-            <InfoIcon style={{ color: 'white' }} />
-          </IconButton>
-        </Tooltip>
-      </Box>
+      <TextField
+        value={config.minKeystoneLevel}
+        onChange={setMinKeystoneLevel}
+        disabled={!config.recordDungeons}
+        label="Minimum Keystone Level"
+        variant="outlined"
+        type="number"
+        error={config.minKeystoneLevel < 0}
+        InputLabelProps={{ shrink: true }}
+        sx={style}
+        inputProps={{ min: 0, style: { color: 'white' } }}
+      />
     );
   };
 
@@ -251,6 +242,7 @@ const PVESettings: React.FC = () => {
         sx={{
           display: 'flex',
           flexDirection: 'row',
+          alignItems: 'center',
         }}
       >
         {getRecordRaidSwitch()}
@@ -262,6 +254,7 @@ const PVESettings: React.FC = () => {
         sx={{
           display: 'flex',
           flexDirection: 'row',
+          alignItems: 'center',
         }}
       >
         {getRecordDungeonSwitch()}

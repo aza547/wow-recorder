@@ -29,7 +29,23 @@ const switchStyle = {
 const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const displayConfiguration = ipc.sendSync('getAllDisplays', []);
+  const initialRender = React.useRef(true);
 
+  React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
+    setConfigValues({
+      obsCaptureMode: config.obsCaptureMode,
+      monitorIndex: config.monitorIndex,
+      captureCursor: config.captureCursor,
+    });
+
+    ipc.sendMessage('recorder', ['video']);
+  }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
   const setOBSCaptureMode = (
     _event: React.MouseEvent<HTMLElement>,
     mode: string
@@ -70,17 +86,6 @@ const VideoSourceControls: React.FC = () => {
       };
     });
   };
-
-  React.useEffect(() => {
-    setConfigValues({
-      obsCaptureMode: config.obsCaptureMode,
-      monitorIndex: config.monitorIndex,
-      captureCursor: config.captureCursor,
-    });
-
-    ipc.sendMessage('recorder', ['video']);
-  }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
-
   const getToggleButton = (value: string, display: string) => {
     return (
       <ToggleButton

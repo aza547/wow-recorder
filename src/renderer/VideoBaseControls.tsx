@@ -59,6 +59,7 @@ interface IProps {
 const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const { recorderStatus } = props;
+  const initialRender = React.useRef(true);
 
   const obsAvailableEncoders: Encoder[] = ipc
     .sendSync('getEncoders', [])
@@ -67,6 +68,12 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
     .sort((a: Encoder, b: Encoder) => a.type < b.type);
 
   React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
     setConfigValues({
       obsOutputResolution: config.obsOutputResolution,
       obsFPS: config.obsFPS,

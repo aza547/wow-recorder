@@ -23,7 +23,7 @@ export const useSettings = (): [
   const configValues = {
     storagePath: getConfigValue<string>('storagePath'),
     bufferStoragePath: getConfigValue<string>('bufferStoragePath'),
-    seperateBufferPath: getConfigValue<boolean>('seperateBufferPath'),
+    separateBufferPath: getConfigValue<boolean>('separateBufferPath'),
     retailLogPath: getConfigValue<string>('retailLogPath'),
     classicLogPath: getConfigValue<string>('classicLogPath'),
     maxStorage: getConfigValue<number>('maxStorage'),

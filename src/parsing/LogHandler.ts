@@ -59,6 +59,11 @@ export default abstract class LogHandler {
     this._combatLogParser.watchPath(logPath);
   }
 
+  destroy() {
+    this._combatLogParser.unwatch();
+    this._combatLogParser.removeAllListeners();
+  }
+
   get activity() {
     return this._activity;
   }

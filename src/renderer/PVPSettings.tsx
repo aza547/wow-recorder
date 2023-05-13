@@ -21,8 +21,15 @@ const switchStyle = {
 
 const PVPSettings: React.FC = () => {
   const [config, setConfig] = useSettings();
+  const initialRender = React.useRef(true);
 
   React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
     setConfigValues({
       recordTwoVTwo: config.recordTwoVTwo,
       recordThreeVThree: config.recordThreeVThree,
@@ -129,12 +136,16 @@ const PVPSettings: React.FC = () => {
         flexWrap: 'wrap',
       }}
     >
-      {getSwitchForm('recordTwoVTwo', '2v2', setRecord2v2)}
-      {getSwitchForm('recordThreeVThree', '3v3', setRecord3v3)}
-      {getSwitchForm('recordFiveVFive', '5v5', setRecord5v5)}
-      {getSwitchForm('recordSkirmish', 'Skirmish', setRecordSkirmish)}
-      {getSwitchForm('recordSoloShuffle', 'Solo Shuffle', setRecordSolo)}
-      {getSwitchForm('recordBattlegrounds', 'Battlegrounds', setRecordBgs)}
+      {getSwitchForm('recordTwoVTwo', 'Record 2v2', setRecord2v2)}
+      {getSwitchForm('recordThreeVThree', 'Record 3v3', setRecord3v3)}
+      {getSwitchForm('recordFiveVFive', 'Record 5v5', setRecord5v5)}
+      {getSwitchForm('recordSkirmish', 'Record Skirmish', setRecordSkirmish)}
+      {getSwitchForm('recordSoloShuffle', 'Record Solo Shuffle', setRecordSolo)}
+      {getSwitchForm(
+        'recordBattlegrounds',
+        'Record Battlegrounds',
+        setRecordBgs
+      )}
     </Box>
   );
 };
