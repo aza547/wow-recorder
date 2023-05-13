@@ -12,9 +12,14 @@ import {
   Typography,
 } from '@mui/material';
 import React from 'react';
-import { RecStatus } from 'main/types';
+import { Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
 import { useSettings, setConfigValues } from './useSettings';
+import {
+  encoderFilter,
+  mapStringToEncoder,
+  mapEncoderToString,
+} from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -34,6 +39,9 @@ const selectStyle = {
   },
 };
 
+const outputResolutions = Object.keys(obsResolutions);
+const fpsOptions = ['10', '20', '30', '60'];
+
 interface IProps {
   recorderStatus: RecStatus;
 }
@@ -51,20 +59,28 @@ interface IProps {
 const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const { recorderStatus } = props;
-  console.log(recorderStatus);
 
-  const outputResolutions = Object.keys(obsResolutions);
-  const fpsOptions = ['10', '20', '30', '60'];
+  const obsAvailableEncoders: Encoder[] = ipc
+    .sendSync('getEncoders', [])
+    .filter(encoderFilter)
+    .map(mapStringToEncoder)
+    .sort((a: Encoder, b: Encoder) => a.type < b.type);
 
   React.useEffect(() => {
     setConfigValues({
       obsOutputResolution: config.obsOutputResolution,
       obsFPS: config.obsFPS,
       obsKBitRate: config.obsKBitRate,
+      obsRecEncoder: config.obsRecEncoder,
     });
 
     ipc.sendMessage('recorder', ['base']);
-  }, [config.obsOutputResolution, config.obsFPS, config.obsKBitRate]);
+  }, [
+    config.obsOutputResolution,
+    config.obsFPS,
+    config.obsKBitRate,
+    config.obsRecEncoder,
+  ]);
 
   const isComponentDisabled = () => {
     return recorderStatus === RecStatus.Recording;
@@ -72,11 +88,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
 
   const getMenuItem = (value: string) => {
     return (
-      <MenuItem
-        sx={{ height: '25px' }}
-        key={`obs-output-resolution-${value}`}
-        value={value}
-      >
+      <MenuItem sx={{ height: '25px' }} key={value} value={value}>
         {value}
       </MenuItem>
     );
@@ -224,6 +236,39 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const setEncoder = (event: SelectChangeEvent<string>) => {
+    const {
+      target: { value },
+    } = event;
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        obsRecEncoder: value,
+      };
+    });
+  };
+
+  const getEncoderSelect = () => {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <FormControl sx={{ my: 1 }}>
+          <InputLabel id="obs-rec-encoder-label" sx={selectStyle}>
+            Video Encoder
+          </InputLabel>
+          <Select
+            value={config.obsRecEncoder}
+            label="Video Encoder"
+            onChange={setEncoder}
+            sx={selectStyle}
+          >
+            {obsAvailableEncoders.map(mapEncoderToString).map(getMenuItem)}
+          </Select>
+        </FormControl>
+      </Box>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -247,6 +292,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
         {getCanvasResolutionSelect()}
         {getBitrateField()}
         {getFPSToggle()}
+        {getEncoderSelect()}
       </Box>
     </Box>
   );

@@ -1,6 +1,7 @@
 export type ConfigurationSchema = {
   storagePath: string;
   bufferStoragePath: string;
+  seperateBufferPath: boolean;
   retailLogPath: string;
   classicLogPath: string;
   maxStorage: number;
@@ -51,6 +52,11 @@ export const configSchema = {
     description: 'Location to store the recordings.',
     type: 'string',
     default: '',
+  },
+  seperateBufferPath: {
+    description: 'Enable storing temporary recordings in a seperate location.',
+    type: 'boolean',
+    default: false,
   },
   bufferStoragePath: {
     description:

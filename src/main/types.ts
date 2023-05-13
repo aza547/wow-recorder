@@ -312,6 +312,16 @@ enum DeviceType {
   OUTPUT,
 }
 
+enum EncoderType {
+  'HARDWARE',
+  'SOFTWARE',
+}
+
+type Encoder = {
+  name: string;
+  type: EncoderType;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -328,7 +338,6 @@ export {
   FileFinderCallbackType,
   VideoQueueItem,
   FakeChangeEvent,
-  ISettingsPanelProps,
   Metadata,
   RendererVideo,
   RendererVideoState,
@@ -345,4 +354,6 @@ export {
   TPreviewPosition,
   DeviceType,
   Pages,
+  EncoderType,
+  Encoder,
 };

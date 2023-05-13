@@ -149,8 +149,6 @@ const wowProcessStopped = async () => {
   }
 };
 
-
-
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
   muted: false,
@@ -319,35 +317,6 @@ const createWindow = async () => {
   });
 };
 
-const openPathDialog = (event: any, args: any) => {
-  if (!mainWindow) return;
-  const setting = args[1];
-
-  dialog
-    .showOpenDialog(mainWindow, { properties: ['openDirectory'] })
-    .then((result) => {
-      if (!result.canceled) {
-        const selectedPath = result.filePaths[0];
-        let validationResult = true;
-
-        // Validate the path if it's a path for a log directory
-        if (setting === 'retailLogPath' || setting === 'classicLogPath') {
-          validationResult = CombatLogParser.validateLogPath(selectedPath);
-        }
-
-        event.reply('mainWindow', [
-          'pathSelected',
-          setting,
-          selectedPath,
-          validationResult,
-        ]);
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-};
-
 /**
  * mainWindow event listeners.
  */
@@ -421,6 +390,26 @@ ipcMain.on('videoButton', async (_event, args) => {
 });
 
 /**
+ * Opens a system explorer window to select a path.
+ */
+ipcMain.handle('selectPath', async () => {
+  if (!mainWindow) {
+    return '';
+  }
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+  });
+
+  if (result.canceled) {
+    console.info('User cancelled path selection');
+    return '';
+  }
+
+  return result.filePaths[0];
+});
+
+/**
  * logPath event listener.
  */
 ipcMain.on('logPath', (_event, args) => {
@@ -450,6 +439,22 @@ ipcMain.on('preview', (_event, args) => {
   } else if (args[0] === 'hide') {
     recorder.hidePreview();
   }
+});
+
+/**
+ * Get the available video encoders.
+ */
+ipcMain.on('getEncoders', (event) => {
+  if (!recorder) {
+    event.returnValue = [];
+    return;
+  }
+
+  const obsEncoders = recorder
+    .getAvailableEncoders()
+    .filter((encoder) => encoder !== 'none');
+
+  event.returnValue = obsEncoders;
 });
 
 /**
