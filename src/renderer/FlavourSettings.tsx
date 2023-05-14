@@ -7,6 +7,7 @@ import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
 
 const style = {
+  width: '300px',
   color: 'white',
   '& .MuiOutlinedInput-notchedOutline': {
     borderColor: 'white',
@@ -18,7 +19,16 @@ const style = {
     borderColor: '#bb4220',
     color: '#bb4220',
   },
-  '& .MuiInputLabel-root': { color: 'white' },
+  '&:hover': {
+    '&& fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
+  '& .MuiOutlinedInput-root': {
+    '&.Mui-focused fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
 };
 
 const formControlLabelStyle = { color: 'white', width: '200px' };
@@ -136,7 +146,15 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setRetailLogPath = async () => {
+    if (isComponentDisabled()) {
+      return;
+    }
+
     const newPath = await pathSelect();
+
+    if (newPath === '') {
+      return;
+    }
 
     setConfig((prevState) => {
       return {
@@ -189,7 +207,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             error={!validateRetailLogPath()}
             helperText={retailLogPathHelperText()}
             onClick={setRetailLogPath}
-            InputLabelProps={{ shrink: true }}
+            InputLabelProps={{ shrink: true, style: { color: 'white' } }}
             sx={{ ...style, width: '600px', my: 1 }}
             inputProps={{ style: { color: 'white' } }}
           />
@@ -199,7 +217,15 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setClassicLogPath = async () => {
+    if (isComponentDisabled()) {
+      return;
+    }
+
     const newPath = await pathSelect();
+
+    if (newPath === '') {
+      return;
+    }
 
     setConfig((prevState) => {
       return {
@@ -252,7 +278,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             error={!validateClassicLogPath()}
             helperText={classicLogPathHelperText()}
             onClick={setClassicLogPath}
-            InputLabelProps={{ shrink: true }}
+            InputLabelProps={{ shrink: true, style: { color: 'white' } }}
             sx={{ ...style, width: '600px', my: 1 }}
             inputProps={{ style: { color: 'white' } }}
           />

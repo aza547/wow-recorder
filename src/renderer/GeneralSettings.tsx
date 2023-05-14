@@ -21,7 +21,16 @@ const style = {
     borderColor: '#bb4220',
     color: '#bb4220',
   },
-  '& .MuiInputLabel-root': { color: 'white' },
+  '&:hover': {
+    '&& fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
+  '& .MuiOutlinedInput-root': {
+    '&.Mui-focused fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
 };
 
 const formControlLabelStyle = { color: 'white' };
@@ -126,7 +135,15 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setStoragePath = async () => {
+    if (isComponentDisabled()) {
+      return;
+    }
+
     const newPath = await pathSelect();
+
+    if (newPath === '') {
+      return;
+    }
 
     setConfig((prevState) => {
       return {
@@ -165,7 +182,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           error={!validateStoragePath()}
           disabled={isComponentDisabled()}
           helperText={storagePathHelperText()}
-          InputLabelProps={{ shrink: true }}
+          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
           sx={{ ...style, my: 1, width: '600px' }}
           inputProps={{ style: { color: 'white' } }}
         />
@@ -174,7 +191,15 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setBufferPath = async () => {
+    if (isComponentDisabled()) {
+      return;
+    }
+
     const newPath = await pathSelect();
+
+    if (newPath === '') {
+      return;
+    }
 
     setConfig((prevState) => {
       return {
@@ -212,7 +237,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           variant="outlined"
           onClick={setBufferPath}
           disabled={isComponentDisabled()}
-          InputLabelProps={{ shrink: true }}
+          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
           sx={{ ...style, my: 1, width: '600px' }}
           inputProps={{ style: { color: 'white' } }}
         />
@@ -239,7 +264,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           variant="outlined"
           disabled={isComponentDisabled()}
           type="number"
-          InputLabelProps={{ shrink: true }}
+          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
           sx={{ ...style, my: 1 }}
           inputProps={{ min: 0, style: { color: 'white' } }}
         />

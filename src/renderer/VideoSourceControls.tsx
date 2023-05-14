@@ -86,7 +86,10 @@ const VideoSourceControls: React.FC = () => {
       };
     });
   };
-  const getToggleButton = (value: string, display: string) => {
+  const getToggleButton = (
+    value: string | number,
+    display: string | number
+  ) => {
     return (
       <ToggleButton
         value={value}
@@ -141,10 +144,7 @@ const VideoSourceControls: React.FC = () => {
             sx={{ border: '1px solid white' }}
           >
             {displayConfiguration.map((display: OurDisplayType) =>
-              getToggleButton(
-                display.index.toString(),
-                (display.index + 1).toString()
-              )
+              getToggleButton(display.index, display.index + 1)
             )}
           </ToggleButtonGroup>
         }

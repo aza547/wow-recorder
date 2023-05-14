@@ -313,8 +313,8 @@ enum DeviceType {
 }
 
 enum EncoderType {
-  'HARDWARE',
-  'SOFTWARE',
+  HARDWARE = 'Hardware',
+  SOFTWARE = 'Software',
 }
 
 type Encoder = {

@@ -17,8 +17,8 @@ import { obsResolutions } from 'main/constants';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   encoderFilter,
-  mapStringToEncoder,
   mapEncoderToString,
+  mapStringToEncoder,
 } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
@@ -36,6 +36,16 @@ const selectStyle = {
   '&.Mui-focused': {
     borderColor: '#bb4220',
     color: '#bb4220',
+  },
+  '&:hover': {
+    '&& fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
+  '& .MuiOutlinedInput-root': {
+    '&.Mui-focused fieldset': {
+      borderColor: '#bb4220',
+    },
   },
 };
 
@@ -97,6 +107,14 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
     return (
       <MenuItem sx={{ height: '25px' }} key={value} value={value}>
         {value}
+      </MenuItem>
+    );
+  };
+
+  const getEncoderMenuItem = (enc: Encoder) => {
+    return (
+      <MenuItem sx={{ height: '25px' }} key={enc.name} value={enc.name}>
+        {mapEncoderToString(enc)}
       </MenuItem>
     );
   };
@@ -176,7 +194,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
         }
         label="FPS"
         labelPlacement="top"
-        sx={{ color: 'white' }}
+        sx={{ color: 'white', pb: 2 }}
       />
     );
   };
@@ -226,18 +244,17 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
       <FormControl size="small" sx={formControlStyle}>
         <TextField
           size="small"
-          name="obsKBitRate"
           value={config.obsKBitRate}
           disabled={isComponentDisabled()}
           onChange={setBitrate}
-          label="Video Bit Rate (Mbps)"
+          label="Bitrate (Mbps)"
           variant="outlined"
           type="number"
           error={!isBitrateValid()}
           helperText={getBitrateHelperText()}
           sx={{ ...selectStyle, my: 1 }}
           InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          inputProps={{ style: { color: 'white' } }}
+          inputProps={{ min: 1, style: { color: 'white' } }}
         />
       </FormControl>
     );
@@ -258,21 +275,17 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
 
   const getEncoderSelect = () => {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <FormControl sx={{ my: 1 }}>
-          <InputLabel id="obs-rec-encoder-label" sx={selectStyle}>
-            Video Encoder
-          </InputLabel>
-          <Select
-            value={config.obsRecEncoder}
-            label="Video Encoder"
-            onChange={setEncoder}
-            sx={selectStyle}
-          >
-            {obsAvailableEncoders.map(mapEncoderToString).map(getMenuItem)}
-          </Select>
-        </FormControl>
-      </Box>
+      <FormControl size="small" sx={formControlStyle}>
+        <InputLabel sx={selectStyle}>Video Encoder</InputLabel>
+        <Select
+          value={config.obsRecEncoder}
+          label="Video Encoder"
+          onChange={setEncoder}
+          sx={{ ...selectStyle }}
+        >
+          {obsAvailableEncoders.map(getEncoderMenuItem)}
+        </Select>
+      </FormControl>
     );
   };
 
@@ -296,9 +309,9 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
           width: '100%',
         }}
       >
+        {getFPSToggle()}
         {getCanvasResolutionSelect()}
         {getBitrateField()}
-        {getFPSToggle()}
         {getEncoderSelect()}
       </Box>
     </Box>

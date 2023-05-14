@@ -16,6 +16,7 @@ import { setConfigValues, useSettings } from './useSettings';
 const formControlStyle = { m: 1, width: '200px' };
 
 const style = {
+  width: '300px',
   color: 'white',
   '& .MuiOutlinedInput-notchedOutline': {
     borderColor: 'white',
@@ -27,14 +28,12 @@ const style = {
     borderColor: '#bb4220',
     color: '#bb4220',
   },
-  '& .MuiInputLabel-root': { color: 'white' },
-  '& .MuiOutlinedInput-root': {
-    '& fieldset': {
-      borderColor: 'white',
-    },
-    '&:hover fieldset': {
+  '&:hover': {
+    '&& fieldset': {
       borderColor: '#bb4220',
     },
+  },
+  '& .MuiOutlinedInput-root': {
     '&.Mui-focused fieldset': {
       borderColor: '#bb4220',
     },
@@ -140,7 +139,7 @@ const PVESettings: React.FC = () => {
         onChange={setMinEncounterDuration}
         variant="outlined"
         type="number"
-        InputLabelProps={{ shrink: true }}
+        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
         sx={style}
         inputProps={{ min: 0, style: { color: 'white' } }}
       />
@@ -229,7 +228,7 @@ const PVESettings: React.FC = () => {
         variant="outlined"
         type="number"
         error={config.minKeystoneLevel < 0}
-        InputLabelProps={{ shrink: true }}
+        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
         sx={style}
         inputProps={{ min: 0, style: { color: 'white' } }}
       />
