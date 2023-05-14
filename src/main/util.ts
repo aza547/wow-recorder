@@ -468,16 +468,6 @@ const getWowFlavour = (pathSpec: string): string => {
   return content.length > 1 ? content[1] : 'unknown';
 };
 
-const validateLogPath = (logPath: string, flavour: Flavour) => {
-  const pathFlavour = getWowFlavour(logPath);
-
-  if (flavour === Flavour.Retail) {
-    return pathFlavour === 'wow';
-  }
-
-  return pathFlavour === 'wow_classic';
-};
-
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -496,5 +486,4 @@ export {
   getThumbnailFileNameForVideo,
   getAssetPath,
   getWowFlavour,
-  validateLogPath,
 };

@@ -23,10 +23,9 @@ import {
   getAvailableDisplays,
   checkAppUpdate,
   getAssetPath,
-  validateLogPath,
 } from './util';
 import Recorder from './Recorder';
-import { Flavour, RecStatus, VideoPlayerSettings } from './types';
+import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import {
   runClassicRecordingTest,
@@ -294,15 +293,26 @@ const createWindow = async () => {
     Poller.getInstance().start();
     mainWindow.webContents.send('refreshState');
 
-    const retailLogPath = cfg.getPath('retailLogPath');
-    const classicLogPath = cfg.getPath('classicLogPath');
-
     if (!noObsDev && recorder) {
-      if (retailLogPath) {
+      const recordRetail = cfg.get<boolean>('recordRetail');
+      const retailLogPath = cfg.getPath('retailLogPath');
+
+      if (recordRetail && recorder) {
+        console.info(
+          '[Main] Create RetailLogHandler object with',
+          retailLogPath
+        );
         retailHandler = new RetailLogHandler(recorder, retailLogPath);
       }
 
-      if (classicLogPath) {
+      const recordClassic = cfg.get<boolean>('recordClassic');
+      const classicLogPath = cfg.getPath('classicLogPath');
+
+      if (recorder && recordClassic) {
+        console.info(
+          '[Main] Create ClassicLogHandler object with',
+          classicLogPath
+        );
         classicHandler = new ClassicLogHandler(recorder, classicLogPath);
       }
     }
@@ -442,20 +452,33 @@ ipcMain.on('flavourSettingChange', () => {
     classicHandler = undefined;
   }
 
-  const recordRetail = cfg.get<boolean>('recordRetail');
-  const retailLogPath = cfg.get<string>('retailLogPath');
-  const validRetailLogPath = validateLogPath(retailLogPath, Flavour.Retail);
+  try {
+    cfg.validate();
+    updateRecStatus(RecStatus.WaitingForWoW);
+  } catch (error) {
+    updateRecStatus(RecStatus.InvalidConfig, String(error));
+    return;
+  }
 
-  if (recordRetail && recorder && validRetailLogPath) {
+  if (!mainWindow) {
+    return;
+  }
+
+  Poller.getInstance().start();
+  mainWindow.webContents.send('refreshState');
+
+  const recordRetail = cfg.get<boolean>('recordRetail');
+  const retailLogPath = cfg.getPath('retailLogPath');
+
+  if (recordRetail && recorder) {
     console.info('[Main] Create RetailLogHandler object with', retailLogPath);
     retailHandler = new RetailLogHandler(recorder, retailLogPath);
   }
 
   const recordClassic = cfg.get<boolean>('recordClassic');
-  const classicLogPath = cfg.get<string>('classicLogPath');
-  const validClassicLogPath = validateLogPath(classicLogPath, Flavour.Classic);
+  const classicLogPath = cfg.getPath('classicLogPath');
 
-  if (recorder && recordClassic && validClassicLogPath) {
+  if (recorder && recordClassic) {
     console.info('[Main] Create ClassicLogHandler object with', classicLogPath);
     classicHandler = new ClassicLogHandler(recorder, classicLogPath);
   }
@@ -654,6 +677,10 @@ ipcMain.on('recorder', async (_event, args) => {
     } catch (error) {
       updateRecStatus(RecStatus.InvalidConfig, String(error));
       return;
+    }
+
+    if (!noObsDev && recorder && !recorder.obsConfigured) {
+      recorder.configure();
     }
 
     const { bufferPath, resolution, fps, encoder, kBitRate } =

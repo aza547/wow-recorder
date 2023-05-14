@@ -133,33 +133,31 @@ export default class ConfigService extends EventEmitter {
     }
 
     // Check if the specified paths is a valid WoW Combat Log directory
-    const combatLogPaths = ['retailLogPath', 'classicLogPath'];
-    let hasValidCombatLogPath = false;
+    const recordRetail = this.get<boolean>('recordRetail');
 
-    combatLogPaths.forEach((configKey) => {
-      const logPath = this.get<string>(configKey as keyof ConfigurationSchema);
+    if (recordRetail) {
+      const retailLogPath = this.get<string>('retailLogPath');
+      const wowFlavour = getWowFlavour(retailLogPath);
 
-      if (!logPath) {
-        return;
+      if (wowFlavour !== 'wow') {
+        console.error('[ConfigService] Invalid retail log path', retailLogPath);
+        throw new Error('[ConfigService] Invalid retail log path');
       }
+    }
 
-      const wowFlavour = getWowFlavour(logPath);
+    const recordClassic = this.get<boolean>('recordClassic');
 
-      if (wowFlavour === 'unknown') {
-        console.warn(
-          `[Config Service] Ignoring invalid combat log directory '${logPath}' for '${configKey}'.`
+    if (recordClassic) {
+      const classicLogPath = this.get<string>('classicLogPath');
+      const wowFlavour = getWowFlavour(classicLogPath);
+
+      if (wowFlavour !== 'wow_classic') {
+        console.error(
+          '[ConfigService] Invalid classic log path',
+          classicLogPath
         );
-        return;
+        throw new Error('[ConfigService] Invalid classic log path');
       }
-
-      hasValidCombatLogPath = true;
-    });
-
-    if (!hasValidCombatLogPath) {
-      console.warn(
-        `[Config Service] No valid WoW Combat Log directory has been configured.`
-      );
-      throw new Error('No valid retail or classic log path found.');
     }
   }
 

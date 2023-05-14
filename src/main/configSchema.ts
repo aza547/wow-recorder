@@ -165,12 +165,12 @@ export const configSchema = {
   recordRetail: {
     description: 'Whether the application should record retail.',
     type: 'boolean',
-    default: true,
+    default: false,
   },
   recordClassic: {
     description: 'Whether the application should record classic.',
     type: 'boolean',
-    default: true,
+    default: false,
   },
   recordRaids: {
     description: 'Whether the application should record raids.',
