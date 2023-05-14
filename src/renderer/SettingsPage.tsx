@@ -11,24 +11,27 @@ interface IProps {
   recorderStatus: RecStatus;
 }
 
+const boxColor = '#141b2d';
+
+const getHeading = (heading: string) => {
+  return (
+    <Typography
+      sx={{
+        color: 'white',
+        fontFamily: '"Arial",sans-serif',
+        fontWeight: 700,
+        textShadow:
+          '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+      }}
+    >
+      {heading}
+    </Typography>
+  );
+};
+
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus } = props;
 
-  const getHeading = (heading: string) => {
-    return (
-      <Typography
-        sx={{
-          color: 'white',
-          fontFamily: '"Arial",sans-serif',
-          fontWeight: 700,
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
-        {heading}
-      </Typography>
-    );
-  };
   return (
     <Box
       sx={{
@@ -54,10 +57,10 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
       <Box sx={{ mx: 2, mt: 2 }}>{getHeading('General Settings')}</Box>
       <Box
         sx={{
-          backgroundColor: '#182035',
+          backgroundColor: boxColor,
           border: '1px solid rgba(0, 0, 0, 0.6)',
           borderRadius: '5px',
-          boxShadow: 1,
+          boxShadow: 3,
           p: 2,
           m: 2,
         }}
@@ -68,24 +71,24 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
       <Box sx={{ mx: 2 }}>{getHeading('Game Settings')}</Box>
       <Box
         sx={{
-          backgroundColor: '#182035',
+          backgroundColor: boxColor,
           border: '1px solid rgba(0, 0, 0, 0.4)',
           borderRadius: '5px',
-          boxShadow: 1,
+          boxShadow: 3,
           p: 2,
           m: 2,
         }}
       >
-        <FlavourSettings recorderStatus={recorderStatus}/>
+        <FlavourSettings recorderStatus={recorderStatus} />
       </Box>
 
       <Box sx={{ mx: 2 }}>{getHeading('PvE Settings')}</Box>
       <Box
         sx={{
-          backgroundColor: '#182035',
+          backgroundColor: boxColor,
           border: '1px solid rgba(0, 0, 0, 0.4)',
           borderRadius: '5px',
-          boxShadow: 1,
+          boxShadow: 3,
           p: 2,
           m: 2,
         }}
@@ -96,10 +99,10 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
       <Box sx={{ mx: 2 }}>{getHeading('PvP Settings')}</Box>
       <Box
         sx={{
-          backgroundColor: '#182035',
+          backgroundColor: boxColor,
           border: '1px solid rgba(0, 0, 0, 0.4)',
           borderRadius: '5px',
-          boxShadow: 1,
+          boxShadow: 3,
           p: 2,
           m: 2,
         }}
@@ -110,10 +113,10 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
       <Box sx={{ mx: 2 }}>{getHeading('Windows Settings')}</Box>
       <Box
         sx={{
-          backgroundColor: '#182035',
+          backgroundColor: boxColor,
           border: '1px solid rgba(0, 0, 0, 0.4)',
           borderRadius: '5px',
-          boxShadow: 1,
+          boxShadow: 3,
           p: 2,
           m: 2,
         }}

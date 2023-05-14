@@ -34,6 +34,19 @@ const selectStyle = {
     borderColor: '#bb4220',
     color: '#bb4220',
   },
+  '&:hover': {
+    '&& fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
+  '& .MuiOutlinedInput-root': {
+    '&.Mui-focused fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
+  '.MuiSvgIcon-root ': {
+    fill: 'white !important',
+  },
 };
 
 const sliderSx = {
@@ -340,7 +353,6 @@ const AudioSourceControls: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        m: 2,
       }}
     >
       <Box
@@ -349,8 +361,8 @@ const AudioSourceControls: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          width: '100%',
-          m: 2,
+          width: '300px',
+          mx: 2,
         }}
       >
         {getSpeakerSelect()}
@@ -362,7 +374,8 @@ const AudioSourceControls: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          width: '100%',
+          width: '300px',
+          mx: 2,
         }}
       >
         {getMicSelect()}

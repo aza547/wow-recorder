@@ -99,10 +99,9 @@ const ChatOverlayControls: React.FC = () => {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'space-evenly',
         alignItems: 'center',
+        justifyContent: 'center',
         width: '100%',
-        m: 2,
       }}
     >
       <FormControlLabel

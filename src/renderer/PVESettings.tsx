@@ -38,6 +38,9 @@ const style = {
       borderColor: '#bb4220',
     },
   },
+  '.MuiSvgIcon-root ': {
+    fill: 'white !important',
+  },
 };
 
 const switchStyle = {

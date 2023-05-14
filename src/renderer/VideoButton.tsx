@@ -110,7 +110,7 @@ export default function VideoButton(props: IProps) {
           sx={{
             opacity: '70%',
             border: '1px solid black',
-            borderRadius: '1%',
+            borderRadius: '5px',
             boxSizing: 'border-box',
             height: '100px',
             width: '200px',
@@ -211,7 +211,7 @@ export default function VideoButton(props: IProps) {
       <Box
         sx={{
           border: '1px solid black',
-          borderRadius: '1%',
+          borderRadius: '5px',
           boxSizing: 'border-box',
           bgcolor: resultColor,
           ml: 2,
@@ -391,7 +391,7 @@ export default function VideoButton(props: IProps) {
                 display: 'flex',
                 flexDirection: 'column',
                 border: '1px solid white',
-                borderRadius: '1%',
+                borderRadius: '5px',
                 p: 1,
                 width: '250px',
                 bgcolor: '#272e48',

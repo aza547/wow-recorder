@@ -19,34 +19,26 @@ const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
 export default class SizeMonitor {
   private cfg = ConfigService.getInstance();
 
-  private storageDir: string;
-
-  private maxStorageGB: number;
-
-  private maxStorageBytes: number;
-
   private mainWindow: BrowserWindow;
 
   constructor(mainWindow: BrowserWindow) {
-    this.storageDir = this.cfg.get<string>('storagePath');
-    this.maxStorageGB = this.cfg.get<number>('maxStorage');
-    this.maxStorageBytes = this.maxStorageGB * 1024 ** 3;
     this.mainWindow = mainWindow;
   }
 
   async run() {
-    console.info(
-      '[SizeMonitor] Running, size limit is',
-      this.maxStorageGB,
-      'GB'
-    );
+    // Config might have changed, so update the limit and path.
+    const storageDir = this.cfg.get<string>('storagePath');
+    const maxStorageGB = this.cfg.get<number>('maxStorage');
+    const maxStorageBytes = maxStorageGB * 1024 ** 3;
 
-    if (this.maxStorageBytes === 0) {
+    console.info('[SizeMonitor] Running, size limit is', maxStorageGB, 'GB');
+
+    if (maxStorageGB === 0) {
       console.info('[SizeMonitor] Limitless storage, doing nothing');
       return;
     }
 
-    const files = await getSortedVideos(this.storageDir);
+    const files = await getSortedVideos(storageDir);
 
     const unprotectedFiles = await asyncFilter(
       files,
@@ -75,7 +67,7 @@ export default class SizeMonitor {
 
     const filesForDeletion = unprotectedFiles.filter((file) => {
       totalVideoFileSize += file.size;
-      return totalVideoFileSize > this.maxStorageBytes;
+      return totalVideoFileSize > maxStorageBytes;
     });
 
     console.info(

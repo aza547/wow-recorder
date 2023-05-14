@@ -24,6 +24,8 @@ import {
   checkAppUpdate,
   getAssetPath,
   validateLogPath,
+  deferredPromiseHelper,
+  doBaseReconfigure,
 } from './util';
 import Recorder from './Recorder';
 import { Flavour, RecStatus, VideoPlayerSettings } from './types';
@@ -48,6 +50,8 @@ let classicHandler: ClassicLogHandler | undefined;
 let recorder: Recorder | undefined;
 let mainWindow: BrowserWindow | null = null;
 let tray = null;
+let isReconfiguring = false;
+let queueReconfigure = false;
 
 // Issue 332. Need to call this before the app is ready.
 // https://www.electronjs.org/docs/latest/api/app#appdisablehardwareacceleration
@@ -596,10 +600,7 @@ ipcMain.on('recorder', async (_event, args) => {
   }
 
   if (args[0] === 'base') {
-    if (!recorder) return;
-
-    if (recorder.isRecording) {
-      // We can hit this if the user opens the scene editor mid encounter.
+    if (!recorder) {
       return;
     }
 

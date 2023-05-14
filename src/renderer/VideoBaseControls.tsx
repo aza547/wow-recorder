@@ -47,6 +47,9 @@ const selectStyle = {
       borderColor: '#bb4220',
     },
   },
+  '.MuiSvgIcon-root ': {
+    fill: 'white !important',
+  },
 };
 
 const outputResolutions = Object.keys(obsResolutions);
@@ -126,7 +129,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
         key={value}
         sx={{
           color: 'white',
-          height: '30px',
+          height: '40px',
           '&.Mui-selected, &.Mui-selected:hover': {
             color: 'white',
             backgroundColor: '#bb4420',
@@ -154,12 +157,10 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   const getCanvasResolutionSelect = () => {
     return (
       <FormControl size="small" sx={formControlStyle}>
-        <InputLabel id="obs-output-resolution-label" sx={selectStyle}>
-          Canvas Resolution
-        </InputLabel>
+        <InputLabel sx={selectStyle}>Canvas Resolution</InputLabel>
         <Select
           value={config.obsOutputResolution}
-          label="Output resolution for OBS"
+          label="Canvas Resolution"
           disabled={isComponentDisabled()}
           onChange={setCanvasResolution}
           sx={selectStyle}
@@ -185,16 +186,17 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
         control={
           <ToggleButtonGroup
             value={config.obsFPS}
+            disabled={isComponentDisabled()}
             exclusive
             onChange={setFPS}
-            sx={{ border: '1px solid white' }}
+            sx={{ border: '1px solid white', height: '40px' }}
           >
             {fpsOptions.map(getToggleButton)}
           </ToggleButtonGroup>
         }
         label="FPS"
         labelPlacement="top"
-        sx={{ color: 'white', pb: 2 }}
+        sx={{ color: 'white', pb: 3 }}
       />
     );
   };
@@ -252,7 +254,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
           type="number"
           error={!isBitrateValid()}
           helperText={getBitrateHelperText()}
-          sx={{ ...selectStyle, my: 1 }}
+          sx={{ ...selectStyle }}
           InputLabelProps={{ shrink: true, style: { color: 'white' } }}
           inputProps={{ min: 1, style: { color: 'white' } }}
         />
@@ -280,6 +282,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
         <Select
           value={config.obsRecEncoder}
           label="Video Encoder"
+          disabled={isComponentDisabled()}
           onChange={setEncoder}
           sx={{ ...selectStyle }}
         >
@@ -297,7 +300,6 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
-        m: 2,
       }}
     >
       {getDisabledText()}
@@ -306,7 +308,6 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          width: '100%',
         }}
       >
         {getFPSToggle()}

@@ -96,7 +96,7 @@ const VideoSourceControls: React.FC = () => {
         key={value}
         sx={{
           color: 'white',
-          height: '30px',
+          height: '40px',
           '&.Mui-selected, &.Mui-selected:hover': {
             color: 'white',
             backgroundColor: '#bb4420',
@@ -116,7 +116,7 @@ const VideoSourceControls: React.FC = () => {
             value={config.obsCaptureMode}
             exclusive
             onChange={setOBSCaptureMode}
-            sx={{ border: '1px solid white' }}
+            sx={{ border: '1px solid white', height: '40px' }}
           >
             {getToggleButton('game_capture', 'game')}
             {getToggleButton('monitor_capture', 'monitor')}
@@ -141,7 +141,7 @@ const VideoSourceControls: React.FC = () => {
             value={config.monitorIndex}
             exclusive
             onChange={setMonitor}
-            sx={{ border: '1px solid white' }}
+            sx={{ border: '1px solid white', height: '40px' }}
           >
             {displayConfiguration.map((display: OurDisplayType) =>
               getToggleButton(display.index, display.index + 1)
@@ -181,7 +181,6 @@ const VideoSourceControls: React.FC = () => {
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
-        m: 2,
       }}
     >
       {getCaptureModeToggle()}

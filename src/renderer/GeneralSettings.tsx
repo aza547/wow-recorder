@@ -59,12 +59,13 @@ const ipc = window.electron.ipcRenderer;
 const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus } = props;
   const [config, setConfig] = useSettings();
-  const initialRender = React.useRef(true);
+  const initialRenderVideoConfig = React.useRef(true);
+  const initialRenderSizeMonitorConfig = React.useRef(true);
 
   React.useEffect(() => {
     // Don't fire on the initial render.
-    if (initialRender.current) {
-      initialRender.current = false;
+    if (initialRenderVideoConfig.current) {
+      initialRenderVideoConfig.current = false;
       return;
     }
 
@@ -72,16 +73,24 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
-      maxStorage: config.maxStorage,
     });
 
     ipc.sendMessage('recorder', ['base']);
-  }, [
-    config.separateBufferPath,
-    config.storagePath,
-    config.bufferStoragePath,
-    config.maxStorage,
-  ]);
+  }, [config.separateBufferPath, config.storagePath, config.bufferStoragePath]);
+
+  // A change to maxStorage doesn't need to restart the recorder, only the
+  // size monitor changes here.
+  React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRenderSizeMonitorConfig.current) {
+      initialRenderSizeMonitorConfig.current = false;
+      return;
+    }
+
+    setConfigValues({
+      maxStorage: config.maxStorage,
+    });
+  }, [config.maxStorage]);
 
   const setseparateBufferPath = (
     event: React.ChangeEvent<HTMLInputElement>
