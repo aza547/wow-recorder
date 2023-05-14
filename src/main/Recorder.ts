@@ -39,6 +39,7 @@ import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
+import { getBaseRecorderConfig, getOverlayConfig } from './configutil';
 
 const { v4: uuidfn } = require('uuid');
 
@@ -201,6 +202,16 @@ export default class Recorder {
   private wroteQueue = new WaitQueue<osn.EOutputSignal>();
 
   /**
+   * Pending reconfigures.
+   */
+  private isReconfiguring = false;
+
+  /**
+   * Pending reconfigures.
+   */
+  private pendingReconfigure = false;
+
+  /**
    * Name we use to create and reference the preview display.
    */
   private previewName = 'preview';
@@ -266,22 +277,6 @@ export default class Recorder {
     this.initializeOBS();
   }
 
-  async reconfigure(mainWindow: BrowserWindow) {
-    console.info('[Recorder] Reconfigure recorder');
-
-    // Stop and shutdown the old instance.
-    await this.stopBuffer();
-    this.removeAudioSourcesOBS();
-    this.shutdownOBS();
-    this.previewCreated = false;
-
-    // Create a new uuid and re-initialize OBS.
-    this.uuid = uuidfn();
-    this.mainWindow = mainWindow;
-    this.videoProcessQueue = new VideoProcessQueue(mainWindow);
-    this.initializeOBS();
-  }
-
   get isRecording() {
     return this._isRecording;
   }
@@ -311,12 +306,19 @@ export default class Recorder {
     this.scene = osn.SceneFactory.create('WR Scene');
     osn.Global.setOutputSource(this.videoChannel, this.scene);
 
-    this.configureBase();
+    const { bufferPath, resolution, fps, encoder, kBitRate } =
+      getBaseRecorderConfig(this.cfg);
+
+    this.configureBase(bufferPath, resolution, fps, encoder, kBitRate);
     this.addVideoSourcesOBS();
 
     this.createOverlayImageSource();
-    this.addOverlaySource();
 
+    const { overlayEnabled, width, height, xPos, yPos } = getOverlayConfig(
+      this.cfg
+    );
+
+    this.addOverlaySource(overlayEnabled, width, height, xPos, yPos);
     this.createPreview();
     this.showPreviewMemory();
 
@@ -324,17 +326,83 @@ export default class Recorder {
   }
 
   /**
+   * Reconfigure the base settings. It's safe to call this function repeatedly,
+   * doing so will queue up a single additional reconfigure that will be run
+   * when the current reconfigure is completed.
+   */
+  async reconfigureBase(
+    bufferPath: string,
+    resolution: string,
+    fps: number,
+    encoder: ESupportedEncoders,
+    kBitRate: number
+  ) {
+    if (this.isReconfiguring) {
+      this.pendingReconfigure = true;
+      return;
+    }
+
+    await this.doReconfigureBase(
+      bufferPath,
+      resolution,
+      fps,
+      encoder,
+      kBitRate
+    );
+  }
+
+  private async doReconfigureBase(
+    bufferPath: string,
+    resolution: string,
+    fps: number,
+    encoder: ESupportedEncoders,
+    kBitRate: number
+  ) {
+    this.isReconfiguring = true;
+
+    if (this.obsState === ERecordingState.Recording) {
+      // We can't change this config if OBS is recording. If it is recording
+      // but the recorder isn't, that means it's a buffer recording. Stop it
+      // briefly to change the config and start it after. Deliberately
+      // checking the OBS state and not the recorder state here. We don't
+      // need to restart, we leave that to the Poller.
+      await this.stopBuffer();
+      this.configureBase(bufferPath, resolution, fps, encoder, kBitRate);
+      await this.startBuffer();
+    } else if (this.obsState === ERecordingState.Offline) {
+      // If OBS is initialized but offline, we don't need to stop anything.
+      // Just reconfigure directly.
+      this.configureBase(bufferPath, resolution, fps, encoder, kBitRate);
+    }
+
+    this.isReconfiguring = false;
+
+    // Recursively call this function if there is pending reconfigure.
+    if (this.pendingReconfigure) {
+      this.pendingReconfigure = false;
+      await this.doReconfigureBase(
+        bufferPath,
+        resolution,
+        fps,
+        encoder,
+        kBitRate
+      );
+    }
+  }
+
+  /**
    * Create the bufferStorageDir if it doesn't already exist. Also
    * cleans it out for good measure.
    */
-  private createRecordingDirs() {
-    if (!this.bufferStorageDir) {
-      throw new Error('[Recorder] bufferStorageDir not set');
+  private createRecordingDirs(bufferStoragePath: string) {
+    if (bufferStoragePath === '') {
+      console.error('[Recorder] bufferStorageDir not set');
+      return;
     }
 
-    if (!fs.existsSync(this.bufferStorageDir)) {
-      console.info('[Recorder] Creating dir:', this.bufferStorageDir);
-      fs.mkdirSync(this.bufferStorageDir);
+    if (!fs.existsSync(bufferStoragePath)) {
+      console.info('[Recorder] Creating dir:', bufferStoragePath);
+      fs.mkdirSync(bufferStoragePath);
     } else {
       console.info('[Recorder] Clean out buffer');
       this.cleanupBuffer(0);
@@ -381,32 +449,23 @@ export default class Recorder {
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
-  configureBase() {
+  configureBase(
+    bufferPath: string,
+    resolution: string,
+    fps: number,
+    encoder: ESupportedEncoders,
+    kBitRate: number
+  ) {
     console.info('[Recorder] Configuring OBS');
 
     if (this.obsState !== ERecordingState.Offline) {
       throw new Error('[Recorder] OBS must be offline to do this');
     }
 
-    const seperateBufferPath = this.cfg.getPath('separateBufferPath');
-
-    if (seperateBufferPath) {
-      this.bufferStorageDir = this.cfg.getPath('bufferStoragePath');
-    } else {
-      this.bufferStorageDir = path.join(
-        this.cfg.getPath('storagePath'),
-        '.temp'
-      );
-    }
-
-    this.createRecordingDirs();
-
-    this.resolution = this.cfg.get<string>(
-      'obsOutputResolution'
-    ) as keyof typeof obsResolutions;
-
+    this.bufferStorageDir = bufferPath;
+    this.createRecordingDirs(this.bufferStorageDir);
+    this.resolution = resolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
-    const fps = this.cfg.get<number>('obsFPS');
 
     osn.VideoFactory.videoContext = {
       fpsNum: fps,
@@ -434,8 +493,6 @@ export default class Recorder {
     this.obsRecordingFactory.overwrite = false;
     this.obsRecordingFactory.noSpace = false;
 
-    const encoder = this.cfg.get<string>('obsRecEncoder') as ESupportedEncoders;
-
     // This function is defined here:
     //   (client) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-client/source/video-encoder.cpp
     //   (server) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-server/source/osn-video-encoder.cpp
@@ -447,8 +504,6 @@ export default class Recorder {
       'WR-video-encoder',
       {}
     );
-
-    const kBitRate = 1000 * this.cfg.get<number>('obsKBitRate');
 
     this.obsRecordingFactory.videoEncoder.update({
       rate_control: 'VBR',
@@ -560,6 +615,12 @@ export default class Recorder {
     if (captureMode === 'game_capture') {
       this.watchVideoSourceSize();
     }
+
+    const { overlayEnabled, width, height, xPos, yPos } = getOverlayConfig(
+      this.cfg
+    );
+
+    this.addOverlaySource(overlayEnabled, width, height, xPos, yPos);
   }
 
   /**
@@ -638,15 +699,15 @@ export default class Recorder {
    * so it can be called externally when WoW is opened - see the Poller
    * class. This removes any previously configured sources.
    */
-  public addAudioSourcesOBS() {
+  public addAudioSourcesOBS(
+    speakers: string,
+    speakerMultiplier: number,
+    mics: string,
+    micMultiplier: number,
+    forceMono: boolean
+  ) {
     console.info('[Recorder] Adding OBS audio sources...');
     this.removeAudioSourcesOBS();
-
-    const speakers = this.cfg.get<string>('audioOutputDevices');
-    const speakerMultiplier = this.cfg.get<number>('speakerVolume');
-    const mics = this.cfg.get<string>('audioInputDevices');
-    const micMultiplier = this.cfg.get<number>('micVolume');
-    const forceMono = this.cfg.get<boolean>('obsForceMono');
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
@@ -1348,7 +1409,13 @@ export default class Recorder {
   /**
    * Apply a chat overlay to the scene.
    */
-  addOverlaySource() {
+  addOverlaySource(
+    overlayEnabled: boolean,
+    width: number,
+    height: number,
+    xPos: number,
+    yPos: number
+  ) {
     if (this.scene === undefined || this.overlayImageSource === undefined) {
       console.error(
         '[Recorder] Not applying overlay as scene or image source undefined',
@@ -1363,16 +1430,9 @@ export default class Recorder {
       this.overlaySceneItem.remove();
     }
 
-    const overlayEnabled = this.cfg.get<boolean>('chatOverlayEnabled');
-
     if (!overlayEnabled) {
       return;
     }
-
-    const width = this.cfg.get<number>('chatOverlayWidth');
-    const height = this.cfg.get<number>('chatOverlayHeight');
-    const xPos = this.cfg.get<number>('chatOverlayXPosition');
-    const yPos = this.cfg.get<number>('chatOverlayYPosition');
 
     // This is the height of the chat overlay image, a bit ugly
     // to have it hardcoded here, but whatever.

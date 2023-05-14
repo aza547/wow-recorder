@@ -24,8 +24,6 @@ import {
   checkAppUpdate,
   getAssetPath,
   validateLogPath,
-  deferredPromiseHelper,
-  doBaseReconfigure,
 } from './util';
 import Recorder from './Recorder';
 import { Flavour, RecStatus, VideoPlayerSettings } from './types';
@@ -35,7 +33,11 @@ import {
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
 import { VideoCategory } from '../types/VideoCategory';
-import { ERecordingState } from './obsEnums';
+import {
+  getAudioRecorderConfig,
+  getOverlayConfig,
+  getBaseRecorderConfig,
+} from './configutil';
 
 const logDir = setupApplicationLogging();
 console.info('[Main] App starting, version:', app.getVersion());
@@ -50,8 +52,6 @@ let classicHandler: ClassicLogHandler | undefined;
 let recorder: Recorder | undefined;
 let mainWindow: BrowserWindow | null = null;
 let tray = null;
-let isReconfiguring = false;
-let queueReconfigure = false;
 
 // Issue 332. Need to call this before the app is ready.
 // https://www.electronjs.org/docs/latest/api/app#appdisablehardwareacceleration
@@ -116,7 +116,16 @@ const wowProcessStarted = async () => {
   // We add the audio sources here so they are only held when WoW is
   // open, holding an audio devices prevents Windows go to sleeping
   // which we don't want to do if we can avoid it.
-  recorder.addAudioSourcesOBS();
+  const { speakers, speakerMultiplier, mics, micMultiplier, forceMono } =
+    getAudioRecorderConfig(cfg);
+
+  recorder.addAudioSourcesOBS(
+    speakers,
+    speakerMultiplier,
+    mics,
+    micMultiplier,
+    forceMono
+  );
 
   await recorder.startBuffer();
 };
@@ -501,7 +510,10 @@ ipcMain.on('getAllDisplays', (event) => {
  * Chat overlay event listener.
  */
 ipcMain.on('overlay', () => {
-  if (recorder) recorder.addOverlaySource();
+  if (recorder) {
+    const { overlayEnabled, width, height, xPos, yPos } = getOverlayConfig(cfg);
+    recorder.addOverlaySource(overlayEnabled, width, height, xPos, yPos);
+  }
 });
 
 /**
@@ -592,11 +604,38 @@ ipcMain.on('recorder', async (_event, args) => {
   }
 
   if (args[0] === 'video') {
+    try {
+      cfg.validate();
+      updateRecStatus(RecStatus.WaitingForWoW);
+    } catch (error) {
+      updateRecStatus(RecStatus.InvalidConfig, String(error));
+      return;
+    }
+
     if (recorder) recorder.addVideoSourcesOBS();
   }
 
   if (args[0] === 'audio') {
-    if (recorder) recorder.addAudioSourcesOBS();
+    try {
+      cfg.validate();
+      updateRecStatus(RecStatus.WaitingForWoW);
+    } catch (error) {
+      updateRecStatus(RecStatus.InvalidConfig, String(error));
+      return;
+    }
+
+    if (recorder) {
+      const { speakers, speakerMultiplier, mics, micMultiplier, forceMono } =
+        getAudioRecorderConfig(cfg);
+
+      recorder.addAudioSourcesOBS(
+        speakers,
+        speakerMultiplier,
+        mics,
+        micMultiplier,
+        forceMono
+      );
+    }
   }
 
   if (args[0] === 'base') {
@@ -604,25 +643,27 @@ ipcMain.on('recorder', async (_event, args) => {
       return;
     }
 
-    if (recorder.obsState === ERecordingState.Recording) {
-      // We can't change this config if OBS is recording. If it is recording
-      // but the recorder isn't, that means it's a buffer recording. Stop it
-      // briefly to change the config and start it after. Deliberately
-      // checking the OBS state and not the recorder state here.
-      await recorder.stopBuffer();
-      recorder.configureBase();
-      await recorder.startBuffer();
+    try {
+      cfg.validate();
+      updateRecStatus(RecStatus.WaitingForWoW);
+    } catch (error) {
+      updateRecStatus(RecStatus.InvalidConfig, String(error));
       return;
     }
 
-    if (recorder.obsState === ERecordingState.Offline) {
-      recorder.configureBase();
-      return;
-    }
+    const { bufferPath, resolution, fps, encoder, kBitRate } =
+      getBaseRecorderConfig(cfg);
 
-    // OBS can briefly be in a starting/stopping state.
-    // Surely it's fast enough that this is basically never hit.
-    console.warn('[Main] This is unexpected...');
+    await recorder.reconfigureBase(
+      bufferPath,
+      resolution,
+      fps,
+      encoder,
+      kBitRate
+    );
+
+    if (mainWindow) mainWindow.webContents.send('refreshState');
+    Poller.getInstance().start();
   }
 });
 

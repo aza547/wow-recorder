@@ -470,7 +470,6 @@ const getWowFlavour = (pathSpec: string): string => {
 
 const validateLogPath = (logPath: string, flavour: Flavour) => {
   const pathFlavour = getWowFlavour(logPath);
-  console.log('flav', pathFlavour, flavour);
 
   if (flavour === Flavour.Retail) {
     return pathFlavour === 'wow';
