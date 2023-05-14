@@ -319,15 +319,9 @@ export default class Recorder {
       this.cfg
     );
 
+    this.createOverlayImageSource();
     this.configureVideoSources(captureMode, monitorIndex, captureCursor);
 
-    this.createOverlayImageSource();
-
-    const { overlayEnabled, width, height, xPos, yPos } = getOverlayConfig(
-      this.cfg
-    );
-
-    this.configureOverlaySource(overlayEnabled, width, height, xPos, yPos);
     this.createPreview();
     this.showPreviewMemory();
 
@@ -377,7 +371,6 @@ export default class Recorder {
       // need to restart, we leave that to the Poller.
       await this.stopBuffer();
       this.configureBase(bufferPath, resolution, fps, encoder, kBitRate);
-      await this.startBuffer();
     } else if (this.obsState === ERecordingState.Offline) {
       // If OBS is initialized but offline, we don't need to stop anything.
       // Just reconfigure directly.
