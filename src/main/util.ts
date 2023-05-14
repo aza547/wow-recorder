@@ -13,7 +13,6 @@ import {
   Flavour,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
-import Recorder from './Recorder';
 
 const categories = Object.values(VideoCategory);
 
