@@ -39,7 +39,11 @@ import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
-import { getBaseRecorderConfig, getOverlayConfig } from './configutil';
+import {
+  getBaseRecorderConfig,
+  getOverlayConfig,
+  getVideoRecorderConfig,
+} from './configutil';
 
 const { v4: uuidfn } = require('uuid');
 
@@ -310,7 +314,12 @@ export default class Recorder {
       getBaseRecorderConfig(this.cfg);
 
     this.configureBase(bufferPath, resolution, fps, encoder, kBitRate);
-    this.addVideoSourcesOBS();
+
+    const { captureMode, monitorIndex, captureCursor } = getVideoRecorderConfig(
+      this.cfg
+    );
+
+    this.configureVideoSources(captureMode, monitorIndex, captureCursor);
 
     this.createOverlayImageSource();
 
@@ -318,7 +327,7 @@ export default class Recorder {
       this.cfg
     );
 
-    this.addOverlaySource(overlayEnabled, width, height, xPos, yPos);
+    this.configureOverlaySource(overlayEnabled, width, height, xPos, yPos);
     this.createPreview();
     this.showPreviewMemory();
 
@@ -577,7 +586,11 @@ export default class Recorder {
   /**
    * Configures the video source in OBS.
    */
-  addVideoSourcesOBS() {
+  configureVideoSources(
+    captureMode: string,
+    monitorIndex: number,
+    captureCursor: boolean
+  ) {
     console.info('[Recorder] Configuring OBS video');
 
     if (this.scene === undefined || this.scene === null) {
@@ -589,15 +602,16 @@ export default class Recorder {
       this.videoSource.remove();
     }
 
-    const captureMode = this.cfg.get<string>('obsCaptureMode');
-
     switch (captureMode) {
       case 'monitor_capture':
-        this.videoSource = this.createMonitorCaptureSource();
+        this.videoSource = Recorder.createMonitorCaptureSource(
+          monitorIndex,
+          captureCursor
+        );
         break;
 
       case 'game_capture':
-        this.videoSource = this.createGameCaptureSource();
+        this.videoSource = Recorder.createGameCaptureSource(captureCursor);
         break;
 
       default:
@@ -620,17 +634,17 @@ export default class Recorder {
       this.cfg
     );
 
-    this.addOverlaySource(overlayEnabled, width, height, xPos, yPos);
+    this.configureOverlaySource(overlayEnabled, width, height, xPos, yPos);
   }
 
   /**
    * Creates a monitor capture source.
    */
-  private createMonitorCaptureSource() {
+  private static createMonitorCaptureSource(
+    monitorIndex: number,
+    captureCursor: boolean
+  ) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
-
-    const monitorIndex = this.cfg.get<number>('monitorIndex');
-    const captureCursor = this.cfg.get<boolean>('captureCursor');
 
     const monitorCaptureSource = osn.InputFactory.create(
       'monitor_capture',
@@ -650,10 +664,8 @@ export default class Recorder {
   /**
    * Creates a game capture source.
    */
-  private createGameCaptureSource() {
+  private static createGameCaptureSource(captureCursor: boolean) {
     console.info('[Recorder] Configuring OBS for Game Capture');
-
-    const captureCursor = this.cfg.get<boolean>('captureCursor');
 
     const gameCaptureSource = osn.InputFactory.create(
       'game_capture',
@@ -699,7 +711,7 @@ export default class Recorder {
    * so it can be called externally when WoW is opened - see the Poller
    * class. This removes any previously configured sources.
    */
-  public addAudioSourcesOBS(
+  public configureAudioSources(
     speakers: string,
     speakerMultiplier: number,
     mics: string,
@@ -747,7 +759,7 @@ export default class Recorder {
         device.flags = ESourceFlags.ForceMono;
       }
 
-      this.addAudioSourceOBS(device, channel);
+      this.addAudioSource(device, channel);
     });
 
     speakers
@@ -783,7 +795,7 @@ export default class Recorder {
     this.audioOutputDevices.forEach((device) => {
       const index = this.audioOutputDevices.indexOf(device);
       const channel = this.audioOutputChannels[index];
-      this.addAudioSourceOBS(device, channel);
+      this.addAudioSource(device, channel);
     });
   }
 
@@ -821,7 +833,7 @@ export default class Recorder {
   /**
    * Add a single audio source to the OBS scene.
    */
-  private addAudioSourceOBS(obsInput: IInput, channel: number) {
+  private addAudioSource(obsInput: IInput, channel: number) {
     console.info(
       '[Recorder] Adding OBS audio source',
       obsInput.name,
@@ -858,6 +870,9 @@ export default class Recorder {
     obsInput.remove();
   }
 
+  /**
+   * Release all OBS resources and shut it down.
+   */
   shutdownOBS() {
     console.info('[Recorder] OBS shutting down', this.uuid);
 
@@ -1210,7 +1225,7 @@ export default class Recorder {
    * Get a list of the audio output devices. Used by the settings to populate
    * the list of devices for user selection.
    */
-  getOutputAudioDevices() {
+  public getOutputAudioDevices() {
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }
@@ -1338,7 +1353,7 @@ export default class Recorder {
     this.previewCreated = true;
   }
 
-  hidePreview() {
+  public hidePreview() {
     if (!this.previewCreated) {
       console.warn('[Recorder] Preview display not created');
       return;
@@ -1361,7 +1376,7 @@ export default class Recorder {
    * input. We scale to match the monitor scaling here too else the preview
    * will be misplaced (see issue 397).
    */
-  showPreview(width: number, height: number, xPos: number, yPos: number) {
+  public showPreview(width: number, height: number, xPos: number, yPos: number) {
     if (!this.previewCreated) {
       console.warn('[Recorder] Preview display not yet created, creating...');
       this.createPreview();
@@ -1399,7 +1414,7 @@ export default class Recorder {
    * Show the preview on the UI, only if we already know the location and
    * dimensions.
    */
-  showPreviewMemory() {
+  public showPreviewMemory() {
     if (this.previewLocation !== undefined) {
       const { width, height, xPos, yPos } = this.previewLocation;
       this.showPreview(width, height, xPos, yPos);
@@ -1409,7 +1424,7 @@ export default class Recorder {
   /**
    * Apply a chat overlay to the scene.
    */
-  addOverlaySource(
+  public configureOverlaySource(
     overlayEnabled: boolean,
     width: number,
     height: number,

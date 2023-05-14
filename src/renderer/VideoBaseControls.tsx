@@ -164,6 +164,14 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
           disabled={isComponentDisabled()}
           onChange={setCanvasResolution}
           sx={selectStyle}
+          MenuProps={{
+            PaperProps: {
+              sx: {
+                height: '300px',
+                overflowY: 'scroll',
+              },
+            },
+          }}
         >
           {outputResolutions.map(getMenuItem)}
         </Select>

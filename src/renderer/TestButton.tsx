@@ -68,12 +68,7 @@ export default function TestButton() {
           }}
         >
           <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
-            This button allows you to test your video and recording settings by
-            injecting some fake data into the combat log. This does not test if
-            you have set up combat logging in-game correctly.
-          </Typography>
-          <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
-            Select a category:
+            Select a category to test:
           </Typography>
           {testCategories.map((category: VideoCategory) => {
             return (
@@ -85,6 +80,7 @@ export default function TestButton() {
                 }}
                 sx={{
                   m: '4px',
+                  height: '30px',
                   color: 'white',
                   borderColor: 'white',
                   ':hover': {

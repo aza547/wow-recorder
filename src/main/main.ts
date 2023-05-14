@@ -37,6 +37,7 @@ import {
   getAudioRecorderConfig,
   getOverlayConfig,
   getBaseRecorderConfig,
+  getVideoRecorderConfig,
 } from './configutil';
 
 const logDir = setupApplicationLogging();
@@ -119,7 +120,7 @@ const wowProcessStarted = async () => {
   const { speakers, speakerMultiplier, mics, micMultiplier, forceMono } =
     getAudioRecorderConfig(cfg);
 
-  recorder.addAudioSourcesOBS(
+  recorder.configureAudioSources(
     speakers,
     speakerMultiplier,
     mics,
@@ -512,7 +513,7 @@ ipcMain.on('getAllDisplays', (event) => {
 ipcMain.on('overlay', () => {
   if (recorder) {
     const { overlayEnabled, width, height, xPos, yPos } = getOverlayConfig(cfg);
-    recorder.addOverlaySource(overlayEnabled, width, height, xPos, yPos);
+    recorder.configureOverlaySource(overlayEnabled, width, height, xPos, yPos);
   }
 });
 
@@ -612,7 +613,11 @@ ipcMain.on('recorder', async (_event, args) => {
       return;
     }
 
-    if (recorder) recorder.addVideoSourcesOBS();
+    if (recorder) {
+      const { captureMode, monitorIndex, captureCursor } =
+        getVideoRecorderConfig(cfg);
+      recorder.configureVideoSources(captureMode, monitorIndex, captureCursor);
+    }
   }
 
   if (args[0] === 'audio') {
@@ -628,7 +633,7 @@ ipcMain.on('recorder', async (_event, args) => {
       const { speakers, speakerMultiplier, mics, micMultiplier, forceMono } =
         getAudioRecorderConfig(cfg);
 
-      recorder.addAudioSourcesOBS(
+      recorder.configureAudioSources(
         speakers,
         speakerMultiplier,
         mics,
