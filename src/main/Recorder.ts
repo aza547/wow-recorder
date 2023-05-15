@@ -712,7 +712,7 @@ export default class Recorder {
     forceMono: boolean
   ) {
     console.info('[Recorder] Adding OBS audio sources...');
-    this.removeAudioSourcesOBS();
+    this.removeAudioSources();
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
@@ -796,10 +796,12 @@ export default class Recorder {
    * Remove all audio sources from the OBS scene. This is public
    * so it can be called externally when WoW is closed.
    */
-  public removeAudioSourcesOBS() {
+  public removeAudioSources() {
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }
+
+    console.info('[Recorder] Removing OBS audio sources...');
 
     this.faders.forEach((fader) => {
       fader.detach();
@@ -811,14 +813,14 @@ export default class Recorder {
     this.audioInputDevices.forEach((device) => {
       const index = this.audioInputDevices.indexOf(device);
       const channel = this.audioInputChannels[index];
-      this.removeAudioSourceOBS(device, channel);
+      this.removeAudioSource(device, channel);
       this.audioInputDevices.splice(index, 1);
     });
 
     this.audioOutputDevices.forEach((device) => {
       const index = this.audioOutputDevices.indexOf(device);
       const channel = this.audioOutputChannels[index];
-      this.removeAudioSourceOBS(device, channel);
+      this.removeAudioSource(device, channel);
       this.audioOutputDevices.splice(index, 1);
     });
   }
@@ -845,9 +847,9 @@ export default class Recorder {
   }
 
   /**
-   * Remove a single audio source to the OBS scene.
+   * Remove a single audio source from the OBS scene.
    */
-  private removeAudioSourceOBS(obsInput: IInput, channel: number) {
+  private removeAudioSource(obsInput: IInput, channel: number) {
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }

@@ -146,13 +146,13 @@ const wowProcessStopped = async () => {
   // Windows going to sleep.
   if (recorder && retailHandler && retailHandler.activity) {
     await retailHandler.forceEndActivity(0, true);
-    recorder.removeAudioSourcesOBS();
+    recorder.removeAudioSources();
   } else if (recorder && classicHandler && classicHandler.activity) {
     await classicHandler.forceEndActivity(0, true);
-    recorder.removeAudioSourcesOBS();
+    recorder.removeAudioSources();
   } else {
     await recorder.stopBuffer();
-    recorder.removeAudioSourcesOBS();
+    recorder.removeAudioSources();
   }
 };
 
