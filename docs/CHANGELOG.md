@@ -5,14 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-### Fixed
-- [Issue 387](https://github.com/aza547/wow-recorder/issues/387) - Fix to Mythic+ video markers UX.
 
 ### Added
 - [Issue 216](https://github.com/aza547/wow-recorder/issues/216) - Add volume controls for audio sources.
 
 ### Changed
 - [NO-ISSUE] - Move some settings to the scene editor.
+
+### Fixed
+- [Issue 387](https://github.com/aza547/wow-recorder/issues/387) - Fix to Mythic+ video markers UX.
+- [Issue 395](https://github.com/aza547/wow-recorder/issues/395) - Fix Dragonflight S2 dungeon timings for +2 and +3 chests.
 
 ## [3.12.0] - 2023-05-03
 ### Added
