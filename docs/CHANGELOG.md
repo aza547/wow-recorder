@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [NO-ISSUE] - Move some settings to the scene editor.
+- [NO-ISSUE] - Revamp settings to avoid shutting down OBS on a reconfigure.
 
 ### Fixed
 - [Issue 387](https://github.com/aza547/wow-recorder/issues/387) - Fix to Mythic+ video markers UX.

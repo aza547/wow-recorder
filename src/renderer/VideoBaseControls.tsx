@@ -53,7 +53,7 @@ const selectStyle = {
 };
 
 const outputResolutions = Object.keys(obsResolutions);
-const fpsOptions = ['10', '20', '30', '60'];
+const fpsOptions = [10, 20, 30, 60];
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -122,7 +122,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const getToggleButton = (value: string) => {
+  const getToggleButton = (value: number) => {
     return (
       <ToggleButton
         value={value}
@@ -184,7 +184,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   };
 
   const setFPS = (_event: React.MouseEvent<HTMLElement>, fps: number) => {
-    if (!fps === null) {
+    if (fps === null) {
       return;
     }
 
