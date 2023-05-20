@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [NO-ISSUE] - Move some settings to the scene editor.
+- [NO-ISSUE] - Revamp settings to avoid shutting down OBS on a reconfigure.
 
 ## [3.12.0] - 2023-05-03
 ### Added
