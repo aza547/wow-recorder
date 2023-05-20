@@ -256,8 +256,6 @@ export default class Manager {
         stage.initial = false;
       }
     }
-
-
   }
 
   /**

@@ -706,6 +706,8 @@ export default class Recorder {
       throw new Error('[Recorder] OBS not initialized');
     }
 
+    console.info('[Recorder] Removing OBS audio sources...');
+
     this.faders.forEach((fader) => {
       fader.detach();
       fader.destroy();
