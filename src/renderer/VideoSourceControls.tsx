@@ -44,7 +44,7 @@ const VideoSourceControls: React.FC = () => {
       captureCursor: config.captureCursor,
     });
 
-    ipc.sendMessage('recorder', ['video']);
+    ipc.sendMessage('settingsChange', []);
   }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
   const setOBSCaptureMode = (
     _event: React.MouseEvent<HTMLElement>,

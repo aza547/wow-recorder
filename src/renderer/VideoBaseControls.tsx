@@ -94,7 +94,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
       obsRecEncoder: config.obsRecEncoder,
     });
 
-    ipc.sendMessage('recorder', ['base']);
+    ipc.sendMessage('settingsChange', []);
   }, [
     config.obsOutputResolution,
     config.obsFPS,

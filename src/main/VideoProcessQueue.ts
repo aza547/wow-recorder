@@ -27,12 +27,9 @@ export default class VideoProcessQueue {
 
   private cfg = ConfigService.getInstance();
 
-  private minEncounterDuration: number;
-
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow;
     this.setupVideoProcessingQueue();
-    this.minEncounterDuration = this.cfg.get<number>('minEncounterDuration');
   }
 
   private setupVideoProcessingQueue() {
@@ -90,7 +87,8 @@ export default class VideoProcessQueue {
 
     if (isRaid) {
       const isLongEnough =
-        duration - data.metadata.overrun >= this.minEncounterDuration;
+        duration - data.metadata.overrun >=
+        this.cfg.get<number>('minEncounterDuration');
 
       if (!isLongEnough) {
         console.info(

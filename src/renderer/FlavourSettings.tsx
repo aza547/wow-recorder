@@ -80,7 +80,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       classicLogPath: config.classicLogPath,
     });
 
-    ipc.sendMessage('flavourSettingChange', []);
+    ipc.sendMessage('settingsChange', []);
   }, [
     config.recordRetail,
     config.recordClassic,

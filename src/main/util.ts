@@ -10,7 +10,7 @@ import {
   OurDisplayType,
   RendererVideo,
   RendererVideoState,
-  Flavour,
+  RecStatus,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -468,6 +468,20 @@ const getWowFlavour = (pathSpec: string): string => {
   return content.length > 1 ? content[1] : 'unknown';
 };
 
+/**
+ * Updates the status icon for the application.
+ * @param status the status number
+ */
+const updateRecStatus = (
+  mainWindow: BrowserWindow,
+  status: RecStatus,
+  reason = ''
+) => {
+  console.info('[Main] Updating status with:', status, reason);
+  if (mainWindow === null) return;
+  mainWindow.webContents.send('updateRecStatus', status, reason);
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -486,4 +500,5 @@ export {
   getThumbnailFileNameForVideo,
   getAssetPath,
   getWowFlavour,
+  updateRecStatus,
 };

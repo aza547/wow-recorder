@@ -10,9 +10,6 @@ import {
   Menu,
 } from 'electron';
 import os from 'os';
-import RetailLogHandler from '../parsing/RetailLogHandler';
-import ClassicLogHandler from '../parsing/ClassicLogHandler';
-import Poller from '../utils/Poller';
 import {
   resolveHtmlPath,
   loadAllVideos,
@@ -23,49 +20,29 @@ import {
   getAvailableDisplays,
   checkAppUpdate,
   getAssetPath,
+  updateRecStatus,
 } from './util';
-import Recorder from './Recorder';
 import { RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
-import {
-  runClassicRecordingTest,
-  runRetailRecordingTest,
-} from '../utils/testButtonUtils';
-import { VideoCategory } from '../types/VideoCategory';
-import {
-  getAudioRecorderConfig,
-  getOverlayConfig,
-  getBaseRecorderConfig,
-  getVideoRecorderConfig,
-} from './configutil';
+import Manager from './Manager';
 
 const logDir = setupApplicationLogging();
-console.info('[Main] App starting, version:', app.getVersion());
+const appVersion = app.getVersion();
+
+console.info('[Main] App starting, version:', appVersion);
 console.info('[Main] On OS:', os.platform(), os.release());
 console.info(
   '[Main] In timezone:',
   Intl.DateTimeFormat().resolvedOptions().timeZone
 );
 
-let retailHandler: RetailLogHandler | undefined;
-let classicHandler: ClassicLogHandler | undefined;
-let recorder: Recorder | undefined;
 let mainWindow: BrowserWindow | null = null;
 let tray = null;
+let manager: Manager | undefined;
 
 // Issue 332. Need to call this before the app is ready.
 // https://www.electronjs.org/docs/latest/api/app#appdisablehardwareacceleration
 app.disableHardwareAcceleration();
-
-/**
- * Updates the status icon for the application.
- * @param status the status number
- */
-const updateRecStatus = (status: RecStatus, reason = '') => {
-  console.info('[Main] Updating status with:', status, reason);
-  if (mainWindow === null) return;
-  mainWindow.webContents.send('updateRecStatus', status, reason);
-};
 
 /**
  * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving
@@ -76,11 +53,13 @@ const updateRecStatus = (status: RecStatus, reason = '') => {
 process.on('unhandledRejection', (error: Error) => {
   console.error('UnhandledPromiseRejectionWarning:', error);
 
-  if (recorder) {
-    recorder.shutdownOBS();
+  if (manager) {
+    manager.recorder.shutdownOBS();
   }
 
-  updateRecStatus(RecStatus.FatalError, String(error));
+  if (mainWindow) {
+    updateRecStatus(mainWindow, RecStatus.FatalError, String(error));
+  }
 });
 
 /**
@@ -101,60 +80,6 @@ cfg.on('change', (key: string, value: any) => {
     });
   }
 });
-
-const wowProcessStarted = async () => {
-  console.info('[Main] Detected WoW is running');
-
-  if (!mainWindow) {
-    throw new Error('[Main] mainWindow not defined');
-  }
-
-  if (!recorder) {
-    throw new Error('[Main] No recorder object');
-  }
-
-  // We add the audio sources here so they are only held when WoW is
-  // open, holding an audio devices prevents Windows go to sleeping
-  // which we don't want to do if we can avoid it.
-  const { speakers, speakerMultiplier, mics, micMultiplier, forceMono } =
-    getAudioRecorderConfig(cfg);
-
-  recorder.configureAudioSources(
-    speakers,
-    speakerMultiplier,
-    mics,
-    micMultiplier,
-    forceMono
-  );
-
-  await recorder.startBuffer();
-};
-
-const wowProcessStopped = async () => {
-  console.info('[Main] Detected WoW is not running');
-
-  if (!mainWindow) {
-    throw new Error('[Main] mainWindow not defined');
-  }
-
-  if (!recorder) {
-    console.info('[Main] No recorder object so no action taken');
-    return;
-  }
-
-  // Remove the audio sources when WoW stops to avoid preventing
-  // Windows going to sleep.
-  if (recorder && retailHandler && retailHandler.activity) {
-    await retailHandler.forceEndActivity(0, true);
-    recorder.removeAudioSources();
-  } else if (recorder && classicHandler && classicHandler.activity) {
-    await classicHandler.forceEndActivity(0, true);
-    recorder.removeAudioSources();
-  } else {
-    await recorder.stopBuffer();
-    recorder.removeAudioSources();
-  }
-};
 
 // Default video player settings on app start
 const videoPlayerSettings: VideoPlayerSettings = {
@@ -232,8 +157,6 @@ const createWindow = async () => {
     await installExtensions();
   }
 
-  const appVersion = app.getVersion();
-
   mainWindow = new BrowserWindow({
     show: false,
     height: 1020 * 0.75,
@@ -244,7 +167,6 @@ const createWindow = async () => {
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false,
-      // devTools: false,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
@@ -270,56 +192,13 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    if (!noObsDev) {
-      recorder = new Recorder(mainWindow);
-    }
-
-    Poller.getInstance()
-      .on('wowProcessStart', wowProcessStarted)
-      .on('wowProcessStop', wowProcessStopped);
-
-    try {
-      cfg.validate();
-      updateRecStatus(RecStatus.WaitingForWoW);
-    } catch (error) {
-      updateRecStatus(RecStatus.InvalidConfig, String(error));
-      return;
-    }
-
-    if (!noObsDev && recorder) {
-      recorder.configure();
-    }
-
-    Poller.getInstance().start();
-    mainWindow.webContents.send('refreshState');
-
-    if (!noObsDev && recorder) {
-      const recordRetail = cfg.get<boolean>('recordRetail');
-      const retailLogPath = cfg.getPath('retailLogPath');
-
-      if (recordRetail && recorder) {
-        console.info(
-          '[Main] Create RetailLogHandler object with',
-          retailLogPath
-        );
-        retailHandler = new RetailLogHandler(recorder, retailLogPath);
-      }
-
-      const recordClassic = cfg.get<boolean>('recordClassic');
-      const classicLogPath = cfg.getPath('classicLogPath');
-
-      if (recorder && recordClassic) {
-        console.info(
-          '[Main] Create ClassicLogHandler object with',
-          classicLogPath
-        );
-        classicHandler = new ClassicLogHandler(recorder, classicLogPath);
-      }
-    }
+    manager = new Manager(mainWindow);
   });
 
   mainWindow.on('moved', () => {
-    if (recorder) recorder.showPreviewMemory();
+    if (manager) {
+      manager.recorder.showPreviewMemory();
+    }
   });
 
   mainWindow.on('closed', () => {
@@ -437,51 +316,11 @@ ipcMain.on('logPath', (_event, args) => {
 });
 
 /**
- * If flavour settings change we need to destroy and recreate the log handlers.
+ * Handle any settings change from the frontend.
  */
-ipcMain.on('flavourSettingChange', () => {
-  console.info('[Main] Flavour settings change event');
-
-  if (retailHandler) {
-    retailHandler.destroy();
-    retailHandler = undefined;
-  }
-
-  if (classicHandler) {
-    classicHandler.destroy();
-    classicHandler = undefined;
-  }
-
-  try {
-    cfg.validate();
-    updateRecStatus(RecStatus.WaitingForWoW);
-  } catch (error) {
-    updateRecStatus(RecStatus.InvalidConfig, String(error));
-    return;
-  }
-
-  if (!mainWindow) {
-    return;
-  }
-
-  Poller.getInstance().start();
-  mainWindow.webContents.send('refreshState');
-
-  const recordRetail = cfg.get<boolean>('recordRetail');
-  const retailLogPath = cfg.getPath('retailLogPath');
-
-  if (recordRetail && recorder) {
-    console.info('[Main] Create RetailLogHandler object with', retailLogPath);
-    retailHandler = new RetailLogHandler(recorder, retailLogPath);
-  }
-
-  const recordClassic = cfg.get<boolean>('recordClassic');
-  const classicLogPath = cfg.getPath('classicLogPath');
-
-  if (recorder && recordClassic) {
-    console.info('[Main] Create ClassicLogHandler object with', classicLogPath);
-    classicHandler = new ClassicLogHandler(recorder, classicLogPath);
-  }
+ipcMain.on('settingsChange', () => {
+  console.info('[Main] Settings change event');
+  if (manager) manager.manage();
 });
 
 /**
@@ -496,14 +335,14 @@ ipcMain.on('openURL', (event, args) => {
  * Preview event listener.
  */
 ipcMain.on('preview', (_event, args) => {
-  if (!recorder) {
+  if (!manager) {
     return;
   }
 
   if (args[0] === 'show') {
-    recorder.showPreview(args[1], args[2], args[3], args[4]);
+    manager.recorder.showPreview(args[1], args[2], args[3], args[4]);
   } else if (args[0] === 'hide') {
-    recorder.hidePreview();
+    manager.recorder.hidePreview();
   }
 });
 
@@ -511,12 +350,12 @@ ipcMain.on('preview', (_event, args) => {
  * Get the available video encoders.
  */
 ipcMain.on('getEncoders', (event) => {
-  if (!recorder) {
+  if (!manager) {
     event.returnValue = [];
     return;
   }
 
-  const obsEncoders = recorder
+  const obsEncoders = manager.recorder
     .getAvailableEncoders()
     .filter((encoder) => encoder !== 'none');
 
@@ -531,16 +370,6 @@ ipcMain.on('getAllDisplays', (event) => {
 });
 
 /**
- * Chat overlay event listener.
- */
-ipcMain.on('overlay', () => {
-  if (recorder) {
-    const { overlayEnabled, width, height, xPos, yPos } = getOverlayConfig(cfg);
-    recorder.configureOverlaySource(overlayEnabled, width, height, xPos, yPos);
-  }
-});
-
-/**
  * Get the list of video files and their state.
  */
 ipcMain.handle('getVideoState', async () =>
@@ -548,7 +377,7 @@ ipcMain.handle('getVideoState', async () =>
 );
 
 ipcMain.on('getAudioDevices', (event) => {
-  if (!recorder || !recorder.obsInitialized) {
+  if (!manager || !manager.recorder.obsInitialized) {
     event.returnValue = {
       input: [],
       output: [],
@@ -557,8 +386,8 @@ ipcMain.on('getAudioDevices', (event) => {
     return;
   }
 
-  const inputDevices = recorder.getInputAudioDevices();
-  const outputDevices = recorder.getOutputAudioDevices();
+  const inputDevices = manager.recorder.getInputAudioDevices();
+  const outputDevices = manager.recorder.getOutputAudioDevices();
 
   event.returnValue = {
     input: inputDevices,
@@ -570,21 +399,15 @@ ipcMain.on('getAudioDevices', (event) => {
  * Set/get global video player settings
  */
 ipcMain.on('videoPlayerSettings', (event, args) => {
-  switch (args[0]) {
-    case 'get':
-      event.returnValue = videoPlayerSettings;
-      break;
+  if (args[0] === 'get') {
+    event.returnValue = videoPlayerSettings;
+    return;
+  }
 
-    case 'set':
-      {
-        const settings = args[1] as VideoPlayerSettings;
-        videoPlayerSettings.muted = settings.muted;
-        videoPlayerSettings.volume = settings.volume;
-      }
-      break;
-
-    default:
-      break;
+  if (args[0] === 'set') {
+    const settings = args[1] as VideoPlayerSettings;
+    videoPlayerSettings.muted = settings.muted;
+    videoPlayerSettings.volume = settings.volume;
   }
 });
 
@@ -592,110 +415,50 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  * Test button listener.
  */
 ipcMain.on('test', (_event, args) => {
-  if (retailHandler) {
-    console.info('[Main] Running retail test');
-
-    runRetailRecordingTest(
-      args[0] as VideoCategory,
-      retailHandler.combatLogParser,
-      Boolean(args[1])
-    );
-  } else if (classicHandler) {
-    console.info('[Main] Running classic test');
-    runClassicRecordingTest(classicHandler.combatLogParser, Boolean(args[0]));
+  if (!manager) {
+    return;
   }
+
+  // const testCategory = args[0] as VideoCategory;
+  // manager.test();
+
+  // if (retailHandler) {
+  //   console.info('[Main] Running retail test');
+
+  //   runRetailRecordingTest(
+  //     args[0] as VideoCategory,
+  //     retailHandler.combatLogParser,
+  //     Boolean(args[1])
+  //   );
+  // } else if (classicHandler) {
+  //   console.info('[Main] Running classic test');
+  //   runClassicRecordingTest(classicHandler.combatLogParser, Boolean(args[0]));
+  // }
 });
 
 /**
  * Handle when a user clicks the stop recording button.
  */
 ipcMain.on('recorder', async (_event, args) => {
-  if (args[0] === 'stop') {
-    console.log('[Main] Force stopping recording due to user request.');
+  // if (args[0] === 'stop') {
+  //   console.log('[Main] Force stopping recording due to user request.');
 
-    if (retailHandler && retailHandler.activity) {
-      await retailHandler.forceEndActivity(0, false);
-      return;
-    }
+  //   if (retailHandler && retailHandler.activity) {
+  //     await retailHandler.forceEndActivity(0, false);
+  //     return;
+  //   }
 
-    if (classicHandler && classicHandler.activity) {
-      await classicHandler.forceEndActivity(0, false);
-      return;
-    }
+  //   if (classicHandler && classicHandler.activity) {
+  //     await classicHandler.forceEndActivity(0, false);
+  //     return;
+  //   }
 
-    if (recorder) await recorder.forceStop();
-    return;
-  }
+  //   if (recorder) await recorder.forceStop();
+  //   return;
+  // }
 
-  if (args[0] === 'video') {
-    try {
-      cfg.validate();
-      updateRecStatus(RecStatus.WaitingForWoW);
-    } catch (error) {
-      updateRecStatus(RecStatus.InvalidConfig, String(error));
-      return;
-    }
-
-    if (recorder) {
-      const { captureMode, monitorIndex, captureCursor } =
-        getVideoRecorderConfig(cfg);
-      recorder.configureVideoSources(captureMode, monitorIndex, captureCursor);
-    }
-  }
-
-  if (args[0] === 'audio') {
-    try {
-      cfg.validate();
-      updateRecStatus(RecStatus.WaitingForWoW);
-    } catch (error) {
-      updateRecStatus(RecStatus.InvalidConfig, String(error));
-      return;
-    }
-
-    if (recorder) {
-      const { speakers, speakerMultiplier, mics, micMultiplier, forceMono } =
-        getAudioRecorderConfig(cfg);
-
-      recorder.configureAudioSources(
-        speakers,
-        speakerMultiplier,
-        mics,
-        micMultiplier,
-        forceMono
-      );
-    }
-  }
-
-  if (args[0] === 'base') {
-    if (!recorder) {
-      return;
-    }
-
-    try {
-      cfg.validate();
-      updateRecStatus(RecStatus.WaitingForWoW);
-    } catch (error) {
-      updateRecStatus(RecStatus.InvalidConfig, String(error));
-      return;
-    }
-
-    if (!noObsDev && recorder && !recorder.obsConfigured) {
-      recorder.configure();
-    }
-
-    const { bufferPath, resolution, fps, encoder, kBitRate } =
-      getBaseRecorderConfig(cfg);
-
-    await recorder.reconfigureBase(
-      bufferPath,
-      resolution,
-      fps,
-      encoder,
-      kBitRate
-    );
-
-    if (mainWindow) mainWindow.webContents.send('refreshState');
-    Poller.getInstance().start();
+  if (manager) {
+    manager.manage();
   }
 });
 
@@ -715,10 +478,9 @@ app.on('window-all-closed', async () => {
 app.on('before-quit', () => {
   console.info('[Main] Running before-quit actions');
 
-  if (recorder) {
+  if (manager) {
     console.info('[Main] Shutting down OBS before quit');
-    recorder.shutdownOBS();
-    recorder = undefined;
+    manager.recorder.shutdownOBS();
   }
 });
 
@@ -728,16 +490,18 @@ app.on('before-quit', () => {
 app
   .whenReady()
   .then(() => {
-    console.log('[Main] App ready');
+    console.info('[Main] App ready');
     const singleInstanceLock = app.requestSingleInstanceLock();
 
     if (!singleInstanceLock) {
       console.warn(
         '[Main] Blocked attempt to launch a second instance of the application'
       );
+
       app.quit();
-    } else {
-      createWindow();
+      return;
     }
+
+    createWindow();
   })
-  .catch(console.log);
+  .catch(console.error);

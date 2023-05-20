@@ -2,9 +2,7 @@ import ElectronStore from 'electron-store';
 import { ipcMain } from 'electron';
 import path from 'path';
 import { EventEmitter } from 'stream';
-import fs from 'fs';
 import { configSchema, ConfigurationSchema } from './configSchema';
-import { getWowFlavour } from './util';
 
 export default class ConfigService extends EventEmitter {
   /**
@@ -98,67 +96,6 @@ export default class ConfigService extends EventEmitter {
         }
       }
     });
-  }
-
-  validate(): void {
-    const storagePath = this.get<string>('storagePath');
-
-    if (!this.get('storagePath') || !fs.existsSync(path.dirname(storagePath))) {
-      console.warn(
-        '[Config Service] Validation failed: `storagePath` is invalid'
-      );
-      throw new Error('Storage path is invalid.');
-    }
-
-    const separateBufferPath = this.get<boolean>('separateBufferPath');
-    const bufferStoragePath = this.get<string>('bufferStoragePath');
-
-    if (
-      separateBufferPath &&
-      (!bufferStoragePath ||
-        bufferStoragePath.length === 0 ||
-        !fs.existsSync(path.dirname(bufferStoragePath)))
-    ) {
-      console.warn(
-        '[Config Service] Validation failed: `bufferStoragePath` is invalid'
-      );
-      throw new Error('Buffer path is invalid.');
-    }
-
-    if (storagePath === bufferStoragePath) {
-      console.warn(
-        '[Config Service] Validation failed: Storage Path is the same as Buffer Path'
-      );
-      throw new Error('Storage Path is the same as Buffer Path');
-    }
-
-    // Check if the specified paths is a valid WoW Combat Log directory
-    const recordRetail = this.get<boolean>('recordRetail');
-
-    if (recordRetail) {
-      const retailLogPath = this.get<string>('retailLogPath');
-      const wowFlavour = getWowFlavour(retailLogPath);
-
-      if (wowFlavour !== 'wow') {
-        console.error('[ConfigService] Invalid retail log path', retailLogPath);
-        throw new Error('[ConfigService] Invalid retail log path');
-      }
-    }
-
-    const recordClassic = this.get<boolean>('recordClassic');
-
-    if (recordClassic) {
-      const classicLogPath = this.get<string>('classicLogPath');
-      const wowFlavour = getWowFlavour(classicLogPath);
-
-      if (wowFlavour !== 'wow_classic') {
-        console.error(
-          '[ConfigService] Invalid classic log path',
-          classicLogPath
-        );
-        throw new Error('[ConfigService] Invalid classic log path');
-      }
-    }
   }
 
   has(key: keyof ConfigurationSchema): boolean {

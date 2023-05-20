@@ -16,7 +16,7 @@ export type Channels =
   | 'preview'
   | 'getEncoders'
   | 'selectPath'
-  | 'flavourSettingChange'
+  | 'settingsChange'
   | 'overlay';
 
 contextBridge.exposeInMainWorld('electron', {

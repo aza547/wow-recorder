@@ -110,7 +110,7 @@ const AudioSourceControls: React.FC = () => {
         obsForceMono: config.obsForceMono,
       });
 
-      ipc.sendMessage('recorder', ['audio']);
+      ipc.sendMessage('settingsChange', []);
     }, 500);
   }, [
     config.audioOutputDevices,

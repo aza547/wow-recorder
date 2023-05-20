@@ -31,6 +31,9 @@ import {
 import {
   IOBSDevice,
   Metadata,
+  ObsAudioConfig,
+  ObsBaseConfig,
+  ObsVideoConfig,
   RecStatus,
   TAudioSourceType,
   TPreviewPosition,
@@ -39,11 +42,6 @@ import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
-import {
-  getBaseRecorderConfig,
-  getOverlayConfig,
-  getVideoRecorderConfig,
-} from './configutil';
 
 const { v4: uuidfn } = require('uuid');
 
@@ -290,109 +288,6 @@ export default class Recorder {
   }
 
   /**
-   * Configure OBS. This is split out of the constructor so that we can always
-   * initialize OBS upfront (without requiring any configuration from the
-   * user). That lets us populate all the options in settings that we depend
-   * on OBS to inform us of (encoders, audio devices). This doesn't attach
-   * audio devices, that's done seperately.
-   */
-  configure() {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    try {
-      this.cfg.validate();
-    } catch (error) {
-      throw new Error('[Recorder] Configure called but config invalid');
-    }
-
-    this.scene = osn.SceneFactory.create('WR Scene');
-    osn.Global.setOutputSource(this.videoChannel, this.scene);
-
-    const { bufferPath, resolution, fps, encoder, kBitRate } =
-      getBaseRecorderConfig(this.cfg);
-
-    this.configureBase(bufferPath, resolution, fps, encoder, kBitRate);
-
-    const { captureMode, monitorIndex, captureCursor } = getVideoRecorderConfig(
-      this.cfg
-    );
-
-    this.createOverlayImageSource();
-    this.configureVideoSources(captureMode, monitorIndex, captureCursor);
-
-    this.createPreview();
-    this.showPreviewMemory();
-
-    this.obsConfigured = true;
-  }
-
-  /**
-   * Reconfigure the base settings. It's safe to call this function repeatedly,
-   * doing so will queue up a single additional reconfigure that will be run
-   * when the current reconfigure is completed.
-   */
-  async reconfigureBase(
-    bufferPath: string,
-    resolution: string,
-    fps: number,
-    encoder: ESupportedEncoders,
-    kBitRate: number
-  ) {
-    if (this.isReconfiguring) {
-      this.pendingReconfigure = true;
-      return;
-    }
-
-    await this.doReconfigureBase(
-      bufferPath,
-      resolution,
-      fps,
-      encoder,
-      kBitRate
-    );
-  }
-
-  private async doReconfigureBase(
-    bufferPath: string,
-    resolution: string,
-    fps: number,
-    encoder: ESupportedEncoders,
-    kBitRate: number
-  ) {
-    this.isReconfiguring = true;
-
-    if (this.obsState === ERecordingState.Recording) {
-      // We can't change this config if OBS is recording. If it is recording
-      // but the recorder isn't, that means it's a buffer recording. Stop it
-      // briefly to change the config and start it after. Deliberately
-      // checking the OBS state and not the recorder state here. We don't
-      // need to restart, we leave that to the Poller.
-      await this.stopBuffer();
-      this.configureBase(bufferPath, resolution, fps, encoder, kBitRate);
-    } else if (this.obsState === ERecordingState.Offline) {
-      // If OBS is initialized but offline, we don't need to stop anything.
-      // Just reconfigure directly.
-      this.configureBase(bufferPath, resolution, fps, encoder, kBitRate);
-    }
-
-    this.isReconfiguring = false;
-
-    // Recursively call this function if there is pending reconfigure.
-    if (this.pendingReconfigure) {
-      this.pendingReconfigure = false;
-      await this.doReconfigureBase(
-        bufferPath,
-        resolution,
-        fps,
-        encoder,
-        kBitRate
-      );
-    }
-  }
-
-  /**
    * Create the bufferStorageDir if it doesn't already exist. Also
    * cleans it out for good measure.
    */
@@ -443,6 +338,10 @@ export default class Recorder {
       throw new Error(`Exception when initializing OBS process: ${e}`);
     }
 
+    this.scene = osn.SceneFactory.create('WR Scene');
+    osn.Global.setOutputSource(this.videoChannel, this.scene);
+    this.createOverlayImageSource();
+
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
   }
@@ -451,26 +350,28 @@ export default class Recorder {
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
-  configureBase(
-    bufferPath: string,
-    resolution: string,
-    fps: number,
-    encoder: ESupportedEncoders,
-    kBitRate: number
-  ) {
+  configureBase(config: ObsBaseConfig) {
     console.info('[Recorder] Configuring OBS');
+
+    const {
+      bufferStoragePath,
+      obsFPS,
+      obsRecEncoder,
+      obsKBitRate,
+      obsOutputResolution,
+    } = config;
 
     if (this.obsState !== ERecordingState.Offline) {
       throw new Error('[Recorder] OBS must be offline to do this');
     }
 
-    this.bufferStorageDir = bufferPath;
+    this.bufferStorageDir = bufferStoragePath;
     this.createRecordingDirs(this.bufferStorageDir);
-    this.resolution = resolution as keyof typeof obsResolutions;
+    this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
     osn.VideoFactory.videoContext = {
-      fpsNum: fps,
+      fpsNum: obsFPS,
       fpsDen: 1,
       baseWidth: width,
       baseHeight: height,
@@ -502,23 +403,23 @@ export default class Recorder {
     // Ideally we'd pass the 3rd arg with all the settings, but it seems that
     // hasn't been implemented so we instead call .update() shortly after.
     this.obsRecordingFactory.videoEncoder = osn.VideoEncoderFactory.create(
-      encoder,
+      obsRecEncoder,
       'WR-video-encoder',
       {}
     );
 
     this.obsRecordingFactory.videoEncoder.update({
       rate_control: 'VBR',
-      bitrate: kBitRate,
-      max_bitrate: kBitRate,
+      bitrate: obsKBitRate,
+      max_bitrate: obsKBitRate,
     });
 
     // Not totally clear why AMF is a special case here. Theory is that as it
     // is a plugin to OBS (it's a seperate github repo), and the likes of the
     // nvenc/x264 encoders are native to OBS so have homogenized settings.
-    if (encoder === ESupportedEncoders.AMD_AMF_H264) {
+    if (obsRecEncoder === ESupportedEncoders.AMD_AMF_H264) {
       this.obsRecordingFactory.videoEncoder.update({
-        'Bitrate.Peak': kBitRate,
+        'Bitrate.Peak': obsKBitRate,
       });
     }
 
@@ -530,8 +431,6 @@ export default class Recorder {
     this.obsRecordingFactory.signalHandler = (signal) => {
       this.handleSignal(signal);
     };
-
-    return this.obsRecordingFactory;
   }
 
   private handleSignal(obsSignal: osn.EOutputSignal) {
@@ -579,12 +478,19 @@ export default class Recorder {
   /**
    * Configures the video source in OBS.
    */
-  configureVideoSources(
-    captureMode: string,
-    monitorIndex: number,
-    captureCursor: boolean
-  ) {
+  configureVideoSources(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS video');
+
+    const {
+      obsCaptureMode,
+      monitorIndex,
+      captureCursor,
+      chatOverlayEnabled,
+      chatOverlayHeight,
+      chatOverlayWidth,
+      chatOverlayXPosition,
+      chatOverlayYPosition,
+    } = config;
 
     if (this.scene === undefined || this.scene === null) {
       throw new Error('[Recorder] No scene');
@@ -595,7 +501,7 @@ export default class Recorder {
       this.videoSource.remove();
     }
 
-    switch (captureMode) {
+    switch (obsCaptureMode) {
       case 'monitor_capture':
         this.videoSource = Recorder.createMonitorCaptureSource(
           monitorIndex,
@@ -609,7 +515,7 @@ export default class Recorder {
 
       default:
         throw new Error(
-          `[Recorder] Unexpected default case hit ${captureMode}`
+          `[Recorder] Unexpected default case hit ${obsCaptureMode}`
         );
     }
 
@@ -619,15 +525,17 @@ export default class Recorder {
       clearInterval(this.videoSourceSizeInterval);
     }
 
-    if (captureMode === 'game_capture') {
+    if (obsCaptureMode === 'game_capture') {
       this.watchVideoSourceSize();
     }
 
-    const { overlayEnabled, width, height, xPos, yPos } = getOverlayConfig(
-      this.cfg
+    this.configureOverlaySource(
+      chatOverlayEnabled,
+      chatOverlayWidth,
+      chatOverlayHeight,
+      chatOverlayXPosition,
+      chatOverlayYPosition
     );
-
-    this.configureOverlaySource(overlayEnabled, width, height, xPos, yPos);
   }
 
   /**
@@ -704,20 +612,22 @@ export default class Recorder {
    * so it can be called externally when WoW is opened - see the Poller
    * class. This removes any previously configured sources.
    */
-  public configureAudioSources(
-    speakers: string,
-    speakerMultiplier: number,
-    mics: string,
-    micMultiplier: number,
-    forceMono: boolean
-  ) {
-    console.info('[Recorder] Adding OBS audio sources...');
+  public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
+    console.info('[Recorder] Adding OBS audio sources...');
+
+    const {
+      audioInputDevices,
+      audioOutputDevices,
+      micVolume,
+      speakerVolume,
+      obsForceMono,
+    } = config;
 
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
 
-    mics
+    audioInputDevices
       .split(',')
       .filter((id) => id)
       .forEach((id) => {
@@ -726,7 +636,7 @@ export default class Recorder {
 
         const micFader = osn.FaderFactory.create(0);
         micFader.attach(obsSource);
-        micFader.mul = micMultiplier;
+        micFader.mul = micVolume;
         this.faders.push(micFader);
 
         this.audioInputDevices.push(obsSource);
@@ -748,14 +658,14 @@ export default class Recorder {
       const index = this.audioInputDevices.indexOf(device);
       const channel = this.audioInputChannels[index];
 
-      if (forceMono) {
+      if (obsForceMono) {
         device.flags = ESourceFlags.ForceMono;
       }
 
       this.addAudioSource(device, channel);
     });
 
-    speakers
+    audioOutputDevices
       .split(',')
       .filter((id) => id)
       .forEach((id) => {
@@ -768,7 +678,7 @@ export default class Recorder {
 
         const speakerFader = osn.FaderFactory.create(0);
         speakerFader.attach(obsSource);
-        speakerFader.mul = speakerMultiplier;
+        speakerFader.mul = speakerVolume;
         this.faders.push(speakerFader);
         this.audioOutputDevices.push(obsSource);
       });
@@ -1371,9 +1281,14 @@ export default class Recorder {
    * input. We scale to match the monitor scaling here too else the preview
    * will be misplaced (see issue 397).
    */
-  public showPreview(width: number, height: number, xPos: number, yPos: number) {
+  public showPreview(
+    width: number,
+    height: number,
+    xPos: number,
+    yPos: number
+  ) {
     if (!this.previewCreated) {
-      console.warn('[Recorder] Preview display not yet created, creating...');
+      console.info('[Recorder] Preview display not yet created, creating...');
       this.createPreview();
     }
 

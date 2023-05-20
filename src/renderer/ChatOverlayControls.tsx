@@ -41,7 +41,7 @@ const ChatOverlayControls: React.FC = () => {
       chatOverlayYPosition: config.chatOverlayYPosition,
     });
 
-    ipc.sendMessage('overlay', []);
+    ipc.sendMessage('settingsChange', []);
   }, [
     config.chatOverlayEnabled,
     config.chatOverlayHeight,

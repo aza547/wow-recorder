@@ -75,7 +75,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       separateBufferPath: config.separateBufferPath,
     });
 
-    ipc.sendMessage('recorder', ['base']);
+    ipc.sendMessage('settingsChange', []);
   }, [config.separateBufferPath, config.storagePath, config.bufferStoragePath]);
 
   // A change to maxStorage doesn't need to restart the recorder, only the

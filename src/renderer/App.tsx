@@ -20,7 +20,7 @@ const ipc = window.electron.ipcRenderer;
 
 const Application = () => {
   const [recorderStatus, setRecorderStatus] = React.useState<RecStatus>(
-    RecStatus.InvalidConfig
+    RecStatus.WaitingForWoW
   );
 
   const [error, setError] = React.useState<string>('');

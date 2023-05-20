@@ -322,6 +322,47 @@ type Encoder = {
   type: EncoderType;
 };
 
+type StorageConfig = {
+  storagePath: string;
+};
+
+type ObsBaseConfig = {
+  bufferStoragePath: string;
+  obsOutputResolution: string;
+  obsFPS: number;
+  obsKBitRate: number;
+  obsRecEncoder: string;
+};
+
+type ObsVideoConfig = {
+  obsCaptureMode: string;
+  monitorIndex: number;
+  captureCursor: boolean;
+  chatOverlayEnabled: boolean;
+  chatOverlayWidth: number;
+  chatOverlayHeight: number;
+  chatOverlayXPosition: number;
+  chatOverlayYPosition: number;
+};
+
+type ObsAudioConfig = {
+  audioInputDevices: string;
+  audioOutputDevices: string;
+  obsForceMono: boolean;
+  speakerVolume: number;
+  micVolume: number;
+};
+
+type RetailConfig = {
+  recordRetail: boolean;
+  retailLogPath: string;
+};
+
+type ClassicConfig = {
+  recordClassic: boolean;
+  classicLogPath: string;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -356,4 +397,10 @@ export {
   Pages,
   EncoderType,
   Encoder,
+  StorageConfig,
+  ObsBaseConfig,
+  ObsVideoConfig,
+  ObsAudioConfig,
+  RetailConfig,
+  ClassicConfig,
 };

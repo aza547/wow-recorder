@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import React from 'react';
 import { RecStatus } from 'main/types';
 import GeneralSettings from './GeneralSettings';
-import AdvancedSettings from './WindowsSettings';
+import WindowsSettings from './WindowsSettings';
 import FlavourSettings from './FlavourSettings';
 import PVESettings from './PVESettings';
 import PVPSettings from './PVPSettings';
@@ -121,7 +121,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
           m: 2,
         }}
       >
-        <AdvancedSettings />
+        <WindowsSettings />
       </Box>
     </Box>
   );
