@@ -70,18 +70,9 @@ process.on('unhandledRejection', (error: Error) => {
  */
 const cfg = ConfigService.getInstance();
 
-cfg.on('change', (key: string, value: any) => {
-  if (key === 'startUp') {
-    const isStartUp = value === true;
-    console.log('[Main] OS level set start-up behaviour:', isStartUp);
-
-    app.setLoginItemSettings({
-      openAtLogin: isStartUp,
-    });
-  }
-});
-
-// Default video player settings on app start
+/**
+ * Default the video player settings on app start.
+ */
 const videoPlayerSettings: VideoPlayerSettings = {
   muted: false,
   volume: 1,
@@ -97,8 +88,8 @@ const isDebug =
 
 // OBS doesn't play all that nicely with the dev tools, so we can call
 // "npm run start-ui-only" to skip using OBS entirely if doing UI work.
-const noObsDev =
-  process.env.NODE_ENV === 'development' && process.env.INIT_OBS === 'false';
+// const noObsDev =
+//   process.env.NODE_ENV === 'development' && process.env.INIT_OBS === 'false';
 
 if (isDebug) {
   require('electron-debug')();
@@ -307,7 +298,7 @@ ipcMain.handle('selectPath', async () => {
 });
 
 /**
- * logPath event listener.
+ * \Listener to open the folder containing the Warcraft Recorder logs.
  */
 ipcMain.on('logPath', (_event, args) => {
   if (args[0] === 'open') {
@@ -320,46 +311,18 @@ ipcMain.on('logPath', (_event, args) => {
  */
 ipcMain.on('settingsChange', () => {
   console.info('[Main] Settings change event');
-  if (manager) manager.manage();
+
+  if (manager) {
+    manager.manage();
+  }
 });
 
 /**
- * openURL event listener.
+ * Opens a URL in the default browser.
  */
 ipcMain.on('openURL', (event, args) => {
   event.preventDefault();
   require('electron').shell.openExternal(args[0]);
-});
-
-/**
- * Preview event listener.
- */
-ipcMain.on('preview', (_event, args) => {
-  if (!manager) {
-    return;
-  }
-
-  if (args[0] === 'show') {
-    manager.recorder.showPreview(args[1], args[2], args[3], args[4]);
-  } else if (args[0] === 'hide') {
-    manager.recorder.hidePreview();
-  }
-});
-
-/**
- * Get the available video encoders.
- */
-ipcMain.on('getEncoders', (event) => {
-  if (!manager) {
-    event.returnValue = [];
-    return;
-  }
-
-  const obsEncoders = manager.recorder
-    .getAvailableEncoders()
-    .filter((encoder) => encoder !== 'none');
-
-  event.returnValue = obsEncoders;
 });
 
 /**
@@ -376,27 +339,8 @@ ipcMain.handle('getVideoState', async () =>
   loadAllVideos(cfg.get<string>('storagePath'))
 );
 
-ipcMain.on('getAudioDevices', (event) => {
-  if (!manager || !manager.recorder.obsInitialized) {
-    event.returnValue = {
-      input: [],
-      output: [],
-    };
-
-    return;
-  }
-
-  const inputDevices = manager.recorder.getInputAudioDevices();
-  const outputDevices = manager.recorder.getOutputAudioDevices();
-
-  event.returnValue = {
-    input: inputDevices,
-    output: outputDevices,
-  };
-});
-
 /**
- * Set/get global video player settings
+ * Set/get global video player settings.
  */
 ipcMain.on('videoPlayerSettings', (event, args) => {
   if (args[0] === 'get') {
@@ -412,76 +356,11 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
 });
 
 /**
- * Test button listener.
- */
-ipcMain.on('test', (_event, args) => {
-  if (!manager) {
-    return;
-  }
-
-  // const testCategory = args[0] as VideoCategory;
-  // manager.test();
-
-  // if (retailHandler) {
-  //   console.info('[Main] Running retail test');
-
-  //   runRetailRecordingTest(
-  //     args[0] as VideoCategory,
-  //     retailHandler.combatLogParser,
-  //     Boolean(args[1])
-  //   );
-  // } else if (classicHandler) {
-  //   console.info('[Main] Running classic test');
-  //   runClassicRecordingTest(classicHandler.combatLogParser, Boolean(args[0]));
-  // }
-});
-
-/**
- * Handle when a user clicks the stop recording button.
- */
-ipcMain.on('recorder', async (_event, args) => {
-  // if (args[0] === 'stop') {
-  //   console.log('[Main] Force stopping recording due to user request.');
-
-  //   if (retailHandler && retailHandler.activity) {
-  //     await retailHandler.forceEndActivity(0, false);
-  //     return;
-  //   }
-
-  //   if (classicHandler && classicHandler.activity) {
-  //     await classicHandler.forceEndActivity(0, false);
-  //     return;
-  //   }
-
-  //   if (recorder) await recorder.forceStop();
-  //   return;
-  // }
-
-  if (manager) {
-    manager.manage();
-  }
-});
-
-/**
  * Shutdown the app if all windows closed.
  */
 app.on('window-all-closed', async () => {
   console.info('[Main] User closed app');
   app.quit();
-});
-
-/**
- * Important we shutdown OBS on the before-quit event as if we get closed by
- * the installer we want to ensure we shutdown OBS, this is common when
- * upgrading the app. See issue 325 and 338.
- */
-app.on('before-quit', () => {
-  console.info('[Main] Running before-quit actions');
-
-  if (manager) {
-    console.info('[Main] Shutting down OBS before quit');
-    manager.recorder.shutdownOBS();
-  }
 });
 
 /**

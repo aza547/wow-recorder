@@ -1,7 +1,7 @@
 import { Size } from 'electron';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
-import { ConfigurationSchema } from './configSchema';
+import ConfigService from './ConfigService';
 
 /**
  * Application recording status.
@@ -363,6 +363,15 @@ type ClassicConfig = {
   classicLogPath: string;
 };
 
+type ConfigStage = {
+  name: string;
+  initial: boolean;
+  current: any;
+  get: (cfg: ConfigService) => any;
+  configure: (...args: any[]) => Promise<void>;
+  validate: (...args: any[]) => void;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -403,4 +412,5 @@ export {
   ObsAudioConfig,
   RetailConfig,
   ClassicConfig,
+  ConfigStage,
 };

@@ -410,8 +410,8 @@ export default class Recorder {
 
     this.obsRecordingFactory.videoEncoder.update({
       rate_control: 'VBR',
-      bitrate: obsKBitRate,
-      max_bitrate: obsKBitRate,
+      bitrate: obsKBitRate * 1000,
+      max_bitrate: obsKBitRate * 1000,
     });
 
     // Not totally clear why AMF is a special case here. Theory is that as it
@@ -419,7 +419,7 @@ export default class Recorder {
     // nvenc/x264 encoders are native to OBS so have homogenized settings.
     if (obsRecEncoder === ESupportedEncoders.AMD_AMF_H264) {
       this.obsRecordingFactory.videoEncoder.update({
-        'Bitrate.Peak': obsKBitRate,
+        'Bitrate.Peak': obsKBitRate * 1000,
       });
     }
 

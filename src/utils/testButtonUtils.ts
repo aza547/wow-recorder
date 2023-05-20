@@ -54,7 +54,7 @@ export const runRetailRecordingTest = (
     return;
   }
 
-  if (!Poller.getInstance().isWowRunning) {
+  if (!Poller.getInstanceLazy().isWowRunning) {
     console.info("[test] WoW isn't running, not starting test.");
     return;
   }
@@ -125,7 +125,7 @@ export const runClassicRecordingTest = (
     return;
   }
 
-  if (!Poller.getInstance().isWowRunning) {
+  if (!Poller.getInstanceLazy().isWowRunning) {
     console.info("[test] WoW isn't running, not starting test.");
     return;
   }

@@ -1,7 +1,8 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, app, ipcMain } from 'electron';
 import { isEqual } from 'lodash';
 import path from 'path';
 import fs from 'fs';
+import { VideoCategory } from 'types/VideoCategory';
 import Poller from '../utils/Poller';
 import ClassicLogHandler from '../parsing/ClassicLogHandler';
 import RetailLogHandler from '../parsing/RetailLogHandler';
@@ -15,6 +16,7 @@ import {
   RetailConfig,
   ClassicConfig,
   RecStatus,
+  ConfigStage,
 } from './types';
 import {
   getObsBaseConfig,
@@ -24,17 +26,12 @@ import {
   getClassicConfig,
   getStorageConfig,
 } from '../utils/configUtils';
-import { updateRecStatus } from './util';
+import { updateRecStatus, validateClassic, validateRetail } from './util';
 import { ERecordingState } from './obsEnums';
-
-type ConfigStage = {
-  name: string;
-  initial: boolean;
-  current: any;
-  get: (cfg: ConfigService) => any;
-  configure: (...args: any[]) => Promise<void>;
-  validate: (...args: any[]) => void;
-};
+import {
+  runClassicRecordingTest,
+  runRetailRecordingTest,
+} from '../utils/testButtonUtils';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -53,6 +50,11 @@ export default class Manager {
   private mainWindow: BrowserWindow;
 
   private cfg: ConfigService = ConfigService.getInstance();
+
+  private poller = Poller.getInstance(
+    getRetailConfig(this.cfg),
+    getClassicConfig(this.cfg)
+  );
 
   private active = false;
 
@@ -76,17 +78,18 @@ export default class Manager {
 
   /**
    * Defined stages of configuration. They are named only for logging
-   * purposes. Each stage holds the current state of the stage, and provides
-   * functions to get, validate and configure the config.
+   * purposes. Each stage holds the current state of the stages config,
+   * and provides functions to get, validate and configure the config.
    */
   private stages: ConfigStage[] = [
+    /* eslint-disable prettier/prettier */
     {
       name: 'storage',
       initial: true,
       current: this.storageCfg,
       get: (cfg: ConfigService) => getStorageConfig(cfg),
-      validate: this.validateStorageCfg,
-      configure: async (config: StorageConfig) => this.configureStorage(config),
+      validate: (config: StorageConfig) => Manager.validateStorageCfg(config),
+      configure: async () => this.configureStorage(),
     },
     {
       name: 'obsBase',
@@ -117,7 +120,7 @@ export default class Manager {
       initial: true,
       current: this.retailCfg,
       get: (cfg: ConfigService) => getRetailConfig(cfg),
-      validate: () => {},
+      validate: (config: RetailConfig) => validateRetail(config),
       configure: async (config: RetailConfig) => this.configureRetail(config),
     },
     {
@@ -125,9 +128,10 @@ export default class Manager {
       initial: true,
       current: this.classicCfg,
       get: (cfg: ConfigService) => getClassicConfig(cfg),
-      validate: () => {},
+      validate: (config: ClassicConfig) => validateClassic(config),
       configure: async (config: ClassicConfig) => this.configureClassic(config),
     },
+    // eslint-enable prettier/prettier */
   ];
 
   /**
@@ -136,14 +140,16 @@ export default class Manager {
   constructor(mainWindow: BrowserWindow) {
     console.info('[Manager] Creating manager');
 
+    this.setupListeners();
+
     this.mainWindow = mainWindow;
     this.recorder = new Recorder(this.mainWindow);
-    this.manage();
 
-    Poller.getInstance()
+    this.poller
       .on('wowProcessStart', () => this.onWowStarted())
-      .on('wowProcessStop', () => this.onWowStopped())
-      .start();
+      .on('wowProcessStop', () => this.onWowStopped());
+
+    this.manage();
   }
 
   /**
@@ -173,6 +179,37 @@ export default class Manager {
     this.active = false;
   }
 
+  public async forceStop() {
+    if (this.retailLogHandler && this.retailLogHandler.activity) {
+      await this.retailLogHandler.forceEndActivity(0, false);
+      return;
+    }
+
+    if (this.classicLogHandler && this.classicLogHandler.activity) {
+      await this.classicLogHandler.forceEndActivity(0, false);
+      return;
+    }
+
+    if (this.recorder) {
+      await this.recorder.forceStop();
+    }
+  };
+
+  public test(category: VideoCategory, endTest: boolean) {
+    if (this.retailLogHandler) {
+      console.info('[Manager] Running retail test');
+      const parser = this.retailLogHandler.combatLogParser;
+      runRetailRecordingTest(category, parser, endTest);
+      return;
+    }
+  
+    if (this.classicLogHandler) {
+      console.info('[Manager] Running classic test');
+      const parser = this.classicLogHandler.combatLogParser;
+      runClassicRecordingTest(parser, endTest);
+    }
+  }
+
   /**
    * This function iterates through the config stages, checks for any changes,
    * validates the new config and then applies it.
@@ -188,6 +225,9 @@ export default class Manager {
       try {
         stage.validate(newConfig);
       } catch (error) {
+        stage.current = newConfig;
+        stage.initial = false;
+
         updateRecStatus(
           this.mainWindow,
           RecStatus.InvalidConfig,
@@ -257,13 +297,14 @@ export default class Manager {
    * Configure the frontend to use the new Storage Path. All we need to do
    * here is trigger a frontened refresh.
    */
-  private configureStorage(config: StorageConfig) {
+  private configureStorage() {
     this.mainWindow.webContents.send('refreshState');
   }
 
   private async configureObsBase(config: ObsBaseConfig) {
     if (this.recorder.isRecording) {
-      // throw error
+      console.error('[Manager] Invalid request from frontend');
+      throw new Error('[Manager] Invalid request from frontend');
     }
 
     if (this.recorder.obsState === ERecordingState.Recording) {
@@ -274,7 +315,7 @@ export default class Manager {
     }
 
     this.recorder.configureBase(config);
-    Poller.getInstance().start();
+    this.poller.start();
   }
 
   /**
@@ -294,11 +335,25 @@ export default class Manager {
   /**
    * Configure the RetailLogHandler.
    */
-  private configureRetail(config: RetailConfig) {
+  private async configureRetail(config: RetailConfig) {
+    if (this.recorder.isRecording) {
+      console.error('[Manager] Invalid request from frontend');
+      throw new Error('[Manager] Invalid request from frontend');
+    }
+
+    if (this.recorder.obsState === ERecordingState.Recording) {
+      // We can't change this config if OBS is recording. If OBS is recording
+      // but isRecording is false, that means it's a buffer recording. Stop it
+      // briefly to change the config.
+      await this.recorder.stopBuffer();
+    }
+
     if (this.retailLogHandler) {
       this.retailLogHandler.destroy();
-      this.retailLogHandler = undefined;
     }
+
+    this.poller.reconfigureRetail(config);
+    this.poller.start();
 
     if (!config.recordRetail) {
       return;
@@ -313,11 +368,25 @@ export default class Manager {
   /**
    * Configure the ClassicLogHandler.
    */
-  private configureClassic(config: ClassicConfig) {
+  private async configureClassic(config: ClassicConfig) {
+    if (this.recorder.isRecording) {
+      console.error('[Manager] Invalid request from frontend');
+      throw new Error('[Manager] Invalid request from frontend');
+    }
+
+    if (this.recorder.obsState === ERecordingState.Recording) {
+      // We can't change this config if OBS is recording. If OBS is recording
+      // but isRecording is false, that means it's a buffer recording. Stop it
+      // briefly to change the config.
+      await this.recorder.stopBuffer();
+    }
+
     if (this.classicLogHandler) {
       this.classicLogHandler.destroy();
-      this.classicLogHandler = undefined;
     }
+
+    this.poller.reconfigureClassic(config);
+    this.poller.start();
 
     if (!config.recordClassic) {
       return;
@@ -329,7 +398,11 @@ export default class Manager {
     );
   }
 
-  private validateStorageCfg(config: StorageConfig) {
+  /**
+   * Checks the storage path is set and exists on the users PC.
+   * @throws an error describing why the config is invalid
+   */
+  private static validateStorageCfg(config: StorageConfig) {
     const { storagePath } = config;
 
     if (!storagePath) {
@@ -343,7 +416,7 @@ export default class Manager {
 
     if (!fs.existsSync(path.dirname(storagePath))) {
       console.warn(
-        '[Config Service] Validation failed, storagePath does not exist',
+        '[Manager] Validation failed, storagePath does not exist',
         storagePath
       );
 
@@ -351,12 +424,17 @@ export default class Manager {
     }
   }
 
+  /**
+   * Checks the buffer storage path is set, exists on the users PC, and is 
+   * not the same as the storage path.
+   * @throws an error describing why the config is invalid
+   */
   private validateObsBaseCfg(config: ObsBaseConfig) {
     const { bufferStoragePath } = config;
 
     if (!bufferStoragePath) {
       console.warn(
-        '[Config Service] Validation failed: `bufferStoragePath` is falsy',
+        '[Manager] Validation failed: `bufferStoragePath` is falsy',
         bufferStoragePath
       );
 
@@ -365,7 +443,7 @@ export default class Manager {
 
     if (!fs.existsSync(path.dirname(bufferStoragePath))) {
       console.warn(
-        '[Config Service] Validation failed, bufferStoragePath does not exist',
+        '[Manager] Validation failed, bufferStoragePath does not exist',
         bufferStoragePath
       );
 
@@ -376,65 +454,84 @@ export default class Manager {
 
     if (storagePath === bufferStoragePath) {
       console.warn(
-        '[Config Service] Validation failed: Storage Path is the same as Buffer Path'
+        '[Manager] Validation failed: Storage Path is the same as Buffer Path'
       );
 
       throw new Error('Storage Path is the same as Buffer Path');
     }
   }
 
-  // validateRetail() {
-  //   // Check if the specified paths is a valid WoW Combat Log directory
-  //   const recordRetail = this.get<boolean>('recordRetail');
+  private setupListeners() {
+    this.cfg.on('change', (key: string, value: any) => {
+      if (key === 'startUp') {
+        const isStartUp = value === true;
+        console.log('[Main] OS level set start-up behaviour:', isStartUp);
+    
+        app.setLoginItemSettings({
+          openAtLogin: isStartUp,
+        });
+      }
+    });
 
-  //   if (recordRetail) {
-  //     const retailLogPath = this.get<string>('retailLogPath');
-  //     const wowFlavour = getWowFlavour(retailLogPath);
+    ipcMain.on('preview', (_event, args) => {
+      if (args[0] === 'show') {
+        this.recorder.showPreview(args[1], args[2], args[3], args[4]);
+      } else if (args[0] === 'hide') {
+        this.recorder.hidePreview();
+      }
+    });
 
-  //     if (wowFlavour !== 'wow') {
-  //       console.error('[ConfigService] Invalid retail log path', retailLogPath);
-  //       throw new Error('[ConfigService] Invalid retail log path');
-  //     }
-  //   }
-  // }
+    ipcMain.on('getEncoders', (event) => {
+      const obsEncoders = this.recorder
+        .getAvailableEncoders()
+        .filter((encoder) => encoder !== 'none');
 
-  // validateClassic() {
-  //   const recordClassic = this.get<boolean>('recordClassic');
+      event.returnValue = obsEncoders;
+    });
 
-  //   if (recordClassic) {
-  //     const classicLogPath = this.get<string>('classicLogPath');
-  //     const wowFlavour = getWowFlavour(classicLogPath);
+    ipcMain.on('getAudioDevices', (event) => {
+      if (!this.recorder.obsInitialized) {
+        event.returnValue = {
+          input: [],
+          output: [],
+        };
+    
+        return;
+      }
+    
+      const inputDevices = this.recorder.getInputAudioDevices();
+      const outputDevices = this.recorder.getOutputAudioDevices();
+    
+      event.returnValue = {
+        input: inputDevices,
+        output: outputDevices,
+      };
+    });
 
-  //     if (wowFlavour !== 'wow_classic') {
-  //       console.error(
-  //         '[ConfigService] Invalid classic log path',
-  //         classicLogPath
-  //       );
-  //       throw new Error('[ConfigService] Invalid classic log path');
-  //     }
-  //   }
-  // }
+
+    ipcMain.on('test', (_event, args) => {
+      const testCategory = args[0] as VideoCategory;
+      const endTest = Boolean(args[1]);
+      this.test(testCategory, endTest);
+    });
+
+    ipcMain.on('recorder', async (_event, args) => {
+      if (args[0] === 'stop') {
+        console.log('[Manager] Force stopping recording due to user request.');
+        this.forceStop();
+        return;
+      }
+
+      this.manage();
+    });
+
+
+  // Important we shutdown OBS on the before-quit event as if we get closed by
+  // the installer we want to ensure we shutdown OBS, this is common when
+  // upgrading the app. See issue 325 and 338.
+  app.on('before-quit', () => {
+    console.info('[Manager] Running before-quit actions');
+    this.recorder.shutdownOBS();
+  });
+  }
 }
-
-// private getAllConfig() {
-//   return {
-//     maxStorage: this.cfg.get<number>('maxStorage'),
-//     minEncounterDuration: this.cfg.get<number>('minEncounterDuration'),
-//     startUp: this.cfg.get<boolean>('startUp'),
-//     startMinimized: this.cfg.get<boolean>('startMinimized'),
-//     recordRetail: this.cfg.get<boolean>('recordRetail'),
-//     recordClassic: this.cfg.get<boolean>('recordClassic'),
-//     recordRaids: this.cfg.get<boolean>('recordRaids'),
-//     recordDungeons: this.cfg.get<boolean>('recordDungeons'),
-//     recordTwoVTwo: this.cfg.get<boolean>('recordTwoVTwo'),
-//     recordThreeVThree: this.cfg.get<boolean>('recordThreeVThree'),
-//     recordFiveVFive: this.cfg.get<boolean>('recordFiveVFive'),
-//     recordSkirmish: this.cfg.get<boolean>('recordSkirmish'),
-//     recordSoloShuffle: this.cfg.get<boolean>('recordSoloShuffle'),
-//     recordBattlegrounds: this.cfg.get<boolean>('recordBattlegrounds'),
-//     selectedCategory: this.cfg.get<number>('selectedCategory'),
-//     minKeystoneLevel: this.cfg.get<number>('minKeystoneLevel'),
-//     minimizeOnQuit: this.cfg.get<boolean>('minimizeOnQuit'),
-//     minimizeToTray: this.cfg.get<boolean>('minimizeToTray'),
-//     minRaidDifficulty: this.cfg.get<string>('minRaidDifficulty'),
-//   };

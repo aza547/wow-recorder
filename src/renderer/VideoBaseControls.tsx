@@ -155,6 +155,10 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   };
 
   const getCanvasResolutionSelect = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <FormControl size="small" sx={formControlStyle}>
         <InputLabel sx={selectStyle}>Canvas Resolution</InputLabel>
@@ -180,6 +184,10 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   };
 
   const setFPS = (_event: React.MouseEvent<HTMLElement>, fps: number) => {
+    if (!fps === null) {
+      return;
+    }
+
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -189,6 +197,10 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   };
 
   const getFPSToggle = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <FormControlLabel
         control={
@@ -244,12 +256,16 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        These settings can not be modified whilst a recording is active.
+        These settings can not be modified while a recording is active.
       </Typography>
     );
   };
 
   const getBitrateField = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <FormControl size="small" sx={formControlStyle}>
         <TextField
@@ -284,6 +300,10 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   };
 
   const getEncoderSelect = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <FormControl size="small" sx={formControlStyle}>
         <InputLabel sx={selectStyle}>Video Encoder</InputLabel>

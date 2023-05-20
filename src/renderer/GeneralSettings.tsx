@@ -92,7 +92,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     });
   }, [config.maxStorage]);
 
-  const setseparateBufferPath = (
+  const setSeparateBufferPath = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setConfig((prevState) => {
@@ -130,7 +130,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         variant="h6"
         sx={{
           color: 'white',
-          fontSize: '1rem',
+          fontSize: '0.75rem',
           fontFamily: '"Arial",sans-serif',
           fontStyle: 'italic',
           m: 1,
@@ -138,7 +138,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        These settings can not be modified whilst a recording is active.
+        These settings can not be modified while a recording is active.
       </Typography>
     );
   };
@@ -180,6 +180,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getStoragePathField = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <Box>
         <TextField
@@ -219,10 +223,14 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getBufferSwitch = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <Box>
         <FormControlLabel
-          control={getSwitch('separateBufferPath', setseparateBufferPath)}
+          control={getSwitch('separateBufferPath', setSeparateBufferPath)}
           label="Separate Buffer Path"
           labelPlacement="top"
           style={formControlLabelStyle}
@@ -233,6 +241,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getBufferPathField = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     if (!config.separateBufferPath) {
       return <></>;
     }
@@ -264,6 +276,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getMaxStorageField = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <Box>
         <TextField

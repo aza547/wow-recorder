@@ -102,7 +102,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         variant="h6"
         sx={{
           color: 'white',
-          fontSize: '1rem',
+          fontSize: '0.75rem',
           fontFamily: '"Arial",sans-serif',
           fontStyle: 'italic',
           m: 1,
@@ -110,7 +110,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        These settings can not be modified whilst a recording is active.
+        These settings can not be modified while a recording is active.
       </Typography>
     );
   };
@@ -182,6 +182,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getRetailSettings = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <Box
         sx={{
@@ -253,6 +257,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getClassicSettings = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     return (
       <Box
         sx={{
