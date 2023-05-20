@@ -245,12 +245,19 @@ export default class Manager {
           newConfig
         );
 
+        updateRecStatus(
+          this.mainWindow,
+          RecStatus.WaitingForWoW,
+        );
+
         // eslint-disable-next-line no-await-in-loop
         await stage.configure(newConfig);
         stage.current = newConfig;
         stage.initial = false;
       }
     }
+
+
   }
 
   /**

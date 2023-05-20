@@ -351,8 +351,6 @@ export default class Recorder {
    * user to have setup their config for, which is why it's split out.
    */
   configureBase(config: ObsBaseConfig) {
-    console.info('[Recorder] Configuring OBS');
-
     const {
       bufferStoragePath,
       obsFPS,
@@ -479,8 +477,6 @@ export default class Recorder {
    * Configures the video source in OBS.
    */
   configureVideoSources(config: ObsVideoConfig) {
-    console.info('[Recorder] Configuring OBS video');
-
     const {
       obsCaptureMode,
       monitorIndex,
@@ -614,7 +610,6 @@ export default class Recorder {
    */
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
-    console.info('[Recorder] Adding OBS audio sources...');
 
     const {
       audioInputDevices,
@@ -710,8 +705,6 @@ export default class Recorder {
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }
-
-    console.info('[Recorder] Removing OBS audio sources...');
 
     this.faders.forEach((fader) => {
       fader.detach();
