@@ -1,10 +1,6 @@
 import { Box, FormControlLabel, Switch } from '@mui/material';
 import React, { ChangeEvent } from 'react';
-import {
-  useSettings,
-  setConfigValues,
-  getConfigValue,
-} from 'settings/useSettings';
+import { useSettings, setConfigValues, getConfigValue } from './useSettings';
 import ChatOverlaySlider from './ChatOverlaySlider';
 
 const switchStyle = {
@@ -26,10 +22,17 @@ const ipc = window.electron.ipcRenderer;
 
 const ChatOverlayControls: React.FC = () => {
   const [config, setConfig] = useSettings();
+  const initialRender = React.useRef(true);
   const resolution = getConfigValue<string>('obsOutputResolution');
   const [xRes, yRes] = resolution.split('x').map((s) => parseInt(s, 10));
 
   React.useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+
     setConfigValues({
       chatOverlayEnabled: config.chatOverlayEnabled,
       chatOverlayHeight: config.chatOverlayHeight,
@@ -38,7 +41,7 @@ const ChatOverlayControls: React.FC = () => {
       chatOverlayYPosition: config.chatOverlayYPosition,
     });
 
-    ipc.sendMessage('overlay', []);
+    ipc.sendMessage('settingsChange', []);
   }, [
     config.chatOverlayEnabled,
     config.chatOverlayHeight,
@@ -96,10 +99,9 @@ const ChatOverlayControls: React.FC = () => {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'space-evenly',
         alignItems: 'center',
+        justifyContent: 'center',
         width: '100%',
-        m: 2,
       }}
     >
       <FormControlLabel

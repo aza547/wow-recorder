@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
-import ConfigService from '../main/ConfigService';
+import { validateClassic, validateRetail } from '../main/util';
+import { ClassicConfig, RetailConfig } from '../main/types';
 
 const tasklist = require('tasklist');
 
@@ -29,20 +30,35 @@ export default class Poller extends EventEmitter {
 
   private processRegex = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
 
-  private cfg = ConfigService.getInstance();
-
   private static _instance: Poller;
 
-  static getInstance() {
+  private retailConfig: RetailConfig;
+
+  private classicConfig: ClassicConfig;
+
+  static getInstance(retailConfig: RetailConfig, classicConfig: ClassicConfig) {
     if (!Poller._instance) {
-      Poller._instance = new Poller();
+      Poller._instance = new Poller(retailConfig, classicConfig);
     }
 
     return Poller._instance;
   }
 
-  private constructor() {
+  static getInstanceLazy() {
+    if (!Poller._instance) {
+      throw new Error('[Poller] Must create poller first');
+    }
+
+    return Poller._instance;
+  }
+
+  private constructor(
+    retailConfig: RetailConfig,
+    classicConfig: ClassicConfig
+  ) {
     super();
+    this.retailConfig = retailConfig;
+    this.classicConfig = classicConfig;
   }
 
   get isWowRunning() {
@@ -59,6 +75,14 @@ export default class Poller extends EventEmitter {
 
   set pollInterval(value) {
     this._pollInterval = value;
+  }
+
+  reconfigureRetail(retailConfig: RetailConfig) {
+    this.retailConfig = retailConfig;
+  }
+
+  reconfigureClassic(classicConfig: ClassicConfig) {
+    this.classicConfig = classicConfig;
   }
 
   reset() {
@@ -99,18 +123,35 @@ export default class Poller extends EventEmitter {
 
   private filterFlavoursByConfig = (wowProcess: WowProcess) => {
     const wowFlavour = wowProcess.flavour;
-    const recordClassic = this.cfg.get<boolean>('recordClassic');
-    const recordRetail = this.cfg.get<boolean>('recordRetail');
+    const { recordRetail } = this.retailConfig;
+    const { recordClassic } = this.classicConfig;
 
     // Any non classic flavour is considered a retail flavour (i.e. retail, beta, ptr)
-    const validRetailProcess = wowFlavour !== 'Classic' && recordRetail;
-    const validClassicProcess = wowFlavour === 'Classic' && recordClassic;
+    let validRetailProcess = wowFlavour !== 'Classic' && recordRetail;
+    let validClassicProcess = wowFlavour === 'Classic' && recordClassic;
 
-    if (validRetailProcess || validClassicProcess) {
-      return true;
+    if (!validRetailProcess && !validClassicProcess) {
+      // We're not configured to record any matching process.
+      return false;
     }
 
-    return false;
+    try {
+      validateRetail(this.retailConfig);
+    } catch {
+      validRetailProcess = false;
+    }
+
+    try {
+      validateClassic(this.classicConfig);
+    } catch {
+      validClassicProcess = false;
+    }
+
+    if (!validRetailProcess && !validClassicProcess) {
+      return false;
+    }
+
+    return true;
   };
 
   private convertToWowProcessType = (match: string[]) => {

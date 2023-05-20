@@ -19,6 +19,8 @@ import {
 } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
 import {
+  Encoder,
+  EncoderType,
   Flavour,
   IOBSDevice,
   PlayerDeathType,
@@ -31,6 +33,7 @@ import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import Player from 'video.js/dist/types/player';
 import * as Images from './images';
+import { ESupportedEncoders } from 'main/obsEnums';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -639,6 +642,31 @@ const standardizeAudioDeviceNames = (
   );
 };
 
+const encoderFilter = (enc: string) => {
+  return Object.values(ESupportedEncoders).includes(enc as ESupportedEncoders);
+};
+
+const mapEncoderToString = (enc: Encoder) => {
+  return `${enc.type} (${enc.name})`;
+};
+
+const mapStringToEncoder = (enc: string): Encoder => {
+  const encoder = enc as ESupportedEncoders;
+  const isHardwareEncoder = encoder !== ESupportedEncoders.OBS_X264;
+
+  const encoderType = isHardwareEncoder
+    ? EncoderType.HARDWARE
+    : EncoderType.SOFTWARE;
+
+  return { name: enc, type: encoderType };
+};
+
+const pathSelect = async (): Promise<string> => {
+  const ipc = window.electron.ipcRenderer;
+  const path = await ipc.invoke('selectPath', []);
+  return path;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -670,4 +698,8 @@ export {
   getAudioDeviceDescription,
   isKnownAudioDevice,
   standardizeAudioDeviceNames,
+  encoderFilter,
+  mapEncoderToString,
+  mapStringToEncoder,
+  pathSelect,
 };

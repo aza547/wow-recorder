@@ -2,8 +2,6 @@ import ElectronStore from 'electron-store';
 import { ipcMain } from 'electron';
 import path from 'path';
 import { EventEmitter } from 'stream';
-import fs from 'fs';
-import CombatLogParser from '../parsing/CombatLogParser';
 import { configSchema, ConfigurationSchema } from './configSchema';
 
 export default class ConfigService extends EventEmitter {
@@ -41,20 +39,6 @@ export default class ConfigService extends EventEmitter {
     this._store.onDidAnyChange((newValue: any, oldValue: any) => {
       this.emit('configChanged', oldValue, newValue);
     });
-
-    // Update the default for buffer-storage-path whenever 'storage-path' changes
-    this._store.onDidChange('storagePath', (newValue: any) =>
-      this.updateDefaults('storagePath', newValue)
-    );
-
-    // We don't wait to wait until the first storagePath update to set the default
-    // bufferStoragePath correctly, as we immediately load config on start-up and
-    // don't want to end up with a blank string, force it to update now.
-    const storagePath = this.get<string>('storagePath');
-
-    if (storagePath) {
-      this.updateDefaults('storagePath', storagePath);
-    }
 
     /**
      * Getter and setter config listeners.
@@ -112,71 +96,6 @@ export default class ConfigService extends EventEmitter {
         }
       }
     });
-  }
-
-  validate(): void {
-    const storagePath = this.get<string>('storagePath');
-
-    if (storagePath) {
-      this.updateDefaults('storagePath', storagePath);
-    }
-
-    if (!this.get('storagePath') || !fs.existsSync(path.dirname(storagePath))) {
-      console.warn(
-        '[Config Service] Validation failed: `storagePath` is invalid'
-      );
-      throw new Error('Storage path is invalid.');
-    }
-
-    const bufferStoragePath = this.get<string>('bufferStoragePath');
-
-    if (
-      !bufferStoragePath ||
-      bufferStoragePath.length === 0 ||
-      !fs.existsSync(path.dirname(bufferStoragePath))
-    ) {
-      console.warn(
-        '[Config Service] Validation failed: `bufferStoragePath` is invalid'
-      );
-      throw new Error('Buffer path is invalid.');
-    }
-
-    if (storagePath === bufferStoragePath) {
-      console.warn(
-        '[Config Service] Validation failed: Storage Path is the same as Buffer Path'
-      );
-      throw new Error('Storage Path is the same as Buffer Path');
-    }
-
-    // Check if the specified paths is a valid WoW Combat Log directory
-    const combatLogPaths = ['retailLogPath', 'classicLogPath'];
-    let hasValidCombatLogPath = false;
-
-    combatLogPaths.forEach((configKey) => {
-      const logPath = this.get<string>(configKey as keyof ConfigurationSchema);
-
-      if (!logPath) {
-        return;
-      }
-
-      const wowFlavour = CombatLogParser.getWowFlavour(logPath);
-
-      if (wowFlavour === 'unknown') {
-        console.warn(
-          `[Config Service] Ignoring invalid combat log directory '${logPath}' for '${configKey}'.`
-        );
-        return;
-      }
-
-      hasValidCombatLogPath = true;
-    });
-
-    if (!hasValidCombatLogPath) {
-      console.warn(
-        `[Config Service] No valid WoW Combat Log directory has been configured.`
-      );
-      throw new Error('No valid retail or classic log path found.');
-    }
   }
 
   has(key: keyof ConfigurationSchema): boolean {
@@ -266,17 +185,6 @@ export default class ConfigService extends EventEmitter {
     );
   }
 
-  private updateDefaults(key: string, newValue: any): void {
-    if (key === 'storagePath') {
-      const bufferStoragePath = ConfigService.resolveBufferStoragePath(
-        newValue as string,
-        this.get('bufferStoragePath')
-      );
-
-      this.set('bufferStoragePath', bufferStoragePath);
-    }
-  }
-
   /**
    * Determine whether a configuration value has changed.
    */
@@ -289,22 +197,5 @@ export default class ConfigService extends EventEmitter {
 
   private static logConfigChanged(newConfig: { [key: string]: any }): void {
     console.log('[Config Service] Configuration changed:', newConfig);
-  }
-
-  /**
-   * Return a value for the `bufferStoragePath` setting, based on the given `storagePath`.
-   *   - If `bufferStoragePath` is not empty, it will simply be returned.
-   *   - If `bufferStoragePath` is empty, and `storagePath` is empty, so will `bufferStoragePath` be.
-   *   - If `bufferStoragePath` is empty, and `storagePath` is not empty, we'll construct a default value.
-   */
-  private static resolveBufferStoragePath(
-    storagePath?: string,
-    bufferStoragePath?: string
-  ): string {
-    if (bufferStoragePath) {
-      return bufferStoragePath;
-    }
-
-    return storagePath ? path.join(storagePath, '.temp') : '';
   }
 }

@@ -7,7 +7,6 @@ const dllPath = path.join(__dirname, '../dll');
 const srcPath = path.join(rootPath, 'src');
 const srcMainPath = path.join(srcPath, 'main');
 const srcRendererPath = path.join(srcPath, 'renderer');
-const srcSettingsPath = path.join(srcPath, 'settings');
 
 const releasePath = path.join(rootPath, 'release');
 const appPath = path.join(releasePath, 'app');
@@ -27,7 +26,6 @@ export default {
   srcPath,
   srcMainPath,
   srcRendererPath,
-  srcSettingsPath,
   releasePath,
   appPath,
   appPackagePath,

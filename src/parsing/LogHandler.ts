@@ -54,9 +54,9 @@ export default abstract class LogHandler {
     this._cfg = ConfigService.getInstance();
   }
 
-  reconfigure(logPath: string) {
+  destroy() {
     this._combatLogParser.unwatch();
-    this._combatLogParser.watchPath(logPath);
+    this._combatLogParser.removeAllListeners();
   }
 
   get activity() {

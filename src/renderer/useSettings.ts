@@ -1,3 +1,4 @@
+import { ConfigurationSchema } from 'main/configSchema';
 import * as React from 'react';
 
 export const getConfigValue = <T>(configKey: string): T => {
@@ -15,10 +16,14 @@ export const setConfigValues = (dict: { [key: string]: any }): void => {
   window.electron.ipcRenderer.sendMessage('config', ['set_values', dict]);
 };
 
-export const useSettings = () => {
+export const useSettings = (): [
+  ConfigurationSchema,
+  React.Dispatch<React.SetStateAction<ConfigurationSchema>>
+] => {
   const configValues = {
     storagePath: getConfigValue<string>('storagePath'),
     bufferStoragePath: getConfigValue<string>('bufferStoragePath'),
+    separateBufferPath: getConfigValue<boolean>('separateBufferPath'),
     retailLogPath: getConfigValue<string>('retailLogPath'),
     classicLogPath: getConfigValue<string>('classicLogPath'),
     maxStorage: getConfigValue<number>('maxStorage'),
@@ -56,7 +61,8 @@ export const useSettings = () => {
     captureCursor: getConfigValue<boolean>('captureCursor'),
     speakerVolume: getConfigValue<number>('speakerVolume'),
     micVolume: getConfigValue<number>('micVolume'),
+    selectedCategory: getConfigValue<number>('selectedCategory'),
   };
 
-  return React.useState(configValues);
+  return React.useState<ConfigurationSchema>(configValues);
 };

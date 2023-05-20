@@ -2,9 +2,8 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 export type Channels =
   | 'mainWindow'
-  | 'settingsWindow'
   | 'getVideoState'
-  | 'contextMenu'
+  | 'videoButton'
   | 'logPath'
   | 'openURL'
   | 'test'
@@ -15,6 +14,9 @@ export type Channels =
   | 'config'
   | 'prepareThumbnail'
   | 'preview'
+  | 'getEncoders'
+  | 'selectPath'
+  | 'settingsChange'
   | 'overlay';
 
 contextBridge.exposeInMainWorld('electron', {

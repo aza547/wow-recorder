@@ -1,7 +1,7 @@
 import { Size } from 'electron';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
-import { ConfigurationSchema } from './configSchema';
+import ConfigService from './ConfigService';
 
 /**
  * Application recording status.
@@ -174,11 +174,6 @@ interface IOurChangeEvent {
   target: IEventTarget;
 }
 
-interface ISettingsPanelProps {
-  config: ConfigurationSchema;
-  onChange: (event: IOurChangeEvent) => void;
-}
-
 /**
  * This is what we write to the .json files. We use "raw" subtypes here to
  * represent any classes as writing entire classes to JSON files causes
@@ -317,6 +312,66 @@ enum DeviceType {
   OUTPUT,
 }
 
+enum EncoderType {
+  HARDWARE = 'Hardware',
+  SOFTWARE = 'Software',
+}
+
+type Encoder = {
+  name: string;
+  type: EncoderType;
+};
+
+type StorageConfig = {
+  storagePath: string;
+};
+
+type ObsBaseConfig = {
+  bufferStoragePath: string;
+  obsOutputResolution: string;
+  obsFPS: number;
+  obsKBitRate: number;
+  obsRecEncoder: string;
+};
+
+type ObsVideoConfig = {
+  obsCaptureMode: string;
+  monitorIndex: number;
+  captureCursor: boolean;
+  chatOverlayEnabled: boolean;
+  chatOverlayWidth: number;
+  chatOverlayHeight: number;
+  chatOverlayXPosition: number;
+  chatOverlayYPosition: number;
+};
+
+type ObsAudioConfig = {
+  audioInputDevices: string;
+  audioOutputDevices: string;
+  obsForceMono: boolean;
+  speakerVolume: number;
+  micVolume: number;
+};
+
+type RetailConfig = {
+  recordRetail: boolean;
+  retailLogPath: string;
+};
+
+type ClassicConfig = {
+  recordClassic: boolean;
+  classicLogPath: string;
+};
+
+type ConfigStage = {
+  name: string;
+  initial: boolean;
+  current: any;
+  get: (cfg: ConfigService) => any;
+  configure: (...args: any[]) => Promise<void>;
+  validate: (...args: any[]) => void;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -333,7 +388,6 @@ export {
   FileFinderCallbackType,
   VideoQueueItem,
   FakeChangeEvent,
-  ISettingsPanelProps,
   Metadata,
   RendererVideo,
   RendererVideoState,
@@ -350,4 +404,13 @@ export {
   TPreviewPosition,
   DeviceType,
   Pages,
+  EncoderType,
+  Encoder,
+  StorageConfig,
+  ObsBaseConfig,
+  ObsVideoConfig,
+  ObsAudioConfig,
+  RetailConfig,
+  ClassicConfig,
+  ConfigStage,
 };

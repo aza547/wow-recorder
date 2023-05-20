@@ -10,6 +10,9 @@ import {
   OurDisplayType,
   RendererVideo,
   RendererVideoState,
+  RecStatus,
+  RetailConfig,
+  ClassicConfig,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -448,6 +451,73 @@ const getAssetPath = (...paths: string[]): string => {
   return path.join(RESOURCES_PATH, ...paths);
 };
 
+/**
+ * Find and return the flavour of WoW that the log directory
+ * belongs to by means of the '.flavor.info' file.
+ */
+const getWowFlavour = (pathSpec: string): string => {
+  const flavourInfoFile = path.normalize(
+    path.join(pathSpec, '../.flavor.info')
+  );
+
+  // If this file doesn't exist, it's not a subdirectory of a WoW flavour.
+  if (!fs.existsSync(flavourInfoFile)) {
+    return 'unknown';
+  }
+
+  const content = fs.readFileSync(flavourInfoFile).toString().split('\n');
+
+  return content.length > 1 ? content[1] : 'unknown';
+};
+
+/**
+ * Updates the status icon for the application.
+ * @param status the status number
+ */
+const updateRecStatus = (
+  mainWindow: BrowserWindow,
+  status: RecStatus,
+  reason = ''
+) => {
+  console.info('[Main] Updating status with:', status, reason);
+  if (mainWindow === null) return;
+  mainWindow.webContents.send('updateRecStatus', status, reason);
+};
+
+/**
+ * Checks that if record retail is enabled we have a valid retail log path.
+ * @throws an error describing why the config is invalid
+ */
+const validateRetail = (config: RetailConfig) => {
+  const { recordRetail, retailLogPath } = config;
+
+  if (!recordRetail) {
+    return;
+  }
+
+  if (getWowFlavour(retailLogPath) !== 'wow') {
+    console.error('[ConfigService] Invalid retail log path', retailLogPath);
+    throw new Error('[ConfigService] Invalid retail log path');
+  }
+};
+
+/**
+ * Checks that if record retail is enabled we have a valid retail log path.
+ * @throws an error describing why the config is invalid
+ */
+const validateClassic = (config: ClassicConfig) => {
+  const { recordClassic, classicLogPath } = config;
+
+  if (!recordClassic) {
+    return;
+  }
+
+  if (getWowFlavour(classicLogPath) !== 'wow_classic') {
+    console.error('[ConfigService] Invalid classic log path', classicLogPath);
+    throw new Error('[ConfigService] Invalid classic log path');
+  }
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -465,4 +535,8 @@ export {
   deferredPromiseHelper,
   getThumbnailFileNameForVideo,
   getAssetPath,
+  getWowFlavour,
+  updateRecStatus,
+  validateRetail,
+  validateClassic,
 };

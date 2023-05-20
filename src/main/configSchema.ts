@@ -1,6 +1,7 @@
 export type ConfigurationSchema = {
   storagePath: string;
   bufferStoragePath: string;
+  separateBufferPath: boolean;
   retailLogPath: string;
   classicLogPath: string;
   maxStorage: number;
@@ -52,10 +53,16 @@ export const configSchema = {
     type: 'string',
     default: '',
   },
+  separateBufferPath: {
+    description: 'Enable storing temporary recordings in a seperate location.',
+    type: 'boolean',
+    default: false,
+  },
   bufferStoragePath: {
     description:
       'Location to store temporary recordings. If left unset this will default to a temporary folder inside the Storage Path.',
     type: 'string',
+    default: '',
   },
   retailLogPath: {
     description:
@@ -158,12 +165,12 @@ export const configSchema = {
   recordRetail: {
     description: 'Whether the application should record retail.',
     type: 'boolean',
-    default: true,
+    default: false,
   },
   recordClassic: {
     description: 'Whether the application should record classic.',
     type: 'boolean',
-    default: true,
+    default: false,
   },
   recordRaids: {
     description: 'Whether the application should record raids.',

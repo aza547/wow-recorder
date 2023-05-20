@@ -1,11 +1,21 @@
-import { Box, Divider } from '@mui/material';
+import { Box } from '@mui/material';
 import React from 'react';
+import { RecStatus } from 'main/types';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
 import VideoSourceControls from './VideoSourceControls';
 import AudioSourceControls from './AudioSourceControls';
+import VideoBaseControls from './VideoBaseControls';
 
-const SceneEditor: React.FC = () => {
+interface IProps {
+  recorderStatus: RecStatus;
+}
+
+const boxColor = '#141b2d';
+
+const SceneEditor: React.FC<IProps> = (props: IProps) => {
+  const { recorderStatus } = props;
+
   return (
     <Box
       sx={{
@@ -15,54 +25,82 @@ const SceneEditor: React.FC = () => {
         height: '100%',
       }}
     >
-      <Box sx={{ width: '100%', height: '75%' }}>
+      <Box sx={{ width: '100%', height: '60%' }}>
         <RecorderPreview />
       </Box>
       <Box
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-evenly',
-          alignItems: 'center',
-          width: '100%',
           height: '40%',
+          overflowY: 'scroll',
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': {
+            width: '1em',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: '#888',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#555',
+          },
         }}
       >
         <Box
           sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '100%',
+            backgroundColor: boxColor,
+            border: '1px solid rgba(0, 0, 0, 0.6)',
+            borderRadius: '5px',
+            boxShadow: 3,
+            p: 1,
+            mt: 2,
+            mx: 2,
+            my: 1,
           }}
         >
           <VideoSourceControls />
-          <Divider
-            flexItem
-            orientation="vertical"
-            sx={{ borderColor: 'black' }}
-          />
-          <AudioSourceControls />
         </Box>
-        <Divider
-          flexItem
-          orientation="horizontal"
-          sx={{ borderColor: 'black' }}
-        />
         <Box
           sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '100%',
+            backgroundColor: boxColor,
+            border: '1px solid rgba(0, 0, 0, 0.6)',
+            borderRadius: '5px',
+            boxShadow: 3,
+            p: 1,
+            mx: 2,
+            my: 1,
           }}
         >
-          <Box sx={{ width: '100%', m: 2 }}>ABC</Box>
-          <Divider
-            flexItem
-            orientation="vertical"
-            sx={{ borderColor: 'black' }}
-          />
+          <VideoBaseControls recorderStatus={recorderStatus} />
+        </Box>
+        <Box
+          sx={{
+            backgroundColor: boxColor,
+            border: '1px solid rgba(0, 0, 0, 0.6)',
+            borderRadius: '5px',
+            boxShadow: 3,
+            p: 1,
+            mx: 2,
+            my: 1,
+          }}
+        >
+          <AudioSourceControls />
+        </Box>
+        <Box
+          sx={{
+            backgroundColor: boxColor,
+            border: '1px solid rgba(0, 0, 0, 0.6)',
+            borderRadius: '5px',
+            boxShadow: 3,
+            p: 1,
+            mx: 2,
+            mt: 1,
+            mb: 2,
+          }}
+        >
           <ChatOverlayControls />
         </Box>
       </Box>

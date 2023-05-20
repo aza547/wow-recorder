@@ -2,6 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import {
   Pages,
+  RecStatus,
   RendererVideoState,
   TAppState,
   TNavigatorState,
@@ -20,10 +21,12 @@ import VideoButton from './VideoButton';
 import HomePage from './HomePage';
 import VideoFilter from './VideoFilter';
 import SceneEditor from './SceneEditor';
+import SettingsPage from './SettingsPage';
 
 interface IProps {
   navigation: TNavigatorState;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  recorderStatus: RecStatus;
   videoState: RendererVideoState;
   appState: TAppState;
   setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
@@ -36,8 +39,15 @@ let debounceSearchTimer: NodeJS.Timer;
  * The GUI itself.
  */
 const Layout: React.FC<IProps> = (props: IProps) => {
-  const { navigation, setNavigation, videoState, appState, setAppState } =
-    props;
+  const {
+    navigation,
+    setNavigation,
+    recorderStatus,
+    videoState,
+    appState,
+    setAppState,
+  } = props;
+
   const { page, categoryIndex, videoIndex } = navigation;
   const { numVideosDisplayed, videoFilterQuery } = appState;
   const categories = Object.values(VideoCategory);
@@ -263,11 +273,19 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const getSceneEditor = () => {
-    return <SceneEditor />;
+    return <SceneEditor recorderStatus={recorderStatus} />;
+  };
+
+  const getSettingsPage = () => {
+    return <SettingsPage recorderStatus={recorderStatus} />;
   };
 
   if (page === Pages.SceneEditor) {
     return getSceneEditor();
+  }
+
+  if (page === Pages.Settings) {
+    return getSettingsPage();
   }
 
   if (categoryIndex < 0) {

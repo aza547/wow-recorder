@@ -1,7 +1,7 @@
 import path from 'path';
-import fs from 'fs';
 import { EventEmitter } from 'stream';
 import { setInterval, clearInterval } from 'timers';
+import { getWowFlavour } from '../main/util';
 import { FileFinderCallbackType } from '../main/types';
 import LogLine from './LogLine';
 
@@ -82,7 +82,7 @@ export default class CombatLogParser extends EventEmitter {
       return;
     }
 
-    const wowFlavour = CombatLogParser.getWowFlavour(resolvedPath);
+    const wowFlavour = getWowFlavour(resolvedPath);
 
     if (wowFlavour === 'unknown') {
       console.warn(
@@ -155,26 +155,7 @@ export default class CombatLogParser extends EventEmitter {
     }
 
     // Check if the parent directory has a WoW flavour info file
-    return CombatLogParser.getWowFlavour(resolvePath) !== 'unknown';
-  }
-
-  /**
-   * Find and return the flavour of WoW that the log directory
-   * belongs to by means of the '.flavor.info' file.
-   */
-  static getWowFlavour(pathSpec: string): string {
-    const flavourInfoFile = path.normalize(
-      path.join(pathSpec, '../.flavor.info')
-    );
-
-    // If this file doesn't exist, it's not a subdirectory of a WoW flavour.
-    if (!fs.existsSync(flavourInfoFile)) {
-      return 'unknown';
-    }
-
-    const content = fs.readFileSync(flavourInfoFile).toString().split('\n');
-
-    return content.length > 1 ? content[1] : 'unknown';
+    return getWowFlavour(resolvePath) !== 'unknown';
   }
 
   /**

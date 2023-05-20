@@ -52,11 +52,6 @@ const configuration: webpack.Configuration = {
       'webpack/hot/only-dev-server',
       path.join(webpackPaths.srcRendererPath, 'index.tsx'),
     ],
-    settings: [
-      `webpack-dev-server/client?http://localhost:${port}/dist`,
-      'webpack/hot/only-dev-server',
-      path.join(webpackPaths.srcSettingsPath, 'index.tsx'),
-    ],
   },
 
   output: {
@@ -142,21 +137,6 @@ const configuration: webpack.Configuration = {
       filename: path.join('mainWindow.index.html'),
       template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
       chunks: ['mainWindow'],
-      minify: {
-        collapseWhitespace: true,
-        removeAttributeQuotes: true,
-        removeComments: true,
-      },
-      isBrowser: false,
-      env: process.env.NODE_ENV,
-      isDevelopment: process.env.NODE_ENV !== 'production',
-      nodeModules: webpackPaths.appNodeModulesPath,
-    }),
-
-    new HtmlWebpackPlugin({
-      filename: path.join('settings.index.html'),
-      template: path.join(webpackPaths.srcSettingsPath, 'index.ejs'),
-      chunks: ['settings'],
       minify: {
         collapseWhitespace: true,
         removeAttributeQuotes: true,
