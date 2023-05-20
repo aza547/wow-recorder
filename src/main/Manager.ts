@@ -179,6 +179,9 @@ export default class Manager {
     this.active = false;
   }
 
+  /**
+   * Force a recording to stop regardless of the scenario.
+   */
   public async forceStop() {
     if (this.retailLogHandler && this.retailLogHandler.activity) {
       await this.retailLogHandler.forceEndActivity(0, false);
@@ -195,6 +198,12 @@ export default class Manager {
     }
   };
 
+  /**
+   * Run a test. We prefer retail here, if the user doesn't have a retail path
+   * configured, then fall back to classic. We only pass through the category
+   * for retail, any classic tests will default to 2v2. Probably should fix 
+   * that.
+   */
   public test(category: VideoCategory, endTest: boolean) {
     if (this.retailLogHandler) {
       console.info('[Manager] Running retail test');
@@ -466,7 +475,12 @@ export default class Manager {
     }
   }
 
+  /**
+   * Setup event listeneres the app relies on.
+   */
   private setupListeners() {
+    // Config change listener we use to tweak the app settings in Windows if 
+    // the user enables/disables run on start-up.
     this.cfg.on('change', (key: string, value: any) => {
       if (key === 'startUp') {
         const isStartUp = value === true;
@@ -478,6 +492,8 @@ export default class Manager {
       }
     });
 
+    // The OBS preview window is tacked on-top of the UI so we call this often
+    // whenever we need to move, resize, show or hide it.
     ipcMain.on('preview', (_event, args) => {
       if (args[0] === 'show') {
         this.recorder.showPreview(args[1], args[2], args[3], args[4]);
@@ -486,6 +502,7 @@ export default class Manager {
       }
     });
 
+    // Encoder listener, to populate settings on the frontend.
     ipcMain.on('getEncoders', (event) => {
       const obsEncoders = this.recorder
         .getAvailableEncoders()
@@ -493,7 +510,8 @@ export default class Manager {
 
       event.returnValue = obsEncoders;
     });
-
+    
+    // Audio devices listener, to populate settings on the frontend.
     ipcMain.on('getAudioDevices', (event) => {
       if (!this.recorder.obsInitialized) {
         event.returnValue = {
@@ -513,13 +531,14 @@ export default class Manager {
       };
     });
 
-
+    // Test listener, to enable the test button to start a test.
     ipcMain.on('test', (_event, args) => {
       const testCategory = args[0] as VideoCategory;
       const endTest = Boolean(args[1]);
       this.test(testCategory, endTest);
     });
 
+    // Force stop listener, to enable the force stop button to do its job.
     ipcMain.on('recorder', async (_event, args) => {
       if (args[0] === 'stop') {
         console.log('[Manager] Force stopping recording due to user request.');

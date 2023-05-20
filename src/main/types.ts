@@ -170,10 +170,6 @@ class FakeChangeEvent {
   }
 }
 
-interface IOurChangeEvent {
-  target: IEventTarget;
-}
-
 /**
  * This is what we write to the .json files. We use "raw" subtypes here to
  * represent any classes as writing entire classes to JSON files causes
