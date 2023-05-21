@@ -492,12 +492,12 @@ const validateFlavour = (config: FlavourConfig) => {
 
   if (recordRetail && getWowFlavour(retailLogPath) !== 'wow') {
     console.error('[Util] Invalid retail log path', retailLogPath);
-    throw new Error('[Util] Invalid retail log path');
+    throw new Error('Invalid retail log path');
   }
 
   if (recordClassic && getWowFlavour(classicLogPath) !== 'wow_classic') {
     console.error('[Util] Invalid classic log path', classicLogPath);
-    throw new Error('[Util] Invalid classic log path');
+    throw new Error('Invalid classic log path');
   }
 };
 

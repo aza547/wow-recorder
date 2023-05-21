@@ -32,8 +32,8 @@ import {
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import Player from 'video.js/dist/types/player';
-import * as Images from './images';
 import { ESupportedEncoders } from 'main/obsEnums';
+import * as Images from './images';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -52,9 +52,12 @@ const getFormattedDuration = (video: RendererVideo) => {
 
 /**
  * Return an array of death markers for a video.
+ * @param video the RendereVideo data type for the video
+ * @param ownOnly true if should only get the players deaths
  */
-const getDeathMarkers = (video: RendererVideo) => {
+const getDeathMarkers = (video: RendererVideo, ownOnly: boolean) => {
   const videoMarkers: any[] = [];
+  const { player } = video;
 
   if (video.deaths === undefined) {
     return videoMarkers;
@@ -71,11 +74,25 @@ const getDeathMarkers = (video: RendererVideo) => {
       markerClass = 'green-video-marker-wide';
     }
 
-    videoMarkers.push({
-      time: death.timestamp,
-      text: markerText,
-      class: markerClass,
-    });
+    if (ownOnly) {
+      if (!player || !player._name) {
+        return;
+      }
+
+      if (player._name === name) {
+        videoMarkers.push({
+          time: death.timestamp,
+          text: markerText,
+          class: markerClass,
+        });
+      }
+    } else {
+      videoMarkers.push({
+        time: death.timestamp,
+        text: markerText,
+        class: markerClass,
+      });
+    }
   });
 
   return videoMarkers;
@@ -158,6 +175,12 @@ const getChallengeModeVideoMarkers = (video: RendererVideo) => {
     }
   );
 
+  const deathMarkers = getDeathMarkers(video, true);
+
+  deathMarkers.forEach((marker) => {
+    videoMarkers.push(marker);
+  });
+
   return videoMarkers;
 };
 
@@ -177,14 +200,16 @@ const addVideoMarkers = (video: RendererVideo, player: Player) => {
     return;
   }
 
-  let videoMarkers;
+  let videoMarkers: any;
 
   if (category === VideoCategory.SoloShuffle) {
     videoMarkers = getShuffleVideoMarkers(video);
   } else if (category === VideoCategory.MythicPlus) {
     videoMarkers = getChallengeModeVideoMarkers(video);
+  } else if (category === VideoCategory.Raids) {
+    videoMarkers = getDeathMarkers(video, true);
   } else {
-    videoMarkers = getDeathMarkers(video);
+    videoMarkers = getDeathMarkers(video, false);
   }
 
   player.markers({
