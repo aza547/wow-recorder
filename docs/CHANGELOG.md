@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [3.13.0] - 2023-05-21
+### Added
 - [Issue 216](https://github.com/aza547/wow-recorder/issues/216) - Add volume controls for audio sources.
 
 ### Changed
