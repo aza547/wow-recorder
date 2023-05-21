@@ -4,6 +4,7 @@ import {
   Chip,
   FormControl,
   FormControlLabel,
+  IconButton,
   InputLabel,
   ListItemText,
   MenuItem,
@@ -12,10 +13,13 @@ import {
   Slider,
   Stack,
   Switch,
+  Tooltip,
 } from '@mui/material';
 import { DeviceType, IOBSDevice } from 'main/types';
 import React from 'react';
 import { VolumeDown, VolumeUp } from '@mui/icons-material';
+import { configSchema } from 'main/configSchema';
+import InfoIcon from '@mui/icons-material/Info';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   getAudioDeviceDescription,
@@ -345,6 +349,22 @@ const AudioSourceControls: React.FC = () => {
     );
   };
 
+  const getInfoIcon = () => {
+    const helptext = [
+      ['Speakers', configSchema.audioOutputDevices.description].join('\n'),
+      ['Mics', configSchema.audioInputDevices.description].join('\n'),
+      ['Mono Input', configSchema.captureCursor.description].join('\n'),
+    ].join('\n\n');
+
+    return (
+      <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
+        <IconButton>
+          <InfoIcon style={{ color: 'white' }} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -383,6 +403,7 @@ const AudioSourceControls: React.FC = () => {
       </Box>
 
       {getMonoSwitch()}
+      {getInfoIcon()}
     </Box>
   );
 };

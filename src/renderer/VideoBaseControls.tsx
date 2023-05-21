@@ -2,6 +2,7 @@ import {
   Box,
   FormControl,
   FormControlLabel,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -9,11 +10,14 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import React from 'react';
 import { Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
+import { configSchema } from 'main/configSchema';
+import InfoIcon from '@mui/icons-material/Info';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   encoderFilter,
@@ -320,6 +324,25 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const getInfoIcon = () => {
+    const helptext = [
+      ['FPS', configSchema.obsFPS.description].join('\n'),
+      ['Canvas Resolution', configSchema.obsOutputResolution.description].join(
+        '\n'
+      ),
+      ['Bitrate', configSchema.obsKBitRate.description].join('\n'),
+      ['Video Encoder', configSchema.obsRecEncoder.description].join('\n'),
+    ].join('\n\n');
+
+    return (
+      <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
+        <IconButton>
+          <InfoIcon style={{ color: 'white' }} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -342,6 +365,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
         {getCanvasResolutionSelect()}
         {getBitrateField()}
         {getEncoderSelect()}
+        {getInfoIcon()}
       </Box>
     </Box>
   );

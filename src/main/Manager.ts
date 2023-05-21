@@ -236,13 +236,7 @@ export default class Manager {
       } catch (error) {
         stage.current = newConfig;
         stage.initial = false;
-
-        updateRecStatus(
-          this.mainWindow,
-          RecStatus.InvalidConfig,
-          String(error)
-        );
-
+        this.refreshStatus(true, String(error));
         return;
       }
 
@@ -254,16 +248,36 @@ export default class Manager {
           newConfig
         );
 
-        updateRecStatus(
-          this.mainWindow,
-          RecStatus.WaitingForWoW,
-        );
-
         // eslint-disable-next-line no-await-in-loop
         await stage.configure(newConfig);
         stage.current = newConfig;
         stage.initial = false;
       }
+    }
+
+    this.refreshStatus(false);
+  }
+
+  /**
+   * Refresh the status after a config change.
+   */
+  private refreshStatus(invalidConfig: boolean, message = '') {
+    if (invalidConfig) {
+      updateRecStatus(
+        this.mainWindow,
+        RecStatus.InvalidConfig,
+        String(message)
+      );
+    } else if (this.recorder.obsState === ERecordingState.Offline) {
+      updateRecStatus(
+        this.mainWindow,
+        RecStatus.WaitingForWoW,
+      );
+    } else {
+      updateRecStatus(
+        this.mainWindow,
+        RecStatus.ReadyToRecord,
+      );
     }
   }
 

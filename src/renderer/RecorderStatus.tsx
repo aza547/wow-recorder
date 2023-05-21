@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { RecStatus } from 'main/types';
 import React from 'react';
+import { getSettings } from './useSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -20,6 +21,7 @@ interface IProps {
 
 export default function RecorderStatus(props: IProps) {
   const { recorderStatus, error } = props;
+  const config = getSettings();
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -34,6 +36,22 @@ export default function RecorderStatus(props: IProps) {
 
   const stopRecording = () => {
     window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
+  };
+
+  const getConfiguredFlavours = () => {
+    if (config.recordRetail && config.recordClassic) {
+      return 'Retail and Classic';
+    }
+
+    if (config.recordRetail) {
+      return 'Retail';
+    }
+
+    if (config.recordClassic) {
+      return 'Classic';
+    }
+
+    return 'nothing. You likely want to enable retail, classic, or both in the app settings';
   };
 
   const getStatusSummary = () => {
@@ -77,31 +95,62 @@ export default function RecorderStatus(props: IProps) {
 
     if (recorderStatus === RecStatus.ReadyToRecord) {
       return (
-        <Typography sx={{ color: 'white' }}>
-          Warcraft Recorder is ready to record and is waiting for a recordable
-          event to appear in the combat log.
-        </Typography>
+        <>
+          <Typography sx={{ color: '#bb4420', m: 1 }}>
+            Detected World of Warcraft is running.
+          </Typography>
+
+          <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
+            Warcraft Recorder is waiting for a recordable event to appear in the
+            combat log. Watching log paths:
+          </Typography>
+
+          {config.recordRetail && (
+            <Typography sx={{ color: 'white', fontSize: '0.75rem', mx: 1 }}>
+              Retail: {config.retailLogPath}
+            </Typography>
+          )}
+
+          {config.recordClassic && (
+            <Typography sx={{ color: 'white', fontSize: '0.75rem', mx: 1 }}>
+              Classic: {config.classicLogPath}
+            </Typography>
+          )}
+
+          <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
+            Tip: If recordings do not start, check your logging settings in-game
+            and confirm your log path configuration is correct.
+          </Typography>
+        </>
       );
     }
 
     if (recorderStatus === RecStatus.WaitingForWoW) {
       return (
-        <Typography sx={{ color: 'white' }}>
-          Warcraft Recorder has valid configuration, and is waiting for World of
-          Warcraft to be launched.
-        </Typography>
+        <>
+          <Typography sx={{ color: '#bb4420', m: 1 }}>
+            Waiting for World of Warcraft to start.
+          </Typography>
+          <Typography sx={{ color: 'white', m: 1, fontSize: '0.75rem' }}>
+            Warcraft Recorder is configured to record {getConfiguredFlavours()}.
+          </Typography>
+        </>
       );
     }
 
     if (recorderStatus === RecStatus.FatalError) {
       return (
         <>
-          <Typography sx={{ color: 'white' }}>
-            Warcraft Recorder has hit a fatal error. Please restart the
-            application.
+          <Typography sx={{ color: 'white', m: 1 }}>
+            Warcraft Recorder has hit a fatal error.
           </Typography>
-          <Typography sx={{ color: 'red' }}>{error}</Typography>
-          <Typography sx={{ color: 'white' }}>
+          <Typography sx={{ color: 'white', m: 1, fontSize: '0.75rem' }}>
+            Please restart the application.
+          </Typography>
+          <Typography sx={{ color: 'red', m: 1, fontSize: '0.75rem' }}>
+            {error}
+          </Typography>
+          <Typography sx={{ color: 'white', m: 1, fontSize: '0.75rem' }}>
             If this problem is recurring, please ask for help in Discord. See
             the pins in the #help channel for advice on getting help.
           </Typography>
@@ -179,10 +228,14 @@ export default function RecorderStatus(props: IProps) {
         <Box
           sx={{
             border: '1px solid white',
-            borderRadius: '1%',
-            p: 1,
+            p: 2,
+            borderRadius: '5px',
             width: '400px',
             bgcolor: '#272e48',
+            display: 'flex',
+            alignItems: 'left',
+            justifyContent: 'center',
+            flexDirection: 'column',
           }}
         >
           {getStatusSummary()}

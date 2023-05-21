@@ -16,10 +16,7 @@ export const setConfigValues = (dict: { [key: string]: any }): void => {
   window.electron.ipcRenderer.sendMessage('config', ['set_values', dict]);
 };
 
-export const useSettings = (): [
-  ConfigurationSchema,
-  React.Dispatch<React.SetStateAction<ConfigurationSchema>>
-] => {
+export const getSettings = (): ConfigurationSchema => {
   const configValues = {
     storagePath: getConfigValue<string>('storagePath'),
     bufferStoragePath: getConfigValue<string>('bufferStoragePath'),
@@ -64,5 +61,13 @@ export const useSettings = (): [
     selectedCategory: getConfigValue<number>('selectedCategory'),
   };
 
+  return configValues;
+};
+
+export const useSettings = (): [
+  ConfigurationSchema,
+  React.Dispatch<React.SetStateAction<ConfigurationSchema>>
+] => {
+  const configValues = getSettings();
   return React.useState<ConfigurationSchema>(configValues);
 };

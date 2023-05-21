@@ -1,5 +1,13 @@
-import { Box, FormControlLabel, Switch } from '@mui/material';
+import {
+  Box,
+  FormControlLabel,
+  IconButton,
+  Switch,
+  Tooltip,
+} from '@mui/material';
 import React, { ChangeEvent } from 'react';
+import { configSchema } from 'main/configSchema';
+import InfoIcon from '@mui/icons-material/Info';
 import { useSettings, setConfigValues, getConfigValue } from './useSettings';
 import ChatOverlaySlider from './ChatOverlaySlider';
 
@@ -95,15 +103,8 @@ const ChatOverlayControls: React.FC = () => {
     });
   };
 
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-      }}
-    >
+  const getChatOverlayEnabledSwitch = () => {
+    return (
       <FormControlLabel
         control={
           <Switch
@@ -116,6 +117,11 @@ const ChatOverlayControls: React.FC = () => {
         labelPlacement="top"
         sx={{ color: 'white' }}
       />
+    );
+  };
+
+  const getChatOverlaySizeSliders = () => {
+    return (
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <FormControlLabel
           control={
@@ -154,7 +160,11 @@ const ChatOverlayControls: React.FC = () => {
           }}
         />
       </Box>
+    );
+  };
 
+  const getChatOverlayPositionSliders = () => {
+    return (
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <FormControlLabel
           control={
@@ -193,6 +203,36 @@ const ChatOverlayControls: React.FC = () => {
           }}
         />
       </Box>
+    );
+  };
+
+  const getInfoIcon = () => {
+    const helptext = [
+      ['Chat Overlay', configSchema.chatOverlayEnabled.description].join('\n'),
+    ].join('\n\n');
+
+    return (
+      <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
+        <IconButton>
+          <InfoIcon style={{ color: 'white' }} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+      }}
+    >
+      {getChatOverlayEnabledSwitch()}
+      {getChatOverlaySizeSliders()}
+      {getChatOverlayPositionSliders()}
+      {getInfoIcon()}
     </Box>
   );
 };

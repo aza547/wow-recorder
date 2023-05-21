@@ -1,12 +1,16 @@
 import {
   Box,
   FormControlLabel,
+  IconButton,
   Switch,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
 } from '@mui/material';
 import React from 'react';
 import { OurDisplayType } from 'main/types';
+import { configSchema } from 'main/configSchema';
+import InfoIcon from '@mui/icons-material/Info';
 import { useSettings, setConfigValues } from './useSettings';
 
 const ipc = window.electron.ipcRenderer;
@@ -174,6 +178,22 @@ const VideoSourceControls: React.FC = () => {
     );
   };
 
+  const getInfoIcon = () => {
+    const helptext = [
+      ['Capture Mode', configSchema.obsCaptureMode.description].join('\n'),
+      ['Monitor', configSchema.monitorIndex.description].join('\n'),
+      ['Capture Cursor', configSchema.captureCursor.description].join('\n'),
+    ].join('\n\n');
+
+    return (
+      <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
+        <IconButton>
+          <InfoIcon style={{ color: 'white' }} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -186,6 +206,7 @@ const VideoSourceControls: React.FC = () => {
       {getCaptureModeToggle()}
       {getMonitorToggle()}
       {getCursorToggle()}
+      {getInfoIcon()}
     </Box>
   );
 };

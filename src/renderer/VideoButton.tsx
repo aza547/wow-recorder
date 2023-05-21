@@ -1,4 +1,11 @@
-import { Box, Button, IconButton, Popover, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  IconButton,
+  Popover,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventIcon from '@mui/icons-material/Event';
@@ -59,7 +66,8 @@ export default function VideoButton(props: IProps) {
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
 
-  const [deletePopoverAnchor, setDeletePopoverAnchor] = React.useState<null | HTMLElement>(null);
+  const [deletePopoverAnchor, setDeletePopoverAnchor] =
+    React.useState<null | HTMLElement>(null);
   const open = Boolean(deletePopoverAnchor);
 
   const openDeletePopover = (event: React.MouseEvent<HTMLElement>) => {
@@ -414,7 +422,7 @@ export default function VideoButton(props: IProps) {
                   },
                 }}
               >
-                I'm sure
+                Yes
               </Button>
             </Box>
           </Popover>
