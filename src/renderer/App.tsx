@@ -66,6 +66,15 @@ const Application = () => {
       setVideoState(
         (await ipc.invoke('getVideoState', [])) as RendererVideoState
       );
+
+      // Fixes issue 410 which caused the preview not to re-appear if
+      // refreshState triggered when full screen.
+      setAppState((prevState) => {
+        return {
+          ...prevState,
+          videoFullScreen: false,
+        };
+      });
     });
 
     ipc.on('updateRecStatus', (status, err) => {
