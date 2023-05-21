@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 216](https://github.com/aza547/wow-recorder/issues/216) - Add volume controls for audio sources.
 
 ### Changed
-- [NO-ISSUE] - Move some settings to the scene editor.
-- [NO-ISSUE] - Revamp settings to avoid shutting down OBS on a reconfigure.
+- [Issue 404](https://github.com/aza547/wow-recorder/issues/404) - Revamp settings so they can be configured live.
 - [Issue 406](https://github.com/aza547/wow-recorder/issues/406) - Show death markers in all content types.
 
 ### Fixed
