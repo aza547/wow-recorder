@@ -11,8 +11,7 @@ import {
   RendererVideo,
   RendererVideoState,
   RecStatus,
-  RetailConfig,
-  ClassicConfig,
+  FlavourConfig,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -485,36 +484,20 @@ const updateRecStatus = (
 };
 
 /**
- * Checks that if record retail is enabled we have a valid retail log path.
+ * Checks the flavour config is valid.
  * @throws an error describing why the config is invalid
  */
-const validateRetail = (config: RetailConfig) => {
-  const { recordRetail, retailLogPath } = config;
+const validateFlavour = (config: FlavourConfig) => {
+  const { recordRetail, retailLogPath, recordClassic, classicLogPath } = config;
 
-  if (!recordRetail) {
-    return;
+  if (recordRetail && getWowFlavour(retailLogPath) !== 'wow') {
+    console.error('[Util] Invalid retail log path', retailLogPath);
+    throw new Error('[Util] Invalid retail log path');
   }
 
-  if (getWowFlavour(retailLogPath) !== 'wow') {
-    console.error('[ConfigService] Invalid retail log path', retailLogPath);
-    throw new Error('[ConfigService] Invalid retail log path');
-  }
-};
-
-/**
- * Checks that if record retail is enabled we have a valid retail log path.
- * @throws an error describing why the config is invalid
- */
-const validateClassic = (config: ClassicConfig) => {
-  const { recordClassic, classicLogPath } = config;
-
-  if (!recordClassic) {
-    return;
-  }
-
-  if (getWowFlavour(classicLogPath) !== 'wow_classic') {
-    console.error('[ConfigService] Invalid classic log path', classicLogPath);
-    throw new Error('[ConfigService] Invalid classic log path');
+  if (recordClassic && getWowFlavour(classicLogPath) !== 'wow_classic') {
+    console.error('[Util] Invalid classic log path', classicLogPath);
+    throw new Error('[Util] Invalid classic log path');
   }
 };
 
@@ -537,6 +520,5 @@ export {
   getAssetPath,
   getWowFlavour,
   updateRecStatus,
-  validateRetail,
-  validateClassic,
+  validateFlavour,
 };

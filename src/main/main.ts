@@ -37,7 +37,7 @@ console.info(
 );
 
 let mainWindow: BrowserWindow | null = null;
-let tray = null;
+let tray: Tray | null = null;
 let manager: Manager | undefined;
 
 // Issue 332. Need to call this before the app is ready.

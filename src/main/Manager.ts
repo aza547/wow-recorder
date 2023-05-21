@@ -13,20 +13,18 @@ import {
   ObsBaseConfig,
   ObsVideoConfig,
   ObsAudioConfig,
-  RetailConfig,
-  ClassicConfig,
   RecStatus,
   ConfigStage,
+  FlavourConfig,
 } from './types';
 import {
   getObsBaseConfig,
   getObsVideoConfig,
   getObsAudioConfig,
-  getRetailConfig,
-  getClassicConfig,
   getStorageConfig,
+  getFlavourConfig,
 } from '../utils/configUtils';
-import { updateRecStatus, validateClassic, validateRetail } from './util';
+import { updateRecStatus, validateFlavour } from './util';
 import { ERecordingState } from './obsEnums';
 import {
   runClassicRecordingTest,
@@ -51,10 +49,7 @@ export default class Manager {
 
   private cfg: ConfigService = ConfigService.getInstance();
 
-  private poller = Poller.getInstance(
-    getRetailConfig(this.cfg),
-    getClassicConfig(this.cfg)
-  );
+  private poller = Poller.getInstance(getFlavourConfig(this.cfg));
 
   private active = false;
 
@@ -68,9 +63,7 @@ export default class Manager {
 
   private obsAudioCfg: ObsAudioConfig = getObsAudioConfig(this.cfg);
 
-  private retailCfg: RetailConfig = getRetailConfig(this.cfg);
-
-  private classicCfg: ClassicConfig = getClassicConfig(this.cfg);
+  private flavourCfg: FlavourConfig = getFlavourConfig(this.cfg);
 
   private retailLogHandler: RetailLogHandler | undefined;
 
@@ -116,20 +109,12 @@ export default class Manager {
       configure: async (config: ObsAudioConfig) => this.configureObsAudio(config),
     },
     {
-      name: 'retail',
+      name: 'flavour',
       initial: true,
-      current: this.retailCfg,
-      get: (cfg: ConfigService) => getRetailConfig(cfg),
-      validate: (config: RetailConfig) => validateRetail(config),
-      configure: async (config: RetailConfig) => this.configureRetail(config),
-    },
-    {
-      name: 'classic',
-      initial: true,
-      current: this.classicCfg,
-      get: (cfg: ConfigService) => getClassicConfig(cfg),
-      validate: (config: ClassicConfig) => validateClassic(config),
-      configure: async (config: ClassicConfig) => this.configureClassic(config),
+      current: this.flavourCfg,
+      get: (cfg: ConfigService) => getFlavourConfig(cfg),
+      validate: (config: FlavourConfig) => validateFlavour(config),
+      configure: async (config: FlavourConfig) => this.configureFlavour(config),
     },
     // eslint-enable prettier/prettier */
   ];
@@ -363,7 +348,7 @@ export default class Manager {
   /**
    * Configure the RetailLogHandler.
    */
-  private async configureRetail(config: RetailConfig) {
+  private async configureFlavour(config: FlavourConfig) {
     if (this.recorder.isRecording) {
       console.error('[Manager] Invalid request from frontend');
       throw new Error('[Manager] Invalid request from frontend');
@@ -380,50 +365,26 @@ export default class Manager {
       this.retailLogHandler.destroy();
     }
 
-    this.poller.reconfigureRetail(config);
-    this.poller.start();
-
-    if (!config.recordRetail) {
-      return;
-    }
-
-    this.retailLogHandler = new RetailLogHandler(
-      this.recorder,
-      config.retailLogPath
-    );
-  }
-
-  /**
-   * Configure the ClassicLogHandler.
-   */
-  private async configureClassic(config: ClassicConfig) {
-    if (this.recorder.isRecording) {
-      console.error('[Manager] Invalid request from frontend');
-      throw new Error('[Manager] Invalid request from frontend');
-    }
-
-    if (this.recorder.obsState === ERecordingState.Recording) {
-      // We can't change this config if OBS is recording. If OBS is recording
-      // but isRecording is false, that means it's a buffer recording. Stop it
-      // briefly to change the config.
-      await this.recorder.stopBuffer();
-    }
-
     if (this.classicLogHandler) {
       this.classicLogHandler.destroy();
     }
 
-    this.poller.reconfigureClassic(config);
-    this.poller.start();
-
-    if (!config.recordClassic) {
-      return;
+    if (config.recordRetail) {
+      this.retailLogHandler = new RetailLogHandler(
+        this.recorder,
+        config.retailLogPath
+      );
     }
 
-    this.classicLogHandler = new ClassicLogHandler(
-      this.recorder,
-      config.classicLogPath
-    );
+    if (config.recordClassic) {
+      this.classicLogHandler = new ClassicLogHandler(
+        this.recorder,
+        config.classicLogPath
+      );
+    }
+
+    this.poller.reconfigureFlavour(config);
+    this.poller.start();
   }
 
   /**

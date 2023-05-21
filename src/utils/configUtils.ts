@@ -5,6 +5,7 @@ import {
   ObsAudioConfig,
   RetailConfig,
   ClassicConfig,
+  FlavourConfig,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../main/ConfigService';
@@ -78,17 +79,12 @@ const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
   };
 };
 
-const getRetailConfig = (cfg: ConfigService): RetailConfig => {
-  return {
-    recordRetail: cfg.get<boolean>('recordRetail'),
-    retailLogPath: cfg.get<string>('retailLogPath'),
-  };
-};
-
-const getClassicConfig = (cfg: ConfigService): ClassicConfig => {
+const getFlavourConfig = (cfg: ConfigService): FlavourConfig => {
   return {
     recordClassic: cfg.get<boolean>('recordClassic'),
     classicLogPath: cfg.get<string>('classicLogPath'),
+    recordRetail: cfg.get<boolean>('recordRetail'),
+    retailLogPath: cfg.get<string>('retailLogPath'),
   };
 };
 
@@ -99,6 +95,5 @@ export {
   getObsBaseConfig,
   getObsVideoConfig,
   getObsAudioConfig,
-  getRetailConfig,
-  getClassicConfig,
+  getFlavourConfig,
 };

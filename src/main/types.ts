@@ -349,12 +349,9 @@ type ObsAudioConfig = {
   micVolume: number;
 };
 
-type RetailConfig = {
+type FlavourConfig = {
   recordRetail: boolean;
   retailLogPath: string;
-};
-
-type ClassicConfig = {
   recordClassic: boolean;
   classicLogPath: string;
 };
@@ -406,7 +403,6 @@ export {
   ObsBaseConfig,
   ObsVideoConfig,
   ObsAudioConfig,
-  RetailConfig,
-  ClassicConfig,
+  FlavourConfig,
   ConfigStage,
 };
