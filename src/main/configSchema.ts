@@ -49,18 +49,20 @@ export type ConfigurationSchemaKey = keyof ConfigurationSchema;
  */
 export const configSchema = {
   storagePath: {
-    description: 'Location to store the recordings.',
+    description:
+      'Location to store the recordings. Warcraft Recorder takes ownership of this directory, it should be empty on initial setup and you should not modify the contents in-place.',
     type: 'string',
     default: '',
   },
   separateBufferPath: {
-    description: 'Enable storing temporary recordings in a seperate location.',
+    description:
+      'Enable storing temporary recordings in a seperate location. This should always be a local location. This feature is intended for people who want their final recordings to be on an NFS drive but not incur the network traffic of constantly recording to it.',
     type: 'boolean',
     default: false,
   },
   bufferStoragePath: {
     description:
-      'Location to store temporary recordings. If left unset this will default to a temporary folder inside the Storage Path.',
+      'Location to store temporary recordings. If left unset this will default to a folder inside the Storage Path.',
     type: 'string',
     default: '',
   },
@@ -84,7 +86,8 @@ export const configSchema = {
     minimum: 0,
   },
   monitorIndex: {
-    description: 'The monitor to record.',
+    description:
+      'The monitor to record. Only applicible if monitor capture is selected.',
     type: 'integer',
     default: 1,
     minimum: 1,
@@ -124,7 +127,7 @@ export const configSchema = {
   },
   obsOutputResolution: {
     description:
-      'Resolution of videos as saved on disk. Smaller resolution gives smaller video size, but can look grainy/pixelated. Typically just set this to the size of your WoW monitor',
+      'Resolution of videos as saved on disk. Set this to the size of your WoW monitor, for now Warcraft Recorder does not support rescaling.',
     type: 'string',
     default: '1920x1080',
   },
@@ -144,7 +147,7 @@ export const configSchema = {
   },
   obsKBitRate: {
     description:
-      'Bit rate to record at. Lower bit rate values give smaller video size but worse video quality. Suggested values are found below.',
+      'Bit rate to record at. Lower bit rate values give smaller video size but worse video quality.',
     type: 'integer',
     default: 15,
     minimum: 1,

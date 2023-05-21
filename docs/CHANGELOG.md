@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 395](https://github.com/aza547/wow-recorder/issues/395) - Fix Dragonflight S2 dungeon timings for +2 and +3 chests.
 - [Issue 405](https://github.com/aza547/wow-recorder/issues/405) - Guard against setting retail and classic log path to the same value.
 - [Issue 410](https://github.com/aza547/wow-recorder/issues/410) - Fix preview dissapearing if recording while player is fullscreen.
+- [Issue 393](https://github.com/aza547/wow-recorder/issues/393) - Improve some clipping issues with the preview. 
 
 ## [3.12.0] - 2023-05-03
 ### Added

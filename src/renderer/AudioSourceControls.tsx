@@ -353,7 +353,7 @@ const AudioSourceControls: React.FC = () => {
     const helptext = [
       ['Speakers', configSchema.audioOutputDevices.description].join('\n'),
       ['Mics', configSchema.audioInputDevices.description].join('\n'),
-      ['Mono Input', configSchema.captureCursor.description].join('\n'),
+      ['Mono Input', configSchema.obsForceMono.description].join('\n'),
     ].join('\n\n');
 
     return (
