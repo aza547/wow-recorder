@@ -42,3 +42,5 @@ If you're interested in getting involved please drop me a message on discord and
 The recording done by Warcraft Recorder is made possible by packaging up [OBS](https://obsproject.com/). We wouldn't stand a chance at providing something useful without it. Big thanks to the OBS developers.
 
 This application is also heavily reliant on [OBS Studio Node](https://github.com/stream-labs/obs-studio-node) to provide bindings to libOBS. Special mention for the folks over at [Streamlabs](https://streamlabs.com/) for open-sourcing the project. 
+
+The app is built with [Electron](https://www.electronjs.org/) and [React](https://react.dev/), using the boilerplate provided by the [ERB](https://electron-react-boilerplate.js.org/) project. 
