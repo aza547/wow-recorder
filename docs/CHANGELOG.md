@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+### Changed
+### Fixed
 
+## [3.13.1] - 2023-06-04
 ### Changed
 - [Issue 416](https://github.com/aza547/wow-recorder/issues/416) - Automatically scale to canvas size.
 - [Issue 420](https://github.com/aza547/wow-recorder/issues/420) - Convert to using thumbnails instead of fixed images.
