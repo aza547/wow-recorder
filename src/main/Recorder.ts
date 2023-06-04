@@ -878,9 +878,14 @@ export default class Recorder {
 
   /**
    * Start recording for real, this basically just cancels pending
-   * buffer recording restarts. We don't need to actually start OBS
-   * recording as it's should already be running (or just about to
-   * start if we hit this in the restart window).
+   * buffer recording restarts.
+   *
+   * We don't need to actually start OBS * recording as it's should already
+   * be running.
+   *
+   * We do need to handle the case here that we're mid buffer restart and
+   * OBS isn't in a Recording state but is about to be, so we will sleep
+   * for a second and retry to avoid missing recordings if so.
    */
   async start() {
     console.info('[Recorder] Start called');
@@ -891,23 +896,32 @@ export default class Recorder {
       console.info('[Recorder] Finished with last game overrun');
     }
 
-    const ready =
-      !this.isRecording && this.obsState === ERecordingState.Recording;
+    let rdy = !this.isRecording && this.obsState === ERecordingState.Recording;
+    let retries = 5;
 
-    if (!ready) {
-      console.warn(
-        '[LogHandler] Not ready to record an activity, no-op',
-        this.isRecording,
-        this.obsState
-      );
+    while (!rdy) {
+      console.info('[Recorder] Not ready, will sleep and retry:', retries);
 
-      return;
+      if (retries < 1) {
+        console.warn(
+          '[Recorder] Exhausted attempts to start',
+          this.isRecording,
+          this.obsState
+        );
+
+        return;
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      rdy = !this.isRecording && this.obsState === ERecordingState.Recording;
+      retries--;
     }
 
     console.info('[Recorder] Start recording by cancelling buffer restart');
     this.updateStatusIcon(RecStatus.Recording);
     this.cancelBufferTimers();
-    this._isRecording = true;
+    this.isRecording = true;
   }
 
   /**

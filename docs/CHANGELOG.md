@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+- [Issue 417](https://github.com/aza547/wow-recorder/issues/417) - Fix a bug where sometimes recordings were missed.
 
 ## [3.13.0] - 2023-05-21
 ### Added
