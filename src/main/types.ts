@@ -221,6 +221,7 @@ type RawCombatant = {
 type RendererVideo = Metadata & {
   mtime: number;
   fullPath: string;
+  imagePath: string;
   isProtected: boolean;
   size: number;
 };

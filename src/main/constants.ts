@@ -224,8 +224,8 @@ const encountersVOI: NumberKeyToStringValueMapType = {
 const encountersAberrus: NumberKeyToStringValueMapType = {
   2688: "Kazzara",
   2687: "Amalgamation Chamber",
-  2693: "Experimentation of the Dracthyr",
-  2682: "Zaqali Invasion",
+  2693: "The Forgotten Experiments",
+  2682: "Assault of the Zaqali",
   2680: "Rashok",
   2689: "Zskarn",
   2683: "Magmorax",

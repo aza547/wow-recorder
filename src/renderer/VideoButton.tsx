@@ -21,7 +21,6 @@ import {
   getPlayerRealm,
   getPlayerSpecID,
   getResultColor,
-  getVideoImage,
   getVideoResultText,
   isArenaUtil,
   isBattlegroundUtil,
@@ -45,10 +44,9 @@ interface IProps {
 
 export default function VideoButton(props: IProps) {
   const { video } = props;
-  const { isProtected, fullPath } = video;
+  const { isProtected, fullPath, imagePath } = video;
   const formattedDuration = getFormattedDuration(video);
   const dungeonName = getDungeonName(video);
-  const buttonImage = getVideoImage(video);
   const resultText = getVideoResultText(video);
   const isMythicPlus = isMythicPlusUtil(video);
   const isRaid = isRaidUtil(video);
@@ -114,7 +112,7 @@ export default function VideoButton(props: IProps) {
       >
         <Box
           component="img"
-          src={buttonImage}
+          src={imagePath}
           sx={{
             opacity: '70%',
             border: '1px solid black',
@@ -122,7 +120,8 @@ export default function VideoButton(props: IProps) {
             boxSizing: 'border-box',
             height: '100px',
             width: '200px',
-            objectFit: 'cover',
+            objectFit: 'contain',
+            backgroundColor: 'black',
           }}
         />
 

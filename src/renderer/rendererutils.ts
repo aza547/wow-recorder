@@ -33,7 +33,6 @@ import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import Player from 'video.js/dist/types/player';
 import { ESupportedEncoders } from 'main/obsEnums';
-import * as Images from './images';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -396,26 +395,8 @@ const getEncounterNameById = (encounterId: number): string => {
 /**
  * Get an appropriate image for the video.
  */
-const getVideoImage = (video: RendererVideo) => {
-  const { category, encounterID, zoneID } = video;
+const getVideoImagePath = (video: RendererVideo) => {
 
-  if (category === VideoCategory.Raids && encounterID !== undefined) {
-    return Images.raidImages[encounterID];
-  }
-
-  if (category === VideoCategory.MythicPlus && zoneID !== undefined) {
-    return Images.dungeonImages[zoneID];
-  }
-
-  if (category === VideoCategory.Battlegrounds && zoneID !== undefined) {
-    return Images.battlegroundImages[zoneID];
-  }
-
-  if (zoneID !== undefined) {
-    return Images.arenaImages[zoneID];
-  }
-
-  return '';
 };
 
 /**
@@ -705,7 +686,6 @@ export {
   getVideoResultText,
   getInstanceDifficultyText,
   getEncounterNameById,
-  getVideoImage,
   getDungeonName,
   isMythicPlusUtil,
   isRaidUtil,
@@ -727,4 +707,5 @@ export {
   mapEncoderToString,
   mapStringToEncoder,
   pathSelect,
+  getVideoImagePath,
 };

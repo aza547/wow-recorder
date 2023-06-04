@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [Issue 416](https://github.com/aza547/wow-recorder/issues/416) - Automatically scale to canvas size.
+- [Issue 420](https://github.com/aza547/wow-recorder/issues/420) - Convert to using thumbnails instead of fixed images.
 
 ### Fixed
 - [Issue 417](https://github.com/aza547/wow-recorder/issues/417) - Fix a bug where sometimes recordings were missed.
 - [NO-ISSUE] - Split out the chat overlay settings from the game settings so it's more responsive.
 - [Issue 418](https://github.com/aza547/wow-recorder/issues/418) - Improve the test button UX.
+- [Issue 419](https://github.com/aza547/wow-recorder/issues/419) - Fix some misnamed boss encounters.
 
 ## [3.13.0] - 2023-05-21
 ### Added

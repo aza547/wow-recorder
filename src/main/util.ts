@@ -172,11 +172,13 @@ const getMetadataForVideo = async (video: string) => {
  */
 const loadVideoDetails = async (video: FileInfo): Promise<RendererVideo> => {
   const metadata = await getMetadataForVideo(video.name);
+  const imagePath = getThumbnailFileNameForVideo(video.name);
 
   return {
     ...metadata,
     mtime: video.mtime,
     fullPath: video.name,
+    imagePath,
     isProtected: Boolean(metadata.protected),
     size: video.size,
   };
