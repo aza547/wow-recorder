@@ -13,6 +13,7 @@ import {
 } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
+import { getOverlayConfig } from '../utils/configUtils';
 import {
   EOBSOutputSignal,
   ERecordingFormat,
@@ -509,6 +510,10 @@ export default class Recorder {
     }
 
     this.watchVideoSourceSize();
+
+    // Re-add the overlay so it doesnt end up underneath the game itself.
+    const overlayCfg = getOverlayConfig(this.cfg);
+    this.configureOverlaySource(overlayCfg);
   }
 
   /**

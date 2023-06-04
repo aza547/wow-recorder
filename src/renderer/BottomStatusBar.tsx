@@ -89,7 +89,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
           <SettingsButton setNavigation={setNavigation} />
           <SceneEditorButton setNavigation={setNavigation} />
           <LogButton />
-          <TestButton />
+          <TestButton recorderStatus={recorderStatus} />
           <DiscordButton />
         </Box>
       </Box>

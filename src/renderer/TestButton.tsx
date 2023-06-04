@@ -2,10 +2,16 @@ import { Box, Button, Popover, Tooltip, Typography } from '@mui/material';
 import BiotechIcon from '@mui/icons-material/Biotech';
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
+import { RecStatus } from 'main/types';
 
 const ipc = window.electron.ipcRenderer;
 
-export default function TestButton() {
+interface IProps {
+  recorderStatus: RecStatus;
+}
+
+const TestButton: React.FC<IProps> = (props: IProps) => {
+  const { recorderStatus } = props;
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -35,18 +41,62 @@ export default function TestButton() {
     handleClose();
   };
 
-  return (
-    <>
-      <Tooltip title="Test">
-        <Button
-          id="test-button"
-          type="button"
-          onClick={handleClick}
-          sx={{ padding: '2px', minWidth: '25px' }}
+  const getPopover = () => {
+    const ready = recorderStatus === RecStatus.ReadyToRecord;
+
+    if (ready) {
+      return (
+        <Popover
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
         >
-          <BiotechIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
-        </Button>
-      </Tooltip>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              border: '1px solid white',
+              borderRadius: '1%',
+              p: 1,
+              width: '250px',
+              bgcolor: '#272e48',
+            }}
+          >
+            <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
+              Select a category to test:
+            </Typography>
+            {testCategories.map((category: VideoCategory) => {
+              return (
+                <Button
+                  key={`test-button-${category}`}
+                  variant="outlined"
+                  onClick={(e) => {
+                    runTest(e, category);
+                  }}
+                  sx={{
+                    m: '4px',
+                    height: '30px',
+                    color: 'white',
+                    borderColor: 'white',
+                    ':hover': {
+                      color: '#bb4420',
+                      borderColor: '#bb4420',
+                    },
+                  }}
+                >
+                  {category}
+                </Button>
+              );
+            })}
+          </Box>
+        </Popover>
+      );
+    }
+    return (
       <Popover
         anchorEl={anchorEl}
         open={open}
@@ -68,33 +118,30 @@ export default function TestButton() {
           }}
         >
           <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
-            Select a category to test:
+            Unable to run a test right now. To run a test, World of Warcraft
+            must be running, your settings must be valid, and you must not
+            currently be in an activity.
           </Typography>
-          {testCategories.map((category: VideoCategory) => {
-            return (
-              <Button
-                key={`test-button-${category}`}
-                variant="outlined"
-                onClick={(e) => {
-                  runTest(e, category);
-                }}
-                sx={{
-                  m: '4px',
-                  height: '30px',
-                  color: 'white',
-                  borderColor: 'white',
-                  ':hover': {
-                    color: '#bb4420',
-                    borderColor: '#bb4420',
-                  },
-                }}
-              >
-                {category}
-              </Button>
-            );
-          })}
         </Box>
       </Popover>
+    );
+  };
+
+  return (
+    <>
+      <Tooltip title="Test">
+        <Button
+          id="test-button"
+          type="button"
+          onClick={handleClick}
+          sx={{ padding: '2px', minWidth: '25px' }}
+        >
+          <BiotechIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
+        </Button>
+      </Tooltip>
+      {getPopover()}
     </>
   );
-}
+};
+
+export default TestButton;
