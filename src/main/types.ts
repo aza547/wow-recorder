@@ -334,6 +334,9 @@ type ObsVideoConfig = {
   obsCaptureMode: string;
   monitorIndex: number;
   captureCursor: boolean;
+};
+
+type ObsOverlayConfig = {
   chatOverlayEnabled: boolean;
   chatOverlayWidth: number;
   chatOverlayHeight: number;
@@ -402,6 +405,7 @@ export {
   StorageConfig,
   ObsBaseConfig,
   ObsVideoConfig,
+  ObsOverlayConfig,
   ObsAudioConfig,
   FlavourConfig,
   ConfigStage,

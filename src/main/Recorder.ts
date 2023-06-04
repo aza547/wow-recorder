@@ -2,6 +2,7 @@ import { BrowserWindow, screen } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
+import { isEqual } from 'lodash';
 import {
   IFader,
   IInput,
@@ -33,6 +34,7 @@ import {
   Metadata,
   ObsAudioConfig,
   ObsBaseConfig,
+  ObsOverlayConfig,
   ObsVideoConfig,
   RecStatus,
   TAudioSourceType,
@@ -151,7 +153,7 @@ export default class Recorder {
    * windowed mode and decides to resize their game. We can handle
    * this cleanly, even mid-recording.
    */
-  private videoScaleFactor: number = 1;
+  private videoScaleFactor = { x: 1, y: 1 };
 
   /**
    * Timer object for checking the size of the game window and rescaling if
@@ -476,17 +478,8 @@ export default class Recorder {
   /**
    * Configures the video source in OBS.
    */
-  configureVideoSources(config: ObsVideoConfig) {
-    const {
-      obsCaptureMode,
-      monitorIndex,
-      captureCursor,
-      chatOverlayEnabled,
-      chatOverlayHeight,
-      chatOverlayWidth,
-      chatOverlayXPosition,
-      chatOverlayYPosition,
-    } = config;
+  public configureVideoSources(config: ObsVideoConfig) {
+    const { obsCaptureMode, monitorIndex, captureCursor } = config;
 
     if (this.scene === undefined || this.scene === null) {
       throw new Error('[Recorder] No scene');
@@ -495,24 +488,18 @@ export default class Recorder {
     if (this.videoSource) {
       this.videoSource.release();
       this.videoSource.remove();
+      this.videoScaleFactor = { x: 1, y: 1 };
     }
 
-    switch (obsCaptureMode) {
-      case 'monitor_capture':
-        this.videoSource = Recorder.createMonitorCaptureSource(
-          monitorIndex,
-          captureCursor
-        );
-        break;
-
-      case 'game_capture':
-        this.videoSource = Recorder.createGameCaptureSource(captureCursor);
-        break;
-
-      default:
-        throw new Error(
-          `[Recorder] Unexpected default case hit ${obsCaptureMode}`
-        );
+    if (obsCaptureMode === 'monitor_capture') {
+      this.videoSource = Recorder.createMonitorCaptureSource(
+        monitorIndex,
+        captureCursor
+      );
+    } else if (obsCaptureMode === 'game_capture') {
+      this.videoSource = Recorder.createGameCaptureSource(captureCursor);
+    } else {
+      throw new Error(`[Recorder] Unexpected mode: ${obsCaptureMode}`);
     }
 
     this.videoSceneItem = this.scene.add(this.videoSource);
@@ -521,17 +508,7 @@ export default class Recorder {
       clearInterval(this.videoSourceSizeInterval);
     }
 
-    if (obsCaptureMode === 'game_capture') {
-      this.watchVideoSourceSize();
-    }
-
-    this.configureOverlaySource(
-      chatOverlayEnabled,
-      chatOverlayWidth,
-      chatOverlayHeight,
-      chatOverlayXPosition,
-      chatOverlayYPosition
-    );
+    this.watchVideoSourceSize();
   }
 
   /**
@@ -880,7 +857,7 @@ export default class Recorder {
    * Start recording for real, this basically just cancels pending
    * buffer recording restarts.
    *
-   * We don't need to actually start OBS * recording as it's should already
+   * We don't need to actually start OBS recording as it's should already
    * be running.
    *
    * We do need to handle the case here that we're mid buffer restart and
@@ -1184,7 +1161,8 @@ export default class Recorder {
   }
 
   /**
-   * Set up an interval to run the scaleVideoSourceSize function.
+   * Set up an interval to run the scaleVideoSourceSize function, and run it
+   * upfront.
    */
   private watchVideoSourceSize() {
     if (!this.obsInitialized) {
@@ -1197,7 +1175,7 @@ export default class Recorder {
 
     this.videoSourceSizeInterval = setInterval(() => {
       this.scaleVideoSourceSize();
-    }, 5000);
+    }, 2000);
   }
 
   /**
@@ -1214,26 +1192,31 @@ export default class Recorder {
       throw new Error('[Recorder] videoSceneItem was undefined');
     }
 
-    if (this.videoSource.width === 0) {
+    if (this.videoSource.width === 0 || this.videoSource.height === 0) {
       // This happens often, suspect it's before OBS gets a hook into a game capture process.
       return;
     }
 
-    const { width } = obsResolutions[this.resolution];
+    const { width, height } = obsResolutions[this.resolution];
 
-    const scaleFactor =
+    const xScaleFactor =
       Math.round((width / this.videoSource.width) * 100) / 100;
 
-    if (scaleFactor !== this.videoScaleFactor) {
+    const yScaleFactor =
+      Math.round((height / this.videoSource.height) * 100) / 100;
+
+    const newScaleFactor = { x: xScaleFactor, y: yScaleFactor };
+
+    if (!isEqual(this.videoScaleFactor, newScaleFactor)) {
       console.info(
-        '[Recorder] Rescaling OBS video from',
+        '[Recorder] Rescaling from',
         this.videoScaleFactor,
         'to',
-        scaleFactor
+        newScaleFactor
       );
 
-      this.videoScaleFactor = scaleFactor;
-      this.videoSceneItem.scale = { x: scaleFactor, y: scaleFactor };
+      this.videoScaleFactor = newScaleFactor;
+      this.videoSceneItem.scale = newScaleFactor;
     }
   }
 
@@ -1343,13 +1326,15 @@ export default class Recorder {
   /**
    * Apply a chat overlay to the scene.
    */
-  public configureOverlaySource(
-    overlayEnabled: boolean,
-    width: number,
-    height: number,
-    xPos: number,
-    yPos: number
-  ) {
+  public configureOverlaySource(config: ObsOverlayConfig) {
+    const {
+      chatOverlayEnabled,
+      chatOverlayWidth,
+      chatOverlayHeight,
+      chatOverlayXPosition,
+      chatOverlayYPosition,
+    } = config;
+
     if (this.scene === undefined || this.overlayImageSource === undefined) {
       console.error(
         '[Recorder] Not applying overlay as scene or image source undefined',
@@ -1364,7 +1349,7 @@ export default class Recorder {
       this.overlaySceneItem.remove();
     }
 
-    if (!overlayEnabled) {
+    if (!chatOverlayEnabled) {
       return;
     }
 
@@ -1373,8 +1358,8 @@ export default class Recorder {
     const baseWidth = 5000;
     const baseHeight = 2000;
 
-    const toCropX = (baseWidth - width) / 2;
-    const toCropY = (baseHeight - height) / 2;
+    const toCropX = (baseWidth - chatOverlayWidth) / 2;
+    const toCropY = (baseHeight - chatOverlayHeight) / 2;
 
     const overlaySettings: ISceneItemInfo = {
       name: 'overlay',
@@ -1387,8 +1372,8 @@ export default class Recorder {
       scaleX: 1,
       scaleY: 1,
       visible: true,
-      x: xPos,
-      y: yPos,
+      x: chatOverlayXPosition,
+      y: chatOverlayYPosition,
       rotation: 0,
       streamVisible: true,
       recordingVisible: true,

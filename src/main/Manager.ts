@@ -16,6 +16,7 @@ import {
   RecStatus,
   ConfigStage,
   FlavourConfig,
+  ObsOverlayConfig,
 } from './types';
 import {
   getObsBaseConfig,
@@ -23,6 +24,7 @@ import {
   getObsAudioConfig,
   getStorageConfig,
   getFlavourConfig,
+  getOverlayConfig,
 } from '../utils/configUtils';
 import { updateRecStatus, validateFlavour } from './util';
 import { ERecordingState } from './obsEnums';
@@ -64,6 +66,8 @@ export default class Manager {
   private obsAudioCfg: ObsAudioConfig = getObsAudioConfig(this.cfg);
 
   private flavourCfg: FlavourConfig = getFlavourConfig(this.cfg);
+
+  private overlayCfg: ObsOverlayConfig = getOverlayConfig(this.cfg);
 
   private retailLogHandler: RetailLogHandler | undefined;
 
@@ -115,6 +119,14 @@ export default class Manager {
       get: (cfg: ConfigService) => getFlavourConfig(cfg),
       validate: (config: FlavourConfig) => validateFlavour(config),
       configure: async (config: FlavourConfig) => this.configureFlavour(config),
+    },
+    {
+      name: 'overlay',
+      initial: true,
+      current: this.overlayCfg,
+      get: (cfg: ConfigService) => getOverlayConfig(cfg),
+      validate: () => {},
+      configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
     },
     // eslint-enable prettier/prettier */
   ];
@@ -385,6 +397,13 @@ export default class Manager {
 
     this.poller.reconfigureFlavour(config);
     this.poller.start();
+  }
+
+  /**
+   * Configure chat overlay in OBS. This can all be changed live.
+   */
+  private configureObsOverlay(config: ObsOverlayConfig) {
+    this.recorder.configureOverlaySource(config);
   }
 
   /**

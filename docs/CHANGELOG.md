@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- [Issue 416](https://github.com/aza547/wow-recorder/issues/416) - Automatically scale to canvas size.
 
 ### Fixed
 - [Issue 417](https://github.com/aza547/wow-recorder/issues/417) - Fix a bug where sometimes recordings were missed.
+- [NO-ISSUE] - Split out the chat overlay settings from the game settings so it's more responsive.
 
 ## [3.13.0] - 2023-05-21
 ### Added

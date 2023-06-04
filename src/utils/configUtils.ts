@@ -3,9 +3,8 @@ import {
   ObsBaseConfig,
   ObsVideoConfig,
   ObsAudioConfig,
-  RetailConfig,
-  ClassicConfig,
   FlavourConfig,
+  ObsOverlayConfig,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../main/ConfigService';
@@ -60,11 +59,6 @@ const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
   return {
     obsCaptureMode: cfg.get<string>('obsCaptureMode'),
     monitorIndex: cfg.get<number>('monitorIndex'),
-    chatOverlayEnabled: cfg.get<boolean>('chatOverlayEnabled'),
-    chatOverlayWidth: cfg.get<number>('chatOverlayWidth'),
-    chatOverlayHeight: cfg.get<number>('chatOverlayHeight'),
-    chatOverlayXPosition: cfg.get<number>('chatOverlayXPosition'),
-    chatOverlayYPosition: cfg.get<number>('chatOverlayYPosition'),
     captureCursor: cfg.get<boolean>('captureCursor'),
   };
 };
@@ -88,6 +82,16 @@ const getFlavourConfig = (cfg: ConfigService): FlavourConfig => {
   };
 };
 
+const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
+  return {
+    chatOverlayEnabled: cfg.get<boolean>('chatOverlayEnabled'),
+    chatOverlayWidth: cfg.get<number>('chatOverlayWidth'),
+    chatOverlayHeight: cfg.get<number>('chatOverlayHeight'),
+    chatOverlayXPosition: cfg.get<number>('chatOverlayXPosition'),
+    chatOverlayYPosition: cfg.get<number>('chatOverlayYPosition'),
+  };
+};
+
 // eslint-disable-next-line import/prefer-default-export
 export {
   allowRecordCategory,
@@ -96,4 +100,5 @@ export {
   getObsVideoConfig,
   getObsAudioConfig,
   getFlavourConfig,
+  getOverlayConfig,
 };
