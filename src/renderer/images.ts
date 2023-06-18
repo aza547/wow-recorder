@@ -1,7 +1,11 @@
-import { specializationById } from '../main/constants';
+import { dungeonAffixesById, specializationById } from '../main/constants';
 
 interface ImageObject {
   [id: number]: string;
+}
+
+interface StrImageObject {
+  [name: string]: string;
 }
 
 const specIDs = Object.keys(specializationById).map((v) => parseInt(v, 10));
@@ -20,4 +24,24 @@ specIDs.forEach((id) => {
   }
 });
 
-export { specImages };
+const affixIDs = Object.keys(dungeonAffixesById).map((v) => parseInt(v, 10));
+const affixImages: ImageObject = {};
+
+affixIDs.forEach((id) => {
+  try {
+    affixImages[id] = require(`../../assets/affixes/${id}.jpg`);
+  } catch (e) {
+    console.error(
+      `[Images] Unable to load image resource that was expected to exist.\n`,
+      e
+    );
+  }
+});
+
+const roleImages: StrImageObject = {
+  tank: require('../../assets/roles/tank.png'),
+  healer: require('../../assets/roles/healer.png'),
+  damage: require('../../assets/roles/damage.png'),
+};
+
+export { specImages, affixImages, roleImages };

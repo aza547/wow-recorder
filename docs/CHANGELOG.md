@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- [Issue 423](https://github.com/aza547/wow-recorder/issues/423) - Add affixes and some other UI improvements.
+
 ### Changed
 ### Fixed
 

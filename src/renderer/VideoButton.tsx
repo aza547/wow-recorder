@@ -15,18 +15,15 @@ import FolderIcon from '@mui/icons-material/Folder';
 import React from 'react';
 import { RendererVideo } from 'main/types';
 import {
-  getDungeonName,
   getPlayerClass,
   getPlayerName,
   getPlayerRealm,
   getPlayerSpecID,
   getResultColor,
-  getVideoResultText,
   isArenaUtil,
   isBattlegroundUtil,
   isMythicPlusUtil,
   isRaidUtil,
-  isSoloShuffleUtil,
   getFormattedDuration,
   getWoWClassColor,
   getVideoTime,
@@ -37,6 +34,9 @@ import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
 import RaidEncounterInfo from './RaidEncounterInfo';
 import BattlegroundInfo from './BattlegroundInfo';
+import DungeonInfo from './DungeonInfo';
+import ArenaInfo from './ArenaInfo';
+import RaidCompAndResult from './RaidCompAndResult';
 
 interface IProps {
   video: RendererVideo;
@@ -46,13 +46,10 @@ export default function VideoButton(props: IProps) {
   const { video } = props;
   const { isProtected, fullPath, imagePath } = video;
   const formattedDuration = getFormattedDuration(video);
-  const dungeonName = getDungeonName(video);
-  const resultText = getVideoResultText(video);
   const isMythicPlus = isMythicPlusUtil(video);
   const isRaid = isRaidUtil(video);
   const isBattleground = isBattlegroundUtil(video);
   const isArena = isArenaUtil(video);
-  const isSoloShuffle = isSoloShuffleUtil(video);
   const resultColor = getResultColor(video);
   const playerName = getPlayerName(video);
   const playerRealm = getPlayerRealm(video);
@@ -114,7 +111,6 @@ export default function VideoButton(props: IProps) {
           component="img"
           src={imagePath}
           sx={{
-            opacity: '70%',
             border: '1px solid black',
             borderRadius: '5px',
             boxSizing: 'border-box',
@@ -124,95 +120,6 @@ export default function VideoButton(props: IProps) {
             backgroundColor: 'black',
           }}
         />
-
-        <Box
-          sx={{
-            position: 'relative',
-            bottom: '100px',
-            width: '100%',
-            height: '100%',
-            flexDirection: 'column',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {isSoloShuffle && (
-            <Typography
-              align="center"
-              sx={{
-                color: 'white',
-                fontWeight: '600',
-                fontFamily: '"Arial",sans-serif',
-                fontSize: '1rem',
-                textShadow:
-                  '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-              }}
-            >
-              {resultText}
-            </Typography>
-          )}
-
-          {isMythicPlus && (
-            <>
-              <Typography
-                align="center"
-                sx={{
-                  color: 'white',
-                  fontWeight: '600',
-                  fontFamily: '"Arial",sans-serif',
-                  fontSize: '1rem',
-                  textShadow:
-                    '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-                }}
-              >
-                {resultText}
-              </Typography>
-              <Typography
-                align="center"
-                sx={{
-                  color: 'white',
-                  fontWeight: '600',
-                  fontFamily: '"Arial",sans-serif',
-                  fontSize: '1rem',
-                  textShadow:
-                    '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-                }}
-              >
-                {dungeonName}
-              </Typography>
-              <Typography
-                align="center"
-                sx={{
-                  color: '#ff8000',
-                  fontWeight: '600',
-                  fontFamily: '"Arial",sans-serif',
-                  fontSize: '1rem',
-                  textShadow:
-                    '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-                }}
-              >
-                +{video.level}
-              </Typography>
-            </>
-          )}
-
-          {!isSoloShuffle && !isMythicPlus && !isBattleground && (
-            <Typography
-              align="center"
-              sx={{
-                color: 'white',
-                fontWeight: '600',
-                fontFamily: '"Arial",sans-serif',
-                fontSize: '1rem',
-                textShadow:
-                  '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-              }}
-            >
-              {resultText}
-            </Typography>
-          )}
-        </Box>
       </Box>
 
       <Box
@@ -224,7 +131,7 @@ export default function VideoButton(props: IProps) {
           ml: 2,
           width: '100%',
           display: 'grid',
-          gridTemplateColumns: '15% 13% 25% 13% 13% 21%',
+          gridTemplateColumns: '15% 20% 20% 10% 10% 10% 15%',
           alignItems: 'center',
         }}
       >
@@ -276,11 +183,34 @@ export default function VideoButton(props: IProps) {
 
         <Box
           sx={{
+            gridColumnStart: 2,
+            gridColumnEnd: 3,
+          }}
+        >
+          {isArena && <ArenaInfo video={video} />}
+          {isMythicPlus && <DungeonInfo video={video} />}
+          {isRaid && <RaidEncounterInfo video={video} />}
+          {isBattleground && <BattlegroundInfo video={video} />}
+        </Box>
+
+        <Box
+          sx={{
+            gridColumnStart: 3,
+            gridColumnEnd: 4,
+          }}
+        >
+          {isArena && <ArenaCompDisplay video={video} />}
+          {isMythicPlus && <DungeonCompDisplay video={video} />}
+          {isRaid && <RaidCompAndResult video={video} />}
+        </Box>
+
+        <Box
+          sx={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gridColumnStart: 2,
-            gridColumnEnd: 3,
+            gridColumnStart: 4,
+            gridColumnEnd: 5,
           }}
         >
           <HourglassBottomIcon sx={{ color: 'white' }} />
@@ -299,23 +229,11 @@ export default function VideoButton(props: IProps) {
 
         <Box
           sx={{
-            gridColumnStart: 3,
-            gridColumnEnd: 4,
-          }}
-        >
-          {isArena && <ArenaCompDisplay video={video} />}
-          {isMythicPlus && <DungeonCompDisplay video={video} />}
-          {isRaid && <RaidEncounterInfo video={video} />}
-          {isBattleground && <BattlegroundInfo video={video} />}
-        </Box>
-
-        <Box
-          sx={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gridColumnStart: 4,
-            gridColumnEnd: 5,
+            gridColumnStart: 5,
+            gridColumnEnd: 6,
           }}
         >
           <AccessTimeIcon sx={{ color: 'white' }} />
@@ -337,8 +255,8 @@ export default function VideoButton(props: IProps) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gridColumnStart: 5,
-            gridColumnEnd: 6,
+            gridColumnStart: 6,
+            gridColumnEnd: 7,
           }}
         >
           <EventIcon sx={{ color: 'white' }} />
@@ -360,8 +278,9 @@ export default function VideoButton(props: IProps) {
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
-            gridColumnStart: 6,
-            gridColumnEnd: 7,
+            justifyContent: 'center',
+            gridColumnStart: 7,
+            gridColumnEnd: 8,
             p: 2,
           }}
         >
