@@ -719,6 +719,7 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
   2: 'Skittish',
   3: 'Volcanic',
   4: 'Necrotic',
+  5: 'Teeming',
   6: 'Raging',
   7: 'Bolstering',
   8: 'Sanguine',
@@ -728,19 +729,18 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
   12: 'Grievous',
   13: 'Explosive',
   14: 'Quaking',
-  122: 'Inspiring',
   117: 'Reaping',
-  124: 'Storming',
-  123: 'Spiteful',
-
-  // Seasonal
   120: 'Awakened',
-
-  // Seasonal, Shadowlands
-  121: 'Prideful', // Season 1
-  128: 'Tormented', // Season 2
-  130: 'Encrypted', // Season 3
-  131: 'Shrouded', // Season 4
+  121: 'Prideful', 
+  122: 'Inspiring',
+  123: 'Spiteful',
+  124: 'Storming',
+  128: 'Tormented', 
+  130: 'Encrypted', 
+  131: 'Shrouded',
+  134: 'Entangling',
+  135: 'Afflicted',
+  136: 'Incorporeal',
 };
 
 /**

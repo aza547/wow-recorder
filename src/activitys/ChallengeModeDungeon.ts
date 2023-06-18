@@ -21,11 +21,21 @@ export default class ChallengeModeDungeon extends Activity {
 
   private _timeline: ChallengeModeTimelineSegment[] = [];
 
-  constructor(startDate: Date, zoneID: number, mapID: number, level: number) {
+  private affixes: number[] = [];
+
+  constructor(
+    startDate: Date,
+    zoneID: number,
+    mapID: number,
+    level: number,
+    affixes: number[]
+  ) {
     super(startDate, VideoCategory.MythicPlus, Flavour.Retail);
     this._zoneID = zoneID;
     this._mapID = mapID;
     this._level = level;
+    this.affixes = affixes;
+
     this._timings = dungeonTimersByMapId[mapID];
     this.overrun = 5;
   }
@@ -183,6 +193,7 @@ export default class ChallengeModeDungeon extends Activity {
       flavour: this.flavour,
       overrun: this.overrun,
       combatants: rawCombatants,
+      affixes: this.affixes,
     };
   }
 

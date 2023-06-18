@@ -174,21 +174,22 @@ export default class RetailLogHandler extends LogHandler {
       }
     }
 
-    const zoneName = line.arg(2);
-    const mapId = parseInt(line.arg(3), 10);
-    const hasDungeonMap = mapId in dungeonsByMapId;
-    const hasTimersForDungeon = mapId in dungeonTimersByMapId;
+    const zoneName = line.arg(1);
+    const zoneID = parseInt(line.arg(2), 10);
+    const mapID = parseInt(line.arg(3), 10);
+    const hasDungeonMap = mapID in dungeonsByMapId;
+    const hasTimersForDungeon = mapID in dungeonTimersByMapId;
 
     if (!hasDungeonMap || !hasTimersForDungeon) {
       console.error(
-        `[RetailLogHandler] Invalid/unsupported mapId for Challenge Mode dungeon: ${mapId} ('${zoneName}')`
+        `[RetailLogHandler] Invalid/unsupported mapID for Challenge Mode dungeon: ${mapID} ('${zoneName}')`
       );
     }
 
     const startTime = line.date();
-    const zoneID = parseInt(line.arg(2), 10);
     const level = parseInt(line.arg(4), 10);
     const minLevelToRecord = this.cfg.get<number>('minKeystoneLevel');
+    const affixes = line.arg(5);
 
     if (level < minLevelToRecord) {
       console.info(
@@ -200,7 +201,14 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
-    this.activity = new ChallengeModeDungeon(startTime, zoneID, mapId, level);
+    this.activity = new ChallengeModeDungeon(
+      startTime,
+      zoneID,
+      mapID,
+      level,
+      affixes
+    );
+
     const challengeModeActivity = this.activity as ChallengeModeDungeon;
 
     challengeModeActivity.addTimelineSegment(
