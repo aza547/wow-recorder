@@ -109,10 +109,6 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  if (affixes === undefined || affixes.length < 1) {
-    return <></>;
-  }
-
   return (
     <Box
       sx={{
@@ -151,7 +147,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
             alignItems: 'flex-start',
           }}
         >
-          {affixes.map(renderAffixDisplay)}
+          {affixes && affixes.map(renderAffixDisplay)}
         </Box>
       </Box>
     </Box>
