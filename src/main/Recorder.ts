@@ -100,7 +100,7 @@ export default class Recorder {
   /**
    * Shiny new OSN API object for controlling OBS.
    */
-  private obsRecordingFactory: osn.IAdvancedRecording | undefined;
+  private obsRecordingFactory: osn.ISimpleRecording | undefined;
 
   /**
    * ConfigService instance.
@@ -371,58 +371,40 @@ export default class Recorder {
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
-    osn.VideoFactory.videoContext = {
+    const videoContext = osn.VideoFactory.create();
+    videoContext.video = {
       fpsNum: obsFPS,
       fpsDen: 1,
       baseWidth: width,
       baseHeight: height,
       outputWidth: width,
       outputHeight: height,
-      outputFormat: 2,
-      colorspace: 2,
-      range: 2,
-      scaleType: 3,
-      fpsType: 2,
+      outputFormat: 2, // NV12
+      colorspace: 2, // CS709
+      range: 2, // Partial
+      scaleType: 3, // Bilinear
+      fpsType: 2, // Fractional
     };
 
     if (this.obsRecordingFactory) {
-      osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
+      osn.SimpleRecordingFactory.destroy(this.obsRecordingFactory);
     }
 
-    this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
+    this.obsRecordingFactory = osn.SimpleRecordingFactory.create();
     this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
-
-    this.obsRecordingFactory.format = ERecordingFormat.MP4;
-    this.obsRecordingFactory.useStreamEncoders = false;
+    this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
     this.obsRecordingFactory.overwrite = false;
     this.obsRecordingFactory.noSpace = false;
+    this.obsRecordingFactory.quality = 2;
+    this.obsRecordingFactory.lowCPU = false;
+    this.obsRecordingFactory.video = videoContext;
 
-    // This function is defined here:
-    //   (client) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-client/source/video-encoder.cpp
-    //   (server) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-server/source/osn-video-encoder.cpp
-    //
-    // Ideally we'd pass the 3rd arg with all the settings, but it seems that
-    // hasn't been implemented so we instead call .update() shortly after.
     this.obsRecordingFactory.videoEncoder = osn.VideoEncoderFactory.create(
       obsRecEncoder,
-      'WR-video-encoder',
-      {}
+      'WR-video-encoder'
     );
 
-    this.obsRecordingFactory.videoEncoder.update({
-      rate_control: 'VBR',
-      bitrate: obsKBitRate * 1000,
-      max_bitrate: obsKBitRate * 1000,
-    });
-
-    // Not totally clear why AMF is a special case here. Theory is that as it
-    // is a plugin to OBS (it's a seperate github repo), and the likes of the
-    // nvenc/x264 encoders are native to OBS so have homogenized settings.
-    if (obsRecEncoder === ESupportedEncoders.AMD_AMF_H264) {
-      this.obsRecordingFactory.videoEncoder.update({
-        'Bitrate.Peak': obsKBitRate * 1000,
-      });
-    }
+    this.obsRecordingFactory.audioEncoder = osn.AudioEncoderFactory.create();
 
     console.info(
       'Video encoder settings:',
@@ -509,7 +491,7 @@ export default class Recorder {
       clearInterval(this.videoSourceSizeInterval);
     }
 
-    this.watchVideoSourceSize();
+    // this.watchVideoSourceSize();
 
     // Re-add the overlay so it doesnt end up underneath the game itself.
     const overlayCfg = getOverlayConfig(this.cfg);
@@ -779,7 +761,7 @@ export default class Recorder {
     osn.Global.setOutputSource(1, null as unknown as ISource);
 
     if (this.obsRecordingFactory) {
-      osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
+      osn.SimpleRecordingFactory.destroy(this.obsRecordingFactory);
     }
 
     this.wroteQueue.empty();

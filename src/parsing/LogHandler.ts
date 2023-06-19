@@ -120,9 +120,6 @@ export default abstract class LogHandler {
 
   protected handleUnitDiedLine(line: LogLine): void {
     if (!this.activity) {
-      console.info(
-        '[LogHandler] Ignoring UNIT_DIED line as no active activity'
-      );
       return;
     }
 

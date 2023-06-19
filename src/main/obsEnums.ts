@@ -111,8 +111,56 @@ export const enum ERecordingFormat {
 }
 
 export enum ESupportedEncoders {
-  AMD_AMF_H264 = 'amd_amf_h264',
-  FFMPEG_NVENC = 'ffmpeg_nvenc',
   JIM_NVENC = 'jim_nvenc',
   OBS_X264 = 'obs_x264',
+}
+
+export const enum EVideoFormat {
+  None,
+  I420,
+  NV12,
+  YVYU,
+  YUY2,
+  UYVY,
+  RGBA,
+  BGRA,
+  BGRX,
+  Y800,
+  I444,
+  BGR3,
+  I422,
+  I40A,
+  I42A,
+  YUVA,
+  AYUV,
+}
+
+export const enum EColorSpace {
+  Default,
+  CS601,
+  CS709,
+  CSSRGB,
+  CS2100PQ,
+  CS2100HLG,
+}
+
+export const enum ERangeType {
+  Default,
+  Partial,
+  Full,
+}
+
+export const enum EScaleType {
+  Disable,
+  Point,
+  Bicubic,
+  Bilinear,
+  Lanczos,
+  Area,
+}
+
+export const enum EFPSType {
+  Common,
+  Integer,
+  Fractional,
 }
