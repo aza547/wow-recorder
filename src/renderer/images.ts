@@ -44,4 +44,6 @@ const roleImages: StrImageObject = {
   damage: require('../../assets/roles/damage.png'),
 };
 
-export { specImages, affixImages, roleImages };
+const chestImage = require('../../assets/icon/chest.png');
+
+export { specImages, affixImages, roleImages, chestImage };

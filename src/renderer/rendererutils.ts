@@ -328,7 +328,7 @@ const getVideoResultText = (video: RendererVideo): string => {
       return '';
     }
 
-    return `+${upgradeLevel}`;
+    return String(upgradeLevel);
   }
 
   if (category === VideoCategory.MythicPlus && !result) {

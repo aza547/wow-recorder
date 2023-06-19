@@ -93,19 +93,38 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
 
   const renderDungeonResult = () => {
     return (
-      <Typography
-        align="center"
+      <Box
         sx={{
-          color: 'white',
-          fontWeight: '600',
-          fontFamily: '"Arial",sans-serif',
-          fontSize: '0.75rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        {resultText}
-      </Typography>
+        <Typography
+          align="center"
+          sx={{
+            color: 'white',
+            fontWeight: '600',
+            fontFamily: '"Arial",sans-serif',
+            fontSize: '0.75rem',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          {resultText}
+        </Typography>
+        <Box
+          key="chest-icon"
+          component="img"
+          src={Images.chestImage}
+          sx={{
+            height: '20px',
+            width: '20px',
+            objectFit: 'cover',
+          }}
+        />
+      </Box>
     );
   };
 
