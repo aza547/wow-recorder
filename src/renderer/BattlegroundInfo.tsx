@@ -27,7 +27,7 @@ const BattlegroundInfo: React.FC<IProps> = (props: IProps) => {
           color: 'white',
           fontFamily: '"Arial",sans-serif',
           fontWeight: 700,
-          fontSize: '1.5rem',
+          fontSize: '1rem',
           textShadow:
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
