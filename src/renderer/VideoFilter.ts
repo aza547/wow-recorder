@@ -1,4 +1,5 @@
 import {
+  dungeonAffixesById,
   dungeonsByZoneId,
   raidEncountersById,
   raidInstances,
@@ -224,6 +225,16 @@ export default class VideoFilter {
     if (this.video.level !== undefined) {
       this.addStringFilter(`+${this.video.level}`);
     }
+
+    if (this.video.affixes) {
+      this.video.affixes.forEach((affixID) => {
+        const affixName = dungeonAffixesById[affixID];
+
+        if (affixName) {
+          this.addStringFilter(affixName);
+        }
+      });
+    }
   }
 
   /**
@@ -277,7 +288,7 @@ export default class VideoFilter {
    */
   static getSuggestions(category: VideoCategory) {
     if (category === VideoCategory.MythicPlus) {
-      return 'Suggestions: timed temple yesterday +18 priest bookmarked';
+      return 'Suggestions: timed temple yesterday +18 priest bookmarked fortified';
     }
 
     if (category === VideoCategory.Raids) {
