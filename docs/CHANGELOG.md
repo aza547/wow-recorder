@@ -5,7 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+### Changed
+### Fixed
 
+## [3.14.0] - 2023-06-20
 ### Added
 - [Issue 423](https://github.com/aza547/wow-recorder/issues/423) - Add affixes and some other UI improvements.
 - [Issue 353](https://github.com/aza547/wow-recorder/issues/353) - Add overrun icon to the status indicator.

@@ -162,7 +162,9 @@ export default function RecorderStatus(props: IProps) {
     if (recorderStatus === RecStatus.Overruning) {
       return (
         <>
-          <Typography sx={{ color: '#bb4420', m: 1 }}>Overrunning</Typography>
+          <Typography sx={{ color: '#bb4420', m: 1 }}>
+            Over-running...
+          </Typography>
           <Typography sx={{ color: 'white', m: 1, fontSize: '0.75rem' }}>
             Warcraft Recorder has detected an activity has completed successfuly
             and is recording a few seconds extra to catch the aftermath.
