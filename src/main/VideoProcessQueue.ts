@@ -87,8 +87,7 @@ export default class VideoProcessQueue {
 
     if (isRaid) {
       const isLongEnough =
-        duration - data.metadata.overrun >=
-        this.cfg.get<number>('minEncounterDuration');
+        duration >= this.cfg.get<number>('minEncounterDuration');
 
       if (!isLongEnough) {
         console.info(

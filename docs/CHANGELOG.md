@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [Issue 423](https://github.com/aza547/wow-recorder/issues/423) - Add affixes and some other UI improvements.
+- [Issue 353](https://github.com/aza547/wow-recorder/issues/353) - Add overrun icon to the status indicator.
 
 ### Changed
-### Fixed
+- [NO-ISSUE] - Bump the version of OBS studio node to 0.23.82.
 
 ## [3.13.1] - 2023-06-04
 ### Changed

@@ -2,6 +2,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
+import MoreTimeIcon from '@mui/icons-material/MoreTime';
 import {
   Box,
   Button,
@@ -158,6 +159,18 @@ export default function RecorderStatus(props: IProps) {
       );
     }
 
+    if (recorderStatus === RecStatus.Overruning) {
+      return (
+        <>
+          <Typography sx={{ color: '#bb4420', m: 1 }}>Overrunning</Typography>
+          <Typography sx={{ color: 'white', m: 1, fontSize: '0.75rem' }}>
+            Warcraft Recorder has detected an activity has completed successfuly
+            and is recording a few seconds extra to catch the aftermath.
+          </Typography>
+        </>
+      );
+    }
+
     return (
       <>
         <Typography sx={{ color: 'white' }}>
@@ -182,6 +195,10 @@ export default function RecorderStatus(props: IProps) {
       return <VisibilityOffIcon sx={{ width: '25px', height: '25px' }} />;
     }
 
+    if (recorderStatus === RecStatus.Overruning) {
+      return <MoreTimeIcon sx={{ width: '25px', height: '25px' }} />;
+    }
+
     return <ReportProblemIcon sx={{ width: '25px', height: '25px' }} />;
   };
 
@@ -193,7 +210,10 @@ export default function RecorderStatus(props: IProps) {
       return 'red';
     }
 
-    if (recorderStatus === RecStatus.InvalidConfig) {
+    if (
+      recorderStatus === RecStatus.InvalidConfig ||
+      recorderStatus === RecStatus.Overruning
+    ) {
       return 'yellow';
     }
 

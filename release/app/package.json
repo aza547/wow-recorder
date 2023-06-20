@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "obs-studio-node": "https://wowrecorder.blob.core.windows.net/wowrecorder/osn-0.23.71-release-win64.tar.gz",
+    "obs-studio-node": "https://wowrecorder.blob.core.windows.net/wowrecorder/osn-0.23.82-release-win64.tar.gz",
     "atomic-queue": "^5.0.4"
   },
   "license": "MIT"

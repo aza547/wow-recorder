@@ -371,18 +371,20 @@ export default class Recorder {
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
-    osn.VideoFactory.videoContext = {
+    const videoContext = osn.VideoFactory.create();
+
+    videoContext.video = {
       fpsNum: obsFPS,
       fpsDen: 1,
       baseWidth: width,
       baseHeight: height,
       outputWidth: width,
       outputHeight: height,
-      outputFormat: 2,
-      colorspace: 2,
-      range: 2,
-      scaleType: 3,
-      fpsType: 2,
+      outputFormat: 2, // NV12
+      colorspace: 2, // CS709
+      range: 2, // Partial
+      scaleType: 3, // Bilinear
+      fpsType: 2, // Fractional
     };
 
     if (this.obsRecordingFactory) {
@@ -391,11 +393,11 @@ export default class Recorder {
 
     this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
     this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
-
-    this.obsRecordingFactory.format = ERecordingFormat.MP4;
+    this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
     this.obsRecordingFactory.useStreamEncoders = false;
     this.obsRecordingFactory.overwrite = false;
     this.obsRecordingFactory.noSpace = false;
+    this.obsRecordingFactory.video = videoContext;
 
     // This function is defined here:
     //   (client) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-client/source/video-encoder.cpp
@@ -932,6 +934,7 @@ export default class Recorder {
     console.info(`[Recorder] Stop recording after overrun: ${overrun}s`);
     const { promise, resolveHelper } = deferredPromiseHelper<void>();
     this.overrunPromise = promise;
+    this.updateStatusIcon(RecStatus.Overruning);
     this.isOverruning = true;
 
     // Await for the specified overrun.
