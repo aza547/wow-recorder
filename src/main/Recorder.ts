@@ -371,20 +371,18 @@ export default class Recorder {
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
-    const videoContext = osn.VideoFactory.create();
-
-    videoContext.video = {
+    osn.VideoFactory.videoContext = {
       fpsNum: obsFPS,
       fpsDen: 1,
       baseWidth: width,
       baseHeight: height,
       outputWidth: width,
       outputHeight: height,
-      outputFormat: 2, // NV12
-      colorspace: 2, // CS709
-      range: 2, // Partial
-      scaleType: 3, // Bilinear
-      fpsType: 2, // Fractional
+      outputFormat: 2,
+      colorspace: 2,
+      range: 2,
+      scaleType: 3,
+      fpsType: 2,
     };
 
     if (this.obsRecordingFactory) {
@@ -397,7 +395,6 @@ export default class Recorder {
     this.obsRecordingFactory.useStreamEncoders = false;
     this.obsRecordingFactory.overwrite = false;
     this.obsRecordingFactory.noSpace = false;
-    this.obsRecordingFactory.video = videoContext;
 
     // This function is defined here:
     //   (client) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-client/source/video-encoder.cpp
@@ -1393,5 +1390,7 @@ export default class Recorder {
       this.overlayImageSource,
       overlaySettings
     );
+
+    console.log(1);
   }
 }
