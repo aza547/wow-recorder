@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ## [3.14.1] - 2023-06-21
-### Foxed
+### Fixed
 - [NO-ISSUE] - Revert the version of OBS studio node to 0.23.71 as the upgrade cause a bug preventing the chat overlay from showing.
 
 ## [3.14.0] - 2023-06-20
