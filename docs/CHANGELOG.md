@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [3.14.2] - 2023-06-24
+### Added
+- [NO-ISSUE] - Add encounters for Trial of the Crusader classic. 
+
 ## [3.14.1] - 2023-06-21
 ### Fixed
 - [NO-ISSUE] - Revert the version of OBS studio node to 0.23.71 as the upgrade cause a bug preventing the chat overlay from showing.

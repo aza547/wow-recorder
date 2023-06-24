@@ -295,6 +295,17 @@ const encountersClassicUlduar: NumberKeyToStringValueMapType = {
   757: "Algalon",
 };
 
+/**
+ * WOTLK Classic TOC
+ */
+const encountersClassicTOC: NumberKeyToStringValueMapType = {
+  629: 'Northrend Beasts',
+  633: 'Lord Jaraxxus',
+  637: 'Faction Champions',
+  641: "Val'kyr Twins",
+  645: "Anub'arak",
+};
+
 const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersNathria,
   ...encountersSanctum,
@@ -306,6 +317,7 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
   ...encountersClassicObsidian,
   ...encountersClassicVault,
   ...encountersClassicUlduar,
+  ...encountersClassicTOC,
 };
 
 /**
@@ -374,7 +386,13 @@ const raidInstances: RaidInstanceType[] = [
     name: 'Ulduar',
     shortName: 'Ulduar',
     encounters: encountersClassicUlduar,
-  }
+  },
+  {
+    zoneId: 4722,
+    name: 'Trial of the Crusader',
+    shortName: 'ToC',
+    encounters: encountersClassicTOC,
+  },
 ];
 
 /**
