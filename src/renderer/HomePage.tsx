@@ -327,7 +327,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     <>
       {haveVideos && display === TDisplay.PLAYER && getVideoPanel()}
       {haveVideos && display === TDisplay.PREVIEW && getPreviewPanel()}
-      {getDisplayToggle()}
+      {haveVideos && getDisplayToggle()}
       {haveVideos && renderVideoCountText()}
       {haveVideos && renderRecentVideoList()}
       {!haveVideos && renderFirstTimeUserPrompt()}
