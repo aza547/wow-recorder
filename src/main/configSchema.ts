@@ -82,7 +82,7 @@ export const configSchema = {
     description:
       'Maximum allowed storage that the application will consume for video files. The oldest videos will be deleted one by one to remain under the limit. Recording will not stop. Set to 0 to signify unlimited.',
     type: 'integer',
-    default: 200,
+    default: 0,
     minimum: 0,
   },
   monitorIndex: {
