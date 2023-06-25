@@ -1,11 +1,7 @@
 import { Flavour, Metadata, RaidInstanceType } from 'main/types';
 
 import Combatant from 'main/Combatant';
-import {
-  instanceDifficulty,
-  raidEncountersById,
-  raidInstances,
-} from '../main/constants';
+import { instanceDifficulty, raidInstances } from '../main/constants';
 
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
@@ -18,15 +14,19 @@ export default class RaidEncounter extends Activity {
 
   private _encounterID: number;
 
+  private _encounterName: string;
+
   constructor(
     startDate: Date,
     encounterID: number,
+    encounterName: string,
     difficultyID: number,
     flavour: Flavour
   ) {
     super(startDate, VideoCategory.Raids, flavour);
     this._difficultyID = difficultyID;
     this._encounterID = encounterID;
+    this._encounterName = encounterName;
     this.overrun = 0;
   }
 
@@ -39,25 +39,12 @@ export default class RaidEncounter extends Activity {
   }
 
   get encounterName() {
-    if (!this.encounterID) {
-      throw new Error("EncounterID not set, can't get name of encounter");
-    }
-
-    const isRecognisedRaidEncounter = Object.prototype.hasOwnProperty.call(
-      raidEncountersById,
-      this.encounterID
-    );
-
-    if (isRecognisedRaidEncounter) {
-      return raidEncountersById[this.encounterID];
-    }
-
-    return 'Unknown Encounter';
+    return this._encounterName;
   }
 
   get zoneID(): number {
     if (!this.encounterID) {
-      throw new Error("EncounterID not set, can't get zone ID");
+      console.warn("[RaidEncounter] EncounterID not set, can't get zone ID");
     }
 
     let zoneID = 0;
@@ -75,10 +62,6 @@ export default class RaidEncounter extends Activity {
   }
 
   get raid(): RaidInstanceType {
-    if (!this.encounterID) {
-      throw new Error("EncounterID not set, can't get raid name");
-    }
-
     const raids = raidInstances.filter((raid) =>
       Object.prototype.hasOwnProperty.call(raid.encounters, this.encounterID)
     );
@@ -86,7 +69,16 @@ export default class RaidEncounter extends Activity {
     const raid = raids.pop();
 
     if (!raid) {
-      throw new Error('[RaidEncounter] No raids matched this encounterID.');
+      console.warn("Encounter not found in known raids, can't get raid name");
+
+      const unknownRaid: RaidInstanceType = {
+        zoneId: 0,
+        name: 'Unknown Raid',
+        shortName: 'Unknown Raid',
+        encounters: {},
+      };
+
+      return unknownRaid;
     }
 
     return raid;

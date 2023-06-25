@@ -26,7 +26,13 @@ const getCombatants = (n: number) => {
 
 test('Basic Raid Encounter', () => {
   const startDate = new Date('2022-12-25T12:00:00');
-  const raidEncounter = new RaidEncounter(startDate, 2607, 16, Flavour.Retail);
+  const raidEncounter = new RaidEncounter(
+    startDate,
+    2607,
+    'Raszageth',
+    16,
+    Flavour.Retail
+  );
   const testCombatants = getCombatants(20);
 
   testCombatants.forEach((c) => {

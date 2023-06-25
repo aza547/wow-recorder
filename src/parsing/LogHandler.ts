@@ -2,7 +2,7 @@ import { getSortedFiles } from '../main/util';
 import Combatant from '../main/Combatant';
 import CombatLogParser from './CombatLogParser';
 import ConfigService from '../main/ConfigService';
-import { raidInstances } from '../main/constants';
+import { instanceDifficulty } from '../main/constants';
 import Recorder from '../main/Recorder';
 import { Flavour, PlayerDeathType } from '../main/types';
 import Activity from '../activitys/Activity';
@@ -85,19 +85,29 @@ export default abstract class LogHandler {
     const startDate = line.date();
     const encounterID = parseInt(line.arg(1), 10);
     const difficultyID = parseInt(line.arg(3), 10);
+    const encounterName = line.arg(2);
 
-    const raids = raidInstances.filter((r) =>
-      Object.prototype.hasOwnProperty.call(r.encounters, encounterID)
+    const isRecognisedDifficulty = Object.prototype.hasOwnProperty.call(
+      instanceDifficulty,
+      difficultyID
     );
 
-    if (!raids.pop()) {
-      console.debug('[LogHandler] Encounter ID not recognised, not recording');
+    if (!isRecognisedDifficulty) {
+      throw new Error(`[LogHandler] Unknown difficulty ID: ${difficultyID}`);
+    }
+
+    const isRaidEncounter =
+      instanceDifficulty[difficultyID].partyType === 'raid';
+
+    if (!isRaidEncounter) {
+      console.debug('[LogHandler] Not a raid encounter, not recording');
       return;
     }
 
     this.activity = new RaidEncounter(
       startDate,
       encounterID,
+      encounterName,
       difficultyID,
       flavour
     );
@@ -120,9 +130,6 @@ export default abstract class LogHandler {
 
   protected handleUnitDiedLine(line: LogLine): void {
     if (!this.activity) {
-      console.info(
-        '[LogHandler] Ignoring UNIT_DIED line as no active activity'
-      );
       return;
     }
 

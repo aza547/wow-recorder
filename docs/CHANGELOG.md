@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- [Issue 407](https://github.com/aza547/wow-recorder/issues/407) - Record unrecognised encounters. This will enable WR to record legacy, beta and ptr raid bosses.
+
 ### Changed
 - [NO-ISSUE] - Improve home page aesthetics.
 
