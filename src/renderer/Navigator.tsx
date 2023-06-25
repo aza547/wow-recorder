@@ -104,6 +104,7 @@ const Navigator: React.FC<IProps> = (props: IProps) => {
       return {
         ...prevState,
         videoIndex: -1,
+        page: Pages.None,
       };
     });
   };

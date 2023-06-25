@@ -50,6 +50,7 @@ const VideoSourceControls: React.FC = () => {
 
     ipc.sendMessage('settingsChange', []);
   }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
+
   const setOBSCaptureMode = (
     _event: React.MouseEvent<HTMLElement>,
     mode: string
@@ -90,6 +91,7 @@ const VideoSourceControls: React.FC = () => {
       };
     });
   };
+
   const getToggleButton = (
     value: string | number,
     display: string | number

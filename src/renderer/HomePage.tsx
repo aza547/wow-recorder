@@ -4,6 +4,8 @@ import {
   List,
   ListItem,
   ListItemButton,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
@@ -27,11 +29,17 @@ interface IProps {
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
+enum TDisplay {
+  PLAYER,
+  PREVIEW,
+}
+
 const categories = Object.values(VideoCategory);
 
 const HomePage: React.FC<IProps> = (props: IProps) => {
   const { videoState, setNavigation, appState, setAppState } = props;
-  const [recentIndex, setRecentIndex] = React.useState<number>(0);
+  const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
+  const [display, setDisplay] = React.useState<TDisplay>(TDisplay.PLAYER);
   const { numVideosDisplayed } = appState;
   const numVideos = getNumVideos(videoState);
   const haveVideos = numVideos > 0;
@@ -98,7 +106,8 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
         page: Pages.None,
       });
     } else {
-      setRecentIndex(slicedVideos.indexOf(video));
+      setSelectedIndex(slicedVideos.indexOf(video));
+      setDisplay(TDisplay.PLAYER);
     }
   };
 
@@ -171,6 +180,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
                 sx={{ width: '100%' }}
               >
                 <ListItemButton
+                  selected={selectedIndex === slicedVideos.indexOf(video)}
                   onClick={() => handleSelectVideo(video, false)}
                   onDoubleClick={() => handleSelectVideo(video, true)}
                   sx={{ width: '100%' }}
@@ -235,50 +245,89 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
   const getVideoPanel = () => {
     return (
       <Box
-        id="video-panel"
         sx={{
           display: 'flex',
           height: '150%',
           width: '90%',
+          border: '2px solid black',
+          boxSizing: 'border-box',
           m: 2,
         }}
       >
-        <Box
-          sx={{
-            width: '50%',
-            height: '100%',
-            border: '2px solid black',
-            boxSizing: 'border-box',
-            ml: 2,
-            mr: 2,
-          }}
-        >
-          <VideoJS
-            id="video-player"
-            key={slicedVideos[recentIndex].fullPath}
-            video={slicedVideos[recentIndex]}
-            setAppState={setAppState}
-          />
-        </Box>
-        {appState.videoFullScreen || (
-          <Box
-            sx={{
-              width: '50%',
-              height: '100%',
-              ml: 2,
-              mr: 2,
-            }}
-          >
-            <RecorderPreview />
-          </Box>
-        )}
+        <VideoJS
+          id="video-player"
+          key={slicedVideos[selectedIndex].fullPath}
+          video={slicedVideos[selectedIndex]}
+          setAppState={setAppState}
+        />
       </Box>
+    );
+  };
+
+  const getPreviewPanel = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          height: '150%',
+          width: '90%',
+          border: '2px solid black',
+          boxSizing: 'border-box',
+          m: 2,
+        }}
+      >
+        <RecorderPreview />
+      </Box>
+    );
+  };
+
+  const getToggleButton = (value: TDisplay, text: string) => {
+    return (
+      <ToggleButton
+        value={value}
+        key={value}
+        sx={{
+          color: 'white',
+          height: '30px',
+          '&.Mui-selected, &.Mui-selected:hover': {
+            color: 'white',
+            backgroundColor: '#bb4420',
+          },
+        }}
+      >
+        {text}
+      </ToggleButton>
+    );
+  };
+
+  const setHomepageDisplay = (
+    _event: React.MouseEvent<HTMLElement>,
+    mode: TDisplay
+  ) => {
+    if (mode !== null) {
+      setDisplay(mode);
+    }
+  };
+
+  const getDisplayToggle = () => {
+    return (
+      <ToggleButtonGroup
+        value={display}
+        exclusive
+        onChange={setHomepageDisplay}
+        sx={{ border: '1px solid white', height: '40px' }}
+      >
+        {getToggleButton(TDisplay.PLAYER, 'Player')}
+        {getToggleButton(TDisplay.PREVIEW, 'Preview')}
+      </ToggleButtonGroup>
     );
   };
 
   return (
     <>
-      {haveVideos && getVideoPanel()}
+      {haveVideos && display === TDisplay.PLAYER && getVideoPanel()}
+      {haveVideos && display === TDisplay.PREVIEW && getPreviewPanel()}
+      {getDisplayToggle()}
       {haveVideos && renderVideoCountText()}
       {haveVideos && renderRecentVideoList()}
       {!haveVideos && renderFirstTimeUserPrompt()}
