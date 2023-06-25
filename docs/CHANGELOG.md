@@ -9,19 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 407](https://github.com/aza547/wow-recorder/issues/407) - Record unrecognised encounters. This will enable WR to record legacy, beta and ptr raid bosses.
 
 ### Changed
-- [NO-ISSUE] - Improve home page aesthetics.
+- Improve home page aesthetics.
 
 ### Fixed
-- [NO-ISSUE] - Fix category selection chip which would do nothing when used on the settings/scene editor pages.
-- [NO-ISSUE] - Default max storage to zero (unlimited) instead of 200GB.
+- Fix category selection chip which would do nothing when used on the settings/scene editor pages.
+- Default max storage to zero (unlimited) instead of 200GB.
 
 ## [3.14.2] - 2023-06-24
 ### Added
-- [NO-ISSUE] - Add encounters for Trial of the Crusader classic. 
+- Add encounters for Trial of the Crusader classic. 
 
 ## [3.14.1] - 2023-06-21
 ### Fixed
-- [NO-ISSUE] - Revert the version of OBS studio node to 0.23.71 as the upgrade cause a bug preventing the chat overlay from showing.
+- Revert the version of OBS studio node to 0.23.71 as the upgrade cause a bug preventing the chat overlay from showing.
 
 ## [3.14.0] - 2023-06-20
 ### Added
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 353](https://github.com/aza547/wow-recorder/issues/353) - Add overrun icon to the status indicator.
 
 ### Changed
-- [NO-ISSUE] - Bump the version of OBS studio node to 0.23.82.
+- Bump the version of OBS studio node to 0.23.82.
 
 ## [3.13.1] - 2023-06-04
 ### Changed
@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 417](https://github.com/aza547/wow-recorder/issues/417) - Fix a bug where sometimes recordings were missed.
-- [NO-ISSUE] - Split out the chat overlay settings from the game settings so it's more responsive.
+- Split out the chat overlay settings from the game settings so it's more responsive.
 - [Issue 418](https://github.com/aza547/wow-recorder/issues/418) - Improve the test button UX.
 - [Issue 419](https://github.com/aza547/wow-recorder/issues/419) - Fix some misnamed boss encounters.
 
@@ -72,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 46](https://github.com/aza547/wow-recorder/issues/46) - Add the ability to use a chat overlay.
 
 ### Changed
-- [NO-ISSUE] - Restyle some checkboxes in the settings as switches, for continuity. 
+- Restyle some checkboxes in the settings as switches, for continuity. 
 
 ### Fixed
 - [Issue 384](https://github.com/aza547/wow-recorder/issues/384) - Fix Balakar Khan encounter ID.
@@ -131,8 +131,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - [Issue 352](https://github.com/aza547/wow-recorder/issues/352) - Improvements to the home page aesthetics.
-- [NO-ISSUE] - Adjusted M+ markers to be based on segment duration.
-- [NO-ISSUE] - Adjusted M+ marker mouseover tips to be boss names instead of just 'Boss'.
+- Adjusted M+ markers to be based on segment duration.
+- Adjusted M+ marker mouseover tips to be boss names instead of just 'Boss'.
 
 ### Fixed
 - [NO-ISSUE] Fixed a bug where the app would sometimes crash on selecting a category with no videos.
@@ -145,7 +145,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 350](https://github.com/aza547/wow-recorder/issues/350) - Fix a bug where videos could be cut wrongly after using the stop recording button.
-- [NO-ISSUE] - Corrected first boss name in Court of Stars.
+- Corrected first boss name in Court of Stars.
 - [Issue 144](https://github.com/aza547/wow-recorder/issues/144) - Hide markers for some categories/flavours.
 
 ## [3.7.0] - 2023-03-24
@@ -216,7 +216,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.3.3] - 2023-01-14
 ### Fixed
-- [NO-ISSUE] - Fix a bug where we didn't respect the overrun.
+- Fix a bug where we didn't respect the overrun.
 - [Issue 279](https://github.com/aza547/wow-recorder/issues/279) - Improve signalling robustness.
 - [Issue 276](https://github.com/aza547/wow-recorder/issues/276) - Reconfiguring settings doesn't result in a blank screen with game capture.
 - [Issue 280](https://github.com/aza547/wow-recorder/issues/280) - Handle unplugged audio devices better in the config.
@@ -236,7 +236,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 245](https://github.com/aza547/wow-recorder/issues/245) - Ability to pick and chose any combination of audio devices to record.
 
 ### Changed
-- [NO-ISSUE] - Upgrade obs-studio-node to 0.23.59. 
+- Upgrade obs-studio-node to 0.23.59. 
 
 ### Fixed
 - [Issue 264](https://github.com/aza547/wow-recorder/issues/264) - Attempt to fix some permissions problems on Windows 11.
@@ -257,22 +257,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 282](https://github.com/aza547/wow-recorder/issues/282) - Added config toggle switch to force input audio to mono.
 
 ### Changed
-- [NO-ISSUE] - Autoplay videos on selection.
-- [NO-ISSUE] - Display errors in a neater manner with suggestions on how to get help.
-- [NO-ISSUE] - Improve clipping of classic arenas to skip waiting room.
+- Autoplay videos on selection.
+- Display errors in a neater manner with suggestions on how to get help.
+- Improve clipping of classic arenas to skip waiting room.
 
 ### Fixed
-- [NO-ISSUE] - Fix a bug where closing wow didn't stop the recorder if mid activity.
-- [NO-ISSUE] - Fix a problem when saving videos to NFS mounts. 
+- Fix a bug where closing wow didn't stop the recorder if mid activity.
+- Fix a problem when saving videos to NFS mounts. 
 - [Issue 187](https://github.com/aza547/wow-recorder/issues/187) - Add Dragonflight M+ timings.
 
 ## [3.1.1] - 2022-12-09
 ### Fixed
 - [Issue 239](https://github.com/aza547/wow-recorder/issues/239) - Fix app crashing when WoW closes if both log paths (retail and classic) are not configured. 
 - [Issue 238](https://github.com/aza547/wow-recorder/issues/238) - Don't crash on unrecognised video category, just don't record.
-- [NO-ISSUE] - Fix to log watching to make the UI more responsive.
-- [NO-ISSUE] - Fix Nokhun Proving Grounds image and shorten name.
-- [NO-ISSUE] - Update video poster to look better.
+- Fix to log watching to make the UI more responsive.
+- Fix Nokhun Proving Grounds image and shorten name.
+- Update video poster to look better.
 
 ## [3.1.0] - 2022-12-03
 ### Added
@@ -286,16 +286,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 235](https://github.com/aza547/wow-recorder/issues/235) - Fix a bug where abandoned M+ runs caused the app to crash. 
 - [Issue 229](https://github.com/aza547/wow-recorder/issues/229) - Fix a bug where the test button didn't work without a retail log path configured.
-- [NO-ISSUE] - Fix a bug where closing WoW while in an activity could crash the app.
+- Fix a bug where closing WoW while in an activity could crash the app.
 
 ## [3.0.3] - 2022-11-24
 ### Fixed
-- [NO-ISSUE] - Fix a bug where overrun isn't working as intended. Broke this in 3.0.1.
+- Fix a bug where overrun isn't working as intended. Broke this in 3.0.1.
 
 ## [3.0.2] - 2022-11-20
 ### Fixed
-- [NO-ISSUE] - Fix a bug where videos were sometimes cut to wrong sizes.
-- [NO-ISSUE] - Fix a bug where Evoker class color wasn't displayed in the UI. 
+- Fix a bug where videos were sometimes cut to wrong sizes.
+- Fix a bug where Evoker class color wasn't displayed in the UI. 
 
 ## [3.0.1] - 2022-11-14
 ### Changed
@@ -309,9 +309,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [Issue 50](https://github.com/aza547/wow-recorder/issues/50) - Classic arena and battleground support. 
-- [NO-ISSUE] - Functionality to have a good estimate at if a battleground is a win or loss.
-- [NO-ISSUE] - Spec detection for all categories that lacked it. 
-- [NO-ISSUE] - Initial Evoker class handling in preperation for Dragonflight.
+- Functionality to have a good estimate at if a battleground is a win or loss.
+- Spec detection for all categories that lacked it. 
+- Initial Evoker class handling in preperation for Dragonflight.
 
 ### Changed
 - [Issue 224](https://github.com/aza547/wow-recorder/issues/224) - Improve main window styling. Bbreaks backwards compatbility with previously recorded videos.
