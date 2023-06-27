@@ -73,6 +73,12 @@ export default class Battleground extends Activity {
 
   getFileName(): string {
     const resultText = this.estimateResult() ? 'Win' : 'Loss';
-    return `${this.battlegroundName} (${resultText})`;
+    let fileName = `${this.battlegroundName} (${resultText})`;
+
+    if (this.player.name !== undefined) {
+      fileName = `${this.player.name} - ${fileName}`;
+    }
+
+    return fileName;
   }
 }

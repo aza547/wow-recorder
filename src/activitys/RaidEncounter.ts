@@ -144,6 +144,12 @@ export default class RaidEncounter extends Activity {
   }
 
   getFileName(): string {
-    return `${this.raid.name}, ${this.encounterName} [${this.difficulty.difficulty}] (${this.resultInfo})`;
+    let fileName = `${this.raid.name}, ${this.encounterName} [${this.difficulty.difficulty}] (${this.resultInfo})`;
+
+    if (this.player.name !== undefined) {
+      fileName = `${this.player.name} - ${fileName}`;
+    }
+
+    return fileName;
   }
 }

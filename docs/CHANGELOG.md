@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Improve home page aesthetics.
+- [Issue 427](https://github.com/aza547/wow-recorder/issues/427) - Include the player name in the video file name.
 
 ### Fixed
 - Fix category selection chip which would do nothing when used on the settings/scene editor pages.

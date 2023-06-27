@@ -204,6 +204,12 @@ export default class SoloShuffle extends Activity {
   }
 
   getFileName() {
-    return `${this.category} ${this.zoneName} (${this.resultInfo})`;
+    let fileName = `${this.category} ${this.zoneName} (${this.resultInfo})`;
+
+    if (this.player.name !== undefined) {
+      fileName = `${this.player.name} - ${fileName}`;
+    }
+
+    return fileName;
   }
 }

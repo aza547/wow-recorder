@@ -198,6 +198,12 @@ export default class ChallengeModeDungeon extends Activity {
   }
 
   getFileName(): string {
-    return `${this.dungeonName} +${this.level} (${this.resultInfo})`;
+    let fileName = `${this.dungeonName} +${this.level} (${this.resultInfo})`;
+
+    if (this.player.name !== undefined) {
+      fileName = `${this.player.name} - ${fileName}`;
+    }
+
+    return fileName;
   }
 }
