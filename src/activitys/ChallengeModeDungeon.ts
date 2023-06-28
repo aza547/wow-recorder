@@ -200,8 +200,12 @@ export default class ChallengeModeDungeon extends Activity {
   getFileName(): string {
     let fileName = `${this.dungeonName} +${this.level} (${this.resultInfo})`;
 
-    if (this.player.name !== undefined) {
-      fileName = `${this.player.name} - ${fileName}`;
+    try {
+      if (this.player.name !== undefined) {
+        fileName = `${this.player.name} - ${fileName}`;
+      }
+    } catch {
+      console.warn('[ChallengeModeDungeon] Failed to get player combatant');
     }
 
     return fileName;

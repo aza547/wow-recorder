@@ -75,8 +75,12 @@ export default class Battleground extends Activity {
     const resultText = this.estimateResult() ? 'Win' : 'Loss';
     let fileName = `${this.battlegroundName} (${resultText})`;
 
-    if (this.player.name !== undefined) {
-      fileName = `${this.player.name} - ${fileName}`;
+    try {
+      if (this.player.name !== undefined) {
+        fileName = `${this.player.name} - ${fileName}`;
+      }
+    } catch {
+      console.warn('[Battleground] Failed to get player combatant');
     }
 
     return fileName;

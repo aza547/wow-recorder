@@ -92,8 +92,12 @@ export default class ArenaMatch extends Activity {
   getFileName() {
     let fileName = `${this.category} ${this.zoneName} (${this.resultInfo})`;
 
-    if (this.player.name !== undefined) {
-      fileName = `${this.player.name} - ${fileName}`;
+    try {
+      if (this.player.name !== undefined) {
+        fileName = `${this.player.name} - ${fileName}`;
+      }
+    } catch {
+      console.warn('[ArenaMatch] Failed to get player combatant');
     }
 
     return fileName;
