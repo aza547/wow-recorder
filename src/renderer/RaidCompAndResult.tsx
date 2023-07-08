@@ -7,6 +7,7 @@ import * as Images from './images';
 
 interface IProps {
   video: RendererVideo;
+  raidCategoryState: RendererVideo[];
 }
 
 type RoleCount = {
@@ -16,7 +17,7 @@ type RoleCount = {
 };
 
 const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
-  const { video } = props;
+  const { video, raidCategoryState } = props;
   const { combatants } = video;
   const resultText = getVideoResultText(video);
 
@@ -42,6 +43,49 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
     const { role } = spec;
     roleCount[role]++;
   });
+
+  const getDailyPullNumber = () => {
+    const videoDate = new Date(video.mtime);
+
+    const dailyVideosInOrder: RendererVideo[] = [];
+
+    raidCategoryState.forEach((neighbourVideo) => {
+      const neighbourDate = new Date(neighbourVideo.mtime);
+
+      const sameDay =
+        neighbourDate.getDate() === videoDate.getDate() &&
+        neighbourDate.getMonth() === videoDate.getMonth() &&
+        neighbourDate.getFullYear() === videoDate.getFullYear();
+
+      if (
+        video.encounterID === undefined ||
+        neighbourVideo.encounterID === undefined
+      ) {
+        return;
+      }
+
+      const sameEncounter = video.encounterID === neighbourVideo.encounterID;
+
+      if (
+        video.difficultyID === undefined ||
+        neighbourVideo.difficultyID === undefined
+      ) {
+        return;
+      }
+
+      const sameDifficulty = video.difficultyID === neighbourVideo.difficultyID;
+
+      if (sameDay && sameEncounter && sameDifficulty) {
+        dailyVideosInOrder.push(neighbourVideo);
+      }
+    });
+
+    dailyVideosInOrder.sort(
+      (A: RendererVideo, B: RendererVideo) => A.mtime - B.mtime
+    );
+
+    return dailyVideosInOrder.indexOf(video) + 1;
+  };
 
   const renderCounter = (role: string) => {
     return (
@@ -112,7 +156,7 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        {resultText}
+        {`${resultText} (${getDailyPullNumber()})`}
       </Typography>
     );
   };

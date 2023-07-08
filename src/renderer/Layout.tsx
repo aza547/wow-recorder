@@ -260,7 +260,11 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                       handleChangeVideo(categoryState.indexOf(video))
                     }
                   >
-                    <VideoButton key={video.fullPath} video={video} />
+                    <VideoButton
+                      key={video.fullPath}
+                      video={video}
+                      categoryState={categoryState}
+                    />
                   </ListItemButton>
                 </ListItem>
               );

@@ -40,10 +40,11 @@ import RaidCompAndResult from './RaidCompAndResult';
 
 interface IProps {
   video: RendererVideo;
+  categoryState: RendererVideo[];
 }
 
 export default function VideoButton(props: IProps) {
-  const { video } = props;
+  const { video, categoryState } = props;
   const { isProtected, fullPath, imagePath } = video;
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
@@ -201,7 +202,12 @@ export default function VideoButton(props: IProps) {
         >
           {isArena && <ArenaCompDisplay video={video} />}
           {isMythicPlus && <DungeonCompDisplay video={video} />}
-          {isRaid && <RaidCompAndResult video={video} />}
+          {isRaid && (
+            <RaidCompAndResult
+              video={video}
+              raidCategoryState={categoryState}
+            />
+          )}
         </Box>
 
         <Box

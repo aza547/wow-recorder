@@ -44,6 +44,7 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
   const numVideos = getNumVideos(videoState);
   const haveVideos = numVideos > 0;
   const recentVideos = getSortedVideos(videoState);
+  const raidCategoryState = videoState[VideoCategory.Raids];
   const slicedVideos = recentVideos.slice(0, numVideosDisplayed);
   const moreVideosRemain = slicedVideos.length !== recentVideos.length;
 
@@ -185,7 +186,11 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
                   onDoubleClick={() => handleSelectVideo(video, true)}
                   sx={{ width: '100%' }}
                 >
-                  <VideoButton key={video.fullPath} video={video} />
+                  <VideoButton
+                    key={video.fullPath}
+                    video={video}
+                    categoryState={raidCategoryState}
+                  />
                 </ListItemButton>
               </ListItem>
             );
