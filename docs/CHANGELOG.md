@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+### Fixed
+
+## [3.15.0] - 2023-07-08
+### Added
 - [Issue 407](https://github.com/aza547/wow-recorder/issues/407) - Record unrecognised encounters. This will enable WR to record legacy, beta and ptr raid bosses.
 - [Issue 428](https://github.com/aza547/wow-recorder/issues/428) - Add a daily pull counter to raid video buttons.
 
