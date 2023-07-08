@@ -151,12 +151,12 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
           color: 'white',
           fontWeight: '600',
           fontFamily: '"Arial",sans-serif',
-          fontSize: '1.5rem',
+          fontSize: '1rem',
           textShadow:
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        {`${resultText} (${getDailyPullNumber()})`}
+        {`${resultText} (Pull ${getDailyPullNumber()})`}
       </Typography>
     );
   };
