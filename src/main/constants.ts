@@ -721,7 +721,6 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1041: "Altairus",
   1042: "Asaad, Caliph of Zephyrs",
   1043: "Grand Vizier Ertan",
-
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
