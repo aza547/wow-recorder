@@ -973,6 +973,13 @@ const specializationById: { [id: number]: SpecializationObjectType } = {
     label: 'Evoker',
     name: 'Preservation',
   },
+  1473: {
+    type: 'ranged',
+    role: 'damage',
+    class: 'EVOKER',
+    label: 'Evoker',
+    name: 'Augmentation',
+  },
   253: {
     type: 'ranged',
     role: 'damage',
@@ -1179,6 +1186,7 @@ const retailUniqueSpecSpells: StringKeyToNumberValueMapType = {
   Lifebloom: 105,
   Pyre: 1467,
   Echo: 1468,
+  'Ebon Might': 1473,
   'Cobra Shot': 253,
   'Aimed Shot': 254,
   'Raptor Strike': 255,
