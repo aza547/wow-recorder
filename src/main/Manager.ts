@@ -1,4 +1,4 @@
-import { BrowserWindow, app, ipcMain } from 'electron';
+import { BrowserWindow, app, ipcMain, powerMonitor } from 'electron';
 import { isEqual } from 'lodash';
 import path from 'path';
 import fs from 'fs';
@@ -284,7 +284,7 @@ export default class Manager {
    * the audio sources and starts the buffer recording.
    */
   private async onWowStarted() {
-    console.info('[Manager] Detected WoW running');
+    console.info('[Manager] Detected WoW running, or Windows active again');
     const config = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(config);
     await this.recorder.startBuffer();
@@ -296,7 +296,7 @@ export default class Manager {
    * allow Windows to go to sleep with WR running.
    */
   private async onWowStopped() {
-    console.info('[Manager] Detected WoW not running');
+    console.info('[Manager] Detected WoW not running, or Windows going inactive');
 
     if (
       this.recorder &&
@@ -544,12 +544,25 @@ export default class Manager {
     });
 
 
-  // Important we shutdown OBS on the before-quit event as if we get closed by
-  // the installer we want to ensure we shutdown OBS, this is common when
-  // upgrading the app. See issue 325 and 338.
-  app.on('before-quit', () => {
-    console.info('[Manager] Running before-quit actions');
-    this.recorder.shutdownOBS();
-  });
+    // Important we shutdown OBS on the before-quit event as if we get closed by
+    // the installer we want to ensure we shutdown OBS, this is common when
+    // upgrading the app. See issue 325 and 338.
+    app.on('before-quit', () => {
+      console.info('[Manager] Running before-quit actions');
+      this.recorder.shutdownOBS();
+    });
+
+    // If Windows is going to sleep, we don't want to confuse OBS.
+    // Stop the recording as if WoW has been closed, and resume it once Windows
+    // has resumed. 
+    powerMonitor.on('suspend', () => {
+      console.info('[Manager] Detected Windows is going to sleep.');
+      this.onWowStopped();
+    });
+
+    powerMonitor.on('resume', () => {
+      console.log('[Manager] Detected Windows waking up from a sleep.');
+      this.poller.start();
+    });
   }
 }
