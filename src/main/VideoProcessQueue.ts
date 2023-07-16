@@ -54,23 +54,15 @@ export default class VideoProcessQueue {
     filename: string,
     relativeStart: number
   ) => {
-    // It's a bit hacky that we async wait for 2 seconds for OBS to
-    // finish up with the video file. Maybe this can be done better.
-    setTimeout(async () => {
-      const queueItem: VideoQueueItem = {
-        bufferFile,
-        metadata,
-        filename,
-        relativeStart,
-      };
+    const queueItem: VideoQueueItem = {
+      bufferFile,
+      metadata,
+      filename,
+      relativeStart,
+    };
 
-      console.log(
-        '[VideoProcessQueue] Queuing video for processing',
-        queueItem
-      );
-
-      this.videoQueue.write(queueItem);
-    }, 2000);
+    console.log('[VideoProcessQueue] Queuing video for processing', queueItem);
+    this.videoQueue.write(queueItem);
   };
 
   private async processVideoQueueItem(
