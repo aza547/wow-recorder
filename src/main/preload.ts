@@ -17,7 +17,8 @@ export type Channels =
   | 'getEncoders'
   | 'selectPath'
   | 'settingsChange'
-  | 'overlay';
+  | 'overlay'
+  | 'remux';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

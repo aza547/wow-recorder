@@ -543,6 +543,13 @@ export default class Manager {
       this.manage();
     });
 
+        // 
+        ipcMain.on('remux', (_event, args) => {
+          if (this.recorder) {
+            this.recorder.remux();
+          }
+        });
+
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
     // the installer we want to ensure we shutdown OBS, this is common when

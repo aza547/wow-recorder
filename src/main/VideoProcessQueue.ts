@@ -54,23 +54,15 @@ export default class VideoProcessQueue {
     filename: string,
     relativeStart: number
   ) => {
-    // It's a bit hacky that we async wait for 2 seconds for OBS to
-    // finish up with the video file. Maybe this can be done better.
-    setTimeout(async () => {
-      const queueItem: VideoQueueItem = {
-        bufferFile,
-        metadata,
-        filename,
-        relativeStart,
-      };
+    const queueItem: VideoQueueItem = {
+      bufferFile,
+      metadata,
+      filename,
+      relativeStart,
+    };
 
-      console.log(
-        '[VideoProcessQueue] Queuing video for processing',
-        queueItem
-      );
-
-      this.videoQueue.write(queueItem);
-    }, 2000);
+    console.log('[VideoProcessQueue] Queuing video for processing', queueItem);
+    this.videoQueue.write(queueItem);
   };
 
   private async processVideoQueueItem(
@@ -274,5 +266,23 @@ export default class VideoProcessQueue {
           filename: thumbnailFile,
         });
     });
+  }
+
+  public static remux(file: string) {
+    ffmpeg(file)
+      .outputOptions([
+        '-map 0',
+        '-c:v copy',
+        '-c:a copy',
+        '-avoid_negative_ts make_zero',
+      ])
+      .output('D:/warcraft-recorder-files/ahk/out2.mp4')
+      .on('start', () => {
+        console.log('Started ffmpeg');
+      })
+      .on('end', () => {
+        console.log('End ffmpeg');
+      })
+      .run();
   }
 }

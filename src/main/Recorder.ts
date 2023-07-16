@@ -46,6 +46,14 @@ import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
 
+const ffmpeg = require('fluent-ffmpeg');
+
+const ffmpegPath = fixPathWhenPackaged(
+  require('@ffmpeg-installer/ffmpeg').path
+);
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+
 const { v4: uuidfn } = require('uuid');
 
 /**
@@ -391,7 +399,7 @@ export default class Recorder {
 
     this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
     this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
-    this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
+    this.obsRecordingFactory.format = 'mkv' as osn.ERecordingFormat;
     this.obsRecordingFactory.useStreamEncoders = false;
     this.obsRecordingFactory.overwrite = false;
     this.obsRecordingFactory.noSpace = false;
@@ -1392,5 +1400,15 @@ export default class Recorder {
     );
 
     console.log(1);
+  }
+
+  public remux() {
+    if (this.obsRecordingFactory === undefined) {
+      return;
+    }
+
+    const file = this.obsRecordingFactory.lastFile();
+
+    
   }
 }

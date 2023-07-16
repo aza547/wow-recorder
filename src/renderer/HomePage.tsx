@@ -328,12 +328,21 @@ const HomePage: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const remux = (event: React.SyntheticEvent) => {
+    window.electron.ipcRenderer.sendMessage('remux', []);
+  };
+
+  const remuxButton = () => {
+    return <Button onClick={remux}>Click me</Button>;
+  };
+
   return (
     <>
       {haveVideos && display === TDisplay.PLAYER && getVideoPanel()}
       {haveVideos && display === TDisplay.PREVIEW && getPreviewPanel()}
       {haveVideos && getDisplayToggle()}
       {haveVideos && renderVideoCountText()}
+      {remuxButton()}
       {haveVideos && renderRecentVideoList()}
       {!haveVideos && renderFirstTimeUserPrompt()}
     </>
