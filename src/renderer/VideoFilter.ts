@@ -288,21 +288,21 @@ export default class VideoFilter {
    */
   static getSuggestions(category: VideoCategory) {
     if (category === VideoCategory.MythicPlus) {
-      return 'Suggestions: timed temple yesterday +18 priest bookmarked fortified';
+      return 'Search suggestions: timed temple yesterday +18 priest bookmarked fortified';
     }
 
     if (category === VideoCategory.Raids) {
-      return 'Suggestions: kill today mythic destruction bookmarked';
+      return 'Search suggestions: kill today mythic destruction bookmarked';
     }
 
     if (category === VideoCategory.Battlegrounds) {
-      return 'Suggestions: warsong gulch bookmarked';
+      return 'Search suggestions: warsong gulch bookmarked';
     }
 
     if (category === VideoCategory.SoloShuffle) {
-      return 'Suggestions: dalaran 6-0 bookmarked';
+      return 'Search suggestions: dalaran 6-0 bookmarked';
     }
 
-    return 'Suggestions: win enigma crucible arcane bookmarked';
+    return 'Search suggestions: win enigma crucible arcane bookmarked';
   }
 }

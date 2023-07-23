@@ -77,7 +77,8 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100% - 70px)',
+        height: '100%',
+        width: '100%',
         overflowY: 'scroll',
         scrollbarWidth: 'thin',
         '&::-webkit-scrollbar': {

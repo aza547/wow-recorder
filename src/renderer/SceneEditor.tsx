@@ -32,7 +32,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          height: '40%',
+          height: '50%',
           overflowY: 'scroll',
           scrollbarWidth: 'thin',
           '&::-webkit-scrollbar': {

@@ -12,16 +12,28 @@ import {
   List,
   ListItem,
   ListItemButton,
+  Tab,
+  Tabs,
   TextField,
+  Typography,
 } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
+import TvIcon from '@mui/icons-material/Tv';
 import { VideoJS } from './VideoJS';
 import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
-import HomePage from './HomePage';
 import VideoFilter from './VideoFilter';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
+import RaidIcon from '../../assets/icon/dragon.png';
+import TwoPeopleIcon from '../../assets/icon/two-people.png';
+import ThreePeopleIcon from '../../assets/icon/three-people.png';
+import FivePeopleIcon from '../../assets/icon/five-people.png';
+import SwordIcon from '../../assets/icon/swords.png';
+import DaggerIcon from '../../assets/icon/dagger.png';
+import DungeonIcon from '../../assets/icon/dungeon.png';
+import FlagIcon from '../../assets/icon/flag.png';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -52,6 +64,20 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const { numVideosDisplayed, videoFilterQuery } = appState;
   const categories = Object.values(VideoCategory);
   const category = categories[categoryIndex];
+
+  const categoryState = videoState[category];
+
+  const filteredCategoryState = categoryState.filter((video) =>
+    new VideoFilter(videoFilterQuery, video).filter()
+  );
+
+  const slicedCategoryState = filteredCategoryState.slice(
+    0,
+    numVideosDisplayed
+  );
+
+  const moreVideosRemain =
+    slicedCategoryState.length !== filteredCategoryState.length;
 
   /**
    * Update state variables following a change of selected video.
@@ -114,40 +140,20 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     }, 750);
   };
 
-  /**
-   * Returns a video panel with videos.
-   */
   const getVideoPanel = () => {
-    const video = videoState[category][videoIndex];
-    const videoFullPath = video.fullPath;
-    return (
-      <Box sx={{ display: 'flex', height: '100%' }}>
-        <VideoJS
-          id="video-player"
-          key={videoFullPath}
-          video={video}
-          setAppState={setAppState}
-        />
-      </Box>
-    );
-  };
-
-  const getHomePage = () => {
     return (
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          height: 'calc(100% - 70px)',
+          height: '60%',
           width: '100%',
         }}
       >
-        <HomePage
-          videoState={videoState}
-          appState={appState}
+        <VideoJS
+          id="video-player"
+          key={categoryState[videoIndex].fullPath}
+          video={categoryState[videoIndex]}
           setAppState={setAppState}
-          setNavigation={setNavigation}
         />
       </Box>
     );
@@ -186,29 +192,16 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const getVideoSelection = () => {
-    const categoryState = videoState[category];
-
-    const filteredCategoryState = categoryState.filter((video) =>
-      new VideoFilter(videoFilterQuery, video).filter()
-    );
-
-    const slicedCategoryState = filteredCategoryState.slice(
-      0,
-      numVideosDisplayed
-    );
-
-    const moreVideosRemain =
-      slicedCategoryState.length !== filteredCategoryState.length;
-
     return (
       <>
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            overflowY: 'scroll',
-            height: '100%',
             width: '100%',
+            height: '50%',
+            overflowY: 'scroll',
+            display: 'flex',
+            alignContent: 'center',
+            justifyContent: 'center',
             scrollbarWidth: 'thin',
             '&::-webkit-scrollbar': {
               width: '1em',
@@ -235,7 +228,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '&.Mui-focused fieldset': { borderColor: '#bb4220' },
-                    '& > fieldset': { borderColor: 'darkgrey' },
+                    '& > fieldset': { borderColor: 'white' },
                     '&:hover fieldset': {
                       borderColor: '#bb4220',
                     },
@@ -256,6 +249,9 @@ const Layout: React.FC<IProps> = (props: IProps) => {
                   sx={{ width: '100%' }}
                 >
                   <ListItemButton
+                    selected={
+                      navigation.videoIndex === categoryState.indexOf(video)
+                    }
                     onClick={() =>
                       handleChangeVideo(categoryState.indexOf(video))
                     }
@@ -276,31 +272,247 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const getSceneEditor = () => {
-    return <SceneEditor recorderStatus={recorderStatus} />;
+  const handleChangeCategory = (
+    _event: React.SyntheticEvent,
+    newCategory: VideoCategory
+  ) => {
+    setNavigation({
+      page: Pages.None,
+      categoryIndex: categories.indexOf(newCategory),
+      videoIndex: 0,
+    });
   };
 
-  const getSettingsPage = () => {
+  const handleChangePage = (_event: React.SyntheticEvent, newPage: Pages) => {
+    setNavigation({
+      page: newPage,
+      categoryIndex: 0,
+      videoIndex: 0,
+    });
+  };
+
+  const renderCategoryTab = (tabCategory: VideoCategory, tabIcon: string) => {
+    return (
+      <Tab
+        value={tabCategory}
+        icon={<img src={tabIcon} alt="raid" width="30" height="30" />}
+        sx={{
+          color: 'white',
+        }}
+        label={tabCategory}
+      />
+    );
+  };
+
+  const renderMiscTab = (tabPage: Pages) => {
+    if (tabPage === Pages.Settings) {
+      return (
+        <Tab
+          value={tabPage}
+          icon={<SettingsIcon width="30" height="30" />}
+          sx={{
+            color: 'white',
+          }}
+          label="Settings"
+        />
+      );
+    }
+
+    if (tabPage === Pages.SceneEditor) {
+      return (
+        <Tab
+          value={tabPage}
+          icon={<TvIcon width="30" height="30" />}
+          sx={{
+            color: 'white',
+          }}
+          label="Scene"
+        />
+      );
+    }
+
+    return <></>;
+  };
+
+  const getTabs = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          borderRight: '1px solid black',
+        }}
+      >
+        <Box
+          sx={{
+            justifyContent: 'flex-start',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            alignItems: 'center',
+            backgroundColor: '#182035',
+          }}
+        >
+          <Tabs
+            value={navigation.page === Pages.None ? category : false}
+            orientation="vertical"
+            onChange={handleChangeCategory}
+            sx={{
+              height: '100%',
+              width: '100%',
+              backgroundColor: '#182035',
+              boxSizing: 'border-box',
+              color: 'white',
+              '& .MuiTab-root.Mui-selected': {
+                color: '#bb4220',
+              },
+            }}
+            TabIndicatorProps={{ style: { background: '#bb4220' } }}
+          >
+            {renderCategoryTab(VideoCategory.TwoVTwo, TwoPeopleIcon)}
+            {renderCategoryTab(VideoCategory.ThreeVThree, ThreePeopleIcon)}
+            {renderCategoryTab(VideoCategory.FiveVFive, FivePeopleIcon)}
+            {renderCategoryTab(VideoCategory.Skirmish, DaggerIcon)}
+            {renderCategoryTab(VideoCategory.SoloShuffle, SwordIcon)}
+            {renderCategoryTab(VideoCategory.MythicPlus, DungeonIcon)}
+            {renderCategoryTab(VideoCategory.Raids, RaidIcon)}
+            {renderCategoryTab(VideoCategory.Battlegrounds, FlagIcon)}
+          </Tabs>
+        </Box>
+
+        <Box
+          sx={{
+            justifyContent: 'flex-end',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            alignItems: 'center',
+            backgroundColor: '#182035',
+          }}
+        >
+          <Tabs
+            value={navigation.page !== Pages.None ? navigation.page : false}
+            orientation="vertical"
+            onChange={handleChangePage}
+            sx={{
+              width: '100%',
+              backgroundColor: '#182035',
+              borderRight: '1px solid black',
+              boxSizing: 'border-box',
+              color: 'white',
+              '& .MuiTab-root.Mui-selected': {
+                color: '#bb4220',
+              },
+            }}
+            TabIndicatorProps={{ style: { background: '#bb4220' } }}
+          >
+            {renderMiscTab(Pages.Settings)}
+            {renderMiscTab(Pages.SceneEditor)}
+          </Tabs>
+        </Box>
+      </Box>
+    );
+  };
+
+  const openSetupInstructions = () => {
+    window.electron.ipcRenderer.sendMessage('openURL', [
+      'https://github.com/aza547/wow-recorder#readme',
+    ]);
+  };
+
+  const renderFirstTimeUserPrompt = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          width: '50%',
+          height: '50%',
+        }}
+      >
+        <Typography
+          align="center"
+          variant="h6"
+          sx={{
+            color: 'white',
+            fontFamily: '"Arial",sans-serif',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          You have no videos saved for this category. If it is your first time
+          here, setup instructions can be found at the link below. If you have
+          problems, please use the Discord #help channel to get support.
+        </Typography>
+        <Button
+          key="setup-button"
+          variant="outlined"
+          onClick={openSetupInstructions}
+          sx={{
+            color: 'white',
+            borderColor: 'white',
+            m: 2,
+            ':hover': {
+              color: '#bb4420',
+              borderColor: '#bb4420',
+            },
+          }}
+        >
+          Setup Instructions
+        </Button>
+      </Box>
+    );
+  };
+
+  const renderCategoryPage = () => {
+    const haveVideos = slicedCategoryState.length > 0;
+
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          width: '100%',
+        }}
+      >
+        {haveVideos && getVideoPanel()}
+        {haveVideos && getVideoSelection()}
+        {!haveVideos && renderFirstTimeUserPrompt()}
+      </Box>
+    );
+  };
+
+  const renderSettingsPage = () => {
     return <SettingsPage recorderStatus={recorderStatus} />;
   };
 
-  if (page === Pages.SceneEditor) {
-    return getSceneEditor();
-  }
+  const renderSceneEditor = () => {
+    return <SceneEditor recorderStatus={recorderStatus} />;
+  };
 
-  if (page === Pages.Settings) {
-    return getSettingsPage();
-  }
-
-  if (categoryIndex < 0) {
-    return getHomePage();
-  }
-
-  if (videoIndex < 0) {
-    return getVideoSelection();
-  }
-
-  return getVideoPanel();
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 'calc(100% - 70px)',
+        width: '100%',
+      }}
+    >
+      {getTabs()}
+      {page === Pages.Settings && renderSettingsPage()}
+      {page === Pages.SceneEditor && renderSceneEditor()}
+      {page === Pages.None && renderCategoryPage()}
+    </Box>
+  );
 };
 
 export default Layout;

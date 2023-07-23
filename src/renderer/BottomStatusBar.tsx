@@ -71,12 +71,6 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
           <SavingStatus savingStatus={savingStatus} />
         </Box>
 
-        <Navigator
-          navigation={navigation}
-          setNavigation={setNavigation}
-          setAppState={setAppState}
-        />
-
         <Box
           sx={{
             display: 'flex',
@@ -86,8 +80,6 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
             justifyContent: 'flex-end',
           }}
         >
-          <SettingsButton setNavigation={setNavigation} />
-          <SceneEditorButton setNavigation={setNavigation} />
           <LogButton />
           <TestButton recorderStatus={recorderStatus} />
           <DiscordButton />

@@ -278,9 +278,7 @@ enum Pages {
 }
 
 /**
- * Tracks the position of the app and the navigator component. A value
- * of -1 for either of the number fields here indicates no selection for the
- * field.
+ * Tracks the position of the app and the navigator component.
  */
 type TNavigatorState = {
   page: Pages;

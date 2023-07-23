@@ -39,8 +39,8 @@ const Application = () => {
   );
 
   const [navigation, setNavigation] = React.useState<TNavigatorState>({
-    categoryIndex: -1,
-    videoIndex: -1,
+    categoryIndex: 0,
+    videoIndex: 0,
     page: Pages.None,
   });
 

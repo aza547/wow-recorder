@@ -1,5 +1,10 @@
 import { dungeonAffixesById, specializationById } from '../main/constants';
 
+import UnknownIcon from '../../assets/icon/wowNotFound.png';
+import TankIcon from '../../assets/roles/tank.png';
+import HealerIcon from '../../assets/roles/healer.png';
+import DamageIcon from '../../assets/roles/damage.png';
+
 interface ImageObject {
   [id: number]: string;
 }
@@ -10,7 +15,7 @@ interface StrImageObject {
 
 const specIDs = Object.keys(specializationById).map((v) => parseInt(v, 10));
 const specImages: ImageObject = {
-  0: require('../../assets/icon/wowNotFound.png'),
+  0: UnknownIcon,
 };
 
 specIDs.forEach((id) => {
@@ -39,9 +44,9 @@ affixIDs.forEach((id) => {
 });
 
 const roleImages: StrImageObject = {
-  tank: require('../../assets/roles/tank.png'),
-  healer: require('../../assets/roles/healer.png'),
-  damage: require('../../assets/roles/damage.png'),
+  tank: TankIcon,
+  healer: HealerIcon,
+  damage: DamageIcon,
 };
 
 const chestImage = require('../../assets/icon/chest.png');
