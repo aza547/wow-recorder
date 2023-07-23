@@ -398,7 +398,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             sx={{
               width: '100%',
               backgroundColor: '#182035',
-              borderRight: '1px solid black',
               boxSizing: 'border-box',
               color: 'white',
               '& .MuiTab-root.Mui-selected': {
