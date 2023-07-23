@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Revamp the UI to be more intuative.
+
 ### Changed
 ### Fixed
 
