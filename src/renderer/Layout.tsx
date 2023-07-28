@@ -467,7 +467,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const renderCategoryPage = () => {
-    const haveVideos = slicedCategoryState.length > 0;
+    const haveVideos = categoryState.length > 0;
 
     return (
       <Box
