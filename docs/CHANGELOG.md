@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- Fix a bug where the app didn't remember the last selected category on starting up.
 
 ## [3.16.1] - 2023-07-23
 ### Fixed

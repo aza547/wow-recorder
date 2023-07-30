@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import {
   Pages,
   RecStatus,
+  RendererVideo,
   RendererVideoState,
   TAppState,
   TNavigatorState,
@@ -14,7 +15,6 @@ import {
   ListItemButton,
   Tab,
   Tabs,
-  TextField,
   Typography,
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -34,6 +34,9 @@ import SwordIcon from '../../assets/icon/swords.png';
 import DaggerIcon from '../../assets/icon/dagger.png';
 import DungeonIcon from '../../assets/icon/dungeon.png';
 import FlagIcon from '../../assets/icon/flag.png';
+import SearchBar from './SearchBar';
+import VideoMarkerToggles from './VideoMarkerToggles';
+import { setConfigValue } from './useSettings';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -45,7 +48,6 @@ interface IProps {
 }
 
 const ipc = window.electron.ipcRenderer;
-let debounceSearchTimer: NodeJS.Timer;
 
 /**
  * The GUI itself.
@@ -64,7 +66,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const { numVideosDisplayed, videoFilterQuery } = appState;
   const categories = Object.values(VideoCategory);
   const category = categories[categoryIndex];
-
   const categoryState = videoState[category];
 
   const filteredCategoryState = categoryState.filter((video) =>
@@ -123,23 +124,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const debouncedFilter = (event: React.BaseSyntheticEvent) => {
-    const filterText = event.target.value;
-
-    if (debounceSearchTimer) {
-      clearTimeout(debounceSearchTimer);
-    }
-
-    debounceSearchTimer = setTimeout(() => {
-      setAppState((prevState) => {
-        return {
-          ...prevState,
-          videoFilterQuery: filterText,
-        };
-      });
-    }, 750);
-  };
-
   const getVideoPanel = () => {
     return (
       <Box
@@ -191,84 +175,69 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const mapVideoToListItem = (video: RendererVideo) => {
+    return (
+      <ListItem disablePadding key={video.fullPath} sx={{ width: '100%' }}>
+        <ListItemButton
+          selected={navigation.videoIndex === categoryState.indexOf(video)}
+          onClick={() => handleChangeVideo(categoryState.indexOf(video))}
+        >
+          <VideoButton
+            key={video.fullPath}
+            video={video}
+            categoryState={categoryState}
+          />
+        </ListItemButton>
+      </ListItem>
+    );
+  };
+
   const getVideoSelection = () => {
     return (
-      <>
+      <Box
+        sx={{
+          width: '100%',
+          height: '50%',
+          overflowY: 'scroll',
+          display: 'flex',
+          flexDirection: 'column',
+          alignContent: 'center',
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': {
+            width: '1em',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: '#888',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: '#555',
+          },
+        }}
+      >
         <Box
           sx={{
             width: '100%',
-            height: '50%',
-            overflowY: 'scroll',
             display: 'flex',
-            alignContent: 'center',
-            justifyContent: 'center',
-            scrollbarWidth: 'thin',
-            '&::-webkit-scrollbar': {
-              width: '1em',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: '#f1f1f1',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: '#888',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              background: '#555',
-            },
+            justifyContent: 'space-evenly',
+            borderTop: '1px solid black',
+            borderBottom: '1px solid black',
           }}
         >
-          <List sx={{ width: '100%' }}>
-            <ListItem disablePadding key="search-bar" sx={{ width: '100%' }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder={VideoFilter.getSuggestions(category)}
-                id="search-bar"
-                onChange={debouncedFilter}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&.Mui-focused fieldset': { borderColor: '#bb4220' },
-                    '& > fieldset': { borderColor: 'white' },
-                    '&:hover fieldset': {
-                      borderColor: '#bb4220',
-                    },
-                  },
-                  '& label.Mui-focused': { color: '#bb4220' },
-                  ml: 2,
-                  mr: 2,
-                  input: { color: 'white' },
-                }}
-                inputProps={{ style: { color: 'white' } }}
-              />
-            </ListItem>
-            {slicedCategoryState.map((video) => {
-              return (
-                <ListItem
-                  disablePadding
-                  key={video.fullPath}
-                  sx={{ width: '100%' }}
-                >
-                  <ListItemButton
-                    selected={
-                      navigation.videoIndex === categoryState.indexOf(video)
-                    }
-                    onClick={() =>
-                      handleChangeVideo(categoryState.indexOf(video))
-                    }
-                  >
-                    <VideoButton
-                      key={video.fullPath}
-                      video={video}
-                      categoryState={categoryState}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-            {moreVideosRemain && getShowMoreButton()}
-          </List>
+          <Box sx={{ width: '50%', ml: 2, mr: 1, my: 1 }}>
+            <SearchBar navigation={navigation} setAppState={setAppState} />
+          </Box>
+          <Box sx={{ width: '50%', ml: 1, mr: 2, my: 1 }}>
+            <VideoMarkerToggles category={category} />
+          </Box>
         </Box>
-      </>
+        <List sx={{ width: '100%', p: 0 }}>
+          {slicedCategoryState.map(mapVideoToListItem)}
+          {moreVideosRemain && getShowMoreButton()}
+        </List>
+      </Box>
     );
   };
 
@@ -276,9 +245,12 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     _event: React.SyntheticEvent,
     newCategory: VideoCategory
   ) => {
+    const newIndex = categories.indexOf(newCategory);
+    setConfigValue('selectedCategory', newIndex);
+
     setNavigation({
       page: Pages.None,
-      categoryIndex: categories.indexOf(newCategory),
+      categoryIndex: newIndex,
       videoIndex: 0,
     });
   };
@@ -296,9 +268,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       <Tab
         value={tabCategory}
         icon={<img src={tabIcon} alt="raid" width="30" height="30" />}
-        sx={{
-          color: 'white',
-        }}
+        sx={{ color: 'white' }}
         label={tabCategory}
       />
     );
@@ -310,9 +280,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         <Tab
           value={tabPage}
           icon={<SettingsIcon width="30" height="30" />}
-          sx={{
-            color: 'white',
-          }}
+          sx={{ color: 'white' }}
           label="Settings"
         />
       );
@@ -323,9 +291,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         <Tab
           value={tabPage}
           icon={<TvIcon width="30" height="30" />}
-          sx={{
-            color: 'white',
-          }}
+          sx={{ color: 'white' }}
           label="Scene"
         />
       );
@@ -474,7 +440,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
           height: '100%',

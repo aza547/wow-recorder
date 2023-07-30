@@ -15,10 +15,13 @@ import RendererTitleBar from './RendererTitleBar';
 import BottomStatusBar from './BottomStatusBar';
 import './App.css';
 import { getEmptyState } from './rendererutils';
+import { useSettings } from './useSettings';
 
 const ipc = window.electron.ipcRenderer;
 
 const Application = () => {
+  const [config] = useSettings();
+
   const [recorderStatus, setRecorderStatus] = React.useState<RecStatus>(
     RecStatus.WaitingForWoW
   );
@@ -39,7 +42,7 @@ const Application = () => {
   );
 
   const [navigation, setNavigation] = React.useState<TNavigatorState>({
-    categoryIndex: 0,
+    categoryIndex: config.selectedCategory,
     videoIndex: 0,
     page: Pages.None,
   });

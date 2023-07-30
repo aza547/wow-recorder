@@ -40,12 +40,15 @@ export type ConfigurationSchema = {
   chatOverlayYPosition: number;
   speakerVolume: number;
   micVolume: number;
+  deathMarkers: number;
+  encounterMarkers: boolean;
+  roundMarkers: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
 
 /**
- * Config schema. The descriptions included here get displayed in the UI.
+ * Config schema. The descriptions included here may get displayed in the UI.
  */
 export const configSchema = {
   storagePath: {
@@ -276,5 +279,20 @@ export const configSchema = {
     description: 'The volume of your mic in the recording, from 0 to 1.',
     type: 'integer',
     default: 1,
+  },
+  deathMarkers: {
+    description: 'Death markers to display on the video timeline.',
+    type: 'integer',
+    default: 1,
+  },
+  encounterMarkers: {
+    description: 'Death markers to display on the video timeline.',
+    type: 'integer',
+    default: true,
+  },
+  roundMarkers: {
+    description: 'Death markers to display on the video timeline.',
+    type: 'boolean',
+    default: true,
   },
 };

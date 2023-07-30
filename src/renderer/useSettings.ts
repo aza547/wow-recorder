@@ -59,6 +59,9 @@ export const getSettings = (): ConfigurationSchema => {
     speakerVolume: getConfigValue<number>('speakerVolume'),
     micVolume: getConfigValue<number>('micVolume'),
     selectedCategory: getConfigValue<number>('selectedCategory'),
+    deathMarkers: getConfigValue<number>('deathMarkers'),
+    encounterMarkers: getConfigValue<boolean>('encounterMarkers'),
+    roundMarkers: getConfigValue<boolean>('roundMarkers'),
   };
 
   return configValues;
