@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix a bug where the app didn't remember the last selected category on starting up.
 
-## [3.16.1] - 2023-07-23
+## [3.16.1] - 2023-07-28
 ### Fixed
 - Fix a bug where if no matches found with a filter query then the app would forever show the no videos message.
 
