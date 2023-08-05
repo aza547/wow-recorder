@@ -243,6 +243,7 @@ type SoloShuffleTimelineSegment = {
   round: number;
   timestamp: number;
   result: boolean;
+  duration?: number;
 };
 
 enum EDeviceType {
@@ -369,6 +370,29 @@ type ConfigStage = {
   validate: (...args: any[]) => void;
 };
 
+enum DeathMarkers {
+  NONE = 'None',
+  OWN = 'Own',
+  ALL = 'All',
+}
+
+enum Colors {
+  UNCOMMON = '#1eff00',
+  RARE = '#0070dd',
+  EPIC = '#a335ee',
+  LEGENDARY = '#ff8000',
+  ARTIFACT = '#e6cc80	',
+  BLIZZARD = '#00ccff',
+}
+
+type VideoMarker = {
+  time: number;
+  duration: number;
+  text: string;
+  color: string;
+  class: string;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -410,4 +434,7 @@ export {
   ObsAudioConfig,
   FlavourConfig,
   ConfigStage,
+  DeathMarkers,
+  VideoMarker,
+  Colors,
 };

@@ -1,13 +1,13 @@
-import { Box, Button } from '@mui/material';
-import { useState } from 'react';
+import { Box, Button, Typography } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
-import { useSettings, setConfigValue } from './useSettings';
-
-enum DeathMarkers {
-  NONE = 'None',
-  OWN = 'Own Only',
-  ALL = 'All',
-}
+import { useEffect, useRef } from 'react';
+import { ConfigurationSchema } from 'main/configSchema';
+import { DeathMarkers } from 'main/types';
+import { setConfigValues } from './useSettings';
+import {
+  convertNumToDeathMarkers,
+  convertDeathMarkersToNum,
+} from './rendererutils';
 
 const buttonSx = {
   mx: 1,
@@ -21,81 +21,122 @@ const buttonSx = {
 };
 
 interface IProps {
+  config: ConfigurationSchema;
+  setConfig: React.Dispatch<React.SetStateAction<ConfigurationSchema>>;
   category: VideoCategory;
 }
 
 const VideoMarkerToggles = (props: IProps) => {
-  const [config] = useSettings();
-  const { category } = props;
+  const initialRender = useRef(true);
+  const { category, config, setConfig } = props;
+  const deathMarkers = convertNumToDeathMarkers(config.deathMarkers);
 
-  let initialDeathMarkers: DeathMarkers;
+  useEffect(() => {
+    // Don't fire on the initial render.
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
 
-  if (config.deathMarkers === 0) {
-    initialDeathMarkers = DeathMarkers.NONE;
-  } else if (config.deathMarkers === 2) {
-    initialDeathMarkers = DeathMarkers.ALL;
-  } else {
-    initialDeathMarkers = DeathMarkers.OWN;
-  }
-
-  const [deathSelection, setDeathSelection] =
-    useState<DeathMarkers>(initialDeathMarkers);
-
-  const [encounterSelection, setEncounterSelection] = useState<boolean>(
-    config.encounterMarkers
-  );
-  const [roundSelection, setRoundSelection] = useState<boolean>(
-    config.roundMarkers
-  );
+    setConfigValues({
+      deathMarkers: config.deathMarkers,
+      encounterMarkers: config.encounterMarkers,
+      roundMarkers: config.roundMarkers,
+    });
+  }, [config.deathMarkers, config.encounterMarkers, config.roundMarkers]);
 
   const toggleDeaths = () => {
     const options = Object.values(DeathMarkers);
-    const current = options.indexOf(deathSelection);
+    const current = options.indexOf(deathMarkers);
     const next = current < options.length - 1 ? current + 1 : 0;
-    setDeathSelection(options[next]);
 
-    if (options[next] === DeathMarkers.NONE) {
-      setConfigValue('deathMarkers', 0);
-    } else if (options[next] === DeathMarkers.ALL) {
-      setConfigValue('deathMarkers', 2);
-    } else {
-      setConfigValue('deathMarkers', 1);
-    }
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        deathMarkers: convertDeathMarkersToNum(options[next]),
+      };
+    });
   };
 
   const toggleEncounters = () => {
-    setConfigValue('encounterMarkers', !encounterSelection);
-    setEncounterSelection(!encounterSelection);
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        encounterMarkers: !config.encounterMarkers,
+      };
+    });
   };
 
   const toggleRound = () => {
-    setConfigValue('roundMarkers', !roundSelection);
-    setRoundSelection(!roundSelection);
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        roundMarkers: !config.roundMarkers,
+      };
+    });
   };
 
   const renderDeathSelection = () => {
+    let color;
+
+    if (deathMarkers === DeathMarkers.ALL) {
+      color = 'rgba(255, 255, 255, 1)';
+    } else if (deathMarkers === DeathMarkers.OWN) {
+      color = 'rgba(255, 255, 255, 0.75)';
+    } else {
+      color = 'rgba(255, 255, 255, 0.5)';
+    }
+
     return (
-      <Button variant="outlined" onClick={toggleDeaths} sx={buttonSx}>
-        Deaths: {deathSelection}
+      <Button
+        variant="outlined"
+        onClick={toggleDeaths}
+        sx={{ ...buttonSx, color, borderColor: color }}
+      >
+        Deaths: {deathMarkers}
       </Button>
     );
   };
 
   const renderEncounterSelection = () => {
-    const text = encounterSelection ? 'ON' : 'OFF';
+    const text = config.encounterMarkers ? 'ON' : 'OFF';
+
+    let color;
+
+    if (config.encounterMarkers) {
+      color = 'rgba(255, 255, 255, 1)';
+    } else {
+      color = 'rgba(255, 255, 255, 0.5)';
+    }
 
     return (
-      <Button variant="outlined" onClick={toggleEncounters} sx={buttonSx}>
+      <Button
+        variant="outlined"
+        onClick={toggleEncounters}
+        sx={{ ...buttonSx, color, borderColor: color }}
+      >
         Encounters: {text}
       </Button>
     );
   };
 
   const renderRoundSelection = () => {
-    const text = roundSelection ? 'ON' : 'OFF';
+    const text = config.roundMarkers ? 'ON' : 'OFF';
+
+    let color;
+
+    if (config.roundMarkers) {
+      color = 'rgba(255, 255, 255, 1)';
+    } else {
+      color = 'rgba(255, 255, 255, 0.5)';
+    }
 
     return (
-      <Button variant="outlined" onClick={toggleRound} sx={buttonSx}>
+      <Button
+        variant="outlined"
+        onClick={toggleRound}
+        sx={{ ...buttonSx, color, borderColor: color }}
+      >
         Round: {text}
       </Button>
     );

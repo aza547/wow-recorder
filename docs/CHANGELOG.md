@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-### Changed
+- Add buttons for easily toggling video markers, and other video marker improvements.
+
 ### Fixed
 - Fix a bug where the coloring of the video tracker bar was slightly wrong.
 - Fix a bug where the app didn't remember the last selected category on starting up.

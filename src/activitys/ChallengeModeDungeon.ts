@@ -194,6 +194,7 @@ export default class ChallengeModeDungeon extends Activity {
       overrun: this.overrun,
       combatants: rawCombatants,
       affixes: this.affixes,
+      deaths: this.deaths,
     };
   }
 

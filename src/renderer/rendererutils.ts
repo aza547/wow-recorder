@@ -19,19 +19,20 @@ import {
 } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
 import {
+  Colors,
+  DeathMarkers,
   Encoder,
   EncoderType,
-  Flavour,
   IOBSDevice,
   PlayerDeathType,
   RawChallengeModeTimelineSegment,
   RendererVideo,
   RendererVideoState,
   SoloShuffleTimelineSegment,
+  VideoMarker,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
-import Player from 'video.js/dist/types/player';
 import { ESupportedEncoders } from 'main/obsEnums';
 
 const getVideoResult = (video: RendererVideo): boolean => {
@@ -54,8 +55,8 @@ const getFormattedDuration = (video: RendererVideo) => {
  * @param video the RendereVideo data type for the video
  * @param ownOnly true if should only get the players deaths
  */
-const getDeathMarkers = (video: RendererVideo, ownOnly: boolean) => {
-  const videoMarkers: any[] = [];
+const getOwnDeathMarkers = (video: RendererVideo) => {
+  const videoMarkers: VideoMarker[] = [];
   const { player } = video;
 
   if (video.deaths === undefined) {
@@ -65,33 +66,62 @@ const getDeathMarkers = (video: RendererVideo, ownOnly: boolean) => {
   video.deaths.forEach((death: PlayerDeathType) => {
     const [name] = ambiguate(death.name);
     const markerText = `Death (${name})`;
-    let markerClass: string;
+    let color: string;
 
     if (death.friendly) {
-      markerClass = 'red-video-marker-wide';
+      color = 'red';
     } else {
-      markerClass = 'green-video-marker-wide';
+      color = Colors.UNCOMMON;
     }
 
-    if (ownOnly) {
-      if (!player || !player._name) {
-        return;
-      }
+    if (!player || !player._name) {
+      return;
+    }
 
-      if (player._name === name) {
-        videoMarkers.push({
-          time: death.timestamp,
-          text: markerText,
-          class: markerClass,
-        });
-      }
-    } else {
+    if (player._name === name) {
       videoMarkers.push({
         time: death.timestamp,
         text: markerText,
-        class: markerClass,
+        color,
+        duration: 5,
+        class: 'vjs-marker',
       });
     }
+  });
+
+  return videoMarkers;
+};
+
+/**
+ * Return an array of death markers for a video.
+ * @param video the RendereVideo data type for the video
+ * @param ownOnly true if should only get the players deaths
+ */
+const getAllDeathMarkers = (video: RendererVideo) => {
+  const videoMarkers: VideoMarker[] = [];
+
+  if (video.deaths === undefined) {
+    return videoMarkers;
+  }
+
+  video.deaths.forEach((death: PlayerDeathType) => {
+    const [name] = ambiguate(death.name);
+    const markerText = `Death (${name})`;
+    let color: string;
+
+    if (death.friendly) {
+      color = 'red';
+    } else {
+      color = Colors.UNCOMMON;
+    }
+
+    videoMarkers.push({
+      time: death.timestamp,
+      text: markerText,
+      color,
+      duration: 5,
+      class: 'vjs-marker',
+    });
   });
 
   return videoMarkers;
@@ -101,8 +131,8 @@ const getDeathMarkers = (video: RendererVideo, ownOnly: boolean) => {
  * Return an array of markers for a solo shuffle. This is markers for each
  * round, colored green for wins or red for losses.
  */
-const getShuffleVideoMarkers = (video: RendererVideo) => {
-  const videoMarkers: any[] = [];
+const getRoundMarkers = (video: RendererVideo) => {
+  const videoMarkers: VideoMarker[] = [];
 
   if (video.soloShuffleTimeline === undefined) {
     return videoMarkers;
@@ -110,20 +140,25 @@ const getShuffleVideoMarkers = (video: RendererVideo) => {
 
   video.soloShuffleTimeline.forEach((segment: SoloShuffleTimelineSegment) => {
     let markerText = `Round ${segment.round}`;
-    let markerClass: string;
+    let color: string;
 
     if (segment.result) {
       markerText = `${markerText} (Win)`;
-      markerClass = 'green-video-marker';
+      color = Colors.UNCOMMON;
     } else {
       markerText = `${markerText} (Loss)`;
-      markerClass = 'red-video-marker';
+      color = 'red';
     }
+
+    // Older solo shuffle segments don't have a duration.
+    const duration = segment.duration ? segment.duration : 5;
 
     videoMarkers.push({
       time: segment.timestamp,
       text: markerText,
-      class: markerClass,
+      color,
+      duration,
+      class: 'vjs-marker-hatched',
     });
   });
 
@@ -134,8 +169,8 @@ const getShuffleVideoMarkers = (video: RendererVideo) => {
  * Return an array of markers for a challenge mode, this highlights the boss
  * encounters as orange and the trash as purple.
  */
-const getChallengeModeVideoMarkers = (video: RendererVideo) => {
-  const videoMarkers: any[] = [];
+const getEncounterMarkers = (video: RendererVideo) => {
+  const videoMarkers: VideoMarker[] = [];
 
   if (video.challengeModeTimeline === undefined) {
     return videoMarkers;
@@ -147,7 +182,8 @@ const getChallengeModeVideoMarkers = (video: RendererVideo) => {
         segment.logEnd === undefined ||
         segment.logStart === undefined ||
         segment.segmentType === undefined ||
-        segment.segmentType !== TimelineSegmentType.BossEncounter
+        segment.segmentType !== TimelineSegmentType.BossEncounter ||
+        segment.timestamp === undefined
       ) {
         return;
       }
@@ -168,59 +204,14 @@ const getChallengeModeVideoMarkers = (video: RendererVideo) => {
       videoMarkers.push({
         time: segment.timestamp,
         text: markerText,
-        class: 'purple-video-marker',
+        color: Colors.EPIC,
         duration: segmentDuration,
+        class: 'vjs-marker-hatched',
       });
     }
   );
 
-  const deathMarkers = getDeathMarkers(video, true);
-
-  deathMarkers.forEach((marker) => {
-    videoMarkers.push(marker);
-  });
-
   return videoMarkers;
-};
-
-/**
- * Add markers to a videoJS player.
- */
-const addVideoMarkers = (video: RendererVideo, player: Player) => {
-  const category = video.category as VideoCategory;
-  const flavour = video.flavour as Flavour;
-
-  if (flavour === Flavour.Classic || category === VideoCategory.Battlegrounds) {
-    // Battlegrounds: Lots of deaths so don't bother making a mess of the UI
-    //                and trying to display them all.
-    // Classic:       Video durations are less accurate so high chance markers
-    //                are misplaced, as the marker timestamps are accurate to
-    //                combat log time.
-    return;
-  }
-
-  let videoMarkers: any;
-
-  if (category === VideoCategory.SoloShuffle) {
-    videoMarkers = getShuffleVideoMarkers(video);
-  } else if (category === VideoCategory.MythicPlus) {
-    videoMarkers = getChallengeModeVideoMarkers(video);
-  } else if (category === VideoCategory.Raids) {
-    videoMarkers = getDeathMarkers(video, true);
-  } else {
-    videoMarkers = getDeathMarkers(video, false);
-  }
-
-  player.markers({
-    markerTip: {
-      display: true,
-      text(marker: any) {
-        return marker.text;
-      },
-    },
-    markers: videoMarkers,
-    onMarkerClick: () => false,
-  });
 };
 
 const getWoWClassColor = (unitClass: WoWCharacterClassType) => {
@@ -390,13 +381,6 @@ const getEncounterNameById = (encounterId: number): string => {
   }
 
   return 'Unknown Boss';
-};
-
-/**
- * Get an appropriate image for the video.
- */
-const getVideoImagePath = (video: RendererVideo) => {
-
 };
 
 /**
@@ -673,10 +657,67 @@ const pathSelect = async (): Promise<string> => {
   return path;
 };
 
+const convertNumToDeathMarkers = (n: number) => {
+  if (n === 2) return DeathMarkers.ALL;
+  if (n === 1) return DeathMarkers.OWN;
+  return DeathMarkers.NONE;
+};
+
+const convertDeathMarkersToNum = (d: DeathMarkers) => {
+  if (d === DeathMarkers.ALL) return 2;
+  if (d === DeathMarkers.OWN) return 1;
+  return 0;
+};
+
+const getMarkerDiv = (
+  marker: VideoMarker,
+  videoDuration: number,
+  progressBarWidth: number
+) => {
+  const markerDiv = document.createElement('div');
+  markerDiv.className = marker.class;
+
+  const markerPosition = (progressBarWidth * marker.time) / videoDuration;
+  let markerWidth = (progressBarWidth * marker.duration) / videoDuration;
+
+  // If the marker is going to hang of the end of the bar, cut it short.
+  if (markerWidth + markerPosition > progressBarWidth) {
+    markerWidth = progressBarWidth - markerPosition;
+  }
+
+  markerDiv.setAttribute(
+    'style',
+    `left: ${markerPosition}px; background-color: ${marker.color}; width: ${markerWidth}px`
+  );
+
+  markerDiv.setAttribute('title', marker.text);
+
+  return markerDiv;
+};
+
+const addMarkerDiv = (marker: HTMLDivElement) => {
+  const progressBar = document.querySelector('.vjs-progress-holder');
+
+  if (!progressBar) {
+    return;
+  }
+
+  progressBar.appendChild(marker);
+};
+
+const removeMarkerDiv = (marker: HTMLDivElement) => {
+  const parent = marker.parentNode;
+
+  if (parent === null) {
+    return;
+  }
+
+  parent.removeChild(marker);
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
-  addVideoMarkers,
   getWoWClassColor,
   getNumVideos,
   getTotalDuration,
@@ -707,5 +748,13 @@ export {
   mapEncoderToString,
   mapStringToEncoder,
   pathSelect,
-  getVideoImagePath,
+  convertNumToDeathMarkers,
+  convertDeathMarkersToNum,
+  getAllDeathMarkers,
+  getOwnDeathMarkers,
+  getRoundMarkers,
+  getEncounterMarkers,
+  getMarkerDiv,
+  addMarkerDiv,
+  removeMarkerDiv,
 };

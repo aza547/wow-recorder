@@ -37,25 +37,37 @@ div#root {
   height: calc(100% - 30px);
 }
 
+.vjs-marker-hatched {
+  position: absolute;
+  bottom: 0px;
+  opacity: 0.75;
+  height: 100%;
+  z-index: 2;
+  background-image: linear-gradient(
+    45deg, 
+    rgba(0,0,0,0.5) 25%, 
+    transparent 25%, 
+    transparent 50%, 
+    rgba(0,0,0,0.5) 50%, 
+    rgba(0,0,0,0.5) 75%, 
+    transparent 75%, 
+    transparent
+  );
+  background-size: 5px 5px;
+}
+
 .vjs-marker {
-  z-index: 1;
-  height: 0.7em;
-  top: 0px;
+  position: absolute;
+  bottom: 0px;
+  opacity: 1;
+  height: 100%;
+  z-index: 3;
 }
 
 .video-js .vjs-play-progress:before {
-  z-index: 3;
+  z-index: 4;
   font-size: 1.6em;
   top: 0.1em;
-}
-
-.vjs-tip {
-  bottom: 40px;
-}
-
-.vjs-tip .vjs-tip-inner {
-  background-color: white;
-  color: black;
 }
 
 .vjs-mouse-display {
@@ -1076,42 +1088,4 @@ input[type='button'].btn-block,
 input[type='reset'].btn-block,
 input[type='submit'].btn-block {
   width: 100%;
-}
-
-.red-video-marker {
-  background-color: red !important;
-  width: 10px !important;
-  border-radius: 0% !important;
-}
-
-.green-video-marker {
-  background-color: #1eff00 !important;
-  width: 10px !important;
-  border-radius: 0% !important;
-}
-
-.red-video-marker-wide {
-  background-color: red !important;
-  width: 25px !important;
-  border-radius: 0% !important;
-}
-
-.green-video-marker-wide {
-  background-color: #1eff00 !important;
-  width: 25px !important;
-  border-radius: 0% !important;
-}
-
-.purple-video-marker {
-  background-color: #a335ee !important;
-  border-radius: 0% !important;
-}
-
-.orange-video-marker {
-  background-color: #ff8000 !important;
-  border-radius: 0% !important;
-}
-
-.orange-video-marker:hover {
-  z-index: 2;
 }

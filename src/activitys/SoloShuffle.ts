@@ -166,15 +166,24 @@ export default class SoloShuffle extends Activity {
     const segments = [];
 
     for (let i = 0; i < this.rounds.length; i++) {
-      const segment = {
-        round: i + 1,
-        timestamp:
-          (this.rounds[i].startDate.getTime() - this.startDate.getTime()) /
-          1000,
-        result: this.rounds[i].result,
-      };
+      const gameStartTime = this.startDate.getTime();
+      const roundStartTime = this.rounds[i].startDate.getTime();
+      const roundEndTime = this.rounds[i].endDate?.getTime();
 
-      segments.push(segment);
+      if (roundEndTime === undefined) {
+        segments.push({
+          round: i + 1,
+          timestamp: (roundStartTime - gameStartTime) / 1000,
+          result: this.rounds[i].result,
+        });
+      } else {
+        segments.push({
+          round: i + 1,
+          timestamp: (roundStartTime - gameStartTime) / 1000,
+          result: this.rounds[i].result,
+          duration: (roundEndTime - roundStartTime) / 1000,
+        });
+      }
     }
 
     return segments;

@@ -10,9 +10,9 @@ export default class ConfigService extends EventEmitter {
    */
   private static _instance: ConfigService;
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore 'schema' is "wrong", but it really isn't.
   private _store = new ElectronStore<ConfigurationSchema>({
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore 'schema' is "wrong", but it really isn't.
     configSchema,
     name: 'config-v3',
   });

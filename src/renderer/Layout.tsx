@@ -36,7 +36,7 @@ import DungeonIcon from '../../assets/icon/dungeon.png';
 import FlagIcon from '../../assets/icon/flag.png';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
-import { setConfigValue } from './useSettings';
+import { useSettings, setConfigValue } from './useSettings';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -62,6 +62,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     setAppState,
   } = props;
 
+  const [config, setConfig] = useSettings();
   const { page, categoryIndex, videoIndex } = navigation;
   const { numVideosDisplayed, videoFilterQuery } = appState;
   const categories = Object.values(VideoCategory);
@@ -135,6 +136,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       >
         <VideoJS
           id="video-player"
+          config={config}
           key={categoryState[videoIndex].fullPath}
           video={categoryState[videoIndex]}
           setAppState={setAppState}
@@ -226,11 +228,15 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             borderBottom: '1px solid black',
           }}
         >
-          <Box sx={{ width: '50%', ml: 2, mr: 1, my: 1 }}>
+          <Box sx={{ flex: 1, ml: 2, mr: 1, my: 1 }}>
             <SearchBar navigation={navigation} setAppState={setAppState} />
           </Box>
-          <Box sx={{ width: '50%', ml: 1, mr: 2, my: 1 }}>
-            <VideoMarkerToggles category={category} />
+          <Box sx={{ ml: 1, mr: 2, my: 1 }}>
+            <VideoMarkerToggles
+              category={category}
+              config={config}
+              setConfig={setConfig}
+            />
           </Box>
         </Box>
         <List sx={{ width: '100%', p: 0 }}>
