@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+### Fixed
+
+## [3.17.0] - 2023-08-05
+### Added
 - [Issue 415](https://github.com/aza547/wow-recorder/issues/415) - Add buttons for easily toggling video markers, and other video marker improvements.
 
 ### Fixed
