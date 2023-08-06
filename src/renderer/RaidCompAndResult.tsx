@@ -4,6 +4,7 @@ import { RawCombatant, RendererVideo } from 'main/types';
 import { specializationById } from 'main/constants';
 import { getVideoResultText } from './rendererutils';
 import * as Images from './images';
+import DeathIcon from '../../assets/icon/death.png';
 
 interface IProps {
   video: RendererVideo;
@@ -18,8 +19,9 @@ type RoleCount = {
 
 const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
   const { video, raidCategoryState } = props;
-  const { combatants } = video;
+  const { combatants, deaths } = video;
   const resultText = getVideoResultText(video);
+  const deathCount = deaths ? deaths.length : 0;
 
   const roleCount: RoleCount = {
     tank: 0,
@@ -143,21 +145,65 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const renderResultText = () => {
+  const renderResult = () => {
     return (
-      <Typography
-        align="center"
+      <Box
         sx={{
-          color: 'white',
-          fontWeight: '600',
-          fontFamily: '"Arial",sans-serif',
-          fontSize: '1rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          mx: '2px',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        {`${resultText} (Pull ${getDailyPullNumber()})`}
-      </Typography>
+        <Typography
+          align="center"
+          sx={{
+            color: 'white',
+            fontWeight: '600',
+            fontFamily: '"Arial",sans-serif',
+            fontSize: '1rem',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          {`${resultText} (Pull ${getDailyPullNumber()})`}
+        </Typography>
+        <Box
+          sx={{
+            mx: 1,
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Typography
+            align="center"
+            sx={{
+              color: 'white',
+              fontWeight: '600',
+              fontFamily: '"Arial",sans-serif',
+              fontSize: '1rem',
+              textShadow:
+                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+            }}
+          >
+            {deathCount}
+          </Typography>
+          <Box
+            key="chest-icon"
+            component="img"
+            src={DeathIcon}
+            sx={{
+              p: '2px',
+              height: '18px',
+              width: '12px',
+              objectFit: 'cover',
+            }}
+          />
+        </Box>
+      </Box>
     );
   };
 
@@ -170,7 +216,7 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
         justifyContent: 'center',
       }}
     >
-      {renderResultText()}
+      {renderResult()}
       {renderRaidComp()}
     </Box>
   );

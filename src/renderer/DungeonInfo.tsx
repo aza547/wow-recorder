@@ -4,6 +4,8 @@ import { RendererVideo } from 'main/types';
 import { dungeonAffixesById } from 'main/constants';
 import * as Images from './images';
 import { getDungeonName, getVideoResultText } from './rendererutils';
+import ChestIcon from '../../assets/icon/chest.png';
+import DeathIcon from '../../assets/icon/death.png';
 
 interface IProps {
   video: RendererVideo;
@@ -11,9 +13,10 @@ interface IProps {
 
 const DungeonInfo: React.FC<IProps> = (props: IProps) => {
   const { video } = props;
-  const { affixes } = video;
+  const { affixes, deaths } = video;
   const resultText = getVideoResultText(video);
   const dungeonName = getDungeonName(video);
+  const deathCount = deaths ? deaths.length : 0;
 
   const renderAffixDisplay = (affixID: number) => {
     return (
@@ -91,10 +94,11 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const renderDungeonResult = () => {
+  const renderChests = () => {
     return (
       <Box
         sx={{
+          mx: '2px',
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
@@ -117,13 +121,68 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
         <Box
           key="chest-icon"
           component="img"
-          src={Images.chestImage}
+          src={ChestIcon}
           sx={{
             height: '20px',
             width: '20px',
             objectFit: 'cover',
           }}
         />
+      </Box>
+    );
+  };
+
+  const renderDeaths = () => {
+    return (
+      <Box
+        sx={{
+          mx: '2px',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography
+          align="center"
+          sx={{
+            color: 'white',
+            fontWeight: '600',
+            fontFamily: '"Arial",sans-serif',
+            fontSize: '0.75rem',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          {deathCount}
+        </Typography>
+        <Box
+          key="chest-icon"
+          component="img"
+          src={DeathIcon}
+          sx={{
+            p: '2px',
+            height: '18px',
+            width: '12px',
+            objectFit: 'cover',
+          }}
+        />
+      </Box>
+    );
+  };
+
+  const renderDungeonResult = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {renderChests()}
+        {renderDeaths()}
       </Box>
     );
   };
