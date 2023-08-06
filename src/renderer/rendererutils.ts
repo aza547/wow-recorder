@@ -632,8 +632,30 @@ const standardizeAudioDeviceNames = (
   );
 };
 
-const encoderFilter = (enc: string) => {
-  return Object.values(ESupportedEncoders).includes(enc as ESupportedEncoders);
+const isHighRes = (res: string) => {
+  const resolutions = res.split('x');
+  const [width, height] = resolutions;
+
+  if (parseInt(width, 10) >= 4000 || parseInt(height, 10) >= 4000) {
+    return true;
+  }
+
+  return false;
+};
+
+const encoderFilter = (enc: string, highRes: boolean) => {
+  const encoder = enc as ESupportedEncoders;
+
+  if (!Object.values(ESupportedEncoders).includes(encoder)) {
+    return false;
+  }
+
+  // If we have a resolution above 4k, only the software encoder is valid.
+  if (highRes) {
+    return encoder === ESupportedEncoders.OBS_X264;
+  }
+
+  return true;
 };
 
 const mapEncoderToString = (enc: Encoder) => {
@@ -757,4 +779,5 @@ export {
   getMarkerDiv,
   addMarkerDiv,
   removeMarkerDiv,
+  isHighRes,
 };

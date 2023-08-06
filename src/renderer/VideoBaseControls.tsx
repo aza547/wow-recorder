@@ -18,9 +18,11 @@ import { Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
 import { configSchema } from 'main/configSchema';
 import InfoIcon from '@mui/icons-material/Info';
+import { ESupportedEncoders } from 'main/obsEnums';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   encoderFilter,
+  isHighRes,
   mapEncoderToString,
   mapStringToEncoder,
 } from './rendererutils';
@@ -77,10 +79,11 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const { recorderStatus } = props;
   const initialRender = React.useRef(true);
+  const highRes = isHighRes(config.obsOutputResolution);
 
   const obsAvailableEncoders: Encoder[] = ipc
     .sendSync('getEncoders', [])
-    .filter(encoderFilter)
+    .filter((s: string) => encoderFilter(s, highRes))
     .map(mapStringToEncoder)
     .sort((a: Encoder, b: Encoder) => a.type < b.type);
 
@@ -150,12 +153,24 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
       target: { value },
     } = event;
 
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        obsOutputResolution: value,
-      };
-    });
+    const selectedhighRes = isHighRes(value);
+
+    if (selectedhighRes) {
+      setConfig((prevState) => {
+        return {
+          ...prevState,
+          obsOutputResolution: value,
+          obsRecEncoder: ESupportedEncoders.OBS_X264,
+        };
+      });
+    } else {
+      setConfig((prevState) => {
+        return {
+          ...prevState,
+          obsOutputResolution: value,
+        };
+      });
+    }
   };
 
   const getCanvasResolutionSelect = () => {

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- [Issue 435](https://github.com/aza547/wow-recorder/issues/435) - Only allow the software encoder for resolutions over 4000 pixels.
 
 ## [3.17.0] - 2023-08-05
 ### Added
