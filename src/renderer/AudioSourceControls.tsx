@@ -92,10 +92,22 @@ let debounceTimer: NodeJS.Timer | undefined;
 const AudioSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
-  const availableAudioDevices = ipc.sendSync('getAudioDevices', []);
+
+  const [audioDevices, setAudioDevices] = React.useState<{
+    input: IOBSDevice[];
+    output: IOBSDevice[];
+  }>({ input: [], output: [] });
 
   React.useEffect(() => {
-    // Don't fire on the initial render.
+    const getAvailableAudioDevices = async () => {
+      const devices = await ipc.invoke('getAudioDevices', []);
+      setAudioDevices(devices);
+    };
+
+    getAvailableAudioDevices();
+
+    // The reset of this effect handles config changes, so if it's the
+    // initial render then just return here.
     if (initialRender.current) {
       initialRender.current = false;
       return;
@@ -126,12 +138,12 @@ const AudioSourceControls: React.FC = () => {
 
   const input = standardizeAudioDeviceNames(
     config.audioInputDevices,
-    availableAudioDevices
+    audioDevices
   );
 
   const output = standardizeAudioDeviceNames(
     config.audioOutputDevices,
-    availableAudioDevices
+    audioDevices
   );
 
   const handleMultiSelect = (
@@ -144,7 +156,7 @@ const AudioSourceControls: React.FC = () => {
 
     const standardizedValue = standardizeAudioDeviceNames(
       value,
-      availableAudioDevices
+      audioDevices
     ).join();
 
     if (type === DeviceType.INPUT) {
@@ -165,7 +177,7 @@ const AudioSourceControls: React.FC = () => {
   };
 
   const getSelectedChip = (id: string) => {
-    const description = getAudioDeviceDescription(id, availableAudioDevices);
+    const description = getAudioDeviceDescription(id, audioDevices);
     return (
       <Chip
         sx={{ height: '25px', bgcolor: 'white' }}
@@ -184,7 +196,7 @@ const AudioSourceControls: React.FC = () => {
           gap: 0.5,
         }}
       >
-        {selected.map(getSelectedChip)}
+        {selected !== undefined && selected.map(getSelectedChip)}
       </Box>
     );
   };
@@ -237,7 +249,7 @@ const AudioSourceControls: React.FC = () => {
             handleMultiSelect(DeviceType.OUTPUT, e);
           }}
         >
-          {availableAudioDevices.output.map(getOutputMenuItem)}
+          {audioDevices.output.map(getOutputMenuItem)}
         </Select>
       </FormControl>
     );
@@ -286,7 +298,7 @@ const AudioSourceControls: React.FC = () => {
             handleMultiSelect(DeviceType.INPUT, e);
           }}
         >
-          {availableAudioDevices.input.map(getInputMenuItem)}
+          {audioDevices.input.map(getInputMenuItem)}
         </Select>
       </FormControl>
     );

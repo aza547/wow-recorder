@@ -22,7 +22,7 @@ import {
   getAssetPath,
   updateRecStatus,
 } from './util';
-import { RecStatus, VideoPlayerSettings } from './types';
+import { OurDisplayType, RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import Manager from './Manager';
 
@@ -328,8 +328,8 @@ ipcMain.on('openURL', (event, args) => {
 /**
  * Get all displays.
  */
-ipcMain.on('getAllDisplays', (event) => {
-  event.returnValue = getAvailableDisplays();
+ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
+  return getAvailableDisplays();
 });
 
 /**

@@ -13,7 +13,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import React from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
 import { configSchema } from 'main/configSchema';
@@ -75,20 +75,29 @@ interface IProps {
  *     changes are allowed but we will need to restart the recorder.
  *   - Otherwise, let the user do whatever they want.
  */
-const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
+const VideoBaseControls: FC<IProps> = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const { recorderStatus } = props;
-  const initialRender = React.useRef(true);
+  const initialRender = useRef(true);
   const highRes = isHighRes(config.obsOutputResolution);
+  const [encoders, setEncoders] = useState<Encoder[]>([]);
 
-  const obsAvailableEncoders: Encoder[] = ipc
-    .sendSync('getEncoders', [])
-    .filter((s: string) => encoderFilter(s, highRes))
-    .map(mapStringToEncoder)
-    .sort((a: Encoder, b: Encoder) => a.type < b.type);
+  useEffect(() => {
+    const getAvailableEncoders = async () => {
+      const allEncoders = await ipc.invoke('getEncoders', []);
 
-  React.useEffect(() => {
-    // Don't fire on the initial render.
+      const availableEncoders = allEncoders
+        .filter((s: string) => encoderFilter(s, highRes))
+        .map(mapStringToEncoder)
+        .sort((a: Encoder, b: Encoder) => a.type < b.type);
+
+      setEncoders(availableEncoders);
+    };
+
+    getAvailableEncoders();
+
+    // The reset of this effect handles config changes, so if it's the
+    // initial render then just return here.
     if (initialRender.current) {
       initialRender.current = false;
       return;
@@ -107,6 +116,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
     config.obsFPS,
     config.obsKBitRate,
     config.obsRecEncoder,
+    highRes,
   ]);
 
   const isComponentDisabled = () => {
@@ -333,7 +343,7 @@ const VideoBaseControls: React.FC<IProps> = (props: IProps) => {
           onChange={setEncoder}
           sx={{ ...selectStyle }}
         >
-          {obsAvailableEncoders.map(getEncoderMenuItem)}
+          {encoders.map(getEncoderMenuItem)}
         </Select>
       </FormControl>
     );

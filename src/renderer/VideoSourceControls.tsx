@@ -7,7 +7,7 @@ import {
   ToggleButtonGroup,
   Tooltip,
 } from '@mui/material';
-import React from 'react';
+import React, { useState } from 'react';
 import { OurDisplayType } from 'main/types';
 import { configSchema } from 'main/configSchema';
 import InfoIcon from '@mui/icons-material/Info';
@@ -32,11 +32,19 @@ const switchStyle = {
 
 const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
-  const displayConfiguration = ipc.sendSync('getAllDisplays', []);
+  const [displays, setDisplays] = useState<OurDisplayType[]>([]);
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
-    // Don't fire on the initial render.
+    const getDisplays = async () => {
+      const allDisplays = await ipc.invoke('getAllDisplays', []);
+      setDisplays(allDisplays);
+    };
+
+    getDisplays();
+
+    // The reset of this effect handles config changes, so if it's the
+    // initial render then just return here.
     if (initialRender.current) {
       initialRender.current = false;
       return;
@@ -149,7 +157,7 @@ const VideoSourceControls: React.FC = () => {
             onChange={setMonitor}
             sx={{ border: '1px solid white', height: '40px' }}
           >
-            {displayConfiguration.map((display: OurDisplayType) =>
+            {displays.map((display: OurDisplayType) =>
               getToggleButton(display.index, display.index + 1)
             )}
           </ToggleButtonGroup>

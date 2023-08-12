@@ -17,6 +17,7 @@ import {
   ConfigStage,
   FlavourConfig,
   ObsOverlayConfig,
+  IOBSDevice,
 } from './types';
 import {
   getObsBaseConfig,
@@ -497,29 +498,30 @@ export default class Manager {
     });
 
     // Encoder listener, to populate settings on the frontend.
-    ipcMain.on('getEncoders', (event) => {
+    ipcMain.handle('getEncoders', (): string[] => {
       const obsEncoders = this.recorder
         .getAvailableEncoders()
         .filter((encoder) => encoder !== 'none');
 
-      event.returnValue = obsEncoders;
+      return obsEncoders;
     });
     
     // Audio devices listener, to populate settings on the frontend.
-    ipcMain.on('getAudioDevices', (event) => {
+    ipcMain.handle('getAudioDevices', (): {
+      input: IOBSDevice[];
+      output: IOBSDevice[];
+    } => {
       if (!this.recorder.obsInitialized) {
-        event.returnValue = {
+        return {
           input: [],
           output: [],
         };
-    
-        return;
       }
     
       const inputDevices = this.recorder.getInputAudioDevices();
       const outputDevices = this.recorder.getOutputAudioDevices();
     
-      event.returnValue = {
+      return {
         input: inputDevices,
         output: outputDevices,
       };
