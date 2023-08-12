@@ -57,7 +57,7 @@ export default class SizeMonitor {
           return isUnprotected;
         } catch {
           console.error('[SizeMonitor] Failed to get metadata for', file.name);
-          deleteVideo(file.name);
+          await deleteVideo(file.name);
           return false;
         }
       }
@@ -74,9 +74,11 @@ export default class SizeMonitor {
       `[SizeMonitor] Deleting ${filesForDeletion.length} old video(s)`
     );
 
-    filesForDeletion.forEach((file) => {
-      deleteVideo(file.name);
-    });
+    await Promise.all(
+      filesForDeletion.map(async (file) => {
+        await deleteVideo(file.name);
+      })
+    );
 
     this.mainWindow.webContents.send('refreshState');
   }

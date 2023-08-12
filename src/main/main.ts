@@ -252,7 +252,7 @@ ipcMain.on('mainWindow', (_event, args) => {
 ipcMain.on('videoButton', async (_event, args) => {
   if (args[0] === 'delete') {
     const videoForDeletion = args[1];
-    deleteVideo(videoForDeletion);
+    await deleteVideo(videoForDeletion);
     if (mainWindow) mainWindow.webContents.send('refreshState');
   }
 

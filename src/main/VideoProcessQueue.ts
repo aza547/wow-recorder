@@ -6,7 +6,7 @@ import ConfigService from './ConfigService';
 import { Metadata, SaveStatus, VideoQueueItem } from './types';
 import {
   fixPathWhenPackaged,
-  tryUnlinkSync,
+  tryUnlink,
   writeMetadataFile,
   getThumbnailFileNameForVideo,
 } from './util';
@@ -100,7 +100,7 @@ export default class VideoProcessQueue {
     );
 
     await writeMetadataFile(videoPath, data.metadata);
-    tryUnlinkSync(data.bufferFile);
+    await tryUnlink(data.bufferFile);
 
     await VideoProcessQueue.getThumbnail(videoPath);
 

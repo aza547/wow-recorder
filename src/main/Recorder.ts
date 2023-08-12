@@ -1027,10 +1027,16 @@ export default class Recorder {
     }
 
     // Sort newest to oldest
-    const videosToDelete = await getSortedVideos(this.bufferStorageDir);
-    if (!videosToDelete || videosToDelete.length === 0) return;
+    const sortedBufferVideos = await getSortedVideos(this.bufferStorageDir);
+    if (!sortedBufferVideos || sortedBufferVideos.length === 0) return;
 
-    videosToDelete.slice(filesToLeave).forEach((v) => deleteVideo(v.name));
+    const videosToDelete = sortedBufferVideos.slice(filesToLeave);
+
+    await Promise.all(
+      videosToDelete.map(async (video) => {
+        await deleteVideo(video.name);
+      })
+    );
   }
 
   /**

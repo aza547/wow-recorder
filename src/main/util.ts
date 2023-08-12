@@ -242,10 +242,10 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
  * Try to unlink a file and return a boolean indicating the success
  * Logs any errors to the console, if the file couldn't be deleted for some reason.
  */
-const tryUnlinkSync = (file: string): boolean => {
+const tryUnlink = async (file: string): Promise<boolean> => {
   try {
     console.log(`[Util] Deleting: ${file}`);
-    fs.unlinkSync(file);
+    await fs.promises.unlink(file);
     return true;
   } catch (e) {
     console.error(`[Util] Unable to delete file: ${file}.`);
@@ -257,24 +257,22 @@ const tryUnlinkSync = (file: string): boolean => {
 /**
  * Delete a video and its metadata file if it exists.
  */
-const deleteVideo = (videoPath: string) => {
+const deleteVideo = async (videoPath: string) => {
   console.info('[Util] Deleting video', videoPath);
 
-  // If we can't delete the video file, make sure we don't delete the metadata
-  // file either, which would leave the video file dangling.
-  if (!tryUnlinkSync(videoPath)) {
+  const success = await tryUnlink(videoPath);
+
+  if (!success) {
+    // If we can't delete the video file, make sure we don't delete the metadata
+    // file either, which would leave the video file dangling.
     return;
   }
 
   const metadataPath = getMetadataFileNameForVideo(videoPath);
-  if (fs.existsSync(metadataPath)) {
-    tryUnlinkSync(metadataPath);
-  }
+  await tryUnlink(metadataPath);
 
   const thumbnailPath = getThumbnailFileNameForVideo(videoPath);
-  if (fs.existsSync(thumbnailPath)) {
-    tryUnlinkSync(thumbnailPath);
-  }
+  await tryUnlink(thumbnailPath);
 };
 
 /**
@@ -514,7 +512,7 @@ export {
   getSortedVideos,
   getAvailableDisplays,
   getSortedFiles,
-  tryUnlinkSync,
+  tryUnlink,
   checkAppUpdate,
   getMetadataForVideo,
   deferredPromiseHelper,
