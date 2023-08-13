@@ -89,7 +89,9 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
   ]);
 
   const isComponentDisabled = () => {
-    return recorderStatus === RecStatus.Recording;
+    const isReadyToRecord = recorderStatus !== RecStatus.ReadyToRecord;
+    const isWaitingForWow = recorderStatus !== RecStatus.WaitingForWoW;
+    return !isReadyToRecord && !isWaitingForWow;
   };
 
   const getDisabledText = () => {

@@ -385,11 +385,10 @@ export default class Recorder {
       fpsType: 2,
     };
 
-    if (this.obsRecordingFactory) {
-      osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
+    if (!this.obsRecordingFactory) {
+      this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
     }
 
-    this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
     this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
     this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
     this.obsRecordingFactory.useStreamEncoders = false;
@@ -779,6 +778,7 @@ export default class Recorder {
 
     if (this.obsRecordingFactory) {
       osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
+      this.obsRecordingFactory = undefined;
     }
 
     this.wroteQueue.empty();
