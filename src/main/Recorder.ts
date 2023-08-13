@@ -362,6 +362,8 @@ export default class Recorder {
       obsOutputResolution,
     } = config;
 
+    console.log('start configure base');
+
     if (this.obsState !== ERecordingState.Offline) {
       throw new Error('[Recorder] OBS must be offline to do this');
     }
@@ -386,7 +388,9 @@ export default class Recorder {
     };
 
     if (this.obsRecordingFactory) {
+      console.log('start destroy');
       osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
+      console.log('end destroy');
     }
 
     this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
@@ -431,6 +435,8 @@ export default class Recorder {
     this.obsRecordingFactory.signalHandler = (signal) => {
       this.handleSignal(signal);
     };
+    
+    console.log('end configure base');
   }
 
   private handleSignal(obsSignal: osn.EOutputSignal) {

@@ -101,6 +101,7 @@ const getSortedFiles = async (
   pattern: string,
   sortDirection: FileSortDirection = FileSortDirection.NewestFirst
 ): Promise<FileInfo[]> => {
+  console.log('enter getSortedFiles');
   // We use fs.promises.readdir here instead of glob, which we used to
   // use but it caused problems with NFS paths, see this issue:
   // https://github.com/isaacs/node-glob/issues/74.
@@ -117,6 +118,7 @@ const getSortedFiles = async (
     // suspect something in getFileInfo isn't as async as it could be.
     // If that can be solved, then we can drop the await here and then
     // do an await Promises.all() on the following line.
+    console.log('loop', i);
     // eslint-disable-next-line no-await-in-loop
     mappedFileInfo.push(await getFileInfo(files[i]));
   }
@@ -125,6 +127,7 @@ const getSortedFiles = async (
     return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => B.mtime - A.mtime);
   }
 
+  console.log('exit getSortedFiles');
   return mappedFileInfo.sort((A: FileInfo, B: FileInfo) => A.mtime - B.mtime);
 };
 
