@@ -117,8 +117,8 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   );
 
   const isComponentDisabled = () => {
-    const isReadyToRecord = recorderStatus !== RecStatus.ReadyToRecord;
-    const isWaitingForWow = recorderStatus !== RecStatus.WaitingForWoW;
+    const isReadyToRecord = recorderStatus === RecStatus.ReadyToRecord;
+    const isWaitingForWow = recorderStatus === RecStatus.WaitingForWoW;
     return !isReadyToRecord && !isWaitingForWow;
   };
 
