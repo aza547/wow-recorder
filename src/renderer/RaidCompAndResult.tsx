@@ -197,8 +197,8 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
             src={DeathIcon}
             sx={{
               p: '2px',
-              height: '18px',
-              width: '12px',
+              height: '16px',
+              width: '16px',
               objectFit: 'cover',
             }}
           />
