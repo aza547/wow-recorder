@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Chaned
+### Fixed
+
+## [3.18.0] - 2023-09-03
+### Added
 - [Issue 425](https://github.com/aza547/wow-recorder/issues/425) - Add death counter to the video button for raids and mythic+.
 
-### Changed
 ### Fixed
 - [Issue 435](https://github.com/aza547/wow-recorder/issues/435) - Only allow the software encoder for resolutions over 4000 pixels.
 - [Issue 437](https://github.com/aza547/wow-recorder/issues/437) - Replace some sync logic with async logic.
