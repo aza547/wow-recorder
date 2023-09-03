@@ -20,9 +20,8 @@ import {
   getAvailableDisplays,
   checkAppUpdate,
   getAssetPath,
-  updateRecStatus,
 } from './util';
-import { OurDisplayType, RecStatus, VideoPlayerSettings } from './types';
+import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import Manager from './Manager';
 
@@ -43,24 +42,6 @@ let manager: Manager | undefined;
 // Issue 332. Need to call this before the app is ready.
 // https://www.electronjs.org/docs/latest/api/app#appdisablehardwareacceleration
 app.disableHardwareAcceleration();
-
-/**
- * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving
- * as expected then it's better to crash the app. See:
- * - https://nodejs.org/api/process.html#process_event_unhandledrejection.
- * - https://nodejs.org/api/process.html#event-unhandledrejection
- */
-process.on('unhandledRejection', (error: Error) => {
-  console.error('UnhandledPromiseRejectionWarning:', error);
-
-  if (manager) {
-    manager.recorder.shutdownOBS();
-  }
-
-  if (mainWindow) {
-    updateRecStatus(mainWindow, RecStatus.FatalError, String(error));
-  }
-});
 
 /**
  * Create a settings store to handle the config.

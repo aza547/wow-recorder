@@ -799,7 +799,13 @@ export default class Recorder {
       return;
     }
 
-    await this.startOBS();
+    try {
+      await this.startOBS();
+    } catch (error) {
+      console.error('Failed to start OBS:', error);
+      return;
+    }
+
     this._recorderStartDate = new Date();
 
     // Some very specific timings can cause us to end up here with an
@@ -820,7 +826,14 @@ export default class Recorder {
   stopBuffer = async () => {
     console.info('[Recorder] Stop recording buffer');
     this.cancelBufferTimers();
-    await this.stopOBS();
+
+    try {
+      await this.stopOBS();
+    } catch (error) {
+      console.error('Failed to stop OBS:', error);
+      return;
+    }
+
     this.cleanupBuffer(1);
   };
 
@@ -829,8 +842,15 @@ export default class Recorder {
    */
   restartBuffer = async () => {
     console.log('[Recorder] Restart recording buffer');
-    await this.stopOBS();
-    await this.startOBS();
+
+    try {
+      await this.stopOBS();
+      await this.startOBS();
+    } catch (error) {
+      console.error('Failed to restart OBS:', error);
+      return;
+    }
+
     this._recorderStartDate = new Date();
     this.cleanupBuffer(1);
   };
@@ -930,7 +950,13 @@ export default class Recorder {
     // The ordering is crucial here, we don't want to call stopOBS more
     // than once in a row else we will crash the app. See issue 291.
     this._isRecording = false;
-    await this.stopOBS();
+
+    try {
+      await this.stopOBS();
+    } catch (error) {
+      console.error('Failed to stop OBS, discarding video:', error);
+      return;
+    }
 
     // Grab some details now before we start OBS again and they are forgotten.
     const bufferFile = this.obsRecordingFactory.lastFile();
