@@ -120,9 +120,9 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
   ]);
 
   const isComponentDisabled = () => {
-    const isReadyToRecord = recorderStatus === RecStatus.ReadyToRecord;
-    const isWaitingForWow = recorderStatus === RecStatus.WaitingForWoW;
-    return !isReadyToRecord && !isWaitingForWow;
+    const isRecording = recorderStatus === RecStatus.Recording;
+    const isOverrunning = recorderStatus === RecStatus.Overruning;
+    return isRecording || isOverrunning;
   };
 
   const getMenuItem = (value: string) => {

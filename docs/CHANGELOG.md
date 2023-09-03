@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Chaned
 ### Fixed
 
+## [3.18.1] - 2023-09-03
+### Fixed
+- [Issue 440](https://github.com/aza547/wow-recorder/issues/440) - Fix a bug preventing settings being configured for the first time.
+
 ## [3.18.0] - 2023-09-03
 ### Added
 - [Issue 425](https://github.com/aza547/wow-recorder/issues/425) - Add death counter to the video button for raids and mythic+.
