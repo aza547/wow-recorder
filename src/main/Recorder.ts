@@ -16,7 +16,6 @@ import WaitQueue from 'wait-queue';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
   EOBSOutputSignal,
-  ERecordingFormat,
   ERecordingState,
   ESourceFlags,
   ESupportedEncoders,
@@ -205,16 +204,6 @@ export default class Recorder {
    * wrote signals here which indicate the video file has been written.
    */
   private wroteQueue = new WaitQueue<osn.EOutputSignal>();
-
-  /**
-   * Pending reconfigures.
-   */
-  private isReconfiguring = false;
-
-  /**
-   * Pending reconfigures.
-   */
-  private pendingReconfigure = false;
 
   /**
    * Name we use to create and reference the preview display.
@@ -869,7 +858,7 @@ export default class Recorder {
    * for a second and retry to avoid missing recordings if so.
    */
   async start() {
-    console.info('[Recorder] Start called');
+    console.info('[Recorder] Start recording by cancelling buffer restart');
 
     if (this.isOverruning) {
       console.info('[Recorder] Overrunning from last game');
@@ -899,7 +888,6 @@ export default class Recorder {
       retries--;
     }
 
-    console.info('[Recorder] Start recording by cancelling buffer restart');
     this.updateStatusIcon(RecStatus.Recording);
     this.cancelBufferTimers();
     this.isRecording = true;

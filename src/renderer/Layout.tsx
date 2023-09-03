@@ -91,14 +91,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         videoIndex: index,
       };
     });
-
-    // Forget the query, the text field will reset on its own.
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        videoFilterQuery: '',
-      };
-    });
   };
 
   const loadMoreVideos = () => {
