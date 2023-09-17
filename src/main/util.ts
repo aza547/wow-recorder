@@ -501,6 +501,14 @@ const validateFlavour = (config: FlavourConfig) => {
   }
 };
 
+/**
+ * Async sleep for a variable duration.
+ * @param ms milliseconds to sleep for
+ */
+const asyncSleep = async (ms: number) => {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -521,4 +529,5 @@ export {
   getWowFlavour,
   updateRecStatus,
   validateFlavour,
+  asyncSleep,
 };

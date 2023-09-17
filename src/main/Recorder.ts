@@ -22,6 +22,7 @@ import {
 } from './obsEnums';
 
 import {
+  asyncSleep,
   deferredPromiseHelper,
   deleteVideo,
   fixPathWhenPackaged,
@@ -44,6 +45,7 @@ import Activity from '../activitys/Activity';
 import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
+import RecorderException from './RecorderException';
 
 const { v4: uuidfn } = require('uuid');
 
@@ -342,7 +344,7 @@ export default class Recorder {
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
-  configureBase(config: ObsBaseConfig) {
+  public configureBase(config: ObsBaseConfig) {
     const {
       bufferStoragePath,
       obsFPS,
@@ -742,7 +744,7 @@ export default class Recorder {
   /**
    * Release all OBS resources and shut it down.
    */
-  shutdownOBS() {
+  public shutdownOBS() {
     console.info('[Recorder] OBS shutting down', this.uuid);
 
     if (!this.obsInitialized) {
@@ -790,8 +792,9 @@ export default class Recorder {
   /**
    * Start recorder buffer. This starts OBS and records in 5 min chunks
    * to the buffer location.
+   * @throws RecorderException if OBS failed to start
    */
-  startBuffer = async () => {
+  public startBuffer = async () => {
     console.info('[Recorder] Start recording buffer');
 
     if (!this.obsInitialized) {
@@ -799,13 +802,7 @@ export default class Recorder {
       return;
     }
 
-    try {
-      await this.startOBS();
-    } catch (error) {
-      console.error('Failed to start OBS:', error);
-      return;
-    }
-
+    await this.startOBS();
     this._recorderStartDate = new Date();
 
     // Some very specific timings can cause us to end up here with an
@@ -822,35 +819,23 @@ export default class Recorder {
 
   /**
    * Stop recorder buffer.
+   * @throws RecorderException if OBS fails to stop
    */
-  stopBuffer = async () => {
+  public stopBuffer = async () => {
     console.info('[Recorder] Stop recording buffer');
     this.cancelBufferTimers();
-
-    try {
-      await this.stopOBS();
-    } catch (error) {
-      console.error('Failed to stop OBS:', error);
-      return;
-    }
-
+    await this.stopOBS();
     this.cleanupBuffer(1);
   };
 
   /**
    * Restarts the buffer recording. Cleans the temp dir between stop/start.
+   * @throws RecorderException if OBS failed to restart
    */
-  restartBuffer = async () => {
+  private restartBuffer = async () => {
     console.log('[Recorder] Restart recording buffer');
-
-    try {
-      await this.stopOBS();
-      await this.startOBS();
-    } catch (error) {
-      console.error('Failed to restart OBS:', error);
-      return;
-    }
-
+    await this.stopOBS();
+    await this.startOBS();
     this._recorderStartDate = new Date();
     this.cleanupBuffer(1);
   };
@@ -859,7 +844,7 @@ export default class Recorder {
    * Cancel buffer timers. This can include any combination of:
    *  - _bufferRestartIntervalID: the interval on which we periodically restart the buffer
    */
-  cancelBufferTimers = () => {
+  private cancelBufferTimers = () => {
     if (this._bufferRestartIntervalID) {
       console.info('[Recorder] Buffer restart interval cleared');
       clearInterval(this._bufferRestartIntervalID);
@@ -876,8 +861,10 @@ export default class Recorder {
    * We do need to handle the case here that we're mid buffer restart and
    * OBS isn't in a Recording state but is about to be, so we will sleep
    * for a second and retry to avoid missing recordings if so.
+   *
+   * @throws A RecorderException if it failed to start
    */
-  async start() {
+  public async start() {
     console.info('[Recorder] Start recording by cancelling buffer restart');
 
     if (this.isOverruning) {
@@ -889,23 +876,16 @@ export default class Recorder {
     let rdy = !this.isRecording && this.obsState === ERecordingState.Recording;
     let retries = 5;
 
-    while (!rdy) {
+    while (!rdy && retries > 1) {
       console.info('[Recorder] Not ready, will sleep and retry:', retries);
-
-      if (retries < 1) {
-        console.warn(
-          '[Recorder] Exhausted attempts to start',
-          this.isRecording,
-          this.obsState
-        );
-
-        return;
-      }
-
       // eslint-disable-next-line no-await-in-loop
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await asyncSleep(1000);
       rdy = !this.isRecording && this.obsState === ERecordingState.Recording;
       retries--;
+    }
+
+    if (!rdy) {
+      throw new RecorderException('Exhausted attempts to start');
     }
 
     this.updateStatusIcon(RecStatus.Recording);
@@ -919,17 +899,15 @@ export default class Recorder {
    * @param {Activity} activity the details of the recording
    * @param {boolean} closedWow if wow has just been closed
    */
-  async stop(activity: Activity, closedWow = false) {
+  public async stop(activity: Activity, closedWow = false) {
     console.info('[Recorder] Stop called');
 
     if (!this._isRecording) {
-      console.warn('[Recorder] Stop recording called but not recording');
-      return;
+      throw new RecorderException('Stop recording called but not recording');
     }
 
     if (!this.obsRecordingFactory) {
-      console.warn('[Recorder] Stop called but no recording factory');
-      return;
+      throw new RecorderException('Stop called but no recording factory');
     }
 
     // Set-up some state in preparation for awaiting out the overrun. This is
@@ -950,13 +928,7 @@ export default class Recorder {
     // The ordering is crucial here, we don't want to call stopOBS more
     // than once in a row else we will crash the app. See issue 291.
     this._isRecording = false;
-
-    try {
-      await this.stopOBS();
-    } catch (error) {
-      console.error('Failed to stop OBS, discarding video:', error);
-      return;
-    }
+    await this.stopOBS();
 
     // Grab some details now before we start OBS again and they are forgotten.
     const bufferFile = this.obsRecordingFactory.lastFile();
@@ -971,7 +943,7 @@ export default class Recorder {
     }
 
     // Finally we can resolve the overrunPromise and allow any pending calls to
-    // start() to go ahead by resolving the overrun promise.
+    // start() to go ahead.
     resolveHelper();
     this.isOverruning = false;
 
@@ -1020,9 +992,13 @@ export default class Recorder {
 
   /**
    * Force stop a recording, throwing it away entirely.
+   * @throws RecorderException if OBS failed to stop
    */
-  async forceStop() {
-    if (!this._isRecording) return;
+  public async forceStop() {
+    if (!this._isRecording) {
+      return;
+    }
+
     await this.stopOBS();
     this._isRecording = false;
 
@@ -1034,7 +1010,7 @@ export default class Recorder {
    * Clean-up the buffer directory.
    * @params Number of files to leave.
    */
-  async cleanupBuffer(filesToLeave: number) {
+  private async cleanupBuffer(filesToLeave: number) {
     if (!this.bufferStorageDir) {
       console.info('[Recorder] Not attempting to clean-up');
       return;
@@ -1055,6 +1031,7 @@ export default class Recorder {
 
   /**
    * Tell OBS to start recording, and assert it signals that it has.
+   * @throws RecorderException if OBS didn't start in time
    */
   private async startOBS() {
     console.info('[Recorder] Start OBS called');
@@ -1076,9 +1053,7 @@ export default class Recorder {
     // Wait up to 30 seconds for OBS to signal it has started recording.
     await Promise.race([
       this.startQueue.shift(),
-      new Promise((_resolve, reject) =>
-        setTimeout(reject, 30000, '[Recorder] OBS timeout waiting for start')
-      ),
+      Recorder.rejectionTimer(30, 'Timeout waiting for OBS to start'),
     ]);
 
     this.startQueue.empty();
@@ -1087,6 +1062,7 @@ export default class Recorder {
 
   /**
    * Tell OBS to stop recording, and assert it signals that it has.
+   * @throws RecorderException if OBS didn't stop in time
    */
   private async stopOBS() {
     console.info('[Recorder] Stop OBS called');
@@ -1109,17 +1085,22 @@ export default class Recorder {
     // otherwise, throw an exception.
     await Promise.race([
       this.wroteQueue.shift(),
-      new Promise((_resolve, reject) =>
-        setTimeout(
-          reject,
-          30000,
-          '[Recorder] OBS timeout waiting for video file'
-        )
-      ),
+      Recorder.rejectionTimer(30, 'Timeout waiting for OBS to stop'),
     ]);
 
     this.wroteQueue.empty();
     console.info('[Recorder] Wrote signal received from signal queue');
+  }
+
+  /**
+   * Helper method returning a promise that will reject after a timer expires.
+   * @param s seconds before rejection
+   * @param msg string to reject with
+   */
+  private static async rejectionTimer(s: number, msg: string) {
+    return new Promise((_resolve, reject) =>
+      setTimeout(() => reject(new RecorderException(msg)), s * 1000)
+    );
   }
 
   /**
@@ -1410,7 +1391,5 @@ export default class Recorder {
       this.overlayImageSource,
       overlaySettings
     );
-
-    console.log(1);
   }
 }

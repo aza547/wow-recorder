@@ -33,6 +33,7 @@ import {
   runClassicRecordingTest,
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
+import RecorderException from './RecorderException';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -288,7 +289,16 @@ export default class Manager {
     console.info('[Manager] Detected WoW running, or Windows active again');
     const config = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(config);
-    await this.recorder.startBuffer();
+
+    try {
+      await this.recorder.startBuffer();
+    } catch (error) {
+      if (error instanceof RecorderException) {
+        error.log();
+      } else {
+        console.error('[Manager] Unexpected exception type: ', error);
+      }
+    }
   }
 
   /**

@@ -174,6 +174,10 @@ export default abstract class LogHandler {
     this.activity.addDeath(playerDeath);
   }
 
+  /**
+   * Start the recording. Every single activity starting comes through this 
+   * function.
+   */
   protected async startRecording(activity: Activity) {
     const { category } = activity;
     const allowed = allowRecordCategory(this.cfg, category);
@@ -183,7 +187,7 @@ export default abstract class LogHandler {
       return;
     }
 
-    console.log(
+    console.info(
       `[LogHandler] Start recording a video for category: ${category}`
     );
 
@@ -213,7 +217,7 @@ export default abstract class LogHandler {
   }
 
   protected async dataTimeout(ms: number) {
-    console.log(
+    console.info(
       `[LogHandler] Haven't received data for combatlog in ${
         ms / 1000
       } seconds.`
@@ -225,7 +229,7 @@ export default abstract class LogHandler {
   }
 
   public async forceEndActivity(timedelta = 0, closedWow = false) {
-    console.log(
+    console.info(
       '[LogHandler] Force ending activity',
       'timedelta:',
       timedelta,
