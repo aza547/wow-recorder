@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Add the 3840 x 1200 resolution.
+
 ### Chaned
 ### Fixed
 

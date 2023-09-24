@@ -28,6 +28,7 @@ const obsResolutions = {
   '2560x1600': { width: 2560, height: 1600 },
   '3440x1440': { width: 3440, height: 1440 },
   '3840x1080': { width: 3840, height: 1080 },
+  '3440x1200': { width: 3840, height: 1200 },
   '3840x1440': { width: 3840, height: 1440 },
   '3840x1600': { width: 3840, height: 1600 },
   '3840x2160': { width: 3840, height: 2160 },
