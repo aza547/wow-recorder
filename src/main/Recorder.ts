@@ -13,6 +13,7 @@ import {
 } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
+import { UiohookKey, uIOhook } from 'uiohook-napi';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
   EOBSOutputSignal,
@@ -181,6 +182,11 @@ export default class Recorder {
   private audioInputDevices: IInput[] = [];
 
   /**
+   * If the button for push to talk is currently held down.
+   */
+  private inputDevicesMuted = false;
+
+  /**
    * Some arbritrarily chosen channel numbers we can use for adding output
    * devices to the OBS scene. That is, adding speaker audio to the
    * recordings.
@@ -335,6 +341,8 @@ export default class Recorder {
     this.createOverlayImageSource();
 
     this.obsInitialized = true;
+
+    uIOhook.start();
     console.info('[Recorder] OBS initialized successfully');
   }
 
@@ -580,6 +588,8 @@ export default class Recorder {
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
 
+    uIOhook.removeAllListeners();
+
     const {
       audioInputDevices,
       audioOutputDevices,
@@ -628,6 +638,28 @@ export default class Recorder {
 
       this.addAudioSource(device, channel);
     });
+
+    if (config.pushToTalk) {
+      this.audioInputDevices.forEach((device) => {
+        device.muted = true;
+      });
+
+      this.inputDevicesMuted = true;
+
+      uIOhook.on('keydown', (e) => {
+        if (e.keycode === config.pushToTalkKey) {
+          console.log("unmute devices");
+          this.unmuteInputDevices();
+        }
+      });
+
+      uIOhook.on('keyup', (e) => {
+        if (e.keycode === config.pushToTalkKey) {
+          console.log("mute devices");
+          this.muteInputDevices();
+        }
+      });
+    }
 
     audioOutputDevices
       .split(',')
@@ -784,6 +816,8 @@ export default class Recorder {
 
     this.obsInitialized = false;
     this.obsConfigured = false;
+    uIOhook.stop();
+
     console.info('[Recorder] OBS shut down successfully');
   }
 
@@ -1384,7 +1418,29 @@ export default class Recorder {
       this.overlayImageSource,
       overlaySettings
     );
+  }
 
-    console.log(1);
+  private muteInputDevices() {
+    if (!this.inputDevicesMuted) {
+      return;
+    }
+
+    this.audioInputDevices.forEach((device) => {
+      device.muted = true;
+    });
+
+    this.inputDevicesMuted = false;
+  }
+
+  private unmuteInputDevices() {
+    if (this.inputDevicesMuted) {
+      return;
+    }
+
+    this.audioInputDevices.forEach((device) => {
+      device.muted = false;
+    });
+
+    this.inputDevicesMuted = true;
   }
 }

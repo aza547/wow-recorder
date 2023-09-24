@@ -10,6 +10,8 @@ import {
   Menu,
 } from 'electron';
 import os from 'os';
+
+import { UiohookKey, UiohookKeyboardEvent, uIOhook } from 'uiohook-napi';
 import {
   resolveHtmlPath,
   loadAllVideos,
@@ -203,6 +205,8 @@ const createWindow = async () => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
+
+  uIOhook.start();
 };
 
 /**
@@ -333,6 +337,17 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
 });
 
 /**
+ * Get the next key pressed by the user. This can be modifier keys, so if
+ * you want to catch the next non-modifier key you may need to call this
+ * a few times back to back. The event returned includes modifier details.
+ */
+ipcMain.handle('getNextKeyPress', async (): Promise<UiohookKeyboardEvent> => {
+  return new Promise((resolve) => {
+    uIOhook.once('keydown', resolve);
+  });
+});
+
+/**
  * Get the list of video files and their state.
  */
 ipcMain.handle('getVideoState', async () =>
@@ -360,6 +375,7 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  */
 app.on('window-all-closed', async () => {
   console.info('[Main] User closed app');
+  uIOhook.stop();
   app.quit();
 });
 

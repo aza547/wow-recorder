@@ -43,6 +43,9 @@ export type ConfigurationSchema = {
   deathMarkers: number;
   encounterMarkers: boolean;
   roundMarkers: boolean;
+  pushToTalk: boolean;
+  pushToTalkKey: number;
+  pushToTalkModifiers: string;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -294,5 +297,20 @@ export const configSchema = {
     description: 'Death markers to display on the video timeline.',
     type: 'boolean',
     default: true,
+  },
+  pushToTalk: {
+    description: 'Push to talk',
+    type: 'boolean',
+    default: false,
+  },
+  pushToTalkKey: {
+    description: 'Push to talk key',
+    type: 'number',
+    default: -1,
+  },
+  pushToTalkModifiers: {
+    description: 'Push to talk key modifiers',
+    type: 'string',
+    default: '',
   },
 };

@@ -256,6 +256,7 @@
     "tasklist": "^4.0.1",
     "tsc": "^2.0.4",
     "tss-react": "^4.1.1",
+    "uiohook-napi": "^1.5.2",
     "video.js": "^8.0.4",
     "videojs-hotkeys": "^0.2.28",
     "videojs-markers": "^1.0.1",

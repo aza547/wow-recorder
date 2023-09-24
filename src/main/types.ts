@@ -1,4 +1,5 @@
 import { Size } from 'electron';
+import { UiohookKey } from 'uiohook-napi';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
@@ -352,6 +353,8 @@ type ObsAudioConfig = {
   obsForceMono: boolean;
   speakerVolume: number;
   micVolume: number;
+  pushToTalk: boolean;
+  pushToTalkKey: number;
 };
 
 type FlavourConfig = {

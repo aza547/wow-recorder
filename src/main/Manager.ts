@@ -3,6 +3,7 @@ import { isEqual } from 'lodash';
 import path from 'path';
 import fs from 'fs';
 import { VideoCategory } from 'types/VideoCategory';
+import { uIOhook, UiohookKey } from 'uiohook-napi';
 import Poller from '../utils/Poller';
 import ClassicLogHandler from '../parsing/ClassicLogHandler';
 import RetailLogHandler from '../parsing/RetailLogHandler';
