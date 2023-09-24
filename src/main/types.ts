@@ -355,6 +355,7 @@ type ObsAudioConfig = {
   micVolume: number;
   pushToTalk: boolean;
   pushToTalkKey: number;
+  pushToTalkModifiers: string;
 };
 
 type FlavourConfig = {

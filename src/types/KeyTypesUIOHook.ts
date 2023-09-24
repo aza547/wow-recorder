@@ -136,8 +136,6 @@ export declare enum EventType {
 }
 
 export interface UioKeyPressEvent {
-  type: EventType.EVENT_KEY_PRESSED | EventType.EVENT_KEY_RELEASED;
-  time: number;
   altKey: boolean;
   ctrlKey: boolean;
   metaKey: boolean;

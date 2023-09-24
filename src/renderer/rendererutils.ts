@@ -34,6 +34,7 @@ import {
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
+import { EventType, UioKeyPressEvent } from 'types/KeyTypesUIOHook';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -737,6 +738,28 @@ const removeMarkerDiv = (marker: HTMLDivElement) => {
   parent.removeChild(marker);
 };
 
+const getKeyPressEventFromConfig = (
+  keycode: number,
+  modifiers: string
+): UioKeyPressEvent | null => {
+  if (keycode === -1) {
+    return null;
+  }
+
+  const ctrl = modifiers.includes('ctrl');
+  const win = modifiers.includes('win');
+  const shift = modifiers.includes('shift');
+  const alt = modifiers.includes('alt');
+
+  return {
+    altKey: alt,
+    ctrlKey: ctrl,
+    metaKey: win,
+    shiftKey: shift,
+    keycode,
+  };
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -780,4 +803,5 @@ export {
   addMarkerDiv,
   removeMarkerDiv,
   isHighRes,
+  getKeyPressEventFromConfig,
 };

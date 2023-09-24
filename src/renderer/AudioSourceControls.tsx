@@ -24,6 +24,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   getAudioDeviceDescription,
+  getKeyPressEventFromConfig,
   standardizeAudioDeviceNames,
 } from './rendererutils';
 import {
@@ -108,7 +109,7 @@ const AudioSourceControls: React.FC = () => {
     React.useState(false);
 
   const [pttHotKey, setPttHotKey] = React.useState<UioKeyPressEvent | null>(
-    null
+    getKeyPressEventFromConfig(config.pushToTalkKey, config.pushToTalkModifiers)
   );
 
   React.useEffect(() => {
@@ -412,11 +413,26 @@ const AudioSourceControls: React.FC = () => {
   };
 
   const setPushToTalkKey = (keyevent: UioKeyPressEvent) => {
-    // todo modifiers
+    const modifiers: string[] = [];
+
+    if (keyevent.altKey) {
+      modifiers.push('alt');
+    }
+    if (keyevent.ctrlKey) {
+      modifiers.push('ctrl');
+    }
+    if (keyevent.shiftKey) {
+      modifiers.push('shift');
+    }
+    if (keyevent.metaKey) {
+      modifiers.push('win');
+    }
+
     setConfig((prevState) => {
       return {
         ...prevState,
         pushToTalkKey: keyevent.keycode,
+        pushToTalkModifiers: modifiers.join(','),
       };
     });
   };

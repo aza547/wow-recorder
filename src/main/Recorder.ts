@@ -28,6 +28,7 @@ import {
   fixPathWhenPackaged,
   getAssetPath,
   getSortedVideos,
+  isPushToTalkHotkey,
 } from './util';
 
 import {
@@ -646,16 +647,16 @@ export default class Recorder {
 
       this.inputDevicesMuted = true;
 
-      uIOhook.on('keydown', (e) => {
-        if (e.keycode === config.pushToTalkKey) {
-          console.log("unmute devices");
+      uIOhook.on('keydown', (keyevent) => {
+        if (isPushToTalkHotkey(config, keyevent)) {
+          console.log("unmute");
           this.unmuteInputDevices();
         }
       });
 
-      uIOhook.on('keyup', (e) => {
-        if (e.keycode === config.pushToTalkKey) {
-          console.log("mute devices");
+      uIOhook.on('keyup', (keyevent) => {
+        if (isPushToTalkHotkey(config, keyevent)) {
+          console.log("mute");
           this.muteInputDevices();
         }
       });
