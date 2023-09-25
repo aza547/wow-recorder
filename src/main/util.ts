@@ -515,11 +515,7 @@ const isPushToTalkHotkey = (
   const shiftMatch = shiftKey === config.pushToTalkModifiers.includes('shift');
   const winMatch = metaKey === config.pushToTalkModifiers.includes('win');
 
-  if (keyMatch && altMatch && ctrlMatch && shiftMatch && winMatch) {
-    return true;
-  }
-
-  return false;
+  return keyMatch && altMatch && ctrlMatch && shiftMatch && winMatch;
 };
 
 export {

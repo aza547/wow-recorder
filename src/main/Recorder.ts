@@ -343,8 +343,6 @@ export default class Recorder {
     this.createOverlayImageSource();
 
     this.obsInitialized = true;
-
-    uIOhook.start();
     console.info('[Recorder] OBS initialized successfully');
   }
 
@@ -815,8 +813,6 @@ export default class Recorder {
 
     this.obsInitialized = false;
     this.obsConfigured = false;
-    uIOhook.stop();
-
     console.info('[Recorder] OBS shut down successfully');
   }
 
