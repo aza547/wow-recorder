@@ -760,6 +760,10 @@ const getKeyPressEventFromConfig = (
   };
 };
 
+const getKeyByValue = (object: any, value: any) => {
+  return Object.keys(object).find((key) => object[key] === value);
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -804,4 +808,5 @@ export {
   removeMarkerDiv,
   isHighRes,
   getKeyPressEventFromConfig,
+  getKeyByValue,
 };

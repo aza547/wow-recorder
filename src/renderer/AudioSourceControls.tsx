@@ -24,6 +24,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   getAudioDeviceDescription,
+  getKeyByValue,
   getKeyPressEventFromConfig,
   standardizeAudioDeviceNames,
 } from './rendererutils';
@@ -157,12 +158,6 @@ const AudioSourceControls: React.FC = () => {
   ]);
 
   React.useEffect(() => {
-    // 
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
-    }
-
     const getNextKey = async (): Promise<UioKeyPressEvent> => {
       return ipc.invoke('getNextKeyPress', []);
     };
@@ -178,24 +173,48 @@ const AudioSourceControls: React.FC = () => {
       return Object.values(UiohookModifierKeyMap).includes(event.keycode);
     };
 
+    const setPushToTalkKey = (keyevent: UioKeyPressEvent) => {
+      const modifiers: string[] = [];
+
+      if (keyevent.altKey) {
+        modifiers.push('alt');
+      }
+      if (keyevent.ctrlKey) {
+        modifiers.push('ctrl');
+      }
+      if (keyevent.shiftKey) {
+        modifiers.push('shift');
+      }
+      if (keyevent.metaKey) {
+        modifiers.push('win');
+      }
+
+      setConfig((prevState) => {
+        return {
+          ...prevState,
+          pushToTalkKey: keyevent.keycode,
+          pushToTalkModifiers: modifiers.join(','),
+        };
+      });
+    };
+
     const getNextNonModifierKey = async () => {
       while (pttHotKeyFieldFocused) {
         // eslint-disable-next-line no-await-in-loop
         const keyPressEvent = await getNextKey();
-        console.log(keyPressEvent);
 
         if (!isKeyModifier(keyPressEvent)) {
           setPttHotKeyFieldFocused(false);
           setPttHotKey(keyPressEvent);
-          blurAll();
           setPushToTalkKey(keyPressEvent);
+          blurAll();
           break;
         }
       }
     };
 
     getNextNonModifierKey();
-  }, [pttHotKeyFieldFocused]);
+  }, [pttHotKeyFieldFocused, setConfig]);
 
   const input = standardizeAudioDeviceNames(
     config.audioInputDevices,
@@ -412,31 +431,6 @@ const AudioSourceControls: React.FC = () => {
     });
   };
 
-  const setPushToTalkKey = (keyevent: UioKeyPressEvent) => {
-    const modifiers: string[] = [];
-
-    if (keyevent.altKey) {
-      modifiers.push('alt');
-    }
-    if (keyevent.ctrlKey) {
-      modifiers.push('ctrl');
-    }
-    if (keyevent.shiftKey) {
-      modifiers.push('shift');
-    }
-    if (keyevent.metaKey) {
-      modifiers.push('win');
-    }
-
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        pushToTalkKey: keyevent.keycode,
-        pushToTalkModifiers: modifiers.join(','),
-      };
-    });
-  };
-
   const getMonoSwitch = () => {
     return (
       <FormControlLabel
@@ -475,11 +469,7 @@ const AudioSourceControls: React.FC = () => {
     );
   };
 
-  const getKeyByValue = (object, value) => {
-    return Object.keys(object).find(key => object[key] === value);
-  };
-
-  const getBindingString = (keyPressEvent: UioKeyPressEvent) => {
+  const getKeyPressEventString = (keyPressEvent: UioKeyPressEvent) => {
     const keys: string[] = [];
 
     if (keyPressEvent.altKey) keys.push('Alt');
@@ -503,7 +493,7 @@ const AudioSourceControls: React.FC = () => {
     }
 
     if (pttHotKey !== null) {
-      return `${getBindingString(pttHotKey)} (Click to re-bind)`;
+      return `${getKeyPressEventString(pttHotKey)} (Click to re-bind)`;
     }
 
     return 'Click to bind';
