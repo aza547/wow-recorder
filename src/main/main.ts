@@ -11,7 +11,7 @@ import {
 } from 'electron';
 import os from 'os';
 
-import { UiohookKey, UiohookKeyboardEvent, uIOhook } from 'uiohook-napi';
+import { UiohookKeyboardEvent, uIOhook } from 'uiohook-napi';
 import {
   resolveHtmlPath,
   loadAllVideos,
