@@ -13,7 +13,7 @@ import {
 } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
-import { UiohookKey, uIOhook } from 'uiohook-napi';
+import { uIOhook } from 'uiohook-napi';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
   EOBSOutputSignal,
