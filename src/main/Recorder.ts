@@ -183,7 +183,8 @@ export default class Recorder {
   private audioInputDevices: IInput[] = [];
 
   /**
-   * If the button for push to talk is currently held down.
+   * Gets toggled if push to talk is enabled and when the hotkey for push to
+   * talk is held down.
    */
   private inputDevicesMuted = false;
 
@@ -588,7 +589,6 @@ export default class Recorder {
    */
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
-
     uIOhook.removeAllListeners();
 
     const {
@@ -649,14 +649,12 @@ export default class Recorder {
 
       uIOhook.on('keydown', (keyevent) => {
         if (isPushToTalkHotkey(config, keyevent)) {
-          console.log("unmute");
           this.unmuteInputDevices();
         }
       });
 
       uIOhook.on('keyup', (keyevent) => {
         if (isPushToTalkHotkey(config, keyevent)) {
-          console.log("mute");
           this.muteInputDevices();
         }
       });

@@ -299,17 +299,19 @@ export const configSchema = {
     default: true,
   },
   pushToTalk: {
-    description: 'Push to talk',
+    description:
+      'If the input audio devices should be recorded all the time, or only when a hotkey is held down.',
     type: 'boolean',
     default: false,
   },
   pushToTalkKey: {
-    description: 'Push to talk key',
+    description: 'The push to talk hotkey, represented by the key code.',
     type: 'number',
     default: -1,
   },
   pushToTalkModifiers: {
-    description: 'Push to talk key modifiers',
+    description:
+      'A comma seperated list of modifiers required in conjunction with the push to talk hotkey.',
     type: 'string',
     default: '',
   },
