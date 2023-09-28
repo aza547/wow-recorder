@@ -13,6 +13,7 @@ import {
 } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
+import { uIOhook } from 'uiohook-napi';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
   EOBSOutputSignal,
@@ -27,11 +28,13 @@ import {
   fixPathWhenPackaged,
   getAssetPath,
   getSortedVideos,
+  isPushToTalkHotkey,
 } from './util';
 
 import {
   IOBSDevice,
   Metadata,
+  MicStatus,
   ObsAudioConfig,
   ObsBaseConfig,
   ObsOverlayConfig,
@@ -179,6 +182,12 @@ export default class Recorder {
    * array of all the devices we know about.
    */
   private audioInputDevices: IInput[] = [];
+
+  /**
+   * Gets toggled if push to talk is enabled and when the hotkey for push to
+   * talk is held down.
+   */
+  private inputDevicesMuted = false;
 
   /**
    * Some arbritrarily chosen channel numbers we can use for adding output
@@ -579,6 +588,8 @@ export default class Recorder {
    */
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
+    uIOhook.removeAllListeners();
+    this.mainWindow.webContents.send('updateMicStatus', MicStatus.NONE);
 
     const {
       audioInputDevices,
@@ -618,6 +629,12 @@ export default class Recorder {
       );
     }
 
+    if (this.audioInputDevices.length !== 0 && config.pushToTalk) {
+      this.mainWindow.webContents.send('updateMicStatus', MicStatus.MUTED);
+    } else if (this.audioInputDevices.length !== 0) {
+      this.mainWindow.webContents.send('updateMicStatus', MicStatus.LISTENING);
+    }
+
     this.audioInputDevices.forEach((device) => {
       const index = this.audioInputDevices.indexOf(device);
       const channel = this.audioInputChannels[index];
@@ -628,6 +645,26 @@ export default class Recorder {
 
       this.addAudioSource(device, channel);
     });
+
+    if (config.pushToTalk) {
+      this.audioInputDevices.forEach((device) => {
+        device.muted = true;
+      });
+
+      this.inputDevicesMuted = true;
+
+      uIOhook.on('keydown', (keyevent) => {
+        if (isPushToTalkHotkey(config, keyevent)) {
+          this.unmuteInputDevices();
+        }
+      });
+
+      uIOhook.on('keyup', (keyevent) => {
+        if (isPushToTalkHotkey(config, keyevent)) {
+          this.muteInputDevices();
+        }
+      });
+    }
 
     audioOutputDevices
       .split(',')
@@ -1384,7 +1421,31 @@ export default class Recorder {
       this.overlayImageSource,
       overlaySettings
     );
+  }
 
-    console.log(1);
+  private muteInputDevices() {
+    if (this.inputDevicesMuted) {
+      return;
+    }
+
+    this.audioInputDevices.forEach((device) => {
+      device.muted = true;
+    });
+
+    this.inputDevicesMuted = true;
+    this.mainWindow.webContents.send('updateMicStatus', MicStatus.MUTED);
+  }
+
+  private unmuteInputDevices() {
+    if (!this.inputDevicesMuted) {
+      return;
+    }
+
+    this.audioInputDevices.forEach((device) => {
+      device.muted = false;
+    });
+
+    this.inputDevicesMuted = false;
+    this.mainWindow.webContents.send('updateMicStatus', MicStatus.LISTENING);
   }
 }

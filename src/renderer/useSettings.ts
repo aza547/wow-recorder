@@ -62,6 +62,9 @@ export const getSettings = (): ConfigurationSchema => {
     deathMarkers: getConfigValue<number>('deathMarkers'),
     encounterMarkers: getConfigValue<boolean>('encounterMarkers'),
     roundMarkers: getConfigValue<boolean>('roundMarkers'),
+    pushToTalk: getConfigValue<boolean>('pushToTalk'),
+    pushToTalkKey: getConfigValue<number>('pushToTalkKey'),
+    pushToTalkModifiers: getConfigValue<string>('pushToTalkModifiers'),
   };
 
   return configValues;

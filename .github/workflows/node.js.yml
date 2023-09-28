@@ -19,7 +19,7 @@ jobs:
     - name: Setup Node JS
       uses: actions/setup-node@v3
       with:
-        node-version: '18.16.0'
+        node-version: '20.4.0'
         cache: 'npm'
 
     - name: Install deps
