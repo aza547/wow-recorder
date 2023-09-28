@@ -23,6 +23,12 @@ enum RecStatus {
   Overruning,
 }
 
+enum MicStatus {
+  NONE,
+  MUTED,
+  LISTENING,
+}
+
 /**
  * Application saving status.
  */
@@ -440,4 +446,5 @@ export {
   DeathMarkers,
   VideoMarker,
   Colors,
+  MicStatus,
 };

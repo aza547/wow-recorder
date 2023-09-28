@@ -553,6 +553,7 @@ export default class Manager {
     app.on('before-quit', () => {
       console.info('[Manager] Running before-quit actions');
       this.recorder.shutdownOBS();
+      uIOhook.stop();
     });
 
     // If Windows is going to sleep, we don't want to confuse OBS.

@@ -34,6 +34,7 @@ import {
 import {
   IOBSDevice,
   Metadata,
+  MicStatus,
   ObsAudioConfig,
   ObsBaseConfig,
   ObsOverlayConfig,
@@ -588,6 +589,7 @@ export default class Recorder {
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
+    this.mainWindow.webContents.send('updateMicStatus', MicStatus.NONE);
 
     const {
       audioInputDevices,
@@ -625,6 +627,12 @@ export default class Recorder {
         0,
         this.audioInputChannels.length
       );
+    }
+
+    if (this.audioInputDevices.length !== 0 && config.pushToTalk) {
+      this.mainWindow.webContents.send('updateMicStatus', MicStatus.MUTED);
+    } else if (this.audioInputDevices.length !== 0) {
+      this.mainWindow.webContents.send('updateMicStatus', MicStatus.LISTENING);
     }
 
     this.audioInputDevices.forEach((device) => {
@@ -1416,7 +1424,7 @@ export default class Recorder {
   }
 
   private muteInputDevices() {
-    if (!this.inputDevicesMuted) {
+    if (this.inputDevicesMuted) {
       return;
     }
 
@@ -1424,11 +1432,12 @@ export default class Recorder {
       device.muted = true;
     });
 
-    this.inputDevicesMuted = false;
+    this.inputDevicesMuted = true;
+    this.mainWindow.webContents.send('updateMicStatus', MicStatus.MUTED);
   }
 
   private unmuteInputDevices() {
-    if (this.inputDevicesMuted) {
+    if (!this.inputDevicesMuted) {
       return;
     }
 
@@ -1436,6 +1445,7 @@ export default class Recorder {
       device.muted = false;
     });
 
-    this.inputDevicesMuted = true;
+    this.inputDevicesMuted = false;
+    this.mainWindow.webContents.send('updateMicStatus', MicStatus.LISTENING);
   }
 }
