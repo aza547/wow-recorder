@@ -28,6 +28,8 @@ import { OurDisplayType, RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import Manager from './Manager';
 
+const { globalShortcut } = require('electron');
+
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
 
@@ -377,6 +379,21 @@ app.on('window-all-closed', async () => {
   console.info('[Main] User closed app');
   uIOhook.stop();
   app.quit();
+});
+
+/**
+ * Disable manually refreshing the app.
+ */
+app.on('browser-window-focus', () => {
+  globalShortcut.register('CommandOrControl+R', () => {});
+  globalShortcut.register('CommandOrControl+Shift+R', () => {});
+  globalShortcut.register('F5', () => {});
+});
+
+app.on('browser-window-blur', () => {
+  globalShortcut.unregister('CommandOrControl+R');
+  globalShortcut.unregister('CommandOrControl+Shift+R');
+  globalShortcut.unregister('F5');
 });
 
 /**
