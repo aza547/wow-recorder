@@ -10,6 +10,8 @@ import {
   Menu,
 } from 'electron';
 import os from 'os';
+
+import { UiohookKeyboardEvent, uIOhook } from 'uiohook-napi';
 import {
   resolveHtmlPath,
   loadAllVideos,
@@ -24,6 +26,8 @@ import {
 import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import Manager from './Manager';
+
+const { globalShortcut } = require('electron');
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -184,6 +188,8 @@ const createWindow = async () => {
     shell.openExternal(edata.url);
     return { action: 'deny' };
   });
+
+  uIOhook.start();
 };
 
 /**
@@ -314,6 +320,17 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
 });
 
 /**
+ * Get the next key pressed by the user. This can be modifier keys, so if
+ * you want to catch the next non-modifier key you may need to call this
+ * a few times back to back. The event returned includes modifier details.
+ */
+ipcMain.handle('getNextKeyPress', async (): Promise<UiohookKeyboardEvent> => {
+  return new Promise((resolve) => {
+    uIOhook.once('keydown', resolve);
+  });
+});
+
+/**
  * Get the list of video files and their state.
  */
 ipcMain.handle('getVideoState', async () =>
@@ -341,7 +358,23 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  */
 app.on('window-all-closed', async () => {
   console.info('[Main] User closed app');
+  uIOhook.stop();
   app.quit();
+});
+
+/**
+ * Disable manually refreshing the app.
+ */
+app.on('browser-window-focus', () => {
+  globalShortcut.register('CommandOrControl+R', () => {});
+  globalShortcut.register('CommandOrControl+Shift+R', () => {});
+  globalShortcut.register('F5', () => {});
+});
+
+app.on('browser-window-blur', () => {
+  globalShortcut.unregister('CommandOrControl+R');
+  globalShortcut.unregister('CommandOrControl+Shift+R');
+  globalShortcut.unregister('F5');
 });
 
 /**

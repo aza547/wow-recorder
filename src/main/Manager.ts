@@ -3,6 +3,7 @@ import { isEqual } from 'lodash';
 import path from 'path';
 import fs from 'fs';
 import { VideoCategory } from 'types/VideoCategory';
+import { uIOhook, UiohookKey } from 'uiohook-napi';
 import Poller from '../utils/Poller';
 import ClassicLogHandler from '../parsing/ClassicLogHandler';
 import RetailLogHandler from '../parsing/RetailLogHandler';
@@ -562,6 +563,7 @@ export default class Manager {
     app.on('before-quit', () => {
       console.info('[Manager] Running before-quit actions');
       this.recorder.shutdownOBS();
+      uIOhook.stop();
     });
 
     // If Windows is going to sleep, we don't want to confuse OBS.

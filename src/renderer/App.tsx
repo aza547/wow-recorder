@@ -1,6 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
 import {
+  MicStatus,
   Pages,
   RecStatus,
   RendererVideoState,
@@ -64,6 +65,8 @@ const Application = () => {
     videoFullScreen: false,
   });
 
+  const [micStatus, setMicStatus] = React.useState<MicStatus>(MicStatus.NONE);
+
   React.useEffect(() => {
     ipc.on('refreshState', async () => {
       setVideoState(
@@ -101,6 +104,10 @@ const Application = () => {
         link: link as string,
       });
     });
+
+    ipc.on('updateMicStatus', (status) => {
+      setMicStatus(status as MicStatus);
+    });
   }, []);
 
   return (
@@ -123,13 +130,11 @@ const Application = () => {
         setAppState={setAppState}
       />
       <BottomStatusBar
-        navigation={navigation}
-        setNavigation={setNavigation}
         recorderStatus={recorderStatus}
         error={error}
         upgradeStatus={upgradeStatus}
         savingStatus={savingStatus}
-        setAppState={setAppState}
+        micStatus={micStatus}
       />
     </Box>
   );

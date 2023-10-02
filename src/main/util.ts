@@ -12,8 +12,10 @@ import {
   RendererVideoState,
   RecStatus,
   FlavourConfig,
+  ObsAudioConfig,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
+import { UiohookKeyboardEvent } from 'uiohook-napi';
 
 const categories = Object.values(VideoCategory);
 
@@ -509,6 +511,21 @@ const asyncSleep = async (ms: number) => {
   await new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+const isPushToTalkHotkey = (
+  config: ObsAudioConfig,
+  keyevent: UiohookKeyboardEvent
+) => {
+  const { keycode, altKey, ctrlKey, shiftKey, metaKey } = keyevent;
+
+  const keyMatch = keycode === config.pushToTalkKey;
+  const altMatch = altKey === config.pushToTalkModifiers.includes('alt');
+  const ctrlMatch = ctrlKey === config.pushToTalkModifiers.includes('ctrl');
+  const shiftMatch = shiftKey === config.pushToTalkModifiers.includes('shift');
+  const winMatch = metaKey === config.pushToTalkModifiers.includes('win');
+
+  return keyMatch && altMatch && ctrlMatch && shiftMatch && winMatch;
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -530,4 +547,5 @@ export {
   updateRecStatus,
   validateFlavour,
   asyncSleep,
+  isPushToTalkHotkey,
 };

@@ -23,6 +23,12 @@ enum RecStatus {
   Overruning,
 }
 
+enum MicStatus {
+  NONE,
+  MUTED,
+  LISTENING,
+}
+
 /**
  * Application saving status.
  */
@@ -352,6 +358,9 @@ type ObsAudioConfig = {
   obsForceMono: boolean;
   speakerVolume: number;
   micVolume: number;
+  pushToTalk: boolean;
+  pushToTalkKey: number;
+  pushToTalkModifiers: string;
 };
 
 type FlavourConfig = {
@@ -437,4 +446,5 @@ export {
   DeathMarkers,
   VideoMarker,
   Colors,
+  MicStatus,
 };

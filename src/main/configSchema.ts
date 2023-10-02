@@ -43,6 +43,9 @@ export type ConfigurationSchema = {
   deathMarkers: number;
   encounterMarkers: boolean;
   roundMarkers: boolean;
+  pushToTalk: boolean;
+  pushToTalkKey: number;
+  pushToTalkModifiers: string;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -294,5 +297,22 @@ export const configSchema = {
     description: 'Death markers to display on the video timeline.',
     type: 'boolean',
     default: true,
+  },
+  pushToTalk: {
+    description:
+      'If the input audio devices should be recorded all the time, or only when a hotkey is held down.',
+    type: 'boolean',
+    default: false,
+  },
+  pushToTalkKey: {
+    description: 'The push to talk hotkey, represented by the key code.',
+    type: 'number',
+    default: -1,
+  },
+  pushToTalkModifiers: {
+    description:
+      'A comma seperated list of modifiers required in conjunction with the push to talk hotkey.',
+    type: 'string',
+    default: '',
   },
 };
