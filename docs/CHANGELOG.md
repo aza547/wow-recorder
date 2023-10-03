@@ -6,10 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+### Fixed
+
+## [3.19.0] - 2023-10-03
+### Added
 - Add the 3840 x 1200 resolution.
 - [Issue 125](https://github.com/aza547/wow-recorder/issues/125) - Push to talk for microphone recording.
 
-### Chaned
 ### Fixed
 - [Issue 443](https://github.com/aza547/wow-recorder/issues/443) - Fix to Ctrl + R breaking the app.
 
