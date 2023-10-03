@@ -72,6 +72,7 @@ const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
     micVolume: cfg.get<number>('micVolume'),
     pushToTalk: cfg.get<boolean>('pushToTalk'),
     pushToTalkKey: cfg.get<number>('pushToTalkKey'),
+    pushToTalkMouseButton: cfg.get<number>('pushToTalkMouseButton'),
     pushToTalkModifiers: cfg.get<string>('pushToTalkModifiers'),
   };
 };

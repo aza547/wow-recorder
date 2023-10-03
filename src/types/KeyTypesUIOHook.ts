@@ -125,20 +125,18 @@ export const UiohookKeyMap = {
   PrintScreen: 3639,
 };
 
-export declare enum EventType {
+export declare enum PTTEventType {
   EVENT_KEY_PRESSED = 4,
   EVENT_KEY_RELEASED = 5,
-  EVENT_MOUSE_CLICKED = 6,
   EVENT_MOUSE_PRESSED = 7,
   EVENT_MOUSE_RELEASED = 8,
-  EVENT_MOUSE_MOVED = 9,
-  EVENT_MOUSE_WHEEL = 11,
 }
 
-export interface UioKeyPressEvent {
+export interface PTTKeyPressEvent {
   altKey: boolean;
   ctrlKey: boolean;
   metaKey: boolean;
   shiftKey: boolean;
-  keycode: number;
+  keyCode: number;
+  mouseButton: number;
 }

@@ -13,7 +13,7 @@ import {
 } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
-import { uIOhook } from 'uiohook-napi';
+import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
   EOBSOutputSignal,
@@ -30,6 +30,7 @@ import {
   getAssetPath,
   getSortedVideos,
   isPushToTalkHotkey,
+  convertUioHookEvent,
 } from './util';
 
 import {
@@ -497,6 +498,8 @@ export default class Recorder {
       );
     } else if (obsCaptureMode === 'game_capture') {
       this.videoSource = Recorder.createGameCaptureSource(captureCursor);
+    } else if (obsCaptureMode === 'window_capture') {
+      this.videoSource = Recorder.createWindowCaptureSource(captureCursor);
     } else {
       throw new Error(`[Recorder] Unexpected mode: ${obsCaptureMode}`);
     }
@@ -560,6 +563,28 @@ export default class Recorder {
     gameCaptureSource.save();
 
     return gameCaptureSource;
+  }
+
+  /**
+   * Creates a window capture source.
+   */
+  private static createWindowCaptureSource(captureCursor: boolean) {
+    console.info('[Recorder] Configuring OBS for Window Capture');
+
+    const windowCaptureSource = osn.InputFactory.create(
+      'window_capture',
+      'WR Window Capture',
+      {
+        cursor: captureCursor,
+        window: 'World of Warcraft:GxWindowClass:Wow.exe',
+        // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
+        // capture behind the WoW window. Not sure why, some googling suggested Windows theme issues.
+        // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
+        method: 2,
+      }
+    );
+
+    return windowCaptureSource;
   }
 
   /**
@@ -655,17 +680,23 @@ export default class Recorder {
 
       this.inputDevicesMuted = true;
 
-      uIOhook.on('keydown', (keyevent) => {
-        if (isPushToTalkHotkey(config, keyevent)) {
-          this.unmuteInputDevices();
-        }
-      });
+      const pttHandler = (
+        fn: () => void,
+        event: UiohookKeyboardEvent | UiohookMouseEvent
+      ) => {
+        const convertedEvent = convertUioHookEvent(event);
 
-      uIOhook.on('keyup', (keyevent) => {
-        if (isPushToTalkHotkey(config, keyevent)) {
-          this.muteInputDevices();
+        if (isPushToTalkHotkey(config, convertedEvent)) {
+          fn();
         }
-      });
+      };
+
+      /* eslint-disable prettier/prettier */
+      uIOhook.on('keydown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
+      uIOhook.on('keyup', (e) => pttHandler(() => this.muteInputDevices(), e));
+      uIOhook.on('mousedown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
+      uIOhook.on('mouseup', (e) => pttHandler(() => this.muteInputDevices(), e));
+      /* eslint-enable prettier/prettier */
     }
 
     audioOutputDevices
@@ -869,8 +900,8 @@ export default class Recorder {
    * Restarts the buffer recording. Cleans the temp dir between stop/start.
    * @throws RecorderException if OBS failed to restart
    */
-  private restartBuffer = async () => {
-    console.log('[Recorder] Restart recording buffer');
+  public restartBuffer = async () => {
+    console.info('[Recorder] Restart recording buffer');
     await this.stopOBS();
     await this.startOBS();
     this._recorderStartDate = new Date();

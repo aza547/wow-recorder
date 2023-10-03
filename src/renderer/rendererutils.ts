@@ -34,7 +34,8 @@ import {
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
-import { EventType, UioKeyPressEvent } from 'types/KeyTypesUIOHook';
+import { PTTKeyPressEvent, UiohookModifierKeyMap } from 'types/KeyTypesUIOHook';
+import { ConfigurationSchema } from 'main/configSchema';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -738,30 +739,69 @@ const removeMarkerDiv = (marker: HTMLDivElement) => {
   parent.removeChild(marker);
 };
 
-const getKeyPressEventFromConfig = (
-  keycode: number,
-  modifiers: string
-): UioKeyPressEvent | null => {
-  if (keycode === -1) {
-    return null;
-  }
-
-  const ctrl = modifiers.includes('ctrl');
-  const win = modifiers.includes('win');
-  const shift = modifiers.includes('shift');
-  const alt = modifiers.includes('alt');
+const getPTTKeyPressEventFromConfig = (
+  config: ConfigurationSchema
+): PTTKeyPressEvent => {
+  const ctrl = config.pushToTalkModifiers.includes('ctrl');
+  const win = config.pushToTalkModifiers.includes('win');
+  const shift = config.pushToTalkModifiers.includes('shift');
+  const alt = config.pushToTalkModifiers.includes('alt');
 
   return {
     altKey: alt,
     ctrlKey: ctrl,
     metaKey: win,
     shiftKey: shift,
-    keycode,
+    keyCode: config.pushToTalkKey,
+    mouseButton: config.pushToTalkMouseButton,
   };
 };
 
 const getKeyByValue = (object: any, value: any) => {
   return Object.keys(object).find((key) => object[key] === value);
+};
+
+const isKeyModifier = (event: PTTKeyPressEvent) => {
+  if (event.keyCode < 0) {
+    return false;
+  }
+
+  const isModifierKey = Object.values(UiohookModifierKeyMap).includes(
+    event.keyCode
+  );
+
+  return isModifierKey;
+};
+
+const getKeyModifiersString = (keyevent: PTTKeyPressEvent) => {
+  const modifiers: string[] = [];
+
+  if (keyevent.altKey) {
+    modifiers.push('alt');
+  }
+  if (keyevent.ctrlKey) {
+    modifiers.push('ctrl');
+  }
+  if (keyevent.shiftKey) {
+    modifiers.push('shift');
+  }
+  if (keyevent.metaKey) {
+    modifiers.push('win');
+  }
+
+  return modifiers.join(',');
+};
+
+const blurAll = (document: Document) => {
+  const tmp = document.createElement('input');
+  document.body.appendChild(tmp);
+  tmp.focus();
+  document.body.removeChild(tmp);
+};
+
+const getNextKeyOrMouseEvent = async (): Promise<PTTKeyPressEvent> => {
+  const ipc = window.electron.ipcRenderer;
+  return ipc.invoke('getNextKeyPress', []);
 };
 
 export {
@@ -807,6 +847,10 @@ export {
   addMarkerDiv,
   removeMarkerDiv,
   isHighRes,
-  getKeyPressEventFromConfig,
+  getPTTKeyPressEventFromConfig,
   getKeyByValue,
+  isKeyModifier,
+  blurAll,
+  getKeyModifiersString,
+  getNextKeyOrMouseEvent,
 };
