@@ -498,9 +498,14 @@ const updateRecStatus = (
 const validateFlavour = (config: FlavourConfig) => {
   const { recordRetail, retailLogPath, recordClassic, classicLogPath } = config;
 
-  if (recordRetail && getWowFlavour(retailLogPath) !== 'wow') {
-    console.error('[Util] Invalid retail log path', retailLogPath);
-    throw new Error('Invalid retail log path');
+  if (recordRetail) {
+    const validFlavours = ['wow', 'wowxptr'];
+    const validPath = validFlavours.includes(getWowFlavour(retailLogPath));
+
+    if (!validPath) {
+      console.error('[Util] Invalid retail log path', retailLogPath);
+      throw new Error('Invalid retail log path');
+    }
   }
 
   if (recordClassic && getWowFlavour(classicLogPath) !== 'wow_classic') {
@@ -514,18 +519,16 @@ const isPushToTalkHotkey = (
   event: PTTKeyPressEvent
 ) => {
   const { keyCode, mouseButton, altKey, ctrlKey, shiftKey, metaKey } = event;
-
-  console.log(event);
-  console.log(config);
+  const { pushToTalkKey, pushToTalkMouseButton, pushToTalkModifiers } = config;
 
   const buttonMatch =
-    (keyCode > 0 && keyCode === config.pushToTalkKey) ||
-    (mouseButton > 0 && mouseButton === config.pushToTalkMouseButton);
+    (keyCode > 0 && keyCode === pushToTalkKey) ||
+    (mouseButton > 0 && mouseButton === pushToTalkMouseButton);
 
-  const altMatch = altKey === config.pushToTalkModifiers.includes('alt');
-  const ctrlMatch = ctrlKey === config.pushToTalkModifiers.includes('ctrl');
-  const shiftMatch = shiftKey === config.pushToTalkModifiers.includes('shift');
-  const winMatch = metaKey === config.pushToTalkModifiers.includes('win');
+  const altMatch = altKey === pushToTalkModifiers.includes('alt');
+  const ctrlMatch = ctrlKey === pushToTalkModifiers.includes('ctrl');
+  const shiftMatch = shiftKey === pushToTalkModifiers.includes('shift');
+  const winMatch = metaKey === pushToTalkModifiers.includes('win');
 
   return buttonMatch && altMatch && ctrlMatch && shiftMatch && winMatch;
 };
