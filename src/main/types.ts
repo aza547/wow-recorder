@@ -360,6 +360,7 @@ type ObsAudioConfig = {
   micVolume: number;
   pushToTalk: boolean;
   pushToTalkKey: number;
+  pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
 };
 

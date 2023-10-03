@@ -64,6 +64,7 @@ export const getSettings = (): ConfigurationSchema => {
     roundMarkers: getConfigValue<boolean>('roundMarkers'),
     pushToTalk: getConfigValue<boolean>('pushToTalk'),
     pushToTalkKey: getConfigValue<number>('pushToTalkKey'),
+    pushToTalkMouseButton: getConfigValue<number>('pushToTalkMouseButton'),
     pushToTalkModifiers: getConfigValue<string>('pushToTalkModifiers'),
   };
 

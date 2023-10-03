@@ -23,16 +23,16 @@ import { configSchema } from 'main/configSchema';
 import InfoIcon from '@mui/icons-material/Info';
 import { useSettings, setConfigValues } from './useSettings';
 import {
+  blurAll,
   getAudioDeviceDescription,
   getKeyByValue,
-  getKeyPressEventFromConfig,
+  getKeyModifiersString,
+  getNextKeyOrMouseEvent,
+  getPTTKeyPressEventFromConfig,
+  isKeyModifier,
   standardizeAudioDeviceNames,
 } from './rendererutils';
-import {
-  UioKeyPressEvent,
-  UiohookKeyMap,
-  UiohookModifierKeyMap,
-} from '../types/KeyTypesUIOHook';
+import { PTTKeyPressEvent, UiohookKeyMap } from '../types/KeyTypesUIOHook';
 
 const selectStyle = {
   color: 'white',
@@ -109,8 +109,8 @@ const AudioSourceControls: React.FC = () => {
   const [pttHotKeyFieldFocused, setPttHotKeyFieldFocused] =
     React.useState(false);
 
-  const [pttHotKey, setPttHotKey] = React.useState<UioKeyPressEvent | null>(
-    getKeyPressEventFromConfig(config.pushToTalkKey, config.pushToTalkModifiers)
+  const [pttHotKey, setPttHotKey] = React.useState<PTTKeyPressEvent>(
+    getPTTKeyPressEventFromConfig(config)
   );
 
   React.useEffect(() => {
@@ -141,6 +141,7 @@ const AudioSourceControls: React.FC = () => {
         obsForceMono: config.obsForceMono,
         pushToTalk: config.pushToTalk,
         pushToTalkKey: config.pushToTalkKey,
+        pushToTalkMouseButton: config.pushToTalkMouseButton,
         pushToTalkModifiers: config.pushToTalkModifiers,
       });
 
@@ -154,46 +155,18 @@ const AudioSourceControls: React.FC = () => {
     config.obsForceMono,
     config.pushToTalk,
     config.pushToTalkKey,
+    config.pushToTalkMouseButton,
     config.pushToTalkModifiers,
   ]);
 
   React.useEffect(() => {
-    const getNextKey = async (): Promise<UioKeyPressEvent> => {
-      return ipc.invoke('getNextKeyPress', []);
-    };
-
-    const blurAll = () => {
-      const tmp = document.createElement('input');
-      document.body.appendChild(tmp);
-      tmp.focus();
-      document.body.removeChild(tmp);
-    };
-
-    const isKeyModifier = (event: UioKeyPressEvent) => {
-      return Object.values(UiohookModifierKeyMap).includes(event.keycode);
-    };
-
-    const setPushToTalkKey = (keyevent: UioKeyPressEvent) => {
-      const modifiers: string[] = [];
-
-      if (keyevent.altKey) {
-        modifiers.push('alt');
-      }
-      if (keyevent.ctrlKey) {
-        modifiers.push('ctrl');
-      }
-      if (keyevent.shiftKey) {
-        modifiers.push('shift');
-      }
-      if (keyevent.metaKey) {
-        modifiers.push('win');
-      }
-
+    const setPushToTalkKey = (event: PTTKeyPressEvent) => {
       setConfig((prevState) => {
         return {
           ...prevState,
-          pushToTalkKey: keyevent.keycode,
-          pushToTalkModifiers: modifiers.join(','),
+          pushToTalkKey: event.keyCode,
+          pushToTalkMouseButton: event.mouseButton,
+          pushToTalkModifiers: getKeyModifiersString(event),
         };
       });
     };
@@ -201,13 +174,13 @@ const AudioSourceControls: React.FC = () => {
     const getNextNonModifierKey = async () => {
       while (pttHotKeyFieldFocused) {
         // eslint-disable-next-line no-await-in-loop
-        const keyPressEvent = await getNextKey();
+        const keyPressEvent = await getNextKeyOrMouseEvent();
 
         if (!isKeyModifier(keyPressEvent)) {
           setPttHotKeyFieldFocused(false);
           setPttHotKey(keyPressEvent);
           setPushToTalkKey(keyPressEvent);
-          blurAll();
+          blurAll(document);
           break;
         }
       }
@@ -469,19 +442,21 @@ const AudioSourceControls: React.FC = () => {
     );
   };
 
-  const getKeyPressEventString = (keyPressEvent: UioKeyPressEvent) => {
+  const getKeyPressEventString = (event: PTTKeyPressEvent) => {
     const keys: string[] = [];
 
-    if (keyPressEvent.altKey) keys.push('Alt');
-    if (keyPressEvent.ctrlKey) keys.push('Ctrl');
-    if (keyPressEvent.shiftKey) keys.push('Shift');
-    if (keyPressEvent.metaKey) keys.push('Win');
+    if (event.altKey) keys.push('Alt');
+    if (event.ctrlKey) keys.push('Ctrl');
+    if (event.shiftKey) keys.push('Shift');
+    if (event.metaKey) keys.push('Win');
 
-    const { keycode } = keyPressEvent;
-    const key = getKeyByValue(UiohookKeyMap, keycode);
+    const { keyCode, mouseButton } = event;
 
-    if (key !== undefined) {
-      keys.push(key);
+    if (keyCode > 0) {
+      const key = getKeyByValue(UiohookKeyMap, keyCode);
+      if (key !== undefined) keys.push(key);
+    } else if (mouseButton > 0) {
+      keys.push(`Mouse ${event.mouseButton}`);
     }
 
     return keys.join('+');

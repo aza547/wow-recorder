@@ -45,6 +45,7 @@ export type ConfigurationSchema = {
   roundMarkers: boolean;
   pushToTalk: boolean;
   pushToTalkKey: number;
+  pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
 };
 
@@ -306,6 +307,11 @@ export const configSchema = {
   },
   pushToTalkKey: {
     description: 'The push to talk hotkey, represented by the key code.',
+    type: 'number',
+    default: -1,
+  },
+  pushToTalkMouseButton: {
+    description: 'The push to talk mouse button.',
     type: 'number',
     default: -1,
   },

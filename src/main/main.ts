@@ -11,7 +11,8 @@ import {
 } from 'electron';
 import os from 'os';
 
-import { UiohookKeyboardEvent, uIOhook } from 'uiohook-napi';
+import { uIOhook } from 'uiohook-napi';
+import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import {
   resolveHtmlPath,
   loadAllVideos,
@@ -23,6 +24,8 @@ import {
   checkAppUpdate,
   getAssetPath,
   updateRecStatus,
+  nextMousePressPromise,
+  nextKeyPressPromise,
 } from './util';
 import { OurDisplayType, RecStatus, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
@@ -343,10 +346,8 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
  * you want to catch the next non-modifier key you may need to call this
  * a few times back to back. The event returned includes modifier details.
  */
-ipcMain.handle('getNextKeyPress', async (): Promise<UiohookKeyboardEvent> => {
-  return new Promise((resolve) => {
-    uIOhook.once('keydown', resolve);
-  });
+ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
+  return Promise.race([nextKeyPressPromise(), nextMousePressPromise()]);
 });
 
 /**

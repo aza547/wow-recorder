@@ -4,6 +4,13 @@ import path from 'path';
 import fs, { promises as fspromise } from 'fs';
 import { app, BrowserWindow, Display, net, screen } from 'electron';
 import {
+  EventType,
+  uIOhook,
+  UiohookKeyboardEvent,
+  UiohookMouseEvent,
+} from 'uiohook-napi';
+import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import {
   Metadata,
   FileInfo,
   FileSortDirection,
@@ -15,7 +22,6 @@ import {
   ObsAudioConfig,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
-import { UiohookKeyboardEvent } from 'uiohook-napi';
 
 const categories = Object.values(VideoCategory);
 
@@ -505,17 +511,94 @@ const validateFlavour = (config: FlavourConfig) => {
 
 const isPushToTalkHotkey = (
   config: ObsAudioConfig,
-  keyevent: UiohookKeyboardEvent
+  event: PTTKeyPressEvent
 ) => {
-  const { keycode, altKey, ctrlKey, shiftKey, metaKey } = keyevent;
+  const { keyCode, mouseButton, altKey, ctrlKey, shiftKey, metaKey } = event;
 
-  const keyMatch = keycode === config.pushToTalkKey;
+  console.log(event);
+  console.log(config);
+
+  const buttonMatch =
+    (keyCode > 0 && keyCode === config.pushToTalkKey) ||
+    (mouseButton > 0 && mouseButton === config.pushToTalkMouseButton);
+
   const altMatch = altKey === config.pushToTalkModifiers.includes('alt');
   const ctrlMatch = ctrlKey === config.pushToTalkModifiers.includes('ctrl');
   const shiftMatch = shiftKey === config.pushToTalkModifiers.includes('shift');
   const winMatch = metaKey === config.pushToTalkModifiers.includes('win');
 
-  return keyMatch && altMatch && ctrlMatch && shiftMatch && winMatch;
+  return buttonMatch && altMatch && ctrlMatch && shiftMatch && winMatch;
+};
+
+const convertUioHookKeyPressEvent = (
+  event: UiohookKeyboardEvent
+): PTTKeyPressEvent => {
+  return {
+    altKey: event.altKey,
+    ctrlKey: event.ctrlKey,
+    metaKey: event.metaKey,
+    shiftKey: event.shiftKey,
+    keyCode: event.keycode,
+    mouseButton: -1,
+  };
+};
+
+const convertUioHookMousePressEvent = (
+  event: UiohookMouseEvent
+): PTTKeyPressEvent => {
+  return {
+    altKey: event.altKey,
+    ctrlKey: event.ctrlKey,
+    metaKey: event.metaKey,
+    shiftKey: event.shiftKey,
+    keyCode: -1,
+    mouseButton: event.button as number,
+  };
+};
+
+const convertUioHookEvent = (
+  event: UiohookKeyboardEvent | UiohookMouseEvent
+): PTTKeyPressEvent => {
+  if (event.type === EventType.EVENT_KEY_PRESSED) {
+    return convertUioHookKeyPressEvent(event as UiohookKeyboardEvent);
+  }
+
+  if (event.type === EventType.EVENT_KEY_RELEASED) {
+    return convertUioHookKeyPressEvent(event as UiohookKeyboardEvent);
+  }
+
+  if (event.type === EventType.EVENT_MOUSE_PRESSED) {
+    return convertUioHookMousePressEvent(event as UiohookMouseEvent);
+  }
+
+  if (event.type === EventType.EVENT_MOUSE_RELEASED) {
+    return convertUioHookMousePressEvent(event as UiohookMouseEvent);
+  }
+
+  return {
+    altKey: false,
+    shiftKey: false,
+    ctrlKey: false,
+    metaKey: false,
+    keyCode: -1,
+    mouseButton: -1,
+  };
+};
+
+const nextKeyPressPromise = (): Promise<PTTKeyPressEvent> => {
+  return new Promise((resolve) => {
+    uIOhook.once('keydown', (event) => {
+      resolve(convertUioHookEvent(event));
+    });
+  });
+};
+
+const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
+  return new Promise((resolve) => {
+    uIOhook.once('mousedown', (event) => {
+      resolve(convertUioHookEvent(event));
+    });
+  });
 };
 
 export {
@@ -539,4 +622,7 @@ export {
   updateRecStatus,
   validateFlavour,
   isPushToTalkHotkey,
+  nextKeyPressPromise,
+  nextMousePressPromise,
+  convertUioHookEvent,
 };

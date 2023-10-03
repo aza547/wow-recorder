@@ -13,7 +13,7 @@ import {
 } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
-import { uIOhook } from 'uiohook-napi';
+import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
   EOBSOutputSignal,
@@ -29,6 +29,7 @@ import {
   getAssetPath,
   getSortedVideos,
   isPushToTalkHotkey,
+  convertUioHookEvent,
 } from './util';
 
 import {
@@ -653,17 +654,23 @@ export default class Recorder {
 
       this.inputDevicesMuted = true;
 
-      uIOhook.on('keydown', (keyevent) => {
-        if (isPushToTalkHotkey(config, keyevent)) {
-          this.unmuteInputDevices();
-        }
-      });
+      const pttHandler = (
+        fn: () => void,
+        event: UiohookKeyboardEvent | UiohookMouseEvent
+      ) => {
+        const convertedEvent = convertUioHookEvent(event);
 
-      uIOhook.on('keyup', (keyevent) => {
-        if (isPushToTalkHotkey(config, keyevent)) {
-          this.muteInputDevices();
+        if (isPushToTalkHotkey(config, convertedEvent)) {
+          fn();
         }
-      });
+      };
+
+      /* eslint-disable prettier/prettier */
+      uIOhook.on('keydown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
+      uIOhook.on('keyup', (e) => pttHandler(() => this.muteInputDevices(), e));
+      uIOhook.on('mousedown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
+      uIOhook.on('mouseup', (e) => pttHandler(() => this.muteInputDevices(), e));
+      /* eslint-enable prettier/prettier */
     }
 
     audioOutputDevices
@@ -865,7 +872,7 @@ export default class Recorder {
    * Restarts the buffer recording. Cleans the temp dir between stop/start.
    */
   restartBuffer = async () => {
-    console.log('[Recorder] Restart recording buffer');
+    console.info('[Recorder] Restart recording buffer');
     await this.stopOBS();
     await this.startOBS();
     this._recorderStartDate = new Date();
