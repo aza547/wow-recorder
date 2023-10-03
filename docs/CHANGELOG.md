@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 443](https://github.com/aza547/wow-recorder/issues/443) - Fix to Ctrl + R breaking the app.
+- Fix PTR log path validation.
 
 ## [3.18.1] - 2023-09-03
 ### Fixed
