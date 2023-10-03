@@ -132,6 +132,7 @@ const VideoSourceControls: React.FC = () => {
             onChange={setOBSCaptureMode}
             sx={{ border: '1px solid white', height: '40px' }}
           >
+            {getToggleButton('window_capture', 'window')}
             {getToggleButton('game_capture', 'game')}
             {getToggleButton('monitor_capture', 'monitor')}
           </ToggleButtonGroup>
@@ -144,7 +145,7 @@ const VideoSourceControls: React.FC = () => {
   };
 
   const getMonitorToggle = () => {
-    if (config.obsCaptureMode === 'game_capture') {
+    if (config.obsCaptureMode !== 'monitor_capture') {
       return <></>;
     }
 

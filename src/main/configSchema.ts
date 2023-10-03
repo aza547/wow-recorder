@@ -16,7 +16,7 @@ export type ConfigurationSchema = {
   obsFPS: number;
   obsForceMono: boolean;
   obsKBitRate: number;
-  obsCaptureMode: string; // 'game_capture' or 'monitor_capture'
+  obsCaptureMode: string; // 'window_capture' or 'game_capture' or 'monitor_capture'
   obsRecEncoder: string;
   recordRetail: boolean;
   recordClassic: boolean;
@@ -162,9 +162,9 @@ export const configSchema = {
   },
   obsCaptureMode: {
     description:
-      'Game capture records the game directly but is limited in that only one OBS process can use game capture at a time. If you are also streaming with OBS Studio you may wish to use monitor capture here.',
+      'The capture mode OBS should use to record. Recommended is Window capture, but each have their own limitations. See #faq in discord for more details.',
     type: 'string',
-    default: 'game_capture',
+    default: 'window_capture',
   },
   obsRecEncoder: {
     description:
