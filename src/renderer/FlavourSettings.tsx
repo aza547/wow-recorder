@@ -166,17 +166,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     });
   };
 
-  const validateRetailLogPath = () => {
-    // todo validate it
-    if (config.retailLogPath === '') {
-      return false;
-    }
-
-    return true;
-  };
-
   const retailLogPathHelperText = () => {
-    if (validateRetailLogPath()) {
+    if (config.retailLogPath !== '') {
       return '';
     }
 
@@ -210,7 +201,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             disabled={!config.recordRetail || isComponentDisabled()}
             label="Retail Log Path"
             variant="outlined"
-            error={!validateRetailLogPath()}
+            error={config.retailLogPath === ''}
             helperText={retailLogPathHelperText()}
             onClick={setRetailLogPath}
             InputLabelProps={{ shrink: true, style: { color: 'white' } }}
@@ -241,17 +232,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     });
   };
 
-  const validateClassicLogPath = () => {
-    // todo validate it
-    if (config.classicLogPath === '') {
-      return false;
-    }
-
-    return true;
-  };
-
   const classicLogPathHelperText = () => {
-    if (validateClassicLogPath()) {
+    if (config.classicLogPath !== '') {
       return '';
     }
 
@@ -285,7 +267,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             disabled={!config.recordClassic || isComponentDisabled()}
             label="Classic Log Path"
             variant="outlined"
-            error={!validateClassicLogPath()}
+            error={config.classicLogPath === ''}
             helperText={classicLogPathHelperText()}
             onClick={setClassicLogPath}
             InputLabelProps={{ shrink: true, style: { color: 'white' } }}

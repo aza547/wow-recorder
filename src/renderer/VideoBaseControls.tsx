@@ -352,6 +352,10 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
   };
 
   const getInfoIcon = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
     const helptext = [
       ['FPS', configSchema.obsFPS.description].join('\n'),
       ['Canvas Resolution', configSchema.obsOutputResolution.description].join(

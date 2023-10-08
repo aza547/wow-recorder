@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 ### Changed
+- Improve the look of some settings while a recording is active.
+
 ### Fixed
+- [Issue 446](https://github.com/aza547/wow-recorder/issues/446) - Fix to darkness in AMD encodings, and improvements for other encoders.
 
 ## [3.19.0] - 2023-10-03
 ### Added

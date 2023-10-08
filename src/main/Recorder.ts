@@ -16,10 +16,15 @@ import WaitQueue from 'wait-queue';
 import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
+  EColorSpace,
+  EFPSType,
   EOBSOutputSignal,
+  ERangeType,
   ERecordingState,
+  EScaleType,
   ESourceFlags,
   ESupportedEncoders,
+  EVideoFormat,
 } from './obsEnums';
 
 import {
@@ -372,6 +377,13 @@ export default class Recorder {
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
+    // The AMD encoder causes recordings to get much darker if using the full
+    // color range setting. So swap that to partial here. See https://github.com/aza547/wow-recorder/issues/446.
+    const colorRange =
+      obsRecEncoder === ESupportedEncoders.AMD_AMF_H264
+        ? ERangeType.Partial
+        : ERangeType.Full;
+
     osn.VideoFactory.videoContext = {
       fpsNum: obsFPS,
       fpsDen: 1,
@@ -379,11 +391,14 @@ export default class Recorder {
       baseHeight: height,
       outputWidth: width,
       outputHeight: height,
-      outputFormat: 2,
-      colorspace: 2,
-      range: 2,
-      scaleType: 3,
-      fpsType: 2,
+
+      // Bit of a mess here to keep typescript happy and make this readable.
+      // See https://github.com/stream-labs/obs-studio-node/issues/1260.
+      outputFormat: EVideoFormat.I444 as unknown as osn.EVideoFormat,
+      colorspace: EColorSpace.CSSRGB as unknown as osn.EColorSpace,
+      scaleType: EScaleType.Bicubic as unknown as osn.EScaleType,
+      fpsType: EFPSType.Fractional as unknown as osn.EFPSType,
+      range: colorRange as unknown as osn.ERangeType,
     };
 
     if (!this.obsRecordingFactory) {
@@ -416,10 +431,11 @@ export default class Recorder {
 
     // Not totally clear why AMF is a special case here. Theory is that as it
     // is a plugin to OBS (it's a seperate github repo), and the likes of the
-    // nvenc/x264 encoders are native to OBS so have homogenized settings.
+    // nvenc/x264 encoders are native to OBS so have homogenized settings. We
+    // add a 1.5 multiplier onto the peak from what the user sets here.
     if (obsRecEncoder === ESupportedEncoders.AMD_AMF_H264) {
       this.obsRecordingFactory.videoEncoder.update({
-        'Bitrate.Peak': obsKBitRate * 1000,
+        'Bitrate.Peak': obsKBitRate * 1000 * 1.5,
       });
     }
 
