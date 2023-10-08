@@ -640,6 +640,8 @@ export default class Recorder {
       obsForceMono,
     } = config;
 
+    // Pretty sure these arguments are doing nothing.
+    // See https://github.com/stream-labs/obs-studio-node/issues/1367.
     const track1 = osn.AudioTrackFactory.create(160, 'track1');
     osn.AudioTrackFactory.setAtIndex(track1, 1);
 
