@@ -12,18 +12,10 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
   const { video } = props;
   const { encounterName, zoneName } = video;
   const difficultyText = getInstanceDifficultyText(video);
+  const unknownRaid = video.zoneName === 'Unknown Raid';
 
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        flexDirection: 'column',
-        backgroundColor: 'transparent',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+  const renderDifficultyText = () => {
+    return (
       <Typography
         align="center"
         sx={{
@@ -37,7 +29,11 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
       >
         {difficultyText}
       </Typography>
+    );
+  };
 
+  const renderEncounterText = () => {
+    return (
       <Typography
         align="center"
         sx={{
@@ -51,7 +47,11 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
       >
         {encounterName}
       </Typography>
+    );
+  };
 
+  const renderZoneText = () => {
+    return (
       <Typography
         align="center"
         sx={{
@@ -65,6 +65,23 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
       >
         {zoneName}
       </Typography>
+    );
+  };
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        flexDirection: 'column',
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {renderDifficultyText()}
+      {renderEncounterText()}
+      {unknownRaid || renderZoneText()}
     </Box>
   );
 };

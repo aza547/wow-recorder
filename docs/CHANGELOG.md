@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 446](https://github.com/aza547/wow-recorder/issues/446) - Fix to darkness in AMD encodings, and improvements for other encoders.
+- Fixed an issue with some encounters not working as search bar queries.
+- Hide the "Unknown Raid" text to make app maintenance easier.
 
 ## [3.19.0] - 2023-10-03
 ### Added

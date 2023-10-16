@@ -190,6 +190,10 @@ export default class VideoFilter {
       }
     }
 
+    if (this.video.encounterName !== undefined) {
+      this.addStringFilter(this.video.encounterName);
+    }
+
     if (this.video.difficultyID === 17) {
       this.addStringFilter('lfr looking for raid');
     } else if (this.video.difficultyID === 14) {
