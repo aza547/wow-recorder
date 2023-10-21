@@ -7,7 +7,7 @@ import {
   retailBattlegrounds,
   specializationById,
 } from 'main/constants';
-import { RendererVideo } from 'main/types';
+import { Flavour, RendererVideo } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
 import {
   isArenaUtil,
@@ -126,6 +126,12 @@ export default class VideoFilter {
       this.addStringFilter('saved');
       this.addStringFilter('protected');
       this.addStringFilter('favourited favorited');
+    }
+
+    if (this.video.flavour === Flavour.Retail) {
+      this.addStringFilter('retail');
+    } else if (this.video.flavour === Flavour.Classic) {
+      this.addStringFilter('classic');
     }
   }
 
@@ -296,7 +302,7 @@ export default class VideoFilter {
     }
 
     if (category === VideoCategory.Raids) {
-      return 'Search suggestions: kill today mythic destruction bookmarked';
+      return 'Search suggestions: kill today retail mythic destruction bookmarked';
     }
 
     if (category === VideoCategory.Battlegrounds) {
