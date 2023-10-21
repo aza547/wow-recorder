@@ -79,7 +79,6 @@ const Application = () => {
         return {
           ...prevState,
           videoFullScreen: false,
-          videoFilterQuery: '',
         };
       });
     });

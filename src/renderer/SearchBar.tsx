@@ -1,6 +1,7 @@
 import { TextField } from '@mui/material';
 import { TAppState, TNavigatorState } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
+import { useState } from 'react';
 import VideoFilter from './VideoFilter';
 
 interface IProps {
@@ -10,6 +11,8 @@ interface IProps {
 
 const SearchBar = (props: IProps) => {
   const { navigation, setAppState } = props;
+  const [searchText, setSearchText] = useState<string>('');
+
   const { categoryIndex } = navigation;
   let debounceSearchTimer: NodeJS.Timer;
 
@@ -18,6 +21,7 @@ const SearchBar = (props: IProps) => {
 
   const debouncedFilter = (event: React.BaseSyntheticEvent) => {
     const filterText = event.target.value;
+    setSearchText(filterText);
 
     if (debounceSearchTimer) {
       clearTimeout(debounceSearchTimer);
@@ -39,6 +43,7 @@ const SearchBar = (props: IProps) => {
       size="small"
       placeholder={VideoFilter.getSuggestions(category)}
       id="search-bar"
+      value={searchText}
       onChange={debouncedFilter}
       sx={{
         '& .MuiOutlinedInput-root': {

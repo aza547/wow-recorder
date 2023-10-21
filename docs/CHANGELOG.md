@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hide the "Unknown Raid" text to make app maintenance easier.
 - Fix a bug where a search query would not be forgotten when a new video is saved.
 - Fixed issue where we tried to delete some non-existent files noisy ENOENT errors in logs.
+- Improve the search bar behaviour for existing queries when new videos are recorded.
 
 ## [3.19.0] - 2023-10-03
 ### Added
