@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- Improve rejected promise handling by removing blanket rejected promise handling.
 
 ## [3.19.1] - 2023-10-21
 ### Added
