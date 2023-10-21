@@ -29,12 +29,12 @@ import {
 
 import {
   deferredPromiseHelper,
-  deleteVideo,
   fixPathWhenPackaged,
   getAssetPath,
   getSortedVideos,
   isPushToTalkHotkey,
   convertUioHookEvent,
+  tryUnlink,
 } from './util';
 
 import {
@@ -1108,7 +1108,9 @@ export default class Recorder {
 
     await Promise.all(
       videosToDelete.map(async (video) => {
-        await deleteVideo(video.name);
+        // Deliberatly don't call deleteVideo here, as we have no
+        // thumbnail or metadata to delete.
+        await tryUnlink(video.name);
       })
     );
   }

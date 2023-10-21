@@ -51,6 +51,10 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
   };
 
   const renderZoneText = () => {
+    if (!unknownRaid) {
+      return <></>;
+    }
+
     return (
       <Typography
         align="center"
@@ -81,7 +85,7 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
     >
       {renderDifficultyText()}
       {renderEncounterText()}
-      {unknownRaid || renderZoneText()}
+      {renderZoneText()}
     </Box>
   );
 };
