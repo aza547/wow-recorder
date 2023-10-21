@@ -51,7 +51,7 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
   };
 
   const renderZoneText = () => {
-    if (!unknownRaid) {
+    if (unknownRaid) {
       return <></>;
     }
 
