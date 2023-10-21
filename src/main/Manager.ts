@@ -3,7 +3,7 @@ import { isEqual } from 'lodash';
 import path from 'path';
 import fs from 'fs';
 import { VideoCategory } from 'types/VideoCategory';
-import { uIOhook, UiohookKey } from 'uiohook-napi';
+import { uIOhook } from 'uiohook-napi';
 import Poller from '../utils/Poller';
 import ClassicLogHandler from '../parsing/ClassicLogHandler';
 import RetailLogHandler from '../parsing/RetailLogHandler';
@@ -184,16 +184,10 @@ export default class Manager {
   public async forceStop() {
     if (this.retailLogHandler && this.retailLogHandler.activity) {
       await this.retailLogHandler.forceEndActivity(0, false);
-      return;
     }
 
     if (this.classicLogHandler && this.classicLogHandler.activity) {
       await this.classicLogHandler.forceEndActivity(0, false);
-      return;
-    }
-
-    if (this.recorder) {
-      await this.recorder.forceStop();
     }
   };
 
@@ -546,7 +540,6 @@ export default class Manager {
       this.manage();
     });
 
-
     // Important we shutdown OBS on the before-quit event as if we get closed by
     // the installer we want to ensure we shutdown OBS, this is common when
     // upgrading the app. See issue 325 and 338.
@@ -556,9 +549,9 @@ export default class Manager {
       uIOhook.stop();
     });
 
-    // If Windows is going to sleep, we don't want to confuse OBS.
-    // Stop the recording as if WoW has been closed, and resume it once Windows
-    // has resumed. 
+    // If Windows is going to sleep, we don't want to confuse OBS. Stop the
+    // recording as if WoW has been closed, and resume it once Windows has 
+    // resumed. 
     powerMonitor.on('suspend', () => {
       console.info('[Manager] Detected Windows is going to sleep.');
       this.onWowStopped();

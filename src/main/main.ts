@@ -23,15 +23,12 @@ import {
   getAvailableDisplays,
   checkAppUpdate,
   getAssetPath,
-  updateRecStatus,
   nextMousePressPromise,
   nextKeyPressPromise,
 } from './util';
-import { OurDisplayType, RecStatus, VideoPlayerSettings } from './types';
+import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import Manager from './Manager';
-
-const { globalShortcut } = require('electron');
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -50,24 +47,6 @@ let manager: Manager | undefined;
 // Issue 332. Need to call this before the app is ready.
 // https://www.electronjs.org/docs/latest/api/app#appdisablehardwareacceleration
 app.disableHardwareAcceleration();
-
-/**
- * Guard against any UnhandledPromiseRejectionWarnings. If OBS isn't behaving
- * as expected then it's better to crash the app. See:
- * - https://nodejs.org/api/process.html#process_event_unhandledrejection.
- * - https://nodejs.org/api/process.html#event-unhandledrejection
- */
-process.on('unhandledRejection', (error: Error) => {
-  console.error('UnhandledPromiseRejectionWarning:', error);
-
-  if (manager) {
-    manager.recorder.shutdownOBS();
-  }
-
-  if (mainWindow) {
-    updateRecStatus(mainWindow, RecStatus.FatalError, String(error));
-  }
-});
 
 /**
  * Create a settings store to handle the config.
@@ -93,11 +72,6 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-// OBS doesn't play all that nicely with the dev tools, so we can call
-// "npm run start-ui-only" to skip using OBS entirely if doing UI work.
-// const noObsDev =
-//   process.env.NODE_ENV === 'development' && process.env.INIT_OBS === 'false';
-
 if (isDebug) {
   require('electron-debug')();
 }
@@ -116,7 +90,7 @@ const installExtensions = async () => {
 };
 
 /**
- * Setup tray icon, menu and even listeners.
+ * Setup tray icon, menu and event listeners.
  */
 const setupTray = () => {
   tray = new Tray(getAssetPath('./icon/small-icon.png'));
@@ -133,7 +107,10 @@ const setupTray = () => {
       label: 'Quit',
       click() {
         console.log('[Main] User clicked close on tray icon');
-        if (mainWindow) mainWindow.close();
+
+        if (mainWindow) {
+          mainWindow.close();
+        }
       },
     },
   ]);
@@ -143,7 +120,10 @@ const setupTray = () => {
 
   tray.on('double-click', () => {
     console.log('[Main] User double clicked tray icon');
-    if (mainWindow) mainWindow.show();
+
+    if (mainWindow) {
+      mainWindow.show();
+    }
   });
 };
 
@@ -174,7 +154,9 @@ const createWindow = async () => {
   mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
 
   mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) throw new Error('"mainWindow" is not defined');
+    if (!mainWindow) {
+      throw new Error('mainWindow is not defined');
+    }
 
     checkAppUpdate(mainWindow);
 
@@ -263,29 +245,25 @@ ipcMain.on('mainWindow', (_event, args) => {
  * VideoButton event listeners.
  */
 ipcMain.on('videoButton', async (_event, args) => {
-  if (args[0] === 'delete') {
+  const action = args[0];
+
+  if (action === 'delete') {
     const videoForDeletion = args[1];
     await deleteVideo(videoForDeletion);
     if (mainWindow) mainWindow.webContents.send('refreshState');
   }
 
-  if (args[0] === 'open') {
+  if (action === 'open') {
     const fileToOpen = args[1];
     openSystemExplorer(fileToOpen);
   }
 
-  if (args[0] === 'save') {
+  if (action === 'save') {
     const videoToToggle = args[1];
     await toggleVideoProtected(videoToToggle);
-    if (mainWindow) mainWindow.webContents.send('refreshState');
-  }
-
-  if (args[0] === 'seekVideo') {
-    const videoIndex = parseInt(args[1], 10);
-    const seekTime = parseInt(args[2], 10);
 
     if (mainWindow) {
-      mainWindow.webContents.send('seekVideo', videoIndex, seekTime);
+      mainWindow.webContents.send('refreshState');
     }
   }
 });
@@ -311,7 +289,7 @@ ipcMain.handle('selectPath', async () => {
 });
 
 /**
- * \Listener to open the folder containing the Warcraft Recorder logs.
+ * Listener to open the folder containing the Warcraft Recorder logs.
  */
 ipcMain.on('logPath', (_event, args) => {
   if (args[0] === 'open') {
@@ -365,12 +343,14 @@ ipcMain.handle('getVideoState', async () =>
  * Set/get global video player settings.
  */
 ipcMain.on('videoPlayerSettings', (event, args) => {
-  if (args[0] === 'get') {
+  const action = args[0];
+
+  if (action === 'get') {
     event.returnValue = videoPlayerSettings;
     return;
   }
 
-  if (args[0] === 'set') {
+  if (action === 'set') {
     const settings = args[1] as VideoPlayerSettings;
     videoPlayerSettings.muted = settings.muted;
     videoPlayerSettings.volume = settings.volume;

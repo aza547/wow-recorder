@@ -604,6 +604,10 @@ const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
   });
 };
 
+const getPromiseBomb = (fuse: number, reason: string) => {
+  return new Promise((_resolve, reject) => setTimeout(reject, fuse, reason));
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -628,4 +632,5 @@ export {
   nextKeyPressPromise,
   nextMousePressPromise,
   convertUioHookEvent,
+  getPromiseBomb,
 };
