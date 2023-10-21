@@ -12,7 +12,7 @@ import EventIcon from '@mui/icons-material/Event';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { RendererVideo } from 'main/types';
 import {
   getPlayerClass,
@@ -62,6 +62,21 @@ export default function VideoButton(props: IProps) {
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
 
+  const [ctrlDown, setCtrlDown] = useState<boolean>(false);
+
+  useEffect(() => {
+    document.addEventListener('keyup', (event: KeyboardEvent) => {
+      if (event.key === 'Control') {
+        setCtrlDown(false);
+      }
+    });
+    document.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Control') {
+        setCtrlDown(true);
+      }
+    });
+  });
+
   const [deletePopoverAnchor, setDeletePopoverAnchor] =
     React.useState<null | HTMLElement>(null);
   const open = Boolean(deletePopoverAnchor);
@@ -92,6 +107,14 @@ export default function VideoButton(props: IProps) {
   const openLocation = (event: React.SyntheticEvent) => {
     event.stopPropagation();
     window.electron.ipcRenderer.sendMessage('videoButton', ['open', fullPath]);
+  };
+
+  const deleteClicked = (event: React.MouseEvent<HTMLElement>) => {
+    if (ctrlDown) {
+      deleteVideo(event);
+    } else {
+      openDeletePopover(event);
+    }
   };
 
   return (
@@ -305,7 +328,7 @@ export default function VideoButton(props: IProps) {
           </Tooltip>
 
           <Tooltip title="Delete">
-            <IconButton onClick={openDeletePopover}>
+            <IconButton onClick={deleteClicked}>
               <DeleteForeverIcon sx={{ color: 'white' }} />
             </IconButton>
           </Tooltip>
@@ -327,10 +350,13 @@ export default function VideoButton(props: IProps) {
                 p: 1,
                 width: '250px',
                 bgcolor: '#272e48',
+                justifyContent: 'center',
+                alignItems: 'center',
               }}
             >
               <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
-                Are you sure you want to permanently delete this video?
+                Are you sure you want to permanently delete this video? Hint:
+                Hold CTRL to skip this prompt.
               </Typography>
               <Button
                 key="delete-video-button"
@@ -339,6 +365,7 @@ export default function VideoButton(props: IProps) {
                 sx={{
                   m: '4px',
                   color: 'white',
+                  width: '100px',
                   borderColor: 'white',
                   ':hover': {
                     color: '#bb4420',

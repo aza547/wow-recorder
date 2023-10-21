@@ -190,7 +190,11 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    manager = new Manager(mainWindow);
+    if (manager === undefined) {
+      manager = new Manager(mainWindow);
+    } else {
+      mainWindow.webContents.send('refreshState');
+    }
   });
 
   mainWindow.on('moved', () => {
@@ -380,21 +384,6 @@ app.on('window-all-closed', async () => {
   console.info('[Main] User closed app');
   uIOhook.stop();
   app.quit();
-});
-
-/**
- * Disable manually refreshing the app.
- */
-app.on('browser-window-focus', () => {
-  globalShortcut.register('CommandOrControl+R', () => {});
-  globalShortcut.register('CommandOrControl+Shift+R', () => {});
-  globalShortcut.register('F5', () => {});
-});
-
-app.on('browser-window-blur', () => {
-  globalShortcut.unregister('CommandOrControl+R');
-  globalShortcut.unregister('CommandOrControl+Shift+R');
-  globalShortcut.unregister('F5');
 });
 
 /**

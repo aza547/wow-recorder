@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Add a CTRL override to the delete video confirmation prompt.
+
 ### Changed
 - Improve the look of some settings while a recording is active.
 
@@ -14,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an issue with some encounters not working as search bar queries.
 - Hide the "Unknown Raid" text to make app maintenance easier.
 - Fix a bug where a search query would not be forgotten when a new video is saved.
+- [Issue 443](https://github.com/aza547/wow-recorder/issues/443) - Back out initial fix and handle F5 refresh properly.
 
 ## [3.19.0] - 2023-10-03
 ### Added
