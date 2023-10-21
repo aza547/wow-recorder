@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+### Fixed
+
+## [3.19.1] - 2023-10-21
+### Added
 - Add a CTRL override to the delete video confirmation prompt.
 - Add retail / classic queries to the search bar.
 
@@ -17,7 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 443](https://github.com/aza547/wow-recorder/issues/443) - Back out initial fix and handle F5 refresh properly.
 - Fixed an issue with some encounters not working as search bar queries.
 - Hide the "Unknown Raid" text to make app maintenance easier.
-- Fix a bug where a search query would not be forgotten when a new video is saved.
 - Fixed issue where we tried to delete some non-existent files noisy ENOENT errors in logs.
 - Improve the search bar behaviour for existing queries when new videos are recorded.
 
