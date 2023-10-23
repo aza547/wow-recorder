@@ -180,6 +180,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             key={video.fullPath}
             video={video}
             categoryState={categoryState}
+            setNavigation={setNavigation}
           />
         </ListItemButton>
       </ListItem>

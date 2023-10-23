@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+- Fix a bug where deleting a video when the last video in a category is selected breaks things.
 
 ## [3.19.2] - 2023-10-23
 ### Fixed

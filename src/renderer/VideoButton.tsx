@@ -13,7 +13,7 @@ import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';
 import React, { useEffect, useState } from 'react';
-import { RendererVideo } from 'main/types';
+import { RendererVideo, TNavigatorState } from 'main/types';
 import {
   getPlayerClass,
   getPlayerName,
@@ -41,10 +41,11 @@ import RaidCompAndResult from './RaidCompAndResult';
 interface IProps {
   video: RendererVideo;
   categoryState: RendererVideo[];
+  setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
 export default function VideoButton(props: IProps) {
-  const { video, categoryState } = props;
+  const { video, categoryState, setNavigation } = props;
   const { isProtected, fullPath, imagePath } = video;
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
@@ -93,6 +94,18 @@ export default function VideoButton(props: IProps) {
 
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
+
+    // We need to decrement the videoIndex in-case the final video in the list
+    // is selected. The delete causes the list to shrink and we don't want to
+    // end up attempting to dereference an undefined variable off the end of
+    // the list.
+    setNavigation((prevState) => {
+      return {
+        ...prevState,
+        videoIndex: prevState.videoIndex - 1,
+      };
+    });
+
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'delete',
       fullPath,
