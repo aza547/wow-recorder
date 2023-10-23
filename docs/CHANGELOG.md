@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+
+## [3.19.2] - 2023-10-23
+### Fixed
 - Improve rejected promise handling by removing blanket rejected promise handling.
+- Revert some color format changes breaking compatiblity with some platforms/players.
 
 ## [3.19.1] - 2023-10-21
 ### Added

@@ -385,8 +385,8 @@ export default class Recorder {
 
       // Bit of a mess here to keep typescript happy and make this readable.
       // See https://github.com/stream-labs/obs-studio-node/issues/1260.
-      outputFormat: EVideoFormat.I444 as unknown as osn.EVideoFormat,
-      colorspace: EColorSpace.CSSRGB as unknown as osn.EColorSpace,
+      outputFormat: EVideoFormat.NV12 as unknown as osn.EVideoFormat,
+      colorspace: EColorSpace.CS709 as unknown as osn.EColorSpace,
       scaleType: EScaleType.Bicubic as unknown as osn.EScaleType,
       fpsType: EFPSType.Fractional as unknown as osn.EFPSType,
       range: colorRange as unknown as osn.ERangeType,
