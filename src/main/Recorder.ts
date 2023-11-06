@@ -1145,6 +1145,7 @@ export default class Recorder {
       console.warn(
         `[Recorder] OBS can't stop, current state is: ${this.obsState}`
       );
+      return;
     }
 
     this.obsRecordingFactory.stop();
