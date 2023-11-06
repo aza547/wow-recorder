@@ -170,15 +170,18 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const mapVideoToListItem = (video: RendererVideo) => {
+    const selected = navigation.videoIndex === categoryState.indexOf(video);
+
     return (
       <ListItem disablePadding key={video.fullPath} sx={{ width: '100%' }}>
         <ListItemButton
-          selected={navigation.videoIndex === categoryState.indexOf(video)}
+          selected={selected}
           onClick={() => handleChangeVideo(categoryState.indexOf(video))}
         >
           <VideoButton
             key={video.fullPath}
             video={video}
+            selected={selected}
             categoryState={categoryState}
             setNavigation={setNavigation}
           />

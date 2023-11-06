@@ -41,11 +41,12 @@ import RaidCompAndResult from './RaidCompAndResult';
 interface IProps {
   video: RendererVideo;
   categoryState: RendererVideo[];
+  selected: boolean;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
 export default function VideoButton(props: IProps) {
-  const { video, categoryState, setNavigation } = props;
+  const { video, categoryState, selected, setNavigation } = props;
   const { isProtected, fullPath, imagePath } = video;
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
@@ -62,6 +63,7 @@ export default function VideoButton(props: IProps) {
   const videoDate = getVideoDate(video);
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
+  const deleteOpacity = selected ? 0.2 : 1;
 
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
 
@@ -341,9 +343,13 @@ export default function VideoButton(props: IProps) {
           </Tooltip>
 
           <Tooltip title="Delete">
-            <IconButton onClick={deleteClicked}>
-              <DeleteForeverIcon sx={{ color: 'white' }} />
-            </IconButton>
+            <div>
+              <IconButton disabled={selected} onClick={deleteClicked}>
+                <DeleteForeverIcon
+                  sx={{ color: 'white', opacity: deleteOpacity }}
+                />
+              </IconButton>
+            </div>
           </Tooltip>
           <Popover
             anchorEl={deletePopoverAnchor}
