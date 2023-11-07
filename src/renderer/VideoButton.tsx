@@ -104,7 +104,10 @@ export default function VideoButton(props: IProps) {
     setNavigation((prevState) => {
       return {
         ...prevState,
-        videoIndex: prevState.videoIndex - 1,
+        videoIndex:
+          prevState.videoIndex > 0
+            ? prevState.videoIndex - 1
+            : prevState.videoIndex,
       };
     });
 
