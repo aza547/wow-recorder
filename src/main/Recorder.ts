@@ -867,7 +867,7 @@ export default class Recorder {
   }
 
   /**
-   * Start recorder buffer. This starts OBS and records in 5 min chunks
+   * Start recorder buffer. This starts OBS and records in 15 min chunks
    * to the buffer location.
    */
   public async startBuffer() {
@@ -890,7 +890,7 @@ export default class Recorder {
     // it when a real game is detected.
     this.bufferRestartIntervalID = setInterval(() => {
       this.restartBuffer();
-    }, 5 * 60 * 1000); // Five mins
+    }, 15 * 60 * 1000); // Fifteen mins
   }
 
   /**
