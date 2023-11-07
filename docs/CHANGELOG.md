@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 ### Changed
+
+## [3.19.3] - 2023-11-07
 ### Fixed
 - Fix a bug where deleting a video when the last video in a category is selected breaks things.
-- [Issue 447](https://github.com/aza547/wow-recorder/issues/447) - Fix a bug where could end up in an error state after sleeping Windows.
+- [Issue 447](https://github.com/aza547/wow-recorder/issues/447) - Fix a bug where could end up in an error state after sleeping Windows/closing WoW.
 - [Issue 401](https://github.com/aza547/wow-recorder/issues/401) - Fix a bug where the selected video delete button shows but doesn't work.
 
 ## [3.19.2] - 2023-10-23
