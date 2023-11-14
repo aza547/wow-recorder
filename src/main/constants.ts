@@ -442,7 +442,7 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   1466: "Darkheart Thicket",
   1501: "Black Rook Hold", 
   1763: "Atal'Dazar",
-  1297: "The Everbloom",
+  1279: "The Everbloom",
   643: 'Throne of the Tides',
 };
 
@@ -491,8 +491,8 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   438: 'The Vortex Pinnacle',
 
   // Dragonflight S3
-  464: "Dawn of the Infinites: Galakdron's Fall",
-  463: "Dawn of the Infinites: Murozond's Rise",
+  463: "Dawn of the Infinites: Galakdron's Fall",
+  464: "Dawn of the Infinites: Murozond's Rise",
   248: "Waycrest Manor",
   198: "Darkheart Thicket",
   199: "Black Rook Hold", 
@@ -551,8 +551,8 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   438: [30 * 60, 24 * 60, 18 * 60],
 
   // Dragonflight S3
-  464: [34 * 60, 27 * 60 + 12, 20 * 60 + 24],
-  463: [35 * 60, 28 * 60, 21 * 60],
+  463: [34 * 60, 27 * 60 + 12, 20 * 60 + 24],
+  464: [35 * 60, 28 * 60, 21 * 60],
   248: [36 * 60 + 40, 29 * 60 + 20, 22 * 60],
   198: [30 * 60, 24 * 60, 18 * 60],
   199: [36 * 60, 28 * 60 + 48, 23 * 60 + 24],
