@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [3.20.1] - 2023-11-14
+### Fixed
+- Fix some bugs with Dragonflight season 3 Mythic+ dungeons.
+
 ## [3.20.0] - 2023-11-14
 ### Added
 - [Issue 451](https://github.com/aza547/wow-recorder/issues/451) - Add Dragonflight season 3 Mythic+ dungeons.
