@@ -435,6 +435,15 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   1841: 'The Underrot',
   1458: "Neltharion's Lair",
   657: 'The Vortex Pinnacle',
+
+  // Dragonflight S3
+  2579: "Dawn of the Infinite",
+  1862: "Waycrest Manor",
+  1466: "Darkheart Thicket",
+  1501: "Black Rook Hold", 
+  1763: "Atal'Dazar",
+  1297: "The Everbloom",
+  643: 'Throne of the Tides',
 };
 
 /**
@@ -480,6 +489,16 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   251: 'The Underrot',
   206: "Neltharion's Lair",
   438: 'The Vortex Pinnacle',
+
+  // Dragonflight S3
+  464: "Dawn of the Infinite1",
+  463: "Dawn of the Infinite2",
+  248: "Waycrest Manor",
+  198: "Darkheart Thicket",
+  199: "Black Rook Hold", 
+  244: "Atal'Dazar",
+  168: "The Everbloom",
+  456:  'Throne of the Tides',
 };
 
 /**
@@ -530,6 +549,16 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   251: [30 * 60, 24 * 60, 18 * 60], 
   206: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], 
   438: [30 * 60, 24 * 60, 18 * 60],
+
+  // Dragonflight S3
+  464: [34 * 60, 27 * 60 + 12, 20 * 60 + 24],
+  463: [35 * 60, 28 * 60, 21 * 60],
+  248: [36 * 60 + 40, 29 * 60 + 20, 22 * 60],
+  198: [30 * 60, 24 * 60, 18 * 60],
+  199: [36 * 60, 28 * 60 + 48, 23 * 60 + 24],
+  244: [30 * 60, 24 * 60, 18 * 60],
+  168: [33 * 60, 26 * 60 + 24, 19 * 60 + 48],
+  456: [34 * 60, 27 * 60 + 12, 20 * 60 + 24],
 };
 
 const dungeonEncounters: NumberKeyToStringValueMapType = {
@@ -722,6 +751,54 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1041: "Altairus",
   1042: "Asaad, Caliph of Zephyrs",
   1043: "Grand Vizier Ertan",
+
+  // Waycrest Manor
+  2113: "Heartsbane Triad",
+  2114: "Soulbound Goliath",
+  2115: "Raal the Gluttonous",
+  2116: "Lord and Lady Waycrest",
+
+  // Black Rook Hold
+  1832: "The Amalgam of Souls",
+  1833: "Illysanna Ravencrest",
+  1834: "Smashspite the Hateful",
+  1835: "Lord Kur'talos Ravencrest",
+
+  // Throne of the Tides
+  1045: "Lady Naz'jar",
+  1044: "Commander Ulthok, the Festering Prince",
+  1046: "Mindbender Ghur'sha",
+  1047: "Ozumat",
+
+  // Everbloom
+  1746: "Witherbark",
+  1757: "Ancient Protectors",
+  1751: "Archmage Sol",
+  1756: "Yalnu",
+
+  // Atal'Dazar
+  2084: "Priestess Alun'za",
+  2086: "Rezan",
+  2085: "Vol'kaal",
+  2087: "Yazma",
+
+  // Dawn of the Infinites: Galakdron's Fall
+  2666: "Chronikar",
+  2667: "Manifested Timeways",
+  2668: "Blight of Galakrond",
+  2669: "Iridikron the Stonescaled",
+
+  // Dawn of the Infinites: Murozond's Rise
+  2670: "Tyr, the Infinite Keeper",
+  2671: "Morchie",
+  2672: "Time-Lost Battlefield",
+  2673: "Chrono-Lord Deios",
+
+  // Darkheart Thicket
+  1836: "Archdruid Glaidalis",
+  1837: "Oakheart",
+  1838: "Dresaron",
+  1839: "Shade of Xavius",
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
