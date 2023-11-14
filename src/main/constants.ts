@@ -491,7 +491,7 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   438: 'The Vortex Pinnacle',
 
   // Dragonflight S3
-  463: "Dawn of the Infinites: Galakdron's Fall",
+  463: "Dawn of the Infinites: Galakrond's Fall",
   464: "Dawn of the Infinites: Murozond's Rise",
   248: "Waycrest Manor",
   198: "Darkheart Thicket",
