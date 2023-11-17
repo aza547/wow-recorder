@@ -757,6 +757,7 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   2114: "Soulbound Goliath",
   2115: "Raal the Gluttonous",
   2116: "Lord and Lady Waycrest",
+  2117: "Gorak Tul",
 
   // Black Rook Hold
   1832: "The Amalgam of Souls",

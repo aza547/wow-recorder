@@ -66,7 +66,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           color: 'white',
           fontWeight: '600',
           fontFamily: '"Arial",sans-serif',
-          fontSize: '1rem',
+          fontSize: '0.75rem',
           textShadow:
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
