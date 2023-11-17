@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 ### Fixed
+
+## [3.20.2] - 2023-11-17
+### Fixed
 - Add missing endboss in Waycrest to avoid "undefined" showing on the video timeline.
 - Make text for dungeon names a bit smaller as new dungeons have long names.
 
