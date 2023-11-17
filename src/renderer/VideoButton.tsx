@@ -140,12 +140,12 @@ export default function VideoButton(props: IProps) {
       sx={{
         display: 'flex',
         width: '100%',
-        height: '100px',
+        height: '80px',
       }}
     >
       <Box
         sx={{
-          height: '100px',
+          height: '80px',
           width: '200px',
         }}
       >
@@ -156,7 +156,7 @@ export default function VideoButton(props: IProps) {
             border: '1px solid black',
             borderRadius: '5px',
             boxSizing: 'border-box',
-            height: '100px',
+            height: '80px',
             width: '200px',
             objectFit: 'contain',
             backgroundColor: 'black',
@@ -173,7 +173,7 @@ export default function VideoButton(props: IProps) {
           ml: 2,
           width: '100%',
           display: 'grid',
-          gridTemplateColumns: '15% 20% 20% 10% 10% 10% 15%',
+          gridTemplateColumns: '10% 25% 20% 10% 10% 10% 15%',
           alignItems: 'center',
         }}
       >

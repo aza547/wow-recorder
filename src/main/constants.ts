@@ -491,14 +491,14 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   438: 'The Vortex Pinnacle',
 
   // Dragonflight S3
-  463: "Dawn of the Infinites: Galakrond's Fall",
-  464: "Dawn of the Infinites: Murozond's Rise",
+  463: "Galakrond's Fall",
+  464: "Murozond's Rise",
   248: "Waycrest Manor",
   198: "Darkheart Thicket",
   199: "Black Rook Hold", 
   244: "Atal'Dazar",
   168: "The Everbloom",
-  456:  'Throne of the Tides',
+  456: 'Throne of the Tides',
 };
 
 /**

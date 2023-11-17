@@ -116,8 +116,8 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
             color: 'white',
             fontFamily: '"Arial",sans-serif',
             ml: '2px',
-            fontSize: '1rem',
-            fontWeight: 700,
+            fontSize: '0.75rem',
+            fontWeight: '600',
             textShadow:
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
@@ -151,6 +151,34 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
         sx={{
           mx: '2px',
           display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography
+          align="center"
+          sx={{
+            color: 'white',
+            fontWeight: '600',
+            fontFamily: '"Arial",sans-serif',
+            fontSize: '0.75rem',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          {`${resultText} (Pull ${getDailyPullNumber()})`}
+        </Typography>
+      </Box>
+    );
+  };
+
+  const renderDeaths = () => {
+    return (
+      <Box
+        sx={{
+          mx: 1,
+          display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
@@ -162,47 +190,24 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
             color: 'white',
             fontWeight: '600',
             fontFamily: '"Arial",sans-serif',
-            fontSize: '1rem',
+            fontSize: '0.75rem',
             textShadow:
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
         >
-          {`${resultText} (Pull ${getDailyPullNumber()})`}
+          {deathCount}
         </Typography>
         <Box
+          key="death-icon"
+          component="img"
+          src={DeathIcon}
           sx={{
-            mx: 1,
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
+            p: '2px',
+            height: '16px',
+            width: '16px',
+            objectFit: 'cover',
           }}
-        >
-          <Typography
-            align="center"
-            sx={{
-              color: 'white',
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              fontSize: '1rem',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-            }}
-          >
-            {deathCount}
-          </Typography>
-          <Box
-            key="chest-icon"
-            component="img"
-            src={DeathIcon}
-            sx={{
-              p: '2px',
-              height: '16px',
-              width: '16px',
-              objectFit: 'cover',
-            }}
-          />
-        </Box>
+        />
       </Box>
     );
   };
@@ -216,8 +221,9 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
         justifyContent: 'center',
       }}
     >
-      {renderResult()}
+      {renderDeaths()}
       {renderRaidComp()}
+      {renderResult()}
     </Box>
   );
 };

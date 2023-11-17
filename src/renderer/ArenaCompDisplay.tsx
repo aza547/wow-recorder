@@ -15,6 +15,9 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   const { video } = props;
   const { combatants, category } = video;
   const isSoloShuffle = category === VideoCategory.SoloShuffle;
+  const is5v5 = category === VideoCategory.FiveVFive;
+  const fontSize = is5v5 ? '0.5rem' : '0.75rem';
+  const iconSize = is5v5 ? '12px' : '18px';
 
   if (combatants === undefined) {
     return <></>;
@@ -82,8 +85,8 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
             color: nameColor,
             fontFamily: '"Arial",sans-serif',
             mr: '2px',
-            fontSize: '0.75rem',
-            fontWeight: 700,
+            fontSize,
+            fontWeight: '600',
             textShadow:
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
@@ -95,8 +98,8 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
           component="img"
           src={specIcon}
           sx={{
-            height: '18px',
-            width: '18px',
+            height: iconSize,
+            width: iconSize,
             border: '1px solid black',
             borderRadius: '15%',
             boxSizing: 'border-box',
@@ -139,8 +142,8 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
           component="img"
           src={specIcon}
           sx={{
-            height: '18px',
-            width: '18px',
+            height: iconSize,
+            width: iconSize,
             border: '1px solid black',
             borderRadius: '15%',
             boxSizing: 'border-box',
@@ -152,7 +155,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
             color: nameColor,
             fontFamily: '"Arial",sans-serif',
             ml: '2px',
-            fontSize: '0.75rem',
+            fontSize,
             fontWeight: 700,
             textShadow:
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',

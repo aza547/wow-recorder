@@ -47,7 +47,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
             fontFamily: '"Arial",sans-serif',
             ml: '2px',
             fontSize: '0.75rem',
-            fontWeight: 700,
+            fontWeight: '600',
             textShadow:
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
@@ -202,7 +202,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          width: '50%',
+          width: '60%',
         }}
       >
         {renderDungeonResult()}
@@ -212,7 +212,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
 
       <Box
         sx={{
-          width: '50%',
+          width: '40%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
