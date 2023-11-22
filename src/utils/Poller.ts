@@ -1,144 +1,67 @@
 import EventEmitter from 'events';
-import { validateClassic, validateFlavour, validateRetail } from '../main/util';
-import { FlavourConfig } from '../main/types';
-
-const tasklist = require('tasklist');
-
-const wowExecutableFlavours: { [key: string]: string } = {
-  wow: 'Retail',
-  wowt: 'PTR',
-  wowb: 'Beta',
-  wowclassic: 'Classic',
-};
-
-type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
-
-type WowProcess = {
-  exe: string;
-  flavour: WoWProcessResultKey;
-};
+import { desktopCapturer } from 'electron';
 
 /**
- * The Poller singleton periodically checks the list of WoW active processes.
- * If the state changes, it emits either a 'wowProcessStart' or
- * 'wowProcessStop' event.
+ * The Poller singleton periodically checks the list of open WoW windows. If
+ * the state changes, it emits either a 'wowStart' or 'wowStop' event. We
+ * can't tell the flavour of WoW from the Window.
  */
 export default class Poller extends EventEmitter {
-  private _isWowRunning = false;
+  private isWowRunning = false;
 
-  private _pollInterval: NodeJS.Timer | undefined;
+  private interval: NodeJS.Timer | undefined;
 
-  private processRegex = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
+  private static instance: Poller;
 
-  private static _instance: Poller;
+  private constructor() {
+    super();
+  }
 
-  private flavourConfig: FlavourConfig;
-
-  static getInstance(flavourConfig: FlavourConfig) {
-    if (!Poller._instance) {
-      Poller._instance = new Poller(flavourConfig);
+  static getInstance() {
+    if (!Poller.instance) {
+      Poller.instance = new Poller();
     }
 
-    return Poller._instance;
+    return Poller.instance;
   }
 
   static getInstanceLazy() {
-    if (!Poller._instance) {
+    if (!Poller.instance) {
       throw new Error('[Poller] Must create poller first');
     }
 
-    return Poller._instance;
+    return Poller.instance;
   }
 
-  private constructor(flavourConfig: FlavourConfig) {
-    super();
-    this.flavourConfig = flavourConfig;
-  }
-
-  get isWowRunning() {
-    return this._isWowRunning;
-  }
-
-  set isWowRunning(value) {
-    this._isWowRunning = value;
-  }
-
-  get pollInterval() {
-    return this._pollInterval;
-  }
-
-  set pollInterval(value) {
-    this._pollInterval = value;
-  }
-
-  reconfigureFlavour(flavourConfig: FlavourConfig) {
-    this.flavourConfig = flavourConfig;
-  }
-
-  reset() {
+  public reset() {
     this.isWowRunning = false;
 
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
+    if (this.interval) {
+      clearInterval(this.interval);
     }
   }
 
-  start() {
+  public start() {
     this.reset();
     this.poll();
-    this.pollInterval = setInterval(() => this.poll(), 5000);
+    this.interval = setInterval(() => this.poll(), 5000);
   }
 
   private poll = async () => {
-    const processList = await tasklist();
+    const windowList = await desktopCapturer.getSources({
+      types: ['window', 'screen'],
+    });
 
-    // Tasklist package doesn't export types annoyingly, hence
-    // the use of any here.
-    const wowProcesses = processList
-      .map((process: any) => process.imageName.match(this.processRegex))
-      .filter((matches: string[]) => matches)
-      .map(this.convertToWowProcessType)
-      .filter(this.filterFlavoursByConfig);
+    const wowWindows = windowList.filter(
+      (source) => source.name === 'World of Warcraft'
+    );
 
-    // We don't care to do anything better in the scenario of multiple
-    // processes running. We don't support users multi-boxing.
-    if (!this.isWowRunning && wowProcesses.pop()) {
+    if (!this.isWowRunning && wowWindows.length > 0) {
       this.isWowRunning = true;
-      this.emit('wowProcessStart');
-    } else if (this.isWowRunning && !wowProcesses.pop()) {
+      this.emit('wowStart');
+    } else if (this.isWowRunning && wowWindows.length < 1) {
       this.isWowRunning = false;
-      this.emit('wowProcessStop');
+      this.emit('wowStop');
     }
-  };
-
-  private filterFlavoursByConfig = (wowProcess: WowProcess) => {
-    const { recordRetail, recordClassic } = this.flavourConfig;
-    const wowFlavour = wowProcess.flavour;
-
-    try {
-      validateFlavour(this.flavourConfig);
-    } catch {
-      return false;
-    }
-
-    // Any non classic flavour is considered a retail flavour (i.e. retail, beta, ptr)
-    const validRetailProcess = wowFlavour !== 'Classic' && recordRetail;
-    const validClassicProcess = wowFlavour === 'Classic' && recordClassic;
-
-    if (!validRetailProcess && !validClassicProcess) {
-      // We're not configured to record any matching process.
-      return false;
-    }
-
-    return true;
-  };
-
-  private convertToWowProcessType = (match: string[]) => {
-    const wowProcessObject: WowProcess = {
-      exe: match[0],
-      flavour: wowExecutableFlavours[match[1].toLowerCase()],
-    };
-
-    return wowProcessObject;
   };
 }
