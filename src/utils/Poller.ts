@@ -7,7 +7,7 @@ import { desktopCapturer } from 'electron';
  * can't tell the flavour of WoW from the Window.
  */
 export default class Poller extends EventEmitter {
-  private isWowRunning = false;
+  public isWowRunning = false;
 
   private interval: NodeJS.Timer | undefined;
 

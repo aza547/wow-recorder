@@ -350,7 +350,9 @@ export default class Manager {
    * Configure audio settings in OBS. This can all be changed live.
    */
   private configureObsAudio(config: ObsAudioConfig) {
-    this.recorder.configureAudioSources(config);
+    if (this.poller.isWowRunning) {
+      this.recorder.configureAudioSources(config);
+    }
   }
 
   /**
