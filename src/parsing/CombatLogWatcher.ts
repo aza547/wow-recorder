@@ -4,6 +4,7 @@ import util from 'util';
 import { FileInfo } from 'main/types';
 import path from 'path';
 import chokidar from 'chokidar';
+import Queue from 'queue-promise';
 import { getFileInfo, getSortedFiles } from '../main/util';
 import LogLine from './LogLine';
 
@@ -53,6 +54,13 @@ export default class CombatLogWatcher extends EventEmitter {
   private state: Record<string, FileInfo> = {};
 
   /**
+   *
+   */
+  private processing = false;
+
+  private pending = new Set();
+
+  /**
    * Constructor, unit of timeout is minutes. No events will be emitted until
    * watch() is called.
    */
@@ -73,9 +81,16 @@ export default class CombatLogWatcher extends EventEmitter {
       useFsEvents: false,
     });
 
-    this.watcher.on('change', (file) => {
+    this.watcher.on('change', async (file) => {
       console.log('changed', file);
-      this.process(file);
+
+      if (!this.processing) {
+        this.processing = true;
+        await this.process(file);
+        this.processing = false;
+      } else {
+        this.pending.add(file);
+      }
     });
   }
 
@@ -115,28 +130,45 @@ export default class CombatLogWatcher extends EventEmitter {
   private async process(file: string) {
     const fullPath = path.join(this.logDir, file);
     const currentInfo = await getFileInfo(fullPath);
-    const lastInfo = this.state[file];
+    const lastInfo = this.state[fullPath];
 
     let bytesToRead;
     let startPosition;
 
-    if (!lastInfo || lastInfo.birthTime !== currentInfo.birthTime) {
-      // If it's a new file, we want to read from the start.
-      bytesToRead = currentInfo.size;
-      startPosition = 0;
-    } else {
+    if (lastInfo) {
+      // Existing file, read from the last known length.
       bytesToRead = currentInfo.size - lastInfo.size;
       startPosition = lastInfo.size;
+    } else {
+      // New file, we want to read from the start.
+      bytesToRead = currentInfo.size;
+      startPosition = 0;
+    }
+
+    if (bytesToRead < 1) {
+      if (this.pending.has(file)) {
+        await this.process(file);
+        this.pending.delete(file);
+      } else {
+        return;
+      }
     }
 
     await this.parseFileChunk(fullPath, bytesToRead, startPosition);
-    this.state[file] = currentInfo;
+    this.state[fullPath] = currentInfo;
+
+    if (this.pending.has(file)) {
+      await this.process(file);
+      this.pending.delete(file);
+    }
   }
 
   /**
    * Parse a chunk of the file of length bytes from a specified position.
    */
   private async parseFileChunk(file: string, bytes: number, position: number) {
+    console.log("ParseFileChunk called with", file, bytes, position);
+
     const buffer = Buffer.alloc(bytes);
     const handle = await open(file, 'r');
     const { bytesRead } = await read(handle, buffer, 0, bytes, position);
