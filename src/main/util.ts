@@ -91,12 +91,13 @@ const getEmptyState = () => {
 /**
  * Return information about a file needed for various parts of the application
  */
-const getFileInfo = async (pathSpec: string): Promise<FileInfo> => {
+export const getFileInfo = async (pathSpec: string): Promise<FileInfo> => {
   const filePath = path.resolve(pathSpec);
   const fstats = await fspromise.stat(filePath);
   const mtime = fstats.mtime.getTime();
+  const birthTime = fstats.birthtime.getTime();
   const { size } = fstats;
-  return { name: filePath, size, mtime };
+  return { name: filePath, size, mtime, birthTime };
 };
 
 /**

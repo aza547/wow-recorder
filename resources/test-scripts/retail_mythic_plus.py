@@ -28,12 +28,16 @@ print("Starting")
 for line in sample_log_lines:
     if "CHALLENGE_MODE_END" in line:
         # Sleep before writing the end event so we actually record something. 
+        logFile.close()
         time.sleep(5)
+        logFile = open(f"{LOG_PATH}/{logName}", "a", encoding="utf-8")
     elif "ENCOUNTER_END" in line:
+        logFile.close()
         time.sleep(2)
+        logFile = open(f"{LOG_PATH}/{logName}", "a", encoding="utf-8")
+        
     logFile.write(rd(line))
     
-
 print("Done")
 logFile.close()
 

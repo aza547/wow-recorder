@@ -1,6 +1,5 @@
-import { getSortedFiles } from '../main/util';
 import Combatant from '../main/Combatant';
-import CombatLogParser from './CombatLogParser';
+import CombatLogWatcher from './CombatLogWatcher';
 import ConfigService from '../main/ConfigService';
 import { instanceDifficulty } from '../main/constants';
 import Recorder from '../main/Recorder';
@@ -29,7 +28,7 @@ import { allowRecordCategory } from '../utils/configUtils';
 export default abstract class LogHandler {
   protected recorder: Recorder;
 
-  protected _combatLogParser: CombatLogParser;
+  public combatLogWatcher: CombatLogWatcher;
 
   protected _player: Combatant | undefined;
 
@@ -40,23 +39,19 @@ export default abstract class LogHandler {
   constructor(recorder: Recorder, logPath: string, dataTimeout: number) {
     this.recorder = recorder;
 
-    this._combatLogParser = new CombatLogParser({
-      dataTimeout: dataTimeout * 60 * 1000,
-      fileFinderFn: getSortedFiles,
-    });
+    this.combatLogWatcher = new CombatLogWatcher(logPath, dataTimeout);
+    this.combatLogWatcher.watch();
 
-    this._combatLogParser.watchPath(logPath);
-
-    this._combatLogParser.on('DataTimeout', async (ms: number) => {
-      await this.dataTimeout(ms);
+    this.combatLogWatcher.on('timeout', (ms: number) => {
+      this.dataTimeout(ms);
     });
 
     this._cfg = ConfigService.getInstance();
   }
 
   destroy() {
-    this._combatLogParser.unwatch();
-    this._combatLogParser.removeAllListeners();
+    this.combatLogWatcher.unwatch();
+    this.combatLogWatcher.removeAllListeners();
   }
 
   get activity() {
@@ -65,10 +60,6 @@ export default abstract class LogHandler {
 
   set activity(activity) {
     this._activity = activity;
-  }
-
-  get combatLogParser() {
-    return this._combatLogParser;
   }
 
   get cfg() {

@@ -1,5 +1,4 @@
 import { VideoCategory } from '../types/VideoCategory';
-import CombatLogParser from '../parsing/CombatLogParser';
 import Poller from './Poller';
 import {
   testData2v2,
@@ -9,16 +8,20 @@ import {
   testDataBattleground,
   testDataDungeon,
 } from './testButtonData';
+import CombatLogWatcher from '../parsing/CombatLogWatcher';
 
 let testRunning = false;
 
-const sendTestCombatLogLine = (parser: CombatLogParser, line: string): void => {
+const sendTestCombatLogLine = (
+  watcher: CombatLogWatcher,
+  line: string
+): void => {
   console.debug(
     '[test] Sending test combat log line to the Combat Log Parser',
     line
   );
 
-  parser.handleLogLine('retail', line);
+  watcher.handleLogLine(line);
 };
 
 /**
@@ -38,7 +41,7 @@ const getAdjustedDate = (seconds = 0): string => {
  */
 export const runRetailRecordingTest = (
   category: VideoCategory,
-  parser: CombatLogParser,
+  watcher: CombatLogWatcher,
   endTest = true
 ) => {
   console.log('[test] User pressed the test button!');
@@ -91,7 +94,7 @@ export const runRetailRecordingTest = (
 
   testLines.forEach((line) => {
     const lineWithDate = `${startDate}  ${line}`;
-    sendTestCombatLogLine(parser, lineWithDate);
+    sendTestCombatLogLine(watcher, lineWithDate);
   });
 
   if (!endTest) {
@@ -99,7 +102,7 @@ export const runRetailRecordingTest = (
   }
 
   setTimeout(() => {
-    sendTestCombatLogLine(parser, testArenaEndLine);
+    sendTestCombatLogLine(watcher, testArenaEndLine);
     testRunning = false;
   }, testDuration * 1000);
 };

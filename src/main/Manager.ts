@@ -200,14 +200,14 @@ export default class Manager {
   public test(category: VideoCategory, endTest: boolean) {
     if (this.retailLogHandler) {
       console.info('[Manager] Running retail test');
-      const parser = this.retailLogHandler.combatLogParser;
+      const parser = this.retailLogHandler.combatLogWatcher;
       runRetailRecordingTest(category, parser, endTest);
       return;
     }
   
     if (this.classicLogHandler) {
       console.info('[Manager] Running classic test');
-      const parser = this.classicLogHandler.combatLogParser;
+      const parser = this.classicLogHandler.combatLogWatcher;
       runClassicRecordingTest(parser, endTest);
     }
   }

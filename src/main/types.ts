@@ -152,6 +152,7 @@ type FileInfo = {
   name: string;
   size: number;
   mtime: number;
+  birthTime: number;
 };
 
 type VideoQueueItem = {

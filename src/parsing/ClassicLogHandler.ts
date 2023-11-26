@@ -26,7 +26,7 @@ export default class ClassicLogHandler extends LogHandler {
   constructor(recorder: Recorder, logPath: string) {
     super(recorder, logPath, 2);
 
-    this.combatLogParser
+    this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {
         await this.handleEncounterStartLine(line);
       })

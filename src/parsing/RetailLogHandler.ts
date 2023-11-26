@@ -32,7 +32,7 @@ export default class RetailLogHandler extends LogHandler {
   constructor(recorder: Recorder, logPath: string) {
     super(recorder, logPath, 10);
 
-    this.combatLogParser
+    this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {
         await this.handleEncounterStartLine(line);
       })

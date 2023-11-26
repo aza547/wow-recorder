@@ -1,7 +1,7 @@
 import { Flavour } from '../../main/types';
 import LogLine from '../../parsing/LogLine';
 import { getSortedFiles } from '../../main/util';
-import CombatLogParser from '../../parsing/CombatLogParser';
+import CombatLogParser from '../../parsing/CombatLogWatcher';
 
 test('Basic Retail', async () => {
   const combatLogParser = new CombatLogParser({
