@@ -84,13 +84,15 @@ export default class CombatLogWatcher extends EventEmitter {
         return;
       }
 
-      const name = file.toString();
-
-      if (!name.startsWith('WoWCombatLog')) {
+      if (typeof file !== 'string') {
         return;
       }
 
-      this.queue.enqueue(() => this.process(name));
+      if (!file.startsWith('WoWCombatLog')) {
+        return;
+      }
+
+      this.queue.enqueue(() => this.process(file));
     });
   }
 
