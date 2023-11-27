@@ -144,7 +144,11 @@ export default class RaidEncounter extends Activity {
   }
 
   getFileName(): string {
-    let fileName = `${this.raid.name}, ${this.encounterName} [${this.difficulty.difficulty}] (${this.resultInfo})`;
+    let fileName = `${this.encounterName} [${this.difficulty.difficulty}] (${this.resultInfo})`;
+
+    if (this.raid.name !== 'Unknown Raid') {
+      fileName = `${this.raid.name}, ${fileName}`;
+    }
 
     try {
       if (this.player.name !== undefined) {

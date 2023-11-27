@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Changed
 - Make the video button more concise.
+- Don't include "Unknown Raid" in the video file name.
 
 ### Fixed
 - [Issue 253](https://github.com/aza547/wow-recorder/issues/253) - Use desktopCapturer to check if WoW is running instead of tasklist.
