@@ -1,9 +1,8 @@
 import { EventEmitter } from 'stream';
-import fs from 'fs';
+import fs, { watch, FSWatcher } from 'fs';
 import util from 'util';
 import { FileInfo } from 'main/types';
 import path from 'path';
-import chokidar from 'chokidar';
 import Queue from 'queue-promise';
 import { getFileInfo, getSortedFiles } from '../main/util';
 import LogLine from './LogLine';
@@ -32,7 +31,7 @@ export default class CombatLogWatcher extends EventEmitter {
   /**
    * The watcher object itself.
    */
-  private watcher?: chokidar.FSWatcher;
+  private watcher?: FSWatcher;
 
   /**
    * A duration after seeing a log write to send a timeout event in if no
@@ -47,18 +46,19 @@ export default class CombatLogWatcher extends EventEmitter {
   private timer?: NodeJS.Timeout;
 
   /**
-   * We need to keep track of some info about the file to know how much we
-   * should read. Initialize this to some dull values so we don't have to
-   * check for undefined.
+   * We need to keep track of some info about each log file to know how much we
+   * should read.
    */
   private state: Record<string, FileInfo> = {};
 
   /**
-   *
+   * A promise queue we use to ensure that we only have one active attempt to
+   * parse the file at a time.
    */
-  private processing = false;
-
-  private pending = new Set();
+  private queue = new Queue({
+    concurrent: 1,
+    interval: 0,
+  });
 
   /**
    * Constructor, unit of timeout is minutes. No events will be emitted until
@@ -75,22 +75,22 @@ export default class CombatLogWatcher extends EventEmitter {
    */
   public async watch() {
     await this.getLogDirectoryState();
+    this.watcher = watch(this.logDir);
 
-    this.watcher = chokidar.watch('WoWCombatLog*.txt', {
-      cwd: this.logDir,
-      useFsEvents: false,
-    });
-
-    this.watcher.on('change', async (file) => {
-      console.log('changed', file);
-
-      if (!this.processing) {
-        this.processing = true;
-        await this.process(file);
-        this.processing = false;
-      } else {
-        this.pending.add(file);
+    this.watcher.on('change', (type, file) => {
+      if (type !== 'change') {
+        // Despite this being a 'change' listener, we can still get
+        // rename events here which we don't care about.
+        return;
       }
+
+      const name = file.toString();
+
+      if (!name.startsWith('WoWCombatLog')) {
+        return;
+      }
+
+      this.queue.enqueue(() => this.process(name));
     });
   }
 
@@ -120,8 +120,6 @@ export default class CombatLogWatcher extends EventEmitter {
     fileInfo.forEach((info) => {
       this.state[info.name] = info;
     });
-
-    console.log("STATE LEN: " ,   Object.keys(this.state).length);
   }
 
   /**
@@ -146,29 +144,19 @@ export default class CombatLogWatcher extends EventEmitter {
     }
 
     if (bytesToRead < 1) {
-      if (this.pending.has(file)) {
-        await this.process(file);
-        this.pending.delete(file);
-      } else {
-        return;
-      }
+      // The node fs watcher is known to sometimes emit multiple events for
+      // the same write. This lets us drop out early if there is nothing to read.
+      return;
     }
 
     await this.parseFileChunk(fullPath, bytesToRead, startPosition);
     this.state[fullPath] = currentInfo;
-
-    if (this.pending.has(file)) {
-      await this.process(file);
-      this.pending.delete(file);
-    }
   }
 
   /**
    * Parse a chunk of the file of length bytes from a specified position.
    */
   private async parseFileChunk(file: string, bytes: number, position: number) {
-    console.log("ParseFileChunk called with", file, bytes, position);
-
     const buffer = Buffer.alloc(bytes);
     const handle = await open(file, 'r');
     const { bytesRead } = await read(handle, buffer, 0, bytes, position);

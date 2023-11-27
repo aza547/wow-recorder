@@ -34,7 +34,7 @@ export default abstract class LogHandler {
 
   protected _cfg: ConfigService;
 
-  protected _activity?: Activity;
+  public activity?: Activity;
 
   constructor(recorder: Recorder, logPath: string, dataTimeout: number) {
     this.recorder = recorder;
@@ -52,14 +52,6 @@ export default abstract class LogHandler {
   destroy() {
     this.combatLogWatcher.unwatch();
     this.combatLogWatcher.removeAllListeners();
-  }
-
-  get activity() {
-    return this._activity;
-  }
-
-  set activity(activity) {
-    this._activity = activity;
   }
 
   get cfg() {
