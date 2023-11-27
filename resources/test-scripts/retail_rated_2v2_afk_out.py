@@ -11,7 +11,7 @@ SAMPLE_LOG = os.path.join(dirname, "../example-logs/retail/rated_2v2_afk_out.txt
 randomNumber = random.random()
 logName = f"WoWCombatLog-{randomNumber}.txt"
 logPath = f"{LOG_PATH}/{logName}"
-logFile = open(logName, "w", encoding="utf-8")
+logFile = open(logPath, "w", encoding="utf-8")
 
 # Load the sample combat log into memory.
 sample_log = open(SAMPLE_LOG, 'r', encoding="utf-8")
