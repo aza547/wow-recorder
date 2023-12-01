@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Don't include "Unknown Raid" in the video file name.
 
 ### Fixed
-- [Issue 253](https://github.com/aza547/wow-recorder/issues/253) - Use desktopCapturer to check if WoW is running instead of tasklist.
 - [Issue 453](https://github.com/aza547/wow-recorder/issues/453) - Fix a bug where we erroneously held an audio device on app starting.
 
 ## [3.20.2] - 2023-11-17

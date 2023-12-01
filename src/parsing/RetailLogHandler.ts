@@ -184,6 +184,7 @@ export default class RetailLogHandler extends LogHandler {
       console.error(
         `[RetailLogHandler] Invalid/unsupported mapID for Challenge Mode dungeon: ${mapID} ('${zoneName}')`
       );
+      return;
     }
 
     const startTime = line.date();

@@ -53,7 +53,7 @@ export default class Manager {
 
   private cfg: ConfigService = ConfigService.getInstance();
 
-  private poller = Poller.getInstance();
+  private poller = Poller.getInstance(getFlavourConfig(this.cfg));
 
   private active = false;
 
@@ -145,8 +145,8 @@ export default class Manager {
     this.recorder = new Recorder(this.mainWindow);
 
     this.poller
-      .on('wowStart', () => this.onWowStarted())
-      .on('wowStop', () => this.onWowStopped());
+      .on('wowProcessStart', () => this.onWowStarted())
+      .on('wowProcessStop', () => this.onWowStopped());
 
     this.manage();
   }
@@ -393,6 +393,7 @@ export default class Manager {
       );
     }
 
+    this.poller.reconfigureFlavour(config);
     this.poller.start();
   }
 
