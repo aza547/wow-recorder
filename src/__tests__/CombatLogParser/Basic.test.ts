@@ -1,14 +1,8 @@
-import { Flavour } from '../../main/types';
 import LogLine from '../../parsing/LogLine';
-import { getSortedFiles } from '../../main/util';
-import CombatLogParser from '../../parsing/CombatLogWatcher';
+import CombatLogWatcher from '../../parsing/CombatLogWatcher';
 
 test('Basic Retail', async () => {
-  const combatLogParser = new CombatLogParser({
-    dataTimeout: 2 * 60 * 1000,
-    fileFinderFn: getSortedFiles,
-  });
-
+  const combatLogParser = new CombatLogWatcher('', 2);
   let promiseResolve: (value: LogLine | PromiseLike<LogLine>) => void;
 
   const testLogLinePromise: Promise<LogLine> = new Promise((resolve) => {
@@ -22,7 +16,7 @@ test('Basic Retail', async () => {
   const arenaMatchStartLine =
     '8/3 22:12:04.000  ARENA_MATCH_START,2547,33,5v5,1';
 
-  combatLogParser.handleLogLine(Flavour.Retail, arenaMatchStartLine);
+  combatLogParser.handleLogLine(arenaMatchStartLine);
 
   const testLogLine = await testLogLinePromise;
   const expectedDate = new Date('2023-08-03T22:12:04');
