@@ -1,3 +1,4 @@
+import VideoProcessQueue from 'main/VideoProcessQueue';
 import Combatant from '../main/Combatant';
 
 import {
@@ -29,8 +30,12 @@ import { VideoCategory } from '../types/VideoCategory';
  * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
-  constructor(recorder: Recorder, logPath: string) {
-    super(recorder, logPath, 10);
+  constructor(
+    recorder: Recorder,
+    videoProcessQueue: VideoProcessQueue,
+    logPath: string
+  ) {
+    super(recorder, videoProcessQueue, logPath, 10);
 
     this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {

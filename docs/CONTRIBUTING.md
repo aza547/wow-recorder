@@ -2,6 +2,11 @@
 
 The below steps describe development on Windows. The app is currently not supported on other operating systems. 
 
+## Architecture
+Once I drew the structure of the application in Excalidraw. You can see that below. It's a rough overview of the key parts and may be a useful overview for any interested developers.
+![](https://i.imgur.com/UbZ0aWY.png)
+You can find the source in the `design.excalidraw` file in this directory.
+
 ## Start in Development Mode
 Development mode benefits from the infrastructure offered by [electron-react-boilerplate](https://github.com/electron-react-boilerplate/electron-react-boilerplate). You can read more about it on their [docs](https://electron-react-boilerplate.js.org/). It allows for a very quick development cycle, access to chrome dev tools, and hot reloading of the app on saving new changes. 
 

@@ -1,3 +1,5 @@
+import VideoProcessQueue from '../main/VideoProcessQueue';
+import Poller from '../utils/Poller';
 import Combatant from '../main/Combatant';
 import CombatLogWatcher from './CombatLogWatcher';
 import ConfigService from '../main/ConfigService';
@@ -16,7 +18,7 @@ import {
 
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
-import { allowRecordCategory } from '../utils/configUtils';
+import { allowRecordCategory, getFlavourConfig } from '../utils/configUtils';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -30,13 +32,27 @@ export default abstract class LogHandler {
 
   public combatLogWatcher: CombatLogWatcher;
 
-  protected _player: Combatant | undefined;
+  protected player: Combatant | undefined;
 
-  protected _cfg: ConfigService;
+  protected cfg: ConfigService = ConfigService.getInstance();
 
   public activity?: Activity;
 
-  constructor(recorder: Recorder, logPath: string, dataTimeout: number) {
+  protected poller: Poller = Poller.getInstance(getFlavourConfig(this.cfg));
+
+  /**
+   * Once we have completed a recording, we throw it onto the
+   * VideoProcessQueue to handle cutting it to size, writing accompanying
+   * metadata and saving it to the final location for display in the GUI.
+   */
+  protected videoProcessQueue: VideoProcessQueue;
+
+  constructor(
+    recorder: Recorder,
+    videoProcessQueue: VideoProcessQueue,
+    logPath: string,
+    dataTimeout: number
+  ) {
     this.recorder = recorder;
 
     this.combatLogWatcher = new CombatLogWatcher(logPath, dataTimeout);
@@ -46,20 +62,12 @@ export default abstract class LogHandler {
       this.dataTimeout(ms);
     });
 
-    this._cfg = ConfigService.getInstance();
+    this.videoProcessQueue = videoProcessQueue;
   }
 
   destroy() {
     this.combatLogWatcher.unwatch();
     this.combatLogWatcher.removeAllListeners();
-  }
-
-  get cfg() {
-    return this._cfg;
-  }
-
-  get player() {
-    return this._player;
   }
 
   protected async handleEncounterStartLine(line: LogLine, flavour: Flavour) {
@@ -170,14 +178,19 @@ export default abstract class LogHandler {
       `[LogHandler] Start recording a video for category: ${category}`
     );
 
-    await this.recorder.start();
+    try {
+      await this.recorder.start();
+    } catch (error) {
+      console.error('error starting');
+      // handle error starting
+    }
   }
 
   /**
    * End the recording after the overrun has elasped. Every single activity
    * ending comes through this function.
    */
-  protected async endRecording(closedWow = false) {
+  protected async endRecording() {
     if (!this.activity) {
       console.error("[LogHandler] No active activity so can't stop");
       return;
@@ -192,7 +205,42 @@ export default abstract class LogHandler {
     // immediately starts a new activity while we're awaiting. See issue 291.
     const lastActivity = this.activity;
     this.activity = undefined;
-    await this.recorder.stop(lastActivity, closedWow);
+
+    const { overrun } = lastActivity;
+    const { bufferStartDate } = this.recorder;
+    let videoFile;
+
+    try {
+      videoFile = await this.recorder.stop(overrun);
+    } catch (error) {
+      console.error('error stopping');
+      // handle error stopping;
+      return;
+    }
+
+    try {
+      const metadata = lastActivity.getMetadata();
+      const activityStartTime = lastActivity.startDate.getTime();
+      const bufferStartTime = bufferStartDate.getTime();
+      const relativeStart = (activityStartTime - bufferStartTime) / 1000;
+
+      this.videoProcessQueue.queueVideo(
+        videoFile,
+        metadata,
+        lastActivity.getFileName(),
+        relativeStart
+      );
+    } catch (error) {
+      // We've failed to get the Metadata from the activity. Throw away the
+      // video and log why. Example of when we hit this is on raid resets
+      // where we don't have long enough to get a GUID for the player.
+      console.warn(
+        '[Recorder] Discarding video as failed to get Metadata:',
+        String(error)
+      );
+    }
+
+    this.poller.start();
   }
 
   protected async dataTimeout(ms: number) {
@@ -207,26 +255,19 @@ export default abstract class LogHandler {
     }
   }
 
-  public async forceEndActivity(timedelta = 0, closedWow = false) {
-    console.log(
-      '[LogHandler] Force ending activity',
-      'timedelta:',
-      timedelta,
-      'closedWow:',
-      closedWow
-    );
-
+  public async forceEndActivity(timedelta = 0) {
     if (!this.activity) {
-      await this.recorder.forceStop();
+      console.error('[LogHandler] forceEndActivity called but no activity');
       return;
     }
 
+    console.info('[LogHandler] Force ending activity, timedelta:', timedelta);
     const endDate = new Date();
     endDate.setTime(endDate.getTime() + timedelta * 1000);
     this.activity.overrun = 0;
 
     this.activity.end(endDate, false);
-    await this.endRecording(closedWow);
+    await this.endRecording();
     this.activity = undefined;
   }
 

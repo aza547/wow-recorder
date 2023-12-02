@@ -34,6 +34,7 @@ import {
   runClassicRecordingTest,
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
+import VideoProcessQueue from './VideoProcessQueue';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -74,6 +75,8 @@ export default class Manager {
   private retailLogHandler: RetailLogHandler | undefined;
 
   private classicLogHandler: ClassicLogHandler | undefined;
+
+  private videoProcessQueue: VideoProcessQueue;
 
   /**
    * Defined stages of configuration. They are named only for logging
@@ -143,6 +146,8 @@ export default class Manager {
 
     this.mainWindow = mainWindow;
     this.recorder = new Recorder(this.mainWindow);
+    this.recorder.on('crash', () => this.recoverRecorderFromCrash());
+    this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
 
     this.poller
       .on('wowProcessStart', () => this.onWowStarted())
@@ -183,11 +188,11 @@ export default class Manager {
    */
   public async forceStop() {
     if (this.retailLogHandler && this.retailLogHandler.activity) {
-      await this.retailLogHandler.forceEndActivity(0, false);
+      await this.retailLogHandler.forceEndActivity();
     }
 
     if (this.classicLogHandler && this.classicLogHandler.activity) {
-      await this.classicLogHandler.forceEndActivity(0, false);
+      await this.classicLogHandler.forceEndActivity();
     }
   };
 
@@ -283,7 +288,12 @@ export default class Manager {
     console.info('[Manager] Detected WoW running, or Windows active again');
     const config = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(config);
-    await this.recorder.startBuffer();
+
+    try {
+      await this.recorder.startBuffer();
+    } catch (error) {
+      console.error('[Manager] OBS failed to record when WoW started');
+    }
   }
 
   /**
@@ -295,21 +305,19 @@ export default class Manager {
     console.info('[Manager] Detected WoW not running, or Windows going inactive');
 
     if (
-      this.recorder &&
       this.retailLogHandler &&
       this.retailLogHandler.activity
     ) {
-      await this.retailLogHandler.forceEndActivity(0, true);
+      await this.retailLogHandler.forceEndActivity();
       this.recorder.removeAudioSources();
     } else if (
-      this.recorder &&
       this.classicLogHandler &&
       this.classicLogHandler.activity
     ) {
-      await this.classicLogHandler.forceEndActivity(0, true);
+      await this.classicLogHandler.forceEndActivity();
       this.recorder.removeAudioSources();
     } else {
-      await this.recorder.stopBuffer();
+      await this.recorder.stop();
       this.recorder.removeAudioSources();
     }
   }
@@ -323,16 +331,11 @@ export default class Manager {
   }
 
   private async configureObsBase(config: ObsBaseConfig) {
-    if (this.recorder.isRecording) {
-      console.error('[Manager] Invalid request from frontend');
-      throw new Error('[Manager] Invalid request from frontend');
-    }
-
     if (this.recorder.obsState === ERecordingState.Recording) {
       // We can't change this config if OBS is recording. If OBS is recording
       // but isRecording is false, that means it's a buffer recording. Stop it
       // briefly to change the config.
-      await this.recorder.stopBuffer();
+      await this.recorder.stop(0);
     }
 
     this.recorder.configureBase(config);
@@ -359,16 +362,11 @@ export default class Manager {
    * Configure the RetailLogHandler.
    */
   private async configureFlavour(config: FlavourConfig) {
-    if (this.recorder.isRecording) {
-      console.error('[Manager] Invalid request from frontend');
-      throw new Error('[Manager] Invalid request from frontend');
-    }
-
     if (this.recorder.obsState === ERecordingState.Recording) {
       // We can't change this config if OBS is recording. If OBS is recording
       // but isRecording is false, that means it's a buffer recording. Stop it
       // briefly to change the config.
-      await this.recorder.stopBuffer();
+      await this.recorder.stop();
     }
 
     if (this.retailLogHandler) {
@@ -382,6 +380,7 @@ export default class Manager {
     if (config.recordRetail) {
       this.retailLogHandler = new RetailLogHandler(
         this.recorder,
+        this.videoProcessQueue,
         config.retailLogPath
       );
     }
@@ -389,6 +388,7 @@ export default class Manager {
     if (config.recordClassic) {
       this.classicLogHandler = new ClassicLogHandler(
         this.recorder,
+        this.videoProcessQueue,
         config.classicLogPath
       );
     }
@@ -563,5 +563,24 @@ export default class Manager {
       console.log('[Manager] Detected Windows waking up from a sleep.');
       this.poller.start();
     });
+  }
+
+  /**
+   * If the recorder emits a crash event, we shut down and restart OBS 
+   * in an attempt to recover. 
+   */
+  private recoverRecorderFromCrash() {
+    console.error('[Manager] OBS got into a bad state, restarting it');
+
+    this.recorder.removeAllListeners();
+    this.recorder.shutdownOBS();
+    this.recorder = new Recorder(this.mainWindow);
+    this.recorder.on('crash', () => this.recoverRecorderFromCrash())
+
+    for (let i = 0; i < this.stages.length; i++) {
+      this.stages[i].initial = true;
+    }
+
+    this.manage();
   }
 }

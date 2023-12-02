@@ -1,3 +1,4 @@
+import VideoProcessQueue from 'main/VideoProcessQueue';
 import {
   classicArenas,
   classicBattlegrounds,
@@ -23,8 +24,12 @@ export default class ClassicLogHandler extends LogHandler {
   // case we start the timer again.
   private _playerDeathTimeout?: NodeJS.Timeout;
 
-  constructor(recorder: Recorder, logPath: string) {
-    super(recorder, logPath, 2);
+  constructor(
+    recorder: Recorder,
+    videoProcessQueue: VideoProcessQueue,
+    logPath: string
+  ) {
+    super(recorder, videoProcessQueue, logPath, 2);
 
     this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {

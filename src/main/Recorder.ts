@@ -14,6 +14,7 @@ import {
 import WaitQueue from 'wait-queue';
 
 import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
+import { EventEmitter } from 'stream';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
   EColorSpace,
@@ -40,7 +41,6 @@ import {
 
 import {
   IOBSDevice,
-  Metadata,
   MicStatus,
   ObsAudioConfig,
   ObsBaseConfig,
@@ -50,8 +50,6 @@ import {
   TAudioSourceType,
   TPreviewPosition,
 } from './types';
-import Activity from '../activitys/Activity';
-import VideoProcessQueue from './VideoProcessQueue';
 import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
 
@@ -69,13 +67,7 @@ const { v4: uuidfn } = require('uuid');
  * actually see the ENCOUNTER_START event 20 seconds after it occured in
  * game.
  */
-export default class Recorder {
-  /**
-   * For quickly checking if we're recording an activity or not. This is
-   * not the same as the OBS state.
-   */
-  public isRecording: boolean = false;
-
+export default class Recorder extends EventEmitter {
   /**
    * If we are currently overruning or not. Overrun is defined as the
    * final seconds where an activity has ended, but we're deliberatly
@@ -97,9 +89,9 @@ export default class Recorder {
   private bufferRestartIntervalID: NodeJS.Timer | undefined;
 
   /**
-   * Date the recording started.
+   * Date the buffer recording started.
    */
-  private recorderStartDate = new Date();
+  public bufferStartDate = new Date();
 
   /**
    * Reference back to the mainWindow object for updating the app status icon.
@@ -121,13 +113,6 @@ export default class Recorder {
    * the finalized video files.
    */
   private bufferStorageDir: string | undefined;
-
-  /**
-   * Once we have completed a recording, we throw it onto the
-   * VideoProcessQueue to handle cutting it to size, writing accompanying
-   * metadata and saving it to the final location for display in the GUI.
-   */
-  private videoProcessQueue: VideoProcessQueue;
 
   /**
    * On creation of the recorder we generate a UUID to identify the OBS
@@ -281,9 +266,9 @@ export default class Recorder {
    * @param mainWindow main app window for IPC interaction
    */
   constructor(mainWindow: BrowserWindow) {
+    super();
     console.info('[Recorder] Constructing recorder:', this.uuid);
     this.mainWindow = mainWindow;
-    this.videoProcessQueue = new VideoProcessQueue(mainWindow);
     this.initializeOBS();
   }
 
@@ -879,7 +864,7 @@ export default class Recorder {
     }
 
     await this.startOBS();
-    this.recorderStartDate = new Date();
+    this.bufferStartDate = new Date();
 
     // Some very specific timings can cause us to end up here with an
     // active timer, and we don't want to end up with two at all costs.
@@ -894,21 +879,13 @@ export default class Recorder {
   }
 
   /**
-   * Stop recorder buffer.
-   */
-  public async stopBuffer() {
-    console.info('[Recorder] Stop recording buffer');
-    this.cancelBufferTimers();
-    await this.stopOBS();
-    this.cleanupBuffer(1);
-  }
-
-  /**
    * Restarts the buffer recording.
    */
   private async restartBuffer() {
     console.info('[Recorder] Restart recording buffer');
-    await this.stopBuffer();
+    this.cancelBufferTimers();
+    await this.stop();
+    this.cleanupBuffer(1);
     await this.startBuffer();
   }
 
@@ -935,7 +912,7 @@ export default class Recorder {
    * for a second and retry to avoid missing recordings if so.
    */
   public async start() {
-    console.info('[Recorder] Start recording by cancelling buffer restart');
+    console.info('[Recorder] Starting a recording');
 
     if (this.isOverruning) {
       console.info('[Recorder] Overrunning from last game');
@@ -943,134 +920,69 @@ export default class Recorder {
       console.info('[Recorder] Finished with last game overrun');
     }
 
-    let rdy = !this.isRecording && this.obsState === ERecordingState.Recording;
-    let retries = 5;
-
-    while (!rdy) {
-      console.info('[Recorder] Not ready, will sleep and retry:', retries);
-
-      if (retries < 1) {
-        console.warn(
-          '[Recorder] Exhausted attempts to start',
-          this.isRecording,
-          this.obsState
-        );
-
-        return;
-      }
-
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      rdy = !this.isRecording && this.obsState === ERecordingState.Recording;
-      retries--;
+    if (this.obsState === ERecordingState.Offline) {
+      console.info('[Recorder] Buffer needs started');
+      await this.startBuffer();
     }
 
     this.updateStatusIcon(RecStatus.Recording);
     this.cancelBufferTimers();
-    this.isRecording = true;
   }
 
   /**
    * Stop recording, no-op if not already recording.
-   *
-   * @param {Activity} activity the details of the recording
-   * @param {boolean} closedWow if wow has just been closed
    */
-  public async stop(activity: Activity, closedWow = false) {
+  public async stop(overrun = 0) {
     console.info('[Recorder] Stop called');
 
-    if (!this.isRecording) {
-      console.warn('[Recorder] Stop recording called but not recording');
-      return;
+    if (!this.obsRecordingFactory) {
+      console.error('[Recorder] Stop called but no recording factory');
+      throw new Error();
     }
 
-    if (!this.obsRecordingFactory) {
-      console.warn('[Recorder] Stop called but no recording factory');
-      return;
+    if (this.obsState !== ERecordingState.Recording) {
+      console.error(
+        `[Recorder] OBS can't stop, current state is: ${this.obsState}`
+      );
+      throw new Error();
     }
 
     // Set-up some state in preparation for awaiting out the overrun. This is
     // all to allow us to asynchronously delay an incoming start() call until we
     // are finished with the previous recording.
-    const { overrun } = activity;
     console.info(`[Recorder] Stop recording after overrun: ${overrun}s`);
     const { promise, resolveHelper } = deferredPromiseHelper<void>();
     this.overrunPromise = promise;
     this.updateStatusIcon(RecStatus.Overruning);
     this.isOverruning = true;
 
-    // Await for the specified overrun.
+    // Await for the specified overrun then stop.
     await new Promise((resolve) => setTimeout(resolve, 1000 * overrun));
+    this.obsRecordingFactory.stop();
 
-    // The ordering is crucial here, we don't want to call stopOBS more
-    // than once in a row else we will crash the app. See issue 291.
-    this.isRecording = false;
-    await this.stopOBS();
+    // Wait up to 30 seconds for OBS to signal it has wrote the file, really
+    // this shouldn't take nearly as long as this but we're generous to account
+    // for slow HDDs etc.
+    const stopPromise = Promise.race([
+      this.wroteQueue.shift(),
+      getPromiseBomb(30000, '[Recorder] OBS timeout waiting for video file'),
+    ]);
 
-    // Grab some details now before we start OBS again and they are forgotten.
-    const bufferFile = this.obsRecordingFactory.lastFile();
-
-    if (!bufferFile) {
-      console.error('[Recorder] Unable to get the last file from OBS');
-      return;
+    try {
+      await stopPromise;
+    } catch (error) {
+      console.error('[Recorder] Error stopping:', String(error));
+      this.emit('crash');
+      throw error;
     }
 
-    const relativeStart =
-      (activity.startDate.getTime() - this.recorderStartDate.getTime()) / 1000;
-
-    // Restart the buffer, it's important that we do this before we resolve the
-    // overrun promise else we'll fail to start the following recording.
-    if (!closedWow) {
-      console.info('[Recorder] WoW not closed, so starting buffer');
-      await this.startBuffer();
-    }
+    this.wroteQueue.empty();
 
     // Finally we can resolve the overrunPromise and allow any pending calls to
     // start() to go ahead by resolving the overrun promise.
     resolveHelper();
     this.isOverruning = false;
-
-    // The remaining logic in this function adds the video to the process
-    // queue. This should probably be run async so we can allow a pending
-    // recording to start first, but it's a minor benefit so not bothering
-    // just now.
-    let metadata: Metadata | undefined;
-
-    try {
-      metadata = activity.getMetadata();
-    } catch (error) {
-      // We've failed to get the Metadata from the activity. Throw away the
-      // video and log why. Example of when we hit this is on raid resets
-      // where we don't have long enough to get a GUID for the player.
-      console.warn(
-        '[Recorder] Discarding video as failed to get Metadata:',
-        String(error)
-      );
-
-      return;
-    }
-
-    // If we got this far, we've got everything we need to process the
-    // video. Add it to the queue for processing.
-    this.videoProcessQueue.queueVideo(
-      bufferFile,
-      metadata,
-      activity.getFileName(),
-      relativeStart
-    );
-  }
-
-  /**
-   * Force stop a recording, throwing it away entirely.
-   */
-  public async forceStop() {
-    if (!this.isRecording) {
-      return;
-    }
-
-    await this.stopOBS();
-    this.isRecording = false;
-    await this.startBuffer();
+    return this.obsRecordingFactory.lastFile();
   }
 
   /**
@@ -1115,56 +1027,21 @@ export default class Recorder {
 
     // Wait up to 30 seconds for OBS to signal it has started recording,
     // really this shouldn't take nearly as long.
-    const startRace = await Promise.race([
+    const startPromise = Promise.race([
       this.startQueue.shift(),
       getPromiseBomb(30000, '[Recorder] OBS timeout waiting for start'),
     ]);
 
     try {
-      await startRace;
-      this.startQueue.empty();
-      this.recorderStartDate = new Date();
+      await startPromise;
     } catch (error) {
-      console.error(`[Recorder] Failed to start OBS: ${String(error)}`);
-      this.updateStatusIcon(RecStatus.FatalError, String(error));
-    }
-  }
-
-  /**
-   * Tell OBS to stop recording, and assert it signals that it has.
-   */
-  private async stopOBS() {
-    console.info('[Recorder] Stop OBS called');
-
-    if (!this.obsRecordingFactory) {
-      console.warn('[Recorder] stopOBS called but no recording factory');
-      return;
+      console.error('[Recorder] Error starting:', String(error));
+      this.emit('crash');
+      throw error;
     }
 
-    if (this.obsState !== ERecordingState.Recording) {
-      console.warn(
-        `[Recorder] OBS can't stop, current state is: ${this.obsState}`
-      );
-      return;
-    }
-
-    this.obsRecordingFactory.stop();
-
-    // Wait up to 30 seconds for OBS to signal it has wrote the file, really
-    // this shouldn't take nearly as long as this but we're generous to account
-    // for slow HDDs etc.
-    const stopRace = Promise.race([
-      this.wroteQueue.shift(),
-      getPromiseBomb(30000, '[Recorder] OBS timeout waiting for video file'),
-    ]);
-
-    try {
-      await stopRace;
-      this.wroteQueue.empty();
-    } catch (error) {
-      console.error(`[Recorder] Failed to stop OBS: ${String(error)}`);
-      this.updateStatusIcon(RecStatus.FatalError, String(error));
-    }
+    this.startQueue.empty();
+    this.bufferStartDate = new Date();
   }
 
   /**

@@ -91,18 +91,24 @@ export default class VideoProcessQueue {
       }
     }
 
-    const videoPath = await VideoProcessQueue.cutVideo(
-      data.bufferFile,
-      this.cfg.get<string>('storagePath'),
-      data.filename,
-      data.relativeStart,
-      data.metadata.duration + data.metadata.overrun
-    );
+    try {
+      const videoPath = await VideoProcessQueue.cutVideo(
+        data.bufferFile,
+        this.cfg.get<string>('storagePath'),
+        data.filename,
+        data.relativeStart,
+        data.metadata.duration + data.metadata.overrun
+      );
 
-    await writeMetadataFile(videoPath, data.metadata);
-    await tryUnlink(data.bufferFile);
-
-    await VideoProcessQueue.getThumbnail(videoPath);
+      await writeMetadataFile(videoPath, data.metadata);
+      await tryUnlink(data.bufferFile);
+      await VideoProcessQueue.getThumbnail(videoPath);
+    } catch (error) {
+      console.error(
+        '[VideoProcessQueue] Error processing video:',
+        String(error)
+      );
+    }
 
     done();
   }
