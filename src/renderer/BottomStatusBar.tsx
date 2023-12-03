@@ -67,7 +67,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
           <VersionUpdateWidget upgradeStatus={upgradeStatus} />
           <SavingStatus savingStatus={savingStatus} />
           <MicrophoneStatus micStatus={micStatus} />
-          <CrashStatus crashes={crashes}/>
+          <CrashStatus crashes={crashes} />
         </Box>
 
         <Box
