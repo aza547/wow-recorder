@@ -61,6 +61,12 @@ export default class CombatLogWatcher extends EventEmitter {
   });
 
   /**
+   * The most recently updated log file, we remember this purely so we can
+   * log when it changes.
+   */
+  private current = '';
+
+  /**
    * Constructor, unit of timeout is minutes. No events will be emitted until
    * watch() is called.
    */
@@ -90,6 +96,11 @@ export default class CombatLogWatcher extends EventEmitter {
 
       if (!file.startsWith('WoWCombatLog')) {
         return;
+      }
+
+      if (file !== this.current) {
+        console.info('[CombatLogWatcher] New active log file', file);
+        this.current = file;
       }
 
       this.queue.enqueue(() => this.process(file));

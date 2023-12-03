@@ -1,3 +1,4 @@
+import { BrowserWindow } from 'electron';
 import VideoProcessQueue from '../main/VideoProcessQueue';
 import Poller from '../utils/Poller';
 import Combatant from '../main/Combatant';
@@ -5,7 +6,7 @@ import CombatLogWatcher from './CombatLogWatcher';
 import ConfigService from '../main/ConfigService';
 import { instanceDifficulty } from '../main/constants';
 import Recorder from '../main/Recorder';
-import { Flavour, PlayerDeathType } from '../main/types';
+import { Flavour, PlayerDeathType, RecStatus } from '../main/types';
 import Activity from '../activitys/Activity';
 import RaidEncounter from '../activitys/RaidEncounter';
 
@@ -19,6 +20,7 @@ import {
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
 import { allowRecordCategory, getFlavourConfig } from '../utils/configUtils';
+import { updateRecStatus } from '../main/util';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -40,6 +42,8 @@ export default abstract class LogHandler {
 
   protected poller: Poller = Poller.getInstance(getFlavourConfig(this.cfg));
 
+  protected mainWindow: BrowserWindow;
+
   /**
    * Once we have completed a recording, we throw it onto the
    * VideoProcessQueue to handle cutting it to size, writing accompanying
@@ -48,11 +52,13 @@ export default abstract class LogHandler {
   protected videoProcessQueue: VideoProcessQueue;
 
   constructor(
+    mainWindow: BrowserWindow,
     recorder: Recorder,
     videoProcessQueue: VideoProcessQueue,
     logPath: string,
     dataTimeout: number
   ) {
+    this.mainWindow = mainWindow;
     this.recorder = recorder;
 
     this.combatLogWatcher = new CombatLogWatcher(logPath, dataTimeout);
@@ -103,7 +109,7 @@ export default abstract class LogHandler {
       flavour
     );
 
-    await this.startRecording(this.activity);
+    await this.startActivity(this.activity);
   }
 
   protected async handleEncounterEndLine(line: LogLine) {
@@ -116,7 +122,7 @@ export default abstract class LogHandler {
 
     const result = Boolean(parseInt(line.arg(5), 10));
     this.activity.end(line.date(), result);
-    await this.endRecording();
+    await this.endActivity();
   }
 
   protected handleUnitDiedLine(line: LogLine): void {
@@ -165,7 +171,7 @@ export default abstract class LogHandler {
     this.activity.addDeath(playerDeath);
   }
 
-  protected async startRecording(activity: Activity) {
+  protected async startActivity(activity: Activity) {
     const { category } = activity;
     const allowed = allowRecordCategory(this.cfg, category);
 
@@ -180,9 +186,10 @@ export default abstract class LogHandler {
 
     try {
       await this.recorder.start();
+      updateRecStatus(this.mainWindow, RecStatus.Recording);
     } catch (error) {
-      console.error('error starting');
-      // handle error starting
+      console.error('[LogHandler] Error starting activity', String(error));
+      this.activity = undefined;
     }
   }
 
@@ -190,7 +197,7 @@ export default abstract class LogHandler {
    * End the recording after the overrun has elasped. Every single activity
    * ending comes through this function.
    */
-  protected async endRecording() {
+  protected async endActivity() {
     if (!this.activity) {
       console.error("[LogHandler] No active activity so can't stop");
       return;
@@ -207,21 +214,31 @@ export default abstract class LogHandler {
     this.activity = undefined;
 
     const { overrun } = lastActivity;
-    const { bufferStartDate } = this.recorder;
+
+    if (overrun > 0) {
+      updateRecStatus(this.mainWindow, RecStatus.Overruning);
+      console.info('[LogHandler] Awaiting overrun:', overrun);
+      await new Promise((resolve) => setTimeout(resolve, 1000 * overrun));
+      console.info('[LogHandler] Done awaiting overrun');
+    }
+
+    const { startDate } = this.recorder;
     let videoFile;
 
     try {
-      videoFile = await this.recorder.stop(overrun);
+      await this.recorder.stop();
+      updateRecStatus(this.mainWindow, RecStatus.WaitingForWoW);
+      videoFile = this.recorder.lastFile;
+      this.poller.start();
     } catch (error) {
-      console.error('error stopping');
-      // handle error stopping;
+      console.error('[LogHandler] Failed to stop OBS, discarding video');
       return;
     }
 
     try {
       const metadata = lastActivity.getMetadata();
       const activityStartTime = lastActivity.startDate.getTime();
-      const bufferStartTime = bufferStartDate.getTime();
+      const bufferStartTime = startDate.getTime();
       const relativeStart = (activityStartTime - bufferStartTime) / 1000;
 
       this.videoProcessQueue.queueVideo(
@@ -235,12 +252,10 @@ export default abstract class LogHandler {
       // video and log why. Example of when we hit this is on raid resets
       // where we don't have long enough to get a GUID for the player.
       console.warn(
-        '[Recorder] Discarding video as failed to get Metadata:',
+        '[LogHandler] Discarding video as failed to get Metadata:',
         String(error)
       );
     }
-
-    this.poller.start();
   }
 
   protected async dataTimeout(ms: number) {
@@ -267,7 +282,7 @@ export default abstract class LogHandler {
     this.activity.overrun = 0;
 
     this.activity.end(endDate, false);
-    await this.endRecording();
+    await this.endActivity();
     this.activity = undefined;
   }
 
@@ -282,7 +297,7 @@ export default abstract class LogHandler {
 
     const endDate = line.date();
     this.activity.end(endDate, false);
-    await this.endRecording();
+    await this.endActivity();
   }
 
   protected isArena() {

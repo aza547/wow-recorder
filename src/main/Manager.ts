@@ -154,6 +154,7 @@ export default class Manager {
       .on('wowProcessStop', () => this.onWowStopped());
 
     this.manage();
+    setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
   }
 
   /**
@@ -285,12 +286,12 @@ export default class Manager {
    * the audio sources and starts the buffer recording.
    */
   private async onWowStarted() {
-    console.info('[Manager] Detected WoW running, or Windows active again');
+    console.info('[Manager] Detected WoW is running');
     const config = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(config);
 
     try {
-      await this.recorder.startBuffer();
+      await this.recorder.start();
     } catch (error) {
       console.error('[Manager] OBS failed to record when WoW started');
     }
@@ -335,9 +336,8 @@ export default class Manager {
       // We can't change this config if OBS is recording. If OBS is recording
       // but isRecording is false, that means it's a buffer recording. Stop it
       // briefly to change the config.
-      await this.recorder.stop(0);
+      await this.recorder.stop();
     }
-
     this.recorder.configureBase(config);
     this.poller.start();
   }
@@ -379,6 +379,7 @@ export default class Manager {
 
     if (config.recordRetail) {
       this.retailLogHandler = new RetailLogHandler(
+        this.mainWindow,
         this.recorder,
         this.videoProcessQueue,
         config.retailLogPath
@@ -387,6 +388,7 @@ export default class Manager {
 
     if (config.recordClassic) {
       this.classicLogHandler = new ClassicLogHandler(
+        this.mainWindow,
         this.recorder,
         this.videoProcessQueue,
         config.classicLogPath
@@ -582,5 +584,25 @@ export default class Manager {
     }
 
     this.manage();
+  }
+
+  private async restartRecorder() {
+    if (this.recorder.obsState !== ERecordingState.Recording) {
+      console.info('[Manager] Not restarting recorder as not recording');
+      return;
+    }
+
+    const retailSafe = !this.retailLogHandler || !this.retailLogHandler.activity;
+    const classicSafe = !this.classicLogHandler || !this.classicLogHandler.activity;
+
+    if (!retailSafe || !classicSafe) {
+      console.info('[Manager] Not restarting recorder as in an activity');
+      return;
+    }
+
+    console.info('[Manager] Restart recorder');
+    await this.recorder.stop();
+    await this.recorder.cleanup();
+    await this.recorder.start();
   }
 }

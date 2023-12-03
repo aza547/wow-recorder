@@ -15,6 +15,7 @@ import WaitQueue from 'wait-queue';
 
 import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
 import { EventEmitter } from 'stream';
+import Queue from 'queue-promise';
 import { getOverlayConfig } from '../utils/configUtils';
 import {
   EColorSpace,
@@ -69,29 +70,9 @@ const { v4: uuidfn } = require('uuid');
  */
 export default class Recorder extends EventEmitter {
   /**
-   * If we are currently overruning or not. Overrun is defined as the
-   * final seconds where an activity has ended, but we're deliberatly
-   * continuing the recording to catch the score screen, kill moments,
-   * etc.
-   */
-  private isOverruning = false;
-
-  /**
-   * Promise we can await on to take actions after the overrun has completed.
-   * This is undefined if isOverruning is false.
-   */
-  private overrunPromise: Promise<void> | undefined;
-
-  /**
-   * Timer object to trigger a restart of the buffer. We do this on a 5
-   * minute interval so we aren't building up massive files.
-   */
-  private bufferRestartIntervalID: NodeJS.Timer | undefined;
-
-  /**
    * Date the buffer recording started.
    */
-  public bufferStartDate = new Date();
+  public startDate = new Date();
 
   /**
    * Reference back to the mainWindow object for updating the app status icon.
@@ -261,6 +242,19 @@ export default class Recorder extends EventEmitter {
   public obsConfigured = false;
 
   /**
+   * Action queue.
+   */
+  private actionQueue = new Queue({
+    concurrent: 1,
+    interval: 100,
+  });
+
+  /**
+   * Action queue.
+   */
+  public lastFile: string = '';
+
+  /**
    * Contructor.
    *
    * @param mainWindow main app window for IPC interaction
@@ -272,63 +266,38 @@ export default class Recorder extends EventEmitter {
     this.initializeOBS();
   }
 
-  /**
-   * Create the bufferStorageDir if it doesn't already exist. Also
-   * cleans it out for good measure.
-   */
-  private createRecordingDirs(bufferStoragePath: string) {
-    if (bufferStoragePath === '') {
-      console.error('[Recorder] bufferStorageDir not set');
-      return;
-    }
+  public async start() {
+    console.info('[Recorder] Queued start');
+    const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
-    if (!fs.existsSync(bufferStoragePath)) {
-      console.info('[Recorder] Creating dir:', bufferStoragePath);
-      fs.mkdirSync(bufferStoragePath);
-    } else {
-      console.info('[Recorder] Clean out buffer');
-      this.cleanupBuffer(0);
-    }
+    this.actionQueue.enqueue(async () => {
+      try {
+        await this.startOBS();
+        resolveHelper(null);
+      } catch (error) {
+        this.emit('crash');
+        rejectHelper(error);
+      }
+    });
+
+    await promise;
   }
 
-  /**
-   * Call through OSN to initialize OBS. This is slow and synchronous,
-   * so use sparingly - it will block the main thread.
-   */
-  private initializeOBS() {
-    console.info('[Recorder] Initializing OBS', this.uuid);
+  public async stop() {
+    console.info('[Recorder] Queued stop');
+    const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
-    try {
-      osn.NodeObs.IPC.host(this.uuid);
-
-      osn.NodeObs.SetWorkingDirectory(
-        fixPathWhenPackaged(
-          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
-        )
-      );
-
-      const initResult = osn.NodeObs.OBS_API_initAPI(
-        'en-US',
-        fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
-        '1.0.0',
-        ''
-      );
-
-      if (initResult !== 0) {
-        throw new Error(
-          `OBS process initialization failed with code ${initResult}`
-        );
+    this.actionQueue.enqueue(async () => {
+      try {
+        await this.stopOBS();
+        resolveHelper(null);
+      } catch (error) {
+        this.emit('crash');
+        rejectHelper(error);
       }
-    } catch (e) {
-      throw new Error(`Exception when initializing OBS process: ${e}`);
-    }
+    });
 
-    this.scene = osn.SceneFactory.create('WR Scene');
-    osn.Global.setOutputSource(this.videoChannel, this.scene);
-    this.createOverlayImageSource();
-
-    this.obsInitialized = true;
-    console.info('[Recorder] OBS initialized successfully');
+    await promise;
   }
 
   /**
@@ -425,48 +394,6 @@ export default class Recorder extends EventEmitter {
     };
   }
 
-  private handleSignal(obsSignal: osn.EOutputSignal) {
-    console.info('[Recorder] Got signal:', obsSignal);
-
-    if (obsSignal.type !== 'recording') {
-      console.info('[Recorder] No action needed on this signal');
-      return;
-    }
-
-    switch (obsSignal.signal) {
-      case EOBSOutputSignal.Start:
-        this.startQueue.push(obsSignal);
-        this.obsState = ERecordingState.Recording;
-        this.updateStatusIcon(RecStatus.ReadyToRecord);
-        break;
-
-      case EOBSOutputSignal.Starting:
-        this.obsState = ERecordingState.Starting;
-        this.updateStatusIcon(RecStatus.ReadyToRecord);
-        break;
-
-      case EOBSOutputSignal.Stop:
-        this.obsState = ERecordingState.Offline;
-        this.updateStatusIcon(RecStatus.WaitingForWoW);
-        break;
-
-      case EOBSOutputSignal.Stopping:
-        this.obsState = ERecordingState.Stopping;
-        this.updateStatusIcon(RecStatus.WaitingForWoW);
-        break;
-
-      case EOBSOutputSignal.Wrote:
-        this.wroteQueue.push(obsSignal);
-        break;
-
-      default:
-        console.info('[Recorder] No action needed on this signal');
-        break;
-    }
-
-    console.info('[Recorder] State is now: ', this.obsState);
-  }
-
   /**
    * Configures the video source in OBS.
    */
@@ -509,95 +436,86 @@ export default class Recorder extends EventEmitter {
     this.configureOverlaySource(overlayCfg);
   }
 
-  /**
-   * Creates a monitor capture source.
-   */
-  private static createMonitorCaptureSource(
-    monitorIndex: number,
-    captureCursor: boolean
-  ) {
-    console.info('[Recorder] Configuring OBS for Monitor Capture');
+  public hidePreview() {
+    if (!this.previewCreated) {
+      console.warn('[Recorder] Preview display not created');
+      return;
+    }
 
-    const monitorCaptureSource = osn.InputFactory.create(
-      'monitor_capture',
-      'WR Monitor Capture'
+    // I'd love to make OBS_content_destroyDisplay work here but I've not managed
+    // so far. This is a hack to "hide" it by moving it off screen.
+    this.previewLocation.xPos = 50000;
+    this.previewLocation.yPos = 50000;
+
+    osn.NodeObs.OBS_content_moveDisplay(
+      this.previewName,
+      this.previewLocation.xPos,
+      this.previewLocation.yPos
     );
-
-    const { settings } = monitorCaptureSource;
-    settings.monitor = monitorIndex;
-    settings.capture_cursor = captureCursor;
-
-    monitorCaptureSource.update(settings);
-    monitorCaptureSource.save();
-
-    return monitorCaptureSource;
   }
 
   /**
-   * Creates a game capture source.
+   * Apply a chat overlay to the scene.
    */
-  private static createGameCaptureSource(captureCursor: boolean) {
-    console.info('[Recorder] Configuring OBS for Game Capture');
+  public configureOverlaySource(config: ObsOverlayConfig) {
+    const {
+      chatOverlayEnabled,
+      chatOverlayWidth,
+      chatOverlayHeight,
+      chatOverlayXPosition,
+      chatOverlayYPosition,
+    } = config;
 
-    const gameCaptureSource = osn.InputFactory.create(
-      'game_capture',
-      'WR Game Capture'
-    );
+    if (this.scene === undefined || this.overlayImageSource === undefined) {
+      console.error(
+        '[Recorder] Not applying overlay as scene or image source undefined',
+        this.scene,
+        this.overlayImageSource
+      );
 
-    const { settings } = gameCaptureSource;
-    settings.capture_mode = 'window';
-    settings.allow_transparency = true;
-    settings.priority = 1;
-    settings.capture_cursor = captureCursor;
-    settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
+      return;
+    }
 
-    gameCaptureSource.update(settings);
-    gameCaptureSource.save();
+    if (this.overlaySceneItem !== undefined) {
+      this.overlaySceneItem.remove();
+    }
 
-    return gameCaptureSource;
-  }
+    if (!chatOverlayEnabled) {
+      return;
+    }
 
-  /**
-   * Creates a window capture source.
-   */
-  private static createWindowCaptureSource(captureCursor: boolean) {
-    console.info('[Recorder] Configuring OBS for Window Capture');
+    // This is the height of the chat overlay image, a bit ugly
+    // to have it hardcoded here, but whatever.
+    const baseWidth = 5000;
+    const baseHeight = 2000;
 
-    const windowCaptureSource = osn.InputFactory.create(
-      'window_capture',
-      'WR Window Capture',
-      {
-        cursor: captureCursor,
-        window: 'World of Warcraft:GxWindowClass:Wow.exe',
-        // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
-        // capture behind the WoW window. Not sure why, some googling suggested Windows theme issues.
-        // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
-        method: 2,
-      }
-    );
+    const toCropX = (baseWidth - chatOverlayWidth) / 2;
+    const toCropY = (baseHeight - chatOverlayHeight) / 2;
 
-    return windowCaptureSource;
-  }
-
-  /**
-   * Creates an image source.
-   */
-  private createOverlayImageSource() {
-    console.info('[Recorder] Create image source for chat overlay');
-
-    const settings = {
-      file: getAssetPath('poster', 'chat-cover.png'),
+    const overlaySettings: ISceneItemInfo = {
+      name: 'overlay',
+      crop: {
+        left: toCropX,
+        right: toCropX,
+        top: toCropY,
+        bottom: toCropY,
+      },
+      scaleX: 1,
+      scaleY: 1,
+      visible: true,
+      x: chatOverlayXPosition,
+      y: chatOverlayYPosition,
+      rotation: 0,
+      streamVisible: true,
+      recordingVisible: true,
+      scaleFilter: 0,
+      blendingMode: 0,
     };
 
-    this.overlayImageSource = osn.InputFactory.create(
-      'image_source',
-      'WR Chat Overlay',
-      settings
+    this.overlaySceneItem = this.scene.add(
+      this.overlayImageSource,
+      overlaySettings
     );
-
-    if (this.overlayImageSource === null) {
-      console.error('[Recorder] Failed to create image source');
-    }
   }
 
   /**
@@ -764,46 +682,6 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Add a single audio source to the OBS scene.
-   */
-  private addAudioSource(obsInput: IInput, channel: number) {
-    console.info(
-      '[Recorder] Adding OBS audio source',
-      obsInput.name,
-      obsInput.id
-    );
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    if (channel <= 1 || channel >= 64) {
-      throw new Error(`[Recorder] Invalid channel number ${channel}`);
-    }
-
-    osn.Global.setOutputSource(channel, obsInput);
-  }
-
-  /**
-   * Remove a single audio source from the OBS scene.
-   */
-  private removeAudioSource(obsInput: IInput, channel: number) {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    console.info(
-      '[Recorder] Removing OBS audio source',
-      obsInput.name,
-      obsInput.id
-    );
-
-    osn.Global.setOutputSource(channel, null as unknown as ISource);
-    obsInput.release();
-    obsInput.remove();
-  }
-
-  /**
    * Release all OBS resources and shut it down.
    */
   public shutdownOBS() {
@@ -852,199 +730,6 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Start recorder buffer. This starts OBS and records in 15 min chunks
-   * to the buffer location.
-   */
-  public async startBuffer() {
-    console.info('[Recorder] Start recording buffer');
-
-    if (!this.obsInitialized) {
-      console.error('[Recorder] OBS not initialized');
-      return;
-    }
-
-    await this.startOBS();
-    this.bufferStartDate = new Date();
-
-    // Some very specific timings can cause us to end up here with an
-    // active timer, and we don't want to end up with two at all costs.
-    // So cancel any. See issue 350.
-    this.cancelBufferTimers();
-
-    // We store off this timer as a member variable as we will cancel
-    // it when a real game is detected.
-    this.bufferRestartIntervalID = setInterval(() => {
-      this.restartBuffer();
-    }, 15 * 60 * 1000); // Fifteen mins
-  }
-
-  /**
-   * Restarts the buffer recording.
-   */
-  private async restartBuffer() {
-    console.info('[Recorder] Restart recording buffer');
-    this.cancelBufferTimers();
-    await this.stop();
-    this.cleanupBuffer(1);
-    await this.startBuffer();
-  }
-
-  /**
-   * Cancel buffer timers. This can include any combination of:
-   *  - _bufferRestartIntervalID: the interval on which we periodically restart the buffer
-   */
-  private cancelBufferTimers = () => {
-    if (this.bufferRestartIntervalID) {
-      console.info('[Recorder] Buffer restart interval cleared');
-      clearInterval(this.bufferRestartIntervalID);
-    }
-  };
-
-  /**
-   * Start recording for real, this basically just cancels pending
-   * buffer recording restarts.
-   *
-   * We don't need to actually start OBS recording as it's should already
-   * be running.
-   *
-   * We do need to handle the case here that we're mid buffer restart and
-   * OBS isn't in a Recording state but is about to be, so we will sleep
-   * for a second and retry to avoid missing recordings if so.
-   */
-  public async start() {
-    console.info('[Recorder] Starting a recording');
-
-    if (this.isOverruning) {
-      console.info('[Recorder] Overrunning from last game');
-      await this.overrunPromise;
-      console.info('[Recorder] Finished with last game overrun');
-    }
-
-    if (this.obsState === ERecordingState.Offline) {
-      console.info('[Recorder] Buffer needs started');
-      await this.startBuffer();
-    }
-
-    this.updateStatusIcon(RecStatus.Recording);
-    this.cancelBufferTimers();
-  }
-
-  /**
-   * Stop recording, no-op if not already recording.
-   */
-  public async stop(overrun = 0) {
-    console.info('[Recorder] Stop called');
-
-    if (!this.obsRecordingFactory) {
-      console.error('[Recorder] Stop called but no recording factory');
-      throw new Error();
-    }
-
-    if (this.obsState !== ERecordingState.Recording) {
-      console.error(
-        `[Recorder] OBS can't stop, current state is: ${this.obsState}`
-      );
-      throw new Error();
-    }
-
-    // Set-up some state in preparation for awaiting out the overrun. This is
-    // all to allow us to asynchronously delay an incoming start() call until we
-    // are finished with the previous recording.
-    console.info(`[Recorder] Stop recording after overrun: ${overrun}s`);
-    const { promise, resolveHelper } = deferredPromiseHelper<void>();
-    this.overrunPromise = promise;
-    this.updateStatusIcon(RecStatus.Overruning);
-    this.isOverruning = true;
-
-    // Await for the specified overrun then stop.
-    await new Promise((resolve) => setTimeout(resolve, 1000 * overrun));
-    this.obsRecordingFactory.stop();
-
-    // Wait up to 30 seconds for OBS to signal it has wrote the file, really
-    // this shouldn't take nearly as long as this but we're generous to account
-    // for slow HDDs etc.
-    const stopPromise = Promise.race([
-      this.wroteQueue.shift(),
-      getPromiseBomb(30000, '[Recorder] OBS timeout waiting for video file'),
-    ]);
-
-    try {
-      await stopPromise;
-    } catch (error) {
-      console.error('[Recorder] Error stopping:', String(error));
-      this.emit('crash');
-      throw error;
-    }
-
-    this.wroteQueue.empty();
-
-    // Finally we can resolve the overrunPromise and allow any pending calls to
-    // start() to go ahead by resolving the overrun promise.
-    resolveHelper();
-    this.isOverruning = false;
-    return this.obsRecordingFactory.lastFile();
-  }
-
-  /**
-   * Clean-up the buffer directory.
-   * @params Number of files to leave.
-   */
-  private async cleanupBuffer(filesToLeave: number) {
-    if (!this.bufferStorageDir) {
-      console.info('[Recorder] Not attempting to clean-up');
-      return;
-    }
-
-    // Sort newest to oldest
-    const sortedBufferVideos = await getSortedVideos(this.bufferStorageDir);
-    if (!sortedBufferVideos || sortedBufferVideos.length === 0) return;
-    const videosToDelete = sortedBufferVideos.slice(filesToLeave);
-
-    const deletePromises = videosToDelete.map(async (video) => {
-      await tryUnlink(video.name);
-    });
-
-    await Promise.all(deletePromises);
-  }
-
-  /**
-   * Tell OBS to start recording, and assert it signals that it has.
-   */
-  private async startOBS() {
-    console.info('[Recorder] Start OBS called');
-
-    if (!this.obsRecordingFactory) {
-      console.warn('[Recorder] StartOBS called but no recording factory');
-      return;
-    }
-
-    if (this.obsState !== ERecordingState.Offline) {
-      console.warn(`[Recorder] OBS can't start, state is: ${this.obsState}`);
-      return;
-    }
-
-    this.obsRecordingFactory.start();
-
-    // Wait up to 30 seconds for OBS to signal it has started recording,
-    // really this shouldn't take nearly as long.
-    const startPromise = Promise.race([
-      this.startQueue.shift(),
-      getPromiseBomb(30000, '[Recorder] OBS timeout waiting for start'),
-    ]);
-
-    try {
-      await startPromise;
-    } catch (error) {
-      console.error('[Recorder] Error starting:', String(error));
-      this.emit('crash');
-      throw error;
-    }
-
-    this.startQueue.empty();
-    this.bufferStartDate = new Date();
-  }
-
-  /**
    * Get a list of the audio input devices. Used by the settings to populate
    * the list of devices for user selection.
    */
@@ -1075,6 +760,394 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
+   * Return an array of all the encoders available to OBS.
+   */
+  public getAvailableEncoders() {
+    console.info('[Recorder] Getting available encoders');
+
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    const encoders = osn.VideoEncoderFactory.types();
+    console.info('[Recorder]', encoders);
+
+    return encoders;
+  }
+
+  /**
+   * Show the scene preview on the UI, taking the location and dimensions as
+   * input. We scale to match the monitor scaling here too else the preview
+   * will be misplaced (see issue 397).
+   */
+  public showPreview(
+    width: number,
+    height: number,
+    xPos: number,
+    yPos: number
+  ) {
+    if (!this.previewCreated) {
+      console.info('[Recorder] Preview display not yet created, creating...');
+      this.createPreview();
+    }
+
+    if (!this.previewCreated) {
+      console.error('[Recorder] Preview display still does not exist');
+      return;
+    }
+
+    const winBounds = this.mainWindow.getBounds();
+
+    const currentScreen = screen.getDisplayNearestPoint({
+      x: winBounds.x,
+      y: winBounds.y,
+    });
+
+    const { scaleFactor } = currentScreen;
+    this.previewLocation = { width, height, xPos, yPos };
+
+    osn.NodeObs.OBS_content_resizeDisplay(
+      this.previewName,
+      width * scaleFactor,
+      height * scaleFactor
+    );
+
+    osn.NodeObs.OBS_content_moveDisplay(
+      this.previewName,
+      xPos * scaleFactor,
+      yPos * scaleFactor
+    );
+  }
+
+  /**
+   * Show the preview on the UI, only if we already know the location and
+   * dimensions.
+   */
+  public showPreviewMemory() {
+    if (this.previewLocation !== undefined) {
+      const { width, height, xPos, yPos } = this.previewLocation;
+      this.showPreview(width, height, xPos, yPos);
+    }
+  }
+
+  /**
+   * Clean-up the recording directory.
+   * @params Number of files to leave.
+   */
+  public async cleanup(filesToLeave = 0) {
+    if (!this.bufferStorageDir) {
+      console.info('[Recorder] Not attempting to clean-up');
+      return;
+    }
+
+    // Sort newest to oldest
+    const sortedBufferVideos = await getSortedVideos(this.bufferStorageDir);
+    if (!sortedBufferVideos || sortedBufferVideos.length === 0) return;
+    const videosToDelete = sortedBufferVideos.slice(filesToLeave);
+
+    const deletePromises = videosToDelete.map(async (video) => {
+      await tryUnlink(video.name);
+    });
+
+    await Promise.all(deletePromises);
+  }
+
+  private async startOBS() {
+    console.info('[Recorder] Start');
+
+    if (!this.obsInitialized) {
+      console.error('[Recorder] OBS not initialized');
+      throw new Error('OBS not initialized');
+    }
+
+    if (!this.obsRecordingFactory) {
+      console.warn('[Recorder] startBuffer called but no recording factory');
+      throw new Error('startBuffer called but no recording factory');
+    }
+
+    if (this.obsState === ERecordingState.Recording) {
+      console.info('[Recorder] Already started');
+      return;
+    }
+
+    this.obsRecordingFactory.start();
+
+    // Wait up to 30 seconds for OBS to signal it has started recording,
+    // really this shouldn't take nearly as long.
+    await Promise.race([
+      this.startQueue.shift(),
+      getPromiseBomb(30000, '[Recorder] OBS timeout waiting for start'),
+    ]);
+
+    this.startQueue.empty();
+    this.startDate = new Date();
+  }
+
+  private async stopOBS() {
+    console.info('[Recorder] Stop');
+
+    if (!this.obsInitialized) {
+      console.error('[Recorder] OBS not initialized');
+      throw new Error('OBS not initialized');
+    }
+
+    if (!this.obsRecordingFactory) {
+      console.warn('[Recorder] Stop OBS called but no obsRecordingFactory');
+      throw new Error('Stop OBS called but no obsRecordingFactory');
+    }
+
+    if (this.obsState === ERecordingState.Offline) {
+      console.info('[Recorder] Already stopped');
+      return;
+    }
+
+    this.obsRecordingFactory.stop();
+
+    // Wait up to 30 seconds for OBS to signal it has wrote the file, really
+    // this shouldn't take nearly as long as this but we're generous to account
+    // for slow HDDs etc.
+    await Promise.race([
+      this.wroteQueue.shift(),
+      getPromiseBomb(30000, '[Recorder] OBS timeout waiting for video file'),
+    ]);
+
+    this.wroteQueue.empty();
+    this.lastFile = this.obsRecordingFactory.lastFile();
+  }
+
+  /**
+   * Create the bufferStorageDir if it doesn't already exist. Also
+   * cleans it out for good measure.
+   */
+  private createRecordingDirs(bufferStoragePath: string) {
+    if (bufferStoragePath === '') {
+      console.error('[Recorder] bufferStorageDir not set');
+      return;
+    }
+
+    if (!fs.existsSync(bufferStoragePath)) {
+      console.info('[Recorder] Creating dir:', bufferStoragePath);
+      fs.mkdirSync(bufferStoragePath);
+    } else {
+      console.info('[Recorder] Clean out buffer');
+      this.cleanup();
+    }
+  }
+
+  /**
+   * Call through OSN to initialize OBS. This is slow and synchronous,
+   * so use sparingly - it will block the main thread.
+   */
+  private initializeOBS() {
+    console.info('[Recorder] Initializing OBS', this.uuid);
+
+    try {
+      osn.NodeObs.IPC.host(this.uuid);
+
+      osn.NodeObs.SetWorkingDirectory(
+        fixPathWhenPackaged(
+          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
+        )
+      );
+
+      const initResult = osn.NodeObs.OBS_API_initAPI(
+        'en-US',
+        fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
+        '1.0.0',
+        ''
+      );
+
+      if (initResult !== 0) {
+        throw new Error(
+          `OBS process initialization failed with code ${initResult}`
+        );
+      }
+    } catch (e) {
+      throw new Error(`Exception when initializing OBS process: ${e}`);
+    }
+
+    this.scene = osn.SceneFactory.create('WR Scene');
+    osn.Global.setOutputSource(this.videoChannel, this.scene);
+    this.createOverlayImageSource();
+
+    this.obsInitialized = true;
+    console.info('[Recorder] OBS initialized successfully');
+  }
+
+  private handleSignal(obsSignal: osn.EOutputSignal) {
+    console.info('[Recorder] Got signal:', obsSignal);
+
+    if (obsSignal.type !== 'recording') {
+      console.info('[Recorder] No action needed on this signal');
+      return;
+    }
+
+    switch (obsSignal.signal) {
+      case EOBSOutputSignal.Start:
+        this.startQueue.push(obsSignal);
+        this.obsState = ERecordingState.Recording;
+        this.updateStatusIcon(RecStatus.ReadyToRecord);
+        break;
+
+      case EOBSOutputSignal.Starting:
+        this.obsState = ERecordingState.Starting;
+        this.updateStatusIcon(RecStatus.ReadyToRecord);
+        break;
+
+      case EOBSOutputSignal.Stop:
+        this.obsState = ERecordingState.Offline;
+        this.updateStatusIcon(RecStatus.WaitingForWoW);
+        break;
+
+      case EOBSOutputSignal.Stopping:
+        this.obsState = ERecordingState.Stopping;
+        this.updateStatusIcon(RecStatus.WaitingForWoW);
+        break;
+
+      case EOBSOutputSignal.Wrote:
+        this.wroteQueue.push(obsSignal);
+        break;
+
+      default:
+        console.info('[Recorder] No action needed on this signal');
+        break;
+    }
+
+    console.info('[Recorder] State is now: ', this.obsState);
+  }
+
+  /**
+   * Creates a game capture source.
+   */
+  private static createGameCaptureSource(captureCursor: boolean) {
+    console.info('[Recorder] Configuring OBS for Game Capture');
+
+    const gameCaptureSource = osn.InputFactory.create(
+      'game_capture',
+      'WR Game Capture'
+    );
+
+    const { settings } = gameCaptureSource;
+    settings.capture_mode = 'window';
+    settings.allow_transparency = true;
+    settings.priority = 1;
+    settings.capture_cursor = captureCursor;
+    settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
+
+    gameCaptureSource.update(settings);
+    gameCaptureSource.save();
+
+    return gameCaptureSource;
+  }
+
+  /**
+   * Creates a monitor capture source.
+   */
+  private static createMonitorCaptureSource(
+    monitorIndex: number,
+    captureCursor: boolean
+  ) {
+    console.info('[Recorder] Configuring OBS for Monitor Capture');
+
+    const monitorCaptureSource = osn.InputFactory.create(
+      'monitor_capture',
+      'WR Monitor Capture'
+    );
+
+    const { settings } = monitorCaptureSource;
+    settings.monitor = monitorIndex;
+    settings.capture_cursor = captureCursor;
+
+    monitorCaptureSource.update(settings);
+    monitorCaptureSource.save();
+
+    return monitorCaptureSource;
+  }
+
+  /**
+   * Creates a window capture source.
+   */
+  private static createWindowCaptureSource(captureCursor: boolean) {
+    console.info('[Recorder] Configuring OBS for Window Capture');
+
+    const windowCaptureSource = osn.InputFactory.create(
+      'window_capture',
+      'WR Window Capture',
+      {
+        cursor: captureCursor,
+        window: 'World of Warcraft:GxWindowClass:Wow.exe',
+        // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
+        // capture behind the WoW window. Not sure why, some googling suggested Windows theme issues.
+        // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
+        method: 2,
+      }
+    );
+
+    return windowCaptureSource;
+  }
+
+  /**
+   * Creates an image source.
+   */
+  private createOverlayImageSource() {
+    console.info('[Recorder] Create image source for chat overlay');
+
+    const settings = {
+      file: getAssetPath('poster', 'chat-cover.png'),
+    };
+
+    this.overlayImageSource = osn.InputFactory.create(
+      'image_source',
+      'WR Chat Overlay',
+      settings
+    );
+
+    if (this.overlayImageSource === null) {
+      console.error('[Recorder] Failed to create image source');
+    }
+  }
+
+  /**
+   * Add a single audio source to the OBS scene.
+   */
+  private addAudioSource(obsInput: IInput, channel: number) {
+    console.info(
+      '[Recorder] Adding OBS audio source',
+      obsInput.name,
+      obsInput.id
+    );
+
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    if (channel <= 1 || channel >= 64) {
+      throw new Error(`[Recorder] Invalid channel number ${channel}`);
+    }
+
+    osn.Global.setOutputSource(channel, obsInput);
+  }
+
+  /**
+   * Remove a single audio source from the OBS scene.
+   */
+  private removeAudioSource(obsInput: IInput, channel: number) {
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    console.info(
+      '[Recorder] Removing OBS audio source',
+      obsInput.name,
+      obsInput.id
+    );
+
+    osn.Global.setOutputSource(channel, null as unknown as ISource);
+    obsInput.release();
+    obsInput.remove();
+  }
+
+  /**
    * Create an OBS audio source.
    */
   private createOBSAudioSource(id: string, type: TAudioSourceType) {
@@ -1089,22 +1162,6 @@ export default class Recorder extends EventEmitter {
       type === TAudioSourceType.input ? 'mic-audio' : 'desktop-audio',
       { device_id: id }
     );
-  }
-
-  /**
-   * Return an array of all the encoders available to OBS.
-   */
-  public getAvailableEncoders() {
-    console.info('[Recorder] Getting available encoders');
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    const encoders = osn.VideoEncoderFactory.types();
-    console.info('[Recorder]', encoders);
-
-    return encoders;
   }
 
   /**
@@ -1195,143 +1252,6 @@ export default class Recorder extends EventEmitter {
     osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
 
     this.previewCreated = true;
-  }
-
-  public hidePreview() {
-    if (!this.previewCreated) {
-      console.warn('[Recorder] Preview display not created');
-      return;
-    }
-
-    // I'd love to make OBS_content_destroyDisplay work here but I've not managed
-    // so far. This is a hack to "hide" it by moving it off screen.
-    this.previewLocation.xPos = 50000;
-    this.previewLocation.yPos = 50000;
-
-    osn.NodeObs.OBS_content_moveDisplay(
-      this.previewName,
-      this.previewLocation.xPos,
-      this.previewLocation.yPos
-    );
-  }
-
-  /**
-   * Show the scene preview on the UI, taking the location and dimensions as
-   * input. We scale to match the monitor scaling here too else the preview
-   * will be misplaced (see issue 397).
-   */
-  public showPreview(
-    width: number,
-    height: number,
-    xPos: number,
-    yPos: number
-  ) {
-    if (!this.previewCreated) {
-      console.info('[Recorder] Preview display not yet created, creating...');
-      this.createPreview();
-    }
-
-    if (!this.previewCreated) {
-      console.error('[Recorder] Preview display still does not exist');
-      return;
-    }
-
-    const winBounds = this.mainWindow.getBounds();
-
-    const currentScreen = screen.getDisplayNearestPoint({
-      x: winBounds.x,
-      y: winBounds.y,
-    });
-
-    const { scaleFactor } = currentScreen;
-    this.previewLocation = { width, height, xPos, yPos };
-
-    osn.NodeObs.OBS_content_resizeDisplay(
-      this.previewName,
-      width * scaleFactor,
-      height * scaleFactor
-    );
-
-    osn.NodeObs.OBS_content_moveDisplay(
-      this.previewName,
-      xPos * scaleFactor,
-      yPos * scaleFactor
-    );
-  }
-
-  /**
-   * Show the preview on the UI, only if we already know the location and
-   * dimensions.
-   */
-  public showPreviewMemory() {
-    if (this.previewLocation !== undefined) {
-      const { width, height, xPos, yPos } = this.previewLocation;
-      this.showPreview(width, height, xPos, yPos);
-    }
-  }
-
-  /**
-   * Apply a chat overlay to the scene.
-   */
-  public configureOverlaySource(config: ObsOverlayConfig) {
-    const {
-      chatOverlayEnabled,
-      chatOverlayWidth,
-      chatOverlayHeight,
-      chatOverlayXPosition,
-      chatOverlayYPosition,
-    } = config;
-
-    if (this.scene === undefined || this.overlayImageSource === undefined) {
-      console.error(
-        '[Recorder] Not applying overlay as scene or image source undefined',
-        this.scene,
-        this.overlayImageSource
-      );
-
-      return;
-    }
-
-    if (this.overlaySceneItem !== undefined) {
-      this.overlaySceneItem.remove();
-    }
-
-    if (!chatOverlayEnabled) {
-      return;
-    }
-
-    // This is the height of the chat overlay image, a bit ugly
-    // to have it hardcoded here, but whatever.
-    const baseWidth = 5000;
-    const baseHeight = 2000;
-
-    const toCropX = (baseWidth - chatOverlayWidth) / 2;
-    const toCropY = (baseHeight - chatOverlayHeight) / 2;
-
-    const overlaySettings: ISceneItemInfo = {
-      name: 'overlay',
-      crop: {
-        left: toCropX,
-        right: toCropX,
-        top: toCropY,
-        bottom: toCropY,
-      },
-      scaleX: 1,
-      scaleY: 1,
-      visible: true,
-      x: chatOverlayXPosition,
-      y: chatOverlayYPosition,
-      rotation: 0,
-      streamVisible: true,
-      recordingVisible: true,
-      scaleFilter: 0,
-      blendingMode: 0,
-    };
-
-    this.overlaySceneItem = this.scene.add(
-      this.overlayImageSource,
-      overlaySettings
-    );
   }
 
   private muteInputDevices() {

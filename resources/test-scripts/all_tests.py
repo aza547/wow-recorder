@@ -11,6 +11,7 @@ tests = {
     "Retail: Skirmish":           os.path.join(dirname, "./retail_skirmish.py"),
     "Retail: Rated Solo Shuffle": os.path.join(dirname, "./retail_rated_solo_shuffle.py"),
     "Retail: Mythic+":            os.path.join(dirname, "./retail_mythic_plus.py"),
+    "Retail: Mythic+ Key Drop":   os.path.join(dirname, "./retail_mythic_plus_drop_go.py"),
     "Retail: Known Raid Encounter":    os.path.join(dirname, "./retail_raid.py"),
     "Retail: Unknown Raid Encounter":  os.path.join(dirname, "./retail_unknown_raid_encounter.py"),
     "Retail: Raid Reset":         os.path.join(dirname, "./retail_raid_reset.py"),

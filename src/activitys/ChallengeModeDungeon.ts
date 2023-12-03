@@ -37,7 +37,7 @@ export default class ChallengeModeDungeon extends Activity {
     this.affixes = affixes;
 
     this._timings = dungeonTimersByMapId[mapID];
-    this.overrun = 5;
+    this.overrun = 0;
   }
 
   get endDate() {
@@ -83,8 +83,6 @@ export default class ChallengeModeDungeon extends Activity {
       );
       return 0;
     }
-
-    console.log('[ChallengeModeDungeon] CMDuration:', this.CMDuration);
 
     for (let i = this.timings.length - 1; i >= 0; i--) {
       if (this.CMDuration <= this.timings[i]) {
@@ -137,6 +135,10 @@ export default class ChallengeModeDungeon extends Activity {
         "[ChallengeModeDungeon] Removing last timeline segment because it's too short."
       );
       this.removeLastTimelineSegment();
+    }
+
+    if (result) {
+      this.overrun = 5;
     }
 
     this.CMDuration = CMDuration;

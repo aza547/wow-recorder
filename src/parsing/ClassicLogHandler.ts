@@ -1,4 +1,5 @@
 import VideoProcessQueue from 'main/VideoProcessQueue';
+import { BrowserWindow } from 'electron';
 import {
   classicArenas,
   classicBattlegrounds,
@@ -25,11 +26,12 @@ export default class ClassicLogHandler extends LogHandler {
   private _playerDeathTimeout?: NodeJS.Timeout;
 
   constructor(
+    mainWindow: BrowserWindow,
     recorder: Recorder,
     videoProcessQueue: VideoProcessQueue,
     logPath: string
   ) {
-    super(recorder, videoProcessQueue, logPath, 2);
+    super(mainWindow, recorder, videoProcessQueue, logPath, 2);
 
     this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {
@@ -213,7 +215,7 @@ export default class ClassicLogHandler extends LogHandler {
       Flavour.Classic
     );
 
-    await this.startRecording(this.activity);
+    await this.startActivity(this.activity);
   }
 
   private async endArena(endDate: Date) {
@@ -265,7 +267,7 @@ export default class ClassicLogHandler extends LogHandler {
 
     arenaMatch.endArena(endDate, result);
     this.clearDeathTimeout();
-    await this.endRecording();
+    await this.endActivity();
   }
 
   protected processCombatant(
@@ -370,7 +372,7 @@ export default class ClassicLogHandler extends LogHandler {
       Flavour.Classic
     );
 
-    await this.startRecording(this.activity);
+    await this.startActivity(this.activity);
   }
 
   private async battlegroundEnd(line: LogLine) {
@@ -383,6 +385,6 @@ export default class ClassicLogHandler extends LogHandler {
 
     const endTime = line.date();
     this.activity.end(endTime, false);
-    await this.endRecording();
+    await this.endActivity();
   }
 }

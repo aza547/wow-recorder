@@ -1,4 +1,5 @@
 import VideoProcessQueue from 'main/VideoProcessQueue';
+import { BrowserWindow } from 'electron';
 import Combatant from '../main/Combatant';
 
 import {
@@ -31,11 +32,12 @@ import { VideoCategory } from '../types/VideoCategory';
  */
 export default class RetailLogHandler extends LogHandler {
   constructor(
+    mainWindow: BrowserWindow,
     recorder: Recorder,
     videoProcessQueue: VideoProcessQueue,
     logPath: string
   ) {
-    super(recorder, videoProcessQueue, logPath, 10);
+    super(mainWindow, recorder, videoProcessQueue, logPath, 10);
 
     this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {
@@ -113,7 +115,7 @@ export default class RetailLogHandler extends LogHandler {
     if (!this.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
       this.activity = new SoloShuffle(startTime, zoneID);
-      await this.startRecording(this.activity);
+      await this.startActivity(this.activity);
     } else if (this.activity && category === VideoCategory.SoloShuffle) {
       console.info(
         '[RetailLogHandler] New round of existing Solo Shuffle starting'
@@ -129,7 +131,7 @@ export default class RetailLogHandler extends LogHandler {
         Flavour.Retail
       );
 
-      await this.startRecording(this.activity);
+      await this.startActivity(this.activity);
     }
   }
 
@@ -144,13 +146,13 @@ export default class RetailLogHandler extends LogHandler {
     if (this.activity.category === VideoCategory.SoloShuffle) {
       const soloShuffle = this.activity as SoloShuffle;
       soloShuffle.endGame(line.date());
-      await this.endRecording();
+      await this.endActivity();
     } else {
       const arenaMatch = this.activity as ArenaMatch;
       const endTime = line.date();
       const winningTeamID = parseInt(line.arg(1), 10);
       arenaMatch.endArena(endTime, winningTeamID);
-      await this.endRecording();
+      await this.endActivity();
     }
   }
 
@@ -225,7 +227,7 @@ export default class RetailLogHandler extends LogHandler {
       )
     );
 
-    await this.startRecording(this.activity);
+    await this.startActivity(this.activity);
   }
 
   private async handleChallengeModeEndLine(line: LogLine) {
@@ -249,7 +251,7 @@ export default class RetailLogHandler extends LogHandler {
     const CMDuration = Math.round(parseInt(line.arg(4), 10) / 1000);
 
     challengeModeActivity.endChallengeMode(endDate, CMDuration, result);
-    await this.endRecording();
+    await this.endActivity();
   }
 
   protected async handleEncounterStartLine(line: LogLine) {
@@ -542,7 +544,7 @@ export default class RetailLogHandler extends LogHandler {
       Flavour.Retail
     );
 
-    await this.startRecording(this.activity);
+    await this.startActivity(this.activity);
   }
 
   private async battlegroundEnd(line: LogLine) {
@@ -555,6 +557,6 @@ export default class RetailLogHandler extends LogHandler {
 
     const endTime = line.date();
     this.activity.end(endTime, false);
-    await this.endRecording();
+    await this.endActivity();
   }
 }
