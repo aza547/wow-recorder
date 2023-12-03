@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+
 ### Changed
 - Make the video button more concise.
 - Don't include "Unknown Raid" in the video file name.
@@ -13,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 455](https://github.com/aza547/wow-recorder/issues/455) - Fix the first write of the combat log being ignored.
 - [Issue 453](https://github.com/aza547/wow-recorder/issues/453) - Fix erroneously holding an audio device on app starting.
-- [Issue 454](https://github.com/aza547/wow-recorder/issues/454) - Improve error handling around OBS.
+- [Issue 454](https://github.com/aza547/wow-recorder/issues/454) - Improve error handling around OBS including automatic recovery from OBS misbehaviour.
 
 ## [3.20.2] - 2023-11-17
 ### Fixed
