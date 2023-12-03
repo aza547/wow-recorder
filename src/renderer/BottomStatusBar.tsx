@@ -1,4 +1,10 @@
-import { MicStatus, RecStatus, SaveStatus, UpgradeStatus } from 'main/types';
+import {
+  Crashes,
+  MicStatus,
+  RecStatus,
+  SaveStatus,
+  UpgradeStatus,
+} from 'main/types';
 import Box from '@mui/material/Box';
 import DiscordButton from './DiscordButton';
 import LogButton from './LogButton';
@@ -7,6 +13,7 @@ import SavingStatus from './SavingStatus';
 import TestButton from './TestButton';
 import VersionUpdateWidget from './VersionUpdateWidget';
 import MicrophoneStatus from './MicrophoneStatus';
+import CrashStatus from './CrashStatus';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -14,11 +21,18 @@ interface IProps {
   upgradeStatus: UpgradeStatus;
   savingStatus: SaveStatus;
   micStatus: MicStatus;
+  crashes: Crashes;
 }
 
 const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, error, upgradeStatus, savingStatus, micStatus } =
-    props;
+  const {
+    recorderStatus,
+    error,
+    upgradeStatus,
+    savingStatus,
+    micStatus,
+    crashes,
+  } = props;
 
   return (
     <Box
@@ -53,6 +67,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
           <VersionUpdateWidget upgradeStatus={upgradeStatus} />
           <SavingStatus savingStatus={savingStatus} />
           <MicrophoneStatus micStatus={micStatus} />
+          <CrashStatus crashes={crashes}/>
         </Box>
 
         <Box

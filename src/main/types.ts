@@ -46,6 +46,17 @@ type UpgradeStatus = {
 };
 
 /**
+ * We display any OBS crashes on the frontend so we don't silently recover 
+ * and have the user think all is well.
+ */
+type Crashes = CrashData[];
+
+type CrashData = {
+  date: Date;
+  reason: string;
+};
+
+/**
  * Unit flags from combat log events
  * See https://wowpedia.fandom.com/wiki/UnitFlag for more information
  */
@@ -449,4 +460,6 @@ export {
   VideoMarker,
   Colors,
   MicStatus,
+  Crashes,
+  CrashData,
 };

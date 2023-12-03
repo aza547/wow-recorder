@@ -20,6 +20,7 @@ import {
   RecStatus,
   FlavourConfig,
   ObsAudioConfig,
+  CrashData,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -487,9 +488,19 @@ const updateRecStatus = (
   status: RecStatus,
   reason = ''
 ) => {
-  console.info('[Main] Updating status with:', status, reason);
+  console.info('[Util] Updating status with:', status, reason);
   if (mainWindow === null) return;
   mainWindow.webContents.send('updateRecStatus', status, reason);
+};
+
+/**
+ * Updates the status icon for the application.
+ * @param status the status number
+ */
+const addCrashToUI = (mainWindow: BrowserWindow, crashData: CrashData) => {
+  console.info('[Util] Updating crashes with:', crashData);
+  if (mainWindow === null) return;
+  mainWindow.webContents.send('updateCrashes', crashData);
 };
 
 /**
@@ -634,4 +645,5 @@ export {
   nextMousePressPromise,
   convertUioHookEvent,
   getPromiseBomb,
+  addCrashToUI,
 };

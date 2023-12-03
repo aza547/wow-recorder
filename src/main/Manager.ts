@@ -19,6 +19,7 @@ import {
   FlavourConfig,
   ObsOverlayConfig,
   IOBSDevice,
+  CrashData,
 } from './types';
 import {
   getObsBaseConfig,
@@ -28,7 +29,7 @@ import {
   getFlavourConfig,
   getOverlayConfig,
 } from '../utils/configUtils';
-import { updateRecStatus, validateFlavour } from './util';
+import { addCrashToUI, updateRecStatus, validateFlavour } from './util';
 import { ERecordingState } from './obsEnums';
 import {
   runClassicRecordingTest,
@@ -146,7 +147,7 @@ export default class Manager {
 
     this.mainWindow = mainWindow;
     this.recorder = new Recorder(this.mainWindow);
-    this.recorder.on('crash', () => this.recoverRecorderFromCrash());
+    this.recorder.on('crash', (crashData) => this.recoverRecorderFromCrash(crashData));
     this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
 
     this.poller
@@ -568,16 +569,18 @@ export default class Manager {
   }
 
   /**
-   * If the recorder emits a crash event, we shut down and restart OBS 
-   * in an attempt to recover. 
+   * If the recorder emits a crash event, we shut down OBS and create a new 
+   * recorder. That may not help whatever caused the crash, but will help 
+   * the app back into a good state.
    */
-  private recoverRecorderFromCrash() {
+  private recoverRecorderFromCrash(crashData: CrashData) {
     console.error('[Manager] OBS got into a bad state, restarting it');
+    addCrashToUI(this.mainWindow, crashData);
 
     this.recorder.removeAllListeners();
     this.recorder.shutdownOBS();
     this.recorder = new Recorder(this.mainWindow);
-    this.recorder.on('crash', () => this.recoverRecorderFromCrash())
+    this.recorder.on('crash', (cd) => this.recoverRecorderFromCrash(cd))
 
     for (let i = 0; i < this.stages.length; i++) {
       this.stages[i].initial = true;
@@ -586,6 +589,12 @@ export default class Manager {
     this.manage();
   }
 
+  /**
+   * Every so often we'll try restart the recorder to avoid having an 
+   * infinitely long video sitting in the .temp folder. First we check
+   * it's safe to do so, i.e. we're currently recording and not in an
+   * activity.
+   */
   private async restartRecorder() {
     if (this.recorder.obsState !== ERecordingState.Recording) {
       console.info('[Manager] Not restarting recorder as not recording');

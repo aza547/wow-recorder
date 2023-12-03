@@ -1,6 +1,8 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
 import {
+  CrashData,
+  Crashes,
   MicStatus,
   Pages,
   RecStatus,
@@ -67,6 +69,8 @@ const Application = () => {
 
   const [micStatus, setMicStatus] = React.useState<MicStatus>(MicStatus.NONE);
 
+  const [crashes, setCrashes] = React.useState<Crashes>([]);
+
   React.useEffect(() => {
     ipc.on('refreshState', async () => {
       setVideoState(
@@ -108,6 +112,10 @@ const Application = () => {
     ipc.on('updateMicStatus', (status) => {
       setMicStatus(status as MicStatus);
     });
+
+    ipc.on('updateCrashes', (crash) => {
+      setCrashes((prevArray) => [...prevArray, crash as CrashData]);
+    });
   }, []);
 
   return (
@@ -135,6 +143,7 @@ const Application = () => {
         upgradeStatus={upgradeStatus}
         savingStatus={savingStatus}
         micStatus={micStatus}
+        crashes={crashes}
       />
     </Box>
   );

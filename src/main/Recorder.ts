@@ -41,6 +41,7 @@ import {
 } from './util';
 
 import {
+  CrashData,
   IOBSDevice,
   MicStatus,
   ObsAudioConfig,
@@ -275,7 +276,14 @@ export default class Recorder extends EventEmitter {
         await this.startOBS();
         resolveHelper(null);
       } catch (error) {
-        this.emit('crash');
+        console.error('[Recorder] Crash on start call', String(error));
+
+        const crashData: CrashData = {
+          date: new Date(),
+          reason: String(error),
+        };
+
+        this.emit('crash', crashData);
         rejectHelper(error);
       }
     });
@@ -292,7 +300,14 @@ export default class Recorder extends EventEmitter {
         await this.stopOBS();
         resolveHelper(null);
       } catch (error) {
-        this.emit('crash');
+        console.error('[Recorder] Crash on stop call', String(error));
+
+        const crashData: CrashData = {
+          date: new Date(),
+          reason: String(error),
+        };
+
+        this.emit('crash', crashData);
         rejectHelper(error);
       }
     });
