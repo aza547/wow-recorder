@@ -333,12 +333,7 @@ export default class Manager {
   }
 
   private async configureObsBase(config: ObsBaseConfig) {
-    if (this.recorder.obsState === ERecordingState.Recording) {
-      // We can't change this config if OBS is recording. If OBS is recording
-      // but isRecording is false, that means it's a buffer recording. Stop it
-      // briefly to change the config.
-      await this.recorder.stop();
-    }
+    await this.recorder.stop();
     this.recorder.configureBase(config);
     this.poller.start();
   }

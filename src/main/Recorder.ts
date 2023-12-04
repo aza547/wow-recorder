@@ -908,7 +908,7 @@ export default class Recorder extends EventEmitter {
 
     if (!this.obsRecordingFactory) {
       console.warn('[Recorder] Stop OBS called but no obsRecordingFactory');
-      throw new Error('Stop OBS called but no obsRecordingFactory');
+      return;
     }
 
     if (this.obsState === ERecordingState.Offline) {
