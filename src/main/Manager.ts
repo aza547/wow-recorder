@@ -168,8 +168,11 @@ export default class Manager {
    */
   public async manage() {
     if (this.active) {
-      console.info('[Manager] Queued a manage call');
-      this.queued = true;
+      if (!this.queued) {
+        console.info('[Manager] Queued a manage call');
+        this.queued = true;
+      }
+
       return;
     }
 
@@ -580,7 +583,9 @@ export default class Manager {
     for (let i = 0; i < this.stages.length; i++) {
       this.stages[i].initial = true;
     }
-
+    
+    this.active = false;
+    this.queued = false;
     this.manage();
   }
 
