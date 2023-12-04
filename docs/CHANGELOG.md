@@ -6,7 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+### Fixed
 
+## [3.21.0] - 2023-12-04
 ### Changed
 - Make the video button more concise.
 - Don't include "Unknown Raid" in the video file name.
