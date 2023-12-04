@@ -250,6 +250,13 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     const newIndex = categories.indexOf(newCategory);
     setConfigValue('selectedCategory', newIndex);
 
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        videoFilterQuery: '',
+      };
+    });
+
     setNavigation({
       page: Pages.None,
       categoryIndex: newIndex,
