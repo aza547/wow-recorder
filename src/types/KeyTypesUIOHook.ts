@@ -1,3 +1,5 @@
+import { EventType } from 'uiohook-napi';
+
 export const UiohookModifierKeyMap = {
   Ctrl: 29,
   CtrlRight: 3613,
@@ -139,4 +141,5 @@ export interface PTTKeyPressEvent {
   shiftKey: boolean;
   keyCode: number;
   mouseButton: number;
+  type: EventType;
 }

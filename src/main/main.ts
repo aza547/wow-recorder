@@ -188,6 +188,7 @@ const createWindow = async () => {
   });
 
   await mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
+  manager.refreshStatus();
   setupTray();
 
   // Open urls in the user's browser

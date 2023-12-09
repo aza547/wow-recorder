@@ -258,28 +258,22 @@ export default class Manager {
       }
     }
 
-    this.refreshStatus(false);
+    this.refreshStatus();
   }
 
   /**
-   * Refresh the status after a config change.
+   * Refresh the status of the frontend, optionally providing arguments to
+   * describe an error case.
    */
-  private refreshStatus(invalidConfig: boolean, message = '') {
+  public refreshStatus(invalidConfig = false, message = '') {
+    this.recorder.refreshRecStatus();
+    this.recorder.refreshMicStatus();
+
     if (invalidConfig) {
       updateRecStatus(
         this.mainWindow,
         RecStatus.InvalidConfig,
         String(message)
-      );
-    } else if (this.recorder.obsState === ERecordingState.Offline) {
-      updateRecStatus(
-        this.mainWindow,
-        RecStatus.WaitingForWoW,
-      );
-    } else {
-      updateRecStatus(
-        this.mainWindow,
-        RecStatus.ReadyToRecord,
       );
     }
   }

@@ -173,22 +173,17 @@ const AudioSourceControls: React.FC = () => {
       });
     };
 
-    const getNextNonModifierKey = async () => {
-      while (pttHotKeyFieldFocused) {
-        // eslint-disable-next-line no-await-in-loop
+    const listenNextKeyPress = async () => {
+      if (pttHotKeyFieldFocused) {
         const keyPressEvent = await getNextKeyOrMouseEvent();
-
-        if (!isKeyModifier(keyPressEvent)) {
-          setPttHotKeyFieldFocused(false);
-          setPttHotKey(keyPressEvent);
-          setPushToTalkKey(keyPressEvent);
-          blurAll(document);
-          break;
-        }
+        setPttHotKeyFieldFocused(false);
+        setPttHotKey(keyPressEvent);
+        setPushToTalkKey(keyPressEvent);
+        blurAll(document);
       }
     };
 
-    getNextNonModifierKey();
+    listenNextKeyPress();
   }, [pttHotKeyFieldFocused, setConfig]);
 
   const input = standardizeAudioDeviceNames(

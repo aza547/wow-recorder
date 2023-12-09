@@ -9,7 +9,7 @@ import {
   UiohookKeyboardEvent,
   UiohookMouseEvent,
 } from 'uiohook-napi';
-import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import { PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
 import {
   Metadata,
   FileInfo,
@@ -537,12 +537,27 @@ const isPushToTalkHotkey = (
     (keyCode > 0 && keyCode === pushToTalkKey) ||
     (mouseButton > 0 && mouseButton === pushToTalkMouseButton);
 
-  const altMatch = altKey === pushToTalkModifiers.includes('alt');
-  const ctrlMatch = ctrlKey === pushToTalkModifiers.includes('ctrl');
-  const shiftMatch = shiftKey === pushToTalkModifiers.includes('shift');
-  const winMatch = metaKey === pushToTalkModifiers.includes('win');
+  if (event.type === EventType.EVENT_KEY_RELEASED) {
+    // If they release the button we ignore modifier config. That covers mainline
+    // use of regular key and modifier but also naked modifier key as the PTT hoykey
+    // which doesnt show a modifier on release.
+    return buttonMatch;
+  }
 
-  return buttonMatch && altMatch && ctrlMatch && shiftMatch && winMatch;
+  let modifierMatch = true;
+
+  // Deliberately permissive here, we check all the modifiers we have in
+  // config are met but we don't enforce the inverse, i.e. we'll accept
+  // an additional modifier present (so CTRL + SHIFT + E will trigger
+  // a CTRL + E hotkey).
+  pushToTalkModifiers.split(',').forEach((mod) => {
+    if (mod === 'alt') modifierMatch = altKey;
+    if (mod === 'ctrl') modifierMatch = ctrlKey;
+    if (mod === 'shift') modifierMatch = shiftKey;
+    if (mod === 'win') modifierMatch = metaKey;
+  });
+
+  return buttonMatch && modifierMatch;
 };
 
 const convertUioHookKeyPressEvent = (
@@ -555,6 +570,7 @@ const convertUioHookKeyPressEvent = (
     shiftKey: event.shiftKey,
     keyCode: event.keycode,
     mouseButton: -1,
+    type: event.type,
   };
 };
 
@@ -568,6 +584,7 @@ const convertUioHookMousePressEvent = (
     shiftKey: event.shiftKey,
     keyCode: -1,
     mouseButton: event.button as number,
+    type: event.type,
   };
 };
 
@@ -597,12 +614,13 @@ const convertUioHookEvent = (
     metaKey: false,
     keyCode: -1,
     mouseButton: -1,
+    type: event.type,
   };
 };
 
 const nextKeyPressPromise = (): Promise<PTTKeyPressEvent> => {
   return new Promise((resolve) => {
-    uIOhook.once('keydown', (event) => {
+    uIOhook.once('keyup', (event) => {
       resolve(convertUioHookEvent(event));
     });
   });
@@ -610,7 +628,7 @@ const nextKeyPressPromise = (): Promise<PTTKeyPressEvent> => {
 
 const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
   return new Promise((resolve) => {
-    uIOhook.once('mousedown', (event) => {
+    uIOhook.once('keyup', (event) => {
       resolve(convertUioHookEvent(event));
     });
   });

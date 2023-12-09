@@ -9,7 +9,6 @@ interface IProps {
 
 export default function MicrophoneStatus(props: IProps) {
   const { micStatus } = props;
-
   if (micStatus === MicStatus.LISTENING) {
     return (
       <Tooltip title="Listening">

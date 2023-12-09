@@ -135,7 +135,7 @@ export const configSchema = {
   },
   obsOutputResolution: {
     description:
-      'Resolution of videos as saved on disk. Set this to the size of your WoW monitor, for now Warcraft Recorder does not support rescaling.',
+      'Resolution of videos as saved on disk. Set this to the size of your WoW monitor, or less if you want to scale down.',
     type: 'string',
     default: '1920x1080',
   },
@@ -163,7 +163,7 @@ export const configSchema = {
   },
   obsCaptureMode: {
     description:
-      'The capture mode OBS should use to record. Recommended is Window capture, but each have their own limitations. See #faq in discord for more details.',
+      'The capture mode OBS should use to record. See the #faq channel in discord for more details.',
     type: 'string',
     default: 'window_capture',
   },

@@ -228,9 +228,16 @@ export default class Recorder extends EventEmitter {
   private overlaySceneItem: ISceneItem | undefined;
 
   /**
-   * The state of OBS according to its signalling.
+   * The state of the recorder, typically used to tell if OBS is recording
+   * or not.
    */
   public obsState: ERecordingState = ERecordingState.Offline;
+
+  /**
+   * The state of the recorder in regards to input devices, i.e. what are we
+   * doing with the mic currently.
+   */
+  public obsMicState: MicStatus = MicStatus.NONE;
 
   /**
    * For easy checking if OBS has been initialized.
@@ -540,7 +547,8 @@ export default class Recorder extends EventEmitter {
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
-    this.mainWindow.webContents.send('updateMicStatus', MicStatus.NONE);
+    this.obsMicState = MicStatus.NONE;
+    this.refreshMicStatus();
 
     const {
       audioInputDevices,
@@ -594,9 +602,11 @@ export default class Recorder extends EventEmitter {
     }
 
     if (this.audioInputDevices.length !== 0 && config.pushToTalk) {
-      this.mainWindow.webContents.send('updateMicStatus', MicStatus.MUTED);
+      this.obsMicState = MicStatus.MUTED;
+      this.refreshMicStatus();
     } else if (this.audioInputDevices.length !== 0) {
-      this.mainWindow.webContents.send('updateMicStatus', MicStatus.LISTENING);
+      this.obsMicState = MicStatus.LISTENING;
+      this.refreshMicStatus();
     }
 
     this.audioInputDevices.forEach((device) => {
@@ -877,6 +887,34 @@ export default class Recorder extends EventEmitter {
     await Promise.all(deletePromises);
   }
 
+  /**
+   * Push the state of the recorder to the RecStatus icon on the frontend.
+   */
+  public refreshRecStatus() {
+    if (this.obsState === ERecordingState.Recording) {
+      this.mainWindow.webContents.send(
+        'updateRecStatus',
+        RecStatus.ReadyToRecord
+      );
+    } else if (
+      this.obsState === ERecordingState.Offline ||
+      this.obsState === ERecordingState.Starting ||
+      this.obsState === ERecordingState.Stopping
+    ) {
+      this.mainWindow.webContents.send(
+        'updateRecStatus',
+        RecStatus.WaitingForWoW
+      );
+    }
+  }
+
+  /**
+   * Push the state of the mic to the MicStatus icon on the frontend.
+   */
+  public refreshMicStatus() {
+    this.mainWindow.webContents.send('updateMicStatus', this.obsMicState);
+  }
+
   private async startOBS() {
     console.info('[Recorder] Start');
 
@@ -1011,22 +1049,22 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Start:
         this.startQueue.push(obsSignal);
         this.obsState = ERecordingState.Recording;
-        this.updateStatusIcon(RecStatus.ReadyToRecord);
+        this.refreshRecStatus();
         break;
 
       case EOBSOutputSignal.Starting:
         this.obsState = ERecordingState.Starting;
-        this.updateStatusIcon(RecStatus.ReadyToRecord);
+        this.refreshRecStatus();
         break;
 
       case EOBSOutputSignal.Stop:
         this.obsState = ERecordingState.Offline;
-        this.updateStatusIcon(RecStatus.WaitingForWoW);
+        this.refreshRecStatus();
         break;
 
       case EOBSOutputSignal.Stopping:
         this.obsState = ERecordingState.Stopping;
-        this.updateStatusIcon(RecStatus.WaitingForWoW);
+        this.refreshRecStatus();
         break;
 
       case EOBSOutputSignal.Wrote:
@@ -1249,10 +1287,6 @@ export default class Recorder extends EventEmitter {
     }
   }
 
-  private updateStatusIcon(status: RecStatus, err = '') {
-    this.mainWindow.webContents.send('updateRecStatus', status, err);
-  }
-
   createPreview() {
     console.info('[Recorder] Creating preview');
 
@@ -1289,7 +1323,8 @@ export default class Recorder extends EventEmitter {
     });
 
     this.inputDevicesMuted = true;
-    this.mainWindow.webContents.send('updateMicStatus', MicStatus.MUTED);
+    this.obsMicState = MicStatus.MUTED;
+    this.refreshMicStatus();
   }
 
   private unmuteInputDevices() {
@@ -1302,6 +1337,7 @@ export default class Recorder extends EventEmitter {
     });
 
     this.inputDevicesMuted = false;
-    this.mainWindow.webContents.send('updateMicStatus', MicStatus.LISTENING);
+    this.obsMicState = MicStatus.LISTENING;
+    this.refreshMicStatus();
   }
 }
