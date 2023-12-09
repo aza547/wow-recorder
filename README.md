@@ -5,8 +5,9 @@
 
 Warcraft Recorder is a desktop screen recorder. It watches the WoW combat log file for interesting events, records them, and presents a user interface in which the recordings can be viewed. 
 
-![](https://i.imgur.com/g6vB4HJ.png)
-![](https://i.imgur.com/E92u4CL.png)
+![](https://i.imgur.com/6HYmYHo.png)
+![](https://i.imgur.com/Ixzr0iQ.png)
+![](https://i.imgur.com/CPFa05L.png)
 
 Windows is currently the only supported operating system. 
 
