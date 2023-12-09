@@ -9,6 +9,7 @@ import {
   TNavigatorState,
 } from 'main/types';
 import {
+  Badge,
   Button,
   List,
   ListItem,
@@ -273,11 +274,32 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const renderCategoryTab = (tabCategory: VideoCategory, tabIcon: string) => {
+    const numVideos = videoState[tabCategory].length;
+
     return (
       <Tab
         value={tabCategory}
-        icon={<img src={tabIcon} alt="raid" width="30" height="30" />}
-        sx={{ color: 'white' }}
+        icon={
+          <Badge
+            badgeContent={numVideos}
+            style={{ transform: 'translate(10px, 0px)' }}
+            sx={{
+              '& .MuiBadge-badge': {
+                color: 'white',
+                backgroundColor: '#bb4420',
+              },
+            }}
+          >
+            <img
+              src={tabIcon}
+              alt={tabCategory}
+              width="30"
+              height="30"
+              style={{ transform: 'translate(-10px, 0px)' }}
+            />
+          </Badge>
+        }
+        sx={{ color: 'white', minHeight: '75px' }}
         label={tabCategory}
       />
     );
