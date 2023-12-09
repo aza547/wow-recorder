@@ -604,11 +604,19 @@ export default class Manager {
       return;
     }
 
-    const retailSafe = !this.retailLogHandler || !this.retailLogHandler.activity;
-    const classicSafe = !this.classicLogHandler || !this.classicLogHandler.activity;
+    const retailNotSafe = this.retailLogHandler?.activity;
+    const classicNotSafe = this.classicLogHandler?.activity;
 
-    if (!retailSafe || !classicSafe) {
+    if (retailNotSafe || classicNotSafe) {
       console.info('[Manager] Not restarting recorder as in an activity');
+      return;
+    }
+
+    const retailOverrunning = this.retailLogHandler?.overrunning;
+    const classicOverrunning = this.classicLogHandler?.overrunning;
+
+    if (retailOverrunning || classicOverrunning) {
+      console.info('[Manager] Not restarting recorder as an activity is overrunning');
       return;
     }
 

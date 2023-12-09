@@ -51,6 +51,11 @@ export default abstract class LogHandler {
    */
   protected videoProcessQueue: VideoProcessQueue;
 
+  /**
+   * Are we currently overruning?
+   */
+  public overrunning = false;
+
   constructor(
     mainWindow: BrowserWindow,
     recorder: Recorder,
@@ -211,6 +216,7 @@ export default abstract class LogHandler {
     // await for the overrun, and we might do weird things if the player
     // immediately starts a new activity while we're awaiting. See issue 291.
     const lastActivity = this.activity;
+    this.overrunning = true;
     this.activity = undefined;
 
     const { overrun } = lastActivity;
@@ -222,6 +228,7 @@ export default abstract class LogHandler {
       console.info('[LogHandler] Done awaiting overrun');
     }
 
+    this.overrunning = false;
     const { startDate } = this.recorder;
     let videoFile;
 

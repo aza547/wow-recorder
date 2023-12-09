@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve responsiveness on startup.
 
 ### Fixed
+- [Issue 458](https://github.com/aza547/wow-recorder/issues/458) - Fixed a bug where videos could be cut way shorter than intended.
 
 ## [3.21.0] - 2023-12-04
 ### Changed
