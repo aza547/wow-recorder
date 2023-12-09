@@ -153,8 +153,6 @@ const createWindow = async () => {
 
   if (manager === undefined) {
     manager = new Manager(mainWindow);
-  } else {
-    mainWindow.webContents.send('refreshState');
   }
 
   mainWindow.on('ready-to-show', () => {
@@ -175,6 +173,8 @@ const createWindow = async () => {
     if (!startMinimized) {
       mainWindow.show();
     }
+
+    mainWindow.webContents.send('refreshState');
   });
 
   mainWindow.on('moved', () => {
