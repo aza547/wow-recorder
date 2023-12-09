@@ -151,7 +151,11 @@ const createWindow = async () => {
     },
   });
 
-  mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
+  if (manager === undefined) {
+    manager = new Manager(mainWindow);
+  } else {
+    mainWindow.webContents.send('refreshState');
+  }
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
@@ -171,12 +175,6 @@ const createWindow = async () => {
     if (!startMinimized) {
       mainWindow.show();
     }
-
-    if (manager === undefined) {
-      manager = new Manager(mainWindow);
-    } else {
-      mainWindow.webContents.send('refreshState');
-    }
   });
 
   mainWindow.on('moved', () => {
@@ -189,6 +187,7 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
+  await mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
   setupTray();
 
   // Open urls in the user's browser
