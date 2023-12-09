@@ -890,8 +890,10 @@ export default class Recorder extends EventEmitter {
   /**
    * Push the state of the recorder to the RecStatus icon on the frontend.
    */
-  public refreshRecStatus() {
-    if (this.obsState === ERecordingState.Recording) {
+  public refreshRecStatus(activity = false) {
+    if (activity) {
+      this.mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
+    } else if (this.obsState === ERecordingState.Recording) {
       this.mainWindow.webContents.send(
         'updateRecStatus',
         RecStatus.ReadyToRecord

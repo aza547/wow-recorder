@@ -266,7 +266,16 @@ export default class Manager {
    * describe an error case.
    */
   public refreshStatus(invalidConfig = false, message = '') {
-    this.recorder.refreshRecStatus();
+    let inActivity = false;
+
+    if (this.retailLogHandler?.activity || this.classicLogHandler?.activity) 
+    {
+      // The recorder doesn't know if it's in an activity or not, that 
+      // knowledge belongs to the LogHandler. Pass it down.
+      inActivity = true;  
+    }
+
+    this.recorder.refreshRecStatus(inActivity);
     this.recorder.refreshMicStatus();
 
     if (invalidConfig) {
