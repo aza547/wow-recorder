@@ -374,6 +374,7 @@ type ObsAudioConfig = {
   pushToTalkKey: number;
   pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
+  obsAudioSuppression: boolean;
 };
 
 type FlavourConfig = {

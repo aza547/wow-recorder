@@ -47,6 +47,7 @@ export type ConfigurationSchema = {
   pushToTalkKey: number;
   pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
+  obsAudioSuppression: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -320,5 +321,11 @@ export const configSchema = {
       'A comma seperated list of modifiers required in conjunction with the push to talk hotkey.',
     type: 'string',
     default: '',
+  },
+  obsAudioSuppression: {
+    description:
+      'Suppress background noise picked up by your microphone, this can help reduce keyboard clacking, breathing, etc.',
+    type: 'boolean',
+    default: true,
   },
 };

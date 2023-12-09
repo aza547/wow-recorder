@@ -66,6 +66,7 @@ export const getSettings = (): ConfigurationSchema => {
     pushToTalkKey: getConfigValue<number>('pushToTalkKey'),
     pushToTalkMouseButton: getConfigValue<number>('pushToTalkMouseButton'),
     pushToTalkModifiers: getConfigValue<string>('pushToTalkModifiers'),
+    obsAudioSuppression: getConfigValue<boolean>('obsAudioSuppression'),
   };
 
   return configValues;

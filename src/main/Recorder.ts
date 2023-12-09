@@ -534,9 +534,8 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Set the configured audio sources ot the OBS scene. This is public
-   * so it can be called externally when WoW is opened - see the Poller
-   * class. This removes any previously configured sources.
+   * Add the configured audio sources to the OBS scene. This is public
+   * so it can be called externally when WoW is opened.
    */
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
@@ -549,6 +548,7 @@ export default class Recorder extends EventEmitter {
       micVolume,
       speakerVolume,
       obsForceMono,
+      obsAudioSuppression,
     } = config;
 
     // Pretty sure these arguments are doing nothing.
@@ -567,6 +567,16 @@ export default class Recorder extends EventEmitter {
         micFader.attach(obsSource);
         micFader.mul = micVolume;
         this.faders.push(micFader);
+
+        if (obsAudioSuppression) {
+          const filter = osn.FilterFactory.create(
+            'noise_suppress_filter_v2',
+            'filter',
+            { method: 'rnnoise', suppress_level: -30, intensity: 1 }
+          );
+
+          obsSource.addFilter(filter);
+        }
 
         this.audioInputDevices.push(obsSource);
       });

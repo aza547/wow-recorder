@@ -74,6 +74,7 @@ const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
     pushToTalkKey: cfg.get<number>('pushToTalkKey'),
     pushToTalkMouseButton: cfg.get<number>('pushToTalkMouseButton'),
     pushToTalkModifiers: cfg.get<string>('pushToTalkModifiers'),
+    obsAudioSuppression: cfg.get<boolean>('obsAudioSuppression'),
   };
 };
 

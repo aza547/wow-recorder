@@ -143,6 +143,7 @@ const AudioSourceControls: React.FC = () => {
         pushToTalkKey: config.pushToTalkKey,
         pushToTalkMouseButton: config.pushToTalkMouseButton,
         pushToTalkModifiers: config.pushToTalkModifiers,
+        obsAudioSuppression: config.obsAudioSuppression,
       });
 
       ipc.sendMessage('settingsChange', []);
@@ -157,6 +158,7 @@ const AudioSourceControls: React.FC = () => {
     config.pushToTalkKey,
     config.pushToTalkMouseButton,
     config.pushToTalkModifiers,
+    config.obsAudioSuppression,
   ]);
 
   React.useEffect(() => {
@@ -404,6 +406,15 @@ const AudioSourceControls: React.FC = () => {
     });
   };
 
+  const setAudioSuppression = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        obsAudioSuppression: event.target.checked,
+      };
+    });
+  };
+
   const getMonoSwitch = () => {
     return (
       <FormControlLabel
@@ -488,12 +499,34 @@ const AudioSourceControls: React.FC = () => {
     );
   };
 
+  const getAudioSuppressionSwitch = () => {
+    return (
+      <FormControlLabel
+        control={
+          <Switch
+            sx={switchStyle}
+            checked={config.obsAudioSuppression}
+            onChange={setAudioSuppression}
+          />
+        }
+        label="Audio Suppression"
+        labelPlacement="top"
+        sx={{
+          color: 'white',
+        }}
+      />
+    );
+  };
+
   const getInfoIcon = () => {
     const helptext = [
+      /* eslint-disable prettier/prettier */
       ['Speakers', configSchema.audioOutputDevices.description].join('\n'),
       ['Mics', configSchema.audioInputDevices.description].join('\n'),
+      ['Audio Suppression', configSchema.obsAudioSuppression.description].join('\n'),
       ['Mono Input', configSchema.obsForceMono.description].join('\n'),
       ['Push To Talk', configSchema.pushToTalk.description].join('\n'),
+      // eslint-enable prettier/prettier */
     ].join('\n\n');
 
     return (
@@ -541,7 +574,7 @@ const AudioSourceControls: React.FC = () => {
         {getMicSelect()}
         {getMicVolume()}
       </Box>
-
+      {getAudioSuppressionSwitch()}
       {getMonoSwitch()}
       {getPushToTalkSwitch()}
       {config.pushToTalk && getPushToTalkSelect()}
