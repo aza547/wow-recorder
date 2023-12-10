@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+### Changed
+### Fixed
+
+## [3.22.0] - 2023-12-10
+### Added
 - Add badges to the video buttons to show how many videos in each category.
 - [Issue 115](https://github.com/aza547/wow-recorder/issues/115) - Add option to suppress background microphone noise.
 - [Issue 448](https://github.com/aza547/wow-recorder/issues/448) - Allow naked modifier key use as the push to talk hotkey.
