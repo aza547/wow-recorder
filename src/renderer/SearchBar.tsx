@@ -48,7 +48,7 @@ const SearchBar = (props: IProps) => {
       sx={{
         '& .MuiOutlinedInput-root': {
           '&.Mui-focused fieldset': { borderColor: '#bb4220' },
-          '& > fieldset': { borderColor: 'white' },
+          '& > fieldset': { borderColor: 'black' },
           '&:hover fieldset': {
             borderColor: '#bb4220',
           },

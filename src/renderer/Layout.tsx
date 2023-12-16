@@ -39,6 +39,7 @@ import FlagIcon from '../../assets/icon/flag.png';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings, setConfigValue } from './useSettings';
+// import Clipping from './Clipping';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -193,29 +194,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
   const getVideoSelection = () => {
     return (
-      <Box
-        sx={{
-          height: '100%',
-          width: '100%',
-          overflowY: 'scroll',
-          display: 'flex',
-          flexDirection: 'column',
-          alignContent: 'center',
-          scrollbarWidth: 'thin',
-          '&::-webkit-scrollbar': {
-            width: '1em',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: '#f1f1f1',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: '#888',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: '#555',
-          },
-        }}
-      >
+      <>
         <Box
           sx={{
             width: '100%',
@@ -225,22 +204,49 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             borderBottom: '1px solid black',
           }}
         >
-          <Box sx={{ flex: 1, ml: 2, mr: 1, my: 1 }}>
-            <SearchBar navigation={navigation} setAppState={setAppState} />
-          </Box>
-          <Box sx={{ ml: 1, mr: 2, my: 1 }}>
+          <Box sx={{ ml: 1, mr: 1, my: 1 }}>
             <VideoMarkerToggles
               category={category}
               config={config}
               setConfig={setConfig}
             />
           </Box>
+          {/* <Box sx={{ my: 1 }}>
+            <Clipping config={config} setConfig={setConfig} />
+          </Box> */}
+          <Box sx={{ flex: 1, m: 1 }}>
+            <SearchBar navigation={navigation} setAppState={setAppState} />
+          </Box>
         </Box>
-        <List sx={{ width: '100%', p: 0 }}>
-          {slicedCategoryState.map(mapVideoToListItem)}
-          {moreVideosRemain && getShowMoreButton()}
-        </List>
-      </Box>
+        <Box
+          sx={{
+            height: '100%',
+            width: '100%',
+            overflowY: 'scroll',
+            display: 'flex',
+            flexDirection: 'column',
+            alignContent: 'center',
+            scrollbarWidth: 'thin',
+            '&::-webkit-scrollbar': {
+              width: '1em',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: '#888',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: '#555',
+            },
+          }}
+        >
+          <List sx={{ width: '100%', p: 0 }}>
+            {slicedCategoryState.map(mapVideoToListItem)}
+            {moreVideosRemain && getShowMoreButton()}
+          </List>
+        </Box>
+      </>
     );
   };
 

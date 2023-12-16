@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
 import { useEffect, useRef } from 'react';
 import { ConfigurationSchema } from 'main/configSchema';
@@ -10,7 +10,7 @@ import {
 } from './rendererutils';
 
 const buttonSx = {
-  mx: 1,
+  mx: 0.5,
   height: '40px',
   color: 'white',
   borderColor: 'white',
@@ -91,7 +91,7 @@ const VideoMarkerToggles = (props: IProps) => {
       <Button
         variant="outlined"
         onClick={toggleDeaths}
-        sx={{ ...buttonSx, color, borderColor: color }}
+        sx={{ ...buttonSx, color, borderColor: 'black' }}
       >
         Deaths: {deathMarkers}
       </Button>
@@ -113,7 +113,7 @@ const VideoMarkerToggles = (props: IProps) => {
       <Button
         variant="outlined"
         onClick={toggleEncounters}
-        sx={{ ...buttonSx, color, borderColor: color }}
+        sx={{ ...buttonSx, color, borderColor: 'black' }}
       >
         Encounters: {text}
       </Button>
