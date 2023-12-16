@@ -42,6 +42,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
         boxSizing: 'border-box',
         alignItems: 'flex-end',
         backgroundColor: '#182035',
+        zIndex: 1,
       }}
     >
       <Box
