@@ -135,7 +135,7 @@ const VideoMarkerToggles = (props: IProps) => {
       <Button
         variant="outlined"
         onClick={toggleRound}
-        sx={{ ...buttonSx, color, borderColor: color }}
+        sx={{ ...buttonSx, color, borderColor: 'black' }}
       >
         Round: {text}
       </Button>

@@ -39,7 +39,6 @@ import FlagIcon from '../../assets/icon/flag.png';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings, setConfigValue } from './useSettings';
-// import Clipping from './Clipping';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -204,17 +203,14 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             borderBottom: '1px solid black',
           }}
         >
-          <Box sx={{ ml: 1, mr: 1, my: 1 }}>
+          <Box sx={{ m: 1 }}>
             <VideoMarkerToggles
               category={category}
               config={config}
               setConfig={setConfig}
             />
           </Box>
-          {/* <Box sx={{ my: 1 }}>
-            <Clipping config={config} setConfig={setConfig} />
-          </Box> */}
-          <Box sx={{ flex: 1, m: 1 }}>
+          <Box sx={{ flex: 1, mr: 1, my: 1 }}>
             <SearchBar navigation={navigation} setAppState={setAppState} />
           </Box>
         </Box>
