@@ -249,6 +249,7 @@
     "path": "^0.12.7",
     "pretty-bytes": "^6.1.0",
     "queue-promise": "^2.2.1",
+    "re-resizable": "^6.9.11",
     "react": "^18.0.0",
     "react-code-blocks": "^0.0.9-0",
     "react-dom": "^18.0.0",

@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TvIcon from '@mui/icons-material/Tv';
+import { Resizable } from 're-resizable';
 import { VideoJS } from './VideoJS';
 import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
@@ -120,10 +121,9 @@ const Layout: React.FC<IProps> = (props: IProps) => {
 
   const getVideoPanel = () => {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          height: '60%',
+      <Resizable
+        defaultSize={{
+          height: '50%',
           width: '100%',
         }}
       >
@@ -134,7 +134,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           video={categoryState[videoIndex]}
           setAppState={setAppState}
         />
-      </Box>
+      </Resizable>
     );
   };
 
@@ -195,8 +195,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     return (
       <Box
         sx={{
+          height: '100%',
           width: '100%',
-          height: '50%',
           overflowY: 'scroll',
           display: 'flex',
           flexDirection: 'column',
