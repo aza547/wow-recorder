@@ -548,7 +548,7 @@ export default class Recorder extends EventEmitter {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
     this.obsMicState = MicStatus.NONE;
-    this.refreshMicStatus();
+    this.emit('state-change');
 
     const {
       audioInputDevices,
@@ -603,10 +603,10 @@ export default class Recorder extends EventEmitter {
 
     if (this.audioInputDevices.length !== 0 && config.pushToTalk) {
       this.obsMicState = MicStatus.MUTED;
-      this.refreshMicStatus();
+      this.emit('state-change');
     } else if (this.audioInputDevices.length !== 0) {
       this.obsMicState = MicStatus.LISTENING;
-      this.refreshMicStatus();
+      this.emit('state-change');
     }
 
     this.audioInputDevices.forEach((device) => {
@@ -887,36 +887,6 @@ export default class Recorder extends EventEmitter {
     await Promise.all(deletePromises);
   }
 
-  /**
-   * Push the state of the recorder to the RecStatus icon on the frontend.
-   */
-  public refreshRecStatus(activity = false) {
-    if (activity) {
-      this.mainWindow.webContents.send('updateRecStatus', RecStatus.Recording);
-    } else if (this.obsState === ERecordingState.Recording) {
-      this.mainWindow.webContents.send(
-        'updateRecStatus',
-        RecStatus.ReadyToRecord
-      );
-    } else if (
-      this.obsState === ERecordingState.Offline ||
-      this.obsState === ERecordingState.Starting ||
-      this.obsState === ERecordingState.Stopping
-    ) {
-      this.mainWindow.webContents.send(
-        'updateRecStatus',
-        RecStatus.WaitingForWoW
-      );
-    }
-  }
-
-  /**
-   * Push the state of the mic to the MicStatus icon on the frontend.
-   */
-  public refreshMicStatus() {
-    this.mainWindow.webContents.send('updateMicStatus', this.obsMicState);
-  }
-
   private async startOBS() {
     console.info('[Recorder] Start');
 
@@ -1051,22 +1021,18 @@ export default class Recorder extends EventEmitter {
       case EOBSOutputSignal.Start:
         this.startQueue.push(obsSignal);
         this.obsState = ERecordingState.Recording;
-        this.refreshRecStatus();
         break;
 
       case EOBSOutputSignal.Starting:
         this.obsState = ERecordingState.Starting;
-        this.refreshRecStatus();
         break;
 
       case EOBSOutputSignal.Stop:
         this.obsState = ERecordingState.Offline;
-        this.refreshRecStatus();
         break;
 
       case EOBSOutputSignal.Stopping:
         this.obsState = ERecordingState.Stopping;
-        this.refreshRecStatus();
         break;
 
       case EOBSOutputSignal.Wrote:
@@ -1078,6 +1044,7 @@ export default class Recorder extends EventEmitter {
         break;
     }
 
+    this.emit('state-change');
     console.info('[Recorder] State is now: ', this.obsState);
   }
 
@@ -1326,7 +1293,7 @@ export default class Recorder extends EventEmitter {
 
     this.inputDevicesMuted = true;
     this.obsMicState = MicStatus.MUTED;
-    this.refreshMicStatus();
+    this.emit('state-change');
   }
 
   private unmuteInputDevices() {
@@ -1340,6 +1307,6 @@ export default class Recorder extends EventEmitter {
 
     this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.LISTENING;
-    this.refreshMicStatus();
+    this.emit('state-change');
   }
 }

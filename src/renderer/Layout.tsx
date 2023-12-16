@@ -126,6 +126,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           height: '50%',
           width: '100%',
         }}
+        enable={{ bottom: true }}
+        bounds="parent"
       >
         <VideoJS
           id="video-player"

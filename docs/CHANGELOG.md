@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 ### Fixed
+- Fix some issues with the status icon occasionally showing the wrong status.
 
 ## [3.22.0] - 2023-12-10
 ### Added

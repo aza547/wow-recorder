@@ -29,7 +29,12 @@ import {
   getFlavourConfig,
   getOverlayConfig,
 } from '../utils/configUtils';
-import { addCrashToUI, updateRecStatus, validateFlavour } from './util';
+import {
+  addCrashToUI,
+  updateMicStatus,
+  updateRecStatus,
+  validateFlavour,
+} from './util';
 import { ERecordingState } from './obsEnums';
 import {
   runClassicRecordingTest,
@@ -78,6 +83,10 @@ export default class Manager {
   private classicLogHandler: ClassicLogHandler | undefined;
 
   private videoProcessQueue: VideoProcessQueue;
+
+  private configValid = false;
+
+  private configMessage = '';
 
   /**
    * Defined stages of configuration. They are named only for logging
@@ -148,6 +157,7 @@ export default class Manager {
     this.mainWindow = mainWindow;
     this.recorder = new Recorder(this.mainWindow);
     this.recorder.on('crash', (crashData) => this.recoverRecorderFromCrash(crashData));
+    this.recorder.on('state-change', () => this.refreshStatus());
     this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
 
     this.poller
@@ -239,7 +249,7 @@ export default class Manager {
       } catch (error) {
         stage.current = newConfig;
         stage.initial = false;
-        this.refreshStatus(true, String(error));
+        this.setConfigInvalid(String(error));
         return;
       }
 
@@ -258,33 +268,57 @@ export default class Manager {
       }
     }
 
+    this.setConfigValid();
+  }
+
+  /**
+   * Set member variables to reflect the config being valid.
+   */
+  private setConfigValid() {
+    this.configValid = true;
+    this.configMessage = '';
     this.refreshStatus();
   }
 
   /**
-   * Refresh the status of the frontend, optionally providing arguments to
-   * describe an error case.
+   * Set member variables to reflect the config being invalid.
    */
-  public refreshStatus(invalidConfig = false, message = '') {
-    let inActivity = false;
+  private setConfigInvalid(reason: string) {
+    this.configValid = false;
+    this.configMessage = reason;
+    this.refreshStatus();
+  }
 
-    if (this.retailLogHandler?.activity || this.classicLogHandler?.activity) 
-    {
-      // The recorder doesn't know if it's in an activity or not, that 
-      // knowledge belongs to the LogHandler. Pass it down.
-      inActivity = true;  
-    }
-
-    this.recorder.refreshRecStatus(inActivity);
-    this.recorder.refreshMicStatus();
-
-    if (invalidConfig) {
+  /**
+   * Refresh the status icons in the UI.
+   */
+  private refreshStatus() {
+    if (!this.configValid) {
       updateRecStatus(
         this.mainWindow,
         RecStatus.InvalidConfig,
-        String(message)
+        String(this.configMessage)
       );
+
+      // Invalid config trumps everything else, so return here.
+      return;
     }
+
+    const inActivity = this.retailLogHandler?.activity || this.classicLogHandler?.activity; 
+
+    if (inActivity) {
+      updateRecStatus(this.mainWindow, RecStatus.Recording);
+    } else if (this.recorder.obsState === ERecordingState.Recording) {
+      updateRecStatus(this.mainWindow, RecStatus.ReadyToRecord);
+    } else if (
+      this.recorder.obsState === ERecordingState.Offline ||
+      this.recorder.obsState === ERecordingState.Starting ||
+      this.recorder.obsState === ERecordingState.Stopping
+    ) {
+      updateRecStatus(this.mainWindow, RecStatus.WaitingForWoW);
+    }
+
+    updateMicStatus(this.mainWindow, this.recorder.obsMicState);
   }
 
   /**
@@ -582,6 +616,7 @@ export default class Manager {
     this.recorder.shutdownOBS();
     this.recorder = new Recorder(this.mainWindow);
     this.recorder.on('crash', (cd) => this.recoverRecorderFromCrash(cd))
+    this.recorder.on('state-change', () => this.refreshStatus());
 
     for (let i = 0; i < this.stages.length; i++) {
       this.stages[i].initial = true;
