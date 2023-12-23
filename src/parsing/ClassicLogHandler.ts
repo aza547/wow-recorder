@@ -208,14 +208,14 @@ export default class ClassicLogHandler extends LogHandler {
     console.debug('[ClassicLogHandler] Starting arena at date:', startDate);
     const category = VideoCategory.TwoVTwo;
 
-    this.activity = new ArenaMatch(
+    const activity = new ArenaMatch(
       startDate,
       category,
       zoneID,
       Flavour.Classic
     );
 
-    await this.startActivity(this.activity);
+    await this.startActivity(activity);
   }
 
   private async endArena(endDate: Date) {
@@ -365,14 +365,14 @@ export default class ClassicLogHandler extends LogHandler {
     const category = VideoCategory.Battlegrounds;
     const zoneID = parseInt(line.arg(1), 10);
 
-    this.activity = new Battleground(
+    const activity = new Battleground(
       startTime,
       category,
       zoneID,
       Flavour.Classic
     );
 
-    await this.startActivity(this.activity);
+    await this.startActivity(activity);
   }
 
   private async battlegroundEnd(line: LogLine) {

@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+### Added
+### Fixed
+- [Issue 459](https://github.com/aza547/wow-recorder/issues/459) - Fix a bug where we didn't respect the content type settings.
+
 ## [3.22.1] - 2023-12-17
 ### Added
 - Add the ability to drag to resize the video player without going fullscreen. 

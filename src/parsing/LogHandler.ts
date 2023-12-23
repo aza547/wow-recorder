@@ -106,7 +106,7 @@ export default abstract class LogHandler {
       return;
     }
 
-    this.activity = new RaidEncounter(
+    const activity = new RaidEncounter(
       startDate,
       encounterID,
       encounterName,
@@ -114,7 +114,7 @@ export default abstract class LogHandler {
       flavour
     );
 
-    await this.startActivity(this.activity);
+    await this.startActivity(activity);
   }
 
   protected async handleEncounterEndLine(line: LogLine) {
@@ -190,6 +190,7 @@ export default abstract class LogHandler {
     );
 
     try {
+      this.activity = activity;
       await this.recorder.start();
       updateRecStatus(this.mainWindow, RecStatus.Recording);
     } catch (error) {

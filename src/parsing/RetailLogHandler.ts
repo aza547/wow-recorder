@@ -114,8 +114,8 @@ export default class RetailLogHandler extends LogHandler {
 
     if (!this.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
-      this.activity = new SoloShuffle(startTime, zoneID);
-      await this.startActivity(this.activity);
+      const activity = new SoloShuffle(startTime, zoneID);
+      await this.startActivity(activity);
     } else if (this.activity && category === VideoCategory.SoloShuffle) {
       console.info(
         '[RetailLogHandler] New round of existing Solo Shuffle starting'
@@ -124,14 +124,15 @@ export default class RetailLogHandler extends LogHandler {
       soloShuffle.startRound(startTime);
     } else {
       console.info('[RetailLogHandler] New', category, 'arena starting');
-      this.activity = new ArenaMatch(
+
+      const activity = new ArenaMatch(
         startTime,
         category,
         zoneID,
         Flavour.Retail
       );
 
-      await this.startActivity(this.activity);
+      await this.startActivity(activity);
     }
   }
 
@@ -209,7 +210,7 @@ export default class RetailLogHandler extends LogHandler {
       return;
     }
 
-    this.activity = new ChallengeModeDungeon(
+    const activity = new ChallengeModeDungeon(
       startTime,
       zoneID,
       mapID,
@@ -217,17 +218,14 @@ export default class RetailLogHandler extends LogHandler {
       affixes
     );
 
-    const challengeModeActivity = this.activity as ChallengeModeDungeon;
-
-    challengeModeActivity.addTimelineSegment(
-      new ChallengeModeTimelineSegment(
-        TimelineSegmentType.Trash,
-        this.activity.startDate,
-        0
-      )
+    const initialSegment = new ChallengeModeTimelineSegment(
+      TimelineSegmentType.Trash,
+      activity.startDate,
+      0
     );
 
-    await this.startActivity(this.activity);
+    activity.addTimelineSegment(initialSegment);
+    await this.startActivity(activity);
   }
 
   private async handleChallengeModeEndLine(line: LogLine) {
@@ -537,14 +535,14 @@ export default class RetailLogHandler extends LogHandler {
     const category = VideoCategory.Battlegrounds;
     const zoneID = parseInt(line.arg(1), 10);
 
-    this.activity = new Battleground(
+    const activity = new Battleground(
       startTime,
       category,
       zoneID,
       Flavour.Retail
     );
 
-    await this.startActivity(this.activity);
+    await this.startActivity(activity);
   }
 
   private async battlegroundEnd(line: LogLine) {
