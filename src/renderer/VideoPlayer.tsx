@@ -16,6 +16,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import { OnProgressProps } from 'react-player/base';
 import FilePlayer from 'react-player/file';
 import screenfull from 'screenfull';
+import { VideoCategory } from 'types/VideoCategory';
 import { secToMmSs } from './rendererutils';
 
 interface IProps {
@@ -43,31 +44,6 @@ const sliderSx = {
   },
 };
 
-const textFieldSx = {
-  color: 'white',
-  mx: 1,
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'white',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#bb4220',
-  },
-  '&.Mui-focused': {
-    borderColor: '#bb4220',
-    color: '#bb4220',
-  },
-  '&:hover': {
-    '&& fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-};
-
 export const VideoPlayer = (props: IProps) => {
   const { video, config } = props;
   const url = video.fullPath;
@@ -78,9 +54,9 @@ export const VideoPlayer = (props: IProps) => {
   const [progress, setProgress] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);
-  const [cutMode, setCutMode] = useState<boolean>(false);
-  const [cutStartValue, setCutStartValue] = useState<number>(100);
-  const [cutStopValue, setCutStopValue] = useState<number>(100);
+  const [clipMode, setClipMode] = useState<boolean>(false);
+  const [clipStartValue, setClipStartValue] = useState<number>(100);
+  const [clipStopValue, setClipStopValue] = useState<number>(100);
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -233,8 +209,8 @@ export const VideoPlayer = (props: IProps) => {
     }
 
     if (Array.isArray(value)) {
-      setCutStartValue(Math.round(value[0]));
-      setCutStopValue(Math.round(value[2]));
+      setClipStartValue(Math.round(value[0]));
+      setClipStopValue(Math.round(value[2]));
 
       if (index === 1) {
         player.current.seekTo(value[1], 'seconds');
@@ -271,7 +247,7 @@ export const VideoPlayer = (props: IProps) => {
 
     const durationSec = player.current.getDuration();
     setDuration(durationSec);
-    setCutStopValue(Math.round(durationSec * 0.8));
+    setClipStopValue(Math.round(durationSec * 0.8));
   };
 
   /**
@@ -279,10 +255,10 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderProgressSlider = () => {
     const current = progress * duration;
-    const thumbValues = [cutStartValue, current, cutStopValue];
+    const thumbValues = [clipStartValue, current, clipStopValue];
 
     const getLabel = (value: number, index: number) => {
-      if (cutMode) {
+      if (clipMode) {
         if (index === 0) return `Start (${secToMmSs(value)})`;
         if (index === 1) return secToMmSs(value);
         if (index === 2) return `End (${secToMmSs(value)})`;
@@ -291,10 +267,31 @@ export const VideoPlayer = (props: IProps) => {
       return secToMmSs(value);
     };
 
-    if (cutMode) {
+    if (clipMode) {
       return (
         <Slider
-          sx={{ m: 2, width: '100%', ...sliderSx }}
+          sx={{
+            m: 2,
+            width: '100%',
+            ...sliderSx,
+            '& .MuiSlider-thumb': {
+              "&[data-index='0']": {
+                backgroundColor: 'white',
+                width: '5px',
+                height: '15px',
+                borderRadius: 0,
+              },
+              "&[data-index='1']": {
+                backgroundColor: 'white',
+              },
+              "&[data-index='2']": {
+                backgroundColor: 'white',
+                width: '5px',
+                height: '15px',
+                borderRadius: 0,
+              },
+            },
+          }}
           valueLabelDisplay="on"
           valueLabelFormat={getLabel}
           value={thumbValues}
@@ -434,91 +431,45 @@ export const VideoPlayer = (props: IProps) => {
   /**
    * Returns the playback rate button for the video controls.
    */
-  const renderCutButton = () => {
+  const renderClipButton = () => {
     return (
       <Tooltip title="Clip">
-        <Button sx={{ color: 'white' }} onClick={() => setCutMode(true)}>
+        <Button sx={{ color: 'white' }} onClick={() => setClipMode(true)}>
           <MovieIcon sx={{ color: 'white', height: '20px' }} />
         </Button>
       </Tooltip>
     );
   };
 
-  // const renderCutStartField = () => {
-  //   return (
-  //     <TextField
-  //       value={Math.round(cutStartValue)}
-  //       label="Start"
-  //       onChange={(e) => setCutStartValue(parseInt(e.target.value, 10))}
-  //       InputLabelProps={{
-  //         shrink: true,
-  //         style: {
-  //           color: 'white',
-  //           fontSize: '15px',
-  //           transformOrigin: 'center',
-  //           transform: 'translate(12px, -12px) scale(0.75)',
-  //         },
-  //       }}
-  //       sx={textFieldSx}
-  //       inputProps={{
-  //         style: {
-  //           padding: '5px',
-  //           fontSize: '10px',
-  //           color: 'white',
-  //           textAlign: 'center',
-  //         },
-  //       }}
-  //     />
-  //   );
-  // };
+  /**
+   * Make a request to the main process to clip a video.
+   */
+  const doClip = () => {
+    const clipDuration = clipStopValue - clipStartValue;
+    const clipOffset = clipStartValue;
+    const clipSource = video.fullPath;
 
-  // const renderCutStopField = () => {
-  //   return (
-  //     <TextField
-  //       value={Math.round(cutStopValue)}
-  //       label="Stop"
-  //       onChange={(e) => setCutStopValue(parseInt(e.target.value, 10))}
-  //       InputLabelProps={{
-  //         shrink: true,
-  //         style: {
-  //           color: 'white',
-  //           fontSize: '15px',
-  //           transformOrigin: 'center',
-  //           transform: 'translate(12px, -12px) scale(0.75)',
-  //         },
-  //       }}
-  //       sx={textFieldSx}
-  //       inputProps={{
-  //         style: {
-  //           padding: '5px',
-  //           fontSize: '10px',
-  //           color: 'white',
-  //           textAlign: 'center',
-  //         },
-  //       }}
-  //     />
-  //   );
-  // };
+    ipc.sendMessage('clip', [clipSource, clipOffset, clipDuration]);
+    setClipMode(false);
+  };
 
-  const renderCutFinishedButton = () => {
-    const doCut = () => {
-      console.log('Cutting!', cutStartValue, cutStopValue);
-      setCutMode(false);
-    };
-
+  /**
+   * Render the button to end the clipping session.
+   */
+  const renderClipFinishedButton = () => {
     return (
       <Tooltip title="Confirm">
-        <Button sx={{ color: 'white' }} onClick={doCut}>
+        <Button sx={{ color: 'white' }} onClick={doClip}>
           <DoneIcon sx={{ color: 'white' }} />
         </Button>
       </Tooltip>
     );
   };
 
-  const renderCutCancelButton = () => {
+  const renderClipCancelButton = () => {
     return (
       <Tooltip title="Cancel">
-        <Button sx={{ color: 'white' }} onClick={() => setCutMode(false)}>
+        <Button sx={{ color: 'white' }} onClick={() => setClipMode(false)}>
           <ClearIcon sx={{ color: 'white' }} />
         </Button>
       </Tooltip>
@@ -567,6 +518,8 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the entire video control component.
    */
   const renderControls = () => {
+    const isClips = video.category === VideoCategory.Clips;
+
     return (
       <Box
         sx={{
@@ -585,13 +538,11 @@ export const VideoPlayer = (props: IProps) => {
         {renderVolumeSlider()}
         {renderProgressSlider()}
         {renderProgressText()}
-        {!cutMode && renderCutButton()}
-        {!cutMode && renderPlaybackRateButton()}
-        {!cutMode && renderFullscreenButton()}
-        {/* {cutMode && renderCutStartField()}
-        {cutMode && renderCutStopField()} */}
-        {cutMode && renderCutFinishedButton()}
-        {cutMode && renderCutCancelButton()}
+        {!clipMode && !isClips && renderClipButton()}
+        {!clipMode && renderPlaybackRateButton()}
+        {!clipMode && renderFullscreenButton()}
+        {clipMode && renderClipFinishedButton()}
+        {clipMode && renderClipCancelButton()}
       </Box>
     );
   };

@@ -20,8 +20,8 @@ import {
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TvIcon from '@mui/icons-material/Tv';
-import { Resizable } from 're-resizable';
-import VideoPlayer, { VideoJS } from './VideoPlayer';
+import ClipIcon from '../../assets/icon/clip-icon.png';
+import { VideoPlayer } from './VideoPlayer';
 import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
@@ -125,7 +125,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         config={config}
         key={categoryState[videoIndex].fullPath}
         video={categoryState[videoIndex]}
-        setAppState={setAppState}
       />
     );
   };
@@ -369,6 +368,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             {renderCategoryTab(VideoCategory.MythicPlus, DungeonIcon)}
             {renderCategoryTab(VideoCategory.Raids, RaidIcon)}
             {renderCategoryTab(VideoCategory.Battlegrounds, FlagIcon)}
+            {renderCategoryTab(VideoCategory.Clips, ClipIcon)}
           </Tabs>
         </Box>
 
@@ -457,8 +457,37 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const renderFirstTimeClipPrompt = () => {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          width: '50%',
+          height: '50%',
+        }}
+      >
+        <Typography
+          align="center"
+          variant="h6"
+          sx={{
+            color: 'white',
+            fontFamily: '"Arial",sans-serif',
+            textShadow:
+              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+          }}
+        >
+          Videos you clip will display here.
+        </Typography>
+      </Box>
+    );
+  };
+
   const renderCategoryPage = () => {
     const haveVideos = categoryState.length > 0;
+    const isClips = category === VideoCategory.Clips;
 
     return (
       <Box
@@ -473,7 +502,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       >
         {haveVideos && getVideoPlayer()}
         {haveVideos && getVideoSelection()}
-        {!haveVideos && renderFirstTimeUserPrompt()}
+        {!haveVideos && !isClips && renderFirstTimeUserPrompt()}
+        {!haveVideos && isClips && renderFirstTimeClipPrompt()}
       </Box>
     );
   };

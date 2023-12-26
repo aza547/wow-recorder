@@ -167,10 +167,12 @@ type FileInfo = {
 };
 
 type VideoQueueItem = {
-  bufferFile: string;
+  source: string;
+  suffix: string;
+  offset: number;
+  duration: number;
+  deleteSource: boolean;
   metadata: Metadata;
-  filename: string;
-  relativeStart: number;
 };
 
 interface IEventTarget {
@@ -196,6 +198,7 @@ class FakeChangeEvent {
  */
 type Metadata = {
   category: VideoCategory;
+  parentCategory?: VideoCategory; // if it's a clip
   duration: number;
   result: boolean;
   flavour: Flavour;
@@ -255,6 +258,7 @@ type RendererVideoState = {
   [VideoCategory.MythicPlus]: RendererVideo[];
   [VideoCategory.Raids]: RendererVideo[];
   [VideoCategory.Battlegrounds]: RendererVideo[];
+  [VideoCategory.Clips]: RendererVideo[];
 };
 
 type SoloShuffleTimelineSegment = {

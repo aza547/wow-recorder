@@ -6,7 +6,12 @@ import CombatLogWatcher from './CombatLogWatcher';
 import ConfigService from '../main/ConfigService';
 import { instanceDifficulty } from '../main/constants';
 import Recorder from '../main/Recorder';
-import { Flavour, PlayerDeathType, RecStatus } from '../main/types';
+import {
+  Flavour,
+  PlayerDeathType,
+  RecStatus,
+  VideoQueueItem,
+} from '../main/types';
 import Activity from '../activitys/Activity';
 import RaidEncounter from '../activitys/RaidEncounter';
 
@@ -127,6 +132,20 @@ export default abstract class LogHandler {
 
     const result = Boolean(parseInt(line.arg(5), 10));
     this.activity.end(line.date(), result);
+
+    if (this.activity.category === VideoCategory.Raids) {
+      const metadata = this.activity.getMetadata();
+      const duration = metadata.duration + metadata.overrun;
+      const minDuration = this.cfg.get<number>('minEncounterDuration');
+      const notLongEnough = duration < minDuration;
+
+      if (notLongEnough) {
+        console.info('[LogHandler] Discarding raid encounter, not long enough');
+        this.activity = undefined;
+        return;
+      }
+    }
+
     await this.endActivity();
   }
 
@@ -235,7 +254,6 @@ export default abstract class LogHandler {
 
     try {
       await this.recorder.stop();
-      updateRecStatus(this.mainWindow, RecStatus.WaitingForWoW);
       videoFile = this.recorder.lastFile;
       this.poller.start();
     } catch (error) {
@@ -244,17 +262,23 @@ export default abstract class LogHandler {
     }
 
     try {
-      const metadata = lastActivity.getMetadata();
       const activityStartTime = lastActivity.startDate.getTime();
       const bufferStartTime = startDate.getTime();
-      const relativeStart = (activityStartTime - bufferStartTime) / 1000;
+      const offset = (activityStartTime - bufferStartTime) / 1000;
+      const metadata = lastActivity.getMetadata();
+      const duration = metadata.duration + metadata.overrun;
+      const suffix = lastActivity.getFileName();
 
-      this.videoProcessQueue.queueVideo(
-        videoFile,
+      const queueItem: VideoQueueItem = {
+        source: videoFile,
+        suffix,
+        offset,
+        duration,
         metadata,
-        lastActivity.getFileName(),
-        relativeStart
-      );
+        deleteSource: true,
+      };
+
+      this.videoProcessQueue.queueVideo(queueItem);
     } catch (error) {
       // We've failed to get the Metadata from the activity. Throw away the
       // video and log why. Example of when we hit this is on raid resets

@@ -20,6 +20,7 @@ import {
   ObsOverlayConfig,
   IOBSDevice,
   CrashData,
+  VideoQueueItem,
 } from './types';
 import {
   getObsBaseConfig,
@@ -31,6 +32,8 @@ import {
 } from '../utils/configUtils';
 import {
   addCrashToUI,
+  buildClipMetadata,
+  getMetadataForVideo,
   updateMicStatus,
   updateRecStatus,
   validateFlavour,
@@ -567,6 +570,29 @@ export default class Manager {
       const testCategory = args[0] as VideoCategory;
       const endTest = Boolean(args[1]);
       this.test(testCategory, endTest);
+    });
+
+    // Clipping listener.
+    ipcMain.on('clip', async (_event, args) => {
+      console.log("[Manager] Clip request received with args", args);
+
+      const source = args[0];
+      const offset = args[1];
+      const duration = args[2]
+
+      const sourceMetadata = await getMetadataForVideo(source);
+      const clipMetadata = buildClipMetadata(sourceMetadata, duration);
+
+      const clipQueueItem: VideoQueueItem = {
+        source,
+        suffix: 'Clip',
+        offset,
+        duration,
+        deleteSource: false,
+        metadata: clipMetadata,
+      }
+
+      this.videoProcessQueue.queueVideo(clipQueueItem)
     });
 
     // Force stop listener, to enable the force stop button to do its job.

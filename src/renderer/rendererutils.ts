@@ -298,6 +298,7 @@ const getEmptyState = () => {
     [VideoCategory.MythicPlus]: [],
     [VideoCategory.Raids]: [],
     [VideoCategory.Battlegrounds]: [],
+    [VideoCategory.Clips]: [],
   };
 
   return videoState;
@@ -399,29 +400,49 @@ const getDungeonName = (video: RendererVideo) => {
 };
 
 const isMythicPlusUtil = (video: RendererVideo) => {
-  const { category } = video;
-  return category === VideoCategory.MythicPlus;
+  const { category, parentCategory } = video;
+
+  return (
+    category === VideoCategory.MythicPlus ||
+    parentCategory === VideoCategory.MythicPlus
+  );
 };
 
 const isRaidUtil = (video: RendererVideo) => {
-  const { category } = video;
-  return category === VideoCategory.Raids;
+  const { category, parentCategory } = video;
+
+  return (
+    category === VideoCategory.Raids || parentCategory === VideoCategory.Raids
+  );
 };
 
 const isBattlegroundUtil = (video: RendererVideo) => {
-  const { category } = video;
-  return category === VideoCategory.Battlegrounds;
+  const { category, parentCategory } = video;
+
+  return (
+    category === VideoCategory.Battlegrounds ||
+    parentCategory === VideoCategory.Battlegrounds
+  );
 };
 
 const isSoloShuffleUtil = (video: RendererVideo) => {
-  const { category } = video;
-  return category === VideoCategory.SoloShuffle;
+  const { category, parentCategory } = video;
+
+  return (
+    category === VideoCategory.SoloShuffle ||
+    parentCategory === VideoCategory.SoloShuffle
+  );
 };
 
 const isArenaUtil = (video: RendererVideo) => {
   return (
     !isMythicPlusUtil(video) && !isRaidUtil(video) && !isBattlegroundUtil(video)
   );
+};
+
+const isClipUtil = (video: RendererVideo) => {
+  const { category } = video;
+  return category === VideoCategory.Clips;
 };
 
 const getResultColor = (video: RendererVideo) => {
@@ -840,6 +861,7 @@ export {
   isBattlegroundUtil,
   isSoloShuffleUtil,
   isArenaUtil,
+  isClipUtil,
   getResultColor,
   getPlayerName,
   getPlayerRealm,

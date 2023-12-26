@@ -85,6 +85,7 @@ const getEmptyState = () => {
     [VideoCategory.MythicPlus]: [],
     [VideoCategory.Raids]: [],
     [VideoCategory.Battlegrounds]: [],
+    [VideoCategory.Clips]: [],
   };
 
   return videoState;
@@ -644,6 +645,14 @@ const getPromiseBomb = (fuse: number, reason: string) => {
   return new Promise((_resolve, reject) => setTimeout(reject, fuse, reason));
 };
 
+const buildClipMetadata = (initial: Metadata, duration: number) => {
+  const final = initial;
+  final.duration = duration;
+  final.parentCategory = initial.category;
+  final.category = VideoCategory.Clips;
+  return final;
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -671,4 +680,5 @@ export {
   convertUioHookEvent,
   getPromiseBomb,
   addCrashToUI,
+  buildClipMetadata,
 };
