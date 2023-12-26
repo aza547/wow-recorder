@@ -1,7 +1,7 @@
 import { RendererVideo, VideoPlayerSettings } from 'main/types';
 import { useEffect, useRef, useState } from 'react';
 import { ConfigurationSchema } from 'main/configSchema';
-import { Box, Button, Slider, Typography } from '@mui/material';
+import { Box, Button, Slider, Tooltip, Typography } from '@mui/material';
 import { Resizable } from 're-resizable';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -10,6 +10,9 @@ import VolumeDownIcon from '@mui/icons-material/VolumeDown';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeMuteIcon from '@mui/icons-material/VolumeMute';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import MovieIcon from '@mui/icons-material/Movie';
+import ClearIcon from '@mui/icons-material/Clear';
+import DoneIcon from '@mui/icons-material/Done';
 import { OnProgressProps } from 'react-player/base';
 import FilePlayer from 'react-player/file';
 import screenfull from 'screenfull';
@@ -23,7 +26,7 @@ interface IProps {
 const ipc = window.electron.ipcRenderer;
 const playbackRates = [0.25, 0.5, 1, 2];
 const style = { backgroundColor: 'black' };
-const progressInterval = 10;
+const progressInterval = 100;
 
 const sliderSx = {
   '& .MuiSlider-thumb': {
@@ -40,6 +43,31 @@ const sliderSx = {
   },
 };
 
+const textFieldSx = {
+  color: 'white',
+  mx: 1,
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'white',
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: '#bb4220',
+  },
+  '&.Mui-focused': {
+    borderColor: '#bb4220',
+    color: '#bb4220',
+  },
+  '&:hover': {
+    '&& fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
+  '& .MuiOutlinedInput-root': {
+    '&.Mui-focused fieldset': {
+      borderColor: '#bb4220',
+    },
+  },
+};
+
 export const VideoPlayer = (props: IProps) => {
   const { video, config } = props;
   const url = video.fullPath;
@@ -50,8 +78,9 @@ export const VideoPlayer = (props: IProps) => {
   const [progress, setProgress] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);
-  const [cutMode, setCutMode] = useState<boolean>(true);
-  const [cutValues, setCutValues] = useState<number[]>([0, 200]);
+  const [cutMode, setCutMode] = useState<boolean>(false);
+  const [cutStartValue, setCutStartValue] = useState<number>(100);
+  const [cutStopValue, setCutStopValue] = useState<number>(100);
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -194,23 +223,26 @@ export const VideoPlayer = (props: IProps) => {
    * Handle a click from the user on the progress slider by seeking to that
    * position.
    */
-  const handleProgressBarChange = (_event: Event, value: number | number[]) => {
-    if (typeof value === 'number' && player.current) {
-      player.current.seekTo(value, 'seconds');
-    }
-  };
-
-  /**
-   *
-   */
-  const handleCutBarChange = (
+  const handleProgressBarChange = (
     _event: Event,
-    values: number | number[],
+    value: number | number[],
     index: number
   ) => {
-    if (Array.isArray(values) && player.current) {
-      setCutValues(values);
-      player.current.seekTo(values[index], 'seconds');
+    if (!player.current) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      setCutStartValue(Math.round(value[0]));
+      setCutStopValue(Math.round(value[2]));
+
+      if (index === 1) {
+        player.current.seekTo(value[1], 'seconds');
+      }
+    }
+
+    if (typeof value === 'number') {
+      player.current.seekTo(value, 'seconds');
     }
   };
 
@@ -226,17 +258,20 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
-   * Handle the onReady event, this is fired when the video player is ready
-   * to play. It's used to update the total duration which we won't know
-   * before.
+   * Handle the onReady event.
    */
   const onReady = () => {
     if (!player.current) {
       return;
     }
 
+    if (duration > 0) {
+      return;
+    }
+
     const durationSec = player.current.getDuration();
     setDuration(durationSec);
+    setCutStopValue(Math.round(durationSec * 0.8));
   };
 
   /**
@@ -244,44 +279,39 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderProgressSlider = () => {
     const current = progress * duration;
-    // let thumbValues;
+    const thumbValues = [cutStartValue, current, cutStopValue];
 
-    // if (cutMode) {
-    //   thumbValues = [cutValues[0], current, cutValues[1]];
-    // } else {
-    //   thumbValues = [current];
-    // }
+    const getLabel = (value: number, index: number) => {
+      if (cutMode) {
+        if (index === 0) return `Start (${secToMmSs(value)})`;
+        if (index === 1) return secToMmSs(value);
+        if (index === 2) return `End (${secToMmSs(value)})`;
+      }
 
-    // const getLabel = (value: number, index: number) => {
-    //   if (cutMode) {
-    //     if (index === 0) return 'Start';
-    //     if (index === 1) return secToMmSs(value);
-    //     if (index === 2) return 'End';
-    //   }
+      return secToMmSs(value);
+    };
 
-    //   return secToMmSs(value);
-    // };
+    if (cutMode) {
+      return (
+        <Slider
+          sx={{ m: 2, width: '100%', ...sliderSx }}
+          valueLabelDisplay="on"
+          valueLabelFormat={getLabel}
+          value={thumbValues}
+          onChange={handleProgressBarChange}
+          max={duration}
+          disableSwap
+        />
+      );
+    }
 
     return (
       <Slider
-        sx={{ ...sliderSx, p: 1.25 }}
-        valueLabelDisplay={cutMode ? 'on' : 'auto'}
+        sx={{ m: 2, width: '100%', ...sliderSx }}
+        valueLabelDisplay="auto"
         valueLabelFormat={secToMmSs}
         value={current}
         onChange={handleProgressBarChange}
-        max={duration}
-      />
-    );
-  };
-
-  const renderCutSlider = () => {
-    return (
-      <Slider
-        sx={{ ...sliderSx, p: 1.25 }}
-        valueLabelDisplay="off"
-        valueLabelFormat={secToMmSs}
-        value={cutValues}
-        onChange={handleCutBarChange}
         max={duration}
       />
     );
@@ -296,7 +326,7 @@ export const VideoPlayer = (props: IProps) => {
       <FilePlayer
         id="file-player"
         ref={player}
-        height="calc(100% - 50px)"
+        height="calc(100% - 36.5px)"
         width="100%"
         url={url}
         style={style}
@@ -393,9 +423,105 @@ export const VideoPlayer = (props: IProps) => {
     const playbackRateText = `${playbackRate}x`;
 
     return (
-      <Button sx={{ color: 'white' }} onClick={handleRateChange}>
-        {playbackRateText}
-      </Button>
+      <Tooltip title="Playback Speed">
+        <Button sx={{ color: 'white' }} onClick={handleRateChange}>
+          {playbackRateText}
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Returns the playback rate button for the video controls.
+   */
+  const renderCutButton = () => {
+    return (
+      <Tooltip title="Clip">
+        <Button sx={{ color: 'white' }} onClick={() => setCutMode(true)}>
+          <MovieIcon sx={{ color: 'white', height: '20px' }} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  // const renderCutStartField = () => {
+  //   return (
+  //     <TextField
+  //       value={Math.round(cutStartValue)}
+  //       label="Start"
+  //       onChange={(e) => setCutStartValue(parseInt(e.target.value, 10))}
+  //       InputLabelProps={{
+  //         shrink: true,
+  //         style: {
+  //           color: 'white',
+  //           fontSize: '15px',
+  //           transformOrigin: 'center',
+  //           transform: 'translate(12px, -12px) scale(0.75)',
+  //         },
+  //       }}
+  //       sx={textFieldSx}
+  //       inputProps={{
+  //         style: {
+  //           padding: '5px',
+  //           fontSize: '10px',
+  //           color: 'white',
+  //           textAlign: 'center',
+  //         },
+  //       }}
+  //     />
+  //   );
+  // };
+
+  // const renderCutStopField = () => {
+  //   return (
+  //     <TextField
+  //       value={Math.round(cutStopValue)}
+  //       label="Stop"
+  //       onChange={(e) => setCutStopValue(parseInt(e.target.value, 10))}
+  //       InputLabelProps={{
+  //         shrink: true,
+  //         style: {
+  //           color: 'white',
+  //           fontSize: '15px',
+  //           transformOrigin: 'center',
+  //           transform: 'translate(12px, -12px) scale(0.75)',
+  //         },
+  //       }}
+  //       sx={textFieldSx}
+  //       inputProps={{
+  //         style: {
+  //           padding: '5px',
+  //           fontSize: '10px',
+  //           color: 'white',
+  //           textAlign: 'center',
+  //         },
+  //       }}
+  //     />
+  //   );
+  // };
+
+  const renderCutFinishedButton = () => {
+    const doCut = () => {
+      console.log('Cutting!', cutStartValue, cutStopValue);
+      setCutMode(false);
+    };
+
+    return (
+      <Tooltip title="Confirm">
+        <Button sx={{ color: 'white' }} onClick={doCut}>
+          <DoneIcon sx={{ color: 'white' }} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  const renderCutCancelButton = () => {
+    return (
+      <Tooltip title="Cancel">
+        <Button sx={{ color: 'white' }} onClick={() => setCutMode(false)}>
+          <ClearIcon sx={{ color: 'white' }} />
+        </Button>
+      </Tooltip>
     );
   };
 
@@ -404,9 +530,11 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderFullscreenButton = () => {
     return (
-      <Button sx={{ color: 'white' }} onClick={toggleFullscreen}>
-        <FullscreenIcon sx={{ color: 'white' }} />
-      </Button>
+      <Tooltip title="Fullscreen">
+        <Button sx={{ color: 'white' }} onClick={toggleFullscreen}>
+          <FullscreenIcon sx={{ color: 'white' }} />
+        </Button>
+      </Tooltip>
     );
   };
 
@@ -443,7 +571,7 @@ export const VideoPlayer = (props: IProps) => {
       <Box
         sx={{
           width: '100%',
-          height: '50px',
+          height: '36.5px',
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'center',
@@ -455,22 +583,15 @@ export const VideoPlayer = (props: IProps) => {
         {renderPlayPause()}
         {renderVolumeButton()}
         {renderVolumeSlider()}
-        <Box
-          sx={{
-            m: 2,
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          {renderProgressSlider()}
-          {cutMode && renderCutSlider()}
-        </Box>
+        {renderProgressSlider()}
         {renderProgressText()}
-        {renderPlaybackRateButton()}
-        {renderFullscreenButton()}
+        {!cutMode && renderCutButton()}
+        {!cutMode && renderPlaybackRateButton()}
+        {!cutMode && renderFullscreenButton()}
+        {/* {cutMode && renderCutStartField()}
+        {cutMode && renderCutStopField()} */}
+        {cutMode && renderCutFinishedButton()}
+        {cutMode && renderCutCancelButton()}
       </Box>
     );
   };
