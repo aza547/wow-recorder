@@ -804,6 +804,24 @@ const getNextKeyOrMouseEvent = async (): Promise<PTTKeyPressEvent> => {
   return ipc.invoke('getNextKeyPress', []);
 };
 
+const secToMmSs = (s: number) => {
+  const rounded = Math.round(s);
+  const mins = Math.floor(rounded / 60);
+  const secs = rounded - mins * 60;
+
+  const ss = secs.toLocaleString('en-US', {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+
+  const mm = mins.toLocaleString('en-US', {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+
+  return `${mm}:${ss}`;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -853,4 +871,5 @@ export {
   blurAll,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
+  secToMmSs,
 };
