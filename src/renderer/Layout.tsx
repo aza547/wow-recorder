@@ -21,7 +21,7 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings';
 import TvIcon from '@mui/icons-material/Tv';
 import { Resizable } from 're-resizable';
-import { VideoJS } from './VideoJS';
+import VideoPlayer, { VideoJS } from './VideoPlayer';
 import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
@@ -119,24 +119,14 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getVideoPanel = () => {
+  const getVideoPlayer = () => {
     return (
-      <Resizable
-        defaultSize={{
-          height: '50%',
-          width: '100%',
-        }}
-        enable={{ bottom: true }}
-        bounds="parent"
-      >
-        <VideoJS
-          id="video-player"
-          config={config}
-          key={categoryState[videoIndex].fullPath}
-          video={categoryState[videoIndex]}
-          setAppState={setAppState}
-        />
-      </Resizable>
+      <VideoPlayer
+        config={config}
+        key={categoryState[videoIndex].fullPath}
+        video={categoryState[videoIndex]}
+        setAppState={setAppState}
+      />
     );
   };
 
@@ -481,7 +471,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           width: '100%',
         }}
       >
-        {haveVideos && getVideoPanel()}
+        {haveVideos && getVideoPlayer()}
         {haveVideos && getVideoSelection()}
         {!haveVideos && renderFirstTimeUserPrompt()}
       </Box>
