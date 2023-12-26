@@ -50,6 +50,8 @@ export const VideoPlayer = (props: IProps) => {
   const [progress, setProgress] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);
+  const [cutMode, setCutMode] = useState<boolean>(true);
+  const [cutValues, setCutValues] = useState<number[]>([0, 200]);
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -192,9 +194,23 @@ export const VideoPlayer = (props: IProps) => {
    * Handle a click from the user on the progress slider by seeking to that
    * position.
    */
-  const handleProgressBarClick = (_event: Event, value: number | number[]) => {
+  const handleProgressBarChange = (_event: Event, value: number | number[]) => {
     if (typeof value === 'number' && player.current) {
       player.current.seekTo(value, 'seconds');
+    }
+  };
+
+  /**
+   *
+   */
+  const handleCutBarChange = (
+    _event: Event,
+    values: number | number[],
+    index: number
+  ) => {
+    if (Array.isArray(values) && player.current) {
+      setCutValues(values);
+      player.current.seekTo(values[index], 'seconds');
     }
   };
 
@@ -227,13 +243,45 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the progress slider for the video controls.
    */
   const renderProgressSlider = () => {
+    const current = progress * duration;
+    // let thumbValues;
+
+    // if (cutMode) {
+    //   thumbValues = [cutValues[0], current, cutValues[1]];
+    // } else {
+    //   thumbValues = [current];
+    // }
+
+    // const getLabel = (value: number, index: number) => {
+    //   if (cutMode) {
+    //     if (index === 0) return 'Start';
+    //     if (index === 1) return secToMmSs(value);
+    //     if (index === 2) return 'End';
+    //   }
+
+    //   return secToMmSs(value);
+    // };
+
     return (
       <Slider
-        sx={{ m: 2, width: '100%', ...sliderSx }}
-        valueLabelDisplay="auto"
+        sx={{ ...sliderSx, p: 1.25 }}
+        valueLabelDisplay={cutMode ? 'on' : 'auto'}
         valueLabelFormat={secToMmSs}
-        value={progress * duration}
-        onChange={handleProgressBarClick}
+        value={current}
+        onChange={handleProgressBarChange}
+        max={duration}
+      />
+    );
+  };
+
+  const renderCutSlider = () => {
+    return (
+      <Slider
+        sx={{ ...sliderSx, p: 1.25 }}
+        valueLabelDisplay="off"
+        valueLabelFormat={secToMmSs}
+        value={cutValues}
+        onChange={handleCutBarChange}
         max={duration}
       />
     );
@@ -248,7 +296,7 @@ export const VideoPlayer = (props: IProps) => {
       <FilePlayer
         id="file-player"
         ref={player}
-        height="calc(100% - 36.5px)"
+        height="calc(100% - 50px)"
         width="100%"
         url={url}
         style={style}
@@ -395,7 +443,7 @@ export const VideoPlayer = (props: IProps) => {
       <Box
         sx={{
           width: '100%',
-          height: '36.5px',
+          height: '50px',
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'center',
@@ -407,7 +455,19 @@ export const VideoPlayer = (props: IProps) => {
         {renderPlayPause()}
         {renderVolumeButton()}
         {renderVolumeSlider()}
-        {renderProgressSlider()}
+        <Box
+          sx={{
+            m: 2,
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          {renderProgressSlider()}
+          {cutMode && renderCutSlider()}
+        </Box>
         {renderProgressText()}
         {renderPlaybackRateButton()}
         {renderFullscreenButton()}
