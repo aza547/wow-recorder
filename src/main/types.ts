@@ -420,6 +420,11 @@ type VideoMarker = {
   class: string;
 };
 
+type SliderMark = {
+  value: number;
+  label: JSX.Element;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -467,4 +472,5 @@ export {
   MicStatus,
   Crashes,
   CrashData,
+  SliderMark,
 };

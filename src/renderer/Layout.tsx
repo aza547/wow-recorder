@@ -479,7 +479,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
         >
-          Videos you clip will display here.
+          You have no clips saved. Videos you clip will display here.
         </Typography>
       </Box>
     );

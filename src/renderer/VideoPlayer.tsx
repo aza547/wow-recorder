@@ -1,4 +1,10 @@
-import { RendererVideo, VideoPlayerSettings } from 'main/types';
+import {
+  DeathMarkers,
+  RendererVideo,
+  SliderMark,
+  VideoMarker,
+  VideoPlayerSettings,
+} from 'main/types';
 import { useEffect, useRef, useState } from 'react';
 import { ConfigurationSchema } from 'main/configSchema';
 import { Box, Button, Slider, Tooltip, Typography } from '@mui/material';
@@ -17,7 +23,18 @@ import { OnProgressProps } from 'react-player/base';
 import FilePlayer from 'react-player/file';
 import screenfull from 'screenfull';
 import { VideoCategory } from 'types/VideoCategory';
-import { secToMmSs } from './rendererutils';
+import DeathIcon from '../../assets/icon/death.png';
+import {
+  convertNumToDeathMarkers,
+  getAllDeathMarkers,
+  getEncounterMarkers,
+  getOwnDeathMarkers,
+  getRoundMarkers,
+  isClipUtil,
+  isMythicPlusUtil,
+  isSoloShuffleUtil,
+  secToMmSs,
+} from './rendererutils';
 
 interface IProps {
   video: RendererVideo;
@@ -75,65 +92,6 @@ export const VideoPlayer = (props: IProps) => {
     ipc.sendMessage('videoPlayerSettings', ['set', soundSettings]);
   }, [volume, muted]);
 
-  // const markerDivs: React.MutableRefObject<HTMLDivElement[]> = React.useRef([]);
-
-  // /**
-  //  * Remove any existing timeline markers, then collate a list of all the
-  //  * markers based on the category and current config.
-  //  *
-  //  * Finally, add the markers to the timelime. This code is not very reacty, I
-  //  * blame VideoJS.
-  //  *
-  //  * We pass cfg in here as an argument to prevent remembering old state. I
-  //  * don't really understand why that is required.
-  //  */
-  // const processMarkers = () => {
-  //   markerDivs.current.forEach(removeMarkerDiv);
-  //   markerDivs.current = [];
-
-  //   const progressBar = document.querySelector('.vjs-progress-holder');
-
-  //   if (
-  //     !playerRef.current ||
-  //     !progressBar ||
-  //     Number.isNaN(playerRef.current.duration())
-  //   ) {
-  //     return;
-  //   }
-
-  //   const duration = playerRef.current.duration();
-  //   const { width } = progressBar.getBoundingClientRect();
-  //   const deathMarkerConfig = convertNumToDeathMarkers(config.deathMarkers);
-
-  //   if (deathMarkerConfig === DeathMarkers.ALL) {
-  //     getAllDeathMarkers(video)
-  //       .map((m) => getMarkerDiv(m, duration, width))
-  //       .forEach((m) => markerDivs.current.push(m));
-  //   } else if (deathMarkerConfig === DeathMarkers.OWN) {
-  //     getOwnDeathMarkers(video)
-  //       .map((m) => getMarkerDiv(m, duration, width))
-  //       .forEach((m) => markerDivs.current.push(m));
-  //   }
-
-  //   const isMythicPlus = video.category === VideoCategory.MythicPlus;
-
-  //   if (isMythicPlus && config.encounterMarkers) {
-  //     getEncounterMarkers(video)
-  //       .map((m) => getMarkerDiv(m, duration, width))
-  //       .forEach((m) => markerDivs.current.push(m));
-  //   }
-
-  //   const isSoloShuffle = video.category === VideoCategory.SoloShuffle;
-
-  //   if (isSoloShuffle && config.roundMarkers) {
-  //     getRoundMarkers(video)
-  //       .map((m) => getMarkerDiv(m, duration, width))
-  //       .forEach((m) => markerDivs.current.push(m));
-  //   }
-
-  //   markerDivs.current.forEach((m) => addMarkerDiv(m));
-  // };
-
   //         hotkeys: {
   //           seekStep: 10,
   //           enableModifiersForNumbers: false,
@@ -148,6 +106,60 @@ export const VideoPlayer = (props: IProps) => {
   //           },
   //         },
   //       },
+
+  const getDeathMark = (marker: VideoMarker): SliderMark => {
+    return {
+      value: marker.time,
+      label: (
+        <Tooltip title={marker.text}>
+          <Box
+            component="img"
+            src={DeathIcon}
+            sx={{
+              p: '2px',
+              height: '13px',
+              width: '13px',
+              objectFit: 'fill',
+            }}
+          />
+        </Tooltip>
+      ),
+    };
+  };
+
+  /**
+   * Get the video timeline markers appropriate for the current video and
+   * configuration.
+   */
+  const getMarks = () => {
+    const marks: SliderMark[] = [];
+
+    if (!player.current || duration === 0 || isClipUtil(video)) {
+      return marks;
+    }
+
+    const deathMarkerConfig = convertNumToDeathMarkers(config.deathMarkers);
+
+    if (deathMarkerConfig === DeathMarkers.ALL) {
+      getAllDeathMarkers(video)
+        .map(getDeathMark)
+        .forEach((m) => marks.push(m));
+    } else if (deathMarkerConfig === DeathMarkers.OWN) {
+      getOwnDeathMarkers(video)
+        .map(getDeathMark)
+        .forEach((m) => marks.push(m));
+    }
+
+    // if (isMythicPlusUtil(video) && config.encounterMarkers) {
+    //   getEncounterMarkers(video);
+    // }
+
+    // if (isSoloShuffleUtil(video) && config.roundMarkers) {
+    //   getRoundMarkers(video);
+    // }
+
+    return marks;
+  };
 
   /**
    * Toggle if the video is currently playing or not. You would think this
@@ -304,12 +316,25 @@ export const VideoPlayer = (props: IProps) => {
 
     return (
       <Slider
-        sx={{ m: 2, width: '100%', ...sliderSx }}
+        sx={{
+          m: 2,
+          width: '100%',
+          ...sliderSx,
+          '& .MuiSlider-markLabel': {
+            top: '20px',
+          },
+          '& .MuiSlider-mark': {
+            backgroundColor: 'white',
+            width: '2px',
+            height: '10px',
+          },
+        }}
         valueLabelDisplay="auto"
         valueLabelFormat={secToMmSs}
         value={current}
         onChange={handleProgressBarChange}
         max={duration}
+        marks={getMarks()}
       />
     );
   };
@@ -323,7 +348,7 @@ export const VideoPlayer = (props: IProps) => {
       <FilePlayer
         id="file-player"
         ref={player}
-        height="calc(100% - 36.5px)"
+        height="calc(100% - 45px)"
         width="100%"
         url={url}
         style={style}
@@ -524,7 +549,7 @@ export const VideoPlayer = (props: IProps) => {
       <Box
         sx={{
           width: '100%',
-          height: '36.5px',
+          height: '45px',
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'center',

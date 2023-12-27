@@ -34,8 +34,9 @@ import {
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
-import { PTTKeyPressEvent, UiohookModifierKeyMap } from 'types/KeyTypesUIOHook';
+import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'main/configSchema';
+import { EventType } from 'uiohook-napi';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -669,52 +670,6 @@ const convertDeathMarkersToNum = (d: DeathMarkers) => {
   return 0;
 };
 
-const getMarkerDiv = (
-  marker: VideoMarker,
-  videoDuration: number,
-  progressBarWidth: number
-) => {
-  const markerDiv = document.createElement('div');
-  markerDiv.className = marker.class;
-
-  const markerPosition = (progressBarWidth * marker.time) / videoDuration;
-  let markerWidth = (progressBarWidth * marker.duration) / videoDuration;
-
-  // If the marker is going to hang of the end of the bar, cut it short.
-  if (markerWidth + markerPosition > progressBarWidth) {
-    markerWidth = progressBarWidth - markerPosition;
-  }
-
-  markerDiv.setAttribute(
-    'style',
-    `left: ${markerPosition}px; background-color: ${marker.color}; width: ${markerWidth}px`
-  );
-
-  markerDiv.setAttribute('title', marker.text);
-
-  return markerDiv;
-};
-
-const addMarkerDiv = (marker: HTMLDivElement) => {
-  const progressBar = document.querySelector('.vjs-progress-holder');
-
-  if (!progressBar) {
-    return;
-  }
-
-  progressBar.appendChild(marker);
-};
-
-const removeMarkerDiv = (marker: HTMLDivElement) => {
-  const parent = marker.parentNode;
-
-  if (parent === null) {
-    return;
-  }
-
-  parent.removeChild(marker);
-};
-
 const getPTTKeyPressEventFromConfig = (
   config: ConfigurationSchema
 ): PTTKeyPressEvent => {
@@ -723,6 +678,11 @@ const getPTTKeyPressEventFromConfig = (
   const shift = config.pushToTalkModifiers.includes('shift');
   const alt = config.pushToTalkModifiers.includes('alt');
 
+  const type =
+    config.pushToTalkKey > 0
+      ? EventType.EVENT_KEY_PRESSED
+      : EventType.EVENT_MOUSE_CLICKED;
+
   return {
     altKey: alt,
     ctrlKey: ctrl,
@@ -730,23 +690,12 @@ const getPTTKeyPressEventFromConfig = (
     shiftKey: shift,
     keyCode: config.pushToTalkKey,
     mouseButton: config.pushToTalkMouseButton,
+    type,
   };
 };
 
 const getKeyByValue = (object: any, value: any) => {
   return Object.keys(object).find((key) => object[key] === value);
-};
-
-const isKeyModifier = (event: PTTKeyPressEvent) => {
-  if (event.keyCode < 0) {
-    return false;
-  }
-
-  const isModifierKey = Object.values(UiohookModifierKeyMap).includes(
-    event.keyCode
-  );
-
-  return isModifierKey;
 };
 
 const getKeyModifiersString = (keyevent: PTTKeyPressEvent) => {
@@ -823,7 +772,7 @@ const getVideoResultText = (video: RendererVideo): string => {
     return 'Depleted';
   }
 
-  if (isRaidUtil(video) === VideoCategory.Raids) {
+  if (isRaidUtil(video)) {
     return result ? 'Kill' : 'Wipe';
   }
 
@@ -883,13 +832,9 @@ export {
   getOwnDeathMarkers,
   getRoundMarkers,
   getEncounterMarkers,
-  getMarkerDiv,
-  addMarkerDiv,
-  removeMarkerDiv,
   isHighRes,
   getPTTKeyPressEventFromConfig,
   getKeyByValue,
-  isKeyModifier,
   blurAll,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,

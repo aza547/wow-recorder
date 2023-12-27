@@ -157,7 +157,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           {deathCount}
         </Typography>
         <Box
-          key="chest-icon"
+          key="death-icon"
           component="img"
           src={DeathIcon}
           sx={{
