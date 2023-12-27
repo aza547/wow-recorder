@@ -650,7 +650,23 @@ const buildClipMetadata = (initial: Metadata, duration: number) => {
   final.duration = duration;
   final.parentCategory = initial.category;
   final.category = VideoCategory.Clips;
+  final.protected = true;
   return final;
+};
+
+const getOBSFormattedDate = (date: Date) => {
+  const toFixedDigits = (n: number, d: number) =>
+    n.toLocaleString('en-US', { minimumIntegerDigits: d, useGrouping: false });
+
+  const day = toFixedDigits(date.getDay(), 2);
+  const month = toFixedDigits(date.getMonth(), 2);
+  const year = toFixedDigits(date.getFullYear(), 4);
+
+  const secs = toFixedDigits(date.getSeconds(), 2);
+  const mins = toFixedDigits(date.getMinutes(), 2);
+  const hours = toFixedDigits(date.getHours(), 2);
+
+  return `${year}-${month}-${day} ${hours}-${mins}-${secs}`;
 };
 
 export {
@@ -681,4 +697,5 @@ export {
   getPromiseBomb,
   addCrashToUI,
   buildClipMetadata,
+  getOBSFormattedDate,
 };

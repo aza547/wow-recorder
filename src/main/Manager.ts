@@ -34,6 +34,7 @@ import {
   addCrashToUI,
   buildClipMetadata,
   getMetadataForVideo,
+  getOBSFormattedDate,
   updateMicStatus,
   updateRecStatus,
   validateFlavour,
@@ -295,7 +296,7 @@ export default class Manager {
   /**
    * Refresh the status icons in the UI.
    */
-  private refreshStatus() {
+  public refreshStatus() {
     if (!this.configValid) {
       updateRecStatus(
         this.mainWindow,
@@ -582,10 +583,11 @@ export default class Manager {
 
       const sourceMetadata = await getMetadataForVideo(source);
       const clipMetadata = buildClipMetadata(sourceMetadata, duration);
+      const now = new Date();
 
       const clipQueueItem: VideoQueueItem = {
         source,
-        suffix: 'Clip',
+        suffix: `Clipped at ${getOBSFormattedDate(now)}`,
         offset,
         duration,
         deleteSource: false,

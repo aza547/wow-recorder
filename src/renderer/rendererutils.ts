@@ -304,51 +304,6 @@ const getEmptyState = () => {
   return videoState;
 };
 
-/**
- * Get a result text appropriate for the video category that signifies a
- * win or a loss, of some sort.
- */
-const getVideoResultText = (video: RendererVideo): string => {
-  const {
-    category,
-    result,
-    upgradeLevel,
-    soloShuffleRoundsWon,
-    soloShuffleRoundsPlayed,
-  } = video;
-
-  if (category === VideoCategory.MythicPlus && result) {
-    if (upgradeLevel === undefined) {
-      return '';
-    }
-
-    return String(upgradeLevel);
-  }
-
-  if (category === VideoCategory.MythicPlus && !result) {
-    return 'Depleted';
-  }
-
-  if (category === VideoCategory.Raids) {
-    return result ? 'Kill' : 'Wipe';
-  }
-
-  if (category === VideoCategory.SoloShuffle) {
-    if (
-      soloShuffleRoundsWon === undefined ||
-      soloShuffleRoundsPlayed === undefined
-    ) {
-      return '';
-    }
-
-    const wins = soloShuffleRoundsWon;
-    const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
-    return `${wins} - ${losses}`;
-  }
-
-  return result ? 'Win' : 'Loss';
-};
-
 const getInstanceDifficultyText = (video: RendererVideo) => {
   const { difficultyID } = video;
 
@@ -841,6 +796,51 @@ const secToMmSs = (s: number) => {
   });
 
   return `${mm}:${ss}`;
+};
+
+/**
+ * Get a result text appropriate for the video category that signifies a
+ * win or a loss, of some sort.
+ */
+const getVideoResultText = (video: RendererVideo): string => {
+  const {
+    category,
+    result,
+    upgradeLevel,
+    soloShuffleRoundsWon,
+    soloShuffleRoundsPlayed,
+  } = video;
+
+  if (isMythicPlusUtil(video) && result) {
+    if (upgradeLevel === undefined) {
+      return '';
+    }
+
+    return String(upgradeLevel);
+  }
+
+  if (isMythicPlusUtil(video) && !result) {
+    return 'Depleted';
+  }
+
+  if (isRaidUtil(video) === VideoCategory.Raids) {
+    return result ? 'Kill' : 'Wipe';
+  }
+
+  if (isSoloShuffleUtil(video)) {
+    if (
+      soloShuffleRoundsWon === undefined ||
+      soloShuffleRoundsPlayed === undefined
+    ) {
+      return '';
+    }
+
+    const wins = soloShuffleRoundsWon;
+    const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
+    return `${wins} - ${losses}`;
+  }
+
+  return result ? 'Win' : 'Loss';
 };
 
 export {

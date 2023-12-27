@@ -55,7 +55,7 @@ export const VideoPlayer = (props: IProps) => {
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);
   const [clipMode, setClipMode] = useState<boolean>(false);
-  const [clipStartValue, setClipStartValue] = useState<number>(100);
+  const [clipStartValue, setClipStartValue] = useState<number>(0);
   const [clipStopValue, setClipStopValue] = useState<number>(100);
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
@@ -209,8 +209,8 @@ export const VideoPlayer = (props: IProps) => {
     }
 
     if (Array.isArray(value)) {
-      setClipStartValue(Math.round(value[0]));
-      setClipStopValue(Math.round(value[2]));
+      setClipStartValue(value[0]);
+      setClipStopValue(value[2]);
 
       if (index === 1) {
         player.current.seekTo(value[1], 'seconds');
@@ -247,7 +247,7 @@ export const VideoPlayer = (props: IProps) => {
 
     const durationSec = player.current.getDuration();
     setDuration(durationSec);
-    setClipStopValue(Math.round(durationSec * 0.8));
+    setClipStopValue(durationSec);
   };
 
   /**
@@ -257,17 +257,17 @@ export const VideoPlayer = (props: IProps) => {
     const current = progress * duration;
     const thumbValues = [clipStartValue, current, clipStopValue];
 
-    const getLabel = (value: number, index: number) => {
-      if (clipMode) {
-        if (index === 0) return `Start (${secToMmSs(value)})`;
-        if (index === 1) return secToMmSs(value);
-        if (index === 2) return `End (${secToMmSs(value)})`;
-      }
-
-      return secToMmSs(value);
-    };
-
     if (clipMode) {
+      const getLabel = (value: number, index: number) => {
+        if (clipMode) {
+          if (index === 0) return `Start (${secToMmSs(value)})`;
+          if (index === 1) return secToMmSs(value);
+          if (index === 2) return `End (${secToMmSs(value)})`;
+        }
+
+        return secToMmSs(value);
+      };
+
       return (
         <Slider
           sx={{
@@ -278,7 +278,7 @@ export const VideoPlayer = (props: IProps) => {
               "&[data-index='0']": {
                 backgroundColor: 'white',
                 width: '5px',
-                height: '15px',
+                height: '20px',
                 borderRadius: 0,
               },
               "&[data-index='1']": {
@@ -287,7 +287,7 @@ export const VideoPlayer = (props: IProps) => {
               "&[data-index='2']": {
                 backgroundColor: 'white',
                 width: '5px',
-                height: '15px',
+                height: '20px',
                 borderRadius: 0,
               },
             },
