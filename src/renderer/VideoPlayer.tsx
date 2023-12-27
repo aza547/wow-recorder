@@ -211,7 +211,7 @@ export const VideoPlayer = (props: IProps) => {
    * Handle a click from the user on the progress slider by seeking to that
    * position.
    */
-  const handleProgressBarChange = (
+  const handleProgressSliderChange = (
     _event: Event,
     value: number | number[],
     index: number
@@ -307,7 +307,7 @@ export const VideoPlayer = (props: IProps) => {
           valueLabelDisplay="on"
           valueLabelFormat={getLabel}
           value={thumbValues}
-          onChange={handleProgressBarChange}
+          onChange={handleProgressSliderChange}
           max={duration}
           disableSwap
         />
@@ -332,7 +332,7 @@ export const VideoPlayer = (props: IProps) => {
         valueLabelDisplay="auto"
         valueLabelFormat={secToMmSs}
         value={current}
-        onChange={handleProgressBarChange}
+        onChange={handleProgressSliderChange}
         max={duration}
         marks={getMarks()}
       />
