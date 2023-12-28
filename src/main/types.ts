@@ -417,7 +417,6 @@ type VideoMarker = {
   duration: number;
   text: string;
   color: string;
-  class: string;
 };
 
 type SliderMark = {

@@ -87,7 +87,6 @@ const getOwnDeathMarkers = (video: RendererVideo) => {
         text: markerText,
         color,
         duration: 5,
-        class: 'vjs-marker',
       });
     }
   });
@@ -123,7 +122,6 @@ const getAllDeathMarkers = (video: RendererVideo) => {
       text: markerText,
       color,
       duration: 5,
-      class: 'vjs-marker',
     });
   });
 
@@ -161,7 +159,6 @@ const getRoundMarkers = (video: RendererVideo) => {
       text: markerText,
       color,
       duration,
-      class: 'vjs-marker-hatched',
     });
   });
 
@@ -209,7 +206,6 @@ const getEncounterMarkers = (video: RendererVideo) => {
         text: markerText,
         color: Colors.EPIC,
         duration: segmentDuration,
-        class: 'vjs-marker-hatched',
       });
     }
   );

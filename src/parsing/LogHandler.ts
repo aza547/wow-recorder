@@ -134,14 +134,17 @@ export default abstract class LogHandler {
     this.activity.end(line.date(), result);
 
     if (this.activity.category === VideoCategory.Raids) {
-      const metadata = this.activity.getMetadata();
+      const metadata = this.activity.getMetadata(); // can throw? 
       const duration = metadata.duration + metadata.overrun;
       const minDuration = this.cfg.get<number>('minEncounterDuration');
       const notLongEnough = duration < minDuration;
 
       if (notLongEnough) {
+        // ??? Does this work? 
         console.info('[LogHandler] Discarding raid encounter, not long enough');
         this.activity = undefined;
+        await this.recorder.stop();
+        this.poller.start();
         return;
       }
     }

@@ -66,6 +66,7 @@ export const VideoPlayer = (props: IProps) => {
   const url = video.fullPath;
 
   const player = useRef<FilePlayer>(null);
+  const progressSlider = useRef<HTMLSpanElement>(null);
 
   const [playing, setPlaying] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
@@ -150,15 +151,97 @@ export const VideoPlayer = (props: IProps) => {
         .forEach((m) => marks.push(m));
     }
 
-    // if (isMythicPlusUtil(video) && config.encounterMarkers) {
-    //   getEncounterMarkers(video);
-    // }
-
-    // if (isSoloShuffleUtil(video) && config.roundMarkers) {
-    //   getRoundMarkers(video);
-    // }
-
     return marks;
+  };
+
+  /**
+   * Return all the active video markers given the current video and config.
+   */
+  const getActiveMarkers = () => {
+    const activeMarkers: VideoMarker[] = [];
+
+    if (isMythicPlusUtil(video) && config.encounterMarkers) {
+      getEncounterMarkers(video).forEach((m) => activeMarkers.push(m));
+    }
+
+    if (isSoloShuffleUtil(video) && config.roundMarkers) {
+      getRoundMarkers(video).forEach((m) => activeMarkers.push(m));
+    }
+
+    return activeMarkers;
+  };
+
+  /**
+   * Build a linear gradient CSS property from a list of video makers.
+   * Returned string is something of the form:
+   *   "linear-gradient(90deg, red 0%, red 25%, ..., grey 75%, grey 100%)".
+   */
+  const markersToLinearGradient = (
+    markers: VideoMarker[],
+    fillerColor: string
+  ) => {
+    if (!progressSlider.current || duration === 0) {
+      return '';
+    }
+
+    let ptr = 0;
+    const gradients = [];
+    const sliderWidth = progressSlider.current.getBoundingClientRect().width;
+    const pxToSecRatio = sliderWidth / duration;
+
+    markers
+      .sort((a, b) => a.time - b.time) // Chronological sort
+      .forEach((marker) => {
+        if (ptr !== marker.time) {
+          // If we've not moved the pointer to this point yet, then add a
+          // filler block to the gradient.
+          const start = Math.round(ptr * pxToSecRatio);
+          const end = Math.round(marker.time * pxToSecRatio);
+          gradients.push(`${fillerColor} ${start}px`);
+          gradients.push(`${fillerColor} ${end}px`);
+        }
+
+        // The pointer must have caught up now, so add the current marker.
+        const start = Math.round(marker.time * pxToSecRatio);
+        const end = Math.round((marker.time + marker.duration) * pxToSecRatio);
+        gradients.push(`${marker.color} ${start}px`);
+        gradients.push(`${marker.color} ${end}px`);
+
+        // Move the pointer on.
+        ptr = marker.time + marker.duration;
+      });
+
+    // If we didn't reach the end, add filler to there. We don't want the
+    // last gradient to continue to the end.
+    if (ptr !== duration) {
+      const start = Math.round(ptr * pxToSecRatio);
+      gradients.push(`${fillerColor} ${start}%`);
+      gradients.push(`${fillerColor} ${sliderWidth}px`);
+    }
+
+    // Build the string from the list of colors and locations.
+    const gradient = `linear-gradient(90deg, ${gradients.join(', ')})`;
+    return gradient;
+  };
+
+  /**
+   * Get a linear gradient style for the video rail for the encounter (M+ only)
+   * and round (Solo Shuffle only) markers.
+   */
+  const getRailGradient = () => {
+    const activeMarkers = getActiveMarkers();
+    const fillerColor = '#5A2F27';
+    return markersToLinearGradient(activeMarkers, fillerColor);
+  };
+
+  /**
+   * Get a linear gradient for the video track for the encounter (M+ only)
+   * and round (Solo Shuffle only) markers.
+   */
+  const getTrackGradient = () => {
+    const activeMarkers = getActiveMarkers();
+    const fillerColor = '#bb4420';
+    return markersToLinearGradient(activeMarkers, fillerColor);
   };
 
   /**
@@ -282,6 +365,7 @@ export const VideoPlayer = (props: IProps) => {
 
       return (
         <Slider
+          ref={progressSlider}
           sx={{
             m: 2,
             width: '100%',
@@ -316,6 +400,7 @@ export const VideoPlayer = (props: IProps) => {
 
     return (
       <Slider
+        ref={progressSlider}
         sx={{
           m: 2,
           width: '100%',
@@ -327,6 +412,13 @@ export const VideoPlayer = (props: IProps) => {
             backgroundColor: 'white',
             width: '2px',
             height: '10px',
+          },
+          '& .MuiSlider-rail': {
+            background: getRailGradient(),
+          },
+          '& .MuiSlider-track': {
+            background: getTrackGradient(),
+            border: 'none',
           },
         }}
         valueLabelDisplay="auto"
