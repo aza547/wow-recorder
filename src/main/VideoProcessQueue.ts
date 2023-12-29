@@ -1,9 +1,8 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
 import SizeMonitor from '../utils/SizeMonitor';
-import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
-import { Metadata, SaveStatus, VideoQueueItem } from './types';
+import { SaveStatus, VideoQueueItem } from './types';
 import {
   fixPathWhenPackaged,
   tryUnlink,
@@ -13,96 +12,90 @@ import {
 
 const atomicQueue = require('atomic-queue');
 const ffmpeg = require('fluent-ffmpeg');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 
-const ffmpegPath = fixPathWhenPackaged(
-  require('@ffmpeg-installer/ffmpeg').path
-);
+const ffmpegInstallerPath = fixPathWhenPackaged(ffmpegInstaller.path);
+ffmpeg.setFfmpegPath(ffmpegInstallerPath);
 
-ffmpeg.setFfmpegPath(ffmpegPath);
-
+/**
+ * A queue for cutting videos to size.
+ */
 export default class VideoProcessQueue {
+  /**
+   * Atomic queue object.
+   */
   private videoQueue: any;
 
+  /**
+   * Handle to the main window for updating the saving status icon.
+   */
   private mainWindow: BrowserWindow;
 
+  /**
+   * Config service handle.
+   */
   private cfg = ConfigService.getInstance();
 
+  /**
+   * Queue constructor.
+   */
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow;
-    this.setupVideoProcessingQueue();
-  }
 
-  private setupVideoProcessingQueue() {
     const worker = this.processVideoQueueItem.bind(this);
     const settings = { concurrency: 1 };
     this.videoQueue = atomicQueue(worker, settings);
 
-    /* eslint-disable prettier/prettier */
     this.videoQueue
       .on('error', VideoProcessQueue.errorProcessingVideo)
-      .on('idle', () => { this.videoQueueEmpty() });
+      .on('idle', () => {
+        this.videoQueueEmpty();
+      });
 
     this.videoQueue.pool
-      .on('start', (data: VideoQueueItem) => { this.startedProcessingVideo(data) })
-      .on('finish', (_: unknown, data: VideoQueueItem) => { this.finishProcessingVideo(data) });
-    /* eslint-enable prettier/prettier */
+      .on('start', (data: VideoQueueItem) => {
+        this.startedProcessingVideo(data);
+      })
+      .on('finish', (_: unknown, data: VideoQueueItem) => {
+        this.finishProcessingVideo(data);
+      });
   }
 
-  queueVideo = async (
-    bufferFile: string,
-    metadata: Metadata,
-    filename: string,
-    relativeStart: number
-  ) => {
-    const queueItem: VideoQueueItem = {
-      bufferFile,
-      metadata,
-      filename,
-      relativeStart,
-    };
-
-    console.log('[VideoProcessQueue] Queuing video for processing', queueItem);
-    this.videoQueue.write(queueItem);
+  /**
+   * Add a video to the queue for processing, the processing it undergoes is
+   * dictated by the input. This is the only public method on this class.
+   */
+  public queueVideo = async (item: VideoQueueItem) => {
+    console.log('[VideoProcessQueue] Queuing video for processing', item);
+    this.videoQueue.write(item);
   };
 
+  /**
+   * Process a video by cutting it to size and saving it to disk, also
+   * writes out the metadata JSON file and thumbnail PNG image.
+   */
   private async processVideoQueueItem(
     data: VideoQueueItem,
     done: () => void
   ): Promise<void> {
-    const { duration } = data.metadata;
-
-    if (duration === null || duration === undefined) {
-      throw new Error('[VideoProcessQueue] Null or undefined duration');
-    }
-
-    const isRaid = data.metadata.category === VideoCategory.Raids;
-
-    if (isRaid) {
-      const isLongEnough =
-        duration >= this.cfg.get<number>('minEncounterDuration');
-
-      if (!isLongEnough) {
-        console.info(
-          '[VideoProcessQueue] Raid encounter was too short, discarding'
-        );
-
-        done();
-        return;
-      }
-    }
+    const outputDir = this.cfg.get<string>('storagePath');
 
     try {
       const videoPath = await VideoProcessQueue.cutVideo(
-        data.bufferFile,
-        this.cfg.get<string>('storagePath'),
-        data.filename,
-        data.relativeStart,
-        data.metadata.duration + data.metadata.overrun
+        data.source,
+        outputDir,
+        data.suffix,
+        data.offset,
+        data.duration
       );
 
       await writeMetadataFile(videoPath, data.metadata);
-      await tryUnlink(data.bufferFile);
       await VideoProcessQueue.getThumbnail(videoPath);
+
+      if (data.deleteSource) {
+        console.info('[VideoProcessQueue] Deleting source video file');
+        await tryUnlink(data.source);
+      }
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
@@ -113,25 +106,34 @@ export default class VideoProcessQueue {
     done();
   }
 
+  /**
+   * Log an error processing the video.
+   */
   private static errorProcessingVideo(err: any) {
     console.error('[VideoProcessQueue] Error processing video', err);
   }
 
+  /**
+   * Log we are starting the processing and update the saving status icon.
+   */
   private startedProcessingVideo(data: VideoQueueItem) {
-    console.info('[VideoProcessQueue] Now processing video', data.bufferFile);
+    console.info('[VideoProcessQueue] Now processing video', data.source);
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
   }
 
+  /**
+   * Log we are done, and update the saving status icon and refresh the
+   * frontend.
+   */
   private finishProcessingVideo(data: VideoQueueItem) {
-    console.log(
-      '[VideoProcessQueue] Finished processing video',
-      data.bufferFile
-    );
-
+    console.log('[VideoProcessQueue] Finished processing video', data.source);
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
     this.mainWindow.webContents.send('refreshState');
   }
 
+  /**
+   * Run actions on the queue being empty.
+   */
   private async videoQueueEmpty() {
     console.log('[VideoProcessQueue] Video processing queue empty');
     new SizeMonitor(this.mainWindow).run();
@@ -161,35 +163,35 @@ export default class VideoProcessQueue {
    * @returns full path of the final video file
    */
   private static async cutVideo(
-    initialFile: string,
-    finalDir: string,
-    outputFilename: string | undefined,
-    relativeStart: number,
-    desiredDuration: number
+    sourceFile: string,
+    outputDir: string,
+    suffix: string | undefined,
+    offset: number,
+    duration: number
   ): Promise<string> {
-    const videoFileName = path.basename(initialFile, '.mp4');
-    const videoFilenameSuffix = outputFilename ? ` - ${outputFilename}` : '';
+    const videoFileName = path.basename(sourceFile, '.mp4');
+    const videoFilenameSuffix = suffix ? ` - ${suffix}` : '';
     const baseVideoFilename = VideoProcessQueue.sanitizeFilename(
       videoFileName + videoFilenameSuffix
     );
-    const finalVideoPath = path.join(finalDir, `${baseVideoFilename}.mp4`);
+    const finalVideoPath = path.join(outputDir, `${baseVideoFilename}.mp4`);
 
     return new Promise<string>((resolve) => {
-      if (relativeStart < 0) {
+      if (offset < 0) {
         console.log(
           '[VideoProcessQueue] Avoiding error by rejecting negative start',
-          relativeStart
+          offset
         );
 
         // eslint-disable-next-line no-param-reassign
-        relativeStart = 0;
+        offset = 0;
       }
 
       console.log(
         '[VideoProcessQueue] Desired duration:',
-        desiredDuration,
+        duration,
         'Relative start time:',
-        relativeStart
+        offset
       );
 
       // It's crucial that we don't re-encode the video here as that
@@ -204,10 +206,10 @@ export default class VideoProcessQueue {
       //
       // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
       // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
-      ffmpeg(initialFile)
-        .inputOptions([`-ss ${relativeStart}`, `-t ${desiredDuration}`])
+      ffmpeg(sourceFile)
+        .inputOptions([`-ss ${offset}`, `-t ${duration}`])
         .outputOptions([
-          `-t ${desiredDuration}`,
+          `-t ${duration}`,
           '-c:v copy',
           '-c:a copy',
           '-avoid_negative_ts make_zero',
@@ -257,14 +259,14 @@ export default class VideoProcessQueue {
           console.info('[VideoProcessQueue] Got thumbnail for', video);
           resolve();
         })
-        .on('error', (err: any) => {
+        .on('error', (err: unknown) => {
           console.error(
             '[VideoProcessQueue] Error getting thumbnail for',
             video,
-            err
+            String(err)
           );
 
-          throw new Error(err);
+          throw new Error(String(err));
         })
         .screenshots({
           timestamps: [0],

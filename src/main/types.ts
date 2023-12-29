@@ -46,7 +46,7 @@ type UpgradeStatus = {
 };
 
 /**
- * We display any OBS crashes on the frontend so we don't silently recover 
+ * We display any OBS crashes on the frontend so we don't silently recover
  * and have the user think all is well.
  */
 type Crashes = CrashData[];
@@ -167,27 +167,13 @@ type FileInfo = {
 };
 
 type VideoQueueItem = {
-  bufferFile: string;
+  source: string;
+  suffix: string;
+  offset: number;
+  duration: number;
+  deleteSource: boolean;
   metadata: Metadata;
-  filename: string;
-  relativeStart: number;
 };
-
-interface IEventTarget {
-  name: string;
-  value: any;
-}
-
-/**
- * Class to fake an event for onChange in `ISettingsPanelProps`
- */
-class FakeChangeEvent {
-  public target: IEventTarget;
-
-  constructor(name: string, value: any) {
-    this.target = { name, value };
-  }
-}
 
 /**
  * This is what we write to the .json files. We use "raw" subtypes here to
@@ -196,6 +182,7 @@ class FakeChangeEvent {
  */
 type Metadata = {
   category: VideoCategory;
+  parentCategory?: VideoCategory; // if it's a clip
   duration: number;
   result: boolean;
   flavour: Flavour;
@@ -255,6 +242,7 @@ type RendererVideoState = {
   [VideoCategory.MythicPlus]: RendererVideo[];
   [VideoCategory.Raids]: RendererVideo[];
   [VideoCategory.Battlegrounds]: RendererVideo[];
+  [VideoCategory.Clips]: RendererVideo[];
 };
 
 type SoloShuffleTimelineSegment = {
@@ -399,13 +387,10 @@ enum DeathMarkers {
   ALL = 'All',
 }
 
-enum Colors {
-  UNCOMMON = '#1eff00',
-  RARE = '#0070dd',
-  EPIC = '#a335ee',
-  LEGENDARY = '#ff8000',
-  ARTIFACT = '#e6cc80	',
-  BLIZZARD = '#00ccff',
+enum MarkerColors {
+  WIN = 'rgba(30, 255, 0, 1)',
+  LOSS = 'rgba(255, 0, 0, 1)',
+  ENCOUNTER = 'rgba(163, 53, 238, 1)',
 }
 
 type VideoMarker = {
@@ -413,7 +398,11 @@ type VideoMarker = {
   duration: number;
   text: string;
   color: string;
-  class: string;
+};
+
+type SliderMark = {
+  value: number;
+  label: JSX.Element;
 };
 
 export {
@@ -431,7 +420,6 @@ export {
   FileInfo,
   FileFinderCallbackType,
   VideoQueueItem,
-  FakeChangeEvent,
   Metadata,
   RendererVideo,
   RendererVideoState,
@@ -459,8 +447,9 @@ export {
   ConfigStage,
   DeathMarkers,
   VideoMarker,
-  Colors,
+  MarkerColors,
   MicStatus,
   Crashes,
   CrashData,
+  SliderMark,
 };

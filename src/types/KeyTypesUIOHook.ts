@@ -1,5 +1,3 @@
-import { EventType } from 'uiohook-napi';
-
 export const UiohookModifierKeyMap = {
   Ctrl: 29,
   CtrlRight: 3613,
@@ -127,7 +125,8 @@ export const UiohookKeyMap = {
   PrintScreen: 3639,
 };
 
-export declare enum PTTEventType {
+export enum PTTEventType {
+  UNKNOWN = -1,
   EVENT_KEY_PRESSED = 4,
   EVENT_KEY_RELEASED = 5,
   EVENT_MOUSE_PRESSED = 7,
@@ -141,5 +140,5 @@ export interface PTTKeyPressEvent {
   shiftKey: boolean;
   keyCode: number;
   mouseButton: number;
-  type: EventType;
+  type: PTTEventType;
 }

@@ -112,7 +112,7 @@ export const runRetailRecordingTest = (
  * in the GUI. Uses some sample log lines from 2v2.txt.
  */
 export const runClassicRecordingTest = (
-  parser: CombatLogParser,
+  parser: CombatLogWatcher,
   endTest = true
 ) => {
   console.log('[test] User pressed the test button!');

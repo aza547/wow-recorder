@@ -8,4 +8,5 @@ export enum VideoCategory {
   MythicPlus = 'Mythic+',
   Raids = 'Raids',
   Battlegrounds = 'Battlegrounds',
+  Clips = 'Clips',
 }

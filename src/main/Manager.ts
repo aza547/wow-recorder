@@ -20,6 +20,8 @@ import {
   ObsOverlayConfig,
   IOBSDevice,
   CrashData,
+  VideoQueueItem,
+  MicStatus,
 } from './types';
 import {
   getObsBaseConfig,
@@ -31,8 +33,9 @@ import {
 } from '../utils/configUtils';
 import {
   addCrashToUI,
-  updateMicStatus,
-  updateRecStatus,
+  buildClipMetadata,
+  getMetadataForVideo,
+  getOBSFormattedDate,
   validateFlavour,
 } from './util';
 import { ERecordingState } from './obsEnums';
@@ -290,35 +293,49 @@ export default class Manager {
   }
 
   /**
-   * Refresh the status icons in the UI.
+   * Refresh the recorder and mic status icons in the UI. This is the only 
+   * place that this should be done from to avoid any status icon confusion.
    */
-  private refreshStatus() {
+  public refreshStatus() {
     if (!this.configValid) {
-      updateRecStatus(
-        this.mainWindow,
-        RecStatus.InvalidConfig,
-        String(this.configMessage)
-      );
-
-      // Invalid config trumps everything else, so return here.
+      this.refreshRecStatus(RecStatus.InvalidConfig, String(this.configMessage));
       return;
     }
 
+    const inOverrun = this.retailLogHandler?.overrunning || this.classicLogHandler?.overrunning;
     const inActivity = this.retailLogHandler?.activity || this.classicLogHandler?.activity; 
 
-    if (inActivity) {
-      updateRecStatus(this.mainWindow, RecStatus.Recording);
+    if (inOverrun) {
+      this.refreshRecStatus(RecStatus.Overruning);
+    } else if (inActivity) {
+      this.refreshRecStatus(RecStatus.Recording);
     } else if (this.recorder.obsState === ERecordingState.Recording) {
-      updateRecStatus(this.mainWindow, RecStatus.ReadyToRecord);
+      this.refreshRecStatus(RecStatus.ReadyToRecord);
     } else if (
       this.recorder.obsState === ERecordingState.Offline ||
       this.recorder.obsState === ERecordingState.Starting ||
       this.recorder.obsState === ERecordingState.Stopping
     ) {
-      updateRecStatus(this.mainWindow, RecStatus.WaitingForWoW);
+      this.refreshRecStatus(RecStatus.WaitingForWoW);
     }
 
-    updateMicStatus(this.mainWindow, this.recorder.obsMicState);
+    this.refreshMicStatus(this.recorder.obsMicState);
+  }
+
+  /**
+   * Send a message to the frontend to update the recorder status icon.
+   */
+  private refreshRecStatus(status: RecStatus, msg = '') {
+    console.info('[Manager] Updating recorder status with:', status, msg);
+    this.mainWindow.webContents.send('updateRecStatus', status, msg);
+  }
+
+  /**
+   * Send a message to the frontend to update the mic status icon.
+   */
+  private refreshMicStatus(status: MicStatus) {
+    console.info('[Manager] Updating mic status with:', status);
+    this.mainWindow.webContents.send('updateMicStatus', status);
   }
 
   /**
@@ -406,10 +423,12 @@ export default class Manager {
     }
 
     if (this.retailLogHandler) {
+      this.retailLogHandler.removeAllListeners();
       this.retailLogHandler.destroy();
     }
 
     if (this.classicLogHandler) {
+      this.classicLogHandler.removeAllListeners();
       this.classicLogHandler.destroy();
     }
 
@@ -420,6 +439,8 @@ export default class Manager {
         this.videoProcessQueue,
         config.retailLogPath
       );
+
+      this.retailLogHandler.on('state-change', () => this.refreshStatus());
     }
 
     if (config.recordClassic) {
@@ -429,6 +450,8 @@ export default class Manager {
         this.videoProcessQueue,
         config.classicLogPath
       );
+
+      this.classicLogHandler.on('state-change', () => this.refreshStatus());
     }
 
     this.poller.reconfigureFlavour(config);
@@ -567,6 +590,30 @@ export default class Manager {
       const testCategory = args[0] as VideoCategory;
       const endTest = Boolean(args[1]);
       this.test(testCategory, endTest);
+    });
+
+    // Clipping listener.
+    ipcMain.on('clip', async (_event, args) => {
+      console.log("[Manager] Clip request received with args", args);
+
+      const source = args[0];
+      const offset = args[1];
+      const duration = args[2]
+
+      const sourceMetadata = await getMetadataForVideo(source);
+      const clipMetadata = buildClipMetadata(sourceMetadata, duration);
+      const now = new Date();
+
+      const clipQueueItem: VideoQueueItem = {
+        source,
+        suffix: `Clipped at ${getOBSFormattedDate(now)}`,
+        offset,
+        duration,
+        deleteSource: false,
+        metadata: clipMetadata,
+      }
+
+      this.videoProcessQueue.queueVideo(clipQueueItem)
     });
 
     // Force stop listener, to enable the force stop button to do its job.

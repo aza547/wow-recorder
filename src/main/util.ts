@@ -9,7 +9,7 @@ import {
   UiohookKeyboardEvent,
   UiohookMouseEvent,
 } from 'uiohook-napi';
-import { PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
+import { PTTEventType, PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
 import {
   Metadata,
   FileInfo,
@@ -17,11 +17,9 @@ import {
   OurDisplayType,
   RendererVideo,
   RendererVideoState,
-  RecStatus,
   FlavourConfig,
   ObsAudioConfig,
   CrashData,
-  MicStatus,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -85,6 +83,7 @@ const getEmptyState = () => {
     [VideoCategory.MythicPlus]: [],
     [VideoCategory.Raids]: [],
     [VideoCategory.Battlegrounds]: [],
+    [VideoCategory.Clips]: [],
   };
 
   return videoState;
@@ -481,26 +480,6 @@ const getWowFlavour = (pathSpec: string): string => {
 };
 
 /**
- * Updates the recorder status icon.
- */
-const updateRecStatus = (
-  mainWindow: BrowserWindow,
-  status: RecStatus,
-  reason = ''
-) => {
-  console.info('[Util] Updating recorder status with:', status, reason);
-  mainWindow.webContents.send('updateRecStatus', status, reason);
-};
-
-/**
- * Updates the mic status icon. Deliberately don't log here as this can fire
- * alot if using PTT.
- */
-const updateMicStatus = (mainWindow: BrowserWindow, status: MicStatus) => {
-  mainWindow.webContents.send('updateMicStatus', status);
-};
-
-/**
  * Updates the status icon for the application.
  * @param status the status number
  */
@@ -543,7 +522,7 @@ const isPushToTalkHotkey = (
     (keyCode > 0 && keyCode === pushToTalkKey) ||
     (mouseButton > 0 && mouseButton === pushToTalkMouseButton);
 
-  if (event.type === EventType.EVENT_KEY_RELEASED) {
+  if (event.type === PTTEventType.EVENT_KEY_RELEASED) {
     // If they release the button we ignore modifier config. That covers mainline
     // use of regular key and modifier but also naked modifier key as the PTT hoykey
     // which doesnt show a modifier on release.
@@ -567,7 +546,8 @@ const isPushToTalkHotkey = (
 };
 
 const convertUioHookKeyPressEvent = (
-  event: UiohookKeyboardEvent
+  event: UiohookKeyboardEvent,
+  type: PTTEventType
 ): PTTKeyPressEvent => {
   return {
     altKey: event.altKey,
@@ -576,12 +556,13 @@ const convertUioHookKeyPressEvent = (
     shiftKey: event.shiftKey,
     keyCode: event.keycode,
     mouseButton: -1,
-    type: event.type,
+    type,
   };
 };
 
 const convertUioHookMousePressEvent = (
-  event: UiohookMouseEvent
+  event: UiohookMouseEvent,
+  type: PTTEventType
 ): PTTKeyPressEvent => {
   return {
     altKey: event.altKey,
@@ -590,7 +571,7 @@ const convertUioHookMousePressEvent = (
     shiftKey: event.shiftKey,
     keyCode: -1,
     mouseButton: event.button as number,
-    type: event.type,
+    type,
   };
 };
 
@@ -598,19 +579,31 @@ const convertUioHookEvent = (
   event: UiohookKeyboardEvent | UiohookMouseEvent
 ): PTTKeyPressEvent => {
   if (event.type === EventType.EVENT_KEY_PRESSED) {
-    return convertUioHookKeyPressEvent(event as UiohookKeyboardEvent);
+    return convertUioHookKeyPressEvent(
+      event as UiohookKeyboardEvent,
+      PTTEventType.EVENT_MOUSE_PRESSED
+    );
   }
 
   if (event.type === EventType.EVENT_KEY_RELEASED) {
-    return convertUioHookKeyPressEvent(event as UiohookKeyboardEvent);
+    return convertUioHookKeyPressEvent(
+      event as UiohookKeyboardEvent,
+      PTTEventType.EVENT_KEY_RELEASED
+    );
   }
 
   if (event.type === EventType.EVENT_MOUSE_PRESSED) {
-    return convertUioHookMousePressEvent(event as UiohookMouseEvent);
+    return convertUioHookMousePressEvent(
+      event as UiohookMouseEvent,
+      PTTEventType.EVENT_MOUSE_PRESSED
+    );
   }
 
   if (event.type === EventType.EVENT_MOUSE_RELEASED) {
-    return convertUioHookMousePressEvent(event as UiohookMouseEvent);
+    return convertUioHookMousePressEvent(
+      event as UiohookMouseEvent,
+      PTTEventType.EVENT_MOUSE_RELEASED
+    );
   }
 
   return {
@@ -620,7 +613,7 @@ const convertUioHookEvent = (
     metaKey: false,
     keyCode: -1,
     mouseButton: -1,
-    type: event.type,
+    type: PTTEventType.UNKNOWN,
   };
 };
 
@@ -634,7 +627,9 @@ const nextKeyPressPromise = (): Promise<PTTKeyPressEvent> => {
 
 const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
   return new Promise((resolve) => {
-    uIOhook.once('keyup', (event) => {
+    // Deliberatly 'mousedown' else we fire on the initial click
+    // and always get mouse button 1.
+    uIOhook.once('mousedown', (event) => {
       resolve(convertUioHookEvent(event));
     });
   });
@@ -642,6 +637,30 @@ const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
 
 const getPromiseBomb = (fuse: number, reason: string) => {
   return new Promise((_resolve, reject) => setTimeout(reject, fuse, reason));
+};
+
+const buildClipMetadata = (initial: Metadata, duration: number) => {
+  const final = initial;
+  final.duration = duration;
+  final.parentCategory = initial.category;
+  final.category = VideoCategory.Clips;
+  final.protected = true;
+  return final;
+};
+
+const getOBSFormattedDate = (date: Date) => {
+  const toFixedDigits = (n: number, d: number) =>
+    n.toLocaleString('en-US', { minimumIntegerDigits: d, useGrouping: false });
+
+  const day = toFixedDigits(date.getDay(), 2);
+  const month = toFixedDigits(date.getMonth(), 2);
+  const year = toFixedDigits(date.getFullYear(), 4);
+
+  const secs = toFixedDigits(date.getSeconds(), 2);
+  const mins = toFixedDigits(date.getMinutes(), 2);
+  const hours = toFixedDigits(date.getHours(), 2);
+
+  return `${year}-${month}-${day} ${hours}-${mins}-${secs}`;
 };
 
 export {
@@ -662,8 +681,6 @@ export {
   getThumbnailFileNameForVideo,
   getAssetPath,
   getWowFlavour,
-  updateRecStatus,
-  updateMicStatus,
   validateFlavour,
   isPushToTalkHotkey,
   nextKeyPressPromise,
@@ -671,4 +688,6 @@ export {
   convertUioHookEvent,
   getPromiseBomb,
   addCrashToUI,
+  buildClipMetadata,
+  getOBSFormattedDate,
 };

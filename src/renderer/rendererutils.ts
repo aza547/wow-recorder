@@ -19,7 +19,7 @@ import {
 } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
 import {
-  Colors,
+  MarkerColors,
   DeathMarkers,
   Encoder,
   EncoderType,
@@ -34,7 +34,7 @@ import {
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
-import { PTTKeyPressEvent, UiohookModifierKeyMap } from 'types/KeyTypesUIOHook';
+import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'main/configSchema';
 
 const getVideoResult = (video: RendererVideo): boolean => {
@@ -71,9 +71,9 @@ const getOwnDeathMarkers = (video: RendererVideo) => {
     let color: string;
 
     if (death.friendly) {
-      color = 'red';
+      color = MarkerColors.LOSS;
     } else {
-      color = Colors.UNCOMMON;
+      color = MarkerColors.WIN;
     }
 
     if (!player || !player._name) {
@@ -86,7 +86,6 @@ const getOwnDeathMarkers = (video: RendererVideo) => {
         text: markerText,
         color,
         duration: 5,
-        class: 'vjs-marker',
       });
     }
   });
@@ -112,9 +111,9 @@ const getAllDeathMarkers = (video: RendererVideo) => {
     let color: string;
 
     if (death.friendly) {
-      color = 'red';
+      color = MarkerColors.LOSS;
     } else {
-      color = Colors.UNCOMMON;
+      color = MarkerColors.WIN;
     }
 
     videoMarkers.push({
@@ -122,7 +121,6 @@ const getAllDeathMarkers = (video: RendererVideo) => {
       text: markerText,
       color,
       duration: 5,
-      class: 'vjs-marker',
     });
   });
 
@@ -146,10 +144,10 @@ const getRoundMarkers = (video: RendererVideo) => {
 
     if (segment.result) {
       markerText = `${markerText} (Win)`;
-      color = Colors.UNCOMMON;
+      color = MarkerColors.WIN;
     } else {
       markerText = `${markerText} (Loss)`;
-      color = 'red';
+      color = MarkerColors.LOSS;
     }
 
     // Older solo shuffle segments don't have a duration.
@@ -160,7 +158,6 @@ const getRoundMarkers = (video: RendererVideo) => {
       text: markerText,
       color,
       duration,
-      class: 'vjs-marker-hatched',
     });
   });
 
@@ -206,9 +203,8 @@ const getEncounterMarkers = (video: RendererVideo) => {
       videoMarkers.push({
         time: segment.timestamp,
         text: markerText,
-        color: Colors.EPIC,
+        color: MarkerColors.ENCOUNTER,
         duration: segmentDuration,
-        class: 'vjs-marker-hatched',
       });
     }
   );
@@ -298,54 +294,10 @@ const getEmptyState = () => {
     [VideoCategory.MythicPlus]: [],
     [VideoCategory.Raids]: [],
     [VideoCategory.Battlegrounds]: [],
+    [VideoCategory.Clips]: [],
   };
 
   return videoState;
-};
-
-/**
- * Get a result text appropriate for the video category that signifies a
- * win or a loss, of some sort.
- */
-const getVideoResultText = (video: RendererVideo): string => {
-  const {
-    category,
-    result,
-    upgradeLevel,
-    soloShuffleRoundsWon,
-    soloShuffleRoundsPlayed,
-  } = video;
-
-  if (category === VideoCategory.MythicPlus && result) {
-    if (upgradeLevel === undefined) {
-      return '';
-    }
-
-    return String(upgradeLevel);
-  }
-
-  if (category === VideoCategory.MythicPlus && !result) {
-    return 'Depleted';
-  }
-
-  if (category === VideoCategory.Raids) {
-    return result ? 'Kill' : 'Wipe';
-  }
-
-  if (category === VideoCategory.SoloShuffle) {
-    if (
-      soloShuffleRoundsWon === undefined ||
-      soloShuffleRoundsPlayed === undefined
-    ) {
-      return '';
-    }
-
-    const wins = soloShuffleRoundsWon;
-    const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
-    return `${wins} - ${losses}`;
-  }
-
-  return result ? 'Win' : 'Loss';
 };
 
 const getInstanceDifficultyText = (video: RendererVideo) => {
@@ -399,29 +351,49 @@ const getDungeonName = (video: RendererVideo) => {
 };
 
 const isMythicPlusUtil = (video: RendererVideo) => {
-  const { category } = video;
-  return category === VideoCategory.MythicPlus;
+  const { category, parentCategory } = video;
+
+  return (
+    category === VideoCategory.MythicPlus ||
+    parentCategory === VideoCategory.MythicPlus
+  );
 };
 
 const isRaidUtil = (video: RendererVideo) => {
-  const { category } = video;
-  return category === VideoCategory.Raids;
+  const { category, parentCategory } = video;
+
+  return (
+    category === VideoCategory.Raids || parentCategory === VideoCategory.Raids
+  );
 };
 
 const isBattlegroundUtil = (video: RendererVideo) => {
-  const { category } = video;
-  return category === VideoCategory.Battlegrounds;
+  const { category, parentCategory } = video;
+
+  return (
+    category === VideoCategory.Battlegrounds ||
+    parentCategory === VideoCategory.Battlegrounds
+  );
 };
 
 const isSoloShuffleUtil = (video: RendererVideo) => {
-  const { category } = video;
-  return category === VideoCategory.SoloShuffle;
+  const { category, parentCategory } = video;
+
+  return (
+    category === VideoCategory.SoloShuffle ||
+    parentCategory === VideoCategory.SoloShuffle
+  );
 };
 
 const isArenaUtil = (video: RendererVideo) => {
   return (
     !isMythicPlusUtil(video) && !isRaidUtil(video) && !isBattlegroundUtil(video)
   );
+};
+
+const isClipUtil = (video: RendererVideo) => {
+  const { category } = video;
+  return category === VideoCategory.Clips;
 };
 
 const getResultColor = (video: RendererVideo) => {
@@ -693,52 +665,6 @@ const convertDeathMarkersToNum = (d: DeathMarkers) => {
   return 0;
 };
 
-const getMarkerDiv = (
-  marker: VideoMarker,
-  videoDuration: number,
-  progressBarWidth: number
-) => {
-  const markerDiv = document.createElement('div');
-  markerDiv.className = marker.class;
-
-  const markerPosition = (progressBarWidth * marker.time) / videoDuration;
-  let markerWidth = (progressBarWidth * marker.duration) / videoDuration;
-
-  // If the marker is going to hang of the end of the bar, cut it short.
-  if (markerWidth + markerPosition > progressBarWidth) {
-    markerWidth = progressBarWidth - markerPosition;
-  }
-
-  markerDiv.setAttribute(
-    'style',
-    `left: ${markerPosition}px; background-color: ${marker.color}; width: ${markerWidth}px`
-  );
-
-  markerDiv.setAttribute('title', marker.text);
-
-  return markerDiv;
-};
-
-const addMarkerDiv = (marker: HTMLDivElement) => {
-  const progressBar = document.querySelector('.vjs-progress-holder');
-
-  if (!progressBar) {
-    return;
-  }
-
-  progressBar.appendChild(marker);
-};
-
-const removeMarkerDiv = (marker: HTMLDivElement) => {
-  const parent = marker.parentNode;
-
-  if (parent === null) {
-    return;
-  }
-
-  parent.removeChild(marker);
-};
-
 const getPTTKeyPressEventFromConfig = (
   config: ConfigurationSchema
 ): PTTKeyPressEvent => {
@@ -747,6 +673,11 @@ const getPTTKeyPressEventFromConfig = (
   const shift = config.pushToTalkModifiers.includes('shift');
   const alt = config.pushToTalkModifiers.includes('alt');
 
+  const type =
+    config.pushToTalkKey > 0
+      ? PTTEventType.EVENT_KEY_PRESSED
+      : PTTEventType.EVENT_MOUSE_PRESSED;
+
   return {
     altKey: alt,
     ctrlKey: ctrl,
@@ -754,23 +685,12 @@ const getPTTKeyPressEventFromConfig = (
     shiftKey: shift,
     keyCode: config.pushToTalkKey,
     mouseButton: config.pushToTalkMouseButton,
+    type,
   };
 };
 
 const getKeyByValue = (object: any, value: any) => {
   return Object.keys(object).find((key) => object[key] === value);
-};
-
-const isKeyModifier = (event: PTTKeyPressEvent) => {
-  if (event.keyCode < 0) {
-    return false;
-  }
-
-  const isModifierKey = Object.values(UiohookModifierKeyMap).includes(
-    event.keyCode
-  );
-
-  return isModifierKey;
 };
 
 const getKeyModifiersString = (keyevent: PTTKeyPressEvent) => {
@@ -804,6 +724,68 @@ const getNextKeyOrMouseEvent = async (): Promise<PTTKeyPressEvent> => {
   return ipc.invoke('getNextKeyPress', []);
 };
 
+const secToMmSs = (s: number) => {
+  const rounded = Math.round(s);
+  const mins = Math.floor(rounded / 60);
+  const secs = rounded - mins * 60;
+
+  const ss = secs.toLocaleString('en-US', {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+
+  const mm = mins.toLocaleString('en-US', {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+
+  return `${mm}:${ss}`;
+};
+
+/**
+ * Get a result text appropriate for the video category that signifies a
+ * win or a loss, of some sort.
+ */
+const getVideoResultText = (video: RendererVideo): string => {
+  const {
+    result,
+    upgradeLevel,
+    soloShuffleRoundsWon,
+    soloShuffleRoundsPlayed,
+  } = video;
+
+  if (isMythicPlusUtil(video) && result) {
+    if (upgradeLevel === undefined) {
+      return '';
+    }
+
+    return String(upgradeLevel);
+  }
+
+  if (isMythicPlusUtil(video) && !result) {
+    return 'Depleted';
+  }
+
+  if (isRaidUtil(video)) {
+    return result ? 'Kill' : 'Wipe';
+  }
+
+  if (isSoloShuffleUtil(video)) {
+    if (
+      soloShuffleRoundsWon === undefined ||
+      soloShuffleRoundsPlayed === undefined
+    ) {
+      return '';
+    }
+
+    const wins = soloShuffleRoundsWon;
+    const losses = soloShuffleRoundsPlayed - soloShuffleRoundsWon;
+    return `${wins} - ${losses}`;
+  }
+
+  return result ? 'Win' : 'Loss';
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -822,6 +804,7 @@ export {
   isBattlegroundUtil,
   isSoloShuffleUtil,
   isArenaUtil,
+  isClipUtil,
   getResultColor,
   getPlayerName,
   getPlayerRealm,
@@ -843,14 +826,11 @@ export {
   getOwnDeathMarkers,
   getRoundMarkers,
   getEncounterMarkers,
-  getMarkerDiv,
-  addMarkerDiv,
-  removeMarkerDiv,
   isHighRes,
   getPTTKeyPressEventFromConfig,
   getKeyByValue,
-  isKeyModifier,
   blurAll,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
+  secToMmSs,
 };

@@ -46,9 +46,9 @@ interface ICategoryRecordingSettings {
  * `configKey`:    The configuration key name that specifies if we're allowed
  *                 to record content from that particular category.
  */
-const categoryRecordingSettings: {
-  [key in VideoCategory]: ICategoryRecordingSettings;
-} = {
+type CategoryRecordingSettingsBase = { [key in VideoCategory]: ICategoryRecordingSettings };
+
+const categoryRecordingSettings: Omit<CategoryRecordingSettingsBase, VideoCategory.Clips> = {
   [VideoCategory.TwoVTwo]: {
     configKey: 'recordTwoVTwo',
   },

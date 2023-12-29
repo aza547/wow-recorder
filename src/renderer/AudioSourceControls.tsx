@@ -29,7 +29,6 @@ import {
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
   getPTTKeyPressEventFromConfig,
-  isKeyModifier,
   standardizeAudioDeviceNames,
 } from './rendererutils';
 import { PTTKeyPressEvent, UiohookKeyMap } from '../types/KeyTypesUIOHook';

@@ -18,7 +18,8 @@ export type Channels =
   | 'selectPath'
   | 'settingsChange'
   | 'overlay'
-  | 'getNextKeyPress';
+  | 'getNextKeyPress'
+  | 'clip';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
