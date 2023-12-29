@@ -188,7 +188,7 @@ export default abstract class LogHandler {
     if (!allowed) {
       console.info('[LogHandler] Not configured to record', category);
       return;
-    } 
+    }
 
     console.log(
       `[LogHandler] Start recording a video for category: ${category}`

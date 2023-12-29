@@ -72,6 +72,10 @@ const categoryRecordingSettings: {
   },
   [VideoCategory.Battlegrounds]: {
     configKey: 'recordBattlegrounds',
+  },  
+  [VideoCategory.Clips]: {
+    // Obvious nonsense, but keeps linter happy.
+    configKey: 'recordBattlegrounds', 
   },
 };
 

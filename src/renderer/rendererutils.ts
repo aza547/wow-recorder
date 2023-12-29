@@ -749,7 +749,6 @@ const secToMmSs = (s: number) => {
  */
 const getVideoResultText = (video: RendererVideo): string => {
   const {
-    category,
     result,
     upgradeLevel,
     soloShuffleRoundsWon,

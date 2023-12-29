@@ -48,7 +48,6 @@ import {
   ObsBaseConfig,
   ObsOverlayConfig,
   ObsVideoConfig,
-  RecStatus,
   TAudioSourceType,
   TPreviewPosition,
 } from './types';
