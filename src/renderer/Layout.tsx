@@ -22,7 +22,6 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import TvIcon from '@mui/icons-material/Tv';
 import ClipIcon from '../../assets/icon/clip-icon.png';
 import { VideoPlayer } from './VideoPlayer';
-import 'videojs-hotkeys';
 import { VideoCategory } from '../types/VideoCategory';
 import VideoButton from './VideoButton';
 import VideoFilter from './VideoFilter';
