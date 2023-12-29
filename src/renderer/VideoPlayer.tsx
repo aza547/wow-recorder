@@ -5,7 +5,7 @@ import {
   VideoMarker,
   VideoPlayerSettings,
 } from 'main/types';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ConfigurationSchema } from 'main/configSchema';
 import { Box, Button, Slider, Tooltip, Typography } from '@mui/material';
 import { Resizable } from 're-resizable';
@@ -76,6 +76,10 @@ export const VideoPlayer = (props: IProps) => {
   const [clipStartValue, setClipStartValue] = useState<number>(0);
   const [clipStopValue, setClipStopValue] = useState<number>(100);
 
+  // This exists to force a re-render on resizing of the window, so that
+  // the coloring of the progress slider remains correct across a resize.
+  const [, setWidth] = useState<number>(0);
+
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
   // variable in the main process that we update and retrieve, but is not written
@@ -87,27 +91,9 @@ export const VideoPlayer = (props: IProps) => {
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
-  // Inform the main process of a volume or muted state change.
-  useEffect(() => {
-    const soundSettings: VideoPlayerSettings = { volume, muted };
-    ipc.sendMessage('videoPlayerSettings', ['set', soundSettings]);
-  }, [volume, muted]);
-
-  //         hotkeys: {
-  //           seekStep: 10,
-  //           enableModifiersForNumbers: false,
-  //           forwardKey(event: { code: string }) {
-  //             return event.code === 'KeyL' || event.code === 'ArrowRight';
-  //           },
-  //           rewindKey(event: { code: string }) {
-  //             return event.code === 'KeyJ' || event.code === 'ArrowLeft';
-  //           },
-  //           playPauseKey(event: { code: string }) {
-  //             return event.code === 'KeyK' || event.code === 'Space';
-  //           },
-  //         },
-  //       },
-
+  /**
+   * Return a death marker appropriate for the MUI slider component.
+   */
   const getDeathMark = (marker: VideoMarker): SliderMark => {
     return {
       value: marker.time,
@@ -174,7 +160,7 @@ export const VideoPlayer = (props: IProps) => {
   /**
    * Build a linear gradient CSS property from a list of video makers.
    * Returned string is something of the form:
-   *   "linear-gradient(90deg, red 0%, red 25%, ..., grey 75%, grey 100%)".
+   *   "linear-gradient(90deg, rga(1, 1, 1, 1) 0px, rga(1, 1, 1, 1) 10px, ... max)".
    */
   const markersToLinearGradient = (
     markers: VideoMarker[],
@@ -215,7 +201,7 @@ export const VideoPlayer = (props: IProps) => {
     // last gradient to continue to the end.
     if (ptr !== duration) {
       const start = Math.round(ptr * pxToSecRatio);
-      gradients.push(`${fillerColor} ${start}%`);
+      gradients.push(`${fillerColor} ${start}px`);
       gradients.push(`${fillerColor} ${sliderWidth}px`);
     }
 
@@ -229,8 +215,8 @@ export const VideoPlayer = (props: IProps) => {
    * and round (Solo Shuffle only) markers.
    */
   const getRailGradient = () => {
-    const activeMarkers = getActiveMarkers();
     const fillerColor = '#5A2F27';
+    const activeMarkers = getActiveMarkers();
     return markersToLinearGradient(activeMarkers, fillerColor);
   };
 
@@ -239,9 +225,17 @@ export const VideoPlayer = (props: IProps) => {
    * and round (Solo Shuffle only) markers.
    */
   const getTrackGradient = () => {
+    const fillerColor = '#BB4420';
     const activeMarkers = getActiveMarkers();
-    const fillerColor = '#bb4420';
-    return markersToLinearGradient(activeMarkers, fillerColor);
+
+    // Lower the opacity of everything in the linear gradient otherwise it
+    // looks out of place on the slider track. This doesn't need to happen
+    // on the slider rail as it has blanket low opacity. Makes a replacement
+    // like: "rga(0, 0, 0, 1) -> rga(0, 0, 0, 0.4)"
+    return markersToLinearGradient(activeMarkers, fillerColor).replace(
+      /, 1\)/g,
+      ', 0.4)'
+    );
   };
 
   /**
@@ -401,6 +395,7 @@ export const VideoPlayer = (props: IProps) => {
     return (
       <Slider
         ref={progressSlider}
+        // onKeyDown={}
         sx={{
           m: 2,
           width: '100%',
@@ -663,6 +658,56 @@ export const VideoPlayer = (props: IProps) => {
       </Box>
     );
   };
+
+  /**
+   * Handle a key down event. It would be nice to pass a "onKeyDown" react
+   * callback to the player / controls box, but the player seems to swallow
+   * such events, so instead we do this.
+   */
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!player.current) {
+      return;
+    }
+
+    if (e.key === 'k') {
+      togglePlaying();
+    }
+
+    if (e.key === 'j' || e.key === 'ArrowLeft') {
+      const current = player.current.getCurrentTime();
+      player.current.seekTo(current - 5, 'seconds');
+    }
+
+    if (e.key === 'l' || e.key === 'ArrowRight') {
+      const current = player.current.getCurrentTime();
+      player.current.seekTo(current + 5, 'seconds');
+    }
+  };
+
+  // Listener for keydown events when the player is open.
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // This hook updates some state to force a re-render on window resize,
+  // otherwise resizing the window (and hence the progress bar) causes
+  // all the makers to be offset until next render.
+  useLayoutEffect(() => {
+    const updateWidth = () => {
+      setWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
+
+  // Inform the main process of a volume or muted state change.
+  useEffect(() => {
+    const soundSettings: VideoPlayerSettings = { volume, muted };
+    ipc.sendMessage('videoPlayerSettings', ['set', soundSettings]);
+  }, [volume, muted]);
 
   return (
     <>

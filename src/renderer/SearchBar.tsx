@@ -45,6 +45,8 @@ const SearchBar = (props: IProps) => {
       id="search-bar"
       value={searchText}
       onChange={debouncedFilter}
+      // Need this so we don't trigger VideoPlayer keydown events
+      onKeyDown={(e) => e.stopPropagation()}
       sx={{
         '& .MuiOutlinedInput-root': {
           '&.Mui-focused fieldset': { borderColor: '#bb4220' },

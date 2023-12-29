@@ -19,7 +19,7 @@ import {
 } from 'main/constants';
 import { TimelineSegmentType } from 'main/keystone';
 import {
-  Colors,
+  MarkerColors,
   DeathMarkers,
   Encoder,
   EncoderType,
@@ -72,9 +72,9 @@ const getOwnDeathMarkers = (video: RendererVideo) => {
     let color: string;
 
     if (death.friendly) {
-      color = 'red';
+      color = MarkerColors.LOSS;
     } else {
-      color = Colors.UNCOMMON;
+      color = MarkerColors.WIN;
     }
 
     if (!player || !player._name) {
@@ -112,9 +112,9 @@ const getAllDeathMarkers = (video: RendererVideo) => {
     let color: string;
 
     if (death.friendly) {
-      color = 'red';
+      color = MarkerColors.LOSS;
     } else {
-      color = Colors.UNCOMMON;
+      color = MarkerColors.WIN;
     }
 
     videoMarkers.push({
@@ -145,10 +145,10 @@ const getRoundMarkers = (video: RendererVideo) => {
 
     if (segment.result) {
       markerText = `${markerText} (Win)`;
-      color = Colors.UNCOMMON;
+      color = MarkerColors.WIN;
     } else {
       markerText = `${markerText} (Loss)`;
-      color = 'red';
+      color = MarkerColors.LOSS;
     }
 
     // Older solo shuffle segments don't have a duration.
@@ -204,7 +204,7 @@ const getEncounterMarkers = (video: RendererVideo) => {
       videoMarkers.push({
         time: segment.timestamp,
         text: markerText,
-        color: Colors.EPIC,
+        color: MarkerColors.ENCOUNTER,
         duration: segmentDuration,
       });
     }

@@ -132,23 +132,6 @@ export default abstract class LogHandler {
 
     const result = Boolean(parseInt(line.arg(5), 10));
     this.activity.end(line.date(), result);
-
-    if (this.activity.category === VideoCategory.Raids) {
-      const metadata = this.activity.getMetadata(); // can throw? 
-      const duration = metadata.duration + metadata.overrun;
-      const minDuration = this.cfg.get<number>('minEncounterDuration');
-      const notLongEnough = duration < minDuration;
-
-      if (notLongEnough) {
-        // ??? Does this work? 
-        console.info('[LogHandler] Discarding raid encounter, not long enough');
-        this.activity = undefined;
-        await this.recorder.stop();
-        this.poller.start();
-        return;
-      }
-    }
-
     await this.endActivity();
   }
 
@@ -205,7 +188,7 @@ export default abstract class LogHandler {
     if (!allowed) {
       console.info('[LogHandler] Not configured to record', category);
       return;
-    }
+    } 
 
     console.log(
       `[LogHandler] Start recording a video for category: ${category}`
@@ -271,6 +254,16 @@ export default abstract class LogHandler {
       const metadata = lastActivity.getMetadata();
       const duration = metadata.duration + metadata.overrun;
       const suffix = lastActivity.getFileName();
+
+      if (lastActivity.category === VideoCategory.Raids) {
+        const minDuration = this.cfg.get<number>('minEncounterDuration');
+        const notLongEnough = duration < minDuration;
+
+        if (notLongEnough) {
+          console.info('[LogHandler] Discarding raid encounter, too short');
+          return;
+        }
+      }
 
       const queueItem: VideoQueueItem = {
         source: videoFile,
