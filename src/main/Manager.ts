@@ -326,6 +326,7 @@ export default class Manager {
    * Send a message to the frontend to update the recorder status icon.
    */
   private refreshRecStatus(status: RecStatus, msg = '') {
+    console.info('[Manager] Updating recorder status with:', status, msg);
     this.mainWindow.webContents.send('updateRecStatus', status, msg);
   }
 
@@ -333,6 +334,7 @@ export default class Manager {
    * Send a message to the frontend to update the mic status icon.
    */
   private refreshMicStatus(status: MicStatus) {
+    console.info('[Manager] Updating mic status with:', status);
     this.mainWindow.webContents.send('updateMicStatus', status);
   }
 
