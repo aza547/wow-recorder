@@ -17,11 +17,9 @@ import {
   OurDisplayType,
   RendererVideo,
   RendererVideoState,
-  RecStatus,
   FlavourConfig,
   ObsAudioConfig,
   CrashData,
-  MicStatus,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -482,26 +480,6 @@ const getWowFlavour = (pathSpec: string): string => {
 };
 
 /**
- * Updates the recorder status icon.
- */
-const updateRecStatus = (
-  mainWindow: BrowserWindow,
-  status: RecStatus,
-  reason = ''
-) => {
-  console.info('[Util] Updating recorder status with:', status, reason);
-  mainWindow.webContents.send('updateRecStatus', status, reason);
-};
-
-/**
- * Updates the mic status icon. Deliberately don't log here as this can fire
- * alot if using PTT.
- */
-const updateMicStatus = (mainWindow: BrowserWindow, status: MicStatus) => {
-  mainWindow.webContents.send('updateMicStatus', status);
-};
-
-/**
  * Updates the status icon for the application.
  * @param status the status number
  */
@@ -687,8 +665,6 @@ export {
   getThumbnailFileNameForVideo,
   getAssetPath,
   getWowFlavour,
-  updateRecStatus,
-  updateMicStatus,
   validateFlavour,
   isPushToTalkHotkey,
   nextKeyPressPromise,

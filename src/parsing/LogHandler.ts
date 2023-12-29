@@ -1,4 +1,5 @@
 import { BrowserWindow } from 'electron';
+import { EventEmitter } from 'stream';
 import VideoProcessQueue from '../main/VideoProcessQueue';
 import Poller from '../utils/Poller';
 import Combatant from '../main/Combatant';
@@ -6,12 +7,7 @@ import CombatLogWatcher from './CombatLogWatcher';
 import ConfigService from '../main/ConfigService';
 import { instanceDifficulty } from '../main/constants';
 import Recorder from '../main/Recorder';
-import {
-  Flavour,
-  PlayerDeathType,
-  RecStatus,
-  VideoQueueItem,
-} from '../main/types';
+import { Flavour, PlayerDeathType, VideoQueueItem } from '../main/types';
 import Activity from '../activitys/Activity';
 import RaidEncounter from '../activitys/RaidEncounter';
 
@@ -25,7 +21,6 @@ import {
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
 import { allowRecordCategory, getFlavourConfig } from '../utils/configUtils';
-import { updateRecStatus } from '../main/util';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -34,7 +29,7 @@ import { updateRecStatus } from '../main/util';
  * If you need something flavour specific then put it in the appropriate
  * subclass; i.e. RetailLogHandler or ClassicLogHandler.
  */
-export default abstract class LogHandler {
+export default abstract class LogHandler extends EventEmitter {
   protected recorder: Recorder;
 
   public combatLogWatcher: CombatLogWatcher;
@@ -68,6 +63,8 @@ export default abstract class LogHandler {
     logPath: string,
     dataTimeout: number
   ) {
+    super();
+
     this.mainWindow = mainWindow;
     this.recorder = recorder;
 
@@ -197,7 +194,7 @@ export default abstract class LogHandler {
     try {
       this.activity = activity;
       await this.recorder.start();
-      updateRecStatus(this.mainWindow, RecStatus.Recording);
+      this.emit('state-change');
     } catch (error) {
       console.error('[LogHandler] Error starting activity', String(error));
       this.activity = undefined;
@@ -228,7 +225,7 @@ export default abstract class LogHandler {
     const { overrun } = lastActivity;
 
     if (overrun > 0) {
-      updateRecStatus(this.mainWindow, RecStatus.Overruning);
+      this.emit('state-change');
       console.info('[LogHandler] Awaiting overrun:', overrun);
       await new Promise((resolve) => setTimeout(resolve, 1000 * overrun));
       console.info('[LogHandler] Done awaiting overrun');
