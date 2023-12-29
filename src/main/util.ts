@@ -9,7 +9,7 @@ import {
   UiohookKeyboardEvent,
   UiohookMouseEvent,
 } from 'uiohook-napi';
-import { PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
+import { PTTEventType, PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
 import {
   Metadata,
   FileInfo,
@@ -522,7 +522,7 @@ const isPushToTalkHotkey = (
     (keyCode > 0 && keyCode === pushToTalkKey) ||
     (mouseButton > 0 && mouseButton === pushToTalkMouseButton);
 
-  if (event.type === EventType.EVENT_KEY_RELEASED) {
+  if (event.type === PTTEventType.EVENT_KEY_RELEASED) {
     // If they release the button we ignore modifier config. That covers mainline
     // use of regular key and modifier but also naked modifier key as the PTT hoykey
     // which doesnt show a modifier on release.
@@ -546,7 +546,8 @@ const isPushToTalkHotkey = (
 };
 
 const convertUioHookKeyPressEvent = (
-  event: UiohookKeyboardEvent
+  event: UiohookKeyboardEvent,
+  type: PTTEventType
 ): PTTKeyPressEvent => {
   return {
     altKey: event.altKey,
@@ -555,12 +556,13 @@ const convertUioHookKeyPressEvent = (
     shiftKey: event.shiftKey,
     keyCode: event.keycode,
     mouseButton: -1,
-    type: event.type,
+    type,
   };
 };
 
 const convertUioHookMousePressEvent = (
-  event: UiohookMouseEvent
+  event: UiohookMouseEvent,
+  type: PTTEventType
 ): PTTKeyPressEvent => {
   return {
     altKey: event.altKey,
@@ -569,7 +571,7 @@ const convertUioHookMousePressEvent = (
     shiftKey: event.shiftKey,
     keyCode: -1,
     mouseButton: event.button as number,
-    type: event.type,
+    type,
   };
 };
 
@@ -577,19 +579,31 @@ const convertUioHookEvent = (
   event: UiohookKeyboardEvent | UiohookMouseEvent
 ): PTTKeyPressEvent => {
   if (event.type === EventType.EVENT_KEY_PRESSED) {
-    return convertUioHookKeyPressEvent(event as UiohookKeyboardEvent);
+    return convertUioHookKeyPressEvent(
+      event as UiohookKeyboardEvent,
+      PTTEventType.EVENT_MOUSE_PRESSED
+    );
   }
 
   if (event.type === EventType.EVENT_KEY_RELEASED) {
-    return convertUioHookKeyPressEvent(event as UiohookKeyboardEvent);
+    return convertUioHookKeyPressEvent(
+      event as UiohookKeyboardEvent,
+      PTTEventType.EVENT_KEY_RELEASED
+    );
   }
 
   if (event.type === EventType.EVENT_MOUSE_PRESSED) {
-    return convertUioHookMousePressEvent(event as UiohookMouseEvent);
+    return convertUioHookMousePressEvent(
+      event as UiohookMouseEvent,
+      PTTEventType.EVENT_MOUSE_PRESSED
+    );
   }
 
   if (event.type === EventType.EVENT_MOUSE_RELEASED) {
-    return convertUioHookMousePressEvent(event as UiohookMouseEvent);
+    return convertUioHookMousePressEvent(
+      event as UiohookMouseEvent,
+      PTTEventType.EVENT_MOUSE_RELEASED
+    );
   }
 
   return {
@@ -599,7 +613,7 @@ const convertUioHookEvent = (
     metaKey: false,
     keyCode: -1,
     mouseButton: -1,
-    type: event.type,
+    type: PTTEventType.UNKNOWN,
   };
 };
 
@@ -613,7 +627,9 @@ const nextKeyPressPromise = (): Promise<PTTKeyPressEvent> => {
 
 const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
   return new Promise((resolve) => {
-    uIOhook.once('keyup', (event) => {
+    // Deliberatly 'mousedown' else we fire on the initial click
+    // and always get mouse button 1.
+    uIOhook.once('mousedown', (event) => {
       resolve(convertUioHookEvent(event));
     });
   });

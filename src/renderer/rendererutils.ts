@@ -34,9 +34,8 @@ import {
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
-import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'main/configSchema';
-import { EventType } from 'uiohook-napi';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -676,8 +675,8 @@ const getPTTKeyPressEventFromConfig = (
 
   const type =
     config.pushToTalkKey > 0
-      ? EventType.EVENT_KEY_PRESSED
-      : EventType.EVENT_MOUSE_CLICKED;
+      ? PTTEventType.EVENT_KEY_PRESSED
+      : PTTEventType.EVENT_MOUSE_PRESSED;
 
   return {
     altKey: alt,
