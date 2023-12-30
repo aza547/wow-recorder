@@ -182,6 +182,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   };
 
   const getVideoSelection = () => {
+    const isClips = category === VideoCategory.Clips;
+
     return (
       <>
         <Box
@@ -193,13 +195,15 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             borderBottom: '1px solid black',
           }}
         >
-          <Box sx={{ m: 1 }}>
-            <VideoMarkerToggles
-              category={category}
-              config={config}
-              setConfig={setConfig}
-            />
-          </Box>
+          {!isClips && (
+            <Box sx={{ m: 1 }}>
+              <VideoMarkerToggles
+                category={category}
+                config={config}
+                setConfig={setConfig}
+              />
+            </Box>
+          )}
           <Box sx={{ flex: 1, mr: 1, my: 1 }}>
             <SearchBar navigation={navigation} setAppState={setAppState} />
           </Box>
