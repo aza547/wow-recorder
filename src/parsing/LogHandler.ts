@@ -30,15 +30,17 @@ import { allowRecordCategory, getFlavourConfig } from '../utils/configUtils';
  * subclass; i.e. RetailLogHandler or ClassicLogHandler.
  */
 export default abstract class LogHandler extends EventEmitter {
-  protected recorder: Recorder;
-
   public combatLogWatcher: CombatLogWatcher;
+
+  public activity?: Activity;
+
+  public overrunning = false;
+
+  protected recorder: Recorder;
 
   protected player: Combatant | undefined;
 
   protected cfg: ConfigService = ConfigService.getInstance();
-
-  public activity?: Activity;
 
   protected poller: Poller = Poller.getInstance(getFlavourConfig(this.cfg));
 
@@ -50,11 +52,6 @@ export default abstract class LogHandler extends EventEmitter {
    * metadata and saving it to the final location for display in the GUI.
    */
   protected videoProcessQueue: VideoProcessQueue;
-
-  /**
-   * Are we currently overruning?
-   */
-  public overrunning = false;
 
   constructor(
     mainWindow: BrowserWindow,
@@ -123,7 +120,7 @@ export default abstract class LogHandler extends EventEmitter {
     console.debug('[LogHandler] Handling ENCOUNTER_END line:', line);
 
     if (!this.activity) {
-      console.error('[LogHandler] Encounter stop with no active encounter');
+      console.info('[LogHandler] Encounter stop with no active encounter');
       return;
     }
 
@@ -313,9 +310,7 @@ export default abstract class LogHandler extends EventEmitter {
 
   protected async zoneChangeStop(line: LogLine) {
     if (!this.activity) {
-      console.error(
-        '[RetailLogHandler] No active activity on force zone change stop'
-      );
+      console.error('[LogHandler] No active activity on zone change stop');
 
       return;
     }

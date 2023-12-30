@@ -160,7 +160,7 @@ export const VideoPlayer = (props: IProps) => {
   /**
    * Build a linear gradient CSS property from a list of video makers.
    * Returned string is something of the form:
-   *   "linear-gradient(90deg, rga(1, 1, 1, 1) 0px, rga(1, 1, 1, 1) 10px, ... max)".
+   *   "linear-gradient(90deg, rgba(1, 1, 1, 1) 0px, rgba(1, 1, 1, 1) 10px, ... max)".
    */
   const markersToLinearGradient = (
     markers: VideoMarker[],
@@ -231,7 +231,7 @@ export const VideoPlayer = (props: IProps) => {
     // Lower the opacity of everything in the linear gradient otherwise it
     // looks out of place on the slider track. This doesn't need to happen
     // on the slider rail as it has blanket low opacity. Makes a replacement
-    // like: "rga(0, 0, 0, 1) -> rga(0, 0, 0, 0.4)"
+    // like: "rgba(0, 0, 0, 1) -> rgba(0, 0, 0, 0.4)"
     return markersToLinearGradient(activeMarkers, fillerColor).replace(
       /, 1\)/g,
       ', 0.4)'
