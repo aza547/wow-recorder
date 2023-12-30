@@ -196,7 +196,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           }}
         >
           {!isClips && (
-            <Box sx={{ m: 1 }}>
+            <Box sx={{ ml: 1, my: 1 }}>
               <VideoMarkerToggles
                 category={category}
                 config={config}
@@ -204,7 +204,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
               />
             </Box>
           )}
-          <Box sx={{ flex: 1, mr: 1, my: 1 }}>
+          <Box sx={{ flex: 1, m: 1, my: 1 }}>
             <SearchBar navigation={navigation} setAppState={setAppState} />
           </Box>
         </Box>

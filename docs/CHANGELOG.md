@@ -5,10 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
 ### Changed
 ### Added
-- [Issue 463](https://github.com/aza547/wow-recorder/issues/463) - Added a video clipping feature, includes a reworked to the video player controls and timeline markers.
+### Fixed
+
+## [3.23.0] - 2023-12-30
+### Added
+- [Issue 463](https://github.com/aza547/wow-recorder/issues/463) - Video clipping feature, includes a reworked to the video player controls and timeline markers.
 
 ### Fixed
 - [Issue 459](https://github.com/aza547/wow-recorder/issues/459) - Fix a bug where we didn't respect the content type settings.
