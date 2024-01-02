@@ -36,24 +36,24 @@ const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
 };
 
 const getStorageConfig = (cfg: ConfigService): StorageConfig => {
-  const storagePath = cfg.getPath('storagePath');
-  let bufferPath: string;
-
-  if (cfg.get<boolean>('separateBufferPath')) {
-    bufferPath = cfg.getPath('bufferStoragePath');
-  } else {
-    bufferPath = path.join(storagePath, '.temp');
-  }
-
   return {
     storagePath: cfg.get<string>('storagePath'),
-    bufferStoragePath: bufferPath,
     maxStorage: cfg.get<number>('maxStorage'),
   };
 };
 
 const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
+  const storagePath = cfg.getPath('storagePath');
+  let obsPath: string;
+
+  if (cfg.get<boolean>('separateBufferPath')) {
+    obsPath = cfg.getPath('bufferStoragePath');
+  } else {
+    obsPath = path.join(storagePath, '.temp');
+  }
+
   return {
+    obsPath,
     obsOutputResolution: cfg.get<string>('obsOutputResolution'),
     obsFPS: cfg.get<number>('obsFPS'),
     obsKBitRate: cfg.get<number>('obsKBitRate'),

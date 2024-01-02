@@ -684,8 +684,6 @@ const checkDisk = async (dir: string, req: number) => {
   const freeBytes = space.free;
   const reqBytes = req * 1024 ** 3 - inUseBytes;
 
-  console.info(freeBytes, reqBytes);
-
   if (freeBytes < reqBytes) {
     const msg = `Disk '${disk}' does not have enough free space, needs ${req}GB.`;
     console.error(`Disk check failed: ${msg}`);

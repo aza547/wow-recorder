@@ -328,11 +328,11 @@ type Encoder = {
 
 type StorageConfig = {
   storagePath: string;
-  bufferStoragePath: string;
   maxStorage: number;
 };
 
 type ObsBaseConfig = {
+  obsPath: string;
   obsOutputResolution: string;
   obsFPS: number;
   obsKBitRate: number;

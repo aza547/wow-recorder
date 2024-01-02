@@ -106,14 +106,14 @@ export default class Manager {
       current: this.storageCfg,
       get: (cfg: ConfigService) => getStorageConfig(cfg),
       validate: async (config: StorageConfig) => Manager.validateStorageCfg(config),
-      configure: async (config: StorageConfig) => this.configureStorage(config),
+      configure: async () => this.configureStorage(),
     },
     {
       name: 'obsBase',
       initial: true,
       current: this.obsBaseCfg,
       get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: async () => {},
+      validate: async (config: ObsBaseConfig) => this.validateBaseCfg(config),
       configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
     },
     {
@@ -381,14 +381,11 @@ export default class Manager {
   }
 
   /**
-   * Configure the storage settings in both the recorder and the UI. We need 
-   * to stop the recorder here as the storage path may have changed.
+   * The storage config is used by the size monitor and the frontend GUI, we
+   * don't need to make any careful changes here, just refresh the frontend.
    */
-  private async configureStorage(config: StorageConfig) {
-    await this.recorder.stop();
-    await this.recorder.configureStorage(config);
+  private async configureStorage() {
     this.mainWindow.webContents.send('refreshState');
-    this.poller.start();
   }
 
   /**
@@ -475,7 +472,7 @@ export default class Manager {
    * @throws an error describing why the config is invalid
    */
   private static async validateStorageCfg(config: StorageConfig) {
-    const { storagePath, bufferStoragePath, maxStorage } = config;
+    const { storagePath, maxStorage } = config;
 
     if (!storagePath) {
       console.warn(
@@ -495,40 +492,46 @@ export default class Manager {
       throw new Error('Storage Path is invalid.');
     }
 
-    if (!bufferStoragePath) {
+    await checkDisk(storagePath, maxStorage);
+  }
+
+  private async validateBaseCfg(config: ObsBaseConfig) {
+    const { obsPath } = config;
+    
+    if (!obsPath) {
       console.warn(
-        '[Manager] Validation failed: `bufferStoragePath` is falsy',
-        bufferStoragePath
+        '[Manager] Validation failed: `obsPath` is falsy',
+        obsPath
       );
 
       throw new Error('Buffer Storage Path is invalid.');
     }
 
-    if (!fs.existsSync(path.dirname(bufferStoragePath))) {
+    if (!fs.existsSync(path.dirname(obsPath))) {
       console.warn(
-        '[Manager] Validation failed, bufferStoragePath does not exist',
-        bufferStoragePath
+        '[Manager] Validation failed, obsPath does not exist',
+        obsPath
       );
 
       throw new Error('Buffer Storage Path is invalid.');
     }
 
-    if (storagePath === bufferStoragePath) {
+    const { storagePath } = this.storageCfg;
+
+    if (storagePath === obsPath) {
       console.warn(
         '[Manager] Validation failed: Storage Path is the same as Buffer Path'
       );
 
       throw new Error('Storage Path is the same as Buffer Path');
     }
-    
-    // Assume we need 10GB extra space for the buffer, or combine it
-    // into the storagePath allowance if it's not separated. 10GB is a best
-    // guess at the worst case for the buffer storage requirement.
-    if (bufferStoragePath.includes(storagePath)) {
-      await checkDisk(storagePath, maxStorage);
-      await checkDisk(bufferStoragePath, 10);
+
+    // 10GB is a rough guess at what the worst case buffer directory might be.
+    if (fs.existsSync(obsPath)) {
+      await checkDisk(obsPath, 10);
     } else {
-      await checkDisk(storagePath, maxStorage + 10);
+      const parentDir = path.dirname(obsPath);
+      await checkDisk(parentDir, 10);
     }
   }
 

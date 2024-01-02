@@ -48,7 +48,6 @@ import {
   ObsBaseConfig,
   ObsOverlayConfig,
   ObsVideoConfig,
-  StorageConfig,
   TAudioSourceType,
   TPreviewPosition,
 } from './types';
@@ -94,7 +93,7 @@ export default class Recorder extends EventEmitter {
    * Location to write all recording to. This is not the final location of
    * the finalized video files.
    */
-  private bufferStorageDir: string | undefined;
+  private obsPath: string | undefined;
 
   /**
    * On creation of the recorder we generate a UUID to identify the OBS
@@ -323,30 +322,20 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Applies the StorageConfig to the recorder class.
-   */
-  public configureStorage(config: StorageConfig) {
-    const { bufferStoragePath } = config;
-    this.bufferStorageDir = bufferStoragePath;
-    this.createRecordingDirs(this.bufferStorageDir);
-
-    if (this.obsRecordingFactory) {
-      console.info('[Recorder] Reconfiguring the OBS output path');
-      this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
-    }
-  }
-
-  /**
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
   public configureBase(config: ObsBaseConfig) {
-    const { obsFPS, obsRecEncoder, obsKBitRate, obsOutputResolution } = config;
+    const { obsFPS, obsRecEncoder, obsKBitRate, obsOutputResolution, obsPath } =
+      config;
 
     if (this.obsState !== ERecordingState.Offline) {
       throw new Error('[Recorder] OBS must be offline to do this');
     }
 
+    this.obsPath = obsPath;
+    Recorder.createRecordingDirs(this.obsPath);
+    this.cleanup();
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
@@ -378,12 +367,7 @@ export default class Recorder extends EventEmitter {
       this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
     }
 
-    if (!this.bufferStorageDir) {
-      console.error('[Recorder] Must call configureStorage first');
-      throw new Error('[Recorder] No bufferStorageDir set');
-    }
-
-    this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
+    this.obsRecordingFactory.path = path.normalize(this.obsPath);
     this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
     this.obsRecordingFactory.useStreamEncoders = false;
     this.obsRecordingFactory.overwrite = false;
@@ -881,13 +865,15 @@ export default class Recorder extends EventEmitter {
    * @params Number of files to leave.
    */
   public async cleanup(filesToLeave = 0) {
-    if (!this.bufferStorageDir) {
+    console.info('[Recorder] Clean out buffer', filesToLeave);
+
+    if (!this.obsPath) {
       console.info('[Recorder] Not attempting to clean-up');
       return;
     }
 
     // Sort newest to oldest
-    const sortedBufferVideos = await getSortedVideos(this.bufferStorageDir);
+    const sortedBufferVideos = await getSortedVideos(this.obsPath);
     if (!sortedBufferVideos || sortedBufferVideos.length === 0) return;
     const videosToDelete = sortedBufferVideos.slice(filesToLeave);
 
@@ -907,8 +893,8 @@ export default class Recorder extends EventEmitter {
     }
 
     if (!this.obsRecordingFactory) {
-      console.warn('[Recorder] startBuffer called but no recording factory');
-      throw new Error('startBuffer called but no recording factory');
+      console.warn('[Recorder] startOBS called but no recording factory');
+      throw new Error('startOBS called but no recording factory');
     }
 
     if (this.obsState === ERecordingState.Recording) {
@@ -962,21 +948,15 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Create the bufferStorageDir if it doesn't already exist. Also
+   * Create the obsPath directory if it doesn't already exist. Also
    * cleans it out for good measure.
    */
-  private createRecordingDirs(bufferStoragePath: string) {
-    if (bufferStoragePath === '') {
-      console.error('[Recorder] Must provide non-empty bufferStoragePath');
-      throw new Error('Empty string provided');
-    }
+  private static createRecordingDirs(obsPath: string) {
+    const exists = fs.existsSync(obsPath);
 
-    if (!fs.existsSync(bufferStoragePath)) {
-      console.info('[Recorder] Creating dir:', bufferStoragePath);
-      fs.mkdirSync(bufferStoragePath);
-    } else {
-      console.info('[Recorder] Clean out buffer');
-      this.cleanup();
+    if (!exists) {
+      console.info('[Recorder] Creating dir:', obsPath);
+      fs.mkdirSync(obsPath);
     }
   }
 
