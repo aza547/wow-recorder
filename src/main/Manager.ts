@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { BrowserWindow, app, ipcMain, powerMonitor } from 'electron';
 import { isEqual } from 'lodash';
 import path from 'path';
@@ -34,6 +35,7 @@ import {
 import {
   addCrashToUI,
   buildClipMetadata,
+  checkDisk,
   getMetadataForVideo,
   getOBSFormattedDate,
   validateFlavour,
@@ -103,15 +105,15 @@ export default class Manager {
       initial: true,
       current: this.storageCfg,
       get: (cfg: ConfigService) => getStorageConfig(cfg),
-      validate: (config: StorageConfig) => Manager.validateStorageCfg(config),
-      configure: async () => this.configureStorage(),
+      validate: async (config: StorageConfig) => Manager.validateStorageCfg(config),
+      configure: async (config: StorageConfig) => this.configureStorage(config),
     },
     {
       name: 'obsBase',
       initial: true,
       current: this.obsBaseCfg,
       get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: (config: ObsBaseConfig) => this.validateObsBaseCfg(config),
+      validate: async () => {},
       configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
     },
     {
@@ -119,7 +121,7 @@ export default class Manager {
       initial: true,
       current: this.obsVideoCfg,
       get: (cfg: ConfigService) => getObsVideoConfig(cfg),
-      validate: () => {},
+      validate: async () => {},
       configure: async (config: ObsVideoConfig) => this.configureObsVideo(config),
     },
     {
@@ -127,7 +129,7 @@ export default class Manager {
       initial: true,
       current: this.obsAudioCfg,
       get: (cfg: ConfigService) => getObsAudioConfig(cfg),
-      validate: () => {},
+      validate: async () => {},
       configure: async (config: ObsAudioConfig) => this.configureObsAudio(config),
     },
     {
@@ -135,7 +137,7 @@ export default class Manager {
       initial: true,
       current: this.flavourCfg,
       get: (cfg: ConfigService) => getFlavourConfig(cfg),
-      validate: (config: FlavourConfig) => validateFlavour(config),
+      validate: async (config: FlavourConfig) => validateFlavour(config),
       configure: async (config: FlavourConfig) => this.configureFlavour(config),
     },
     {
@@ -143,7 +145,7 @@ export default class Manager {
       initial: true,
       current: this.overlayCfg,
       get: (cfg: ConfigService) => getOverlayConfig(cfg),
-      validate: () => {},
+      validate: async () => {},
       configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
     },
     // eslint-enable prettier/prettier */
@@ -248,7 +250,7 @@ export default class Manager {
       const configChanged = !isEqual(newConfig, stage.current);
 
       try {
-        stage.validate(newConfig);
+        await stage.validate(newConfig);
       } catch (error) {
         stage.current = newConfig;
         stage.initial = false;
@@ -264,7 +266,6 @@ export default class Manager {
           newConfig
         );
 
-        // eslint-disable-next-line no-await-in-loop
         await stage.configure(newConfig);
         stage.current = newConfig;
         stage.initial = false;
@@ -326,7 +327,6 @@ export default class Manager {
    * Send a message to the frontend to update the recorder status icon.
    */
   private refreshRecStatus(status: RecStatus, msg = '') {
-    console.info('[Manager] Updating recorder status with:', status, msg);
     this.mainWindow.webContents.send('updateRecStatus', status, msg);
   }
 
@@ -334,7 +334,6 @@ export default class Manager {
    * Send a message to the frontend to update the mic status icon.
    */
   private refreshMicStatus(status: MicStatus) {
-    console.info('[Manager] Updating mic status with:', status);
     this.mainWindow.webContents.send('updateMicStatus', status);
   }
 
@@ -382,13 +381,19 @@ export default class Manager {
   }
 
   /**
-   * Configure the frontend to use the new Storage Path. All we need to do
-   * here is trigger a frontened refresh.
+   * Configure the storage settings in both the recorder and the UI. We need 
+   * to stop the recorder here as the storage path may have changed.
    */
-  private configureStorage() {
+  private async configureStorage(config: StorageConfig) {
+    await this.recorder.stop();
+    await this.recorder.configureStorage(config);
     this.mainWindow.webContents.send('refreshState');
+    this.poller.start();
   }
 
+  /**
+   * Configure the base OBS config. We need to stop the recording to do this.
+   */
   private async configureObsBase(config: ObsBaseConfig) {
     await this.recorder.stop();
     this.recorder.configureBase(config);
@@ -469,8 +474,8 @@ export default class Manager {
    * Checks the storage path is set and exists on the users PC.
    * @throws an error describing why the config is invalid
    */
-  private static validateStorageCfg(config: StorageConfig) {
-    const { storagePath } = config;
+  private static async validateStorageCfg(config: StorageConfig) {
+    const { storagePath, bufferStoragePath, maxStorage } = config;
 
     if (!storagePath) {
       console.warn(
@@ -489,15 +494,6 @@ export default class Manager {
 
       throw new Error('Storage Path is invalid.');
     }
-  }
-
-  /**
-   * Checks the buffer storage path is set, exists on the users PC, and is 
-   * not the same as the storage path.
-   * @throws an error describing why the config is invalid
-   */
-  private validateObsBaseCfg(config: ObsBaseConfig) {
-    const { bufferStoragePath } = config;
 
     if (!bufferStoragePath) {
       console.warn(
@@ -517,14 +513,22 @@ export default class Manager {
       throw new Error('Buffer Storage Path is invalid.');
     }
 
-    const storagePath = this.cfg.get<string>('storagePath');
-
     if (storagePath === bufferStoragePath) {
       console.warn(
         '[Manager] Validation failed: Storage Path is the same as Buffer Path'
       );
 
       throw new Error('Storage Path is the same as Buffer Path');
+    }
+    
+    // Assume we need 10GB extra space for the buffer, or combine it
+    // into the storagePath allowance if it's not separated. 10GB is a best
+    // guess at the worst case for the buffer storage requirement.
+    if (bufferStoragePath.includes(storagePath)) {
+      await checkDisk(storagePath, maxStorage);
+      await checkDisk(bufferStoragePath, 10);
+    } else {
+      await checkDisk(storagePath, maxStorage + 10);
     }
   }
 

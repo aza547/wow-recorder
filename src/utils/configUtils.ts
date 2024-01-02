@@ -12,6 +12,11 @@ import { categoryRecordingSettings } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 
 const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
+  if (category === VideoCategory.Clips) {
+    console.info('[configUtils] Clips are never recorded directly');
+    return false;
+  }
+
   const categoryConfig = categoryRecordingSettings[category];
 
   if (!categoryConfig) {
@@ -31,12 +36,6 @@ const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
 };
 
 const getStorageConfig = (cfg: ConfigService): StorageConfig => {
-  return {
-    storagePath: cfg.get<string>('storagePath'),
-  };
-};
-
-const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
   const storagePath = cfg.getPath('storagePath');
   let bufferPath: string;
 
@@ -47,7 +46,14 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
   }
 
   return {
+    storagePath: cfg.get<string>('storagePath'),
     bufferStoragePath: bufferPath,
+    maxStorage: cfg.get<number>('maxStorage'),
+  };
+};
+
+const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
+  return {
     obsOutputResolution: cfg.get<string>('obsOutputResolution'),
     obsFPS: cfg.get<number>('obsFPS'),
     obsKBitRate: cfg.get<number>('obsKBitRate'),

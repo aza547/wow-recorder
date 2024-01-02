@@ -48,6 +48,7 @@ import {
   ObsBaseConfig,
   ObsOverlayConfig,
   ObsVideoConfig,
+  StorageConfig,
   TAudioSourceType,
   TPreviewPosition,
 } from './types';
@@ -322,24 +323,30 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
+   * Applies the StorageConfig to the recorder class.
+   */
+  public configureStorage(config: StorageConfig) {
+    const { bufferStoragePath } = config;
+    this.bufferStorageDir = bufferStoragePath;
+    this.createRecordingDirs(this.bufferStorageDir);
+
+    if (this.obsRecordingFactory) {
+      console.info('[Recorder] Reconfiguring the OBS output path');
+      this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
+    }
+  }
+
+  /**
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
   public configureBase(config: ObsBaseConfig) {
-    const {
-      bufferStoragePath,
-      obsFPS,
-      obsRecEncoder,
-      obsKBitRate,
-      obsOutputResolution,
-    } = config;
+    const { obsFPS, obsRecEncoder, obsKBitRate, obsOutputResolution } = config;
 
     if (this.obsState !== ERecordingState.Offline) {
       throw new Error('[Recorder] OBS must be offline to do this');
     }
 
-    this.bufferStorageDir = bufferStoragePath;
-    this.createRecordingDirs(this.bufferStorageDir);
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
@@ -369,6 +376,11 @@ export default class Recorder extends EventEmitter {
 
     if (!this.obsRecordingFactory) {
       this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
+    }
+
+    if (!this.bufferStorageDir) {
+      console.error('[Recorder] Must call configureStorage first');
+      throw new Error('[Recorder] No bufferStorageDir set');
     }
 
     this.obsRecordingFactory.path = path.normalize(this.bufferStorageDir);
@@ -955,8 +967,8 @@ export default class Recorder extends EventEmitter {
    */
   private createRecordingDirs(bufferStoragePath: string) {
     if (bufferStoragePath === '') {
-      console.error('[Recorder] bufferStorageDir not set');
-      return;
+      console.error('[Recorder] Must provide non-empty bufferStoragePath');
+      throw new Error('Empty string provided');
     }
 
     if (!fs.existsSync(bufferStoragePath)) {

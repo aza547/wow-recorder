@@ -328,10 +328,11 @@ type Encoder = {
 
 type StorageConfig = {
   storagePath: string;
+  bufferStoragePath: string;
+  maxStorage: number;
 };
 
 type ObsBaseConfig = {
-  bufferStoragePath: string;
   obsOutputResolution: string;
   obsFPS: number;
   obsKBitRate: number;
@@ -378,7 +379,7 @@ type ConfigStage = {
   current: any;
   get: (cfg: ConfigService) => any;
   configure: (...args: any[]) => Promise<void>;
-  validate: (...args: any[]) => void;
+  validate: (...args: any[]) => Promise<void>;
 };
 
 enum DeathMarkers {

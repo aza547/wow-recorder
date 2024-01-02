@@ -60,7 +60,6 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus } = props;
   const [config, setConfig] = useSettings();
   const initialRenderVideoConfig = React.useRef(true);
-  const initialRenderSizeMonitorConfig = React.useRef(true);
 
   React.useEffect(() => {
     // Don't fire on the initial render.
@@ -73,24 +72,16 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
+      maxStorage: config.maxStorage,
     });
 
     ipc.sendMessage('settingsChange', []);
-  }, [config.separateBufferPath, config.storagePath, config.bufferStoragePath]);
-
-  // A change to maxStorage doesn't need to restart the recorder, only the
-  // size monitor changes here.
-  React.useEffect(() => {
-    // Don't fire on the initial render.
-    if (initialRenderSizeMonitorConfig.current) {
-      initialRenderSizeMonitorConfig.current = false;
-      return;
-    }
-
-    setConfigValues({
-      maxStorage: config.maxStorage,
-    });
-  }, [config.maxStorage]);
+  }, [
+    config.separateBufferPath,
+    config.storagePath,
+    config.bufferStoragePath,
+    config.maxStorage,
+  ]);
 
   const setSeparateBufferPath = (
     event: React.ChangeEvent<HTMLInputElement>

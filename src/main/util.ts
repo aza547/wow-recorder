@@ -9,6 +9,7 @@ import {
   UiohookKeyboardEvent,
   UiohookMouseEvent,
 } from 'uiohook-napi';
+import checkDiskSpace from 'check-disk-space';
 import { PTTEventType, PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
 import {
   Metadata,
@@ -663,6 +664,35 @@ const getOBSFormattedDate = (date: Date) => {
   return `${year}-${month}-${day} ${hours}-${mins}-${secs}`;
 };
 
+/**
+ * Check a disk has the required free space, including any files in the
+ * directory currently.
+ * @param dir folder to check
+ * @param req size required in GB
+ * @returns the number of GB available to WR but not in use
+ */
+const checkDisk = async (dir: string, req: number) => {
+  const files = await getSortedFiles(dir, '.*');
+  let inUseBytes = 0;
+
+  files.forEach((file) => {
+    inUseBytes += file.size;
+  });
+
+  const space = await checkDiskSpace(dir);
+  const disk = space.diskPath;
+  const freeBytes = space.free;
+  const reqBytes = req * 1024 ** 3 - inUseBytes;
+
+  console.info(freeBytes, reqBytes);
+
+  if (freeBytes < reqBytes) {
+    const msg = `Disk '${disk}' does not have enough free space, needs ${req}GB.`;
+    console.error(`Disk check failed: ${msg}`);
+    throw new Error(msg);
+  }
+};
+
 export {
   setupApplicationLogging,
   loadAllVideos,
@@ -690,4 +720,5 @@ export {
   addCrashToUI,
   buildClipMetadata,
   getOBSFormattedDate,
+  checkDisk,
 };
