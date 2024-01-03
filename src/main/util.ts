@@ -105,7 +105,7 @@ export const getFileInfo = async (pathSpec: string): Promise<FileInfo> => {
 /**
  * Asynchronously find and return a list of files in the given directory,
  * that matches the given pattern sorted by modification time according
- * to `sortDirection`. Ensure to properly escape patterns, e.g. ".*\\.mkv".
+ * to `sortDirection`. Ensure to properly escape patterns, e.g. ".*\\.mp4".
  */
 const getSortedFiles = async (
   dir: string,
@@ -146,27 +146,23 @@ const getSortedVideos = async (
   storageDir: string,
   sortDirection: FileSortDirection = FileSortDirection.NewestFirst
 ): Promise<FileInfo[]> => {
-  return getSortedFiles(storageDir, '.*\\.(mp4|mkv)', sortDirection);
+  return getSortedFiles(storageDir, '.*\\.mp4', sortDirection);
 };
 
 /**
- * Get the filename for the metadata file associated with the given video
- * file. The slice(-4) handles both MP4 (old) and (new) MKV extensions.
+ * Get the filename for the metadata file associated with the given video file.
  */
 const getMetadataFileNameForVideo = (video: string) => {
-  const ext = video.slice(-4);
-  const videoFileName = path.basename(video, ext);
+  const videoFileName = path.basename(video, '.mp4');
   const videoDirName = path.dirname(video);
   return path.join(videoDirName, `${videoFileName}.json`);
 };
 
 /**
- * Get the filename for the thumbnail file associated with the given video
- * file. The slice(-4) handles both MP4 (old) and (new) MKV extensions.
+ * Get the filename for the thumbnail file associated with the given video file.
  */
 const getThumbnailFileNameForVideo = (video: string) => {
-  const ext = video.slice(-4);
-  const videoFileName = path.basename(video, ext);
+  const videoFileName = path.basename(video, '.mp4');
   const videoDirName = path.dirname(video);
   return path.join(videoDirName, `${videoFileName}.png`);
 };
