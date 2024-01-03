@@ -8,6 +8,7 @@ import {
   tryUnlink,
   writeMetadataFile,
   getThumbnailFileNameForVideo,
+  getOBSFormattedDate,
 } from './util';
 
 const atomicQueue = require('atomic-queue');
@@ -169,11 +170,15 @@ export default class VideoProcessQueue {
     offset: number,
     duration: number
   ): Promise<string> {
-    const videoFileName = path.basename(sourceFile, '.mp4');
-    const videoFilenameSuffix = suffix ? ` - ${suffix}` : '';
-    const baseVideoFilename = VideoProcessQueue.sanitizeFilename(
-      videoFileName + videoFilenameSuffix
-    );
+    const now = new Date();
+    let videoFileName = getOBSFormattedDate(now);
+
+    if (suffix) {
+      videoFileName += ' - ';
+      videoFileName += suffix;
+    }
+
+    const baseVideoFilename = VideoProcessQueue.sanitizeFilename(videoFileName);
     const finalVideoPath = path.join(outputDir, `${baseVideoFilename}.mp4`);
 
     return new Promise<string>((resolve) => {

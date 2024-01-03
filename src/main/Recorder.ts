@@ -346,7 +346,7 @@ export default class Recorder extends EventEmitter {
         ? ERangeType.Partial
         : ERangeType.Full;
 
-    osn.VideoFactory.videoContext = {
+    const defaultVideoInfo: osn.IVideoInfo = {
       fpsNum: obsFPS,
       fpsDen: 1,
       baseWidth: width,
@@ -363,10 +363,14 @@ export default class Recorder extends EventEmitter {
       range: colorRange as unknown as osn.ERangeType,
     };
 
+    const context = osn.VideoFactory.create();
+    context.video = defaultVideoInfo;
+
     if (!this.obsRecordingFactory) {
       this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
     }
 
+    this.obsRecordingFactory.video = context;
     this.obsRecordingFactory.path = path.normalize(this.obsPath);
     this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
     this.obsRecordingFactory.useStreamEncoders = false;
@@ -379,6 +383,8 @@ export default class Recorder extends EventEmitter {
     //
     // Ideally we'd pass the 3rd arg with all the settings, but it seems that
     // hasn't been implemented so we instead call .update() shortly after.
+    const videoEncoders = osn.VideoEncoderFactory.types();
+    console.log(videoEncoders);
     this.obsRecordingFactory.videoEncoder = osn.VideoEncoderFactory.create(
       obsRecEncoder,
       'WR-video-encoder',
