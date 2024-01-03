@@ -153,12 +153,12 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Takes an input MP4 file, trims the footage from the start of the video so
+   * Takes an input video file, trims the footage from the start of the video so
    * that the output is desiredDuration seconds. Some ugly async/await stuff
    * here. Some interesting implementation details around ffmpeg in comments
    * below.
    *
-   * @param {string} initialFile path to initial MP4 file
+   * @param {string} initialFile path to initial video file
    * @param {string} finalDir path to output directory
    * @param {number} desiredDuration seconds to cut down to
    * @returns full path of the final video file
@@ -179,7 +179,7 @@ export default class VideoProcessQueue {
     }
 
     const baseVideoFilename = VideoProcessQueue.sanitizeFilename(videoFileName);
-    const finalVideoPath = path.join(outputDir, `${baseVideoFilename}.mp4`);
+    const finalVideoPath = path.join(outputDir, `${baseVideoFilename}.mkv`);
 
     return new Promise<string>((resolve) => {
       if (offset < 0) {
@@ -250,7 +250,7 @@ export default class VideoProcessQueue {
    * video to disk. Going further into the file seems computationally
    * expensive, so we avoid that.
    *
-   * @param {string} video full path to initial MP4 file
+   * @param {string} video full path to initial mkv file
    * @param {string} output path to output directory
    */
   private static async getThumbnail(video: string) {

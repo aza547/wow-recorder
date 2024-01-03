@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Video files are now MKV instead of MP4. 
+
 ### Added
+
 ### Fixed
 - [Issue 311](https://github.com/aza547/wow-recorder/issues/311) - Ensure there is enough disk space on application of storage config.
+- Fix a bug where month numbers in clipped file names were off by one. 
 
 ## [3.23.0] - 2023-12-30
 ### Added

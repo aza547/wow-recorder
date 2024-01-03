@@ -372,7 +372,7 @@ export default class Recorder extends EventEmitter {
 
     this.obsRecordingFactory.video = context;
     this.obsRecordingFactory.path = path.normalize(this.obsPath);
-    this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
+    this.obsRecordingFactory.format = 'mkv' as osn.ERecordingFormat;
     this.obsRecordingFactory.useStreamEncoders = false;
     this.obsRecordingFactory.overwrite = false;
     this.obsRecordingFactory.noSpace = false;
