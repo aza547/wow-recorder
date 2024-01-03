@@ -383,8 +383,6 @@ export default class Recorder extends EventEmitter {
     //
     // Ideally we'd pass the 3rd arg with all the settings, but it seems that
     // hasn't been implemented so we instead call .update() shortly after.
-    const videoEncoders = osn.VideoEncoderFactory.types();
-    console.log(videoEncoders);
     this.obsRecordingFactory.videoEncoder = osn.VideoEncoderFactory.create(
       obsRecEncoder,
       'WR-video-encoder',
