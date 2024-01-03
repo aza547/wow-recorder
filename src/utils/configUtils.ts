@@ -1,5 +1,4 @@
 import {
-  StorageConfig,
   ObsBaseConfig,
   ObsVideoConfig,
   ObsAudioConfig,
@@ -35,13 +34,6 @@ const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   return true;
 };
 
-const getStorageConfig = (cfg: ConfigService): StorageConfig => {
-  return {
-    storagePath: cfg.get<string>('storagePath'),
-    maxStorage: cfg.get<number>('maxStorage'),
-  };
-};
-
 const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
   const storagePath = cfg.getPath('storagePath');
   let obsPath: string;
@@ -53,6 +45,8 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
   }
 
   return {
+    storagePath: cfg.get<string>('storagePath'),
+    maxStorage: cfg.get<number>('maxStorage'),
     obsPath,
     obsOutputResolution: cfg.get<string>('obsOutputResolution'),
     obsFPS: cfg.get<number>('obsFPS'),
@@ -106,7 +100,6 @@ const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
 // eslint-disable-next-line import/prefer-default-export
 export {
   allowRecordCategory,
-  getStorageConfig,
   getObsBaseConfig,
   getObsVideoConfig,
   getObsAudioConfig,

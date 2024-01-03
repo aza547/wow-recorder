@@ -19,7 +19,7 @@ test('Basic Retail', async () => {
   combatLogParser.handleLogLine(arenaMatchStartLine);
 
   const testLogLine = await testLogLinePromise;
-  const expectedDate = new Date('2023-08-03T22:12:04');
+  const expectedDate = new Date('2024-08-03T22:12:04');
 
   expect(testLogLine.date()).toStrictEqual(expectedDate);
   expect(testLogLine.type()).toBe('ARENA_MATCH_START');

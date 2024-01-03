@@ -326,12 +326,9 @@ type Encoder = {
   type: EncoderType;
 };
 
-type StorageConfig = {
+type ObsBaseConfig = {
   storagePath: string;
   maxStorage: number;
-};
-
-type ObsBaseConfig = {
   obsPath: string;
   obsOutputResolution: string;
   obsFPS: number;
@@ -439,7 +436,6 @@ export {
   Pages,
   EncoderType,
   Encoder,
-  StorageConfig,
   ObsBaseConfig,
   ObsVideoConfig,
   ObsOverlayConfig,

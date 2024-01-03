@@ -11,7 +11,6 @@ import RetailLogHandler from '../parsing/RetailLogHandler';
 import Recorder from './Recorder';
 import ConfigService from './ConfigService';
 import {
-  StorageConfig,
   ObsBaseConfig,
   ObsVideoConfig,
   ObsAudioConfig,
@@ -28,7 +27,6 @@ import {
   getObsBaseConfig,
   getObsVideoConfig,
   getObsAudioConfig,
-  getStorageConfig,
   getFlavourConfig,
   getOverlayConfig,
 } from '../utils/configUtils';
@@ -71,8 +69,6 @@ export default class Manager {
 
   private queued = false;
 
-  private storageCfg: StorageConfig = getStorageConfig(this.cfg);
-
   private obsBaseCfg: ObsBaseConfig = getObsBaseConfig(this.cfg);
 
   private obsVideoCfg: ObsVideoConfig = getObsVideoConfig(this.cfg);
@@ -101,19 +97,11 @@ export default class Manager {
   private stages: ConfigStage[] = [
     /* eslint-disable prettier/prettier */
     {
-      name: 'storage',
-      initial: true,
-      current: this.storageCfg,
-      get: (cfg: ConfigService) => getStorageConfig(cfg),
-      validate: async (config: StorageConfig) => Manager.validateStorageCfg(config),
-      configure: async () => this.configureStorage(),
-    },
-    {
       name: 'obsBase',
       initial: true,
       current: this.obsBaseCfg,
       get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: async (config: ObsBaseConfig) => this.validateBaseCfg(config),
+      validate: async (config: ObsBaseConfig) => Manager.validateBaseCfg(config),
       configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
     },
     {
@@ -381,20 +369,13 @@ export default class Manager {
   }
 
   /**
-   * The storage config is used by the size monitor and the frontend GUI, we
-   * don't need to make any careful changes here, just refresh the frontend.
-   */
-  private async configureStorage() {
-    this.mainWindow.webContents.send('refreshState');
-  }
-
-  /**
    * Configure the base OBS config. We need to stop the recording to do this.
    */
   private async configureObsBase(config: ObsBaseConfig) {
     await this.recorder.stop();
     this.recorder.configureBase(config);
     this.poller.start();
+    this.mainWindow.webContents.send('refreshState');
   }
 
   /**
@@ -467,12 +448,8 @@ export default class Manager {
     this.recorder.configureOverlaySource(config);
   }
 
-  /**
-   * Checks the storage path is set and exists on the users PC.
-   * @throws an error describing why the config is invalid
-   */
-  private static async validateStorageCfg(config: StorageConfig) {
-    const { storagePath, maxStorage } = config;
+  private static async validateBaseCfg(config: ObsBaseConfig) {
+    const { storagePath, maxStorage, obsPath } = config;
 
     if (!storagePath) {
       console.warn(
@@ -493,10 +470,6 @@ export default class Manager {
     }
 
     await checkDisk(storagePath, maxStorage);
-  }
-
-  private async validateBaseCfg(config: ObsBaseConfig) {
-    const { obsPath } = config;
     
     if (!obsPath) {
       console.warn(
@@ -515,8 +488,6 @@ export default class Manager {
 
       throw new Error('Buffer Storage Path is invalid.');
     }
-
-    const { storagePath } = this.storageCfg;
 
     if (storagePath === obsPath) {
       console.warn(
