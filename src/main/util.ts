@@ -658,7 +658,7 @@ const getOBSFormattedDate = (date: Date) => {
     n.toLocaleString('en-US', { minimumIntegerDigits: d, useGrouping: false });
 
   const day = toFixedDigits(date.getDay(), 2);
-  const month = toFixedDigits(date.getMonth(), 2) + 1;
+  const month = toFixedDigits(date.getMonth() + 1, 2);
   const year = toFixedDigits(date.getFullYear(), 4);
 
   const secs = toFixedDigits(date.getSeconds(), 2);
