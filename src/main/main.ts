@@ -44,10 +44,6 @@ let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let manager: Manager | undefined;
 
-// Issue 332. Need to call this before the app is ready.
-// https://www.electronjs.org/docs/latest/api/app#appdisablehardwareacceleration
-app.disableHardwareAcceleration();
-
 /**
  * Create a settings store to handle the config.
  * This defaults to a path like:

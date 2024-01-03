@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 380](https://github.com/aza547/wow-recorder/issues/380) - Add support for h265 encoding, remove the ffmpeg_nvenc encoder as jim_nvenc is preferable.
+
 ### Fixed
 - [Issue 311](https://github.com/aza547/wow-recorder/issues/311) - Ensure there is enough disk space on application of storage config.
 

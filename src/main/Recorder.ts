@@ -342,7 +342,8 @@ export default class Recorder extends EventEmitter {
     // The AMD encoder causes recordings to get much darker if using the full
     // color range setting. So swap that to partial here. See https://github.com/aza547/wow-recorder/issues/446.
     const colorRange =
-      obsRecEncoder === ESupportedEncoders.AMD_AMF_H264
+      obsRecEncoder === ESupportedEncoders.AMD_AMF_H264 ||
+      obsRecEncoder === ESupportedEncoders.AMD_AMF_H265
         ? ERangeType.Partial
         : ERangeType.Full;
 
@@ -395,7 +396,10 @@ export default class Recorder extends EventEmitter {
     // is a plugin to OBS (it's a seperate github repo), and the likes of the
     // nvenc/x264 encoders are native to OBS so have homogenized settings. We
     // add a 1.5 multiplier onto the peak from what the user sets here.
-    if (obsRecEncoder === ESupportedEncoders.AMD_AMF_H264) {
+    if (
+      obsRecEncoder === ESupportedEncoders.AMD_AMF_H264 ||
+      obsRecEncoder === ESupportedEncoders.AMD_AMF_H265
+    ) {
       this.obsRecordingFactory.videoEncoder.update({
         'Bitrate.Peak': obsKBitRate * 1000 * 1.5,
       });
