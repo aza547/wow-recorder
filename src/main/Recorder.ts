@@ -346,7 +346,7 @@ export default class Recorder extends EventEmitter {
         ? ERangeType.Partial
         : ERangeType.Full;
 
-    const defaultVideoInfo: osn.IVideoInfo = {
+    osn.VideoFactory.videoContext = {
       fpsNum: obsFPS,
       fpsDen: 1,
       baseWidth: width,
@@ -363,14 +363,10 @@ export default class Recorder extends EventEmitter {
       range: colorRange as unknown as osn.ERangeType,
     };
 
-    const context = osn.VideoFactory.create();
-    context.video = defaultVideoInfo;
-
     if (!this.obsRecordingFactory) {
       this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
     }
 
-    this.obsRecordingFactory.video = context;
     this.obsRecordingFactory.path = path.normalize(this.obsPath);
     this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
     this.obsRecordingFactory.useStreamEncoders = false;

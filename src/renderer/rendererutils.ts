@@ -618,16 +618,16 @@ const isHighRes = (res: string) => {
 };
 
 const encoderFilter = (enc: string, highRes: boolean) => {
-  // const encoder = enc as ESupportedEncoders;
+  const encoder = enc as ESupportedEncoders;
 
-  // if (!Object.values(ESupportedEncoders).includes(encoder)) {
-  //   return false;
-  // }
+  if (!Object.values(ESupportedEncoders).includes(encoder)) {
+    return false;
+  }
 
-  // // If we have a resolution above 4k, only the software encoder is valid.
-  // if (highRes) {
-  //   return encoder === ESupportedEncoders.OBS_X264;
-  // }
+  // If we have a resolution above 4k, only the software encoder is valid.
+  if (highRes) {
+    return encoder === ESupportedEncoders.OBS_X264;
+  }
 
   return true;
 };
