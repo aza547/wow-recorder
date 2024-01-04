@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Upgrade OSN from 0.23.71 to 0.24.6. This upgrades OBS from v28 to v29.
 - Video files are now MKV instead of MP4. 
 
 ### Added
