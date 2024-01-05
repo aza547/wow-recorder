@@ -370,15 +370,31 @@ export const VideoPlayer = (props: IProps) => {
                 width: '5px',
                 height: '20px',
                 borderRadius: 0,
+                '& .MuiSlider-valueLabel': {
+                  fontSize: '0.5rem',
+                },
               },
               "&[data-index='1']": {
+                width: '5px',
+                height: '5px',
                 backgroundColor: 'white',
+                '& .MuiSlider-valueLabel': {
+                  fontSize: '0.5rem',
+                  rotate: '180deg',
+                  transform: 'translateY(-15%) scale(1)',
+                  '& .MuiSlider-valueLabelCircle': {
+                    rotate: '180deg',
+                  },
+                },
               },
               "&[data-index='2']": {
                 backgroundColor: 'white',
                 width: '5px',
                 height: '20px',
                 borderRadius: 0,
+                '& .MuiSlider-valueLabel': {
+                  fontSize: '0.5rem',
+                },
               },
             },
           }}
