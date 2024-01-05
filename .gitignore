@@ -33,3 +33,4 @@ src/main/osn-data/*
 
 # Python crap
 *cpython*
+*__pycache__*
