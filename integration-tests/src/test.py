@@ -88,7 +88,7 @@ def check_latest_mp4_contains(contains):
     if contains in latest:
         print("  MP4 existed as expected")
     else:
-        print(f"FAILED: Latest MP4 did not contain {contains}")
+        print(f"FAILED: Latest MP4 did not contain {contains}, was {latest}")
         sys.exit(1)
 
 

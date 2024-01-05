@@ -2,7 +2,7 @@ import os
 
 CWD = os.path.dirname(__file__)
 
-NAME = "rated_solo_shuffle"
+NAME = "skirmish"
 LOG = f"{CWD}/../../logs/retail/{NAME}.txt"
 OVERRUN = 3
 OUTPUT = "Alexsmite - Skirmish Nagrand (Win)"
