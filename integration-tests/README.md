@@ -8,6 +8,7 @@ These tests do the following:
 Requirements to run:
 - Python3
 - WR installed and running (either prod or dev version is fine)
+- WoW running
 - The following variables in `test.py` set appropriately for your environment:
   - `RETAIL_LOG_PATH` - Retail WoW log dir
   - `CLASSIC_LOG_PATH` - Classic WoW log dir
