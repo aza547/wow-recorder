@@ -15,8 +15,8 @@ Windows is currently the only supported operating system.
 1. Download and run the most recent [Warcraft Recorder installer](https://github.com/aza547/wow-recorder/releases/latest).
 2. Launch the application and click the Settings button.
     - Create a folder on your PC to store the recordings.
-    - In the **General Settings** set the _Storage Path_ to the folder you just created.
-    - In the **Game Settings** section, enable recording and set the location of your World of Warcraft logs folder.
+    - Set the Storage Path to the folder you just created.
+    - Enable recording and set the location of your World of Warcraft logs folder.
     - Modify any other settings as desired.
 3. Click the Scene button and configure the OBS scene and recording settings.
     - Select your desired output resolution.
