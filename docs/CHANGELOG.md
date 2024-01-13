@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Added
+- [Issue 470](https://github.com/aza547/wow-recorder/issues/470) - Add the 5120x2160 resolution.
 
 ### Fixed
 - [Issue 311](https://github.com/aza547/wow-recorder/issues/311) - Ensure there is enough disk space on application of storage config.
