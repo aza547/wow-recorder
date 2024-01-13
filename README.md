@@ -12,13 +12,20 @@ Warcraft Recorder is a desktop screen recorder. It watches the WoW combat log fi
 Windows is currently the only supported operating system. 
 
 #  How to Use
-1. Download and run the most recent installer from the [releases](https://github.com/aza547/wow-recorder/releases) section.
-1. Launch the application and click the settings cog, then fill out the settings page.
-1. Enable **advanced** combat logging.
-    - Retail: Install and configure the SimpleCombatLogger addon ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
-    - Classic: Install and configure the AutoCombatLogger addon ([CurseForge](https://www.curseforge.com/wow/addons/autocombatlogger), [Wago](https://addons.wago.io/addons/autocombatlogger)). 
-
-If you are a retail arena player, I also recommend the [jaxSurrender](https://www.curseforge.com/wow/addons/jaxsurrender) addon.
+1. Download and run the most recent [Warcraft Recorder installer](https://github.com/aza547/wow-recorder/releases/latest).
+2. Launch the application and click the Settings button.
+    - Create a folder on your PC to store the recordings.
+    - In the **General Settings** set the _Storage Path_ to the folder you just created.
+    - In the **Game Settings** section, enable recording and configure the location of your World of Warcraft logs folder.
+    - Modify any other settings as desired.
+3. Click the Scene button and configure the OBS scene and recording settings.
+    - Select your desired output resolution.
+    - Add your speakers and/or microphone if you want to include audio.
+    - Recommend selecting a hardware encoder, if available.
+    - Modify any other settings as desired.
+5. Install the required combat logging addon, enabling advanced combat logging when prompted.
+    - Retail: SimpleCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
+    - Classic: AutoCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/autocombatlogger), [Wago](https://addons.wago.io/addons/autocombatlogger)). 
 
 # Testing It Works
 
