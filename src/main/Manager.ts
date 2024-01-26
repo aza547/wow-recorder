@@ -639,6 +639,17 @@ export default class Manager {
 
     this.recorder.removeAllListeners();
     this.recorder.shutdownOBS();
+
+    if (this.retailLogHandler) {
+      this.retailLogHandler.removeAllListeners();
+      this.retailLogHandler.destroy();
+    }
+
+    if (this.classicLogHandler) {
+      this.classicLogHandler.removeAllListeners();
+      this.classicLogHandler.destroy();
+    }
+    
     this.recorder = new Recorder(this.mainWindow);
     this.recorder.on('crash', (cd) => this.recoverRecorderFromCrash(cd))
     this.recorder.on('state-change', () => this.refreshStatus());

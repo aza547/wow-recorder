@@ -542,8 +542,6 @@ export default class Recorder extends EventEmitter {
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
-    this.obsMicState = MicStatus.NONE;
-    this.emit('state-change');
 
     const {
       audioInputDevices,
@@ -709,6 +707,9 @@ export default class Recorder extends EventEmitter {
       this.removeAudioSource(device, channel);
       this.audioOutputDevices.splice(index, 1);
     });
+
+    this.obsMicState = MicStatus.NONE;
+    this.emit('state-change');
   }
 
   /**
@@ -1005,6 +1006,18 @@ export default class Recorder extends EventEmitter {
 
     if (obsSignal.type !== 'recording') {
       console.info('[Recorder] No action needed on this signal');
+      return;
+    }
+
+    if (obsSignal.code !== 0) {
+      console.error('[Recorder] Non-zero signal');
+
+      const crashData: CrashData = {
+        date: new Date(),
+        reason: obsSignal.error,
+      };
+
+      this.emit('crash', crashData);
       return;
     }
 

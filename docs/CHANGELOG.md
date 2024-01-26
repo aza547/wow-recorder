@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix a bug where month numbers in clipped file names were off by one. 
 - Improvements to the python integration test infrastructure.
 - Improvements to overlapping of sliders in clipping mode.
+- [Issue 477](https://github.com/aza547/wow-recorder/issues/477) - Prevent mic showing as listening when WoW is closed.
 
 ## [3.23.0] - 2023-12-30
 ### Added
