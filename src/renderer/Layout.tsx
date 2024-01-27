@@ -278,7 +278,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         icon={
           <Badge
             badgeContent={numVideos}
-            style={{ transform: 'translate(10px, 0px)' }}
+            style={{ transform: 'translate(10px, 5px)' }}
             sx={{
               '& .MuiBadge-badge': {
                 color: 'white',
@@ -289,13 +289,13 @@ const Layout: React.FC<IProps> = (props: IProps) => {
             <img
               src={tabIcon}
               alt={tabCategory}
-              width="30"
-              height="30"
+              width="25"
+              height="25"
               style={{ transform: 'translate(-10px, 0px)' }}
             />
           </Badge>
         }
-        sx={{ color: 'white', minHeight: '75px' }}
+        sx={{ color: 'white', minHeight: '60px', height: '60px' }}
         label={tabCategory}
       />
     );
@@ -306,8 +306,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       return (
         <Tab
           value={tabPage}
-          icon={<SettingsIcon width="30" height="30" />}
-          sx={{ color: 'white' }}
+          icon={<SettingsIcon width="25" height="25" />}
+          sx={{ color: 'white', minHeight: '60px', height: '60px' }}
           label="Settings"
         />
       );
@@ -317,8 +317,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
       return (
         <Tab
           value={tabPage}
-          icon={<TvIcon width="30" height="30" />}
-          sx={{ color: 'white' }}
+          icon={<TvIcon width="25" height="25" />}
+          sx={{ color: 'white', minHeight: '60px', height: '60px' }}
           label="Scene"
         />
       );
