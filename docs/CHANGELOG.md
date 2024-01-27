@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 476](https://github.com/aza547/wow-recorder/issues/476) - Fix some buttons getting shunted off the screen on small monitors.
 - Fix a bug where month numbers in clipped file names were off by one. 
 - Improvements to the python integration test infrastructure.
-- Improvements to overlapping of sliders in clipping mode.
+- Improvements to video player controls aesthetics and overlapping of sliders in clipping mode.
 
 ## [3.23.0] - 2023-12-30
 ### Added

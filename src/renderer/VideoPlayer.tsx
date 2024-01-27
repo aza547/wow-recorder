@@ -103,7 +103,7 @@ export const VideoPlayer = (props: IProps) => {
             component="img"
             src={DeathIcon}
             sx={{
-              p: '2px',
+              p: '1px',
               height: '13px',
               width: '13px',
               objectFit: 'fill',
@@ -166,8 +166,12 @@ export const VideoPlayer = (props: IProps) => {
     markers: VideoMarker[],
     fillerColor: string
   ) => {
-    if (!progressSlider.current || duration === 0) {
-      return '';
+    if (!progressSlider.current || duration === 0 || isClipUtil(video)) {
+      // Initial render shows a flash of the default color without this,
+      // and this branch also protects us loading anything on the clips
+      // category where the markers are bogus as they are just lifted
+      // from the parent.
+      return `linear-gradient(90deg, ${fillerColor} 0%, ${fillerColor} 100%)`;
     }
 
     let ptr = 0;
@@ -371,15 +375,16 @@ export const VideoPlayer = (props: IProps) => {
                 height: '20px',
                 borderRadius: 0,
                 '& .MuiSlider-valueLabel': {
-                  fontSize: '0.5rem',
+                  fontSize: '0.75rem',
                 },
               },
               "&[data-index='1']": {
                 width: '5px',
                 height: '5px',
+                zIndex: 1,
                 backgroundColor: 'white',
                 '& .MuiSlider-valueLabel': {
-                  fontSize: '0.5rem',
+                  fontSize: '0.75rem',
                   rotate: '180deg',
                   transform: 'translateY(-15%) scale(1)',
                   '& .MuiSlider-valueLabelCircle': {
@@ -393,7 +398,7 @@ export const VideoPlayer = (props: IProps) => {
                 height: '20px',
                 borderRadius: 0,
                 '& .MuiSlider-valueLabel': {
-                  fontSize: '0.5rem',
+                  fontSize: '0.75rem',
                 },
               },
             },
@@ -411,7 +416,6 @@ export const VideoPlayer = (props: IProps) => {
     return (
       <Slider
         ref={progressSlider}
-        // onKeyDown={}
         sx={{
           m: 2,
           width: '100%',
@@ -422,7 +426,7 @@ export const VideoPlayer = (props: IProps) => {
           '& .MuiSlider-mark': {
             backgroundColor: 'white',
             width: '2px',
-            height: '10px',
+            height: '4px',
           },
           '& .MuiSlider-rail': {
             background: getRailGradient(),
@@ -451,7 +455,7 @@ export const VideoPlayer = (props: IProps) => {
       <FilePlayer
         id="file-player"
         ref={player}
-        height="calc(100% - 45px)"
+        height="calc(100% - 40px)"
         width="100%"
         url={url}
         style={style}
@@ -652,7 +656,7 @@ export const VideoPlayer = (props: IProps) => {
       <Box
         sx={{
           width: '100%',
-          height: '45px',
+          height: '40px',
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'center',
