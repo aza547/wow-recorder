@@ -278,7 +278,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
         icon={
           <Badge
             badgeContent={numVideos}
-            style={{ transform: 'translate(10px, 5px)' }}
+            style={{ transform: 'translate(15px, 5px)' }}
             sx={{
               '& .MuiBadge-badge': {
                 color: 'white',
@@ -291,7 +291,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
               alt={tabCategory}
               width="25"
               height="25"
-              style={{ transform: 'translate(-10px, 0px)' }}
+              style={{ transform: 'translate(-15px, 0px)' }}
             />
           </Badge>
         }
