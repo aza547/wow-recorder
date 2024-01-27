@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [3.23.1] - 2024-01-27
+### Changed
+- Improvements to the python integration test infrastructure.
+- Improvements to video player controls aesthetics and overlapping of sliders in clipping mode.
 
 ### Added
 - [Issue 470](https://github.com/aza547/wow-recorder/issues/470) - Add the 5120x2160 resolution.
@@ -15,8 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 477](https://github.com/aza547/wow-recorder/issues/477) - Prevent mic showing as listening when WoW is closed.
 - [Issue 476](https://github.com/aza547/wow-recorder/issues/476) - Fix some buttons getting shunted off the screen on small monitors.
 - Fix a bug where month numbers in clipped file names were off by one. 
-- Improvements to the python integration test infrastructure.
-- Improvements to video player controls aesthetics and overlapping of sliders in clipping mode.
 
 ## [3.23.0] - 2023-12-30
 ### Added
