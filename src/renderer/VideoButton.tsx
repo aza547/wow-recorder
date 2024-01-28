@@ -13,7 +13,8 @@ import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';
 import React, { useEffect, useState } from 'react';
-import { RendererVideo, TNavigatorState } from 'main/types';
+import { RendererVideo, RendererVideoState, TNavigatorState } from 'main/types';
+import { VideoCategory } from 'types/VideoCategory';
 import {
   getPlayerClass,
   getPlayerName,
@@ -40,13 +41,13 @@ import RaidCompAndResult from './RaidCompAndResult';
 
 interface IProps {
   video: RendererVideo;
-  categoryState: RendererVideo[];
-  selected: boolean;
+  videoState: RendererVideoState;
+  setVideoState: React.Dispatch<React.SetStateAction<RendererVideoState>>;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
 
 export default function VideoButton(props: IProps) {
-  const { video, categoryState, selected, setNavigation } = props;
+  const { video, videoState, setVideoState, setNavigation } = props;
   const { isProtected, fullPath, imagePath } = video;
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
@@ -63,25 +64,13 @@ export default function VideoButton(props: IProps) {
   const videoDate = getVideoDate(video);
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
-  const deleteOpacity = selected ? 0.2 : 1;
+  let deleteVideoOnUnmount = false;
 
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
 
-  useEffect(() => {
-    document.addEventListener('keyup', (event: KeyboardEvent) => {
-      if (event.key === 'Control') {
-        setCtrlDown(false);
-      }
-    });
-    document.addEventListener('keydown', (event: KeyboardEvent) => {
-      if (event.key === 'Control') {
-        setCtrlDown(true);
-      }
-    });
-  });
-
   const [deletePopoverAnchor, setDeletePopoverAnchor] =
     React.useState<null | HTMLElement>(null);
+
   const open = Boolean(deletePopoverAnchor);
 
   const openDeletePopover = (event: React.MouseEvent<HTMLElement>) => {
@@ -94,28 +83,87 @@ export default function VideoButton(props: IProps) {
     setDeletePopoverAnchor(null);
   };
 
+  /**
+   * Delete a video. This avoids attempting to delete the video
+   * from disk when the MP4 file is still open in the UI by:
+   *
+   * - Setting this deleteOnUnmount to true.
+   * - Removing it from the videoState.
+   * - That triggers a re-render which unmounts this button and closes the file.
+   * - The useEffect hook then runs the actual delete from disk IPC call.
+   *
+   * That solves the problem of allowing us to delete an open video while
+   * keeping the app responsive. Some risk a deleted video re-appears if the OS
+   * call fails to delete (e.g. it's open in another program) but happy to live
+   * with that.
+   */
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
+    deleteVideoOnUnmount = true;
+    let deletedIndex: number;
 
-    // We need to decrement the videoIndex in-case the final video in the list
-    // is selected. The delete causes the list to shrink and we don't want to
-    // end up attempting to dereference an undefined variable off the end of
-    // the list.
-    setNavigation((prevState) => {
-      return {
-        ...prevState,
-        videoIndex:
-          prevState.videoIndex > 0
-            ? prevState.videoIndex - 1
-            : prevState.videoIndex,
-      };
+    setVideoState((prevState) => {
+      deletedIndex = prevState[video.category].indexOf(video);
+      prevState[video.category].splice(deletedIndex, 1);
+      return prevState;
     });
 
+    setNavigation((prevState) => {
+      let newSelectedIndex: number;
+
+      if (prevState.videoIndex === deletedIndex) {
+        // Deleting the selected video so just reset to the first in the category.
+        newSelectedIndex = 0;
+      } else if (prevState.videoIndex > deletedIndex) {
+        // Deleting a video before the selected video so move back one to remain
+        // on the same video selection.
+        newSelectedIndex = prevState.videoIndex - 1;
+      } else {
+        // Deleting a video after selection, no change to selected index.
+        newSelectedIndex = prevState.videoIndex;
+      }
+
+      return {
+        ...prevState,
+        videoIndex: newSelectedIndex,
+      };
+    });
+  };
+
+  /**
+   * IPC call to the main process to actually delete a video and it's
+   * assosciated files from disk.
+   */
+  const deleteVideoFromDisk = () => {
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'delete',
       fullPath,
     ]);
   };
+
+  /**
+   * Sets up event listeners so that users can skip the "Are you sure you want
+   * to delete this video?" prompt by holding CTRL. Also sets the callback on
+   * unmount to delete the video if the delete button was clicked.
+   */
+  useEffect(() => {
+    document.addEventListener('keyup', (event: KeyboardEvent) => {
+      if (event.key === 'Control') {
+        setCtrlDown(false);
+      }
+    });
+    document.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Control') {
+        setCtrlDown(true);
+      }
+    });
+
+    return () => {
+      if (deleteVideoOnUnmount) {
+        deleteVideoFromDisk();
+      }
+    };
+  });
 
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
@@ -246,7 +294,7 @@ export default function VideoButton(props: IProps) {
           {isRaid && (
             <RaidCompAndResult
               video={video}
-              raidCategoryState={categoryState}
+              raidCategoryState={videoState[VideoCategory.Raids]}
             />
           )}
         </Box>
@@ -347,10 +395,8 @@ export default function VideoButton(props: IProps) {
 
           <Tooltip title="Delete">
             <div>
-              <IconButton disabled={selected} onClick={deleteClicked}>
-                <DeleteForeverIcon
-                  sx={{ color: 'white', opacity: deleteOpacity }}
-                />
+              <IconButton onClick={deleteClicked}>
+                <DeleteForeverIcon sx={{ color: 'white' }} />
               </IconButton>
             </div>
           </Tooltip>

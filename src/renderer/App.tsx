@@ -134,6 +134,7 @@ const Application = () => {
         setNavigation={setNavigation}
         recorderStatus={recorderStatus}
         videoState={videoState}
+        setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
       />

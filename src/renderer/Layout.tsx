@@ -44,6 +44,7 @@ interface IProps {
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
   recorderStatus: RecStatus;
   videoState: RendererVideoState;
+  setVideoState: React.Dispatch<React.SetStateAction<RendererVideoState>>;
   appState: TAppState;
   setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
 }
@@ -59,6 +60,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     setNavigation,
     recorderStatus,
     videoState,
+    setVideoState,
     appState,
     setAppState,
   } = props;
@@ -172,8 +174,8 @@ const Layout: React.FC<IProps> = (props: IProps) => {
           <VideoButton
             key={video.fullPath}
             video={video}
-            selected={selected}
-            categoryState={categoryState}
+            videoState={videoState}
+            setVideoState={setVideoState}
             setNavigation={setNavigation}
           />
         </ListItemButton>

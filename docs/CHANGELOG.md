@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [ISsue 462](https://github.com/aza547/wow-recorder/issues/462) - Fix a bug where you could not delete the selected video.
 
 ## [3.23.1] - 2024-01-27
 ### Changed
