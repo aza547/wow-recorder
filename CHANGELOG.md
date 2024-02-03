@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [3.23.2] - 2024-02-03
+### Fixed
 - [Issue 462](https://github.com/aza547/wow-recorder/issues/462) - Fix a bug where you could not delete the selected video.
 - Fix a bug where we were using the day of the week instead of day of the month in clipped file names.
 
