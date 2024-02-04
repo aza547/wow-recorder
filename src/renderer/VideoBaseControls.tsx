@@ -18,7 +18,7 @@ import { Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
 import { configSchema } from 'main/configSchema';
 import InfoIcon from '@mui/icons-material/Info';
-import { ESupportedEncoders } from 'main/obsEnums';
+import { ESupportedEncoders, QualityPresets } from 'main/obsEnums';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   encoderFilter,
@@ -106,7 +106,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     setConfigValues({
       obsOutputResolution: config.obsOutputResolution,
       obsFPS: config.obsFPS,
-      obsKBitRate: config.obsKBitRate,
+      obsQuality: config.obsQuality,
       obsRecEncoder: config.obsRecEncoder,
     });
 
@@ -114,7 +114,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
   }, [
     config.obsOutputResolution,
     config.obsFPS,
-    config.obsKBitRate,
+    config.obsQuality,
     config.obsRecEncoder,
     highRes,
   ]);
@@ -137,6 +137,14 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     return (
       <MenuItem sx={{ height: '25px' }} key={enc.name} value={enc.name}>
         {mapEncoderToString(enc)}
+      </MenuItem>
+    );
+  };
+
+  const getQualityMenuItem = (quality: QualityPresets) => {
+    return (
+      <MenuItem sx={{ height: '25px' }} key={quality} value={quality}>
+        {quality}
       </MenuItem>
     );
   };
@@ -252,19 +260,15 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     );
   };
 
-  const isBitrateValid = () => {
-    return config.obsKBitRate > 1 && config.obsKBitRate < 300;
-  };
+  const setQuality = (event: SelectChangeEvent<string>) => {
+    const {
+      target: { value },
+    } = event;
 
-  const getBitrateHelperText = () => {
-    return isBitrateValid() ? '' : 'Must be between 1 and 300';
-  };
-
-  const setBitrate = (event: React.ChangeEvent<HTMLInputElement>) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        obsKBitRate: parseInt(event.target.value, 10),
+        obsQuality: value,
       };
     });
   };
@@ -292,27 +296,23 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     );
   };
 
-  const getBitrateField = () => {
+  const getQualitySelect = () => {
     if (isComponentDisabled()) {
       return <></>;
     }
 
     return (
       <FormControl size="small" sx={formControlStyle}>
-        <TextField
-          size="small"
-          value={config.obsKBitRate}
+        <InputLabel sx={selectStyle}>Quality</InputLabel>
+        <Select
+          value={config.obsQuality}
+          label="Quality"
           disabled={isComponentDisabled()}
-          onChange={setBitrate}
-          label="Bitrate (Mbps)"
-          variant="outlined"
-          type="number"
-          error={!isBitrateValid()}
-          helperText={getBitrateHelperText()}
+          onChange={setQuality}
           sx={{ ...selectStyle }}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          inputProps={{ min: 1, style: { color: 'white' } }}
-        />
+        >
+          {Object.values(QualityPresets).map(getQualityMenuItem)}
+        </Select>
       </FormControl>
     );
   };
@@ -361,7 +361,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       ['Canvas Resolution', configSchema.obsOutputResolution.description].join(
         '\n'
       ),
-      ['Bitrate', configSchema.obsKBitRate.description].join('\n'),
+      ['Quality', configSchema.obsQuality.description].join('\n'),
       ['Video Encoder', configSchema.obsRecEncoder.description].join('\n'),
     ].join('\n\n');
 
@@ -394,7 +394,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       >
         {getFPSToggle()}
         {getCanvasResolutionSelect()}
-        {getBitrateField()}
+        {getQualitySelect()}
         {getEncoderSelect()}
         {getInfoIcon()}
       </Box>

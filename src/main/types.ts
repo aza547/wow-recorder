@@ -332,7 +332,7 @@ type ObsBaseConfig = {
   obsPath: string;
   obsOutputResolution: string;
   obsFPS: number;
-  obsKBitRate: number;
+  obsQuality: string;
   obsRecEncoder: string;
 };
 

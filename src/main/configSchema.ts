@@ -15,7 +15,7 @@ export type ConfigurationSchema = {
   obsOutputResolution: string;
   obsFPS: number;
   obsForceMono: boolean;
-  obsKBitRate: number;
+  obsQuality: string;
   obsCaptureMode: string; // 'window_capture' or 'game_capture' or 'monitor_capture'
   obsRecEncoder: string;
   recordRetail: boolean;
@@ -153,13 +153,11 @@ export const configSchema = {
     type: 'boolean',
     default: true,
   },
-  obsKBitRate: {
+  obsQuality: {
     description:
-      'Bit rate to record at. Lower bit rate values give smaller video size but worse video quality.',
-    type: 'integer',
-    default: 15,
-    minimum: 1,
-    maximum: 300,
+      'Quality to record at. Higher quality works your encoder harder and uses more disk space per video.',
+    type: 'string',
+    default: 'High',
   },
   obsCaptureMode: {
     description:

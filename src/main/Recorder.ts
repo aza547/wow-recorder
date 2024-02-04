@@ -10,6 +10,7 @@ import {
   ISceneItem,
   ISceneItemInfo,
   ISource,
+  ISettings,
 } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
@@ -27,6 +28,7 @@ import {
   ESourceFlags,
   ESupportedEncoders,
   EVideoFormat,
+  QualityPresets,
 } from './obsEnums';
 
 import {
@@ -326,7 +328,7 @@ export default class Recorder extends EventEmitter {
    * user to have setup their config for, which is why it's split out.
    */
   public configureBase(config: ObsBaseConfig) {
-    const { obsFPS, obsRecEncoder, obsKBitRate, obsOutputResolution, obsPath } =
+    const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
     if (this.obsState !== ERecordingState.Offline) {
@@ -385,21 +387,40 @@ export default class Recorder extends EventEmitter {
       {}
     );
 
-    this.obsRecordingFactory.videoEncoder.update({
-      rate_control: 'VBR',
-      bitrate: obsKBitRate * 1000,
-      max_bitrate: obsKBitRate * 1000,
-    });
+    // We set the CPQ or CRF value here. Low value is higher quality, and
+    // vice versa. We never allow setting lower than 14 as it's virtually
+    // lossless at that point. The lowest we will allow is 30 as after that
+    // quality is pretty awful. The limits on what this can actually be set
+    // to I took from what OBS studio allows and is annotated below.
+    const qualitySettings: ISettings = {};
+    const cqp = Recorder.getCqpFromQuality(obsQuality);
 
-    // Not totally clear why AMF is a special case here. Theory is that as it
-    // is a plugin to OBS (it's a seperate github repo), and the likes of the
-    // nvenc/x264 encoders are native to OBS so have homogenized settings. We
-    // add a 1.5 multiplier onto the peak from what the user sets here.
-    if (obsRecEncoder === ESupportedEncoders.AMD_AMF_H264) {
-      this.obsRecordingFactory.videoEncoder.update({
-        'Bitrate.Peak': obsKBitRate * 1000 * 1.5,
-      });
+    switch (obsRecEncoder) {
+      case ESupportedEncoders.OBS_X264:
+        // CRF and CPQ are so similar in configuration that we can just treat
+        // the CRF configuration the same as CQP configuration.
+        qualitySettings.rate_control = 'CRF';
+        qualitySettings.crf = cqp; // 0 - 51
+        break;
+
+      case ESupportedEncoders.AMD_AMF_H264:
+        qualitySettings.rate_control = 'CQP'; // 0 - 51
+        qualitySettings['QP.BFrame'] = cqp;
+        qualitySettings['QP.IFrame'] = cqp;
+        qualitySettings['QP.PFrame'] = cqp;
+        break;
+
+      case ESupportedEncoders.JIM_NVENC:
+        qualitySettings.rate_control = 'CQP'; // 1-51
+        qualitySettings.cqp = cqp;
+        break;
+
+      default:
+        console.error('[Recorder] Unrecognised encoder type', obsRecEncoder);
+        throw new Error('Unrecognised encoder type');
     }
+
+    this.obsRecordingFactory.videoEncoder.update(qualitySettings);
 
     console.info(
       'Video encoder settings:',
@@ -1312,5 +1333,25 @@ export default class Recorder extends EventEmitter {
     this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.LISTENING;
     this.emit('state-change');
+  }
+
+  private static getCqpFromQuality(obsQuality: string) {
+    switch (obsQuality) {
+      case QualityPresets.AMAZING:
+        return 16;
+
+      case QualityPresets.HIGH:
+        return 22;
+
+      case QualityPresets.MODERATE:
+        return 28;
+
+      case QualityPresets.LOW:
+        return 34;
+
+      default:
+        console.error('[Recorder] Unrecognised quality', obsQuality);
+        throw new Error('Unrecognised quality');
+    }
   }
 }

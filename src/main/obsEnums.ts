@@ -112,9 +112,15 @@ export const enum ERecordingFormat {
 
 export enum ESupportedEncoders {
   AMD_AMF_H264 = 'amd_amf_h264',
-  FFMPEG_NVENC = 'ffmpeg_nvenc',
   JIM_NVENC = 'jim_nvenc',
   OBS_X264 = 'obs_x264',
+}
+
+export enum QualityPresets {
+  AMAZING = 'Amazing',
+  HIGH = 'High',
+  MODERATE = 'Moderate',
+  LOW = 'Low',
 }
 
 export const enum ERangeType {

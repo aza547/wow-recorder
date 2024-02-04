@@ -50,7 +50,7 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
     obsPath,
     obsOutputResolution: cfg.get<string>('obsOutputResolution'),
     obsFPS: cfg.get<number>('obsFPS'),
-    obsKBitRate: cfg.get<number>('obsKBitRate'),
+    obsQuality: cfg.get<string>('obsQuality'),
     obsRecEncoder: cfg.get<string>('obsRecEncoder'),
   };
 };
