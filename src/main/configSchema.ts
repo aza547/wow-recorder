@@ -48,6 +48,8 @@ export type ConfigurationSchema = {
   pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
   obsAudioSuppression: boolean;
+  raidOverrun: number;
+  dungeonOverrun: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -118,7 +120,7 @@ export const configSchema = {
   },
   minEncounterDuration: {
     description:
-      'Minimum raid boss encounter duration, encounters shorter than this will not be recorded. This setting is aimed at avoiding saving boss resets.',
+      'Encounters shorter than this duration will not be recorded. This setting is aimed at avoiding saving boss resets.',
     type: 'integer',
     default: 15,
     maximum: 10000,
@@ -233,7 +235,7 @@ export const configSchema = {
   },
   minRaidDifficulty: {
     description:
-      'The minimum raid difficulty to record, this setting only applies to retail.',
+      'The minimum raid difficulty to record. Only applies to retail.',
     type: 'string',
     default: 'LFR',
   },
@@ -306,12 +308,12 @@ export const configSchema = {
   },
   pushToTalkKey: {
     description: 'The push to talk hotkey, represented by the key code.',
-    type: 'number',
+    type: 'integer',
     default: -1,
   },
   pushToTalkMouseButton: {
     description: 'The push to talk mouse button.',
-    type: 'number',
+    type: 'integer',
     default: -1,
   },
   pushToTalkModifiers: {
@@ -325,5 +327,20 @@ export const configSchema = {
       'Suppress background noise picked up by your microphone, this can help reduce keyboard clacking, breathing, etc.',
     type: 'boolean',
     default: true,
+  },
+  raidOverrun: {
+    description: 'Number of seconds to record after a boss has been killed.',
+    type: 'integer',
+    default: 15,
+    minimum: 0,
+    maximum: 60,
+  },
+  dungeonOverrun: {
+    description:
+      'Number of seconds to record after a dungeon has been completed.',
+    type: 'integer',
+    default: 5,
+    minimum: 0,
+    maximum: 60,
   },
 };

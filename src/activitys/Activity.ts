@@ -111,6 +111,7 @@ export default abstract class Activity {
   }
 
   set overrun(s) {
+    console.info('[Activity] Setting overrun to', s);
     this._overrun = s;
   }
 

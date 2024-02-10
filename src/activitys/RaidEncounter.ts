@@ -111,15 +111,6 @@ export default class RaidEncounter extends Activity {
     return instanceDifficulty[this.difficultyID];
   }
 
-  end(endDate: Date, result: boolean) {
-    if (result) {
-      console.log('[RaidEncounter] Adding overrun as this was a kill');
-      this.overrun = 15;
-    }
-
-    super.end(endDate, result);
-  }
-
   getMetadata(): Metadata {
     const rawCombatants = Array.from(this.combatantMap.values()).map(
       (combatant: Combatant) => combatant.getRaw()

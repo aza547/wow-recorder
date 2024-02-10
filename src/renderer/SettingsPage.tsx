@@ -69,6 +69,28 @@ const getGameSettingsInfoIcon = () => {
   );
 };
 
+const getPVESettingsInfoIcon = () => {
+  const helptext = [
+    /* eslint-disable prettier/prettier */
+    ['Record Raids',               configSchema.recordRaids.description].join('\n'),
+    ['Minimum Encounter Duration', configSchema.minEncounterDuration.description].join('\n'),
+    ['Raid Overrun',               configSchema.raidOverrun.description].join('\n'),
+    ['Minimum Raid Difficulty',    configSchema.minRaidDifficulty.description].join('\n'),
+    ['Record Mythic+',             configSchema.recordDungeons.description].join('\n'),
+    ['Minimum Keystone Level',     configSchema.minKeystoneLevel.description].join('\n'),
+    ['Mythic+ Overrun',            configSchema.dungeonOverrun.description].join('\n'),
+    // eslint-enable prettier/prettier */
+  ].join('\n\n');
+
+  return (
+    <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
+      <IconButton>
+        <InfoIcon style={{ color: 'white' }} />
+      </IconButton>
+    </Tooltip>
+  );
+};
+
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus } = props;
 
@@ -145,7 +167,18 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
         <FlavourSettings recorderStatus={recorderStatus} />
       </Box>
 
-      <Box sx={{ mx: 2 }}>{getHeading('PvE Settings')}</Box>
+      <Box
+        sx={{
+          mx: 2,
+          mt: 2,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}
+      >
+        {getHeading('PvE Settings')}
+        {getPVESettingsInfoIcon()}
+      </Box>
       <Box
         sx={{
           backgroundColor: boxColor,

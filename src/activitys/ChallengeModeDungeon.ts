@@ -137,10 +137,6 @@ export default class ChallengeModeDungeon extends Activity {
       this.removeLastTimelineSegment();
     }
 
-    if (result) {
-      this.overrun = 5;
-    }
-
     this.CMDuration = CMDuration;
     super.end(endDate, result);
   }

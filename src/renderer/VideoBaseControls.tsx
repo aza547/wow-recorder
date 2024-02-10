@@ -199,7 +199,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <FormControl size="small" sx={formControlStyle}>
+      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '150px' }}>
         <InputLabel sx={selectStyle}>Canvas Resolution</InputLabel>
         <Select
           value={config.obsOutputResolution}
@@ -302,7 +302,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <FormControl size="small" sx={formControlStyle}>
+      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '150px' }}>
         <InputLabel sx={selectStyle}>Quality</InputLabel>
         <Select
           value={config.obsQuality}
@@ -336,7 +336,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <FormControl size="small" sx={formControlStyle}>
+      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '250px' }}>
         <InputLabel sx={selectStyle}>Video Encoder</InputLabel>
         <Select
           value={config.obsRecEncoder}
@@ -390,6 +390,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
+          width: '100%',
         }}
       >
         {getFPSToggle()}

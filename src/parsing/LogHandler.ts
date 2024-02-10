@@ -125,6 +125,12 @@ export default abstract class LogHandler extends EventEmitter {
     }
 
     const result = Boolean(parseInt(line.arg(5), 10));
+
+    if (result) {
+      const overrun = this.cfg.get<number>('raidOverrun');
+      this.activity.overrun = overrun;
+    }
+
     this.activity.end(line.date(), result);
     await this.endActivity();
   }

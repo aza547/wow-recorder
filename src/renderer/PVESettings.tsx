@@ -13,10 +13,11 @@ import { ConfigurationSchema } from 'main/configSchema';
 import React from 'react';
 import { setConfigValues, useSettings } from './useSettings';
 
-const formControlStyle = { m: 1, width: '200px' };
+const formControlStyle = { width: '100%' };
 
 const style = {
-  width: '300px',
+  m: 1,
+  width: '100%',
   color: 'white',
   '& .MuiOutlinedInput-notchedOutline': {
     borderColor: 'white',
@@ -77,11 +78,15 @@ const PVESettings: React.FC = () => {
       minRaidDifficulty: config.minRaidDifficulty,
       recordDungeons: config.recordDungeons,
       minKeystoneLevel: config.minKeystoneLevel,
+      raidOverrun: config.raidOverrun,
+      dungeonOverrun: config.dungeonOverrun,
     });
   }, [
+    config.dungeonOverrun,
     config.minEncounterDuration,
     config.minKeystoneLevel,
     config.minRaidDifficulty,
+    config.raidOverrun,
     config.recordDungeons,
     config.recordRaids,
   ]);
@@ -143,7 +148,7 @@ const PVESettings: React.FC = () => {
         variant="outlined"
         type="number"
         InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        sx={style}
+        sx={{ ...style, maxWidth: '250px' }}
         inputProps={{ min: 0, style: { color: 'white' } }}
       />
     );
@@ -168,15 +173,17 @@ const PVESettings: React.FC = () => {
     }
 
     return (
-      <FormControl sx={formControlStyle}>
-        <InputLabel sx={style}>Minimum Raid Difficulty</InputLabel>
+      <FormControl sx={{ ...formControlStyle, maxWidth: '250px' }}>
+        <InputLabel sx={{ ...style, maxWidth: '250px' }}>
+          Minimum Raid Difficulty
+        </InputLabel>
         <Select
           value={config.minRaidDifficulty}
           disabled={!config.recordRaids}
           label="Minimum Raid Difficulty"
           variant="outlined"
           onChange={setMinRaidDifficulty}
-          sx={style}
+          sx={{ ...style, maxWidth: '250px' }}
         >
           {raidDifficultyOptions.map((difficulty: string) => (
             <MenuItem key={difficulty} value={difficulty}>
@@ -185,6 +192,78 @@ const PVESettings: React.FC = () => {
           ))}
         </Select>
       </FormControl>
+    );
+  };
+
+  const setRaidOverrun = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = parseInt(event.target.value, 10);
+
+    if (newValue < 0 || newValue > 60) {
+      // Don't allow invalid config to go further.
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        raidOverrun: newValue,
+      };
+    });
+  };
+
+  const getRaidOverrunField = () => {
+    if (!config.recordRaids) {
+      return <></>;
+    }
+
+    return (
+      <TextField
+        value={config.raidOverrun}
+        label="Raid Overrun (sec)"
+        disabled={!config.recordRaids}
+        onChange={setRaidOverrun}
+        variant="outlined"
+        type="number"
+        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
+        sx={{ ...style, maxWidth: '250px' }}
+        inputProps={{ min: 0, max: 60, style: { color: 'white' } }}
+      />
+    );
+  };
+
+  const setDungeonOverrun = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = parseInt(event.target.value, 10);
+
+    if (newValue < 0 || newValue > 60) {
+      // Don't allow invalid config to go further.
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        dungeonOverrun: newValue,
+      };
+    });
+  };
+
+  const getDungeonOverrunField = () => {
+    if (!config.recordDungeons) {
+      return <></>;
+    }
+
+    return (
+      <TextField
+        value={config.dungeonOverrun}
+        label="Mythic+ Overrun (sec)"
+        disabled={!config.recordDungeons}
+        onChange={setDungeonOverrun}
+        variant="outlined"
+        type="number"
+        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
+        sx={{ ...style, maxWidth: '250px' }}
+        inputProps={{ min: 0, max: 60, style: { color: 'white' } }}
+      />
     );
   };
 
@@ -232,7 +311,7 @@ const PVESettings: React.FC = () => {
         type="number"
         error={config.minKeystoneLevel < 0}
         InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        sx={style}
+        sx={{ ...style, maxWidth: '250px' }}
         inputProps={{ min: 0, style: { color: 'white' } }}
       />
     );
@@ -245,10 +324,12 @@ const PVESettings: React.FC = () => {
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
+          width: '100%',
         }}
       >
         {getRecordRaidSwitch()}
         {getMinEncounterDurationField()}
+        {getRaidOverrunField()}
         {getMinRaidDifficultySelect()}
       </Box>
 
@@ -257,10 +338,12 @@ const PVESettings: React.FC = () => {
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
+          width: '100%',
         }}
       >
         {getRecordDungeonSwitch()}
         {getMinKeystoneLevelField()}
+        {getDungeonOverrunField()}
       </Box>
     </Box>
   );

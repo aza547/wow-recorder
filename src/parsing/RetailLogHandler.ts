@@ -248,6 +248,11 @@ export default class RetailLogHandler extends LogHandler {
     // levels can be calculated. This includes player death penalty.
     const CMDuration = Math.round(parseInt(line.arg(4), 10) / 1000);
 
+    if (result) {
+      const overrun = this.cfg.get<number>('dungeonOverrun');
+      challengeModeActivity.overrun = overrun;
+    }
+
     challengeModeActivity.endChallengeMode(endDate, CMDuration, result);
     await this.endActivity();
   }
