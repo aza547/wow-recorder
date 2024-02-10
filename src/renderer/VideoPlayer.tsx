@@ -708,8 +708,7 @@ export const VideoPlayer = (props: IProps) => {
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  });
 
   // This hook updates some state to force a re-render on window resize,
   // otherwise resizing the window (and hence the progress bar) causes
@@ -721,7 +720,7 @@ export const VideoPlayer = (props: IProps) => {
 
     window.addEventListener('resize', updateWidth);
     return () => window.removeEventListener('resize', updateWidth);
-  }, []);
+  });
 
   // Inform the main process of a volume or muted state change.
   useEffect(() => {

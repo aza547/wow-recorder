@@ -116,7 +116,7 @@ const Application = () => {
     ipc.on('updateCrashes', (crash) => {
       setCrashes((prevArray) => [...prevArray, crash as CrashData]);
     });
-  }, []);
+  });
 
   return (
     <Box
