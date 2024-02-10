@@ -388,31 +388,30 @@ export default class Recorder extends EventEmitter {
     );
 
     // We set the CPQ or CRF value here. Low value is higher quality, and
-    // vice versa. We never allow setting lower than 14 as it's virtually
-    // lossless at that point. The lowest we will allow is 30 as after that
-    // quality is pretty awful. The limits on what this can actually be set
-    // to I took from what OBS studio allows and is annotated below.
-    const qualitySettings: ISettings = {};
+    // vice versa. The limits on what this can actually be set to I took
+    // from what OBS studio allows and is annotated below, but we don't
+    // go to the extremes of the allowed range anyway.
+    const encoderSettings: ISettings = {};
     const cqp = Recorder.getCqpFromQuality(obsQuality);
 
     switch (obsRecEncoder) {
       case ESupportedEncoders.OBS_X264:
         // CRF and CPQ are so similar in configuration that we can just treat
         // the CRF configuration the same as CQP configuration.
-        qualitySettings.rate_control = 'CRF';
-        qualitySettings.crf = cqp; // 0 - 51
+        encoderSettings.rate_control = 'CRF';
+        encoderSettings.crf = cqp; // 0 - 51
         break;
 
       case ESupportedEncoders.AMD_AMF_H264:
-        qualitySettings.rate_control = 'CQP'; // 0 - 51
-        qualitySettings['QP.BFrame'] = cqp;
-        qualitySettings['QP.IFrame'] = cqp;
-        qualitySettings['QP.PFrame'] = cqp;
+        encoderSettings.rate_control = 'CQP'; // 0 - 51
+        encoderSettings['QP.BFrame'] = cqp;
+        encoderSettings['QP.IFrame'] = cqp;
+        encoderSettings['QP.PFrame'] = cqp;
         break;
 
       case ESupportedEncoders.JIM_NVENC:
-        qualitySettings.rate_control = 'CQP'; // 1-51
-        qualitySettings.cqp = cqp;
+        encoderSettings.rate_control = 'CQP'; // 1-51
+        encoderSettings.cqp = cqp;
         break;
 
       default:
@@ -420,7 +419,7 @@ export default class Recorder extends EventEmitter {
         throw new Error('Unrecognised encoder type');
     }
 
-    this.obsRecordingFactory.videoEncoder.update(qualitySettings);
+    this.obsRecordingFactory.videoEncoder.update(encoderSettings);
 
     console.info(
       'Video encoder settings:',

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 474](https://github.com/aza547/wow-recorder/issues/474) - Use CQP/CRF encoder modes rather than VBR.
 ### Added
 ### Fixed
+- [Issue 478](https://github.com/aza547/wow-recorder/issues/478) - Fix an issue with config validation sometimes failing when it shouldn't.
 
 ## [3.23.2] - 2024-02-03
 ### Fixed

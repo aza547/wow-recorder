@@ -669,7 +669,6 @@ const getOBSFormattedDate = (date: Date) => {
  * directory currently.
  * @param dir folder to check
  * @param req size required in GB
- * @returns the number of GB available to WR but not in use
  */
 const checkDisk = async (dir: string, req: number) => {
   const files = await getSortedFiles(dir, '.*');
@@ -679,7 +678,18 @@ const checkDisk = async (dir: string, req: number) => {
     inUseBytes += file.size;
   });
 
-  const space = await checkDiskSpace(dir);
+  let space;
+
+  try {
+    space = await checkDiskSpace(dir);
+  } catch (error) {
+    // If we fail to check how much space is free then just log a warning and
+    // return, we don't want to fail config validation in this case. See issue 478.
+    console.warn('[Util] Failed to get free disk space from OS');
+    console.warn(String(error));
+    return;
+  }
+
   const disk = space.diskPath;
   const freeBytes = space.free;
   const reqBytes = req * 1024 ** 3 - inUseBytes;
