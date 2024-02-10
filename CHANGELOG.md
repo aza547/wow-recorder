@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 388](https://github.com/aza547/wow-recorder/issues/388) - Pause video playback on minimize.
 
 ## [3.24.2] - 2024-02-10
 ### Changed

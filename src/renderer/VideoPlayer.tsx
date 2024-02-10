@@ -729,6 +729,11 @@ export const VideoPlayer = (props: IProps) => {
     ipc.sendMessage('videoPlayerSettings', ['set', soundSettings]);
   }, [volume, muted]);
 
+  // Used to pause when the app is minimized to the system tray.
+  useEffect(() => {
+    ipc.on('pausePlayer', () => setPlaying(false));
+  });
+
   return (
     <>
       <Resizable

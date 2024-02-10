@@ -211,6 +211,7 @@ ipcMain.on('mainWindow', (_event, args) => {
 
     if (cfg.get<boolean>('minimizeToTray')) {
       console.log('[Main] Minimize main window to tray');
+      mainWindow.webContents.send('pausePlayer');
       mainWindow.hide();
     } else {
       console.log('[Main] Minimize main window to taskbar');
@@ -233,6 +234,7 @@ ipcMain.on('mainWindow', (_event, args) => {
 
     if (cfg.get<boolean>('minimizeOnQuit')) {
       console.log('[Main] Hiding main window');
+      mainWindow.webContents.send('pausePlayer');
       mainWindow.hide();
     } else {
       console.log('[Main] Closing main window');

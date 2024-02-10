@@ -105,8 +105,6 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     });
   };
 
-  // This is effectively equivalent to componentDidMount() in
-  // React Component classes
   React.useEffect(() => {
     ipc.on('fatalError', async (stack) => {
       setAppState((prevState) => {
