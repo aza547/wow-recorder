@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Remove combatant specs and classes from filter queries, class and spec querys now only apply to the player.
 ### Added
+- [Issue 421](https://github.com/aza547/wow-recorder/issues/421) - Tagging feature.
 ### Fixed
 - [Issue 388](https://github.com/aza547/wow-recorder/issues/388) - Pause video playback on minimize to system tray.
 
