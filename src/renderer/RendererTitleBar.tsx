@@ -23,7 +23,7 @@ export default function RendererTitleBar() {
     window.electron.ipcRenderer.on('updateTitleBar', (t) => {
       setTitle(t as string);
     });
-  });
+  }, []);
 
   return (
     <Box
