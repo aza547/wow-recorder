@@ -1,8 +1,14 @@
 import {
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   IconButton,
   Popover,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -12,6 +18,7 @@ import EventIcon from '@mui/icons-material/Event';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';
+import MessageIcon from '@mui/icons-material/Message';
 import React, { useEffect, useState } from 'react';
 import { RendererVideo, RendererVideoState, TNavigatorState } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
@@ -48,7 +55,7 @@ interface IProps {
 
 export default function VideoButton(props: IProps) {
   const { video, videoState, setVideoState, setNavigation } = props;
-  const { isProtected, fullPath, imagePath } = video;
+  const { isProtected, fullPath, imagePath, tag } = video;
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
   const isRaid = isRaidUtil(video);
@@ -64,12 +71,24 @@ export default function VideoButton(props: IProps) {
   const videoDate = getVideoDate(video);
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
+  const tagOpacity = tag ? 1 : 0.2;
+  const tagTooltip: string = tag ? `Tag: ${tag}` : 'Tag';
   let deleteVideoOnUnmount = false;
 
+  const buttonSx = {
+    color: 'white',
+    ':hover': {
+      color: 'white',
+      borderColor: '#bb4420',
+      background: '#bb4420',
+    },
+  };
+
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
+  const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
 
   const [deletePopoverAnchor, setDeletePopoverAnchor] =
-    React.useState<null | HTMLElement>(null);
+    useState<null | HTMLElement>(null);
 
   const open = Boolean(deletePopoverAnchor);
 
@@ -165,6 +184,27 @@ export default function VideoButton(props: IProps) {
     };
   });
 
+  const saveTag = (newTag: string) => {
+    window.electron.ipcRenderer.sendMessage('videoButton', [
+      'tag',
+      fullPath,
+      newTag,
+    ]);
+  };
+
+  const openTagDialog = () => {
+    setTagDialogOpen(true);
+  };
+
+  const closeTagDialog = () => {
+    setTagDialogOpen(false);
+  };
+
+  const clearTag = () => {
+    saveTag('');
+    closeTagDialog();
+  };
+
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
     window.electron.ipcRenderer.sendMessage('videoButton', ['save', fullPath]);
@@ -191,6 +231,68 @@ export default function VideoButton(props: IProps) {
         height: '80px',
       }}
     >
+      <Dialog
+        open={tagDialogOpen}
+        onClose={handleClose}
+        PaperProps={{
+          style: {
+            minHeight: '100px',
+            minWidth: '500px',
+            backgroundColor: '#1A233A',
+          },
+          component: 'form',
+          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            const formJson = Object.fromEntries((formData as any).entries());
+            const { newTag } = formJson;
+            saveTag(newTag);
+            closeTagDialog();
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: 'white' }}>Add a Description</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'white' }}>
+            Remind future you what was happening here. This text is searchable.
+          </DialogContentText>
+          <TextField
+            inputProps={{ style: { color: 'white' } }}
+            sx={{
+              '& .MuiInput-underline:before': { borderBottomColor: 'white' },
+              '& .MuiInput-underline:after': { borderBottomColor: 'white' },
+              '&& .MuiInput-root:hover::before': { borderColor: 'white' },
+            }}
+            multiline
+            minRows={1}
+            maxRows={10}
+            autoFocus
+            margin="dense"
+            type="string"
+            id="newTag"
+            name="newTag"
+            fullWidth
+            variant="standard"
+            defaultValue={tag}
+            onKeyDown={(e) => {
+              // Need this to prevent "k" triggering video play/pause while
+              // dialog is open and other similar things.
+              e.stopPropagation();
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeTagDialog} sx={buttonSx}>
+            Cancel
+          </Button>
+          <Button onClick={clearTag} sx={buttonSx}>
+            Clear
+          </Button>
+          <Button type="submit" sx={buttonSx}>
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Box
         sx={{
           height: '80px',
@@ -379,6 +481,12 @@ export default function VideoButton(props: IProps) {
             p: 2,
           }}
         >
+          <Tooltip title={tagTooltip}>
+            <IconButton onClick={openTagDialog}>
+              <MessageIcon sx={{ color: 'white', opacity: tagOpacity }} />
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title="Never age out">
             <IconButton onClick={protectVideo}>
               <BookmarksIcon

@@ -81,26 +81,28 @@ export default class VideoFilter {
    * Set generic filters we want for every video regardless of category.
    */
   private setGenericFilters() {
-    if (this.video.combatants) {
-      this.video.combatants.forEach((combatant) => {
-        this.addStringFilter(combatant._name);
-        this.addStringFilter(combatant._realm);
+    if (this.video.player) {
+      const { player } = this.video;
 
-        if (combatant._specID === undefined) {
-          return;
-        }
-
+      if (player._specID) {
         const isKnownSpec = Object.prototype.hasOwnProperty.call(
           specializationById,
-          combatant._specID
+          player._specID
         );
 
         if (isKnownSpec) {
-          this.addStringFilter(specializationById[combatant._specID].name);
-          this.addStringFilter(specializationById[combatant._specID].label);
+          this.addStringFilter(specializationById[player._specID].name);
+          this.addStringFilter(specializationById[player._specID].label);
         }
-      });
+      }
     }
+
+    this.video.combatants
+      .map((combatant) => combatant._name)
+      .filter((name) => name)
+      .forEach((name) => {
+        this.addStringFilter(name);
+      });
 
     const videoDate = new Date(this.video.mtime);
     const currentDate = new Date();
@@ -132,6 +134,17 @@ export default class VideoFilter {
       this.addStringFilter('retail');
     } else if (this.video.flavour === Flavour.Classic) {
       this.addStringFilter('classic');
+    }
+
+    if (this.video.tag) {
+      // Split all the words in the tag on whitespace, remove non-letter
+      // characters from all the words to exclude punctuation and add
+      // as filters.
+      this.video.tag
+        .split(/[\s+]/)
+        .map((word) => word.replace(/[^a-zA-Z]/g, ''))
+        .filter((word) => word)
+        .forEach((word) => this.addStringFilter(word));
     }
   }
 

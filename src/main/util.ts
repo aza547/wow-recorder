@@ -326,6 +326,34 @@ const toggleVideoProtected = async (videoPath: string) => {
 };
 
 /**
+ * Tag a video.
+ */
+const tagVideo = async (videoPath: string, tag: string) => {
+  let metadata;
+
+  try {
+    metadata = await getMetadataForVideo(videoPath);
+  } catch (err) {
+    console.error(
+      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`
+    );
+
+    return;
+  }
+
+  if (!tag || !/\S/.test(tag)) {
+    // empty or whitespace only
+    console.info('[Util] User removed tag');
+    metadata.tag = undefined;
+  } else {
+    console.info('[Util] User tagged', videoPath, 'with', tag);
+    metadata.tag = tag;
+  }
+
+  await writeMetadataFile(videoPath, metadata);
+};
+
+/**
  * Get a text string that indicates the physical position of a display depending
  * on its index.
  */
@@ -729,4 +757,5 @@ export {
   buildClipMetadata,
   getOBSFormattedDate,
   checkDisk,
+  tagVideo,
 };

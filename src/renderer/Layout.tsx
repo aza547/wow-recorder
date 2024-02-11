@@ -38,6 +38,7 @@ import FlagIcon from '../../assets/icon/flag.png';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings, setConfigValue } from './useSettings';
+import { useEffect } from 'react';
 
 interface IProps {
   navigation: TNavigatorState;
@@ -105,7 +106,7 @@ const Layout: React.FC<IProps> = (props: IProps) => {
     });
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     ipc.on('fatalError', async (stack) => {
       setAppState((prevState) => {
         return {

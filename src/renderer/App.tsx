@@ -1,5 +1,5 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import React from 'react';
+import { useEffect, useState } from 'react';
 import {
   CrashData,
   Crashes,
@@ -25,32 +25,32 @@ const ipc = window.electron.ipcRenderer;
 const Application = () => {
   const [config] = useSettings();
 
-  const [recorderStatus, setRecorderStatus] = React.useState<RecStatus>(
+  const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW
   );
 
-  const [error, setError] = React.useState<string>('');
+  const [error, setError] = useState<string>('');
 
-  const [upgradeStatus, setUpgradeStatus] = React.useState<UpgradeStatus>({
+  const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>({
     available: false,
     link: undefined,
   });
 
-  const [savingStatus, setSavingStatus] = React.useState<SaveStatus>(
+  const [savingStatus, setSavingStatus] = useState<SaveStatus>(
     SaveStatus.NotSaving
   );
 
-  const [videoState, setVideoState] = React.useState<RendererVideoState>(
+  const [videoState, setVideoState] = useState<RendererVideoState>(
     getEmptyState()
   );
 
-  const [navigation, setNavigation] = React.useState<TNavigatorState>({
+  const [navigation, setNavigation] = useState<TNavigatorState>({
     categoryIndex: config.selectedCategory,
     videoIndex: 0,
     page: Pages.None,
   });
 
-  const [appState, setAppState] = React.useState<TAppState>({
+  const [appState, setAppState] = useState<TAppState>({
     // If the app hits a fatal error, we set this to true and provide a reason.
     fatalError: false,
     fatalErrorText: '',
@@ -67,11 +67,11 @@ const Application = () => {
     videoFullScreen: false,
   });
 
-  const [micStatus, setMicStatus] = React.useState<MicStatus>(MicStatus.NONE);
+  const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
 
-  const [crashes, setCrashes] = React.useState<Crashes>([]);
+  const [crashes, setCrashes] = useState<Crashes>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     ipc.on('refreshState', async () => {
       setVideoState(
         (await ipc.invoke('getVideoState', [])) as RendererVideoState

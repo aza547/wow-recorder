@@ -206,6 +206,7 @@ type Metadata = {
   combatants: RawCombatant[];
   overrun: number;
   affixes?: number[];
+  tag?: string;
 };
 
 /**

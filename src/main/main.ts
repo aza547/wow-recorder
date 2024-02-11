@@ -25,6 +25,7 @@ import {
   getAssetPath,
   nextMousePressPromise,
   nextKeyPressPromise,
+  tagVideo,
 } from './util';
 import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
@@ -252,7 +253,7 @@ ipcMain.on('videoButton', async (_event, args) => {
   if (action === 'delete') {
     const videoForDeletion = args[1];
     await deleteVideo(videoForDeletion);
-    if (mainWindow) mainWindow.webContents.send('refreshState');
+    mainWindow?.webContents.send('refreshState');
   }
 
   if (action === 'open') {
@@ -263,10 +264,14 @@ ipcMain.on('videoButton', async (_event, args) => {
   if (action === 'save') {
     const videoToToggle = args[1];
     await toggleVideoProtected(videoToToggle);
+    mainWindow?.webContents.send('refreshState');
+  }
 
-    if (mainWindow) {
-      mainWindow.webContents.send('refreshState');
-    }
+  if (action === 'tag') {
+    const videoToTag = args[1];
+    const tag = args[2];
+    await tagVideo(videoToTag, tag);
+    mainWindow?.webContents.send('refreshState');
   }
 });
 
