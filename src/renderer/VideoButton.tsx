@@ -45,6 +45,7 @@ import BattlegroundInfo from './BattlegroundInfo';
 import DungeonInfo from './DungeonInfo';
 import ArenaInfo from './ArenaInfo';
 import RaidCompAndResult from './RaidCompAndResult';
+import TagDialog from './TagDialog';
 
 interface IProps {
   video: RendererVideo;
@@ -72,17 +73,13 @@ export default function VideoButton(props: IProps) {
   const specIcon = Images.specImages[playerSpecID];
   const bookmarkOpacity = isProtected ? 1 : 0.2;
   const tagOpacity = tag ? 1 : 0.2;
-  const tagTooltip: string = tag ? `Tag: ${tag}` : 'Tag';
   let deleteVideoOnUnmount = false;
+  let tagTooltip: string = tag ? `Tag: ${tag}` : 'Tag';
 
-  const buttonSx = {
-    color: 'white',
-    ':hover': {
-      color: 'white',
-      borderColor: '#bb4420',
-      background: '#bb4420',
-    },
-  };
+  if (tagTooltip.length > 50) {
+    // If the tooltip is over 50 chars then truncate it.
+    tagTooltip = `${tagTooltip.slice(0, 50)}...`;
+  }
 
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
   const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
@@ -184,25 +181,8 @@ export default function VideoButton(props: IProps) {
     };
   });
 
-  const saveTag = (newTag: string) => {
-    window.electron.ipcRenderer.sendMessage('videoButton', [
-      'tag',
-      fullPath,
-      newTag,
-    ]);
-  };
-
   const openTagDialog = () => {
     setTagDialogOpen(true);
-  };
-
-  const closeTagDialog = () => {
-    setTagDialogOpen(false);
-  };
-
-  const clearTag = () => {
-    saveTag('');
-    closeTagDialog();
   };
 
   const protectVideo = (event: React.SyntheticEvent) => {
@@ -231,68 +211,11 @@ export default function VideoButton(props: IProps) {
         height: '80px',
       }}
     >
-      <Dialog
-        open={tagDialogOpen}
-        onClose={handleClose}
-        PaperProps={{
-          style: {
-            minHeight: '100px',
-            minWidth: '500px',
-            backgroundColor: '#1A233A',
-          },
-          component: 'form',
-          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            const formData = new FormData(event.currentTarget);
-            const formJson = Object.fromEntries((formData as any).entries());
-            const { newTag } = formJson;
-            saveTag(newTag);
-            closeTagDialog();
-          },
-        }}
-      >
-        <DialogTitle sx={{ color: 'white' }}>Add a Description</DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ color: 'white' }}>
-            Remind future you what was happening here. This text is searchable.
-          </DialogContentText>
-          <TextField
-            inputProps={{ style: { color: 'white' } }}
-            sx={{
-              '& .MuiInput-underline:before': { borderBottomColor: 'white' },
-              '& .MuiInput-underline:after': { borderBottomColor: 'white' },
-              '&& .MuiInput-root:hover::before': { borderColor: 'white' },
-            }}
-            multiline
-            minRows={1}
-            maxRows={10}
-            autoFocus
-            margin="dense"
-            type="string"
-            id="newTag"
-            name="newTag"
-            fullWidth
-            variant="standard"
-            defaultValue={tag}
-            onKeyDown={(e) => {
-              // Need this to prevent "k" triggering video play/pause while
-              // dialog is open and other similar things.
-              e.stopPropagation();
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeTagDialog} sx={buttonSx}>
-            Cancel
-          </Button>
-          <Button onClick={clearTag} sx={buttonSx}>
-            Clear
-          </Button>
-          <Button type="submit" sx={buttonSx}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <TagDialog
+        video={video}
+        tagDialogOpen={tagDialogOpen}
+        setTagDialogOpen={setTagDialogOpen}
+      />
       <Box
         sx={{
           height: '80px',

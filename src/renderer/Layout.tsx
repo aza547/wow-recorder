@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import TvIcon from '@mui/icons-material/Tv';
+import { useEffect } from 'react';
 import ClipIcon from '../../assets/icon/clip-icon.png';
 import { VideoPlayer } from './VideoPlayer';
 import { VideoCategory } from '../types/VideoCategory';
@@ -38,7 +39,6 @@ import FlagIcon from '../../assets/icon/flag.png';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings, setConfigValue } from './useSettings';
-import { useEffect } from 'react';
 
 interface IProps {
   navigation: TNavigatorState;
