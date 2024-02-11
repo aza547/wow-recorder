@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 388](https://github.com/aza547/wow-recorder/issues/388) - Pause video playback on minimize to system tray.
 
-## [3.24.2] - 2024-02-10
+## [3.24.0] - 2024-02-10
 ### Changed
 - [Issue 474](https://github.com/aza547/wow-recorder/issues/474) - Use CQP/CRF encoder modes rather than VBR.
 - Removed support for ffmpeg_nvenc encoder, as jim_nvenc is always preferable.
