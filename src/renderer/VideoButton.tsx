@@ -82,10 +82,9 @@ export default function VideoButton(props: IProps) {
   const bookmarkOpacity = isProtected ? 1 : 0.2;
   const tagOpacity = tag ? 1 : 0.2;
   let deleteVideoOnUnmount = false;
-  let tagTooltip: string = tag ? `Tag: ${tag}` : 'Tag';
+  let tagTooltip: string = tag || 'Add a tag';
 
   if (tagTooltip.length > 50) {
-    // If the tooltip is over 50 chars then truncate it.
     tagTooltip = `${tagTooltip.slice(0, 50)}...`;
   }
 

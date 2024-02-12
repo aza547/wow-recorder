@@ -397,7 +397,7 @@ const isClipUtil = (video: RendererVideo) => {
 };
 
 const getResultColor = (video: RendererVideo) => {
-  const { result, soloShuffleRoundsWon } = video;
+  const { result, soloShuffleRoundsWon, upgradeLevel } = video;
 
   if (isSoloShuffleUtil(video)) {
     if (
@@ -420,6 +420,16 @@ const getResultColor = (video: RendererVideo) => {
 
       return soloShuffleResultColors[soloShuffleRoundsWon];
     }
+  }
+
+  if (
+    isMythicPlusUtil(video) &&
+    result &&
+    upgradeLevel !== undefined &&
+    upgradeLevel < 1
+  ) {
+    // It's a completed, but depleted mythic+.
+    return 'rgb(171, 170, 30, 0.3)';
   }
 
   if (result) {
@@ -754,16 +764,20 @@ const getVideoResultText = (video: RendererVideo): string => {
     soloShuffleRoundsPlayed,
   } = video;
 
-  if (isMythicPlusUtil(video) && result) {
+  if (isMythicPlusUtil(video)) {
+    if (!result) {
+      return 'Abandoned';
+    }
+
     if (upgradeLevel === undefined) {
       return '';
     }
 
-    return String(upgradeLevel);
-  }
+    if (upgradeLevel < 1) {
+      return 'Depleted';
+    }
 
-  if (isMythicPlusUtil(video) && !result) {
-    return 'Depleted';
+    return String(upgradeLevel);
   }
 
   if (isRaidUtil(video)) {

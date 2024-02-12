@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 388](https://github.com/aza547/wow-recorder/issues/388) - Pause video playback on minimize to system tray.
 - Prevent spellchecking on the search bar text field giving annoying squiggles.
+- [Issue 434](https://github.com/aza547/wow-recorder/issues/434) - Fix abandoned/deplete marking on Mythic+ dungeons.
 
 ## [3.24.0] - 2024-02-10
 ### Changed
