@@ -7,8 +7,6 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
-  Popover,
-  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -46,6 +44,7 @@ import DungeonInfo from './DungeonInfo';
 import ArenaInfo from './ArenaInfo';
 import RaidCompAndResult from './RaidCompAndResult';
 import TagDialog from './TagDialog';
+import ControlIcon from '../../assets/icon/ctrl-icon.png';
 
 interface IProps {
   video: RendererVideo;
@@ -53,6 +52,15 @@ interface IProps {
   setVideoState: React.Dispatch<React.SetStateAction<RendererVideoState>>;
   setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
 }
+
+const dialogButtonSx = {
+  color: 'white',
+  ':hover': {
+    color: 'white',
+    borderColor: '#bb4420',
+    background: '#bb4420',
+  },
+};
 
 export default function VideoButton(props: IProps) {
   const { video, videoState, setVideoState, setNavigation } = props;
@@ -83,21 +91,7 @@ export default function VideoButton(props: IProps) {
 
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
   const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
-
-  const [deletePopoverAnchor, setDeletePopoverAnchor] =
-    useState<null | HTMLElement>(null);
-
-  const open = Boolean(deletePopoverAnchor);
-
-  const openDeletePopover = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    setDeletePopoverAnchor(deletePopoverAnchor ? null : event.currentTarget);
-  };
-
-  const handleClose = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    setDeletePopoverAnchor(null);
-  };
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 
   /**
    * Delete a video. This avoids attempting to delete the video
@@ -199,8 +193,61 @@ export default function VideoButton(props: IProps) {
     if (ctrlDown) {
       deleteVideo(event);
     } else {
-      openDeletePopover(event);
+      setDeleteDialogOpen(true);
     }
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const markForDelete = () => {
+    deleteVideoOnUnmount = true;
+    closeDeleteDialog();
+  };
+
+  const getTagDialog = () => {
+    return (
+      <TagDialog
+        video={video}
+        tagDialogOpen={tagDialogOpen}
+        setTagDialogOpen={setTagDialogOpen}
+      />
+    );
+  };
+
+  const getDeleteDialog = () => {
+    return (
+      <Dialog
+        open={deleteDialogOpen}
+        PaperProps={{ style: { backgroundColor: '#1A233A' } }}
+      >
+        <DialogTitle sx={{ color: 'white' }}>
+          Permanently Delete this Video?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'white' }}>
+            Hold{' '}
+            <img
+              src={ControlIcon}
+              alt="Control Key"
+              width="35"
+              height="35"
+              style={{ verticalAlign: 'middle' }}
+            />{' '}
+            to skip this prompt in future.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} sx={dialogButtonSx}>
+            Cancel
+          </Button>
+          <Button onClick={markForDelete} sx={dialogButtonSx}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
   };
 
   return (
@@ -211,11 +258,8 @@ export default function VideoButton(props: IProps) {
         height: '80px',
       }}
     >
-      <TagDialog
-        video={video}
-        tagDialogOpen={tagDialogOpen}
-        setTagDialogOpen={setTagDialogOpen}
-      />
+      {getTagDialog()}
+      {getDeleteDialog()}
       <Box
         sx={{
           height: '80px',
@@ -431,51 +475,6 @@ export default function VideoButton(props: IProps) {
               </IconButton>
             </div>
           </Tooltip>
-          <Popover
-            anchorEl={deletePopoverAnchor}
-            open={open}
-            onClose={handleClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                border: '1px solid white',
-                borderRadius: '5px',
-                p: 1,
-                width: '250px',
-                bgcolor: '#272e48',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Typography sx={{ color: 'white', fontSize: '0.75rem', m: 1 }}>
-                Are you sure you want to permanently delete this video? Hint:
-                Hold CTRL to skip this prompt.
-              </Typography>
-              <Button
-                key="delete-video-button"
-                variant="outlined"
-                onClick={deleteVideo}
-                sx={{
-                  m: '4px',
-                  color: 'white',
-                  width: '100px',
-                  borderColor: 'white',
-                  ':hover': {
-                    color: '#bb4420',
-                    borderColor: '#bb4420',
-                  },
-                }}
-              >
-                Yes
-              </Button>
-            </Box>
-          </Popover>
         </Box>
       </Box>
     </Box>

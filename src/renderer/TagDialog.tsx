@@ -90,6 +90,7 @@ export default function TagDialog(props: IProps) {
           fullWidth
           variant="standard"
           defaultValue={video.tag}
+          spellCheck={false}
           onKeyDown={(e) => {
             // Need this to prevent "k" triggering video play/pause while
             // dialog is open and other similar things.

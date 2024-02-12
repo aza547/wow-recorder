@@ -40,6 +40,7 @@ const SearchBar = (props: IProps) => {
   return (
     <TextField
       fullWidth
+      spellCheck={false}
       size="small"
       placeholder={VideoFilter.getSuggestions(category)}
       id="search-bar"
