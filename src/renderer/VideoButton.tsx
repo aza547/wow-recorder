@@ -234,7 +234,7 @@ export default function VideoButton(props: IProps) {
               height="35"
               style={{ verticalAlign: 'middle' }}
             />{' '}
-            to skip this prompt in future.
+            to skip this prompt.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
