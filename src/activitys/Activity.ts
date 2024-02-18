@@ -120,7 +120,10 @@ export default abstract class Activity {
       throw new Error('Failed to get duration of in-progress activity');
     }
 
-    return (this.endDate.getTime() - this.startDate.getTime()) / 1000;
+    const baseDuration =
+      (this.endDate.getTime() - this.startDate.getTime()) / 1000;
+
+    return baseDuration + this.overrun;
   }
 
   get player() {

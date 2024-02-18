@@ -252,7 +252,7 @@ export default abstract class LogHandler extends EventEmitter {
       const bufferStartTime = startDate.getTime();
       const offset = (activityStartTime - bufferStartTime) / 1000;
       const metadata = lastActivity.getMetadata();
-      const duration = metadata.duration + metadata.overrun;
+      const { duration } = metadata;
       const suffix = lastActivity.getFileName();
 
       if (lastActivity.category === VideoCategory.Raids) {

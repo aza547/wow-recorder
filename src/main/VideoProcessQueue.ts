@@ -152,15 +152,39 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Takes an input MP4 file, trims the footage from the start of the video so
-   * that the output is desiredDuration seconds. Some ugly async/await stuff
-   * here. Some interesting implementation details around ffmpeg in comments
-   * below.
-   *
-   * @param {string} initialFile path to initial MP4 file
-   * @param {string} finalDir path to output directory
-   * @param {number} desiredDuration seconds to cut down to
-   * @returns full path of the final video file
+   * Returns the full path for a video cut operation's output file.
+   */
+  private static getOutputVideoPath(
+    sourceFile: string,
+    outputDir: string,
+    suffix: string | undefined
+  ) {
+    let videoName = path.basename(sourceFile, '.mp4');
+
+    if (suffix) {
+      videoName += suffix;
+    }
+
+    videoName = VideoProcessQueue.sanitizeFilename(videoName);
+    return path.join(outputDir, `${videoName}.mp4`);
+  }
+
+  /**
+   * Return the start time of a video, avoiding the case where the offset is
+   * negative as that's obviously not a valid thing to do.
+   */
+  private static getStartTime(offset: number) {
+    if (offset > 0) {
+      return offset;
+    }
+
+    console.warn('[VideoProcessQueue] Rejectiving negative start time', offset);
+    return 0;
+  }
+
+  /**
+   * Takes an input MP4 file, trims the footage offset from the start of the
+   * video so that the output is duration seconds.
    */
   private static async cutVideo(
     sourceFile: string,
@@ -169,31 +193,17 @@ export default class VideoProcessQueue {
     offset: number,
     duration: number
   ): Promise<string> {
-    const videoFileName = path.basename(sourceFile, '.mp4');
-    const videoFilenameSuffix = suffix ? ` - ${suffix}` : '';
-    const baseVideoFilename = VideoProcessQueue.sanitizeFilename(
-      videoFileName + videoFilenameSuffix
+    const startTime = VideoProcessQueue.getStartTime(offset);
+    const outputPath = VideoProcessQueue.getOutputVideoPath(
+      sourceFile,
+      outputDir,
+      suffix
     );
-    const finalVideoPath = path.join(outputDir, `${baseVideoFilename}.mp4`);
+
+    console.info('[VideoProcessQueue] Start time:', startTime);
+    console.info('[VideoProcessQueue] Duration:', duration);
 
     return new Promise<string>((resolve) => {
-      if (offset < 0) {
-        console.log(
-          '[VideoProcessQueue] Avoiding error by rejecting negative start',
-          offset
-        );
-
-        // eslint-disable-next-line no-param-reassign
-        offset = 0;
-      }
-
-      console.log(
-        '[VideoProcessQueue] Desired duration:',
-        duration,
-        'Relative start time:',
-        offset
-      );
-
       const handleEnd = async (err: unknown) => {
         if (err) {
           console.error('[VideoProcessQueue] Cutting error (1): ', String(err));
@@ -201,7 +211,7 @@ export default class VideoProcessQueue {
         }
 
         console.info('[VideoProcessQueue] FFmpeg cut video succeeded');
-        resolve(finalVideoPath);
+        resolve(outputPath);
       };
 
       const handleErr = (err: unknown) => {
@@ -217,8 +227,8 @@ export default class VideoProcessQueue {
       // but that's cheap so we can just do it. Read about it here:
       // https://superuser.com/questions/1001299/.
       ffmpeg(sourceFile)
-        .output(finalVideoPath)
-        .setStartTime(offset)
+        .output(outputPath)
+        .setStartTime(startTime)
         .setDuration(duration)
         .withVideoCodec('copy')
         .withAudioCodec('aac')
