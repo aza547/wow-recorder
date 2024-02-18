@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Cut videos more accurately by dropping the no-negative-ts flag from the  cut call to ffmpeg.
 
 ## [3.25.0] - 2024-02-13
 ### Changed

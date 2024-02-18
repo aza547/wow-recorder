@@ -194,48 +194,36 @@ export default class VideoProcessQueue {
         offset
       );
 
+      const handleEnd = async (err: unknown) => {
+        if (err) {
+          console.error('[VideoProcessQueue] Cutting error (1): ', String(err));
+          throw new Error('Error when cutting video');
+        } else {
+          console.info('[VideoProcessQueue] FFmpeg cut video succeeded');
+          resolve(finalVideoPath);
+        }
+      };
+
+      const handleErr = (err: unknown) => {
+        console.error('[VideoProcessQueue] Cutting error (2): ', String(err));
+        throw new Error('Error when cutting video');
+      };
+
       // It's crucial that we don't re-encode the video here as that
-      // would spin the CPU and delay the replay being available. I
-      // did try this with re-encoding as it has compression benefits
-      // but took literally ages. My CPU was maxed out for nearly the
-      // same elapsed time as the recording.
+      // would spin the CPU and delay the replay being available. Read
+      // about it here: https://stackoverflow.com/questions/63997589/.
       //
-      // We ensure that we don't re-encode by passing the "-c copy"
-      // option to ffmpeg. Read about it here:
-      // https://superuser.com/questions/377343/cut-part-from-video-file-from-start-position-to-end-position-with-ffmpeg
-      //
-      // This thread has a brilliant summary why we need "-avoid_negative_ts make_zero":
-      // https://superuser.com/questions/1167958/video-cut-with-missing-frames-in-ffmpeg?rq=1
+      // We do need to re-encode the audio to prevent it being desynced,
+      // but that's cheap so we can just do it. Read about it here:
+      // https://superuser.com/questions/1001299/.
       ffmpeg(sourceFile)
-        .inputOptions([`-ss ${offset}`, `-t ${duration}`])
-        .outputOptions([
-          `-t ${duration}`,
-          '-c:v copy',
-          '-c:a copy',
-          '-avoid_negative_ts make_zero',
-        ])
         .output(finalVideoPath)
-
-        // Handle the end of the FFmpeg cutting.
-        .on('end', async (err: any) => {
-          if (err) {
-            console.log(
-              '[VideoProcessQueue] FFmpeg video cut error (1): ',
-              err
-            );
-            throw new Error('FFmpeg error when cutting video (1)');
-          } else {
-            console.log('[VideoProcessQueue] FFmpeg cut video succeeded');
-            resolve(finalVideoPath);
-          }
-        })
-
-        // Handle an error with the FFmpeg cutting. Not sure if we
-        // need this as well as the above but being careful.
-        .on('error', (err: any) => {
-          console.log('[VideoProcessQueue] FFmpeg video cut error (2): ', err);
-          throw new Error('FFmpeg error when cutting video (2)');
-        })
+        .setStartTime(offset)
+        .setDuration(duration)
+        .withVideoCodec('copy')
+        .withAudioCodec('aac')
+        .on('end', handleEnd)
+        .on('error', handleErr)
         .run();
     });
   }
@@ -246,7 +234,6 @@ export default class VideoProcessQueue {
    * expensive, so we avoid that.
    *
    * @param {string} video full path to initial MP4 file
-   * @param {string} output path to output directory
    */
   private static async getThumbnail(video: string) {
     const thumbnailPath = getThumbnailFileNameForVideo(video);
@@ -254,25 +241,31 @@ export default class VideoProcessQueue {
     const thumbnailDir = path.dirname(thumbnailPath);
 
     return new Promise<void>((resolve) => {
-      ffmpeg(video)
-        .on('end', () => {
-          console.info('[VideoProcessQueue] Got thumbnail for', video);
-          resolve();
-        })
-        .on('error', (err: unknown) => {
-          console.error(
-            '[VideoProcessQueue] Error getting thumbnail for',
-            video,
-            String(err)
-          );
+      const handleEnd = () => {
+        console.info('[VideoProcessQueue] Got thumbnail for', video);
+        resolve();
+      };
 
-          throw new Error(String(err));
-        })
-        .screenshots({
-          timestamps: [0],
-          folder: thumbnailDir,
-          filename: thumbnailFile,
-        });
+      const handleError = (err: unknown) => {
+        console.error(
+          '[VideoProcessQueue] Error getting thumbnail for',
+          video,
+          String(err)
+        );
+
+        throw new Error(String(err));
+      };
+
+      const screenshotConfig = {
+        timestamps: [0],
+        folder: thumbnailDir,
+        filename: thumbnailFile,
+      };
+
+      ffmpeg(video)
+        .on('end', handleEnd)
+        .on('error', handleError)
+        .screenshots(screenshotConfig);
     });
   }
 }

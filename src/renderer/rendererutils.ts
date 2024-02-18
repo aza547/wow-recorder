@@ -55,7 +55,6 @@ const getFormattedDuration = (video: RendererVideo) => {
 /**
  * Return an array of death markers for a video.
  * @param video the RendereVideo data type for the video
- * @param ownOnly true if should only get the players deaths
  */
 const getOwnDeathMarkers = (video: RendererVideo) => {
   const videoMarkers: VideoMarker[] = [];
