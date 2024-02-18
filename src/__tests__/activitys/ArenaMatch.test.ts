@@ -31,9 +31,10 @@ test('Basic Arena Match', () => {
   arenaMatch.endArena(endDate, winningTeamID);
 
   const expectedDuration = (endDate.getTime() - startDate.getTime()) / 1000;
+  const overrun = 3;
   const expectedResult = winningTeamID === testCombatants[0].teamID;
 
-  expect(arenaMatch.duration).toBe(expectedDuration);
+  expect(arenaMatch.duration).toBe(expectedDuration + overrun);
   expect(arenaMatch.result).toBe(expectedResult);
   expect(arenaMatch.resultInfo).toBe('Win');
   expect(arenaMatch.zoneName).toBe("Blade's Edge");

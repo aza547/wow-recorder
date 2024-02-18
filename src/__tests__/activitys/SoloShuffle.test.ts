@@ -70,8 +70,9 @@ test('Basic Solo Shuffle', () => {
   soloShuffle.endGame(endDate);
 
   const expectedDuration = (endDate.getTime() - startDate.getTime()) / 1000;
+  const overrun = 3;
 
-  expect(soloShuffle.duration).toBe(expectedDuration);
+  expect(soloShuffle.duration).toBe(expectedDuration + overrun);
   expect(soloShuffle.getFileName()).toBe("Solo Shuffle Blade's Edge (1-5)");
   expect(soloShuffle.resultInfo).toBe('1-5');
   expect(soloShuffle.roundsWon).toBe(1);

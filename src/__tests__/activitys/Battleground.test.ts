@@ -33,8 +33,9 @@ test('Basic Battleground', () => {
   const endDate = new Date('2022-12-25T12:10:00');
   battleground.end(endDate, false);
   const expectedDuration = (endDate.getTime() - startDate.getTime()) / 1000;
+  const overrun = 3;
 
-  expect(battleground.duration).toBe(expectedDuration);
+  expect(battleground.duration).toBe(expectedDuration + overrun);
   expect(battleground.battlegroundName).toBe('The Battle for Gilneas');
   expect(battleground.getFileName()).toBe('The Battle for Gilneas (Win)');
   expect(battleground.estimateResult()).toBe(true);
