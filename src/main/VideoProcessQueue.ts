@@ -162,6 +162,7 @@ export default class VideoProcessQueue {
     let videoName = path.basename(sourceFile, '.mp4');
 
     if (suffix) {
+      videoName += ' - ';
       videoName += suffix;
     }
 
