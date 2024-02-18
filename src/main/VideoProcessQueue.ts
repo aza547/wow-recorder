@@ -224,15 +224,28 @@ export default class VideoProcessQueue {
       // would spin the CPU and delay the replay being available. Read
       // about it here: https://stackoverflow.com/questions/63997589/.
       //
-      // We do need to re-encode the audio to prevent it being desynced,
-      // but that's cheap so we can just do it. Read about it here:
-      // https://superuser.com/questions/1001299/.
+      // We need to deal with audio desync due to the cutting. We could
+      // just re-encode it which is fairly cheap but for long runs
+      // this can incur noticable cutting time. I saw a 20min Mythic+ take
+      // approx 10s to cut which is probably not acceptable. Read about the
+      // re-encoding approach here: https://superuser.com/questions/1001299/.
+      //
+      // What we actually do is pass the "-async 1" argument, which is a bit
+      // smelly, it's a deprecated feature that's gone from FFMPEG docs, but it
+      // does seem to do exactly what we want. Audio desync is corrected and
+      // cutting time doesn't appear to scale with video length using this flag,
+      // Read about it here: https://stackoverflow.com/questions/8844460/.
+      //
+      // The suggested aresample audio filter doesn't work along with the
+      // 'copy' codec option in FFMPEG, possibly there is a way around that but
+      /// the '-async 1' flag does not share this problem.
       ffmpeg(sourceFile)
         .output(outputPath)
         .setStartTime(startTime)
         .setDuration(duration)
         .withVideoCodec('copy')
-        .withAudioCodec('aac')
+        .withAudioCodec('copy')
+        .outputOptions('-async 1')
         .on('end', handleEnd)
         .on('error', handleErr)
         .run();
