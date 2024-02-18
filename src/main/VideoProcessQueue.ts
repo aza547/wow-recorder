@@ -198,10 +198,10 @@ export default class VideoProcessQueue {
         if (err) {
           console.error('[VideoProcessQueue] Cutting error (1): ', String(err));
           throw new Error('Error when cutting video');
-        } else {
-          console.info('[VideoProcessQueue] FFmpeg cut video succeeded');
-          resolve(finalVideoPath);
         }
+
+        console.info('[VideoProcessQueue] FFmpeg cut video succeeded');
+        resolve(finalVideoPath);
       };
 
       const handleErr = (err: unknown) => {
