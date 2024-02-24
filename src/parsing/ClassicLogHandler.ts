@@ -303,9 +303,14 @@ export default class ClassicLogHandler extends LogHandler {
       //
       // Drop out if this event isn't from an already registered combatant,
       // isn't from the player and we haven't registered the destination unit
-      // as a combatant yet. Important we continue if we have registered the
-      // source as a combatant as we rely on spells that may not have a dest
-      // for spec detection e.g. bladestorm.
+      // as a combatant yet.
+      //
+      // We avoid this branch if we have registered either the source or
+      // destination as a combatant as:
+      //   1. It's fine to include a source we have'n registered so long as
+      //      they are interacting with a destination unit we have registered.
+      //   2. We may rely on spells that do not have a destination for spec
+      //      detection, e.g. Bladestorm.
       //
       // This approach can be thought of a bit like a web crawler, where we
       // start from the player and crawl for the other combatants.
