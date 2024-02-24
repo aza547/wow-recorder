@@ -297,18 +297,19 @@ export default class ClassicLogHandler extends LogHandler {
       !srcIdentified &&
       !destIdentified
     ) {
+      // Drop out of this function if certain conditions are met, long
+      // description below. We only ever get here if we're in arena and the event
+      // isn't from the player themself.
+      //
       // In classic arena we mandate that combatants are only identified by
       // interaction with the player, or a unit that the player has interacted
       // with. This is to avoid counting outsiders.
       //
-      // Drop out if this event isn't from an already registered combatant,
-      // isn't from the player and we haven't registered the destination unit
-      // as a combatant yet.
-      //
-      // We avoid this branch if we have registered either the source or
+      // We also avoid this branch if we have registered either the source or
       // destination as a combatant as:
-      //   1. It's fine to include a source we have'n registered so long as
-      //      they are interacting with a destination unit we have registered.
+      //   1. It's fine to include a source combatant we have'nt registered so
+      //      long as they are interacting with a destination combatant we have
+      //      registered.
       //   2. We may rely on spells that do not have a destination for spec
       //      detection, e.g. Bladestorm.
       //
