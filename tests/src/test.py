@@ -28,6 +28,7 @@ import classic.rated_2v2
 import classic.rated_2v2_double
 import classic.rated_3v3
 import classic.rated_5v5
+import classic.rated_2v2_extra_units
 
 
 # These variables are environment dependent, you may need to adjust them.
@@ -60,6 +61,7 @@ CLASSIC_TESTS = [
     classic.rated_2v2_double,
     classic.rated_3v3,
     classic.rated_5v5,
+    classic.rated_2v2_extra_units,
 ]
 
 RETAIL_TEST_NAMES = list(map(lambda t: t.NAME, RETAIL_TESTS))

@@ -10,7 +10,7 @@ import Recorder from '../main/Recorder';
 import LogHandler from './LogHandler';
 import { Flavour } from '../main/types';
 import ArenaMatch from '../activitys/ArenaMatch';
-import { isUnitFriendly, isUnitPlayer } from './logutils';
+import { isUnitFriendly, isUnitPlayer, isUnitSelf } from './logutils';
 import Battleground from '../activitys/Battleground';
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
@@ -64,20 +64,20 @@ export default class ClassicLogHandler extends LogHandler {
       return;
     }
 
-    if (this.isArena() && this.activity.deaths.length > 0) {
-      // When exiting classic arena we get spammed with nearby players on
-      // zoning into the world. We avoid including them as combatants by
-      // ignoring any new players introduced after the first player death.
-      return;
-    }
-
     const srcGUID = line.arg(1);
     const srcFlags = parseInt(line.arg(3), 16);
     const srcNameRealm = line.arg(2);
+    const destGUID = line.arg(5);
+
     const alreadyKnowCombatant =
       this.activity.getCombatant(srcGUID) !== undefined;
 
-    const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
+    const combatant = this.processClassicCombatant(
+      srcGUID,
+      srcNameRealm,
+      srcFlags,
+      destGUID
+    );
 
     if (combatant === undefined) {
       // It's not an event we want to add a combatant for.
@@ -173,7 +173,15 @@ export default class ClassicLogHandler extends LogHandler {
     const srcGUID = line.arg(1);
     const srcNameRealm = line.arg(2);
     const srcFlags = parseInt(line.arg(3), 16);
-    const combatant = this.processCombatant(srcGUID, srcNameRealm, srcFlags);
+    const destGUID = line.arg(5);
+    const spellName = line.arg(10);
+
+    const combatant = this.processClassicCombatant(
+      srcGUID,
+      srcNameRealm,
+      srcFlags,
+      destGUID
+    );
 
     if (combatant === undefined) {
       // Not an event we can add a combatant for.
@@ -184,8 +192,6 @@ export default class ClassicLogHandler extends LogHandler {
       // If we already have a specID for this combatant, no point continuing.
       return;
     }
-
-    const spellName = line.arg(10);
 
     const knownSpell = Object.prototype.hasOwnProperty.call(
       classicUniqueSpecSpells,
@@ -270,12 +276,39 @@ export default class ClassicLogHandler extends LogHandler {
     await this.endActivity();
   }
 
-  protected processCombatant(
+  protected processClassicCombatant(
     srcGUID: string,
     srcNameRealm: string,
-    srcFlags: number
+    srcFlags: number,
+    destGUID: string
   ) {
     if (!this.activity) {
+      return undefined;
+    }
+
+    const srcCombatant = this.activity.getCombatant(srcGUID);
+    const destCombatant = this.activity.getCombatant(destGUID);
+    const srcIdentified = srcCombatant !== undefined;
+    const destIdentified = destCombatant !== undefined;
+
+    if (
+      this.isArena() &&
+      !isUnitSelf(srcFlags) &&
+      !srcIdentified &&
+      !destIdentified
+    ) {
+      // In classic arena we mandate that combatants are only identified by
+      // interaction with the player, or a unit that the player has interacted
+      // with. This is to avoid counting outsiders.
+      //
+      // Drop out if this event isn't from an already registered combatant,
+      // isn't from the player and we haven't registered the destination unit
+      // as a combatant yet. Important we continue if we have registered the
+      // source as a combatant as we rely on spells that may not have a dest
+      // for spec detection e.g. bladestorm.
+      //
+      // This approach can be thought of a bit like a web crawler, where we
+      // start from the player and crawl for the other combatants.
       return undefined;
     }
 

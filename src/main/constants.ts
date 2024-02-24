@@ -1295,15 +1295,22 @@ const retailUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Ignore Pain': 73,
 };
 
-// Need this for any non-raid spec detection in classic.
-// These spells should be common, and unique to a spec.
-// More than one may be added per spec to improve chance of identifying.
+// Need this for any non-raid spec detection in classic. More than one may be 
+// added per spec to improve chance of identifying.
+//
+// These spells MUST be unique to the spec. Ideally they also are common so they
+// are more likely to be cast by the combatants, giving us higher chance at 
+// identifying the spec. Obviously some risk they cast nothing so we can't be 
+// perfect here.
+//
+// Some ordering conditions in how we identify combatants with a crawling mechanism means we
+// won't always react if we see one of these spells, so again; make these common spells if possible.
 const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Heart Strike': 250,
   'Howling Blast': 251,
   'Summon Gargoyle': 252,
   Starfall: 102,
-  Berserk: 103,
+  Mangle: 103,
   Swiftmend: 105,
   'Bestial Wrath': 253,
   'Chimera Shot': 254,
@@ -1316,17 +1323,17 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Crusader Strike': 67,
   Penance: 256,
   'Guardian Spirit': 257,
-  Dispersion: 258,
+  'Vampiric Touch': 258,
   Mutilate: 259,
   'Killing Spree': 260, // might be wrong? assumed combatID === outlawID
-  'Shadow Dance': 261,
+  'Shadowstep': 261,
   Thunderstorm: 262,
   'Feral Spirit': 263,
   Riptide: 264,
   Haunt: 265,
   Metamorphosis: 266,
   'Chaos Bolt': 267,
-  Bladestorm: 71,
+  'Mortal Strike': 71,
   Bloodthirst: 72,
   Shockwave: 73,
 };

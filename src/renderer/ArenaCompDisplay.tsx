@@ -54,7 +54,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   };
 
   const renderEnemyCombatant = (combatant: RawCombatant) => {
-    let nameColor = 'grey';
+    let nameColor = 'darkgrey';
     let specIcon = Images.specImages[0];
 
     if (combatant._specID !== undefined) {
@@ -111,7 +111,7 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   };
 
   const renderFriendlyCombatant = (combatant: RawCombatant) => {
-    let nameColor = 'grey';
+    let nameColor = 'darkgrey';
     let specIcon = Images.specImages[0];
 
     if (combatant._specID !== undefined) {

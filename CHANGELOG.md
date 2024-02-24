@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 226](https://github.com/aza547/wow-recorder/issues/226) - Fix a bug where classic arena could be tagged with the wrong category.
 - Cut videos more accurately by dropping the no-negative-ts flag from the  cut call to ffmpeg.
 - Show durations in the UI including overrun.
+- Fix the color of unidentified specs in the UI.
 
 ## [3.25.0] - 2024-02-13
 ### Changed
