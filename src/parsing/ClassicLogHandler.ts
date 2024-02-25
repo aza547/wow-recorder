@@ -172,7 +172,7 @@ export default class ClassicLogHandler extends LogHandler {
     const isPlayer = isUnitPlayer(unitFlags);
     const isFeignDeath = Boolean(parseInt(line.arg(9), 10));
 
-    if (isPlayer || isFeignDeath) {
+    if (!isPlayer || isFeignDeath) {
       // Deliberatly not logging here as not interesting and frequent.
       return;
     }
