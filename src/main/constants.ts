@@ -1303,8 +1303,9 @@ const retailUniqueSpecSpells: StringKeyToNumberValueMapType = {
 // identifying the spec. Obviously some risk they cast nothing so we can't be 
 // perfect here.
 //
-// Some ordering conditions in how we identify combatants with a crawling mechanism means we
-// won't always react if we see one of these spells, so again; make these common spells if possible.
+// Some ordering conditions in how we identify combatants with a crawling mechanism
+// means we won't always react if we see one of these spells, so again; make these 
+// common spells if possible.
 const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Heart Strike': 250,
   'Howling Blast': 251,
@@ -1320,7 +1321,7 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Deep Freeze': 64,
   'Holy Shock': 65,
   "Avenger's Shield": 66,
-  'Crusader Strike': 67,
+  'Crusader Strike': 70, // in classic rets are 67 but use 70 for consistency with retail
   Penance: 256,
   'Guardian Spirit': 257,
   'Vampiric Touch': 258,
@@ -1337,6 +1338,14 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   Bloodthirst: 72,
   Shockwave: 73,
 };
+
+// Used in addition to the spells above to detect specs in classic. The same 
+// logic applies here; these should be spec unique auras. 
+const classicUniqueSpecAuras: StringKeyToNumberValueMapType = {
+  'Borrowed Time': 256,
+  'Unstable Affliction': 265,
+  'The Art of War': 70, // in classic rets are 67 but use 70 for consistency with retail
+}
 
 export {
   months,
@@ -1362,6 +1371,7 @@ export {
   raidInstances,
   categoryRecordingSettings,
   classicUniqueSpecSpells,
+  classicUniqueSpecAuras,
   retailUniqueSpecSpells,
   obsResolutions,
   WoWCharacterClassType,

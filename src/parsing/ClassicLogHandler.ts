@@ -3,6 +3,7 @@ import { BrowserWindow } from 'electron';
 import {
   classicArenas,
   classicBattlegrounds,
+  classicUniqueSpecAuras,
   classicUniqueSpecSpells,
 } from '../main/constants';
 
@@ -68,6 +69,9 @@ export default class ClassicLogHandler extends LogHandler {
     const srcFlags = parseInt(line.arg(3), 16);
     const srcNameRealm = line.arg(2);
     const destGUID = line.arg(5);
+    const destFlags = line.arg(7);
+    const destNameRealm = line.arg(6);
+    const spellName = line.arg(10);
 
     const alreadyKnowCombatant =
       this.activity.getCombatant(srcGUID) !== undefined;
@@ -76,7 +80,9 @@ export default class ClassicLogHandler extends LogHandler {
       srcGUID,
       srcNameRealm,
       srcFlags,
-      destGUID
+      destGUID,
+      destNameRealm,
+      destFlags
     );
 
     if (combatant === undefined) {
@@ -99,6 +105,17 @@ export default class ClassicLogHandler extends LogHandler {
           newStartDate
         );
         this.activity.startDate = newStartDate;
+      }
+    }
+
+    if (combatant.specID === undefined) {
+      const knownSpell = Object.prototype.hasOwnProperty.call(
+        classicUniqueSpecAuras,
+        spellName
+      );
+
+      if (knownSpell) {
+        combatant.specID = classicUniqueSpecAuras[spellName];
       }
     }
   }
@@ -152,8 +169,10 @@ export default class ClassicLogHandler extends LogHandler {
     }
 
     const unitFlags = parseInt(line.arg(7), 16);
+    const isPlayer = isUnitPlayer(unitFlags);
+    const isFeignDeath = Boolean(parseInt(line.arg(9), 10));
 
-    if (!isUnitPlayer(unitFlags)) {
+    if (isPlayer || isFeignDeath) {
       // Deliberatly not logging here as not interesting and frequent.
       return;
     }
@@ -174,13 +193,17 @@ export default class ClassicLogHandler extends LogHandler {
     const srcNameRealm = line.arg(2);
     const srcFlags = parseInt(line.arg(3), 16);
     const destGUID = line.arg(5);
+    const destFlags = line.arg(7);
+    const destNameRealm = line.arg(6);
     const spellName = line.arg(10);
 
     const combatant = this.processClassicCombatant(
       srcGUID,
       srcNameRealm,
       srcFlags,
-      destGUID
+      destGUID,
+      destNameRealm,
+      destFlags
     );
 
     if (combatant === undefined) {
@@ -188,18 +211,15 @@ export default class ClassicLogHandler extends LogHandler {
       return;
     }
 
-    if (combatant.specID !== undefined) {
-      // If we already have a specID for this combatant, no point continuing.
-      return;
-    }
+    if (combatant.specID === undefined) {
+      const knownSpell = Object.prototype.hasOwnProperty.call(
+        classicUniqueSpecSpells,
+        spellName
+      );
 
-    const knownSpell = Object.prototype.hasOwnProperty.call(
-      classicUniqueSpecSpells,
-      spellName
-    );
-
-    if (knownSpell) {
-      combatant.specID = classicUniqueSpecSpells[spellName];
+      if (knownSpell) {
+        combatant.specID = classicUniqueSpecSpells[spellName];
+      }
     }
   }
 
@@ -280,7 +300,9 @@ export default class ClassicLogHandler extends LogHandler {
     srcGUID: string,
     srcNameRealm: string,
     srcFlags: number,
-    destGUID: string
+    destGUID: string,
+    destNameRealm: string,
+    destFlags: number
   ) {
     if (!this.activity) {
       return undefined;
@@ -316,6 +338,13 @@ export default class ClassicLogHandler extends LogHandler {
       // This approach can be thought of a bit like a web crawler, where we
       // start from the player and crawl for the other combatants.
       return undefined;
+    }
+
+    if (srcIdentified && !destIdentified) {
+      // If we know the source but not the dest, we want to add the dest so
+      // we can fill in the combatant details later. That allows the crawling
+      // to go both directions.
+      super.processCombatant(destGUID, destNameRealm, destFlags, true);
     }
 
     const combatant = super.processCombatant(

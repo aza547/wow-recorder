@@ -29,7 +29,7 @@ import classic.rated_2v2_double
 import classic.rated_3v3
 import classic.rated_5v5
 import classic.rated_2v2_extra_units
-
+import classic.rated_2v2_feign_death
 
 # These variables are environment dependent, you may need to adjust them.
 RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
@@ -62,6 +62,7 @@ CLASSIC_TESTS = [
     classic.rated_3v3,
     classic.rated_5v5,
     classic.rated_2v2_extra_units,
+    classic.rated_2v2_feign_death,
 ]
 
 RETAIL_TEST_NAMES = list(map(lambda t: t.NAME, RETAIL_TESTS))

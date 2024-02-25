@@ -24,7 +24,8 @@
       "!./osn-data/**",
       "!./src/main/logs/**",
       "!./.git/**",
-      "!./resources/**"
+      "!./resources/**",
+      "!./tests/**"
     ]
   },
   "lint-staged": {
