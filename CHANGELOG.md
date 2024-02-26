@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [3.25.1] - 2024-02-26
+### Fixed
 - [Issue 226](https://github.com/aza547/wow-recorder/issues/226) - Fix a bug where classic arena could be tagged with the wrong category.
 - [Issue 252](https://github.com/aza547/wow-recorder/issues/252) - Fix a bug where hunter's feign death would end a classic arena game early.
 - [Issue 481](https://github.com/aza547/wow-recorder/issues/481) - Improve classic arena spec detection.
