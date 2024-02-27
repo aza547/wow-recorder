@@ -102,12 +102,13 @@ export default class Poller extends EventEmitter {
       return false;
     }
 
-    const lower = process.toLocaleLowerCase();
+    const lower = process.toLowerCase();
 
-    if (lower === 'wow.exe' && recordRetail) {
-      return true;
+    if (lower === 'wowclassic.exe') {
+      return recordClassic;
     }
 
-    return recordClassic;
+    // The process name matched the regex so must be retail.
+    return recordRetail;
   };
 }
