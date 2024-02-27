@@ -1,22 +1,7 @@
 import EventEmitter from 'events';
 import { validateFlavour } from '../main/util';
 import { FlavourConfig } from '../main/types';
-
-const tasklist = require('tasklist');
-
-const wowExecutableFlavours: { [key: string]: string } = {
-  wow: 'Retail',
-  wowt: 'PTR',
-  wowb: 'Beta',
-  wowclassic: 'Classic',
-};
-
-type WoWProcessResultKey = keyof typeof wowExecutableFlavours;
-
-type WowProcess = {
-  exe: string;
-  flavour: WoWProcessResultKey;
-};
+import listProcesses from './processList';
 
 /**
  * The Poller singleton periodically checks the list of WoW active processes.
@@ -86,18 +71,15 @@ export default class Poller extends EventEmitter {
   start() {
     this.reset();
     this.poll();
-    this.pollInterval = setInterval(() => this.poll(), 5000);
+    this.pollInterval = setInterval(() => this.poll(), 1000);
   }
 
   private poll = async () => {
-    const processList = await tasklist();
+    const processList = await listProcesses();
 
-    // Tasklist package doesn't export types annoyingly, hence
-    // the use of any here.
     const wowProcesses = processList
-      .map((process: any) => process.imageName.match(this.processRegex))
-      .filter((matches: string[]) => matches)
-      .map(this.convertToWowProcessType)
+      .map((process) => process.name)
+      .filter((name) => name.match(this.processRegex))
       .filter(this.filterFlavoursByConfig);
 
     // We don't care to do anything better in the scenario of multiple
@@ -111,9 +93,8 @@ export default class Poller extends EventEmitter {
     }
   };
 
-  private filterFlavoursByConfig = (wowProcess: WowProcess) => {
+  private filterFlavoursByConfig = (process: string) => {
     const { recordRetail, recordClassic } = this.flavourConfig;
-    const wowFlavour = wowProcess.flavour;
 
     try {
       validateFlavour(this.flavourConfig);
@@ -121,24 +102,12 @@ export default class Poller extends EventEmitter {
       return false;
     }
 
-    // Any non classic flavour is considered a retail flavour (i.e. retail, beta, ptr)
-    const validRetailProcess = wowFlavour !== 'Classic' && recordRetail;
-    const validClassicProcess = wowFlavour === 'Classic' && recordClassic;
+    const lower = process.toLocaleLowerCase();
 
-    if (!validRetailProcess && !validClassicProcess) {
-      // We're not configured to record any matching process.
-      return false;
+    if (lower === 'wow.exe' && recordRetail) {
+      return true;
     }
 
-    return true;
-  };
-
-  private convertToWowProcessType = (match: string[]) => {
-    const wowProcessObject: WowProcess = {
-      exe: match[0],
-      flavour: wowExecutableFlavours[match[1].toLowerCase()],
-    };
-
-    return wowProcessObject;
+    return recordClassic;
   };
 }

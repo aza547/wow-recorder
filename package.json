@@ -103,7 +103,8 @@
       "output": "release/build"
     },
     "extraResources": [
-      "./assets/**"
+      "./assets/**",
+      "./binaries/*"
     ],
     "publish": {
       "provider": "github",
@@ -257,7 +258,6 @@
     "react-player": "^2.14.1",
     "react-router-dom": "^6.3.0",
     "screenfull": "^6.0.2",
-    "tasklist": "^4.0.1",
     "tsc": "^2.0.4",
     "tss-react": "^4.1.1",
     "wait-queue": "^1.1.4"
