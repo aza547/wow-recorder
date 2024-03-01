@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 317](https://github.com/aza547/wow-recorder/issues/317) - Remove dependency on tasklist.
 - Bring back the avoid_negative_ts make_zero to the cut command.
+- Make the selected video more obvious.
 
 ## [3.25.1] - 2024-02-26
 ### Fixed

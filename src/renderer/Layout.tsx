@@ -164,10 +164,19 @@ const Layout: React.FC<IProps> = (props: IProps) => {
   const mapVideoToListItem = (video: RendererVideo) => {
     const selected = navigation.videoIndex === categoryState.indexOf(video);
 
+    const backgroundColor = selected
+      ? 'rgba(25, 118, 210, 0.20)'
+      : 'transparent';
+
     return (
       <ListItem disablePadding key={video.fullPath} sx={{ width: '100%' }}>
         <ListItemButton
           selected={selected}
+          sx={{
+            '&.Mui-selected, &.Mui-selected:hover': {
+              backgroundColor,
+            },
+          }}
           onClick={() => handleChangeVideo(categoryState.indexOf(video))}
         >
           <VideoButton
