@@ -142,7 +142,7 @@ const PVESettings: React.FC = () => {
     return (
       <TextField
         value={config.minEncounterDuration}
-        label="Minimum Encounter Duration (secs)"
+        label="Minimum Encounter Duration (sec)"
         disabled={!config.recordRaids}
         onChange={setMinEncounterDuration}
         variant="outlined"
