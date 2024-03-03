@@ -163,50 +163,43 @@ export default class RetailLogHandler extends LogHandler {
       line
     );
 
-    // It's impossible to start a keystone dungeon while another one is in progress
-    // so we'll just remove the existing one and make a new one when `CHALLENGE_MODE_START`
-    // is encountered. If any other activity is in progress, we will just exit.
-    if (this.activity) {
-      const activeChallengeMode =
-        this.activity.category === VideoCategory.MythicPlus;
-
-      if (activeChallengeMode) {
-        console.warn(
-          '[RetailLogHandler] A challenge mode instance is already in progress; abandoning it.'
-        );
-      } else {
-        console.error(
-          "[RetailLogHandler] Another activity in progress, can't start challenge mode."
-        );
-        return;
-      }
+    if (this.activity && this.activity.category === VideoCategory.MythicPlus) {
+      // This can happen if you zone in and out of a key mid pull.
+      // If it's a new key, we see a CHALLENGE_MODE_END event first.
+      console.info('[RetailLogHandler] Subsequent start event for dungeon');
+      return;
     }
 
-    const zoneName = line.arg(1);
     const zoneID = parseInt(line.arg(2), 10);
     const mapID = parseInt(line.arg(3), 10);
-    const hasDungeonMap = mapID in dungeonsByMapId;
-    const hasTimersForDungeon = mapID in dungeonTimersByMapId;
 
-    if (!hasDungeonMap || !hasTimersForDungeon) {
-      console.error(
-        `[RetailLogHandler] Invalid/unsupported mapID for Challenge Mode dungeon: ${mapID} ('${zoneName}')`
-      );
+    const unknownMap = !Object.prototype.hasOwnProperty.call(
+      dungeonsByMapId,
+      mapID
+    );
+
+    if (unknownMap) {
+      console.error('[RetailLogHandler] Unknown map', mapID);
+      return;
+    }
+
+    const unknownTimer = !Object.prototype.hasOwnProperty.call(
+      dungeonTimersByMapId,
+      mapID
+    );
+
+    if (unknownTimer) {
+      console.error('[RetailLogHandler] Unknown timer', mapID);
       return;
     }
 
     const startTime = line.date();
     const level = parseInt(line.arg(4), 10);
-    const minLevelToRecord = this.cfg.get<number>('minKeystoneLevel');
     const affixes = line.arg(5);
+    const minLevelToRecord = this.cfg.get<number>('minKeystoneLevel');
 
     if (level < minLevelToRecord) {
-      console.info(
-        '[RetailLogHandler] Ignoring key of level:',
-        level,
-        '. Threshold to record is: ',
-        minLevelToRecord
-      );
+      console.info('[RetailLogHandler] Ignoring key below recording threshold');
       return;
     }
 

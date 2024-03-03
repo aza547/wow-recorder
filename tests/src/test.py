@@ -3,12 +3,14 @@ import os
 import random
 import argparse
 import sys
+import json
 from time import sleep
 from glob import glob
 
 # Import the retail tests
 import retail.mythic_plus
 import retail.mythic_plus_drop_go
+import retail.mythic_plus_repair
 import retail.raid_wipe
 import retail.raid_reset
 import retail.raid_unknown_encounter
@@ -39,8 +41,9 @@ STORAGE_PATH = "D:/wr-test"
 CWD = os.path.dirname(__file__)
 
 RETAIL_TESTS = [
-    retail.mythic_plus_drop_go,
     retail.mythic_plus,
+    retail.mythic_plus_drop_go,
+    retail.mythic_plus_repair,
     retail.raid_reset,
     retail.raid_unknown_encounter,
     retail.raid_wipe,
@@ -52,6 +55,7 @@ RETAIL_TESTS = [
     retail.skirmish,
     retail.wargame_3v3,
     retail.zone_changes,
+    
 ]
 
 CLASSIC_TESTS = [
@@ -83,6 +87,17 @@ def replace_date(line):
     return new_date_string + line_no_ts
 
 
+def get_latest_metadata():
+    """Reads the latest metadata file as a dict."""
+    files = glob(f"{STORAGE_PATH}/*.json")
+    latest = max(files, key=os.path.getctime)
+
+    with open(latest) as metadata_file:
+        data = json.load(metadata_file)
+
+    return data
+
+
 def check_latest_mp4_contains(contains):
     """Checks that the most recent MP4 file in the STORAGE_PATH includes a substring."""
     files = glob(f"{STORAGE_PATH}/*.mp4")
@@ -92,6 +107,22 @@ def check_latest_mp4_contains(contains):
         print("  MP4 existed as expected")
     else:
         print(f"FAILED: Latest MP4 did not contain {contains}, was {latest}")
+        sys.exit(1)
+
+
+def check_boss_count(num):
+    """Check there was the correct number of bosses in the Mythic+ run."""
+    metadata = get_latest_metadata()
+    bosses = 0
+
+    for entry in metadata["challengeModeTimeline"]:
+        if entry["segmentType"] == "Boss":
+            bosses += 1
+
+    if bosses == num:
+        print("  Boss count as expected")
+    else:
+        print(f"FAILED: Boss count not as expected, was {bosses} but expected {num}")
         sys.exit(1)
 
 
@@ -164,16 +195,20 @@ def run_test(flavour, test):
 
     log_file.close()
 
-    if test.OVERRUN:
+    if hasattr(test, "OVERRUN"):
         print(f"  Waiting {test.OVERRUN}s for overrun")
         sleep(test.OVERRUN)
 
     print(f"  Waiting 2s for cutting")
     sleep(2)
 
-    if test.OUTPUT:
+    if hasattr(test, "OUTPUT"):
         print(f"  Checking most recent MP4 contains {test.OUTPUT}")
         check_latest_mp4_contains(test.OUTPUT)
+
+    if hasattr(test, "BOSSES"):
+        print(f"  Check run contains {test.BOSSES} bosses")
+        check_boss_count(test.BOSSES)
 
     print("  PASSED")
 
