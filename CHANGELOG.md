@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [3.25.2] - 2024-03-04
+### Fixed
 - [Issue 482](https://github.com/aza547/wow-recorder/issues/482) - Fix a bug where leaving a Mythic+ and re-entering would cut it wrongly.
 - [Issue 317](https://github.com/aza547/wow-recorder/issues/317) - Remove dependency on tasklist.
 - Bring back the avoid_negative_ts make_zero to the cut command.
