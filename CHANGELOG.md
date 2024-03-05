@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [3.25.3] - 2024-03-05
+### Fixed
 - Fix a bug where we would fail to detect wow running due to fastlist missing dependencies.
 
 ## [3.25.2] - 2024-03-04
