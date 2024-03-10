@@ -117,7 +117,7 @@ export enum ESupportedEncoders {
 }
 
 export enum QualityPresets {
-  AMAZING = 'Amazing',
+  ULTRA = 'Ultra',
   HIGH = 'High',
   MODERATE = 'Moderate',
   LOW = 'Low',

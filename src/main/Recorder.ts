@@ -1336,14 +1336,14 @@ export default class Recorder extends EventEmitter {
 
   private static getCqpFromQuality(obsQuality: string) {
     switch (obsQuality) {
-      case QualityPresets.AMAZING:
-        return 16;
-
-      case QualityPresets.HIGH:
+      case QualityPresets.ULTRA:
         return 22;
 
+      case QualityPresets.HIGH:
+        return 26;
+
       case QualityPresets.MODERATE:
-        return 28;
+        return 30;
 
       case QualityPresets.LOW:
         return 34;
