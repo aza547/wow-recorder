@@ -27,14 +27,15 @@ const obsResolutions = {
   '2560x1440': { width: 2560, height: 1440 },
   '2560x1600': { width: 2560, height: 1600 },
   '3440x1440': { width: 3440, height: 1440 },
-  '3840x1080': { width: 3840, height: 1080 },
   '3440x1200': { width: 3840, height: 1200 },
+  '3520x990' : { width: 3520, height: 990 },
+  '3840x1080': { width: 3840, height: 1080 },
   '3840x1440': { width: 3840, height: 1440 },
   '3840x1600': { width: 3840, height: 1600 },
   '3840x2160': { width: 3840, height: 2160 },
   '5120x1440': { width: 5120, height: 1440 },
   '5120x2160': { width: 5120, height: 2160},
-  // eslint-enable prettier/prettier */
+  /* eslint-enable prettier/prettier */
 };
 
 interface ICategoryRecordingSettings {
@@ -47,9 +48,14 @@ interface ICategoryRecordingSettings {
  * `configKey`:    The configuration key name that specifies if we're allowed
  *                 to record content from that particular category.
  */
-type CategoryRecordingSettingsBase = { [key in VideoCategory]: ICategoryRecordingSettings };
+type CategoryRecordingSettingsBase = {
+  [key in VideoCategory]: ICategoryRecordingSettings;
+};
 
-const categoryRecordingSettings: Omit<CategoryRecordingSettingsBase, VideoCategory.Clips> = {
+const categoryRecordingSettings: Omit<
+  CategoryRecordingSettingsBase,
+  VideoCategory.Clips
+> = {
   [VideoCategory.TwoVTwo]: {
     configKey: 'recordTwoVTwo',
   },
@@ -224,15 +230,15 @@ const encountersVOI: NumberKeyToStringValueMapType = {
  * Dragonflight Tier 2
  */
 const encountersAberrus: NumberKeyToStringValueMapType = {
-  2688: "Kazzara",
-  2687: "Amalgamation Chamber",
-  2693: "The Forgotten Experiments",
-  2682: "Assault of the Zaqali",
-  2680: "Rashok",
-  2689: "Zskarn",
-  2683: "Magmorax",
-  2684: "Echo of Neltharion",
-  2685: "Scalecommander Sarkareth"
+  2688: 'Kazzara',
+  2687: 'Amalgamation Chamber',
+  2693: 'The Forgotten Experiments',
+  2682: 'Assault of the Zaqali',
+  2680: 'Rashok',
+  2689: 'Zskarn',
+  2683: 'Magmorax',
+  2684: 'Echo of Neltharion',
+  2685: 'Scalecommander Sarkareth',
 };
 
 /**
@@ -284,7 +290,7 @@ const encountersClassicUlduar: NumberKeyToStringValueMapType = {
   744: 'Flame Leviathan',
   745: 'Ignis',
   746: 'Razorscale',
-  747: "XT-002",
+  747: 'XT-002',
   748: 'Assembly of Iron',
   749: 'Kologarn',
   750: 'Auriaya',
@@ -294,7 +300,7 @@ const encountersClassicUlduar: NumberKeyToStringValueMapType = {
   754: 'Mimiron',
   755: 'General Vezax',
   756: 'Yogg-Saron',
-  757: "Algalon",
+  757: 'Algalon',
 };
 
 /**
@@ -431,19 +437,19 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   2520: 'Brackenhide Hollow',
   2527: 'Halls of Infusion',
   2451: 'Uldaman: Legacy of Tyr',
-  2519: "Neltharus",
+  2519: 'Neltharus',
   1754: 'Freehold',
   1841: 'The Underrot',
   1458: "Neltharion's Lair",
   657: 'The Vortex Pinnacle',
 
   // Dragonflight S3
-  2579: "Dawn of the Infinite",
-  1862: "Waycrest Manor",
-  1466: "Darkheart Thicket",
-  1501: "Black Rook Hold", 
+  2579: 'Dawn of the Infinite',
+  1862: 'Waycrest Manor',
+  1466: 'Darkheart Thicket',
+  1501: 'Black Rook Hold',
   1763: "Atal'Dazar",
-  1279: "The Everbloom",
+  1279: 'The Everbloom',
   643: 'Throne of the Tides',
 };
 
@@ -485,7 +491,7 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   405: 'Brackenhide Hollow',
   406: 'Halls of Infusion',
   403: 'Uldaman: Legacy of Tyr',
-  404: "Neltharus",
+  404: 'Neltharus',
   245: 'Freehold',
   251: 'The Underrot',
   206: "Neltharion's Lair",
@@ -494,11 +500,11 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   // Dragonflight S3
   463: "Galakrond's Fall",
   464: "Murozond's Rise",
-  248: "Waycrest Manor",
-  198: "Darkheart Thicket",
-  199: "Black Rook Hold", 
+  248: 'Waycrest Manor',
+  198: 'Darkheart Thicket',
+  199: 'Black Rook Hold',
   244: "Atal'Dazar",
-  168: "The Everbloom",
+  168: 'The Everbloom',
   456: 'Throne of the Tides',
 };
 
@@ -545,10 +551,10 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   405: [35 * 60, 28 * 60, 21 * 60],
   406: [35 * 60, 28 * 60, 21 * 60],
   403: [35 * 60, 28 * 60, 21 * 60],
-  404: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], 
-  245: [30 * 60, 24 * 60, 18 * 60], 
-  251: [30 * 60, 24 * 60, 18 * 60], 
-  206: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], 
+  404: [33 * 60, 26 * 60 + 24, 19 * 60 + 48],
+  245: [30 * 60, 24 * 60, 18 * 60],
+  251: [30 * 60, 24 * 60, 18 * 60],
+  206: [33 * 60, 26 * 60 + 24, 19 * 60 + 48],
   438: [30 * 60, 24 * 60, 18 * 60],
 
   // Dragonflight S3
@@ -707,40 +713,40 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
 
   // Brackenhide Hollow
   2570: "Hackclaw's War-Band",
-  2567: "Gutshot",
-  2568: "Treemouth",
-  2569: "Decatriarch Wratheye",
+  2567: 'Gutshot',
+  2568: 'Treemouth',
+  2569: 'Decatriarch Wratheye',
 
   // Halls of Infusion
-  2615: "Watcher Irideus",
-  2616: "Gulping Goliath",
-  2617: "Khajin the Unyielding",
-  2618: "Primal Tsunami",
+  2615: 'Watcher Irideus',
+  2616: 'Gulping Goliath',
+  2617: 'Khajin the Unyielding',
+  2618: 'Primal Tsunami',
 
   // Uldaman: Legacy of Tyr
-  2555: "The Lost Dwarves",
-  2556: "Bromach",
-  2557: "Sentinel Talondras",
-  2558: "Emberon",
-  2559: "Chrono-Lord Deios",
-  
+  2555: 'The Lost Dwarves',
+  2556: 'Bromach',
+  2557: 'Sentinel Talondras',
+  2558: 'Emberon',
+  2559: 'Chrono-Lord Deios',
+
   // Neltharus
-  2610: "Magmatusk",
-  2611: "Warlord Sargha",
-  2612: "Forgemaster Gorek",
-  2613: "Chargath, Bane of Scales",
+  2610: 'Magmatusk',
+  2611: 'Warlord Sargha',
+  2612: 'Forgemaster Gorek',
+  2613: 'Chargath, Bane of Scales',
 
   // Freehold
   2093: "Skycap'n Kragg",
   2094: "Council o' Captains",
-  2095: "Ring of Booty",
-  2096: "Harlan Sweete",
+  2095: 'Ring of Booty',
+  2096: 'Harlan Sweete',
 
   // The Underrot
-  2111: "Elder Leaxa",
-  2118: "Cragmaw the Infested",
-  2112: "Sporecaller Zancha",
-  2123: "Unbound Abomination",
+  2111: 'Elder Leaxa',
+  2118: 'Cragmaw the Infested',
+  2112: 'Sporecaller Zancha',
+  2123: 'Unbound Abomination',
 
   // Neltharion's Lair
   1790: 'Rokmora',
@@ -749,58 +755,58 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1793: 'Dargrul the Underking',
 
   // The Vortex Pinnacle
-  1041: "Altairus",
-  1042: "Asaad, Caliph of Zephyrs",
-  1043: "Grand Vizier Ertan",
+  1041: 'Altairus',
+  1042: 'Asaad, Caliph of Zephyrs',
+  1043: 'Grand Vizier Ertan',
 
   // Waycrest Manor
-  2113: "Heartsbane Triad",
-  2114: "Soulbound Goliath",
-  2115: "Raal the Gluttonous",
-  2116: "Lord and Lady Waycrest",
-  2117: "Gorak Tul",
+  2113: 'Heartsbane Triad',
+  2114: 'Soulbound Goliath',
+  2115: 'Raal the Gluttonous',
+  2116: 'Lord and Lady Waycrest',
+  2117: 'Gorak Tul',
 
   // Black Rook Hold
-  1832: "The Amalgam of Souls",
-  1833: "Illysanna Ravencrest",
-  1834: "Smashspite the Hateful",
+  1832: 'The Amalgam of Souls',
+  1833: 'Illysanna Ravencrest',
+  1834: 'Smashspite the Hateful',
   1835: "Lord Kur'talos Ravencrest",
 
   // Throne of the Tides
   1045: "Lady Naz'jar",
-  1044: "Commander Ulthok, the Festering Prince",
+  1044: 'Commander Ulthok, the Festering Prince',
   1046: "Mindbender Ghur'sha",
-  1047: "Ozumat",
+  1047: 'Ozumat',
 
   // Everbloom
-  1746: "Witherbark",
-  1757: "Ancient Protectors",
-  1751: "Archmage Sol",
-  1756: "Yalnu",
+  1746: 'Witherbark',
+  1757: 'Ancient Protectors',
+  1751: 'Archmage Sol',
+  1756: 'Yalnu',
 
   // Atal'Dazar
   2084: "Priestess Alun'za",
-  2086: "Rezan",
+  2086: 'Rezan',
   2085: "Vol'kaal",
-  2087: "Yazma",
+  2087: 'Yazma',
 
   // Dawn of the Infinites: Galakdron's Fall
-  2666: "Chronikar",
-  2667: "Manifested Timeways",
-  2668: "Blight of Galakrond",
-  2669: "Iridikron the Stonescaled",
+  2666: 'Chronikar',
+  2667: 'Manifested Timeways',
+  2668: 'Blight of Galakrond',
+  2669: 'Iridikron the Stonescaled',
 
   // Dawn of the Infinites: Murozond's Rise
-  2670: "Tyr, the Infinite Keeper",
-  2671: "Morchie",
-  2672: "Time-Lost Battlefield",
-  2673: "Chrono-Lord Deios",
+  2670: 'Tyr, the Infinite Keeper',
+  2671: 'Morchie',
+  2672: 'Time-Lost Battlefield',
+  2673: 'Chrono-Lord Deios',
 
   // Darkheart Thicket
-  1836: "Archdruid Glaidalis",
-  1837: "Oakheart",
-  1838: "Dresaron",
-  1839: "Shade of Xavius",
+  1836: 'Archdruid Glaidalis',
+  1837: 'Oakheart',
+  1838: 'Dresaron',
+  1839: 'Shade of Xavius',
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
@@ -828,12 +834,12 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
   14: 'Quaking',
   117: 'Reaping',
   120: 'Awakened',
-  121: 'Prideful', 
+  121: 'Prideful',
   122: 'Inspiring',
   123: 'Spiteful',
   124: 'Storming',
-  128: 'Tormented', 
-  130: 'Encrypted', 
+  128: 'Tormented',
+  130: 'Encrypted',
   131: 'Shrouded',
   134: 'Entangling',
   135: 'Afflicted',
@@ -889,7 +895,7 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   15: { difficultyID: 'heroic', difficulty: 'HC', partyType: 'raid' },
   16: { difficultyID: 'mythic', difficulty: 'M', partyType: 'raid' },
   17: { difficultyID: 'lfr', difficulty: 'LFR', partyType: 'raid' },
-  
+
   23: { difficultyID: 'mythic', difficulty: 'M', partyType: 'party' },
   24: { difficultyID: 'normal', difficulty: 'T', partyType: 'party' },
   33: { difficultyID: 'normal', difficulty: 'T', partyType: 'raid' },
@@ -930,6 +936,27 @@ const videoButtonSx = {
   borderRadius: 2,
 };
 
+const scrollBarSx = {
+  scrollbarWidth: 'thin',
+  '&::-webkit-scrollbar': {
+    width: '0.5em',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: '#f1f1f1',
+    borderRadius: '2px',
+    border: '1px solid black',
+    boxSizing: 'border-box',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: '#888',
+    borderRadius: '2px',
+    border: '1px solid black',
+    boxSizing: 'border-box',
+  },
+  '&::-webkit-scrollbar-thumb:hover': {
+    background: '#555',
+  },
+};
 
 type WoWCharacterDamageType = 'melee' | 'ranged';
 type WoWCharacterRoleType = 'tank' | 'healer' | 'damage';
@@ -950,7 +977,7 @@ type WoWCharacterClassType =
   | 'UNKNOWN';
 
 const WoWClassColor = {
-  DEATHKNIGHT: "#C41E3A",
+  DEATHKNIGHT: '#C41E3A',
   DEMONHUNTER: '#A330C9',
   DRUID: '#FF7C0A',
   HUNTER: '#AAD372',
@@ -964,7 +991,7 @@ const WoWClassColor = {
   WARRIOR: '#C69B6D',
   EVOKER: '#33937F',
   UNKNOWN: 'grey',
-}
+};
 
 type SpecializationObjectType = {
   type: WoWCharacterDamageType;
@@ -1295,16 +1322,16 @@ const retailUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Ignore Pain': 73,
 };
 
-// Need this for any non-raid spec detection in classic. More than one may be 
+// Need this for any non-raid spec detection in classic. More than one may be
 // added per spec to improve chance of identifying.
 //
 // These spells MUST be unique to the spec. Ideally they also are common so they
-// are more likely to be cast by the combatants, giving us higher chance at 
-// identifying the spec. Obviously some risk they cast nothing so we can't be 
+// are more likely to be cast by the combatants, giving us higher chance at
+// identifying the spec. Obviously some risk they cast nothing so we can't be
 // perfect here.
 //
 // Some ordering conditions in how we identify combatants with a crawling mechanism
-// means we won't always react if we see one of these spells, so again; make these 
+// means we won't always react if we see one of these spells, so again; make these
 // common spells if possible.
 const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Heart Strike': 250,
@@ -1327,7 +1354,7 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Vampiric Touch': 258,
   Mutilate: 259,
   'Killing Spree': 260, // might be wrong? assumed combatID === outlawID
-  'Shadowstep': 261,
+  Shadowstep: 261,
   Thunderstorm: 262,
   'Feral Spirit': 263,
   Riptide: 264,
@@ -1339,13 +1366,13 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   Shockwave: 73,
 };
 
-// Used in addition to the spells above to detect specs in classic. The same 
-// logic applies here; these should be spec unique auras. 
+// Used in addition to the spells above to detect specs in classic. The same
+// logic applies here; these should be spec unique auras.
 const classicUniqueSpecAuras: StringKeyToNumberValueMapType = {
   'Borrowed Time': 256,
   'Unstable Affliction': 265,
   'The Art of War': 70, // in classic rets are 67 but use 70 for consistency with retail
-}
+};
 
 export {
   months,
@@ -1376,4 +1403,5 @@ export {
   obsResolutions,
   WoWCharacterClassType,
   WoWClassColor,
+  scrollBarSx,
 };

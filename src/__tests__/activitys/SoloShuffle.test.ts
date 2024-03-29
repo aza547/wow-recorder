@@ -22,9 +22,6 @@ test('Basic Solo Shuffle', () => {
   const startDate = new Date('2022-12-25T12:00:00');
   const endDate = getRelativeDate(startDate, 6 * 60);
 
-  console.log(startDate);
-  console.log(endDate);
-
   const roundStartDates = [
     getRelativeDate(startDate, 1 * 60),
     getRelativeDate(startDate, 2 * 60),

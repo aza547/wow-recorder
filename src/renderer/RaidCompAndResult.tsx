@@ -47,12 +47,18 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
   });
 
   const getDailyPullNumber = () => {
-    const videoDate = new Date(video.mtime);
+    const videoDate = video.start
+      ? new Date(video.start)
+      : new Date(video.mtime);
 
     const dailyVideosInOrder: RendererVideo[] = [];
 
     raidCategoryState.forEach((neighbourVideo) => {
-      const neighbourDate = new Date(neighbourVideo.mtime);
+      const bestDate = neighbourVideo.start
+        ? neighbourVideo.start
+        : neighbourVideo.mtime;
+
+      const neighbourDate = new Date(bestDate);
 
       const sameDay =
         neighbourDate.getDate() === videoDate.getDate() &&

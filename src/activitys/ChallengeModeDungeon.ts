@@ -78,7 +78,7 @@ export default class ChallengeModeDungeon extends Activity {
     }
 
     if (!this.CMDuration) {
-      console.log(
+      console.info(
         "[ChallengeModeDungeon] Run didn't complete (abandoned, not a deplete)"
       );
       return 0;
@@ -193,6 +193,8 @@ export default class ChallengeModeDungeon extends Activity {
       combatants: rawCombatants,
       affixes: this.affixes,
       deaths: this.deaths,
+      start: this.startDate.getTime(),
+      uniqueHash: this.getUniqueHash(),
     };
   }
 

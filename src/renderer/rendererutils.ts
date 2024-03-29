@@ -27,7 +27,6 @@ import {
   PlayerDeathType,
   RawChallengeModeTimelineSegment,
   RendererVideo,
-  RendererVideoState,
   SoloShuffleTimelineSegment,
   VideoMarker,
 } from 'main/types';
@@ -215,90 +214,6 @@ const getWoWClassColor = (unitClass: WoWCharacterClassType) => {
   return WoWClassColor[unitClass];
 };
 
-const getNumVideos = (videoState: RendererVideoState) => {
-  let numVideos = 0;
-
-  Object.values(videoState).forEach((videoList: RendererVideo[]) => {
-    Object.values(videoList).forEach(() => {
-      numVideos += 1;
-    });
-  });
-
-  return numVideos;
-};
-
-const getTotalDuration = (videoState: RendererVideoState) => {
-  let totalDuration = 0;
-
-  Object.values(videoState).forEach((videoList: RendererVideo[]) => {
-    Object.values(videoList).forEach((video: RendererVideo) => {
-      totalDuration += video.duration;
-      totalDuration += video.overrun;
-    });
-  });
-
-  return totalDuration;
-};
-
-const getLatestCategory = (videoState: RendererVideoState) => {
-  const categories = Object.values(VideoCategory);
-  const latestVideoDate: number[] = [];
-
-  categories.forEach((category) => {
-    const firstVideo = videoState[category][0];
-
-    if (firstVideo !== undefined) {
-      latestVideoDate.push(firstVideo.mtime);
-    } else {
-      latestVideoDate.push(0);
-    }
-  });
-
-  const latestDate = Math.max(...latestVideoDate);
-  const latestDateIndex = latestVideoDate.indexOf(latestDate);
-  return categories[latestDateIndex];
-};
-
-const getSortedVideos = (videoState: RendererVideoState) => {
-  const categories = Object.values(VideoCategory);
-  const allVideos: RendererVideo[] = [];
-
-  categories.forEach((category) => {
-    videoState[category].forEach((vid) => {
-      allVideos.push(vid);
-    });
-  });
-
-  // Sort in reverse chronological order.
-  const sortedVideos = allVideos.sort((a, b) => {
-    const dateA = a.mtime;
-    const dateB = b.mtime;
-    return dateA > dateB ? -1 : 1;
-  });
-
-  return sortedVideos;
-};
-
-/**
- * Get empty video state. This is duplicated here because we can't access
- * it in utils.ts on the frontend.
- */
-const getEmptyState = () => {
-  const videoState: RendererVideoState = {
-    [VideoCategory.TwoVTwo]: [],
-    [VideoCategory.ThreeVThree]: [],
-    [VideoCategory.FiveVFive]: [],
-    [VideoCategory.Skirmish]: [],
-    [VideoCategory.SoloShuffle]: [],
-    [VideoCategory.MythicPlus]: [],
-    [VideoCategory.Raids]: [],
-    [VideoCategory.Battlegrounds]: [],
-    [VideoCategory.Clips]: [],
-  };
-
-  return videoState;
-};
-
 const getInstanceDifficultyText = (video: RendererVideo) => {
   const { difficultyID } = video;
 
@@ -315,7 +230,8 @@ const getInstanceDifficultyText = (video: RendererVideo) => {
     return '';
   }
 
-  return instanceDifficulty[difficultyID].difficulty;
+  const difficulty = instanceDifficulty[difficultyID].difficultyID;
+  return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 };
 
 /**
@@ -390,7 +306,7 @@ const isArenaUtil = (video: RendererVideo) => {
   );
 };
 
-const isClipUtil = (video: RendererVideo) => {
+const isClip = (video: RendererVideo) => {
   const { category } = video;
   return category === VideoCategory.Clips;
 };
@@ -538,8 +454,7 @@ const getVideoTime = (video: RendererVideo) => {
 };
 
 const getVideoDate = (video: RendererVideo) => {
-  const { mtime } = video;
-  const date = new Date(mtime);
+  const date = video.start ? new Date(video.start) : new Date(video.mtime);
   const day = date.getDate();
   const month = months[date.getMonth()].slice(0, 3);
   const dateAsString = `${day} ${month}`;
@@ -799,15 +714,31 @@ const getVideoResultText = (video: RendererVideo): string => {
   return result ? 'Win' : 'Loss';
 };
 
+const getCategoryFromConfig = (config: ConfigurationSchema) => {
+  const categories = Object.values(VideoCategory);
+  return categories[config.selectedCategory];
+};
+
+const getCategoryIndex = (category: VideoCategory) => {
+  const categories = Object.values(VideoCategory);
+  return categories.indexOf(category);
+};
+
+const getVideoCategoryFilter = (category: VideoCategory) => {
+  return (video: RendererVideo) => video.category === category;
+};
+
+const getFirstInCategory = (
+  videos: RendererVideo[],
+  category: VideoCategory
+) => {
+  return videos.find((video) => video.category === category);
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
   getWoWClassColor,
-  getNumVideos,
-  getTotalDuration,
-  getLatestCategory,
-  getSortedVideos,
-  getEmptyState,
   getVideoResultText,
   getInstanceDifficultyText,
   getEncounterNameById,
@@ -817,7 +748,7 @@ export {
   isBattlegroundUtil,
   isSoloShuffleUtil,
   isArenaUtil,
-  isClipUtil,
+  isClip,
   getResultColor,
   getPlayerName,
   getPlayerRealm,
@@ -846,4 +777,8 @@ export {
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
   secToMmSs,
+  getCategoryFromConfig,
+  getVideoCategoryFilter,
+  getCategoryIndex,
+  getFirstInCategory,
 };

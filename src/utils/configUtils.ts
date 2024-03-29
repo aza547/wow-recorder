@@ -52,6 +52,11 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
     obsFPS: cfg.get<number>('obsFPS'),
     obsQuality: cfg.get<string>('obsQuality'),
     obsRecEncoder: cfg.get<string>('obsRecEncoder'),
+    cloudStorage: cfg.get<boolean>('cloudStorage'),
+    cloudUpload: cfg.get<boolean>('cloudUpload'),
+    cloudAccountName: cfg.get<string>('cloudAccountName'),
+    cloudAccountPassword: cfg.get<string>('cloudAccountPassword'),
+    cloudGuildName: cfg.get<string>('cloudGuildName'),
   };
 };
 

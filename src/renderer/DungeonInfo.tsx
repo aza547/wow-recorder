@@ -203,6 +203,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           flexDirection: 'column',
           alignItems: 'center',
           width: '60%',
+          mx: 1,
         }}
       >
         {renderDungeonResult()}
@@ -216,6 +217,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          mx: 1,
         }}
       >
         <Box

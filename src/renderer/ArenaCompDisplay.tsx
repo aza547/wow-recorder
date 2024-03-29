@@ -15,9 +15,8 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   const { video } = props;
   const { combatants, category } = video;
   const isSoloShuffle = category === VideoCategory.SoloShuffle;
-  const is5v5 = category === VideoCategory.FiveVFive;
-  const fontSize = is5v5 ? '0.5rem' : '0.75rem';
-  const iconSize = is5v5 ? '12px' : '18px';
+  const fontSize = '0.75rem';
+  const iconSize = '18px';
 
   if (combatants === undefined) {
     return <></>;

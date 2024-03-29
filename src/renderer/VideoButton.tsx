@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -17,25 +18,22 @@ import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';
 import MessageIcon from '@mui/icons-material/Message';
-import React, { useEffect, useState } from 'react';
-import { RendererVideo, RendererVideoState, TNavigatorState } from 'main/types';
+import React, { MutableRefObject, useEffect, useState } from 'react';
+import { RendererVideo, AppState } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
+import DownloadIcon from '@mui/icons-material/Download';
+import UploadIcon from '@mui/icons-material/Upload';
+import LinkIcon from '@mui/icons-material/Link';
 import {
-  getPlayerClass,
-  getPlayerName,
-  getPlayerRealm,
-  getPlayerSpecID,
   getResultColor,
   isArenaUtil,
   isBattlegroundUtil,
   isMythicPlusUtil,
   isRaidUtil,
   getFormattedDuration,
-  getWoWClassColor,
   getVideoTime,
   getVideoDate,
 } from './rendererutils';
-import * as Images from './images';
 import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
 import RaidEncounterInfo from './RaidEncounterInfo';
@@ -45,12 +43,16 @@ import ArenaInfo from './ArenaInfo';
 import RaidCompAndResult from './RaidCompAndResult';
 import TagDialog from './TagDialog';
 import ControlIcon from '../../assets/icon/ctrl-icon.png';
+import PovSelection from './PovSelection';
+import { useSettings } from './useSettings';
+import SnackBar from './SnackBar';
 
 interface IProps {
+  selected: boolean;
   video: RendererVideo;
-  videoState: RendererVideoState;
-  setVideoState: React.Dispatch<React.SetStateAction<RendererVideoState>>;
-  setNavigation: React.Dispatch<React.SetStateAction<TNavigatorState>>;
+  videoState: RendererVideo[];
+  setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+  persistentProgress: MutableRefObject<number>;
 }
 
 const dialogButtonSx = {
@@ -62,92 +64,115 @@ const dialogButtonSx = {
   },
 };
 
+const ipc = window.electron.ipcRenderer;
+
 export default function VideoButton(props: IProps) {
-  const { video, videoState, setVideoState, setNavigation } = props;
-  const { isProtected, fullPath, imagePath, tag } = video;
+  const { selected, video, videoState, setAppState, persistentProgress } =
+    props;
+  const [config] = useSettings();
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
   const isRaid = isRaidUtil(video);
   const isBattleground = isBattlegroundUtil(video);
   const isArena = isArenaUtil(video);
   const resultColor = getResultColor(video);
-  const playerName = getPlayerName(video);
-  const playerRealm = getPlayerRealm(video);
-  const playerClass = getPlayerClass(video);
-  const playerClassColor = getWoWClassColor(playerClass);
-  const playerSpecID = getPlayerSpecID(video);
   const videoTime = getVideoTime(video);
   const videoDate = getVideoDate(video);
-  const specIcon = Images.specImages[playerSpecID];
+
+  const [ctrlDown, setCtrlDown] = useState<boolean>(false);
+  const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [thumbnailSignedUrl, setThumbnailSignedUrl] = useState<string>('');
+  const [localPovIndex, setLocalPovIndex] = useState<number>(0);
+  const [downloadSpinner, setDownloadSpinner] = useState<boolean>(false);
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
+  const [linkSnackBarOpen, setLinkSnackBarOpen] = useState(false);
+
+  const povs = [video, ...video.multiPov];
+  const pov = povs[localPovIndex];
+  const { cloud, thumbnailSource, isProtected, tag, videoSource } = pov;
+
+  // Check if we have this point of view duplicated in the other storage
+  // type. Don't want to be showing the download button if we have already
+  // got it on disk and vice versa.
+  const haveOnDisk =
+    !cloud ||
+    povs.filter((v) => v.name === pov.name).filter((v) => !v.cloud).length > 0;
+
+  const haveInCloud =
+    cloud ||
+    povs.filter((v) => v.name === pov.name).filter((v) => v.cloud).length > 0;
+
   const bookmarkOpacity = isProtected ? 1 : 0.2;
   const tagOpacity = tag ? 1 : 0.2;
-  let deleteVideoOnUnmount = false;
   let tagTooltip: string = tag || 'Add a tag';
 
   if (tagTooltip.length > 50) {
     tagTooltip = `${tagTooltip.slice(0, 50)}...`;
   }
 
-  const [ctrlDown, setCtrlDown] = useState<boolean>(false);
-  const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  // Sign the thumbnail URL and render it.
+  useEffect(() => {
+    const getSignedThumbnailUrl = async () => {
+      const url = await ipc.invoke('signGetUrl', [thumbnailSource]);
+      setThumbnailSignedUrl(url);
+    };
+
+    if (cloud) {
+      getSignedThumbnailUrl();
+    } else {
+      setThumbnailSignedUrl(thumbnailSource);
+    }
+  }, [cloud, thumbnailSource]);
+
+  useEffect(() => {
+    if (povs.length > localPovIndex) {
+      return;
+    }
+
+    setLocalPovIndex(0);
+  }, [localPovIndex, povs.length, selected]);
+
+  useEffect(() => {
+    ipc.on('updateDownloadProgress', (name, progress) => {
+      if (name !== pov.name) {
+        return;
+      }
+
+      setDownloadSpinner(true);
+      setDownloadProgress(progress as number);
+
+      if (progress === 100) {
+        setTimeout(() => setDownloadSpinner(false), 1000);
+      }
+    });
+  }, [pov.name]);
 
   /**
    * Delete a video. This avoids attempting to delete the video
-   * from disk when the MP4 file is still open in the UI by:
-   *
-   * - Setting this deleteOnUnmount to true.
-   * - Removing it from the videoState.
-   * - That triggers a re-render which unmounts this button and closes the file.
-   * - The useEffect hook then runs the actual delete from disk IPC call.
-   *
-   * That solves the problem of allowing us to delete an open video while
-   * keeping the app responsive. Some risk a deleted video re-appears if the OS
-   * call fails to delete (e.g. it's open in another program) but happy to live
-   * with that.
+   * from disk when the MP4 file is still open in the UI via the safeDelete
+   * call.
    */
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
-    deleteVideoOnUnmount = true;
-    let deletedIndex: number;
+    setDeleteDialogOpen(false);
 
-    setVideoState((prevState) => {
-      deletedIndex = prevState[video.category].indexOf(video);
-      prevState[video.category].splice(deletedIndex, 1);
-      return prevState;
-    });
+    window.electron.ipcRenderer.sendMessage('safeDeleteVideo', [
+      videoSource,
+      cloud,
+    ]);
 
-    setNavigation((prevState) => {
-      let newSelectedIndex: number;
+    if (!selected) {
+      return;
+    }
 
-      if (prevState.videoIndex === deletedIndex) {
-        // Deleting the selected video so just reset to the first in the category.
-        newSelectedIndex = 0;
-      } else if (prevState.videoIndex > deletedIndex) {
-        // Deleting a video before the selected video so move back one to remain
-        // on the same video selection.
-        newSelectedIndex = prevState.videoIndex - 1;
-      } else {
-        // Deleting a video after selection, no change to selected index.
-        newSelectedIndex = prevState.videoIndex;
-      }
-
+    setAppState((prevState) => {
       return {
         ...prevState,
-        videoIndex: newSelectedIndex,
+        selectedVideoName: undefined,
+        playingVideo: undefined,
       };
     });
-  };
-
-  /**
-   * IPC call to the main process to actually delete a video and it's
-   * assosciated files from disk.
-   */
-  const deleteVideoFromDisk = () => {
-    window.electron.ipcRenderer.sendMessage('videoButton', [
-      'delete',
-      fullPath,
-    ]);
   };
 
   /**
@@ -166,12 +191,6 @@ export default function VideoButton(props: IProps) {
         setCtrlDown(true);
       }
     });
-
-    return () => {
-      if (deleteVideoOnUnmount) {
-        deleteVideoFromDisk();
-      }
-    };
   });
 
   const openTagDialog = () => {
@@ -180,35 +199,37 @@ export default function VideoButton(props: IProps) {
 
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
-    window.electron.ipcRenderer.sendMessage('videoButton', ['save', fullPath]);
+
+    window.electron.ipcRenderer.sendMessage('videoButton', [
+      'save',
+      videoSource,
+      cloud,
+    ]);
   };
 
   const openLocation = (event: React.SyntheticEvent) => {
     event.stopPropagation();
-    window.electron.ipcRenderer.sendMessage('videoButton', ['open', fullPath]);
+
+    window.electron.ipcRenderer.sendMessage('videoButton', [
+      'open',
+      videoSource,
+      cloud,
+    ]);
   };
 
   const deleteClicked = (event: React.MouseEvent<HTMLElement>) => {
     if (ctrlDown) {
       deleteVideo(event);
     } else {
+      event.stopPropagation();
       setDeleteDialogOpen(true);
     }
-  };
-
-  const closeDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-  };
-
-  const markForDelete = () => {
-    deleteVideoOnUnmount = true;
-    closeDeleteDialog();
   };
 
   const getTagDialog = () => {
     return (
       <TagDialog
-        video={video}
+        video={pov}
         tagDialogOpen={tagDialogOpen}
         setTagDialogOpen={setTagDialogOpen}
       />
@@ -238,14 +259,146 @@ export default function VideoButton(props: IProps) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDeleteDialog} sx={dialogButtonSx}>
+          <Button
+            onClick={(event) => {
+              event.stopPropagation();
+              setDeleteDialogOpen(false);
+            }}
+            sx={dialogButtonSx}
+          >
             Cancel
           </Button>
-          <Button onClick={markForDelete} sx={dialogButtonSx}>
+          <Button
+            onClick={(event) => {
+              event.stopPropagation();
+              deleteVideo(event);
+            }}
+            sx={dialogButtonSx}
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
+    );
+  };
+
+  const getOpenButton = () => {
+    return (
+      <Tooltip title="Open location">
+        <IconButton onClick={openLocation}>
+          <FolderIcon sx={{ color: 'white' }} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
+  const uploadVideo = async () => {
+    ipc.sendMessage('videoButton', ['upload', videoSource]);
+  };
+
+  const getUploadButton = () => {
+    return (
+      <Tooltip title="Upload to cloud">
+        <IconButton onClick={uploadVideo}>
+          <UploadIcon sx={{ color: 'white' }} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
+  const downloadVideo = async () => {
+    setDownloadSpinner(true);
+    ipc.sendMessage('videoButton', ['download', videoSource]);
+  };
+
+  const getDownloadButton = () => {
+    if (downloadSpinner) {
+      return (
+        <Box
+          sx={{
+            position: 'relative',
+            display: 'inline-flex',
+          }}
+        >
+          <CircularProgress
+            variant="determinate"
+            size={35}
+            value={downloadProgress}
+            sx={{ color: '#bb4420' }}
+          />
+          <Box
+            sx={{
+              top: 0,
+              left: 0,
+              bottom: 0,
+              right: 0,
+              position: 'absolute',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Typography
+              variant="caption"
+              component="div"
+              sx={{
+                color: 'white',
+                fontWeight: '600',
+                fontFamily: 'Arial',
+                fontSize: '0.6rem',
+                textShadow:
+                  '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+              }}
+            >
+              {`${downloadProgress}%`}
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
+
+    return (
+      <Tooltip title="Download to disk">
+        <IconButton onClick={downloadVideo}>
+          <DownloadIcon sx={{ color: 'white' }} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
+  const getShareableLinkSnackBar = () => {
+    return (
+      <SnackBar
+        message="Link copied!"
+        timeout={2}
+        open={linkSnackBarOpen}
+        setOpen={setLinkSnackBarOpen}
+      />
+    );
+  };
+
+  const getShareableLink = async () => {
+    return ipc.invoke('signGetUrl', [videoSource]);
+  };
+
+  const writeToClipBoard = async (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+    setLinkSnackBarOpen(true);
+    const url = await getShareableLink();
+    ipc.sendMessage('writeClipboard', [url]);
+  };
+
+  const getShareLinkButton = () => {
+    return (
+      <Tooltip title="Get sharable link">
+        <div>
+          {getShareableLinkSnackBar()}
+          <IconButton onClick={writeToClipBoard}>
+            <LinkIcon sx={{ color: 'white' }} />
+          </IconButton>
+        </div>
+      </Tooltip>
     );
   };
 
@@ -254,30 +407,33 @@ export default function VideoButton(props: IProps) {
       sx={{
         display: 'flex',
         width: '100%',
-        height: '80px',
+        height: '130px',
       }}
     >
       {getTagDialog()}
       {getDeleteDialog()}
       <Box
         sx={{
-          height: '80px',
-          width: '200px',
+          height: '130px',
+          width: '30%',
         }}
       >
-        <Box
-          component="img"
-          src={imagePath}
-          sx={{
-            border: '1px solid black',
-            borderRadius: '5px',
-            boxSizing: 'border-box',
-            height: '80px',
-            width: '200px',
-            objectFit: 'contain',
-            backgroundColor: 'black',
-          }}
-        />
+        <Box>
+          <Box
+            component="img"
+            src={thumbnailSignedUrl}
+            sx={{
+              border: '1px solid black',
+              borderRadius: '5px',
+              boxSizing: 'border-box',
+              height: '130px',
+              minWidth: '300px',
+              width: '100%',
+              objectFit: 'contain',
+              backgroundColor: 'black',
+            }}
+          />
+        </Box>
       </Box>
 
       <Box
@@ -286,194 +442,207 @@ export default function VideoButton(props: IProps) {
           borderRadius: '5px',
           boxSizing: 'border-box',
           bgcolor: resultColor,
-          ml: 2,
           width: '100%',
-          display: 'grid',
-          gridTemplateColumns: '15% 25% 20% 8% 8% 8% 15%',
+          height: '130px',
+          display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-evenly',
+          mx: 1,
         }}
       >
         <Box
           sx={{
+            height: '100%',
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <PovSelection
+            povs={povs}
+            parentButtonSelected={selected}
+            localPovIndex={localPovIndex}
+            setLocalPovIndex={setLocalPovIndex}
+            setAppState={setAppState}
+            persistentProgress={persistentProgress}
+          />
+        </Box>
+
+        <Box
+          sx={{
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box sx={{ m: 2 }}>
+            {isArena && <ArenaInfo video={video} />}
+            {isMythicPlus && <DungeonInfo video={video} />}
+            {isRaid && <RaidEncounterInfo video={video} />}
+            {isBattleground && <BattlegroundInfo video={video} />}
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box sx={{ m: 2 }}>
+            {isArena && <ArenaCompDisplay video={video} />}
+            {isMythicPlus && <DungeonCompDisplay video={video} />}
+            {isRaid && (
+              <RaidCompAndResult
+                video={video}
+                raidCategoryState={videoState.filter(
+                  (v) => v.category === VideoCategory.Raids
+                )}
+              />
+            )}
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
           }}
         >
           <Box
-            component="img"
-            src={specIcon}
             sx={{
-              height: '25px',
-              width: '25px',
-              border: '1px solid black',
-              borderRadius: '15%',
-              boxSizing: 'border-box',
-              objectFit: 'cover',
-            }}
-          />
-
-          <Typography
-            sx={{
-              color: playerClassColor,
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              m: 1,
             }}
           >
-            {playerName}
-          </Typography>
+            <Tooltip title="Duration">
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  mx: 1,
+                }}
+              >
+                <HourglassBottomIcon sx={{ color: 'white' }} />
+                <Typography
+                  sx={{
+                    color: 'white',
+                    fontWeight: '600',
+                    fontFamily: '"Arial",sans-serif',
+                    textShadow:
+                      '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+                  }}
+                >
+                  {formattedDuration}
+                </Typography>
+              </Box>
+            </Tooltip>
 
-          <Typography
+            <Tooltip title="Time">
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  mx: 1,
+                }}
+              >
+                <AccessTimeIcon sx={{ color: 'white' }} />
+                <Typography
+                  sx={{
+                    color: 'white',
+                    fontWeight: '600',
+                    fontFamily: '"Arial",sans-serif',
+                    textShadow:
+                      '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+                  }}
+                >
+                  {videoTime}
+                </Typography>
+              </Box>
+            </Tooltip>
+
+            <Tooltip title="Date">
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  mx: 1,
+                }}
+              >
+                <EventIcon sx={{ color: 'white' }} />
+                <Typography
+                  sx={{
+                    color: 'white',
+                    fontWeight: '600',
+                    fontFamily: '"Arial",sans-serif',
+                    textShadow:
+                      '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+                  }}
+                >
+                  {videoDate}
+                </Typography>
+              </Box>
+            </Tooltip>
+          </Box>
+
+          <Box
             sx={{
-              color: 'white',
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              fontSize: '0.7rem',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              m: 1,
             }}
           >
-            {playerRealm}
-          </Typography>
-        </Box>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Tooltip title={tagTooltip}>
+                <IconButton onClick={openTagDialog}>
+                  <MessageIcon sx={{ color: 'white', opacity: tagOpacity }} />
+                </IconButton>
+              </Tooltip>
 
-        <Box
-          sx={{
-            gridColumnStart: 2,
-            gridColumnEnd: 3,
-          }}
-        >
-          {isArena && <ArenaInfo video={video} />}
-          {isMythicPlus && <DungeonInfo video={video} />}
-          {isRaid && <RaidEncounterInfo video={video} />}
-          {isBattleground && <BattlegroundInfo video={video} />}
-        </Box>
+              <Tooltip title="Never age out">
+                <IconButton onClick={protectVideo}>
+                  <BookmarksIcon
+                    sx={{ color: 'white', opacity: bookmarkOpacity }}
+                  />
+                </IconButton>
+              </Tooltip>
 
-        <Box
-          sx={{
-            gridColumnStart: 3,
-            gridColumnEnd: 4,
-          }}
-        >
-          {isArena && <ArenaCompDisplay video={video} />}
-          {isMythicPlus && <DungeonCompDisplay video={video} />}
-          {isRaid && (
-            <RaidCompAndResult
-              video={video}
-              raidCategoryState={videoState[VideoCategory.Raids]}
-            />
-          )}
-        </Box>
+              {cloud && getShareLinkButton()}
+              {!cloud && getOpenButton()}
+              {cloud && !haveOnDisk && getDownloadButton()}
+              {!cloud &&
+                !haveInCloud &&
+                config.cloudUpload &&
+                getUploadButton()}
 
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gridColumnStart: 4,
-            gridColumnEnd: 5,
-          }}
-        >
-          <HourglassBottomIcon sx={{ color: 'white' }} />
-          <Typography
-            sx={{
-              color: 'white',
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-            }}
-          >
-            {formattedDuration}
-          </Typography>
-        </Box>
-
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gridColumnStart: 5,
-            gridColumnEnd: 6,
-          }}
-        >
-          <AccessTimeIcon sx={{ color: 'white' }} />
-          <Typography
-            sx={{
-              color: 'white',
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-            }}
-          >
-            {videoTime}
-          </Typography>
-        </Box>
-
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gridColumnStart: 6,
-            gridColumnEnd: 7,
-          }}
-        >
-          <EventIcon sx={{ color: 'white' }} />
-          <Typography
-            sx={{
-              color: 'white',
-              fontWeight: '600',
-              fontFamily: '"Arial",sans-serif',
-              textShadow:
-                '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-            }}
-          >
-            {videoDate}
-          </Typography>
-        </Box>
-
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gridColumnStart: 7,
-            gridColumnEnd: 8,
-            p: 2,
-          }}
-        >
-          <Tooltip title={tagTooltip}>
-            <IconButton onClick={openTagDialog}>
-              <MessageIcon sx={{ color: 'white', opacity: tagOpacity }} />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Never age out">
-            <IconButton onClick={protectVideo}>
-              <BookmarksIcon
-                sx={{ color: 'white', opacity: bookmarkOpacity }}
-              />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Open location">
-            <IconButton onClick={openLocation}>
-              <FolderIcon sx={{ color: 'white' }} />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Delete">
-            <div>
-              <IconButton onClick={deleteClicked}>
-                <DeleteForeverIcon sx={{ color: 'white' }} />
-              </IconButton>
-            </div>
-          </Tooltip>
+              <Tooltip title="Delete">
+                <IconButton onClick={deleteClicked}>
+                  <DeleteForeverIcon sx={{ color: 'white' }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>

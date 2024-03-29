@@ -190,7 +190,7 @@ export default abstract class LogHandler extends EventEmitter {
       return;
     }
 
-    console.log(
+    console.info(
       `[LogHandler] Start recording a video for category: ${category}`
     );
 
@@ -287,7 +287,7 @@ export default abstract class LogHandler extends EventEmitter {
   }
 
   protected async dataTimeout(ms: number) {
-    console.log(
+    console.info(
       `[LogHandler] Haven't received data for combatlog in ${
         ms / 1000
       } seconds.`

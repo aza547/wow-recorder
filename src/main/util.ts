@@ -17,14 +17,11 @@ import {
   FileSortDirection,
   OurDisplayType,
   RendererVideo,
-  RendererVideoState,
   FlavourConfig,
   ObsAudioConfig,
   CrashData,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
-
-const categories = Object.values(VideoCategory);
 
 /**
  * When packaged, we need to fix some paths
@@ -44,7 +41,7 @@ const fixPathWhenPackaged = (pathSpec: string) => {
 const setupApplicationLogging = () => {
   const log = require('electron-log');
   const date = new Date().toISOString().slice(0, 10);
-  const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
+  const logRelativePath = `logs/WarcraftRecorderPro-${date}.log`;
   const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
   log.transports.file.resolvePath = () => logPath;
   Object.assign(console, log.functions);
@@ -70,25 +67,6 @@ const getResolvedHtmlPath = () => {
 };
 
 export const resolveHtmlPath = getResolvedHtmlPath();
-
-/**
- * Empty video state.
- */
-const getEmptyState = () => {
-  const videoState: RendererVideoState = {
-    [VideoCategory.TwoVTwo]: [],
-    [VideoCategory.ThreeVThree]: [],
-    [VideoCategory.FiveVFive]: [],
-    [VideoCategory.Skirmish]: [],
-    [VideoCategory.SoloShuffle]: [],
-    [VideoCategory.MythicPlus]: [],
-    [VideoCategory.Raids]: [],
-    [VideoCategory.Battlegrounds]: [],
-    [VideoCategory.Clips]: [],
-  };
-
-  return videoState;
-};
 
 /**
  * Return information about a file needed for various parts of the application
@@ -179,60 +157,126 @@ const getMetadataForVideo = async (video: string) => {
 };
 
 /**
- * Load video details from the metadata and add it to videoState.
+ * Try to unlink a file and return a boolean indicating the success
+ * Logs any errors to the console, if the file couldn't be deleted for some reason.
  */
-const loadVideoDetails = async (video: FileInfo): Promise<RendererVideo> => {
-  const metadata = await getMetadataForVideo(video.name);
-  const imagePath = getThumbnailFileNameForVideo(video.name);
-
-  return {
-    ...metadata,
-    mtime: video.mtime,
-    fullPath: video.name,
-    imagePath,
-    isProtected: Boolean(metadata.protected),
-    size: video.size,
-  };
+const tryUnlink = async (file: string): Promise<boolean> => {
+  try {
+    console.info(`[Util] Deleting: ${file}`);
+    await fspromise.access(file);
+    await fs.promises.unlink(file);
+    return true;
+  } catch (e) {
+    console.error(`[Util] Unable to delete file: ${file}.`);
+    console.error((e as Error).message);
+    return false;
+  }
 };
 
 /**
- * Load videos from category folders in reverse chronological order.
+ * Delete a video and its metadata file if it exists.
  */
-const loadAllVideos = async (
+const deleteVideoDisk = async (videoPath: string) => {
+  console.info('[Util] Deleting video', videoPath);
+  const success = await tryUnlink(videoPath);
+
+  if (!success) {
+    // If we can't delete the video file, make sure we don't delete the metadata
+    // file either, which would leave the video file dangling.
+    return;
+  }
+
+  const metadataPath = getMetadataFileNameForVideo(videoPath);
+  await tryUnlink(metadataPath);
+
+  const thumbnailPath = getThumbnailFileNameForVideo(videoPath);
+  await tryUnlink(thumbnailPath);
+};
+
+/**
+ * Delete a video and it's accompanying files after a short delay. Use case
+ * is when we are mid refresh of the frontend and spot a video marked for
+ * deletion in its metadata.
+ *
+ * We can't always immediately delete the video because the frontend might
+ * have it open, but once the refresh has kicked in we're safe as we won't
+ * display a video marked for delete.
+ *
+ * The timeout of 2000 is somewhat arbitrary, don't want to be too long
+ * in-case we go through multiple refreshes and set a bunch of timers
+ * to delete the same file. Not the end of the world either way, just
+ * looks ugly in logs.
+ */
+const delayedDeleteVideo = (video: RendererVideo) => {
+  const src = video.videoSource;
+  console.info('[Util] Will soon remove a video marked for deletion', src);
+
+  setTimeout(() => {
+    console.info('[Util] Removing a video marked for deletion', src);
+    deleteVideoDisk(video.videoSource);
+  }, 2000);
+};
+
+/**
+ * Load video details from the metadata and add it to videoState.
+ */
+const loadVideoDetailsDisk = async (
+  video: FileInfo
+): Promise<RendererVideo> => {
+  try {
+    const metadata = await getMetadataForVideo(video.name);
+    const thumbnailSource = getThumbnailFileNameForVideo(video.name);
+
+    return {
+      ...metadata,
+      name: path.basename(video.name),
+      mtime: video.mtime,
+      videoSource: video.name,
+      thumbnailSource,
+      isProtected: Boolean(metadata.protected),
+      size: video.size,
+      cloud: false,
+      multiPov: [],
+    };
+  } catch (error) {
+    // Just log it and rethrow. Want this to be diagnosable.
+    console.warn('[Manager] Failed to load video:', video.name, String(error));
+    throw error;
+  }
+};
+
+const loadAllVideosDisk = async (
   storageDir: string
-): Promise<{ [category: string]: RendererVideo[] }> => {
-  const videoIndex: { [category: string]: number } = {};
-
-  categories.forEach((category) => {
-    videoIndex[category] = 0;
-  });
-
-  const videoState = getEmptyState();
-
+): Promise<RendererVideo[]> => {
   if (!storageDir) {
-    return videoState;
+    return [];
   }
 
   const videos = await getSortedVideos(storageDir);
 
   if (videos.length === 0) {
-    return videoState;
+    return [];
   }
 
-  const videoDetailPromises = videos.map((video) => loadVideoDetails(video));
+  const videoDetailPromises = videos.map((video) =>
+    loadVideoDetailsDisk(video)
+  );
 
   // Await all the videoDetailsPromises to settle, and then remove any
   // that were rejected. This can happen if there is a missing metadata file.
-  const videoDetail: RendererVideo[] = (
+  const videoDetails: RendererVideo[] = (
     await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
   ).filter((result) => !(result instanceof Error));
 
-  videoDetail.forEach((details) => {
-    const { category } = details;
-    videoState[category].push(details);
-  });
+  // Any details marked for deletion do it now. We allow for this flag to be
+  // set in the metadata to give us a robust mechanism for removing a video
+  // that may be open in the player. We hide it from the state as part of a
+  // refresh, that guarentees it cannot be loaded in the player.
+  videoDetails.filter((video) => video.delete).forEach(delayedDeleteVideo);
 
-  return videoState;
+  // Return this list of videos without those marked for deletion which may still
+  // exist for a short time.
+  return videoDetails.filter((video) => !video.delete);
 };
 
 /**
@@ -250,43 +294,6 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
 };
 
 /**
- * Try to unlink a file and return a boolean indicating the success
- * Logs any errors to the console, if the file couldn't be deleted for some reason.
- */
-const tryUnlink = async (file: string): Promise<boolean> => {
-  try {
-    console.log(`[Util] Deleting: ${file}`);
-    await fs.promises.unlink(file);
-    return true;
-  } catch (e) {
-    console.error(`[Util] Unable to delete file: ${file}.`);
-    console.error((e as Error).message);
-    return false;
-  }
-};
-
-/**
- * Delete a video and its metadata file if it exists.
- */
-const deleteVideo = async (videoPath: string) => {
-  console.info('[Util] Deleting video', videoPath);
-
-  const success = await tryUnlink(videoPath);
-
-  if (!success) {
-    // If we can't delete the video file, make sure we don't delete the metadata
-    // file either, which would leave the video file dangling.
-    return;
-  }
-
-  const metadataPath = getMetadataFileNameForVideo(videoPath);
-  await tryUnlink(metadataPath);
-
-  const thumbnailPath = getThumbnailFileNameForVideo(videoPath);
-  await tryUnlink(thumbnailPath);
-};
-
-/**
  * Open a folder in system explorer.
  */
 const openSystemExplorer = (filePath: string) => {
@@ -298,7 +305,7 @@ const openSystemExplorer = (filePath: string) => {
 /**
  * Put a save marker on a video, protecting it from the file monitor.
  */
-const toggleVideoProtected = async (videoPath: string) => {
+const toggleVideoProtectedDisk = async (videoPath: string) => {
   let metadata;
 
   try {
@@ -328,7 +335,7 @@ const toggleVideoProtected = async (videoPath: string) => {
 /**
  * Tag a video.
  */
-const tagVideo = async (videoPath: string, tag: string) => {
+const tagVideoDisk = async (videoPath: string, tag: string) => {
   let metadata;
 
   try {
@@ -455,7 +462,7 @@ const checkAppUpdate = (mainWindow: BrowserWindow | null = null) => {
       const link = release.assets[0].browser_download_url;
 
       if (latestVersion !== app.getVersion() && latestVersion && link) {
-        console.log('[Util] New version available:', latestVersion);
+        console.info('[Util] New version available:', latestVersion);
         if (mainWindow === null) return;
         mainWindow.webContents.send('updateUpgradeStatus', true, link);
       }
@@ -729,13 +736,59 @@ const checkDisk = async (dir: string, req: number) => {
   }
 };
 
+/**
+ * We use start as the preference here: the genuine start date of the activity.
+ * It was only added for cloud support, so if it doesn't exist, fallback to
+ * the mtime which is particularly worse on cloud storage. It worked fine on
+ * disk storage where there is no upload delay.
+ */
+const reverseChronologicalVideoSort = (A: RendererVideo, B: RendererVideo) => {
+  const metricA = A.start ? A.start : A.mtime;
+  const metricB = B.start ? B.start : B.mtime;
+  return metricB - metricA;
+};
+
+/**
+ * Check if two dates are within sec of each other.
+ */
+const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
+  const differenceMilliseconds = Math.abs(d1.getTime() - d2.getTime());
+  const millisecondsInMinute = sec * 1000; // 60 seconds * 1000 milliseconds
+  return differenceMilliseconds <= millisecondsInMinute;
+};
+
+/**
+ * Re-write the metadata file on disk with a flag saying the video should
+ * NOT be loaded, and should be deleted at earliest conviencence.
+ *
+ * This helps us avoid any scenario where we attempt and fail to delete a
+ * video open by the player.
+ */
+const markForVideoForDelete = async (videoPath: string) => {
+  try {
+    const metadata = await getMetadataForVideo(videoPath);
+    metadata.delete = true;
+    await writeMetadataFile(videoPath, metadata);
+  } catch (error) {
+    // This isn't a total disaster, but might cause some duplicates to
+    // display in the UI; i.e. a cloud and disk version of the same video.
+    // Just log it so it's diagnosable, a user could fix it easily with a
+    // manual delete.
+    console.error(
+      '[Util] Failed to mark a video for deletion',
+      videoPath,
+      String(error)
+    );
+  }
+};
+
 export {
   setupApplicationLogging,
-  loadAllVideos,
+  loadAllVideosDisk,
   writeMetadataFile,
-  deleteVideo,
+  deleteVideoDisk,
   openSystemExplorer,
-  toggleVideoProtected,
+  toggleVideoProtectedDisk,
   fixPathWhenPackaged,
   getSortedVideos,
   getAvailableDisplays,
@@ -757,5 +810,10 @@ export {
   buildClipMetadata,
   getOBSFormattedDate,
   checkDisk,
-  tagVideo,
+  tagVideoDisk,
+  getMetadataFileNameForVideo,
+  loadVideoDetailsDisk,
+  reverseChronologicalVideoSort,
+  areDatesWithinSeconds,
+  markForVideoForDelete,
 };

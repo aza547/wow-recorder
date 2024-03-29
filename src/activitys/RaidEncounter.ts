@@ -131,6 +131,8 @@ export default class RaidEncounter extends Activity {
       deaths: this.deaths,
       overrun: this.overrun,
       combatants: rawCombatants,
+      start: this.startDate.getTime(),
+      uniqueHash: this.getUniqueHash(),
     };
   }
 

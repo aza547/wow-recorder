@@ -17,7 +17,7 @@ export default function RendererTitleBar() {
     ipc.sendMessage('mainWindow', ['quit']);
   };
 
-  const [title, setTitle] = React.useState('Warcraft Recorder');
+  const [title, setTitle] = React.useState('Warcraft Recorder Pro');
 
   React.useEffect(() => {
     window.electron.ipcRenderer.on('updateTitleBar', (t) => {

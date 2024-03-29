@@ -209,6 +209,8 @@ export default class SoloShuffle extends Activity {
       soloShuffleTimeline: this.getTimelineSegments(),
       combatants: rawCombatants,
       overrun: this.overrun,
+      start: this.startDate.getTime(),
+      uniqueHash: this.getUniqueHash(),
     };
   }
 

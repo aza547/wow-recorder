@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { PlayerDeathType, Flavour, Metadata } from '../main/types';
 import Combatant from '../main/Combatant';
 import { VideoCategory } from '../types/VideoCategory';
@@ -25,6 +26,8 @@ export default abstract class Activity {
   protected _playerGUID?: string;
 
   protected _overrun: number = 0;
+
+  protected hash = crypto.createHash('md5');
 
   constructor(startDate: Date, category: VideoCategory, flavour: Flavour) {
     this._result = false;
@@ -156,5 +159,39 @@ export default abstract class Activity {
 
   addDeath(death: PlayerDeathType) {
     this.deaths.push(death);
+  }
+
+  /**
+   * Gets fields from the metadata that are deterministic and hashes them. This is used to
+   * correlate videos; deliberately excludes fields that vary from player to player for this
+   * reason. Does not include start time as I'm not sure it's totally fixed across multi povs;
+   * it might vary slightly with local system clock.
+   */
+  getUniqueHash(): string {
+    const deterministicFields = [this.category, this.flavour, this.result].map(
+      (f) => f.toString()
+    );
+
+    const sortedNames: string[] = [];
+    const sortedDeaths: string[] = [];
+
+    Array.from(this.combatantMap.values())
+      .map((combatant) => combatant.name)
+      .sort()
+      .forEach((name) => {
+        if (name) sortedNames.push(name);
+      });
+
+    this.deaths
+      .map((death) => death.name)
+      .sort()
+      .forEach((name) => sortedDeaths.push(name));
+
+    const uniqueString =
+      deterministicFields.join(' ') +
+      sortedNames.join(' ') +
+      sortedDeaths.join(' ');
+
+    return this.hash.update(uniqueString).digest('base64');
   }
 }

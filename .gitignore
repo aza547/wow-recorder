@@ -33,3 +33,7 @@ src/main/osn-data/*
 # Python crap
 *cpython*
 *__pycache__*
+
+# Cloud storage dirs
+upload
+buffer

@@ -1,35 +1,36 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CrashData,
   Crashes,
   MicStatus,
   Pages,
   RecStatus,
-  RendererVideoState,
   SaveStatus,
-  TAppState,
-  TNavigatorState,
+  AppState,
   UpgradeStatus,
+  RendererVideo,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import BottomStatusBar from './BottomStatusBar';
 import './App.css';
-import { getEmptyState } from './rendererutils';
 import { useSettings } from './useSettings';
+import { getCategoryFromConfig } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
 
-const Application = () => {
+const WarcraftRecorder = () => {
   const [config] = useSettings();
+  const [error, setError] = useState<string>('');
+  const [videoState, setVideoState] = useState<RendererVideo[]>([]);
+  const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
+  const [crashes, setCrashes] = useState<Crashes>([]);
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW
   );
-
-  const [error, setError] = useState<string>('');
 
   const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>({
     available: false,
@@ -40,20 +41,12 @@ const Application = () => {
     SaveStatus.NotSaving
   );
 
-  const [videoState, setVideoState] = useState<RendererVideoState>(
-    getEmptyState()
-  );
-
-  const [navigation, setNavigation] = useState<TNavigatorState>({
-    categoryIndex: config.selectedCategory,
-    videoIndex: 0,
+  const [appState, setAppState] = useState<AppState>({
+    // Navigation.
     page: Pages.None,
-  });
-
-  const [appState, setAppState] = useState<TAppState>({
-    // If the app hits a fatal error, we set this to true and provide a reason.
-    fatalError: false,
-    fatalErrorText: '',
+    category: getCategoryFromConfig(config),
+    playingVideo: undefined,
+    selectedVideoName: undefined,
 
     // Limit the number of videos displayed for performance. User can load more
     // by clicking the button, but mainline case will be to watch back recent
@@ -67,55 +60,57 @@ const Application = () => {
     videoFullScreen: false,
   });
 
-  const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
+  // Used to allow for hot switching of video players when moving between POVs.
+  const persistentProgress = useRef(0);
 
-  const [crashes, setCrashes] = useState<Crashes>([]);
+  const doRefresh = async () => {
+    const state = (await ipc.invoke('getVideoState', [])) as RendererVideo[];
+    setVideoState(state);
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
+  const updateRecStatus = (status: unknown, err: unknown) => {
+    setRecorderStatus(status as RecStatus);
+
+    if (status === RecStatus.InvalidConfig || status === RecStatus.FatalError) {
+      setError(err as string);
+    }
+  };
+
+  const updateSaveStatus = (status: unknown) => {
+    setSavingStatus(status as SaveStatus);
+  };
+
+  const updateUpgradeStatus = (available: unknown, link: unknown) => {
+    setUpgradeStatus({
+      available: available as boolean,
+      link: link as string,
+    });
+  };
+
+  const updateMicStatus = (status: unknown) => {
+    setMicStatus(status as MicStatus);
+  };
+
+  const updateCrashes = (crash: unknown) => {
+    setCrashes((prevArray) => [...prevArray, crash as CrashData]);
+  };
 
   useEffect(() => {
-    ipc.on('refreshState', async () => {
-      setVideoState(
-        (await ipc.invoke('getVideoState', [])) as RendererVideoState
-      );
-
-      // Fixes issue 410 which caused the preview not to re-appear if
-      // refreshState triggered when full screen.
-      setAppState((prevState) => {
-        return {
-          ...prevState,
-          videoFullScreen: false,
-        };
-      });
-    });
-
-    ipc.on('updateRecStatus', (status, err) => {
-      setRecorderStatus(status as RecStatus);
-
-      if (
-        status === RecStatus.InvalidConfig ||
-        status === RecStatus.FatalError
-      ) {
-        setError(err as string);
-      }
-    });
-
-    ipc.on('updateSaveStatus', (status) => {
-      setSavingStatus(status as SaveStatus);
-    });
-
-    ipc.on('updateUpgradeStatus', (available, link) => {
-      setUpgradeStatus({
-        available: available as boolean,
-        link: link as string,
-      });
-    });
-
-    ipc.on('updateMicStatus', (status) => {
-      setMicStatus(status as MicStatus);
-    });
-
-    ipc.on('updateCrashes', (crash) => {
-      setCrashes((prevArray) => [...prevArray, crash as CrashData]);
-    });
+    ipc.on('refreshState', doRefresh);
+    ipc.on('updateRecStatus', updateRecStatus);
+    ipc.on('updateSaveStatus', updateSaveStatus);
+    ipc.on('updateUpgradeStatus', updateUpgradeStatus);
+    ipc.on('updateMicStatus', updateMicStatus);
+    ipc.on('updateCrashes', updateCrashes);
   }, []);
 
   return (
@@ -130,13 +125,11 @@ const Application = () => {
     >
       <RendererTitleBar />
       <Layout
-        navigation={navigation}
-        setNavigation={setNavigation}
         recorderStatus={recorderStatus}
         videoState={videoState}
-        setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
+        persistentProgress={persistentProgress}
       />
       <BottomStatusBar
         recorderStatus={recorderStatus}
@@ -154,7 +147,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Application />} />
+        <Route path="/" element={<WarcraftRecorder />} />
       </Routes>
     </Router>
   );

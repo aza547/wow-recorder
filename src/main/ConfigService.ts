@@ -34,7 +34,7 @@ export default class ConfigService extends EventEmitter {
 
     this.cleanupStore();
 
-    console.log('[Config Service] Using configuration', this._store.store);
+    console.info('[Config Service] Using configuration', this._store.store);
 
     this._store.onDidAnyChange((newValue: any, oldValue: any) => {
       this.emit('configChanged', oldValue, newValue);
@@ -179,7 +179,7 @@ export default class ConfigService extends EventEmitter {
     // trying to remove keys that _don't_ exist in the schema.
     keysToDelete.forEach((k) => this._store.delete(k));
 
-    console.log(
+    console.info(
       '[Config Service] Deleted deprecated keys from configuration store',
       keysToDelete
     );
@@ -196,6 +196,6 @@ export default class ConfigService extends EventEmitter {
   }
 
   private static logConfigChanged(newConfig: { [key: string]: any }): void {
-    console.log('[Config Service] Configuration changed:', newConfig);
+    console.info('[Config Service] Configuration changed:', newConfig);
   }
 }

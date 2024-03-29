@@ -1,6 +1,7 @@
 import { Box } from '@mui/material';
 import React from 'react';
 import { RecStatus } from 'main/types';
+import { scrollBarSx } from 'main/constants';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
 import VideoSourceControls from './VideoSourceControls';
@@ -33,20 +34,8 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
           display: 'flex',
           flexDirection: 'column',
           height: '50%',
-          overflowY: 'scroll',
-          scrollbarWidth: 'thin',
-          '&::-webkit-scrollbar': {
-            width: '1em',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: '#f1f1f1',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: '#888',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: '#555',
-          },
+          overflowY: 'auto',
+          ...scrollBarSx,
         }}
       >
         <Box

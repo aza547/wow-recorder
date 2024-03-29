@@ -86,6 +86,8 @@ export default class ArenaMatch extends Activity {
       player: this.player.getRaw(),
       combatants: rawCombatants,
       overrun: this.overrun,
+      start: this.startDate.getTime(),
+      uniqueHash: this.getUniqueHash(),
     };
   }
 

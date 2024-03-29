@@ -5,8 +5,13 @@ import {
   VideoMarker,
   VideoPlayerSettings,
 } from 'main/types';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ConfigurationSchema } from 'main/configSchema';
+import {
+  MutableRefObject,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Box, Button, Slider, Tooltip, Typography } from '@mui/material';
 import { Resizable } from 're-resizable';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -20,9 +25,8 @@ import MovieIcon from '@mui/icons-material/Movie';
 import ClearIcon from '@mui/icons-material/Clear';
 import DoneIcon from '@mui/icons-material/Done';
 import { OnProgressProps } from 'react-player/base';
-import FilePlayer from 'react-player/file';
+import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
-import { VideoCategory } from 'types/VideoCategory';
 import DeathIcon from '../../assets/icon/death.png';
 import {
   convertNumToDeathMarkers,
@@ -30,15 +34,18 @@ import {
   getEncounterMarkers,
   getOwnDeathMarkers,
   getRoundMarkers,
-  isClipUtil,
+  isClip,
   isMythicPlusUtil,
   isSoloShuffleUtil,
   secToMmSs,
 } from './rendererutils';
+import { setConfigValue, useSettings } from './useSettings';
 
 interface IProps {
   video: RendererVideo;
-  config: ConfigurationSchema;
+  persistentProgress: MutableRefObject<number>;
+  playing: boolean;
+  setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -62,13 +69,13 @@ const sliderSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const { video, config } = props;
-  const url = video.fullPath;
+  const { video, persistentProgress, playing, setPlaying } = props;
+  const { videoSource, cloud } = video;
+  const [config] = useSettings();
 
-  const player = useRef<FilePlayer>(null);
+  const player = useRef<ReactPlayer>(null);
   const progressSlider = useRef<HTMLSpanElement>(null);
 
-  const [playing, setPlaying] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);
@@ -80,6 +87,12 @@ export const VideoPlayer = (props: IProps) => {
   // the coloring of the progress slider remains correct across a resize.
   const [, setWidth] = useState<number>(0);
 
+  // On the initial seek we will attempt to resume playback from the
+  // persistentProgress prop. The ideas is that when switching between
+  // different POVs of the same activity we want to play from the same
+  // point.
+  let initialSeek = false;
+
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
   // variable in the main process that we update and retrieve, but is not written
@@ -90,6 +103,25 @@ export const VideoPlayer = (props: IProps) => {
 
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
+  const [src, setSrc] = useState<string>('');
+
+  // We set the video player size in the config when it gets resized, on a
+  // debounce timer as it fires alot of resize events.
+  let debounceTimer: NodeJS.Timer | undefined;
+
+  // Sign the thumbnail URL and render it.
+  useEffect(() => {
+    const getVideoSignedUrl = async () => {
+      const signedUrl = await ipc.invoke('signGetUrl', [videoSource]);
+      setSrc(signedUrl);
+    };
+
+    if (video.cloud) {
+      getVideoSignedUrl();
+    } else {
+      setSrc(videoSource);
+    }
+  }, [videoSource, video.cloud]);
 
   /**
    * Return a death marker appropriate for the MUI slider component.
@@ -121,7 +153,7 @@ export const VideoPlayer = (props: IProps) => {
   const getMarks = () => {
     const marks: SliderMark[] = [];
 
-    if (!player.current || duration === 0 || isClipUtil(video)) {
+    if (!player.current || duration === 0 || isClip(video)) {
       return marks;
     }
 
@@ -166,7 +198,7 @@ export const VideoPlayer = (props: IProps) => {
     markers: VideoMarker[],
     fillerColor: string
   ) => {
-    if (!progressSlider.current || duration === 0 || isClipUtil(video)) {
+    if (!progressSlider.current || duration === 0 || isClip(video)) {
       // Initial render shows a flash of the default color without this,
       // and this branch also protects us loading anything on the clips
       // category where the markers are bogus as they are just lifted
@@ -285,6 +317,7 @@ export const VideoPlayer = (props: IProps) => {
    * progresss bar position.
    */
   const onProgress = (event: OnProgressProps) => {
+    persistentProgress.current = event.playedSeconds;
     setProgress(event.played);
   };
 
@@ -332,6 +365,11 @@ export const VideoPlayer = (props: IProps) => {
   const onReady = () => {
     if (!player.current) {
       return;
+    }
+
+    if (!initialSeek) {
+      player.current.seekTo(persistentProgress.current, 'seconds');
+      initialSeek = true;
     }
 
     if (duration > 0) {
@@ -450,14 +488,15 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the video player itself, passing through all necessary callbacks
    * and props for it to function and be controlled.
    */
-  const renderFilePlayer = () => {
+  const renderPlayer = () => {
     return (
-      <FilePlayer
-        id="file-player"
+      <ReactPlayer
+        id="react-player"
         ref={player}
         height="calc(100% - 40px)"
         width="100%"
-        url={url}
+        // key={key}
+        url={src}
         style={style}
         playing={playing}
         volume={volume}
@@ -564,11 +603,19 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the playback rate button for the video controls.
    */
   const renderClipButton = () => {
+    const color = cloud ? 'rgba(239, 239, 240, 0.25)' : 'white';
+
     return (
       <Tooltip title="Clip">
-        <Button sx={{ color: 'white' }} onClick={() => setClipMode(true)}>
-          <MovieIcon sx={{ color: 'white', height: '20px' }} />
-        </Button>
+        <div>
+          <Button
+            sx={{ color: 'white' }}
+            onClick={() => setClipMode(true)}
+            disabled={cloud}
+          >
+            <MovieIcon sx={{ color, height: '20px' }} />
+          </Button>
+        </div>
       </Tooltip>
     );
   };
@@ -579,7 +626,7 @@ export const VideoPlayer = (props: IProps) => {
   const doClip = () => {
     const clipDuration = clipStopValue - clipStartValue;
     const clipOffset = clipStartValue;
-    const clipSource = video.fullPath;
+    const clipSource = video.videoSource;
 
     ipc.sendMessage('clip', [clipSource, clipOffset, clipDuration]);
     setClipMode(false);
@@ -650,8 +697,6 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the entire video control component.
    */
   const renderControls = () => {
-    const isClips = video.category === VideoCategory.Clips;
-
     return (
       <Box
         sx={{
@@ -670,7 +715,7 @@ export const VideoPlayer = (props: IProps) => {
         {renderVolumeSlider()}
         {renderProgressSlider()}
         {renderProgressText()}
-        {!clipMode && !isClips && renderClipButton()}
+        {!clipMode && !isClip(video) && renderClipButton()}
         {!clipMode && renderPlaybackRateButton()}
         {!clipMode && renderFullscreenButton()}
         {clipMode && renderClipFinishedButton()}
@@ -731,18 +776,37 @@ export const VideoPlayer = (props: IProps) => {
 
   // Used to pause when the app is minimized to the system tray.
   useEffect(() => {
+    ipc.removeAllListeners('pausePlayer');
     ipc.on('pausePlayer', () => setPlaying(false));
-  }, []);
+  }, [setPlaying]);
+
+  const onResize = (_unused1: unknown, __unused2: unknown, element: any) => {
+    const height = element.clientHeight;
+
+    if (typeof height !== 'number') {
+      // Just being cautious as we have no types for this callback.
+      return;
+    }
+
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    debounceTimer = setTimeout(() => {
+      setConfigValue('videoPlayerHeight', height);
+    }, 500);
+  };
 
   return (
     <>
       <Resizable
         defaultSize={{
-          height: '50%',
+          height: `${config.videoPlayerHeight}px`,
           width: '100%',
         }}
         enable={{ bottom: true }}
         bounds="parent"
+        onResize={onResize}
       >
         <Box
           id="player-and-controls"
@@ -751,7 +815,7 @@ export const VideoPlayer = (props: IProps) => {
             height: '100%',
           }}
         >
-          {renderFilePlayer()}
+          {renderPlayer()}
           {renderControls()}
         </Box>
       </Resizable>
