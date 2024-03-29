@@ -6,12 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+- Fix a bug where uploads would buffer the entire file into memory.
+- Fix a bug where the progress bars maths was wonky.
+
+## [4.0.0] - 2024-03-29
+### Changed
 - Change the CQP values for recording, they were too high resulting in large video files.
 
 ### Added
 - Add cloud storage support.
-
-### Fixed
 
 ## [3.25.3] - 2024-03-05
 ### Fixed

@@ -204,7 +204,7 @@ export default class CloudClient extends EventEmitter {
     const config: AxiosRequestConfig = {
       responseType: 'stream',
       onDownloadProgress: (event) =>
-        progressCallback(Math.round((100 * event.bytes) / size)),
+        progressCallback(Math.round((100 * event.loaded) / size)),
     };
 
     const response = await axios.get(signedUrl, config);
