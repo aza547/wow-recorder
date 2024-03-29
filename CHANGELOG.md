@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [4.0.2] - 2024-03-29
+### Fixed
+- Fix a bug where deleteing a POV could cause a blank screen.
+
+## [4.0.1] - 2024-03-29
+### Fixed
 - Fix a bug where uploads would buffer the entire file into memory.
 - Fix a bug where the progress bars maths was wonky.
 

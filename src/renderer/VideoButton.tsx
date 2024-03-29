@@ -166,6 +166,8 @@ export default function VideoButton(props: IProps) {
       return;
     }
 
+    setLocalPovIndex(0);
+
     setAppState((prevState) => {
       return {
         ...prevState,
