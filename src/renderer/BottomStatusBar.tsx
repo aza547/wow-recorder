@@ -6,6 +6,8 @@ import {
   UpgradeStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
+import { Fade, LinearProgress, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import DiscordButton from './DiscordButton';
 import LogButton from './LogButton';
 import RecorderStatus from './RecorderStatus';
@@ -33,6 +35,64 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
     micStatus,
     crashes,
   } = props;
+
+  const [showProgressBar, setShowProgressBar] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+
+  useEffect(() => {
+    const ipc = window.electron.ipcRenderer;
+
+    ipc.on('updateUploadProgress', (progress) => {
+      setShowProgressBar(true);
+      setUploadProgress(progress as number);
+
+      if (progress === 100) {
+        setTimeout(() => setShowProgressBar(false), 1000);
+      }
+    });
+  }, []);
+
+  const getUploadProgressBar = () => {
+    return (
+      <Box sx={{ width: '100%' }}>
+        <Fade in={showProgressBar}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+            }}
+          >
+            <LinearProgress
+              variant="determinate"
+              value={uploadProgress}
+              sx={{
+                minWidth: '300px',
+                height: '15px',
+                borderRadius: '2px',
+                border: '1px solid black',
+                backgroundColor: 'white',
+                '& .MuiLinearProgress-bar': {
+                  backgroundColor: '#bb4420',
+                },
+              }}
+            />
+            <Typography
+              sx={{
+                color: 'white',
+                fontSize: '0.75rem',
+                mx: '5px',
+              }}
+            >
+              {uploadProgress}% Uploaded
+            </Typography>
+          </Box>
+        </Fade>
+      </Box>
+    );
+  };
 
   return (
     <Box
@@ -69,6 +129,18 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
           <SavingStatus savingStatus={savingStatus} />
           <MicrophoneStatus micStatus={micStatus} />
           <CrashStatus crashes={crashes} />
+        </Box>
+
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {getUploadProgressBar()}
         </Box>
 
         <Box

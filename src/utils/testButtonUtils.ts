@@ -44,10 +44,10 @@ export const runRetailRecordingTest = (
   watcher: CombatLogWatcher,
   endTest = true
 ) => {
-  console.log('[test] User pressed the test button!');
+  console.info('[test] User pressed the test button!');
 
   if (!endTest) {
-    console.log(
+    console.info(
       '[test] The test will NOT end on its own and needs to be stopped manually.'
     );
   }
@@ -115,10 +115,10 @@ export const runClassicRecordingTest = (
   parser: CombatLogWatcher,
   endTest = true
 ) => {
-  console.log('[test] User pressed the test button!');
+  console.info('[test] User pressed the test button!');
 
   if (!endTest) {
-    console.log(
+    console.info(
       '[test] The test will NOT end on its own and needs to be stopped manually.'
     );
   }

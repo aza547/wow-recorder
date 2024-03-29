@@ -2,7 +2,7 @@ import { BrowserWindow } from 'electron';
 import { FileInfo } from 'main/types';
 import ConfigService from '../main/ConfigService';
 import {
-  deleteVideo,
+  deleteVideoDisk,
   getMetadataForVideo,
   getSortedVideos,
 } from '../main/util';
@@ -16,7 +16,7 @@ const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
   return fileStream.filter((_, index) => results[index]);
 };
 
-export default class SizeMonitor {
+export default class DiskSizeMonitor {
   private cfg = ConfigService.getInstance();
 
   private mainWindow: BrowserWindow;
@@ -31,10 +31,14 @@ export default class SizeMonitor {
     const maxStorageGB = this.cfg.get<number>('maxStorage');
     const maxStorageBytes = maxStorageGB * 1024 ** 3;
 
-    console.info('[SizeMonitor] Running, size limit is', maxStorageGB, 'GB');
+    console.info(
+      '[DiskSizeMonitor] Running, size limit is',
+      maxStorageGB,
+      'GB'
+    );
 
     if (maxStorageGB === 0) {
-      console.info('[SizeMonitor] Limitless storage, doing nothing');
+      console.info('[DiskSizeMonitor] Limitless storage, doing nothing');
       return;
     }
 
@@ -49,15 +53,18 @@ export default class SizeMonitor {
 
           if (!isUnprotected) {
             console.info(
-              '[SizeMonitor] Will not delete protected video',
+              '[DiskSizeMonitor] Will not delete protected video',
               file.name
             );
           }
 
           return isUnprotected;
         } catch {
-          console.error('[SizeMonitor] Failed to get metadata for', file.name);
-          await deleteVideo(file.name);
+          console.error(
+            '[DiskSizeMonitor] Failed to get metadata for',
+            file.name
+          );
+          await deleteVideoDisk(file.name);
           return false;
         }
       }
@@ -71,15 +78,21 @@ export default class SizeMonitor {
     });
 
     console.info(
-      `[SizeMonitor] Deleting ${filesForDeletion.length} old video(s)`
+      `[DiskSizeMonitor] Deleting ${filesForDeletion.length} old video(s)`
     );
 
     await Promise.all(
       filesForDeletion.map(async (file) => {
-        await deleteVideo(file.name);
+        await deleteVideoDisk(file.name);
       })
     );
 
     this.mainWindow.webContents.send('refreshState');
+  }
+
+  public async usage() {
+    const storageDir = this.cfg.get<string>('storagePath');
+    const files = await getSortedVideos(storageDir);
+    return files.map((file) => file.size).reduce((acc, num) => acc + num, 0);
   }
 }

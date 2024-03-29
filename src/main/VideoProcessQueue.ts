@@ -1,14 +1,18 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
-import SizeMonitor from '../utils/SizeMonitor';
+import assert from 'assert';
+import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from './ConfigService';
-import { SaveStatus, VideoQueueItem } from './types';
+import { CloudStatus, DiskStatus, SaveStatus, VideoQueueItem } from './types';
 import {
   fixPathWhenPackaged,
   tryUnlink,
   writeMetadataFile,
   getThumbnailFileNameForVideo,
+  getMetadataFileNameForVideo,
 } from './util';
+import CloudClient from '../storage/CloudClient';
+import CloudSizeMonitor from '../storage/CloudSizeMonitor';
 
 const atomicQueue = require('atomic-queue');
 const ffmpeg = require('fluent-ffmpeg');
@@ -22,9 +26,21 @@ ffmpeg.setFfmpegPath(ffmpegInstallerPath);
  */
 export default class VideoProcessQueue {
   /**
-   * Atomic queue object.
+   * Atomic queue object for queueing cutting of videos.
    */
   private videoQueue: any;
+
+  /**
+   * Atomic queue object for queuing upload of videos, seperated from the
+   * video queue as this can take a long time and we don't want to block further
+   * video cuts behind uploads.
+   */
+  private uploadQueue: any;
+
+  /**
+   * Atomic queue object for queuing download of videos.
+   */
+  private downloadQueue: any;
 
   /**
    * Handle to the main window for updating the saving status icon.
@@ -37,28 +53,87 @@ export default class VideoProcessQueue {
   private cfg = ConfigService.getInstance();
 
   /**
-   * Queue constructor.
+   * Cloud client, defined if using cloud storage.
+   */
+  private cloudClient: CloudClient | undefined;
+
+  /**
+   * Constructor.
    */
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow;
+    this.videoQueue = this.createVideoQueue();
+    this.uploadQueue = this.createUploadQueue();
+    this.downloadQueue = this.createDownloadQueue();
+  }
 
+  private createVideoQueue() {
     const worker = this.processVideoQueueItem.bind(this);
     const settings = { concurrency: 1 };
-    this.videoQueue = atomicQueue(worker, settings);
+    const queue = atomicQueue(worker, settings);
 
-    this.videoQueue
+    /* eslint-disable prettier/prettier */
+    queue
       .on('error', VideoProcessQueue.errorProcessingVideo)
-      .on('idle', () => {
-        this.videoQueueEmpty();
-      });
+      .on('idle', () => {this.videoQueueEmpty()});
+         
+    queue.pool
+      .on('start', (data: VideoQueueItem) => { this.startedProcessingVideo(data) })
+      .on('finish', (_: unknown, data: VideoQueueItem) => { this.finishProcessingVideo(data) });
+    /* eslint-enable prettier/prettier */
 
-    this.videoQueue.pool
-      .on('start', (data: VideoQueueItem) => {
-        this.startedProcessingVideo(data);
-      })
-      .on('finish', (_: unknown, data: VideoQueueItem) => {
-        this.finishProcessingVideo(data);
-      });
+    return queue;
+  }
+
+  private createUploadQueue() {
+    const worker = this.processUploadQueueItem.bind(this);
+    const settings = { concurrency: 1 };
+    const queue = atomicQueue(worker, settings);
+
+    /* eslint-disable prettier/prettier */
+    queue
+      .on('error', VideoProcessQueue.errorUploadingVideo)
+      .on('idle', () => { this.uploadQueueEmpty() });
+
+    queue.pool
+      .on('start', (videoPath: string) => { this.startedUploadingVideo(videoPath) })
+      .on('finish', async (_: unknown, videoPath: string) => { await this.finishUploadingVideo(videoPath) });
+    /* eslint-enable prettier/prettier */
+
+    return queue;
+  }
+
+  private createDownloadQueue() {
+    const worker = this.processDownloadQueueItem.bind(this);
+    const settings = { concurrency: 1 };
+    const queue = atomicQueue(worker, settings);
+
+    /* eslint-disable prettier/prettier */
+    queue
+      .on('error', VideoProcessQueue.errorDownloadingVideo)
+      .on('idle', () => { this.downloadQueueEmpty() });
+
+    queue.pool
+      .on('start', (videoPath: string) => { this.startedDownloadingVideo(videoPath) })
+      .on('finish', async (_: unknown, videoPath: string) => { await this.finishDownloadingVideo(videoPath) });
+    /* eslint-enable prettier/prettier */
+
+    return queue;
+  }
+
+  /**
+   * Set the cloud client.
+   */
+  public setCloudClient = (cloudClient: CloudClient) => {
+    this.cloudClient = cloudClient;
+  };
+
+  /**
+   * Unset the cloud client.
+   */
+  public unsetCloudClient() {
+    this.cloudClient = undefined;
+    this.cfg.get<string>('storagePath');
   }
 
   /**
@@ -66,8 +141,16 @@ export default class VideoProcessQueue {
    * dictated by the input. This is the only public method on this class.
    */
   public queueVideo = async (item: VideoQueueItem) => {
-    console.log('[VideoProcessQueue] Queuing video for processing', item);
+    console.info('[VideoProcessQueue] Queuing video for processing', item);
     this.videoQueue.write(item);
+  };
+
+  public queueUpload = async (videoPath: string) => {
+    this.uploadQueue.write(videoPath);
+  };
+
+  public queueDownload = async (name: string) => {
+    this.downloadQueue.write(name);
   };
 
   /**
@@ -78,9 +161,9 @@ export default class VideoProcessQueue {
     data: VideoQueueItem,
     done: () => void
   ): Promise<void> {
-    const outputDir = this.cfg.get<string>('storagePath');
-
     try {
+      const outputDir = this.cfg.get<string>('storagePath');
+
       const videoPath = await VideoProcessQueue.cutVideo(
         data.source,
         outputDir,
@@ -96,6 +179,10 @@ export default class VideoProcessQueue {
         console.info('[VideoProcessQueue] Deleting source video file');
         await tryUnlink(data.source);
       }
+
+      if (this.cloudClient !== undefined) {
+        this.uploadQueue.write(videoPath);
+      }
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
@@ -107,10 +194,114 @@ export default class VideoProcessQueue {
   }
 
   /**
+   * Upload a video to the cloud store.
+   */
+  private async processUploadQueueItem(
+    videoPath: string,
+    done: () => void
+  ): Promise<void> {
+    let lastProgress = 0;
+
+    const progressCallback = (progress: number) => {
+      if (progress === lastProgress) {
+        return;
+      }
+
+      this.mainWindow.webContents.send('updateUploadProgress', progress);
+      lastProgress = progress;
+    };
+
+    try {
+      assert(this.cloudClient);
+      const thumbNailPath = getThumbnailFileNameForVideo(videoPath);
+      const metadataPath = getMetadataFileNameForVideo(videoPath);
+
+      // Upload the video first, this can take a bit of time, and don't want
+      // to confuse the frontend by having metadata without video.
+      await this.cloudClient.putFile(videoPath, progressCallback);
+      progressCallback(100);
+
+      // Now the video is uploaded, also upload the metadata and thumbnail.
+      await Promise.all([
+        this.cloudClient.putFile(thumbNailPath),
+        this.cloudClient.putFile(metadataPath),
+      ]);
+    } catch (error) {
+      console.error(
+        '[VideoProcessQueue] Error processing video:',
+        String(error)
+      );
+      progressCallback(100);
+    }
+
+    done();
+  }
+
+  /**
+   * Download a video from the cloud store to disk. This won't remove it from
+   * the cloud store.
+   */
+  private async processDownloadQueueItem(
+    name: string,
+    done: () => void
+  ): Promise<void> {
+    const storageDir = this.cfg.get<string>('storagePath');
+    const metadataName = name.replace('.mp4', '.json');
+    const thumbnailName = name.replace('.mp4', '.png');
+
+    let lastProgress = 0;
+
+    const progressCallback = (progress: number) => {
+      if (progress === lastProgress) {
+        return;
+      }
+
+      this.mainWindow.webContents.send(
+        'updateDownloadProgress',
+        name,
+        progress
+      );
+
+      lastProgress = progress;
+    };
+
+    try {
+      assert(this.cloudClient);
+
+      await Promise.all([
+        await this.cloudClient.getAsFile(name, storageDir, progressCallback),
+        await this.cloudClient.getAsFile(metadataName, storageDir),
+        await this.cloudClient.getAsFile(thumbnailName, storageDir),
+      ]);
+    } catch (error) {
+      console.error(
+        '[VideoProcessQueue] Error downloading video:',
+        String(error)
+      );
+    }
+
+    done();
+  }
+
+  /**
    * Log an error processing the video.
    */
-  private static errorProcessingVideo(err: any) {
-    console.error('[VideoProcessQueue] Error processing video', err);
+  private static errorProcessingVideo(err: unknown) {
+    console.error('[VideoProcessQueue] Error processing video', String(err));
+  }
+
+  /**
+   * Log an error uploading the video.
+   */
+  private static errorUploadingVideo(err: unknown) {
+    console.error('[VideoProcessQueue] Error uploading video', String(err));
+  }
+
+  /**
+   * Log an error downloading the video.
+   */
+  private static errorDownloadingVideo(err: unknown) {
+    console.error('[VideoProcessQueue] Error downloading video', String(err));
   }
 
   /**
@@ -126,8 +317,40 @@ export default class VideoProcessQueue {
    * frontend.
    */
   private finishProcessingVideo(data: VideoQueueItem) {
-    console.log('[VideoProcessQueue] Finished processing video', data.source);
+    console.info('[VideoProcessQueue] Finished cutting video', data.source);
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
+    this.mainWindow.webContents.send('refreshState');
+  }
+
+  /**
+   * Called on the start of an upload. Set the upload bar to zero and log.
+   */
+  private startedUploadingVideo(videoPath: string) {
+    console.info('[VideoProcessQueue] Now uploading video', videoPath);
+    this.mainWindow.webContents.send('updateUploadProgress', 0);
+  }
+
+  /**
+   * Called on the end of an upload.
+   */
+  private async finishUploadingVideo(videoPath: string) {
+    console.info('[VideoProcessQueue] Finished uploading video', videoPath);
+    this.mainWindow.webContents.send('refreshState');
+  }
+
+  /**
+   * Called on the start of a download. Set the download bar to zero and log.
+   */
+  private startedDownloadingVideo(videoPath: string) {
+    console.info('[VideoProcessQueue] Now downloading video', videoPath);
+    this.mainWindow.webContents.send('updateDownloadProgress', 0);
+  }
+
+  /**
+   * Called on the end of an upload.
+   */
+  private async finishDownloadingVideo(videoPath: string) {
+    console.info('[VideoProcessQueue] Finished downloading video', videoPath);
     this.mainWindow.webContents.send('refreshState');
   }
 
@@ -135,8 +358,56 @@ export default class VideoProcessQueue {
    * Run actions on the queue being empty.
    */
   private async videoQueueEmpty() {
-    console.log('[VideoProcessQueue] Video processing queue empty');
-    new SizeMonitor(this.mainWindow).run();
+    console.info('[VideoProcessQueue] Video processing queue empty');
+    const sizeMonitor = new DiskSizeMonitor(this.mainWindow);
+    sizeMonitor.run();
+    const usage = await sizeMonitor.usage();
+
+    const status: DiskStatus = {
+      usageGB: usage / 1024 ** 3,
+      maxUsageGB: 250,
+    };
+
+    this.mainWindow.webContents.send('updateDiskStatus', status);
+  }
+
+  /**
+   * Run actions on the upload queue being empty.
+   */
+  private async uploadQueueEmpty() {
+    console.info('[VideoProcessQueue] Upload processing queue empty');
+
+    if (this.cloudClient === undefined) {
+      return;
+    }
+
+    const sizeMonitor = new CloudSizeMonitor(this.mainWindow, this.cloudClient);
+    sizeMonitor.run();
+    const usage = await sizeMonitor.usage();
+
+    const status: CloudStatus = {
+      usageGB: usage / 1024 ** 3,
+      maxUsageGB: 250,
+    };
+
+    this.mainWindow.webContents.send('updateCloudStatus', status);
+  }
+
+  /**
+   * Run actions on the download queue being empty.
+   */
+  private async downloadQueueEmpty() {
+    console.info('[VideoProcessQueue] Download processing queue empty');
+    const sizeMonitor = new DiskSizeMonitor(this.mainWindow);
+    sizeMonitor.run();
+    const usage = await sizeMonitor.usage();
+
+    const status: DiskStatus = {
+      usageGB: usage / 1024 ** 3,
+      maxUsageGB: 250,
+    };
+
+    this.mainWindow.webContents.send('updateDiskStatus', status);
   }
 
   /**

@@ -3,6 +3,7 @@ import React from 'react';
 import { RecStatus } from 'main/types';
 import { configSchema } from 'main/configSchema';
 import InfoIcon from '@mui/icons-material/Info';
+import { scrollBarSx } from 'main/constants';
 import GeneralSettings from './GeneralSettings';
 import WindowsSettings from './WindowsSettings';
 import FlavourSettings from './FlavourSettings';
@@ -33,14 +34,17 @@ const getHeading = (heading: string) => {
 
 const getGeneralSettingsInfoIcon = () => {
   const helptext = [
-    ['Storage Path', configSchema.storagePath.description].join('\n'),
-    ['Max Storage', configSchema.maxStorage.description].join('\n'),
-    ['Separate Buffer Path', configSchema.separateBufferPath.description].join(
-      '\n'
-    ),
-    ['Buffer Storage Path', configSchema.bufferStoragePath.description].join(
-      '\n'
-    ),
+    /* eslint-disable prettier/prettier */
+    ['Disk Storage Folder', configSchema.storagePath.description].join('\n'),
+    ['Max Disk Storage', configSchema.maxStorage.description].join('\n'),
+    ['Separate Buffer Folder', configSchema.separateBufferPath.description].join('\n'),
+    ['Buffer Storage Folder', configSchema.bufferStoragePath.description].join('\n'),
+    ['Cloud Playback', configSchema.cloudStorage.description].join('\n'),
+    ['Cloud Upload', configSchema.cloudUpload.description].join('\n'),
+    ['Account Name', configSchema.cloudAccountName.description].join('\n'),
+    ['Account Password', configSchema.cloudAccountPassword.description].join('\n'),
+    ['Guild Name', configSchema.cloudGuildName.description].join('\n'),
+    /* eslint-enable prettier/prettier */
   ].join('\n\n');
 
   return (
@@ -101,20 +105,8 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
         flexDirection: 'column',
         height: '100%',
         width: '100%',
-        overflowY: 'scroll',
-        scrollbarWidth: 'thin',
-        '&::-webkit-scrollbar': {
-          width: '1em',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: '#f1f1f1',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          backgroundColor: '#888',
-        },
-        '&::-webkit-scrollbar-thumb:hover': {
-          background: '#555',
-        },
+        overflowY: 'auto',
+        ...scrollBarSx,
       }}
     >
       <Box

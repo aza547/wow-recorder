@@ -8,6 +8,7 @@ import {
   dialog,
   Tray,
   Menu,
+  clipboard,
 } from 'electron';
 import os from 'os';
 
@@ -15,17 +16,13 @@ import { uIOhook } from 'uiohook-napi';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import {
   resolveHtmlPath,
-  loadAllVideos,
-  deleteVideo,
   openSystemExplorer,
-  toggleVideoProtected,
   setupApplicationLogging,
   getAvailableDisplays,
   checkAppUpdate,
   getAssetPath,
   nextMousePressPromise,
   nextKeyPressPromise,
-  tagVideo,
 } from './util';
 import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
@@ -100,14 +97,14 @@ const setupTray = () => {
     {
       label: 'Open',
       click() {
-        console.log('[Main] User clicked open on tray icon');
+        console.info('[Main] User clicked open on tray icon');
         if (mainWindow) mainWindow.show();
       },
     },
     {
       label: 'Quit',
       click() {
-        console.log('[Main] User clicked close on tray icon');
+        console.info('[Main] User clicked close on tray icon');
 
         if (mainWindow) {
           mainWindow.close();
@@ -120,7 +117,7 @@ const setupTray = () => {
   tray.setContextMenu(contextMenu);
 
   tray.on('double-click', () => {
-    console.log('[Main] User double clicked tray icon');
+    console.info('[Main] User double clicked tray icon');
 
     if (mainWindow) {
       mainWindow.show();
@@ -166,7 +163,7 @@ const createWindow = async () => {
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send(
       'updateTitleBar',
-      `Warcraft Recorder v${appVersion}`
+      `Warcraft Recorder Pro v${appVersion}`
     );
 
     const startMinimized = cfg.get<boolean>('startMinimized');
@@ -208,20 +205,20 @@ ipcMain.on('mainWindow', (_event, args) => {
   if (mainWindow === null) return;
 
   if (args[0] === 'minimize') {
-    console.log('[Main] User clicked minimize');
+    console.info('[Main] User clicked minimize');
 
     if (cfg.get<boolean>('minimizeToTray')) {
-      console.log('[Main] Minimize main window to tray');
+      console.info('[Main] Minimize main window to tray');
       mainWindow.webContents.send('pausePlayer');
       mainWindow.hide();
     } else {
-      console.log('[Main] Minimize main window to taskbar');
+      console.info('[Main] Minimize main window to taskbar');
       mainWindow.minimize();
     }
   }
 
   if (args[0] === 'resize') {
-    console.log('[Main] User clicked resize');
+    console.info('[Main] User clicked resize');
 
     if (mainWindow.isMaximized()) {
       mainWindow.unmaximize();
@@ -231,47 +228,16 @@ ipcMain.on('mainWindow', (_event, args) => {
   }
 
   if (args[0] === 'quit') {
-    console.log('[Main] User clicked quit button');
+    console.info('[Main] User clicked quit button');
 
     if (cfg.get<boolean>('minimizeOnQuit')) {
-      console.log('[Main] Hiding main window');
+      console.info('[Main] Hiding main window');
       mainWindow.webContents.send('pausePlayer');
       mainWindow.hide();
     } else {
-      console.log('[Main] Closing main window');
+      console.info('[Main] Closing main window');
       mainWindow.close();
     }
-  }
-});
-
-/**
- * VideoButton event listeners.
- */
-ipcMain.on('videoButton', async (_event, args) => {
-  const action = args[0];
-
-  if (action === 'delete') {
-    const videoForDeletion = args[1];
-    await deleteVideo(videoForDeletion);
-    mainWindow?.webContents.send('refreshState');
-  }
-
-  if (action === 'open') {
-    const fileToOpen = args[1];
-    openSystemExplorer(fileToOpen);
-  }
-
-  if (action === 'save') {
-    const videoToToggle = args[1];
-    await toggleVideoProtected(videoToToggle);
-    mainWindow?.webContents.send('refreshState');
-  }
-
-  if (action === 'tag') {
-    const videoToTag = args[1];
-    const tag = args[2];
-    await tagVideo(videoToTag, tag);
-    mainWindow?.webContents.send('refreshState');
   }
 });
 
@@ -302,6 +268,13 @@ ipcMain.on('logPath', (_event, args) => {
   if (args[0] === 'open') {
     openSystemExplorer(logDir);
   }
+});
+
+/**
+ * Listener to write to clipboard.
+ */
+ipcMain.on('writeClipboard', (_event, args) => {
+  clipboard.writeText(args[0] as string);
 });
 
 /**
@@ -342,9 +315,14 @@ ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
 /**
  * Get the list of video files and their state.
  */
-ipcMain.handle('getVideoState', async () =>
-  loadAllVideos(cfg.get<string>('storagePath'))
-);
+ipcMain.handle('getVideoState', async () => {
+  if (!manager) {
+    throw new Error('Programmer error, no manager');
+  }
+
+  const storagePath = cfg.get<string>('storagePath');
+  return manager.loadAllVideos(storagePath);
+});
 
 /**
  * Set/get global video player settings.

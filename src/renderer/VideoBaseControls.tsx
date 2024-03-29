@@ -7,7 +7,6 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
-  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
@@ -55,6 +54,12 @@ const selectStyle = {
   },
   '.MuiSvgIcon-root ': {
     fill: 'white !important',
+  },
+  '& .MuiInputBase-input.Mui-disabled': {
+    WebkitTextFillColor: 'darkgrey',
+  },
+  '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'darkgrey',
   },
 };
 
@@ -211,7 +216,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
             PaperProps: {
               sx: {
                 height: '300px',
-                overflowY: 'scroll',
+                overflowY: 'auto',
               },
             },
           }}
@@ -301,6 +306,15 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       return <></>;
     }
 
+    const cloudFilter = (quality: QualityPresets) => {
+      if (config.cloudUpload) return quality !== QualityPresets.ULTRA;
+      return true;
+    };
+
+    const options = Object.values(QualityPresets)
+      .filter(cloudFilter)
+      .map(getQualityMenuItem);
+
     return (
       <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '150px' }}>
         <InputLabel sx={selectStyle}>Quality</InputLabel>
@@ -311,7 +325,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           onChange={setQuality}
           sx={{ ...selectStyle }}
         >
-          {Object.values(QualityPresets).map(getQualityMenuItem)}
+          {options}
         </Select>
       </FormControl>
     );

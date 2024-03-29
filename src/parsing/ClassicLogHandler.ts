@@ -100,7 +100,7 @@ export default class ClassicLogHandler extends LogHandler {
 
       if (enemyCombatants.length === 1) {
         const newStartDate = line.date();
-        console.log(
+        console.info(
           '[ClassicLogHandler] Adjusting game start date:',
           newStartDate
         );
@@ -274,7 +274,7 @@ export default class ClassicLogHandler extends LogHandler {
     // Verbose logging to make it super obvious what's happened.
     console.info('[ClassicLogHandler] Logging combatants');
     arenaMatch.combatantMap.forEach((k, v) => {
-      console.log(k, v);
+      console.info(k, v);
     });
 
     // We decide who won by counting the deaths. The winner is the

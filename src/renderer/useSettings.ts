@@ -69,6 +69,12 @@ export const getSettings = (): ConfigurationSchema => {
     obsAudioSuppression: getConfigValue<boolean>('obsAudioSuppression'),
     raidOverrun: getConfigValue<number>('raidOverrun'),
     dungeonOverrun: getConfigValue<number>('dungeonOverrun'),
+    cloudStorage: getConfigValue<boolean>('cloudStorage'),
+    cloudUpload: getConfigValue<boolean>('cloudUpload'),
+    cloudAccountName: getConfigValue<string>('cloudAccountName'),
+    cloudAccountPassword: getConfigValue<string>('cloudAccountPassword'),
+    cloudGuildName: getConfigValue<string>('cloudGuildName'),
+    videoPlayerHeight: getConfigValue<number>('videoPlayerHeight'),
   };
 
   return configValues;

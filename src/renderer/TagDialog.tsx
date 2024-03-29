@@ -28,21 +28,24 @@ const buttonSx = {
 export default function TagDialog(props: IProps) {
   const { video, tagDialogOpen, setTagDialogOpen } = props;
 
-  const closeTagDialog = () => {
+  const closeTagDialog = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
     setTagDialogOpen(false);
   };
 
   const saveTag = (newTag: string) => {
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'tag',
-      video.fullPath,
+      video.videoSource,
+      video.cloud,
       newTag,
     ]);
   };
 
-  const clearTag = () => {
+  const clearTag = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
     saveTag('');
-    closeTagDialog();
+    setTagDialogOpen(false);
   };
 
   return (
@@ -59,11 +62,12 @@ export default function TagDialog(props: IProps) {
         // doesn't like it. TODO: Fix it.
         onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
           event.preventDefault();
+          event.stopPropagation();
           const formData = new FormData(event.currentTarget);
           const formJson = Object.fromEntries((formData as any).entries());
           const { newTag } = formJson;
           saveTag(newTag);
-          closeTagDialog();
+          setTagDialogOpen(false);
         },
       }}
     >

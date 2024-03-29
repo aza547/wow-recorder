@@ -14,6 +14,7 @@ import {
   isBattlegroundUtil,
   isMythicPlusUtil,
   isRaidUtil,
+  getVideoDate,
 } from './rendererutils';
 
 /**
@@ -95,17 +96,24 @@ export default class VideoFilter {
           this.addStringFilter(specializationById[player._specID].label);
         }
       }
+
+      this.addStringFilter(player._name);
     }
 
-    this.video.combatants
-      .map((combatant) => combatant._name)
-      .filter((name) => name)
-      .forEach((name) => {
-        this.addStringFilter(name);
-      });
+    if (this.video.cloud) {
+      this.addStringFilter('cloud');
+    } else {
+      this.addStringFilter('disk');
+      this.addStringFilter('local');
+    }
 
-    const videoDate = new Date(this.video.mtime);
+    const dateStr = getVideoDate(this.video);
+    this.addStringFilter(dateStr);
+
     const currentDate = new Date();
+    const videoDate = this.video.start
+      ? new Date(this.video.start)
+      : new Date(this.video.mtime);
 
     const isToday =
       videoDate.getDate() === currentDate.getDate() &&

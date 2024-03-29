@@ -182,8 +182,9 @@ type VideoQueueItem = {
  */
 type Metadata = {
   category: VideoCategory;
-  parentCategory?: VideoCategory; // if it's a clip
+  parentCategory?: VideoCategory; // present if it's a clip
   duration: number;
+  start?: number; // epoch start time of activity
   result: boolean;
   flavour: Flavour;
   zoneID?: number;
@@ -207,6 +208,8 @@ type Metadata = {
   overrun: number;
   affixes?: number[];
   tag?: string;
+  delete?: boolean; // signals video should be deleted when possible
+  uniqueHash?: string; // used for cloud video grouping
 };
 
 /**
@@ -227,23 +230,14 @@ type RawCombatant = {
  * add when reading the file.
  */
 type RendererVideo = Metadata & {
+  name: string;
   mtime: number;
-  fullPath: string;
-  imagePath: string;
+  videoSource: string;
+  thumbnailSource: string;
   isProtected: boolean;
   size: number;
-};
-
-type RendererVideoState = {
-  [VideoCategory.TwoVTwo]: RendererVideo[];
-  [VideoCategory.ThreeVThree]: RendererVideo[];
-  [VideoCategory.FiveVFive]: RendererVideo[];
-  [VideoCategory.Skirmish]: RendererVideo[];
-  [VideoCategory.SoloShuffle]: RendererVideo[];
-  [VideoCategory.MythicPlus]: RendererVideo[];
-  [VideoCategory.Raids]: RendererVideo[];
-  [VideoCategory.Battlegrounds]: RendererVideo[];
-  [VideoCategory.Clips]: RendererVideo[];
+  cloud: boolean;
+  multiPov: RendererVideo[];
 };
 
 type SoloShuffleTimelineSegment = {
@@ -286,20 +280,13 @@ enum Pages {
 }
 
 /**
- * Tracks the position of the app and the navigator component.
+ * The state of the frontend.
  */
-type TNavigatorState = {
+type AppState = {
   page: Pages;
-  categoryIndex: number;
-  videoIndex: number;
-};
-
-/**
- * Some bits of application state.
- */
-type TAppState = {
-  fatalError: boolean;
-  fatalErrorText: string;
+  category: VideoCategory;
+  playingVideo: RendererVideo | undefined; // the video being played by the player
+  selectedVideoName: string | undefined;
   numVideosDisplayed: number;
   videoFilterQuery: string;
   videoFullScreen: boolean;
@@ -335,6 +322,11 @@ type ObsBaseConfig = {
   obsFPS: number;
   obsQuality: string;
   obsRecEncoder: string;
+  cloudStorage: boolean;
+  cloudUpload: boolean;
+  cloudAccountName: string;
+  cloudAccountPassword: string;
+  cloudGuildName: string;
 };
 
 type ObsVideoConfig = {
@@ -404,6 +396,22 @@ type SliderMark = {
   label: JSX.Element;
 };
 
+type CloudStatus = {
+  usageGB: number;
+  maxUsageGB: number;
+};
+
+type DiskStatus = {
+  usageGB: number;
+  maxUsageGB: number;
+};
+
+type CloudObject = {
+  key: string;
+  size: number;
+  lastMod: Date;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -421,15 +429,13 @@ export {
   VideoQueueItem,
   Metadata,
   RendererVideo,
-  RendererVideoState,
   Flavour,
   SoloShuffleTimelineSegment,
   EDeviceType,
   IOBSDevice,
   IDevice,
   TAudioSourceType,
-  TNavigatorState,
-  TAppState,
+  AppState,
   RawCombatant,
   RawChallengeModeTimelineSegment,
   TPreviewPosition,
@@ -450,4 +456,7 @@ export {
   Crashes,
   CrashData,
   SliderMark,
+  CloudStatus,
+  DiskStatus,
+  CloudObject,
 };

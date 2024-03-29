@@ -1,23 +1,18 @@
 import { TextField } from '@mui/material';
-import { TAppState, TNavigatorState } from 'main/types';
-import { VideoCategory } from 'types/VideoCategory';
+import { AppState } from 'main/types';
 import { useState } from 'react';
 import VideoFilter from './VideoFilter';
 
 interface IProps {
-  navigation: TNavigatorState;
-  setAppState: React.Dispatch<React.SetStateAction<TAppState>>;
+  appState: AppState;
+  setAppState: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
 const SearchBar = (props: IProps) => {
-  const { navigation, setAppState } = props;
+  const { appState, setAppState } = props;
   const [searchText, setSearchText] = useState<string>('');
-
-  const { categoryIndex } = navigation;
+  const { category } = appState;
   let debounceSearchTimer: NodeJS.Timer;
-
-  const categories = Object.values(VideoCategory);
-  const category = categories[categoryIndex];
 
   const debouncedFilter = (event: React.BaseSyntheticEvent) => {
     const filterText = event.target.value;
@@ -34,7 +29,7 @@ const SearchBar = (props: IProps) => {
           videoFilterQuery: filterText,
         };
       });
-    }, 750);
+    }, 1500);
   };
 
   return (

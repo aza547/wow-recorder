@@ -50,6 +50,12 @@ export type ConfigurationSchema = {
   obsAudioSuppression: boolean;
   raidOverrun: number;
   dungeonOverrun: number;
+  cloudStorage: boolean;
+  cloudUpload: boolean;
+  cloudAccountName: string;
+  cloudAccountPassword: string;
+  cloudGuildName: string;
+  videoPlayerHeight: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -342,5 +348,36 @@ export const configSchema = {
     default: 5,
     minimum: 0,
     maximum: 60,
+  },
+  cloudStorage: {
+    description: 'Enable the ability to play videos from the cloud.',
+    type: 'boolean',
+    default: false,
+  },
+  cloudUpload: {
+    description: 'Upload your videos to the cloud.',
+    type: 'boolean',
+    default: false,
+  },
+  cloudAccountName: {
+    description: 'Your Warcraft Recorder account username.',
+    type: 'string',
+    default: '',
+  },
+  cloudAccountPassword: {
+    description: 'Your Warcraft Recorder account password.',
+    type: 'string',
+    default: '',
+  },
+  cloudGuildName: {
+    description: 'The guild or group your account is affiliated with.',
+    type: 'string',
+    default: '',
+  },
+  videoPlayerHeight: {
+    description: 'The height of the video player, not exposed in the config.',
+    type: 'number',
+    default: 500,
+    minimum: 0,
   },
 };
