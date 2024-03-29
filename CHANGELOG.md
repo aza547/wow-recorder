@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change the CQP values for recording, they were too high resulting in large video files.
 
 ### Added
+- Add cloud storage support.
+
 ### Fixed
 
 ## [3.25.3] - 2024-03-05
