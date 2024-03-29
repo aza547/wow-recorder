@@ -303,9 +303,14 @@ export default class CloudClient extends EventEmitter {
 
     const config: AxiosRequestConfig = {
       onUploadProgress: (event) =>
-        progressCallback(Math.round((100 * event.bytes) / stats.size)),
+        progressCallback(Math.round((100 * event.loaded) / stats.size)),
       headers: { 'Content-Length': stats.size, 'Content-Type': contentType },
       validateStatus: () => true,
+
+      // Without this, we buffer the whole file (which can be several GB)
+      // into memory which is just a disaster. This makes me want to pick
+      // a different HTTP library. https://github.com/axios/axios/issues/1045.
+      maxRedirects: 0,
     };
 
     const signedUrl = await this.signPutUrl(key, stats.size);
