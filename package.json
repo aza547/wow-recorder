@@ -45,7 +45,7 @@
     ]
   },
   "build": {
-    "productName": "WarcraftRecorderPro",
+    "productName": "WarcraftRecorder",
     "appId": "org.WarcraftRecorder",
     "asar": true,
     "asarUnpack": "**\\**",

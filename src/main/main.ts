@@ -49,7 +49,7 @@ app.disableHardwareAcceleration();
 /**
  * Create a settings store to handle the config.
  * This defaults to a path like:
- *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorderPro\config-v3.json"
+ *   - (prod) "C:\Users\alexa\AppData\Roaming\WarcraftRecorder\config-v3.json"
  *   - (dev)  "C:\Users\alexa\AppData\Roaming\Electron\config-v3.json"
  */
 const cfg = ConfigService.getInstance();
