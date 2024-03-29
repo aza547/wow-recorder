@@ -163,7 +163,7 @@ const createWindow = async () => {
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send(
       'updateTitleBar',
-      `Warcraft Recorder Pro v${appVersion}`
+      `Warcraft Recorder v${appVersion}`
     );
 
     const startMinimized = cfg.get<boolean>('startMinimized');

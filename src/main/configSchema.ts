@@ -165,7 +165,7 @@ export const configSchema = {
     description:
       'Quality to record at. Higher quality works your encoder harder and uses more disk space per video.',
     type: 'string',
-    default: 'High',
+    default: 'Moderate',
   },
   obsCaptureMode: {
     description:

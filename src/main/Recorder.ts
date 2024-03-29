@@ -392,12 +392,7 @@ export default class Recorder extends EventEmitter {
     // from what OBS studio allows and is annotated below, but we don't
     // go to the extremes of the allowed range anyway.
     const encoderSettings: ISettings = {};
-
-    // For now, cloud storage only allows moderate quality, to keep Storage
-    // down. Unclear if that's good enough long term.
-    const cqp = config.cloudStorage
-      ? Recorder.getCqpFromQuality(QualityPresets.MODERATE)
-      : Recorder.getCqpFromQuality(obsQuality);
+    const cqp = Recorder.getCqpFromQuality(obsQuality);
 
     switch (obsRecEncoder) {
       case ESupportedEncoders.OBS_X264:
