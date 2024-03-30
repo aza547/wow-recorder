@@ -1,5 +1,6 @@
 import {
   Box,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -32,6 +33,15 @@ const listItemButtonSx = {
   },
 };
 
+const iconButtonSx = {
+  height: '25px',
+  width: '25px',
+  borderRadius: '2px',
+  '& .MuiTouchRipple-root .MuiTouchRipple-child': {
+    borderRadius: '2px',
+  },
+};
+
 interface IProps {
   povs: RendererVideo[];
   parentButtonSelected: boolean;
@@ -51,15 +61,46 @@ export default function PovSelection(props: IProps) {
     persistentProgress,
   } = props;
 
-  const getPovListItem = (v: RendererVideo, index: number) => {
+  /**
+   * A group of POVs are the same POV from the same player and may contain
+   * either a disk video, a cloud video or both.
+   */
+  const getGroupListItem = (group: RendererVideo[]) => {
+    const diskVideos = group.filter((vid) => !vid.cloud);
+    const cloudVideos = group.filter((vid) => vid.cloud);
+
+    const haveDiskVideo = diskVideos.length !== 0;
+    const haveCloudVideo = cloudVideos.length !== 0;
+
+    const cloudVideo = cloudVideos[0];
+    const diskVideo = diskVideos[0];
+
+    const cloudIndex = povs.indexOf(cloudVideo);
+    const diskIndex = povs.indexOf(diskVideo);
+
+    const cloudSelected = parentButtonSelected && localPovIndex === cloudIndex;
+    const diskSelected = parentButtonSelected && localPovIndex === diskIndex;
+    const povSelected = cloudSelected || diskSelected;
+
+    const cloudButtonColor = cloudSelected ? '#bb4420' : 'white';
+    const diskButtonColor = diskSelected ? '#bb4420' : 'white';
+
+    // Safe to just use the zeroth video here, all the details we pull out
+    // are guarenteed to be the same for all videos in this group./
+    const v = group[0];
     const name = getPlayerName(v);
     const specID = getPlayerSpecID(v);
     const icon = Images.specImages[specID];
     const unitClass = getPlayerClass(v);
     const classColor = getWoWClassColor(unitClass);
-    const key = v.cloud ? `${name}-cloud` : `${name}-disk`;
-    const povSelected =
-      parentButtonSelected && povs.length > 1 && localPovIndex === index;
+
+    /**
+     * Stop an event propogating higher.
+     */
+    const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
+      event.stopPropagation();
+      event.preventDefault();
+    };
 
     /**
      * Update state variables following a change of selected point of view.
@@ -68,7 +109,7 @@ export default function PovSelection(props: IProps) {
       event: React.MouseEvent<HTMLElement>,
       povIndex: number
     ) => {
-      event.stopPropagation();
+      stopPropagation(event);
       setLocalPovIndex(povIndex);
       const video = povs[povIndex];
 
@@ -85,28 +126,69 @@ export default function PovSelection(props: IProps) {
       });
     };
 
+    /**
+     * Return the cloud icon.
+     */
     const getCloudIcon = () => {
       return (
         <Tooltip title="Saved on the cloud">
-          <CloudIcon sx={{ color: 'white', height: '15px', width: '15px' }} />
+          <IconButton
+            onMouseDown={stopPropagation}
+            onClick={(event) => handleChangePov(event, cloudIndex)}
+            sx={iconButtonSx}
+          >
+            <CloudIcon
+              sx={{
+                height: '15px',
+                width: '15px',
+                color: cloudButtonColor,
+              }}
+            />
+          </IconButton>
         </Tooltip>
       );
     };
 
+    /**
+     * Return the disk icon.
+     */
     const getDiskIcon = () => {
       return (
         <Tooltip title="Saved on local disk">
-          <SaveIcon sx={{ color: 'white', height: '15px', width: '15px' }} />
+          <IconButton
+            onMouseDown={stopPropagation}
+            onClick={(event) => handleChangePov(event, diskIndex)}
+            sx={iconButtonSx}
+          >
+            <SaveIcon
+              sx={{
+                height: '15px',
+                width: '15px',
+                color: diskButtonColor,
+              }}
+            />
+          </IconButton>
         </Tooltip>
       );
     };
 
     return (
-      <ListItem disablePadding sx={{ width: '100%', height: '25px' }} key={key}>
+      <ListItem
+        disablePadding
+        sx={{ width: '100%', height: '25px' }}
+        key={name}
+      >
         <ListItemButton
-          selected={povSelected}
-          onClick={(event) => handleChangePov(event, index)}
+          onMouseDown={stopPropagation}
           sx={listItemButtonSx}
+          selected={povSelected}
+          onClick={(event) => {
+            if (haveCloudVideo) {
+              handleChangePov(event, cloudIndex);
+            } else {
+              handleChangePov(event, diskIndex);
+            }
+          }}
         >
           <Box
             sx={{
@@ -118,9 +200,18 @@ export default function PovSelection(props: IProps) {
               height: '25px',
             }}
           >
-            <Box sx={{ m: 1 }}>
-              {v.cloud && getCloudIcon()}
-              {!v.cloud && getDiskIcon()}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                width: '50px',
+                minWidth: '50px',
+              }}
+            >
+              {haveDiskVideo && getDiskIcon()}
+              {haveCloudVideo && getCloudIcon()}
             </Box>
             <Box
               component="img"
@@ -166,6 +257,23 @@ export default function PovSelection(props: IProps) {
     );
   };
 
+  /**
+   * Group the povs by name, grouping disk and cloud POVs for the
+   * same video into a single group.
+   */
+  const groupByName = (arr: RendererVideo[]) => {
+    return arr.reduce((acc: Record<string, RendererVideo[]>, obj) => {
+      const { name } = obj;
+
+      if (!acc[name]) {
+        acc[name] = [];
+      }
+
+      acc[name].push(obj);
+      return acc;
+    }, {});
+  };
+
   return (
     <Box
       sx={{
@@ -191,7 +299,7 @@ export default function PovSelection(props: IProps) {
           ...scrollBarSx,
         }}
       >
-        {povs.map((p, i) => getPovListItem(p, i))}
+        {Object.values(groupByName(povs)).map((g) => getGroupListItem(g))}
       </List>
     </Box>
   );

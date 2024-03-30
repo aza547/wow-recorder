@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [4.0.7] - 2024-03-30
+### Fixed
+- Make the POV selection group cloud and disk videos.
+
 ## [4.0.6] - 2024-03-30
 ### Fixed
 - Fix ripple effect on video buttons when selecting sub-buttons.
