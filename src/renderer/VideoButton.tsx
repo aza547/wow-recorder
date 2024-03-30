@@ -64,6 +64,14 @@ const dialogButtonSx = {
   },
 };
 
+const iconButtonSx = {
+  boxShadow: 1,
+  border: '1px ridge',
+  borderRadius: '5px',
+  mx: '2px',
+  borderColor: 'rgba(0, 0, 0, 0.2)',
+};
+
 const ipc = window.electron.ipcRenderer;
 
 export default function VideoButton(props: IProps) {
@@ -287,7 +295,7 @@ export default function VideoButton(props: IProps) {
   const getOpenButton = () => {
     return (
       <Tooltip title="Open location">
-        <IconButton onClick={openLocation}>
+        <IconButton onClick={openLocation} sx={iconButtonSx}>
           <FolderIcon sx={{ color: 'white' }} />
         </IconButton>
       </Tooltip>
@@ -301,7 +309,7 @@ export default function VideoButton(props: IProps) {
   const getUploadButton = () => {
     return (
       <Tooltip title="Upload to cloud">
-        <IconButton onClick={uploadVideo}>
+        <IconButton onClick={uploadVideo} sx={iconButtonSx}>
           <UploadIcon sx={{ color: 'white' }} />
         </IconButton>
       </Tooltip>
@@ -361,7 +369,7 @@ export default function VideoButton(props: IProps) {
 
     return (
       <Tooltip title="Download to disk">
-        <IconButton onClick={downloadVideo}>
+        <IconButton onClick={downloadVideo} sx={iconButtonSx}>
           <DownloadIcon sx={{ color: 'white' }} />
         </IconButton>
       </Tooltip>
@@ -396,7 +404,7 @@ export default function VideoButton(props: IProps) {
       <Tooltip title="Get sharable link">
         <div>
           {getShareableLinkSnackBar()}
-          <IconButton onClick={writeToClipBoard}>
+          <IconButton onClick={writeToClipBoard} sx={iconButtonSx}>
             <LinkIcon sx={{ color: 'white' }} />
           </IconButton>
         </div>
@@ -617,13 +625,13 @@ export default function VideoButton(props: IProps) {
               }}
             >
               <Tooltip title={tagTooltip}>
-                <IconButton onClick={openTagDialog}>
+                <IconButton onClick={openTagDialog} sx={iconButtonSx}>
                   <MessageIcon sx={{ color: 'white', opacity: tagOpacity }} />
                 </IconButton>
               </Tooltip>
 
               <Tooltip title="Never age out">
-                <IconButton onClick={protectVideo}>
+                <IconButton onClick={protectVideo} sx={iconButtonSx}>
                   <BookmarksIcon
                     sx={{ color: 'white', opacity: bookmarkOpacity }}
                   />
@@ -639,7 +647,7 @@ export default function VideoButton(props: IProps) {
                 getUploadButton()}
 
               <Tooltip title="Delete">
-                <IconButton onClick={deleteClicked}>
+                <IconButton onClick={deleteClicked} sx={iconButtonSx}>
                   <DeleteForeverIcon sx={{ color: 'white' }} />
                 </IconButton>
               </Tooltip>

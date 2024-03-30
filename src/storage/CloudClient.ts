@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { EventEmitter } from 'stream';
+import { EventEmitter, Readable } from 'stream';
 import axios, { AxiosRequestConfig } from 'axios';
 import {
   S3Client,
@@ -247,11 +247,16 @@ export default class CloudClient extends EventEmitter {
    * Write a JSON string into R2.
    */
   public async putJsonString(str: string, key: string) {
-    const signedUrl = await this.signPutUrl(key, str.length);
+    console.info('[CloudClient] PUT JSON string', key);
 
-    const rsp = await axios.put(signedUrl, str, {
+    // Must convert to a UTF-8 to avoid encoding shenanigans here with
+    // handling special characters.
+    const buffer = Buffer.from(str, 'utf-8');
+    const signedUrl = await this.signPutUrl(key, buffer.length);
+
+    const rsp = await axios.put(signedUrl, buffer, {
       headers: {
-        'Content-Length': str.length,
+        'Content-Length': buffer.length,
         'Content-Type': 'application/json',
       },
       validateStatus: () => true,

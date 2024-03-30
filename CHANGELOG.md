@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [4.0.4] - 2024-03-30
+### Changed
+- Add some borders to UI buttons.
+
+### Fixed
+- Fix a bug where special characters in character names could break some functionality.
+
 ## [4.0.3] - 2024-03-30
 ### Fixed
 - Fix a bug where frontend resource URLs could expire and fail to load.
