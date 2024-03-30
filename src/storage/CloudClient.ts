@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { EventEmitter, Readable } from 'stream';
+import { EventEmitter } from 'stream';
 import axios, { AxiosRequestConfig } from 'axios';
 import {
   S3Client,
@@ -11,7 +11,6 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
 import { CloudObject } from 'main/types';
 import path from 'path';
-import { getPromiseBomb } from '../main/util';
 
 /**
  * A client for retrieving resources from the cloud.
