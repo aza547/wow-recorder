@@ -328,13 +328,22 @@ export default function VideoButton(props: IProps) {
           sx={{
             position: 'relative',
             display: 'inline-flex',
+            boxShadow: 1,
+            border: '1px ridge',
+            borderRadius: '5px',
+            mx: '2px',
+            borderColor: 'rgba(0, 0, 0, 0.2)',
+            height: '40px',
+            width: '40px',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
         >
           <CircularProgress
             variant="determinate"
             size={35}
             value={downloadProgress}
-            sx={{ color: '#bb4420' }}
+            sx={{ color: 'white' }}
           />
           <Box
             sx={{
@@ -521,7 +530,7 @@ export default function VideoButton(props: IProps) {
             height: '100%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-evenly',
             flexDirection: 'column',
           }}
         >
@@ -531,7 +540,7 @@ export default function VideoButton(props: IProps) {
               alignItems: 'center',
               justifyContent: 'center',
               flexDirection: 'row',
-              m: 1,
+              mx: 1,
             }}
           >
             <Tooltip title="Duration">
@@ -613,7 +622,7 @@ export default function VideoButton(props: IProps) {
               alignItems: 'center',
               justifyContent: 'center',
               flexDirection: 'row',
-              m: 1,
+              mx: 1,
             }}
           >
             <Box
