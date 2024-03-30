@@ -84,6 +84,8 @@ export default class CloudClient extends EventEmitter {
    * calling the constructor.
    */
   public async init() {
+    console.error('[CloudClient] Initializing the cloud client');
+
     const headers = { Authorization: this.authHeader };
     const encbucket = encodeURIComponent(this.bucket);
 
@@ -156,18 +158,6 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Used to check connectitivty to R2. Really this should be fine if we've
-   * been authenticated by the WR API. Maybe lists should go through that one
-   * day.
-   */
-  public async listWithTimeout(s: number) {
-    return Promise.race([
-      this.list(),
-      getPromiseBomb(s * 1000, 'Initial login to cloud storage too slow'),
-    ]);
-  }
-
-  /**
    * Get an object as a string.
    */
   public async getAsString(key: string) {
@@ -226,6 +216,8 @@ export default class CloudClient extends EventEmitter {
    * and the WR API checks the current bucket usage before approving.
    */
   private async signPutUrl(key: string, length: number) {
+    console.info('[CloudClient] Getting signed PUT URL', key, length);
+
     const headers = { Authorization: this.authHeader };
     const encbucket = encodeURIComponent(this.bucket);
     const enckey = encodeURIComponent(key);
@@ -268,8 +260,8 @@ export default class CloudClient extends EventEmitter {
     const { status, data } = rsp;
 
     if (status >= 400) {
-      console.error('[CloudClient] File upload failed', key, status, data);
-      throw new Error('Uploading a file to the cloud failed');
+      console.error('[CloudClient] JSON upload failed', key, status, data);
+      throw new Error('Uploading a JSON string to the cloud failed');
     }
 
     await this.updateLastMod();
@@ -384,6 +376,8 @@ export default class CloudClient extends EventEmitter {
    * R2. If the mtime object doesn't exist, we will create it.
    */
   public async pollInit() {
+    console.info('[CloudClient] Poll init');
+
     try {
       const mtime = await this.getAsString('mtime');
       this.bucketLastMod = mtime;
@@ -393,6 +387,7 @@ export default class CloudClient extends EventEmitter {
         await this.updateLastMod();
       } else {
         console.error('[CloudClient] Error getting mtime', String(error));
+        throw new Error('Error getting mtime from R2');
       }
     }
   }
@@ -401,6 +396,7 @@ export default class CloudClient extends EventEmitter {
    * Set a timer to poll for updates.
    */
   public pollForUpdates(sec: number) {
+    console.info('[CloudClient] Start polling for updates');
     this.stopPollForUpdates();
 
     this.pollTimer = setInterval(() => {
@@ -412,6 +408,8 @@ export default class CloudClient extends EventEmitter {
    * Clear the polling timer.
    */
   public stopPollForUpdates() {
+    console.info('[CloudClient] Stop polling for updates');
+
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
     }
@@ -440,6 +438,7 @@ export default class CloudClient extends EventEmitter {
    */
   private async updateLastMod() {
     const mtime = new Date().getTime().toString();
+    console.info('[CloudClient] Updating last mod time to', mtime);
     this.bucketLastMod = mtime;
     const encbucket = encodeURIComponent(this.bucket);
     const url = `${this.apiEndpoint}/${encbucket}/mtime/${mtime}`;

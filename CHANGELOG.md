@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [4.0.3] - 2024-03-30
+### Fixed
+- Fix a bug where frontend resource URLs could expire and fail to load.
+- Improve logging for cloud function.
+- Fix video marker buttons not reacting correctly.
+
 ## [4.0.2] - 2024-03-29
 ### Fixed
 - Fix a bug where deleteing a POV could cause a blank screen.

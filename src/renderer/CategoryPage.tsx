@@ -59,6 +59,7 @@ const CategoryPage = (props: IProps) => {
         persistentProgress={persistentProgress}
         playing={playing}
         setPlaying={setPlaying}
+        config={config}
       />
     );
   };

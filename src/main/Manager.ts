@@ -19,6 +19,7 @@ import {
   loadAllVideosDisk,
   areDatesWithinSeconds,
   markForVideoForDelete,
+  getPromiseBomb,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -588,7 +589,14 @@ export default class Manager {
       );
 
       await client.init();
-      await client.listWithTimeout(2);
+
+      // Poll init is a handy way to ensure we access to R2. If the mtime
+      // object in R2 if this is the first launch, or to just read it if
+      // it's already present.
+      await Promise.race([
+        client.pollInit(),
+        getPromiseBomb(2000, 'R2 access too slow or failed'),
+      ]);
     } catch (error) {
       console.warn('[Manager] Cloud validation failed,', String(error));
       throw new Error('Failed to authenticate with the cloud store.');
@@ -822,7 +830,10 @@ export default class Manager {
         return '';
       }
 
-      return this.cloudClient.signGetUrl(baseUrl, 3600);
+      // Sign the frontend resources for a week in the future so that we don't
+      // need to worry about these links expiring. We only use this function for
+      // loading images and videos directly into React.
+      return this.cloudClient.signGetUrl(baseUrl, 3600 * 24 * 7);
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by

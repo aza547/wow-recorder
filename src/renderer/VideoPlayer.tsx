@@ -46,6 +46,7 @@ interface IProps {
   persistentProgress: MutableRefObject<number>;
   playing: boolean;
   setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  config: ConfigurationSchema;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -69,9 +70,8 @@ const sliderSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const { video, persistentProgress, playing, setPlaying } = props;
+  const { video, persistentProgress, playing, setPlaying, config } = props;
   const { videoSource, cloud } = video;
-  const [config] = useSettings();
 
   const player = useRef<ReactPlayer>(null);
   const progressSlider = useRef<HTMLSpanElement>(null);
