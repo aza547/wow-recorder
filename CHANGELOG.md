@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [4.0.6] - 2024-03-30
+### Fixed
+- Fix ripple effect on video buttons when selecting sub-buttons.
+- Fix button ripple effect radius.
+
 ## [4.0.5] - 2024-03-30
 ### Fixed
 - Fix the UI button around the download spinner. 

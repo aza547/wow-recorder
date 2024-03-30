@@ -70,6 +70,9 @@ const iconButtonSx = {
   borderRadius: '5px',
   mx: '2px',
   borderColor: 'rgba(0, 0, 0, 0.2)',
+  '& .MuiTouchRipple-root .MuiTouchRipple-child': {
+    borderRadius: '5px',
+  },
 };
 
 const ipc = window.electron.ipcRenderer;
@@ -155,6 +158,11 @@ export default function VideoButton(props: IProps) {
       }
     });
   }, [pov.name]);
+
+  const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+  };
 
   /**
    * Delete a video. This avoids attempting to delete the video
@@ -295,7 +303,11 @@ export default function VideoButton(props: IProps) {
   const getOpenButton = () => {
     return (
       <Tooltip title="Open location">
-        <IconButton onClick={openLocation} sx={iconButtonSx}>
+        <IconButton
+          onMouseDown={stopPropagation}
+          onClick={openLocation}
+          sx={iconButtonSx}
+        >
           <FolderIcon sx={{ color: 'white' }} />
         </IconButton>
       </Tooltip>
@@ -309,7 +321,11 @@ export default function VideoButton(props: IProps) {
   const getUploadButton = () => {
     return (
       <Tooltip title="Upload to cloud">
-        <IconButton onClick={uploadVideo} sx={iconButtonSx}>
+        <IconButton
+          onMouseDown={stopPropagation}
+          onClick={uploadVideo}
+          sx={iconButtonSx}
+        >
           <UploadIcon sx={{ color: 'white' }} />
         </IconButton>
       </Tooltip>
@@ -378,7 +394,11 @@ export default function VideoButton(props: IProps) {
 
     return (
       <Tooltip title="Download to disk">
-        <IconButton onClick={downloadVideo} sx={iconButtonSx}>
+        <IconButton
+          onMouseDown={stopPropagation}
+          onClick={downloadVideo}
+          sx={iconButtonSx}
+        >
           <DownloadIcon sx={{ color: 'white' }} />
         </IconButton>
       </Tooltip>
@@ -413,7 +433,11 @@ export default function VideoButton(props: IProps) {
       <Tooltip title="Get sharable link">
         <div>
           {getShareableLinkSnackBar()}
-          <IconButton onClick={writeToClipBoard} sx={iconButtonSx}>
+          <IconButton
+            onMouseDown={stopPropagation}
+            onClick={writeToClipBoard}
+            sx={iconButtonSx}
+          >
             <LinkIcon sx={{ color: 'white' }} />
           </IconButton>
         </div>
@@ -634,13 +658,21 @@ export default function VideoButton(props: IProps) {
               }}
             >
               <Tooltip title={tagTooltip}>
-                <IconButton onClick={openTagDialog} sx={iconButtonSx}>
+                <IconButton
+                  onMouseDown={stopPropagation}
+                  onClick={openTagDialog}
+                  sx={iconButtonSx}
+                >
                   <MessageIcon sx={{ color: 'white', opacity: tagOpacity }} />
                 </IconButton>
               </Tooltip>
 
               <Tooltip title="Never age out">
-                <IconButton onClick={protectVideo} sx={iconButtonSx}>
+                <IconButton
+                  onMouseDown={stopPropagation}
+                  onClick={protectVideo}
+                  sx={iconButtonSx}
+                >
                   <BookmarksIcon
                     sx={{ color: 'white', opacity: bookmarkOpacity }}
                   />
@@ -656,7 +688,11 @@ export default function VideoButton(props: IProps) {
                 getUploadButton()}
 
               <Tooltip title="Delete">
-                <IconButton onClick={deleteClicked} sx={iconButtonSx}>
+                <IconButton
+                  onMouseDown={stopPropagation}
+                  onClick={deleteClicked}
+                  sx={iconButtonSx}
+                >
                   <DeleteForeverIcon sx={{ color: 'white' }} />
                 </IconButton>
               </Tooltip>
