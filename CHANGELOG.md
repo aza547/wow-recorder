@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ## [4.0.7] - 2024-03-30
-### Fixed
+### Changed
 - Make the POV selection group cloud and disk videos.
 
 ## [4.0.6] - 2024-03-30
