@@ -129,7 +129,7 @@ export default function PovSelection(props: IProps) {
       let onClick = (
         event: React.MouseEvent<HTMLButtonElement, MouseEvent>
       ) => {
-        handleChangePov(event, diskIndex);
+        handleChangePov(event, cloudIndex);
       };
 
       if (!haveCloudVideo) {
