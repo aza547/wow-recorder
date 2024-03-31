@@ -65,6 +65,7 @@ export default class CloudClient extends EventEmitter {
    */
   constructor(user: string, pass: string, bucket: string) {
     super();
+    console.info('Creating cloud client with', user, bucket);
     this.bucket = bucket;
     this.authHeader = CloudClient.createAuthHeader(user, pass);
   }
@@ -96,17 +97,12 @@ export default class CloudClient extends EventEmitter {
     const { status, data } = response;
 
     if (status === 401) {
-      console.error('[CloudClient] 401 response from auth worker');
+      console.error('[CloudClient] 401 response from worker', data);
       throw new Error('Login to cloud store failed, check your credentials');
     }
 
     if (status !== 200) {
-      console.error(
-        '[CloudClient] Failure response from auth worker',
-        response.status,
-        response.data
-      );
-
+      console.error('[CloudClient] Failure response from worker', status, data);
       throw new Error('Error logging into cloud store');
     }
 
@@ -128,7 +124,7 @@ export default class CloudClient extends EventEmitter {
   public async list(): Promise<CloudObject[]> {
     assert(this.S3);
 
-    const params = { Bucket: 'warcraft-recorder-dev' };
+    const params = { Bucket: this.bucket };
     const cmd = new ListObjectsCommand(params);
     const data = await this.S3.send(cmd);
 
@@ -279,11 +275,10 @@ export default class CloudClient extends EventEmitter {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     progressCallback = (_progress: number) => {}
   ) {
+    console.error('[CloudClient] Uploading', file);
     const key = path.basename(file);
     const stats = await fs.promises.stat(file);
     const stream = fs.createReadStream(file);
-    const start = new Date();
-
     let contentType;
 
     if (key.endsWith('.mp4')) {
@@ -310,6 +305,7 @@ export default class CloudClient extends EventEmitter {
     };
 
     const signedUrl = await this.signPutUrl(key, stats.size);
+    const start = new Date();
     const rsp = await axios.put(signedUrl, stream, config);
     const { status, data } = rsp;
 

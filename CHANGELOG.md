@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- POV styling improvements.
+- Cloud access bug with hardcoded bucket name.
+- Make settings scrollbar wider.
+- More cloud access logging.
 
 ## [4.0.7] - 2024-03-30
 ### Changed

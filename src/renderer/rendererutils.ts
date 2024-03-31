@@ -735,6 +735,14 @@ const getFirstInCategory = (
   return videos.find((video) => video.category === category);
 };
 
+/**
+ * Stop an event propogating higher.
+ */
+const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
+  event.stopPropagation();
+  event.preventDefault();
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -781,4 +789,5 @@ export {
   getVideoCategoryFilter,
   getCategoryIndex,
   getFirstInCategory,
+  stopPropagation,
 };

@@ -17,6 +17,7 @@ import {
   getPlayerSpecID,
   getPlayerClass,
   getWoWClassColor,
+  stopPropagation,
 } from './rendererutils';
 import * as Images from './images';
 
@@ -78,8 +79,8 @@ export default function PovSelection(props: IProps) {
     const cloudIndex = povs.indexOf(cloudVideo);
     const diskIndex = povs.indexOf(diskVideo);
 
-    const cloudSelected = parentButtonSelected && localPovIndex === cloudIndex;
-    const diskSelected = parentButtonSelected && localPovIndex === diskIndex;
+    const cloudSelected = localPovIndex === cloudIndex;
+    const diskSelected = localPovIndex === diskIndex;
     const povSelected = cloudSelected || diskSelected;
 
     const cloudButtonColor = cloudSelected ? '#bb4420' : 'white';
@@ -93,14 +94,6 @@ export default function PovSelection(props: IProps) {
     const icon = Images.specImages[specID];
     const unitClass = getPlayerClass(v);
     const classColor = getWoWClassColor(unitClass);
-
-    /**
-     * Stop an event propogating higher.
-     */
-    const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
-      event.stopPropagation();
-      event.preventDefault();
-    };
 
     /**
      * Update state variables following a change of selected point of view.
@@ -130,11 +123,26 @@ export default function PovSelection(props: IProps) {
      * Return the cloud icon.
      */
     const getCloudIcon = () => {
+      let opacity = 1;
+      let title = 'Saved in the cloud';
+
+      let onClick = (
+        event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+      ) => {
+        handleChangePov(event, diskIndex);
+      };
+
+      if (!haveCloudVideo) {
+        opacity = 0.2;
+        title = 'No cloud recording is saved';
+        onClick = stopPropagation;
+      }
+
       return (
-        <Tooltip title="Saved on the cloud">
+        <Tooltip title={title}>
           <IconButton
             onMouseDown={stopPropagation}
-            onClick={(event) => handleChangePov(event, cloudIndex)}
+            onClick={onClick}
             sx={iconButtonSx}
           >
             <CloudIcon
@@ -142,6 +150,7 @@ export default function PovSelection(props: IProps) {
                 height: '15px',
                 width: '15px',
                 color: cloudButtonColor,
+                opacity,
               }}
             />
           </IconButton>
@@ -153,11 +162,26 @@ export default function PovSelection(props: IProps) {
      * Return the disk icon.
      */
     const getDiskIcon = () => {
+      let opacity = 1;
+      let title = 'Saved on local disk';
+
+      let onClick = (
+        event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+      ) => {
+        handleChangePov(event, diskIndex);
+      };
+
+      if (!haveDiskVideo) {
+        opacity = 0.2;
+        title = 'No disk recording is saved';
+        onClick = stopPropagation;
+      }
+
       return (
-        <Tooltip title="Saved on local disk">
+        <Tooltip title={title}>
           <IconButton
             onMouseDown={stopPropagation}
-            onClick={(event) => handleChangePov(event, diskIndex)}
+            onClick={onClick}
             sx={iconButtonSx}
           >
             <SaveIcon
@@ -165,6 +189,7 @@ export default function PovSelection(props: IProps) {
                 height: '15px',
                 width: '15px',
                 color: diskButtonColor,
+                opacity,
               }}
             />
           </IconButton>
@@ -210,8 +235,8 @@ export default function PovSelection(props: IProps) {
                 minWidth: '50px',
               }}
             >
-              {haveDiskVideo && getDiskIcon()}
-              {haveCloudVideo && getCloudIcon()}
+              {getCloudIcon()}
+              {getDiskIcon()}
             </Box>
             <Box
               component="img"
@@ -296,6 +321,7 @@ export default function PovSelection(props: IProps) {
           overflowY: 'auto',
           p: 0,
           my: 1,
+          mx: 2,
           ...scrollBarSx,
         }}
       >

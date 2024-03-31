@@ -33,6 +33,7 @@ import {
   getFormattedDuration,
   getVideoTime,
   getVideoDate,
+  stopPropagation,
 } from './rendererutils';
 import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
@@ -158,11 +159,6 @@ export default function VideoButton(props: IProps) {
       }
     });
   }, [pov.name]);
-
-  const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    event.preventDefault();
-  };
 
   /**
    * Delete a video. This avoids attempting to delete the video

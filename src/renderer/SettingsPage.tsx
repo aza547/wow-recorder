@@ -107,6 +107,9 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
         width: '100%',
         overflowY: 'auto',
         ...scrollBarSx,
+        '&::-webkit-scrollbar': {
+          width: '1em',
+        },
       }}
     >
       <Box
