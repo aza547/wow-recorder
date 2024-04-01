@@ -34,6 +34,7 @@ import {
   getVideoTime,
   getVideoDate,
   stopPropagation,
+  povNameSort,
 } from './rendererutils';
 import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
@@ -100,7 +101,7 @@ export default function VideoButton(props: IProps) {
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [linkSnackBarOpen, setLinkSnackBarOpen] = useState(false);
 
-  const povs = [video, ...video.multiPov];
+  const povs = [video, ...video.multiPov].sort(povNameSort);
   const pov = povs[localPovIndex];
   const { cloud, thumbnailSource, isProtected, tag, videoSource } = pov;
 

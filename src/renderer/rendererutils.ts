@@ -743,6 +743,13 @@ const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
   event.preventDefault();
 };
 
+const povNameSort = (a: RendererVideo, b: RendererVideo) => {
+  const playerA = a.player?._name;
+  const playerB = b.player?._name;
+  if (!playerA || !playerB) return 0;
+  return playerA.localeCompare(playerB);
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -790,4 +797,5 @@ export {
   getCategoryIndex,
   getFirstInCategory,
   stopPropagation,
+  povNameSort,
 };

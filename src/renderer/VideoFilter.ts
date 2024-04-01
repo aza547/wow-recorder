@@ -100,13 +100,6 @@ export default class VideoFilter {
       this.addStringFilter(player._name);
     }
 
-    if (this.video.cloud) {
-      this.addStringFilter('cloud');
-    } else {
-      this.addStringFilter('disk');
-      this.addStringFilter('local');
-    }
-
     const dateStr = getVideoDate(this.video);
     this.addStringFilter(dateStr);
 

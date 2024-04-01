@@ -804,7 +804,7 @@ export const VideoPlayer = (props: IProps) => {
           videoPlayerHeight: height,
         };
       });
-    }, 1000);
+    }, 500);
   };
 
   return (

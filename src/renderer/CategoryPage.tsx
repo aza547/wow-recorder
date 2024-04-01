@@ -15,7 +15,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import { getVideoCategoryFilter } from './rendererutils';
+import { getVideoCategoryFilter, povNameSort } from './rendererutils';
 import VideoFilter from './VideoFilter';
 import VideoButton from './VideoButton';
 
@@ -67,7 +67,7 @@ const CategoryPage = (props: IProps) => {
 
   const handleChangeVideo = (index: number) => {
     const video = videoState[index];
-    const povs = [video, ...video.multiPov];
+    const povs = [video, ...video.multiPov].sort(povNameSort);
     persistentProgress.current = 0;
 
     setAppState((prevState) => {
@@ -80,7 +80,7 @@ const CategoryPage = (props: IProps) => {
   };
 
   const mapActivityToListItem = (video: RendererVideo) => {
-    const povs = [video, ...video.multiPov];
+    const povs = [video, ...video.multiPov].sort(povNameSort);
     const names = povs.map((v) => v.name);
     const selected = appState.selectedVideoName
       ? names.includes(appState.selectedVideoName)

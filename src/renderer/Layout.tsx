@@ -87,6 +87,7 @@ const Layout = (props: IProps) => {
         icon={
           <Badge
             badgeContent={numVideos}
+            max={999}
             style={{ transform: 'translate(15px, 5px)' }}
             sx={{
               '& .MuiBadge-badge': {
