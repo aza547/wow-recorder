@@ -24,6 +24,7 @@ Warcraft Recorder is a desktop screen recorder. It watches the WoW combat log fi
 5. Install the required combat logging addon, enabling advanced combat logging when prompted.
     - Retail: SimpleCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
     - Classic: AutoCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/autocombatlogger), [Wago](https://addons.wago.io/addons/autocombatlogger)). 
+    - Classic Era: AutoCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/autocombatlogger), [Wago](https://addons.wago.io/addons/autocombatlogger)). 
 
 # Supported Platforms
 
@@ -37,7 +38,8 @@ Warcraft Recorder is a desktop screen recorder. It watches the WoW combat log fi
 |---|---|
 | Retail | Yes |
 | WotLK Classic | Yes |
-| Classic | No |
+| Classic Era | Yes* |
+*raids only
 
 # Testing It Works
 You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above setup steps. This runs a short test of the recording function.

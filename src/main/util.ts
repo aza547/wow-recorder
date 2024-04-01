@@ -529,7 +529,14 @@ const addCrashToUI = (mainWindow: BrowserWindow, crashData: CrashData) => {
  * @throws an error describing why the config is invalid
  */
 const validateFlavour = (config: FlavourConfig) => {
-  const { recordRetail, retailLogPath, recordClassic, classicLogPath } = config;
+  const {
+    recordRetail,
+    retailLogPath,
+    recordClassic,
+    classicLogPath,
+    recordEra,
+    eraLogPath,
+  } = config;
 
   if (recordRetail) {
     const validFlavours = ['wow', 'wowxptr'];
@@ -544,6 +551,11 @@ const validateFlavour = (config: FlavourConfig) => {
   if (recordClassic && getWowFlavour(classicLogPath) !== 'wow_classic') {
     console.error('[Util] Invalid classic log path', classicLogPath);
     throw new Error('Invalid classic log path');
+  }
+
+  if (recordEra && getWowFlavour(eraLogPath) !== 'wow_classic_era') {
+    console.error('[Util] Invalid era log path', eraLogPath);
+    throw new Error('Invalid era log path');
   }
 };
 

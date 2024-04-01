@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { uIOhook } from 'uiohook-napi';
 import assert from 'assert';
+import EraLogHandler from '../parsing/EraLogHandler';
 import {
   addCrashToUI,
   buildClipMetadata,
@@ -100,6 +101,8 @@ export default class Manager {
   private retailLogHandler: RetailLogHandler | undefined;
 
   private classicLogHandler: ClassicLogHandler | undefined;
+
+  private eraLogHandler: EraLogHandler | undefined;
 
   private cloudClient: CloudClient | undefined;
 
@@ -226,6 +229,10 @@ export default class Manager {
     if (this.classicLogHandler && this.classicLogHandler.activity) {
       await this.classicLogHandler.forceEndActivity();
     }
+
+    if (this.eraLogHandler && this.eraLogHandler.activity) {
+      await this.eraLogHandler.forceEndActivity();
+    }
   }
 
   /**
@@ -319,9 +326,14 @@ export default class Manager {
     }
 
     const inOverrun =
-      this.retailLogHandler?.overrunning || this.classicLogHandler?.overrunning;
+      this.retailLogHandler?.overrunning ||
+      this.classicLogHandler?.overrunning ||
+      this.eraLogHandler?.overrunning;
+
     const inActivity =
-      this.retailLogHandler?.activity || this.classicLogHandler?.activity;
+      this.retailLogHandler?.activity ||
+      this.classicLogHandler?.activity ||
+      this.eraLogHandler?.activity;
 
     if (inOverrun) {
       this.refreshRecStatus(RecStatus.Overruning);
@@ -428,6 +440,9 @@ export default class Manager {
     } else if (this.classicLogHandler && this.classicLogHandler.activity) {
       await this.classicLogHandler.forceEndActivity();
       this.recorder.removeAudioSources();
+    } else if (this.eraLogHandler && this.eraLogHandler.activity) {
+      await this.eraLogHandler.forceEndActivity();
+      this.recorder.removeAudioSources();
     } else {
       await this.recorder.stop();
       this.recorder.removeAudioSources();
@@ -521,6 +536,11 @@ export default class Manager {
       this.classicLogHandler.destroy();
     }
 
+    if (this.eraLogHandler) {
+      this.eraLogHandler.removeAllListeners();
+      this.eraLogHandler.destroy();
+    }
+
     if (config.recordRetail) {
       this.retailLogHandler = new RetailLogHandler(
         this.mainWindow,
@@ -541,6 +561,17 @@ export default class Manager {
       );
 
       this.classicLogHandler.on('state-change', () => this.refreshStatus());
+    }
+
+    if (config.recordEra) {
+      this.eraLogHandler = new EraLogHandler(
+        this.mainWindow,
+        this.recorder,
+        this.videoProcessQueue,
+        config.eraLogPath
+      );
+
+      this.eraLogHandler.on('state-change', () => this.refreshStatus());
     }
 
     this.poller.reconfigureFlavour(config);
@@ -882,6 +913,11 @@ export default class Manager {
       this.classicLogHandler.destroy();
     }
 
+    if (this.eraLogHandler) {
+      this.eraLogHandler.removeAllListeners();
+      this.eraLogHandler.destroy();
+    }
+
     this.recorder = new Recorder(this.mainWindow);
     this.recorder.on('crash', (cd) => this.recoverRecorderFromCrash(cd));
     this.recorder.on('state-change', () => this.refreshStatus());
@@ -909,16 +945,18 @@ export default class Manager {
 
     const retailNotSafe = this.retailLogHandler?.activity;
     const classicNotSafe = this.classicLogHandler?.activity;
+    const eraNotSafe = this.eraLogHandler?.activity;
 
-    if (retailNotSafe || classicNotSafe) {
+    if (retailNotSafe || classicNotSafe || eraNotSafe) {
       console.info('[Manager] Not restarting recorder as in an activity');
       return;
     }
 
     const retailOverrunning = this.retailLogHandler?.overrunning;
     const classicOverrunning = this.classicLogHandler?.overrunning;
+    const eraOverrunning = this.eraLogHandler?.overrunning;
 
-    if (retailOverrunning || classicOverrunning) {
+    if (retailOverrunning || classicOverrunning || eraOverrunning) {
       console.info(
         '[Manager] Not restarting recorder as an activity is overrunning'
       );

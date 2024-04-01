@@ -93,7 +93,8 @@ export default function PovSelection(props: IProps) {
     const specID = getPlayerSpecID(v);
     const icon = Images.specImages[specID];
     const unitClass = getPlayerClass(v);
-    const classColor = getWoWClassColor(unitClass);
+    const classColor =
+      unitClass === 'UNKNOWN' ? 'gray' : getWoWClassColor(unitClass);
 
     /**
      * Update state variables following a change of selected point of view.

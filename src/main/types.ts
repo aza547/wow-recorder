@@ -361,6 +361,8 @@ type FlavourConfig = {
   retailLogPath: string;
   recordClassic: boolean;
   classicLogPath: string;
+  recordEra: boolean;
+  eraLogPath: string;
 };
 
 type ConfigStage = {

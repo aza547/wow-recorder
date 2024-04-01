@@ -33,9 +33,13 @@ import classic.rated_5v5
 import classic.rated_2v2_extra_units
 import classic.rated_2v2_feign_death
 
+# Import the era tests
+import era.raid
+
 # These variables are environment dependent, you may need to adjust them.
 RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
 CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
+ERA_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_era_/Logs"
 STORAGE_PATH = "D:/wr-test"
 
 CWD = os.path.dirname(__file__)
@@ -69,12 +73,17 @@ CLASSIC_TESTS = [
     classic.rated_2v2_feign_death,
 ]
 
+
+ERA_TESTS = [
+    era.raid,
+]
+
 RETAIL_TEST_NAMES = list(map(lambda t: t.NAME, RETAIL_TESTS))
 CLASSIC_TEST_NAMES = list(map(lambda t: t.NAME, CLASSIC_TESTS))
 
 # Define the CLI arguments.
 parser = argparse.ArgumentParser(prog="Warcraft Recorder Tests")
-parser.add_argument("-f", help="flavour", choices=["classic", "retail"])
+parser.add_argument("-f", help="flavour", choices=["classic", "retail", "era"])
 parser.add_argument("-t", help="test", choices=RETAIL_TEST_NAMES + CLASSIC_TEST_NAMES)
 args = parser.parse_args()
 
@@ -144,6 +153,9 @@ def get_test_log(flavour):
 
     if flavour == "classic":
         return f"{CLASSIC_LOG_PATH}/{logName}"
+    
+    if flavour == "era":
+        return f"{ERA_LOG_PATH}/{logName}"
 
 
 def get_sample_log_lines(file):
@@ -175,8 +187,10 @@ def find_test_by_name(flavour, test_name):
     """Find a test by its name, returning the entire test definition."""
     if flavour == "retail":
         test = list(filter(lambda test: test.NAME == test_name, RETAIL_TESTS))[0]
-    else:
+    if flavour == "classic":
         test = list(filter(lambda test: test.NAME == test_name, CLASSIC_TESTS))[0]
+    else:
+        test = list(filter(lambda test: test.NAME == test_name, ERA_TESTS))[0]
 
     return test
 
@@ -225,10 +239,17 @@ def run_classic():
         run_test("classic", test)
 
 
+def run_era():
+    """Run all the classic era tests."""
+    for test in ERA_TESTS:
+        run_test("era", test)
+
+
 def run_all():
     """Run all the tests."""
     run_retail()
     run_classic()
+    run_era()
 
 
 def run_single(flavour, test_name):
@@ -246,5 +267,7 @@ elif not args.t and args.f == "retail":
     run_retail()
 elif not args.t and args.f == "classic":
     run_classic()
+elif not args.t and args.f == "era":
+    run_era()
 else:
     run_all()

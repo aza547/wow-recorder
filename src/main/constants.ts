@@ -906,6 +906,9 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   176: { difficultyID: 'normal', difficulty: '25N', partyType: 'raid' },
   193: { difficultyID: 'heroic', difficulty: '10HC', partyType: 'raid' },
   194: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
+
+  // Classic era 10 man?
+  198: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
 };
 
 const categoryTabSx = {
@@ -1340,6 +1343,8 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   Starfall: 102,
   Mangle: 103,
   Swiftmend: 105,
+  Nourish: 105,
+  Lifebloom: 105,
   'Bestial Wrath': 253,
   'Chimera Shot': 254,
   'Explosive Shot': 255,
@@ -1355,6 +1360,7 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   Mutilate: 259,
   'Killing Spree': 260, // might be wrong? assumed combatID === outlawID
   Shadowstep: 261,
+  'Lava Burst': 262,
   Thunderstorm: 262,
   'Feral Spirit': 263,
   Riptide: 264,

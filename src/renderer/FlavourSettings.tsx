@@ -78,6 +78,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       retailLogPath: config.retailLogPath,
       recordClassic: config.recordClassic,
       classicLogPath: config.classicLogPath,
+      recordEra: config.recordEra,
+      eraLogPath: config.eraLogPath,
     });
 
     ipc.sendMessage('settingsChange', []);
@@ -86,6 +88,8 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     config.recordClassic,
     config.retailLogPath,
     config.classicLogPath,
+    config.recordEra,
+    config.eraLogPath,
   ]);
 
   const isComponentDisabled = () => {
@@ -279,6 +283,81 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const eraLogPathHelperText = () => {
+    if (config.eraLogPath !== '') {
+      return '';
+    }
+
+    return 'Invalid era log path';
+  };
+
+  const setRecordEra = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        recordEra: event.target.checked,
+      };
+    });
+  };
+
+  const setEraLogPath = async () => {
+    if (isComponentDisabled()) {
+      return;
+    }
+
+    const newPath = await pathSelect();
+
+    if (newPath === '') {
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        eraLogPath: newPath,
+      };
+    });
+  };
+
+  const getEraSettings = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+        }}
+      >
+        <Box>
+          <FormControlLabel
+            disabled={isComponentDisabled()}
+            control={getSwitch('recordEra', setRecordEra)}
+            label="Record Era"
+            labelPlacement="top"
+            style={formControlLabelStyle}
+          />
+        </Box>
+        {config.recordEra && (
+          <TextField
+            value={config.eraLogPath}
+            disabled={!config.recordEra || isComponentDisabled()}
+            label="Classic Era Log Path"
+            variant="outlined"
+            error={config.eraLogPath === ''}
+            helperText={eraLogPathHelperText()}
+            onClick={setEraLogPath}
+            InputLabelProps={{ shrink: true, style: { color: 'white' } }}
+            sx={{ ...style, width: '600px', my: 1 }}
+            inputProps={{ style: { color: 'white' } }}
+          />
+        )}
+      </Box>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -289,6 +368,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       {getDisabledText()}
       {getRetailSettings()}
       {getClassicSettings()}
+      {getEraSettings()}
     </Box>
   );
 };

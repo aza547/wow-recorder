@@ -4,6 +4,7 @@ export type ConfigurationSchema = {
   separateBufferPath: boolean;
   retailLogPath: string;
   classicLogPath: string;
+  eraLogPath: string;
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
@@ -20,6 +21,7 @@ export type ConfigurationSchema = {
   obsRecEncoder: string;
   recordRetail: boolean;
   recordClassic: boolean;
+  recordEra: boolean;
   recordRaids: boolean;
   recordDungeons: boolean;
   recordTwoVTwo: boolean;
@@ -91,6 +93,12 @@ export const configSchema = {
   classicLogPath: {
     description:
       'Location of the World of Warcraft logs folder for your classic installation, e.g. "D:\\World of Warcraft\\_classic_\\Logs".',
+    type: 'string',
+    default: '',
+  },
+  eraLogPath: {
+    description:
+      'Location of the World of Warcraft logs folder for your classic era installation, e.g. "D:\\World of Warcraft\\_classic_era_\\Logs".',
     type: 'string',
     default: '',
   },
@@ -186,6 +194,11 @@ export const configSchema = {
   },
   recordClassic: {
     description: 'Whether the application should record classic.',
+    type: 'boolean',
+    default: false,
+  },
+  recordEra: {
+    description: 'Whether the application should record classic era.',
     type: 'boolean',
     default: false,
   },

@@ -89,6 +89,8 @@ const getFlavourConfig = (cfg: ConfigService): FlavourConfig => {
     classicLogPath: cfg.get<string>('classicLogPath'),
     recordRetail: cfg.get<boolean>('recordRetail'),
     retailLogPath: cfg.get<string>('retailLogPath'),
+    recordEra: cfg.get<boolean>('recordEra'),
+    eraLogPath: cfg.get<string>('eraLogPath'),
   };
 };
 

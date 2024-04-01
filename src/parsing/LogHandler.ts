@@ -27,7 +27,7 @@ import { allowRecordCategory, getFlavourConfig } from '../utils/configUtils';
  * classic and retail combat logs.
  *
  * If you need something flavour specific then put it in the appropriate
- * subclass; i.e. RetailLogHandler or ClassicLogHandler.
+ * subclass; i.e. RetailLogHandler, ClassicLogHandler or EraLogHandler.
  */
 export default abstract class LogHandler extends EventEmitter {
   public combatLogWatcher: CombatLogWatcher;
