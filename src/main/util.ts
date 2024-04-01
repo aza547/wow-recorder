@@ -782,6 +782,16 @@ const markForVideoForDelete = async (videoPath: string) => {
   }
 };
 
+/**
+ * Sort alphabetically by player name.
+ */
+const povNameSort = (a: RendererVideo, b: RendererVideo) => {
+  const playerA = a.player?._name;
+  const playerB = b.player?._name;
+  if (!playerA || !playerB) return 0;
+  return playerA.localeCompare(playerB);
+};
+
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -816,4 +826,5 @@ export {
   reverseChronologicalVideoSort,
   areDatesWithinSeconds,
   markForVideoForDelete,
+  povNameSort,
 };

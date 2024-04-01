@@ -20,6 +20,7 @@ import {
   areDatesWithinSeconds,
   markForVideoForDelete,
   getPromiseBomb,
+  povNameSort,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -936,18 +937,18 @@ export default class Manager {
   public async loadAllVideos(storagePath: string) {
     const videos: RendererVideo[] = [];
 
-    // Deliberately before the cloud stuff so we'll link multipov
-    // cloud videos to disk videos and not vice versa.
-    const diskVideos = await loadAllVideosDisk(storagePath);
-    diskVideos.forEach((video) => Manager.correlateVideo(video, videos));
-
     if (this.cloudClient !== undefined) {
       const cloudVideos = await this.loadAllVideosCloud();
       cloudVideos.forEach((video) => Manager.correlateVideo(video, videos));
     }
 
+    // Deliberately after the cloud stuff so we'll always have cloud povs
+    // come first in the UI and not vice versa.
+    const diskVideos = await loadAllVideosDisk(storagePath);
+    diskVideos.forEach((video) => Manager.correlateVideo(video, videos));
+
     videos.sort(reverseChronologicalVideoSort).forEach((video) => {
-      video.multiPov.sort(reverseChronologicalVideoSort);
+      video.multiPov.sort(povNameSort);
     });
 
     return videos;

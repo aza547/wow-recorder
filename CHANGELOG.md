@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [4.0.9] - 2024-04-01
+### Changed
+- Change the test icon to be more intiuative. 
+- Order video POVs alphabetically. 
+
+
 ## [4.0.8] - 2024-03-31
 ### Fixed
 - POV styling improvements.

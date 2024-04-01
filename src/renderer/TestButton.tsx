@@ -1,5 +1,5 @@
 import { Box, Button, Popover, Tooltip, Typography } from '@mui/material';
-import BiotechIcon from '@mui/icons-material/Biotech';
+import ScienceIcon from '@mui/icons-material/Science';
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
 import { RecStatus } from 'main/types';
@@ -136,7 +136,7 @@ const TestButton: React.FC<IProps> = (props: IProps) => {
           onClick={handleClick}
           sx={{ padding: '2px', minWidth: '25px' }}
         >
-          <BiotechIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
+          <ScienceIcon sx={{ width: '25px', height: '25px', color: 'white' }} />
         </Button>
       </Tooltip>
       {getPopover()}
