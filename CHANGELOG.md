@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Change the test icon to be more intiuative. 
 - Order video POVs alphabetically. 
+- Fix a bug where we would forget the player size.
 
 
 ## [4.0.8] - 2024-03-31

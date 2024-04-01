@@ -60,6 +60,7 @@ const CategoryPage = (props: IProps) => {
         playing={playing}
         setPlaying={setPlaying}
         config={config}
+        setConfig={setConfig}
       />
     );
   };

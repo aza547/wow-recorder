@@ -27,6 +27,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import { OnProgressProps } from 'react-player/base';
 import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
+import { ConfigurationSchema } from 'main/configSchema';
 import DeathIcon from '../../assets/icon/death.png';
 import {
   convertNumToDeathMarkers,
@@ -39,7 +40,7 @@ import {
   isSoloShuffleUtil,
   secToMmSs,
 } from './rendererutils';
-import { setConfigValue, useSettings } from './useSettings';
+import { setConfigValue } from './useSettings';
 
 interface IProps {
   video: RendererVideo;
@@ -47,6 +48,7 @@ interface IProps {
   playing: boolean;
   setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   config: ConfigurationSchema;
+  setConfig: React.Dispatch<React.SetStateAction<ConfigurationSchema>>;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -70,7 +72,8 @@ const sliderSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const { video, persistentProgress, playing, setPlaying, config } = props;
+  const { video, persistentProgress, playing, setPlaying, config, setConfig } =
+    props;
   const { videoSource, cloud } = video;
 
   const player = useRef<ReactPlayer>(null);
@@ -794,7 +797,14 @@ export const VideoPlayer = (props: IProps) => {
 
     debounceTimer = setTimeout(() => {
       setConfigValue('videoPlayerHeight', height);
-    }, 500);
+
+      setConfig((prevState) => {
+        return {
+          ...prevState,
+          videoPlayerHeight: height,
+        };
+      });
+    }, 1000);
   };
 
   return (
