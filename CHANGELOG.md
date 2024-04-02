@@ -9,16 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
-## [4.1.2] - 2024-04-02
+## [4.1.1] - 2024-04-02
 ### Fixed
+- Fix size monitor to not stop at 1000 keys.
 - Reset number of videos displayed on category change.
 - Fix a leaky event listener on the video button download function.
 - Improve some cloud logging.
 - Reset the videos shown on changing category.
-
-## [4.1.1] - 2024-04-02
-### Fixed
-- Fix size monitor to not stop at 1000 keys.
 
 ## [4.1.0] - 2024-04-01
 ### Changed
