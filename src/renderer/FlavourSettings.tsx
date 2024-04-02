@@ -335,7 +335,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
           <FormControlLabel
             disabled={isComponentDisabled()}
             control={getSwitch('recordEra', setRecordEra)}
-            label="Record Era"
+            label="Record Classic Era"
             labelPlacement="top"
             style={formControlLabelStyle}
           />

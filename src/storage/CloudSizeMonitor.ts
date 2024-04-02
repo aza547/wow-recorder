@@ -13,7 +13,11 @@ export default class CloudSizeMonitor {
   }
 
   async run() {
-    const maxStorageGB = 250;
+    // We set this threshold a bit lower than the max storage as the ordering
+    // here is that the size monitor will after videos are uploaded, so we always
+    // want some leeway; we don't want the worker to reject uploads, which it will
+    // do if they the max storage is hit.
+    const maxStorageGB = 250 * 0.8;
     const maxStorageBytes = maxStorageGB * 1024 ** 3;
 
     console.info(

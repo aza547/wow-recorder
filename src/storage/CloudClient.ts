@@ -6,6 +6,9 @@ import {
   ListObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsCommandInput,
+  ListObjectsV2Command,
+  ListObjectsV2CommandInput,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
@@ -123,31 +126,40 @@ export default class CloudClient extends EventEmitter {
    */
   public async list(): Promise<CloudObject[]> {
     assert(this.S3);
-
-    const params = { Bucket: this.bucket };
-    const cmd = new ListObjectsCommand(params);
-    const data = await this.S3.send(cmd);
-
-    const objects = data.Contents;
-
-    if (!objects) {
-      return [];
-    }
-
     const cloudObjects: CloudObject[] = [];
+    let continuationToken;
 
-    objects.forEach((obj) => {
-      const key = obj.Key;
-      const size = obj.Size;
-      const lastMod = obj.LastModified;
+    do {
+      const params: ListObjectsV2CommandInput = {
+        Bucket: this.bucket,
+        MaxKeys: 1000,
+        ContinuationToken: continuationToken,
+      };
 
-      if (key === undefined || size === undefined || lastMod === undefined) {
-        return;
+      const cmd = new ListObjectsV2Command(params);
+      // eslint-disable-next-line no-await-in-loop
+      const rsp = await this.S3.send(cmd);
+
+      const objects = rsp.Contents;
+      continuationToken = rsp.NextContinuationToken;
+
+      if (!objects) {
+        return cloudObjects;
       }
 
-      const cloudObject: CloudObject = { key, size, lastMod };
-      cloudObjects.push(cloudObject);
-    });
+      objects.forEach((obj) => {
+        const key = obj.Key;
+        const size = obj.Size;
+        const lastMod = obj.LastModified;
+
+        if (key === undefined || size === undefined || lastMod === undefined) {
+          return;
+        }
+
+        const cloudObject: CloudObject = { key, size, lastMod };
+        cloudObjects.push(cloudObject);
+      });
+    } while (continuationToken);
 
     return cloudObjects;
   }

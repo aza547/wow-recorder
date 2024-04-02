@@ -39,7 +39,7 @@ Warcraft Recorder is a desktop screen recorder. It watches the WoW combat log fi
 | Retail | Yes |
 | WotLK Classic | Yes |
 | Classic Era | Yes* |
-*raids only
+*Season of Discovery raids only
 
 # Testing It Works
 You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above setup steps. This runs a short test of the recording function.

@@ -62,7 +62,7 @@ const getGameSettingsInfoIcon = () => {
     ['Retail Log Path', configSchema.retailLogPath.description].join('\n'),
     ['Record Classic', configSchema.recordClassic.description].join('\n'),
     ['Classic Log Path', configSchema.classicLogPath.description].join('\n'),
-    ['Record Era', configSchema.recordEra.description].join('\n'),
+    ['Record Classic Era', configSchema.recordEra.description].join('\n'),
     ['Era Log Path', configSchema.eraLogPath.description].join('\n'),
   ].join('\n\n');
 
