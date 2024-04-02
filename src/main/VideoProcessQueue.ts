@@ -256,12 +256,7 @@ export default class VideoProcessQueue {
         return;
       }
 
-      this.mainWindow.webContents.send(
-        'updateDownloadProgress',
-        name,
-        progress
-      );
-
+      this.mainWindow.webContents.send('updateDownloadProgress', progress);
       lastProgress = progress;
     };
 

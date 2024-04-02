@@ -66,7 +66,7 @@ export default class CloudClient extends EventEmitter {
    */
   constructor(user: string, pass: string, bucket: string) {
     super();
-    console.info('Creating cloud client with', user, bucket);
+    console.info('[CloudClient] Creating cloud client with', user, bucket);
     this.bucket = bucket;
     this.authHeader = CloudClient.createAuthHeader(user, pass);
   }
@@ -85,7 +85,7 @@ export default class CloudClient extends EventEmitter {
    * calling the constructor.
    */
   public async init() {
-    console.error('[CloudClient] Initializing the cloud client');
+    console.info('[CloudClient] Initializing the cloud client');
 
     const headers = { Authorization: this.authHeader };
     const encbucket = encodeURIComponent(this.bucket);
@@ -123,7 +123,10 @@ export default class CloudClient extends EventEmitter {
    * don't want the AWS types passed up the stack further than this class.
    */
   public async list(): Promise<CloudObject[]> {
+    console.info('[CloudClient] Listing all objects in R2.');
+    const start = new Date();
     assert(this.S3);
+
     const cloudObjects: CloudObject[] = [];
     let continuationToken;
 
@@ -158,6 +161,16 @@ export default class CloudClient extends EventEmitter {
         cloudObjects.push(cloudObject);
       });
     } while (continuationToken);
+
+    const duration = (new Date().valueOf() - start.valueOf()) / 1000;
+
+    console.info(
+      '[CloudClient] List of',
+      cloudObjects.length,
+      'R2 objects took',
+      duration,
+      'sec.'
+    );
 
     return cloudObjects;
   }

@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -145,21 +144,6 @@ export default function VideoButton(props: IProps) {
 
     setLocalPovIndex(0);
   }, [localPovIndex, povs.length, selected]);
-
-  useEffect(() => {
-    ipc.on('updateDownloadProgress', (name, progress) => {
-      if (name !== pov.name) {
-        return;
-      }
-
-      setDownloadSpinner(true);
-      setDownloadProgress(progress as number);
-
-      if (progress === 100) {
-        setTimeout(() => setDownloadSpinner(false), 1000);
-      }
-    });
-  }, [pov.name]);
 
   /**
    * Delete a video. This avoids attempting to delete the video
@@ -335,60 +319,6 @@ export default function VideoButton(props: IProps) {
   };
 
   const getDownloadButton = () => {
-    if (downloadSpinner) {
-      return (
-        <Box
-          sx={{
-            position: 'relative',
-            display: 'inline-flex',
-            boxShadow: 1,
-            border: '1px ridge',
-            borderRadius: '5px',
-            mx: '2px',
-            borderColor: 'rgba(0, 0, 0, 0.2)',
-            height: '40px',
-            width: '40px',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <CircularProgress
-            variant="determinate"
-            size={35}
-            value={downloadProgress}
-            sx={{ color: 'white' }}
-          />
-          <Box
-            sx={{
-              top: 0,
-              left: 0,
-              bottom: 0,
-              right: 0,
-              position: 'absolute',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Typography
-              variant="caption"
-              component="div"
-              sx={{
-                color: 'white',
-                fontWeight: '600',
-                fontFamily: 'Arial',
-                fontSize: '0.6rem',
-                textShadow:
-                  '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-              }}
-            >
-              {`${downloadProgress}%`}
-            </Typography>
-          </Box>
-        </Box>
-      );
-    }
-
     return (
       <Tooltip title="Download to disk">
         <IconButton

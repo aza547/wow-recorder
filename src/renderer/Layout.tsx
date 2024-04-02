@@ -63,6 +63,7 @@ const Layout = (props: IProps) => {
         category: newCategory,
         selectedVideoName: first?.name,
         playingVideo: first,
+        numVideosDisplayed: 10,
       };
     });
   };

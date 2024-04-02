@@ -454,6 +454,7 @@ export default class Manager {
    */
   private async configureObsBase(config: ObsBaseConfig) {
     await this.recorder.stop();
+
     const {
       cloudStorage,
       cloudUpload,

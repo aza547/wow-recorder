@@ -36,18 +36,29 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
     crashes,
   } = props;
 
-  const [showProgressBar, setShowProgressBar] = useState(false);
+  const [showUploadProgressBar, setShowUploadProgressBar] = useState(false);
+  const [showDownloadProgressBar, setShowDownloadProgressBar] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [downloadProgress, setDownloadProgress] = useState<number>(0);
 
   useEffect(() => {
     const ipc = window.electron.ipcRenderer;
 
     ipc.on('updateUploadProgress', (progress) => {
-      setShowProgressBar(true);
+      setShowUploadProgressBar(true);
       setUploadProgress(progress as number);
 
       if (progress === 100) {
-        setTimeout(() => setShowProgressBar(false), 1000);
+        setTimeout(() => setShowUploadProgressBar(false), 1000);
+      }
+    });
+
+    ipc.on('updateDownloadProgress', (progress) => {
+      setShowDownloadProgressBar(true);
+      setDownloadProgress(progress as number);
+
+      if (progress === 100) {
+        setTimeout(() => setShowDownloadProgressBar(false), 1000);
       }
     });
   }, []);
@@ -55,7 +66,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
   const getUploadProgressBar = () => {
     return (
       <Box sx={{ width: '100%' }}>
-        <Fade in={showProgressBar}>
+        <Fade in={showUploadProgressBar}>
           <Box
             sx={{
               display: 'flex',
@@ -94,15 +105,61 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const getDownloadProgressBar = () => {
+    return (
+      <Box sx={{ width: '100%' }}>
+        <Fade in={showDownloadProgressBar}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+            }}
+          >
+            <LinearProgress
+              variant="determinate"
+              value={downloadProgress}
+              sx={{
+                minWidth: '300px',
+                height: '15px',
+                borderRadius: '2px',
+                border: '1px solid black',
+                backgroundColor: 'white',
+                '& .MuiLinearProgress-bar': {
+                  backgroundColor: '#bb4420',
+                },
+              }}
+            />
+            <Typography
+              sx={{
+                color: 'white',
+                fontSize: '0.75rem',
+                mx: '5px',
+              }}
+            >
+              {downloadProgress}% Downloaded
+            </Typography>
+          </Box>
+        </Fade>
+      </Box>
+    );
+  };
+
   return (
     <Box
       sx={{
         borderTop: '1px solid black',
         height: '35px',
         boxSizing: 'border-box',
-        alignItems: 'flex-end',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: '#182035',
         zIndex: 1,
+        flexDirection: 'row',
+        px: 1,
       }}
     >
       <Box
@@ -110,52 +167,42 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
-          ml: 1,
-          mr: 1,
+          justifyContent: 'flex-start',
+          width: '10%',
         }}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-          }}
-        >
-          <RecorderStatus recorderStatus={recorderStatus} error={error} />
-          <VersionUpdateWidget upgradeStatus={upgradeStatus} />
-          <SavingStatus savingStatus={savingStatus} />
-          <MicrophoneStatus micStatus={micStatus} />
-          <CrashStatus crashes={crashes} />
-        </Box>
+        <RecorderStatus recorderStatus={recorderStatus} error={error} />
+        <VersionUpdateWidget upgradeStatus={upgradeStatus} />
+        <SavingStatus savingStatus={savingStatus} />
+        <MicrophoneStatus micStatus={micStatus} />
+        <CrashStatus crashes={crashes} />
+      </Box>
 
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {getUploadProgressBar()}
-        </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '80%',
+        }}
+      >
+        {showUploadProgressBar && getUploadProgressBar()}
+        {showDownloadProgressBar && getDownloadProgressBar()}
+      </Box>
 
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-          }}
-        >
-          <LogButton />
-          <TestButton recorderStatus={recorderStatus} />
-          <DiscordButton />
-        </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          width: '10%',
+        }}
+      >
+        <LogButton />
+        <TestButton recorderStatus={recorderStatus} />
+        <DiscordButton />
       </Box>
     </Box>
   );
