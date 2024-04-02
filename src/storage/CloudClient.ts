@@ -3,10 +3,8 @@ import { EventEmitter } from 'stream';
 import axios, { AxiosRequestConfig } from 'axios';
 import {
   S3Client,
-  ListObjectsCommand,
   GetObjectCommand,
   HeadObjectCommand,
-  ListObjectsCommandInput,
   ListObjectsV2Command,
   ListObjectsV2CommandInput,
 } from '@aws-sdk/client-s3';
