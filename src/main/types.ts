@@ -367,7 +367,7 @@ type FlavourConfig = {
 
 type ConfigStage = {
   name: string;
-  initial: boolean;
+  valid: boolean;
   current: any;
   get: (cfg: ConfigService) => any;
   configure: (...args: any[]) => Promise<void>;
@@ -413,6 +413,17 @@ type CloudObject = {
   size: number;
   lastMod: Date;
 };
+
+interface ICloudClient {
+  list: () => Promise<CloudObject[]>;
+  delete: (key: string) => Promise<void>;
+}
+
+interface IBrowserWindow {
+  webContents: {
+    send: (channel: string) => void;
+  };
+}
 
 export {
   RecStatus,
@@ -461,4 +472,6 @@ export {
   CloudStatus,
   DiskStatus,
   CloudObject,
+  ICloudClient,
+  IBrowserWindow,
 };

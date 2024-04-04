@@ -40,11 +40,11 @@ import {
   isSoloShuffleUtil,
   secToMmSs,
 } from './rendererutils';
-import { setConfigValue } from './useSettings';
 
 interface IProps {
   video: RendererVideo;
   persistentProgress: MutableRefObject<number>;
+  playerHeight: MutableRefObject<number>;
   playing: boolean;
   setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   config: ConfigurationSchema;
@@ -72,8 +72,15 @@ const sliderSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const { video, persistentProgress, playing, setPlaying, config, setConfig } =
-    props;
+  const {
+    video,
+    persistentProgress,
+    playing,
+    setPlaying,
+    config,
+    setConfig,
+    playerHeight,
+  } = props;
   const { videoSource, cloud } = video;
 
   const player = useRef<ReactPlayer>(null);
@@ -107,10 +114,6 @@ export const VideoPlayer = (props: IProps) => {
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
   const [src, setSrc] = useState<string>('');
-
-  // We set the video player size in the config when it gets resized, on a
-  // debounce timer as it fires alot of resize events.
-  let debounceTimer: NodeJS.Timer | undefined;
 
   // Sign the thumbnail URL and render it.
   useEffect(() => {
@@ -791,27 +794,14 @@ export const VideoPlayer = (props: IProps) => {
       return;
     }
 
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
-    debounceTimer = setTimeout(() => {
-      setConfigValue('videoPlayerHeight', height);
-
-      setConfig((prevState) => {
-        return {
-          ...prevState,
-          videoPlayerHeight: height,
-        };
-      });
-    }, 1000);
+    playerHeight.current = height;
   };
 
   return (
     <>
       <Resizable
         defaultSize={{
-          height: `${config.videoPlayerHeight}px`,
+          height: `${playerHeight.current}px`,
           width: '100%',
         }}
         enable={{ bottom: true }}

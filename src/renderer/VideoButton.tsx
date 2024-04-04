@@ -52,6 +52,7 @@ interface IProps {
   selected: boolean;
   video: RendererVideo;
   videoState: RendererVideo[];
+  setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
 }
@@ -79,8 +80,14 @@ const iconButtonSx = {
 const ipc = window.electron.ipcRenderer;
 
 export default function VideoButton(props: IProps) {
-  const { selected, video, videoState, setAppState, persistentProgress } =
-    props;
+  const {
+    selected,
+    video,
+    videoState,
+    setVideoState,
+    setAppState,
+    persistentProgress,
+  } = props;
   const [config] = useSettings();
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
@@ -96,8 +103,6 @@ export default function VideoButton(props: IProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [thumbnailSignedUrl, setThumbnailSignedUrl] = useState<string>('');
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
-  const [downloadSpinner, setDownloadSpinner] = useState<boolean>(false);
-  const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [linkSnackBarOpen, setLinkSnackBarOpen] = useState(false);
 
   const povs = [video, ...video.multiPov].sort(povNameSort);
@@ -158,6 +163,12 @@ export default function VideoButton(props: IProps) {
       videoSource,
       cloud,
     ]);
+
+    setVideoState((prevState) => {
+      
+      prevState.deleteVideo(pov);
+      return prevState;
+    });
 
     if (!selected) {
       return;
@@ -314,7 +325,6 @@ export default function VideoButton(props: IProps) {
   };
 
   const downloadVideo = async () => {
-    setDownloadSpinner(true);
     ipc.sendMessage('videoButton', ['download', videoSource]);
   };
 

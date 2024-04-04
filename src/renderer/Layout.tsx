@@ -28,9 +28,11 @@ import CategoryPage from './CategoryPage';
 interface IProps {
   recorderStatus: RecStatus;
   videoState: RendererVideo[];
+  setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
+  playerHeight: MutableRefObject<number>;
 }
 
 /**
@@ -40,9 +42,11 @@ const Layout = (props: IProps) => {
   const {
     recorderStatus,
     videoState,
+    setVideoState,
     appState,
     setAppState,
     persistentProgress,
+    playerHeight,
   } = props;
   const { page, category } = appState;
 
@@ -220,9 +224,11 @@ const Layout = (props: IProps) => {
       <CategoryPage
         category={category}
         videoState={videoState}
+        setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
         persistentProgress={persistentProgress}
+        playerHeight={playerHeight}
       />
     );
   };

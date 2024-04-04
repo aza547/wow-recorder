@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Improve the responsiveness of reconfigures by only validating what has changed.
+- Make the video player resizing more responsive.
+- Remove deaths from unique hashing as it seems they can vary.
+- Cloud size monitor running in wrong direction & test for this.
 
 ## [4.1.1] - 2024-04-02
 ### Fixed

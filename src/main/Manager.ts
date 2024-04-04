@@ -121,7 +121,7 @@ export default class Manager {
     /* eslint-disable prettier/prettier */
     {
       name: 'obsBase',
-      initial: true,
+      valid: false,
       current: this.obsBaseCfg,
       get: (cfg: ConfigService) => getObsBaseConfig(cfg),
       validate: async (config: ObsBaseConfig) => Manager.validateBaseCfg(config),
@@ -129,7 +129,7 @@ export default class Manager {
     },
     {
       name: 'obsVideo',
-      initial: true,
+      valid: false,
       current: this.obsVideoCfg,
       get: (cfg: ConfigService) => getObsVideoConfig(cfg),
       validate: async () => {},
@@ -137,7 +137,7 @@ export default class Manager {
     },
     {
       name: 'obsAudio',
-      initial: true,
+      valid: false,
       current: this.obsAudioCfg,
       get: (cfg: ConfigService) => getObsAudioConfig(cfg),
       validate: async () => {},
@@ -145,7 +145,7 @@ export default class Manager {
     },
     {
       name: 'flavour',
-      initial: true,
+      valid: false,
       current: this.flavourCfg,
       get: (cfg: ConfigService) => getFlavourConfig(cfg),
       validate: async (config: FlavourConfig) => validateFlavour(config),
@@ -153,7 +153,7 @@ export default class Manager {
     },
     {
       name: 'overlay',
-      initial: true,
+      valid: false,
       current: this.overlayCfg,
       get: (cfg: ConfigService) => getOverlayConfig(cfg),
       validate: async () => {},
@@ -266,18 +266,23 @@ export default class Manager {
     for (let i = 0; i < this.stages.length; i++) {
       const stage = this.stages[i];
       const newConfig = stage.get(this.cfg);
-      const configChanged = !isEqual(newConfig, stage.current);
+      const stageConfigChanged = !isEqual(newConfig, stage.current);
 
-      try {
-        await stage.validate(newConfig);
-      } catch (error) {
-        stage.current = newConfig;
-        stage.initial = false;
-        this.setConfigInvalid(String(error));
-        return;
+      if (stageConfigChanged) {
+        // Assume the config isn't valid till we prove otherwise.
+        stage.valid = false;
       }
 
-      if (stage.initial || configChanged) {
+      if (!stage.valid) {
+        try {
+          await stage.validate(newConfig);
+        } catch (error) {
+          // If this stage isn't valid we won't go further, set the frontend
+          // stage to reflect what's wrong and drop out.
+          this.setConfigInvalid(String(error));
+          return;
+        }
+
         console.info(
           '[Manager] Configuring stage',
           stage.name,
@@ -286,11 +291,15 @@ export default class Manager {
         );
 
         await stage.configure(newConfig);
+
+        // We've validated and configured the new config, mark the stage as
+        // valid so we won't reconfigure it unless it changes.
+        stage.valid = true;
         stage.current = newConfig;
-        stage.initial = false;
       }
     }
 
+    // Update the frontend to reflect the valid config.
     this.setConfigValid();
   }
 
@@ -378,7 +387,8 @@ export default class Manager {
     try {
       const usage = await new CloudSizeMonitor(
         this.mainWindow,
-        this.cloudClient
+        this.cloudClient,
+        250
       ).usage();
 
       const status: CloudStatus = {
@@ -816,8 +826,6 @@ export default class Manager {
         } else {
           await toggleVideoProtectedDisk(src);
         }
-
-        this.mainWindow.webContents.send('refreshState');
       }
 
       if (action === 'tag') {
@@ -826,8 +834,6 @@ export default class Manager {
         } else {
           await tagVideoDisk(src, tag);
         }
-
-        this.mainWindow.webContents.send('refreshState');
       }
 
       if (action === 'download') {
@@ -849,8 +855,6 @@ export default class Manager {
       } else {
         markForVideoForDelete(src);
       }
-
-      this.mainWindow.webContents.send('refreshState');
     });
 
     // URL Signer. We expose this so that the videoState doesn't need to
@@ -924,7 +928,7 @@ export default class Manager {
     this.recorder.on('state-change', () => this.refreshStatus());
 
     for (let i = 0; i < this.stages.length; i++) {
-      this.stages[i].initial = true;
+      this.stages[i].valid = false;
     }
 
     this.active = false;
@@ -978,86 +982,19 @@ export default class Manager {
 
     if (this.cloudClient !== undefined) {
       const cloudVideos = await this.loadAllVideosCloud();
-      cloudVideos.forEach((video) => Manager.correlateVideo(video, videos));
+      cloudVideos.forEach((video) => videos.push(video));
     }
 
     // Deliberately after the cloud stuff so we'll always have cloud povs
     // come first in the UI and not vice versa.
     const diskVideos = await loadAllVideosDisk(storagePath);
-    diskVideos.forEach((video) => Manager.correlateVideo(video, videos));
+    diskVideos.forEach((video) => videos.push(video));
 
     videos.sort(reverseChronologicalVideoSort).forEach((video) => {
       video.multiPov.sort(povNameSort);
     });
 
     return videos;
-  }
-
-  /**
-   * Decide if this video is a different point of view from an already seen
-   * video. If so, attach it as a child to the renderer video object, if not
-   * add it to the list of videos we know of.
-   * @video the video to check
-   * @videos the videos we already know about
-   */
-  private static correlateVideo(video: RendererVideo, videos: RendererVideo[]) {
-    // If we can prove this video is another POV of the same activity
-    // we will group them in the UI.
-    let correlated = false;
-
-    if (video.uniqueHash === undefined || video.start === undefined) {
-      // We don't have the fields required to correlate this video to
-      // any other so just add it and move on.
-      videos.push(video);
-      return;
-    }
-
-    // We might be able to correlate this, so loop over each of the videos we
-    // already know about and look for a match.
-    for (let i = 0; i < videos.length; i++) {
-      const videoToCompare = videos[i];
-      const sameHash = videoToCompare.uniqueHash === video.uniqueHash;
-
-      const clipCompare = videoToCompare.category === VideoCategory.Clips;
-      const isClip = video.category === VideoCategory.Clips;
-
-      if ((clipCompare && !isClip) || (isClip && !clipCompare)) {
-        // We only correlate clips with other clips. Go next.
-        // eslint-disable-next-line no-continue
-        continue;
-      }
-
-      if (!sameHash || videoToCompare.start === undefined) {
-        // Mismatching hash or no start time so either these videos or
-        // not correlated or we can't prove they are these are correlated.
-        // eslint-disable-next-line no-continue
-        continue;
-      }
-
-      // The hash is the same, but it could still be similar pull from a
-      // different time so check the date. Don't look for an exact match
-      // here as I'm not sure how accurate the start event in the combat log
-      // is between players; surely it can vary slightly depending on local
-      // system clock etc.
-      const d1 = new Date(video.start);
-      const d2 = new Date(videoToCompare.start);
-      const closeStartTime = areDatesWithinSeconds(d1, d2, 5);
-
-      if (sameHash && closeStartTime) {
-        // The video is a different POV of the same activity, link them and
-        // break, we will never have more than one "parent" video so if we've
-        // found it we're good to drop out and save some CPU cycles.
-        correlated = true;
-        videoToCompare.multiPov.push(video);
-        break;
-      }
-    }
-
-    if (!correlated) {
-      // We didn't correlate this video with another so just add it like
-      // it is a normal video, this is the fallback case.
-      videos.push(video);
-    }
   }
 
   private async loadAllVideosCloud() {

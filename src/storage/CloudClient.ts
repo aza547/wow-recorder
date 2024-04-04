@@ -10,13 +10,13 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
-import { CloudObject } from 'main/types';
+import { CloudObject, ICloudClient } from 'main/types';
 import path from 'path';
 
 /**
  * A client for retrieving resources from the cloud.
  */
-export default class CloudClient extends EventEmitter {
+export default class CloudClient extends EventEmitter implements ICloudClient {
   /**
    * The bucket name we're configured to target. Expected to be the name of
    * the guild as configured in the settings.

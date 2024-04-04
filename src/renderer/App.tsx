@@ -18,15 +18,18 @@ import BottomStatusBar from './BottomStatusBar';
 import './App.css';
 import { useSettings } from './useSettings';
 import { getCategoryFromConfig } from './rendererutils';
+import RendererVideoState from './RendererVideoState';
 
 const ipc = window.electron.ipcRenderer;
 
 const WarcraftRecorder = () => {
   const [config] = useSettings();
   const [error, setError] = useState<string>('');
-  const [videoState, setVideoState] = useState<RendererVideo[]>([]);
   const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
   const [crashes, setCrashes] = useState<Crashes>([]);
+
+  const [stateManager] = useRef<RendererVideoState>(new RendererVideoState([]));
+  const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW
@@ -63,8 +66,12 @@ const WarcraftRecorder = () => {
   // Used to allow for hot switching of video players when moving between POVs.
   const persistentProgress = useRef(0);
 
+  // Used to remember the player height when switching categories.
+  const playerHeight = useRef(500);
+
   const doRefresh = async () => {
-    const state = (await ipc.invoke('getVideoState', [])) as RendererVideo[];
+    const videos = (await ipc.invoke('getVideoState', [])) as RendererVideo[];
+    const state = new RendererVideoState(videos);
     setVideoState(state);
 
     setAppState((prevState) => {
@@ -127,9 +134,11 @@ const WarcraftRecorder = () => {
       <Layout
         recorderStatus={recorderStatus}
         videoState={videoState}
+        setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
         persistentProgress={persistentProgress}
+        playerHeight={playerHeight}
       />
       <BottomStatusBar
         recorderStatus={recorderStatus}

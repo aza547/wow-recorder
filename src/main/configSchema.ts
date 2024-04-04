@@ -57,7 +57,6 @@ export type ConfigurationSchema = {
   cloudAccountName: string;
   cloudAccountPassword: string;
   cloudGuildName: string;
-  videoPlayerHeight: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -386,11 +385,5 @@ export const configSchema = {
     description: 'The guild or group your account is affiliated with.',
     type: 'string',
     default: '',
-  },
-  videoPlayerHeight: {
-    description: 'The height of the video player, not exposed in the config.',
-    type: 'number',
-    default: 500,
-    minimum: 0,
   },
 };

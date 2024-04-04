@@ -22,17 +22,26 @@ import VideoButton from './VideoButton';
 interface IProps {
   category: VideoCategory;
   videoState: RendererVideo[];
+  setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
+  playerHeight: MutableRefObject<number>;
 }
 
 /**
  * A page representing a video category.
  */
 const CategoryPage = (props: IProps) => {
-  const { category, videoState, appState, setAppState, persistentProgress } =
-    props;
+  const {
+    category,
+    videoState,
+    setVideoState,
+    appState,
+    setAppState,
+    persistentProgress,
+    playerHeight,
+  } = props;
   const { numVideosDisplayed, videoFilterQuery } = appState;
   const [config, setConfig] = useSettings();
   const categoryFilter = getVideoCategoryFilter(category);
@@ -61,6 +70,7 @@ const CategoryPage = (props: IProps) => {
         setPlaying={setPlaying}
         config={config}
         setConfig={setConfig}
+        playerHeight={playerHeight}
       />
     );
   };
@@ -105,6 +115,7 @@ const CategoryPage = (props: IProps) => {
             key={video.videoSource}
             video={video}
             videoState={videoState}
+            setVideoState={setVideoState}
             setAppState={setAppState}
             selected={selected}
             persistentProgress={persistentProgress}

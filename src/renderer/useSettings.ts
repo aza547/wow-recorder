@@ -76,7 +76,6 @@ export const getSettings = (): ConfigurationSchema => {
     cloudAccountName: getConfigValue<string>('cloudAccountName'),
     cloudAccountPassword: getConfigValue<string>('cloudAccountPassword'),
     cloudGuildName: getConfigValue<string>('cloudGuildName'),
-    videoPlayerHeight: getConfigValue<number>('videoPlayerHeight'),
   };
 
   return configValues;
