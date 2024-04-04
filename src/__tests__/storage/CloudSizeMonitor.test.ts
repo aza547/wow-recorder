@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
 import { CloudObject, IBrowserWindow, ICloudClient } from '../../main/types';
 import CloudSizeMonitor from '../../storage/CloudSizeMonitor';
@@ -53,7 +52,7 @@ test('Run', async () => {
   const mainWindow = new TestBrowserWindow();
   const cloudClient = new TestCloudClient();
 
-  const sizeMonitor = new CloudSizeMonitor(mainWindow, cloudClient, 200);
+  const sizeMonitor = new CloudSizeMonitor(mainWindow, cloudClient, 250);
   await sizeMonitor.run();
 
   const { deleted } = cloudClient;
@@ -62,4 +61,17 @@ test('Run', async () => {
 
   expect(deleted).toStrictEqual(expected);
   expect(refreshes).toBe(1);
+});
+
+/**
+ * Test the size monitor runs and deletes an older video from a list of two when
+ * the size limit is exceeded.
+ */
+test('Usage', async () => {
+  const mainWindow = new TestBrowserWindow();
+  const cloudClient = new TestCloudClient();
+
+  const sizeMonitor = new CloudSizeMonitor(mainWindow, cloudClient, 250);
+  const usage = await sizeMonitor.usage();
+  expect(usage).toBe(300 * 1024 ** 3);
 });

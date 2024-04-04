@@ -106,7 +106,6 @@ export default class CloudSizeMonitor {
     });
 
     await Promise.all(deletePromises);
-    console.log(deletePromises);
     this.mainWindow.webContents.send('refreshState');
   }
 
