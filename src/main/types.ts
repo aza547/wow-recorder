@@ -414,6 +414,17 @@ type CloudObject = {
   lastMod: Date;
 };
 
+interface ICloudClient {
+  list: () => Promise<CloudObject[]>;
+  delete: (key: string) => Promise<void>;
+}
+
+interface IBrowserWindow {
+  webContents: {
+    send: (channel: string) => void;
+  };
+}
+
 export {
   RecStatus,
   SaveStatus,
@@ -461,4 +472,6 @@ export {
   CloudStatus,
   DiskStatus,
   CloudObject,
+  ICloudClient,
+  IBrowserWindow,
 };

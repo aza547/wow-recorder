@@ -376,7 +376,11 @@ export default class VideoProcessQueue {
       return;
     }
 
-    const sizeMonitor = new CloudSizeMonitor(this.mainWindow, this.cloudClient);
+    const sizeMonitor = new CloudSizeMonitor(
+      this.mainWindow,
+      this.cloudClient,
+      250
+    );
     sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 

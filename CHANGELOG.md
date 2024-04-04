@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Cloud size monitor running in wrong direction & add a test for this.
 
 ## [4.1.1] - 2024-04-02
 ### Fixed

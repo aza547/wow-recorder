@@ -1,15 +1,20 @@
-import { BrowserWindow } from 'electron';
-import { CloudObject } from 'main/types';
-import CloudClient from 'storage/CloudClient';
+import { CloudObject, IBrowserWindow, ICloudClient } from 'main/types';
 
 export default class CloudSizeMonitor {
-  private mainWindow: BrowserWindow;
+  private mainWindow: IBrowserWindow;
 
-  private cloudClient: CloudClient;
+  private cloudClient: ICloudClient;
 
-  constructor(mainWindow: BrowserWindow, cloudClient: CloudClient) {
+  private maxSizeGB: number;
+
+  constructor(
+    mainWindow: IBrowserWindow,
+    cloudClient: ICloudClient,
+    maxSizeGB: number
+  ) {
     this.mainWindow = mainWindow;
     this.cloudClient = cloudClient;
+    this.maxSizeGB = maxSizeGB;
   }
 
   async run() {
@@ -17,7 +22,7 @@ export default class CloudSizeMonitor {
     // here is that the size monitor will after videos are uploaded, so we always
     // want some leeway; we don't want the worker to reject uploads, which it will
     // do if they the max storage is hit.
-    const maxStorageGB = 250 * 0.8;
+    const maxStorageGB = this.maxSizeGB * 0.8;
     const maxStorageBytes = maxStorageGB * 1024 ** 3;
 
     console.info(
@@ -52,10 +57,10 @@ export default class CloudSizeMonitor {
       return object.key.endsWith('mp4');
     };
 
-    const reverseChronologicalSort = (a: CloudObject, b: CloudObject) => {
+    const chronologicalSort = (a: CloudObject, b: CloudObject) => {
       const timeA = a.lastMod.getTime();
       const timeB = b.lastMod.getTime();
-      return timeB - timeA;
+      return timeA - timeB;
     };
 
     const bytesToFree = usedStorageBytes - maxStorageBytes;
@@ -66,18 +71,24 @@ export default class CloudSizeMonitor {
         return false;
       }
 
-      bytesReclaimed += object.size;
-      return bytesReclaimed < bytesToFree;
+      if (bytesReclaimed < bytesToFree) {
+        bytesReclaimed += object.size;
+        return true;
+      }
+
+      return false;
     };
 
     const videosToDelete = objects
       .filter(filterVideos)
-      .sort(reverseChronologicalSort)
+      .sort(chronologicalSort)
       .filter(filterSizeThreshold);
 
     console.info(
       `[CloudSizeMonitor] Deleting ${videosToDelete.length} old video(s)`
     );
+
+    const deletePromises: Promise<void>[] = [];
 
     videosToDelete.forEach(async (blob) => {
       const videoKey = blob.key;
@@ -89,13 +100,12 @@ export default class CloudSizeMonitor {
       const thumbnailKey = videoKey.replace('mp4', 'png');
       const metadataKey = videoKey.replace('mp4', 'json');
 
-      await Promise.all([
-        this.cloudClient.delete(videoKey),
-        this.cloudClient.delete(thumbnailKey),
-        this.cloudClient.delete(metadataKey),
-      ]);
+      deletePromises.push(this.cloudClient.delete(videoKey));
+      deletePromises.push(this.cloudClient.delete(thumbnailKey));
+      deletePromises.push(this.cloudClient.delete(metadataKey));
     });
-
+    
+    await Promise.all(deletePromises);
     this.mainWindow.webContents.send('refreshState');
   }
 

@@ -378,7 +378,8 @@ export default class Manager {
     try {
       const usage = await new CloudSizeMonitor(
         this.mainWindow,
-        this.cloudClient
+        this.cloudClient,
+        250
       ).usage();
 
       const status: CloudStatus = {
