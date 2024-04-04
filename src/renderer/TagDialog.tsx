@@ -8,12 +8,15 @@ import {
   Button,
 } from '@mui/material';
 import { RendererVideo } from 'main/types';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, MutableRefObject, SetStateAction } from 'react';
+import StateManager from './StateManager';
 
 interface IProps {
   video: RendererVideo;
   tagDialogOpen: boolean;
   setTagDialogOpen: Dispatch<SetStateAction<boolean>>;
+  stateManager: MutableRefObject<StateManager>;
+  setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
 }
 
 const buttonSx = {
@@ -26,7 +29,13 @@ const buttonSx = {
 };
 
 export default function TagDialog(props: IProps) {
-  const { video, tagDialogOpen, setTagDialogOpen } = props;
+  const {
+    video,
+    tagDialogOpen,
+    setTagDialogOpen,
+    stateManager,
+    setVideoState,
+  } = props;
 
   const closeTagDialog = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -34,6 +43,8 @@ export default function TagDialog(props: IProps) {
   };
 
   const saveTag = (newTag: string) => {
+    stateManager.current.tag(video, newTag);
+
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'tag',
       video.videoSource,

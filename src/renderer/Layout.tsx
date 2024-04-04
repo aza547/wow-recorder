@@ -24,9 +24,11 @@ import {
   getVideoCategoryFilter,
 } from './rendererutils';
 import CategoryPage from './CategoryPage';
+import StateManager from './StateManager';
 
 interface IProps {
   recorderStatus: RecStatus;
+  stateManager: MutableRefObject<StateManager>;
   videoState: RendererVideo[];
   setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
   appState: AppState;
@@ -41,6 +43,7 @@ interface IProps {
 const Layout = (props: IProps) => {
   const {
     recorderStatus,
+    stateManager,
     videoState,
     setVideoState,
     appState,
@@ -224,6 +227,7 @@ const Layout = (props: IProps) => {
       <CategoryPage
         category={category}
         videoState={videoState}
+        stateManager={stateManager}
         setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}

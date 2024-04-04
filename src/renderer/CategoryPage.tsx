@@ -18,9 +18,11 @@ import { useSettings } from './useSettings';
 import { getVideoCategoryFilter, povNameSort } from './rendererutils';
 import VideoFilter from './VideoFilter';
 import VideoButton from './VideoButton';
+import StateManager from './StateManager';
 
 interface IProps {
   category: VideoCategory;
+  stateManager: MutableRefObject<StateManager>;
   videoState: RendererVideo[];
   setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
   appState: AppState;
@@ -35,6 +37,7 @@ interface IProps {
 const CategoryPage = (props: IProps) => {
   const {
     category,
+    stateManager,
     videoState,
     setVideoState,
     appState,
@@ -114,6 +117,7 @@ const CategoryPage = (props: IProps) => {
           <VideoButton
             key={video.videoSource}
             video={video}
+            stateManager={stateManager}
             videoState={videoState}
             setVideoState={setVideoState}
             setAppState={setAppState}

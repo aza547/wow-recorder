@@ -47,10 +47,12 @@ import ControlIcon from '../../assets/icon/ctrl-icon.png';
 import PovSelection from './PovSelection';
 import { useSettings } from './useSettings';
 import SnackBar from './SnackBar';
+import StateManager from './StateManager';
 
 interface IProps {
   selected: boolean;
   video: RendererVideo;
+  stateManager: MutableRefObject<StateManager>;
   videoState: RendererVideo[];
   setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
@@ -83,6 +85,7 @@ export default function VideoButton(props: IProps) {
   const {
     selected,
     video,
+    stateManager,
     videoState,
     setVideoState,
     setAppState,
@@ -107,7 +110,16 @@ export default function VideoButton(props: IProps) {
 
   const povs = [video, ...video.multiPov].sort(povNameSort);
   const pov = povs[localPovIndex];
-  const { cloud, thumbnailSource, isProtected, tag, videoSource } = pov;
+
+  const {
+    cloud,
+    thumbnailSource,
+    isProtected,
+    tag,
+    videoSource,
+    category,
+    start,
+  } = pov;
 
   // Check if we have this point of view duplicated in the other storage
   // type. Don't want to be showing the download button if we have already
@@ -164,11 +176,7 @@ export default function VideoButton(props: IProps) {
       cloud,
     ]);
 
-    setVideoState((prevState) => {
-      
-      prevState.deleteVideo(pov);
-      return prevState;
-    });
+    stateManager.current.deleteVideo(pov);
 
     if (!selected) {
       return;
@@ -209,6 +217,7 @@ export default function VideoButton(props: IProps) {
 
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
+    stateManager.current.toggleProtect(pov);
 
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'save',
@@ -242,6 +251,8 @@ export default function VideoButton(props: IProps) {
         video={pov}
         tagDialogOpen={tagDialogOpen}
         setTagDialogOpen={setTagDialogOpen}
+        stateManager={stateManager}
+        setVideoState={setVideoState}
       />
     );
   };
@@ -307,7 +318,7 @@ export default function VideoButton(props: IProps) {
   };
 
   const uploadVideo = async () => {
-    ipc.sendMessage('videoButton', ['upload', videoSource]);
+    ipc.sendMessage('videoButton', ['upload', videoSource, category, start]);
   };
 
   const getUploadButton = () => {

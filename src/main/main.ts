@@ -321,7 +321,7 @@ ipcMain.handle('getVideoState', async () => {
   }
 
   const storagePath = cfg.get<string>('storagePath');
-  return manager.loadAllVideos(storagePath);
+  return manager.loadAllVideos(10, storagePath);
 });
 
 /**

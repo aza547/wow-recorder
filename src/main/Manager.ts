@@ -16,12 +16,10 @@ import {
   tagVideoDisk,
   toggleVideoProtectedDisk,
   openSystemExplorer,
-  reverseChronologicalVideoSort,
   loadAllVideosDisk,
-  areDatesWithinSeconds,
   markForVideoForDelete,
   getPromiseBomb,
-  povNameSort,
+  chronologicalKeySort,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -46,6 +44,7 @@ import {
   CloudStatus,
   DiskStatus,
   CloudObject,
+  UploadQueueItem,
 } from './types';
 import {
   getObsBaseConfig,
@@ -811,16 +810,17 @@ export default class Manager {
     ipcMain.on('videoButton', async (_event, args) => {
       const action = args[0] as string;
       const src = args[1] as string;
-      const cloud = args[2] as boolean;
-      const tag = args[3] as string;
 
       if (action === 'open') {
         // Open only called for disk based video, see openURL for cloud version.
+        const cloud = args[2] as boolean;
         assert(!cloud);
         openSystemExplorer(src);
       }
 
       if (action === 'save') {
+        const cloud = args[2] as boolean;
+
         if (cloud) {
           await this.protectVideoCloud(src);
         } else {
@@ -829,6 +829,9 @@ export default class Manager {
       }
 
       if (action === 'tag') {
+        const cloud = args[2] as boolean;
+        const tag = args[3] as string;
+
         if (cloud) {
           await this.tagVideoCloud(src, tag);
         } else {
@@ -841,7 +844,16 @@ export default class Manager {
       }
 
       if (action === 'upload') {
-        this.videoProcessQueue.queueUpload(src);
+        const category = args[2] as string;
+        const start = args[3] as number;
+
+        const item: UploadQueueItem = {
+          path: src,
+          category,
+          start,
+        };
+
+        this.videoProcessQueue.queueUpload(item);
       }
     });
 
@@ -977,11 +989,11 @@ export default class Manager {
   /**
    * Load the details for all the videos.
    */
-  public async loadAllVideos(storagePath: string) {
+  public async loadAllVideos(max: number, storagePath: string) {
     const videos: RendererVideo[] = [];
 
     if (this.cloudClient !== undefined) {
-      const cloudVideos = await this.loadAllVideosCloud();
+      const cloudVideos = await this.loadVideosCloud(max);
       cloudVideos.forEach((video) => videos.push(video));
     }
 
@@ -990,14 +1002,10 @@ export default class Manager {
     const diskVideos = await loadAllVideosDisk(storagePath);
     diskVideos.forEach((video) => videos.push(video));
 
-    videos.sort(reverseChronologicalVideoSort).forEach((video) => {
-      video.multiPov.sort(povNameSort);
-    });
-
     return videos;
   }
 
-  private async loadAllVideosCloud() {
+  private async loadVideosCloud(num: number) {
     let objects: CloudObject[];
 
     try {
@@ -1010,6 +1018,8 @@ export default class Manager {
 
     const videoDetailPromises = objects
       .filter((obj) => obj.key.endsWith('json'))
+      .sort(chronologicalKeySort)
+      .slice(0, num)
       .map((obj) => this.loadVideoDetailsCloud(obj));
 
     const videoDetails: RendererVideo[] = (
@@ -1043,7 +1053,7 @@ export default class Manager {
 
       return {
         ...metadata,
-        name: videoSource,
+        name: path.basename(videoSource),
         mtime,
         videoSource,
         thumbnailSource,

@@ -18,7 +18,7 @@ import BottomStatusBar from './BottomStatusBar';
 import './App.css';
 import { useSettings } from './useSettings';
 import { getCategoryFromConfig } from './rendererutils';
-import RendererVideoState from './RendererVideoState';
+import StateManager from './StateManager';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -28,8 +28,11 @@ const WarcraftRecorder = () => {
   const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
   const [crashes, setCrashes] = useState<Crashes>([]);
 
-  const [stateManager] = useRef<RendererVideoState>(new RendererVideoState([]));
+  // The video state contains most of the frontend state, it's complex so
+  // modifications go through the encapsulated StateManager class, which
+  // calls the React set function appropriately.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
+  const stateManager = useRef<StateManager>(new StateManager(setVideoState));
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW
@@ -70,9 +73,7 @@ const WarcraftRecorder = () => {
   const playerHeight = useRef(500);
 
   const doRefresh = async () => {
-    const videos = (await ipc.invoke('getVideoState', [])) as RendererVideo[];
-    const state = new RendererVideoState(videos);
-    setVideoState(state);
+    stateManager.current.refresh();
 
     setAppState((prevState) => {
       return {
@@ -133,6 +134,7 @@ const WarcraftRecorder = () => {
       <RendererTitleBar />
       <Layout
         recorderStatus={recorderStatus}
+        stateManager={stateManager}
         videoState={videoState}
         setVideoState={setVideoState}
         appState={appState}

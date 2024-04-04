@@ -5,31 +5,44 @@ import { areDatesWithinSeconds } from './rendererutils';
 /**
  * The video state, and utility mutation methods.
  */
-export default class RendererVideoState {
-  private raw: RendererVideo[];
+export default class StateManager {
+  private ipc = window.electron.ipcRenderer;
 
-  constructor(initial: RendererVideo[]) {
-    this.raw = initial;
+  private raw: RendererVideo[] = [];
+
+  private setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
+
+  constructor(
+    setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>
+  ) {
+    this.setVideoState = setVideoState;
   }
 
-  public getRaw() {
-    return this.raw;
+  public async refresh() {
+    this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
+    this.set();
   }
 
-  public getCorrelated() {
+  private set() {
     const correlated: RendererVideo[] = [];
     const cloudVideos = this.raw.filter((video) => video.cloud);
     const diskVideos = this.raw.filter((video) => !video.cloud);
 
     cloudVideos.forEach((video) =>
-      RendererVideoState.correlateVideo(video, correlated)
+      StateManager.correlateVideo(video, correlated)
     );
 
     diskVideos.forEach((video) =>
-      RendererVideoState.correlateVideo(video, correlated)
+      StateManager.correlateVideo(video, correlated)
     );
 
-    return correlated;
+    correlated
+      .sort(StateManager.reverseChronologicalVideoSort)
+      .forEach((video) => {
+        video.multiPov.sort(StateManager.povNameSort);
+      });
+
+    this.setVideoState(correlated);
   }
 
   private static correlateVideo(video: RendererVideo, videos: RendererVideo[]) {
@@ -95,31 +108,52 @@ export default class RendererVideoState {
   public deleteVideo(video: RendererVideo) {
     const index = this.raw.indexOf(video);
 
-    if (index > -1) {
-      const { multiPov } = this.raw[index];
-
-      if (multiPov.length > 0) {
-        // Grab the first POV and add it in place to the list of parent videos.
-        const firstPov = multiPov[0];
-        this.raw[index] = firstPov;
-
-        // Remove the first POV and loop over the rest, adding as appropriate.
-        multiPov.splice(0, 1);
-        multiPov.forEach((p) => this.raw[index].multiPov.push(p));
-      } else {
-        this.raw.splice(index, 1);
-      }
-
+    if (index < 0) {
+      // Should never happen.
       return;
     }
 
-    for (let i = 0; i < this.raw.length; i++) {
-      const povIndex = this.raw[i].multiPov.indexOf(video);
+    this.raw.splice(index, 1);
+    this.set();
+  }
 
-      if (povIndex > -1) {
-        this.raw[i].multiPov.splice(povIndex, 1);
-        return;
-      }
+  public toggleProtect(video: RendererVideo) {
+    const index = this.raw.indexOf(video);
+
+    if (index < 0) {
+      // Should never happen.
+      return;
     }
+
+    this.raw[index].isProtected = !this.raw[index].isProtected;
+    this.set();
+  }
+
+  public tag(video: RendererVideo, tag: string) {
+    const index = this.raw.indexOf(video);
+
+    if (index < 0) {
+      // Should never happen.
+      return;
+    }
+
+    this.raw[index].tag = tag;
+    this.set();
+  }
+
+  private static reverseChronologicalVideoSort(
+    A: RendererVideo,
+    B: RendererVideo
+  ) {
+    const metricA = A.start ? A.start : A.mtime;
+    const metricB = B.start ? B.start : B.mtime;
+    return metricB - metricA;
+  }
+
+  private static povNameSort(a: RendererVideo, b: RendererVideo) {
+    const playerA = a.player?._name;
+    const playerB = b.player?._name;
+    if (!playerA || !playerB) return 0;
+    return playerA.localeCompare(playerB);
   }
 }

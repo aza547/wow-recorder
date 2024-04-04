@@ -425,6 +425,12 @@ interface IBrowserWindow {
   };
 }
 
+type UploadQueueItem = {
+  path: string;
+  category: string;
+  start: number;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -474,4 +480,5 @@ export {
   CloudObject,
   ICloudClient,
   IBrowserWindow,
+  UploadQueueItem,
 };
