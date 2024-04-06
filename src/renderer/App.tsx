@@ -29,7 +29,7 @@ const WarcraftRecorder = () => {
   const [crashes, setCrashes] = useState<Crashes>([]);
 
   // The video state contains most of the frontend state, it's complex so
-  // modifications go through the encapsulated StateManager class, which
+  // frontend triggered modifications go through the StateManager class, which
   // calls the React set function appropriately.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 

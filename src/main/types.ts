@@ -240,7 +240,9 @@ type RendererVideo = Metadata & {
 };
 
 /**
- *
+ * Cloud metadata is stored in a single object per client, so we need
+ * each CloudMetadata entry inside the objects to point to the video
+ * and thumbnail they describe. Disk videos rely on file naming for this.
  */
 type CloudMetadata = Metadata & {
   name: string;
@@ -435,8 +437,6 @@ interface IBrowserWindow {
 
 type UploadQueueItem = {
   path: string;
-  category: string;
-  start: number;
 };
 
 export {
@@ -490,5 +490,4 @@ export {
   IBrowserWindow,
   UploadQueueItem,
   CloudMetadata,
-  CloudMetadataFile,
 };

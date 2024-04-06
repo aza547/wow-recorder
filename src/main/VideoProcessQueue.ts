@@ -16,8 +16,6 @@ import {
   tryUnlink,
   writeMetadataFile,
   getThumbnailFileNameForVideo,
-  loadVideoDetailsDisk,
-  getFileInfo,
   getConsistentMachineHash,
   getMetadataForVideo,
   getAllCloudMetadata,
@@ -194,16 +192,10 @@ export default class VideoProcessQueue {
       if (this.cloudClient !== undefined) {
         const item: UploadQueueItem = {
           path: videoPath,
-          category: data.metadata.category,
-          start: data.metadata.start || 0,
         };
 
         this.queueUpload(item);
       }
-
-      const fileInfo = await getFileInfo(videoPath);
-      const video = await loadVideoDetailsDisk(fileInfo);
-      this.mainWindow.webContents.send('addVideo', video);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
@@ -315,10 +307,6 @@ export default class VideoProcessQueue {
         this.cloudClient.getAsFile(metadataName, storageDir),
         this.cloudClient.getAsFile(thumbnailName, storageDir),
       ]);
-
-      const fileInfo = await getFileInfo(path.join(key, storageDir));
-      const video = await loadVideoDetailsDisk(fileInfo);
-      this.mainWindow.webContents.send('addVideo', video);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error downloading video:',
@@ -362,7 +350,7 @@ export default class VideoProcessQueue {
    * Log we are done, and update the saving status icon and refresh the
    * frontend.
    */
-  private async finishProcessingVideo(item: VideoQueueItem) {
+  private finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished cutting video', item.source);
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
     this.mainWindow.webContents.send('refreshState');
@@ -379,7 +367,7 @@ export default class VideoProcessQueue {
   /**
    * Called on the end of an upload.
    */
-  private async finishUploadingVideo(item: UploadQueueItem) {
+  private finishUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Finished uploading video', item.path);
     this.mainWindow.webContents.send('refreshState');
   }
@@ -395,7 +383,7 @@ export default class VideoProcessQueue {
   /**
    * Called on the end of an upload.
    */
-  private async finishDownloadingVideo(videoPath: string) {
+  private finishDownloadingVideo(videoPath: string) {
     console.info('[VideoProcessQueue] Finished downloading video', videoPath);
     this.mainWindow.webContents.send('refreshState');
   }

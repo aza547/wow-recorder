@@ -108,16 +108,7 @@ export default function VideoButton(props: IProps) {
 
   const povs = [video, ...video.multiPov].sort(povNameSort);
   const pov = povs[localPovIndex];
-
-  const {
-    cloud,
-    thumbnailSource,
-    isProtected,
-    tag,
-    videoSource,
-    category,
-    start,
-  } = pov;
+  const { cloud, thumbnailSource, isProtected, tag, videoSource } = pov;
 
   // Check if we have this point of view duplicated in the other storage
   // type. Don't want to be showing the download button if we have already
@@ -315,7 +306,7 @@ export default function VideoButton(props: IProps) {
   };
 
   const uploadVideo = async () => {
-    ipc.sendMessage('videoButton', ['upload', videoSource, category, start]);
+    ipc.sendMessage('videoButton', ['upload', videoSource]);
   };
 
   const getUploadButton = () => {

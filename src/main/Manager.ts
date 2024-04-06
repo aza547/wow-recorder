@@ -182,7 +182,6 @@ export default class Manager {
       .on('wowProcessStart', () => this.onWowStarted())
       .on('wowProcessStop', () => this.onWowStopped());
 
-    this.manage();
     setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
   }
 
@@ -843,13 +842,8 @@ export default class Manager {
       }
 
       if (action === 'upload') {
-        const category = args[2] as string;
-        const start = args[3] as number;
-
         const item: UploadQueueItem = {
           path: src,
-          category,
-          start,
         };
 
         this.videoProcessQueue.queueUpload(item);

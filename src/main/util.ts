@@ -765,26 +765,6 @@ const reverseChronologicalVideoSort = (A: RendererVideo, B: RendererVideo) => {
 };
 
 /**
- * Splits a key, extracts the timestamp and sorts in chronological
- * order over it. Expects a key in the form "2v2/1712263735000/<name>"
- * but also handles the old format of "<name>" by putting to the end
- * of the sort.
- */
-const chronologicalKeySort = (A: CloudObject, B: CloudObject) => {
-  const splitA = A.key.split('/');
-  const splitB = B.key.split('/');
-
-  const timeA = splitA.length < 3 ? 0 : splitA[1];
-  const timeB = splitB.length < 3 ? 0 : splitB[1];
-
-  if (timeA > timeB) {
-    return -1;
-  }
-
-  return 1;
-};
-
-/**
  * Check if two dates are within sec of each other.
  */
 const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
@@ -836,7 +816,10 @@ const getAllCloudMetadata = async (client: CloudClient) => {
     .filter((key) => key.endsWith('.json'));
 
   const promises = jsonKeys.map((key) => client.getAsString(key));
-  const settled = await Promise.all(promises);
+
+  const settled: string[] = (
+    await Promise.all(promises.map((p) => p.catch((e) => e)))
+  ).filter((result) => !(result instanceof Error));
 
   const metadata: CloudMetadata[] = [];
 
@@ -896,7 +879,6 @@ export {
   areDatesWithinSeconds,
   markForVideoForDelete,
   povNameSort,
-  chronologicalKeySort,
   getMetadataForVideoCloud,
   getConsistentMachineHash,
   getAllCloudMetadata,

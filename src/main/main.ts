@@ -154,7 +154,7 @@ const createWindow = async () => {
     manager = new Manager(mainWindow);
   }
 
-  mainWindow.on('ready-to-show', () => {
+  mainWindow.on('ready-to-show', async () => {
     if (!mainWindow) {
       throw new Error('mainWindow is not defined');
     }
@@ -166,6 +166,9 @@ const createWindow = async () => {
       'updateTitleBar',
       `Warcraft Recorder v${appVersion}`
     );
+
+    assert(manager);
+    await manager.manage();
 
     const startMinimized = cfg.get<boolean>('startMinimized');
 
