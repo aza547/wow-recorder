@@ -830,11 +830,6 @@ const getAllCloudMetadata = async (client: CloudClient) => {
   return metadata;
 };
 
-const getMetadataForVideoCloud = async (name: string, client: CloudClient) => {
-  const metadata = await getAllCloudMetadata(client);
-  return metadata.find((data) => data.name === name);
-};
-
 /**
  * Get a hash derived from the hostname of this PC.
  */
@@ -878,7 +873,6 @@ export {
   areDatesWithinSeconds,
   markForVideoForDelete,
   povNameSort,
-  getMetadataForVideoCloud,
   getConsistentMachineHash,
   getAllCloudMetadata,
 };

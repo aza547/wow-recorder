@@ -18,9 +18,9 @@ import {
   openSystemExplorer,
   markForVideoForDelete,
   getPromiseBomb,
-  getMetadataForVideoCloud,
   loadAllVideosDisk,
   getAllCloudMetadata,
+  getConsistentMachineHash,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -1051,13 +1051,11 @@ export default class Manager {
    */
   private tagVideoCloud = async (videoKey: string, tag: string) => {
     assert(this.cloudClient);
-    const jsonKey = videoKey.replace('mp4', 'json');
+    const name = path.basename(videoKey, '.mp4');
 
     try {
-      const metadata = await getMetadataForVideoCloud(
-        jsonKey,
-        this.cloudClient
-      );
+      const metadataList = await getAllCloudMetadata(this.cloudClient);
+      const metadata = metadataList.find((video) => video.name === name);
 
       if (metadata === undefined) {
         // WTF?
@@ -1073,11 +1071,13 @@ export default class Manager {
         metadata.tag = tag;
       }
 
-      const jsonString = JSON.stringify(metadata, null, 2);
-      await this.cloudClient.putJsonString(jsonString, jsonKey);
+      const json = JSON.stringify(metadataList, null, 2);
+      const machineHash = getConsistentMachineHash();
+      const key = `${machineHash}.json`;
+      await this.cloudClient.putJsonString(json, key);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to tag', jsonKey, String(error));
+      console.warn('[Manager] Failed to tag', name, String(error));
     }
   };
 
@@ -1086,13 +1086,11 @@ export default class Manager {
    */
   private protectVideoCloud = async (videoKey: string) => {
     assert(this.cloudClient);
-    const jsonKey = videoKey.replace('mp4', 'json');
+    const name = path.basename(videoKey, '.mp4');
 
     try {
-      const metadata = await getMetadataForVideoCloud(
-        jsonKey,
-        this.cloudClient
-      );
+      const metadataList = await getAllCloudMetadata(this.cloudClient);
+      const metadata = metadataList.find((video) => video.name === name);
 
       if (metadata === undefined) {
         // WTF?
@@ -1104,11 +1102,13 @@ export default class Manager {
       console.info('[Manager] User toggled protection for', videoKey);
       console.info('[Manager] Protected attribute is now', metadata.protected);
 
-      const jsonString = JSON.stringify(metadata, null, 2);
-      await this.cloudClient.putJsonString(jsonString, jsonKey);
+      const json = JSON.stringify(metadataList, null, 2);
+      const machineHash = getConsistentMachineHash();
+      const key = `${machineHash}.json`;
+      await this.cloudClient.putJsonString(json, key);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to protect', jsonKey, String(error));
+      console.warn('[Manager] Failed to protect', name, String(error));
     }
   };
 }
