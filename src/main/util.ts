@@ -1,6 +1,7 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 import { URL } from 'url';
 import path from 'path';
+import os from 'os';
 import fs, { promises as fspromise } from 'fs';
 import { app, BrowserWindow, Display, net, screen } from 'electron';
 import {
@@ -10,6 +11,8 @@ import {
   UiohookMouseEvent,
 } from 'uiohook-napi';
 import checkDiskSpace from 'check-disk-space';
+import CloudClient from 'storage/CloudClient';
+import crypto from 'crypto';
 import { PTTEventType, PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
 import {
   Metadata,
@@ -21,9 +24,9 @@ import {
   ObsAudioConfig,
   CrashData,
   CloudObject,
+  CloudMetadata,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
-import CloudClient from 'storage/CloudClient';
 
 /**
  * When packaged, we need to fix some paths
@@ -231,12 +234,11 @@ const loadVideoDetailsDisk = async (
 
     return {
       ...metadata,
-      name: path.basename(video.name),
+      name: path.basename(video.name, '.mp4'),
       mtime: video.mtime,
       videoSource: video.name,
       thumbnailSource,
       isProtected: Boolean(metadata.protected),
-      size: video.size,
       cloud: false,
       multiPov: [],
     };
@@ -826,52 +828,37 @@ const povNameSort = (a: RendererVideo, b: RendererVideo) => {
   return playerA.localeCompare(playerB);
 };
 
-const getMetadataForVideoCloud = async (
-  jsonKey: string,
-  client: CloudClient
-) => {
-  const json = await client.getAsString(jsonKey);
-  const metadata = JSON.parse(json) as Metadata;
+const getAllCloudMetadata = async (client: CloudClient) => {
+  const objs = await client.list();
+
+  const jsonKeys = objs
+    .map((obj) => obj.key)
+    .filter((key) => key.endsWith('.json'));
+
+  const promises = jsonKeys.map((key) => client.getAsString(key));
+  const settled = await Promise.all(promises);
+
+  const metadata: CloudMetadata[] = [];
+
+  settled.forEach((result) => {
+    const parsed = JSON.parse(result) as CloudMetadata[];
+    metadata.push(...parsed);
+  });
+
   return metadata;
 };
 
+const getMetadataForVideoCloud = async (name: string, client: CloudClient) => {
+  const metadata = await getAllCloudMetadata(client);
+  return metadata.find((data) => data.name === name);
+};
+
 /**
- * Load details for a video from the cloud.
- * @throws
+ * Get a hash derived from the hostname of this PC.
  */
-const loadVideoDetailsCloud = async (
-  key: string,
-  client: CloudClient
-): Promise<RendererVideo> => {
-  const imageKey = key.replace('json', 'png');
-  const videoKey = key.replace('json', 'mp4');
-
-  try {
-    const metadata = await getMetadataForVideoCloud(key, client);
-    const videoObject = await client.head(videoKey);
-
-    const thumbnailSource = imageKey;
-    const videoSource = videoKey;
-    const isProtected = Boolean(metadata.protected);
-    const mtime = videoObject.lastMod.getTime();
-    const { size } = videoObject;
-
-    return {
-      ...metadata,
-      name: path.basename(videoSource),
-      mtime,
-      videoSource,
-      thumbnailSource,
-      isProtected,
-      size,
-      cloud: true,
-      multiPov: [],
-    };
-  } catch (error) {
-    // Just log it and rethrow. Want this to be diagnosable.
-    console.warn('[Util] Failed to load video:', key, String(error));
-    throw error;
-  }
+const getConsistentMachineHash = () => {
+  const hostname = os.hostname();
+  return crypto.createHash('md5').update(hostname).digest('hex');
 };
 
 export {
@@ -911,5 +898,6 @@ export {
   povNameSort,
   chronologicalKeySort,
   getMetadataForVideoCloud,
-  loadVideoDetailsCloud,
+  getConsistentMachineHash,
+  getAllCloudMetadata,
 };

@@ -19,7 +19,8 @@ import {
   markForVideoForDelete,
   getPromiseBomb,
   getMetadataForVideoCloud,
-  loadVideoDetailsCloud,
+  loadAllVideosDisk,
+  getAllCloudMetadata,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -40,10 +41,8 @@ import {
   VideoQueueItem,
   MicStatus,
   RendererVideo,
-  Metadata,
   CloudStatus,
   DiskStatus,
-  CloudObject,
   UploadQueueItem,
 } from './types';
 import {
@@ -986,53 +985,50 @@ export default class Manager {
     await this.recorder.start();
   }
 
-  // /**
-  //  * Load the details for all the videos.
-  //  */
-  // public async loadVideos(start: number, max: number, storagePath: string) {
-  //   const videos: RendererVideo[] = [];
+  /**
+   * Load the details for all the videos.
+   */
+  public async loadAllVideos(storagePath: string) {
+    const videos: RendererVideo[] = [];
 
-  //   if (this.cloudClient !== undefined) {
-  //     const cloudVideos = await this.loadVideosCloud(max);
-  //     cloudVideos.forEach((video) => videos.push(video));
-  //   }
+    if (this.cloudClient !== undefined) {
+      const cloudVideos = await this.loadAllVideosCloud();
+      videos.push(...cloudVideos);
+    }
 
-  //   // Deliberately after the cloud stuff so we'll always have cloud povs
-  //   // come first in the UI and not vice versa.
-  //   const diskVideos = await loadAllVideosDisk(storagePath);
-  //   diskVideos.forEach((video) => videos.push(video));
+    // Deliberately after the cloud stuff so we'll always have cloud povs
+    // come first in the UI and not vice versa.
+    const diskVideos = await loadAllVideosDisk(storagePath);
+    videos.push(...diskVideos);
 
-  //   return videos;
-  // }
+    return videos;
+  }
 
-  // private async loadVideosCloud(start: number, num: number) {
-  //   let objects: CloudObject[];
+  private async loadAllVideosCloud() {
+    const videos: RendererVideo[] = [];
 
-  //   try {
-  //     assert(this.cloudClient);
-  //     objects = await this.cloudClient.list();
-  //   } catch (error) {
-  //     console.error('[Manager] Failed to list keys:', String(error));
-  //     return [];
-  //   }
+    try {
+      assert(this.cloudClient);
+      const metadataList = await getAllCloudMetadata(this.cloudClient);
 
-  //   const videoDetailPromises = objects
-  //     .filter((obj) => obj.key.endsWith('json'))
-  //     .sort(chronologicalKeySort)
-  //     .slice(0, num)
-  //     .map((obj) => this.loadVideoDetailsCloud(obj));
+      metadataList.forEach((metadata) => {
+        const video: RendererVideo = {
+          ...metadata,
+          mtime: 0,
+          videoSource: metadata.videoKey,
+          thumbnailSource: metadata.thumbnailKey,
+          isProtected: Boolean(metadata.protected),
+          cloud: true,
+          multiPov: [],
+        };
 
-  //   const videoDetails: RendererVideo[] = (
-  //     await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
-  //   ).filter((result) => !(result instanceof Error));
+        videos.push(video);
+      });
+    } catch (error) {
+      console.error('[Manager] Failed to get Metadata:', String(error));
+    }
 
-  //   return videoDetails;
-  // }
-
-  public async listVideosCloud() {
-    assert(this.cloudClient);
-    const objs = await this.cloudClient.list();
-    return objs.filter((obj) => obj.key.endsWith('.json'));
+    return videos;
   }
 
   /**
@@ -1069,6 +1065,11 @@ export default class Manager {
         this.cloudClient
       );
 
+      if (metadata === undefined) {
+        // WTF?
+        return;
+      }
+
       if (!tag || !/\S/.test(tag)) {
         // empty or whitespace only
         console.info('[Manager] User removed tag');
@@ -1098,6 +1099,12 @@ export default class Manager {
         jsonKey,
         this.cloudClient
       );
+
+      if (metadata === undefined) {
+        // WTF?
+        return;
+      }
+
       metadata.protected = !metadata.protected;
 
       console.info('[Manager] User toggled protection for', videoKey);
@@ -1110,9 +1117,4 @@ export default class Manager {
       console.warn('[Manager] Failed to protect', jsonKey, String(error));
     }
   };
-
-  public loadVideoDetailsCloud(key: string) {
-    assert(this.cloudClient);
-    return loadVideoDetailsCloud(key, this.cloudClient);
-  }
 }

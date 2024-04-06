@@ -4,6 +4,7 @@ import assert from 'assert';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from './ConfigService';
 import {
+  CloudMetadata,
   CloudStatus,
   DiskStatus,
   SaveStatus,
@@ -15,10 +16,11 @@ import {
   tryUnlink,
   writeMetadataFile,
   getThumbnailFileNameForVideo,
-  getMetadataFileNameForVideo,
   loadVideoDetailsDisk,
   getFileInfo,
-  loadVideoDetailsCloud,
+  getConsistentMachineHash,
+  getMetadataForVideo,
+  getAllCloudMetadata,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import CloudSizeMonitor from '../storage/CloudSizeMonitor';
@@ -233,26 +235,44 @@ export default class VideoProcessQueue {
     try {
       assert(this.cloudClient);
       const thumbNailPath = getThumbnailFileNameForVideo(item.path);
-      const metadataPath = getMetadataFileNameForVideo(item.path);
-      const base = path.basename(item.path);
-      const videoKey = `${item.category}/${item.start}/${base}`;
-      const thumbnailKey = videoKey.replace('.mp4', '.png');
-      const metadataKey = videoKey.replace('.mp4', '.json');
+      const videoKey = path.basename(item.path);
 
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
       await this.cloudClient.putFile(item.path, videoKey, progressCallback);
       progressCallback(100);
 
-      // Now the video is uploaded, also upload the metadata and thumbnail.
-      await Promise.all([
-        this.cloudClient.putFile(thumbNailPath, thumbnailKey),
-        this.cloudClient.putFile(metadataPath, metadataKey),
-      ]);
+      // Now the video is uploaded, also upload the thumbnail.
+      const thumbnailKey = videoKey.replace('.mp4', '.png');
+      await this.cloudClient.putFile(thumbNailPath, thumbnailKey);
 
-      // Let the frontend know it's there so we can avoid a full refresh.
-      const video = await loadVideoDetailsCloud(metadataKey, this.cloudClient);
-      this.mainWindow.webContents.send('addVideo', video);
+      // Now deal with metadata.
+      const machineHash = getConsistentMachineHash();
+      const metadataKey = `${machineHash}.json`;
+      const newMetadata = await getMetadataForVideo(item.path);
+
+      // Convert disk metadata to cloud metadata.
+      const newCloudMetadata: CloudMetadata = {
+        name: path.basename(item.path, '.mp4'),
+        videoKey,
+        thumbnailKey,
+        ...newMetadata,
+      };
+
+      let existingCloudMetadata: CloudMetadata[] = [];
+
+      try {
+        existingCloudMetadata = await getAllCloudMetadata(this.cloudClient);
+      } catch (error) {
+        // first time whatever
+      }
+
+      // Combine metadata.
+      existingCloudMetadata.push(newCloudMetadata);
+
+      // Finally upload it.
+      const json = JSON.stringify(existingCloudMetadata, null, 2);
+      await this.cloudClient.putJsonString(json, metadataKey);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
@@ -345,6 +365,7 @@ export default class VideoProcessQueue {
   private async finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished cutting video', item.source);
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
+    this.mainWindow.webContents.send('refreshState');
   }
 
   /**
@@ -360,6 +381,7 @@ export default class VideoProcessQueue {
    */
   private async finishUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Finished uploading video', item.path);
+    this.mainWindow.webContents.send('refreshState');
   }
 
   /**
@@ -375,6 +397,7 @@ export default class VideoProcessQueue {
    */
   private async finishDownloadingVideo(videoPath: string) {
     console.info('[VideoProcessQueue] Finished downloading video', videoPath);
+    this.mainWindow.webContents.send('refreshState');
   }
 
   /**

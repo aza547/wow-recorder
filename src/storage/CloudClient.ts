@@ -265,9 +265,9 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
    * Write a JSON string into R2.
    */
   public async putJsonString(str: string, key: string) {
-    console.info('[CloudClient] PUT JSON string', key);
+    console.info('[CloudClient] PUT JSON string with key', key);
 
-    // Must convert to a UTF-8 to avoid encoding shenanigans here with
+    // Must convert to UTF-8 to avoid encoding shenanigans here with
     // handling special characters.
     const buffer = Buffer.from(str, 'utf-8');
     const signedUrl = await this.signPutUrl(key, buffer.length);

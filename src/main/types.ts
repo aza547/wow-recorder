@@ -235,9 +235,17 @@ type RendererVideo = Metadata & {
   videoSource: string;
   thumbnailSource: string;
   isProtected: boolean;
-  size: number;
   cloud: boolean;
   multiPov: RendererVideo[];
+};
+
+/**
+ *
+ */
+type CloudMetadata = Metadata & {
+  name: string;
+  videoKey: string;
+  thumbnailKey: string;
 };
 
 type SoloShuffleTimelineSegment = {
@@ -287,6 +295,7 @@ type AppState = {
   category: VideoCategory;
   playingVideo: RendererVideo | undefined; // the video being played by the player
   selectedVideoName: string | undefined;
+  numVideosDisplayed: number;
   videoFilterQuery: string;
   videoFullScreen: boolean;
 };
@@ -480,4 +489,6 @@ export {
   ICloudClient,
   IBrowserWindow,
   UploadQueueItem,
+  CloudMetadata,
+  CloudMetadataFile,
 };

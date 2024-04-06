@@ -54,7 +54,6 @@ interface IProps {
   video: RendererVideo;
   stateManager: MutableRefObject<StateManager>;
   videoState: RendererVideo[];
-  setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
 }
@@ -87,7 +86,6 @@ export default function VideoButton(props: IProps) {
     video,
     stateManager,
     videoState,
-    setVideoState,
     setAppState,
     persistentProgress,
   } = props;
@@ -252,7 +250,6 @@ export default function VideoButton(props: IProps) {
         tagDialogOpen={tagDialogOpen}
         setTagDialogOpen={setTagDialogOpen}
         stateManager={stateManager}
-        setVideoState={setVideoState}
       />
     );
   };

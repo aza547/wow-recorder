@@ -16,7 +16,6 @@ interface IProps {
   tagDialogOpen: boolean;
   setTagDialogOpen: Dispatch<SetStateAction<boolean>>;
   stateManager: MutableRefObject<StateManager>;
-  setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
 }
 
 const buttonSx = {
@@ -29,13 +28,7 @@ const buttonSx = {
 };
 
 export default function TagDialog(props: IProps) {
-  const {
-    video,
-    tagDialogOpen,
-    setTagDialogOpen,
-    stateManager,
-    setVideoState,
-  } = props;
+  const { video, tagDialogOpen, setTagDialogOpen, stateManager } = props;
 
   const closeTagDialog = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();

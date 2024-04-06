@@ -18,7 +18,11 @@ import DaggerIcon from '../../assets/icon/dagger.png';
 import DungeonIcon from '../../assets/icon/dungeon.png';
 import FlagIcon from '../../assets/icon/flag.png';
 import { setConfigValue } from './useSettings';
-import { getCategoryIndex, getFirstInCategory } from './rendererutils';
+import {
+  getCategoryIndex,
+  getFirstInCategory,
+  getVideoCategoryFilter,
+} from './rendererutils';
 import CategoryPage from './CategoryPage';
 import StateManager from './StateManager';
 
@@ -26,13 +30,10 @@ interface IProps {
   recorderStatus: RecStatus;
   stateManager: MutableRefObject<StateManager>;
   videoState: RendererVideo[];
-  setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
-  categoryCounters: Record<string, number>;
-  moreAvailable: boolean;
 }
 
 /**
@@ -43,13 +44,10 @@ const Layout = (props: IProps) => {
     recorderStatus,
     stateManager,
     videoState,
-    setVideoState,
     appState,
     setAppState,
     persistentProgress,
     playerHeight,
-    categoryCounters,
-    moreAvailable,
   } = props;
   const { page, category } = appState;
 
@@ -62,8 +60,6 @@ const Layout = (props: IProps) => {
     const first = getFirstInCategory(videoState, newCategory);
     persistentProgress.current = 0;
 
-    // state manager action
-    // numVideosDisplayed: 10,
     setAppState((prevState) => {
       return {
         ...prevState,
@@ -72,10 +68,9 @@ const Layout = (props: IProps) => {
         category: newCategory,
         selectedVideoName: first?.name,
         playingVideo: first,
+        numVideosDisplayed: 10,
       };
     });
-
-    stateManager.current.changeCategory(newCategory);
   };
 
   const handleChangePage = (_: React.SyntheticEvent, newPage: Pages) => {
@@ -88,7 +83,9 @@ const Layout = (props: IProps) => {
   };
 
   const renderCategoryTab = (tabCategory: VideoCategory, tabIcon: string) => {
-    const numVideos = categoryCounters[tabCategory];
+    const categoryFilter = getVideoCategoryFilter(tabCategory);
+    const categoryState = videoState.filter(categoryFilter);
+    const numVideos = categoryState.length;
 
     return (
       <Tab
@@ -229,12 +226,10 @@ const Layout = (props: IProps) => {
         category={category}
         videoState={videoState}
         stateManager={stateManager}
-        setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
         persistentProgress={persistentProgress}
         playerHeight={playerHeight}
-        moreAvailable={moreAvailable}
       />
     );
   };

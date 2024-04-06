@@ -28,24 +28,13 @@ const WarcraftRecorder = () => {
   const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
   const [crashes, setCrashes] = useState<Crashes>([]);
 
-  const category = getCategoryFromConfig(config);
-
   // The video state contains most of the frontend state, it's complex so
   // modifications go through the encapsulated StateManager class, which
   // calls the React set function appropriately.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
-  const [moreAvailable, setMoreAvailable] = useState(true);
-  const [categoryCounters, setCategoryCounters] = useState<
-    Record<string, number>
-  >({});
 
   const stateManager = useRef<StateManager>(
-    StateManager.getInstance(
-      category,
-      setVideoState,
-      setCategoryCounters,
-      setMoreAvailable
-    )
+    StateManager.getInstance(setVideoState)
   );
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
@@ -64,9 +53,14 @@ const WarcraftRecorder = () => {
   const [appState, setAppState] = useState<AppState>({
     // Navigation.
     page: Pages.None,
-    category,
+    category: getCategoryFromConfig(config),
     playingVideo: undefined,
     selectedVideoName: undefined,
+
+    // Limit the number of videos displayed for performance. User can load more
+    // by clicking the button, but mainline case will be to watch back recent
+    // videos.
+    numVideosDisplayed: 10,
 
     // Any text applied in the filter bar gets translated into a filter here.
     videoFilterQuery: '',
@@ -145,13 +139,10 @@ const WarcraftRecorder = () => {
         recorderStatus={recorderStatus}
         stateManager={stateManager}
         videoState={videoState}
-        setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
         persistentProgress={persistentProgress}
         playerHeight={playerHeight}
-        categoryCounters={categoryCounters}
-        moreAvailable={moreAvailable}
       />
       <BottomStatusBar
         recorderStatus={recorderStatus}

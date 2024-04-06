@@ -183,6 +183,6 @@ export default abstract class Activity {
 
     const uniqueString = deterministicFields.join(' ') + sortedNames.join(' ');
 
-    return this.hash.update(uniqueString).digest('base64');
+    return this.hash.update(uniqueString).digest('hex');
   }
 }

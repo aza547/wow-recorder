@@ -438,8 +438,8 @@ const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
 };
 
 const getVideoTime = (video: RendererVideo) => {
-  const { mtime } = video;
-  const date = new Date(mtime);
+  const { start, mtime } = video;
+  const date = start ? new Date(start) : new Date(mtime);
 
   const hours = date
     .getHours()
