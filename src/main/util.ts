@@ -23,7 +23,6 @@ import {
   FlavourConfig,
   ObsAudioConfig,
   CrashData,
-  CloudObject,
   CloudMetadata,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
