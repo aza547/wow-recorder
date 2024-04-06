@@ -106,7 +106,10 @@ export default class CloudSizeMonitor {
     });
 
     await Promise.all(deletePromises);
-    this.mainWindow.webContents.send('refreshState');
+
+    if (videosToDelete.length > 0) {
+      this.mainWindow.webContents.send('refreshState');
+    }
   }
 
   public async usage() {

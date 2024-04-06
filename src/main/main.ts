@@ -14,6 +14,7 @@ import os from 'os';
 
 import { uIOhook } from 'uiohook-napi';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import assert from 'assert';
 import {
   resolveHtmlPath,
   openSystemExplorer,
@@ -23,6 +24,8 @@ import {
   getAssetPath,
   nextMousePressPromise,
   nextKeyPressPromise,
+  loadAllVideosDisk,
+  loadVideoDetailsCloud,
 } from './util';
 import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
@@ -171,8 +174,6 @@ const createWindow = async () => {
     if (!startMinimized) {
       mainWindow.show();
     }
-
-    mainWindow.webContents.send('refreshState');
   });
 
   mainWindow.on('moved', () => {
@@ -315,13 +316,26 @@ ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
 /**
  * Get the list of video files and their state.
  */
-ipcMain.handle('getVideoState', async () => {
-  if (!manager) {
-    throw new Error('Programmer error, no manager');
-  }
-
+ipcMain.handle('getVideoStateDisk', async () => {
   const storagePath = cfg.get<string>('storagePath');
-  return manager.loadAllVideos(10, storagePath);
+  return loadAllVideosDisk(storagePath);
+});
+
+/**
+ * List all the cloud objects.
+ */
+ipcMain.handle('getVideoListCloud', async () => {
+  assert(manager);
+  return manager.listVideosCloud();
+});
+
+/**
+ * Load a single video's details from the cloud.
+ */
+ipcMain.handle('loadVideoMetadataCloud', async (_event, args) => {
+  assert(manager);
+  const jsonKey = args[0] as string;
+  return manager.loadVideoDetailsCloud(jsonKey);
 });
 
 /**

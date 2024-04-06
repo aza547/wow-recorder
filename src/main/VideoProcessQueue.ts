@@ -16,6 +16,9 @@ import {
   writeMetadataFile,
   getThumbnailFileNameForVideo,
   getMetadataFileNameForVideo,
+  loadVideoDetailsDisk,
+  getFileInfo,
+  loadVideoDetailsCloud,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import CloudSizeMonitor from '../storage/CloudSizeMonitor';
@@ -195,6 +198,10 @@ export default class VideoProcessQueue {
 
         this.queueUpload(item);
       }
+
+      const fileInfo = await getFileInfo(videoPath);
+      const video = await loadVideoDetailsDisk(fileInfo);
+      this.mainWindow.webContents.send('addVideo', video);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
@@ -242,6 +249,10 @@ export default class VideoProcessQueue {
         this.cloudClient.putFile(thumbNailPath, thumbnailKey),
         this.cloudClient.putFile(metadataPath, metadataKey),
       ]);
+
+      // Let the frontend know it's there so we can avoid a full refresh.
+      const video = await loadVideoDetailsCloud(metadataKey, this.cloudClient);
+      this.mainWindow.webContents.send('addVideo', video);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
@@ -258,12 +269,12 @@ export default class VideoProcessQueue {
    * the cloud store.
    */
   private async processDownloadQueueItem(
-    name: string,
+    key: string,
     done: () => void
   ): Promise<void> {
     const storageDir = this.cfg.get<string>('storagePath');
-    const metadataName = name.replace('.mp4', '.json');
-    const thumbnailName = name.replace('.mp4', '.png');
+    const metadataName = key.replace('.mp4', '.json');
+    const thumbnailName = key.replace('.mp4', '.png');
 
     let lastProgress = 0;
 
@@ -280,10 +291,14 @@ export default class VideoProcessQueue {
       assert(this.cloudClient);
 
       await Promise.all([
-        await this.cloudClient.getAsFile(name, storageDir, progressCallback),
-        await this.cloudClient.getAsFile(metadataName, storageDir),
-        await this.cloudClient.getAsFile(thumbnailName, storageDir),
+        this.cloudClient.getAsFile(key, storageDir, progressCallback),
+        this.cloudClient.getAsFile(metadataName, storageDir),
+        this.cloudClient.getAsFile(thumbnailName, storageDir),
       ]);
+
+      const fileInfo = await getFileInfo(path.join(key, storageDir));
+      const video = await loadVideoDetailsDisk(fileInfo);
+      this.mainWindow.webContents.send('addVideo', video);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error downloading video:',
@@ -327,10 +342,9 @@ export default class VideoProcessQueue {
    * Log we are done, and update the saving status icon and refresh the
    * frontend.
    */
-  private finishProcessingVideo(item: VideoQueueItem) {
+  private async finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished cutting video', item.source);
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
-    this.mainWindow.webContents.send('refreshState');
   }
 
   /**
@@ -346,7 +360,6 @@ export default class VideoProcessQueue {
    */
   private async finishUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Finished uploading video', item.path);
-    this.mainWindow.webContents.send('refreshState');
   }
 
   /**
@@ -362,7 +375,6 @@ export default class VideoProcessQueue {
    */
   private async finishDownloadingVideo(videoPath: string) {
     console.info('[VideoProcessQueue] Finished downloading video', videoPath);
-    this.mainWindow.webContents.send('refreshState');
   }
 
   /**

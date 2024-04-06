@@ -2,7 +2,9 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 export type Channels =
   | 'mainWindow'
-  | 'getVideoState'
+  | 'getVideoStateDisk'
+  | 'getVideoListCloud'
+  | 'loadVideoMetadataCloud'
   | 'videoButton'
   | 'logPath'
   | 'openURL'

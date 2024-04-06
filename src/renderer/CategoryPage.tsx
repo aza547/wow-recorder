@@ -29,6 +29,7 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
+  moreAvailable: boolean;
 }
 
 /**
@@ -44,8 +45,9 @@ const CategoryPage = (props: IProps) => {
     setAppState,
     persistentProgress,
     playerHeight,
+    moreAvailable,
   } = props;
-  const { numVideosDisplayed, videoFilterQuery } = appState;
+  const { videoFilterQuery } = appState;
   const [config, setConfig] = useSettings();
   const categoryFilter = getVideoCategoryFilter(category);
   const categoryState = videoState.filter(categoryFilter);
@@ -57,12 +59,11 @@ const CategoryPage = (props: IProps) => {
     new VideoFilter(videoFilterQuery, video).filter()
   );
 
-  const slicedState = filteredState.slice(0, numVideosDisplayed);
-  const moreVideosRemain = slicedState.length !== categoryState.length;
+  const moreVideosRemain = filteredState.length !== categoryState.length;
 
   const getVideoPlayer = () => {
     const { playingVideo } = appState;
-    const videoToPlay = playingVideo || slicedState[0];
+    const videoToPlay = playingVideo || filteredState[0];
 
     return (
       <VideoPlayer
@@ -130,12 +131,7 @@ const CategoryPage = (props: IProps) => {
   };
 
   const loadMoreVideos = () => {
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        numVideosDisplayed: prevState.numVideosDisplayed + 10,
-      };
-    });
+    // statemanager action
   };
 
   const getShowMoreButton = () => {
@@ -210,8 +206,8 @@ const CategoryPage = (props: IProps) => {
           }}
         >
           <List sx={{ width: '100%', p: 0 }}>
-            {slicedState.map(mapActivityToListItem)}
-            {moreVideosRemain && getShowMoreButton()}
+            {filteredState.map(mapActivityToListItem)}
+            {moreAvailable && getShowMoreButton()}
           </List>
         </Box>
       </>

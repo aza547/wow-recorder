@@ -23,6 +23,7 @@ import {
   CloudObject,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
+import CloudClient from 'storage/CloudClient';
 
 /**
  * When packaged, we need to fix some paths
@@ -241,7 +242,7 @@ const loadVideoDetailsDisk = async (
     };
   } catch (error) {
     // Just log it and rethrow. Want this to be diagnosable.
-    console.warn('[Manager] Failed to load video:', video.name, String(error));
+    console.warn('[Util] Failed to load video:', video.name, String(error));
     throw error;
   }
 };
@@ -825,6 +826,54 @@ const povNameSort = (a: RendererVideo, b: RendererVideo) => {
   return playerA.localeCompare(playerB);
 };
 
+const getMetadataForVideoCloud = async (
+  jsonKey: string,
+  client: CloudClient
+) => {
+  const json = await client.getAsString(jsonKey);
+  const metadata = JSON.parse(json) as Metadata;
+  return metadata;
+};
+
+/**
+ * Load details for a video from the cloud.
+ * @throws
+ */
+const loadVideoDetailsCloud = async (
+  key: string,
+  client: CloudClient
+): Promise<RendererVideo> => {
+  const imageKey = key.replace('json', 'png');
+  const videoKey = key.replace('json', 'mp4');
+
+  try {
+    const metadata = await getMetadataForVideoCloud(key, client);
+    const videoObject = await client.head(videoKey);
+
+    const thumbnailSource = imageKey;
+    const videoSource = videoKey;
+    const isProtected = Boolean(metadata.protected);
+    const mtime = videoObject.lastMod.getTime();
+    const { size } = videoObject;
+
+    return {
+      ...metadata,
+      name: path.basename(videoSource),
+      mtime,
+      videoSource,
+      thumbnailSource,
+      isProtected,
+      size,
+      cloud: true,
+      multiPov: [],
+    };
+  } catch (error) {
+    // Just log it and rethrow. Want this to be diagnosable.
+    console.warn('[Util] Failed to load video:', key, String(error));
+    throw error;
+  }
+};
+
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -861,4 +910,6 @@ export {
   markForVideoForDelete,
   povNameSort,
   chronologicalKeySort,
+  getMetadataForVideoCloud,
+  loadVideoDetailsCloud,
 };
