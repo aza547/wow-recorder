@@ -14,6 +14,7 @@ import os from 'os';
 
 import { uIOhook } from 'uiohook-napi';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import assert from 'assert';
 import {
   resolveHtmlPath,
   openSystemExplorer,
@@ -153,7 +154,7 @@ const createWindow = async () => {
     manager = new Manager(mainWindow);
   }
 
-  mainWindow.on('ready-to-show', () => {
+  mainWindow.on('ready-to-show', async () => {
     if (!mainWindow) {
       throw new Error('mainWindow is not defined');
     }
@@ -166,13 +167,14 @@ const createWindow = async () => {
       `Warcraft Recorder v${appVersion}`
     );
 
+    assert(manager);
+    await manager.manage();
+
     const startMinimized = cfg.get<boolean>('startMinimized');
 
     if (!startMinimized) {
       mainWindow.show();
     }
-
-    mainWindow.webContents.send('refreshState');
   });
 
   mainWindow.on('moved', () => {
@@ -316,11 +318,8 @@ ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
  * Get the list of video files and their state.
  */
 ipcMain.handle('getVideoState', async () => {
-  if (!manager) {
-    throw new Error('Programmer error, no manager');
-  }
-
   const storagePath = cfg.get<string>('storagePath');
+  assert(manager);
   return manager.loadAllVideos(storagePath);
 });
 

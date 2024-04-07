@@ -229,18 +229,17 @@ const loadVideoDetailsDisk = async (
 
     return {
       ...metadata,
-      name: path.basename(video.name),
+      name: path.basename(video.name, '.mp4'),
       mtime: video.mtime,
       videoSource: video.name,
       thumbnailSource,
       isProtected: Boolean(metadata.protected),
-      size: video.size,
       cloud: false,
       multiPov: [],
     };
   } catch (error) {
     // Just log it and rethrow. Want this to be diagnosable.
-    console.warn('[Manager] Failed to load video:', video.name, String(error));
+    console.warn('[Util] Failed to load video:', video.name, String(error));
     throw error;
   }
 };

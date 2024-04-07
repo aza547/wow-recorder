@@ -87,7 +87,9 @@ export default class DiskSizeMonitor {
       })
     );
 
-    this.mainWindow.webContents.send('refreshState');
+    if (filesForDeletion.length > 0) {
+      this.mainWindow.webContents.send('refreshState');
+    }
   }
 
   public async usage() {

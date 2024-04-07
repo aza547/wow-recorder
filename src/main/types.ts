@@ -235,7 +235,6 @@ type RendererVideo = Metadata & {
   videoSource: string;
   thumbnailSource: string;
   isProtected: boolean;
-  size: number;
   cloud: boolean;
   multiPov: RendererVideo[];
 };
@@ -367,7 +366,7 @@ type FlavourConfig = {
 
 type ConfigStage = {
   name: string;
-  initial: boolean;
+  valid: boolean;
   current: any;
   get: (cfg: ConfigService) => any;
   configure: (...args: any[]) => Promise<void>;
@@ -425,6 +424,10 @@ interface IBrowserWindow {
   };
 }
 
+type UploadQueueItem = {
+  path: string;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -474,4 +477,5 @@ export {
   CloudObject,
   ICloudClient,
   IBrowserWindow,
+  UploadQueueItem,
 };

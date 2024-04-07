@@ -47,10 +47,12 @@ import ControlIcon from '../../assets/icon/ctrl-icon.png';
 import PovSelection from './PovSelection';
 import { useSettings } from './useSettings';
 import SnackBar from './SnackBar';
+import StateManager from './StateManager';
 
 interface IProps {
   selected: boolean;
   video: RendererVideo;
+  stateManager: MutableRefObject<StateManager>;
   videoState: RendererVideo[];
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
@@ -79,8 +81,14 @@ const iconButtonSx = {
 const ipc = window.electron.ipcRenderer;
 
 export default function VideoButton(props: IProps) {
-  const { selected, video, videoState, setAppState, persistentProgress } =
-    props;
+  const {
+    selected,
+    video,
+    stateManager,
+    videoState,
+    setAppState,
+    persistentProgress,
+  } = props;
   const [config] = useSettings();
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
@@ -96,8 +104,6 @@ export default function VideoButton(props: IProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [thumbnailSignedUrl, setThumbnailSignedUrl] = useState<string>('');
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
-  const [downloadSpinner, setDownloadSpinner] = useState<boolean>(false);
-  const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [linkSnackBarOpen, setLinkSnackBarOpen] = useState(false);
 
   const povs = [video, ...video.multiPov].sort(povNameSort);
@@ -159,6 +165,8 @@ export default function VideoButton(props: IProps) {
       cloud,
     ]);
 
+    stateManager.current.deleteVideo(pov);
+
     if (!selected) {
       return;
     }
@@ -198,6 +206,7 @@ export default function VideoButton(props: IProps) {
 
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
+    stateManager.current.toggleProtect(pov);
 
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'save',
@@ -231,6 +240,7 @@ export default function VideoButton(props: IProps) {
         video={pov}
         tagDialogOpen={tagDialogOpen}
         setTagDialogOpen={setTagDialogOpen}
+        stateManager={stateManager}
       />
     );
   };
@@ -314,7 +324,6 @@ export default function VideoButton(props: IProps) {
   };
 
   const downloadVideo = async () => {
-    setDownloadSpinner(true);
     ipc.sendMessage('videoButton', ['download', videoSource]);
   };
 

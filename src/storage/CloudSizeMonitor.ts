@@ -104,9 +104,12 @@ export default class CloudSizeMonitor {
       deletePromises.push(this.cloudClient.delete(thumbnailKey));
       deletePromises.push(this.cloudClient.delete(metadataKey));
     });
-    
+
     await Promise.all(deletePromises);
-    this.mainWindow.webContents.send('refreshState');
+
+    if (videosToDelete.length > 0) {
+      this.mainWindow.webContents.send('refreshState');
+    }
   }
 
   public async usage() {

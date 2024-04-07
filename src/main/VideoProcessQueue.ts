@@ -3,12 +3,22 @@ import path from 'path';
 import assert from 'assert';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from './ConfigService';
-import { CloudStatus, DiskStatus, SaveStatus, VideoQueueItem } from './types';
+import {
+  CloudMetadata,
+  CloudStatus,
+  DiskStatus,
+  SaveStatus,
+  UploadQueueItem,
+  VideoQueueItem,
+} from './types';
 import {
   fixPathWhenPackaged,
   tryUnlink,
   writeMetadataFile,
   getThumbnailFileNameForVideo,
+  getConsistentMachineHash,
+  getMetadataForVideo,
+  getAllCloudMetadata,
   getMetadataFileNameForVideo,
 } from './util';
 import CloudClient from '../storage/CloudClient';
@@ -96,8 +106,8 @@ export default class VideoProcessQueue {
       .on('idle', () => { this.uploadQueueEmpty() });
 
     queue.pool
-      .on('start', (videoPath: string) => { this.startedUploadingVideo(videoPath) })
-      .on('finish', async (_: unknown, videoPath: string) => { await this.finishUploadingVideo(videoPath) });
+      .on('start', (item: UploadQueueItem) => { this.startedUploadingVideo(item) })
+      .on('finish', async (_: unknown, item: UploadQueueItem) => { await this.finishUploadingVideo(item) });
     /* eslint-enable prettier/prettier */
 
     return queue;
@@ -145,8 +155,8 @@ export default class VideoProcessQueue {
     this.videoQueue.write(item);
   };
 
-  public queueUpload = async (videoPath: string) => {
-    this.uploadQueue.write(videoPath);
+  public queueUpload = async (item: UploadQueueItem) => {
+    this.uploadQueue.write(item);
   };
 
   public queueDownload = async (name: string) => {
@@ -181,7 +191,11 @@ export default class VideoProcessQueue {
       }
 
       if (this.cloudClient !== undefined) {
-        this.uploadQueue.write(videoPath);
+        const item: UploadQueueItem = {
+          path: videoPath,
+        };
+
+        this.queueUpload(item);
       }
     } catch (error) {
       console.error(
@@ -197,7 +211,7 @@ export default class VideoProcessQueue {
    * Upload a video to the cloud store.
    */
   private async processUploadQueueItem(
-    videoPath: string,
+    item: UploadQueueItem,
     done: () => void
   ): Promise<void> {
     let lastProgress = 0;
@@ -213,15 +227,14 @@ export default class VideoProcessQueue {
 
     try {
       assert(this.cloudClient);
-      const thumbNailPath = getThumbnailFileNameForVideo(videoPath);
-      const metadataPath = getMetadataFileNameForVideo(videoPath);
+      const thumbNailPath = getThumbnailFileNameForVideo(item.path);
+      const metadataPath = getMetadataFileNameForVideo(item.path);
 
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
-      await this.cloudClient.putFile(videoPath, progressCallback);
+      await this.cloudClient.putFile(item.path, progressCallback);
       progressCallback(100);
 
-      // Now the video is uploaded, also upload the metadata and thumbnail.
       await Promise.all([
         this.cloudClient.putFile(thumbNailPath),
         this.cloudClient.putFile(metadataPath),
@@ -242,12 +255,12 @@ export default class VideoProcessQueue {
    * the cloud store.
    */
   private async processDownloadQueueItem(
-    name: string,
+    key: string,
     done: () => void
   ): Promise<void> {
     const storageDir = this.cfg.get<string>('storagePath');
-    const metadataName = name.replace('.mp4', '.json');
-    const thumbnailName = name.replace('.mp4', '.png');
+    const metadataName = key.replace('.mp4', '.json');
+    const thumbnailName = key.replace('.mp4', '.png');
 
     let lastProgress = 0;
 
@@ -264,9 +277,9 @@ export default class VideoProcessQueue {
       assert(this.cloudClient);
 
       await Promise.all([
-        await this.cloudClient.getAsFile(name, storageDir, progressCallback),
-        await this.cloudClient.getAsFile(metadataName, storageDir),
-        await this.cloudClient.getAsFile(thumbnailName, storageDir),
+        this.cloudClient.getAsFile(key, storageDir, progressCallback),
+        this.cloudClient.getAsFile(metadataName, storageDir),
+        this.cloudClient.getAsFile(thumbnailName, storageDir),
       ]);
     } catch (error) {
       console.error(
@@ -302,8 +315,8 @@ export default class VideoProcessQueue {
   /**
    * Log we are starting the processing and update the saving status icon.
    */
-  private startedProcessingVideo(data: VideoQueueItem) {
-    console.info('[VideoProcessQueue] Now processing video', data.source);
+  private startedProcessingVideo(item: VideoQueueItem) {
+    console.info('[VideoProcessQueue] Now processing video', item.source);
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
   }
 
@@ -311,8 +324,8 @@ export default class VideoProcessQueue {
    * Log we are done, and update the saving status icon and refresh the
    * frontend.
    */
-  private finishProcessingVideo(data: VideoQueueItem) {
-    console.info('[VideoProcessQueue] Finished cutting video', data.source);
+  private finishProcessingVideo(item: VideoQueueItem) {
+    console.info('[VideoProcessQueue] Finished cutting video', item.source);
     this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
     this.mainWindow.webContents.send('refreshState');
   }
@@ -320,16 +333,16 @@ export default class VideoProcessQueue {
   /**
    * Called on the start of an upload. Set the upload bar to zero and log.
    */
-  private startedUploadingVideo(videoPath: string) {
-    console.info('[VideoProcessQueue] Now uploading video', videoPath);
+  private startedUploadingVideo(item: UploadQueueItem) {
+    console.info('[VideoProcessQueue] Now uploading video', item.path);
     this.mainWindow.webContents.send('updateUploadProgress', 0);
   }
 
   /**
    * Called on the end of an upload.
    */
-  private async finishUploadingVideo(videoPath: string) {
-    console.info('[VideoProcessQueue] Finished uploading video', videoPath);
+  private finishUploadingVideo(item: UploadQueueItem) {
+    console.info('[VideoProcessQueue] Finished uploading video', item.path);
     this.mainWindow.webContents.send('refreshState');
   }
 
@@ -344,7 +357,7 @@ export default class VideoProcessQueue {
   /**
    * Called on the end of an upload.
    */
-  private async finishDownloadingVideo(videoPath: string) {
+  private finishDownloadingVideo(videoPath: string) {
     console.info('[VideoProcessQueue] Finished downloading video', videoPath);
     this.mainWindow.webContents.send('refreshState');
   }
@@ -381,7 +394,8 @@ export default class VideoProcessQueue {
       this.cloudClient,
       250
     );
-    sizeMonitor.run();
+
+    await sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 
     const status: CloudStatus = {

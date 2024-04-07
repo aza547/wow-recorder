@@ -24,13 +24,16 @@ import {
   getVideoCategoryFilter,
 } from './rendererutils';
 import CategoryPage from './CategoryPage';
+import StateManager from './StateManager';
 
 interface IProps {
   recorderStatus: RecStatus;
+  stateManager: MutableRefObject<StateManager>;
   videoState: RendererVideo[];
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
+  playerHeight: MutableRefObject<number>;
 }
 
 /**
@@ -39,10 +42,12 @@ interface IProps {
 const Layout = (props: IProps) => {
   const {
     recorderStatus,
+    stateManager,
     videoState,
     appState,
     setAppState,
     persistentProgress,
+    playerHeight,
   } = props;
   const { page, category } = appState;
 
@@ -220,9 +225,11 @@ const Layout = (props: IProps) => {
       <CategoryPage
         category={category}
         videoState={videoState}
+        stateManager={stateManager}
         appState={appState}
         setAppState={setAppState}
         persistentProgress={persistentProgress}
+        playerHeight={playerHeight}
       />
     );
   };

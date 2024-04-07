@@ -10,13 +10,13 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
-import { CloudObject } from 'main/types';
+import { CloudObject, ICloudClient } from 'main/types';
 import path from 'path';
 
 /**
  * A client for retrieving resources from the cloud.
  */
-export default class CloudClient extends EventEmitter {
+export default class CloudClient extends EventEmitter implements ICloudClient {
   /**
    * The bucket name we're configured to target. Expected to be the name of
    * the guild as configured in the settings.
@@ -265,9 +265,9 @@ export default class CloudClient extends EventEmitter {
    * Write a JSON string into R2.
    */
   public async putJsonString(str: string, key: string) {
-    console.info('[CloudClient] PUT JSON string', key);
+    console.info('[CloudClient] PUT JSON string with key', key);
 
-    // Must convert to a UTF-8 to avoid encoding shenanigans here with
+    // Must convert to UTF-8 to avoid encoding shenanigans here with
     // handling special characters.
     const buffer = Buffer.from(str, 'utf-8');
     const signedUrl = await this.signPutUrl(key, buffer.length);
@@ -298,8 +298,8 @@ export default class CloudClient extends EventEmitter {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     progressCallback = (_progress: number) => {}
   ) {
-    console.error('[CloudClient] Uploading', file);
     const key = path.basename(file);
+    console.info('[CloudClient] Uploading', file, 'to', key);
     const stats = await fs.promises.stat(file);
     const stream = fs.createReadStream(file);
     let contentType;

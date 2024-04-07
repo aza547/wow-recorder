@@ -173,7 +173,6 @@ export default abstract class Activity {
     );
 
     const sortedNames: string[] = [];
-    const sortedDeaths: string[] = [];
 
     Array.from(this.combatantMap.values())
       .map((combatant) => combatant.name)
@@ -182,16 +181,8 @@ export default abstract class Activity {
         if (name) sortedNames.push(name);
       });
 
-    this.deaths
-      .map((death) => death.name)
-      .sort()
-      .forEach((name) => sortedDeaths.push(name));
+    const uniqueString = deterministicFields.join(' ') + sortedNames.join(' ');
 
-    const uniqueString =
-      deterministicFields.join(' ') +
-      sortedNames.join(' ') +
-      sortedDeaths.join(' ');
-
-    return this.hash.update(uniqueString).digest('base64');
+    return this.hash.update(uniqueString).digest('hex');
   }
 }

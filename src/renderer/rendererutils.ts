@@ -438,8 +438,8 @@ const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
 };
 
 const getVideoTime = (video: RendererVideo) => {
-  const { mtime } = video;
-  const date = new Date(mtime);
+  const { start, mtime } = video;
+  const date = start ? new Date(start) : new Date(mtime);
 
   const hours = date
     .getHours()
@@ -750,6 +750,12 @@ const povNameSort = (a: RendererVideo, b: RendererVideo) => {
   return playerA.localeCompare(playerB);
 };
 
+const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
+  const differenceMilliseconds = Math.abs(d1.getTime() - d2.getTime());
+  const millisecondsInMinute = sec * 1000; // 60 seconds * 1000 milliseconds
+  return differenceMilliseconds <= millisecondsInMinute;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -798,4 +804,5 @@ export {
   getFirstInCategory,
   stopPropagation,
   povNameSort,
+  areDatesWithinSeconds,
 };

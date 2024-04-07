@@ -40,7 +40,7 @@ import era.raid
 RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
 CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
 ERA_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_era_/Logs"
-STORAGE_PATH = "D:/wr-test"
+STORAGE_PATH = "D:/wr-test-s3"
 
 CWD = os.path.dirname(__file__)
 
