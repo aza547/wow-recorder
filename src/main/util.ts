@@ -1,7 +1,6 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 import { URL } from 'url';
 import path from 'path';
-import os from 'os';
 import fs, { promises as fspromise } from 'fs';
 import { app, BrowserWindow, Display, net, screen } from 'electron';
 import {
@@ -11,8 +10,6 @@ import {
   UiohookMouseEvent,
 } from 'uiohook-napi';
 import checkDiskSpace from 'check-disk-space';
-import CloudClient from 'storage/CloudClient';
-import crypto from 'crypto';
 import { PTTEventType, PTTKeyPressEvent } from '../types/KeyTypesUIOHook';
 import {
   Metadata,
@@ -23,7 +20,6 @@ import {
   FlavourConfig,
   ObsAudioConfig,
   CrashData,
-  CloudMetadata,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 

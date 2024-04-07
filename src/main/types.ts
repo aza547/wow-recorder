@@ -478,5 +478,4 @@ export {
   ICloudClient,
   IBrowserWindow,
   UploadQueueItem,
-  CloudMetadata,
 };
