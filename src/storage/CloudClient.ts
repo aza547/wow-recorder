@@ -295,11 +295,11 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
    */
   public async putFile(
     file: string,
-    key: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     progressCallback = (_progress: number) => {}
   ) {
-    console.error('[CloudClient] Uploading', file, 'to', key);
+    const key = path.basename(file);
+    console.info('[CloudClient] Uploading', file, 'to', key);
     const stats = await fs.promises.stat(file);
     const stream = fs.createReadStream(file);
     let contentType;

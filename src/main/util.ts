@@ -807,37 +807,6 @@ const povNameSort = (a: RendererVideo, b: RendererVideo) => {
   return playerA.localeCompare(playerB);
 };
 
-const getAllCloudMetadata = async (client: CloudClient) => {
-  const objs = await client.list();
-
-  const jsonKeys = objs
-    .map((obj) => obj.key)
-    .filter((key) => key.endsWith('.json'));
-
-  const promises = jsonKeys.map((key) => client.getAsString(key));
-
-  const settled: string[] = (
-    await Promise.all(promises.map((p) => p.catch((e) => e)))
-  ).filter((result) => !(result instanceof Error));
-
-  const metadata: CloudMetadata[] = [];
-
-  settled.forEach((result) => {
-    const parsed = JSON.parse(result) as CloudMetadata[];
-    metadata.push(...parsed);
-  });
-
-  return metadata;
-};
-
-/**
- * Get a hash derived from the hostname of this PC.
- */
-const getConsistentMachineHash = () => {
-  const hostname = os.hostname();
-  return crypto.createHash('md5').update(hostname).digest('hex');
-};
-
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -873,6 +842,4 @@ export {
   areDatesWithinSeconds,
   markForVideoForDelete,
   povNameSort,
-  getConsistentMachineHash,
-  getAllCloudMetadata,
 };

@@ -19,6 +19,7 @@ import {
   getConsistentMachineHash,
   getMetadataForVideo,
   getAllCloudMetadata,
+  getMetadataFileNameForVideo,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import CloudSizeMonitor from '../storage/CloudSizeMonitor';
@@ -227,44 +228,17 @@ export default class VideoProcessQueue {
     try {
       assert(this.cloudClient);
       const thumbNailPath = getThumbnailFileNameForVideo(item.path);
-      const videoKey = path.basename(item.path);
+      const metadataPath = getMetadataFileNameForVideo(item.path);
 
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
-      await this.cloudClient.putFile(item.path, videoKey, progressCallback);
+      await this.cloudClient.putFile(item.path, progressCallback);
       progressCallback(100);
 
-      // Now the video is uploaded, also upload the thumbnail.
-      const thumbnailKey = videoKey.replace('.mp4', '.png');
-      await this.cloudClient.putFile(thumbNailPath, thumbnailKey);
-
-      // Now deal with metadata.
-      const machineHash = getConsistentMachineHash();
-      const metadataKey = `${machineHash}.json`;
-      const newMetadata = await getMetadataForVideo(item.path);
-
-      // Convert disk metadata to cloud metadata.
-      const newCloudMetadata: CloudMetadata = {
-        name: path.basename(item.path, '.mp4'),
-        videoKey,
-        thumbnailKey,
-        ...newMetadata,
-      };
-
-      let existingCloudMetadata: CloudMetadata[] = [];
-
-      try {
-        existingCloudMetadata = await getAllCloudMetadata(this.cloudClient);
-      } catch (error) {
-        // first time whatever
-      }
-
-      // Combine metadata.
-      existingCloudMetadata.push(newCloudMetadata);
-
-      // Finally upload it.
-      const json = JSON.stringify(existingCloudMetadata, null, 2);
-      await this.cloudClient.putJsonString(json, metadataKey);
+      await Promise.all([
+        this.cloudClient.putFile(thumbNailPath),
+        this.cloudClient.putFile(metadataPath),
+      ]);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',

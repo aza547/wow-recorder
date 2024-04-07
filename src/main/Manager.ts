@@ -20,7 +20,6 @@ import {
   getPromiseBomb,
   loadAllVideosDisk,
   getAllCloudMetadata,
-  getConsistentMachineHash,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -44,6 +43,8 @@ import {
   CloudStatus,
   DiskStatus,
   UploadQueueItem,
+  Metadata,
+  CloudObject,
 } from './types';
 import {
   getObsBaseConfig,
@@ -999,31 +1000,73 @@ export default class Manager {
   }
 
   private async loadAllVideosCloud() {
-    const videos: RendererVideo[] = [];
+    let objects: CloudObject[];
 
     try {
       assert(this.cloudClient);
-      const metadataList = await getAllCloudMetadata(this.cloudClient);
-
-      metadataList.forEach((metadata) => {
-        const video: RendererVideo = {
-          ...metadata,
-          mtime: 0,
-          videoSource: metadata.videoKey,
-          thumbnailSource: metadata.thumbnailKey,
-          isProtected: Boolean(metadata.protected),
-          cloud: true,
-          multiPov: [],
-        };
-
-        videos.push(video);
-      });
+      objects = await this.cloudClient.list();
     } catch (error) {
-      console.error('[Manager] Failed to get Metadata:', String(error));
+      console.error('[Manager] Failed to list keys:', String(error));
+      return [];
     }
 
-    return videos;
+    const videoDetailPromises = objects
+      .filter((obj) => obj.key.endsWith('json'))
+      .map((obj) => this.loadVideoDetailsCloud(obj));
+
+    const videoDetails: RendererVideo[] = (
+      await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
+    ).filter((result) => !(result instanceof Error));
+
+    return videoDetails;
   }
+
+  /**
+   * Load details for a video from the cloud.
+   * @throws
+   */
+  private loadVideoDetailsCloud = async (
+    obj: CloudObject
+  ): Promise<RendererVideo> => {
+    const jsonKey = obj.key;
+    const imageKey = jsonKey.replace('json', 'png');
+    const videoKey = jsonKey.replace('json', 'mp4');
+
+    try {
+      assert(this.cloudClient);
+      const metadata = await this.getMetadataForVideoCloud(jsonKey);
+
+      const thumbnailSource = imageKey;
+      const videoSource = videoKey;
+      const isProtected = Boolean(metadata.protected);
+
+      return {
+        ...metadata,
+        name: path.basename(videoSource, '.mp4'),
+        mtime: 0,
+        videoSource,
+        thumbnailSource,
+        isProtected,
+        cloud: true,
+        multiPov: [],
+      };
+    } catch (error) {
+      // Just log it and rethrow. Want this to be diagnosable.
+      console.warn('[Manager] Failed to load video:', jsonKey, String(error));
+      throw error;
+    }
+  };
+
+  /**
+   * Get the metadata object for a video from the accompanying JSON file.
+   * @throws
+   */
+  private getMetadataForVideoCloud = async (jsonKey: string) => {
+    assert(this.cloudClient);
+    const json = await this.cloudClient.getAsString(jsonKey);
+    const metadata = JSON.parse(json) as Metadata;
+    return metadata;
+  };
 
   /**
    * Delete a video from the cloud, and it's accompanying metadata and thumbnail.
@@ -1050,17 +1093,10 @@ export default class Manager {
    * Tag a video in the cloud.
    */
   private tagVideoCloud = async (videoKey: string, tag: string) => {
-    assert(this.cloudClient);
-    const name = path.basename(videoKey, '.mp4');
+    const jsonKey = videoKey.replace('mp4', 'json');
 
     try {
-      const metadataList = await getAllCloudMetadata(this.cloudClient);
-      const metadata = metadataList.find((video) => video.name === name);
-
-      if (metadata === undefined) {
-        // WTF?
-        return;
-      }
+      const metadata = await this.getMetadataForVideoCloud(jsonKey);
 
       if (!tag || !/\S/.test(tag)) {
         // empty or whitespace only
@@ -1071,13 +1107,12 @@ export default class Manager {
         metadata.tag = tag;
       }
 
-      const json = JSON.stringify(metadataList, null, 2);
-      const machineHash = getConsistentMachineHash();
-      const key = `${machineHash}.json`;
-      await this.cloudClient.putJsonString(json, key);
+      const jsonString = JSON.stringify(metadata, null, 2);
+      assert(this.cloudClient);
+      await this.cloudClient.putJsonString(jsonString, jsonKey);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to tag', name, String(error));
+      console.warn('[Manager] Failed to tag', jsonKey, String(error));
     }
   };
 
@@ -1085,30 +1120,21 @@ export default class Manager {
    * Toggle protection on a video in the cloud.
    */
   private protectVideoCloud = async (videoKey: string) => {
-    assert(this.cloudClient);
-    const name = path.basename(videoKey, '.mp4');
+    const jsonKey = videoKey.replace('mp4', 'json');
 
     try {
-      const metadataList = await getAllCloudMetadata(this.cloudClient);
-      const metadata = metadataList.find((video) => video.name === name);
-
-      if (metadata === undefined) {
-        // WTF?
-        return;
-      }
-
+      const metadata = await this.getMetadataForVideoCloud(jsonKey);
       metadata.protected = !metadata.protected;
 
       console.info('[Manager] User toggled protection for', videoKey);
       console.info('[Manager] Protected attribute is now', metadata.protected);
 
-      const json = JSON.stringify(metadataList, null, 2);
-      const machineHash = getConsistentMachineHash();
-      const key = `${machineHash}.json`;
-      await this.cloudClient.putJsonString(json, key);
+      const jsonString = JSON.stringify(metadata, null, 2);
+      assert(this.cloudClient);
+      await this.cloudClient.putJsonString(jsonString, jsonKey);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to protect', name, String(error));
+      console.warn('[Manager] Failed to protect', jsonKey, String(error));
     }
   };
 }

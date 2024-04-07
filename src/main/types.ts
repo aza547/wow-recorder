@@ -239,17 +239,6 @@ type RendererVideo = Metadata & {
   multiPov: RendererVideo[];
 };
 
-/**
- * Cloud metadata is stored in a single object per client, so we need
- * each CloudMetadata entry inside the objects to point to the video
- * and thumbnail they describe. Disk videos rely on file naming for this.
- */
-type CloudMetadata = Metadata & {
-  name: string;
-  videoKey: string;
-  thumbnailKey: string;
-};
-
 type SoloShuffleTimelineSegment = {
   round: number;
   timestamp: number;
