@@ -10,7 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
-import { CloudObject, ICloudClient } from 'main/types';
+import { CloudMetadata, CloudObject, ICloudClient, Metadata } from 'main/types';
 import path from 'path';
 
 /**
@@ -53,7 +53,7 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
    * handles deletes and mtime updates directly.
    */
   private apiEndpoint =
-    'https://warcraft-recorder-worker.alex-kershaw4.workers.dev';
+    'https://warcraft-recorder-dev.alex-kershaw4.workers.dev';
 
   /**
    * The Cloudflare R2 endpoint, this is an S3 compatible API.
@@ -115,6 +115,30 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
         secretAccessKey: data.secret,
       },
     });
+  }
+
+  /**
+   * Get the video state from the WR database.
+   */
+  public async getState(): Promise<CloudMetadata[]> {
+    console.info('[CloudClient] Getting state');
+    const encGuild = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encGuild}/videos`;
+    const headers = { Authorization: this.authHeader };
+    const response = await axios.get(url, { headers });
+    return response.data;
+  }
+
+  /**
+   * Add a video to the WR database.
+   */
+  public async postVideo(metadata: CloudMetadata) {
+    console.info('[CloudClient] Adding video to database', metadata.name);
+    const encGuild = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encGuild}/videos`;
+    const headers = { Authorization: this.authHeader };
+    const response = await axios.post(url, metadata, { headers });
+    return response.data;
   }
 
   /**

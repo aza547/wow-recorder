@@ -19,7 +19,6 @@ import {
   markForVideoForDelete,
   getPromiseBomb,
   loadAllVideosDisk,
-  getAllCloudMetadata,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -45,6 +44,7 @@ import {
   UploadQueueItem,
   Metadata,
   CloudObject,
+  CloudMetadata,
 } from './types';
 import {
   getObsBaseConfig,
@@ -991,34 +991,36 @@ export default class Manager {
       videos.push(...cloudVideos);
     }
 
-    // Deliberately after the cloud stuff so we'll always have cloud povs
-    // come first in the UI and not vice versa.
     const diskVideos = await loadAllVideosDisk(storagePath);
     videos.push(...diskVideos);
 
     return videos;
   }
 
-  private async loadAllVideosCloud() {
-    let objects: CloudObject[];
+  private async loadAllVideosCloud(): Promise<RendererVideo[]> {
+    let data: CloudMetadata[];
 
     try {
       assert(this.cloudClient);
-      objects = await this.cloudClient.list();
+      data = await this.cloudClient.getState();
     } catch (error) {
-      console.error('[Manager] Failed to list keys:', String(error));
+      console.error('[Manager] Failed to get state:', String(error));
       return [];
     }
 
-    const videoDetailPromises = objects
-      .filter((obj) => obj.key.endsWith('json'))
-      .map((obj) => this.loadVideoDetailsCloud(obj));
+    const list: RendererVideo[] = data.map((metadata) => {
+      return {
+        ...metadata,
+        videoSource: metadata.videoKey,
+        thumbnailSource: metadata.thumbnailKey,
+        multiPov: [],
+        cloud: true,
+        isProtected: Boolean(metadata.protected),
+        mtime: 0,
+      };
+    });
 
-    const videoDetails: RendererVideo[] = (
-      await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
-    ).filter((result) => !(result instanceof Error));
-
-    return videoDetails;
+    return list;
   }
 
   /**

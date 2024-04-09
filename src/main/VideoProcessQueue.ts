@@ -233,16 +233,25 @@ export default class VideoProcessQueue {
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
       await this.cloudClient.putFile(item.path, progressCallback);
+      await this.cloudClient.putFile(thumbNailPath);
       progressCallback(100);
+      const metadata = await getMetadataForVideo(item.path);
 
-      await Promise.all([
-        this.cloudClient.putFile(thumbNailPath),
-        this.cloudClient.putFile(metadataPath),
-      ]);
+      const cloudMetadata: CloudMetadata = {
+        ...metadata,
+        start: metadata.start || 0,
+        uniqueHash: metadata.uniqueHash || '',
+        name: path.basename(item.path, '.mp4'),
+        videoKey: path.basename(item.path),
+        thumbnailKey: path.basename(item.path.replace('mp4', 'png')),
+      };
+
+      await this.cloudClient.postVideo(cloudMetadata);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
-        String(error)
+        String(error), 
+        error
       );
       progressCallback(100);
     }

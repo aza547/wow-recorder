@@ -199,7 +199,7 @@ type Metadata = {
   mapID?: number;
   challengeModeTimeline?: RawChallengeModeTimelineSegment[];
   soloShuffleTimeline?: SoloShuffleTimelineSegment[];
-  level?: number;
+  keystoneLevel?: number;
   encounterName?: string;
   protected?: boolean;
   soloShuffleRoundsWon?: number;
@@ -210,6 +210,18 @@ type Metadata = {
   tag?: string;
   delete?: boolean; // signals video should be deleted when possible
   uniqueHash?: string; // used for cloud video grouping
+};
+
+/**
+ * We mandata some fields are present for cloud videos that are optional for
+ * disk based videos.
+ */
+type CloudMetadata = Metadata & {
+  name: string;
+  videoKey: string;
+  thumbnailKey: string;
+  start: number;
+  uniqueHash: string;
 };
 
 /**
@@ -478,4 +490,5 @@ export {
   ICloudClient,
   IBrowserWindow,
   UploadQueueItem,
+  CloudMetadata,
 };
