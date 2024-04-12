@@ -88,9 +88,11 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
       }
     });
 
-    dailyVideosInOrder.sort(
-      (A: RendererVideo, B: RendererVideo) => A.mtime - B.mtime
-    );
+    dailyVideosInOrder.sort((A: RendererVideo, B: RendererVideo) => {
+      const bestTimeA = A.start ? A.start : A.mtime;
+      const bestTimeB = B.start ? B.start : B.mtime;
+      return bestTimeA - bestTimeB;
+    });
 
     return dailyVideosInOrder.indexOf(video) + 1;
   };

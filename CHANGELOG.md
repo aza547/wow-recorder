@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [4.1.4] - 2024-04-12
+### Fixed
+- Fix pull counter for cloud videos.
+
 ## [4.1.3] - 2024-04-07
 ### Fixed
 - Improve the responsiveness of setting reconfigures by only validating what has changed.
