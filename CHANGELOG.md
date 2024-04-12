@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix to include new SOD difficulty for Sunken Temple.
 
 ## [4.1.4] - 2024-04-12
 ### Fixed
