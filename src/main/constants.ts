@@ -909,6 +909,7 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
 
   // Classic era 10 man?
   198: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
+  215: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
 };
 
 const categoryTabSx = {
