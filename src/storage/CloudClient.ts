@@ -10,7 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
-import { CloudMetadata, CloudObject, ICloudClient, Metadata } from 'main/types';
+import { CloudMetadata, CloudObject, ICloudClient } from 'main/types';
 import path from 'path';
 
 /**
@@ -165,7 +165,23 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
     const encName = encodeURIComponent(videoName);
     const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}`;
     const headers = { Authorization: this.authHeader };
-    await axios.delete(url, { headers });
+
+    const response = await axios.delete(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error(
+        '[CloudClient] Failed to delete a video from database',
+        status,
+        data
+      );
+
+      throw new Error('Failed to delete a video from database');
+    }
   }
 
   /**
@@ -178,7 +194,18 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
     const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}/protected`;
     const headers = { Authorization: this.authHeader };
     const body = bool ? 'true' : 'false';
-    await axios.post(url, body, { headers });
+
+    const response = await axios.post(url, body, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failed to protect a video', status, data);
+      throw new Error('Failed to protect a video');
+    }
   }
 
   /**
@@ -190,7 +217,18 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
     const encName = encodeURIComponent(videoName);
     const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}/tag`;
     const headers = { Authorization: this.authHeader };
-    await axios.post(url, tag, { headers });
+
+    const response = await axios.post(url, tag, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failed to tag a video', status, data);
+      throw new Error('Failed to tag a video');
+    }
   }
 
   /**
