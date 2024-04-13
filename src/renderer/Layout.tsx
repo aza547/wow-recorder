@@ -66,7 +66,7 @@ const Layout = (props: IProps) => {
         videoFilterQuery: '',
         page: Pages.None,
         category: newCategory,
-        selectedVideoName: first?.name,
+        selectedVideoName: first?.videoName,
         playingVideo: first,
         numVideosDisplayed: 10,
       };

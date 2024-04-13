@@ -229,7 +229,7 @@ const loadVideoDetailsDisk = async (
 
     return {
       ...metadata,
-      name: path.basename(video.name, '.mp4'),
+      videoName: path.basename(video.name, '.mp4'),
       mtime: video.mtime,
       videoSource: video.name,
       thumbnailSource,

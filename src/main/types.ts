@@ -217,7 +217,7 @@ type Metadata = {
  * disk based videos.
  */
 type CloudMetadata = Metadata & {
-  name: string;
+  videoName: string;
   videoKey: string;
   thumbnailKey: string;
   start: number;
@@ -242,7 +242,7 @@ type RawCombatant = {
  * add when reading the file.
  */
 type RendererVideo = Metadata & {
-  name: string;
+  videoName: string;
   mtime: number;
   videoSource: string;
   thumbnailSource: string;

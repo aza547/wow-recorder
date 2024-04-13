@@ -16,10 +16,7 @@ import {
   tryUnlink,
   writeMetadataFile,
   getThumbnailFileNameForVideo,
-  getConsistentMachineHash,
   getMetadataForVideo,
-  getAllCloudMetadata,
-  getMetadataFileNameForVideo,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import CloudSizeMonitor from '../storage/CloudSizeMonitor';
@@ -228,7 +225,6 @@ export default class VideoProcessQueue {
     try {
       assert(this.cloudClient);
       const thumbNailPath = getThumbnailFileNameForVideo(item.path);
-      const metadataPath = getMetadataFileNameForVideo(item.path);
 
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
@@ -241,7 +237,7 @@ export default class VideoProcessQueue {
         ...metadata,
         start: metadata.start || 0,
         uniqueHash: metadata.uniqueHash || '',
-        name: path.basename(item.path, '.mp4'),
+        videoName: path.basename(item.path, '.mp4'),
         videoKey: path.basename(item.path),
         thumbnailKey: path.basename(item.path.replace('mp4', 'png')),
       };
@@ -250,7 +246,7 @@ export default class VideoProcessQueue {
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
-        String(error), 
+        String(error),
         error
       );
       progressCallback(100);

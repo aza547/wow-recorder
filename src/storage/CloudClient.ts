@@ -133,12 +133,48 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
    * Add a video to the WR database.
    */
   public async postVideo(metadata: CloudMetadata) {
-    console.info('[CloudClient] Adding video to database', metadata.name);
+    console.info('[CloudClient] Adding video to database', metadata.videoName);
     const encGuild = encodeURIComponent(this.bucket);
     const url = `${this.apiEndpoint}/${encGuild}/videos`;
     const headers = { Authorization: this.authHeader };
-    const response = await axios.post(url, metadata, { headers });
-    return response.data;
+    await axios.post(url, metadata, { headers });
+  }
+
+  /**
+   * Delete a video.
+   */
+  public async deleteVideo(videoName: string) {
+    console.info('[CloudClient] Deleting video', videoName);
+    const encGuild = encodeURIComponent(this.bucket);
+    const encName = encodeURIComponent(videoName);
+    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}`;
+    const headers = { Authorization: this.authHeader };
+    await axios.delete(url, { headers });
+  }
+
+  /**
+   * Protect a video.
+   */
+  public async protectVideo(videoName: string, bool: boolean) {
+    console.info('[CloudClient] Set protected', bool, videoName);
+    const encGuild = encodeURIComponent(this.bucket);
+    const encName = encodeURIComponent(videoName);
+    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}/protected`;
+    const headers = { Authorization: this.authHeader };
+    const body = bool ? 'true' : 'false';
+    await axios.post(url, body, { headers });
+  }
+
+  /**
+   * Tag a video.
+   */
+  public async tagVideo(videoName: string, tag: string) {
+    console.info('[CloudClient] Set tag', tag, videoName);
+    const encGuild = encodeURIComponent(this.bucket);
+    const encName = encodeURIComponent(videoName);
+    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}/tag`;
+    const headers = { Authorization: this.authHeader };
+    await axios.post(url, tag, { headers });
   }
 
   /**
