@@ -187,7 +187,7 @@ export default class ChallengeModeDungeon extends Activity {
       upgradeLevel: this.upgradeLevel,
       player: this.player.getRaw(),
       challengeModeTimeline: rawSegments,
-      level: this.level,
+      keystoneLevel: this.level,
       flavour: this.flavour,
       overrun: this.overrun,
       combatants: rawCombatants,

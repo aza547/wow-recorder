@@ -48,12 +48,12 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
   private pollTimer: NodeJS.Timer | undefined;
 
   /**
-   * The WR API endpoint. This is used for authenticating the user to provide read
-   * only S3 credentials on startup, to provide signed URLs for uploads and also
-   * handles deletes and mtime updates directly.
+   * The WR API endpoint. This is used for authentication, retrieval and
+   * manipulation of video state from the video database, and various
+   * bits of R2 interaction.
    */
   private apiEndpoint =
-    'https://warcraft-recorder-dev.alex-kershaw4.workers.dev';
+    'https://warcraft-recorder-api.alex-kershaw4.workers.dev';
 
   /**
    * The Cloudflare R2 endpoint, this is an S3 compatible API.
@@ -137,7 +137,23 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
     const encGuild = encodeURIComponent(this.bucket);
     const url = `${this.apiEndpoint}/${encGuild}/videos`;
     const headers = { Authorization: this.authHeader };
-    await axios.post(url, metadata, { headers });
+
+    const response = await axios.post(url, metadata, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error(
+        '[CloudClient] Failed to add a video to database',
+        status,
+        data
+      );
+
+      throw new Error('Failed to add a video to database');
+    }
   }
 
   /**

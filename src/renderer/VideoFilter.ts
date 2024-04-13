@@ -246,8 +246,8 @@ export default class VideoFilter {
       }
     }
 
-    if (this.video.level !== undefined) {
-      this.addStringFilter(`+${this.video.level}`);
+    if (this.video.keystoneLevel !== undefined) {
+      this.addStringFilter(`+${this.video.keystoneLevel}`);
     }
 
     if (this.video.affixes) {
