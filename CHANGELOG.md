@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [5.0.1] - 2024-04-14
+### Fixed
+- Fix to download button not working.
+
 ## [5.0.0] - 2024-04-13
 ### Changed
 - Use D1 for storing cloud video state, instead of JSON files in R2.

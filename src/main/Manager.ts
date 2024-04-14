@@ -806,16 +806,17 @@ export default class Manager {
     // VideoButton event listeners.
     ipcMain.on('videoButton', async (_event, args) => {
       const action = args[0] as string;
-      const src = args[1] as string;
 
       if (action === 'open') {
         // Open only called for disk based video, see openURL for cloud version.
+        const src = args[1] as string;
         const cloud = args[2] as boolean;
         assert(!cloud);
         openSystemExplorer(src);
       }
 
       if (action === 'save') {
+        const src = args[1] as string;
         const cloud = args[2] as boolean;
         const bool = args[3] as boolean;
 
@@ -827,6 +828,7 @@ export default class Manager {
       }
 
       if (action === 'tag') {
+        const src = args[1] as string;
         const cloud = args[2] as boolean;
         const tag = args[3] as string;
 
@@ -838,10 +840,13 @@ export default class Manager {
       }
 
       if (action === 'download') {
-        this.videoProcessQueue.queueDownload(src);
+        const video = args[1] as RendererVideo;
+        this.videoProcessQueue.queueDownload(video);
       }
 
       if (action === 'upload') {
+        const src = args[1] as string;
+
         const item: UploadQueueItem = {
           path: src,
         };

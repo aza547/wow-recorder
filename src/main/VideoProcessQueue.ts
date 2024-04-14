@@ -7,6 +7,7 @@ import {
   CloudMetadata,
   CloudStatus,
   DiskStatus,
+  RendererVideo,
   SaveStatus,
   UploadQueueItem,
   VideoQueueItem,
@@ -17,6 +18,7 @@ import {
   writeMetadataFile,
   getThumbnailFileNameForVideo,
   getMetadataForVideo,
+  rendererVideoToMetadata,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import CloudSizeMonitor from '../storage/CloudSizeMonitor';
@@ -156,8 +158,8 @@ export default class VideoProcessQueue {
     this.uploadQueue.write(item);
   };
 
-  public queueDownload = async (name: string) => {
-    this.downloadQueue.write(name);
+  public queueDownload = async (video: RendererVideo) => {
+    this.downloadQueue.write(video);
   };
 
   /**
@@ -260,12 +262,11 @@ export default class VideoProcessQueue {
    * the cloud store.
    */
   private async processDownloadQueueItem(
-    key: string,
+    video: RendererVideo,
     done: () => void
   ): Promise<void> {
     const storageDir = this.cfg.get<string>('storagePath');
-    const metadataName = key.replace('.mp4', '.json');
-    const thumbnailName = key.replace('.mp4', '.png');
+    const { videoName, videoSource, thumbnailSource } = video;
 
     let lastProgress = 0;
 
@@ -282,10 +283,13 @@ export default class VideoProcessQueue {
       assert(this.cloudClient);
 
       await Promise.all([
-        this.cloudClient.getAsFile(key, storageDir, progressCallback),
-        this.cloudClient.getAsFile(metadataName, storageDir),
-        this.cloudClient.getAsFile(thumbnailName, storageDir),
+        this.cloudClient.getAsFile(videoSource, storageDir, progressCallback),
+        this.cloudClient.getAsFile(thumbnailSource, storageDir),
       ]);
+
+      const metadata = rendererVideoToMetadata(video);
+      const videoPath = path.join(storageDir, `${videoName}.mp4`);
+      await writeMetadataFile(videoPath, metadata);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error downloading video:',

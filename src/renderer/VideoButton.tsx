@@ -327,7 +327,7 @@ export default function VideoButton(props: IProps) {
   };
 
   const downloadVideo = async () => {
-    ipc.sendMessage('videoButton', ['download', videoSource]);
+    ipc.sendMessage('videoButton', ['download', video]);
   };
 
   const getDownloadButton = () => {
