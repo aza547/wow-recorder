@@ -10,7 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
-import { CloudObject, ICloudClient } from 'main/types';
+import { CloudMetadata, CloudObject, ICloudClient } from 'main/types';
 import path from 'path';
 
 /**
@@ -48,12 +48,12 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
   private pollTimer: NodeJS.Timer | undefined;
 
   /**
-   * The WR API endpoint. This is used for authenticating the user to provide read
-   * only S3 credentials on startup, to provide signed URLs for uploads and also
-   * handles deletes and mtime updates directly.
+   * The WR API endpoint. This is used for authentication, retrieval and
+   * manipulation of video state from the video database, and various
+   * bits of R2 interaction.
    */
   private apiEndpoint =
-    'https://warcraft-recorder-worker.alex-kershaw4.workers.dev';
+    'https://warcraft-recorder-api.alex-kershaw4.workers.dev';
 
   /**
    * The Cloudflare R2 endpoint, this is an S3 compatible API.
@@ -115,6 +115,120 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
         secretAccessKey: data.secret,
       },
     });
+  }
+
+  /**
+   * Get the video state from the WR database.
+   */
+  public async getState(): Promise<CloudMetadata[]> {
+    console.info('[CloudClient] Getting state');
+    const encGuild = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encGuild}/videos`;
+    const headers = { Authorization: this.authHeader };
+    const response = await axios.get(url, { headers });
+    return response.data;
+  }
+
+  /**
+   * Add a video to the WR database.
+   */
+  public async postVideo(metadata: CloudMetadata) {
+    console.info('[CloudClient] Adding video to database', metadata.videoName);
+    const encGuild = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encGuild}/videos`;
+    const headers = { Authorization: this.authHeader };
+
+    const response = await axios.post(url, metadata, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error(
+        '[CloudClient] Failed to add a video to database',
+        status,
+        data
+      );
+
+      throw new Error('Failed to add a video to database');
+    }
+  }
+
+  /**
+   * Delete a video.
+   */
+  public async deleteVideo(videoName: string) {
+    console.info('[CloudClient] Deleting video', videoName);
+    const encGuild = encodeURIComponent(this.bucket);
+    const encName = encodeURIComponent(videoName);
+    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}`;
+    const headers = { Authorization: this.authHeader };
+
+    const response = await axios.delete(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error(
+        '[CloudClient] Failed to delete a video from database',
+        status,
+        data
+      );
+
+      throw new Error('Failed to delete a video from database');
+    }
+  }
+
+  /**
+   * Protect a video.
+   */
+  public async protectVideo(videoName: string, bool: boolean) {
+    console.info('[CloudClient] Set protected', bool, videoName);
+    const encGuild = encodeURIComponent(this.bucket);
+    const encName = encodeURIComponent(videoName);
+    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}/protected`;
+    const headers = { Authorization: this.authHeader };
+    const body = bool ? 'true' : 'false';
+
+    const response = await axios.post(url, body, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failed to protect a video', status, data);
+      throw new Error('Failed to protect a video');
+    }
+  }
+
+  /**
+   * Tag a video.
+   */
+  public async tagVideo(videoName: string, tag: string) {
+    console.info('[CloudClient] Set tag', tag, videoName);
+    const encGuild = encodeURIComponent(this.bucket);
+    const encName = encodeURIComponent(videoName);
+    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}/tag`;
+    const headers = { Authorization: this.authHeader };
+
+    const response = await axios.post(url, tag, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failed to tag a video', status, data);
+      throw new Error('Failed to tag a video');
+    }
   }
 
   /**

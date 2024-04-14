@@ -1,6 +1,6 @@
 {
-  "name": "electron-react-boilerplate",
-  "description": "A foundation for scalable desktop apps",
+  "name": "WarcraftRecorder",
+  "description": "A World of Warcraft screen recorder",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
     "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
@@ -46,7 +46,7 @@
   },
   "build": {
     "productName": "WarcraftRecorder",
-    "appId": "org.WarcraftRecorder",
+    "appId": "org.warcraftrecorder",
     "asar": true,
     "asarUnpack": "**\\**",
     "files": [
@@ -110,8 +110,8 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "electron-react-boilerplate",
-      "repo": "electron-react-boilerplate"
+      "owner": "aza547",
+      "repo": "wow-recorder"
     }
   },
   "repository": {
@@ -247,7 +247,7 @@
     "electron-log": "^4.4.8",
     "electron-osx-prompt": "^1.4.1",
     "electron-store": "^8.0.1",
-    "electron-updater": "^4.6.5",
+    "electron-updater": "^5.0.1",
     "fluent-ffmpeg": "^2.1.2",
     "fs": "^0.0.1-security",
     "history": "^5.3.0",

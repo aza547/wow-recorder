@@ -84,7 +84,7 @@ const CategoryPage = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: video.name,
+        selectedVideoName: video.videoName,
         playingVideo: povs[0],
       };
     });
@@ -92,7 +92,7 @@ const CategoryPage = (props: IProps) => {
 
   const mapActivityToListItem = (video: RendererVideo) => {
     const povs = [video, ...video.multiPov].sort(povNameSort);
-    const names = povs.map((v) => v.name);
+    const names = povs.map((v) => v.videoName);
     const selected = appState.selectedVideoName
       ? names.includes(appState.selectedVideoName)
       : categoryState.indexOf(video) === 0;

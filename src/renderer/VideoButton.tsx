@@ -108,18 +108,21 @@ export default function VideoButton(props: IProps) {
 
   const povs = [video, ...video.multiPov].sort(povNameSort);
   const pov = povs[localPovIndex];
-  const { cloud, thumbnailSource, isProtected, tag, videoSource } = pov;
+  const { videoName, cloud, thumbnailSource, isProtected, tag, videoSource } =
+    pov;
 
   // Check if we have this point of view duplicated in the other storage
   // type. Don't want to be showing the download button if we have already
   // got it on disk and vice versa.
   const haveOnDisk =
     !cloud ||
-    povs.filter((v) => v.name === pov.name).filter((v) => !v.cloud).length > 0;
+    povs.filter((v) => v.videoName === videoName).filter((v) => !v.cloud)
+      .length > 0;
 
   const haveInCloud =
     cloud ||
-    povs.filter((v) => v.name === pov.name).filter((v) => v.cloud).length > 0;
+    povs.filter((v) => v.videoName === videoName).filter((v) => v.cloud)
+      .length > 0;
 
   const bookmarkOpacity = isProtected ? 1 : 0.2;
   const tagOpacity = tag ? 1 : 0.2;
@@ -160,11 +163,8 @@ export default function VideoButton(props: IProps) {
     event.stopPropagation();
     setDeleteDialogOpen(false);
 
-    window.electron.ipcRenderer.sendMessage('safeDeleteVideo', [
-      videoSource,
-      cloud,
-    ]);
-
+    const src = cloud ? videoName : videoSource;
+    window.electron.ipcRenderer.sendMessage('safeDeleteVideo', [src, cloud]);
     stateManager.current.deleteVideo(pov);
 
     if (!selected) {
@@ -207,11 +207,14 @@ export default function VideoButton(props: IProps) {
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
     stateManager.current.toggleProtect(pov);
+    const src = cloud ? videoName : videoSource;
+    const bool = !isProtected;
 
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'save',
-      videoSource,
+      src,
       cloud,
+      bool,
     ]);
   };
 
@@ -324,7 +327,7 @@ export default function VideoButton(props: IProps) {
   };
 
   const downloadVideo = async () => {
-    ipc.sendMessage('videoButton', ['download', videoSource]);
+    ipc.sendMessage('videoButton', ['download', pov]);
   };
 
   const getDownloadButton = () => {

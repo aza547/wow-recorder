@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [5.1.0] - 2024-04-14
+### Fixed
+- Bring back auto-updater.
+
+## [5.0.1] - 2024-04-14
+### Fixed
+- Fix the cloud size monitor so it deletes from the database.
+- Fix to download button not working.
+
+## [5.0.0] - 2024-04-13
+### Changed
+- Use D1 for storing cloud video state, instead of JSON files in R2.
+
+### Fixed
 - Fix to include new SOD difficulty for Sunken Temple.
 
 ## [4.1.4] - 2024-04-12

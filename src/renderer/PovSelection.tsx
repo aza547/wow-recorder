@@ -114,7 +114,7 @@ export default function PovSelection(props: IProps) {
       setAppState((prevState) => {
         return {
           ...prevState,
-          selectedVideoName: video.name,
+          selectedVideoName: video.videoName,
           playingVideo: povs[povIndex],
         };
       });
@@ -289,13 +289,13 @@ export default function PovSelection(props: IProps) {
    */
   const groupByName = (arr: RendererVideo[]) => {
     return arr.reduce((acc: Record<string, RendererVideo[]>, obj) => {
-      const { name } = obj;
+      const { videoName } = obj;
 
-      if (!acc[name]) {
-        acc[name] = [];
+      if (!acc[videoName]) {
+        acc[videoName] = [];
       }
 
-      acc[name].push(obj);
+      acc[videoName].push(obj);
       return acc;
     }, {});
   };

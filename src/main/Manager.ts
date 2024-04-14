@@ -19,7 +19,6 @@ import {
   markForVideoForDelete,
   getPromiseBomb,
   loadAllVideosDisk,
-  getAllCloudMetadata,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -43,8 +42,7 @@ import {
   CloudStatus,
   DiskStatus,
   UploadQueueItem,
-  Metadata,
-  CloudObject,
+  CloudMetadata,
 } from './types';
 import {
   getObsBaseConfig,
@@ -808,26 +806,29 @@ export default class Manager {
     // VideoButton event listeners.
     ipcMain.on('videoButton', async (_event, args) => {
       const action = args[0] as string;
-      const src = args[1] as string;
 
       if (action === 'open') {
         // Open only called for disk based video, see openURL for cloud version.
+        const src = args[1] as string;
         const cloud = args[2] as boolean;
         assert(!cloud);
         openSystemExplorer(src);
       }
 
       if (action === 'save') {
+        const src = args[1] as string;
         const cloud = args[2] as boolean;
+        const bool = args[3] as boolean;
 
         if (cloud) {
-          await this.protectVideoCloud(src);
+          await this.protectVideoCloud(src, bool);
         } else {
           await toggleVideoProtectedDisk(src);
         }
       }
 
       if (action === 'tag') {
+        const src = args[1] as string;
         const cloud = args[2] as boolean;
         const tag = args[3] as string;
 
@@ -839,10 +840,13 @@ export default class Manager {
       }
 
       if (action === 'download') {
-        this.videoProcessQueue.queueDownload(src);
+        const video = args[1] as RendererVideo;
+        this.videoProcessQueue.queueDownload(video);
       }
 
       if (action === 'upload') {
+        const src = args[1] as string;
+
         const item: UploadQueueItem = {
           path: src,
         };
@@ -991,150 +995,76 @@ export default class Manager {
       videos.push(...cloudVideos);
     }
 
-    // Deliberately after the cloud stuff so we'll always have cloud povs
-    // come first in the UI and not vice versa.
     const diskVideos = await loadAllVideosDisk(storagePath);
     videos.push(...diskVideos);
 
     return videos;
   }
 
-  private async loadAllVideosCloud() {
-    let objects: CloudObject[];
-
+  private async loadAllVideosCloud(): Promise<RendererVideo[]> {
     try {
       assert(this.cloudClient);
-      objects = await this.cloudClient.list();
+      const raw = await this.cloudClient.getState();
+
+      const videos = raw.map((metadata) => {
+        return {
+          ...metadata,
+          videoSource: metadata.videoKey,
+          thumbnailSource: metadata.thumbnailKey,
+          multiPov: [],
+          cloud: true,
+          isProtected: Boolean(metadata.protected),
+          mtime: 0,
+        };
+      });
+
+      return videos;
     } catch (error) {
-      console.error('[Manager] Failed to list keys:', String(error));
+      console.error('[Manager] Failed to get state:', String(error));
       return [];
     }
-
-    const videoDetailPromises = objects
-      .filter((obj) => obj.key.endsWith('json'))
-      .map((obj) => this.loadVideoDetailsCloud(obj));
-
-    const videoDetails: RendererVideo[] = (
-      await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
-    ).filter((result) => !(result instanceof Error));
-
-    return videoDetails;
   }
-
-  /**
-   * Load details for a video from the cloud.
-   * @throws
-   */
-  private loadVideoDetailsCloud = async (
-    obj: CloudObject
-  ): Promise<RendererVideo> => {
-    const jsonKey = obj.key;
-    const imageKey = jsonKey.replace('json', 'png');
-    const videoKey = jsonKey.replace('json', 'mp4');
-
-    try {
-      assert(this.cloudClient);
-      const metadata = await this.getMetadataForVideoCloud(jsonKey);
-
-      const thumbnailSource = imageKey;
-      const videoSource = videoKey;
-      const isProtected = Boolean(metadata.protected);
-
-      return {
-        ...metadata,
-        name: path.basename(videoSource, '.mp4'),
-        mtime: 0,
-        videoSource,
-        thumbnailSource,
-        isProtected,
-        cloud: true,
-        multiPov: [],
-      };
-    } catch (error) {
-      // Just log it and rethrow. Want this to be diagnosable.
-      console.warn('[Manager] Failed to load video:', jsonKey, String(error));
-      throw error;
-    }
-  };
-
-  /**
-   * Get the metadata object for a video from the accompanying JSON file.
-   * @throws
-   */
-  private getMetadataForVideoCloud = async (jsonKey: string) => {
-    assert(this.cloudClient);
-    const json = await this.cloudClient.getAsString(jsonKey);
-    const metadata = JSON.parse(json) as Metadata;
-    return metadata;
-  };
 
   /**
    * Delete a video from the cloud, and it's accompanying metadata and thumbnail.
    */
-  private deleteVideoCloud = async (videoKey: string) => {
-    const thumbnailKey = videoKey.replace('mp4', 'png');
-    const jsonKey = videoKey.replace('mp4', 'json');
-
+  private deleteVideoCloud = async (videoName: string) => {
     try {
       assert(this.cloudClient);
-
-      await Promise.all([
-        this.cloudClient.delete(videoKey),
-        this.cloudClient.delete(thumbnailKey),
-        this.cloudClient.delete(jsonKey),
-      ]);
+      await this.cloudClient.deleteVideo(videoName);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to delete', jsonKey, String(error));
-    }
-  };
-
-  /**
-   * Tag a video in the cloud.
-   */
-  private tagVideoCloud = async (videoKey: string, tag: string) => {
-    const jsonKey = videoKey.replace('mp4', 'json');
-
-    try {
-      const metadata = await this.getMetadataForVideoCloud(jsonKey);
-
-      if (!tag || !/\S/.test(tag)) {
-        // empty or whitespace only
-        console.info('[Manager] User removed tag');
-        metadata.tag = undefined;
-      } else {
-        console.info('[Manager] User tagged', videoKey, 'with', tag);
-        metadata.tag = tag;
-      }
-
-      const jsonString = JSON.stringify(metadata, null, 2);
-      assert(this.cloudClient);
-      await this.cloudClient.putJsonString(jsonString, jsonKey);
-    } catch (error) {
-      // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to tag', jsonKey, String(error));
+      console.warn('[Manager] Failed to delete', videoName, String(error));
     }
   };
 
   /**
    * Toggle protection on a video in the cloud.
    */
-  private protectVideoCloud = async (videoKey: string) => {
-    const jsonKey = videoKey.replace('mp4', 'json');
+  private protectVideoCloud = async (videoName: string, bool: boolean) => {
+    console.info('[Manager] User protected', videoName, bool);
 
     try {
-      const metadata = await this.getMetadataForVideoCloud(jsonKey);
-      metadata.protected = !metadata.protected;
-
-      console.info('[Manager] User toggled protection for', videoKey);
-      console.info('[Manager] Protected attribute is now', metadata.protected);
-
-      const jsonString = JSON.stringify(metadata, null, 2);
       assert(this.cloudClient);
-      await this.cloudClient.putJsonString(jsonString, jsonKey);
+      await this.cloudClient.protectVideo(videoName, bool);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to protect', jsonKey, String(error));
+      console.warn('[Manager] Failed to protect', videoName, String(error));
+    }
+  };
+
+  /**
+   * Tag a video in the cloud.
+   */
+  private tagVideoCloud = async (videoName: string, tag: string) => {
+    console.info('[Manager] User tagged', videoName, 'with', tag);
+
+    try {
+      assert(this.cloudClient);
+      await this.cloudClient.tagVideo(videoName, tag);
+    } catch (error) {
+      // Just log this and quietly swallow it. Nothing more we can do.
+      console.warn('[Manager] Failed to tag', videoName, String(error));
     }
   };
 }

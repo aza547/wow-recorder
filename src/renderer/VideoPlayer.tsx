@@ -48,7 +48,6 @@ interface IProps {
   playing: boolean;
   setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   config: ConfigurationSchema;
-  setConfig: React.Dispatch<React.SetStateAction<ConfigurationSchema>>;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -78,7 +77,6 @@ export const VideoPlayer = (props: IProps) => {
     playing,
     setPlaying,
     config,
-    setConfig,
     playerHeight,
   } = props;
   const { videoSource, cloud } = video;
@@ -610,9 +608,10 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderClipButton = () => {
     const color = cloud ? 'rgba(239, 239, 240, 0.25)' : 'white';
+    const tooltip = cloud ? 'You can only clip locally saved videos' : 'Clip';
 
     return (
-      <Tooltip title="Clip">
+      <Tooltip title={tooltip}>
         <div>
           <Button
             sx={{ color: 'white' }}

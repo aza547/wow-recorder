@@ -20,14 +20,20 @@ class TestCloudClient implements ICloudClient {
     },
   ];
 
-  public deleted: string[] = [];
+  public deletedObjects: string[] = [];
+
+  public deletedRows: string[] = [];
 
   public async list() {
     return this.objects;
   }
 
   public async delete(key: string) {
-    this.deleted.push(key);
+    this.deletedObjects.push(key);
+  }
+
+  public async deleteVideo(videoName: string) {
+    this.deletedRows.push(videoName);
   }
 }
 
@@ -55,11 +61,13 @@ test('Run', async () => {
   const sizeMonitor = new CloudSizeMonitor(mainWindow, cloudClient, 250);
   await sizeMonitor.run();
 
-  const { deleted } = cloudClient;
-  const expected = ['older.mp4', 'older.png', 'older.json'];
+  const { deletedObjects, deletedRows } = cloudClient;
+  const expectedDeletedObjects = ['older.mp4', 'older.png'];
+  const expectedDeletedRows = ['older'];
   const refreshes = mainWindow.webContents.refreshCount;
 
-  expect(deleted).toStrictEqual(expected);
+  expect(deletedObjects).toStrictEqual(expectedDeletedObjects);
+  expect(deletedRows).toStrictEqual(expectedDeletedRows);
   expect(refreshes).toBe(1);
 });
 

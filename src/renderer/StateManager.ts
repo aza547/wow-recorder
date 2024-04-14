@@ -47,7 +47,6 @@ export default class StateManager {
   public async refresh() {
     this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
     const correlated = this.correlate();
-    console.log(correlated);
     this.setVideoState(correlated);
   }
 

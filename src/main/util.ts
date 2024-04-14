@@ -229,7 +229,7 @@ const loadVideoDetailsDisk = async (
 
     return {
       ...metadata,
-      name: path.basename(video.name, '.mp4'),
+      videoName: path.basename(video.name, '.mp4'),
       mtime: video.mtime,
       videoSource: video.name,
       thumbnailSource,
@@ -803,6 +803,22 @@ const povNameSort = (a: RendererVideo, b: RendererVideo) => {
   return playerA.localeCompare(playerB);
 };
 
+/**
+ * Convert a RendererVideo type to a Metadata type, used when downloading
+ * videos from cloud to disk.
+ */
+const rendererVideoToMetadata = (video: RendererVideo) => {
+  const data = video as any;
+  delete data.videoSource;
+  delete data.videoName;
+  delete data.mtime;
+  delete data.thumbnailSource;
+  delete data.isProtected;
+  delete data.cloud;
+  delete data.multiPov;
+  return data as Metadata;
+};
+
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -838,4 +854,5 @@ export {
   areDatesWithinSeconds,
   markForVideoForDelete,
   povNameSort,
+  rendererVideoToMetadata,
 };
