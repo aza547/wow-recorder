@@ -1002,29 +1002,27 @@ export default class Manager {
   }
 
   private async loadAllVideosCloud(): Promise<RendererVideo[]> {
-    let data: CloudMetadata[];
-
     try {
       assert(this.cloudClient);
-      data = await this.cloudClient.getState();
+      const raw = await this.cloudClient.getState();
+
+      const videos = raw.map((metadata) => {
+        return {
+          ...metadata,
+          videoSource: metadata.videoKey,
+          thumbnailSource: metadata.thumbnailKey,
+          multiPov: [],
+          cloud: true,
+          isProtected: Boolean(metadata.protected),
+          mtime: 0,
+        };
+      });
+
+      return videos;
     } catch (error) {
       console.error('[Manager] Failed to get state:', String(error));
       return [];
     }
-
-    const list: RendererVideo[] = data.map((metadata) => {
-      return {
-        ...metadata,
-        videoSource: metadata.videoKey,
-        thumbnailSource: metadata.thumbnailKey,
-        multiPov: [],
-        cloud: true,
-        isProtected: Boolean(metadata.protected),
-        mtime: 0,
-      };
-    });
-
-    return list;
   }
 
   /**
