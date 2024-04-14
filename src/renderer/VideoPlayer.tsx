@@ -45,8 +45,6 @@ interface IProps {
   video: RendererVideo;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
-  playing: boolean;
-  setPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   config: ConfigurationSchema;
 }
 
@@ -71,19 +69,13 @@ const sliderSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const {
-    video,
-    persistentProgress,
-    playing,
-    setPlaying,
-    config,
-    playerHeight,
-  } = props;
+  const { video, persistentProgress, config, playerHeight } = props;
   const { videoSource, cloud } = video;
 
   const player = useRef<ReactPlayer>(null);
   const progressSlider = useRef<HTMLSpanElement>(null);
 
+  const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);

@@ -199,8 +199,12 @@ const createWindow = async () => {
 
   uIOhook.start();
 
-  // eslint-disable-next-line
-  new AppUpdater();
+  try {
+    // eslint-disable-next-line
+    new AppUpdater();
+  } catch (error) {
+    console.error('[Main] App Updater:', String(error));
+  }
 };
 
 /**

@@ -49,7 +49,6 @@ const CategoryPage = (props: IProps) => {
   const categoryState = videoState.filter(categoryFilter);
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
-  const [playing, setPlaying] = useState(false);
 
   const filteredState = categoryState.filter((video) =>
     new VideoFilter(videoFilterQuery, video).filter()
@@ -67,10 +66,7 @@ const CategoryPage = (props: IProps) => {
         key={videoToPlay.videoSource}
         video={videoToPlay}
         persistentProgress={persistentProgress}
-        playing={playing}
-        setPlaying={setPlaying}
         config={config}
-        setConfig={setConfig}
         playerHeight={playerHeight}
       />
     );
