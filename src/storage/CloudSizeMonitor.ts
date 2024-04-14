@@ -1,4 +1,5 @@
 import { CloudObject, IBrowserWindow, ICloudClient } from 'main/types';
+import path from 'path';
 
 export default class CloudSizeMonitor {
   private mainWindow: IBrowserWindow;
@@ -97,12 +98,12 @@ export default class CloudSizeMonitor {
         return;
       }
 
+      const videoName = path.basename(videoKey, '.mp4');
       const thumbnailKey = videoKey.replace('mp4', 'png');
-      const metadataKey = videoKey.replace('mp4', 'json');
 
       deletePromises.push(this.cloudClient.delete(videoKey));
       deletePromises.push(this.cloudClient.delete(thumbnailKey));
-      deletePromises.push(this.cloudClient.delete(metadataKey));
+      deletePromises.push(this.cloudClient.deleteVideo(videoName));
     });
 
     await Promise.all(deletePromises);

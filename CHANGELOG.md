@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.0.1] - 2024-04-14
 ### Fixed
+- Fix the cloud size monitor so it deletes from the database.
 - Fix to download button not working.
 
 ## [5.0.0] - 2024-04-13
