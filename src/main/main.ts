@@ -11,7 +11,6 @@ import {
   clipboard,
 } from 'electron';
 import os from 'os';
-
 import { uIOhook } from 'uiohook-napi';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import assert from 'assert';
@@ -28,6 +27,7 @@ import {
 import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import Manager from './Manager';
+import AppUpdater from './AppUpdater';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -198,6 +198,9 @@ const createWindow = async () => {
   });
 
   uIOhook.start();
+
+  // eslint-disable-next-line
+  new AppUpdater();
 };
 
 /**
