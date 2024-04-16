@@ -429,6 +429,7 @@ interface ICloudClient {
   list: () => Promise<CloudObject[]>;
   delete: (key: string) => Promise<void>;
   deleteVideo: (videoName: string) => Promise<void>;
+  getState: () => Promise<CloudMetadata[]>;
 }
 
 interface IBrowserWindow {

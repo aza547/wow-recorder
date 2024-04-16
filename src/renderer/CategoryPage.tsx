@@ -55,7 +55,7 @@ const CategoryPage = (props: IProps) => {
   );
 
   const slicedState = filteredState.slice(0, numVideosDisplayed);
-  const moreVideosRemain = slicedState.length !== categoryState.length;
+  const moreVideosRemain = slicedState.length !== filteredState.length;
 
   const getVideoPlayer = () => {
     const { playingVideo } = appState;

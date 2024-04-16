@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [5.1.2] - 2024-04-16
+### Fixed
+- A bug where the show more button would show in error.
+- A bug where the cloud size monitor would delete protected videos.
+
 ## [5.1.1] - 2024-04-14
 ### Fixed
 - Fix a bug where hitting play/pause was slightly slow to respond.

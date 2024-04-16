@@ -1,7 +1,47 @@
 /* eslint-disable max-classes-per-file */
-import { CloudObject, IBrowserWindow, ICloudClient } from '../../main/types';
+import { VideoCategory } from '../../types/VideoCategory';
+import {
+  CloudMetadata,
+  CloudObject,
+  Flavour,
+  IBrowserWindow,
+  ICloudClient,
+} from '../../main/types';
 import CloudSizeMonitor from '../../storage/CloudSizeMonitor';
 
+const getTestCloudMetaData = (name: string, protect: boolean) => {
+  const metadata: CloudMetadata = {
+    videoName: name,
+    videoKey: `${name}.mp4`,
+    thumbnailKey: `${name}.png`,
+    category: VideoCategory.Clips,
+    parentCategory: VideoCategory.Raids,
+    duration: 7,
+    start: 0,
+    result: true,
+    flavour: Flavour.Retail,
+    zoneID: 0,
+    zoneName: 'Unknown Raid',
+    encounterID: 2824,
+    difficultyID: 16,
+    difficulty: 'M',
+    player: {
+      _GUID: 'Player-3674-09579123',
+      _teamID: 0,
+      _specID: 62,
+      _name: 'Vutar',
+      _realm: 'TwistingNether',
+    },
+    deaths: [],
+    encounterName: 'Smolderon',
+    protected: protect,
+    combatants: [],
+    overrun: 15,
+    uniqueHash: '636d225211b182acbd979026b42706d9',
+  };
+
+  return metadata;
+};
 /**
  * Test implementation of the Cloud Client to do the bare minimum required
  * for the size monitor run.
@@ -16,8 +56,19 @@ class TestCloudClient implements ICloudClient {
     {
       key: 'older.mp4',
       size: 150 * 1024 ** 3,
-      lastMod: new Date(Date.now() - 60000),
+      lastMod: new Date(Date.now() - 1000),
     },
+    {
+      key: 'protected.mp4',
+      size: 1 * 1024 ** 3,
+      lastMod: new Date(Date.now() - 2000),
+    },
+  ];
+
+  private state: CloudMetadata[] = [
+    getTestCloudMetaData('newer', false),
+    getTestCloudMetaData('older', false),
+    getTestCloudMetaData('protected', true),
   ];
 
   public deletedObjects: string[] = [];
@@ -34,6 +85,10 @@ class TestCloudClient implements ICloudClient {
 
   public async deleteVideo(videoName: string) {
     this.deletedRows.push(videoName);
+  }
+
+  public async getState() {
+    return this.state;
   }
 }
 
@@ -81,5 +136,5 @@ test('Usage', async () => {
 
   const sizeMonitor = new CloudSizeMonitor(mainWindow, cloudClient, 250);
   const usage = await sizeMonitor.usage();
-  expect(usage).toBe(300 * 1024 ** 3);
+  expect(usage).toBe(301 * 1024 ** 3);
 });

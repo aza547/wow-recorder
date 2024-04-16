@@ -33,6 +33,7 @@ export default class CloudSizeMonitor {
     );
 
     const objects = await this.cloudClient.list();
+    const state = await this.cloudClient.getState();
 
     const usedStorageBytes = objects
       .map((obj) => obj.size)
@@ -55,7 +56,26 @@ export default class CloudSizeMonitor {
         return false;
       }
 
-      return object.key.endsWith('mp4');
+      if (!object.key.endsWith('mp4')) {
+        return false;
+      }
+
+      const metadata = state.find((item) => item.videoKey === object.key);
+
+      if (metadata === undefined) {
+        return false;
+      }
+
+      const isProtected = Boolean(metadata.protected);
+
+      if (isProtected) {
+        console.info(
+          '[CloudSizeMonitor] Not deleting protected video',
+          object.key
+        );
+      }
+
+      return !isProtected;
     };
 
     const chronologicalSort = (a: CloudObject, b: CloudObject) => {
