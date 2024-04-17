@@ -59,7 +59,7 @@ const CategoryPage = (props: IProps) => {
 
   const getVideoPlayer = () => {
     const { playingVideo } = appState;
-    const videoToPlay = playingVideo || slicedState[0];
+    const videoToPlay = playingVideo || categoryState[0];
 
     return (
       <VideoPlayer

@@ -8,7 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [5.1.3] - 2024-04-17
+### Fixed
 - Fix a deplete timer in DOTI.
+- Fix a bug where we could try dereference an undefined video.
+- Fix a bug where search text was retained when changing categories.
 
 ## [5.1.2] - 2024-04-16
 ### Fixed

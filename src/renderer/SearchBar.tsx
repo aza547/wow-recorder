@@ -1,6 +1,6 @@
 import { TextField } from '@mui/material';
 import { AppState } from 'main/types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import VideoFilter from './VideoFilter';
 
 interface IProps {
@@ -13,6 +13,12 @@ const SearchBar = (props: IProps) => {
   const [searchText, setSearchText] = useState<string>('');
   const { category } = appState;
   let debounceSearchTimer: NodeJS.Timer;
+
+  useEffect(() => {
+    // We need this so we reset the search on changing category.
+    // Not really sure why the whole component isn't re-created.
+    setSearchText(appState.videoFilterQuery);
+  }, [appState.videoFilterQuery]);
 
   const debouncedFilter = (event: React.BaseSyntheticEvent) => {
     const filterText = event.target.value;
