@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix a deplete timer in DOTI.
 
 ## [5.1.2] - 2024-04-16
 ### Fixed
