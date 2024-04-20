@@ -22,6 +22,7 @@ import {
   getCategoryIndex,
   getFirstInCategory,
   getVideoCategoryFilter,
+  povNameSort,
 } from './rendererutils';
 import CategoryPage from './CategoryPage';
 import StateManager from './StateManager';
@@ -57,7 +58,18 @@ const Layout = (props: IProps) => {
   ) => {
     const index = getCategoryIndex(newCategory);
     setConfigValue('selectedCategory', index);
-    const first = getFirstInCategory(videoState, newCategory);
+
+    let first: RendererVideo | undefined;
+    const firstInCategory = getFirstInCategory(videoState, newCategory);
+
+    if (firstInCategory) {
+      const povs = [firstInCategory, ...firstInCategory.multiPov].sort(
+        povNameSort
+      );
+
+      [first] = povs;
+    }
+
     persistentProgress.current = 0;
 
     setAppState((prevState) => {

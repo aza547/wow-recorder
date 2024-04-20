@@ -3,6 +3,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import MoreTimeIcon from '@mui/icons-material/MoreTime';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {
   Box,
   Button,
@@ -201,14 +202,31 @@ export default function RecorderStatus(props: IProps) {
       return <MoreTimeIcon sx={{ width: '25px', height: '25px' }} />;
     }
 
+    if (recorderStatus === RecStatus.Reconfiguring) {
+      return (
+        <SettingsIcon
+          sx={{
+            width: '25px',
+            height: '25px',
+            animation: 'spin 2s linear infinite',
+            '@keyframes spin': {
+              from: { transform: 'rotate(0deg)' },
+              to: { transform: 'rotate(360deg)' },
+            },
+          }}
+        />
+      );
+    }
+
     return <ReportProblemIcon sx={{ width: '25px', height: '25px' }} />;
   };
 
   const getAppropriateColor = () => {
-    if (
-      recorderStatus === RecStatus.Recording ||
-      recorderStatus === RecStatus.FatalError
-    ) {
+    if (recorderStatus === RecStatus.ReadyToRecord) {
+      return '#bb4420';
+    }
+
+    if (recorderStatus === RecStatus.FatalError) {
       return 'red';
     }
 

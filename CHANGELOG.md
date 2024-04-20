@@ -9,8 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cloud size monitor now runs server side.
 
 ### Added
+- Add a reconfiguring status and animation to the status icon.
+
 ### Fixed
 - Max cloud storage size is now variable.
+- Fix a bug where the wrong video would show on startup/category change with multipov.
 
 ## [5.1.3] - 2024-04-17
 ### Fixed

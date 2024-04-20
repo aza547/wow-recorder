@@ -15,7 +15,11 @@ import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import { getVideoCategoryFilter, povNameSort } from './rendererutils';
+import {
+  getFirstInCategory,
+  getVideoCategoryFilter,
+  povNameSort,
+} from './rendererutils';
 import VideoFilter from './VideoFilter';
 import VideoButton from './VideoButton';
 import StateManager from './StateManager';
@@ -59,7 +63,25 @@ const CategoryPage = (props: IProps) => {
 
   const getVideoPlayer = () => {
     const { playingVideo } = appState;
-    const videoToPlay = playingVideo || categoryState[0];
+    let videoToPlay: RendererVideo;
+
+    if (playingVideo !== undefined) {
+      videoToPlay = playingVideo;
+    } else {
+      const firstInCategory = getFirstInCategory(videoState, category);
+
+      if (firstInCategory === undefined) {
+        // This should never happen, we only load the player if we
+        // have atleast one video to show.
+        throw new Error('firstInCategory was undefined');
+      }
+
+      const povs = [firstInCategory, ...firstInCategory.multiPov].sort(
+        povNameSort
+      );
+
+      [videoToPlay] = povs;
+    }
 
     return (
       <VideoPlayer

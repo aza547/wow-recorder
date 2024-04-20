@@ -200,6 +200,11 @@ export default class Manager {
       return;
     }
 
+    this.mainWindow.webContents.send(
+      'updateRecStatus',
+      RecStatus.Reconfiguring
+    );
+
     this.active = true;
     await this.internalManage();
 

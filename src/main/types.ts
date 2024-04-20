@@ -21,6 +21,7 @@ enum RecStatus {
   ReadyToRecord,
   FatalError,
   Overruning,
+  Reconfiguring,
 }
 
 enum MicStatus {
