@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Cloud size monitor now runs server side.
+
 ### Added
 ### Fixed
+- Max cloud storage size is now variable.
 
 ## [5.1.3] - 2024-04-17
 ### Fixed

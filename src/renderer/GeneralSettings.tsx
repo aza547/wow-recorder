@@ -67,12 +67,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
 
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>({
     usageGB: 0,
-    maxUsageGB: 250,
+    maxUsageGB: 0,
   });
 
   const [diskStatus, setDiskStatus] = useState<DiskStatus>({
     usageGB: 0,
-    maxUsageGB: config.maxStorage,
+    maxUsageGB: 0,
   });
 
   useEffect(() => {

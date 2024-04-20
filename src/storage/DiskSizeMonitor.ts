@@ -95,6 +95,11 @@ export default class DiskSizeMonitor {
   public async usage() {
     const storageDir = this.cfg.get<string>('storagePath');
     const files = await getSortedVideos(storageDir);
+
+    if (files.length < 1) {
+      return 0;
+    }
+
     return files.map((file) => file.size).reduce((acc, num) => acc + num, 0);
   }
 }

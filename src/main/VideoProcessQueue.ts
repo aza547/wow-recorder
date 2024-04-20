@@ -21,7 +21,6 @@ import {
   rendererVideoToMetadata,
 } from './util';
 import CloudClient from '../storage/CloudClient';
-import CloudSizeMonitor from '../storage/CloudSizeMonitor';
 
 const atomicQueue = require('atomic-queue');
 const ffmpeg = require('fluent-ffmpeg');
@@ -382,7 +381,7 @@ export default class VideoProcessQueue {
 
     const status: DiskStatus = {
       usageGB: usage / 1024 ** 3,
-      maxUsageGB: 250,
+      maxUsageGB: this.cfg.get<number>('maxStorage'),
     };
 
     this.mainWindow.webContents.send('updateDiskStatus', status);
@@ -398,21 +397,16 @@ export default class VideoProcessQueue {
       return;
     }
 
-    const sizeMonitor = new CloudSizeMonitor(
-      this.mainWindow,
-      this.cloudClient,
-      250
-    );
-
-    await sizeMonitor.run();
-    const usage = await sizeMonitor.usage();
+    await this.cloudClient.runHousekeeping();
+    const usage = await this.cloudClient.getUsage();
 
     const status: CloudStatus = {
       usageGB: usage / 1024 ** 3,
-      maxUsageGB: 250,
+      maxUsageGB: await this.cloudClient.getMaxStorage(),
     };
 
     this.mainWindow.webContents.send('updateCloudStatus', status);
+    this.mainWindow.webContents.send('refreshState');
   }
 
   /**
@@ -426,7 +420,7 @@ export default class VideoProcessQueue {
 
     const status: DiskStatus = {
       usageGB: usage / 1024 ** 3,
-      maxUsageGB: 250,
+      maxUsageGB: this.cfg.get<number>('maxStorage'),
     };
 
     this.mainWindow.webContents.send('updateDiskStatus', status);

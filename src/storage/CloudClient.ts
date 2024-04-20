@@ -10,13 +10,16 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
-import { CloudMetadata, CloudObject, ICloudClient } from 'main/types';
+import { CloudMetadata, CloudObject } from 'main/types';
 import path from 'path';
+
+const devMode =
+  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 /**
  * A client for retrieving resources from the cloud.
  */
-export default class CloudClient extends EventEmitter implements ICloudClient {
+export default class CloudClient extends EventEmitter {
   /**
    * The bucket name we're configured to target. Expected to be the name of
    * the guild as configured in the settings.
@@ -52,8 +55,9 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
    * manipulation of video state from the video database, and various
    * bits of R2 interaction.
    */
-  private apiEndpoint =
-    'https://warcraft-recorder-api.alex-kershaw4.workers.dev';
+  private apiEndpoint = devMode
+    ? 'https://warcraft-recorder-dev.alex-kershaw4.workers.dev'
+    : 'https://warcraft-recorder-api.alex-kershaw4.workers.dev';
 
   /**
    * The Cloudflare R2 endpoint, this is an S3 compatible API.
@@ -121,7 +125,7 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
    * Get the video state from the WR database.
    */
   public async getState(): Promise<CloudMetadata[]> {
-    console.info('[CloudClient] Getting state');
+    console.info('[CloudClient] Getting video state');
     const encGuild = encodeURIComponent(this.bucket);
     const url = `${this.apiEndpoint}/${encGuild}/videos`;
     const headers = { Authorization: this.authHeader };
@@ -550,6 +554,80 @@ export default class CloudClient extends EventEmitter implements ICloudClient {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
     }
+  }
+
+  /**
+   * Get guild max storage.
+   */
+  public async getMaxStorage() {
+    console.info('[CloudClient] Get max storage from API');
+    const headers = { Authorization: this.authHeader };
+    const encbucket = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encbucket}/storage`;
+
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status === 401) {
+      console.error('[CloudClient] 401 response from worker', data);
+      throw new Error('Login to cloud store failed, check your credentials');
+    }
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failure response from worker', status, data);
+      throw new Error('Error logging into cloud store');
+    }
+
+    console.info('[CloudClient] Max storage was', data.maxGB);
+    return data.maxGB;
+  }
+
+  /**
+   * Call the API to run housekeeping, typically called after a video
+   * upload, but theorically safe to call whenever. Logs the result.
+   */
+  public async runHousekeeping() {
+    console.info('[CloudClient] Run housekeeper');
+
+    const headers = { Authorization: this.authHeader };
+    const encbucket = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encbucket}/housekeeping`;
+
+    const response = await axios.post(url, undefined, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status === 401) {
+      console.error('[CloudClient] 401 response from worker', data);
+      throw new Error('Login to cloud store failed, check your credentials');
+    }
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failure response from worker', status, data);
+      throw new Error('Error logging into cloud store');
+    }
+
+    console.info('[CloudClient] Housekeeping results:', data);
+  }
+
+  /**
+   * Get the total R2 space usage.
+   */
+  public async getUsage() {
+    const objects = await this.list();
+
+    if (objects.length < 1) {
+      return 0;
+    }
+
+    return objects.map((obj) => obj.size).reduce((acc, num) => acc + num, 0);
   }
 
   /**

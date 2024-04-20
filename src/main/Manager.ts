@@ -42,7 +42,6 @@ import {
   CloudStatus,
   DiskStatus,
   UploadQueueItem,
-  CloudMetadata,
 } from './types';
 import {
   getObsBaseConfig,
@@ -58,7 +57,6 @@ import {
 } from '../utils/testButtonUtils';
 import VideoProcessQueue from './VideoProcessQueue';
 import CloudClient from '../storage/CloudClient';
-import CloudSizeMonitor from '../storage/CloudSizeMonitor';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 
 /**
@@ -381,15 +379,11 @@ export default class Manager {
     }
 
     try {
-      const usage = await new CloudSizeMonitor(
-        this.mainWindow,
-        this.cloudClient,
-        250
-      ).usage();
+      const usage = await this.cloudClient.getUsage();
 
       const status: CloudStatus = {
         usageGB: usage / 1024 ** 3,
-        maxUsageGB: 250,
+        maxUsageGB: await this.cloudClient.getMaxStorage(),
       };
 
       this.mainWindow.webContents.send('updateCloudStatus', status);
@@ -500,7 +494,9 @@ export default class Manager {
       }
     }
 
+    this.refreshCloudStatus();
     this.refreshDiskStatus();
+
     this.recorder.configureBase(config);
     this.poller.start();
     this.mainWindow.webContents.send('refreshState');

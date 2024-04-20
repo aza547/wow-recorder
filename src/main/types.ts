@@ -425,13 +425,6 @@ type CloudObject = {
   lastMod: Date;
 };
 
-interface ICloudClient {
-  list: () => Promise<CloudObject[]>;
-  delete: (key: string) => Promise<void>;
-  deleteVideo: (videoName: string) => Promise<void>;
-  getState: () => Promise<CloudMetadata[]>;
-}
-
 interface IBrowserWindow {
   webContents: {
     send: (channel: string) => void;
@@ -489,7 +482,6 @@ export {
   CloudStatus,
   DiskStatus,
   CloudObject,
-  ICloudClient,
   IBrowserWindow,
   UploadQueueItem,
   CloudMetadata,
