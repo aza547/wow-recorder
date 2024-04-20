@@ -222,11 +222,10 @@ export default function RecorderStatus(props: IProps) {
   };
 
   const getAppropriateColor = () => {
-    if (recorderStatus === RecStatus.ReadyToRecord) {
-      return '#bb4420';
-    }
-
-    if (recorderStatus === RecStatus.FatalError) {
+    if (
+      recorderStatus === RecStatus.Recording ||
+      recorderStatus === RecStatus.FatalError
+    ) {
       return 'red';
     }
 
