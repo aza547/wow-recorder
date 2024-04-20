@@ -34,6 +34,7 @@ import {
   getVideoDate,
   stopPropagation,
   povNameSort,
+  countUniquePovs,
 } from './rendererutils';
 import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
@@ -131,6 +132,12 @@ export default function VideoButton(props: IProps) {
   if (tagTooltip.length > 50) {
     tagTooltip = `${tagTooltip.slice(0, 50)}...`;
   }
+
+  // We do some hokey maths here to decide the height of the button, because
+  // I've no idea how else to stop the image resizing the entire thing unless
+  // its parent has an absolute size, super annoying.
+  const uniquePovs = countUniquePovs(povs);
+  const buttonHeight = Math.max(25 + uniquePovs * 25, 130);
 
   // Sign the thumbnail URL and render it.
   useEffect(() => {
@@ -389,52 +396,47 @@ export default function VideoButton(props: IProps) {
       sx={{
         display: 'flex',
         width: '100%',
-        height: '130px',
       }}
     >
       {getTagDialog()}
       {getDeleteDialog()}
-      <Box
-        sx={{
-          height: '130px',
-          width: '30%',
-        }}
-      >
-        <Box>
-          <Box
-            component="img"
-            src={thumbnailSignedUrl}
-            sx={{
-              border: '1px solid black',
-              borderRadius: '5px',
-              boxSizing: 'border-box',
-              height: '130px',
-              minWidth: '300px',
-              width: '100%',
-              objectFit: 'contain',
-              backgroundColor: 'black',
-            }}
-          />
-        </Box>
-      </Box>
 
       <Box
         sx={{
           border: '1px solid black',
           borderRadius: '5px',
-          boxSizing: 'border-box',
           bgcolor: resultColor,
           width: '100%',
-          height: '130px',
+          height: `${buttonHeight}px`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-evenly',
-          mx: 1,
+          boxSizing: 'border-box',
         }}
       >
         <Box
+          component="img"
+          src={thumbnailSignedUrl}
+          sx={{
+            borderTopLeftRadius: '5px',
+            borderBottomLeftRadius: '5px',
+            borderRight: '1px solid black',
+            width: '25%',
+            minWidth: '25%',
+            maxWidth: '25%',
+            height: '100%',
+            minHeight: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+            backgroundColor: 'black',
+            boxSizing: 'border-box',
+          }}
+        />
+
+        <Box
           sx={{
             height: '100%',
+            width: '35%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -453,6 +455,7 @@ export default function VideoButton(props: IProps) {
         <Box
           sx={{
             height: '100%',
+            width: '25%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -469,6 +472,7 @@ export default function VideoButton(props: IProps) {
         <Box
           sx={{
             height: '100%',
+            width: '25%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -491,6 +495,7 @@ export default function VideoButton(props: IProps) {
         <Box
           sx={{
             height: '100%',
+            width: '35%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-evenly',

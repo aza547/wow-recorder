@@ -116,6 +116,7 @@ const WarcraftRecorder = () => {
   };
 
   useEffect(() => {
+    doRefresh();
     ipc.on('refreshState', doRefresh);
     ipc.on('updateRecStatus', updateRecStatus);
     ipc.on('updateSaveStatus', updateSaveStatus);

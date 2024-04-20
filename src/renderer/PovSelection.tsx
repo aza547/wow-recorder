@@ -304,8 +304,8 @@ export default function PovSelection(props: IProps) {
     <Box
       sx={{
         display: 'flex',
-        alignItems: 'start',
-        justifyContent: 'start',
+        alignItems: 'center',
+        justifyContent: 'center',
         flexDirection: 'column',
         maxHeight: '100%',
         width: '100%',
@@ -319,11 +319,9 @@ export default function PovSelection(props: IProps) {
           maxHeight: '100%',
           width: '250px',
           flexDirection: 'column',
-          overflowY: 'auto',
           p: 0,
           my: 1,
           mx: 2,
-          ...scrollBarSx,
         }}
       >
         {Object.values(groupByName(povs)).map((g) => getGroupListItem(g))}

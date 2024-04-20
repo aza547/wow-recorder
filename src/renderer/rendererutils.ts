@@ -756,6 +756,22 @@ const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
   return differenceMilliseconds <= millisecondsInMinute;
 };
 
+const countUniquePovs = (povs: RendererVideo[]) => {
+  let uniquePovs = 0;
+  const seenPovs: string[] = [];
+
+  for (let i = 0; i < povs.length; i++) {
+    const name = povs[i].player?._name;
+
+    if (name && !seenPovs.includes(name)) {
+      uniquePovs++;
+      seenPovs.push(name);
+    }
+  }
+
+  return uniquePovs;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -805,4 +821,5 @@ export {
   stopPropagation,
   povNameSort,
   areDatesWithinSeconds,
+  countUniquePovs,
 };
