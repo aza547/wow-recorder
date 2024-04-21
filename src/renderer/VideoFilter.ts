@@ -36,9 +36,14 @@ export default class VideoFilter {
   private query: string;
 
   /**
-   * Video member variable.
+   * The lead video, used to determine the high level details.
    */
   private video: RendererVideo;
+
+  /**
+   * The POVs included in this video.
+   */
+  private povs: RendererVideo[];
 
   /**
    * Constructor. This sets up the filters for a given video.
@@ -49,6 +54,7 @@ export default class VideoFilter {
   constructor(query: string, video: RendererVideo) {
     this.query = query.toLowerCase();
     this.video = video;
+    this.povs = [video, ...video.multiPov];
 
     this.setGenericFilters();
 
@@ -79,26 +85,66 @@ export default class VideoFilter {
   }
 
   /**
+   * If the player is named in the video metadata, add a search filter for
+   * the name and spec.
+   */
+  private setNameFilter(video: RendererVideo) {
+    if (!video.player) {
+      return;
+    }
+
+    const { player } = video;
+
+    if (player._specID) {
+      const isKnownSpec = Object.prototype.hasOwnProperty.call(
+        specializationById,
+        player._specID
+      );
+
+      if (isKnownSpec) {
+        this.addStringFilter(specializationById[player._specID].name);
+        this.addStringFilter(specializationById[player._specID].label);
+      }
+    }
+
+    this.addStringFilter(player._name);
+  }
+
+  /**
+   * If the video is protected, add some key words to the filter.
+   */
+  private setProtectedFilter(video: RendererVideo) {
+    if (video.isProtected) {
+      this.addStringFilter('bookmarked');
+      this.addStringFilter('saved');
+      this.addStringFilter('protected');
+      this.addStringFilter('favourited favorited');
+    }
+  }
+
+  /**
+   * If the video is tagged, add the tag to the filter.
+   */
+  private setTagFilter(video: RendererVideo) {
+    if (video.tag) {
+      // Split all the words in the tag on whitespace, remove non-letter
+      // characters from all the words to exclude punctuation and add
+      // as filters.
+      video.tag
+        .split(/[\s+]/)
+        .map((word) => word.replace(/[^a-zA-Z]/g, ''))
+        .filter((word) => word)
+        .forEach((word) => this.addStringFilter(word));
+    }
+  }
+
+  /**
    * Set generic filters we want for every video regardless of category.
    */
   private setGenericFilters() {
-    if (this.video.player) {
-      const { player } = this.video;
-
-      if (player._specID) {
-        const isKnownSpec = Object.prototype.hasOwnProperty.call(
-          specializationById,
-          player._specID
-        );
-
-        if (isKnownSpec) {
-          this.addStringFilter(specializationById[player._specID].name);
-          this.addStringFilter(specializationById[player._specID].label);
-        }
-      }
-
-      this.addStringFilter(player._name);
-    }
+    this.povs.forEach((pov) => this.setNameFilter(pov));
+    this.povs.forEach((pov) => this.setProtectedFilter(pov));
+    this.povs.forEach((pov) => this.setTagFilter(pov));
 
     const dateStr = getVideoDate(this.video);
     this.addStringFilter(dateStr);
@@ -124,28 +170,10 @@ export default class VideoFilter {
       this.addStringFilter('yesterday');
     }
 
-    if (this.video.isProtected) {
-      this.addStringFilter('bookmarked');
-      this.addStringFilter('saved');
-      this.addStringFilter('protected');
-      this.addStringFilter('favourited favorited');
-    }
-
     if (this.video.flavour === Flavour.Retail) {
       this.addStringFilter('retail');
     } else if (this.video.flavour === Flavour.Classic) {
       this.addStringFilter('classic');
-    }
-
-    if (this.video.tag) {
-      // Split all the words in the tag on whitespace, remove non-letter
-      // characters from all the words to exclude punctuation and add
-      // as filters.
-      this.video.tag
-        .split(/[\s+]/)
-        .map((word) => word.replace(/[^a-zA-Z]/g, ''))
-        .filter((word) => word)
-        .forEach((word) => this.addStringFilter(word));
     }
   }
 

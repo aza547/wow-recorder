@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Various search bar fixes.
+- Remove app updater code, it doesn't work without a certificate.
 
 ## [5.2.0] - 2024-04-20
 ### Changed

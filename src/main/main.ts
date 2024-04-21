@@ -27,7 +27,6 @@ import {
 import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from './ConfigService';
 import Manager from './Manager';
-import AppUpdater from './AppUpdater';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -198,13 +197,6 @@ const createWindow = async () => {
   });
 
   uIOhook.start();
-
-  try {
-    // eslint-disable-next-line
-    new AppUpdater();
-  } catch (error) {
-    console.error('[Main] App Updater:', String(error));
-  }
 };
 
 /**

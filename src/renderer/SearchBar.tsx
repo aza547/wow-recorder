@@ -8,11 +8,14 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
+// This has to be outside the component else we don't clear
+// it correctly on re-renders.
+let debounceSearchTimer: NodeJS.Timer;
+
 const SearchBar = (props: IProps) => {
   const { appState, setAppState } = props;
   const [searchText, setSearchText] = useState<string>('');
   const { category } = appState;
-  let debounceSearchTimer: NodeJS.Timer;
 
   useEffect(() => {
     // We need this so we reset the search on changing category.
@@ -35,7 +38,7 @@ const SearchBar = (props: IProps) => {
           videoFilterQuery: filterText,
         };
       });
-    }, 1500);
+    }, 1000);
   };
 
   return (
