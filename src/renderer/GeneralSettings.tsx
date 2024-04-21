@@ -601,7 +601,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       {getBufferPathField()}
       {getMaxStorageField()}
 
-      <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'row', my: 2, }}>
         {getCloudSwitch()}
         {getCloudUploadSwitch()}
       </Box>

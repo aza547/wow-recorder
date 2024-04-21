@@ -107,6 +107,8 @@ export default class Manager {
 
   private configMessage = '';
 
+  private reconfiguring = false;
+
   /**
    * Defined stages of configuration. They are named only for logging
    * purposes. Each stage holds the current state of the stages config,
@@ -200,11 +202,6 @@ export default class Manager {
       return;
     }
 
-    this.mainWindow.webContents.send(
-      'updateRecStatus',
-      RecStatus.Reconfiguring
-    );
-
     this.active = true;
     await this.internalManage();
 
@@ -261,6 +258,8 @@ export default class Manager {
    */
   private async internalManage() {
     console.info('[Manager] Internal manage');
+    this.reconfiguring = true;
+    this.refreshStatus();
 
     for (let i = 0; i < this.stages.length; i++) {
       const stage = this.stages[i];
@@ -278,6 +277,7 @@ export default class Manager {
         } catch (error) {
           // If this stage isn't valid we won't go further, set the frontend
           // stage to reflect what's wrong and drop out.
+          this.reconfiguring = false;
           this.setConfigInvalid(String(error));
           return;
         }
@@ -299,6 +299,7 @@ export default class Manager {
     }
 
     // Update the frontend to reflect the valid config.
+    this.reconfiguring = false;
     this.setConfigValid();
   }
 
@@ -325,6 +326,14 @@ export default class Manager {
    * place that this should be done from to avoid any status icon confusion.
    */
   public refreshStatus() {
+    if (this.reconfiguring) {
+      this.mainWindow.webContents.send(
+        'updateRecStatus',
+        RecStatus.Reconfiguring
+      );
+      return;
+    }
+
     if (!this.configValid) {
       this.refreshRecStatus(
         RecStatus.InvalidConfig,

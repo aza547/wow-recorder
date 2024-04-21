@@ -69,13 +69,16 @@ const dialogButtonSx = {
 };
 
 const iconButtonSx = {
-  boxShadow: 1,
-  border: '1px ridge',
+  backgroundColor: 'dimgray',
+  border: '1px solid black',
+  boxShadow: 3,
   borderRadius: '5px',
   mx: '2px',
-  borderColor: 'rgba(0, 0, 0, 0.2)',
   '& .MuiTouchRipple-root .MuiTouchRipple-child': {
     borderRadius: '5px',
+  },
+  ':hover': {
+    background: '#bb4420',
   },
 };
 

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [5.2.2] - 2024-04-21
+### Changed
+- Video button styling.
+
+### Fixed
+- Fix a status icon bug.
+
 ## [5.2.1] - 2024-04-21
 ### Fixed
 - Various search bar fixes.
