@@ -200,6 +200,7 @@ type Metadata = {
   mapID?: number;
   challengeModeTimeline?: RawChallengeModeTimelineSegment[];
   soloShuffleTimeline?: SoloShuffleTimelineSegment[];
+  level?: number; // back compatibility pre-cloud
   keystoneLevel?: number;
   encounterName?: string;
   protected?: boolean;

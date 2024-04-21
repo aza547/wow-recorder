@@ -89,7 +89,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
             '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
         }}
       >
-        +{video.keystoneLevel}
+        +{video.keystoneLevel || video.level}
       </Typography>
     );
   };
