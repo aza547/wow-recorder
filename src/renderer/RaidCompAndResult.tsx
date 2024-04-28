@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import React from 'react';
 import { RawCombatant, RendererVideo } from 'main/types';
 import { specializationById } from 'main/constants';
-import { getVideoResultText } from './rendererutils';
+import { areDatesWithinSeconds, getVideoResultText } from './rendererutils';
 import * as Images from './images';
 import DeathIcon from '../../assets/icon/death.png';
 
@@ -60,10 +60,14 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
 
       const neighbourDate = new Date(bestDate);
 
-      const sameDay =
-        neighbourDate.getDate() === videoDate.getDate() &&
-        neighbourDate.getMonth() === videoDate.getMonth() &&
-        neighbourDate.getFullYear() === videoDate.getFullYear();
+      // Pulls longer than 3 hours apart are considered
+      // from different sessions and will reset the pull
+      // counter.
+      const withinThreshold = areDatesWithinSeconds(
+        videoDate,
+        neighbourDate,
+        3600 * 3
+      );
 
       if (
         video.encounterID === undefined ||
@@ -83,7 +87,7 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
 
       const sameDifficulty = video.difficultyID === neighbourVideo.difficultyID;
 
-      if (sameDay && sameEncounter && sameDifficulty) {
+      if (withinThreshold && sameEncounter && sameDifficulty) {
         dailyVideosInOrder.push(neighbourVideo);
       }
     });
