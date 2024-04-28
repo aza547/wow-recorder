@@ -409,12 +409,12 @@ export default class CloudClient extends EventEmitter {
 
     if (status !== 200) {
       console.error(
-        '[CloudClient] Failed to get signed upload request',
-        response.status,
-        response.data
+        '[CloudClient] Failed to get signed multipart upload request',
+        status,
+        data
       );
 
-      throw new Error('Failed to get signed upload request');
+      throw new Error('Failed to get signed multipart upload request');
     }
 
     return data;
@@ -497,7 +497,7 @@ export default class CloudClient extends EventEmitter {
     // If a file is larger than 4.995GB, we need to use a multipart approach,
     // else it will be rejected by R2. See https://github.com/aza547/wow-recorder/issues/489
     // and https://developers.cloudflare.com/r2/reference/limits.
-    const sizeThresholdBytes = 4.9 * 1024 ** 3;
+    const sizeThresholdBytes = 1 * 1024 ** 3;
 
     if (stats.size < sizeThresholdBytes) {
       await this.doSinglePartUpload(file, progressCallback);
@@ -821,7 +821,7 @@ export default class CloudClient extends EventEmitter {
           // we are through the parts. It falls a bit short on the final part, assuming
           // it's the same size as the others, but it's good enough.
           const previous = 100 * (part / numParts);
-          const current = 100 * (event.loaded / stats.size);
+          const current = 100 * (event.loaded / bytes);
           const normalized = (1 / numParts) * current;
           const actual = Math.round(previous + normalized);
           progressCallback(actual);
