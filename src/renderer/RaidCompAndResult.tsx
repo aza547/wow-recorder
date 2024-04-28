@@ -46,7 +46,7 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
     roleCount[role]++;
   });
 
-  const getDailyPullNumber = () => {
+  const getPullNumber = () => {
     const videoDate = video.start
       ? new Date(video.start)
       : new Date(video.mtime);
@@ -175,7 +175,7 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
               '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
           }}
         >
-          {`${resultText} (Pull ${getDailyPullNumber()})`}
+          {`${resultText} (Pull ${getPullNumber()})`}
         </Typography>
       </Box>
     );

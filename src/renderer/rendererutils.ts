@@ -45,14 +45,20 @@ const getVideoResult = (video: RendererVideo): boolean => {
  */
 const getFormattedDuration = (video: RendererVideo) => {
   const { duration } = video;
-  const durationDate = new Date(0);
-  durationDate.setTime(duration * 1000);
 
-  if (durationDate.getHours() === 0) {
-    return durationDate.toISOString().substr(14, 5);
+  const hours = Math.floor(duration / 3600);
+  const minutes = Math.floor((duration % 3600) / 60);
+  const seconds = Math.floor(duration % 60);
+
+  const formattedHours = hours < 10 ? `0${hours}` : hours;
+  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+  const formattedSeconds = seconds < 10 ? `0${seconds}` : seconds;
+
+  if (hours > 0) {
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   }
 
-  return durationDate.toISOString().substr(11, 8);
+  return `${formattedMinutes}:${formattedSeconds}`;
 };
 
 /**
