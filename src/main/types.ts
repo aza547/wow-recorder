@@ -437,6 +437,14 @@ type UploadQueueItem = {
   path: string;
 };
 
+type CreateMultiPartUploadResponseBody = {
+  urls: string[];
+};
+
+type CompleteMultiPartUploadRequestBody = {
+  etags: string[];
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -487,4 +495,6 @@ export {
   IBrowserWindow,
   UploadQueueItem,
   CloudMetadata,
+  CreateMultiPartUploadResponseBody,
+  CompleteMultiPartUploadRequestBody,
 };

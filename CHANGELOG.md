@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 483](https://github.com/aza547/wow-recorder/issues/483) - Fix a bug where pull count for raid bosses reset over midnight.
 - [Issue 490](https://github.com/aza547/wow-recorder/issues/490) - Fix a bug where durations over an hour would wrap.
+- [Issue 489](https://github.com/aza547/wow-recorder/issues/489) - Fix a bug where videos larger than 5GB failed to upload.
 
 ## [5.2.3] - 2024-04-21
 ### Fixed

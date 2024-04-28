@@ -10,7 +10,12 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import assert from 'assert';
-import { CloudMetadata, CloudObject } from 'main/types';
+import {
+  CloudMetadata,
+  CloudObject,
+  CompleteMultiPartUploadRequestBody,
+  CreateMultiPartUploadResponseBody,
+} from 'main/types';
 import path from 'path';
 
 const devMode =
@@ -380,6 +385,75 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
+   * Create a multi part upload by calling the WR API to get a list of signed
+   * URLs for each part. Once we've uploaded to each URL in turn, must call
+   * completeMultiPartUpload.
+   */
+  private async createMultiPartUpload(
+    key: string,
+    length: number
+  ): Promise<CreateMultiPartUploadResponseBody> {
+    console.info('[CloudClient] Create signed multipart upload', key, length);
+
+    const headers = { Authorization: this.authHeader };
+    const encbucket = encodeURIComponent(this.bucket);
+    const enckey = encodeURIComponent(key);
+    const url = `${this.apiEndpoint}/${encbucket}/create-multipart-upload/${enckey}/${length}`;
+
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error(
+        '[CloudClient] Failed to get signed upload request',
+        response.status,
+        response.data
+      );
+
+      throw new Error('Failed to get signed upload request');
+    }
+
+    return data;
+  }
+
+  /**
+   * Complete a multipart upload by calling the WR API.
+   */
+  private async completeMultiPartUpload(key: string, etags: string[]) {
+    console.info('[CloudClient] Complete signed multipart upload', key);
+
+    const headers = { Authorization: this.authHeader };
+    const encbucket = encodeURIComponent(this.bucket);
+    const enckey = encodeURIComponent(key);
+    const url = `${this.apiEndpoint}/${encbucket}/complete-multipart-upload/${enckey}`;
+
+    const body: CompleteMultiPartUploadRequestBody = {
+      etags,
+    };
+
+    const rsp = await axios.post(url, body, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = rsp;
+
+    if (status !== 200) {
+      console.error(
+        '[CloudClient] Failed to complete multipart upload',
+        status,
+        data
+      );
+
+      throw new Error('Failed to complete multipart upload');
+    }
+  }
+
+  /**
    * Write a JSON string into R2.
    */
   public async putJsonString(str: string, key: string) {
@@ -419,52 +493,17 @@ export default class CloudClient extends EventEmitter {
     const key = path.basename(file);
     console.info('[CloudClient] Uploading', file, 'to', key);
     const stats = await fs.promises.stat(file);
-    const stream = fs.createReadStream(file);
-    let contentType;
 
-    if (key.endsWith('.mp4')) {
-      contentType = 'video/mp4';
-    } else if (key.endsWith('.json')) {
-      contentType = 'application/json';
-    } else if (key.endsWith('.png')) {
-      contentType = 'image/png';
+    // If a file is larger than 4.995GB, we need to use a multipart approach,
+    // else it will be rejected by R2. See https://github.com/aza547/wow-recorder/issues/489
+    // and https://developers.cloudflare.com/r2/reference/limits.
+    const sizeThresholdBytes = 4.9 * 1024 ** 3;
+
+    if (stats.size < sizeThresholdBytes) {
+      await this.doSinglePartUpload(file, progressCallback);
     } else {
-      console.error('[CloudClient] Tried to upload invalid file type', key);
-      throw new Error('Tried to upload invalid file type');
+      await this.doMultiPartUpload(file, progressCallback);
     }
-
-    const config: AxiosRequestConfig = {
-      onUploadProgress: (event) =>
-        progressCallback(Math.round((100 * event.loaded) / stats.size)),
-      headers: { 'Content-Length': stats.size, 'Content-Type': contentType },
-      validateStatus: () => true,
-
-      // Without this, we buffer the whole file (which can be several GB)
-      // into memory which is just a disaster. This makes me want to pick
-      // a different HTTP library. https://github.com/axios/axios/issues/1045.
-      maxRedirects: 0,
-    };
-
-    const signedUrl = await this.signPutUrl(key, stats.size);
-    const start = new Date();
-    const rsp = await axios.put(signedUrl, stream, config);
-    const { status, data } = rsp;
-
-    if (status >= 400) {
-      console.error('[CloudClient] File upload failed', key, status, data);
-      throw new Error('Uploading a file to the cloud failed');
-    }
-
-    console.info('[Cloud Client] Upload status:', rsp.status);
-    const duration = (new Date().valueOf() - start.valueOf()) / 1000;
-
-    console.info(
-      '[CloudClient] Upload of',
-      file,
-      `(${stats.size} bytes) took `,
-      duration,
-      'seconds'
-    );
 
     await this.updateLastMod();
   }
@@ -659,5 +698,194 @@ export default class CloudClient extends EventEmitter {
     const url = `${this.apiEndpoint}/${encbucket}/mtime/${mtime}`;
     const headers = { Authorization: this.authHeader };
     await axios.post(url, undefined, { headers });
+  }
+
+  /**
+   * Get the content type based on the key name. It's good to pass the to
+   * R2 as if we set a video content type, a link to it will be played by
+   * browsers, rather than just downloading the file.
+   */
+  private static getContentType(key: string) {
+    if (key.endsWith('.mp4')) {
+      return 'video/mp4';
+    }
+
+    if (key.endsWith('.png')) {
+      return 'image/png';
+    }
+
+    console.error('[CloudClient] Tried to upload invalid file type', key);
+    throw new Error('Tried to upload invalid file type');
+  }
+
+  /**
+   * Upload a file to S3 in as a single part. Will fail if the file is larger
+   * than 10GB.
+   */
+  private async doSinglePartUpload(
+    file: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    progressCallback = (_progress: number) => {}
+  ) {
+    const key = path.basename(file);
+    const stats = await fs.promises.stat(file);
+    const stream = fs.createReadStream(file);
+    const contentType = CloudClient.getContentType(key);
+
+    const config: AxiosRequestConfig = {
+      onUploadProgress: (event) =>
+        progressCallback(Math.round((100 * event.loaded) / stats.size)),
+      headers: { 'Content-Length': stats.size, 'Content-Type': contentType },
+      validateStatus: () => true,
+
+      // Without this, we buffer the whole file (which can be several GB)
+      // into memory which is just a disaster. This makes me want to pick
+      // a different HTTP library. https://github.com/axios/axios/issues/1045.
+      maxRedirects: 0,
+    };
+
+    const signedUrl = await this.signPutUrl(key, stats.size);
+    const start = new Date();
+    const rsp = await axios.put(signedUrl, stream, config);
+    const { status, data } = rsp;
+
+    if (status >= 400) {
+      console.error('[CloudClient] File upload failed', key, status, data);
+      throw new Error('Uploading a file to the cloud failed');
+    }
+
+    console.info('[Cloud Client] Upload status:', rsp.status);
+    const duration = (new Date().valueOf() - start.valueOf()) / 1000;
+
+    console.info(
+      '[CloudClient] Single part upload of',
+      file,
+      `(${stats.size} bytes) took `,
+      duration,
+      'seconds'
+    );
+  }
+
+  /**
+   * Upload a file to S3 with a multipart approach. Use this method for files
+   * larger than 4.995GB as per the Cloudflare docs.
+   */
+  private async doMultiPartUpload(
+    file: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    progressCallback = (_progress: number) => {}
+  ) {
+    const key = path.basename(file);
+    const stats = await fs.promises.stat(file);
+    const contentType = CloudClient.getContentType(key);
+
+    const signedMultipartUpload = await this.createMultiPartUpload(
+      key,
+      stats.size
+    );
+
+    const start = new Date();
+    const { urls } = signedMultipartUpload;
+
+    let offset = 0;
+    let remaining = stats.size;
+
+    const numParts = urls.length;
+    console.debug('[CloudClient] Multipart upload has', numParts, 'parts');
+
+    // Part size must remain in sync with the client. See partSizeBytes in
+    // CloudClient.ts. This must be greater than 5MB and smaller than 5GB.
+    const partSizeBytes = 1 * 1024 ** 3;
+    const etags: string[] = [];
+
+    // Loop through each of the signed upload URLs, uploading to each in
+    // turn. We need to keep track of the etags returned to use when
+    // completing the multipart upload.
+    for (let part = 0; part < numParts; part++) {
+      console.debug('[CloudClient] Starting part', part + 1);
+
+      const url = urls[part];
+      const bytes = remaining > partSizeBytes ? partSizeBytes : remaining;
+
+      // Create a stream to read from the file appropriate for this part.
+      const stream = fs.createReadStream(file, {
+        start: offset,
+        end: offset + bytes,
+      });
+
+      const config: AxiosRequestConfig = {
+        headers: { 'Content-Length': bytes, 'Content-Type': contentType },
+
+        onUploadProgress: (event) => {
+          // This determines the total progress made, accounting for the progress
+          // we are through the parts. It falls a bit short on the final part, assuming
+          // it's the same size as the others, but it's good enough.
+          const previous = 100 * (part / numParts);
+          const current = 100 * (event.loaded / stats.size);
+          const normalized = (1 / numParts) * current;
+          const actual = Math.round(previous + normalized);
+          progressCallback(actual);
+        },
+
+        validateStatus: () => true,
+
+        // Without this, we buffer the whole file (which can be several GB)
+        // into memory which is just a disaster. This makes me want to pick
+        // a different HTTP library. https://github.com/axios/axios/issues/1045.
+        maxRedirects: 0,
+      };
+
+      // eslint-disable-next-line no-await-in-loop
+      const rsp = await axios.put(url, stream, config);
+      const { status, headers, data } = rsp;
+
+      if (status >= 400) {
+        console.error(
+          '[CloudClient] Multipart upload failed',
+          key,
+          status,
+          data
+        );
+        throw new Error('Multipart upload failed');
+      }
+
+      const { etag } = headers;
+
+      if (!etag) {
+        console.error('[CloudClient] No etag in response headers', key);
+        throw new Error('Multipart upload failed');
+      }
+
+      // Weirdly axios returns this with quotes included, strip them off.
+      const etagNoQuotes = etag.replaceAll('"', '');
+      etags.push(etagNoQuotes);
+
+      console.debug(
+        '[CloudClient] Finished part',
+        part + 1,
+        'etag',
+        etagNoQuotes
+      );
+
+      // Increment the offset into the file for the next go round the loop.
+      offset += bytes;
+      remaining -= bytes;
+
+      // Update the progress bar on the frontend. It's a bit worse we only
+      // update every time we complete a part here (which are 1GB each), so
+      // UX probably a bit worse. Maybe can do better.
+      progressCallback(Math.round((100 * offset) / stats.size));
+    }
+
+    await this.completeMultiPartUpload(key, etags);
+    const duration = (new Date().valueOf() - start.valueOf()) / 1000;
+
+    console.info(
+      '[CloudClient] Multipart part upload of',
+      file,
+      `(${stats.size} bytes) took `,
+      duration,
+      'seconds'
+    );
   }
 }
