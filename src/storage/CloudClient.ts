@@ -497,7 +497,7 @@ export default class CloudClient extends EventEmitter {
     // If a file is larger than 4.995GB, we need to use a multipart approach,
     // else it will be rejected by R2. See https://github.com/aza547/wow-recorder/issues/489
     // and https://developers.cloudflare.com/r2/reference/limits.
-    const sizeThresholdBytes = 1 * 1024 ** 3;
+    const sizeThresholdBytes = 4.9 * 1024 ** 3;
 
     if (stats.size < sizeThresholdBytes) {
       await this.doSinglePartUpload(file, progressCallback);
