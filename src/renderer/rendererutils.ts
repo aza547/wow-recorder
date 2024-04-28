@@ -47,8 +47,12 @@ const getFormattedDuration = (video: RendererVideo) => {
   const { duration } = video;
   const durationDate = new Date(0);
   durationDate.setTime(duration * 1000);
-  const formattedDuration = durationDate.toISOString().substr(14, 5);
-  return formattedDuration;
+
+  if (durationDate.getHours() === 0) {
+    return durationDate.toISOString().substr(14, 5);
+  }
+
+  return durationDate.toISOString().substr(11, 8);
 };
 
 /**

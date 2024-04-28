@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 490](https://github.com/aza547/wow-recorder/issues/490) - Fix a bug where durations over an hour would wrap.
 
 ## [5.2.3] - 2024-04-21
 ### Fixed
