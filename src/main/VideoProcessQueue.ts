@@ -230,8 +230,8 @@ export default class VideoProcessQueue {
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
       await this.cloudClient.putFile(item.path, progressCallback);
-      await this.cloudClient.putFile(thumbNailPath);
       progressCallback(100);
+      await this.cloudClient.putFile(thumbNailPath);
       const metadata = await getMetadataForVideo(item.path);
 
       const cloudMetadata: CloudMetadata = {
@@ -242,6 +242,14 @@ export default class VideoProcessQueue {
         videoKey: path.basename(item.path),
         thumbnailKey: path.basename(item.path.replace('mp4', 'png')),
       };
+
+      if (cloudMetadata.level) {
+        // The string "level" isn't a valid column name, in new videos we
+        // use the keystoneLevel entry in the metadata, but if we're uploading
+        // an old video correct it here at the point of upload.
+        cloudMetadata.keystoneLevel = cloudMetadata.level;
+        delete cloudMetadata.level;
+      }
 
       await this.cloudClient.postVideo(cloudMetadata);
     } catch (error) {
