@@ -19,6 +19,7 @@ import {
   getThumbnailFileNameForVideo,
   getMetadataForVideo,
   rendererVideoToMetadata,
+  getFileInfo,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 
@@ -249,6 +250,14 @@ export default class VideoProcessQueue {
         // an old video correct it here at the point of upload.
         cloudMetadata.keystoneLevel = cloudMetadata.level;
         delete cloudMetadata.level;
+      }
+
+      if (cloudMetadata.start === 0) {
+        // Another "old videos don't have..." bug, this time for the start
+        // parameter, which causes dates to be wrong in the UI. Grab the date
+        // from the video file on disk.
+        const stats = await getFileInfo(item.path);
+        cloudMetadata.start = stats.mtime;
       }
 
       await this.cloudClient.postVideo(cloudMetadata);

@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
-- [Issue 494](https://github.com/aza547/wow-recorder/issues/494) - Fix a bug where some old videos don't upload correctly.
+- [Issue 494](https://github.com/aza547/wow-recorder/issues/494) - Fix a bug where some old videos don't upload correctly due to level/keystoneLevel confusion.
+- [Issue 495](https://github.com/aza547/wow-recorder/issues/495) - Fix a bug where old videos didn't show the start time correctly.
 
 ## [5.2.4] - 2024-04-28
 ### Fixed
