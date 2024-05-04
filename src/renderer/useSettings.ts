@@ -17,6 +17,7 @@ export const setConfigValues = (dict: { [key: string]: any }): void => {
 };
 
 export const getSettings = (): ConfigurationSchema => {
+  /* eslint-disable prettier/prettier */
   const configValues = {
     storagePath: getConfigValue<string>('storagePath'),
     bufferStoragePath: getConfigValue<string>('bufferStoragePath'),
@@ -76,6 +77,17 @@ export const getSettings = (): ConfigurationSchema => {
     cloudAccountName: getConfigValue<string>('cloudAccountName'),
     cloudAccountPassword: getConfigValue<string>('cloudAccountPassword'),
     cloudGuildName: getConfigValue<string>('cloudGuildName'),
+    cloudUpload2v2: getConfigValue<boolean>('cloudUpload2v2'),
+    cloudUpload3v3: getConfigValue<boolean>('cloudUpload3v3'),
+    cloudUpload5v5: getConfigValue<boolean>('cloudUpload5v5'),
+    cloudUploadSkirmish: getConfigValue<boolean>('cloudUploadSkirmish'),
+    cloudUploadSoloShuffle: getConfigValue<boolean>('cloudUploadSoloShuffle'),
+    cloudUploadDungeons: getConfigValue<boolean>('cloudUploadDungeons'),
+    cloudUploadRaids: getConfigValue<boolean>('cloudUploadRaids'),
+    cloudUploadBattlegrounds: getConfigValue<boolean>('cloudUploadBattlegrounds'),
+    cloudUploadRaidMinDifficulty: getConfigValue<string>('cloudUploadRaidMinDifficulty'),
+    cloudUploadDungeonMinLevel: getConfigValue<number>('cloudUploadDungeonMinLevel'),
+    /* eslint-enable prettier/prettier */
   };
 
   return configValues;

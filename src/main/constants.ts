@@ -39,7 +39,8 @@ const obsResolutions = {
 };
 
 interface ICategoryRecordingSettings {
-  configKey: ConfigurationSchemaKey;
+  allowRecordKey: ConfigurationSchemaKey;
+  autoUploadKey: ConfigurationSchemaKey;
 }
 
 /**
@@ -57,28 +58,36 @@ const categoryRecordingSettings: Omit<
   VideoCategory.Clips
 > = {
   [VideoCategory.TwoVTwo]: {
-    configKey: 'recordTwoVTwo',
+    allowRecordKey: 'recordTwoVTwo',
+    autoUploadKey: 'cloudUpload2v2',
   },
   [VideoCategory.ThreeVThree]: {
-    configKey: 'recordThreeVThree',
+    allowRecordKey: 'recordThreeVThree',
+    autoUploadKey: 'cloudUpload3v3',
   },
   [VideoCategory.FiveVFive]: {
-    configKey: 'recordFiveVFive',
+    allowRecordKey: 'recordFiveVFive',
+    autoUploadKey: 'cloudUpload5v5',
   },
   [VideoCategory.Skirmish]: {
-    configKey: 'recordSkirmish',
+    allowRecordKey: 'recordSkirmish',
+    autoUploadKey: 'cloudUploadSkirmish',
   },
   [VideoCategory.SoloShuffle]: {
-    configKey: 'recordSoloShuffle',
+    allowRecordKey: 'recordSoloShuffle',
+    autoUploadKey: 'cloudUploadSoloShuffle',
   },
   [VideoCategory.MythicPlus]: {
-    configKey: 'recordDungeons',
+    allowRecordKey: 'recordDungeons',
+    autoUploadKey: 'cloudUploadDungeons',
   },
   [VideoCategory.Raids]: {
-    configKey: 'recordRaids',
+    allowRecordKey: 'recordRaids',
+    autoUploadKey: 'cloudUploadRaids',
   },
   [VideoCategory.Battlegrounds]: {
-    configKey: 'recordBattlegrounds',
+    allowRecordKey: 'recordBattlegrounds',
+    autoUploadKey: 'cloudUploadBattlegrounds',
   },
 };
 

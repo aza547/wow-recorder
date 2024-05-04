@@ -9,6 +9,7 @@ import WindowsSettings from './WindowsSettings';
 import FlavourSettings from './FlavourSettings';
 import PVESettings from './PVESettings';
 import PVPSettings from './PVPSettings';
+import CloudSettings from './CloudSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -39,11 +40,6 @@ const getGeneralSettingsInfoIcon = () => {
     ['Max Disk Storage', configSchema.maxStorage.description].join('\n'),
     ['Separate Buffer Folder', configSchema.separateBufferPath.description].join('\n'),
     ['Buffer Storage Folder', configSchema.bufferStoragePath.description].join('\n'),
-    ['Cloud Playback', configSchema.cloudStorage.description].join('\n'),
-    ['Cloud Upload', configSchema.cloudUpload.description].join('\n'),
-    ['Account Name', configSchema.cloudAccountName.description].join('\n'),
-    ['Account Password', configSchema.cloudAccountPassword.description].join('\n'),
-    ['Guild Name', configSchema.cloudGuildName.description].join('\n'),
     /* eslint-enable prettier/prettier */
   ].join('\n\n');
 
@@ -86,6 +82,27 @@ const getPVESettingsInfoIcon = () => {
     ['Minimum Keystone Level',     configSchema.minKeystoneLevel.description].join('\n'),
     ['Mythic+ Overrun',            configSchema.dungeonOverrun.description].join('\n'),
     // eslint-enable prettier/prettier */
+  ].join('\n\n');
+
+  return (
+    <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
+      <IconButton>
+        <InfoIcon style={{ color: 'white' }} />
+      </IconButton>
+    </Tooltip>
+  );
+};
+
+const getCloudSettingsInfoIcon = () => {
+  const helptext = [
+    /* eslint-disable prettier/prettier */
+    ['Cloud Playback', configSchema.cloudStorage.description].join('\n'),
+    ['Cloud Upload', configSchema.cloudUpload.description].join('\n'),
+    ['Account Name', configSchema.cloudAccountName.description].join('\n'),
+    ['Account Password', configSchema.cloudAccountPassword.description].join('\n'),
+    ['Guild Name', configSchema.cloudGuildName.description].join('\n'),
+    ['Upload Toggles', "Provides control over what content types get automatically uploaded."].join('\n'),
+    /* eslint-enable prettier/prettier */
   ].join('\n\n');
 
   return (
@@ -215,6 +232,30 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
         }}
       >
         <WindowsSettings />
+      </Box>
+
+      <Box
+        sx={{
+          mx: 2,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}
+      >
+        {getHeading('Cloud Settings')}
+        {getCloudSettingsInfoIcon()}
+      </Box>
+      <Box
+        sx={{
+          backgroundColor: boxColor,
+          border: '1px solid rgba(0, 0, 0, 0.4)',
+          borderRadius: '5px',
+          boxShadow: 3,
+          p: 2,
+          m: 2,
+        }}
+      >
+        <CloudSettings recorderStatus={recorderStatus} />
       </Box>
     </Box>
   );

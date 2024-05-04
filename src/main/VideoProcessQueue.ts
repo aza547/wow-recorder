@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
 import assert from 'assert';
+import { allowUploadCategory } from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from './ConfigService';
 import {
@@ -190,11 +191,15 @@ export default class VideoProcessQueue {
       }
 
       if (this.cloudClient !== undefined) {
-        const item: UploadQueueItem = {
-          path: videoPath,
-        };
+        const allowUpload = allowUploadCategory(this.cfg, data.metadata);
 
-        this.queueUpload(item);
+        if (allowUpload) {
+          const item: UploadQueueItem = {
+            path: videoPath,
+          };
+
+          this.queueUpload(item);
+        }
       }
     } catch (error) {
       console.error(

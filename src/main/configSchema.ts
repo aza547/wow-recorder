@@ -57,6 +57,16 @@ export type ConfigurationSchema = {
   cloudAccountName: string;
   cloudAccountPassword: string;
   cloudGuildName: string;
+  cloudUpload2v2: boolean;
+  cloudUpload3v3: boolean;
+  cloudUpload5v5: boolean;
+  cloudUploadSkirmish: boolean;
+  cloudUploadSoloShuffle: boolean;
+  cloudUploadDungeons: boolean;
+  cloudUploadRaids: boolean;
+  cloudUploadBattlegrounds: boolean;
+  cloudUploadRaidMinDifficulty: string;
+  cloudUploadDungeonMinLevel: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -367,7 +377,8 @@ export const configSchema = {
     default: false,
   },
   cloudUpload: {
-    description: 'Upload your videos to the cloud.',
+    description:
+      'Upload your videos to the cloud, this enables both automatic upload on completion of a recording, as well as the ability to manually upload existing videos.',
     type: 'boolean',
     default: false,
   },
@@ -385,5 +396,57 @@ export const configSchema = {
     description: 'The guild or group your account is affiliated with.',
     type: 'string',
     default: '',
+  },
+  cloudUpload2v2: {
+    description: 'If 2v2 recordings should be uploaded to the cloud.',
+    type: 'boolean',
+    default: true,
+  },
+  cloudUpload3v3: {
+    description: 'If 3v3 recordings should be uploaded to the cloud.',
+    type: 'boolean',
+    default: true,
+  },
+  cloudUpload5v5: {
+    description: 'If 5v5 recordings should be uploaded to the cloud.',
+    type: 'boolean',
+    default: true,
+  },
+  cloudUploadSkirmish: {
+    description: 'If skirmish recordings should be uploaded to the cloud.',
+    type: 'boolean',
+    default: true,
+  },
+  cloudUploadSoloShuffle: {
+    description: 'If solo shuffle recordings should be uploaded to the cloud.',
+    type: 'boolean',
+    default: true,
+  },
+  cloudUploadDungeons: {
+    description: 'If mythic+ recordings should be uploaded to the cloud.',
+    type: 'boolean',
+    default: true,
+  },
+  cloudUploadRaids: {
+    description:
+      'If raid encounter recordings should be uploaded to the cloud.',
+    type: 'boolean',
+    default: true,
+  },
+  cloudUploadBattlegrounds: {
+    description: 'If battleground recordings should be uploaded to the cloud.',
+    type: 'boolean',
+    default: true,
+  },
+  cloudUploadRaidMinDifficulty: {
+    description:
+      'The minimum raid encounter difficulty for automatic cloud uploading.',
+    type: 'string',
+    default: 'LFR',
+  },
+  cloudUploadDungeonMinLevel: {
+    description: 'The minimum keystone level for automatic cloud uploading.',
+    type: 'integer',
+    default: 2,
   },
 };

@@ -4,11 +4,9 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Box from '@mui/material/Box';
 import { LinearProgress, Switch, Tooltip, Typography } from '@mui/material';
 import { ConfigurationSchema } from 'main/configSchema';
-import { CloudStatus, DiskStatus, RecStatus } from 'main/types';
+import { DiskStatus, RecStatus } from 'main/types';
 import { useEffect, useRef, useState } from 'react';
-import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
-import { QualityPresets } from 'main/obsEnums';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
 
@@ -65,20 +63,20 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const initialRenderVideoConfig = useRef(true);
 
-  const [cloudStatus, setCloudStatus] = useState<CloudStatus>({
-    usageGB: 0,
-    maxUsageGB: 0,
-  });
-
   const [diskStatus, setDiskStatus] = useState<DiskStatus>({
     usageGB: 0,
     maxUsageGB: 0,
   });
 
+  React.useEffect(() => {
+    ipc.on('updateDiskStatus', (status) => {
+      setDiskStatus(status as DiskStatus);
+    });
+  }, []);
+
   useEffect(() => {
     // Populate the progress bar on initial mount, and also on config
     // change; the user could change cloud accounts.
-    ipc.sendMessage('getCloudStatus', []);
     ipc.sendMessage('getDiskStatus', []);
 
     if (initialRenderVideoConfig.current) {
@@ -88,23 +86,11 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       return;
     }
 
-    // We don't allow ultra quality with cloud upload, so drop it here if
-    // we've just turned cloud upload on.
-    const ultra = config.obsQuality === QualityPresets.ULTRA;
-    const dropQuality = config.cloudUpload && ultra;
-    const obsQuality = dropQuality ? QualityPresets.HIGH : config.obsQuality;
-
     setConfigValues({
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
       maxStorage: config.maxStorage,
-      cloudStorage: config.cloudStorage,
-      cloudUpload: config.cloudUpload,
-      cloudAccountName: config.cloudAccountName,
-      cloudAccountPassword: config.cloudAccountPassword,
-      cloudGuildName: config.cloudGuildName,
-      obsQuality,
     });
 
     // Inform the backend of a settings change so we can update config
@@ -115,21 +101,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     config.storagePath,
     config.bufferStoragePath,
     config.maxStorage,
-    config.cloudStorage,
-    config.cloudAccountName,
-    config.cloudAccountPassword,
-    config.cloudGuildName,
-    config.cloudUpload,
-    config.obsQuality,
   ]);
-
-  ipc.on('updateCloudStatus', (status) => {
-    setCloudStatus(status as CloudStatus);
-  });
-
-  ipc.on('updateDiskStatus', (status) => {
-    setDiskStatus(status as DiskStatus);
-  });
 
   const setSeparateBufferPath = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -316,228 +288,6 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
-  const setCloudStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig((prevState) => {
-      const cloudStorage = event.target.checked;
-
-      const newState = {
-        ...prevState,
-        cloudStorage,
-      };
-
-      if (!cloudStorage) {
-        // Can't have upload on if cloud storage is off so also set that
-        // to false if we're disabling cloud storage.
-        newState.cloudUpload = false;
-      }
-
-      return newState;
-    });
-  };
-
-  const setCloudUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        cloudUpload: event.target.checked,
-      };
-    });
-  };
-
-  const getCloudSwitch = () => {
-    if (isComponentDisabled()) {
-      return <></>;
-    }
-
-    return (
-      <Box>
-        <FormControlLabel
-          control={getSwitch('cloudStorage', setCloudStorage)}
-          label="Cloud Playback"
-          labelPlacement="top"
-          style={formControlLabelStyle}
-          disabled={isComponentDisabled()}
-        />
-      </Box>
-    );
-  };
-
-  const getCloudUploadSwitch = () => {
-    if (isComponentDisabled() || !config.cloudStorage) {
-      return <></>;
-    }
-
-    return (
-      <Box>
-        <FormControlLabel
-          control={getSwitch('cloudUpload', setCloudUpload)}
-          label="Cloud Upload"
-          labelPlacement="top"
-          style={formControlLabelStyle}
-          disabled={isComponentDisabled()}
-        />
-      </Box>
-    );
-  };
-
-  const setCloudAccountName = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        cloudAccountName: event.target.value,
-      };
-    });
-  };
-
-  const getCloudAccountNameField = () => {
-    if (isComponentDisabled() || !config.cloudStorage) {
-      return <></>;
-    }
-
-    return (
-      <Box>
-        <TextField
-          name="cloudAccountName"
-          value={config.cloudAccountName}
-          label="Account Name"
-          variant="outlined"
-          spellCheck={false}
-          onChange={setCloudAccountName}
-          error={config.cloudAccountName === ''}
-          helperText={config.cloudAccountName === '' ? 'Must not be empty' : ''}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, m: 1, width: '300px' }}
-          inputProps={{ style: { color: 'white' } }}
-        />
-      </Box>
-    );
-  };
-
-  const setCloudPassword = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        cloudAccountPassword: event.target.value,
-      };
-    });
-  };
-
-  const getCloudAccountPasswordField = () => {
-    if (isComponentDisabled() || !config.cloudStorage) {
-      return <></>;
-    }
-
-    return (
-      <Box>
-        <TextField
-          name="cloudAccountPassword"
-          value={config.cloudAccountPassword}
-          label="Account Pasword"
-          type="password"
-          variant="outlined"
-          error={config.cloudAccountPassword === ''}
-          helperText={
-            config.cloudAccountPassword === '' ? 'Must not be empty' : ''
-          }
-          onChange={setCloudPassword}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, m: 1, width: '300px' }}
-          inputProps={{ style: { color: 'white' } }}
-        />
-      </Box>
-    );
-  };
-
-  const setCloudGuild = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        cloudGuildName: event.target.value,
-      };
-    });
-  };
-
-  const getCloudGuildField = () => {
-    if (isComponentDisabled() || !config.cloudStorage) {
-      return <></>;
-    }
-
-    return (
-      <Box>
-        <TextField
-          name="cloudGuildName"
-          value={config.cloudGuildName}
-          label="Guild Name"
-          variant="outlined"
-          spellCheck={false}
-          error={config.cloudGuildName === ''}
-          helperText={config.cloudGuildName === '' ? 'Must not be empty' : ''}
-          onChange={setCloudGuild}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, m: 1, width: '300px' }}
-          inputProps={{ style: { color: 'white' } }}
-        />
-      </Box>
-    );
-  };
-
-  const getCloudUsageBar = () => {
-    if (!config.cloudStorage) {
-      return <></>;
-    }
-
-    const usage = Math.round(cloudStatus.usageGB);
-    const max = Math.round(cloudStatus.maxUsageGB);
-    const perc = (100 * usage) / max;
-
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'left',
-          width: '100%',
-          my: 2,
-        }}
-      >
-        <Tooltip title="Cloud usage">
-          <CloudIcon
-            sx={{ color: 'white', height: '20px', width: '20px', mx: 1 }}
-          />
-        </Tooltip>
-
-        <LinearProgress
-          variant="determinate"
-          value={perc}
-          sx={{
-            minWidth: '300px',
-            height: '15px',
-            borderRadius: '2px',
-            border: '1px solid black',
-            backgroundColor: 'white',
-            '& .MuiLinearProgress-bar': {
-              backgroundColor: '#bb4420',
-            },
-          }}
-        />
-        <Typography
-          sx={{
-            color: 'white',
-            fontSize: '0.75rem',
-            mx: '5px',
-          }}
-        >
-          {usage}GB of {max}GB
-        </Typography>
-      </Box>
-    );
-  };
-
   const getDiskUsageBar = () => {
     const usage = Math.round(diskStatus.usageGB);
     const max = Math.round(diskStatus.maxUsageGB);
@@ -600,20 +350,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
 
       {getBufferPathField()}
       {getMaxStorageField()}
-
-      <Box sx={{ display: 'flex', flexDirection: 'row', my: 2, }}>
-        {getCloudSwitch()}
-        {getCloudUploadSwitch()}
-      </Box>
-
-      <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-        {getCloudAccountNameField()}
-        {getCloudAccountPasswordField()}
-        {getCloudGuildField()}
-      </Box>
-
       {getDiskUsageBar()}
-      {getCloudUsageBar()}
     </Box>
   );
 };

@@ -4,6 +4,7 @@ import {
   ObsAudioConfig,
   FlavourConfig,
   ObsOverlayConfig,
+  Metadata,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../main/ConfigService';
@@ -23,7 +24,7 @@ const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
     return false;
   }
 
-  const categoryAllowed = cfg.get<boolean>(categoryConfig.configKey);
+  const categoryAllowed = cfg.get<boolean>(categoryConfig.allowRecordKey);
 
   if (!categoryAllowed) {
     console.info('[configUtils] Configured to not record:', category);
@@ -31,6 +32,74 @@ const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   }
 
   console.info('[configUtils] Good to record:', category);
+  return true;
+};
+
+const allowUploadCategory = (cfg: ConfigService, metadata: Metadata) => {
+  const { category } = metadata;
+
+  if (category === VideoCategory.Clips) {
+    console.info('[configUtils] Clips are always uploaded');
+    return true;
+  }
+
+  const categoryConfig = categoryRecordingSettings[category];
+
+  if (!categoryConfig) {
+    console.info('[configUtils] Unrecognised category', category);
+    return false;
+  }
+
+  const categoryAllowed = cfg.get<boolean>(categoryConfig.autoUploadKey);
+
+  if (!categoryAllowed) {
+    console.info('[configUtils] Configured to not upload:', category);
+    return false;
+  }
+
+  if (category === VideoCategory.Raids) {
+    const { difficulty } = metadata;
+    const orderedDifficulty = ['lfr', 'normal', 'heroic', 'mythic'];
+
+    const minDifficultyToUpload = cfg
+      .get<string>('cloudUploadRaidMinDifficulty')
+      .toLowerCase();
+
+    if (difficulty === undefined) {
+      console.info('[configUtils] Undefined difficulty, not blocking');
+      return true;
+    }
+
+    const actualIndex = orderedDifficulty.indexOf(difficulty);
+    const configuredIndex = orderedDifficulty.indexOf(minDifficultyToUpload);
+
+    if (actualIndex < 0) {
+      console.info('[configUtils] Unrecognised difficulty, not blocking');
+      return true;
+    }
+
+    if (actualIndex < configuredIndex) {
+      console.info('[configUtils] Raid encounter below  upload threshold');
+      return false;
+    }
+  }
+
+  if (category === VideoCategory.MythicPlus) {
+    const minKeystoneLevel = cfg.get<number>('cloudUploadDungeonMinLevel');
+    const { keystoneLevel } = metadata;
+
+    if (keystoneLevel === undefined) {
+      console.info('[configUtils] Keystone level undefined, not blocking');
+      return true;
+    }
+
+    if (keystoneLevel < minKeystoneLevel) {
+      console.info('[configUtils] Keystone too low for upload');
+      return false;
+    }
+  }
+
+  console.info('[configUtils] Good to upload:', category);
   return true;
 };
 
@@ -107,6 +176,7 @@ const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
 // eslint-disable-next-line import/prefer-default-export
 export {
   allowRecordCategory,
+  allowUploadCategory,
   getObsBaseConfig,
   getObsVideoConfig,
   getObsAudioConfig,

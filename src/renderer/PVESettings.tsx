@@ -309,7 +309,7 @@ const PVESettings: React.FC = () => {
         label="Minimum Keystone Level"
         variant="outlined"
         type="number"
-        error={config.minKeystoneLevel < 0}
+        error={config.minKeystoneLevel < 2}
         InputLabelProps={{ shrink: true, style: { color: 'white' } }}
         sx={{ ...style, maxWidth: '250px' }}
         inputProps={{ min: 0, style: { color: 'white' } }}
