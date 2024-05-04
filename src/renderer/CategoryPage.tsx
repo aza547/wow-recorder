@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { AppState, RecStatus, RendererVideo } from 'main/types';
+import { AppState, RendererVideo } from 'main/types';
 import {
   Button,
   List,
@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { scrollBarSx } from 'main/constants';
-import { MutableRefObject } from 'react';
+import { MutableRefObject, useState } from 'react';
 import { VideoPlayer } from './VideoPlayer';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
@@ -32,7 +32,6 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
-  recorderStatus: RecStatus;
 }
 
 /**
@@ -47,7 +46,6 @@ const CategoryPage = (props: IProps) => {
     setAppState,
     persistentProgress,
     playerHeight,
-    recorderStatus,
   } = props;
   const { numVideosDisplayed, videoFilterQuery } = appState;
   const [config, setConfig] = useSettings();
@@ -140,7 +138,6 @@ const CategoryPage = (props: IProps) => {
             setAppState={setAppState}
             selected={selected}
             persistentProgress={persistentProgress}
-            recorderStatus={recorderStatus}
           />
         </ListItemButton>
       </ListItem>

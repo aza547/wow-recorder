@@ -16,12 +16,12 @@ enum Flavour {
  */
 enum RecStatus {
   WaitingForWoW,
-  ReadyToRecord,
   Recording,
+  InvalidConfig,
+  ReadyToRecord,
+  FatalError,
   Overruning,
   Reconfiguring,
-  InvalidConfig,
-  FatalError,
 }
 
 enum MicStatus {
