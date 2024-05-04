@@ -18,7 +18,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import FolderIcon from '@mui/icons-material/Folder';
 import MessageIcon from '@mui/icons-material/Message';
 import React, { MutableRefObject, useEffect, useState } from 'react';
-import { RendererVideo, AppState } from 'main/types';
+import { RendererVideo, AppState, RecStatus } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
@@ -57,6 +57,7 @@ interface IProps {
   videoState: RendererVideo[];
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
+  recorderStatus: RecStatus;
 }
 
 const dialogButtonSx = {
@@ -92,7 +93,9 @@ export default function VideoButton(props: IProps) {
     videoState,
     setAppState,
     persistentProgress,
+    recorderStatus,
   } = props;
+
   const [config] = useSettings();
   const formattedDuration = getFormattedDuration(video);
   const isMythicPlus = isMythicPlusUtil(video);
@@ -141,6 +144,15 @@ export default function VideoButton(props: IProps) {
   // its parent has an absolute size, super annoying.
   const uniquePovs = countUniquePovs(povs);
   const buttonHeight = Math.max(25 + uniquePovs * 25, 130);
+
+  // We don't want to show the upload/download buttons if we're not in a valid
+  // config state. The below recording states indicate config is valid, so cloud
+  // credentials must be too assuming cloudUpload is true.
+  const validConfig =
+    recorderStatus === RecStatus.WaitingForWoW ||
+    recorderStatus === RecStatus.ReadyToRecord ||
+    recorderStatus === RecStatus.Recording ||
+    recorderStatus === RecStatus.Overruning;
 
   // Sign the thumbnail URL and render it.
   useEffect(() => {
@@ -626,10 +638,11 @@ export default function VideoButton(props: IProps) {
                 </IconButton>
               </Tooltip>
 
-              {cloud && getShareLinkButton()}
+              {cloud && validConfig && getShareLinkButton()}
               {!cloud && getOpenButton()}
-              {cloud && !haveOnDisk && getDownloadButton()}
+              {cloud && validConfig && !haveOnDisk && getDownloadButton()}
               {!cloud &&
+                validConfig &&
                 !haveInCloud &&
                 config.cloudUpload &&
                 getUploadButton()}

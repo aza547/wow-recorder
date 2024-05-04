@@ -242,6 +242,7 @@ const Layout = (props: IProps) => {
         setAppState={setAppState}
         persistentProgress={persistentProgress}
         playerHeight={playerHeight}
+        recorderStatus={recorderStatus}
       />
     );
   };

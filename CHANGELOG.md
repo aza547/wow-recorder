@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.3.0] - 2024-05-04
 ### Added
 - [Issue 498](https://github.com/aza547/wow-recorder/issues/498) - Allows more detailed configuration of what videos to upload.
+### Fixed
+- Fix a bug where the upload/download buttons would show up when config wasn't valid.
 
 ## [5.2.5] - 2024-05-02
 ### Fixed
