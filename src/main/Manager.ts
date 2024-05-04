@@ -850,11 +850,21 @@ export default class Manager {
       }
 
       if (action === 'download') {
+        if (!this.configValid) {
+          console.warn('[Manager] Refusing to queue download, config invalid');
+          return;
+        }
+
         const video = args[1] as RendererVideo;
         this.videoProcessQueue.queueDownload(video);
       }
 
       if (action === 'upload') {
+        if (!this.configValid) {
+          console.warn('[Manager] Refusing to queue upload, config invalid');
+          return;
+        }
+
         const src = args[1] as string;
 
         const item: UploadQueueItem = {

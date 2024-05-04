@@ -68,6 +68,20 @@ export default class VideoProcessQueue {
   private cloudClient: CloudClient | undefined;
 
   /**
+   * List of video file paths currently in the upload queue, or in
+   * progress. Used to block subsequent attempts to queue the same
+   * operation.
+   */
+  private inProgressUploads: string[] = [];
+
+  /**
+   * List of video names currently in the download queue, or in
+   * progress. Used to block subsequent attempts to queeue the same
+   * operation.
+   */
+  private inProgressDownloads: string[] = [];
+
+  /**
    * Constructor.
    */
   constructor(mainWindow: BrowserWindow) {
@@ -156,10 +170,27 @@ export default class VideoProcessQueue {
   };
 
   public queueUpload = async (item: UploadQueueItem) => {
+    const alreadyQueued = this.inProgressUploads.includes(item.path);
+
+    if (alreadyQueued) {
+      console.warn('[VideoProcessQueue] Upload already queued', item.path);
+      return;
+    }
+
+    this.inProgressUploads.push(item.path);
     this.uploadQueue.write(item);
   };
 
   public queueDownload = async (video: RendererVideo) => {
+    const { videoName } = video;
+    const alreadyQueued = this.inProgressDownloads.includes(video.videoName);
+
+    if (alreadyQueued) {
+      console.warn('[VideoProcessQueue] Download already queued', videoName);
+      return;
+    }
+
+    this.inProgressDownloads.push(videoName);
     this.downloadQueue.write(video);
   };
 
@@ -374,22 +405,32 @@ export default class VideoProcessQueue {
   private finishUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Finished uploading video', item.path);
     this.mainWindow.webContents.send('refreshState');
+
+    this.inProgressUploads = this.inProgressUploads.filter(
+      (p) => p !== item.path
+    );
   }
 
   /**
    * Called on the start of a download. Set the download bar to zero and log.
    */
-  private startedDownloadingVideo(videoPath: string) {
-    console.info('[VideoProcessQueue] Now downloading video', videoPath);
+  private startedDownloadingVideo(video: RendererVideo) {
+    const { videoName } = video;
+    console.info('[VideoProcessQueue] Now downloading video', videoName);
     this.mainWindow.webContents.send('updateDownloadProgress', 0);
   }
 
   /**
    * Called on the end of an upload.
    */
-  private finishDownloadingVideo(videoPath: string) {
-    console.info('[VideoProcessQueue] Finished downloading video', videoPath);
+  private finishDownloadingVideo(video: RendererVideo) {
+    const { videoName } = video;
+    console.info('[VideoProcessQueue] Finished downloading video', videoName);
     this.mainWindow.webContents.send('refreshState');
+
+    this.inProgressDownloads = this.inProgressDownloads.filter(
+      (p) => p !== videoName
+    );
   }
 
   /**
