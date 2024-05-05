@@ -551,7 +551,8 @@ export default class CloudClient extends EventEmitter {
     const url = `${this.apiEndpoint}/${encbucket}/mtime`;
     const response = await axios.get(url, { headers });
     const { data } = response;
-    return data.toString();
+    const { mtime } = data;
+    return mtime;
   }
 
   /**
