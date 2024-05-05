@@ -448,7 +448,7 @@ export default class CloudClient extends EventEmitter {
     const url = `${this.apiEndpoint}/${encbucket}/usage`;
     const response = await axios.get(url, { headers });
     const { data } = response;
-    return data.toString();
+    return parseInt(data.toString(), 10);
   }
 
   /**
@@ -561,7 +561,12 @@ export default class CloudClient extends EventEmitter {
     const mtime = await this.getMtime();
 
     if (mtime !== this.bucketLastMod) {
-      console.info('[CloudClient] Cloud data changed');
+      console.info(
+        '[CloudClient] Cloud data changed:',
+        mtime,
+        this.bucketLastMod
+      );
+
       this.emit('change');
       this.bucketLastMod = mtime;
     }

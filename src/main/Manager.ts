@@ -395,10 +395,11 @@ export default class Manager {
 
     try {
       const usage = await this.cloudClient.getUsage();
+      const maxUsageGB = await this.cloudClient.getMaxStorage();
 
       const status: CloudStatus = {
         usageGB: usage / 1024 ** 3,
-        maxUsageGB: await this.cloudClient.getMaxStorage(),
+        maxUsageGB,
       };
 
       this.mainWindow.webContents.send('updateCloudStatus', status);
