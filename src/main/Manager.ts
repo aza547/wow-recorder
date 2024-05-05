@@ -19,6 +19,7 @@ import {
   markForVideoForDelete,
   getPromiseBomb,
   loadAllVideosDisk,
+  cloudSignedMetadataToRendererVideo,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -491,8 +492,6 @@ export default class Manager {
         cloudGuildName
       );
 
-      await this.cloudClient.init();
-
       this.cloudClient.on('change', () => {
         this.mainWindow.webContents.send('refreshState');
         this.refreshCloudStatus();
@@ -637,14 +636,9 @@ export default class Manager {
         cloudGuildName
       );
 
-      await client.init();
-
-      // Poll init is a handy way to ensure we access to R2. If the mtime
-      // object in R2 if this is the first launch, or to just read it if
-      // it's already present.
       await Promise.race([
-        client.pollInit(),
-        getPromiseBomb(2000, 'R2 access too slow or failed'),
+        client.auth(),
+        getPromiseBomb(10000, 'Authentication timed out'),
       ]);
     } catch (error) {
       console.warn('[Manager] Cloud validation failed,', String(error));
@@ -887,22 +881,6 @@ export default class Manager {
       }
     });
 
-    // URL Signer. We expose this so that the videoState doesn't need to
-    // contain signed URLs which are variable. That triggers lots of re-renders
-    // we can do without if we keep things deterministic.
-    ipcMain.handle('signGetUrl', async (_event, args): Promise<string> => {
-      const baseUrl = args[0];
-
-      if (this.cloudClient === undefined) {
-        return '';
-      }
-
-      // Sign the frontend resources for a week in the future so that we don't
-      // need to worry about these links expiring. We only use this function for
-      // loading images and videos directly into React.
-      return this.cloudClient.signGetUrl(baseUrl, 3600 * 24 * 7);
-    });
-
     // Important we shutdown OBS on the before-quit event as if we get closed by
     // the installer we want to ensure we shutdown OBS, this is common when
     // upgrading the app. See issue 325 and 338.
@@ -1024,21 +1002,8 @@ export default class Manager {
   private async loadAllVideosCloud(): Promise<RendererVideo[]> {
     try {
       assert(this.cloudClient);
-      const raw = await this.cloudClient.getState();
-
-      const videos = raw.map((metadata) => {
-        return {
-          ...metadata,
-          videoSource: metadata.videoKey,
-          thumbnailSource: metadata.thumbnailKey,
-          multiPov: [],
-          cloud: true,
-          isProtected: Boolean(metadata.protected),
-          mtime: 0,
-        };
-      });
-
-      return videos;
+      const cloudSigned = await this.cloudClient.getState();
+      return cloudSigned.map(cloudSignedMetadataToRendererVideo);
     } catch (error) {
       console.error('[Manager] Failed to get state:', String(error));
       return [];

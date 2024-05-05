@@ -227,6 +227,16 @@ type CloudMetadata = Metadata & {
 };
 
 /**
+ * When we retrieve state from the WR API, we have a few additional entries
+ * in the data, these are signed by the API so that we can read them without
+ * the client having credentials.
+ */
+type CloudSignedMetadata = CloudMetadata & {
+  signedVideoKey: string;
+  signedThumbnailKey: string;
+};
+
+/**
  * All fields in the raw type can be undefined to force us to check them
  * before use. In theory anything can be present or not present in the
  * metadata files.
@@ -495,6 +505,7 @@ export {
   IBrowserWindow,
   UploadQueueItem,
   CloudMetadata,
+  CloudSignedMetadata,
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
 };

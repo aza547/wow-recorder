@@ -2,17 +2,8 @@ import fs from 'fs';
 import { EventEmitter } from 'stream';
 import axios, { AxiosRequestConfig } from 'axios';
 import {
-  S3Client,
-  GetObjectCommand,
-  HeadObjectCommand,
-  ListObjectsV2Command,
-  ListObjectsV2CommandInput,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import assert from 'assert';
-import {
   CloudMetadata,
-  CloudObject,
+  CloudSignedMetadata,
   CompleteMultiPartUploadRequestBody,
   CreateMultiPartUploadResponseBody,
 } from 'main/types';
@@ -39,12 +30,6 @@ export default class CloudClient extends EventEmitter {
   private bucketLastMod = '0';
 
   /**
-   * The read only S3 client. This is setup by the init function which needs to
-   * be async as it gets read only credentials from the WR API.
-   */
-  private S3: S3Client | undefined;
-
-  /**
    * The auth header for the WR API, which uses basic HTTP auth using the cloud
    * user and password.
    */
@@ -62,13 +47,7 @@ export default class CloudClient extends EventEmitter {
    */
   private apiEndpoint = devMode
     ? 'https://warcraft-recorder-dev.alex-kershaw4.workers.dev'
-    : 'https://warcraft-recorder-api.alex-kershaw4.workers.dev';
-
-  /**
-   * The Cloudflare R2 endpoint, this is an S3 compatible API.
-   */
-  private s3Endpoint =
-    'https://c5952c10f79c8369edb2ef256ef3d337.r2.cloudflarestorage.com/';
+    : 'https://warcraft-recorder-api-v2.alex-kershaw4.workers.dev';
 
   /**
    * Constructor.
@@ -90,46 +69,9 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Initialize the S3 client. This should always be called immediately after
-   * calling the constructor.
-   */
-  public async init() {
-    console.info('[CloudClient] Initializing the cloud client');
-
-    const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-
-    const response = await axios.get(`${this.apiEndpoint}/${encbucket}/keys`, {
-      headers,
-      validateStatus: () => true,
-    });
-
-    const { status, data } = response;
-
-    if (status === 401) {
-      console.error('[CloudClient] 401 response from worker', data);
-      throw new Error('Login to cloud store failed, check your credentials');
-    }
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failure response from worker', status, data);
-      throw new Error('Error logging into cloud store');
-    }
-
-    this.S3 = new S3Client({
-      region: 'auto',
-      endpoint: this.s3Endpoint,
-      credentials: {
-        accessKeyId: data.access,
-        secretAccessKey: data.secret,
-      },
-    });
-  }
-
-  /**
    * Get the video state from the WR database.
    */
-  public async getState(): Promise<CloudMetadata[]> {
+  public async getState(): Promise<CloudSignedMetadata[]> {
     console.info('[CloudClient] Getting video state');
     const encGuild = encodeURIComponent(this.bucket);
     const url = `${this.apiEndpoint}/${encGuild}/videos`;
@@ -241,96 +183,27 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * List all the objects in the bucket. This should be called sparingly as
-   * it's the most expensive bucket operation. Returns a custom type as we
-   * don't want the AWS types passed up the stack further than this class.
-   */
-  public async list(): Promise<CloudObject[]> {
-    console.info('[CloudClient] Listing all objects in R2.');
-    const start = new Date();
-    assert(this.S3);
-
-    const cloudObjects: CloudObject[] = [];
-    let continuationToken;
-
-    do {
-      const params: ListObjectsV2CommandInput = {
-        Bucket: this.bucket,
-        MaxKeys: 1000,
-        ContinuationToken: continuationToken,
-      };
-
-      const cmd = new ListObjectsV2Command(params);
-      // eslint-disable-next-line no-await-in-loop
-      const rsp = await this.S3.send(cmd);
-
-      const objects = rsp.Contents;
-      continuationToken = rsp.NextContinuationToken;
-
-      if (!objects) {
-        return cloudObjects;
-      }
-
-      objects.forEach((obj) => {
-        const key = obj.Key;
-        const size = obj.Size;
-        const lastMod = obj.LastModified;
-
-        if (key === undefined || size === undefined || lastMod === undefined) {
-          return;
-        }
-
-        const cloudObject: CloudObject = { key, size, lastMod };
-        cloudObjects.push(cloudObject);
-      });
-    } while (continuationToken);
-
-    const duration = (new Date().valueOf() - start.valueOf()) / 1000;
-
-    console.info(
-      '[CloudClient] List of',
-      cloudObjects.length,
-      'R2 objects took',
-      duration,
-      'sec.'
-    );
-
-    return cloudObjects;
-  }
-
-  /**
-   * Get an object as a string.
-   */
-  public async getAsString(key: string) {
-    assert(this.S3);
-
-    const params = { Bucket: this.bucket, Key: key };
-    const cmd = new GetObjectCommand(params);
-    const rsp = await this.S3.send(cmd);
-    const { Body } = rsp;
-
-    if (!Body) {
-      return '';
-    }
-
-    return Body.transformToString();
-  }
-
-  /**
    * Get an object and write it to a file.
    */
   public async getAsFile(
     key: string,
+    url: string,
     dir: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     progressCallback = (_progress: number) => {}
   ) {
-    assert(this.S3);
-    console.info('[CloudClient] Downloading file from cloud store', key, dir);
+    console.info('[CloudClient] Downloading file from cloud store', key);
 
-    const signedUrl = await this.signGetUrl(key, 3600);
-    const head = await this.head(key);
-    const size = head.size || 1;
+    const headers = { Authorization: this.authHeader };
+    const encbucket = encodeURIComponent(this.bucket);
+    const enckey = encodeURIComponent(key);
+
+    const sizeUrl = `${this.apiEndpoint}/${encbucket}/size/${enckey}`;
+    const sizeRsp = await axios.get(sizeUrl, { headers });
+    const sizeData = sizeRsp.data;
+    const { size } = sizeData;
+
+    console.info('[CloudClient] Bytes to download', size, 'for key', key);
 
     const config: AxiosRequestConfig = {
       responseType: 'stream',
@@ -338,7 +211,7 @@ export default class CloudClient extends EventEmitter {
         progressCallback(Math.round((100 * event.loaded) / size)),
     };
 
-    const response = await axios.get(signedUrl, config);
+    const response = await axios.get(url, config);
     const file = path.join(dir, key);
     const writer = fs.createWriteStream(file);
 
@@ -509,35 +382,6 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Sign a GET URL, this is all done client side. We have read only
-   * access keys.
-   */
-  public async signGetUrl(key: string, expiry: number) {
-    assert(this.S3);
-    const req = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-    return getSignedUrl(this.S3, req, { expiresIn: expiry });
-  }
-
-  /**
-   * Head an object, making a request directly to R2.
-   */
-  public async head(key: string): Promise<CloudObject> {
-    assert(this.S3);
-
-    const params = { Bucket: this.bucket, Key: key };
-    const cmd = new HeadObjectCommand(params);
-    const data = await this.S3.send(cmd);
-
-    const object: CloudObject = {
-      key,
-      size: data.ContentLength || 0,
-      lastMod: data.LastModified || new Date(0),
-    };
-
-    return object;
-  }
-
-  /**
    * Delete an object via the WR API.
    */
   public async delete(key: string) {
@@ -559,7 +403,7 @@ export default class CloudClient extends EventEmitter {
     console.info('[CloudClient] Poll init');
 
     try {
-      const mtime = await this.getAsString('mtime');
+      const mtime = await this.getMtime();
       this.bucketLastMod = mtime;
     } catch (error) {
       if (String(error).includes('NoSuchKey')) {
@@ -593,6 +437,18 @@ export default class CloudClient extends EventEmitter {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
     }
+  }
+
+  /**
+   * Get the total R2 space in use by the guild.
+   */
+  public async getUsage() {
+    const headers = { Authorization: this.authHeader };
+    const encbucket = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encbucket}/usage`;
+    const response = await axios.get(url, { headers });
+    const { data } = response;
+    return data.toString();
   }
 
   /**
@@ -657,16 +513,44 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Get the total R2 space usage.
+   * Checks we're authenticated and authorized to access the cloud resources.
    */
-  public async getUsage() {
-    const objects = await this.list();
+  public async auth() {
+    const headers = { Authorization: this.authHeader };
+    const encbucket = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encbucket}/auth`;
 
-    if (objects.length < 1) {
-      return 0;
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status === 401 || status === 403) {
+      console.error('[CloudClient] Auth failed:', status, data);
+      throw new Error('Login to cloud store failed, check your credentials');
     }
 
-    return objects.map((obj) => obj.size).reduce((acc, num) => acc + num, 0);
+    if (status !== 200) {
+      console.error('[CloudClient] Failure response from worker', status, data);
+      throw new Error('Error logging into cloud store');
+    }
+
+    console.info('[CloudClient] Auth success!');
+  }
+
+  /**
+   * Get the mtime object from R2, this keeps track of the most recent
+   * modification time to any R2 data.
+   */
+  private async getMtime(): Promise<string> {
+    const headers = { Authorization: this.authHeader };
+    const encbucket = encodeURIComponent(this.bucket);
+    const url = `${this.apiEndpoint}/${encbucket}/mtime`;
+    const response = await axios.get(url, { headers });
+    const { data } = response;
+    return data.toString();
   }
 
   /**
@@ -674,15 +558,13 @@ export default class CloudClient extends EventEmitter {
    * we need to trigger a UI refresh.
    */
   private async checkForUpdate() {
-    const mtime = await this.getAsString('mtime');
+    const mtime = await this.getMtime();
 
-    if (mtime === this.bucketLastMod) {
-      return;
+    if (mtime !== this.bucketLastMod) {
+      console.info('[CloudClient] Cloud data changed');
+      this.emit('change');
+      this.bucketLastMod = mtime;
     }
-
-    console.info('[CloudClient] Cloud data changed');
-    this.emit('change');
-    this.bucketLastMod = mtime;
   }
 
   /**

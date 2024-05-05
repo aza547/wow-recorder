@@ -20,7 +20,6 @@ export type Channels =
   | 'overlay'
   | 'getNextKeyPress'
   | 'clip'
-  | 'signGetUrl'
   | 'getCloudStatus'
   | 'getDiskStatus'
   | 'safeDeleteVideo'

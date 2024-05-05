@@ -138,8 +138,8 @@ export default class VideoProcessQueue {
       .on('idle', () => { this.downloadQueueEmpty() });
 
     queue.pool
-      .on('start', (videoPath: string) => { this.startedDownloadingVideo(videoPath) })
-      .on('finish', async (_: unknown, videoPath: string) => { await this.finishDownloadingVideo(videoPath) });
+      .on('start', (video: RendererVideo) => { this.startedDownloadingVideo(video) })
+      .on('finish', async (_: unknown, video: RendererVideo) => { await this.finishDownloadingVideo(video) });
     /* eslint-enable prettier/prettier */
 
     return queue;
@@ -335,8 +335,18 @@ export default class VideoProcessQueue {
       assert(this.cloudClient);
 
       await Promise.all([
-        this.cloudClient.getAsFile(videoSource, storageDir, progressCallback),
-        this.cloudClient.getAsFile(thumbnailSource, storageDir),
+        this.cloudClient.getAsFile(
+          `${videoName}.mp4`,
+          videoSource,
+          storageDir,
+          progressCallback
+        ),
+
+        this.cloudClient.getAsFile(
+          `${videoName}.png`,
+          thumbnailSource,
+          storageDir
+        ),
       ]);
 
       const metadata = rendererVideoToMetadata(video);

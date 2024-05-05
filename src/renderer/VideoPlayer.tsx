@@ -103,21 +103,6 @@ export const VideoPlayer = (props: IProps) => {
 
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
-  const [src, setSrc] = useState<string>('');
-
-  // Sign the thumbnail URL and render it.
-  useEffect(() => {
-    const getVideoSignedUrl = async () => {
-      const signedUrl = await ipc.invoke('signGetUrl', [videoSource]);
-      setSrc(signedUrl);
-    };
-
-    if (video.cloud) {
-      getVideoSignedUrl();
-    } else {
-      setSrc(videoSource);
-    }
-  }, [videoSource, video.cloud]);
 
   /**
    * Return a death marker appropriate for the MUI slider component.
@@ -491,8 +476,7 @@ export const VideoPlayer = (props: IProps) => {
         ref={player}
         height="calc(100% - 40px)"
         width="100%"
-        // key={key}
-        url={src}
+        url={videoSource}
         style={style}
         playing={playing}
         volume={volume}

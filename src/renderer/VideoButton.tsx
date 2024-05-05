@@ -106,7 +106,6 @@ export default function VideoButton(props: IProps) {
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
   const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
-  const [thumbnailSignedUrl, setThumbnailSignedUrl] = useState<string>('');
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
   const [linkSnackBarOpen, setLinkSnackBarOpen] = useState(false);
 
@@ -141,20 +140,6 @@ export default function VideoButton(props: IProps) {
   // its parent has an absolute size, super annoying.
   const uniquePovs = countUniquePovs(povs);
   const buttonHeight = Math.max(25 + uniquePovs * 25, 130);
-
-  // Sign the thumbnail URL and render it.
-  useEffect(() => {
-    const getSignedThumbnailUrl = async () => {
-      const url = await ipc.invoke('signGetUrl', [thumbnailSource]);
-      setThumbnailSignedUrl(url);
-    };
-
-    if (cloud) {
-      getSignedThumbnailUrl();
-    } else {
-      setThumbnailSignedUrl(thumbnailSource);
-    }
-  }, [cloud, thumbnailSource]);
 
   useEffect(() => {
     if (povs.length > localPovIndex) {
@@ -365,16 +350,11 @@ export default function VideoButton(props: IProps) {
     );
   };
 
-  const getShareableLink = async () => {
-    return ipc.invoke('signGetUrl', [videoSource]);
-  };
-
   const writeToClipBoard = async (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     event.preventDefault();
     setLinkSnackBarOpen(true);
-    const url = await getShareableLink();
-    ipc.sendMessage('writeClipboard', [url]);
+    ipc.sendMessage('writeClipboard', [videoSource]);
   };
 
   const getShareLinkButton = () => {
@@ -419,7 +399,7 @@ export default function VideoButton(props: IProps) {
       >
         <Box
           component="img"
-          src={thumbnailSignedUrl}
+          src={thumbnailSource}
           sx={{
             borderTopLeftRadius: '5px',
             borderBottomLeftRadius: '5px',

@@ -20,6 +20,7 @@ import {
   FlavourConfig,
   ObsAudioConfig,
   CrashData,
+  CloudSignedMetadata,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 
@@ -819,6 +820,32 @@ const rendererVideoToMetadata = (video: RendererVideo) => {
   return data as Metadata;
 };
 
+/**
+ * Convert a CloudSignedMetadata object to a RendererVideo object.
+ */
+const cloudSignedMetadataToRendererVideo = (metadata: CloudSignedMetadata) => {
+  // For cloud videos, the signed URLs are the sources.
+  const videoSource = metadata.signedVideoKey;
+  const thumbnailSource = metadata.signedThumbnailKey;
+
+  // We don't want the signed properties themselves.
+  const mutable: any = metadata;
+  delete mutable.signedVideoKey;
+  delete mutable.signedThumbnailKey;
+
+  const video: RendererVideo = {
+    ...mutable,
+    videoSource,
+    thumbnailSource,
+    multiPov: [],
+    cloud: true,
+    isProtected: Boolean(mutable.protected),
+    mtime: 0,
+  };
+
+  return video;
+};
+
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -855,4 +882,5 @@ export {
   markForVideoForDelete,
   povNameSort,
   rendererVideoToMetadata,
+  cloudSignedMetadataToRendererVideo,
 };

@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
-## [5.3.0] - 2024-05-04
+## [5.3.0] - 2024-05-05
 ### Added
 - [Issue 498](https://github.com/aza547/wow-recorder/issues/498) - Allows more detailed configuration of what videos to upload.
+- Use new API auth endpoint to validate we're authenticated with the cloud.
+- Client-side work to match API improvements for scalability.
 
 ### Fixed
 - [Issue 497](https://github.com/aza547/wow-recorder/issues/497) - Fix a bug where the upload/download buttons would show up when config wasn't valid, and when the upload button could sometimes cause errors.
