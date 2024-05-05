@@ -400,19 +400,14 @@ export default class CloudClient extends EventEmitter {
    * R2. If the mtime object doesn't exist, we will create it.
    */
   public async pollInit() {
-    console.info('[CloudClient] Poll init');
+    console.info('[CloudClient] Initialize cloud polling');
 
     try {
       const mtime = await this.getMtime();
       this.bucketLastMod = mtime;
     } catch (error) {
-      if (String(error).includes('NoSuchKey')) {
-        console.info('[CloudClient] Hit NoSuchKey, mtime will be created');
-        await this.updateLastMod();
-      } else {
-        console.error('[CloudClient] Error getting mtime', String(error));
-        throw new Error('Error getting mtime from R2');
-      }
+      console.error('[CloudClient] Error getting mtime', String(error));
+      throw new Error('Error getting mtime from R2');
     }
   }
 
