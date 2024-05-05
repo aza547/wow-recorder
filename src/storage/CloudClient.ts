@@ -448,7 +448,8 @@ export default class CloudClient extends EventEmitter {
     const url = `${this.apiEndpoint}/${encbucket}/usage`;
     const response = await axios.get(url, { headers });
     const { data } = response;
-    return parseInt(data.toString(), 10);
+    const { usage } = data;
+    return parseInt(usage, 10);
   }
 
   /**
