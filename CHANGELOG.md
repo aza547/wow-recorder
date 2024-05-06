@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
-- Improve retry handling in-case of upload failure.
+
+## [5.3.1] - 2024-05-06
+### Fixed
+- Improve retry handling in-case of cloud upload failure.
+- Fix a bug where two copies of WR were showing in Windows.
 
 ## [5.3.0] - 2024-05-05
 ### Added

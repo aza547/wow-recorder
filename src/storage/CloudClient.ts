@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import { EventEmitter } from 'stream';
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import {
   CloudMetadata,
   CloudSignedMetadata,
@@ -649,7 +649,17 @@ export default class CloudClient extends EventEmitter {
         await axios.put(signedUrl, stream, config);
         success = true;
       } catch (error) {
-        console.warn('[CloudClient] Retryable failure:', key, error);
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError;
+
+          console.warn(
+            '[CloudClient] Single part retryable failure:',
+            key,
+            axiosError.message
+          );
+        } else {
+          console.error('[CloudClient] Not an AxiosError', key, String(error));
+        }
       }
     }
 
@@ -737,23 +747,36 @@ export default class CloudClient extends EventEmitter {
       // Retry each part upload a few times on failure to allow for
       // intermittent failures the same way we do for single part uploads.
       let attempts = 0;
+      let success = false;
       let rsp;
 
-      while (!rsp && attempts < 5) {
+      while (!success && attempts < 5) {
         attempts++;
 
         try {
           rsp = await axios.put(url, stream, config);
+          success = true;
         } catch (error) {
-          console.warn(
-            '[CloudClient] Multipart retryable failure:',
-            key,
-            error
-          );
+          // Almost certainly this is an AxiosError.
+          if (axios.isAxiosError(error)) {
+            const axiosError = error as AxiosError;
+
+            console.warn(
+              '[CloudClient] Multipart retryable failure:',
+              key,
+              axiosError.message
+            );
+          } else {
+            console.error(
+              '[CloudClient] Not an AxiosError',
+              key,
+              String(error)
+            );
+          }
         }
       }
 
-      if (!rsp) {
+      if (!success || !rsp) {
         console.error('[CloudClient] Multipart upload failed:', key);
         throw new Error('Multipart upload failed, retry attempts exausted');
       }
