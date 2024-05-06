@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Improve retry handling in-case of upload failure.
 
 ## [5.3.0] - 2024-05-05
 ### Added

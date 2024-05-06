@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import { EventEmitter } from 'stream';
 import axios, { AxiosRequestConfig } from 'axios';
@@ -48,6 +49,17 @@ export default class CloudClient extends EventEmitter {
   private apiEndpoint = devMode
     ? 'https://warcraft-recorder-dev.alex-kershaw4.workers.dev'
     : 'https://warcraft-recorder-api-v2.alex-kershaw4.workers.dev';
+
+  /**
+   * If a file is larger than 4.995GB, we MUST use a multipart approach,
+   * else it will be rejected by R2. See https://github.com/aza547/wow-recorder/issues/489
+   * and https://developers.cloudflare.com/r2/reference/limits.
+   *
+   * However, we use a much lower threshold here as it makes retries less painful, in the
+   * event of a network failure or similar and we decide to retry, we only need to go back
+   * to the start of the current part.
+   */
+  private multiPartSizeBytes = 100 * 1024 ** 2;
 
   /**
    * Constructor.
@@ -271,7 +283,7 @@ export default class CloudClient extends EventEmitter {
     const headers = { Authorization: this.authHeader };
     const encbucket = encodeURIComponent(this.bucket);
     const enckey = encodeURIComponent(key);
-    const url = `${this.apiEndpoint}/${encbucket}/create-multipart-upload/${enckey}/${length}`;
+    const url = `${this.apiEndpoint}/${encbucket}/create-multipart-upload/${enckey}/${length}/${this.multiPartSizeBytes}`;
 
     const response = await axios.get(url, {
       headers,
@@ -367,12 +379,7 @@ export default class CloudClient extends EventEmitter {
     console.info('[CloudClient] Uploading', file, 'to', key);
     const stats = await fs.promises.stat(file);
 
-    // If a file is larger than 4.995GB, we need to use a multipart approach,
-    // else it will be rejected by R2. See https://github.com/aza547/wow-recorder/issues/489
-    // and https://developers.cloudflare.com/r2/reference/limits.
-    const sizeThresholdBytes = 4.9 * 1024 ** 3;
-
-    if (stats.size < sizeThresholdBytes) {
+    if (stats.size < this.multiPartSizeBytes) {
       await this.doSinglePartUpload(file, progressCallback);
     } else {
       await this.doMultiPartUpload(file, progressCallback);
@@ -620,7 +627,6 @@ export default class CloudClient extends EventEmitter {
       onUploadProgress: (event) =>
         progressCallback(Math.round((100 * event.loaded) / stats.size)),
       headers: { 'Content-Length': stats.size, 'Content-Type': contentType },
-      validateStatus: () => true,
 
       // Without this, we buffer the whole file (which can be several GB)
       // into memory which is just a disaster. This makes me want to pick
@@ -630,15 +636,28 @@ export default class CloudClient extends EventEmitter {
 
     const signedUrl = await this.signPutUrl(key, stats.size);
     const start = new Date();
-    const rsp = await axios.put(signedUrl, stream, config);
-    const { status, data } = rsp;
 
-    if (status >= 400) {
-      console.error('[CloudClient] File upload failed', key, status, data);
-      throw new Error('Uploading a file to the cloud failed');
+    // Retry the upload up to 5 times to allow for network errors, R2
+    // errors or anything else intermittent going wrong.
+    let attempts = 0;
+    let success = false;
+
+    while (!success && attempts < 5) {
+      attempts++;
+
+      try {
+        await axios.put(signedUrl, stream, config);
+        success = true;
+      } catch (error) {
+        console.warn('[CloudClient] Retryable failure:', key, error);
+      }
     }
 
-    console.info('[Cloud Client] Upload status:', rsp.status);
+    if (!success) {
+      console.error('[CloudClient] Failed to upload:', key);
+      throw new Error('Retry attempts exausted');
+    }
+
     const duration = (new Date().valueOf() - start.valueOf()) / 1000;
 
     console.info(
@@ -676,10 +695,6 @@ export default class CloudClient extends EventEmitter {
 
     const numParts = urls.length;
     console.debug('[CloudClient] Multipart upload has', numParts, 'parts');
-
-    // Part size must remain in sync with the client. See partSizeBytes in
-    // CloudClient.ts. This must be greater than 5MB and smaller than 5GB.
-    const partSizeBytes = 1 * 1024 ** 3;
     const etags: string[] = [];
 
     // Loop through each of the signed upload URLs, uploading to each in
@@ -689,7 +704,11 @@ export default class CloudClient extends EventEmitter {
       console.debug('[CloudClient] Starting part', part + 1);
 
       const url = urls[part];
-      const bytes = remaining > partSizeBytes ? partSizeBytes : remaining;
+
+      const bytes =
+        remaining > this.multiPartSizeBytes
+          ? this.multiPartSizeBytes
+          : remaining;
 
       // Create a stream to read from the file appropriate for this part.
       const stream = fs.createReadStream(file, {
@@ -699,7 +718,6 @@ export default class CloudClient extends EventEmitter {
 
       const config: AxiosRequestConfig = {
         headers: { 'Content-Length': bytes, 'Content-Type': contentType },
-
         onUploadProgress: (event) => {
           // This determines the total progress made, accounting for the progress
           // we are through the parts. It falls a bit short on the final part, assuming
@@ -710,34 +728,42 @@ export default class CloudClient extends EventEmitter {
           const actual = Math.round(previous + normalized);
           progressCallback(actual);
         },
-
-        validateStatus: () => true,
-
         // Without this, we buffer the whole file (which can be several GB)
         // into memory which is just a disaster. This makes me want to pick
         // a different HTTP library. https://github.com/axios/axios/issues/1045.
         maxRedirects: 0,
       };
 
-      // eslint-disable-next-line no-await-in-loop
-      const rsp = await axios.put(url, stream, config);
-      const { status, headers, data } = rsp;
+      // Retry each part upload a few times on failure to allow for
+      // intermittent failures the same way we do for single part uploads.
+      let attempts = 0;
+      let rsp;
 
-      if (status >= 400) {
-        console.error(
-          '[CloudClient] Multipart upload failed',
-          key,
-          status,
-          data
-        );
-        throw new Error('Multipart upload failed');
+      while (!rsp && attempts < 5) {
+        attempts++;
+
+        try {
+          rsp = await axios.put(url, stream, config);
+        } catch (error) {
+          console.warn(
+            '[CloudClient] Multipart retryable failure:',
+            key,
+            error
+          );
+        }
       }
 
+      if (!rsp) {
+        console.error('[CloudClient] Multipart upload failed:', key);
+        throw new Error('Multipart upload failed, retry attempts exausted');
+      }
+
+      const { headers } = rsp;
       const { etag } = headers;
 
       if (!etag) {
         console.error('[CloudClient] No etag in response headers', key);
-        throw new Error('Multipart upload failed');
+        throw new Error('Multipart upload failed, no etag header');
       }
 
       // Weirdly axios returns this with quotes included, strip them off.
