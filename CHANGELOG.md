@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
-## [5.3.1] - 2024-05-06
+## [5.3.1] - 2024-05-08
 ### Fixed
 - Improve retry handling in-case of cloud upload failure.
 - Fix a bug where two copies of WR were showing in Windows.
+- Allow classic beta to be accepted as a valid log path.
 
 ## [5.3.0] - 2024-05-05
 ### Added

@@ -548,9 +548,14 @@ const validateFlavour = (config: FlavourConfig) => {
     }
   }
 
-  if (recordClassic && getWowFlavour(classicLogPath) !== 'wow_classic') {
-    console.error('[Util] Invalid classic log path', classicLogPath);
-    throw new Error('Invalid classic log path');
+  if (recordClassic) {
+    const validFlavours = ['wow_classic', 'wow_classic_beta'];
+    const validPath = validFlavours.includes(getWowFlavour(classicLogPath));
+
+    if (!validPath) {
+      console.error('[Util] Invalid classic log path', classicLogPath);
+      throw new Error('Invalid classic log path');
+    }
   }
 
   if (recordEra && getWowFlavour(eraLogPath) !== 'wow_classic_era') {
