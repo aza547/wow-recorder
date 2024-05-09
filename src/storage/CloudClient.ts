@@ -620,7 +620,6 @@ export default class CloudClient extends EventEmitter {
   ) {
     const key = path.basename(file);
     const stats = await fs.promises.stat(file);
-    const stream = fs.createReadStream(file);
     const contentType = CloudClient.getContentType(key);
 
     const config: AxiosRequestConfig = {
@@ -644,6 +643,7 @@ export default class CloudClient extends EventEmitter {
 
     while (!success && attempts < 5) {
       attempts++;
+      const stream = fs.createReadStream(file);
 
       try {
         await axios.put(signedUrl, stream, config);
