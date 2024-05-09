@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix a bug where we would re-use the same stream on a failed upload, instead of a new one.
 
 ## [5.3.1] - 2024-05-08
 ### Fixed

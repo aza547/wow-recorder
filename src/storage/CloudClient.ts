@@ -665,7 +665,7 @@ export default class CloudClient extends EventEmitter {
 
     if (!success) {
       console.error('[CloudClient] Failed to upload:', key);
-      throw new Error('Retry attempts exausted');
+      throw new Error('Retry attempts exhausted');
     }
 
     const duration = (new Date().valueOf() - start.valueOf()) / 1000;
@@ -720,12 +720,6 @@ export default class CloudClient extends EventEmitter {
           ? this.multiPartSizeBytes
           : remaining;
 
-      // Create a stream to read from the file appropriate for this part.
-      const stream = fs.createReadStream(file, {
-        start: offset,
-        end: offset + bytes,
-      });
-
       const config: AxiosRequestConfig = {
         headers: { 'Content-Length': bytes, 'Content-Type': contentType },
         onUploadProgress: (event) => {
@@ -753,6 +747,11 @@ export default class CloudClient extends EventEmitter {
       while (!success && attempts < 5) {
         attempts++;
 
+        const stream = fs.createReadStream(file, {
+          start: offset,
+          end: offset + bytes,
+        });
+
         try {
           rsp = await axios.put(url, stream, config);
           success = true;
@@ -778,7 +777,7 @@ export default class CloudClient extends EventEmitter {
 
       if (!success || !rsp) {
         console.error('[CloudClient] Multipart upload failed:', key);
-        throw new Error('Multipart upload failed, retry attempts exausted');
+        throw new Error('Multipart upload failed, retry attempts exhausted');
       }
 
       const { headers } = rsp;
