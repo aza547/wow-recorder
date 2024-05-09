@@ -124,8 +124,10 @@ export default class CloudClient extends EventEmitter {
    */
   public async deleteVideo(videoName: string) {
     console.info('[CloudClient] Deleting video', videoName);
+
     const encGuild = encodeURIComponent(this.bucket);
     const encName = encodeURIComponent(videoName);
+
     const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}`;
     const headers = { Authorization: this.authHeader };
 
@@ -146,6 +148,7 @@ export default class CloudClient extends EventEmitter {
       throw new Error('Failed to delete a video from database');
     }
 
+    console.info('[Cloud Client] Deleted', videoName);
     await this.updateLastMod();
   }
 
