@@ -145,6 +145,8 @@ export default class CloudClient extends EventEmitter {
 
       throw new Error('Failed to delete a video from database');
     }
+
+    await this.updateLastMod();
   }
 
   /**
@@ -385,20 +387,6 @@ export default class CloudClient extends EventEmitter {
       await this.doMultiPartUpload(file, progressCallback);
     }
 
-    await this.updateLastMod();
-  }
-
-  /**
-   * Delete an object via the WR API.
-   */
-  public async delete(key: string) {
-    console.info('[Cloud Client] Deleting', key);
-    const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const enckey = encodeURIComponent(key);
-    const url = `${this.apiEndpoint}/${encbucket}/${enckey}`;
-    await axios.delete(url, { headers });
-    console.info('[Cloud Client] Deleted', key);
     await this.updateLastMod();
   }
 
