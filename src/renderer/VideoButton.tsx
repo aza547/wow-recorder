@@ -291,8 +291,6 @@ export default function VideoButton(props: IProps) {
   };
 
   const getDeleteDialog = () => {
-    
-
     const getTitle = () => {
       return (
         <DialogTitle sx={{ color: 'white' }}>
