@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix a bug where we would re-use the same stream on a failed upload, instead of a new one.
 - Fix a bug where deleting a cloud video would not trigger other clients to update.
+- Make the cloud settings more responsive withb a debounce timer.
+- [Issue 500](https://github.com/aza547/wow-recorder/issues/500) - Fix some M+ timers.
 
 ## [5.3.1] - 2024-05-08
 ### Fixed

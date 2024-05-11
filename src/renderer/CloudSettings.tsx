@@ -40,6 +40,8 @@ const switchStyle = {
   },
 };
 
+let debounceTimer: NodeJS.Timer | undefined;
+
 interface IProps {
   recorderStatus: RecStatus;
 }
@@ -55,37 +57,41 @@ const CloudSettings = (props: IProps) => {
   });
 
   React.useEffect(() => {
-    // Populate the progress bar on initial mount, and also on config
-    // change; the user could change cloud accounts.
-    ipc.sendMessage('getCloudStatus', []);
-
     if (initialRender.current) {
-      // Drop out on initial render, we don't need to set config.
+      // Drop out on initial render after getting the cloud status,
+      // we don't need to set config. The first time we load.
+      ipc.sendMessage('getCloudStatus', []);
       initialRender.current = false;
       return;
     }
 
-    setConfigValues({
-      cloudStorage: config.cloudStorage,
-      cloudAccountName: config.cloudAccountName,
-      cloudAccountPassword: config.cloudAccountPassword,
-      cloudGuildName: config.cloudGuildName,
-      cloudUpload: config.cloudUpload,
-      cloudUpload2v2: config.cloudUpload2v2,
-      cloudUpload3v3: config.cloudUpload3v3,
-      cloudUpload5v5: config.cloudUpload5v5,
-      cloudUploadSkirmish: config.cloudUploadSkirmish,
-      cloudUploadSoloShuffle: config.cloudUploadSoloShuffle,
-      cloudUploadDungeons: config.cloudUploadDungeons,
-      cloudUploadRaids: config.cloudUploadRaids,
-      cloudUploadBattlegrounds: config.cloudUploadBattlegrounds,
-      cloudUploadRaidMinDifficulty: config.cloudUploadRaidMinDifficulty,
-      cloudUploadDungeonMinLevel: config.cloudUploadDungeonMinLevel,
-    });
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
 
-    // Inform the backend of a settings change so we can update config
-    // and validate it's good.
-    ipc.sendMessage('settingsChange', []);
+    debounceTimer = setTimeout(() => {
+      setConfigValues({
+        cloudStorage: config.cloudStorage,
+        cloudAccountName: config.cloudAccountName,
+        cloudAccountPassword: config.cloudAccountPassword,
+        cloudGuildName: config.cloudGuildName,
+        cloudUpload: config.cloudUpload,
+        cloudUpload2v2: config.cloudUpload2v2,
+        cloudUpload3v3: config.cloudUpload3v3,
+        cloudUpload5v5: config.cloudUpload5v5,
+        cloudUploadSkirmish: config.cloudUploadSkirmish,
+        cloudUploadSoloShuffle: config.cloudUploadSoloShuffle,
+        cloudUploadDungeons: config.cloudUploadDungeons,
+        cloudUploadRaids: config.cloudUploadRaids,
+        cloudUploadBattlegrounds: config.cloudUploadBattlegrounds,
+        cloudUploadRaidMinDifficulty: config.cloudUploadRaidMinDifficulty,
+        cloudUploadDungeonMinLevel: config.cloudUploadDungeonMinLevel,
+      });
+
+      // Inform the backend of a settings change so we can update config
+      // and validate it's good.
+      ipc.sendMessage('settingsChange', []);
+    }, 500);
   }, [
     config.cloudStorage,
     config.cloudAccountName,
