@@ -40,6 +40,8 @@ import {
   convertUioHookEvent,
   tryUnlink,
   getPromiseBomb,
+  takeOwnershipBufferDir,
+  exists,
 } from './util';
 
 import {
@@ -327,7 +329,7 @@ export default class Recorder extends EventEmitter {
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
-  public configureBase(config: ObsBaseConfig) {
+  public async configureBase(config: ObsBaseConfig) {
     const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
@@ -336,7 +338,7 @@ export default class Recorder extends EventEmitter {
     }
 
     this.obsPath = obsPath;
-    Recorder.createRecordingDirs(this.obsPath);
+    await Recorder.createRecordingDirs(this.obsPath);
     this.cleanup();
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
@@ -972,12 +974,13 @@ export default class Recorder extends EventEmitter {
    * Create the obsPath directory if it doesn't already exist. Also
    * cleans it out for good measure.
    */
-  private static createRecordingDirs(obsPath: string) {
-    const exists = fs.existsSync(obsPath);
+  private static async createRecordingDirs(obsPath: string) {
+    const dirExists = await exists(obsPath);
 
-    if (!exists) {
+    if (!dirExists) {
       console.info('[Recorder] Creating dir:', obsPath);
-      fs.mkdirSync(obsPath);
+      await fs.promises.mkdir(obsPath);
+      await takeOwnershipBufferDir(obsPath);
     }
   }
 

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix a bug where deleting a cloud video would not trigger other clients to update.
 - Make the cloud settings more responsive withb a debounce timer.
 - [Issue 500](https://github.com/aza547/wow-recorder/issues/500) - Fix some M+ timers.
+- [Issue 400](https://github.com/aza547/wow-recorder/issues/400) - Prevent setting a pre-existing storage or buffer path with videos in it to avoid accidental deletions.
 
 ## [5.3.1] - 2024-05-08
 ### Fixed

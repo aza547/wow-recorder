@@ -851,6 +851,144 @@ const cloudSignedMetadataToRendererVideo = (metadata: CloudSignedMetadata) => {
   return video;
 };
 
+/**
+ * Check if a file or folder exists.
+ */
+const exists = async (file: string) => {
+  try {
+    await fs.promises.access(file);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Check if the folder contains the managed.txt file indicating it is owned
+ * by Warcraft Recorder.
+ */
+const isFolderOwned = async (dir: string) => {
+  const file = path.join(dir, 'managed.txt');
+
+  if (await exists(file)) {
+    console.info('[Util] Ownership file exists in', dir);
+    return true;
+  }
+
+  console.info('[Util] Ownership file does not exist in', dir);
+  return false;
+};
+
+/**
+ * Take ownership of a directory as the storage directory by writing a file to
+ * indicate our ownership. This does the necessary checks that it doesn't contain
+ * files we don't recognise first, to avoid the case where a user sets a storage
+ * path that contains other files which Warcraft Recorder may go on to delete.
+ * More context: https://github.com/aza547/wow-recorder/issues/400.
+ */
+const takeOwnershipStorageDir = async (dir: string) => {
+  const helptext =
+    'If you are setting up Warcraft Recorder for the first time, this folder should be empty.';
+
+  const content =
+    'This folder is managed by Warcraft Recorder, files in it may be automatically created, modified or deleted.';
+
+  const files = await fs.promises.readdir(dir);
+
+  // Check for any files that don't match the extensions Warcraft
+  // Recorder creates. We won't take ownership of a directory with
+  // other files in it.
+  const unexpected = files
+    .filter((file) => !file.endsWith('.mp4'))
+    .filter((file) => !file.endsWith('.json'))
+    .filter((file) => !file.endsWith('.png'))
+    .filter((file) => file !== '.temp')
+    .filter((file) => file !== 'managed.txt');
+
+  if (unexpected.length > 0) {
+    console.warn(
+      '[Util] Found',
+      unexpected.length,
+      'unexpected files in storage dir',
+      dir,
+      unexpected
+    );
+
+    throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
+  }
+
+  // Ensure that every MP4 file we saw has a corresponding JSON and PNG file,
+  // this covers the case that we've seen before where someone was otherwise
+  // recording MP4s to the same directory as they configured Warcraft Recorder
+  // to use.
+  const mp4s = files.filter((file) => file.endsWith('.mp4'));
+
+  for (let i = 0; i < mp4s.length; i++) {
+    const mp4 = mp4s[i];
+    const base = path.basename(mp4, '.mp4');
+
+    const thumbnail = `${base}.png`;
+    const metadata = `${base}.json`;
+
+    if (!files.includes(thumbnail) || !files.includes(metadata)) {
+      console.warn('[Util] Mismatch of files in storage dir', base);
+      throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
+    }
+  }
+
+  const file = path.join(dir, 'managed.txt');
+  await fs.promises.writeFile(file, content);
+};
+
+/**
+ * Take ownership of a directory as the buffer directory by writing a file to
+ * indicate our ownership. This does the necessary checks that it doesn't contain
+ * files we don't recognise first, to avoid the case where a user sets a buffer
+ * storage path that contains other files which Warcraft Recorder may go on to delete.
+ * More context: https://github.com/aza547/wow-recorder/issues/400.
+ */
+const takeOwnershipBufferDir = async (dir: string) => {
+  const helptext =
+    'If you are setting up Warcraft Recorder for the first time, this folder should be empty.';
+
+  const content =
+    'This folder is managed by Warcraft Recorder, files in it may be automatically created, modified or deleted.';
+
+  const files = await fs.promises.readdir(dir);
+
+  const unexpected = files
+    .filter((file) => !file.endsWith('.mp4'))
+    .filter((file) => file !== 'managed.txt');
+
+  if (unexpected.length > 0) {
+    console.warn(
+      '[Util] Found',
+      unexpected.length,
+      'unexpected files in buffer dir',
+      dir,
+      unexpected
+    );
+
+    throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
+  }
+
+  const regex = /^\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}.mp4$/;
+
+  files
+    .filter((file) => file.endsWith('.mp4'))
+    .forEach((file) => {
+      const match = regex.test(file);
+
+      if (!match) {
+        console.warn('[Util] Unrecognized file in buffer dir', file);
+        throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
+      }
+    });
+
+  const file = path.join(dir, 'managed.txt');
+  await fs.promises.writeFile(file, content);
+};
+
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -888,4 +1026,8 @@ export {
   povNameSort,
   rendererVideoToMetadata,
   cloudSignedMetadataToRendererVideo,
+  exists,
+  isFolderOwned,
+  takeOwnershipStorageDir,
+  takeOwnershipBufferDir,
 };

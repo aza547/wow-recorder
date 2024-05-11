@@ -20,6 +20,10 @@ import {
   getPromiseBomb,
   loadAllVideosDisk,
   cloudSignedMetadataToRendererVideo,
+  isFolderOwned,
+  exists,
+  takeOwnershipStorageDir,
+  takeOwnershipBufferDir,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -511,7 +515,7 @@ export default class Manager {
     this.refreshCloudStatus();
     this.refreshDiskStatus();
 
-    this.recorder.configureBase(config);
+    await this.recorder.configureBase(config);
     this.poller.start();
     this.mainWindow.webContents.send('refreshState');
   }
@@ -675,7 +679,10 @@ export default class Manager {
       throw new Error('Buffer Storage Path is invalid.');
     }
 
-    if (!fs.existsSync(path.dirname(obsPath))) {
+    const obsParentDir = path.dirname(obsPath);
+    const obsParentDirExists = await exists(obsParentDir);
+
+    if (!obsParentDirExists) {
       console.warn(
         '[Manager] Validation failed, obsPath does not exist',
         obsPath
@@ -692,12 +699,24 @@ export default class Manager {
       throw new Error('Storage Path is the same as Buffer Path');
     }
 
+    const obsDirExists = await exists(obsPath);
+
     // 10GB is a rough guess at what the worst case buffer directory might be.
-    if (fs.existsSync(obsPath)) {
+    if (obsDirExists) {
       await checkDisk(obsPath, 10);
     } else {
       const parentDir = path.dirname(obsPath);
       await checkDisk(parentDir, 10);
+    }
+
+    const storagePathOwned = await isFolderOwned(storagePath);
+
+    if (!storagePathOwned) {
+      await takeOwnershipStorageDir(storagePath);
+    }
+
+    if (obsDirExists && !(await isFolderOwned(obsPath))) {
+      await takeOwnershipBufferDir(obsPath);
     }
   }
 
