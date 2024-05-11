@@ -112,6 +112,8 @@ export default function VideoButton(props: IProps) {
   const [linkSnackBarOpen, setLinkSnackBarOpen] = useState(false);
 
   const povs = [video, ...video.multiPov].sort(povNameSort);
+  const multiPov = povs.length > 1;
+
   const pov = povs[localPovIndex];
   const { videoName, cloud, thumbnailSource, isProtected, tag, videoSource } =
     pov;
@@ -267,9 +269,9 @@ export default function VideoButton(props: IProps) {
   };
 
   const deleteClicked = (event: React.MouseEvent<HTMLElement>) => {
-    if (ctrlDown && altDown) {
+    if (ctrlDown && altDown && multiPov) {
       deleteAllPovs(event);
-    } else if (ctrlDown && altDown) {
+    } else if (ctrlDown) {
       deleteVideo(event);
     } else {
       event.stopPropagation();
@@ -289,7 +291,7 @@ export default function VideoButton(props: IProps) {
   };
 
   const getDeleteDialog = () => {
-    const multiPov = povs.length > 1;
+    
 
     const getTitle = () => {
       return (
