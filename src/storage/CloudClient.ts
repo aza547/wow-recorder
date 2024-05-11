@@ -148,7 +148,7 @@ export default class CloudClient extends EventEmitter {
       throw new Error('Failed to delete a video from database');
     }
 
-    console.info('[Cloud Client] Deleted', videoName);
+    console.info('[CloudClient] Deleted', videoName);
     await this.updateLastMod();
   }
 

@@ -45,6 +45,7 @@ import ArenaInfo from './ArenaInfo';
 import RaidCompAndResult from './RaidCompAndResult';
 import TagDialog from './TagDialog';
 import ControlIcon from '../../assets/icon/ctrl-icon.png';
+import AltIcon from '../../assets/icon/alt-icon.png';
 import PovSelection from './PovSelection';
 import { useSettings } from './useSettings';
 import SnackBar from './SnackBar';
@@ -104,6 +105,7 @@ export default function VideoButton(props: IProps) {
   const videoDate = getVideoDate(video);
 
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
+  const [altDown, setAltDown] = useState<boolean>(false);
   const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
@@ -178,6 +180,39 @@ export default function VideoButton(props: IProps) {
   };
 
   /**
+   * Delete all the points of view for this video.
+   */
+  const deleteAllPovs = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setDeleteDialogOpen(false);
+
+    povs.forEach((p) => {
+      const src = p.cloud ? p.videoName : p.videoSource;
+
+      window.electron.ipcRenderer.sendMessage('safeDeleteVideo', [
+        src,
+        p.cloud,
+      ]);
+
+      stateManager.current.deleteVideo(p);
+    });
+
+    if (!selected) {
+      return;
+    }
+
+    setLocalPovIndex(0);
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        selectedVideoName: undefined,
+        playingVideo: undefined,
+      };
+    });
+  };
+
+  /**
    * Sets up event listeners so that users can skip the "Are you sure you want
    * to delete this video?" prompt by holding CTRL. Also sets the callback on
    * unmount to delete the video if the delete button was clicked.
@@ -187,10 +222,18 @@ export default function VideoButton(props: IProps) {
       if (event.key === 'Control') {
         setCtrlDown(false);
       }
+
+      if (event.key === 'Alt') {
+        setAltDown(false);
+      }
     });
     document.addEventListener('keydown', (event: KeyboardEvent) => {
       if (event.key === 'Control') {
         setCtrlDown(true);
+      }
+
+      if (event.key === 'Alt') {
+        setAltDown(true);
       }
     });
   });
@@ -224,7 +267,9 @@ export default function VideoButton(props: IProps) {
   };
 
   const deleteClicked = (event: React.MouseEvent<HTMLElement>) => {
-    if (ctrlDown) {
+    if (ctrlDown && altDown) {
+      deleteAllPovs(event);
+    } else if (ctrlDown && altDown) {
       deleteVideo(event);
     } else {
       event.stopPropagation();
@@ -244,15 +289,31 @@ export default function VideoButton(props: IProps) {
   };
 
   const getDeleteDialog = () => {
-    return (
-      <Dialog
-        open={deleteDialogOpen}
-        PaperProps={{ style: { backgroundColor: '#1A233A' } }}
-      >
+    const multiPov = povs.length > 1;
+
+    const getTitle = () => {
+      return (
         <DialogTitle sx={{ color: 'white' }}>
           Permanently Delete this Video?
         </DialogTitle>
+      );
+    };
+
+    const getMultiPovText = () => {
+      return (
         <DialogContent>
+          <DialogContentText sx={{ color: 'white' }}>
+            This activity has multiple points of view saved. You can delete the
+            currently selected point of view, or you can delete all the points
+            of view at once.
+          </DialogContentText>
+        </DialogContent>
+      );
+    };
+
+    const getSingleHotKeyText = () => {
+      return (
+        <DialogContent sx={{ py: '4px' }}>
           <DialogContentText sx={{ color: 'white' }}>
             Hold{' '}
             <img
@@ -262,28 +323,93 @@ export default function VideoButton(props: IProps) {
               height="35"
               style={{ verticalAlign: 'middle' }}
             />{' '}
-            to skip this prompt.
+            to skip this prompt and delete a single POV.
           </DialogContentText>
         </DialogContent>
+      );
+    };
+
+    const getMultiHotKeyText = () => {
+      return (
+        <DialogContent sx={{ py: '4px' }}>
+          <DialogContentText sx={{ color: 'white' }}>
+            Hold{' '}
+            <img
+              src={ControlIcon}
+              alt="Control Key"
+              width="35"
+              height="35"
+              style={{ verticalAlign: 'middle' }}
+            />
+            +
+            <img
+              src={AltIcon}
+              alt="Alt Key"
+              width="35"
+              height="35"
+              style={{ verticalAlign: 'middle' }}
+            />{' '}
+            to skip this prompt and delete all the POVs.
+          </DialogContentText>
+        </DialogContent>
+      );
+    };
+
+    const getCancelButton = () => {
+      return (
+        <Button
+          onClick={(event) => {
+            event.stopPropagation();
+            setDeleteDialogOpen(false);
+          }}
+          sx={dialogButtonSx}
+        >
+          Cancel
+        </Button>
+      );
+    };
+
+    const getDeleteSingleButton = () => {
+      return (
+        <Button
+          onClick={(event) => {
+            event.stopPropagation();
+            deleteVideo(event);
+          }}
+          sx={dialogButtonSx}
+        >
+          Delete
+        </Button>
+      );
+    };
+
+    const getDeleteAllButton = () => {
+      return (
+        <Button
+          onClick={(event) => {
+            event.stopPropagation();
+            deleteAllPovs(event);
+          }}
+          sx={dialogButtonSx}
+        >
+          Delete All
+        </Button>
+      );
+    };
+
+    return (
+      <Dialog
+        open={deleteDialogOpen}
+        PaperProps={{ style: { backgroundColor: '#1A233A' } }}
+      >
+        {getTitle()}
+        {multiPov && getMultiPovText()}
+        {getSingleHotKeyText()}
+        {multiPov && getMultiHotKeyText()}
         <DialogActions>
-          <Button
-            onClick={(event) => {
-              event.stopPropagation();
-              setDeleteDialogOpen(false);
-            }}
-            sx={dialogButtonSx}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={(event) => {
-              event.stopPropagation();
-              deleteVideo(event);
-            }}
-            sx={dialogButtonSx}
-          >
-            Delete
-          </Button>
+          {getCancelButton()}
+          {getDeleteSingleButton()}
+          {multiPov && getDeleteAllButton()}
         </DialogActions>
       </Dialog>
     );
