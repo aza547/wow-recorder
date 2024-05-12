@@ -1360,6 +1360,8 @@ const classicUniqueSpecSpells: StringKeyToNumberValueMapType = {
   'Explosive Shot': 255,
   'Arcane Barrage': 62,
   "Dragon's Breath": 63,
+  Combustion: 63,
+  'Ice Barrier': 64,
   'Deep Freeze': 64,
   'Holy Shock': 65,
   "Avenger's Shield": 66,
