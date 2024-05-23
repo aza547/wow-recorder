@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [5.4.1] - 2024-05-23
+### Changed
 - [Issue 502](https://github.com/aza547/wow-recorder/issues/502) - Bring back combatant search filters.
 
-### Added
 ### Fixed
 - More M+ timer fixes.
 - Better detection of mage specs in classic.
