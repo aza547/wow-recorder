@@ -175,6 +175,27 @@ export default class VideoFilter {
     } else if (this.video.flavour === Flavour.Classic) {
       this.addStringFilter('classic');
     }
+
+    if (this.video.combatants) {
+      this.video.combatants.forEach((combatant) => {
+        this.addStringFilter(combatant._name);
+        this.addStringFilter(combatant._realm);
+
+        if (combatant._specID === undefined) {
+          return;
+        }
+
+        const isKnownSpec = Object.prototype.hasOwnProperty.call(
+          specializationById,
+          combatant._specID
+        );
+
+        if (isKnownSpec) {
+          this.addStringFilter(specializationById[combatant._specID].name);
+          this.addStringFilter(specializationById[combatant._specID].label);
+        }
+      });
+    }
   }
 
   /**
