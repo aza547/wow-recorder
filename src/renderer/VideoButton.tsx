@@ -470,7 +470,7 @@ export default function VideoButton(props: IProps) {
   const getShareableLinkSnackBarSuccess = () => {
     return (
       <SnackBar
-        message="Link copied!"
+        message="Link copied, valid for 24 hours."
         timeout={2}
         open={linkSnackBarSuccessOpen}
         setOpen={setLinkSnackBarSuccessOpen}
