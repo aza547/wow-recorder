@@ -51,9 +51,9 @@ export default class CloudClient extends EventEmitter {
     : 'https://warcraft-recorder-api-v2.alex-kershaw4.workers.dev';
 
   /**
-   * The WR website, used to build shareable links.
+   * The WR website, used by the client to build shareable links.
    */
-  private website = 'https://warcraft-recorder-pages.pages.dev';
+  private website = 'https://warcraftrecorder.com';
 
   /**
    * If a file is larger than 4.995GB, we MUST use a multipart approach,
