@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { BrowserWindow, app, ipcMain, powerMonitor } from 'electron';
+import { BrowserWindow, app, clipboard, ipcMain, powerMonitor } from 'electron';
 import { isEqual } from 'lodash';
 import path from 'path';
 import fs from 'fs';
@@ -899,6 +899,16 @@ export default class Manager {
       } else {
         markForVideoForDelete(src);
       }
+    });
+
+    /**
+     * Listener to generate a shareable link to a video.
+     */
+    ipcMain.handle('getShareableLink', async (_event, args) => {
+      assert(this.cloudClient);
+      const videoName = args[0];
+      const shareable = await this.cloudClient.getShareableLink(videoName);
+      clipboard.writeText(shareable);
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by

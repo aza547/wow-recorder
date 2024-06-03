@@ -8,11 +8,12 @@ interface IProps {
   message: string;
   timeout: number;
   open: boolean;
+  color: string;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function SnackBar(props: IProps) {
-  const { message, timeout, open, setOpen } = props;
+  const { message, timeout, open, setOpen, color } = props;
 
   const handleClose = (
     _event: React.SyntheticEvent | Event,
@@ -48,7 +49,7 @@ export default function SnackBar(props: IProps) {
       }}
     >
       <SnackbarContent
-        sx={{ backgroundColor: '#bb4420' }}
+        sx={{ backgroundColor: color }}
         message={message}
         action={action}
       />

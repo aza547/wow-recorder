@@ -109,7 +109,9 @@ export default function VideoButton(props: IProps) {
   const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
-  const [linkSnackBarOpen, setLinkSnackBarOpen] = useState(false);
+
+  const [linkSnackBarSuccessOpen, setLinkSnackBarSuccessOpen] = useState(false);
+  const [linkSnackBarFailedOpen, setLinkSnackBarFailedOpen] = useState(false);
 
   const povs = [video, ...video.multiPov].sort(povNameSort);
   const multiPov = povs.length > 1;
@@ -465,32 +467,51 @@ export default function VideoButton(props: IProps) {
     );
   };
 
-  const getShareableLinkSnackBar = () => {
+  const getShareableLinkSnackBarSuccess = () => {
     return (
       <SnackBar
         message="Link copied!"
         timeout={2}
-        open={linkSnackBarOpen}
-        setOpen={setLinkSnackBarOpen}
+        open={linkSnackBarSuccessOpen}
+        setOpen={setLinkSnackBarSuccessOpen}
+        color="#bb4420"
       />
     );
   };
 
-  const writeToClipBoard = async (event: React.MouseEvent<HTMLElement>) => {
+  const getShareableLinkSnackBarFailed = () => {
+    return (
+      <SnackBar
+        message="Failed to generate link, see logs."
+        timeout={2}
+        open={linkSnackBarFailedOpen}
+        setOpen={setLinkSnackBarFailedOpen}
+        color="#ff0033"
+      />
+    );
+  };
+
+  const getShareableLink = async (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     event.preventDefault();
-    setLinkSnackBarOpen(true);
-    ipc.sendMessage('writeClipboard', [videoSource]);
+
+    try {
+      await ipc.invoke('getShareableLink', [videoName]);
+      setLinkSnackBarSuccessOpen(true);
+    } catch (error) {
+      setLinkSnackBarFailedOpen(true);
+    }
   };
 
   const getShareLinkButton = () => {
     return (
       <Tooltip title="Get sharable link">
         <div>
-          {getShareableLinkSnackBar()}
+          {getShareableLinkSnackBarSuccess()}
+          {getShareableLinkSnackBarFailed()}
           <IconButton
             onMouseDown={stopPropagation}
-            onClick={writeToClipBoard}
+            onClick={getShareableLink}
             sx={iconButtonSx}
           >
             <LinkIcon sx={{ color: 'white' }} />

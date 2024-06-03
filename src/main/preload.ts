@@ -23,7 +23,8 @@ export type Channels =
   | 'getCloudStatus'
   | 'getDiskStatus'
   | 'safeDeleteVideo'
-  | 'writeClipboard';
+  | 'writeClipboard'
+  | 'getShareableLink';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

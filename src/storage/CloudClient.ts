@@ -51,6 +51,11 @@ export default class CloudClient extends EventEmitter {
     : 'https://warcraft-recorder-api-v2.alex-kershaw4.workers.dev';
 
   /**
+   * The WR website, used to build shareable links.
+   */
+  private website = 'https://warcraft-recorder-pages.pages.dev';
+
+  /**
    * If a file is larger than 4.995GB, we MUST use a multipart approach,
    * else it will be rejected by R2. See https://github.com/aza547/wow-recorder/issues/489
    * and https://developers.cloudflare.com/r2/reference/limits.
@@ -810,5 +815,33 @@ export default class CloudClient extends EventEmitter {
       duration,
       'seconds'
     );
+  }
+
+  /**
+   * Get a shareable link for a video.
+   */
+  public async getShareableLink(videoName: string) {
+    console.info('[CloudClient] Getting shareable link', videoName);
+
+    const encGuild = encodeURIComponent(this.bucket);
+    const encName = encodeURIComponent(videoName);
+
+    const url = `${this.apiEndpoint}/${encGuild}/link/${encName}`;
+    const headers = { Authorization: this.authHeader };
+
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failed to get shareable link', status, data);
+      throw new Error('Failed to get shareable link');
+    }
+
+    const { id } = data;
+    return `${this.website}/link/${id}`;
   }
 }
