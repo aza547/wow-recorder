@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { FileInfo } from 'main/types';
+import { FileInfo, FileSortDirection } from 'main/types';
 import ConfigService from '../main/ConfigService';
 import {
   deleteVideoDisk,
@@ -26,10 +26,23 @@ export default class DiskSizeMonitor {
   }
 
   async run() {
-    // Config might have changed, so update the limit and path.
     const storageDir = this.cfg.get<string>('storagePath');
     const maxStorageGB = this.cfg.get<number>('maxStorage');
+
+    if (maxStorageGB === 0) {
+      console.info('[DiskSizeMonitor] Limitless storage, doing nothing');
+      return;
+    }
+
     const maxStorageBytes = maxStorageGB * 1024 ** 3;
+    const usage = await this.usage();
+    const bytesToFree = usage - maxStorageBytes;
+    let bytesFreed = 0;
+
+    const files = await getSortedVideos(
+      storageDir,
+      FileSortDirection.OldestFirst
+    );
 
     console.info(
       '[DiskSizeMonitor] Running, size limit is',
@@ -37,27 +50,12 @@ export default class DiskSizeMonitor {
       'GB'
     );
 
-    if (maxStorageGB === 0) {
-      console.info('[DiskSizeMonitor] Limitless storage, doing nothing');
-      return;
-    }
-
-    const files = await getSortedVideos(storageDir);
-
     const unprotectedFiles = await asyncFilter(
       files,
       async (file: FileInfo) => {
         try {
           const metadata = await getMetadataForVideo(file.name);
           const isUnprotected = !(metadata.protected || false);
-
-          if (!isUnprotected) {
-            console.info(
-              '[DiskSizeMonitor] Will not delete protected video',
-              file.name
-            );
-          }
-
           return isUnprotected;
         } catch {
           console.error(
@@ -70,11 +68,9 @@ export default class DiskSizeMonitor {
       }
     );
 
-    let totalVideoFileSize = 0;
-
     const filesForDeletion = unprotectedFiles.filter((file) => {
-      totalVideoFileSize += file.size;
-      return totalVideoFileSize > maxStorageBytes;
+      bytesFreed += file.size;
+      return bytesFreed < bytesToFree;
     });
 
     console.info(

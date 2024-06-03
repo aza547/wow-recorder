@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.4.2] - 2024-06-03
 ### Changed
 - Make shareable links readable, and website player enhancements.
+### Fixed
+- Fix a bug with the disk size monitor not cleaning up correctly.
 
 ## [5.4.1] - 2024-05-23
 ### Changed
