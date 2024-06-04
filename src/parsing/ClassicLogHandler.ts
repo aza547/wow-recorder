@@ -20,12 +20,6 @@ import { VideoCategory } from '../types/VideoCategory';
  * Classic log handler class.
  */
 export default class ClassicLogHandler extends LogHandler {
-  // It's hard to end classic arenas on time due to log flushing and no
-  // ARENA_MATCH_END events. We start a 20s timer on a player death that
-  // will end the game unless another death is seen in that 20s, in which
-  // case we start the timer again.
-  private _playerDeathTimeout?: NodeJS.Timeout;
-
   constructor(
     mainWindow: BrowserWindow,
     recorder: Recorder,
@@ -292,7 +286,6 @@ export default class ClassicLogHandler extends LogHandler {
     // 11/12 13:36:53.746  UNIT_DIED,0000000000000000,nil,0x80000000,0x80000000,Creature-0-4468-30-7750-11946-00006F9FFC,"Drek'Thar",0xa48,0x0,0
 
     arenaMatch.endArena(endDate, result);
-    this.clearDeathTimeout();
     await this.endActivity();
   }
 
@@ -369,26 +362,10 @@ export default class ClassicLogHandler extends LogHandler {
     return combatant;
   }
 
-  private setDeathTimeout(ms: number) {
-    this.clearDeathTimeout();
-
-    this._playerDeathTimeout = setTimeout(async () => {
-      await this.endArena(new Date());
-    }, ms);
-  }
-
-  private clearDeathTimeout() {
-    if (this._playerDeathTimeout) {
-      clearTimeout(this._playerDeathTimeout);
-    }
-  }
-
   private processArenaDeath(deathDate: Date) {
     if (!this.activity) {
       return;
     }
-
-    this.setDeathTimeout(20000);
 
     let totalFriends = 0;
     let totalEnemies = 0;
