@@ -539,7 +539,7 @@ const validateFlavour = (config: FlavourConfig) => {
   } = config;
 
   if (recordRetail) {
-    const validFlavours = ['wow', 'wowxptr'];
+    const validFlavours = ['wow', 'wowxptr', 'wow_beta'];
     const validPath = validFlavours.includes(getWowFlavour(retailLogPath));
 
     if (!validPath) {
