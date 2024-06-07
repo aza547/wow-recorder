@@ -47,6 +47,7 @@ import {
   CloudStatus,
   DiskStatus,
   UploadQueueItem,
+  CheckAuthResponse,
 } from './types';
 import {
   getObsBaseConfig,
@@ -617,7 +618,12 @@ export default class Manager {
   }
 
   private static async validateCloudBaseConfig(config: ObsBaseConfig) {
-    const { cloudAccountName, cloudAccountPassword, cloudGuildName } = config;
+    const {
+      cloudAccountName,
+      cloudAccountPassword,
+      cloudGuildName,
+      cloudUpload,
+    } = config;
 
     if (!cloudAccountName) {
       console.warn('[Manager] Empty account name');
@@ -634,6 +640,8 @@ export default class Manager {
       throw new Error('Guild name must not be empty.');
     }
 
+    let raceWinner;
+
     try {
       const client = new CloudClient(
         cloudAccountName,
@@ -641,13 +649,27 @@ export default class Manager {
         cloudGuildName
       );
 
-      await Promise.race([
-        client.auth(),
+      const access = client.checkAuth();
+
+      raceWinner = await Promise.race([
+        access,
         getPromiseBomb(10000, 'Authentication timed out'),
       ]);
     } catch (error) {
       console.warn('[Manager] Cloud validation failed,', String(error));
       throw new Error('Failed to authenticate with the cloud store.');
+    }
+
+    // OK to cast here as we know the promise is resolved or
+    // we threw an error so won't get here.
+    const { read, write } = raceWinner as CheckAuthResponse;
+
+    if (!read) {
+      throw new Error('User is not authorized to access the guild.');
+    }
+
+    if (!write && cloudUpload) {
+      throw new Error('User is not authorized to upload to the guild.');
     }
   }
 

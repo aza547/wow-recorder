@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { FileInfo, FileSortDirection } from 'main/types';
+import { FileInfo, FileSortDirection } from '../main/types';
 import ConfigService from '../main/ConfigService';
 import {
   deleteVideoDisk,

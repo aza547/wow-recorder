@@ -455,6 +455,11 @@ type CompleteMultiPartUploadRequestBody = {
   etags: string[];
 };
 
+type CheckAuthResponse = {
+  read: boolean;
+  write: boolean;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -508,4 +513,5 @@ export {
   CloudSignedMetadata,
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
+  CheckAuthResponse,
 };

@@ -3,6 +3,7 @@ import fs from 'fs';
 import { EventEmitter } from 'stream';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import {
+  CheckAuthResponse,
   CloudMetadata,
   CloudSignedMetadata,
   CompleteMultiPartUploadRequestBody,
@@ -47,7 +48,7 @@ export default class CloudClient extends EventEmitter {
    * bits of R2 interaction.
    */
   private apiEndpoint = devMode
-    ? 'https://warcraft-recorder-dev.alex-kershaw4.workers.dev'
+    ? 'https://warcraft-recorder-api-v3.alex-kershaw4.workers.dev'
     : 'https://warcraft-recorder-api-v2.alex-kershaw4.workers.dev';
 
   /**
@@ -512,9 +513,10 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Checks we're authenticated and authorized to access the cloud resources.
+   * Checks we're authenticated and authorized to access the cloud resources,
+   * and returns the read and write access for the user.
    */
-  public async auth() {
+  public async checkAuth(): Promise<CheckAuthResponse> {
     const headers = { Authorization: this.authHeader };
     const encbucket = encodeURIComponent(this.bucket);
     const url = `${this.apiEndpoint}/${encbucket}/auth`;
@@ -536,7 +538,12 @@ export default class CloudClient extends EventEmitter {
       throw new Error('Error logging into cloud store');
     }
 
-    console.info('[CloudClient] Auth success!');
+    const { read, write } = data;
+
+    console.info('[CloudClient] Read access: ', read);
+    console.info('[CloudClient] Write access: ', write);
+
+    return { read, write };
   }
 
   /**

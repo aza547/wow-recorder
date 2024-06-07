@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Access control to allow users to read but not write. Accompanies website changes.
+
 ### Fixed
 - Fix a bug where TWW beta wouldn't be accepted as a retail log path.
 - [Issue 227](https://github.com/aza547/wow-recorder/issues/227) - Fix a bug in classic where arena games sometimes ended too early.
