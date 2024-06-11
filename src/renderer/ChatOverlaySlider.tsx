@@ -6,10 +6,11 @@ interface IProps {
   value: number;
   disabled: boolean;
   setValue: (v: number) => void;
+  step: number;
 }
 
 const ChatOverlaySlider = (props: IProps) => {
-  const { max, value, disabled, setValue } = props;
+  const { max, value, disabled, setValue, step } = props;
 
   const handleChange = (_event: Event, newValue: number | number[]) => {
     setValue(newValue as number);
@@ -56,6 +57,7 @@ const ChatOverlaySlider = (props: IProps) => {
         valueLabelDisplay="auto"
         min={0}
         max={max}
+        step={step}
         sx={sliderSx}
       />
     </Box>

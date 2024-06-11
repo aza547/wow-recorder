@@ -159,7 +159,7 @@ export default class Manager {
       valid: false,
       current: this.overlayCfg,
       get: (cfg: ConfigService) => getOverlayConfig(cfg),
-      validate: async () => {},
+      validate: async (config: ObsOverlayConfig) => Manager.validateOverlayConfig(config),
       configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
     },
     /* eslint-enable prettier/prettier */
@@ -739,6 +739,31 @@ export default class Manager {
 
     if (obsDirExists && !(await isFolderOwned(obsPath))) {
       await takeOwnershipBufferDir(obsPath);
+    }
+  }
+
+  private static async validateOverlayConfig(config: ObsOverlayConfig) {
+    const { chatOverlayOwnImage, chatOverlayOwnImagePath } = config;
+
+    if (!chatOverlayOwnImage) {
+      return;
+    }
+
+    if (!chatOverlayOwnImagePath) {
+      console.warn('Overlay image path was not provided for custom overlay');
+      throw new Error('Overlay image path was not provided for custom overlay');
+    }
+
+    if (!chatOverlayOwnImagePath.endsWith('.png')) {
+      console.warn('Overlay image must be a PNG file');
+      throw new Error('Overlay image must be a PNG file');
+    }
+
+    const fileExists = await exists(chatOverlayOwnImagePath);
+
+    if (!fileExists) {
+      console.warn(`${chatOverlayOwnImagePath} does not exist`);
+      throw new Error(`${chatOverlayOwnImagePath} does not exist`);
     }
   }
 

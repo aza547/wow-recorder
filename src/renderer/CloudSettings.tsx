@@ -297,6 +297,10 @@ const CloudSettings = (props: IProps) => {
         // Can't have upload on if cloud storage is off so also set that
         // to false if we're disabling cloud storage.
         newState.cloudUpload = false;
+
+        // We disable the own image property if we've just turned off
+        // cloud storage. It's a paid feature.
+        newState.chatOverlayOwnImage = false;
       }
 
       return newState;

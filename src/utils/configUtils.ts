@@ -166,8 +166,11 @@ const getFlavourConfig = (cfg: ConfigService): FlavourConfig => {
 const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
   return {
     chatOverlayEnabled: cfg.get<boolean>('chatOverlayEnabled'),
+    chatOverlayOwnImage: cfg.get<boolean>('chatOverlayOwnImage'),
+    chatOverlayOwnImagePath: cfg.get<string>('chatOverlayOwnImagePath'),
     chatOverlayWidth: cfg.get<number>('chatOverlayWidth'),
     chatOverlayHeight: cfg.get<number>('chatOverlayHeight'),
+    chatOverlayScale: cfg.get<number>('chatOverlayScale'),
     chatOverlayXPosition: cfg.get<number>('chatOverlayXPosition'),
     chatOverlayYPosition: cfg.get<number>('chatOverlayYPosition'),
   };

@@ -36,8 +36,11 @@ export type ConfigurationSchema = {
   minimizeOnQuit: boolean;
   minimizeToTray: boolean;
   chatOverlayEnabled: boolean;
+  chatOverlayOwnImage: boolean;
+  chatOverlayOwnImagePath: string;
   chatOverlayWidth: number;
   chatOverlayHeight: number;
+  chatOverlayScale: number;
   chatOverlayXPosition: number;
   chatOverlayYPosition: number;
   speakerVolume: number;
@@ -283,6 +286,18 @@ export const configSchema = {
     type: 'boolean',
     default: false,
   },
+  chatOverlayOwnImage: {
+    description:
+      'If a custom image should be used as the chat overlay. This feature is only available to Pro users.',
+    type: 'boolean',
+    default: false,
+  },
+  chatOverlayOwnImagePath: {
+    description:
+      'The PNG file to use as a chat overlay. This feature is only available to Pro users.',
+    type: 'string',
+    default: '',
+  },
   chatOverlayWidth: {
     description: 'The width of the chat overlay.',
     type: 'integer',
@@ -292,6 +307,11 @@ export const configSchema = {
     description: 'The height of the chat overlay.',
     type: 'integer',
     default: 230,
+  },
+  chatOverlayScale: {
+    description: 'The scale of the chat overlay.',
+    type: 'integer',
+    default: 1,
   },
   chatOverlayXPosition: {
     description: 'The x-position of the chat overlay.',

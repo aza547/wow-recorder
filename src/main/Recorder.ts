@@ -497,15 +497,9 @@ export default class Recorder extends EventEmitter {
    * Apply a chat overlay to the scene.
    */
   public configureOverlaySource(config: ObsOverlayConfig) {
-    const {
-      chatOverlayEnabled,
-      chatOverlayWidth,
-      chatOverlayHeight,
-      chatOverlayXPosition,
-      chatOverlayYPosition,
-    } = config;
+    this.createOverlayImageSource(config);
 
-    if (this.scene === undefined || this.overlayImageSource === undefined) {
+    if (!this.scene || !this.overlayImageSource) {
       console.error(
         '[Recorder] Not applying overlay as scene or image source undefined',
         this.scene,
@@ -515,15 +509,84 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    if (this.overlaySceneItem !== undefined) {
+    const { chatOverlayEnabled, chatOverlayOwnImage } = config;
+
+    if (this.overlaySceneItem) {
       this.overlaySceneItem.remove();
+      this.overlaySceneItem = undefined;
     }
 
     if (!chatOverlayEnabled) {
       return;
     }
 
-    // This is the height of the chat overlay image, a bit ugly
+    if (chatOverlayOwnImage) {
+      this.configureOwnOverlay(config);
+    } else {
+      this.configureDefaultOverlay(config);
+    }
+  }
+
+  private async configureOwnOverlay(config: ObsOverlayConfig) {
+    const { chatOverlayScale, chatOverlayXPosition, chatOverlayYPosition } =
+      config;
+
+    if (!this.scene || !this.overlayImageSource) {
+      console.error(
+        '[Recorder] Not applying default overlay',
+        this.scene,
+        this.overlayImageSource
+      );
+
+      return;
+    }
+
+    const overlaySettings: ISceneItemInfo = {
+      name: 'overlay',
+      crop: {
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+      },
+      scaleX: chatOverlayScale,
+      scaleY: chatOverlayScale,
+      visible: true,
+      x: chatOverlayXPosition,
+      y: chatOverlayYPosition,
+      rotation: 0,
+      streamVisible: true,
+      recordingVisible: true,
+      scaleFilter: 0,
+      blendingMode: 0,
+    };
+
+    this.overlaySceneItem = this.scene.add(
+      this.overlayImageSource,
+      overlaySettings
+    );
+  }
+
+  private configureDefaultOverlay(config: ObsOverlayConfig) {
+    const {
+      chatOverlayWidth,
+      chatOverlayHeight,
+      chatOverlayXPosition,
+      chatOverlayYPosition,
+      chatOverlayScale,
+    } = config;
+
+    if (this.scene === undefined || this.overlayImageSource === undefined) {
+      console.error(
+        '[Recorder] Not applying default overlay',
+        this.scene,
+        this.overlayImageSource
+      );
+
+      return;
+    }
+
+    // This is the height of the default chat overlay image, a bit ugly
     // to have it hardcoded here, but whatever.
     const baseWidth = 5000;
     const baseHeight = 2000;
@@ -539,8 +602,8 @@ export default class Recorder extends EventEmitter {
         top: toCropY,
         bottom: toCropY,
       },
-      scaleX: 1,
-      scaleY: 1,
+      scaleX: chatOverlayScale,
+      scaleY: chatOverlayScale,
       visible: true,
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
@@ -1018,7 +1081,6 @@ export default class Recorder extends EventEmitter {
 
     this.scene = osn.SceneFactory.create('WR Scene');
     osn.Global.setOutputSource(this.videoChannel, this.scene);
-    this.createOverlayImageSource();
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
@@ -1148,21 +1210,23 @@ export default class Recorder extends EventEmitter {
   /**
    * Creates an image source.
    */
-  private createOverlayImageSource() {
+  private createOverlayImageSource(config: ObsOverlayConfig) {
     console.info('[Recorder] Create image source for chat overlay');
+    const { chatOverlayOwnImage, chatOverlayOwnImagePath } = config;
 
-    const settings = {
-      file: getAssetPath('poster', 'chat-cover.png'),
-    };
+    const file = chatOverlayOwnImage
+      ? chatOverlayOwnImagePath
+      : getAssetPath('poster', 'chat-cover.png');
 
     this.overlayImageSource = osn.InputFactory.create(
       'image_source',
       'WR Chat Overlay',
-      settings
+      { file }
     );
 
-    if (this.overlayImageSource === null) {
+    if (!this.overlayImageSource) {
       console.error('[Recorder] Failed to create image source');
+      throw new Error('Failed to create overlay source');
     }
   }
 

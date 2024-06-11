@@ -360,8 +360,11 @@ type ObsVideoConfig = {
 
 type ObsOverlayConfig = {
   chatOverlayEnabled: boolean;
+  chatOverlayOwnImage: boolean;
+  chatOverlayOwnImagePath: string;
   chatOverlayWidth: number;
   chatOverlayHeight: number;
+  chatOverlayScale: number;
   chatOverlayXPosition: number;
   chatOverlayYPosition: number;
 };
