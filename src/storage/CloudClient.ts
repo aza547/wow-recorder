@@ -49,7 +49,7 @@ export default class CloudClient extends EventEmitter {
    */
   private apiEndpoint = devMode
     ? 'https://warcraft-recorder-api-v3.alex-kershaw4.workers.dev'
-    : 'https://warcraft-recorder-api-v2.alex-kershaw4.workers.dev';
+    : 'https://warcraft-recorder-api-v3.alex-kershaw4.workers.dev';
 
   /**
    * The WR website, used by the client to build shareable links.
