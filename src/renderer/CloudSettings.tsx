@@ -18,6 +18,7 @@ import { CloudStatus, RecStatus } from 'main/types';
 import { useState } from 'react';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { setConfigValues, useSettings } from './useSettings';
+import { toFixedDigits } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -498,7 +499,7 @@ const CloudSettings = (props: IProps) => {
             mx: '5px',
           }}
         >
-          {usage}GB of {max}GB
+          {Math.round(usage)}GB of {Math.round(max)}GB
         </Typography>
       </Box>
     );
@@ -575,7 +576,7 @@ const CloudSettings = (props: IProps) => {
         {getCloudGuildField()}
       </Box>
 
-      {config.cloudUpload && getCloudUsageBar()}
+      {config.cloudStorage && getCloudUsageBar()}
       {config.cloudUpload && getCloudUploadCategorySettings()}
     </Box>
   );

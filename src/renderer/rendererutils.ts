@@ -788,6 +788,9 @@ const countUniquePovs = (povs: RendererVideo[]) => {
   return uniquePovs;
 };
 
+const toFixedDigits = (n: number, d: number) =>
+  n.toLocaleString('en-US', { minimumIntegerDigits: d, useGrouping: false });
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -839,4 +842,5 @@ export {
   povNameSort,
   areDatesWithinSeconds,
   countUniquePovs,
+  toFixedDigits,
 };
