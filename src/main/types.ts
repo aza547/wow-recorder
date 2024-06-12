@@ -367,6 +367,10 @@ type ObsOverlayConfig = {
   chatOverlayScale: number;
   chatOverlayXPosition: number;
   chatOverlayYPosition: number;
+
+  // While not strictly overlay config, we need this to determine
+  // if it's valid to have a custom overlay (which is a paid feature).
+  cloudStorage: boolean;
 };
 
 type ObsAudioConfig = {

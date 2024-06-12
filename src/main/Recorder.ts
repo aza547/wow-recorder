@@ -509,7 +509,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    const { chatOverlayEnabled, chatOverlayOwnImage } = config;
+    const { chatOverlayEnabled, chatOverlayOwnImage, cloudStorage } = config;
 
     if (this.overlaySceneItem) {
       this.overlaySceneItem.remove();
@@ -520,7 +520,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    if (chatOverlayOwnImage) {
+    if (chatOverlayOwnImage && cloudStorage) {
       this.configureOwnOverlay(config);
     } else {
       this.configureDefaultOverlay(config);

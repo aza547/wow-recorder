@@ -743,15 +743,21 @@ export default class Manager {
   }
 
   private static async validateOverlayConfig(config: ObsOverlayConfig) {
-    const { chatOverlayOwnImage, chatOverlayOwnImagePath } = config;
+    const { chatOverlayOwnImage, chatOverlayOwnImagePath, cloudStorage } =
+      config;
 
     if (!chatOverlayOwnImage) {
       return;
     }
 
+    if (!cloudStorage) {
+      console.warn('To use a custom overlay, enable cloud storage');
+      throw new Error('To use a custom overlay, enable cloud storage.');
+    }
+
     if (!chatOverlayOwnImagePath) {
-      console.warn('Overlay image path was not provided for custom overlay');
-      throw new Error('Overlay image path was not provided for custom overlay');
+      console.warn('Overlay image was not provided for custom overlay');
+      throw new Error('Overlay image was not provided for custom overlay.');
     }
 
     if (!chatOverlayOwnImagePath.endsWith('.png')) {

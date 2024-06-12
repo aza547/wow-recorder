@@ -86,6 +86,7 @@ const CloudSettings = (props: IProps) => {
         cloudUploadBattlegrounds: config.cloudUploadBattlegrounds,
         cloudUploadRaidMinDifficulty: config.cloudUploadRaidMinDifficulty,
         cloudUploadDungeonMinLevel: config.cloudUploadDungeonMinLevel,
+        chatOverlayOwnImage: config.chatOverlayOwnImage,
       });
 
       // Inform the backend of a settings change so we can update config
@@ -108,6 +109,7 @@ const CloudSettings = (props: IProps) => {
     config.cloudUploadBattlegrounds,
     config.cloudUploadRaidMinDifficulty,
     config.cloudUploadDungeonMinLevel,
+    config.chatOverlayOwnImage,
   ]);
 
   React.useEffect(() => {
