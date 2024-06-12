@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [5.5.0] - 2024-06-12
+### Added
 - [Issue 403](https://github.com/aza547/wow-recorder/issues/403) - Allow Pro users to use a custom chat overlay. 
 - Access control to allow users to read but not write. Accompanies website changes.
 
