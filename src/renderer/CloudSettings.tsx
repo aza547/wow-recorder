@@ -18,7 +18,6 @@ import { CloudStatus, RecStatus } from 'main/types';
 import { useState } from 'react';
 import CloudIcon from '@mui/icons-material/Cloud';
 import { setConfigValues, useSettings } from './useSettings';
-import { toFixedDigits } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
 
