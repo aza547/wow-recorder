@@ -442,13 +442,15 @@ export default class CloudClient extends EventEmitter {
    * Get the total R2 space in use by the guild.
    */
   public async getUsage() {
+    console.info('[CloudClient] Get usage from API');
     const headers = { Authorization: this.authHeader };
     const encbucket = encodeURIComponent(this.bucket);
     const url = `${this.apiEndpoint}/${encbucket}/usage`;
     const response = await axios.get(url, { headers });
     const { data } = response;
-    const { usage } = data;
-    return parseInt(usage, 10);
+    const usage = parseInt(data.usage, 10);
+    console.info('[CloudClient] Usage was', usage);
+    return usage;
   }
 
   /**
