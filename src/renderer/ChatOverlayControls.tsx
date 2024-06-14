@@ -331,7 +331,7 @@ const ChatOverlayControls: React.FC = () => {
               disabled={!config.chatOverlayEnabled}
               setValue={setScale}
               max={5}
-              step={0.1}
+              step={0.05}
             />
           }
           label="Scale"

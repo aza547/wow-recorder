@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 485](https://github.com/aza547/wow-recorder/issues/485) - Added upload rate limit setting.
 
 ### Fixed
+- Make the chat overlay scale slider step size smaller. 
 
 ## [5.5.0] - 2024-06-12
 ### Added
