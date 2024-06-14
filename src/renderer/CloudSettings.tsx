@@ -76,6 +76,8 @@ const CloudSettings = (props: IProps) => {
         cloudAccountPassword: config.cloudAccountPassword,
         cloudGuildName: config.cloudGuildName,
         cloudUpload: config.cloudUpload,
+        cloudUploadRateLimit: config.cloudUploadRateLimit,
+        cloudUploadRateLimitMbps: config.cloudUploadRateLimitMbps,
         cloudUpload2v2: config.cloudUpload2v2,
         cloudUpload3v3: config.cloudUpload3v3,
         cloudUpload5v5: config.cloudUpload5v5,
@@ -99,6 +101,8 @@ const CloudSettings = (props: IProps) => {
     config.cloudAccountPassword,
     config.cloudGuildName,
     config.cloudUpload,
+    config.cloudUploadRateLimit,
+    config.cloudUploadRateLimitMbps,
     config.cloudUpload2v2,
     config.cloudUpload3v3,
     config.cloudUpload5v5,
@@ -257,6 +261,10 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setMinKeystoneLevel = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.value) {
+      return;
+    }
+
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -342,6 +350,35 @@ const CloudSettings = (props: IProps) => {
         <FormControlLabel
           control={getSwitch('cloudUpload', setCloudUpload)}
           label="Cloud Upload"
+          labelPlacement="top"
+          style={formControlLabelStyle}
+          disabled={isComponentDisabled()}
+        />
+      </Box>
+    );
+  };
+
+  const setCloudUploadRateLimit = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        cloudUploadRateLimit: event.target.checked,
+      };
+    });
+  };
+
+  const getCloudUploadRateLimitSwitch = () => {
+    if (isComponentDisabled() || !config.cloudUpload) {
+      return <></>;
+    }
+
+    return (
+      <Box>
+        <FormControlLabel
+          control={getSwitch('cloudUploadRateLimit', setCloudUploadRateLimit)}
+          label="Upload Rate Limit"
           labelPlacement="top"
           style={formControlLabelStyle}
           disabled={isComponentDisabled()}
@@ -560,6 +597,43 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
+  const setUploadRateLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.value) {
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        cloudUploadRateLimitMbps: parseInt(event.target.value, 10),
+      };
+    });
+  };
+
+  const getRateLimitField = () => {
+    if (!config.cloudUploadRateLimit) {
+      return <></>;
+    }
+
+    const helperText =
+      config.cloudUploadRateLimitMbps < 1 ? 'Must be 1 or greater' : '';
+
+    return (
+      <TextField
+        value={config.cloudUploadRateLimitMbps}
+        onChange={setUploadRateLimit}
+        label="Upload Rate Limit (MB/s)"
+        variant="outlined"
+        type="number"
+        error={config.cloudUploadRateLimitMbps < 1}
+        helperText={helperText}
+        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
+        sx={{ ...style, maxWidth: '250px' }}
+        inputProps={{ min: 0, style: { color: 'white' } }}
+      />
+    );
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {getDisabledText()}
@@ -567,6 +641,8 @@ const CloudSettings = (props: IProps) => {
       <Box sx={{ display: 'flex', flexDirection: 'row', mb: 1 }}>
         {getCloudSwitch()}
         {getCloudUploadSwitch()}
+        {getCloudUploadRateLimitSwitch()}
+        {getRateLimitField()}
       </Box>
 
       <Box sx={{ display: 'flex', flexDirection: 'row' }}>

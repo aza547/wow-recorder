@@ -380,20 +380,33 @@ export default class CloudClient extends EventEmitter {
 
   /**
    * Write a file into R2.
+   *
+   * @param file file path to upload
+   * @param rate rate of upload in MB/s, or -1 to signify no limit
    */
   public async putFile(
     file: string,
+    rate = -1,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     progressCallback = (_progress: number) => {}
   ) {
     const key = path.basename(file);
-    console.info('[CloudClient] Uploading', file, 'to', key);
+
+    console.info(
+      '[CloudClient] Uploading',
+      file,
+      'to',
+      key,
+      'with rate limit',
+      rate
+    );
+
     const stats = await fs.promises.stat(file);
 
     if (stats.size < this.multiPartSizeBytes) {
-      await this.doSinglePartUpload(file, progressCallback);
+      await this.doSinglePartUpload(file, rate, progressCallback);
     } else {
-      await this.doMultiPartUpload(file, progressCallback);
+      await this.doMultiPartUpload(file, rate, progressCallback);
     }
 
     await this.updateLastMod();
@@ -620,6 +633,7 @@ export default class CloudClient extends EventEmitter {
    */
   private async doSinglePartUpload(
     file: string,
+    rate: number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     progressCallback = (_progress: number) => {}
   ) {
@@ -636,6 +650,10 @@ export default class CloudClient extends EventEmitter {
       // into memory which is just a disaster. This makes me want to pick
       // a different HTTP library. https://github.com/axios/axios/issues/1045.
       maxRedirects: 0,
+
+      // Apply the rate limit here if it's in-play.
+      // Convert units from MB/s to bytes per sec.
+      maxRate: rate > 0 ? rate * 1024 ** 2 : undefined,
     };
 
     const signedUrl = await this.signPutUrl(key, stats.size);
@@ -690,6 +708,7 @@ export default class CloudClient extends EventEmitter {
    */
   private async doMultiPartUpload(
     file: string,
+    rate: number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     progressCallback = (_progress: number) => {}
   ) {
@@ -737,10 +756,15 @@ export default class CloudClient extends EventEmitter {
           const actual = Math.round(previous + normalized);
           progressCallback(actual);
         },
+
         // Without this, we buffer the whole file (which can be several GB)
         // into memory which is just a disaster. This makes me want to pick
         // a different HTTP library. https://github.com/axios/axios/issues/1045.
         maxRedirects: 0,
+
+        // Apply the rate limit here if it's in-play.
+        // Convert units from MB/s to bytes per sec.
+        maxRate: rate > 0 ? rate * 1024 ** 2 : undefined,
       };
 
       // Retry each part upload a few times on failure to allow for

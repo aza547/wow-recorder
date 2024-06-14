@@ -77,6 +77,8 @@ export const getSettings = (): ConfigurationSchema => {
     dungeonOverrun: getConfigValue<number>('dungeonOverrun'),
     cloudStorage: getConfigValue<boolean>('cloudStorage'),
     cloudUpload: getConfigValue<boolean>('cloudUpload'),
+    cloudUploadRateLimit: getConfigValue<boolean>('cloudUploadRateLimit'),
+    cloudUploadRateLimitMbps: getConfigValue<number>('cloudUploadRateLimitMbps'),
     cloudAccountName: getConfigValue<string>('cloudAccountName'),
     cloudAccountPassword: getConfigValue<string>('cloudAccountPassword'),
     cloudGuildName: getConfigValue<string>('cloudGuildName'),

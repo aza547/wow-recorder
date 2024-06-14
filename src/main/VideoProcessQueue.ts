@@ -251,6 +251,11 @@ export default class VideoProcessQueue {
   ): Promise<void> {
     let lastProgress = 0;
 
+    // Decide if we need to use a rate limit or not. Setting to -1 is unlimited.
+    const rateLimit = this.cfg.get<boolean>('cloudUploadRateLimit')
+      ? this.cfg.get<number>('cloudUploadRateLimitMbps')
+      : -1;
+
     const progressCallback = (progress: number) => {
       if (progress === lastProgress) {
         return;
@@ -262,13 +267,17 @@ export default class VideoProcessQueue {
 
     try {
       assert(this.cloudClient);
-      const thumbNailPath = getThumbnailFileNameForVideo(item.path);
 
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
-      await this.cloudClient.putFile(item.path, progressCallback);
+      await this.cloudClient.putFile(item.path, rateLimit, progressCallback);
       progressCallback(100);
-      await this.cloudClient.putFile(thumbNailPath);
+
+      // Upload the thumbnail.
+      const thumbNailPath = getThumbnailFileNameForVideo(item.path);
+      await this.cloudClient.putFile(thumbNailPath, rateLimit);
+
+      // Now add the metadata.
       const metadata = await getMetadataForVideo(item.path);
 
       const cloudMetadata: CloudMetadata = {

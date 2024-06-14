@@ -98,6 +98,7 @@ const getCloudSettingsInfoIcon = () => {
     /* eslint-disable prettier/prettier */
     ['Cloud Playback', configSchema.cloudStorage.description].join('\n'),
     ['Cloud Upload', configSchema.cloudUpload.description].join('\n'),
+    ['Upload Rate Limit', configSchema.cloudUploadRateLimit.description].join('\n'),
     ['Account Name', configSchema.cloudAccountName.description].join('\n'),
     ['Account Password', configSchema.cloudAccountPassword.description].join('\n'),
     ['Guild Name', configSchema.cloudGuildName.description].join('\n'),

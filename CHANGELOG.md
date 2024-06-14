@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 485](https://github.com/aza547/wow-recorder/issues/485) - Added upload rate limit setting.
+
 ### Fixed
 
 ## [5.5.0] - 2024-06-12

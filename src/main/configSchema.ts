@@ -57,6 +57,8 @@ export type ConfigurationSchema = {
   dungeonOverrun: number;
   cloudStorage: boolean;
   cloudUpload: boolean;
+  cloudUploadRateLimit: boolean;
+  cloudUploadRateLimitMbps: number;
   cloudAccountName: string;
   cloudAccountPassword: string;
   cloudGuildName: string;
@@ -401,6 +403,17 @@ export const configSchema = {
       'Upload your videos to the cloud, this enables both automatic upload on completion of a recording, as well as the ability to manually upload existing videos.',
     type: 'boolean',
     default: false,
+  },
+  cloudUploadRateLimit: {
+    description:
+      'If upload to the cloud should be rate limited. Useful if you are finding uploading is causing you to lag.',
+    type: 'boolean',
+    default: false,
+  },
+  cloudUploadRateLimitMbps: {
+    description: 'The upload rate limit in MB/s ',
+    type: 'integer',
+    default: 100,
   },
   cloudAccountName: {
     description: 'Your Warcraft Recorder account username.',
