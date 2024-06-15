@@ -36,6 +36,9 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
           height: '50%',
           overflowY: 'auto',
           ...scrollBarSx,
+          '&::-webkit-scrollbar': {
+            width: '1em',
+          },
         }}
       >
         <Box
