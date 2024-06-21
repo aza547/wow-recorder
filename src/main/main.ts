@@ -14,6 +14,7 @@ import os from 'os';
 import { uIOhook } from 'uiohook-napi';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import assert from 'assert';
+import listProcesses from 'utils/processList';
 import {
   resolveHtmlPath,
   openSystemExplorer,
@@ -174,6 +175,15 @@ const createWindow = async () => {
     if (!startMinimized) {
       mainWindow.show();
     }
+
+    const poll = async () => {
+      console.info('Start poll');
+      await listProcesses();
+      console.log('Done poll');
+    };
+
+    console.info('STARTING FASTLIST');
+    setInterval(() => poll(), 1000);
   });
 
   mainWindow.on('moved', () => {
