@@ -78,7 +78,7 @@ export default class Poller extends EventEmitter {
     const processList = await listProcesses();
 
     const wowProcesses = processList
-      .map((process) => process.name)
+      .map((process) => process.caption)
       .filter((name) => name.match(this.processRegex))
       .filter(this.filterFlavoursByConfig);
 

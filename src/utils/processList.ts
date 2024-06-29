@@ -1,43 +1,30 @@
-import util from 'util';
-import path from 'path';
-import childProcess from 'child_process';
-import { app } from 'electron';
-
-const TEN_MEGABYTES = 1000 * 1000 * 10;
-const BINARY = 'fastlist-0.3.0-x64.exe';
-const execFile = util.promisify(childProcess.execFile);
+import { exec } from 'child_process';
 
 export interface ProcessDescriptor {
-  readonly pid: number;
-  readonly name: string;
-  readonly ppid: number;
+  readonly caption: string;
+  readonly pid: string;
 }
 
-/**
- * An interface to fastlist. This is basically just ps-list
- * (https://github.com/sindresorhus/ps-list), but because ps-list is an ESM
- * module we can't just use it like normal. This file exists to call the
- * fastlist executable, and parse the output.
- */
 const listProcesses = async (): Promise<ProcessDescriptor[]> => {
-  const binaryPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'binaries', BINARY)
-    : path.join(__dirname, '../../binaries', BINARY);
+  const cmd = 'wmic process get Caption,ProcessId';
 
-  const { stdout } = await execFile(binaryPath, {
-    maxBuffer: TEN_MEGABYTES,
-    windowsHide: true,
+  return new Promise((resolve, reject) => {
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`, stderr);
+        reject();
+        return;
+      }
+
+      const processList = stdout
+        .split('\n')
+        .map((line) => line.trim().split(/\s+/))
+        .filter((parts) => parts.length === 2)
+        .map((parts) => ({ caption: parts[0], pid: parts[1] }));
+
+      resolve(processList);
+    });
   });
-
-  return stdout
-    .trim()
-    .split('\r\n')
-    .map((line) => line.split('\t'))
-    .map(([pid, ppid, name]) => ({
-      pid: Number.parseInt(pid, 10),
-      ppid: Number.parseInt(ppid, 10),
-      name,
-    }));
 };
 
 export default listProcesses;
