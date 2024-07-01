@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
-import { validateFlavour } from '../main/util';
+import { ChildProcessWithoutNullStreams } from 'child_process';
 import { FlavourConfig } from '../main/types';
-import listProcesses from './processList';
+import spawnRustPs from './processList';
 
 /**
  * The Poller singleton periodically checks the list of WoW active processes.
@@ -13,7 +13,7 @@ export default class Poller extends EventEmitter {
 
   private _pollInterval: NodeJS.Timer | undefined;
 
-  private processRegex = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
+  private child: ChildProcessWithoutNullStreams | undefined;
 
   private static _instance: Poller;
 
@@ -63,52 +63,43 @@ export default class Poller extends EventEmitter {
   reset() {
     this.isWowRunning = false;
 
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
+    if (this.child) {
+      this.child.kill();
+      this.child = undefined;
     }
   }
 
   start() {
     this.reset();
     this.poll();
-    this.pollInterval = setInterval(() => this.poll(), 1000);
   }
 
   private poll = async () => {
-    const processList = await listProcesses();
+    this.child = spawnRustPs();
 
-    const wowProcesses = processList
-      .map((process) => process.name)
-      .filter((name) => name.match(this.processRegex))
-      .filter(this.filterFlavoursByConfig);
+    this.child.stdout.on('data', (data) => {
+      const json = JSON.parse(data);
 
-    // We don't care to do anything better in the scenario of multiple
-    // processes running. We don't support users multi-boxing.
-    if (!this.isWowRunning && wowProcesses.pop()) {
-      this.isWowRunning = true;
-      this.emit('wowProcessStart');
-    } else if (this.isWowRunning && !wowProcesses.pop()) {
-      this.isWowRunning = false;
-      this.emit('wowProcessStop');
-    }
-  };
+      const { Retail, Classic } = json;
+      const { recordRetail, recordClassic } = this.flavourConfig;
 
-  private filterFlavoursByConfig = (process: string) => {
-    const { recordRetail, recordClassic } = this.flavourConfig;
+      const retailCheck = Retail && recordRetail;
+      const classicCheck = Classic && recordClassic;
 
-    try {
-      validateFlavour(this.flavourConfig);
-    } catch {
-      return false;
-    }
+      // We don't care to do anything better in the scenario of multiple
+      // processes running. We don't support users multi-boxing.
 
-    const lower = process.toLowerCase();
+      if (!this.isWowRunning && (retailCheck || classicCheck)) {
+        this.isWowRunning = true;
+        this.emit('wowProcessStart');
+      } else if (this.isWowRunning && !retailCheck && !classicCheck) {
+        this.isWowRunning = false;
+        this.emit('wowProcessStop');
+      }
+    });
 
-    if (lower === 'wowclassic.exe') {
-      return recordClassic;
-    }
-
-    // The process name matched the regex so must be retail.
-    return recordRetail;
+    this.child.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
   };
 }
