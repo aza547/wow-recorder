@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix a slow memory leak caused by the process polling mechanism. 
 
 ## [5.6.0] - 2024-06-15
 ### Added

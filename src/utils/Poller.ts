@@ -1,7 +1,8 @@
 import EventEmitter from 'events';
-import { ChildProcessWithoutNullStreams } from 'child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import path from 'path';
+import { app } from 'electron';
 import { FlavourConfig } from '../main/types';
-import spawnRustPs from './processList';
 
 /**
  * The Poller singleton periodically checks the list of WoW active processes.
@@ -18,6 +19,12 @@ export default class Poller extends EventEmitter {
   private static _instance: Poller;
 
   private flavourConfig: FlavourConfig;
+
+  private binary = 'rust-ps.exe';
+
+  private binaryPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'binaries', this.binary)
+    : path.join(__dirname, '../../binaries', this.binary);
 
   static getInstance(flavourConfig: FlavourConfig) {
     if (!Poller._instance) {
@@ -75,9 +82,13 @@ export default class Poller extends EventEmitter {
   }
 
   private poll = async () => {
-    this.child = spawnRustPs();
+    this.child = spawn(this.binaryPath);
+    this.child.stdout.on('data', this.handleStdout);
+    this.child.stderr.on('data', this.handleStderr);
+  };
 
-    this.child.stdout.on('data', (data) => {
+  private handleStdout = (data: any) => {
+    try {
       const json = JSON.parse(data);
 
       const { Retail, Classic } = json;
@@ -88,7 +99,6 @@ export default class Poller extends EventEmitter {
 
       // We don't care to do anything better in the scenario of multiple
       // processes running. We don't support users multi-boxing.
-
       if (!this.isWowRunning && (retailCheck || classicCheck)) {
         this.isWowRunning = true;
         this.emit('wowProcessStart');
@@ -96,10 +106,14 @@ export default class Poller extends EventEmitter {
         this.isWowRunning = false;
         this.emit('wowProcessStop');
       }
-    });
+    } catch (error) {
+      // Think we can hit this on sleeping/resuming from sleep.
+      console.warn('Failed parsing JSON from rust-ps:', data);
+    }
+  };
 
-    this.child.stderr.on('data', (data) => {
-      console.error(`stderr: ${data}`);
-    });
+  private handleStderr = (data: any) => {
+    console.warn('stderr returned from rust-ps');
+    console.error(data);
   };
 }
