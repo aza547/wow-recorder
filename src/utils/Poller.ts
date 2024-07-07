@@ -1,7 +1,8 @@
 import EventEmitter from 'events';
-import { validateFlavour } from '../main/util';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
+import path from 'path';
+import { app } from 'electron';
 import { FlavourConfig } from '../main/types';
-import listProcesses from './processList';
 
 /**
  * The Poller singleton periodically checks the list of WoW active processes.
@@ -13,11 +14,17 @@ export default class Poller extends EventEmitter {
 
   private _pollInterval: NodeJS.Timer | undefined;
 
-  private processRegex = new RegExp(/(wow(T|B|classic)?)\.exe/, 'i');
+  private child: ChildProcessWithoutNullStreams | undefined;
 
   private static _instance: Poller;
 
   private flavourConfig: FlavourConfig;
+
+  private binary = 'rust-ps.exe';
+
+  private binaryPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'binaries', this.binary)
+    : path.join(__dirname, '../../binaries', this.binary);
 
   static getInstance(flavourConfig: FlavourConfig) {
     if (!Poller._instance) {
@@ -63,52 +70,50 @@ export default class Poller extends EventEmitter {
   reset() {
     this.isWowRunning = false;
 
-    if (this.pollInterval) {
-      clearInterval(this.pollInterval);
+    if (this.child) {
+      this.child.kill();
+      this.child = undefined;
     }
   }
 
   start() {
     this.reset();
     this.poll();
-    this.pollInterval = setInterval(() => this.poll(), 1000);
   }
 
   private poll = async () => {
-    const processList = await listProcesses();
+    this.child = spawn(this.binaryPath);
+    this.child.stdout.on('data', this.handleStdout);
+    this.child.stderr.on('data', this.handleStderr);
+  };
 
-    const wowProcesses = processList
-      .map((process) => process.name)
-      .filter((name) => name.match(this.processRegex))
-      .filter(this.filterFlavoursByConfig);
+  private handleStdout = (data: any) => {
+    try {
+      const json = JSON.parse(data);
 
-    // We don't care to do anything better in the scenario of multiple
-    // processes running. We don't support users multi-boxing.
-    if (!this.isWowRunning && wowProcesses.pop()) {
-      this.isWowRunning = true;
-      this.emit('wowProcessStart');
-    } else if (this.isWowRunning && !wowProcesses.pop()) {
-      this.isWowRunning = false;
-      this.emit('wowProcessStop');
+      const { Retail, Classic } = json;
+      const { recordRetail, recordClassic } = this.flavourConfig;
+
+      const retailCheck = Retail && recordRetail;
+      const classicCheck = Classic && recordClassic;
+
+      // We don't care to do anything better in the scenario of multiple
+      // processes running. We don't support users multi-boxing.
+      if (!this.isWowRunning && (retailCheck || classicCheck)) {
+        this.isWowRunning = true;
+        this.emit('wowProcessStart');
+      } else if (this.isWowRunning && !retailCheck && !classicCheck) {
+        this.isWowRunning = false;
+        this.emit('wowProcessStop');
+      }
+    } catch (error) {
+      // Think we can hit this on sleeping/resuming from sleep.
+      console.warn('Failed parsing JSON from rust-ps:', data);
     }
   };
 
-  private filterFlavoursByConfig = (process: string) => {
-    const { recordRetail, recordClassic } = this.flavourConfig;
-
-    try {
-      validateFlavour(this.flavourConfig);
-    } catch {
-      return false;
-    }
-
-    const lower = process.toLowerCase();
-
-    if (lower === 'wowclassic.exe') {
-      return recordClassic;
-    }
-
-    // The process name matched the regex so must be retail.
-    return recordRetail;
+  private handleStderr = (data: any) => {
+    console.warn('stderr returned from rust-ps');
+    console.error(data);
   };
 }

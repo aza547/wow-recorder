@@ -14,7 +14,8 @@ import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import EventIcon from '@mui/icons-material/Event';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import FolderIcon from '@mui/icons-material/Folder';
 import MessageIcon from '@mui/icons-material/Message';
 import React, { MutableRefObject, useEffect, useState } from 'react';
@@ -45,7 +46,6 @@ import ArenaInfo from './ArenaInfo';
 import RaidCompAndResult from './RaidCompAndResult';
 import TagDialog from './TagDialog';
 import ControlIcon from '../../assets/icon/ctrl-icon.png';
-import AltIcon from '../../assets/icon/alt-icon.png';
 import PovSelection from './PovSelection';
 import { useSettings } from './useSettings';
 import SnackBar from './SnackBar';
@@ -105,7 +105,6 @@ export default function VideoButton(props: IProps) {
   const videoDate = getVideoDate(video);
 
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
-  const [altDown, setAltDown] = useState<boolean>(false);
   const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
@@ -218,26 +217,18 @@ export default function VideoButton(props: IProps) {
 
   /**
    * Sets up event listeners so that users can skip the "Are you sure you want
-   * to delete this video?" prompt by holding CTRL. Also sets the callback on
-   * unmount to delete the video if the delete button was clicked.
+   * to delete this video?" prompt by holding CTRL.
    */
   useEffect(() => {
     document.addEventListener('keyup', (event: KeyboardEvent) => {
       if (event.key === 'Control') {
         setCtrlDown(false);
       }
-
-      if (event.key === 'Alt') {
-        setAltDown(false);
-      }
     });
+
     document.addEventListener('keydown', (event: KeyboardEvent) => {
       if (event.key === 'Control') {
         setCtrlDown(true);
-      }
-
-      if (event.key === 'Alt') {
-        setAltDown(true);
       }
     });
   });
@@ -270,13 +261,22 @@ export default function VideoButton(props: IProps) {
     ]);
   };
 
-  const deleteClicked = (event: React.MouseEvent<HTMLElement>) => {
-    if (ctrlDown && altDown && multiPov) {
-      deleteAllPovs(event);
-    } else if (ctrlDown) {
+  const deleteSingleClicked = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+
+    if (ctrlDown) {
       deleteVideo(event);
     } else {
-      event.stopPropagation();
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const deleteAllClicked = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+
+    if (ctrlDown) {
+      deleteAllPovs(event);
+    } else {
       setDeleteDialogOpen(true);
     }
   };
@@ -294,26 +294,11 @@ export default function VideoButton(props: IProps) {
 
   const getDeleteDialog = () => {
     const getTitle = () => {
-      return (
-        <DialogTitle sx={{ color: 'white' }}>
-          Permanently Delete this Video?
-        </DialogTitle>
-      );
+      const msg = 'Are you sure?';
+      return <DialogTitle sx={{ color: 'white' }}>{msg}</DialogTitle>;
     };
 
-    const getMultiPovText = () => {
-      return (
-        <DialogContent>
-          <DialogContentText sx={{ color: 'white' }}>
-            This activity has multiple points of view saved. You can delete the
-            currently selected point of view, or you can delete all the points
-            of view at once.
-          </DialogContentText>
-        </DialogContent>
-      );
-    };
-
-    const getSingleHotKeyText = () => {
+    const getHotKeyText = () => {
       return (
         <DialogContent sx={{ py: '4px' }}>
           <DialogContentText sx={{ color: 'white' }}>
@@ -325,33 +310,7 @@ export default function VideoButton(props: IProps) {
               height="35"
               style={{ verticalAlign: 'middle' }}
             />{' '}
-            to skip this prompt and delete a single POV.
-          </DialogContentText>
-        </DialogContent>
-      );
-    };
-
-    const getMultiHotKeyText = () => {
-      return (
-        <DialogContent sx={{ py: '4px' }}>
-          <DialogContentText sx={{ color: 'white' }}>
-            Hold{' '}
-            <img
-              src={ControlIcon}
-              alt="Control Key"
-              width="35"
-              height="35"
-              style={{ verticalAlign: 'middle' }}
-            />
-            +
-            <img
-              src={AltIcon}
-              alt="Alt Key"
-              width="35"
-              height="35"
-              style={{ verticalAlign: 'middle' }}
-            />{' '}
-            to skip this prompt and delete all the POVs.
+            to skip this prompt.
           </DialogContentText>
         </DialogContent>
       );
@@ -371,7 +330,7 @@ export default function VideoButton(props: IProps) {
       );
     };
 
-    const getDeleteSingleButton = () => {
+    const getDeleteButton = () => {
       return (
         <Button
           onClick={(event) => {
@@ -385,33 +344,16 @@ export default function VideoButton(props: IProps) {
       );
     };
 
-    const getDeleteAllButton = () => {
-      return (
-        <Button
-          onClick={(event) => {
-            event.stopPropagation();
-            deleteAllPovs(event);
-          }}
-          sx={dialogButtonSx}
-        >
-          Delete All
-        </Button>
-      );
-    };
-
     return (
       <Dialog
         open={deleteDialogOpen}
         PaperProps={{ style: { backgroundColor: '#1A233A' } }}
       >
         {getTitle()}
-        {multiPov && getMultiPovText()}
-        {getSingleHotKeyText()}
-        {multiPov && getMultiHotKeyText()}
+        {getHotKeyText()}
         <DialogActions>
           {getCancelButton()}
-          {getDeleteSingleButton()}
-          {multiPov && getDeleteAllButton()}
+          {getDeleteButton()}
         </DialogActions>
       </Dialog>
     );
@@ -517,6 +459,34 @@ export default function VideoButton(props: IProps) {
             <LinkIcon sx={{ color: 'white' }} />
           </IconButton>
         </div>
+      </Tooltip>
+    );
+  };
+
+  const getDeleteSingleButton = () => {
+    return (
+      <Tooltip title="Delete">
+        <IconButton
+          onMouseDown={stopPropagation}
+          onClick={deleteSingleClicked}
+          sx={iconButtonSx}
+        >
+          <DeleteIcon sx={{ color: 'white' }} />
+        </IconButton>
+      </Tooltip>
+    );
+  };
+
+  const getDeleteAllButton = () => {
+    return (
+      <Tooltip title="Delete all points of view">
+        <IconButton
+          onMouseDown={stopPropagation}
+          onClick={deleteAllClicked}
+          sx={iconButtonSx}
+        >
+          <DeleteSweepIcon sx={{ color: 'white' }} />
+        </IconButton>
       </Tooltip>
     );
   };
@@ -760,16 +730,8 @@ export default function VideoButton(props: IProps) {
                 !haveInCloud &&
                 config.cloudUpload &&
                 getUploadButton()}
-
-              <Tooltip title="Delete">
-                <IconButton
-                  onMouseDown={stopPropagation}
-                  onClick={deleteClicked}
-                  sx={iconButtonSx}
-                >
-                  <DeleteForeverIcon sx={{ color: 'white' }} />
-                </IconButton>
-              </Tooltip>
+              {getDeleteSingleButton()}
+              {multiPov && getDeleteAllButton()}
             </Box>
           </Box>
         </Box>

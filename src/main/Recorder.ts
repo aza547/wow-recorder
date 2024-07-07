@@ -406,9 +406,7 @@ export default class Recorder extends EventEmitter {
 
       case ESupportedEncoders.AMD_AMF_H264:
         encoderSettings.rate_control = 'CQP'; // 0 - 51
-        encoderSettings['QP.BFrame'] = cqp;
-        encoderSettings['QP.IFrame'] = cqp;
-        encoderSettings['QP.PFrame'] = cqp;
+        encoderSettings.cqp = cqp;
         break;
 
       case ESupportedEncoders.JIM_NVENC:
