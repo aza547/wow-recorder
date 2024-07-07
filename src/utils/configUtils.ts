@@ -10,6 +10,7 @@ import path from 'path';
 import ConfigService from '../main/ConfigService';
 import { categoryRecordingSettings } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
+import { ESupportedEncoders } from '../main/obsEnums';
 
 const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   if (category === VideoCategory.Clips) {
@@ -113,6 +114,16 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
     obsPath = path.join(storagePath, '.temp');
   }
 
+  // Bizzare here bug where the amd_amf_h264 suddenly started massively leaking
+  // memory for me, and switching to the texture one resolved it. This migrates
+  // all users of the amd_amf_h264 encoder to use h264_texture_amf.
+  let obsRecEncoder = cfg.get<string>('obsRecEncoder');
+
+  if (obsRecEncoder === 'amd_amf_h264') {
+    obsRecEncoder = ESupportedEncoders.AMD_AMF_H264;
+    cfg.set('obsRecEncoder', obsRecEncoder);
+  }
+
   return {
     storagePath: cfg.get<string>('storagePath'),
     maxStorage: cfg.get<number>('maxStorage'),
@@ -120,7 +131,7 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
     obsOutputResolution: cfg.get<string>('obsOutputResolution'),
     obsFPS: cfg.get<number>('obsFPS'),
     obsQuality: cfg.get<string>('obsQuality'),
-    obsRecEncoder: cfg.get<string>('obsRecEncoder'),
+    obsRecEncoder,
     cloudStorage: cfg.get<boolean>('cloudStorage'),
     cloudUpload: cfg.get<boolean>('cloudUpload'),
     cloudAccountName: cfg.get<string>('cloudAccountName'),

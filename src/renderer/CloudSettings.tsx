@@ -611,7 +611,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getRateLimitField = () => {
-    if (!config.cloudUploadRateLimit) {
+    if (!config.cloudUpload || !config.cloudUploadRateLimit) {
       return <></>;
     }
 
