@@ -948,7 +948,7 @@ export default class Recorder extends EventEmitter {
    * Clean-up the recording directory.
    * @params Number of files to leave.
    */
-  public async cleanup(filesToLeave = 0) {
+  public async cleanup(filesToLeave = 3) {
     console.info('[Recorder] Clean out buffer', filesToLeave);
 
     if (!this.obsPath) {
