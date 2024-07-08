@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [5.6.1] - 2024-07-08
+### Changed
 - Make delete and delete all points of view into separate buttons for ease of use.
 
-### Added
 ### Fixed
 - Fix a major memory leak when using the AMD hardware encoder.
 - Fix a slow memory leak caused by the process polling mechanism. 
