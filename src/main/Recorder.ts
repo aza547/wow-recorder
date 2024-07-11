@@ -1029,6 +1029,7 @@ export default class Recorder extends EventEmitter {
 
     this.wroteQueue.empty();
     this.lastFile = this.obsRecordingFactory.lastFile();
+    console.info('[Recorder] Got last file from OBS:', this.lastFile);
   }
 
   /**

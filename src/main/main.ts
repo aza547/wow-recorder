@@ -363,7 +363,6 @@ ipcMain.on('videoPlayerSettings', (event, args) => {
  */
 app.on('window-all-closed', async () => {
   console.info('[Main] User closed app');
-  uIOhook.stop();
   app.quit();
 });
 

@@ -970,6 +970,7 @@ export default class Manager {
     app.on('before-quit', () => {
       console.info('[Manager] Running before-quit actions');
       this.recorder.shutdownOBS();
+      this.poller.reset();
       uIOhook.stop();
     });
 
