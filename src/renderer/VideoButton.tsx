@@ -155,16 +155,14 @@ export default function VideoButton(props: IProps) {
   }, [localPovIndex, povs.length, selected]);
 
   /**
-   * Delete a video. This avoids attempting to delete the video
-   * from disk when the MP4 file is still open in the UI via the safeDelete
-   * call.
+   * Delete a video.
    */
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     setDeleteDialogOpen(false);
 
     const src = cloud ? videoName : videoSource;
-    window.electron.ipcRenderer.sendMessage('safeDeleteVideo', [src, cloud]);
+    window.electron.ipcRenderer.sendMessage('deleteVideo', [src, cloud]);
     stateManager.current.deleteVideo(pov);
 
     if (!selected) {
@@ -172,6 +170,7 @@ export default function VideoButton(props: IProps) {
     }
 
     setLocalPovIndex(0);
+    persistentProgress.current = 0;
 
     setAppState((prevState) => {
       return {
@@ -192,10 +191,7 @@ export default function VideoButton(props: IProps) {
     povs.forEach((p) => {
       const src = p.cloud ? p.videoName : p.videoSource;
 
-      window.electron.ipcRenderer.sendMessage('safeDeleteVideo', [
-        src,
-        p.cloud,
-      ]);
+      window.electron.ipcRenderer.sendMessage('deleteVideo', [src, p.cloud]);
 
       stateManager.current.deleteVideo(p);
     });

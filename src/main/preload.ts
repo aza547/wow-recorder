@@ -23,7 +23,7 @@ export type Channels =
   | 'clip'
   | 'getCloudStatus'
   | 'getDiskStatus'
-  | 'safeDeleteVideo'
+  | 'deleteVideo'
   | 'writeClipboard'
   | 'getShareableLink';
 
