@@ -128,8 +128,7 @@ export default class Manager {
       valid: false,
       current: this.obsBaseCfg,
       get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: async (config: ObsBaseConfig) =>
-        Manager.validateBaseCfg(config),
+      validate: async (config: ObsBaseConfig) => Manager.validateBaseCfg(config),
       configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
     },
     {
@@ -138,8 +137,7 @@ export default class Manager {
       current: this.obsVideoCfg,
       get: (cfg: ConfigService) => getObsVideoConfig(cfg),
       validate: async () => {},
-      configure: async (config: ObsVideoConfig) =>
-        this.configureObsVideo(config),
+      configure: async (config: ObsVideoConfig) => this.configureObsVideo(config),
     },
     {
       name: 'obsAudio',
@@ -147,8 +145,7 @@ export default class Manager {
       current: this.obsAudioCfg,
       get: (cfg: ConfigService) => getObsAudioConfig(cfg),
       validate: async () => {},
-      configure: async (config: ObsAudioConfig) =>
-        this.configureObsAudio(config),
+      configure: async (config: ObsAudioConfig) => this.configureObsAudio(config),
     },
     {
       name: 'flavour',
@@ -163,10 +160,8 @@ export default class Manager {
       valid: false,
       current: this.overlayCfg,
       get: (cfg: ConfigService) => getOverlayConfig(cfg),
-      validate: async (config: ObsOverlayConfig) =>
-        Manager.validateOverlayConfig(config),
-      configure: async (config: ObsOverlayConfig) =>
-        this.configureObsOverlay(config),
+      validate: async (config: ObsOverlayConfig) => Manager.validateOverlayConfig(config),
+      configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
     },
     /* eslint-enable prettier/prettier */
   ];
@@ -963,6 +958,10 @@ export default class Manager {
           // If that didn't work for any reason, try to at least mark it for deletion,
           // so that it can be picked up on refresh and we won't show videos the user
           // intended to delete
+          console.warn(
+            '[Manager] Failed to directly delete video on disk:',
+            String(error)
+          );
           markForVideoForDelete(src);
         }
       }
