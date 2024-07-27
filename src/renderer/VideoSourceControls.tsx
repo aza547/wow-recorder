@@ -236,6 +236,29 @@ const VideoSourceControls: React.FC = () => {
       );
     };
 
+    // Always include the base game modes even if they aren't currently running.
+    const classicOpen = windows.find(
+      (window) => window.name === '[WowClassic.exe]: World of Warcraft'
+    );
+
+    const retailOpen = windows.find(
+      (window) => window.name === '[Wow.exe]: World of Warcraft'
+    );
+
+    if (!classicOpen) {
+      windows.push({
+        name: '[WowClassic.exe]: World of Warcraft',
+        value: 'World of Warcraft:GxWindowClass:Window:Wow.exe',
+      });
+    }
+
+    if (!retailOpen) {
+      windows.push({
+        name: '[Wow.exe]: World of Warcraft',
+        value: 'World of Warcraft:waApplication Window:Wow.exe',
+      });
+    }
+
     return (
       <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '200px' }}>
         <InputLabel sx={selectStyle}>Window</InputLabel>

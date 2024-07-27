@@ -753,8 +753,11 @@ export default class Manager {
     const { obsCaptureMode, obsWindowName } = config;
 
     if (obsCaptureMode === 'window_capture' && !obsWindowName) {
-      console.warn('[Manager] Must select a window to capture from');
-      throw new Error('Must select a window to capture from.');
+      console.warn('[Manager] No window selected.');
+
+      throw new Error(
+        'Must select a window in the scene settings, if none appear, make sure WoW is running.'
+      );
     }
   }
 

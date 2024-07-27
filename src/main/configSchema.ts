@@ -199,7 +199,7 @@ export const configSchema = {
   obsWindowName: {
     description: 'The window to capture when using window capture mode.',
     type: 'string',
-    default: '',
+    default: 'World of Warcraft:waApplication Window:Wow.exe',
   },
   obsRecEncoder: {
     description:
