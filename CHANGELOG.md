@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Fix a regression where PTR and Beta didn't work in 5.6.1.
+- [Issue 506](https://github.com/aza547/wow-recorder/issues/506) - Improve disk delete behaviour.
 
 ## [5.6.1] - 2024-07-08
 ### Changed
