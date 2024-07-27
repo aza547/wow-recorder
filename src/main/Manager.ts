@@ -24,6 +24,7 @@ import {
   exists,
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
+  deleteVideoDisk,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -942,7 +943,7 @@ export default class Manager {
       }
     });
 
-    ipcMain.on('safeDeleteVideo', async (_event, args) => {
+    ipcMain.on('deleteVideo', async (_event, args) => {
       const src = args[0] as string;
       const cloud = args[1] as string;
 
@@ -950,7 +951,19 @@ export default class Manager {
         // No special handling for cloud storage.
         await this.deleteVideoCloud(src);
       } else {
-        markForVideoForDelete(src);
+        // Try to just delete the video from disk
+        try {
+          await deleteVideoDisk(src);
+        } catch (error) {
+          // If that didn't work for any reason, try to at least mark it for deletion,
+          // so that it can be picked up on refresh and we won't show videos the user
+          // intended to delete
+          console.warn(
+            '[Manager] Failed to directly delete video on disk:',
+            String(error)
+          );
+          markForVideoForDelete(src);
+        }
       }
     });
 
