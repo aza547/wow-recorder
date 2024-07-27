@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [5.6.2] - 2024-07-27
+### Fixed
 - Fix a regression where PTR and Beta didn't work in 5.6.1.
 - [Issue 506](https://github.com/aza547/wow-recorder/issues/506) - Improve disk delete behaviour.
 - Fix a bug where window capture did not work on TWW pre-patch as Blizzard changed the window name.
