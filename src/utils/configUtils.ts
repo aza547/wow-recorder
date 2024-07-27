@@ -143,6 +143,7 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
 const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
   return {
     obsCaptureMode: cfg.get<string>('obsCaptureMode'),
+    obsWindowName: cfg.get<string>('obsWindowName'),
     monitorIndex: cfg.get<number>('monitorIndex'),
     captureCursor: cfg.get<boolean>('captureCursor'),
   };

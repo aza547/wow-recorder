@@ -34,7 +34,13 @@ export default class ConfigService extends EventEmitter {
 
     this.cleanupStore();
 
-    console.info('[Config Service] Using configuration', this._store.store);
+    const loggable = this._store.store;
+
+    if (loggable.cloudAccountPassword) {
+      loggable.cloudAccountPassword = '**********';
+    }
+
+    console.info('[Config Service] Using configuration', loggable);
 
     this._store.onDidAnyChange((newValue: any, oldValue: any) => {
       this.emit('configChanged', oldValue, newValue);
@@ -196,6 +202,10 @@ export default class ConfigService extends EventEmitter {
   }
 
   private static logConfigChanged(newConfig: { [key: string]: any }): void {
+    if (newConfig.cloudAccountPassword) {
+      newConfig.cloudAccountPassword = '**********';
+    }
+
     console.info('[Config Service] Configuration changed:', newConfig);
   }
 }

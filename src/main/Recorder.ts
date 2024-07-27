@@ -11,6 +11,8 @@ import {
   ISceneItemInfo,
   ISource,
   ISettings,
+  IProperty,
+  IListProperty,
 } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
@@ -54,6 +56,7 @@ import {
   ObsVideoConfig,
   TAudioSourceType,
   TPreviewPosition,
+  WindowCaptureChoice,
 } from './types';
 import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
@@ -435,7 +438,8 @@ export default class Recorder extends EventEmitter {
    * Configures the video source in OBS.
    */
   public configureVideoSources(config: ObsVideoConfig) {
-    const { obsCaptureMode, monitorIndex, captureCursor } = config;
+    const { obsCaptureMode, monitorIndex, captureCursor, obsWindowName } =
+      config;
 
     if (this.scene === undefined || this.scene === null) {
       throw new Error('[Recorder] No scene');
@@ -455,7 +459,10 @@ export default class Recorder extends EventEmitter {
     } else if (obsCaptureMode === 'game_capture') {
       this.videoSource = Recorder.createGameCaptureSource(captureCursor);
     } else if (obsCaptureMode === 'window_capture') {
-      this.videoSource = Recorder.createWindowCaptureSource(captureCursor);
+      this.videoSource = Recorder.createWindowCaptureSource(
+        obsWindowName,
+        captureCursor
+      );
     } else {
       throw new Error(`[Recorder] Unexpected mode: ${obsCaptureMode}`);
     }
@@ -1185,25 +1192,24 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Creates a window capture source.
+   * Creates a window capture source. In TWW, the retail and classic Window names
+   * diverged slightly, so while this was previously a hardcoded string, now we
+   * need to dynamically find it.
    */
-  private static createWindowCaptureSource(captureCursor: boolean) {
+  private static createWindowCaptureSource(
+    window: string,
+    captureCursor: boolean
+  ) {
     console.info('[Recorder] Configuring OBS for Window Capture');
 
-    const windowCaptureSource = osn.InputFactory.create(
-      'window_capture',
-      'WR Window Capture',
-      {
-        cursor: captureCursor,
-        window: 'World of Warcraft:GxWindowClass:Wow.exe',
-        // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
-        // capture behind the WoW window. Not sure why, some googling suggested Windows theme issues.
-        // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
-        method: 2,
-      }
-    );
-
-    return windowCaptureSource;
+    return osn.InputFactory.create('window_capture', 'WR Window Capture', {
+      // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
+      // capture behind the WoW window. Not sure why, some googling suggested Windows theme issues.
+      // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
+      method: 2,
+      cursor: captureCursor,
+      window,
+    });
   }
 
   /**
@@ -1418,5 +1424,50 @@ export default class Recorder extends EventEmitter {
         console.error('[Recorder] Unrecognised quality', obsQuality);
         throw new Error('Unrecognised quality');
     }
+  }
+
+  private static isListProperty(property: IProperty) {
+    // For some reason this doesn't work.
+    // return property.type === EPropertyType.List;
+    return property.type === 6;
+  }
+
+  /**
+   * List the windows for use in the settings pages on the frontend.
+   */
+  public getAvailableWindows() {
+    console.info('[Recorder] Getting available windows');
+    let windows: WindowCaptureChoice[] = [];
+
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    const src = osn.InputFactory.create(
+      'window_capture',
+      'Dummy Window Capture'
+    );
+
+    let prop = src.properties.first();
+
+    while (prop && prop.description !== 'Window') {
+      prop = prop.next();
+    }
+
+    if (
+      prop &&
+      prop.description === 'Window' &&
+      Recorder.isListProperty(prop)
+    ) {
+      windows = (prop as IListProperty).details.items.filter((item) =>
+        item.name.includes('World of Warcraft')
+      );
+    }
+
+    src.release();
+    src.remove();
+
+    console.info('[Recorder] Available windows', windows);
+    return windows;
   }
 }

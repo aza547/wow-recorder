@@ -354,6 +354,7 @@ type ObsBaseConfig = {
 
 type ObsVideoConfig = {
   obsCaptureMode: string;
+  obsWindowName: string;
   monitorIndex: number;
   captureCursor: boolean;
 };
@@ -467,6 +468,11 @@ type CheckAuthResponse = {
   write: boolean;
 };
 
+type WindowCaptureChoice = {
+  name: string;
+  value: string | number;
+};
+
 export {
   RecStatus,
   SaveStatus,
@@ -521,4 +527,5 @@ export {
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
   CheckAuthResponse,
+  WindowCaptureChoice,
 };

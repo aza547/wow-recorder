@@ -48,6 +48,7 @@ export const getSettings = (): ConfigurationSchema => {
     obsForceMono: getConfigValue<boolean>('obsForceMono'),
     obsQuality: getConfigValue<string>('obsQuality'),
     obsCaptureMode: getConfigValue<string>('obsCaptureMode'),
+    obsWindowName: getConfigValue<string>('obsWindowName'),
     obsRecEncoder: getConfigValue<string>('obsRecEncoder'),
     minKeystoneLevel: getConfigValue<number>('minKeystoneLevel'),
     minimizeOnQuit: getConfigValue<boolean>('minimizeOnQuit'),

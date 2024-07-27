@@ -136,7 +136,7 @@ export default class Manager {
       valid: false,
       current: this.obsVideoCfg,
       get: (cfg: ConfigService) => getObsVideoConfig(cfg),
-      validate: async () => {},
+      validate: async (config: ObsVideoConfig) => Manager.validateVideoConfig(config),
       configure: async (config: ObsVideoConfig) => this.configureObsVideo(config),
     },
     {
@@ -289,11 +289,17 @@ export default class Manager {
           return;
         }
 
+        const loggable = { ...newConfig };
+
+        if (loggable.cloudAccountPassword) {
+          loggable.cloudAccountPassword = '**********';
+        }
+
         console.info(
           '[Manager] Configuring stage',
           stage.name,
           'with',
-          newConfig
+          loggable
         );
 
         await stage.configure(newConfig);
@@ -743,6 +749,15 @@ export default class Manager {
     }
   }
 
+  private static async validateVideoConfig(config: ObsVideoConfig) {
+    const { obsCaptureMode, obsWindowName } = config;
+
+    if (obsCaptureMode === 'window_capture' && !obsWindowName) {
+      console.warn('[Manager] Must select a window to capture from');
+      throw new Error('Must select a window to capture from.');
+    }
+  }
+
   private static async validateOverlayConfig(config: ObsOverlayConfig) {
     const { chatOverlayOwnImage, chatOverlayOwnImagePath, cloudStorage } =
       config;
@@ -752,24 +767,26 @@ export default class Manager {
     }
 
     if (!cloudStorage) {
-      console.warn('To use a custom overlay, enable cloud storage');
+      console.warn('[Manager] To use a custom overlay, enable cloud storage');
       throw new Error('To use a custom overlay, enable cloud storage.');
     }
 
     if (!chatOverlayOwnImagePath) {
-      console.warn('Overlay image was not provided for custom overlay');
+      console.warn(
+        '[Manager] Overlay image was not provided for custom overlay'
+      );
       throw new Error('Overlay image was not provided for custom overlay.');
     }
 
     if (!chatOverlayOwnImagePath.endsWith('.png')) {
-      console.warn('Overlay image must be a PNG file');
+      console.warn('[Manager] Overlay image must be a PNG file');
       throw new Error('Overlay image must be a PNG file');
     }
 
     const fileExists = await exists(chatOverlayOwnImagePath);
 
     if (!fileExists) {
-      console.warn(`${chatOverlayOwnImagePath} does not exist`);
+      console.warn(`[Manager] ${chatOverlayOwnImagePath} does not exist`);
       throw new Error(`${chatOverlayOwnImagePath} does not exist`);
     }
   }
@@ -809,6 +826,9 @@ export default class Manager {
 
       return obsEncoders;
     });
+
+    // Window listener, to populate settings on the frontend.
+    ipcMain.handle('getWindows', () => this.recorder.getAvailableWindows());
 
     // Audio devices listener, to populate settings on the frontend.
     ipcMain.handle(
