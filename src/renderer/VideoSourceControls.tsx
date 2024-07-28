@@ -260,7 +260,7 @@ const VideoSourceControls: React.FC = () => {
     }
 
     return (
-      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '200px' }}>
+      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '300px' }}>
         <InputLabel sx={selectStyle}>Window</InputLabel>
         <Select
           value={config.obsWindowName}

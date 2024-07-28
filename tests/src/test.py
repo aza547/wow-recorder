@@ -88,11 +88,18 @@ parser.add_argument("-t", help="test", choices=RETAIL_TEST_NAMES + CLASSIC_TEST_
 args = parser.parse_args()
 
 
-def replace_date(line):
+def replace_date(line, flavour):
     """Replaces the date in a log line with the current date in the original format."""
     event_position = line.find("  ")
     line_no_ts = line[event_position:]
-    new_date_string = datetime.datetime.now().strftime("%#m/%#d %H:%M:%S.%f")[:-3]
+
+    if flavour == "retail":
+        # Retail started using the year in TWW.
+        new_date_string = datetime.datetime.now().strftime("%#m/%#d/%Y %H:%M:%S.%f")[:-3]
+    else:
+        # Pre TWW we don't use the year.
+        new_date_string = datetime.datetime.now().strftime("%#m/%#d %H:%M:%S.%f")[:-3]
+
     return new_date_string + line_no_ts
 
 
@@ -187,7 +194,7 @@ def find_test_by_name(flavour, test_name):
     """Find a test by its name, returning the entire test definition."""
     if flavour == "retail":
         test = list(filter(lambda test: test.NAME == test_name, RETAIL_TESTS))[0]
-    if flavour == "classic":
+    elif flavour == "classic":
         test = list(filter(lambda test: test.NAME == test_name, CLASSIC_TESTS))[0]
     else:
         test = list(filter(lambda test: test.NAME == test_name, ERA_TESTS))[0]
@@ -205,7 +212,7 @@ def run_test(flavour, test):
 
     for line in sample_log_lines:
         log_file = maybe_sleep(line, test, log_file, log_path)
-        log_file.write(replace_date(line))
+        log_file.write(replace_date(line, flavour))
 
     log_file.close()
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Handle TWW log timestamps which now include the year.
 
 ## [5.6.2] - 2024-07-27
 ### Fixed

@@ -51,23 +51,36 @@ export default class LogLine {
   }
 
   /**
-   * Parse the timestamp from a log line and create a Date value from it
+   * Parse the timestamp from a log line and create a Date object from it.
    */
   date(): Date {
-    // Split the line by any delimiter that isn't a number
-    // and convert them to actual numbers.
-    const timeParts = this.timestamp
-      .split(/[^0-9]/)
-      .map((v) => parseInt(v, 10));
-    const [month, day, hours, mins, secs, msec] = timeParts;
+    const timeParts = this.timestamp.split(/[^0-9]/);
     const dateObj = new Date();
 
-    dateObj.setMonth(month - 1);
-    dateObj.setDate(day);
-    dateObj.setHours(hours);
-    dateObj.setMinutes(mins);
-    dateObj.setSeconds(secs);
-    dateObj.setMilliseconds(msec);
+    if (timeParts.length === 7) {
+      // In TWW, Blizzard changed the timestamp format to include the year.
+      // e.g. "7/27/2024 21:39:13.0951"
+      const [month, day, year, hours, mins, secs] = timeParts.map(parseInt);
+
+      dateObj.setMonth(month - 1);
+      dateObj.setDate(day);
+      dateObj.setFullYear(year);
+      dateObj.setHours(hours);
+      dateObj.setMinutes(mins);
+      dateObj.setSeconds(secs);
+      dateObj.setMilliseconds(0);
+    } else {
+      // Non-TWW timestamp, doesn't include year.
+      // e.g. "4/9 20:04:44.359"
+      const [month, day, hours, mins, secs] = timeParts.map(parseInt);
+
+      dateObj.setMonth(month - 1);
+      dateObj.setDate(day);
+      dateObj.setHours(hours);
+      dateObj.setMinutes(mins);
+      dateObj.setSeconds(secs);
+      dateObj.setMilliseconds(0);
+    }
 
     return dateObj;
   }

@@ -48,7 +48,7 @@ export default class CloudClient extends EventEmitter {
    * bits of R2 interaction.
    */
   private apiEndpoint = devMode
-    ? 'https://warcraft-recorder-api-v3.alex-kershaw4.workers.dev'
+    ? 'https://warcraft-recorder-dev.alex-kershaw4.workers.dev'
     : 'https://warcraft-recorder-api-v3.alex-kershaw4.workers.dev';
 
   /**
