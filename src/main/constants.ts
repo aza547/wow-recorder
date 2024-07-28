@@ -460,6 +460,15 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   1763: "Atal'Dazar",
   1279: 'The Everbloom',
   643: 'Throne of the Tides',
+
+  // TWW S1 - not on wiki yet.
+  // Taken from https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L487.
+  670: 'Grim Batol',
+  1822: 'Siege of Boralus',
+  2652: 'The Stonevault',
+  2660: 'Ara-Kara, City of Echoes',
+  2662: 'The Dawnbreaker',
+  2669: 'City of Threads',
 };
 
 /**
@@ -515,6 +524,14 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   244: "Atal'Dazar",
   168: 'The Everbloom',
   456: 'Throne of the Tides',
+
+  // TWW S1 - taken from WoWhead, searcing for "set keystone map X".
+  353: 'Siege of Boralus',
+  501: 'The Stonevault',
+  502: 'City of Threads',
+  503: 'Ara-Kara, City of Echoes',
+  505: 'The Dawnbreaker',
+  507: 'Grim Batol',
 };
 
 /**
@@ -575,8 +592,21 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   244: [30 * 60, 24 * 60, 18 * 60],
   168: [33 * 60, 26 * 60 + 24, 19 * 60 + 48],
   456: [34 * 60, 27 * 60 + 12, 20 * 60 + 24],
+
+  // TWW S1
+  // Don't have exact timers yet so for now have assumed 0.8 and 0.6 multipliers.
+  // https://overgear.com/guides/wow/the-war-within-mythic-guide/.
+  501: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6],
+  503: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6],
+  353: [36 * 60, 36 * 60 * 0.8, 36 * 60 * 0.6],
+  502: [38 * 60, 38 * 60 * 0.8, 38 * 60 * 0.6],
+  505: [35 * 60, 35 * 60 * 0.8, 35 * 60 * 0.6],
+  507: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6],
 };
 
+// Useful database for grabbing this stuff:
+// https://wago.tools/db2/JournalEncounter?build=11.0.2.55789&filter[Name_lang]=Erudax&page=1
+// Make sure to pick the most recent build. Column we need is "DungeonEncounterID".
 const dungeonEncounters: NumberKeyToStringValueMapType = {
   // Grimrail Depot
   1715: 'Rocketspark and Borka',
@@ -816,6 +846,40 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1837: 'Oakheart',
   1838: 'Dresaron',
   1839: 'Shade of Xavius',
+
+  // The Stonevault
+  2854: 'E.D.N.A',
+  2880: 'Skarmorak',
+  2888: 'Master Machinists',
+  2883: 'Void Speaker Eirich',
+
+  // The Dawnbreaker
+  2837: 'Speaker Shadowcrown',
+  2838: "Anub'ikkaj",
+  2839: "Rasha'nan",
+
+  // City of Threads
+  2907: "Orator Krix'vizk",
+  2908: 'Fangs of the Queen',
+  2905: 'The Coaglamation',
+  2909: 'Izo, the Grand Splicer',
+
+  // Ara-Kara, City of Echoes
+  2926: 'Avanoxx',
+  2906: "Anub'zekt",
+  2901: "Ki'katal the Harvester",
+
+  // Siege of Boralus
+  2098: 'Chopper Redhook',
+  2109: 'Dread Captain Lockwood',
+  2099: 'Hadal Darkfathom',
+  2100: "Viq'Goth",
+
+  // Grim Batol
+  1051: 'General Umbriss',
+  1050: 'Forgemaster Throngus',
+  1048: 'Drahga Shadowburner',
+  1049: 'Erudax, the Duke of Below',
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
@@ -826,6 +890,9 @@ const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
   ...dungeonsByZoneId,
 };
 
+// https://www.wowhead.com/beta/affixes was handy when finding TWW beta affixes.
+// Remember to add thumbnails (from Wowhead) to assets/affixes/<id>.jpg.
+// Some of these are shortened so they fit.
 const dungeonAffixesById: NumberKeyToStringValueMapType = {
   1: 'Overflowing',
   2: 'Skittish',
@@ -850,9 +917,20 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
   128: 'Tormented',
   130: 'Encrypted',
   131: 'Shrouded',
+  133: 'Focused',
   134: 'Entangling',
   135: 'Afflicted',
   136: 'Incorporeal',
+  137: 'Shielding',
+  144: 'Thorned',
+  145: 'Reckless',
+  146: 'Attuned',
+  147: 'Guile',
+  148: 'Ascendant',
+  152: 'Peril',
+  153: 'Frenzied',
+  158: 'Voidbound',
+  159: 'Oblivion',
 };
 
 /**
