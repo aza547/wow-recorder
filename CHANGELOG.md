@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Shareable links now last up to 30 days.
+- [Issue 508](https://github.com/aza547/wow-recorder/issues/508) - Shareable links now last up to 30 days.
 
 ### Added
 - Adds TWW season 1 Mythic+ dungeon support.
