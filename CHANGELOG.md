@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Shareable links now last up to 7 days.
+- Shareable links now last up to 30 days.
 
 ### Added
 - Adds TWW season 1 Mythic+ dungeon support.
