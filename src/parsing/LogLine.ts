@@ -57,7 +57,7 @@ export default class LogLine {
     const timeParts = this.timestamp.split(/[^0-9]/);
     const dateObj = new Date();
 
-    if (timeParts.length === 7) {
+    if (timeParts.length >= 7) {
       // In TWW, Blizzard changed the timestamp format to include the year.
       // e.g. "7/27/2024 21:39:13.0951"
       const [month, day, year, hours, mins, secs] = timeParts.map((v) =>
