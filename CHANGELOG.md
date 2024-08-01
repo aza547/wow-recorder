@@ -6,11 +6,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-### Added
-### Fixed
-
-## [5.7.0] - 2024-07-28
-### Changed
 - [Issue 508](https://github.com/aza547/wow-recorder/issues/508) - Shareable links now last up to 30 days.
 
 ### Added
@@ -18,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Handle TWW log timestamps which now include the year.
+- Attempt to fix an issue where the rust-ps binary was getting flagged by anti-virus.
 
 ## [5.6.2] - 2024-07-27
 ### Fixed
