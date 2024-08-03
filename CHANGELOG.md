@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 504](https://github.com/aza547/wow-recorder/issues/504) - Reattempt to configure on network failures.
 
 ## [5.7.0] - 2024-08-03
 ### Changed

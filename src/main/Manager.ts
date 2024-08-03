@@ -65,6 +65,7 @@ import {
 import VideoProcessQueue from './VideoProcessQueue';
 import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
+import RetryableConfigError from '../utils/RetryableConfigError';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -115,6 +116,8 @@ export default class Manager {
   private configMessage = '';
 
   private reconfiguring = false;
+
+  private retryTimer: NodeJS.Timeout | undefined;
 
   /**
    * Defined stages of configuration. They are named only for logging
@@ -268,6 +271,12 @@ export default class Manager {
     this.reconfiguring = true;
     this.refreshStatus();
 
+    if (this.retryTimer) {
+      // We're here already configuring so we don't need to have a retry timer
+      // active. We will create one if appropriate.
+      clearTimeout(this.retryTimer);
+    }
+
     for (let i = 0; i < this.stages.length; i++) {
       const stage = this.stages[i];
       const newConfig = stage.get(this.cfg);
@@ -286,6 +295,14 @@ export default class Manager {
           // stage to reflect what's wrong and drop out.
           this.reconfiguring = false;
           this.setConfigInvalid(String(error));
+
+          if (error instanceof RetryableConfigError) {
+            // If we hit a RetryableConfigError, typically a network
+            // issue, then retry in a bit. This covers us if WR starts
+            // while the network is offline etc.
+            this.retryTimer = setTimeout(() => this.manage(), error.time);
+          }
+
           return;
         }
 
@@ -663,8 +680,15 @@ export default class Manager {
         getPromiseBomb(10000, 'Authentication timed out'),
       ]);
     } catch (error) {
-      console.warn('[Manager] Cloud validation failed,', String(error));
-      throw new Error('Failed to authenticate with the cloud store.');
+      console.warn(
+        '[Manager] Cloud validation failed, will retry',
+        String(error)
+      );
+
+      throw new RetryableConfigError(
+        'Failed to authenticate with the cloud store.',
+        10000
+      );
     }
 
     // OK to cast here as we know the promise is resolved or
