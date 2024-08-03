@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [5.7.0] - 2024-08-03
+### Changed
 - [Issue 508](https://github.com/aza547/wow-recorder/issues/508) - Shareable links now last up to 30 days.
 
 ### Added
