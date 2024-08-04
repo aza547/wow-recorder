@@ -384,6 +384,20 @@ app
       return;
     }
 
+    app.on('second-instance', () => {
+      console.info('[Main] Second instance attempted');
+
+      // Someone tried to run a second instance, we should focus this app.
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) {
+          mainWindow.restore();
+        }
+
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+
     createWindow();
   })
   .catch(console.error);

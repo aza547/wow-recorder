@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - The cloud account name field is now labelled user / email.
+- [Issue 510](https://github.com/aza547/wow-recorder/issues/510) - Refocus the main window if the users tries to launch the app again.
 
 ## [5.7.1] - 2024-08-04
 ### Fixed
