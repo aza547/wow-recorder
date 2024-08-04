@@ -408,7 +408,7 @@ const CloudSettings = (props: IProps) => {
         <TextField
           name="cloudAccountName"
           value={config.cloudAccountName}
-          label="Account Name"
+          label="User / Email"
           variant="outlined"
           spellCheck={false}
           onChange={setCloudAccountName}

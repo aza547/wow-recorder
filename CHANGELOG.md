@@ -8,7 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- The cloud account name field is now labelled user / email.
+
+## [5.7.1] - 2024-08-04
+### Fixed
 - [Issue 504](https://github.com/aza547/wow-recorder/issues/504) - Reattempt to configure on network failures.
+- Another attempt to fix an issue where the rust-ps binary was getting flagged by anti-virus.
 
 ## [5.7.0] - 2024-08-03
 ### Changed
