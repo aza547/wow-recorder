@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { uIOhook } from 'uiohook-napi';
 import assert from 'assert';
+import AuthError from '../utils/AuthError';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
   addCrashToUI,
@@ -673,17 +674,22 @@ export default class Manager {
         cloudGuildName
       );
 
-      const access = client.checkAuth();
-
       raceWinner = await Promise.race([
-        access,
+        client.checkAuth(),
         getPromiseBomb(10000, 'Authentication timed out'),
       ]);
     } catch (error) {
-      console.warn(
-        '[Manager] Cloud validation failed, will retry',
-        String(error)
-      );
+      console.warn('[Manager] Cloud validation failed', String(error));
+
+      if (error instanceof AuthError) {
+        // If the server returns a 401 or a 403 we just rethrow that so the
+        // message is presented on the status indicator. No point retrying
+        // if the user has their password wrong.
+        console.warn('[Manager] Auth failed, will not retry');
+        throw error;
+      }
+
+      console.warn('[Manager] Will retry');
 
       throw new RetryableConfigError(
         'Failed to authenticate with the cloud store.',

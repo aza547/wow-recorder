@@ -10,6 +10,7 @@ import {
   CreateMultiPartUploadResponseBody,
 } from 'main/types';
 import path from 'path';
+import AuthError from '../utils/AuthError';
 
 const devMode =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
@@ -545,7 +546,10 @@ export default class CloudClient extends EventEmitter {
 
     if (status === 401 || status === 403) {
       console.error('[CloudClient] Auth failed:', status, data);
-      throw new Error('Login to cloud store failed, check your credentials');
+
+      throw new AuthError(
+        'Login to cloud store failed, check your credentials'
+      );
     }
 
     if (status !== 200) {
