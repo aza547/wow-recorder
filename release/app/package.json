@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "5.7.2",
+  "version": "5.8.0",
   "description": "A World of Warcraft screen recorder",
   "main": "./dist/main/main.js",
   "author": {
@@ -14,7 +14,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "atomic-queue": "^5.0.4",
-    "obs-studio-node": "https://warcraftrecorderstorage.blob.core.windows.net/warcraftrecorder/osn-0.24.38-release-win64.tar.gz",
+    "obs-studio-node": "https://warcraftrecorderstorage.blob.core.windows.net/warcraftrecorder/osn-0.24.43-release-win64.tar.gz",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"

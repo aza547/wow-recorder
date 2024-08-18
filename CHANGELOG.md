@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Upgrade OBS to 29 (and OSN to 0.24.43).
 ### Added
 ### Fixed
 - [Issue 512](https://github.com/aza547/wow-recorder/issues/512) - Fix a bug where the manager would repeatedly retry configuration if the user got the password wrong.

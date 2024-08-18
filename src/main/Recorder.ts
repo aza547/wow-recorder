@@ -219,6 +219,11 @@ export default class Recorder extends EventEmitter {
   private previewName = 'preview';
 
   /**
+   * Has the preview been created yet.
+   */
+  private previewCreated = false;
+
+  /**
    * Exists across a reconfigure.
    */
   private previewLocation: TPreviewPosition = {
@@ -359,21 +364,6 @@ export default class Recorder extends EventEmitter {
     this.gameCaptureSceneItem = this.scene.add(this.gameCaptureSource);
     this.monitorCaptureSceneItem = this.scene.add(this.monitorCaptureSource);
     this.overlayImageSceneItem = this.scene.add(this.overlayImageSource);
-
-    // Create the preview, this is what shows in the scene tab. A weird
-    // dependency here is that the video context must be set up first, else
-    // a future context setup call will never return.
-    osn.NodeObs.OBS_content_createSourcePreviewDisplay(
-      this.mainWindow.getNativeWindowHandle(),
-      this.scene.name,
-      this.previewName
-    );
-
-    // This is just setting the preview background to black, and something
-    // to do with the padding which I can't quite remember what.
-    osn.NodeObs.OBS_content_setShouldDrawUI(this.previewName, false);
-    osn.NodeObs.OBS_content_setPaddingSize(this.previewName, 0);
-    osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
   }
 
   /**
@@ -529,7 +519,7 @@ export default class Recorder extends EventEmitter {
     this.videoScaleFactor = { x: 1, y: 1 };
 
     if (obsCaptureMode === 'monitor_capture') {
-      this.configureMonitorCaptureSource(monitorIndex, captureCursor);
+      this.configureMonitorCaptureSource(monitorIndex);
     } else if (obsCaptureMode === 'game_capture') {
       this.configureGameCaptureSource(captureCursor);
     } else if (obsCaptureMode === 'window_capture') {
@@ -919,6 +909,22 @@ export default class Recorder extends EventEmitter {
     xPos: number,
     yPos: number
   ) {
+    if (!this.previewCreated) {
+      osn.NodeObs.OBS_content_createSourcePreviewDisplay(
+        this.mainWindow.getNativeWindowHandle(),
+        this.scene.name,
+        this.previewName
+      );
+
+      osn.NodeObs.OBS_content_resizeDisplay(this.previewName, 0, 0);
+
+      // This is just setting the preview background to black, and something
+      // to do with the padding which I can't quite remember what.
+      osn.NodeObs.OBS_content_setShouldDrawUI(this.previewName, false);
+      osn.NodeObs.OBS_content_setPaddingSize(this.previewName, 0);
+      osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
+    }
+
     const winBounds = this.mainWindow.getBounds();
 
     const currentScreen = screen.getDisplayNearestPoint({
@@ -1205,31 +1211,28 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Creates a monitor capture source.
+   * Creates a monitor capture source. Monitor capture always shows the cursor.
    */
-  private configureMonitorCaptureSource(
-    monitorIndex: number,
-    captureCursor: boolean
-  ) {
+  private configureMonitorCaptureSource(monitorIndex: number) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
-
     let prop = this.monitorCaptureSource.properties.first();
-    let id = '';
 
-    while (prop) {
-      if (prop.name === 'monitor_id' && Recorder.isObsListProperty(prop)) {
-        id = prop.details.items[monitorIndex].value as string;
-      }
-
+    while (prop && prop.name !== 'monitor_id') {
       prop = prop.next();
     }
 
     const { settings } = this.monitorCaptureSource;
-
-    settings.capture_cursor = captureCursor;
     settings.compatibility = false;
     settings.orce_sdr = false;
-    settings.monitor_id = id;
+
+    if (prop.name === 'monitor_id' && Recorder.isObsListProperty(prop)) {
+      // An "Auto" option appears as the first thing here so make sure we
+      // don't select that; the frontend doesn't expect it and we end up
+      // having multiple indexes corresponding to a single monitor.
+      settings.monitor_id = prop.details.items.filter(
+        (item) => item.value !== 'Auto'
+      )[monitorIndex].value as string;
+    }
 
     this.monitorCaptureSource.update(settings);
     this.monitorCaptureSource.save();
