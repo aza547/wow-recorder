@@ -354,7 +354,6 @@ type ObsBaseConfig = {
 
 type ObsVideoConfig = {
   obsCaptureMode: string;
-  obsWindowName: string;
   monitorIndex: number;
   captureCursor: boolean;
 };
@@ -468,10 +467,73 @@ type CheckAuthResponse = {
   write: boolean;
 };
 
-type WindowCaptureChoice = {
+export interface ISettingsSubCategory {
+  nameSubCategory: string;
+  codeSubCategory?: string;
+  parameters: TObsFormData;
+}
+
+export type TObsStringList = { value: string }[];
+
+export interface IObsFont {
+  face?: string;
+  flags?: number;
+  size?: number;
+  path?: string;
+  style?: string;
+}
+
+export declare type TObsValue =
+  | number
+  | string
+  | boolean
+  | IObsFont
+  | TObsStringList;
+
+export declare type TObsType =
+  | 'OBS_PROPERTY_BOOL'
+  | 'OBS_PROPERTY_INT'
+  | 'OBS_PROPERTY_LIST'
+  | 'OBS_PROPERTY_PATH'
+  | 'OBS_PROPERTY_FILE'
+  | 'OBS_PROPERTY_EDIT_TEXT'
+  | 'OBS_PROPERTY_TEXT'
+  | 'OBS_PROPERTY_UINT'
+  | 'OBS_PROPERTY_COLOR'
+  | 'OBS_PROPERTY_DOUBLE'
+  | 'OBS_PROPERTY_FLOAT'
+  | 'OBS_PROPERTY_SLIDER'
+  | 'OBS_PROPERTY_FONT'
+  | 'OBS_PROPERTY_EDITABLE_LIST'
+  | 'OBS_PROPERTY_BUTTON'
+  | 'OBS_PROPERTY_BITMASK'
+  | 'OBS_INPUT_RESOLUTION_LIST';
+
+export interface IObsInput<TValueType> {
+  value: TValueType;
+  currentValue?: TValueType;
   name: string;
-  value: string | number;
-};
+  description: string;
+  showDescription?: boolean;
+  enabled?: boolean;
+  visible?: boolean;
+  masked?: boolean;
+  type: TObsType;
+}
+
+export interface IObsListOption<TValue> {
+  description: string;
+  value: TValue;
+}
+
+export interface IObsListInput<TValue> extends IObsInput<TValue> {
+  options: IObsListOption<TValue>[];
+}
+
+export declare type TObsFormData = (
+  | IObsInput<TObsValue>
+  | IObsListInput<TObsValue>
+)[];
 
 export {
   RecStatus,
@@ -527,5 +589,4 @@ export {
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
   CheckAuthResponse,
-  WindowCaptureChoice,
 };

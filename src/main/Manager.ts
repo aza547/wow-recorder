@@ -629,7 +629,7 @@ export default class Manager {
    * Configure chat overlay in OBS. This can all be changed live.
    */
   private configureObsOverlay(config: ObsOverlayConfig) {
-    this.recorder.configureOverlaySource(config);
+    this.recorder.configureOverlayImageSource(config);
   }
 
   private static async validateBaseCfg(config: ObsBaseConfig) {
@@ -779,17 +779,7 @@ export default class Manager {
     }
   }
 
-  private static async validateVideoConfig(config: ObsVideoConfig) {
-    const { obsCaptureMode, obsWindowName } = config;
-
-    if (obsCaptureMode === 'window_capture' && !obsWindowName) {
-      console.warn('[Manager] No window selected.');
-
-      throw new Error(
-        'Must select a window in the scene settings, if none appear, make sure WoW is running.'
-      );
-    }
-  }
+  private static async validateVideoConfig(config: ObsVideoConfig) {}
 
   private static async validateOverlayConfig(config: ObsOverlayConfig) {
     const { chatOverlayOwnImage, chatOverlayOwnImagePath, cloudStorage } =
@@ -837,6 +827,7 @@ export default class Manager {
 
         app.setLoginItemSettings({
           openAtLogin: isStartUp,
+          path: app.getPath('exe'),
         });
       }
     });
@@ -859,9 +850,6 @@ export default class Manager {
 
       return obsEncoders;
     });
-
-    // Window listener, to populate settings on the frontend.
-    ipcMain.handle('getWindows', () => this.recorder.getAvailableWindows());
 
     // Audio devices listener, to populate settings on the frontend.
     ipcMain.handle(

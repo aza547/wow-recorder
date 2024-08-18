@@ -5,15 +5,10 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
-  FormControl,
   IconButton,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
 } from '@mui/material';
 import React, { useState } from 'react';
-import { OurDisplayType, WindowCaptureChoice } from 'main/types';
+import { OurDisplayType } from 'main/types';
 import { configSchema } from 'main/configSchema';
 import InfoIcon from '@mui/icons-material/Info';
 import { useSettings, setConfigValues } from './useSettings';
@@ -35,45 +30,9 @@ const switchStyle = {
   },
 };
 
-const formControlStyle = { m: 1, width: '100%' };
-
-const selectStyle = {
-  color: 'white',
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'white',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#bb4220',
-  },
-  '&.Mui-focused': {
-    borderColor: '#bb4220',
-    color: '#bb4220',
-  },
-  '&:hover': {
-    '&& fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '.MuiSvgIcon-root ': {
-    fill: 'white !important',
-  },
-  '& .MuiInputBase-input.Mui-disabled': {
-    WebkitTextFillColor: 'darkgrey',
-  },
-  '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'darkgrey',
-  },
-};
-
 const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const [displays, setDisplays] = useState<OurDisplayType[]>([]);
-  const [windows, setWindows] = useState<WindowCaptureChoice[]>([]);
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
@@ -84,13 +43,6 @@ const VideoSourceControls: React.FC = () => {
 
     getDisplays();
 
-    const getWindows = async () => {
-      const allWindows = await ipc.invoke('getWindows', []);
-      setWindows(allWindows);
-    };
-
-    getWindows();
-
     // The reset of this effect handles config changes, so if it's the
     // initial render then just return here.
     if (initialRender.current) {
@@ -100,18 +52,12 @@ const VideoSourceControls: React.FC = () => {
 
     setConfigValues({
       obsCaptureMode: config.obsCaptureMode,
-      obsWindowName: config.obsWindowName,
       monitorIndex: config.monitorIndex,
       captureCursor: config.captureCursor,
     });
 
     ipc.sendMessage('settingsChange', []);
-  }, [
-    config.monitorIndex,
-    config.obsCaptureMode,
-    config.captureCursor,
-    config.obsWindowName,
-  ]);
+  }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
 
   const setOBSCaptureMode = (
     _event: React.MouseEvent<HTMLElement>,
@@ -125,19 +71,6 @@ const VideoSourceControls: React.FC = () => {
       return {
         ...prevState,
         obsCaptureMode: mode,
-      };
-    });
-  };
-
-  const setOBSWindowName = (event: SelectChangeEvent<string>) => {
-    const {
-      target: { value },
-    } = event;
-
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        obsWindowName: value,
       };
     });
   };
@@ -223,57 +156,6 @@ const VideoSourceControls: React.FC = () => {
     );
   };
 
-  const getWindowSelect = () => {
-    if (config.obsCaptureMode !== 'window_capture') {
-      return <></>;
-    }
-
-    const mapWindowToMenuItem = (item: WindowCaptureChoice) => {
-      return (
-        <MenuItem sx={{ height: '25px' }} key={item.name} value={item.value}>
-          {item.name}
-        </MenuItem>
-      );
-    };
-
-    // Always include the base game modes even if they aren't currently running.
-    const classicOpen = windows.find(
-      (window) => window.name === '[WowClassic.exe]: World of Warcraft'
-    );
-
-    const retailOpen = windows.find(
-      (window) => window.name === '[Wow.exe]: World of Warcraft'
-    );
-
-    if (!classicOpen) {
-      windows.push({
-        name: '[WowClassic.exe]: World of Warcraft',
-        value: 'World of Warcraft:GxWindowClass:Window:Wow.exe',
-      });
-    }
-
-    if (!retailOpen) {
-      windows.push({
-        name: '[Wow.exe]: World of Warcraft',
-        value: 'World of Warcraft:waApplication Window:Wow.exe',
-      });
-    }
-
-    return (
-      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '300px' }}>
-        <InputLabel sx={selectStyle}>Window</InputLabel>
-        <Select
-          value={config.obsWindowName}
-          label="Window"
-          onChange={setOBSWindowName}
-          sx={{ ...selectStyle }}
-        >
-          {windows.map(mapWindowToMenuItem)}
-        </Select>
-      </FormControl>
-    );
-  };
-
   const getCursorToggle = () => {
     return (
       <FormControlLabel
@@ -320,7 +202,6 @@ const VideoSourceControls: React.FC = () => {
     >
       {getCaptureModeToggle()}
       {getMonitorToggle()}
-      {getWindowSelect()}
       {getCursorToggle()}
       {getInfoIcon()}
     </Box>

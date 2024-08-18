@@ -3,23 +3,12 @@ import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
 import { isEqual } from 'lodash';
-import {
-  IFader,
-  IInput,
-  IScene,
-  ISceneItem,
-  ISceneItemInfo,
-  ISource,
-  ISettings,
-  IProperty,
-  IListProperty,
-} from 'obs-studio-node';
+import { IFader, IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
 import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
 import { EventEmitter } from 'stream';
 import Queue from 'queue-promise';
-import { getOverlayConfig } from '../utils/configUtils';
 import {
   EColorSpace,
   EFPSType,
@@ -49,17 +38,21 @@ import {
 import {
   CrashData,
   IOBSDevice,
+  IObsInput,
+  ISettingsSubCategory,
   MicStatus,
   ObsAudioConfig,
   ObsBaseConfig,
   ObsOverlayConfig,
   ObsVideoConfig,
   TAudioSourceType,
+  TObsFormData,
+  TObsValue,
   TPreviewPosition,
-  WindowCaptureChoice,
 } from './types';
 import ConfigService from './ConfigService';
 import { obsResolutions } from './constants';
+import { getOverlayConfig } from '../utils/configUtils';
 
 const { v4: uuidfn } = require('uuid');
 
@@ -87,11 +80,6 @@ export default class Recorder extends EventEmitter {
   private mainWindow: BrowserWindow;
 
   /**
-   * Shiny new OSN API object for controlling OBS.
-   */
-  private obsRecordingFactory: osn.IAdvancedRecording | undefined;
-
-  /**
    * ConfigService instance.
    */
   private cfg: ConfigService = ConfigService.getInstance();
@@ -112,17 +100,48 @@ export default class Recorder extends EventEmitter {
   /**
    * OBS IScene object.
    */
-  private scene: IScene | undefined;
+  private scene: IScene;
 
   /**
-   * ISceneItem object for the video feed, useful to have handy for rescaling.
+   * Window capture item within the scene.
    */
-  private videoSceneItem: ISceneItem | undefined;
+  private windowCaptureSceneItem: ISceneItem;
 
   /**
-   * Object representing the video source.
+   * Game capture item within the scene.
    */
-  private videoSource: IInput | undefined;
+  private gameCaptureSceneItem: ISceneItem;
+
+  /**
+   * Monitor capture item within the scene.
+   */
+  private monitorCaptureSceneItem: ISceneItem;
+
+  /**
+   * Overlay image item within the scene.
+   */
+  private overlayImageSceneItem: ISceneItem;
+
+  /**
+   * The window capture source.
+   */
+  private windowCaptureSource: IInput;
+
+  /**
+   * The game capture source.
+   */
+  private gameCaptureSource: IInput;
+
+  /**
+   * The monitor capture source.
+   */
+  private monitorCaptureSource: IInput;
+
+  /**
+   * The image source to be used for the overlay, we create this
+   * ahead of time regardless of if the user has the overlay enabled.
+   */
+  private overlayImageSource: IInput;
 
   /**
    * Resolution selected by the user in settings. Defaults to 1920x1080 for
@@ -148,14 +167,14 @@ export default class Recorder extends EventEmitter {
    * Arbritrarily chosen channel numbers for video input. We only ever
    * include one video source.
    */
-  private videoChannel = 1;
+  private videoChannel = 0;
 
   /**
    * Some arbritrarily chosen channel numbers we can use for adding input
    * devices to the OBS scene. That is, adding microphone audio to the
    * recordings.
    */
-  private audioInputChannels = [2, 3, 4];
+  private audioInputChannels = [1, 2, 3];
 
   /**
    * Array of input devices we are including in the source. This is not an
@@ -174,7 +193,7 @@ export default class Recorder extends EventEmitter {
    * devices to the OBS scene. That is, adding speaker audio to the
    * recordings.
    */
-  private audioOutputChannels = [5, 6, 7, 8, 9];
+  private audioOutputChannels = [4, 5, 6, 7, 8];
 
   /**
    * Array of output devices we are including in the source. This is not an
@@ -200,11 +219,6 @@ export default class Recorder extends EventEmitter {
   private previewName = 'preview';
 
   /**
-   * Bool tracking if the preview exists yet.
-   */
-  private previewCreated = false;
-
-  /**
    * Exists across a reconfigure.
    */
   private previewLocation: TPreviewPosition = {
@@ -215,23 +229,11 @@ export default class Recorder extends EventEmitter {
   };
 
   /**
-   * The image source to be used for the overlay, we create this
-   * ahead of time regardless of if the user has the overlay enabled.
-   */
-  private overlayImageSource: IInput | undefined;
-
-  /**
    * Faders are used to modify the volume of an input source. We keep a list
    * of them here as we need a fader per audio source so it's handy to have a
    * list for cleaning them up.
    */
   private faders: IFader[] = [];
-
-  /**
-   * Handle to the scene item for the overlay source. Handy for adding
-   * and removing it later.
-   */
-  private overlaySceneItem: ISceneItem | undefined;
 
   /**
    * The state of the recorder, typically used to tell if OBS is recording
@@ -256,7 +258,8 @@ export default class Recorder extends EventEmitter {
   public obsConfigured = false;
 
   /**
-   * Action queue.
+   * Action queue, used to ensure we do not make concurrent stop/start
+   * requests to OBS. That's complication we can do without.
    */
   private actionQueue = new Queue({
     concurrent: 1,
@@ -264,22 +267,120 @@ export default class Recorder extends EventEmitter {
   });
 
   /**
-   * Action queue.
+   * The last file output by OBS.
    */
   public lastFile: string = '';
 
   /**
+   * The video context.
+   */
+  private context: osn.IVideo;
+
+  /**
+   * Sensible defaults for the video context.
+   */
+  private defaultVideoContext: osn.IVideoInfo = {
+    fpsNum: 60,
+    fpsDen: 1,
+    baseWidth: 1920,
+    baseHeight: 1080,
+    outputWidth: 1920,
+    outputHeight: 1080,
+
+    // Bit of a mess here to keep typescript happy and make this readable.
+    // See https://github.com/stream-labs/obs-studio-node/issues/1260.
+    outputFormat: EVideoFormat.NV12 as unknown as osn.EVideoFormat,
+    colorspace: EColorSpace.CS709 as unknown as osn.EColorSpace,
+    scaleType: EScaleType.Bicubic as unknown as osn.EScaleType,
+    fpsType: EFPSType.Fractional as unknown as osn.EFPSType,
+    range: ERangeType.Partial as unknown as osn.ERangeType,
+  };
+
+  /**
    * Contructor.
-   *
-   * @param mainWindow main app window for IPC interaction
    */
   constructor(mainWindow: BrowserWindow) {
     super();
     console.info('[Recorder] Constructing recorder:', this.uuid);
     this.mainWindow = mainWindow;
     this.initializeOBS();
+
+    // The video context is an OBS construct used to control many features of
+    // recording, including the dimensions and FPS.
+    this.context = osn.VideoFactory.create();
+    this.context.video = this.defaultVideoContext;
+
+    // We create all the sources we might need to use here, as the source API
+    // provided by OSN provides mechanisms for retrieving valid settings; it's
+    // useful to always be able to access them even if we never add the sources
+    // to the scene.
+    this.windowCaptureSource = osn.InputFactory.create(
+      'window_capture',
+      'WR Window Capture'
+    );
+
+    this.gameCaptureSource = osn.InputFactory.create(
+      'game_capture',
+      'WR Game Capture'
+    );
+
+    this.monitorCaptureSource = osn.InputFactory.create(
+      'monitor_capture',
+      'WR Monitor Capture'
+    );
+
+    // In theory having this created so early isn't required, but may as well
+    // and avoid a bunch of undefined checks. We will reconfigure it as required.
+    this.overlayImageSource = osn.InputFactory.create(
+      'image_source',
+      'WR Chat Overlay',
+      { file: getAssetPath('poster', 'chat-cover.png') }
+    );
+
+    // Connects the signal handler, we get feedback from OBS by way of
+    // signals, so this is how we know it's doing the right thing after
+    // we ask it to start/stop.
+    osn.NodeObs.OBS_service_connectOutputSignals(
+      (signal: osn.EOutputSignal) => {
+        this.handleSignal(signal);
+      }
+    );
+
+    // The scene is an OBS construct that holds the sources, think of it as a
+    // blank canvas we can add sources to. We could create it later but we can
+    // once again avoid a bunch of undefined checks by doing it here.
+    this.scene = osn.SceneFactory.create('WR Scene');
+    osn.Global.setOutputSource(this.videoChannel, this.scene);
+
+    // It might seem a bit weird that we add all the sources, but we disable
+    // them all by default. That way we can avoid undefined checks on all the
+    // variables set here, as we need the scene item references for scaling.
+    this.windowCaptureSceneItem = this.scene.add(this.windowCaptureSource);
+    this.gameCaptureSceneItem = this.scene.add(this.gameCaptureSource);
+    this.monitorCaptureSceneItem = this.scene.add(this.monitorCaptureSource);
+    this.overlayImageSceneItem = this.scene.add(this.overlayImageSource);
+
+    // Create the preview, this is what shows in the scene tab. A weird
+    // dependency here is that the video context must be set up first, else
+    // a future context setup call will never return.
+    osn.NodeObs.OBS_content_createSourcePreviewDisplay(
+      this.mainWindow.getNativeWindowHandle(),
+      this.scene.name,
+      this.previewName
+    );
+
+    // This is just setting the preview background to black, and something
+    // to do with the padding which I can't quite remember what.
+    osn.NodeObs.OBS_content_setShouldDrawUI(this.previewName, false);
+    osn.NodeObs.OBS_content_setPaddingSize(this.previewName, 0);
+    osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
   }
 
+  /**
+   * Publicly accessible method to start recording, handles all the gory internals
+   * to make sure we only attempt one recorder action at once, and to handle if OBS
+   * misbehaves.
+   */
   public async start() {
     console.info('[Recorder] Queued start');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
@@ -304,6 +405,11 @@ export default class Recorder extends EventEmitter {
     await promise;
   }
 
+  /**
+   * Publicly accessible method to stop recording, handles all the gory internals
+   * to make sure we only attempt one recorder action at once, and to handle if OBS
+   * misbehaves.
+   */
   public async stop() {
     console.info('[Recorder] Queued stop');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
@@ -353,7 +459,7 @@ export default class Recorder extends EventEmitter {
         ? ERangeType.Partial
         : ERangeType.Full;
 
-    osn.VideoFactory.videoContext = {
+    const videoInfo: osn.IVideoInfo = {
       fpsNum: obsFPS,
       fpsDen: 1,
       baseWidth: width,
@@ -370,122 +476,78 @@ export default class Recorder extends EventEmitter {
       range: colorRange as unknown as osn.ERangeType,
     };
 
-    if (!this.obsRecordingFactory) {
-      this.obsRecordingFactory = osn.AdvancedRecordingFactory.create();
-    }
+    this.context.video = videoInfo;
+    const outputPath = path.normalize(this.obsPath);
 
-    this.obsRecordingFactory.path = path.normalize(this.obsPath);
-    this.obsRecordingFactory.format = 'mp4' as osn.ERecordingFormat;
-    this.obsRecordingFactory.useStreamEncoders = false;
-    this.obsRecordingFactory.overwrite = false;
-    this.obsRecordingFactory.noSpace = false;
+    Recorder.applySetting('Output', 'Mode', 'Advanced');
+    Recorder.applySetting('Output', 'RecFilePath', outputPath);
+    Recorder.applySetting('Output', 'RecEncoder', obsRecEncoder);
+    Recorder.applySetting('Output', 'RecFormat', 'mp4');
 
-    // This function is defined here:
-    //   (client) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-client/source/video-encoder.cpp
-    //   (server) https://github.com/stream-labs/obs-studio-node/blob/staging/obs-studio-server/source/osn-video-encoder.cpp
-    //
-    // Ideally we'd pass the 3rd arg with all the settings, but it seems that
-    // hasn't been implemented so we instead call .update() shortly after.
-    this.obsRecordingFactory.videoEncoder = osn.VideoEncoderFactory.create(
-      obsRecEncoder,
-      'WR-video-encoder',
-      {}
-    );
-
-    // We set the CPQ or CRF value here. Low value is higher quality, and
-    // vice versa. The limits on what this can actually be set to I took
-    // from what OBS studio allows and is annotated below, but we don't
-    // go to the extremes of the allowed range anyway.
-    const encoderSettings: ISettings = {};
+    // // We set the CPQ or CRF value here. Low value is higher quality, and
+    // // vice versa. The limits on what this can actually be set to I took
+    // // from what OBS studio allows and is annotated below, but we don't
+    // // go to the extremes of the allowed range anyway.
+    // const encoderSettings: ISettings = {};
     const cqp = Recorder.getCqpFromQuality(obsQuality);
 
     switch (obsRecEncoder) {
       case ESupportedEncoders.OBS_X264:
         // CRF and CPQ are so similar in configuration that we can just treat
         // the CRF configuration the same as CQP configuration.
-        encoderSettings.rate_control = 'CRF';
-        encoderSettings.crf = cqp; // 0 - 51
+        Recorder.applySetting('Output', 'Recrate_control', 'CRF');
+        Recorder.applySetting('Output', 'Reccrf', cqp);
         break;
 
       case ESupportedEncoders.AMD_AMF_H264:
-        encoderSettings.rate_control = 'CQP'; // 0 - 51
-        encoderSettings.cqp = cqp;
-        break;
-
       case ESupportedEncoders.JIM_NVENC:
-        encoderSettings.rate_control = 'CQP'; // 1-51
-        encoderSettings.cqp = cqp;
+        Recorder.applySetting('Output', 'Recrate_control', 'CQP');
+        Recorder.applySetting('Output', 'Reccqp', cqp);
         break;
 
       default:
         console.error('[Recorder] Unrecognised encoder type', obsRecEncoder);
         throw new Error('Unrecognised encoder type');
     }
-
-    this.obsRecordingFactory.videoEncoder.update(encoderSettings);
-
-    console.info(
-      'Video encoder settings:',
-      this.obsRecordingFactory.videoEncoder.settings
-    );
-
-    this.obsRecordingFactory.signalHandler = (signal) => {
-      this.handleSignal(signal);
-    };
   }
 
   /**
    * Configures the video source in OBS.
    */
   public configureVideoSources(config: ObsVideoConfig) {
-    const { obsCaptureMode, monitorIndex, captureCursor, obsWindowName } =
-      config;
+    const { obsCaptureMode, monitorIndex, captureCursor } = config;
 
-    if (this.scene === undefined || this.scene === null) {
-      throw new Error('[Recorder] No scene');
-    }
+    [
+      this.windowCaptureSource,
+      this.gameCaptureSource,
+      this.monitorCaptureSource,
+      this.overlayImageSource,
+    ].forEach((src) => {
+      src.enabled = false;
+    });
 
-    if (this.videoSource) {
-      this.videoSource.release();
-      this.videoSource.remove();
-      this.videoScaleFactor = { x: 1, y: 1 };
-    }
+    this.videoScaleFactor = { x: 1, y: 1 };
 
     if (obsCaptureMode === 'monitor_capture') {
-      this.videoSource = Recorder.createMonitorCaptureSource(
-        monitorIndex,
-        captureCursor
-      );
+      this.configureMonitorCaptureSource(monitorIndex, captureCursor);
     } else if (obsCaptureMode === 'game_capture') {
-      this.videoSource = Recorder.createGameCaptureSource(captureCursor);
+      this.configureGameCaptureSource(captureCursor);
     } else if (obsCaptureMode === 'window_capture') {
-      this.videoSource = Recorder.createWindowCaptureSource(
-        obsWindowName,
-        captureCursor
-      );
+      this.configureWindowCaptureSource(captureCursor);
     } else {
       throw new Error(`[Recorder] Unexpected mode: ${obsCaptureMode}`);
     }
 
-    this.videoSceneItem = this.scene.add(this.videoSource);
-
-    if (this.videoSourceSizeInterval) {
-      clearInterval(this.videoSourceSizeInterval);
-    }
+    const overlayCfg = getOverlayConfig(this.cfg);
+    this.configureOverlayImageSource(overlayCfg);
 
     this.watchVideoSourceSize();
-
-    // Re-add the overlay so it doesnt end up underneath the game itself.
-    const overlayCfg = getOverlayConfig(this.cfg);
-    this.configureOverlaySource(overlayCfg);
   }
 
+  /**
+   * Hides the scene preview.
+   */
   public hidePreview() {
-    if (!this.previewCreated) {
-      console.warn('[Recorder] Preview display not created');
-      return;
-    }
-
     // I'd love to make OBS_content_destroyDisplay work here but I've not managed
     // so far. This is a hack to "hide" it by moving it off screen.
     this.previewLocation.xPos = 50000;
@@ -499,80 +561,42 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Apply a chat overlay to the scene.
+   * Configure and add the chat overlay to the scene.
    */
-  public configureOverlaySource(config: ObsOverlayConfig) {
-    this.createOverlayImageSource(config);
-
-    if (!this.scene || !this.overlayImageSource) {
-      console.error(
-        '[Recorder] Not applying overlay as scene or image source undefined',
-        this.scene,
-        this.overlayImageSource
-      );
-
-      return;
-    }
-
-    const { chatOverlayEnabled, chatOverlayOwnImage, cloudStorage } = config;
-
-    if (this.overlaySceneItem) {
-      this.overlaySceneItem.remove();
-      this.overlaySceneItem = undefined;
-    }
-
-    if (!chatOverlayEnabled) {
-      return;
-    }
-
-    if (chatOverlayOwnImage && cloudStorage) {
-      this.configureOwnOverlay(config);
-    } else {
-      this.configureDefaultOverlay(config);
-    }
-  }
-
   private async configureOwnOverlay(config: ObsOverlayConfig) {
-    const { chatOverlayScale, chatOverlayXPosition, chatOverlayYPosition } =
-      config;
+    console.info('[Recorder] Configure own image as chat overlay');
 
-    if (!this.scene || !this.overlayImageSource) {
-      console.error(
-        '[Recorder] Not applying default overlay',
-        this.scene,
-        this.overlayImageSource
-      );
+    const {
+      chatOverlayScale,
+      chatOverlayXPosition,
+      chatOverlayYPosition,
+      chatOverlayOwnImagePath,
+    } = config;
 
-      return;
-    }
-
-    const overlaySettings: ISceneItemInfo = {
-      name: 'overlay',
-      crop: {
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-      },
-      scaleX: chatOverlayScale,
-      scaleY: chatOverlayScale,
-      visible: true,
+    this.overlayImageSceneItem.position = {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
-      rotation: 0,
-      streamVisible: true,
-      recordingVisible: true,
-      scaleFilter: 0,
-      blendingMode: 0,
     };
 
-    this.overlaySceneItem = this.scene.add(
-      this.overlayImageSource,
-      overlaySettings
-    );
+    this.overlayImageSceneItem.scale = {
+      x: chatOverlayScale,
+      y: chatOverlayScale,
+    };
+
+    const { settings } = this.overlayImageSource;
+    settings.file = chatOverlayOwnImagePath;
+
+    this.overlayImageSource.update(settings);
+    this.overlayImageSource.save();
+    this.overlayImageSource.enabled = true;
   }
 
+  /**
+   * Configure and add the default chat overlay to the scene.
+   */
   private configureDefaultOverlay(config: ObsOverlayConfig) {
+    console.info('[Recorder] Configure default image as chat overlay');
+
     const {
       chatOverlayWidth,
       chatOverlayHeight,
@@ -580,16 +604,6 @@ export default class Recorder extends EventEmitter {
       chatOverlayYPosition,
       chatOverlayScale,
     } = config;
-
-    if (this.scene === undefined || this.overlayImageSource === undefined) {
-      console.error(
-        '[Recorder] Not applying default overlay',
-        this.scene,
-        this.overlayImageSource
-      );
-
-      return;
-    }
 
     // This is the height of the default chat overlay image, a bit ugly
     // to have it hardcoded here, but whatever.
@@ -599,30 +613,29 @@ export default class Recorder extends EventEmitter {
     const toCropX = (baseWidth - chatOverlayWidth) / 2;
     const toCropY = (baseHeight - chatOverlayHeight) / 2;
 
-    const overlaySettings: ISceneItemInfo = {
-      name: 'overlay',
-      crop: {
-        left: toCropX,
-        right: toCropX,
-        top: toCropY,
-        bottom: toCropY,
-      },
-      scaleX: chatOverlayScale,
-      scaleY: chatOverlayScale,
-      visible: true,
+    const { settings } = this.overlayImageSource;
+    settings.file = getAssetPath('poster', 'chat-cover.png');
+
+    this.overlayImageSceneItem.position = {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
-      rotation: 0,
-      streamVisible: true,
-      recordingVisible: true,
-      scaleFilter: 0,
-      blendingMode: 0,
     };
 
-    this.overlaySceneItem = this.scene.add(
-      this.overlayImageSource,
-      overlaySettings
-    );
+    this.overlayImageSceneItem.scale = {
+      x: chatOverlayScale,
+      y: chatOverlayScale,
+    };
+
+    this.overlayImageSceneItem.crop = {
+      left: toCropX,
+      right: toCropX,
+      top: toCropY,
+      bottom: toCropY,
+    };
+
+    this.overlayImageSource.update(settings);
+    this.overlayImageSource.save();
+    this.overlayImageSource.enabled = true;
   }
 
   /**
@@ -810,35 +823,30 @@ export default class Recorder extends EventEmitter {
 
     if (!this.obsInitialized) {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
+      return;
     }
 
     if (this.videoSourceSizeInterval) {
       clearInterval(this.videoSourceSizeInterval);
     }
 
-    if (this.overlayImageSource) {
-      this.overlayImageSource.release();
-      this.overlayImageSource.remove();
-    }
+    [
+      this.windowCaptureSource,
+      this.gameCaptureSource,
+      this.monitorCaptureSource,
+      this.overlayImageSource,
+    ].forEach((src) => {
+      src.release();
+    });
 
-    if (this.videoSource) {
-      this.videoSource.release();
-      this.videoSource.remove();
-    }
-
-    osn.Global.setOutputSource(1, null as unknown as ISource);
-
-    if (this.obsRecordingFactory) {
-      osn.AdvancedRecordingFactory.destroy(this.obsRecordingFactory);
-      this.obsRecordingFactory = undefined;
-    }
-
-    this.wroteQueue.empty();
-    this.wroteQueue.clearListeners();
-    this.startQueue.empty();
-    this.startQueue.clearListeners();
+    [this.wroteQueue, this.startQueue].forEach((queue) => {
+      queue.empty();
+      queue.clearListeners();
+    });
 
     try {
+      osn.NodeObs.InitShutdownSequence();
+      osn.NodeObs.RemoveSourceCallback();
       osn.NodeObs.OBS_service_removeCallback();
       osn.NodeObs.IPC.disconnect();
     } catch (e) {
@@ -883,16 +891,20 @@ export default class Recorder extends EventEmitter {
   /**
    * Return an array of all the encoders available to OBS.
    */
-  public getAvailableEncoders() {
+  public getAvailableEncoders(): string[] {
     console.info('[Recorder] Getting available encoders');
 
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    const encoders = osn.VideoEncoderFactory.types();
-    console.info('[Recorder]', encoders);
+    const encoders = Recorder.getAvailableValues(
+      'Output',
+      'Recording',
+      'RecEncoder'
+    );
 
+    console.info('[Recorder]', encoders);
     return encoders;
   }
 
@@ -907,16 +919,6 @@ export default class Recorder extends EventEmitter {
     xPos: number,
     yPos: number
   ) {
-    if (!this.previewCreated) {
-      console.info('[Recorder] Preview display not yet created, creating...');
-      this.createPreview();
-    }
-
-    if (!this.previewCreated) {
-      console.error('[Recorder] Preview display still does not exist');
-      return;
-    }
-
     const winBounds = this.mainWindow.getBounds();
 
     const currentScreen = screen.getDisplayNearestPoint({
@@ -975,6 +977,9 @@ export default class Recorder extends EventEmitter {
     await Promise.all(deletePromises);
   }
 
+  /**
+   * Start OBS, no-op if already stopped.
+   */
   private async startOBS() {
     console.info('[Recorder] Start');
 
@@ -983,17 +988,12 @@ export default class Recorder extends EventEmitter {
       throw new Error('OBS not initialized');
     }
 
-    if (!this.obsRecordingFactory) {
-      console.warn('[Recorder] startOBS called but no recording factory');
-      throw new Error('startOBS called but no recording factory');
-    }
-
     if (this.obsState === ERecordingState.Recording) {
       console.info('[Recorder] Already started');
       return;
     }
 
-    this.obsRecordingFactory.start();
+    osn.NodeObs.OBS_service_startRecording();
 
     // Wait up to 30 seconds for OBS to signal it has started recording,
     // really this shouldn't take nearly as long.
@@ -1006,6 +1006,9 @@ export default class Recorder extends EventEmitter {
     this.startDate = new Date();
   }
 
+  /**
+   * Stop OBS, no-op if already stopped.
+   */
   private async stopOBS() {
     console.info('[Recorder] Stop');
 
@@ -1014,17 +1017,12 @@ export default class Recorder extends EventEmitter {
       throw new Error('OBS not initialized');
     }
 
-    if (!this.obsRecordingFactory) {
-      console.warn('[Recorder] Stop OBS called but no obsRecordingFactory');
-      return;
-    }
-
     if (this.obsState === ERecordingState.Offline) {
       console.info('[Recorder] Already stopped');
       return;
     }
 
-    this.obsRecordingFactory.stop();
+    osn.NodeObs.OBS_service_stopRecording();
 
     // Wait up to 30 seconds for OBS to signal it has wrote the file, really
     // this shouldn't take nearly as long as this but we're generous to account
@@ -1035,7 +1033,7 @@ export default class Recorder extends EventEmitter {
     ]);
 
     this.wroteQueue.empty();
-    this.lastFile = this.obsRecordingFactory.lastFile();
+    this.lastFile = osn.NodeObs.OBS_service_getLastRecording();
     console.info('[Recorder] Got last file from OBS:', this.lastFile);
   }
 
@@ -1085,13 +1083,13 @@ export default class Recorder extends EventEmitter {
       throw new Error(`Exception when initializing OBS process: ${e}`);
     }
 
-    this.scene = osn.SceneFactory.create('WR Scene');
-    osn.Global.setOutputSource(this.videoChannel, this.scene);
-
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
   }
 
+  /**
+   * Handle a signal from OBS.
+   */
   private handleSignal(obsSignal: osn.EOutputSignal) {
     console.info('[Recorder] Got signal:', obsSignal);
 
@@ -1100,17 +1098,29 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    if (obsSignal.code !== 0) {
-      console.error('[Recorder] Non-zero signal');
+    // This code was previously here catching any non-zero return signals,
+    // but it seems that is not a good criteria to consider it a crash as
+    // seen several instances of non-zero return codes that have been
+    // non-fatal.
+    //
+    // For example when I use my NVENC encoder on my non-default
+    // GPU we get a -4 RC despite everything being otherwise fine; suspect
+    // caused by the fact that it tries the AMD GPU first which doesn't work.
+    //
+    // I spent alot of time trying to work out what was wrong only to find that
+    // the difference in streamlabs desktop is that they don't crash on a non-zero
+    // RC.
+    // if (obsSignal.code !== 0) {
+    //   console.error('[Recorder] Non-zero signal');
 
-      const crashData: CrashData = {
-        date: new Date(),
-        reason: obsSignal.error,
-      };
+    //   const crashData: CrashData = {
+    //     date: new Date(),
+    //     reason: obsSignal.error,
+    //   };
 
-      this.emit('crash', crashData);
-      return;
-    }
+    //   this.emit('crash', crashData);
+    //   return;
+    // }
 
     switch (obsSignal.signal) {
       case EOBSOutputSignal.Start:
@@ -1134,6 +1144,13 @@ export default class Recorder extends EventEmitter {
         this.wroteQueue.push(obsSignal);
         break;
 
+      case EOBSOutputSignal.WriteError:
+        this.emit('crash', {
+          date: new Date(),
+          reason: obsSignal.error,
+        });
+        return;
+
       default:
         console.info('[Recorder] No action needed on this signal');
         break;
@@ -1146,92 +1163,141 @@ export default class Recorder extends EventEmitter {
   /**
    * Creates a game capture source.
    */
-  private static createGameCaptureSource(captureCursor: boolean) {
+  private configureGameCaptureSource(captureCursor: boolean) {
     console.info('[Recorder] Configuring OBS for Game Capture');
 
-    const gameCaptureSource = osn.InputFactory.create(
-      'game_capture',
-      'WR Game Capture'
-    );
+    // This is the name of the retail window, we fall back to this
+    // if we don't find something in the game capture source.
+    let window = 'World of Warcraft:waApplication Window:Wow.exe';
 
-    const { settings } = gameCaptureSource;
+    // Search the game capture source for WoW options.
+    let prop = this.gameCaptureSource.properties.first();
+
+    while (prop && prop.name !== 'window') {
+      prop = prop.next();
+    }
+
+    if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
+      // Filter the WoW windows, and reverse sort them alphabetically. This
+      // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
+      const windows = prop.details.items
+        .filter((item) => item.name.includes('[Wow.exe]: World of Warcraft'))
+        .sort()
+        .reverse();
+
+      if (windows.length) {
+        window = windows[0].value as string;
+      }
+    }
+
+    const { settings } = this.gameCaptureSource;
     settings.capture_mode = 'window';
     settings.allow_transparency = true;
     settings.priority = 1;
     settings.capture_cursor = captureCursor;
-    settings.window = 'World of Warcraft:GxWindowClass:Wow.exe';
+    settings.window = window;
 
-    gameCaptureSource.update(settings);
-    gameCaptureSource.save();
+    this.gameCaptureSource.update(settings);
+    this.gameCaptureSource.save();
 
-    return gameCaptureSource;
+    // Enable the source which is what actually makes it show up in the scene.
+    this.gameCaptureSource.enabled = true;
   }
 
   /**
    * Creates a monitor capture source.
    */
-  private static createMonitorCaptureSource(
+  private configureMonitorCaptureSource(
     monitorIndex: number,
     captureCursor: boolean
   ) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
 
-    const monitorCaptureSource = osn.InputFactory.create(
-      'monitor_capture',
-      'WR Monitor Capture'
-    );
+    let prop = this.monitorCaptureSource.properties.first();
+    let id = '';
 
-    const { settings } = monitorCaptureSource;
-    settings.monitor = monitorIndex;
+    while (prop) {
+      if (prop.name === 'monitor_id' && Recorder.isObsListProperty(prop)) {
+        id = prop.details.items[monitorIndex].value as string;
+      }
+
+      prop = prop.next();
+    }
+
+    const { settings } = this.monitorCaptureSource;
+
     settings.capture_cursor = captureCursor;
+    settings.compatibility = false;
+    settings.orce_sdr = false;
+    settings.monitor_id = id;
 
-    monitorCaptureSource.update(settings);
-    monitorCaptureSource.save();
+    this.monitorCaptureSource.update(settings);
+    this.monitorCaptureSource.save();
 
-    return monitorCaptureSource;
+    // Enable the source which is what actually makes it show up in the scene.
+    this.monitorCaptureSource.enabled = true;
   }
 
   /**
    * Creates a window capture source. In TWW, the retail and classic Window names
    * diverged slightly, so while this was previously a hardcoded string, now we
-   * need to dynamically find it.
+   * manage it in the settings.
    */
-  private static createWindowCaptureSource(
-    window: string,
-    captureCursor: boolean
-  ) {
+  private configureWindowCaptureSource(captureCursor: boolean) {
     console.info('[Recorder] Configuring OBS for Window Capture');
 
-    return osn.InputFactory.create('window_capture', 'WR Window Capture', {
-      // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
-      // capture behind the WoW window. Not sure why, some googling suggested Windows theme issues.
-      // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
-      method: 2,
-      cursor: captureCursor,
-      window,
-    });
+    // This is the name of the retail window, we fall back to this
+    // if we don't find something in the window capture source.
+    let window = 'World of Warcraft:waApplication Window:Wow.exe';
+
+    // Search the game capture source for WoW options.
+    let prop = this.windowCaptureSource.properties.first();
+
+    while (prop && prop.name !== 'window') {
+      prop = prop.next();
+    }
+
+    if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
+      // Filter the WoW windows, and reverse sort them alphabetically. This
+      // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
+      const windows = prop.details.items
+        .filter((item) => item.name.includes('[Wow.exe]: World of Warcraft'))
+        .sort()
+        .reverse();
+
+      if (windows.length) {
+        window = windows[0].value as string;
+      }
+    }
+
+    // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
+    // captures behind the WoW window. Not sure why, some googling suggested Windows theme issues.
+    // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
+    const { settings } = this.windowCaptureSource;
+    settings.method = 2;
+    settings.cursor = captureCursor;
+    settings.window = window;
+
+    this.windowCaptureSource.update(settings);
+    this.windowCaptureSource.save();
+
+    // Enable the source which is what actually makes it show up in the scene.
+    this.windowCaptureSource.enabled = true;
   }
 
   /**
-   * Creates an image source.
+   * Configure the chat overlay image source.
    */
-  private createOverlayImageSource(config: ObsOverlayConfig) {
-    console.info('[Recorder] Create image source for chat overlay');
-    const { chatOverlayOwnImage, chatOverlayOwnImagePath } = config;
+  public configureOverlayImageSource(config: ObsOverlayConfig) {
+    const { chatOverlayEnabled, chatOverlayOwnImage } = config;
+    console.info('[Recorder] Configure image source for chat overlay');
 
-    const file = chatOverlayOwnImage
-      ? chatOverlayOwnImagePath
-      : getAssetPath('poster', 'chat-cover.png');
-
-    this.overlayImageSource = osn.InputFactory.create(
-      'image_source',
-      'WR Chat Overlay',
-      { file }
-    );
-
-    if (!this.overlayImageSource) {
-      console.error('[Recorder] Failed to create image source');
-      throw new Error('Failed to create overlay source');
+    if (!chatOverlayEnabled) {
+      this.overlayImageSource.enabled = false;
+    } else if (chatOverlayOwnImage && this.cfg.get('cloudStorage')) {
+      this.configureOwnOverlay(config);
+    } else {
+      this.configureDefaultOverlay(config);
     }
   }
 
@@ -1249,7 +1315,7 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    if (channel <= 1 || channel >= 64) {
+    if (channel < 1 || channel >= 64) {
       throw new Error(`[Recorder] Invalid channel number ${channel}`);
     }
 
@@ -1259,20 +1325,19 @@ export default class Recorder extends EventEmitter {
   /**
    * Remove a single audio source from the OBS scene.
    */
-  private removeAudioSource(obsInput: IInput, channel: number) {
+  private removeAudioSource(source: IInput, channel: number) {
     if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
+      throw new Error('OBS not initialized');
     }
 
     console.info(
       '[Recorder] Removing OBS audio source',
-      obsInput.name,
-      obsInput.id
+      source.name,
+      source.id
     );
 
     osn.Global.setOutputSource(channel, null as unknown as ISource);
-    obsInput.release();
-    obsInput.remove();
+    source.release();
   }
 
   /**
@@ -1293,8 +1358,7 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Set up an interval to run the scaleVideoSourceSize function, and run it
-   * upfront.
+   * Set up an interval to run the scaleVideoSourceSize function.
    */
   private watchVideoSourceSize() {
     if (!this.obsInitialized) {
@@ -1311,73 +1375,54 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Watch the video input source for size changes. This only matters for
-   * doing game capture on a windowed instance of WoW, such that we'll scale
-   * it to the size of the output video if it's resized by the player.
+   * Watch the video input source for size changes, and rescale to fill the
+   * canvas.
    */
   private scaleVideoSourceSize() {
-    if (!this.videoSource) {
-      throw new Error('[Recorder] videoSource was undefined');
-    }
+    let activeSource;
+    let activeSceneItem;
 
-    if (!this.videoSceneItem) {
-      throw new Error('[Recorder] videoSceneItem was undefined');
-    }
-
-    if (this.videoSource.width === 0 || this.videoSource.height === 0) {
-      // This happens often, suspect it's before OBS gets a hook into a game capture process.
+    if (this.windowCaptureSource.enabled) {
+      activeSource = this.windowCaptureSource;
+      activeSceneItem = this.windowCaptureSceneItem;
+    } else if (this.gameCaptureSource.enabled) {
+      activeSource = this.gameCaptureSource;
+      activeSceneItem = this.gameCaptureSceneItem;
+    } else if (this.monitorCaptureSource.enabled) {
+      activeSource = this.monitorCaptureSource;
+      activeSceneItem = this.monitorCaptureSceneItem;
+    } else {
       return;
     }
 
+    if (activeSource.width === 0 || activeSource.height === 0) {
+      // This happens often, suspect it's before OBS gets a hook into a game
+      // capture process.
+      return;
+    }
     const { width, height } = obsResolutions[this.resolution];
-
-    const xScaleFactor =
-      Math.round((width / this.videoSource.width) * 100) / 100;
-
-    const yScaleFactor =
-      Math.round((height / this.videoSource.height) * 100) / 100;
-
+    const xScaleFactor = Math.round((width / activeSource.width) * 100) / 100;
+    const yScaleFactor = Math.round((height / activeSource.height) * 100) / 100;
     const newScaleFactor = { x: xScaleFactor, y: yScaleFactor };
 
-    if (!isEqual(this.videoScaleFactor, newScaleFactor)) {
-      console.info(
-        '[Recorder] Rescaling from',
-        this.videoScaleFactor,
-        'to',
-        newScaleFactor
-      );
-
-      this.videoScaleFactor = newScaleFactor;
-      this.videoSceneItem.scale = newScaleFactor;
-    }
-  }
-
-  createPreview() {
-    console.info('[Recorder] Creating preview');
-
-    if (this.scene === undefined) {
-      console.error('[Recorder] Scene undefined so not creating preview');
+    if (isEqual(this.videoScaleFactor, newScaleFactor)) {
       return;
     }
 
-    if (this.previewCreated) {
-      console.warn('[Recorder] Preview display already exists');
-      return;
-    }
-
-    osn.NodeObs.OBS_content_createSourcePreviewDisplay(
-      this.mainWindow.getNativeWindowHandle(),
-      this.scene.name,
-      this.previewName
+    console.info(
+      '[Recorder] Rescaling from',
+      this.videoScaleFactor,
+      'to',
+      newScaleFactor
     );
 
-    osn.NodeObs.OBS_content_setShouldDrawUI(this.previewName, false);
-    osn.NodeObs.OBS_content_setPaddingSize(this.previewName, 0);
-    osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
-
-    this.previewCreated = true;
+    this.videoScaleFactor = newScaleFactor;
+    activeSceneItem.scale = this.videoScaleFactor;
   }
 
+  /**
+   * Mute the mic audio sources.
+   */
   private muteInputDevices() {
     if (this.inputDevicesMuted) {
       return;
@@ -1392,6 +1437,9 @@ export default class Recorder extends EventEmitter {
     this.emit('state-change');
   }
 
+  /**
+   * Unmute the mic audio sources.
+   */
   private unmuteInputDevices() {
     if (!this.inputDevicesMuted) {
       return;
@@ -1406,6 +1454,9 @@ export default class Recorder extends EventEmitter {
     this.emit('state-change');
   }
 
+  /**
+   * Convert the quality setting to an appropriate CQP value.
+   */
   private static getCqpFromQuality(obsQuality: string) {
     switch (obsQuality) {
       case QualityPresets.ULTRA:
@@ -1426,48 +1477,84 @@ export default class Recorder extends EventEmitter {
     }
   }
 
-  private static isListProperty(property: IProperty) {
-    // For some reason this doesn't work.
-    // return property.type === EPropertyType.List;
-    return property.type === 6;
+  /**
+   * Apply a setting to OBS.
+   */
+  private static applySetting(
+    category: string,
+    parameter: string,
+    value: string | number
+  ) {
+    console.info('[Recorder] Apply setting', category, parameter, value);
+
+    let old;
+    const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
+
+    settings.forEach((subcategory: ISettingsSubCategory) => {
+      subcategory.parameters.forEach((param: IObsInput<TObsValue>) => {
+        if (param.name === parameter) {
+          old = param.currentValue;
+          param.currentValue = value;
+        }
+      });
+    });
+
+    if (value !== old) {
+      osn.NodeObs.OBS_settings_saveSettings(category, settings);
+    }
   }
 
   /**
-   * List the windows for use in the settings pages on the frontend.
+   * Get the allowed values for a specific setting.
    */
-  public getAvailableWindows() {
-    console.info('[Recorder] Getting available windows');
-    let windows: WindowCaptureChoice[] = [];
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    const src = osn.InputFactory.create(
-      'window_capture',
-      'Dummy Window Capture'
+  private static getAvailableValues(
+    category: string,
+    subcategory: string,
+    parameter: string
+  ) {
+    console.info(
+      '[Recorder] Get available values for',
+      category,
+      subcategory,
+      parameter
     );
 
-    let prop = src.properties.first();
+    const categorySettings =
+      osn.NodeObs.OBS_settings_getSettings(category).data;
 
-    while (prop && prop.description !== 'Window') {
-      prop = prop.next();
+    if (!categorySettings) {
+      throw new Error(`No category found: ${category}`);
     }
 
-    if (
-      prop &&
-      prop.description === 'Window' &&
-      Recorder.isListProperty(prop)
-    ) {
-      windows = (prop as IListProperty).details.items.filter((item) =>
-        item.name.includes('World of Warcraft')
+    const subcategorySettings = categorySettings.find(
+      (sub: ISettingsSubCategory) => sub.nameSubCategory === subcategory
+    );
+
+    if (!subcategorySettings) {
+      throw new Error(`No subcategory found: ${subcategory} in ${category}`);
+    }
+
+    const parameterSettings = subcategorySettings.parameters.find(
+      (param: IObsInput<TObsValue>) => param.name === parameter
+    );
+
+    if (!parameterSettings) {
+      throw new Error(
+        `No parameter found: ${parameter} in ${category} -> ${subcategory}`
       );
     }
 
-    src.release();
-    src.remove();
+    return parameterSettings.values.map(
+      (value: TObsValue) => Object.values(value)[0]
+    );
+  }
 
-    console.info('[Recorder] Available windows', windows);
-    return windows;
+  /**
+   * Type guard for an OBS list property.
+   */
+  private static isObsListProperty(
+    property: osn.IProperty
+  ): property is osn.IListProperty {
+    return property.type === 6;
   }
 }
