@@ -1,56 +1,15 @@
 import * as React from 'react';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Box from '@mui/material/Box';
-import { LinearProgress, Switch, Tooltip, Typography } from '@mui/material';
-import { ConfigurationSchema } from 'main/configSchema';
+import { configSchema } from 'main/configSchema';
 import { DiskStatus, RecStatus } from 'main/types';
 import { useEffect, useRef, useState } from 'react';
-import SaveIcon from '@mui/icons-material/Save';
+import { HardDrive, Info } from 'lucide-react';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
-
-const style = {
-  width: '300px',
-  color: 'white',
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'white',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#bb4220',
-  },
-  '&.Mui-focused': {
-    borderColor: '#bb4220',
-    color: '#bb4220',
-  },
-  '&:hover': {
-    '&& fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-};
-
-const formControlLabelStyle = { color: 'white', m: 2 };
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
+import { Input } from './components/Input/Input';
+import Label from './components/Label/Label';
+import Switch from './components/Switch/Switch';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import Progress from './components/Progress/Progress';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -103,33 +62,19 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     config.maxStorage,
   ]);
 
-  const setSeparateBufferPath = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const setSeparateBufferPath = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
         bufferStoragePath: '',
-        separateBufferPath: event.target.checked,
+        separateBufferPath: checked,
       };
     });
   };
 
-  const getSwitch = (
-    preference: keyof ConfigurationSchema,
-    changeFn: (event: React.ChangeEvent<HTMLInputElement>) => void
-  ) => (
-    <Switch
-      sx={switchStyle}
-      checked={Boolean(config[preference])}
-      name={preference}
-      onChange={changeFn}
-    />
-  );
-
   const isComponentDisabled = () => {
     const isRecording = recorderStatus === RecStatus.Recording;
-    const isOverrunning = recorderStatus === RecStatus.Overruning;
+    const isOverrunning = recorderStatus === RecStatus.Overrunning;
     return isRecording || isOverrunning;
   };
 
@@ -139,20 +84,9 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Typography
-        variant="h6"
-        sx={{
-          color: 'white',
-          fontSize: '0.75rem',
-          fontFamily: '"Arial",sans-serif',
-          fontStyle: 'italic',
-          m: 1,
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <h2 className="text-foreground-lighter text-lg drop-shadow-sm my-2">
         These settings can not be modified while a recording is active.
-      </Typography>
+      </h2>
     );
   };
 
@@ -177,21 +111,24 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <TextField
+      <div className="flex flex-col">
+        <Label htmlFor="storagePath" className="flex items-center">
+          Disk Storage Folder
+          <Tooltip content={configSchema.storagePath.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
           name="storagePath"
           value={config.storagePath}
-          label="Disk Storage Folder"
-          variant="outlined"
           onClick={setStoragePath}
-          error={config.storagePath === ''}
+          required
           disabled={isComponentDisabled()}
-          helperText={config.storagePath === '' ? 'Must not be empty' : ''}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, my: 1, width: '600px' }}
-          inputProps={{ style: { color: 'white' } }}
         />
-      </Box>
+        {config.storagePath === '' && (
+          <span className="text-error text-sm">Must not be empty</span>
+        )}
+      </div>
     );
   };
 
@@ -220,15 +157,24 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <FormControlLabel
-          control={getSwitch('separateBufferPath', setSeparateBufferPath)}
-          label="Separate Buffer Folder"
-          labelPlacement="top"
-          style={formControlLabelStyle}
-          disabled={isComponentDisabled()}
-        />
-      </Box>
+      <div className="flex flex-col">
+        <Label htmlFor="separateBufferPath" className="flex items-center">
+          Separate Buffer Folder
+          <Tooltip
+            content={configSchema.separateBufferPath.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch
+            checked={Boolean(config.separateBufferPath)}
+            name="separateBufferPath"
+            onCheckedChange={setSeparateBufferPath}
+          />
+        </div>
+      </div>
     );
   };
 
@@ -242,19 +188,24 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <TextField
+      <div className="flex flex-col w-1/3 min-w-60 max-w-80">
+        <Label htmlFor="bufferStoragePath" className="flex items-center">
+          Buffer Folder
+          <Tooltip
+            content={configSchema.bufferStoragePath.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
           name="bufferStoragePath"
           value={config.bufferStoragePath}
-          label="Buffer Folder"
-          variant="outlined"
           onClick={setBufferPath}
+          required
           disabled={isComponentDisabled()}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, my: 1, width: '600px' }}
-          inputProps={{ style: { color: 'white' } }}
         />
-      </Box>
+      </div>
     );
   };
 
@@ -273,18 +224,22 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <TextField
+      <div className="flex flex-col w-1/3 min-w-60 max-w-80">
+        <Label htmlFor="maxDiskStorage" className="flex items-center">
+          Max Disk Storage (GB)
+          <Tooltip content={configSchema.maxStorage.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
+          name="maxDiskStorage"
           value={config.maxStorage}
           onChange={setMaxStorage}
-          label="Max Disk Storage (GB)"
-          variant="outlined"
+          required
           type="number"
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, my: 1 }}
-          inputProps={{ min: 0, style: { color: 'white' } }}
+          disabled={isComponentDisabled()}
         />
-      </Box>
+      </div>
     );
   };
 
@@ -297,61 +252,29 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       max === 0 ? `${usage}GB of Unlimited` : `${usage}GB of ${max}GB`;
 
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'left',
-          width: '100%',
-          my: 2,
-        }}
-      >
-        <Tooltip title="Disk usage">
-          <SaveIcon
-            sx={{ color: 'white', height: '20px', width: '20px', mx: 1 }}
-          />
+      <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
+        <Tooltip content="Disk usage">
+          <HardDrive />
         </Tooltip>
-        <LinearProgress
-          variant="determinate"
-          value={perc}
-          sx={{
-            minWidth: '300px',
-            height: '15px',
-            borderRadius: '2px',
-            border: '1px solid black',
-            backgroundColor: 'white',
-            '& .MuiLinearProgress-bar': {
-              backgroundColor: '#bb4420',
-            },
-          }}
-        />
-        <Typography
-          sx={{
-            color: 'white',
-            fontSize: '0.75rem',
-            mx: '5px',
-          }}
-        >
+        <Progress value={perc} className="h-3" />
+        <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
           {text}
-        </Typography>
-      </Box>
+        </span>
+      </div>
     );
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="flex flex-col gap-y-6">
       {getDisabledText()}
-
-      <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+      <div className="flex flex-row gap-x-6">
         {getStoragePathField()}
         {getBufferSwitch()}
-      </Box>
-
+      </div>
       {getBufferPathField()}
       {getMaxStorageField()}
       {getDiskUsageBar()}
-    </Box>
+    </div>
   );
 };
 

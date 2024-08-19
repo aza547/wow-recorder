@@ -1,5 +1,7 @@
-import { Button, Tooltip } from '@mui/material';
-import icon from '../../assets/icon/discord-icon.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDiscord } from '@fortawesome/free-brands-svg-icons';
+import { Button } from './components/Button/Button';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -9,14 +11,15 @@ export default function DiscordButton() {
   };
 
   return (
-    <Tooltip title="Discord">
+    <Tooltip content="Discord" side="top">
       <Button
         id="discord-button"
         type="button"
         onClick={openDiscordURL}
-        sx={{ padding: '2px', minWidth: '25px' }}
+        variant="ghost"
+        size="icon"
       >
-        <img alt="icon" src={icon} height="25px" width="25px" />
+        <FontAwesomeIcon icon={faDiscord} size="lg" />
       </Button>
     </Tooltip>
   );

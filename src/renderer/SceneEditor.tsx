@@ -24,7 +24,9 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         flexDirection: 'column',
         width: '100%',
         height: '100%',
+        borderBottomLeftRadius: '6px',
       }}
+      className="bg-background-higher pt-[32px]"
     >
       <Box sx={{ width: '100%', height: '60%' }}>
         <RecorderPreview />

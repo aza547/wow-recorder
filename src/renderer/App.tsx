@@ -14,11 +14,11 @@ import {
 import Box from '@mui/material/Box';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
-import BottomStatusBar from './BottomStatusBar';
 import './App.css';
 import { useSettings } from './useSettings';
 import { getCategoryFromConfig } from './rendererutils';
 import StateManager from './StateManager';
+import { TooltipProvider } from './components/Tooltip/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -135,24 +135,21 @@ const WarcraftRecorder = () => {
         width: '100%',
       }}
     >
-      <RendererTitleBar />
-      <Layout
-        recorderStatus={recorderStatus}
-        stateManager={stateManager}
-        videoState={videoState}
-        appState={appState}
-        setAppState={setAppState}
-        persistentProgress={persistentProgress}
-        playerHeight={playerHeight}
-      />
-      <BottomStatusBar
-        recorderStatus={recorderStatus}
-        error={error}
-        upgradeStatus={upgradeStatus}
-        savingStatus={savingStatus}
-        micStatus={micStatus}
-        crashes={crashes}
-      />
+      <TooltipProvider>
+        <RendererTitleBar />
+        <Layout
+          recorderStatus={recorderStatus}
+          stateManager={stateManager}
+          videoState={videoState}
+          appState={appState}
+          setAppState={setAppState}
+          persistentProgress={persistentProgress}
+          playerHeight={playerHeight}
+          error={error}
+          micStatus={micStatus}
+          crashes={crashes}
+        />
+      </TooltipProvider>
     </Box>
   );
 };

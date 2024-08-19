@@ -148,20 +148,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
   };
 
   return (
-    <Box
-      sx={{
-        borderTop: '1px solid black',
-        height: '35px',
-        boxSizing: 'border-box',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#182035',
-        zIndex: 1,
-        flexDirection: 'row',
-        px: 1,
-      }}
-    >
+    <div className="h-[35px] flex content-center items-center bg-background z-1 flex-row px-4">
       <Box
         sx={{
           display: 'flex',
@@ -172,7 +159,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
         }}
       >
         <RecorderStatus recorderStatus={recorderStatus} error={error} />
-        <VersionUpdateWidget upgradeStatus={upgradeStatus} />
+        {/* <VersionUpdateWidget upgradeStatus={upgradeStatus} /> */}
         <SavingStatus savingStatus={savingStatus} />
         <MicrophoneStatus micStatus={micStatus} />
         <CrashStatus crashes={crashes} />
@@ -204,7 +191,7 @@ const BottomStatusBar: React.FC<IProps> = (props: IProps) => {
         <TestButton recorderStatus={recorderStatus} />
         <DiscordButton />
       </Box>
-    </Box>
+    </div>
   );
 };
 

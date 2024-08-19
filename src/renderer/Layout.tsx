@@ -1,22 +1,29 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import { Pages, RecStatus, AppState, RendererVideo } from 'main/types';
-import { Badge, Tab, Tabs } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import TvIcon from '@mui/icons-material/Tv';
+import {
+  Pages,
+  RecStatus,
+  AppState,
+  RendererVideo,
+  MicStatus,
+  Crashes,
+} from 'main/types';
 import { MutableRefObject } from 'react';
-import ClipIcon from '../../assets/icon/clip-icon.png';
+import {
+  Clapperboard,
+  Cog,
+  Dice2,
+  Dice3,
+  Dice5,
+  Goal,
+  MonitorCog,
+  Sword,
+  Swords,
+} from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
 import { VideoCategory } from '../types/VideoCategory';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
-import RaidIcon from '../../assets/icon/dragon.png';
-import TwoPeopleIcon from '../../assets/icon/two-people.png';
-import ThreePeopleIcon from '../../assets/icon/three-people.png';
-import FivePeopleIcon from '../../assets/icon/five-people.png';
-import SwordIcon from '../../assets/icon/swords.png';
-import DaggerIcon from '../../assets/icon/dagger.png';
-import DungeonIcon from '../../assets/icon/dungeon.png';
-import FlagIcon from '../../assets/icon/flag.png';
 import { setConfigValue } from './useSettings';
 import {
   getCategoryIndex,
@@ -26,6 +33,12 @@ import {
 } from './rendererutils';
 import CategoryPage from './CategoryPage';
 import StateManager from './StateManager';
+import Menu from './components/Menu';
+import Separator from './components/Separator/Separator';
+import LogsButton from './LogButton';
+import TestButton from './TestButton';
+import DiscordButton from './DiscordButton';
+import ApplicationStatusCard from './containers/ApplicationStatusCard/ApplicationStatusCard';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -35,6 +48,9 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
+  error: string;
+  micStatus: MicStatus;
+  crashes: Crashes;
 }
 
 /**
@@ -49,13 +65,13 @@ const Layout = (props: IProps) => {
     setAppState,
     persistentProgress,
     playerHeight,
+    error,
+    micStatus,
+    crashes,
   } = props;
   const { page, category } = appState;
 
-  const handleChangeCategory = (
-    _: React.SyntheticEvent,
-    newCategory: VideoCategory
-  ) => {
+  const handleChangeCategory = (newCategory: VideoCategory) => {
     const index = getCategoryIndex(newCategory);
     setConfigValue('selectedCategory', index);
 
@@ -85,7 +101,7 @@ const Layout = (props: IProps) => {
     });
   };
 
-  const handleChangePage = (_: React.SyntheticEvent, newPage: Pages) => {
+  const handleChangePage = (newPage: Pages) => {
     setAppState((prevState) => {
       return {
         ...prevState,
@@ -94,26 +110,18 @@ const Layout = (props: IProps) => {
     });
   };
 
-  const renderCategoryTab = (tabCategory: VideoCategory, tabIcon: string) => {
+  const renderCategoryTab = (
+    tabCategory: VideoCategory,
+    tabIcon: string | React.ReactNode
+  ) => {
     const categoryFilter = getVideoCategoryFilter(tabCategory);
     const categoryState = videoState.filter(categoryFilter);
     const numVideos = categoryState.length;
 
     return (
-      <Tab
-        value={tabCategory}
-        icon={
-          <Badge
-            badgeContent={numVideos}
-            max={9999}
-            style={{ transform: 'translate(15px, 5px)' }}
-            sx={{
-              '& .MuiBadge-badge': {
-                color: 'white',
-                backgroundColor: '#bb4420',
-              },
-            }}
-          >
+      <Menu.Item value={tabCategory}>
+        <Menu.Item.Icon>
+          {typeof tabIcon === 'string' ? (
             <img
               src={tabIcon}
               alt={tabCategory}
@@ -121,114 +129,89 @@ const Layout = (props: IProps) => {
               height="25"
               style={{ transform: 'translate(-15px, 0px)' }}
             />
-          </Badge>
-        }
-        sx={{ color: 'white', minHeight: '60px', height: '60px' }}
-        label={tabCategory}
-      />
+          ) : (
+            tabIcon
+          )}
+        </Menu.Item.Icon>
+        {tabCategory}
+        <Menu.Item.Badge value={numVideos} />
+      </Menu.Item>
     );
   };
 
   const renderSettingsTab = () => {
     return (
-      <Tab
-        value={Pages.Settings}
-        icon={<SettingsIcon width="25" height="25" />}
-        sx={{ color: 'white', minHeight: '60px', height: '60px' }}
-        label="Settings"
-      />
+      <Menu.Item value={Pages.Settings}>
+        <Menu.Item.Icon>
+          <Cog />
+        </Menu.Item.Icon>
+        General
+      </Menu.Item>
     );
   };
 
   const renderSceneTab = () => {
     return (
-      <Tab
-        value={Pages.SceneEditor}
-        icon={<TvIcon width="25" height="25" />}
-        sx={{ color: 'white', minHeight: '60px', height: '60px' }}
-        label="Scene"
-      />
+      <Menu.Item value={Pages.SceneEditor}>
+        <Menu.Item.Icon>
+          <MonitorCog />
+        </Menu.Item.Icon>
+        Scene
+      </Menu.Item>
     );
   };
 
-  const getTabs = () => {
+  const SideMenu = () => {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          borderRight: '1px solid black',
-        }}
-      >
-        <Box
-          sx={{
-            justifyContent: 'flex-start',
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
-            alignItems: 'center',
-            backgroundColor: '#182035',
-          }}
+      <div className="flex flex-col h-full bg-background w-1/6 min-w-60 max-w-80 px-4 items-center pt-4 pb-2">
+        <ApplicationStatusCard
+          recorderStatus={recorderStatus}
+          error={error}
+          micStatus={micStatus}
+          crashes={crashes}
+        />
+        <Menu
+          initialValue={appState.page === Pages.None ? category : false}
+          onChange={handleChangeCategory}
         >
-          <Tabs
-            value={appState.page === Pages.None ? category : false}
-            orientation="vertical"
-            onChange={handleChangeCategory}
-            sx={{
-              height: '100%',
-              width: '100%',
-              backgroundColor: '#182035',
-              boxSizing: 'border-box',
-              color: 'white',
-              '& .MuiTab-root.Mui-selected': {
-                color: '#bb4220',
-              },
-            }}
-            TabIndicatorProps={{ style: { background: '#bb4220' } }}
-          >
-            {renderCategoryTab(VideoCategory.TwoVTwo, TwoPeopleIcon)}
-            {renderCategoryTab(VideoCategory.ThreeVThree, ThreePeopleIcon)}
-            {renderCategoryTab(VideoCategory.FiveVFive, FivePeopleIcon)}
-            {renderCategoryTab(VideoCategory.Skirmish, DaggerIcon)}
-            {renderCategoryTab(VideoCategory.SoloShuffle, SwordIcon)}
-            {renderCategoryTab(VideoCategory.MythicPlus, DungeonIcon)}
-            {renderCategoryTab(VideoCategory.Raids, RaidIcon)}
-            {renderCategoryTab(VideoCategory.Battlegrounds, FlagIcon)}
-            {renderCategoryTab(VideoCategory.Clips, ClipIcon)}
-          </Tabs>
-        </Box>
-
-        <Box
-          sx={{
-            justifyContent: 'flex-end',
-            display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
-            alignItems: 'center',
-            backgroundColor: '#182035',
-          }}
+          <Menu.Label>Recordings</Menu.Label>
+          {renderCategoryTab(VideoCategory.TwoVTwo, <Dice2 />)}
+          {renderCategoryTab(VideoCategory.ThreeVThree, <Dice3 />)}
+          {renderCategoryTab(VideoCategory.FiveVFive, <Dice5 />)}
+          {renderCategoryTab(VideoCategory.Skirmish, <Sword />)}
+          {renderCategoryTab(VideoCategory.SoloShuffle, <Swords />)}
+          {renderCategoryTab(
+            VideoCategory.MythicPlus,
+            <FontAwesomeIcon icon={faDungeon} size="xl" />
+          )}
+          {renderCategoryTab(
+            VideoCategory.Raids,
+            <FontAwesomeIcon icon={faDragon} size="lg" />
+          )}
+          {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
+          {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}
+        </Menu>
+        <Separator className="my-5" />
+        <Menu
+          initialValue={appState.page !== Pages.None ? appState.page : false}
+          onChange={handleChangePage}
         >
-          <Tabs
-            value={appState.page !== Pages.None ? appState.page : false}
-            orientation="vertical"
-            onChange={handleChangePage}
-            sx={{
-              width: '100%',
-              backgroundColor: '#182035',
-              boxSizing: 'border-box',
-              color: 'white',
-              '& .MuiTab-root.Mui-selected': {
-                color: '#bb4220',
-              },
-            }}
-            TabIndicatorProps={{ style: { background: '#bb4220' } }}
-          >
-            {renderSettingsTab()}
-            {renderSceneTab()}
-          </Tabs>
-        </Box>
-      </Box>
+          <Menu.Label>Settings</Menu.Label>
+          {renderSettingsTab()}
+          {renderSceneTab()}
+        </Menu>
+        <div className="mt-auto w-full">
+          <Separator className="mb-4" />
+          <div className="flex items-center justify-center gap-x-4">
+            <LogsButton />
+            <TestButton recorderStatus={recorderStatus} />
+            <DiscordButton />
+          </div>
+          <div className="w-full mt-1 text-foreground font-sans text-[11px] font-bold text-center opacity-75">
+            Version 5.7.2
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -255,20 +238,12 @@ const Layout = (props: IProps) => {
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        height: 'calc(100% - 70px)',
-        width: '100%',
-      }}
-    >
-      {getTabs()}
+    <div className="flex flex-row items-center h-full w-full font-sans">
+      <SideMenu />
       {page === Pages.Settings && renderSettingsPage()}
       {page === Pages.SceneEditor && renderSceneEditor()}
       {page === Pages.None && renderCategoryPage()}
-    </Box>
+    </div>
   );
 };
 

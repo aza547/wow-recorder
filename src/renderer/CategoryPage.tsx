@@ -1,13 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import { AppState, RendererVideo } from 'main/types';
-import {
-  Button,
-  List,
-  ListItem,
-  ListItemButton,
-  Typography,
-} from '@mui/material';
+import { List, ListItem, ListItemButton, Typography } from '@mui/material';
 import { scrollBarSx } from 'main/constants';
 import { MutableRefObject, useState } from 'react';
 import { VideoPlayer } from './VideoPlayer';
@@ -23,6 +17,8 @@ import {
 import VideoFilter from './VideoFilter';
 import VideoButton from './VideoButton';
 import StateManager from './StateManager';
+import Separator from './components/Separator/Separator';
+import { Button } from './components/Button/Button';
 
 interface IProps {
   category: VideoCategory;
@@ -167,17 +163,8 @@ const CategoryPage = (props: IProps) => {
       >
         <Button
           key="show-more-button"
-          variant="outlined"
+          variant="outline"
           onClick={loadMoreVideos}
-          sx={{
-            mb: 1,
-            color: 'white',
-            borderColor: 'white',
-            ':hover': {
-              color: '#bb4420',
-              borderColor: '#bb4420',
-            },
-          }}
         >
           Load More
         </Button>
@@ -241,47 +228,18 @@ const CategoryPage = (props: IProps) => {
 
   const renderFirstTimeUserPrompt = () => {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          width: '50%',
-          height: '50%',
-        }}
-      >
-        <Typography
-          align="center"
-          variant="h6"
-          sx={{
-            color: 'white',
-            fontFamily: '"Arial",sans-serif',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
-        >
-          You have no videos saved for this category. If it is your first time
-          here, setup instructions can be found at the link below. If you have
-          problems, please use the Discord #help channel to get support.
-        </Typography>
-        <Button
-          key="setup-button"
-          variant="outlined"
-          onClick={openSetupInstructions}
-          sx={{
-            color: 'white',
-            borderColor: 'white',
-            m: 2,
-            ':hover': {
-              color: '#bb4420',
-              borderColor: '#bb4420',
-            },
-          }}
-        >
-          Setup Instructions
-        </Button>
-      </Box>
+      <div className="flex items-center justify-center flex-col w-1/2 h-1/2 text-center font-sans text-foreground gap-y-6">
+        <h1 className="text-xl font-bold">
+          You have no videos saved for this category.
+        </h1>
+        <Separator className="my-2" />
+        <h2 className="text-foreground font-sans text-lg">
+          If it is your first time here, setup instructions can be found at the
+          link below. If you have problems, please use the Discord #help channel
+          to get support.
+        </h2>
+        <Button onClick={openSetupInstructions}>Setup Instructions</Button>
+      </div>
     );
   };
 
@@ -322,7 +280,9 @@ const CategoryPage = (props: IProps) => {
         justifyContent: 'center',
         height: '100%',
         width: '100%',
+        borderBottomLeftRadius: '6px',
       }}
+      className="bg-background-higher pt-[32px]"
     >
       {haveVideos && getVideoPlayer()}
       {haveVideos && getVideoSelection()}

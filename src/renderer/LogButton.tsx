@@ -1,24 +1,24 @@
-import { Button, Tooltip } from '@mui/material';
-import DescriptionIcon from '@mui/icons-material/Description';
+import { FileText } from 'lucide-react';
+import { Button } from './components/Button/Button';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
 
-export default function SettingsButton() {
+export default function LogsButton() {
   const openLogPath = () => {
     ipc.sendMessage('logPath', ['open']);
   };
 
   return (
-    <Tooltip title="Logs">
+    <Tooltip content="Logs" side="top">
       <Button
         id="log-button"
         type="button"
         onClick={openLogPath}
-        sx={{ padding: '2px', minWidth: '25px' }}
+        variant="ghost"
+        size="icon"
       >
-        <DescriptionIcon
-          sx={{ width: '25px', height: '25px', color: 'white' }}
-        />
+        <FileText size={20} />
       </Button>
     </Tooltip>
   );

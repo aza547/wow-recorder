@@ -1,63 +1,18 @@
-import FormControlLabel from '@mui/material/FormControlLabel';
-import {
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Switch,
-  TextField,
-} from '@mui/material';
-import { ConfigurationSchema } from 'main/configSchema';
+import { configSchema, ConfigurationSchema } from 'main/configSchema';
 import React from 'react';
+import { Info } from 'lucide-react';
 import { setConfigValues, useSettings } from './useSettings';
-
-const formControlStyle = { width: '100%' };
-
-const style = {
-  m: 1,
-  width: '100%',
-  color: 'white',
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'white',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#bb4220',
-  },
-  '&.Mui-focused': {
-    borderColor: '#bb4220',
-    color: '#bb4220',
-  },
-  '&:hover': {
-    '&& fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '.MuiSvgIcon-root ': {
-    fill: 'white !important',
-  },
-};
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
+import Switch from './components/Switch/Switch';
+import Label from './components/Label/Label';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import { Input } from './components/Input/Input';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from './components/Select/Select';
 
 const raidDifficultyOptions = ['LFR', 'Normal', 'Heroic', 'Mythic'];
 
@@ -93,33 +48,37 @@ const PVESettings: React.FC = () => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (event: React.ChangeEvent<HTMLInputElement>) => void
+    changeFn: (checked: boolean) => void
   ) => (
     <Switch
-      sx={switchStyle}
       checked={Boolean(config[preference])}
       name={preference}
-      onChange={changeFn}
+      onCheckedChange={changeFn}
     />
   );
 
-  const setRecordRaids = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecordRaids = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordRaids: event.target.checked,
+        recordRaids: checked,
       };
     });
   };
 
   const getRecordRaidSwitch = () => {
     return (
-      <FormControlLabel
-        control={getSwitch('recordRaids', setRecordRaids)}
-        label="Record Raids"
-        labelPlacement="top"
-        style={{ color: 'white', width: '200px' }}
-      />
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="recordRaids" className="flex items-center">
+          Record Raids
+          <Tooltip content={configSchema.recordRaids.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('recordRaids', setRecordRaids)}
+        </div>
+      </div>
     );
   };
 
@@ -140,25 +99,28 @@ const PVESettings: React.FC = () => {
     }
 
     return (
-      <TextField
-        value={config.minEncounterDuration}
-        label="Minimum Encounter Duration (sec)"
-        disabled={!config.recordRaids}
-        onChange={setMinEncounterDuration}
-        variant="outlined"
-        type="number"
-        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        sx={{ ...style, maxWidth: '250px' }}
-        inputProps={{ min: 0, style: { color: 'white' } }}
-      />
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label htmlFor="minEncounterDuration" className="flex items-center">
+          Minimum Encounter Duration (sec)
+          <Tooltip
+            content={configSchema.minEncounterDuration.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
+          value={config.minEncounterDuration}
+          name="minEncounterDuration"
+          disabled={!config.recordRaids}
+          onChange={setMinEncounterDuration}
+          type="number"
+        />
+      </div>
     );
   };
 
-  const setMinRaidDifficulty = (event: SelectChangeEvent<string>) => {
-    const {
-      target: { value },
-    } = event;
-
+  const setMinRaidDifficulty = (value: string) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -173,25 +135,33 @@ const PVESettings: React.FC = () => {
     }
 
     return (
-      <FormControl sx={{ ...formControlStyle, maxWidth: '250px' }}>
-        <InputLabel sx={{ ...style, maxWidth: '250px' }}>
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label htmlFor="minRaidDifficulty" className="flex items-center">
           Minimum Raid Difficulty
-        </InputLabel>
+          <Tooltip
+            content={configSchema.minRaidDifficulty.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
         <Select
-          value={config.minRaidDifficulty}
+          onValueChange={setMinRaidDifficulty}
           disabled={!config.recordRaids}
-          label="Minimum Raid Difficulty"
-          variant="outlined"
-          onChange={setMinRaidDifficulty}
-          sx={{ ...style, maxWidth: '250px' }}
+          value={config.minRaidDifficulty}
         >
-          {raidDifficultyOptions.map((difficulty: string) => (
-            <MenuItem key={difficulty} value={difficulty}>
-              {difficulty}
-            </MenuItem>
-          ))}
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Placeholder" />
+          </SelectTrigger>
+          <SelectContent>
+            {raidDifficultyOptions.map((difficulty: string) => (
+              <SelectItem key={difficulty} value={difficulty}>
+                {difficulty}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
-      </FormControl>
+      </div>
     );
   };
 
@@ -217,17 +187,21 @@ const PVESettings: React.FC = () => {
     }
 
     return (
-      <TextField
-        value={config.raidOverrun}
-        label="Raid Overrun (sec)"
-        disabled={!config.recordRaids}
-        onChange={setRaidOverrun}
-        variant="outlined"
-        type="number"
-        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        sx={{ ...style, maxWidth: '250px' }}
-        inputProps={{ min: 0, max: 60, style: { color: 'white' } }}
-      />
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label htmlFor="raidOverrun" className="flex items-center">
+          Raid Overrun (sec)
+          <Tooltip content={configSchema.raidOverrun.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
+          value={config.raidOverrun}
+          name="raidOverrun"
+          disabled={!config.recordRaids}
+          onChange={setRaidOverrun}
+          type="number"
+        />
+      </div>
     );
   };
 
@@ -253,37 +227,46 @@ const PVESettings: React.FC = () => {
     }
 
     return (
-      <TextField
-        value={config.dungeonOverrun}
-        label="Mythic+ Overrun (sec)"
-        disabled={!config.recordDungeons}
-        onChange={setDungeonOverrun}
-        variant="outlined"
-        type="number"
-        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        sx={{ ...style, maxWidth: '250px' }}
-        inputProps={{ min: 0, max: 60, style: { color: 'white' } }}
-      />
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label htmlFor="dungeonOverrun" className="flex items-center">
+          Mythic+ Overrun (sec)
+          <Tooltip content={configSchema.dungeonOverrun.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
+          value={config.dungeonOverrun}
+          name="dungeonOverrun"
+          disabled={!config.recordDungeons}
+          onChange={setDungeonOverrun}
+          type="number"
+        />
+      </div>
     );
   };
 
-  const setRecordDungeons = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecordDungeons = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordDungeons: event.target.checked,
+        recordDungeons: checked,
       };
     });
   };
 
   const getRecordDungeonSwitch = () => {
     return (
-      <FormControlLabel
-        control={getSwitch('recordDungeons', setRecordDungeons)}
-        label="Record Mythic+"
-        labelPlacement="top"
-        style={{ color: 'white', width: '200px' }}
-      />
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="recordDungeons" className="flex items-center">
+          Record Mythic+
+          <Tooltip content={configSchema.recordDungeons.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('recordDungeons', setRecordDungeons)}
+        </div>
+      </div>
     );
   };
 
@@ -302,50 +285,43 @@ const PVESettings: React.FC = () => {
     }
 
     return (
-      <TextField
-        value={config.minKeystoneLevel}
-        onChange={setMinKeystoneLevel}
-        disabled={!config.recordDungeons}
-        label="Minimum Keystone Level"
-        variant="outlined"
-        type="number"
-        error={config.minKeystoneLevel < 2}
-        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        sx={{ ...style, maxWidth: '250px' }}
-        inputProps={{ min: 0, style: { color: 'white' } }}
-      />
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label htmlFor="minKeystoneLevel" className="flex items-center">
+          Minimum Keystone Level
+          <Tooltip
+            content={configSchema.minKeystoneLevel.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
+          value={config.minKeystoneLevel}
+          name="minKeystoneLevel"
+          disabled={!config.recordDungeons}
+          onChange={setMinKeystoneLevel}
+          type="number"
+          min={2}
+        />
+      </div>
     );
   };
 
   return (
-    <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '100%',
-        }}
-      >
+    <div className="flex flex-col gap-y-4">
+      <div className="flex flex-row gap-x-6">
         {getRecordRaidSwitch()}
         {getMinEncounterDurationField()}
         {getRaidOverrunField()}
         {getMinRaidDifficultySelect()}
-      </Box>
+      </div>
 
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '100%',
-        }}
-      >
+      <div className="flex flex-row gap-x-6">
         {getRecordDungeonSwitch()}
         {getMinKeystoneLevelField()}
         {getDungeonOverrunField()}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

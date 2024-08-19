@@ -1,59 +1,14 @@
-import FormControlLabel from '@mui/material/FormControlLabel';
-import { Box, Switch, TextField, Typography } from '@mui/material';
-import { ConfigurationSchema } from 'main/configSchema';
+import { Typography } from '@mui/material';
+import { ConfigurationSchema, configSchema } from 'main/configSchema';
 import React from 'react';
 import { RecStatus } from 'main/types';
+import { Info } from 'lucide-react';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
-
-const style = {
-  width: '300px',
-  color: 'white',
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'white',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#bb4220',
-  },
-  '&.Mui-focused': {
-    borderColor: '#bb4220',
-    color: '#bb4220',
-  },
-  '&:hover': {
-    '&& fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-};
-
-const formControlLabelStyle = { color: 'white', width: '200px' };
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-      color: 'grey',
-      backgroundColor: 'grey',
-    },
-    '&.Mui-disabled': {
-      opacity: 0.5,
-      color: 'grey',
-      backgroundColor: 'grey',
-    },
-  },
-};
+import Switch from './components/Switch/Switch';
+import Label from './components/Label/Label';
+import { Input } from './components/Input/Input';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -94,7 +49,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
   const isComponentDisabled = () => {
     const isRecording = recorderStatus === RecStatus.Recording;
-    const isOverrunning = recorderStatus === RecStatus.Overruning;
+    const isOverrunning = recorderStatus === RecStatus.Overrunning;
     return isRecording || isOverrunning;
   };
 
@@ -123,30 +78,29 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (event: React.ChangeEvent<HTMLInputElement>) => void
+    changeFn: (checked: boolean) => void
   ) => (
     <Switch
-      sx={switchStyle}
       checked={Boolean(config[preference])}
       name={preference}
-      onChange={changeFn}
+      onCheckedChange={changeFn}
     />
   );
 
-  const setRecordRetail = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecordRetail = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordRetail: event.target.checked,
+        recordRetail: checked,
       };
     });
   };
 
-  const setRecordClassic = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecordClassic = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordClassic: event.target.checked,
+        recordClassic: checked,
       };
     });
   };
@@ -170,50 +124,49 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     });
   };
 
-  const retailLogPathHelperText = () => {
-    if (config.retailLogPath !== '') {
-      return '';
-    }
-
-    return 'Invalid retail log path';
-  };
-
   const getRetailSettings = () => {
     if (isComponentDisabled()) {
       return <></>;
     }
 
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        <Box>
-          <FormControlLabel
-            disabled={isComponentDisabled()}
-            control={getSwitch('recordRetail', setRecordRetail)}
-            label="Record Retail"
-            labelPlacement="top"
-            style={formControlLabelStyle}
-          />
-        </Box>
+      <div className="flex flex-row gap-x-6">
+        <div className="flex flex-col w-[140px]">
+          <Label htmlFor="recordRetail" className="flex items-center">
+            Record Retail
+            <Tooltip content={configSchema.recordRetail.description} side="top">
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch('recordRetail', setRecordRetail)}
+          </div>
+        </div>
         {config.recordRetail && (
-          <TextField
-            value={config.retailLogPath}
-            disabled={!config.recordRetail || isComponentDisabled()}
-            label="Retail Log Path"
-            variant="outlined"
-            error={config.retailLogPath === ''}
-            helperText={retailLogPathHelperText()}
-            onClick={setRetailLogPath}
-            InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-            sx={{ ...style, width: '600px', my: 1 }}
-            inputProps={{ style: { color: 'white' } }}
-          />
+          <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+            <Label htmlFor="retailLogPath" className="flex items-center">
+              Retail Log Path
+              <Tooltip
+                content={configSchema.retailLogPath.description}
+                side="top"
+              >
+                <Info size={20} className="inline-flex ml-2" />
+              </Tooltip>
+            </Label>
+            <Input
+              value={config.retailLogPath}
+              disabled={!config.recordRetail || isComponentDisabled()}
+              onClick={setRetailLogPath}
+              required
+            />
+            {config.retailLogPath === '' && (
+              <span className="text-error text-sm">
+                Invalid retail log path
+              </span>
+            )}
+          </div>
         )}
-      </Box>
+      </div>
     );
   };
 
@@ -236,66 +189,60 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     });
   };
 
-  const classicLogPathHelperText = () => {
-    if (config.classicLogPath !== '') {
-      return '';
-    }
-
-    return 'Invalid classic log path';
-  };
-
   const getClassicSettings = () => {
     if (isComponentDisabled()) {
       return <></>;
     }
 
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        <Box>
-          <FormControlLabel
-            disabled={isComponentDisabled()}
-            control={getSwitch('recordClassic', setRecordClassic)}
-            label="Record Classic"
-            labelPlacement="top"
-            style={formControlLabelStyle}
-          />
-        </Box>
+      <div className="flex flex-row gap-x-6">
+        <div className="flex flex-col w-[140px]">
+          <Label htmlFor="recordClassic" className="flex items-center">
+            Record Classic
+            <Tooltip
+              content={configSchema.recordClassic.description}
+              side="top"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch('recordClassic', setRecordClassic)}
+          </div>
+        </div>
         {config.recordClassic && (
-          <TextField
-            value={config.classicLogPath}
-            disabled={!config.recordClassic || isComponentDisabled()}
-            label="Classic Log Path"
-            variant="outlined"
-            error={config.classicLogPath === ''}
-            helperText={classicLogPathHelperText()}
-            onClick={setClassicLogPath}
-            InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-            sx={{ ...style, width: '600px', my: 1 }}
-            inputProps={{ style: { color: 'white' } }}
-          />
+          <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+            <Label htmlFor="classicLogPath" className="flex items-center">
+              Classic Log Path
+              <Tooltip
+                content={configSchema.classicLogPath.description}
+                side="top"
+              >
+                <Info size={20} className="inline-flex ml-2" />
+              </Tooltip>
+            </Label>
+            <Input
+              value={config.classicLogPath}
+              disabled={!config.recordClassic || isComponentDisabled()}
+              onClick={setClassicLogPath}
+              required
+            />
+            {config.classicLogPath === '' && (
+              <span className="text-error text-sm">
+                Invalid classic log path
+              </span>
+            )}
+          </div>
         )}
-      </Box>
+      </div>
     );
   };
 
-  const eraLogPathHelperText = () => {
-    if (config.eraLogPath !== '') {
-      return '';
-    }
-
-    return 'Invalid era log path';
-  };
-
-  const setRecordEra = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecordEra = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordEra: event.target.checked,
+        recordEra: checked,
       };
     });
   };
@@ -325,51 +272,50 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        <Box>
-          <FormControlLabel
-            disabled={isComponentDisabled()}
-            control={getSwitch('recordEra', setRecordEra)}
-            label="Record Classic Era"
-            labelPlacement="top"
-            style={formControlLabelStyle}
-          />
-        </Box>
+      <div className="flex flex-row gap-x-6">
+        <div className="flex flex-col w-[140px]">
+          <Label htmlFor="recordEra" className="flex items-center">
+            Record Classic Era
+            <Tooltip content={configSchema.recordEra.description} side="top">
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch('recordEra', setRecordEra)}
+          </div>
+        </div>
         {config.recordEra && (
-          <TextField
-            value={config.eraLogPath}
-            disabled={!config.recordEra || isComponentDisabled()}
-            label="Classic Era Log Path"
-            variant="outlined"
-            error={config.eraLogPath === ''}
-            helperText={eraLogPathHelperText()}
-            onClick={setEraLogPath}
-            InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-            sx={{ ...style, width: '600px', my: 1 }}
-            inputProps={{ style: { color: 'white' } }}
-          />
+          <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+            <Label htmlFor="eraLogPath" className="flex items-center">
+              Classic Era Log Path
+              <Tooltip content={configSchema.eraLogPath.description} side="top">
+                <Info size={20} className="inline-flex ml-2" />
+              </Tooltip>
+            </Label>
+            <Input
+              value={config.eraLogPath}
+              disabled={!config.recordEra || isComponentDisabled()}
+              onClick={setEraLogPath}
+              required
+            />
+            {config.eraLogPath === '' && (
+              <span className="text-error text-xs font-semibold mt-1">
+                Invalid Classic Era log path
+              </span>
+            )}
+          </div>
         )}
-      </Box>
+      </div>
     );
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <div className="flex flex-col gap-y-8">
       {getDisabledText()}
       {getRetailSettings()}
       {getClassicSettings()}
       {getEraSettings()}
-    </Box>
+    </div>
   );
 };
 

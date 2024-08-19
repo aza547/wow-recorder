@@ -1,23 +1,8 @@
-import FormControlLabel from '@mui/material/FormControlLabel';
-import { Box, Switch } from '@mui/material';
 import { ConfigurationSchema } from 'main/configSchema';
 import React from 'react';
 import { setConfigValues, useSettings } from './useSettings';
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
+import Switch from './components/Switch/Switch';
+import Label from './components/Label/Label';
 
 const PVPSettings: React.FC = () => {
   const [config, setConfig] = useSettings();
@@ -49,93 +34,88 @@ const PVPSettings: React.FC = () => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (event: React.ChangeEvent<HTMLInputElement>) => void
+    changeFn: (checked: boolean) => void
   ) => (
     <Switch
-      sx={switchStyle}
       checked={Boolean(config[preference])}
       name={preference}
-      onChange={changeFn}
+      onCheckedChange={changeFn}
     />
   );
 
   const getSwitchForm = (
     preference: keyof ConfigurationSchema,
     label: string,
-    changeFn: (event: React.ChangeEvent<HTMLInputElement>) => void
+    changeFn: (checked: boolean) => void
   ) => {
     return (
-      <FormControlLabel
-        control={getSwitch(preference, changeFn)}
-        label={label}
-        labelPlacement="top"
-        style={{ color: 'white' }}
-      />
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor={preference} className="flex items-center">
+          {label}
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch(preference, changeFn)}
+        </div>
+      </div>
     );
   };
 
-  const setRecord2v2 = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecord2v2 = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordTwoVTwo: event.target.checked,
+        recordTwoVTwo: checked,
       };
     });
   };
 
-  const setRecord3v3 = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecord3v3 = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordThreeVThree: event.target.checked,
+        recordThreeVThree: checked,
       };
     });
   };
 
-  const setRecord5v5 = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecord5v5 = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordFiveVFive: event.target.checked,
+        recordFiveVFive: checked,
       };
     });
   };
 
-  const setRecordSkirmish = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecordSkirmish = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordSkirmish: event.target.checked,
+        recordSkirmish: checked,
       };
     });
   };
 
-  const setRecordSolo = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecordSolo = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordSoloShuffle: event.target.checked,
+        recordSoloShuffle: checked,
       };
     });
   };
 
-  const setRecordBgs = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRecordBgs = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordBattlegrounds: event.target.checked,
+        recordBattlegrounds: checked,
       };
     });
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-      }}
-    >
+    <div className="flex flex-row flex-wrap gap-x-4">
       {getSwitchForm('recordTwoVTwo', 'Record 2v2', setRecord2v2)}
       {getSwitchForm('recordThreeVThree', 'Record 3v3', setRecord3v3)}
       {getSwitchForm('recordFiveVFive', 'Record 5v5', setRecord5v5)}
@@ -146,7 +126,7 @@ const PVPSettings: React.FC = () => {
         'Record Battlegrounds',
         setRecordBgs
       )}
-    </Box>
+    </div>
   );
 };
 
