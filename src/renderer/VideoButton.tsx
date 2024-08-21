@@ -42,7 +42,6 @@ import RaidCompAndResult from './RaidCompAndResult';
 import TagDialog from './TagDialog';
 import PovSelection from './PovSelection';
 import { useSettings } from './useSettings';
-import SnackBar from './SnackBar';
 import StateManager from './StateManager';
 import { cn } from './components/utils';
 import { Tooltip } from './components/Tooltip/Tooltip';
@@ -83,9 +82,6 @@ export default function VideoButton(props: IProps) {
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
-
-  const [linkSnackBarSuccessOpen, setLinkSnackBarSuccessOpen] = useState(false);
-  const [linkSnackBarFailedOpen, setLinkSnackBarFailedOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -298,30 +294,6 @@ export default function VideoButton(props: IProps) {
           <CloudDownload />
         </Button>
       </Tooltip>
-    );
-  };
-
-  const getShareableLinkSnackBarSuccess = () => {
-    return (
-      <SnackBar
-        message="Link copied, valid for up to 30 days."
-        timeout={2}
-        open={linkSnackBarSuccessOpen}
-        setOpen={setLinkSnackBarSuccessOpen}
-        color="#bb4420"
-      />
-    );
-  };
-
-  const getShareableLinkSnackBarFailed = () => {
-    return (
-      <SnackBar
-        message="Failed to generate link, see logs."
-        timeout={2}
-        open={linkSnackBarFailedOpen}
-        setOpen={setLinkSnackBarFailedOpen}
-        color="#ff0033"
-      />
     );
   };
 
