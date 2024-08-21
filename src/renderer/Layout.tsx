@@ -7,6 +7,7 @@ import {
   MicStatus,
   Crashes,
   UpgradeStatus,
+  SaveStatus,
 } from 'main/types';
 import { MutableRefObject } from 'react';
 import {
@@ -54,6 +55,7 @@ interface IProps {
   micStatus: MicStatus;
   crashes: Crashes;
   upgradeStatus: UpgradeStatus;
+  savingStatus: SaveStatus;
 }
 
 /**
@@ -72,6 +74,7 @@ const Layout = (props: IProps) => {
     micStatus,
     crashes,
     upgradeStatus,
+    savingStatus,
   } = props;
   const { page, category } = appState;
   const [appVersion, setAppVersion] = React.useState<string>();
@@ -182,6 +185,7 @@ const Layout = (props: IProps) => {
           error={error}
           micStatus={micStatus}
           crashes={crashes}
+          savingStatus={savingStatus}
         />
         <Menu
           initialValue={appState.page === Pages.None ? category : false}

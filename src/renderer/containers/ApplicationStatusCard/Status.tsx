@@ -1,7 +1,7 @@
 /* eslint-disable react/require-default-props */
 /* eslint-disable import/prefer-default-export */
-import { CloudDownload, CloudUpload } from 'lucide-react';
-import { RecStatus } from 'main/types';
+import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
+import { RecStatus, SaveStatus } from 'main/types';
 import React from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import {
@@ -25,9 +25,10 @@ type StatusInfo = {
 type StatusProps = {
   status: RecStatus;
   error: string;
+  savingStatus: SaveStatus;
 };
 
-const Status = ({ status, error }: StatusProps) => {
+const Status = ({ status, error, savingStatus }: StatusProps) => {
   const stopRecording = () => {
     window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
   };
@@ -59,7 +60,6 @@ const Status = ({ status, error }: StatusProps) => {
     [RecStatus.FatalError]: 'Error',
     [RecStatus.Overrunning]: 'Overrunning',
     [RecStatus.Reconfiguring]: 'Reconfiguring',
-    [RecStatus.Saving]: 'Saving',
   };
 
   // The variant applied to the StatusLight on the card, for each status
@@ -71,7 +71,6 @@ const Status = ({ status, error }: StatusProps) => {
     [RecStatus.FatalError]: 'error',
     [RecStatus.Overrunning]: 'overrunning',
     [RecStatus.Reconfiguring]: 'waiting',
-    [RecStatus.Saving]: 'saving',
   };
 
   // The description for each status, which shows in the popover when the status title is hovered
@@ -177,7 +176,6 @@ const Status = ({ status, error }: StatusProps) => {
       </div>
     ),
     [RecStatus.Reconfiguring]: undefined,
-    [RecStatus.Saving]: undefined,
   };
 
   const statusLightsClasses = 'w-1.5 h-full rounded-l-md rounded-r-none';
@@ -207,12 +205,16 @@ const Status = ({ status, error }: StatusProps) => {
     });
 
     ipc.on('updateDownloadProgress', (progress) => {
+      console.log('updateDownloadProgress called');
       if (!progress || progress === 100) {
         setTimeout(() => setDownloadProgress(false), 1000);
       }
       setDownloadProgress(progress as number);
     });
   }, []);
+
+  const isSaving = savingStatus === SaveStatus.Saving;
+  const isUpDowning = uploadProgress !== false || downloadProgress !== false;
 
   return (
     <div className="w-full h-full flex relative rounded-md border-t border-[rgba(255,255,255,10%)]">
@@ -242,22 +244,36 @@ const Status = ({ status, error }: StatusProps) => {
             </HoverCardContent>
           )}
         </HoverCard>
-        {(uploadProgress || downloadProgress) && (
-          <span className="text-foreground-lighter/80 font-bold text-[11px] drop-shadow-sm flex gap-x-1 items-center">
-            {downloadProgress && (
+        {(isSaving || isUpDowning) && (
+          <div className="flex text-foreground-lighter/80 font-bold text-[11px] drop-shadow-sm gap-x-1 items-center">
+            {isSaving && (
               <>
-                <CloudDownload size={14} /> {downloadProgress.toFixed(0)}%
+                <HardDriveDownload size={14} />
+                {isUpDowning && <Separator orientation="vertical" />}
               </>
             )}
-            {downloadProgress && uploadProgress && (
-              <Separator orientation="vertical" />
-            )}
-            {uploadProgress && (
+            {isUpDowning && (
               <>
-                <CloudUpload size={14} /> {uploadProgress.toFixed(0)}%
+                <>
+                  {downloadProgress !== false && (
+                    <>
+                      <CloudDownload size={14} /> {downloadProgress.toFixed(0)}%
+                    </>
+                  )}
+                </>
+                {downloadProgress !== false && uploadProgress !== false && (
+                  <Separator orientation="vertical" />
+                )}
+                <>
+                  {uploadProgress !== false && (
+                    <>
+                      <CloudUpload size={14} /> {uploadProgress.toFixed(0)}%
+                    </>
+                  )}
+                </>
               </>
             )}
-          </span>
+          </div>
         )}
       </div>
     </div>

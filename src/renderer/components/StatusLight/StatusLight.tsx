@@ -18,8 +18,6 @@ const statusLightForegroundVariants = cva('rounded-full border-[3px]', {
       waiting: 'bg-zinc-400 border-zinc-500',
       overrunning:
         'bg-blue-accent border-blue-accent-border shadow-[0px_0px_4px_2px_rgba(2,132,199,0.66)]',
-      saving:
-        'bg-blue-accent border-blue-accent-border shadow-[0px_0px_4px_2px_rgba(2,132,199,0.66)] animate-pulse',
     },
   },
 });
@@ -33,8 +31,7 @@ export interface StatusLightProps
     | 'invalid'
     | 'error'
     | 'ready'
-    | 'overrunning'
-    | 'saving';
+    | 'overrunning';
   wrapperClasses?: string;
   foregroundClasses?: string;
 }

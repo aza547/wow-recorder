@@ -489,11 +489,13 @@ export default function VideoButton(props: IProps) {
           className="h-full w-4 absolute top-0 right-0 rounded-r-md"
           style={{ backgroundColor: resultColor }}
         />
-        <img
-          className="h-full object-contain box-border object-left rounded-l-md rounded-r-none"
-          src={thumbnailSource}
-          alt="video-thumbnail"
-        />
+        <div className="flex items-center justify-center overflow-hidden w-80 h-full rounded-l-md">
+          <img
+            className="min-w-full min-h-full shrink-0"
+            src={thumbnailSource}
+            alt="video-thumbnail"
+          />
+        </div>
 
         <div className="h-full w-1/3 flex items-center content-center">
           <PovSelection

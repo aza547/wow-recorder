@@ -1,4 +1,4 @@
-import { Crashes, MicStatus, RecStatus } from 'main/types';
+import { Crashes, MicStatus, RecStatus, SaveStatus } from 'main/types';
 
 import { cn } from 'renderer/components/utils';
 import MicrophoneStatus from './MicStatus';
@@ -10,6 +10,7 @@ type ApplicationStatusCardProps = {
   error: string;
   micStatus: MicStatus;
   crashes: Crashes;
+  savingStatus: SaveStatus;
 };
 
 const ApplicationStatusCard = ({
@@ -17,9 +18,9 @@ const ApplicationStatusCard = ({
   error,
   micStatus,
   crashes,
+  savingStatus,
 }: ApplicationStatusCardProps) => {
   const hasExtraBar = !!(micStatus || crashes?.length);
-  console.log({ hasExtraBar, micStatus, crashes });
   return (
     <div className="w-full h-20 rounded-md mb-4 flex relative">
       <div
@@ -37,7 +38,11 @@ const ApplicationStatusCard = ({
           id="gradient-layer"
           className="w-full h-full rounded-md bg-gradient-to-r from-background-dark-gradient-from to-transparent absolute"
         />
-        <Status status={recorderStatus} error={error} />
+        <Status
+          status={recorderStatus}
+          error={error}
+          savingStatus={savingStatus}
+        />
       </div>
       <div
         className={cn(

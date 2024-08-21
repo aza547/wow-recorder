@@ -121,7 +121,7 @@ const WarcraftRecorder = () => {
       setError(err as string);
     }
   };
-  // TODO: Update Rec Status when saving from here, so new status badge thing picks it up
+
   const updateSaveStatus = (status: unknown) => {
     setSavingStatus(status as SaveStatus);
   };
@@ -176,6 +176,7 @@ const WarcraftRecorder = () => {
           micStatus={micStatus}
           crashes={crashes}
           upgradeStatus={upgradeStatus}
+          savingStatus={savingStatus}
         />
       </TooltipProvider>
     </Box>

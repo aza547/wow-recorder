@@ -22,7 +22,6 @@ enum RecStatus {
   FatalError,
   Overrunning,
   Reconfiguring,
-  Saving,
 }
 
 enum MicStatus {
