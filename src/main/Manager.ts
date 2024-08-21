@@ -503,7 +503,6 @@ export default class Manager {
 
     const {
       cloudStorage,
-      cloudUpload,
       cloudAccountName,
       cloudAccountPassword,
       cloudGuildName,
@@ -530,12 +529,7 @@ export default class Manager {
 
       this.cloudClient.pollInit();
       this.cloudClient.pollForUpdates(10);
-
-      if (cloudUpload) {
-        // The video process queue only needs the cloud client for uploads, so
-        // we only need to set this if we're configured to upload.
-        this.videoProcessQueue.setCloudClient(this.cloudClient);
-      }
+      this.videoProcessQueue.setCloudClient(this.cloudClient);
     }
 
     this.refreshCloudStatus();

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - [Issue 512](https://github.com/aza547/wow-recorder/issues/512) - Fix a bug where the manager would repeatedly retry configuration if the user got the password wrong.
+- Fixed an issue where you could not download a video if the cloud upload setting was disabled.
 
 ## [5.7.2] - 2024-08-04
 ### Fixed
