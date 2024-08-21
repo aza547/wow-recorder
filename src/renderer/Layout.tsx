@@ -42,6 +42,7 @@ import TestButton from './TestButton';
 import DiscordButton from './DiscordButton';
 import ApplicationStatusCard from './containers/ApplicationStatusCard/ApplicationStatusCard';
 import UpgradeNotifier from './containers/UpgradeNotifier/UpgradeNotifier';
+import { ScrollArea } from './components/ScrollArea/ScrollArea';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -187,36 +188,41 @@ const Layout = (props: IProps) => {
           crashes={crashes}
           savingStatus={savingStatus}
         />
-        <Menu
-          initialValue={appState.page === Pages.None ? category : false}
-          onChange={handleChangeCategory}
+        <ScrollArea
+          className="w-full h-[calc(100%-80px)]"
+          withScrollIndicators={false}
         >
-          <Menu.Label>Recordings</Menu.Label>
-          {renderCategoryTab(VideoCategory.TwoVTwo, <Dice2 />)}
-          {renderCategoryTab(VideoCategory.ThreeVThree, <Dice3 />)}
-          {renderCategoryTab(VideoCategory.FiveVFive, <Dice5 />)}
-          {renderCategoryTab(VideoCategory.Skirmish, <Sword />)}
-          {renderCategoryTab(VideoCategory.SoloShuffle, <Swords />)}
-          {renderCategoryTab(
-            VideoCategory.MythicPlus,
-            <FontAwesomeIcon icon={faDungeon} size="xl" />
-          )}
-          {renderCategoryTab(
-            VideoCategory.Raids,
-            <FontAwesomeIcon icon={faDragon} size="lg" />
-          )}
-          {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
-          {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}
-        </Menu>
-        <Separator className="my-5" />
-        <Menu
-          initialValue={appState.page !== Pages.None ? appState.page : false}
-          onChange={handleChangePage}
-        >
-          <Menu.Label>Settings</Menu.Label>
-          {renderSettingsTab()}
-          {renderSceneTab()}
-        </Menu>
+          <Menu
+            initialValue={appState.page === Pages.None ? category : false}
+            onChange={handleChangeCategory}
+          >
+            <Menu.Label>Recordings</Menu.Label>
+            {renderCategoryTab(VideoCategory.TwoVTwo, <Dice2 />)}
+            {renderCategoryTab(VideoCategory.ThreeVThree, <Dice3 />)}
+            {renderCategoryTab(VideoCategory.FiveVFive, <Dice5 />)}
+            {renderCategoryTab(VideoCategory.Skirmish, <Sword />)}
+            {renderCategoryTab(VideoCategory.SoloShuffle, <Swords />)}
+            {renderCategoryTab(
+              VideoCategory.MythicPlus,
+              <FontAwesomeIcon icon={faDungeon} size="xl" />
+            )}
+            {renderCategoryTab(
+              VideoCategory.Raids,
+              <FontAwesomeIcon icon={faDragon} size="lg" />
+            )}
+            {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
+            {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}
+          </Menu>
+          <Separator className="my-5" />
+          <Menu
+            initialValue={appState.page !== Pages.None ? appState.page : false}
+            onChange={handleChangePage}
+          >
+            <Menu.Label>Settings</Menu.Label>
+            {renderSettingsTab()}
+            {renderSceneTab()}
+          </Menu>
+        </ScrollArea>
         <div className="mt-auto w-full">
           <Separator className="mb-4" />
           <div className="flex items-center justify-center gap-x-4">

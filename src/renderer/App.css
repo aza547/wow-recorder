@@ -85,7 +85,7 @@ html {
   height: 100%;
   width: 100%;
   overflow: clip;
-  background-color: #1a233a;
+  background-color: var(--background);
 }
 
 body {

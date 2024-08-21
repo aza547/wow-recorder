@@ -13,6 +13,7 @@ import {
   TabsTrigger,
 } from './components/Tabs/Tabs';
 import Separator from './components/Separator/Separator';
+import { ScrollArea } from './components/ScrollArea/ScrollArea';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -33,48 +34,54 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
           <TabsTrigger value="game">Game</TabsTrigger>
           <TabsTrigger value="pro">Pro</TabsTrigger>
         </TabsList>
-        <TabsContent value="application">
-          <div className="p-4 flex flex-col gap-y-8">
-            <div>
-              <CategoryHeading>General Settings</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
-              <GeneralSettings recorderStatus={recorderStatus} />
+        <ScrollArea
+          withScrollIndicators={false}
+          className="h-[calc(100svh-48px)] pb-8"
+        >
+          <TabsContent value="application">
+            <div className="p-4 flex flex-col gap-y-8">
+              <div>
+                <CategoryHeading>General Settings</CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <GeneralSettings recorderStatus={recorderStatus} />
+              </div>
+              <div>
+                <CategoryHeading>Windows Settings</CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <WindowsSettings />
+              </div>
             </div>
-            <div>
-              <CategoryHeading>Windows Settings</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
-              <WindowsSettings />
+          </TabsContent>
+
+          <TabsContent value="game">
+            <div className="p-4 flex flex-col gap-y-8">
+              <div>
+                <CategoryHeading>Game Settings</CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <FlavourSettings recorderStatus={recorderStatus} />
+              </div>
+              <div>
+                <CategoryHeading>PvE Settings</CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <PVESettings />
+              </div>
+              <div>
+                <CategoryHeading>PvP Settings</CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <PVPSettings />
+              </div>
             </div>
-          </div>
-        </TabsContent>
-        <TabsContent value="game">
-          <div className="p-4 flex flex-col gap-y-8">
-            <div>
-              <CategoryHeading>Game Settings</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
-              <FlavourSettings recorderStatus={recorderStatus} />
+          </TabsContent>
+          <TabsContent value="pro">
+            <div className="p-4 flex flex-col gap-y-8">
+              <div>
+                <CategoryHeading>Cloud Settings</CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <CloudSettings recorderStatus={recorderStatus} />
+              </div>
             </div>
-            <div>
-              <CategoryHeading>PvE Settings</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
-              <PVESettings />
-            </div>
-            <div>
-              <CategoryHeading>PvP Settings</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
-              <PVPSettings />
-            </div>
-          </div>
-        </TabsContent>
-        <TabsContent value="pro">
-          <div className="p-4 flex flex-col gap-y-8">
-            <div>
-              <CategoryHeading>Cloud Settings</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
-              <CloudSettings recorderStatus={recorderStatus} />
-            </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
+        </ScrollArea>
       </Tabs>
     </div>
   );
