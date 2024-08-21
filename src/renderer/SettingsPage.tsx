@@ -1,8 +1,5 @@
-import { IconButton, Tooltip } from '@mui/material';
 import React from 'react';
 import { RecStatus } from 'main/types';
-import { configSchema } from 'main/configSchema';
-import InfoIcon from '@mui/icons-material/Info';
 import GeneralSettings from './GeneralSettings';
 import WindowsSettings from './WindowsSettings';
 import FlavourSettings from './FlavourSettings';
@@ -24,35 +21,6 @@ interface IProps {
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
   <h2 className="text-foreground-lighter font-bold">{children}</h2>
 );
-
-const getCloudSettingsInfoIcon = () => {
-  const helptext = [
-    /* eslint-disable prettier/prettier */
-    ['Cloud Playback', configSchema.cloudStorage.description].join('\n'),
-    ['Cloud Upload', configSchema.cloudUpload.description].join('\n'),
-    ['Upload Rate Limit', configSchema.cloudUploadRateLimit.description].join(
-      '\n'
-    ),
-    ['Account Name', configSchema.cloudAccountName.description].join('\n'),
-    ['Account Password', configSchema.cloudAccountPassword.description].join(
-      '\n'
-    ),
-    ['Guild Name', configSchema.cloudGuildName.description].join('\n'),
-    [
-      'Upload Toggles',
-      'Provides control over what content types get automatically uploaded.',
-    ].join('\n'),
-    /* eslint-enable prettier/prettier */
-  ].join('\n\n');
-
-  return (
-    <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
-      <IconButton>
-        <InfoIcon style={{ color: 'white' }} />
-      </IconButton>
-    </Tooltip>
-  );
-};
 
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus } = props;

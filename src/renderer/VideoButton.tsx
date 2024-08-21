@@ -1,29 +1,31 @@
 import {
   Box,
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  IconButton,
-  Tooltip,
-  Typography,
 } from '@mui/material';
-import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import EventIcon from '@mui/icons-material/Event';
-import BookmarksIcon from '@mui/icons-material/Bookmarks';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import FolderIcon from '@mui/icons-material/Folder';
-import MessageIcon from '@mui/icons-material/Message';
 import React, { MutableRefObject, useEffect, useState } from 'react';
 import { RendererVideo, AppState } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
-import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
-import LinkIcon from '@mui/icons-material/Link';
+import {
+  CalendarDays,
+  Clock,
+  CloudDownload,
+  CloudUpload,
+  FolderOpen,
+  Hourglass,
+  Link2,
+  PackageX,
+  Trash,
+} from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMessage, faStar } from '@fortawesome/free-solid-svg-icons';
+import {
+  faStar as faStarOutline,
+  faMessage as faMessageOutline,
+} from '@fortawesome/free-regular-svg-icons';
 import {
   getResultColor,
   isArenaUtil,
@@ -50,6 +52,9 @@ import PovSelection from './PovSelection';
 import { useSettings } from './useSettings';
 import SnackBar from './SnackBar';
 import StateManager from './StateManager';
+import { cn } from './components/utils';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import { Button } from './components/Button/Button';
 
 interface IProps {
   selected: boolean;
@@ -59,29 +64,6 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
 }
-
-const dialogButtonSx = {
-  color: 'white',
-  ':hover': {
-    color: 'white',
-    borderColor: '#bb4420',
-    background: '#bb4420',
-  },
-};
-
-const iconButtonSx = {
-  backgroundColor: 'dimgray',
-  border: '1px solid black',
-  boxShadow: 3,
-  borderRadius: '5px',
-  mx: '2px',
-  '& .MuiTouchRipple-root .MuiTouchRipple-child': {
-    borderRadius: '5px',
-  },
-  ':hover': {
-    background: '#bb4420',
-  },
-};
 
 const ipc = window.electron.ipcRenderer;
 
@@ -132,8 +114,6 @@ export default function VideoButton(props: IProps) {
     povs.filter((v) => v.videoName === videoName).filter((v) => v.cloud)
       .length > 0;
 
-  const bookmarkOpacity = isProtected ? 1 : 0.2;
-  const tagOpacity = tag ? 1 : 0.2;
   let tagTooltip: string = tag || 'Add a tag';
 
   if (tagTooltip.length > 50) {
@@ -319,7 +299,7 @@ export default function VideoButton(props: IProps) {
             event.stopPropagation();
             setDeleteDialogOpen(false);
           }}
-          sx={dialogButtonSx}
+          // sx={dialogButtonSx}
         >
           Cancel
         </Button>
@@ -333,7 +313,7 @@ export default function VideoButton(props: IProps) {
             event.stopPropagation();
             deleteVideo(event);
           }}
-          sx={dialogButtonSx}
+          // sx={dialogButtonSx}
         >
           Delete
         </Button>
@@ -357,14 +337,15 @@ export default function VideoButton(props: IProps) {
 
   const getOpenButton = () => {
     return (
-      <Tooltip title="Open location">
-        <IconButton
+      <Tooltip content="Open location">
+        <Button
           onMouseDown={stopPropagation}
           onClick={openLocation}
-          sx={iconButtonSx}
+          variant="secondary"
+          size="icon"
         >
-          <FolderIcon sx={{ color: 'white' }} />
-        </IconButton>
+          <FolderOpen />
+        </Button>
       </Tooltip>
     );
   };
@@ -375,14 +356,15 @@ export default function VideoButton(props: IProps) {
 
   const getUploadButton = () => {
     return (
-      <Tooltip title="Upload to cloud">
-        <IconButton
+      <Tooltip content="Upload to cloud">
+        <Button
           onMouseDown={stopPropagation}
           onClick={uploadVideo}
-          sx={iconButtonSx}
+          variant="secondary"
+          size="icon"
         >
-          <UploadIcon sx={{ color: 'white' }} />
-        </IconButton>
+          <CloudUpload />
+        </Button>
       </Tooltip>
     );
   };
@@ -393,14 +375,15 @@ export default function VideoButton(props: IProps) {
 
   const getDownloadButton = () => {
     return (
-      <Tooltip title="Download to disk">
-        <IconButton
+      <Tooltip content="Download to disk">
+        <Button
           onMouseDown={stopPropagation}
           onClick={downloadVideo}
-          sx={iconButtonSx}
+          variant="secondary"
+          size="icon"
         >
-          <DownloadIcon sx={{ color: 'white' }} />
-        </IconButton>
+          <CloudDownload />
+        </Button>
       </Tooltip>
     );
   };
@@ -443,17 +426,18 @@ export default function VideoButton(props: IProps) {
 
   const getShareLinkButton = () => {
     return (
-      <Tooltip title="Get sharable link">
+      <Tooltip content="Get shareable link">
         <div>
           {getShareableLinkSnackBarSuccess()}
           {getShareableLinkSnackBarFailed()}
-          <IconButton
+          <Button
             onMouseDown={stopPropagation}
             onClick={getShareableLink}
-            sx={iconButtonSx}
+            variant="secondary"
+            size="icon"
           >
-            <LinkIcon sx={{ color: 'white' }} />
-          </IconButton>
+            <Link2 />
+          </Button>
         </div>
       </Tooltip>
     );
@@ -461,83 +445,57 @@ export default function VideoButton(props: IProps) {
 
   const getDeleteSingleButton = () => {
     return (
-      <Tooltip title="Delete">
-        <IconButton
+      <Tooltip content="Delete">
+        <Button
           onMouseDown={stopPropagation}
           onClick={deleteSingleClicked}
-          sx={iconButtonSx}
+          variant="secondary"
+          size="icon"
         >
-          <DeleteIcon sx={{ color: 'white' }} />
-        </IconButton>
+          <Trash />
+        </Button>
       </Tooltip>
     );
   };
 
   const getDeleteAllButton = () => {
     return (
-      <Tooltip title="Delete all points of view">
-        <IconButton
+      <Tooltip content="Delete all points of view">
+        <Button
           onMouseDown={stopPropagation}
           onClick={deleteAllClicked}
-          sx={iconButtonSx}
+          variant="secondary"
+          size="icon"
         >
-          <DeleteSweepIcon sx={{ color: 'white' }} />
-        </IconButton>
+          <PackageX />
+        </Button>
       </Tooltip>
     );
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        width: '100%',
-      }}
-    >
+    <div className="flex w-full">
       {getTagDialog()}
       {getDeleteDialog()}
 
-      <Box
-        sx={{
-          border: '1px solid black',
-          borderRadius: '5px',
-          bgcolor: resultColor,
-          width: '100%',
-          height: `${buttonHeight}px`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-evenly',
-          boxSizing: 'border-box',
-        }}
+      <div
+        className={cn(
+          'flex items-center content-evenly box-border w-full rounded-md border bg-video border-video-border hover:bg-video-hover transition-all relative',
+          { 'bg-video-hover': selected }
+        )}
+        style={{ height: buttonHeight }}
       >
-        <Box
-          component="img"
+        <div
+          className="h-full w-4 absolute top-0 right-0 rounded-r-md"
+          style={{ backgroundColor: resultColor }}
+        />
+        <img
+          className="h-full object-contain box-border object-left rounded-l-md rounded-r-none"
           src={thumbnailSource}
-          sx={{
-            borderTopLeftRadius: '5px',
-            borderBottomLeftRadius: '5px',
-            borderRight: '1px solid black',
-            width: '25%',
-            minWidth: '25%',
-            maxWidth: '25%',
-            height: '100%',
-            minHeight: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
-            backgroundColor: 'black',
-            boxSizing: 'border-box',
-          }}
+          alt="video-thumbnail"
         />
 
-        <Box
-          sx={{
-            height: '100%',
-            width: '35%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
+        <div className="h-full w-1/3 flex items-center content-center">
           <PovSelection
             povs={povs}
             parentButtonSelected={selected}
@@ -546,7 +504,7 @@ export default function VideoButton(props: IProps) {
             setAppState={setAppState}
             persistentProgress={persistentProgress}
           />
-        </Box>
+        </div>
 
         <Box
           sx={{
@@ -598,87 +556,34 @@ export default function VideoButton(props: IProps) {
             flexDirection: 'column',
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'row',
-              mx: 1,
-            }}
-          >
-            <Tooltip title="Duration">
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  mx: 1,
-                }}
-              >
-                <HourglassBottomIcon sx={{ color: 'white' }} />
-                <Typography
-                  sx={{
-                    color: 'white',
-                    fontWeight: '600',
-                    fontFamily: '"Arial",sans-serif',
-                    textShadow:
-                      '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-                  }}
-                >
+          <div className="flex items-center content-center flex-row gap-x-4">
+            <Tooltip content="Duration">
+              <div className="flex flex-col items-center text-secondary-foreground gap-y-1">
+                <Hourglass />
+                <span className="font-semibold font-sans text-shadow-instance text-sm">
                   {formattedDuration}
-                </Typography>
-              </Box>
+                </span>
+              </div>
             </Tooltip>
 
-            <Tooltip title="Time">
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  mx: 1,
-                }}
-              >
-                <AccessTimeIcon sx={{ color: 'white' }} />
-                <Typography
-                  sx={{
-                    color: 'white',
-                    fontWeight: '600',
-                    fontFamily: '"Arial",sans-serif',
-                    textShadow:
-                      '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-                  }}
-                >
+            <Tooltip content="Time">
+              <div className="flex flex-col items-center text-secondary-foreground gap-y-1">
+                <Clock />
+                <span className="font-semibold font-sans text-shadow-instance text-sm">
                   {videoTime}
-                </Typography>
-              </Box>
+                </span>
+              </div>
             </Tooltip>
 
-            <Tooltip title="Date">
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  mx: 1,
-                }}
-              >
-                <EventIcon sx={{ color: 'white' }} />
-                <Typography
-                  sx={{
-                    color: 'white',
-                    fontWeight: '600',
-                    fontFamily: '"Arial",sans-serif',
-                    textShadow:
-                      '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-                  }}
-                >
+            <Tooltip content="Date">
+              <div className="flex flex-col items-center text-secondary-foreground gap-y-1">
+                <CalendarDays />
+                <span className="font-semibold font-sans text-shadow-instance text-sm">
                   {videoDate}
-                </Typography>
-              </Box>
+                </span>
+              </div>
             </Tooltip>
-          </Box>
+          </div>
 
           <Box
             sx={{
@@ -689,34 +594,35 @@ export default function VideoButton(props: IProps) {
               mx: 1,
             }}
           >
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Tooltip title={tagTooltip}>
-                <IconButton
+            <div className="flex flex-row items-center content-center gap-x-2">
+              <Tooltip content={tagTooltip}>
+                <Button
                   onMouseDown={stopPropagation}
                   onClick={openTagDialog}
-                  sx={iconButtonSx}
+                  variant="secondary"
+                  size="icon"
                 >
-                  <MessageIcon sx={{ color: 'white', opacity: tagOpacity }} />
-                </IconButton>
+                  {tag ? (
+                    <FontAwesomeIcon icon={faMessage} size="lg" />
+                  ) : (
+                    <FontAwesomeIcon icon={faMessageOutline} size="lg" />
+                  )}
+                </Button>
               </Tooltip>
 
-              <Tooltip title="Never age out">
-                <IconButton
+              <Tooltip content={isProtected ? 'Age out' : 'Never age out'}>
+                <Button
                   onMouseDown={stopPropagation}
                   onClick={protectVideo}
-                  sx={iconButtonSx}
+                  variant="secondary"
+                  size="icon"
                 >
-                  <BookmarksIcon
-                    sx={{ color: 'white', opacity: bookmarkOpacity }}
-                  />
-                </IconButton>
+                  {isProtected ? (
+                    <FontAwesomeIcon icon={faStar} size="lg" />
+                  ) : (
+                    <FontAwesomeIcon icon={faStarOutline} size="lg" />
+                  )}
+                </Button>
               </Tooltip>
 
               {cloud && getShareLinkButton()}
@@ -728,10 +634,10 @@ export default function VideoButton(props: IProps) {
                 getUploadButton()}
               {getDeleteSingleButton()}
               {multiPov && getDeleteAllButton()}
-            </Box>
+            </div>
           </Box>
         </Box>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

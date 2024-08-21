@@ -12,6 +12,7 @@ import {
   RendererVideo,
 } from 'main/types';
 import Box from '@mui/material/Box';
+import { ArrowBigDownDash } from 'lucide-react';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import './App.css';
@@ -19,6 +20,9 @@ import { useSettings } from './useSettings';
 import { getCategoryFromConfig } from './rendererutils';
 import StateManager from './StateManager';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
+import Toaster from './components/Toast/Toaster';
+import { toast } from './components/Toast/useToast';
+import { ToastAction } from './components/Toast/Toast';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -27,6 +31,7 @@ const WarcraftRecorder = () => {
   const [error, setError] = useState<string>('');
   const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
   const [crashes, setCrashes] = useState<Crashes>([]);
+  const upgradeNotified = useRef(false);
 
   // The video state contains most of the frontend state, it's complex so
   // frontend triggered modifications go through the StateManager class, which
@@ -45,6 +50,27 @@ const WarcraftRecorder = () => {
     available: false,
     link: undefined,
   });
+
+  useEffect(() => {
+    if (upgradeNotified.current) return;
+
+    if (upgradeStatus.available) {
+      toast({
+        title: 'Update available!',
+        description:
+          'There is an update available for Warcraft Recorder. Please click the button below to download it.',
+        action: (
+          <a href={upgradeStatus.link} className="w-full">
+            <ToastAction altText="Download">
+              <ArrowBigDownDash /> Download
+            </ToastAction>
+          </a>
+        ),
+        duration: 60000, // stay up for a minute I guess
+      });
+      upgradeNotified.current = true;
+    }
+  }, [upgradeStatus, upgradeNotified]);
 
   const [savingStatus, setSavingStatus] = useState<SaveStatus>(
     SaveStatus.NotSaving
@@ -95,7 +121,7 @@ const WarcraftRecorder = () => {
       setError(err as string);
     }
   };
-
+  // TODO: Update Rec Status when saving from here, so new status badge thing picks it up
   const updateSaveStatus = (status: unknown) => {
     setSavingStatus(status as SaveStatus);
   };
@@ -135,6 +161,7 @@ const WarcraftRecorder = () => {
         width: '100%',
       }}
     >
+      <Toaster />
       <TooltipProvider>
         <RendererTitleBar />
         <Layout
@@ -148,6 +175,7 @@ const WarcraftRecorder = () => {
           error={error}
           micStatus={micStatus}
           crashes={crashes}
+          upgradeStatus={upgradeStatus}
         />
       </TooltipProvider>
     </Box>

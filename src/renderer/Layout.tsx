@@ -6,6 +6,7 @@ import {
   RendererVideo,
   MicStatus,
   Crashes,
+  UpgradeStatus,
 } from 'main/types';
 import { MutableRefObject } from 'react';
 import {
@@ -39,6 +40,7 @@ import LogsButton from './LogButton';
 import TestButton from './TestButton';
 import DiscordButton from './DiscordButton';
 import ApplicationStatusCard from './containers/ApplicationStatusCard/ApplicationStatusCard';
+import UpgradeNotifier from './containers/UpgradeNotifier/UpgradeNotifier';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -51,6 +53,7 @@ interface IProps {
   error: string;
   micStatus: MicStatus;
   crashes: Crashes;
+  upgradeStatus: UpgradeStatus;
 }
 
 /**
@@ -68,8 +71,18 @@ const Layout = (props: IProps) => {
     error,
     micStatus,
     crashes,
+    upgradeStatus,
   } = props;
   const { page, category } = appState;
+  const [appVersion, setAppVersion] = React.useState<string>();
+
+  React.useEffect(() => {
+    window.electron.ipcRenderer.on('updateTitleBar', (t: unknown) => {
+      if (typeof t === 'string') {
+        setAppVersion(t.split('v')[1] as string);
+      }
+    });
+  }, []);
 
   const handleChangeCategory = (newCategory: VideoCategory) => {
     const index = getCategoryIndex(newCategory);
@@ -203,13 +216,16 @@ const Layout = (props: IProps) => {
         <div className="mt-auto w-full">
           <Separator className="mb-4" />
           <div className="flex items-center justify-center gap-x-4">
+            <UpgradeNotifier upgradeStatus={upgradeStatus} />
             <LogsButton />
             <TestButton recorderStatus={recorderStatus} />
             <DiscordButton />
           </div>
-          <div className="w-full mt-1 text-foreground font-sans text-[11px] font-bold text-center opacity-75">
-            Version 5.7.2
-          </div>
+          {!!appVersion && (
+            <div className="w-full mt-1 text-foreground font-sans text-[11px] font-bold text-center opacity-75">
+              Version {appVersion}
+            </div>
+          )}
         </div>
       </div>
     );

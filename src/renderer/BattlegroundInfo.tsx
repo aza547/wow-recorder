@@ -1,6 +1,5 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import { Typography } from '@mui/material';
 import { RendererVideo } from 'main/types';
 
 interface IProps {
@@ -22,18 +21,9 @@ const BattlegroundInfo: React.FC<IProps> = (props: IProps) => {
         justifyContent: 'center',
       }}
     >
-      <Typography
-        sx={{
-          color: 'white',
-          fontFamily: '"Arial",sans-serif',
-          fontWeight: 700,
-          fontSize: '1rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-white font-semibold text-base text-shadow-instance">
         {zoneName}
-      </Typography>
+      </span>
     </Box>
   );
 };

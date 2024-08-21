@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import React from 'react';
 import { specializationById } from 'main/constants';
 import { RawCombatant, RendererVideo } from 'main/types';
@@ -65,7 +65,7 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
         sx={{
           display: 'flex',
           flexDirection: 'row',
-          alignItems: 'flex-end',
+          alignItems: 'center',
           justifyContent: 'start',
         }}
       >
@@ -82,19 +82,12 @@ const DungeonCompDisplay: React.FC<IProps> = (props: IProps) => {
             objectFit: 'cover',
           }}
         />
-        <Typography
-          sx={{
-            color: nameColor,
-            fontFamily: '"Arial",sans-serif',
-            ml: '2px',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
+        <span
+          className="font-bold text-xs text-shadow-instance ml-0.5"
+          style={{ color: nameColor }}
         >
           {combatant._name}
-        </Typography>
+        </span>
       </Box>
     );
   };

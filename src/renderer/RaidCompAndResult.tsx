@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import React from 'react';
 import { RawCombatant, RendererVideo } from 'main/types';
 import { specializationById } from 'main/constants';
@@ -123,19 +123,9 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
             objectFit: 'cover',
           }}
         />
-        <Typography
-          sx={{
-            color: 'white',
-            fontFamily: '"Arial",sans-serif',
-            ml: '2px',
-            fontSize: '0.75rem',
-            fontWeight: '600',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
-        >
+        <span className="text-white font-semibold text-xs text-shadow-instance ml-1">
           {roleCount[role as keyof RoleCount]}
-        </Typography>
+        </span>
       </Box>
     );
   };
@@ -168,19 +158,9 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
           justifyContent: 'center',
         }}
       >
-        <Typography
-          align="center"
-          sx={{
-            color: 'white',
-            fontWeight: '600',
-            fontFamily: '"Arial",sans-serif',
-            fontSize: '0.75rem',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
-        >
+        <span className="text-white font-semibold text-xs text-shadow-instance">
           {`${resultText} (Pull ${getPullNumber()})`}
-        </Typography>
+        </span>
       </Box>
     );
   };
@@ -196,19 +176,9 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
           justifyContent: 'center',
         }}
       >
-        <Typography
-          align="center"
-          sx={{
-            color: 'white',
-            fontWeight: '600',
-            fontFamily: '"Arial",sans-serif',
-            fontSize: '0.75rem',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
-        >
+        <span className="text-white font-semibold text-xs text-shadow-instance">
           {deathCount}
-        </Typography>
+        </span>
         <Box
           key="death-icon"
           component="img"

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import { AppState, RendererVideo } from 'main/types';
-import { List, ListItem, ListItemButton, Typography } from '@mui/material';
+import { List, ListItem, ListItemButton } from '@mui/material';
 import { scrollBarSx } from 'main/constants';
-import { MutableRefObject, useState } from 'react';
+import { MutableRefObject } from 'react';
 import { VideoPlayer } from './VideoPlayer';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
@@ -19,6 +19,7 @@ import VideoButton from './VideoButton';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
+import { cn } from './components/utils';
 
 interface IProps {
   category: VideoCategory;
@@ -116,27 +117,23 @@ const CategoryPage = (props: IProps) => {
       : 'transparent';
 
     return (
-      <ListItem disablePadding key={video.videoSource} sx={{ width: '100%' }}>
-        <ListItemButton
+      // eslint-disable-next-line jsx-a11y/interactive-supports-focus, jsx-a11y/click-events-have-key-events
+      <div
+        className={cn('w-full p-2')}
+        key={video.videoSource}
+        onClick={() => handleChangeVideo(videoState.indexOf(video))}
+        role="button"
+      >
+        <VideoButton
+          key={video.videoSource}
+          video={video}
+          stateManager={stateManager}
+          videoState={videoState}
+          setAppState={setAppState}
           selected={selected}
-          sx={{
-            '&.Mui-selected, &.Mui-selected:hover': {
-              backgroundColor,
-            },
-          }}
-          onClick={() => handleChangeVideo(videoState.indexOf(video))}
-        >
-          <VideoButton
-            key={video.videoSource}
-            video={video}
-            stateManager={stateManager}
-            videoState={videoState}
-            setAppState={setAppState}
-            selected={selected}
-            persistentProgress={persistentProgress}
-          />
-        </ListItemButton>
-      </ListItem>
+          persistentProgress={persistentProgress}
+        />
+      </div>
     );
   };
 
@@ -175,28 +172,18 @@ const CategoryPage = (props: IProps) => {
   const getVideoSelection = () => {
     return (
       <>
-        <Box
-          sx={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'space-evenly',
-            borderTop: '1px solid black',
-            borderBottom: '1px solid black',
-          }}
-        >
+        <div className="w-full flex justify-evenly border-t border-b border-black items-center gap-x-5 px-2 pt-1 pb-3">
           {!isClips && (
-            <Box sx={{ ml: 1, my: 1 }}>
-              <VideoMarkerToggles
-                category={category}
-                config={config}
-                setConfig={setConfig}
-              />
-            </Box>
+            <VideoMarkerToggles
+              category={category}
+              config={config}
+              setConfig={setConfig}
+            />
           )}
-          <Box sx={{ flex: 1, m: 1, my: 1 }}>
+          <div className="flex-grow">
             <SearchBar appState={appState} setAppState={setAppState} />
-          </Box>
-        </Box>
+          </div>
+        </div>
         <Box
           sx={{
             height: '100%',
@@ -207,7 +194,7 @@ const CategoryPage = (props: IProps) => {
             alignContent: 'center',
             ...scrollBarSx,
             '&::-webkit-scrollbar': {
-              width: '1em',
+              width: '0.33em',
             },
           }}
         >
@@ -230,7 +217,7 @@ const CategoryPage = (props: IProps) => {
     return (
       <div className="flex items-center justify-center flex-col w-1/2 h-1/2 text-center font-sans text-foreground gap-y-6">
         <h1 className="text-xl font-bold">
-          You have no videos saved for this category.
+          You have no videos saved for this category
         </h1>
         <Separator className="my-2" />
         <h2 className="text-foreground font-sans text-lg">
@@ -245,50 +232,23 @@ const CategoryPage = (props: IProps) => {
 
   const renderFirstTimeClipPrompt = () => {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          width: '50%',
-          height: '50%',
-        }}
-      >
-        <Typography
-          align="center"
-          variant="h6"
-          sx={{
-            color: 'white',
-            fontFamily: '"Arial",sans-serif',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
-        >
-          You have no clips saved. Videos you clip will display here.
-        </Typography>
-      </Box>
+      <div className="flex items-center justify-center flex-col w-1/2 h-1/2 text-center font-sans text-foreground gap-y-6">
+        <h1 className="text-xl font-bold">You have no clips saved</h1>
+        <Separator className="my-2" />
+        <h2 className="text-foreground font-sans text-lg">
+          Videos you clip will be displayed here.
+        </h2>
+      </div>
     );
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        width: '100%',
-        borderBottomLeftRadius: '6px',
-      }}
-      className="bg-background-higher pt-[32px]"
-    >
+    <div className="flex flex-col items-center justify-center h-full w-full bg-background-higher pt-[32px]">
       {haveVideos && getVideoPlayer()}
       {haveVideos && getVideoSelection()}
       {!haveVideos && !isClips && renderFirstTimeUserPrompt()}
       {!haveVideos && isClips && renderFirstTimeClipPrompt()}
-    </Box>
+    </div>
   );
 };
 

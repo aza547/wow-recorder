@@ -1,5 +1,4 @@
-import React, { ComponentProps } from 'react';
-import icon from '../../assets/icon/small-icon.png';
+import { ComponentProps } from 'react';
 import { cn } from './components/utils';
 
 const ipc = window.electron.ipcRenderer;
@@ -16,14 +15,6 @@ export default function RendererTitleBar() {
   const clickedQuit = () => {
     ipc.sendMessage('mainWindow', ['quit']);
   };
-
-  const [title, setTitle] = React.useState('Warcraft Recorder Pro');
-
-  React.useEffect(() => {
-    window.electron.ipcRenderer.on('updateTitleBar', (t) => {
-      setTitle(t as string);
-    });
-  }, []);
 
   const TitleBarButton = ({
     children,
@@ -49,12 +40,6 @@ export default function RendererTitleBar() {
       id="title-bar"
       className="w-full h-[32px] bg-transparent flex items-center px-2 pr-0 absolute top-0 left-0"
     >
-      {/* <div>
-        <img alt="icon" src={icon} height="25px" width="25px" />
-      </div>
-      <div className="text-primary text-sm text-center font-bold ml-4">
-        {title}
-      </div> */}
       <div id="title-bar-btns" className="ml-auto absolute right-0 top-0">
         <TitleBarButton id="min-btn" onClick={clickedHide}>
           🗕

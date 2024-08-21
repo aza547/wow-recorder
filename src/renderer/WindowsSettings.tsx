@@ -1,5 +1,4 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
 import { ConfigurationSchema } from 'main/configSchema';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';

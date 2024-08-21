@@ -1,5 +1,6 @@
 /* eslint-disable global-require */
 /** @type {import('tailwindcss').Config} */
+const plugin = require('tailwindcss/plugin');
 const { fontFamily } = require('tailwindcss/defaultTheme');
 
 module.exports = {
@@ -72,6 +73,12 @@ module.exports = {
           DEFAULT: 'hsl(var(--blue-accent))',
           border: 'hsl(var(--blue-accent-border))',
         },
+        video: {
+          DEFAULT: 'hsl(var(--video-item-background))',
+          hover: 'hsl(var(--video-item-background-hover))',
+          border: 'hsl(var(--video-item-border))',
+          foreground: 'hsl(var(--video-item-foreground))',
+        },
       },
       borderRadius: {
         lg: `var(--radius)`,
@@ -80,6 +87,10 @@ module.exports = {
       },
       fontFamily: {
         sans: ['var(--font-sans)', ...fontFamily.sans],
+      },
+      textShadow: {
+        instance:
+          '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
       },
       keyframes: {
         'accordion-down': {
@@ -97,6 +108,18 @@ module.exports = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    plugin(function ({ matchUtilities, theme }) {
+      matchUtilities(
+        {
+          'text-shadow': (value) => ({
+            textShadow: value,
+          }),
+        },
+        { values: theme('textShadow') }
+      );
+    }),
+  ],
   variants: {},
 };

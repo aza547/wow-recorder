@@ -52,6 +52,7 @@ const RecorderPreview: React.FC = () => {
         border: '2px solid black',
         boxSizing: 'border-box',
       }}
+      className="z-0"
     >
       Preview...
     </Box>

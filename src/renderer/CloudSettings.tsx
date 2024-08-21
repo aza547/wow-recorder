@@ -1,20 +1,8 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import {
-  FormControl,
-  FormControlLabel,
-  InputLabel,
-  LinearProgress,
-  MenuItem,
-  SelectChangeEvent,
-  TextField,
-  Typography,
-} from '@mui/material';
 import { configSchema, ConfigurationSchema } from 'main/configSchema';
 import { CloudStatus, RecStatus } from 'main/types';
 import { useState } from 'react';
-import CloudIcon from '@mui/icons-material/Cloud';
-import { Cloud, CloudUpload, Info } from 'lucide-react';
+import { Cloud, Info } from 'lucide-react';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
@@ -33,23 +21,6 @@ import Separator from './components/Separator/Separator';
 const ipc = window.electron.ipcRenderer;
 
 const raidDifficultyOptions = ['LFR', 'Normal', 'Heroic', 'Mythic'];
-
-const formControlLabelStyle = { color: 'white', m: 2 };
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
 
 let debounceTimer: NodeJS.Timer | undefined;
 
@@ -145,21 +116,10 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <Typography
-        variant="h6"
-        sx={{
-          color: 'white',
-          fontSize: '0.75rem',
-          fontFamily: '"Arial",sans-serif',
-          fontStyle: 'italic',
-          m: 1,
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <h1 className="text-foreground-lighter text-lg drop-shadow-sm">
         Some settings in this category are currently hidden as they can not be
         modified while a recording is active.
-      </Typography>
+      </h1>
     );
   };
 
@@ -200,37 +160,6 @@ const CloudSettings = (props: IProps) => {
         </div>
       </div>
     );
-  };
-
-  const formControlStyle = { width: '100%' };
-
-  const style = {
-    m: 1,
-    width: '100%',
-    color: 'white',
-    '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: 'white',
-    },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#bb4220',
-    },
-    '&.Mui-focused': {
-      borderColor: '#bb4220',
-      color: '#bb4220',
-    },
-    '&:hover': {
-      '&& fieldset': {
-        borderColor: '#bb4220',
-      },
-    },
-    '& .MuiOutlinedInput-root': {
-      '&.Mui-focused fieldset': {
-        borderColor: '#bb4220',
-      },
-    },
-    '.MuiSvgIcon-root ': {
-      fill: 'white !important',
-    },
   };
 
   const setMinRaidThreshold = (value: string) => {
