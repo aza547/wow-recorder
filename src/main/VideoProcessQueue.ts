@@ -353,7 +353,11 @@ export default class VideoProcessQueue {
         ),
       ]);
 
-      const metadata = rendererVideoToMetadata(video);
+      // Spread to force this to be cloned, avoiding modifying the original input,
+      // which is used again later. This manifested as a bug that prevented us clearing
+      // the entry from the inProgressDownloads when done, meaning that a repeated
+      // attempt to download would fail.
+      const metadata = rendererVideoToMetadata({ ...video });
       const videoPath = path.join(storageDir, `${videoName}.mp4`);
       await writeMetadataFile(videoPath, metadata);
     } catch (error) {
