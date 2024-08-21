@@ -21,7 +21,7 @@ import { getCategoryFromConfig } from './rendererutils';
 import StateManager from './StateManager';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
-import { toast } from './components/Toast/useToast';
+import { useToast } from './components/Toast/useToast';
 import { ToastAction } from './components/Toast/Toast';
 
 const ipc = window.electron.ipcRenderer;
@@ -32,6 +32,7 @@ const WarcraftRecorder = () => {
   const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
   const [crashes, setCrashes] = useState<Crashes>([]);
   const upgradeNotified = useRef(false);
+  const { toast } = useToast();
 
   // The video state contains most of the frontend state, it's complex so
   // frontend triggered modifications go through the StateManager class, which
@@ -70,7 +71,7 @@ const WarcraftRecorder = () => {
       });
       upgradeNotified.current = true;
     }
-  }, [upgradeStatus, upgradeNotified]);
+  }, [upgradeStatus, upgradeNotified, toast]);
 
   const [savingStatus, setSavingStatus] = useState<SaveStatus>(
     SaveStatus.NotSaving

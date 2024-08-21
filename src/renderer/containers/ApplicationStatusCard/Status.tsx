@@ -217,66 +217,69 @@ const Status = ({ status, error, savingStatus }: StatusProps) => {
   const isUpDowning = uploadProgress !== false || downloadProgress !== false;
 
   return (
-    <div className="w-full h-full flex relative rounded-md border-t border-[rgba(255,255,255,10%)]">
-      <StatusLight
-        wrapperClasses={`${statusLightsClasses}`}
-        foregroundClasses={`border-none ${statusLightsClasses}`}
-        variant={statusIndicatorVariant}
-      />
-      <div className="ml-4 py-2 font-sans flex flex-col justify-around">
-        <span className="text-foreground-lighter/80 font-bold text-xs drop-shadow-sm">
-          Status
-        </span>
-        <HoverCard openDelay={300}>
-          <HoverCardTrigger>
+    <HoverCard openDelay={300}>
+      <HoverCardTrigger>
+        <div className="w-full h-full flex relative rounded-md border-t border-[rgba(255,255,255,10%)] hover:cursor-pointer">
+          <StatusLight
+            wrapperClasses={`${statusLightsClasses}`}
+            foregroundClasses={`border-none ${statusLightsClasses}`}
+            variant={statusIndicatorVariant}
+          />
+          <div className="ml-4 py-2 font-sans flex flex-col justify-around">
+            <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
+              Status
+            </span>
+
             <span
               className={cn(
-                'text-foreground-lighter font-semibold text-sm transition-all',
-                { 'cursor-pointer hover:opacity-75': !!statusDescription }
+                'text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground',
+                { '': !!statusDescription }
               )}
             >
               {statusTitle}
             </span>
-          </HoverCardTrigger>
-          {!!statusDescription && (
-            <HoverCardContent className="w-80">
-              {statusDescription}
-            </HoverCardContent>
-          )}
-        </HoverCard>
-        {(isSaving || isUpDowning) && (
-          <div className="flex text-foreground-lighter/80 font-bold text-[11px] drop-shadow-sm gap-x-1 items-center">
-            {isSaving && (
-              <>
-                <HardDriveDownload size={14} />
-                {isUpDowning && <Separator orientation="vertical" />}
-              </>
-            )}
-            {isUpDowning && (
-              <>
-                <>
-                  {downloadProgress !== false && (
-                    <>
-                      <CloudDownload size={14} /> {downloadProgress.toFixed(0)}%
-                    </>
-                  )}
-                </>
-                {downloadProgress !== false && uploadProgress !== false && (
-                  <Separator orientation="vertical" />
+
+            {(isSaving || isUpDowning) && (
+              <div className="flex text-foreground-lighter/80 font-bold text-[11px] drop-shadow-sm gap-x-1 items-center">
+                {isSaving && (
+                  <>
+                    <HardDriveDownload size={14} />
+                    {isUpDowning && <Separator orientation="vertical" />}
+                  </>
                 )}
-                <>
-                  {uploadProgress !== false && (
+                {isUpDowning && (
+                  <>
                     <>
-                      <CloudUpload size={14} /> {uploadProgress.toFixed(0)}%
+                      {downloadProgress !== false && (
+                        <>
+                          <CloudDownload size={14} />{' '}
+                          {downloadProgress.toFixed(0)}%
+                        </>
+                      )}
                     </>
-                  )}
-                </>
-              </>
+                    {downloadProgress !== false && uploadProgress !== false && (
+                      <Separator orientation="vertical" />
+                    )}
+                    <>
+                      {uploadProgress !== false && (
+                        <>
+                          <CloudUpload size={14} /> {uploadProgress.toFixed(0)}%
+                        </>
+                      )}
+                    </>
+                  </>
+                )}
+              </div>
             )}
           </div>
+        </div>
+        {!!statusDescription && (
+          <HoverCardContent className="w-80">
+            {statusDescription}
+          </HoverCardContent>
         )}
-      </div>
-    </div>
+      </HoverCardTrigger>
+    </HoverCard>
   );
 };
 

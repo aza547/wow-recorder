@@ -1,11 +1,4 @@
-import {
-  Box,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from '@mui/material';
+import { Box } from '@mui/material';
 import React, { MutableRefObject, useEffect, useState } from 'react';
 import { RendererVideo, AppState } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
@@ -47,7 +40,6 @@ import DungeonInfo from './DungeonInfo';
 import ArenaInfo from './ArenaInfo';
 import RaidCompAndResult from './RaidCompAndResult';
 import TagDialog from './TagDialog';
-import ControlIcon from '../../assets/icon/ctrl-icon.png';
 import PovSelection from './PovSelection';
 import { useSettings } from './useSettings';
 import SnackBar from './SnackBar';
@@ -55,6 +47,8 @@ import StateManager from './StateManager';
 import { cn } from './components/utils';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Button } from './components/Button/Button';
+import DeleteDialog from './DeleteDialog';
+import { useToast } from './components/Toast/useToast';
 
 interface IProps {
   selected: boolean;
@@ -87,12 +81,13 @@ export default function VideoButton(props: IProps) {
   const videoDate = getVideoDate(video);
 
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
-  const [tagDialogOpen, setTagDialogOpen] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
 
   const [linkSnackBarSuccessOpen, setLinkSnackBarSuccessOpen] = useState(false);
   const [linkSnackBarFailedOpen, setLinkSnackBarFailedOpen] = useState(false);
+
+  const { toast } = useToast();
 
   const povs = [video, ...video.multiPov].sort(povNameSort);
   const multiPov = povs.length > 1;
@@ -209,10 +204,6 @@ export default function VideoButton(props: IProps) {
     });
   });
 
-  const openTagDialog = () => {
-    setTagDialogOpen(true);
-  };
-
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
     stateManager.current.toggleProtect(pov);
@@ -237,8 +228,8 @@ export default function VideoButton(props: IProps) {
     ]);
   };
 
-  const deleteSingleClicked = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
+  const onDeleteSingle = (event: React.MouseEvent<HTMLElement>) => {
+    // event.stopPropagation();
 
     if (ctrlDown) {
       deleteVideo(event);
@@ -247,7 +238,7 @@ export default function VideoButton(props: IProps) {
     }
   };
 
-  const deleteAllClicked = (event: React.MouseEvent<HTMLElement>) => {
+  const onDeleteAll = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
 
     if (ctrlDown) {
@@ -255,84 +246,6 @@ export default function VideoButton(props: IProps) {
     } else {
       setDeleteDialogOpen(true);
     }
-  };
-
-  const getTagDialog = () => {
-    return (
-      <TagDialog
-        video={pov}
-        tagDialogOpen={tagDialogOpen}
-        setTagDialogOpen={setTagDialogOpen}
-        stateManager={stateManager}
-      />
-    );
-  };
-
-  const getDeleteDialog = () => {
-    const getTitle = () => {
-      const msg = 'Are you sure?';
-      return <DialogTitle sx={{ color: 'white' }}>{msg}</DialogTitle>;
-    };
-
-    const getHotKeyText = () => {
-      return (
-        <DialogContent sx={{ py: '4px' }}>
-          <DialogContentText sx={{ color: 'white' }}>
-            Hold{' '}
-            <img
-              src={ControlIcon}
-              alt="Control Key"
-              width="35"
-              height="35"
-              style={{ verticalAlign: 'middle' }}
-            />{' '}
-            to skip this prompt.
-          </DialogContentText>
-        </DialogContent>
-      );
-    };
-
-    const getCancelButton = () => {
-      return (
-        <Button
-          onClick={(event) => {
-            event.stopPropagation();
-            setDeleteDialogOpen(false);
-          }}
-          // sx={dialogButtonSx}
-        >
-          Cancel
-        </Button>
-      );
-    };
-
-    const getDeleteButton = () => {
-      return (
-        <Button
-          onClick={(event) => {
-            event.stopPropagation();
-            deleteVideo(event);
-          }}
-          // sx={dialogButtonSx}
-        >
-          Delete
-        </Button>
-      );
-    };
-
-    return (
-      <Dialog
-        open={deleteDialogOpen}
-        PaperProps={{ style: { backgroundColor: '#1A233A' } }}
-      >
-        {getTitle()}
-        {getHotKeyText()}
-        <DialogActions>
-          {getCancelButton()}
-          {getDeleteButton()}
-        </DialogActions>
-      </Dialog>
-    );
   };
 
   const getOpenButton = () => {
@@ -418,66 +331,78 @@ export default function VideoButton(props: IProps) {
 
     try {
       await ipc.invoke('getShareableLink', [videoName]);
-      setLinkSnackBarSuccessOpen(true);
+      toast({
+        title: 'Share link generated',
+        description: 'Valid for 30 days',
+        duration: 5000,
+      });
     } catch (error) {
-      setLinkSnackBarFailedOpen(true);
+      toast({
+        title: 'Failed to generate link',
+        description: 'Please see logs for more details',
+        variant: 'destructive',
+        duration: 5000,
+      });
     }
   };
 
   const getShareLinkButton = () => {
     return (
       <Tooltip content="Get shareable link">
-        <div>
-          {getShareableLinkSnackBarSuccess()}
-          {getShareableLinkSnackBarFailed()}
-          <Button
-            onMouseDown={stopPropagation}
-            onClick={getShareableLink}
-            variant="secondary"
-            size="icon"
-          >
-            <Link2 />
-          </Button>
-        </div>
+        <Button
+          onMouseDown={stopPropagation}
+          onClick={getShareableLink}
+          variant="secondary"
+          size="icon"
+        >
+          <Link2 />
+        </Button>
       </Tooltip>
     );
   };
 
   const getDeleteSingleButton = () => {
     return (
-      <Tooltip content="Delete">
+      <DeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onDelete={deleteVideo}
+        tooltipContent="Delete"
+      >
         <Button
           onMouseDown={stopPropagation}
-          onClick={deleteSingleClicked}
           variant="secondary"
           size="icon"
+          onClick={onDeleteSingle}
         >
           <Trash />
         </Button>
-      </Tooltip>
+      </DeleteDialog>
     );
   };
 
   const getDeleteAllButton = () => {
     return (
-      <Tooltip content="Delete all points of view">
+      <DeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onDelete={deleteAllPovs}
+        tooltipContent="Delete all points of view"
+      >
         <Button
           onMouseDown={stopPropagation}
-          onClick={deleteAllClicked}
           variant="secondary"
           size="icon"
+          onClick={onDeleteAll}
         >
           <PackageX />
         </Button>
-      </Tooltip>
+      </DeleteDialog>
     );
   };
 
   return (
     <div className="flex w-full">
-      {getTagDialog()}
-      {getDeleteDialog()}
-
       <div
         className={cn(
           'flex items-center content-evenly box-border w-full rounded-md border bg-video border-video-border hover:bg-video-hover transition-all relative',
@@ -597,10 +522,13 @@ export default function VideoButton(props: IProps) {
             }}
           >
             <div className="flex flex-row items-center content-center gap-x-2">
-              <Tooltip content={tagTooltip}>
+              <TagDialog
+                video={pov}
+                stateManager={stateManager}
+                tooltipContent={tagTooltip}
+              >
                 <Button
                   onMouseDown={stopPropagation}
-                  onClick={openTagDialog}
                   variant="secondary"
                   size="icon"
                 >
@@ -610,7 +538,7 @@ export default function VideoButton(props: IProps) {
                     <FontAwesomeIcon icon={faMessageOutline} size="lg" />
                   )}
                 </Button>
-              </Tooltip>
+              </TagDialog>
 
               <Tooltip content={isProtected ? 'Age out' : 'Never age out'}>
                 <Button
