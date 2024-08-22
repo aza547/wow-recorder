@@ -108,7 +108,7 @@ const ChatOverlayControls: React.FC = () => {
           Chat Overlay
           <Tooltip
             content={configSchema.chatOverlayEnabled.description}
-            side="top"
+            side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
@@ -130,7 +130,7 @@ const ChatOverlayControls: React.FC = () => {
           Own Image
           <Tooltip
             content={configSchema.chatOverlayOwnImage.description}
-            side="top"
+            side="right"
           >
             {config.cloudStorage ? (
               <Info size={20} className="inline-flex" />
@@ -277,7 +277,7 @@ const ChatOverlayControls: React.FC = () => {
           Image Path
           <Tooltip
             content={configSchema.chatOverlayOwnImagePath.description}
-            side="top"
+            side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>

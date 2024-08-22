@@ -130,9 +130,12 @@ export default function VideoButton(props: IProps) {
    */
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
+    console.log('deleteVideo called');
     setDeleteDialogOpen(false);
 
     const src = cloud ? videoName : videoSource;
+    console.log('gonna delete', src);
+    console.log('cloud is', cloud);
     window.electron.ipcRenderer.sendMessage('deleteVideo', [src, cloud]);
     stateManager.current.deleteVideo(pov);
 
@@ -158,7 +161,7 @@ export default function VideoButton(props: IProps) {
   const deleteAllPovs = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     setDeleteDialogOpen(false);
-
+    console.log('deleteAllPovs called');
     povs.forEach((p) => {
       const src = p.cloud ? p.videoName : p.videoSource;
 
@@ -225,11 +228,12 @@ export default function VideoButton(props: IProps) {
   };
 
   const onDeleteSingle = (event: React.MouseEvent<HTMLElement>) => {
-    // event.stopPropagation();
-
+    event.stopPropagation();
+    console.log('onDeleteSingle called');
     if (ctrlDown) {
       deleteVideo(event);
     } else {
+      console.log('in onDeleteSingle else');
       setDeleteDialogOpen(true);
     }
   };
@@ -305,7 +309,7 @@ export default function VideoButton(props: IProps) {
       await ipc.invoke('getShareableLink', [videoName]);
       toast({
         title: 'Share link generated',
-        description: 'Valid for 30 days',
+        description: 'This link will be valid for up to 30 days.',
         duration: 5000,
       });
     } catch (error) {
@@ -338,7 +342,7 @@ export default function VideoButton(props: IProps) {
       <DeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onDelete={deleteVideo}
+        onDelete={(e) => console.log('Delete one')}
         tooltipContent="Delete"
       >
         <Button
@@ -358,7 +362,7 @@ export default function VideoButton(props: IProps) {
       <DeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onDelete={deleteAllPovs}
+        onDelete={(e) => console.log('Delete all')}
         tooltipContent="Delete all points of view"
       >
         <Button

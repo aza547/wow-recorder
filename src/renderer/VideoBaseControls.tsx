@@ -126,7 +126,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           Canvas Resolution
           <Tooltip
             content={configSchema.obsOutputResolution.description}
-            side="top"
+            side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
@@ -173,7 +173,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       <div>
         <Label className="flex items-center">
           FPS
-          <Tooltip content={configSchema.obsFPS.description}>
+          <Tooltip content={configSchema.obsFPS.description} side="right">
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -233,7 +233,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
           Quality
-          <Tooltip content={configSchema.obsQuality.description} side="top">
+          <Tooltip content={configSchema.obsQuality.description} side="right">
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -275,7 +275,10 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
           Video Encoder
-          <Tooltip content={configSchema.obsRecEncoder.description} side="top">
+          <Tooltip
+            content={configSchema.obsRecEncoder.description}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>

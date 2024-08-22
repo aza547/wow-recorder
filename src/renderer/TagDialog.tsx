@@ -44,7 +44,6 @@ export default function TagDialog(props: IProps) {
   };
 
   const onSave = (event: React.MouseEvent<HTMLElement>) => {
-    event.preventDefault();
     event.stopPropagation();
     saveTag(tag ?? '');
   };

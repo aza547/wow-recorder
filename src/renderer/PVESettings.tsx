@@ -114,7 +114,7 @@ const PVESettings: React.FC = () => {
           name="minEncounterDuration"
           disabled={!config.recordRaids}
           onChange={setMinEncounterDuration}
-          type="number"
+          type="numeric"
         />
       </div>
     );
@@ -199,7 +199,7 @@ const PVESettings: React.FC = () => {
           name="raidOverrun"
           disabled={!config.recordRaids}
           onChange={setRaidOverrun}
-          type="number"
+          type="numeric"
         />
       </div>
     );
@@ -239,7 +239,7 @@ const PVESettings: React.FC = () => {
           name="dungeonOverrun"
           disabled={!config.recordDungeons}
           onChange={setDungeonOverrun}
-          type="number"
+          type="numeric"
         />
       </div>
     );
@@ -300,7 +300,7 @@ const PVESettings: React.FC = () => {
           name="minKeystoneLevel"
           disabled={!config.recordDungeons}
           onChange={setMinKeystoneLevel}
-          type="number"
+          type="numeric"
           min={2}
         />
       </div>

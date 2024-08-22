@@ -247,7 +247,7 @@ const CloudSettings = (props: IProps) => {
           name="cloudUploadDungeonMinLevel"
           disabled={!config.cloudUploadDungeons}
           onChange={setMinKeystoneLevel}
-          type="number"
+          type="numeric"
           min={2}
         />
       </div>
@@ -557,7 +557,7 @@ const CloudSettings = (props: IProps) => {
           value={config.cloudUploadRateLimitMbps}
           onChange={setUploadRateLimit}
           spellCheck={false}
-          type="number"
+          type="numeric"
         />
         {config.cloudUploadRateLimitMbps < 1 && (
           <span className="text-error text-xs font-semibold mt-1">

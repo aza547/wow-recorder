@@ -37,10 +37,10 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
       }}
       className="bg-background-higher pt-[32px]"
     >
-      <Box sx={{ width: '100%', height: '50%' }}>
+      <Box sx={{ width: '100%', height: '60%' }}>
         <RecorderPreview />
       </Box>
-      <Tabs defaultValue="source" className="w-full h-[50%] px-4">
+      <Tabs defaultValue="source" className="w-full h-[40%] px-4">
         <TabsList>
           <TabsTrigger value="source">Source</TabsTrigger>
           <TabsTrigger value="video">Video</TabsTrigger>

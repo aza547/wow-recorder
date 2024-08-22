@@ -150,7 +150,7 @@ const AudioSourceControls: React.FC = () => {
           Speakers
           <Tooltip
             content={configSchema.audioOutputDevices.description}
-            side="top"
+            side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
@@ -206,7 +206,7 @@ const AudioSourceControls: React.FC = () => {
           Microphones
           <Tooltip
             content={configSchema.audioInputDevices.description}
-            side="top"
+            side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
@@ -287,7 +287,7 @@ const AudioSourceControls: React.FC = () => {
       <div className="flex flex-col w-[140px]">
         <Label className="flex items-center">
           Mono Input
-          <Tooltip content={configSchema.obsForceMono.description} side="top">
+          <Tooltip content={configSchema.obsForceMono.description} side="right">
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -306,7 +306,7 @@ const AudioSourceControls: React.FC = () => {
       <div className="flex flex-col w-[140px]">
         <Label className="flex items-center">
           Push to Talk
-          <Tooltip content={configSchema.pushToTalk.description} side="top">
+          <Tooltip content={configSchema.pushToTalk.description} side="right">
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -354,7 +354,10 @@ const AudioSourceControls: React.FC = () => {
       <div className="flex flex-col">
         <Label htmlFor="pttKey" className="flex items-center">
           Push to Talk Key
-          <Tooltip content={configSchema.pushToTalkKey.description} side="top">
+          <Tooltip
+            content={configSchema.pushToTalkKey.description}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -375,7 +378,7 @@ const AudioSourceControls: React.FC = () => {
           Audio Suppression
           <Tooltip
             content={configSchema.obsAudioSuppression.description}
-            side="top"
+            side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>

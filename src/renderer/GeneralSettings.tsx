@@ -236,7 +236,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           value={config.maxStorage}
           onChange={setMaxStorage}
           required
-          type="number"
+          type="numeric"
           disabled={isComponentDisabled()}
         />
       </div>

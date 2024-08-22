@@ -112,7 +112,10 @@ const VideoSourceControls: React.FC = () => {
       <div>
         <Label className="flex items-center">
           Capture Mode
-          <Tooltip content={configSchema.obsCaptureMode.description}>
+          <Tooltip
+            content={configSchema.obsCaptureMode.description}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -139,8 +142,8 @@ const VideoSourceControls: React.FC = () => {
     return (
       <div>
         <Label className="flex items-center">
-          Monitor #
-          <Tooltip content={configSchema.monitorIndex.description} side="top">
+          Monitor
+          <Tooltip content={configSchema.monitorIndex.description} side="right">
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -193,7 +196,10 @@ const VideoSourceControls: React.FC = () => {
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
           Window
-          <Tooltip content={configSchema.obsWindowName.description} side="top">
+          <Tooltip
+            content={configSchema.obsWindowName.description}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -218,7 +224,10 @@ const VideoSourceControls: React.FC = () => {
       <div className="flex flex-col w-[140px]">
         <Label className="flex items-center">
           Capture Cursor
-          <Tooltip content={configSchema.captureCursor.description} side="top">
+          <Tooltip
+            content={configSchema.captureCursor.description}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>

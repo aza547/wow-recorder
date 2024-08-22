@@ -245,7 +245,7 @@ const Status = ({ status, error, savingStatus }: StatusProps) => {
             </span>
 
             {(isSaving || isUpDowning) && (
-              <div className="flex text-foreground-lighter/80 font-bold text-[11px] drop-shadow-sm gap-x-1 items-center">
+              <div className="flex text-foreground-lighter font-bold text-[11px] drop-shadow-sm gap-x-1 items-center hover:text-foreground-lighter">
                 {isSaving && (
                   <>
                     <HardDriveDownload size={14} />
