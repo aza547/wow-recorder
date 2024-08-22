@@ -53,29 +53,21 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         >
           <TabsContent value="source">
             <div className="p-4">
-              <CategoryHeading>Source</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
               <VideoSourceControls />
             </div>
           </TabsContent>
           <TabsContent value="video">
             <div className="p-4">
-              <CategoryHeading>Video Settings</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
               <VideoBaseControls recorderStatus={recorderStatus} />
             </div>
           </TabsContent>
           <TabsContent value="audio">
             <div className="p-4">
-              <CategoryHeading>Audio Settings</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
               <AudioSourceControls />
             </div>
           </TabsContent>
           <TabsContent value="overlay">
             <div className="p-4">
-              <CategoryHeading>Chat Overlay</CategoryHeading>
-              <Separator className="mt-2 mb-4" />
               <ChatOverlayControls />
             </div>
           </TabsContent>
