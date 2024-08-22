@@ -470,7 +470,7 @@ type CheckAuthResponse = {
 
 type WindowCaptureChoice = {
   name: string;
-  value: string | number;
+  value: string;
 };
 
 export {

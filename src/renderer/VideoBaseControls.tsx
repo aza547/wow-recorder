@@ -1,23 +1,9 @@
-import {
-  Box,
-  FormControl,
-  FormControlLabel,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  ToggleButton,
-  ToggleButtonGroup,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
 import { configSchema } from 'main/configSchema';
-import InfoIcon from '@mui/icons-material/Info';
 import { ESupportedEncoders, QualityPresets } from 'main/obsEnums';
+import { Info } from 'lucide-react';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   encoderFilter,
@@ -25,43 +11,21 @@ import {
   mapEncoderToString,
   mapStringToEncoder,
 } from './rendererutils';
+import Label from './components/Label/Label';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from './components/ToggleGroup/ToggleGroup';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './components/Select/Select';
 
 const ipc = window.electron.ipcRenderer;
-
-const formControlStyle = { m: 1, width: '100%' };
-
-const selectStyle = {
-  color: 'white',
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'white',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#bb4220',
-  },
-  '&.Mui-focused': {
-    borderColor: '#bb4220',
-    color: '#bb4220',
-  },
-  '&:hover': {
-    '&& fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '.MuiSvgIcon-root ': {
-    fill: 'white !important',
-  },
-  '& .MuiInputBase-input.Mui-disabled': {
-    WebkitTextFillColor: 'darkgrey',
-  },
-  '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'darkgrey',
-  },
-};
 
 const outputResolutions = Object.keys(obsResolutions);
 const fpsOptions = [10, 20, 30, 60];
@@ -126,58 +90,11 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
 
   const isComponentDisabled = () => {
     const isRecording = recorderStatus === RecStatus.Recording;
-    const isOverrunning = recorderStatus === RecStatus.Overruning;
+    const isOverrunning = recorderStatus === RecStatus.Overrunning;
     return isRecording || isOverrunning;
   };
 
-  const getMenuItem = (value: string) => {
-    return (
-      <MenuItem sx={{ height: '25px' }} key={value} value={value}>
-        {value}
-      </MenuItem>
-    );
-  };
-
-  const getEncoderMenuItem = (enc: Encoder) => {
-    return (
-      <MenuItem sx={{ height: '25px' }} key={enc.name} value={enc.name}>
-        {mapEncoderToString(enc)}
-      </MenuItem>
-    );
-  };
-
-  const getQualityMenuItem = (quality: QualityPresets) => {
-    return (
-      <MenuItem sx={{ height: '25px' }} key={quality} value={quality}>
-        {quality}
-      </MenuItem>
-    );
-  };
-
-  const getToggleButton = (value: number) => {
-    return (
-      <ToggleButton
-        value={value}
-        key={value}
-        sx={{
-          color: 'white',
-          height: '40px',
-          '&.Mui-selected, &.Mui-selected:hover': {
-            color: 'white',
-            backgroundColor: '#bb4420',
-          },
-        }}
-      >
-        {value}
-      </ToggleButton>
-    );
-  };
-
-  const setCanvasResolution = (event: SelectChangeEvent<string>) => {
-    const {
-      target: { value },
-    } = event;
-
+  const setCanvasResolution = (value: string) => {
     const selectedhighRes = isHighRes(value);
 
     if (selectedhighRes) {
@@ -204,30 +121,37 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '150px' }}>
-        <InputLabel sx={selectStyle}>Canvas Resolution</InputLabel>
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label className="flex items-center">
+          Canvas Resolution
+          <Tooltip
+            content={configSchema.obsOutputResolution.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
         <Select
           value={config.obsOutputResolution}
-          label="Canvas Resolution"
+          onValueChange={setCanvasResolution}
           disabled={isComponentDisabled()}
-          onChange={setCanvasResolution}
-          sx={selectStyle}
-          MenuProps={{
-            PaperProps: {
-              sx: {
-                height: '300px',
-                overflowY: 'auto',
-              },
-            },
-          }}
         >
-          {outputResolutions.map(getMenuItem)}
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a resolution" />
+          </SelectTrigger>
+          <SelectContent>
+            {outputResolutions.map((resolution) => (
+              <SelectItem key={resolution} value={resolution}>
+                {resolution}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
-      </FormControl>
+      </div>
     );
   };
 
-  const setFPS = (_event: React.MouseEvent<HTMLElement>, fps: number) => {
+  const setFPS = (fps: string) => {
     if (fps === null) {
       return;
     }
@@ -235,7 +159,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        obsFPS: fps,
+        obsFPS: parseInt(fps, 10),
       };
     });
   };
@@ -246,30 +170,31 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <FormControlLabel
-        control={
-          <ToggleButtonGroup
-            value={config.obsFPS}
-            disabled={isComponentDisabled()}
-            exclusive
-            onChange={setFPS}
-            sx={{ border: '1px solid white', height: '40px' }}
-          >
-            {fpsOptions.map(getToggleButton)}
-          </ToggleButtonGroup>
-        }
-        label="FPS"
-        labelPlacement="top"
-        sx={{ color: 'white', pb: 3 }}
-      />
+      <div>
+        <Label className="flex items-center">
+          FPS
+          <Tooltip content={configSchema.obsFPS.description}>
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <ToggleGroup
+          value={config.obsFPS.toString()}
+          onValueChange={setFPS}
+          size="sm"
+          type="single"
+          variant="outline"
+        >
+          {fpsOptions.map((fpsOption) => (
+            <ToggleGroupItem value={fpsOption.toString()}>
+              {fpsOption}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
     );
   };
 
-  const setQuality = (event: SelectChangeEvent<string>) => {
-    const {
-      target: { value },
-    } = event;
-
+  const setQuality = (value: string) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -284,20 +209,11 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Typography
-        variant="h6"
-        align="center"
-        sx={{
-          color: 'white',
-          fontSize: '0.75rem',
-          fontFamily: '"Arial",sans-serif',
-          fontStyle: 'italic',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
-        These settings can not be modified while a recording is active.
-      </Typography>
+      <div className="flex items-center justify-center flex-col w-1/2 h-1/2 text-center font-sans text-foreground gap-y-6">
+        <h1 className="text-xl font-bold">
+          These settings can not be modified while a recording is active.
+        </h1>
+      </div>
     );
   };
 
@@ -311,31 +227,37 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       return true;
     };
 
-    const options = Object.values(QualityPresets)
-      .filter(cloudFilter)
-      .map(getQualityMenuItem);
+    const options = Object.values(QualityPresets).filter(cloudFilter);
 
     return (
-      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '150px' }}>
-        <InputLabel sx={selectStyle}>Quality</InputLabel>
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label className="flex items-center">
+          Quality
+          <Tooltip content={configSchema.obsQuality.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
         <Select
           value={config.obsQuality}
-          label="Quality"
+          onValueChange={setQuality}
           disabled={isComponentDisabled()}
-          onChange={setQuality}
-          sx={{ ...selectStyle }}
         >
-          {options}
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select quality" />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
-      </FormControl>
+      </div>
     );
   };
 
-  const setEncoder = (event: SelectChangeEvent<string>) => {
-    const {
-      target: { value },
-    } = event;
-
+  const setEncoder = (value: string) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -350,70 +272,43 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '250px' }}>
-        <InputLabel sx={selectStyle}>Video Encoder</InputLabel>
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label className="flex items-center">
+          Video Encoder
+          <Tooltip content={configSchema.obsRecEncoder.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
         <Select
           value={config.obsRecEncoder}
-          label="Video Encoder"
+          onValueChange={setEncoder}
           disabled={isComponentDisabled()}
-          onChange={setEncoder}
-          sx={{ ...selectStyle }}
         >
-          {encoders.map(getEncoderMenuItem)}
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select encoder" />
+          </SelectTrigger>
+          <SelectContent>
+            {encoders.map((encoder) => (
+              <SelectItem key={encoder.name} value={encoder.name}>
+                {mapEncoderToString(encoder)}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
-      </FormControl>
-    );
-  };
-
-  const getInfoIcon = () => {
-    if (isComponentDisabled()) {
-      return <></>;
-    }
-
-    const helptext = [
-      ['FPS', configSchema.obsFPS.description].join('\n'),
-      ['Canvas Resolution', configSchema.obsOutputResolution.description].join(
-        '\n'
-      ),
-      ['Quality', configSchema.obsQuality.description].join('\n'),
-      ['Video Encoder', configSchema.obsRecEncoder.description].join('\n'),
-    ].join('\n\n');
-
-    return (
-      <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
-        <IconButton>
-          <InfoIcon style={{ color: 'white' }} />
-        </IconButton>
-      </Tooltip>
+      </div>
     );
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-      }}
-    >
+    <div className="flex flex-col items-center w-full">
       {getDisabledText()}
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          width: '100%',
-        }}
-      >
+      <div className="flex items-center w-full gap-x-8">
         {getFPSToggle()}
         {getCanvasResolutionSelect()}
         {getQualitySelect()}
         {getEncoderSelect()}
-        {getInfoIcon()}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

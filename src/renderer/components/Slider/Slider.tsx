@@ -1,3 +1,4 @@
+/* eslint-disable react/require-default-props */
 /* eslint-disable react/prop-types */
 import * as React from 'react';
 import * as SliderPrimitive from '@radix-ui/react-slider';
@@ -7,8 +8,10 @@ import { Tooltip } from '../Tooltip/Tooltip';
 
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
->(({ className, value, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
+    withTooltip?: boolean;
+  }
+>(({ className, value, withTooltip = true, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
@@ -20,12 +23,22 @@ const Slider = React.forwardRef<
     <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-card">
       <SliderPrimitive.Range className="absolute h-full bg-primary" />
     </SliderPrimitive.Track>
-    <Tooltip
-      content={value}
-      side="top"
-      onClick={(e) => e.preventDefault()}
-      onPointerDownOutside={(e) => e.preventDefault()}
-    >
+    {withTooltip ? (
+      <Tooltip
+        content={value}
+        side="top"
+        onClick={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
+        <SliderPrimitive.Thumb
+          className={cn(
+            'block h-4 w-4 rounded-full bg-white transition-colors',
+            'focus-visible:outline-none hover:bg-primary hover:cursor-pointer',
+            'disabled:pointer-events-none disabled:opacity-50'
+          )}
+        />
+      </Tooltip>
+    ) : (
       <SliderPrimitive.Thumb
         className={cn(
           'block h-4 w-4 rounded-full bg-white transition-colors',
@@ -33,7 +46,7 @@ const Slider = React.forwardRef<
           'disabled:pointer-events-none disabled:opacity-50'
         )}
       />
-    </Tooltip>
+    )}
   </SliderPrimitive.Root>
 ));
 Slider.displayName = SliderPrimitive.Root.displayName;

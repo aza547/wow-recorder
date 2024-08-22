@@ -196,7 +196,7 @@ const CloudSettings = (props: IProps) => {
           value={config.cloudUploadRaidMinDifficulty}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Placeholder" />
+            <SelectValue placeholder="Select a difficulty" />
           </SelectTrigger>
           <SelectContent>
             {raidDifficultyOptions.map((difficulty: string) => (

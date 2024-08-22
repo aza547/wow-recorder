@@ -151,7 +151,7 @@ const PVESettings: React.FC = () => {
           value={config.minRaidDifficulty}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Placeholder" />
+            <SelectValue placeholder="Select a difficulty" />
           </SelectTrigger>
           <SelectContent>
             {raidDifficultyOptions.map((difficulty: string) => (
