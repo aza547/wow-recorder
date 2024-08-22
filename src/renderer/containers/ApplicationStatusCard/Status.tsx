@@ -211,6 +211,11 @@ const Status = ({ status, error, savingStatus }: StatusProps) => {
       }
       setDownloadProgress(progress as number);
     });
+
+    return () => {
+      ipc.removeAllListeners('updateUploadProgress');
+      ipc.removeAllListeners('updateDownloadProgress');
+    };
   }, []);
 
   const isSaving = savingStatus === SaveStatus.Saving;
