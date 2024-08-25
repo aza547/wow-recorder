@@ -1,14 +1,6 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import {
-  Box,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  Typography,
-} from '@mui/material';
-import { scrollBarSx } from 'main/constants';
+import { Box } from '@mui/material';
 import { AppState, RendererVideo } from 'main/types';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
@@ -172,10 +164,7 @@ export default function PovSelection(props: IProps) {
     };
 
     return (
-      <div
-        className="w-full h-auto py-1 px-2 bg-[rgba(0,0,0,25%)] border border-popover-border rounded-md"
-        key={name}
-      >
+      <div className="w-full h-auto rounded-md" key={name}>
         <div
           className="flex w-full h-full items-center content-center p-0"
           // selected={povSelected}
@@ -191,7 +180,7 @@ export default function PovSelection(props: IProps) {
             <ToggleGroup
               type="single"
               value={(diskSelected ? diskIndex : cloudIndex).toString()}
-              className="flex flex-row items-center content-end w-[50px] mr-2"
+              className="flex flex-row items-center content-end w-[50px] bg-[rgba(0,0,0,25%)] "
               size="xs"
               variant="outline"
             >
@@ -253,17 +242,20 @@ export default function PovSelection(props: IProps) {
 
         This is because it's a faff to vertically center <3 elements within that area, so let's just forego it.
       */}
-      {povsArray.length > 3 ? (
+      {povsArray.length > 5 ? (
         <>
-          <ScrollArea className="h-[130px]">
-            <div className="flex w-[250px] flex-col p-0 my-1 mx-2 gap-y-1">
+          <ScrollArea
+            className="h-[150px]"
+            scrollabilityIndicatorClasses="*:text-black"
+          >
+            <div className="flex w-[250px] flex-col p-0 my-1 mx-2">
               {povsArray.map((g) => getGroupListItem(g))}
             </div>
           </ScrollArea>
           <div className="w-full h-1 shadow-lg absolute bottom-0" />
         </>
       ) : (
-        <div className="flex w-[250px] h-full items-center flex-col p-0 my-1 mx-2 gap-y-1">
+        <div className="flex w-[250px] h-full items-center flex-col p-0 my-1 mx-2">
           {povsArray.map((g) => getGroupListItem(g))}
         </div>
       )}

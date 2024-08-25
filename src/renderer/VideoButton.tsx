@@ -130,12 +130,9 @@ export default function VideoButton(props: IProps) {
    */
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
-    console.log('deleteVideo called');
     setDeleteDialogOpen(false);
 
     const src = cloud ? videoName : videoSource;
-    console.log('gonna delete', src);
-    console.log('cloud is', cloud);
     window.electron.ipcRenderer.sendMessage('deleteVideo', [src, cloud]);
     stateManager.current.deleteVideo(pov);
 
@@ -161,7 +158,6 @@ export default function VideoButton(props: IProps) {
   const deleteAllPovs = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     setDeleteDialogOpen(false);
-    console.log('deleteAllPovs called');
     povs.forEach((p) => {
       const src = p.cloud ? p.videoName : p.videoSource;
 
@@ -338,12 +334,7 @@ export default function VideoButton(props: IProps) {
 
   const getDeleteSingleButton = () => {
     return (
-      <DeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onDelete={(e) => deleteVideo(e)}
-        tooltipContent="Delete"
-      >
+      <DeleteDialog onDelete={(e) => deleteVideo(e)} tooltipContent="Delete">
         <Button
           onMouseDown={stopPropagation}
           variant="secondary"
@@ -359,8 +350,6 @@ export default function VideoButton(props: IProps) {
   const getDeleteAllButton = () => {
     return (
       <DeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
         onDelete={(e) => deleteAllPovs(e)}
         tooltipContent="Delete all points of view"
       >
@@ -383,7 +372,7 @@ export default function VideoButton(props: IProps) {
           'flex items-center content-evenly box-border w-full rounded-md border bg-video border-video-border hover:bg-video-hover transition-all relative',
           { 'bg-video-hover': selected }
         )}
-        style={{ height: buttonHeight }}
+        style={{ height: '150px' }}
       >
         <div
           className="h-full w-4 absolute top-0 right-0 rounded-r-md"
@@ -399,7 +388,7 @@ export default function VideoButton(props: IProps) {
 
         <div className="h-full w-1/3 flex items-center content-center">
           <PovSelection
-            povs={povs}
+            povs={[...povs, ...povs, ...povs, ...povs]}
             parentButtonSelected={selected}
             localPovIndex={localPovIndex}
             setLocalPovIndex={setLocalPovIndex}

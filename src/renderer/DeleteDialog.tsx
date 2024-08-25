@@ -13,20 +13,15 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 
 type DeleteDialogProps = {
   children: React.ReactNode;
-  open: boolean;
-  onOpenChange: (state: boolean) => void;
   onDelete: (event: React.MouseEvent<HTMLElement>) => void;
   tooltipContent: string;
 };
 
 const DeleteDialog = ({
   children,
-  open,
-  onOpenChange,
   onDelete,
   tooltipContent,
 }: DeleteDialogProps) => {
-  console.log(tooltipContent, onDelete);
   return (
     <Dialog>
       <Tooltip content={tooltipContent}>
