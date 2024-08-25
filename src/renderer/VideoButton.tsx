@@ -229,11 +229,10 @@ export default function VideoButton(props: IProps) {
 
   const onDeleteSingle = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
-    console.log('onDeleteSingle called');
+
     if (ctrlDown) {
       deleteVideo(event);
     } else {
-      console.log('in onDeleteSingle else');
       setDeleteDialogOpen(true);
     }
   };
@@ -342,7 +341,7 @@ export default function VideoButton(props: IProps) {
       <DeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onDelete={(e) => console.log('Delete one')}
+        onDelete={(e) => deleteVideo(e)}
         tooltipContent="Delete"
       >
         <Button
@@ -362,7 +361,7 @@ export default function VideoButton(props: IProps) {
       <DeleteDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onDelete={(e) => console.log('Delete all')}
+        onDelete={(e) => deleteAllPovs(e)}
         tooltipContent="Delete all points of view"
       >
         <Button

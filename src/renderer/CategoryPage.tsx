@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import { AppState, RendererVideo } from 'main/types';
-import { List, ListItem, ListItemButton } from '@mui/material';
+import { List } from '@mui/material';
 import { scrollBarSx } from 'main/constants';
 import { MutableRefObject } from 'react';
 import { VideoPlayer } from './VideoPlayer';
@@ -172,7 +172,7 @@ const CategoryPage = (props: IProps) => {
   const getVideoSelection = () => {
     return (
       <>
-        <div className="w-full flex justify-evenly border-t border-b border-black items-center gap-x-5 px-2 pt-1 pb-3">
+        <div className="w-full flex justify-evenly border-b border-video-border items-center gap-x-5 px-2 pt-1 pb-4">
           {!isClips && (
             <VideoMarkerToggles
               category={category}

@@ -26,9 +26,9 @@ const DeleteDialog = ({
   onDelete,
   tooltipContent,
 }: DeleteDialogProps) => {
-  console.log(onDelete);
+  console.log(tooltipContent, onDelete);
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog>
       <Tooltip content={tooltipContent}>
         <DialogTrigger asChild>{children}</DialogTrigger>
       </Tooltip>

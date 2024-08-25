@@ -394,19 +394,23 @@ const AudioSourceControls: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center content-start w-full gap-10 flex-wrap">
-      <div className="flex flex-col justify-center w-1/4 gap-y-4">
-        {getSpeakerSelect()}
-        {getSpeakerVolume()}
+    <div className="flex gap-y-10 flex-col">
+      <div className="flex items-center content-start w-full gap-10 flex-wrap">
+        <div className="flex flex-col justify-center w-1/4 gap-y-4">
+          {getSpeakerSelect()}
+          {getSpeakerVolume()}
+        </div>
+        <div className="flex flex-col justify-center w-1/4 gap-y-4">
+          {getMicSelect()}
+          {getMicVolume()}
+        </div>
+        {getAudioSuppressionSwitch()}
+        {getMonoSwitch()}
       </div>
-      <div className="flex flex-col justify-center w-1/4 gap-y-4">
-        {getMicSelect()}
-        {getMicVolume()}
+      <div className="flex items-center flex-wrap gap-y-4">
+        {getPushToTalkSwitch()}
+        {config.pushToTalk && getPushToTalkSelect()}
       </div>
-      {getAudioSuppressionSwitch()}
-      {getMonoSwitch()}
-      {getPushToTalkSwitch()}
-      {config.pushToTalk && getPushToTalkSelect()}
     </div>
   );
 };

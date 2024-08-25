@@ -17,21 +17,24 @@ import {
   CommandList,
 } from '../Command/Command';
 
-const multiSelectVariants = cva('m-1 transition px-3 py-2 text-[11px]', {
-  variants: {
-    variant: {
-      default: 'text-card-foreground bg-video hover:bg-video/80',
-      secondary:
-        'border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80',
-      destructive:
-        'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-      inverted: 'inverted',
+const multiSelectVariants = cva(
+  'm-1 transition px-3 py-2 text-[11px] overflow-hidden text-ellipsis whitespace-nowrap inline-block',
+  {
+    variants: {
+      variant: {
+        default: 'text-card-foreground bg-video hover:bg-video/80',
+        secondary:
+          'border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        destructive:
+          'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
+        inverted: 'inverted',
+      },
     },
-  },
-  defaultVariants: {
-    variant: 'default',
-  },
-});
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+);
 
 interface MultiSelectProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -110,30 +113,30 @@ export const MultiSelect = React.forwardRef<
           >
             {selectedValues.length > 0 ? (
               <div className="flex justify-between items-center w-full">
-                <div className="flex flex-wrap items-center">
+                <div className="flex flex-nowrap items-center w-[calc(100%-24px)]">
                   {selectedValues.slice(0, maxCount).map((value) => {
                     const option = options.find((o) => o.value === value);
                     const IconComponent = option?.icon;
                     return (
                       <Badge
                         key={value}
-                        className={cn(
-                          isAnimating ? 'animate-bounce' : '',
-                          multiSelectVariants({ variant })
-                        )}
+                        className={cn(multiSelectVariants({ variant }), {
+                          'max-w-[calc(100%-24px)]':
+                            selectedValues.length > maxCount,
+                        })}
                         style={{ animationDuration: `${animation}s` }}
                       >
                         {IconComponent && (
                           <IconComponent className="h-4 w-4 mr-2" />
                         )}
                         {option?.label}
-                        <XCircle
+                        {/* <XCircle
                           className="ml-2 h-4 w-4 cursor-pointer"
                           onClick={(event) => {
                             event.stopPropagation();
                             toggleOption(value);
                           }}
-                        />
+                        /> */}
                       </Badge>
                     );
                   })}

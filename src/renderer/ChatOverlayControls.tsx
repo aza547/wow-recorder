@@ -151,7 +151,8 @@ const ChatOverlayControls: React.FC = () => {
   };
 
   const getChatOverlaySizeSliders = () => {
-    const disabled = !config.chatOverlayEnabled || config.chatOverlayOwnImage;
+    if (config.chatOverlayOwnImage) return null;
+    const disabled = !config.chatOverlayEnabled;
 
     return (
       <div className="flex flex-col gap-y-4">
