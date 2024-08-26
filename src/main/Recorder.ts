@@ -317,8 +317,7 @@ export default class Recorder extends EventEmitter {
 
     // We create all the sources we might need to use here, as the source API
     // provided by OSN provides mechanisms for retrieving valid settings; it's
-    // useful to always be able to access them even if we never add the sources
-    // to the scene.
+    // useful to always be able to access them even if we never enable the sources.
     this.windowCaptureSource = osn.InputFactory.create(
       'window_capture',
       'WR Window Capture'
@@ -345,11 +344,9 @@ export default class Recorder extends EventEmitter {
     // Connects the signal handler, we get feedback from OBS by way of
     // signals, so this is how we know it's doing the right thing after
     // we ask it to start/stop.
-    osn.NodeObs.OBS_service_connectOutputSignals(
-      (signal: osn.EOutputSignal) => {
-        this.handleSignal(signal);
-      }
-    );
+    osn.NodeObs.OBS_service_connectOutputSignals((s: osn.EOutputSignal) => {
+      this.handleSignal(s);
+    });
 
     // The scene is an OBS construct that holds the sources, think of it as a
     // blank canvas we can add sources to. We could create it later but we can
@@ -442,13 +439,6 @@ export default class Recorder extends EventEmitter {
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
-    // The AMD encoder causes recordings to get much darker if using the full
-    // color range setting. So swap that to partial here. See https://github.com/aza547/wow-recorder/issues/446.
-    const colorRange =
-      obsRecEncoder === ESupportedEncoders.AMD_AMF_H264
-        ? ERangeType.Partial
-        : ERangeType.Full;
-
     const videoInfo: osn.IVideoInfo = {
       fpsNum: obsFPS,
       fpsDen: 1,
@@ -463,7 +453,10 @@ export default class Recorder extends EventEmitter {
       colorspace: EColorSpace.CS709 as unknown as osn.EColorSpace,
       scaleType: EScaleType.Bicubic as unknown as osn.EScaleType,
       fpsType: EFPSType.Fractional as unknown as osn.EFPSType,
-      range: colorRange as unknown as osn.ERangeType,
+
+      // The AMD encoder causes recordings to get much darker if using the full
+      // color range setting. So swap that to partial here. See Issue 446.
+      range: ERangeType.Partial as unknown as osn.ERangeType,
     };
 
     this.context.video = videoInfo;
@@ -474,11 +467,10 @@ export default class Recorder extends EventEmitter {
     Recorder.applySetting('Output', 'RecEncoder', obsRecEncoder);
     Recorder.applySetting('Output', 'RecFormat', 'mp4');
 
-    // // We set the CPQ or CRF value here. Low value is higher quality, and
-    // // vice versa. The limits on what this can actually be set to I took
-    // // from what OBS studio allows and is annotated below, but we don't
-    // // go to the extremes of the allowed range anyway.
-    // const encoderSettings: ISettings = {};
+    // We set the CPQ or CRF value here. Low value is higher quality, and
+    // vice versa. The limits on what this can actually be set to I took
+    // from what OBS studio allows and is annotated below, but we don't
+    // go to the extremes of the allowed range anyway.
     const cqp = Recorder.getCqpFromQuality(obsQuality);
 
     switch (obsRecEncoder) {
@@ -491,6 +483,7 @@ export default class Recorder extends EventEmitter {
 
       case ESupportedEncoders.AMD_AMF_H264:
       case ESupportedEncoders.JIM_NVENC:
+        // These settings are identical for AMD and NVENC encoders.
         Recorder.applySetting('Output', 'Recrate_control', 'CQP');
         Recorder.applySetting('Output', 'Reccqp', cqp);
         break;
@@ -530,7 +523,6 @@ export default class Recorder extends EventEmitter {
 
     const overlayCfg = getOverlayConfig(this.cfg);
     this.configureOverlayImageSource(overlayCfg);
-
     this.watchVideoSourceSize();
   }
 
@@ -571,6 +563,13 @@ export default class Recorder extends EventEmitter {
     this.overlayImageSceneItem.scale = {
       x: chatOverlayScale,
       y: chatOverlayScale,
+    };
+
+    this.overlayImageSceneItem.crop = {
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
     };
 
     const { settings } = this.overlayImageSource;
@@ -1116,17 +1115,21 @@ export default class Recorder extends EventEmitter {
     // I spent alot of time trying to work out what was wrong only to find that
     // the difference in streamlabs desktop is that they don't crash on a non-zero
     // RC.
-    // if (obsSignal.code !== 0) {
-    //   console.error('[Recorder] Non-zero signal');
+    //
+    // So we do what we can by checking wrote signals non-zero and ignoring
+    // other non-zero signals. If something goes wrong earlier, we will hit a
+    // timeout anyway which will cover our backs.
+    if (obsSignal.code !== 0 && obsSignal.signal !== 'wrote') {
+      console.error('[Recorder] Non-zero wrote signal');
 
-    //   const crashData: CrashData = {
-    //     date: new Date(),
-    //     reason: obsSignal.error,
-    //   };
+      const crashData: CrashData = {
+        date: new Date(),
+        reason: obsSignal.error,
+      };
 
-    //   this.emit('crash', crashData);
-    //   return;
-    // }
+      this.emit('crash', crashData);
+      return;
+    }
 
     switch (obsSignal.signal) {
       case EOBSOutputSignal.Start:
@@ -1205,8 +1208,6 @@ export default class Recorder extends EventEmitter {
 
     this.gameCaptureSource.update(settings);
     this.gameCaptureSource.save();
-
-    // Enable the source which is what actually makes it show up in the scene.
     this.gameCaptureSource.enabled = true;
   }
 
@@ -1236,15 +1237,13 @@ export default class Recorder extends EventEmitter {
 
     this.monitorCaptureSource.update(settings);
     this.monitorCaptureSource.save();
-
-    // Enable the source which is what actually makes it show up in the scene.
     this.monitorCaptureSource.enabled = true;
   }
 
   /**
    * Creates a window capture source. In TWW, the retail and classic Window names
    * diverged slightly, so while this was previously a hardcoded string, now we
-   * manage it in the settings.
+   * search for it in the OSN sources API.
    */
   private configureWindowCaptureSource(captureCursor: boolean) {
     console.info('[Recorder] Configuring OBS for Window Capture');
