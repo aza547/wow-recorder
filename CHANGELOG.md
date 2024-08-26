@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- [PR 517](https://github.com/aza547/wow-recorder/pull/517) - Major rework of the UI, big thanks to Stephix for contributing this.
 ### Added
 ### Fixed
 - [Issue 512](https://github.com/aza547/wow-recorder/issues/512) - Fix a bug where the manager would repeatedly retry configuration if the user got the password wrong.
