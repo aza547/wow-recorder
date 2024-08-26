@@ -287,6 +287,7 @@ const ChatOverlayControls: React.FC = () => {
           name="overlayImagePath"
           value={config.chatOverlayOwnImagePath}
           onClick={setOverlayPath}
+          readOnly
         />
       </div>
     );

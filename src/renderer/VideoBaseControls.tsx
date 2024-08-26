@@ -186,7 +186,10 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           variant="outline"
         >
           {fpsOptions.map((fpsOption) => (
-            <ToggleGroupItem value={fpsOption.toString()}>
+            <ToggleGroupItem
+              key={fpsOption.toString()}
+              value={fpsOption.toString()}
+            >
               {fpsOption}
             </ToggleGroupItem>
           ))}

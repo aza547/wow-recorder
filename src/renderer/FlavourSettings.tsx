@@ -146,6 +146,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               value={config.retailLogPath}
               disabled={!config.recordRetail || isComponentDisabled()}
               onClick={setRetailLogPath}
+              readOnly
               required
             />
             {config.retailLogPath === '' && (
@@ -214,6 +215,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               value={config.classicLogPath}
               disabled={!config.recordClassic || isComponentDisabled()}
               onClick={setClassicLogPath}
+              readOnly
               required
             />
             {config.classicLogPath === '' && (
@@ -285,6 +287,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               value={config.eraLogPath}
               disabled={!config.recordEra || isComponentDisabled()}
               onClick={setEraLogPath}
+              readOnly
               required
             />
             {config.eraLogPath === '' && (

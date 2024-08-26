@@ -125,6 +125,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           onClick={setStoragePath}
           required
           disabled={isComponentDisabled()}
+          readOnly
         />
         {config.storagePath === '' && (
           <span className="text-error text-sm">Must not be empty</span>
@@ -205,6 +206,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           onClick={setBufferPath}
           required
           disabled={isComponentDisabled()}
+          readOnly
         />
       </div>
     );

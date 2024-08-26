@@ -366,6 +366,7 @@ const AudioSourceControls: React.FC = () => {
           value={getHotkeyString()}
           onFocus={() => setPttHotKeyFieldFocused(true)}
           onBlur={() => setPttHotKeyFieldFocused(false)}
+          readOnly
         />
       </div>
     );
