@@ -113,9 +113,53 @@ const getAllDeathMarkers = (video: RendererVideo) => {
     return videoMarkers;
   }
 
-  video.deaths.forEach((death: PlayerDeathType) => {
+  const groupedDeathsByTimestamp = video.deaths.reduce(
+    (acc: Record<string, PlayerDeathType[]>, obj) => {
+      const { timestamp } = obj;
+
+      if (!acc[timestamp]) {
+        acc[timestamp] = [];
+      }
+
+      acc[timestamp].push(obj);
+      return acc;
+    },
+    {}
+  );
+
+  const singleDeaths = Object.entries(groupedDeathsByTimestamp)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    .map(([_, arr]) => arr)
+    .filter((arr) => arr.length === 1)
+    .map((arr) => arr[0]);
+
+  const simultaenousDeaths = Object.entries(groupedDeathsByTimestamp)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    .map(([_, arr]) => arr)
+    .filter((arr) => arr.length !== 1)
+    .map((arr) => arr[0]);
+
+  singleDeaths.forEach((death: PlayerDeathType) => {
     const [name] = ambiguate(death.name);
     const markerText = `Death (${name})`;
+    let color: string;
+
+    if (death.friendly) {
+      color = MarkerColors.LOSS;
+    } else {
+      color = MarkerColors.WIN;
+    }
+
+    videoMarkers.push({
+      time: death.timestamp,
+      text: markerText,
+      color,
+      duration: 5,
+    });
+  });
+
+  simultaenousDeaths.forEach((death: PlayerDeathType) => {
+    const markerText = `Death (multiple)`;
     let color: string;
 
     if (death.friendly) {
