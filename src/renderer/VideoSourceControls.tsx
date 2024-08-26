@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { OurDisplayType, WindowCaptureChoice } from 'main/types';
+import { OurDisplayType } from 'main/types';
 import { configSchema } from 'main/configSchema';
 import { Info } from 'lucide-react';
 import { useSettings, setConfigValues } from './useSettings';
@@ -8,13 +8,6 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from './components/ToggleGroup/ToggleGroup';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './components/Select/Select';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
 
@@ -23,7 +16,6 @@ const ipc = window.electron.ipcRenderer;
 const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
   const [displays, setDisplays] = useState<OurDisplayType[]>([]);
-  const [windows, setWindows] = useState<WindowCaptureChoice[]>([]);
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
@@ -34,13 +26,6 @@ const VideoSourceControls: React.FC = () => {
 
     getDisplays();
 
-    const getWindows = async () => {
-      const allWindows = await ipc.invoke('getWindows', []);
-      setWindows(allWindows);
-    };
-
-    getWindows();
-
     // The reset of this effect handles config changes, so if it's the
     // initial render then just return here.
     if (initialRender.current) {
@@ -50,18 +35,12 @@ const VideoSourceControls: React.FC = () => {
 
     setConfigValues({
       obsCaptureMode: config.obsCaptureMode,
-      obsWindowName: config.obsWindowName,
       monitorIndex: config.monitorIndex,
       captureCursor: config.captureCursor,
     });
 
     ipc.sendMessage('settingsChange', []);
-  }, [
-    config.monitorIndex,
-    config.obsCaptureMode,
-    config.captureCursor,
-    config.obsWindowName,
-  ]);
+  }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
 
   const setOBSCaptureMode = (mode: string) => {
     if (mode === null) {
@@ -72,15 +51,6 @@ const VideoSourceControls: React.FC = () => {
       return {
         ...prevState,
         obsCaptureMode: mode,
-      };
-    });
-  };
-
-  const setOBSWindowName = (value: string) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        obsWindowName: value,
       };
     });
   };
@@ -164,61 +134,6 @@ const VideoSourceControls: React.FC = () => {
     );
   };
 
-  const getWindowSelect = () => {
-    if (config.obsCaptureMode !== 'window_capture') {
-      return <></>;
-    }
-
-    // Always include the base game modes even if they aren't currently running.
-    const classicOpen = windows.find(
-      (window) => window.name === '[WowClassic.exe]: World of Warcraft'
-    );
-
-    const retailOpen = windows.find(
-      (window) => window.name === '[Wow.exe]: World of Warcraft'
-    );
-
-    if (!classicOpen) {
-      windows.push({
-        name: '[WowClassic.exe]: World of Warcraft',
-        value: 'World of Warcraft:GxWindowClass:Window:Wow.exe',
-      });
-    }
-
-    if (!retailOpen) {
-      windows.push({
-        name: '[Wow.exe]: World of Warcraft',
-        value: 'World of Warcraft:waApplication Window:Wow.exe',
-      });
-    }
-
-    return (
-      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
-        <Label className="flex items-center">
-          Window
-          <Tooltip
-            content={configSchema.obsWindowName.description}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <Select value={config.obsWindowName} onValueChange={setOBSWindowName}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a window" />
-          </SelectTrigger>
-          <SelectContent>
-            {windows.map((window) => (
-              <SelectItem key={window.value} value={window.value}>
-                {window.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
-  };
-
   const getCursorToggle = () => {
     return (
       <div className="flex flex-col w-[140px]">
@@ -245,7 +160,6 @@ const VideoSourceControls: React.FC = () => {
     <div className="flex items-center w-full gap-x-8">
       {getCaptureModeToggle()}
       {getMonitorToggle()}
-      {getWindowSelect()}
       {getCursorToggle()}
     </div>
   );

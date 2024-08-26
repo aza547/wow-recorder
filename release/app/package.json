@@ -14,7 +14,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "atomic-queue": "^5.0.4",
-    "obs-studio-node": "https://warcraftrecorderstorage.blob.core.windows.net/warcraftrecorder/osn-0.23.71-release-win64.tar.gz",
+    "obs-studio-node": "https://warcraftrecorderstorage.blob.core.windows.net/warcraftrecorder/osn-0.24.43-release-win64.tar.gz",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"

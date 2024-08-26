@@ -282,7 +282,7 @@
     "lodash": "^4.17.21",
     "lucide-react": "^0.428.0",
     "node-abi": "^3.47.0",
-    "obs-studio-node": "https://warcraftrecorderstorage.blob.core.windows.net/warcraftrecorder/osn-0.23.71-release-win64.tar.gz",
+    "obs-studio-node": "https://warcraftrecorderstorage.blob.core.windows.net/warcraftrecorder/osn-0.24.43-release-win64.tar.gz",
     "path": "^0.12.7",
     "pretty-bytes": "^6.1.0",
     "queue-promise": "^2.2.1",

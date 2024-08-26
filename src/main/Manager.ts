@@ -140,10 +140,8 @@ export default class Manager {
       valid: false,
       current: this.obsVideoCfg,
       get: (cfg: ConfigService) => getObsVideoConfig(cfg),
-      validate: async (config: ObsVideoConfig) =>
-        Manager.validateVideoConfig(config),
-      configure: async (config: ObsVideoConfig) =>
-        this.configureObsVideo(config),
+      validate: async (config: ObsVideoConfig) => Manager.validateVideoConfig(config),
+      configure: async (config: ObsVideoConfig) => this.configureObsVideo(config),
     },
     {
       name: 'obsAudio',
@@ -151,8 +149,7 @@ export default class Manager {
       current: this.obsAudioCfg,
       get: (cfg: ConfigService) => getObsAudioConfig(cfg),
       validate: async () => {},
-      configure: async (config: ObsAudioConfig) =>
-        this.configureObsAudio(config),
+      configure: async (config: ObsAudioConfig) => this.configureObsAudio(config),
     },
     {
       name: 'flavour',
@@ -167,10 +164,8 @@ export default class Manager {
       valid: false,
       current: this.overlayCfg,
       get: (cfg: ConfigService) => getOverlayConfig(cfg),
-      validate: async (config: ObsOverlayConfig) =>
-        Manager.validateOverlayConfig(config),
-      configure: async (config: ObsOverlayConfig) =>
-        this.configureObsOverlay(config),
+      validate: async (config: ObsOverlayConfig) => Manager.validateOverlayConfig(config),
+      configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
     },
     /* eslint-enable prettier/prettier */
   ];
@@ -628,7 +623,7 @@ export default class Manager {
    * Configure chat overlay in OBS. This can all be changed live.
    */
   private configureObsOverlay(config: ObsOverlayConfig) {
-    this.recorder.configureOverlaySource(config);
+    this.recorder.configureOverlayImageSource(config);
   }
 
   private static async validateBaseCfg(config: ObsBaseConfig) {
@@ -778,17 +773,7 @@ export default class Manager {
     }
   }
 
-  private static async validateVideoConfig(config: ObsVideoConfig) {
-    const { obsCaptureMode, obsWindowName } = config;
-
-    if (obsCaptureMode === 'window_capture' && !obsWindowName) {
-      console.warn('[Manager] No window selected.');
-
-      throw new Error(
-        'Must select a window in the scene settings, if none appear, make sure WoW is running.'
-      );
-    }
-  }
+  private static async validateVideoConfig(config: ObsVideoConfig) {}
 
   private static async validateOverlayConfig(config: ObsOverlayConfig) {
     const { chatOverlayOwnImage, chatOverlayOwnImagePath, cloudStorage } =
@@ -858,9 +843,6 @@ export default class Manager {
 
       return obsEncoders;
     });
-
-    // Window listener, to populate settings on the frontend.
-    ipcMain.handle('getWindows', () => this.recorder.getAvailableWindows());
 
     // Audio devices listener, to populate settings on the frontend.
     ipcMain.handle(
@@ -1034,9 +1016,11 @@ export default class Manager {
     // upgrading the app. See issue 325 and 338.
     app.on('before-quit', () => {
       console.info('[Manager] Running before-quit actions');
-      this.recorder.shutdownOBS();
       this.poller.reset();
       uIOhook.stop();
+
+      // This takes a few seconds and is synchronous so do it last.
+      this.recorder.shutdownOBS();
     });
 
     // If Windows is going to sleep, we don't want to confuse OBS. Stop the

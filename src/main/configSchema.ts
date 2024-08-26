@@ -18,7 +18,6 @@ export type ConfigurationSchema = {
   obsForceMono: boolean;
   obsQuality: string;
   obsCaptureMode: string; // 'window_capture' or 'game_capture' or 'monitor_capture'
-  obsWindowName: string;
   obsRecEncoder: string;
   recordRetail: boolean;
   recordClassic: boolean;
@@ -195,11 +194,6 @@ export const configSchema = {
       'The capture mode OBS should use to record. See the #faq channel in discord for more details.',
     type: 'string',
     default: 'window_capture',
-  },
-  obsWindowName: {
-    description: 'The window to capture when using window capture mode.',
-    type: 'string',
-    default: 'World of Warcraft:waApplication Window:Wow.exe',
   },
   obsRecEncoder: {
     description:

@@ -15,7 +15,6 @@ export type Channels =
   | 'prepareThumbnail'
   | 'preview'
   | 'getEncoders'
-  | 'getWindows'
   | 'selectPath'
   | 'selectFile'
   | 'settingsChange'
