@@ -4,6 +4,8 @@ import React from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import { Tooltip } from 'renderer/components/Tooltip/Tooltip';
 
+const ipc = window.electron.ipcRenderer;
+
 type UpgradeNotifierProps = {
   upgradeStatus: UpgradeStatus;
 };
@@ -24,11 +26,14 @@ const UpgradeNotifier = React.memo(
 
     return (
       <Tooltip content="An update is available">
-        <a href={upgradeStatus.link}>
-          <Button variant="ghost" type="button" size="icon">
-            <ArrowBigDownDash />
-          </Button>
-        </a>
+        <Button
+          variant="ghost"
+          type="button"
+          size="icon"
+          onClick={() => ipc.sendMessage('openURL', [upgradeStatus.link])}
+        >
+          <ArrowBigDownDash />
+        </Button>
       </Tooltip>
     );
   },

@@ -30,7 +30,6 @@ import {
   getVideoDate,
   stopPropagation,
   povNameSort,
-  countUniquePovs,
 } from './rendererutils';
 import ArenaCompDisplay from './ArenaCompDisplay';
 import DungeonCompDisplay from './DungeonCompDisplay';
@@ -80,7 +79,6 @@ export default function VideoButton(props: IProps) {
   const videoDate = getVideoDate(video);
 
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [localPovIndex, setLocalPovIndex] = useState<number>(0);
 
   const { toast } = useToast();
@@ -111,12 +109,6 @@ export default function VideoButton(props: IProps) {
     tagTooltip = `${tagTooltip.slice(0, 50)}...`;
   }
 
-  // We do some hokey maths here to decide the height of the button, because
-  // I've no idea how else to stop the image resizing the entire thing unless
-  // its parent has an absolute size, super annoying.
-  const uniquePovs = countUniquePovs(povs);
-  const buttonHeight = Math.max(25 + uniquePovs * 25, 130);
-
   useEffect(() => {
     if (povs.length > localPovIndex) {
       return;
@@ -130,7 +122,6 @@ export default function VideoButton(props: IProps) {
    */
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
-    setDeleteDialogOpen(false);
 
     const src = cloud ? videoName : videoSource;
     window.electron.ipcRenderer.sendMessage('deleteVideo', [src, cloud]);
@@ -157,7 +148,6 @@ export default function VideoButton(props: IProps) {
    */
   const deleteAllPovs = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
-    setDeleteDialogOpen(false);
     povs.forEach((p) => {
       const src = p.cloud ? p.videoName : p.videoSource;
 
@@ -228,8 +218,6 @@ export default function VideoButton(props: IProps) {
 
     if (ctrlDown) {
       deleteVideo(event);
-    } else {
-      setDeleteDialogOpen(true);
     }
   };
 
@@ -238,8 +226,6 @@ export default function VideoButton(props: IProps) {
 
     if (ctrlDown) {
       deleteAllPovs(event);
-    } else {
-      setDeleteDialogOpen(true);
     }
   };
 
@@ -303,7 +289,7 @@ export default function VideoButton(props: IProps) {
     try {
       await ipc.invoke('getShareableLink', [videoName]);
       toast({
-        title: 'Share link generated',
+        title: 'Shareable link generated and placed in clipboard',
         description: 'This link will be valid for up to 30 days.',
         duration: 5000,
       });
@@ -388,7 +374,7 @@ export default function VideoButton(props: IProps) {
 
         <div className="h-full w-1/3 flex items-center content-center">
           <PovSelection
-            povs={[...povs, ...povs, ...povs, ...povs]}
+            povs={povs}
             parentButtonSelected={selected}
             localPovIndex={localPovIndex}
             setLocalPovIndex={setLocalPovIndex}

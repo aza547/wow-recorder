@@ -301,12 +301,13 @@ const ChatOverlayControls: React.FC = () => {
           config.chatOverlayOwnImage &&
           getOwnImagePathField()}
       </div>
-
-      <div className="flex items-center content-center w-full gap-8">
-        {getChatOverlaySizeSliders()}
-        {getChatOverlayPositionSliders()}
-        {getScaleSlider()}
-      </div>
+      {config.chatOverlayEnabled && (
+        <div className="flex items-center content-center w-full gap-8">
+          {getChatOverlaySizeSliders()}
+          {getChatOverlayPositionSliders()}
+          {getScaleSlider()}
+        </div>
+      )}
     </div>
   );
 };

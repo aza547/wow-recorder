@@ -10,6 +10,7 @@ import Label from './components/Label/Label';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Progress from './components/Progress/Progress';
+import TextBanner from './components/TextBanner/TextBanner';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -84,9 +85,9 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <h2 className="text-foreground-lighter text-lg drop-shadow-sm my-2">
-        These settings can not be modified while a recording is active.
-      </h2>
+      <TextBanner>
+        These settings cannot be modified while a recording is active.
+      </TextBanner>
     );
   };
 

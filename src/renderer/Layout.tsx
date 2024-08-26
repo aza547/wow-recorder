@@ -81,7 +81,7 @@ const Layout = (props: IProps) => {
   const [appVersion, setAppVersion] = React.useState<string>();
 
   React.useEffect(() => {
-    window.electron.ipcRenderer.on('updateTitleBar', (t: unknown) => {
+    window.electron.ipcRenderer.on('updateVersionDisplay', (t: unknown) => {
       if (typeof t === 'string') {
         setAppVersion(t.split('v')[1] as string);
       }

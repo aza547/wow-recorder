@@ -1,4 +1,3 @@
-import { Typography } from '@mui/material';
 import { ConfigurationSchema, configSchema } from 'main/configSchema';
 import React from 'react';
 import { RecStatus } from 'main/types';
@@ -9,6 +8,7 @@ import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 import { Input } from './components/Input/Input';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import TextBanner from './components/TextBanner/TextBanner';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -59,20 +59,9 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Typography
-        variant="h6"
-        sx={{
-          color: 'white',
-          fontSize: '0.75rem',
-          fontFamily: '"Arial",sans-serif',
-          fontStyle: 'italic',
-          m: 1,
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
-        These settings can not be modified while a recording is active.
-      </Typography>
+      <TextBanner>
+        These settings cannot be modified while a recording is active.
+      </TextBanner>
     );
   };
 

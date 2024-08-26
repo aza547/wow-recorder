@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './components/Select/Select';
+import TextBanner from './components/TextBanner/TextBanner';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -139,7 +140,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a resolution" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent side="right" position="popper">
             {outputResolutions.map((resolution) => (
               <SelectItem key={resolution} value={resolution}>
                 {resolution}
@@ -209,11 +210,9 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <div className="flex items-center justify-center flex-col w-1/2 h-1/2 text-center font-sans text-foreground gap-y-6">
-        <h1 className="text-xl font-bold">
-          These settings can not be modified while a recording is active.
-        </h1>
-      </div>
+      <TextBanner>
+        These settings cannot be modified while a recording is active.
+      </TextBanner>
     );
   };
 

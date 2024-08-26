@@ -58,7 +58,6 @@ export default function PovSelection(props: IProps) {
 
     const cloudSelected = localPovIndex === cloudIndex;
     const diskSelected = localPovIndex === diskIndex;
-    const povSelected = cloudSelected || diskSelected;
 
     const cloudButtonColor = cloudSelected ? '#bb4420' : 'white';
     const diskButtonColor = diskSelected ? '#bb4420' : 'white';
@@ -117,6 +116,7 @@ export default function PovSelection(props: IProps) {
             value={cloudIndex.toString()}
             disabled={!haveCloudVideo}
             onClick={(e) => handleChangePov(e, cloudIndex)}
+            className="!pointer-events-auto"
           >
             <CloudIcon
               sx={{
@@ -167,7 +167,6 @@ export default function PovSelection(props: IProps) {
       <div className="w-full h-auto rounded-md" key={name}>
         <div
           className="flex w-full h-full items-center content-center p-0"
-          // selected={povSelected}
           onClick={(event) => {
             if (haveCloudVideo) {
               handleChangePov(event, cloudIndex);
@@ -180,7 +179,7 @@ export default function PovSelection(props: IProps) {
             <ToggleGroup
               type="single"
               value={(diskSelected ? diskIndex : cloudIndex).toString()}
-              className="flex flex-row items-center content-end w-[50px] bg-[rgba(0,0,0,25%)] "
+              className="flex flex-row items-center content-end w-[50px] bg-[rgba(0,0,0,25%)]"
               size="xs"
               variant="outline"
             >

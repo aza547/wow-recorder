@@ -205,7 +205,6 @@ const Status = ({ status, error, savingStatus }: StatusProps) => {
     });
 
     ipc.on('updateDownloadProgress', (progress) => {
-      console.log('updateDownloadProgress called');
       if (!progress || progress === 100) {
         setTimeout(() => setDownloadProgress(false), 1000);
       }

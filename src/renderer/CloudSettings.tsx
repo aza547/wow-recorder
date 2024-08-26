@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from './components/Select/Select';
 import Separator from './components/Separator/Separator';
+import TextBanner from './components/TextBanner/TextBanner';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -116,10 +117,10 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <h1 className="text-foreground-lighter text-lg drop-shadow-sm">
-        Some settings in this category are currently hidden as they can not be
+      <TextBanner>
+        Some settings in this category are currently hidden as they cannot be
         modified while a recording is active.
-      </h1>
+      </TextBanner>
     );
   };
 
@@ -569,7 +570,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-y-4">
+    <div className="flex flex-col gap-y-4 flex-wrap">
       {getDisabledText()}
 
       <div className="flex flex-row">{getCloudSwitch()}</div>

@@ -132,8 +132,7 @@ export default class Manager {
       valid: false,
       current: this.obsBaseCfg,
       get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: async (config: ObsBaseConfig) =>
-        Manager.validateBaseCfg(config),
+      validate: async (config: ObsBaseConfig) => Manager.validateBaseCfg(config),
       configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
     },
     {

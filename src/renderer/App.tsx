@@ -61,11 +61,12 @@ const WarcraftRecorder = () => {
         description:
           'There is an update available for Warcraft Recorder. Please click the button below to download it.',
         action: (
-          <a href={upgradeStatus.link} className="w-full">
-            <ToastAction altText="Download">
-              <ArrowBigDownDash /> Download
-            </ToastAction>
-          </a>
+          <ToastAction
+            altText="Download"
+            onClick={() => ipc.sendMessage('openURL', [upgradeStatus.link])}
+          >
+            <ArrowBigDownDash /> Download
+          </ToastAction>
         ),
         duration: 60000, // stay up for a minute I guess
       });
