@@ -1119,7 +1119,7 @@ export default class Recorder extends EventEmitter {
     // So we do what we can by checking wrote signals non-zero and ignoring
     // other non-zero signals. If something goes wrong earlier, we will hit a
     // timeout anyway which will cover our backs.
-    if (obsSignal.code !== 0 && obsSignal.signal !== 'wrote') {
+    if (obsSignal.code !== 0 && obsSignal.signal === 'wrote') {
       console.error('[Recorder] Non-zero wrote signal');
 
       const crashData: CrashData = {
