@@ -1,6 +1,5 @@
-import { Box } from '@mui/material';
-import React from 'react';
-import icon from '../../assets/icon/small-icon.png';
+import { ComponentProps } from 'react';
+import { cn } from './components/utils';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -17,41 +16,45 @@ export default function RendererTitleBar() {
     ipc.sendMessage('mainWindow', ['quit']);
   };
 
-  const [title, setTitle] = React.useState('Warcraft Recorder Pro');
-
-  React.useEffect(() => {
-    window.electron.ipcRenderer.on('updateTitleBar', (t) => {
-      setTitle(t as string);
-    });
-  }, []);
+  const TitleBarButton = ({
+    children,
+    className,
+    ...props
+  }: ComponentProps<'button'>) => {
+    return (
+      <button
+        type="button"
+        className={cn(
+          'w-8 h-8 bg-transparent border-0 text-white text-base outline-none hover:bg-foreground',
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  };
 
   return (
-    <Box
+    <div
       id="title-bar"
-      sx={{
-        borderBottom: '1px solid black',
-        height: '35px',
-        width: '100%',
-        boxSizing: 'border-box',
-        backgroundColor: '#182035',
-        zIndex: 1,
-      }}
+      className="w-full h-[32px] bg-transparent flex items-center px-2 pr-0 absolute top-0 left-0"
     >
-      <div id="logo">
-        <img alt="icon" src={icon} height="25px" width="25px" />
-      </div>
-      <div id="title">{title}</div>
-      <div id="title-bar-btns">
-        <button id="min-btn" type="button" onClick={clickedHide}>
+      <div id="title-bar-btns" className="ml-auto absolute right-0 top-0">
+        <TitleBarButton id="min-btn" onClick={clickedHide}>
           🗕
-        </button>
-        <button id="max-btn" type="button" onClick={clickedResize}>
+        </TitleBarButton>
+        <TitleBarButton id="max-btn" onClick={clickedResize}>
           🗗
-        </button>
-        <button id="close-btn" type="button" onClick={clickedQuit}>
+        </TitleBarButton>
+        <TitleBarButton
+          id="close-btn"
+          className="hover:bg-destructive"
+          onClick={clickedQuit}
+        >
           ✖
-        </button>
+        </TitleBarButton>
       </div>
-    </Box>
+    </div>
   );
 }

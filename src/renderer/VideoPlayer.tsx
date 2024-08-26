@@ -12,7 +12,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Box, Button, Slider, Tooltip, Typography } from '@mui/material';
+import { Box, Slider, Typography } from '@mui/material';
 import { Resizable } from 're-resizable';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -40,6 +40,8 @@ import {
   isSoloShuffleUtil,
   secToMmSs,
 } from './rendererutils';
+import { Button } from './components/Button/Button';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 interface IProps {
   video: RendererVideo;
@@ -56,6 +58,12 @@ const progressInterval = 100;
 const sliderSx = {
   '& .MuiSlider-thumb': {
     color: 'white',
+    width: '16px',
+    height: '16px',
+    '&:hover': {
+      color: '#bb4220',
+      boxShadow: 'none',
+    },
   },
   '& .MuiSlider-track': {
     color: '#bb4220',
@@ -111,7 +119,7 @@ export const VideoPlayer = (props: IProps) => {
     return {
       value: marker.time,
       label: (
-        <Tooltip title={marker.text}>
+        <Tooltip content={marker.text}>
           <Box
             component="img"
             src={DeathIcon}
@@ -396,10 +404,14 @@ export const VideoPlayer = (props: IProps) => {
                 '& .MuiSlider-valueLabel': {
                   fontSize: '0.75rem',
                 },
+                '&:hover': {
+                  backgroundColor: '#bb4220',
+                  boxShadow: 'none',
+                },
               },
               "&[data-index='1']": {
-                width: '5px',
-                height: '5px',
+                width: '10px',
+                height: '10px',
                 zIndex: 1,
                 backgroundColor: 'white',
                 '& .MuiSlider-valueLabel': {
@@ -410,6 +422,10 @@ export const VideoPlayer = (props: IProps) => {
                     rotate: '180deg',
                   },
                 },
+                '&:hover': {
+                  backgroundColor: '#bb4220',
+                  boxShadow: 'none',
+                },
               },
               "&[data-index='2']": {
                 backgroundColor: 'white',
@@ -418,6 +434,10 @@ export const VideoPlayer = (props: IProps) => {
                 borderRadius: 0,
                 '& .MuiSlider-valueLabel': {
                   fontSize: '0.75rem',
+                },
+                '&:hover': {
+                  backgroundColor: '#bb4220',
+                  boxShadow: 'none',
                 },
               },
             },
@@ -498,9 +518,11 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderPlayPause = () => {
     return (
-      <Button sx={{ color: 'white' }} onClick={togglePlaying}>
-        {playing && <PauseIcon sx={{ color: 'white' }} />}
-        {!playing && <PlayArrowIcon sx={{ color: 'white' }} />}
+      <Button variant="ghost" size="xs" onClick={togglePlaying}>
+        {playing && <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />}
+        {!playing && (
+          <PlayArrowIcon sx={{ color: 'white', fontSize: '22px' }} />
+        )}
       </Button>
     );
   };
@@ -517,18 +539,18 @@ export const VideoPlayer = (props: IProps) => {
    */
   const getAppropriateVolumeIcon = () => {
     if (muted) {
-      return <VolumeOffIcon sx={{ color: 'white' }} />;
+      return <VolumeOffIcon sx={{ color: 'white', fontSize: '22px' }} />;
     }
 
     if (volume === 0) {
-      return <VolumeMuteIcon sx={{ color: 'white' }} />;
+      return <VolumeMuteIcon sx={{ color: 'white', fontSize: '22px' }} />;
     }
 
     if (volume < 0.5) {
-      return <VolumeDownIcon sx={{ color: 'white' }} />;
+      return <VolumeDownIcon sx={{ color: 'white', fontSize: '22px' }} />;
     }
 
-    return <VolumeUpIcon sx={{ color: 'white' }} />;
+    return <VolumeUpIcon sx={{ color: 'white', fontSize: '22px' }} />;
   };
 
   /**
@@ -536,7 +558,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderVolumeButton = () => {
     return (
-      <Button sx={{ color: 'white' }} onClick={toggleMuted}>
+      <Button variant="ghost" size="xs" onClick={toggleMuted}>
         {getAppropriateVolumeIcon()}
       </Button>
     );
@@ -550,17 +572,11 @@ export const VideoPlayer = (props: IProps) => {
     const max = duration;
 
     return (
-      <Box sx={{ mx: 2 }}>
-        <Typography
-          noWrap
-          sx={{
-            color: 'white',
-            fontSize: 12,
-          }}
-        >
+      <div className="mx-1 flex">
+        <span className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold">
           {secToMmSs(current)} / {secToMmSs(max)}
-        </Typography>
-      </Box>
+        </span>
+      </div>
     );
   };
 
@@ -571,8 +587,8 @@ export const VideoPlayer = (props: IProps) => {
     const playbackRateText = `${playbackRate}x`;
 
     return (
-      <Tooltip title="Playback Speed">
-        <Button sx={{ color: 'white' }} onClick={handleRateChange}>
+      <Tooltip content="Playback Speed">
+        <Button variant="ghost" size="xs" onClick={handleRateChange}>
           {playbackRateText}
         </Button>
       </Tooltip>
@@ -587,14 +603,15 @@ export const VideoPlayer = (props: IProps) => {
     const tooltip = cloud ? 'You can only clip locally saved videos' : 'Clip';
 
     return (
-      <Tooltip title={tooltip}>
+      <Tooltip content={tooltip}>
         <div>
           <Button
-            sx={{ color: 'white' }}
+            variant="ghost"
+            size="xs"
             onClick={() => setClipMode(true)}
             disabled={cloud}
           >
-            <MovieIcon sx={{ color, height: '20px' }} />
+            <MovieIcon sx={{ color, fontSize: '22px' }} />
           </Button>
         </div>
       </Tooltip>
@@ -618,8 +635,8 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderClipFinishedButton = () => {
     return (
-      <Tooltip title="Confirm">
-        <Button sx={{ color: 'white' }} onClick={doClip}>
+      <Tooltip content="Confirm">
+        <Button variant="ghost" size="xs" onClick={doClip}>
           <DoneIcon sx={{ color: 'white' }} />
         </Button>
       </Tooltip>
@@ -628,8 +645,8 @@ export const VideoPlayer = (props: IProps) => {
 
   const renderClipCancelButton = () => {
     return (
-      <Tooltip title="Cancel">
-        <Button sx={{ color: 'white' }} onClick={() => setClipMode(false)}>
+      <Tooltip content="Cancel">
+        <Button variant="ghost" size="xs" onClick={() => setClipMode(false)}>
           <ClearIcon sx={{ color: 'white' }} />
         </Button>
       </Tooltip>
@@ -641,8 +658,8 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderFullscreenButton = () => {
     return (
-      <Tooltip title="Fullscreen">
-        <Button sx={{ color: 'white' }} onClick={toggleFullscreen}>
+      <Tooltip content="Fullscreen">
+        <Button variant="ghost" size="xs" onClick={toggleFullscreen}>
           <FullscreenIcon sx={{ color: 'white' }} />
         </Button>
       </Tooltip>
@@ -665,7 +682,7 @@ export const VideoPlayer = (props: IProps) => {
   const renderVolumeSlider = () => {
     return (
       <Slider
-        sx={{ m: 2, width: '75px', ...sliderSx }}
+        sx={{ m: 1, width: '75px', ...sliderSx }}
         valueLabelDisplay="auto"
         value={muted ? 0 : volume * 100}
         onChange={handleVolumeChange}
@@ -679,18 +696,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderControls = () => {
     return (
-      <Box
-        sx={{
-          width: '100%',
-          height: '40px',
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'center',
-          alignItems: 'center',
-          border: '1 px solid black',
-          backgroundColor: '#1E232C',
-        }}
-      >
+      <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2">
         {renderPlayPause()}
         {renderVolumeButton()}
         {renderVolumeSlider()}
@@ -701,7 +707,7 @@ export const VideoPlayer = (props: IProps) => {
         {!clipMode && renderFullscreenButton()}
         {clipMode && renderClipFinishedButton()}
         {clipMode && renderClipCancelButton()}
-      </Box>
+      </div>
     );
   };
 

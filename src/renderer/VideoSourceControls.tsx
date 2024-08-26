@@ -1,74 +1,24 @@
-import {
-  Box,
-  FormControlLabel,
-  Switch,
-  ToggleButton,
-  ToggleButtonGroup,
-  Tooltip,
-  FormControl,
-  IconButton,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
-} from '@mui/material';
 import React, { useState } from 'react';
 import { OurDisplayType, WindowCaptureChoice } from 'main/types';
 import { configSchema } from 'main/configSchema';
-import InfoIcon from '@mui/icons-material/Info';
+import { Info } from 'lucide-react';
 import { useSettings, setConfigValues } from './useSettings';
+import Label from './components/Label/Label';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from './components/ToggleGroup/ToggleGroup';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './components/Select/Select';
+import Switch from './components/Switch/Switch';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
-
-const formControlStyle = { m: 1, width: '100%' };
-
-const selectStyle = {
-  color: 'white',
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'white',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#bb4220',
-  },
-  '&.Mui-focused': {
-    borderColor: '#bb4220',
-    color: '#bb4220',
-  },
-  '&:hover': {
-    '&& fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '.MuiSvgIcon-root ': {
-    fill: 'white !important',
-  },
-  '& .MuiInputBase-input.Mui-disabled': {
-    WebkitTextFillColor: 'darkgrey',
-  },
-  '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'darkgrey',
-  },
-};
 
 const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
@@ -113,10 +63,7 @@ const VideoSourceControls: React.FC = () => {
     config.obsWindowName,
   ]);
 
-  const setOBSCaptureMode = (
-    _event: React.MouseEvent<HTMLElement>,
-    mode: string
-  ) => {
+  const setOBSCaptureMode = (mode: string) => {
     if (mode === null) {
       return;
     }
@@ -129,11 +76,7 @@ const VideoSourceControls: React.FC = () => {
     });
   };
 
-  const setOBSWindowName = (event: SelectChangeEvent<string>) => {
-    const {
-      target: { value },
-    } = event;
-
+  const setOBSWindowName = (value: string) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -142,10 +85,7 @@ const VideoSourceControls: React.FC = () => {
     });
   };
 
-  const setMonitor = (
-    _event: React.MouseEvent<HTMLElement>,
-    display: number
-  ) => {
+  const setMonitor = (display: string) => {
     if (display === null) {
       return;
     }
@@ -153,54 +93,44 @@ const VideoSourceControls: React.FC = () => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        monitorIndex: display,
+        monitorIndex: parseInt(display, 10),
       };
     });
   };
 
-  const setCaptureCursor = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setCaptureCursor = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        captureCursor: event.target.checked,
+        captureCursor: checked,
       };
     });
-  };
-
-  const getToggleButton = (
-    value: string | number,
-    display: string | number
-  ) => {
-    return (
-      <ToggleButton
-        value={value}
-        key={value}
-        sx={{
-          color: 'white',
-          height: '40px',
-          '&.Mui-selected, &.Mui-selected:hover': {
-            color: 'white',
-            backgroundColor: '#bb4420',
-          },
-        }}
-      >
-        {display}
-      </ToggleButton>
-    );
   };
 
   const getCaptureModeToggle = () => {
     return (
-      <ToggleButtonGroup
-        value={config.obsCaptureMode}
-        exclusive
-        onChange={setOBSCaptureMode}
-        sx={{ border: '1px solid white', height: '40px', mx: 1 }}
-      >
-        {getToggleButton('window_capture', 'window')}
-        {getToggleButton('game_capture', 'game')}
-        {getToggleButton('monitor_capture', 'monitor')}
-      </ToggleButtonGroup>
+      <div>
+        <Label className="flex items-center">
+          Capture Mode
+          <Tooltip
+            content={configSchema.obsCaptureMode.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <ToggleGroup
+          value={config.obsCaptureMode}
+          onValueChange={setOBSCaptureMode}
+          size="sm"
+          type="single"
+          variant="outline"
+        >
+          <ToggleGroupItem value="window_capture">Window</ToggleGroupItem>
+          <ToggleGroupItem value="game_capture">Game</ToggleGroupItem>
+          <ToggleGroupItem value="monitor_capture">Monitor</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
     );
   };
 
@@ -210,16 +140,27 @@ const VideoSourceControls: React.FC = () => {
     }
 
     return (
-      <ToggleButtonGroup
-        value={config.monitorIndex}
-        exclusive
-        onChange={setMonitor}
-        sx={{ border: '1px solid white', height: '40px', mx: 1 }}
-      >
-        {displays.map((display: OurDisplayType) =>
-          getToggleButton(display.index, display.index + 1)
-        )}
-      </ToggleButtonGroup>
+      <div>
+        <Label className="flex items-center">
+          Monitor
+          <Tooltip content={configSchema.monitorIndex.description} side="right">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <ToggleGroup
+          value={config.monitorIndex.toString()}
+          onValueChange={setMonitor}
+          type="single"
+          variant="outline"
+          size="sm"
+        >
+          {displays.map((display: OurDisplayType) => (
+            <ToggleGroupItem value={display.index.toString()}>
+              {display.index + 1}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
     );
   };
 
@@ -227,14 +168,6 @@ const VideoSourceControls: React.FC = () => {
     if (config.obsCaptureMode !== 'window_capture') {
       return <></>;
     }
-
-    const mapWindowToMenuItem = (item: WindowCaptureChoice) => {
-      return (
-        <MenuItem sx={{ height: '25px' }} key={item.name} value={item.value}>
-          {item.name}
-        </MenuItem>
-      );
-    };
 
     // Always include the base game modes even if they aren't currently running.
     const classicOpen = windows.find(
@@ -260,70 +193,61 @@ const VideoSourceControls: React.FC = () => {
     }
 
     return (
-      <FormControl size="small" sx={{ ...formControlStyle, maxWidth: '300px' }}>
-        <InputLabel sx={selectStyle}>Window</InputLabel>
-        <Select
-          value={config.obsWindowName}
-          label="Window"
-          onChange={setOBSWindowName}
-          sx={{ ...selectStyle }}
-        >
-          {windows.map(mapWindowToMenuItem)}
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label className="flex items-center">
+          Window
+          <Tooltip
+            content={configSchema.obsWindowName.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Select value={config.obsWindowName} onValueChange={setOBSWindowName}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a window" />
+          </SelectTrigger>
+          <SelectContent>
+            {windows.map((window) => (
+              <SelectItem key={window.value} value={window.value}>
+                {window.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
-      </FormControl>
+      </div>
     );
   };
 
   const getCursorToggle = () => {
     return (
-      <FormControlLabel
-        control={
+      <div className="flex flex-col w-[140px]">
+        <Label className="flex items-center">
+          Capture Cursor
+          <Tooltip
+            content={configSchema.captureCursor.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
           <Switch
-            sx={switchStyle}
             checked={config.captureCursor}
-            onChange={setCaptureCursor}
+            onCheckedChange={setCaptureCursor}
           />
-        }
-        label="Capture Cursor"
-        labelPlacement="top"
-        sx={{
-          color: 'white',
-        }}
-      />
-    );
-  };
-
-  const getInfoIcon = () => {
-    const helptext = [
-      ['Capture Mode', configSchema.obsCaptureMode.description].join('\n'),
-      ['Monitor', configSchema.monitorIndex.description].join('\n'),
-      ['Capture Cursor', configSchema.captureCursor.description].join('\n'),
-    ].join('\n\n');
-
-    return (
-      <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
-        <IconButton>
-          <InfoIcon style={{ color: 'white' }} />
-        </IconButton>
-      </Tooltip>
+        </div>
+      </div>
     );
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-      }}
-    >
+    <div className="flex items-center w-full gap-x-8">
       {getCaptureModeToggle()}
       {getMonitorToggle()}
       {getWindowSelect()}
       {getCursorToggle()}
-      {getInfoIcon()}
-    </Box>
+    </div>
   );
 };
 

@@ -1,30 +1,10 @@
-import {
-  Box,
-  Checkbox,
-  Chip,
-  FormControl,
-  FormControlLabel,
-  IconButton,
-  InputLabel,
-  ListItemText,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Slider,
-  Stack,
-  Switch,
-  TextField,
-  Tooltip,
-} from '@mui/material';
 import { DeviceType, IOBSDevice } from 'main/types';
 import React from 'react';
-import { VolumeDown, VolumeUp } from '@mui/icons-material';
 import { configSchema } from 'main/configSchema';
-import InfoIcon from '@mui/icons-material/Info';
+import { Info, Volume1, Volume2 } from 'lucide-react';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   blurAll,
-  getAudioDeviceDescription,
   getKeyByValue,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
@@ -32,66 +12,12 @@ import {
   standardizeAudioDeviceNames,
 } from './rendererutils';
 import { PTTKeyPressEvent, UiohookKeyMap } from '../types/KeyTypesUIOHook';
-
-const selectStyle = {
-  color: 'white',
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: 'white',
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#bb4220',
-  },
-  '&.Mui-focused': {
-    borderColor: '#bb4220',
-    color: '#bb4220',
-  },
-  '&:hover': {
-    '&& fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '& .MuiOutlinedInput-root': {
-    '&.Mui-focused fieldset': {
-      borderColor: '#bb4220',
-    },
-  },
-  '.MuiSvgIcon-root ': {
-    fill: 'white !important',
-  },
-};
-
-const sliderSx = {
-  '& .MuiSlider-thumb': {
-    color: 'white',
-  },
-  '& .MuiSlider-track': {
-    color: '#bb4220',
-  },
-  '& .MuiSlider-rail': {
-    color: '#bb4220',
-  },
-  '& .MuiSlider-active': {
-    color: '#bb4220',
-  },
-};
-
-const formControlStyle = { m: 1, width: '100%' };
-
-const switchStyle = {
-  mx: 2,
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
+import Label from './components/Label/Label';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import { MultiSelect } from './components/MultiSelect/MultiSelect';
+import Slider from './components/Slider/Slider';
+import Switch from './components/Switch/Switch';
+import { Input } from './components/Input/Input';
 
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timer | undefined;
@@ -195,255 +121,199 @@ const AudioSourceControls: React.FC = () => {
     audioDevices
   );
 
-  const handleMultiSelect = (
-    type: DeviceType,
-    event: SelectChangeEvent<string[]>
-  ) => {
-    const {
-      target: { value },
-    } = event;
-
-    const standardizedValue = standardizeAudioDeviceNames(
-      value,
+  const onDeviceChange = (type: DeviceType, values: string[]) => {
+    const standardizedValues = standardizeAudioDeviceNames(
+      values,
       audioDevices
     ).join();
-
     if (type === DeviceType.INPUT) {
       setConfig((prevState) => {
         return {
           ...prevState,
-          audioInputDevices: standardizedValue,
+          audioInputDevices: standardizedValues,
         };
       });
     } else {
       setConfig((prevState) => {
         return {
           ...prevState,
-          audioOutputDevices: standardizedValue,
+          audioOutputDevices: standardizedValues,
         };
       });
     }
   };
 
-  const getSelectedChip = (id: string) => {
-    const description = getAudioDeviceDescription(id, audioDevices);
-    return (
-      <Chip
-        sx={{ height: '25px', bgcolor: 'white' }}
-        key={description}
-        label={description}
-      />
-    );
-  };
-
-  const renderSelected = (selected: string[]) => {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 0.5,
-        }}
-      >
-        {selected !== undefined && selected.map(getSelectedChip)}
-      </Box>
-    );
-  };
-
-  const getOutputMenuItem = (device: IOBSDevice) => {
-    const tooManySelected = output.length >= 5;
-    const isSelected = output.indexOf(device.id) > -1;
-
-    return (
-      <MenuItem
-        sx={{ height: '25px' }}
-        disabled={tooManySelected && !isSelected}
-        key={`device_${device.id}`}
-        value={device.id}
-      >
-        <Checkbox checked={isSelected} />
-        <ListItemText primary={device.description} />
-      </MenuItem>
-    );
-  };
-
-  const getInputMenuItem = (device: IOBSDevice) => {
-    const tooManySelected = input.length >= 5;
-    const isSelected = input.indexOf(device.id) > -1;
-
-    return (
-      <MenuItem
-        sx={{ height: '25px' }}
-        disabled={tooManySelected && !isSelected}
-        key={`device_${device.id}`}
-        value={device.id}
-      >
-        <Checkbox checked={isSelected} />
-        <ListItemText primary={device.description} />
-      </MenuItem>
-    );
-  };
-
   const getSpeakerSelect = () => {
     return (
-      <FormControl size="small" sx={formControlStyle}>
-        <InputLabel sx={selectStyle}>Speakers</InputLabel>
-        <Select
-          multiple
-          value={output}
-          label="Speakers"
-          sx={selectStyle}
-          renderValue={renderSelected}
-          onChange={(e) => {
-            handleMultiSelect(DeviceType.OUTPUT, e);
-          }}
-        >
-          {audioDevices.output.map(getOutputMenuItem)}
-        </Select>
-      </FormControl>
+      <div className="flex flex-col w-full">
+        <Label className="flex items-center">
+          Speakers
+          <Tooltip
+            content={configSchema.audioOutputDevices.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <MultiSelect
+          options={audioDevices.output.map((audioDevice) => ({
+            value: audioDevice.id,
+            label: audioDevice.description,
+          }))}
+          onValueChange={(values) => onDeviceChange(DeviceType.OUTPUT, values)}
+          defaultValue={output}
+          placeholder="Select an output device"
+          maxCount={1}
+        />
+      </div>
     );
   };
 
-  const setSpeakerVolume = (_event: Event, newValue: number | number[]) => {
-    if (typeof newValue !== 'number') {
+  const setSpeakerVolume = (newValue: number[]) => {
+    if (typeof newValue[0] !== 'number') {
       return;
     }
 
     setConfig((prevState) => {
       return {
         ...prevState,
-        speakerVolume: newValue / 100,
+        speakerVolume: newValue[0] / 100,
       };
     });
   };
 
   const getSpeakerVolume = () => {
     return (
-      <Box sx={{ width: '100%' }}>
-        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
-          <VolumeDown sx={{ color: 'white' }} />
-          <Slider
-            sx={sliderSx}
-            value={config.speakerVolume * 100}
-            onChange={setSpeakerVolume}
-          />
-          <VolumeUp sx={{ color: 'white' }} />
-        </Stack>
-      </Box>
+      <div className="w-full flex gap-x-2 items-center">
+        <Volume1 />
+        <Slider
+          defaultValue={[config.speakerVolume * 100]}
+          value={[config.speakerVolume * 100]}
+          max={100}
+          step={1}
+          onValueChange={setSpeakerVolume}
+          withTooltip={false}
+        />
+        <Volume2 />
+      </div>
     );
   };
 
   const getMicSelect = () => {
     return (
-      <FormControl size="small" variant="outlined" sx={formControlStyle}>
-        <InputLabel sx={selectStyle}>Mics</InputLabel>
-        <Select
-          multiple
-          value={input}
-          label="Mics"
-          sx={selectStyle}
-          renderValue={renderSelected}
-          onChange={(e) => {
-            handleMultiSelect(DeviceType.INPUT, e);
-          }}
-        >
-          {audioDevices.input.map(getInputMenuItem)}
-        </Select>
-      </FormControl>
+      <div className="flex flex-col w-full">
+        <Label className="flex items-center">
+          Microphones
+          <Tooltip
+            content={configSchema.audioInputDevices.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <MultiSelect
+          options={audioDevices.input.map((audioDevice) => ({
+            value: audioDevice.id,
+            label: audioDevice.description,
+          }))}
+          onValueChange={(values) => onDeviceChange(DeviceType.INPUT, values)}
+          defaultValue={input}
+          placeholder="Select an input device"
+          maxCount={1}
+        />
+      </div>
     );
   };
 
-  const setMicVolume = (_event: Event, newValue: number | number[]) => {
-    if (typeof newValue !== 'number') {
+  const setMicVolume = (newValue: number[]) => {
+    if (typeof newValue[0] !== 'number') {
       return;
     }
 
     setConfig((prevState) => {
       return {
         ...prevState,
-        micVolume: newValue / 100,
+        micVolume: newValue[0] / 100,
       };
     });
   };
 
   const getMicVolume = () => {
     return (
-      <Box sx={{ width: '100%' }}>
-        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
-          <VolumeDown sx={{ color: 'white' }} />
-          <Slider
-            sx={sliderSx}
-            value={config.micVolume * 100}
-            onChange={setMicVolume}
-          />
-          <VolumeUp sx={{ color: 'white' }} />
-        </Stack>
-      </Box>
+      <div className="w-full flex gap-x-2 items-center">
+        <Volume1 />
+        <Slider
+          defaultValue={[config.micVolume * 100]}
+          value={[config.micVolume * 100]}
+          max={100}
+          step={1}
+          onValueChange={setMicVolume}
+          withTooltip={false}
+        />
+        <Volume2 />
+      </div>
     );
   };
 
-  const setForceMono = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setForceMono = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        obsForceMono: event.target.checked,
+        obsForceMono: checked,
       };
     });
   };
 
-  const setPushToTalk = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setPushToTalk = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        pushToTalk: event.target.checked,
+        pushToTalk: checked,
       };
     });
   };
 
-  const setAudioSuppression = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setAudioSuppression = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        obsAudioSuppression: event.target.checked,
+        obsAudioSuppression: checked,
       };
     });
   };
 
   const getMonoSwitch = () => {
     return (
-      <FormControlLabel
-        control={
+      <div className="flex flex-col w-[140px]">
+        <Label className="flex items-center">
+          Mono Input
+          <Tooltip content={configSchema.obsForceMono.description} side="right">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
           <Switch
-            sx={switchStyle}
             checked={config.obsForceMono}
-            onChange={setForceMono}
+            onCheckedChange={setForceMono}
           />
-        }
-        label="Mono Input"
-        labelPlacement="top"
-        sx={{
-          color: 'white',
-        }}
-      />
+        </div>
+      </div>
     );
   };
 
   const getPushToTalkSwitch = () => {
     return (
-      <FormControlLabel
-        control={
-          <Switch
-            sx={switchStyle}
-            checked={config.pushToTalk}
-            onChange={setPushToTalk}
-          />
-        }
-        label="Push To Talk"
-        labelPlacement="top"
-        sx={{
-          color: 'white',
-        }}
-      />
+      <div className="flex flex-col w-[140px]">
+        <Label className="flex items-center">
+          Push to Talk
+          <Tooltip content={configSchema.pushToTalk.description} side="right">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch checked={config.pushToTalk} onCheckedChange={setPushToTalk} />
+        </div>
+      </div>
     );
   };
 
@@ -481,99 +351,68 @@ const AudioSourceControls: React.FC = () => {
 
   const getPushToTalkSelect = () => {
     return (
-      <TextField
-        value={getHotkeyString()}
-        label="Push to Talk Key"
-        sx={selectStyle}
-        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        InputProps={{ readOnly: true, style: { color: 'white' } }}
-        onFocus={() => setPttHotKeyFieldFocused(true)}
-        onBlur={() => setPttHotKeyFieldFocused(false)}
-      />
+      <div className="flex flex-col">
+        <Label htmlFor="pttKey" className="flex items-center">
+          Push to Talk Key
+          <Tooltip
+            content={configSchema.pushToTalkKey.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
+          name="pttKey"
+          value={getHotkeyString()}
+          onFocus={() => setPttHotKeyFieldFocused(true)}
+          onBlur={() => setPttHotKeyFieldFocused(false)}
+          readOnly
+        />
+      </div>
     );
   };
 
   const getAudioSuppressionSwitch = () => {
     return (
-      <FormControlLabel
-        control={
+      <div className="flex flex-col w-[140px]">
+        <Label className="flex items-center">
+          Audio Suppression
+          <Tooltip
+            content={configSchema.obsAudioSuppression.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
           <Switch
-            sx={switchStyle}
             checked={config.obsAudioSuppression}
-            onChange={setAudioSuppression}
+            onCheckedChange={setAudioSuppression}
           />
-        }
-        label="Audio Suppression"
-        labelPlacement="top"
-        sx={{
-          color: 'white',
-        }}
-      />
-    );
-  };
-
-  const getInfoIcon = () => {
-    const helptext = [
-      /* eslint-disable prettier/prettier */
-      ['Speakers', configSchema.audioOutputDevices.description].join('\n'),
-      ['Mics', configSchema.audioInputDevices.description].join('\n'),
-      ['Audio Suppression', configSchema.obsAudioSuppression.description].join('\n'),
-      ['Mono Input', configSchema.obsForceMono.description].join('\n'),
-      ['Push To Talk', configSchema.pushToTalk.description].join('\n'),
-      // eslint-enable prettier/prettier */
-    ].join('\n\n');
-
-    return (
-      <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
-        <IconButton>
-          <InfoIcon style={{ color: 'white' }} />
-        </IconButton>
-      </Tooltip>
+        </div>
+      </div>
     );
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '300px',
-          mx: 2,
-        }}
-      >
-        {getSpeakerSelect()}
-        {getSpeakerVolume()}
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '300px',
-          mx: 2,
-        }}
-      >
-        {getMicSelect()}
-        {getMicVolume()}
-      </Box>
-      {getAudioSuppressionSwitch()}
-      {getMonoSwitch()}
-      {getPushToTalkSwitch()}
-      {config.pushToTalk && getPushToTalkSelect()}
-      {getInfoIcon()}
-    </Box>
+    <div className="flex gap-y-10 flex-col">
+      <div className="flex items-center content-start w-full gap-10 flex-wrap">
+        <div className="flex flex-col justify-center w-1/4 gap-y-4">
+          {getSpeakerSelect()}
+          {getSpeakerVolume()}
+        </div>
+        <div className="flex flex-col justify-center w-1/4 gap-y-4">
+          {getMicSelect()}
+          {getMicVolume()}
+        </div>
+        {getAudioSuppressionSwitch()}
+        {getMonoSwitch()}
+      </div>
+      <div className="flex items-center flex-wrap gap-y-4">
+        {getPushToTalkSwitch()}
+        {config.pushToTalk && getPushToTalkSelect()}
+      </div>
+    </div>
   );
 };
 

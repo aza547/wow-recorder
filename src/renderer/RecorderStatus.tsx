@@ -15,6 +15,7 @@ import {
 import { RecStatus } from 'main/types';
 import React from 'react';
 import { getSettings } from './useSettings';
+import StatusLight from './components/StatusLight/StatusLight';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -160,7 +161,7 @@ export default function RecorderStatus(props: IProps) {
       );
     }
 
-    if (recorderStatus === RecStatus.Overruning) {
+    if (recorderStatus === RecStatus.Overrunning) {
       return (
         <>
           <Typography sx={{ color: '#bb4420', m: 1 }}>
@@ -198,7 +199,7 @@ export default function RecorderStatus(props: IProps) {
       return <VisibilityOffIcon sx={{ width: '25px', height: '25px' }} />;
     }
 
-    if (recorderStatus === RecStatus.Overruning) {
+    if (recorderStatus === RecStatus.Overrunning) {
       return <MoreTimeIcon sx={{ width: '25px', height: '25px' }} />;
     }
 
@@ -231,7 +232,7 @@ export default function RecorderStatus(props: IProps) {
 
     if (
       recorderStatus === RecStatus.InvalidConfig ||
-      recorderStatus === RecStatus.Overruning
+      recorderStatus === RecStatus.Overrunning
     ) {
       return 'yellow';
     }

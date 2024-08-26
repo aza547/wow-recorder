@@ -1,23 +1,8 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import { FormControlLabel, Switch } from '@mui/material';
 import { ConfigurationSchema } from 'main/configSchema';
 import { setConfigValues, useSettings } from './useSettings';
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
+import Switch from './components/Switch/Switch';
+import Label from './components/Label/Label';
 
 const WindowsSettings = () => {
   const [config, setConfig] = useSettings();
@@ -45,80 +30,73 @@ const WindowsSettings = () => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (event: React.ChangeEvent<HTMLInputElement>) => void
+    changeFn: (checked: boolean) => void
   ) => (
     <Switch
-      sx={switchStyle}
       checked={Boolean(config[preference])}
       name={preference}
-      onChange={changeFn}
+      onCheckedChange={changeFn}
     />
   );
 
   const getSwitchForm = (
     preference: keyof ConfigurationSchema,
     label: string,
-    changeFn: (event: React.ChangeEvent<HTMLInputElement>) => void
+    changeFn: (checked: boolean) => void
   ) => {
     return (
-      <FormControlLabel
-        control={getSwitch(preference, changeFn)}
-        label={label}
-        labelPlacement="top"
-        style={{ color: 'white' }}
-      />
+      <div className="flex flex-col">
+        <Label htmlFor="separateBufferPath">{label}</Label>
+        <div className="flex h-10 items-center">
+          {getSwitch(preference, changeFn)}
+        </div>
+      </div>
     );
   };
 
-  const setRunOnStartup = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setRunOnStartup = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        startUp: event.target.checked,
+        startUp: checked,
       };
     });
   };
 
-  const setStartMinimized = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setStartMinimized = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        startMinimized: event.target.checked,
+        startMinimized: checked,
       };
     });
   };
 
-  const setMinimizeOnQuit = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setMinimizeOnQuit = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        minimizeOnQuit: event.target.checked,
+        minimizeOnQuit: checked,
       };
     });
   };
 
-  const setMinimizeToTray = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setMinimizeToTray = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        minimizeToTray: event.target.checked,
+        minimizeToTray: checked,
       };
     });
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-      }}
-    >
+    <div className="flex flex-row flex-wrap gap-x-8">
       {getSwitchForm('startUp', 'Run on Startup', setRunOnStartup)}
       {getSwitchForm('startMinimized', 'Start Minimized', setStartMinimized)}
       {getSwitchForm('minimizeOnQuit', 'Minimize on Quit', setMinimizeOnQuit)}
       {getSwitchForm('minimizeToTray', 'Minimize to Tray', setMinimizeToTray)}
-    </Box>
+    </div>
   );
 };
 

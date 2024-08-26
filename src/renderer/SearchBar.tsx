@@ -1,7 +1,8 @@
-import { TextField } from '@mui/material';
 import { AppState } from 'main/types';
 import { useEffect, useState } from 'react';
 import VideoFilter from './VideoFilter';
+import { Input } from './components/Input/Input';
+import Label from './components/Label/Label';
 
 interface IProps {
   appState: AppState;
@@ -42,30 +43,19 @@ const SearchBar = (props: IProps) => {
   };
 
   return (
-    <TextField
-      fullWidth
-      spellCheck={false}
-      size="small"
-      placeholder={VideoFilter.getSuggestions(category)}
-      id="search-bar"
-      value={searchText}
-      onChange={debouncedFilter}
-      // Need this so we don't trigger VideoPlayer keydown events
-      onKeyDown={(e) => e.stopPropagation()}
-      sx={{
-        '& .MuiOutlinedInput-root': {
-          '&.Mui-focused fieldset': { borderColor: '#bb4220' },
-          '& > fieldset': { borderColor: 'black' },
-          '&:hover fieldset': {
-            borderColor: '#bb4220',
-          },
-        },
-        '& label.Mui-focused': { color: '#bb4220' },
-        input: { color: 'white' },
-        height: '40px',
-      }}
-      inputProps={{ style: { color: 'white' } }}
-    />
+    <div>
+      <Label htmlFor="search-bar">Search</Label>
+      <Input
+        className="w-full"
+        spellCheck={false}
+        placeholder={VideoFilter.getSuggestions(category)}
+        id="search-bar"
+        name="search-bar"
+        value={searchText}
+        onChange={debouncedFilter}
+        onKeyDown={(e) => e.stopPropagation()}
+      />
+    </div>
   );
 };
 

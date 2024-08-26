@@ -140,8 +140,10 @@ export default class Manager {
       valid: false,
       current: this.obsVideoCfg,
       get: (cfg: ConfigService) => getObsVideoConfig(cfg),
-      validate: async (config: ObsVideoConfig) => Manager.validateVideoConfig(config),
-      configure: async (config: ObsVideoConfig) => this.configureObsVideo(config),
+      validate: async (config: ObsVideoConfig) =>
+        Manager.validateVideoConfig(config),
+      configure: async (config: ObsVideoConfig) =>
+        this.configureObsVideo(config),
     },
     {
       name: 'obsAudio',
@@ -149,7 +151,8 @@ export default class Manager {
       current: this.obsAudioCfg,
       get: (cfg: ConfigService) => getObsAudioConfig(cfg),
       validate: async () => {},
-      configure: async (config: ObsAudioConfig) => this.configureObsAudio(config),
+      configure: async (config: ObsAudioConfig) =>
+        this.configureObsAudio(config),
     },
     {
       name: 'flavour',
@@ -164,8 +167,10 @@ export default class Manager {
       valid: false,
       current: this.overlayCfg,
       get: (cfg: ConfigService) => getOverlayConfig(cfg),
-      validate: async (config: ObsOverlayConfig) => Manager.validateOverlayConfig(config),
-      configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
+      validate: async (config: ObsOverlayConfig) =>
+        Manager.validateOverlayConfig(config),
+      configure: async (config: ObsOverlayConfig) =>
+        this.configureObsOverlay(config),
     },
     /* eslint-enable prettier/prettier */
   ];
@@ -384,7 +389,7 @@ export default class Manager {
       this.eraLogHandler?.activity;
 
     if (inOverrun) {
-      this.refreshRecStatus(RecStatus.Overruning);
+      this.refreshRecStatus(RecStatus.Overrunning);
     } else if (inActivity) {
       this.refreshRecStatus(RecStatus.Recording);
     } else if (this.recorder.obsState === ERecordingState.Recording) {

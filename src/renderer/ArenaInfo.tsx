@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import React from 'react';
 import { RendererVideo } from 'main/types';
 import { getVideoResultText } from './rendererutils';
@@ -14,55 +14,25 @@ const ArenaInfo: React.FC<IProps> = (props: IProps) => {
 
   const renderResultText = () => {
     return (
-      <Typography
-        align="center"
-        sx={{
-          color: 'white',
-          fontWeight: '600',
-          fontFamily: '"Arial",sans-serif',
-          fontSize: '0.75rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-white font-semibold text-xs text-shadow-instance">
         {resultText}
-      </Typography>
+      </span>
     );
   };
 
   const renderMapName = () => {
     return (
-      <Typography
-        align="center"
-        sx={{
-          color: 'white',
-          fontWeight: '600',
-          fontFamily: '"Arial",sans-serif',
-          fontSize: '1rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-white font-semibold text-base text-shadow-instance">
         {zoneName}
-      </Typography>
+      </span>
     );
   };
 
   const renderCategoryName = () => {
     return (
-      <Typography
-        align="center"
-        sx={{
-          color: 'white',
-          fontWeight: '600',
-          fontFamily: '"Arial",sans-serif',
-          fontSize: '0.75rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-white font-semibold text-xs text-shadow-instance">
         {category}
-      </Typography>
+      </span>
     );
   };
 
