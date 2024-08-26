@@ -1,6 +1,5 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import { Typography } from '@mui/material';
 import { RendererVideo } from 'main/types';
 import { getInstanceDifficultyText } from './rendererutils';
 
@@ -16,37 +15,17 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
 
   const renderDifficultyText = () => {
     return (
-      <Typography
-        align="center"
-        sx={{
-          color: 'white',
-          fontFamily: '"Arial",sans-serif',
-          fontWeight: 600,
-          fontSize: '0.75rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-white font-sans font-semibold text-xs text-shadow-instance">
         {difficultyText}
-      </Typography>
+      </span>
     );
   };
 
   const renderEncounterText = () => {
     return (
-      <Typography
-        align="center"
-        sx={{
-          color: 'white',
-          fontFamily: '"Arial",sans-serif',
-          fontWeight: 600,
-          fontSize: '1rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-white font-sans font-semibold text-base text-shadow-instance">
         {encounterName}
-      </Typography>
+      </span>
     );
   };
 
@@ -56,19 +35,9 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <Typography
-        align="center"
-        sx={{
-          color: 'white',
-          fontFamily: '"Arial",sans-serif',
-          fontWeight: 600,
-          fontSize: '0.75rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-white font-sans font-semibold text-xs text-shadow-instance">
         {zoneName}
-      </Typography>
+      </span>
     );
   };
 

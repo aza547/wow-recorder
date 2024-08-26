@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import React from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { specializationById } from 'main/constants';
@@ -15,7 +15,6 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
   const { video } = props;
   const { combatants, category } = video;
   const isSoloShuffle = category === VideoCategory.SoloShuffle;
-  const fontSize = '0.75rem';
   const iconSize = '18px';
 
   if (combatants === undefined) {
@@ -79,19 +78,12 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
           justifyContent: 'end',
         }}
       >
-        <Typography
-          sx={{
-            color: nameColor,
-            fontFamily: '"Arial",sans-serif',
-            mr: '2px',
-            fontSize,
-            fontWeight: '600',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
+        <span
+          className="font-semibold text-xs text-shadow-instance mr-0.5"
+          style={{ color: nameColor }}
         >
           {combatant._name}
-        </Typography>
+        </span>
         <Box
           key={combatant._GUID}
           component="img"
@@ -149,19 +141,12 @@ const ArenaCompDisplay: React.FC<IProps> = (props: IProps) => {
             objectFit: 'cover',
           }}
         />
-        <Typography
-          sx={{
-            color: nameColor,
-            fontFamily: '"Arial",sans-serif',
-            ml: '2px',
-            fontSize,
-            fontWeight: 700,
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
+        <span
+          className="font-bold text-xs text-shadow-instance ml-0.5"
+          style={{ color: nameColor }}
         >
           {combatant._name}
-        </Typography>
+        </span>
       </Box>
     );
   };

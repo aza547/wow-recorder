@@ -1,44 +1,27 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import {
-  FormControl,
-  FormControlLabel,
-  InputLabel,
-  LinearProgress,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Switch,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import { ConfigurationSchema } from 'main/configSchema';
+import { configSchema, ConfigurationSchema } from 'main/configSchema';
 import { CloudStatus, RecStatus } from 'main/types';
 import { useState } from 'react';
-import CloudIcon from '@mui/icons-material/Cloud';
+import { Cloud, Info } from 'lucide-react';
 import { setConfigValues, useSettings } from './useSettings';
+import Switch from './components/Switch/Switch';
+import Label from './components/Label/Label';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import { Input } from './components/Input/Input';
+import Progress from './components/Progress/Progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './components/Select/Select';
+import Separator from './components/Separator/Separator';
+import TextBanner from './components/TextBanner/TextBanner';
 
 const ipc = window.electron.ipcRenderer;
 
 const raidDifficultyOptions = ['LFR', 'Normal', 'Heroic', 'Mythic'];
-
-const formControlLabelStyle = { color: 'white', m: 2 };
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
 
 let debounceTimer: NodeJS.Timer | undefined;
 
@@ -124,7 +107,7 @@ const CloudSettings = (props: IProps) => {
 
   const isComponentDisabled = () => {
     const isRecording = recorderStatus === RecStatus.Recording;
-    const isOverrunning = recorderStatus === RecStatus.Overruning;
+    const isOverrunning = recorderStatus === RecStatus.Overrunning;
     return isRecording || isOverrunning;
   };
 
@@ -134,96 +117,53 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <Typography
-        variant="h6"
-        sx={{
-          color: 'white',
-          fontSize: '0.75rem',
-          fontFamily: '"Arial",sans-serif',
-          fontStyle: 'italic',
-          m: 1,
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
-        Some settings in this category are currently hidden as they can not be
+      <TextBanner>
+        Some settings in this category are currently hidden as they cannot be
         modified while a recording is active.
-      </Typography>
+      </TextBanner>
     );
   };
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (event: React.ChangeEvent<HTMLInputElement>) => void
+    changeFn: (checked: boolean) => void
   ) => (
     <Switch
-      sx={switchStyle}
       checked={Boolean(config[preference])}
       name={preference}
-      onChange={changeFn}
+      onCheckedChange={changeFn}
     />
   );
 
   const getSwitchForm = (
     preference: keyof ConfigurationSchema,
-    label: string,
-    width: string | undefined = undefined
+    label: string
   ) => {
-    const changeFn = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const changeFn = (checked: boolean) => {
       setConfig((prevState) => {
         return {
           ...prevState,
-          [preference]: event.target.checked,
+          [preference]: checked,
         };
       });
     };
 
     return (
-      <FormControlLabel
-        control={getSwitch(preference, changeFn)}
-        label={label}
-        labelPlacement="top"
-        style={{ color: 'white', width }}
-      />
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor={preference} className="flex items-center">
+          {label}
+          <Tooltip content={configSchema[preference].description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch(preference, changeFn)}
+        </div>
+      </div>
     );
   };
 
-  const formControlStyle = { width: '100%' };
-
-  const style = {
-    m: 1,
-    width: '100%',
-    color: 'white',
-    '& .MuiOutlinedInput-notchedOutline': {
-      borderColor: 'white',
-    },
-    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-      borderColor: '#bb4220',
-    },
-    '&.Mui-focused': {
-      borderColor: '#bb4220',
-      color: '#bb4220',
-    },
-    '&:hover': {
-      '&& fieldset': {
-        borderColor: '#bb4220',
-      },
-    },
-    '& .MuiOutlinedInput-root': {
-      '&.Mui-focused fieldset': {
-        borderColor: '#bb4220',
-      },
-    },
-    '.MuiSvgIcon-root ': {
-      fill: 'white !important',
-    },
-  };
-
-  const setMinRaidThreshold = (event: SelectChangeEvent<string>) => {
-    const {
-      target: { value },
-    } = event;
-
+  const setMinRaidThreshold = (value: string) => {
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -238,25 +178,36 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <FormControl sx={{ ...formControlStyle, maxWidth: '250px' }}>
-        <InputLabel sx={{ ...style, maxWidth: '250px' }}>
-          Upload Difficulty Threshold
-        </InputLabel>
-        <Select
-          value={config.cloudUploadRaidMinDifficulty}
-          disabled={!config.cloudUploadRaids}
-          label="Upload Difficulty Threshold"
-          variant="outlined"
-          onChange={setMinRaidThreshold}
-          sx={{ ...style, maxWidth: '250px' }}
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label
+          htmlFor="cloudUploadRaidMinDifficulty"
+          className="flex items-center"
         >
-          {raidDifficultyOptions.map((difficulty: string) => (
-            <MenuItem key={difficulty} value={difficulty}>
-              {difficulty}
-            </MenuItem>
-          ))}
+          Upload Difficulty Threshold
+          <Tooltip
+            content={configSchema.cloudUploadRaidMinDifficulty.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Select
+          onValueChange={setMinRaidThreshold}
+          disabled={!config.cloudUploadRaids}
+          value={config.cloudUploadRaidMinDifficulty}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a difficulty" />
+          </SelectTrigger>
+          <SelectContent>
+            {raidDifficultyOptions.map((difficulty: string) => (
+              <SelectItem key={difficulty} value={difficulty}>
+                {difficulty}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>
-      </FormControl>
+      </div>
     );
   };
 
@@ -279,24 +230,34 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <TextField
-        value={config.cloudUploadDungeonMinLevel}
-        onChange={setMinKeystoneLevel}
-        disabled={!config.cloudUploadDungeons}
-        label="Upload Level Threshold"
-        variant="outlined"
-        type="number"
-        error={config.cloudUploadDungeonMinLevel < 2}
-        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        sx={{ ...style, maxWidth: '250px' }}
-        inputProps={{ min: 0, style: { color: 'white' } }}
-      />
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label
+          htmlFor="cloudUploadDungeonMinLevel"
+          className="flex items-center"
+        >
+          Upload Level Threshold
+          <Tooltip
+            content={configSchema.cloudUploadDungeonMinLevel.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
+          value={config.cloudUploadDungeonMinLevel}
+          name="cloudUploadDungeonMinLevel"
+          disabled={!config.cloudUploadDungeons}
+          onChange={setMinKeystoneLevel}
+          type="numeric"
+          min={2}
+        />
+      </div>
     );
   };
 
-  const setCloudStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setCloudStorage = (checked: boolean) => {
     setConfig((prevState) => {
-      const cloudStorage = event.target.checked;
+      const cloudStorage = checked;
 
       const newState = {
         ...prevState,
@@ -313,11 +274,11 @@ const CloudSettings = (props: IProps) => {
     });
   };
 
-  const setCloudUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setCloudUpload = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudUpload: event.target.checked,
+        cloudUpload: checked,
       };
     });
   };
@@ -328,15 +289,17 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <FormControlLabel
-          control={getSwitch('cloudStorage', setCloudStorage)}
-          label="Cloud Playback"
-          labelPlacement="top"
-          style={formControlLabelStyle}
-          disabled={isComponentDisabled()}
-        />
-      </Box>
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudStorage" className="flex items-center">
+          Cloud Playback
+          <Tooltip content={configSchema.cloudStorage.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudStorage', setCloudStorage)}
+        </div>
+      </div>
     );
   };
 
@@ -346,25 +309,25 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <FormControlLabel
-          control={getSwitch('cloudUpload', setCloudUpload)}
-          label="Cloud Upload"
-          labelPlacement="top"
-          style={formControlLabelStyle}
-          disabled={isComponentDisabled()}
-        />
-      </Box>
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudUpload" className="flex items-center">
+          Cloud Upload
+          <Tooltip content={configSchema.cloudUpload.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudUpload', setCloudUpload)}
+        </div>
+      </div>
     );
   };
 
-  const setCloudUploadRateLimit = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const setCloudUploadRateLimit = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudUploadRateLimit: event.target.checked,
+        cloudUploadRateLimit: checked,
       };
     });
   };
@@ -375,15 +338,20 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <FormControlLabel
-          control={getSwitch('cloudUploadRateLimit', setCloudUploadRateLimit)}
-          label="Upload Rate Limit"
-          labelPlacement="top"
-          style={formControlLabelStyle}
-          disabled={isComponentDisabled()}
-        />
-      </Box>
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudUploadRateLimit" className="flex items-center">
+          Upload Rate Limit
+          <Tooltip
+            content={configSchema.cloudUploadRateLimit.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudUploadRateLimit', setCloudUploadRateLimit)}
+        </div>
+      </div>
     );
   };
 
@@ -404,21 +372,29 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <TextField
+      <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+        <Label htmlFor="cloudAccountName" className="flex items-center">
+          User / Email
+          <Tooltip
+            content={configSchema.cloudAccountName.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
           name="cloudAccountName"
           value={config.cloudAccountName}
-          label="User / Email"
-          variant="outlined"
-          spellCheck={false}
           onChange={setCloudAccountName}
-          error={config.cloudAccountName === ''}
-          helperText={config.cloudAccountName === '' ? 'Must not be empty' : ''}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, m: 1, width: '300px' }}
-          inputProps={{ style: { color: 'white' } }}
+          spellCheck={false}
+          required
         />
-      </Box>
+        {config.cloudAccountName === '' && (
+          <span className="text-error text-xs font-semibold mt-1">
+            Cannot be empty
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -439,23 +415,30 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <TextField
+      <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+        <Label htmlFor="cloudAccountPassword" className="flex items-center">
+          Password
+          <Tooltip
+            content={configSchema.cloudAccountPassword.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
           name="cloudAccountPassword"
           value={config.cloudAccountPassword}
-          label="Account Pasword"
-          type="password"
-          variant="outlined"
-          error={config.cloudAccountPassword === ''}
-          helperText={
-            config.cloudAccountPassword === '' ? 'Must not be empty' : ''
-          }
           onChange={setCloudPassword}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, m: 1, width: '300px' }}
-          inputProps={{ style: { color: 'white' } }}
+          spellCheck={false}
+          type="password"
+          required
         />
-      </Box>
+        {config.cloudAccountPassword === '' && (
+          <span className="text-error text-xs font-semibold mt-1">
+            Cannot be empty
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -474,21 +457,26 @@ const CloudSettings = (props: IProps) => {
     }
 
     return (
-      <Box>
-        <TextField
+      <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+        <Label htmlFor="cloudGuildName" className="flex items-center">
+          Guild Name
+          <Tooltip content={configSchema.cloudGuildName.description} side="top">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
           name="cloudGuildName"
           value={config.cloudGuildName}
-          label="Guild Name"
-          variant="outlined"
-          spellCheck={false}
-          error={config.cloudGuildName === ''}
-          helperText={config.cloudGuildName === '' ? 'Must not be empty' : ''}
           onChange={setCloudGuild}
-          InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-          sx={{ ...style, m: 1, width: '300px' }}
-          inputProps={{ style: { color: 'white' } }}
+          spellCheck={false}
+          required
         />
-      </Box>
+        {config.cloudGuildName === '' && (
+          <span className="text-error text-xs font-semibold mt-1">
+            Cannot be empty
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -498,101 +486,40 @@ const CloudSettings = (props: IProps) => {
     const perc = Math.round((100 * usage) / max);
 
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'left',
-          width: '100%',
-          my: 2,
-        }}
-      >
-        <Tooltip title="Cloud usage">
-          <CloudIcon
-            sx={{ color: 'white', height: '20px', width: '20px', mx: 1 }}
-          />
+      <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
+        <Tooltip content="Cloud usage">
+          <Cloud size={24} />
         </Tooltip>
 
-        <LinearProgress
-          variant="determinate"
-          value={perc}
-          sx={{
-            minWidth: '300px',
-            height: '15px',
-            borderRadius: '2px',
-            border: '1px solid black',
-            backgroundColor: 'white',
-            '& .MuiLinearProgress-bar': {
-              backgroundColor: '#bb4420',
-            },
-          }}
-        />
-        <Typography
-          sx={{
-            color: 'white',
-            fontSize: '0.75rem',
-            mx: '5px',
-          }}
-        >
+        <Progress value={perc} className="h-3" />
+        <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
           {Math.round(usage)}GB of {Math.round(max)}GB
-        </Typography>
-      </Box>
+        </span>
+      </div>
     );
   };
 
   const getCloudUploadCategorySettings = () => {
     return (
       <>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'flex-start',
-            width: '100%',
-            mt: 1,
-          }}
-        >
-          {getSwitchForm('cloudUploadRaids', 'Upload Raids', '125px')}
+        <div className="flex flex-row gap-x-6">
+          {getSwitchForm('cloudUploadRaids', 'Upload Raids')}
           {getMinRaidDifficultySelect()}
-        </Box>
+        </div>
 
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'start',
-            width: '100%',
-          }}
-        >
-          {getSwitchForm('cloudUploadDungeons', 'Upload Mythic+', '125px')}
+        <div className="flex flex-row gap-x-6">
+          {getSwitchForm('cloudUploadDungeons', 'Upload Mythic+')}
           {getMinKeystoneLevelField()}
-        </Box>
+        </div>
 
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'start',
-            width: '100%',
-            my: 1,
-          }}
-        >
-          {getSwitchForm('cloudUpload2v2', 'Upload 2v2', '125px')}
-          {getSwitchForm('cloudUpload3v3', 'Upload 3v3', '125px')}
-          {getSwitchForm('cloudUpload5v5', 'Upload 5v5', '125px')}
-          {getSwitchForm('cloudUploadSkirmish', 'Upload Skirmish', '125px')}
-          {getSwitchForm(
-            'cloudUploadSoloShuffle',
-            'Upload Solo Shuffle',
-            '150px'
-          )}
-          {getSwitchForm(
-            'cloudUploadBattlegrounds',
-            'Upload Battlegrounds',
-            '160px'
-          )}
-        </Box>
+        <div className="flex flex-row gap-x-6">
+          {getSwitchForm('cloudUpload2v2', 'Upload 2v2')}
+          {getSwitchForm('cloudUpload3v3', 'Upload 3v3')}
+          {getSwitchForm('cloudUpload5v5', 'Upload 5v5')}
+          {getSwitchForm('cloudUploadSkirmish', 'Upload Skirmish')}
+          {getSwitchForm('cloudUploadSoloShuffle', 'Upload Solo Shuffle')}
+          {getSwitchForm('cloudUploadBattlegrounds', 'Upload Battlegrounds')}
+        </div>
       </>
     );
   };
@@ -615,45 +542,61 @@ const CloudSettings = (props: IProps) => {
       return <></>;
     }
 
-    const helperText =
-      config.cloudUploadRateLimitMbps < 1 ? 'Must be 1 or greater' : '';
-
     return (
-      <TextField
-        value={config.cloudUploadRateLimitMbps}
-        onChange={setUploadRateLimit}
-        label="Upload Rate Limit (MB/s)"
-        variant="outlined"
-        type="number"
-        error={config.cloudUploadRateLimitMbps < 1}
-        helperText={helperText}
-        InputLabelProps={{ shrink: true, style: { color: 'white' } }}
-        sx={{ ...style, maxWidth: '250px' }}
-        inputProps={{ min: 0, style: { color: 'white' } }}
-      />
+      <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+        <Label htmlFor="cloudUploadRateLimitMbps" className="flex items-center">
+          Upload Rate Limit (MB/s)
+          <Tooltip
+            content={configSchema.cloudUploadRateLimitMbps.description}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <Input
+          name="cloudUploadRateLimitMbps"
+          value={config.cloudUploadRateLimitMbps}
+          onChange={setUploadRateLimit}
+          spellCheck={false}
+          type="numeric"
+        />
+        {config.cloudUploadRateLimitMbps < 1 && (
+          <span className="text-error text-xs font-semibold mt-1">
+            Must be 1 or greater
+          </span>
+        )}
+      </div>
     );
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="flex flex-col gap-y-4 flex-wrap">
       {getDisabledText()}
 
-      <Box sx={{ display: 'flex', flexDirection: 'row', mb: 1 }}>
-        {getCloudSwitch()}
-        {getCloudUploadSwitch()}
-        {getCloudUploadRateLimitSwitch()}
-        {getRateLimitField()}
-      </Box>
+      <div className="flex flex-row">{getCloudSwitch()}</div>
 
-      <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+      <div className="flex flex-row gap-4 flex-wrap">
         {getCloudAccountNameField()}
         {getCloudAccountPasswordField()}
         {getCloudGuildField()}
-      </Box>
+      </div>
 
-      {config.cloudStorage && getCloudUsageBar()}
-      {config.cloudUpload && getCloudUploadCategorySettings()}
-    </Box>
+      {config.cloudStorage && (
+        <>
+          {getCloudUsageBar()}
+          <Separator className="my-4" />
+        </>
+      )}
+
+      <div className="flex flex-col gap-4">
+        <div>{getCloudUploadSwitch()}</div>
+        <div className="flex flex-row gap-x-6">
+          {getCloudUploadRateLimitSwitch()}
+          {getRateLimitField()}
+        </div>
+        {config.cloudUpload && getCloudUploadCategorySettings()}
+      </div>
+    </div>
   );
 };
 

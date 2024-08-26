@@ -36,8 +36,15 @@ const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   return true;
 };
 
-const allowUploadCategory = (cfg: ConfigService, metadata: Metadata) => {
+const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
   const { category } = metadata;
+
+  const upload = cfg.get<boolean>('cloudUpload');
+
+  if (!upload) {
+    console.info('[configUtils] Cloud upload is disabled');
+    return false;
+  }
 
   if (category === VideoCategory.Clips) {
     console.info('[configUtils] Clips are always uploaded');
@@ -194,7 +201,7 @@ const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
 // eslint-disable-next-line import/prefer-default-export
 export {
   allowRecordCategory,
-  allowUploadCategory,
+  shouldUpload,
   getObsBaseConfig,
   getObsVideoConfig,
   getObsAudioConfig,

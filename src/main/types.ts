@@ -20,7 +20,7 @@ enum RecStatus {
   InvalidConfig,
   ReadyToRecord,
   FatalError,
-  Overruning,
+  Overrunning,
   Reconfiguring,
 }
 

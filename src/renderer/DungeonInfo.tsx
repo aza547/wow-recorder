@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import React from 'react';
 import { RendererVideo } from 'main/types';
 import { dungeonAffixesById } from 'main/constants';
@@ -41,56 +41,26 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
             objectFit: 'cover',
           }}
         />
-        <Typography
-          sx={{
-            color: 'white',
-            fontFamily: '"Arial",sans-serif',
-            ml: '2px',
-            fontSize: '0.75rem',
-            fontWeight: '600',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
-        >
+        <span className="text-white font-semibold text-xs text-shadow-instance ml-0.5">
           {dungeonAffixesById[affixID]}
-        </Typography>
+        </span>
       </Box>
     );
   };
 
   const renderDungeonName = () => {
     return (
-      <Typography
-        align="center"
-        sx={{
-          color: 'white',
-          fontWeight: '600',
-          fontFamily: '"Arial",sans-serif',
-          fontSize: '0.75rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-white font-semibold text-xs text-shadow-instance text-center">
         {dungeonName}
-      </Typography>
+      </span>
     );
   };
 
   const renderDungeonLevel = () => {
     return (
-      <Typography
-        align="center"
-        sx={{
-          color: '#ff8000',
-          fontWeight: '600',
-          fontFamily: '"Arial",sans-serif',
-          fontSize: '0.75rem',
-          textShadow:
-            '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-        }}
-      >
+      <span className="text-[#ff8000] font-semibold text-xs text-shadow-instance">
         +{video.keystoneLevel || video.level}
-      </Typography>
+      </span>
     );
   };
 
@@ -105,19 +75,9 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           justifyContent: 'center',
         }}
       >
-        <Typography
-          align="center"
-          sx={{
-            color: 'white',
-            fontWeight: '600',
-            fontFamily: '"Arial",sans-serif',
-            fontSize: '0.75rem',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
-        >
+        <span className="text-white font-semibold text-xs text-shadow-instance">
           {resultText}
-        </Typography>
+        </span>
         <Box
           key="chest-icon"
           component="img"
@@ -143,19 +103,9 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           justifyContent: 'center',
         }}
       >
-        <Typography
-          align="center"
-          sx={{
-            color: 'white',
-            fontWeight: '600',
-            fontFamily: '"Arial",sans-serif',
-            fontSize: '0.75rem',
-            textShadow:
-              '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-          }}
-        >
+        <span className="text-white font-semibold text-xs text-shadow-instance">
           {deathCount}
-        </Typography>
+        </span>
         <Box
           key="death-icon"
           component="img"

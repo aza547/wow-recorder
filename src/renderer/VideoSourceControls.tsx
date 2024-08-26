@@ -1,34 +1,17 @@
-import {
-  Box,
-  FormControlLabel,
-  Switch,
-  ToggleButton,
-  ToggleButtonGroup,
-  Tooltip,
-  IconButton,
-} from '@mui/material';
 import React, { useState } from 'react';
 import { OurDisplayType } from 'main/types';
 import { configSchema } from 'main/configSchema';
-import InfoIcon from '@mui/icons-material/Info';
+import { Info } from 'lucide-react';
 import { useSettings, setConfigValues } from './useSettings';
+import Label from './components/Label/Label';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from './components/ToggleGroup/ToggleGroup';
+import Switch from './components/Switch/Switch';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
-
-const switchStyle = {
-  '& .MuiSwitch-switchBase': {
-    '&.Mui-checked': {
-      color: '#fff',
-      '+.MuiSwitch-track': {
-        backgroundColor: '#bb4220',
-        opacity: 1.0,
-      },
-    },
-    '&.Mui-disabled + .MuiSwitch-track': {
-      opacity: 0.5,
-    },
-  },
-};
 
 const VideoSourceControls: React.FC = () => {
   const [config, setConfig] = useSettings();
@@ -59,10 +42,7 @@ const VideoSourceControls: React.FC = () => {
     ipc.sendMessage('settingsChange', []);
   }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
 
-  const setOBSCaptureMode = (
-    _event: React.MouseEvent<HTMLElement>,
-    mode: string
-  ) => {
+  const setOBSCaptureMode = (mode: string) => {
     if (mode === null) {
       return;
     }
@@ -75,10 +55,7 @@ const VideoSourceControls: React.FC = () => {
     });
   };
 
-  const setMonitor = (
-    _event: React.MouseEvent<HTMLElement>,
-    display: number
-  ) => {
+  const setMonitor = (display: string) => {
     if (display === null) {
       return;
     }
@@ -86,54 +63,44 @@ const VideoSourceControls: React.FC = () => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        monitorIndex: display,
+        monitorIndex: parseInt(display, 10),
       };
     });
   };
 
-  const setCaptureCursor = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setCaptureCursor = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        captureCursor: event.target.checked,
+        captureCursor: checked,
       };
     });
-  };
-
-  const getToggleButton = (
-    value: string | number,
-    display: string | number
-  ) => {
-    return (
-      <ToggleButton
-        value={value}
-        key={value}
-        sx={{
-          color: 'white',
-          height: '40px',
-          '&.Mui-selected, &.Mui-selected:hover': {
-            color: 'white',
-            backgroundColor: '#bb4420',
-          },
-        }}
-      >
-        {display}
-      </ToggleButton>
-    );
   };
 
   const getCaptureModeToggle = () => {
     return (
-      <ToggleButtonGroup
-        value={config.obsCaptureMode}
-        exclusive
-        onChange={setOBSCaptureMode}
-        sx={{ border: '1px solid white', height: '40px', mx: 1 }}
-      >
-        {getToggleButton('window_capture', 'window')}
-        {getToggleButton('game_capture', 'game')}
-        {getToggleButton('monitor_capture', 'monitor')}
-      </ToggleButtonGroup>
+      <div>
+        <Label className="flex items-center">
+          Capture Mode
+          <Tooltip
+            content={configSchema.obsCaptureMode.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <ToggleGroup
+          value={config.obsCaptureMode}
+          onValueChange={setOBSCaptureMode}
+          size="sm"
+          type="single"
+          variant="outline"
+        >
+          <ToggleGroupItem value="window_capture">Window</ToggleGroupItem>
+          <ToggleGroupItem value="game_capture">Game</ToggleGroupItem>
+          <ToggleGroupItem value="monitor_capture">Monitor</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
     );
   };
 
@@ -143,68 +110,58 @@ const VideoSourceControls: React.FC = () => {
     }
 
     return (
-      <ToggleButtonGroup
-        value={config.monitorIndex}
-        exclusive
-        onChange={setMonitor}
-        sx={{ border: '1px solid white', height: '40px', mx: 1 }}
-      >
-        {displays.map((display: OurDisplayType) =>
-          getToggleButton(display.index, display.index + 1)
-        )}
-      </ToggleButtonGroup>
+      <div>
+        <Label className="flex items-center">
+          Monitor
+          <Tooltip content={configSchema.monitorIndex.description} side="right">
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <ToggleGroup
+          value={config.monitorIndex.toString()}
+          onValueChange={setMonitor}
+          type="single"
+          variant="outline"
+          size="sm"
+        >
+          {displays.map((display: OurDisplayType) => (
+            <ToggleGroupItem value={display.index.toString()}>
+              {display.index + 1}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </div>
     );
   };
 
   const getCursorToggle = () => {
     return (
-      <FormControlLabel
-        control={
+      <div className="flex flex-col w-[140px]">
+        <Label className="flex items-center">
+          Capture Cursor
+          <Tooltip
+            content={configSchema.captureCursor.description}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
           <Switch
-            sx={switchStyle}
             checked={config.captureCursor}
-            onChange={setCaptureCursor}
+            onCheckedChange={setCaptureCursor}
           />
-        }
-        label="Capture Cursor"
-        labelPlacement="top"
-        sx={{
-          color: 'white',
-        }}
-      />
-    );
-  };
-
-  const getInfoIcon = () => {
-    const helptext = [
-      ['Capture Mode', configSchema.obsCaptureMode.description].join('\n'),
-      ['Monitor', configSchema.monitorIndex.description].join('\n'),
-      ['Capture Cursor', configSchema.captureCursor.description].join('\n'),
-    ].join('\n\n');
-
-    return (
-      <Tooltip title={<div style={{ whiteSpace: 'pre-line' }}>{helptext}</div>}>
-        <IconButton>
-          <InfoIcon style={{ color: 'white' }} />
-        </IconButton>
-      </Tooltip>
+        </div>
+      </div>
     );
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-      }}
-    >
+    <div className="flex items-center w-full gap-x-8">
       {getCaptureModeToggle()}
       {getMonitorToggle()}
       {getCursorToggle()}
-      {getInfoIcon()}
-    </Box>
+    </div>
   );
 };
 

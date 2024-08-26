@@ -1,7 +1,7 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
 import assert from 'assert';
-import { allowUploadCategory } from '../utils/configUtils';
+import { shouldUpload } from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from './ConfigService';
 import {
@@ -157,7 +157,6 @@ export default class VideoProcessQueue {
    */
   public unsetCloudClient() {
     this.cloudClient = undefined;
-    this.cfg.get<string>('storagePath');
   }
 
   /**
@@ -221,16 +220,12 @@ export default class VideoProcessQueue {
         await tryUnlink(data.source);
       }
 
-      if (this.cloudClient !== undefined) {
-        const allowUpload = allowUploadCategory(this.cfg, data.metadata);
+      if (this.cloudClient && shouldUpload(this.cfg, data.metadata)) {
+        const item: UploadQueueItem = {
+          path: videoPath,
+        };
 
-        if (allowUpload) {
-          const item: UploadQueueItem = {
-            path: videoPath,
-          };
-
-          this.queueUpload(item);
-        }
+        this.queueUpload(item);
       }
     } catch (error) {
       console.error(
@@ -290,7 +285,7 @@ export default class VideoProcessQueue {
       };
 
       if (cloudMetadata.level) {
-        // The string "level" isn't a valid column name, in new videos we
+        // The string "level" isn't a valid SQL column name, in new videos we
         // use the keystoneLevel entry in the metadata, but if we're uploading
         // an old video correct it here at the point of upload.
         cloudMetadata.keystoneLevel = cloudMetadata.level;
@@ -358,7 +353,11 @@ export default class VideoProcessQueue {
         ),
       ]);
 
-      const metadata = rendererVideoToMetadata(video);
+      // Spread to force this to be cloned, avoiding modifying the original input,
+      // which is used again later. This manifested as a bug that prevented us clearing
+      // the entry from the inProgressDownloads when done, meaning that a repeated
+      // attempt to download would fail.
+      const metadata = rendererVideoToMetadata({ ...video });
       const videoPath = path.join(storageDir, `${videoName}.mp4`);
       await writeMetadataFile(videoPath, metadata);
     } catch (error) {
@@ -475,7 +474,7 @@ export default class VideoProcessQueue {
   private async uploadQueueEmpty() {
     console.info('[VideoProcessQueue] Upload processing queue empty');
 
-    if (this.cloudClient === undefined) {
+    if (!this.cloudClient) {
       return;
     }
 

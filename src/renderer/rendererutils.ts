@@ -354,14 +354,14 @@ const getResultColor = (video: RendererVideo) => {
     upgradeLevel < 1
   ) {
     // It's a completed, but depleted mythic+.
-    return 'rgb(171, 170, 30, 0.3)';
+    return 'hsl(var(--warning))';
   }
 
   if (result) {
-    return 'rgb(53, 164, 50, 0.3)';
+    return 'hsl(var(--success))';
   }
 
-  return 'rgb(156, 21, 21, 0.3)';
+  return 'hsl(var(--error))';
 };
 
 const getPlayerName = (video: RendererVideo) => {

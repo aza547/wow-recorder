@@ -1,4 +1,3 @@
-import { Box, Button } from '@mui/material';
 import { VideoCategory } from 'types/VideoCategory';
 import { useEffect, useRef } from 'react';
 import { ConfigurationSchema } from 'main/configSchema';
@@ -8,16 +7,11 @@ import {
   convertNumToDeathMarkers,
   convertDeathMarkersToNum,
 } from './rendererutils';
-
-const buttonSx = {
-  mx: 0.5,
-  height: '40px',
-  ':hover': {
-    color: 'white',
-    borderColor: '#bb4420',
-    background: '#bb4420',
-  },
-};
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from './components/ToggleGroup/ToggleGroup';
+import Label from './components/Label/Label';
 
 interface IProps {
   config: ConfigurationSchema;
@@ -44,140 +38,102 @@ const VideoMarkerToggles = (props: IProps) => {
     });
   }, [config.deathMarkers, config.encounterMarkers, config.roundMarkers]);
 
-  const toggleDeaths = () => {
-    const options = Object.values(DeathMarkers);
-    const current = options.indexOf(deathMarkers);
-    const next = current < options.length - 1 ? current + 1 : 0;
-
+  const setDeaths = (value: DeathMarkers) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        deathMarkers: convertDeathMarkersToNum(options[next]),
+        deathMarkers: convertDeathMarkersToNum(value),
       };
     });
   };
 
-  const toggleEncounters = () => {
+  const setEncounterMarkers = (value: string) => {
+    const isTrue = value === 'true';
     setConfig((prevState) => {
       return {
         ...prevState,
-        encounterMarkers: !config.encounterMarkers,
+        encounterMarkers: isTrue,
       };
     });
   };
 
-  const toggleRound = () => {
+  const setRoundMarkers = (value: string) => {
+    const isTrue = value === 'true';
     setConfig((prevState) => {
       return {
         ...prevState,
-        roundMarkers: !config.roundMarkers,
+        roundMarkers: isTrue,
       };
     });
   };
 
   const renderDeathSelection = () => {
-    let color;
-    let backgroundColor;
-
-    if (deathMarkers === DeathMarkers.ALL) {
-      color = 'rgba(255, 255, 255, 1)';
-      backgroundColor = 'rgba(187, 68, 32, 0.75)';
-    } else if (deathMarkers === DeathMarkers.OWN) {
-      color = 'rgba(255, 255, 255, 0.75)';
-      backgroundColor = 'rgba(187, 68, 32, 0.4)';
-    } else {
-      color = 'rgba(255, 255, 255, 0.5)';
-      backgroundColor = 'rgba(0, 0, 0, 0)';
-    }
-
     return (
-      <Button
-        variant="outlined"
-        onClick={toggleDeaths}
-        sx={{
-          ...buttonSx,
-          color,
-          backgroundColor,
-          border: ' 1px solid black',
-        }}
-      >
-        Deaths: {deathMarkers}
-      </Button>
+      <div>
+        <Label>Show deaths</Label>
+        <ToggleGroup
+          type="single"
+          value={deathMarkers}
+          size="sm"
+          onValueChange={setDeaths}
+          variant="outline"
+        >
+          <ToggleGroupItem value={DeathMarkers.ALL}>
+            {DeathMarkers.ALL}
+          </ToggleGroupItem>
+          <ToggleGroupItem value={DeathMarkers.OWN}>
+            {DeathMarkers.OWN}
+          </ToggleGroupItem>
+          <ToggleGroupItem value={DeathMarkers.NONE}>
+            {DeathMarkers.NONE}
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
     );
   };
 
   const renderEncounterSelection = () => {
-    const text = config.encounterMarkers ? 'ON' : 'OFF';
-
-    let color;
-    let backgroundColor;
-
-    if (config.encounterMarkers) {
-      color = 'rgba(255, 255, 255, 1)';
-      backgroundColor = 'rgba(163, 53, 238, 0.5)';
-    } else {
-      color = 'rgba(255, 255, 255, 0.5)';
-      backgroundColor = 'rgba(0, 0, 0, 0)';
-    }
-
     return (
-      <Button
-        variant="contained"
-        onClick={toggleEncounters}
-        sx={{
-          ...buttonSx,
-          color,
-          border: '1px solid black',
-          backgroundColor,
-        }}
-      >
-        Encounters: {text}
-      </Button>
+      <div>
+        <Label>Show Encounters</Label>
+        <ToggleGroup
+          type="single"
+          value={config.encounterMarkers.toString()}
+          size="sm"
+          variant="outline"
+          onValueChange={setEncounterMarkers}
+        >
+          <ToggleGroupItem value="true">On</ToggleGroupItem>
+          <ToggleGroupItem value="false">Off</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
     );
   };
 
   const renderRoundSelection = () => {
-    const text = config.roundMarkers ? 'ON' : 'OFF';
-
-    let color;
-    let background;
-
-    if (config.roundMarkers) {
-      color = 'rgba(255, 255, 255, 1)';
-      background =
-        'linear-gradient(120deg, rgba(255, 0, 0, 0.5) 30%, rgba(21, 212, 0, 0.5) 70%)';
-    } else {
-      color = 'rgba(255, 255, 255, 0.5)';
-      background = 'rgba(0, 0, 0, 0)';
-    }
-
     return (
-      <Button
-        variant="contained"
-        onClick={toggleRound}
-        sx={{
-          ...buttonSx,
-          color,
-          border: '1px solid black',
-          background,
-        }}
-      >
-        Round: {text}
-      </Button>
+      <div>
+        <Label>Show Rounds</Label>
+        <ToggleGroup
+          type="single"
+          value={config.roundMarkers.toString()}
+          size="sm"
+          variant="outline"
+          onValueChange={setRoundMarkers}
+        >
+          <ToggleGroupItem value="true">On</ToggleGroupItem>
+          <ToggleGroupItem value="false">Off</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
     );
   };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-      }}
-    >
+    <div className="flex items-center gap-x-5">
       {renderDeathSelection()}
       {category === VideoCategory.MythicPlus && renderEncounterSelection()}
       {category === VideoCategory.SoloShuffle && renderRoundSelection()}
-    </Box>
+    </div>
   );
 };
 

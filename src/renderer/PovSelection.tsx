@@ -1,13 +1,6 @@
-import {
-  Box,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import { scrollBarSx } from 'main/constants';
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+import { Box } from '@mui/material';
 import { AppState, RendererVideo } from 'main/types';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
@@ -20,28 +13,12 @@ import {
   stopPropagation,
 } from './rendererutils';
 import * as Images from './images';
-
-const listItemButtonSx = {
-  display: 'flex',
-  width: '100%',
-  height: '25px',
-  alignItems: 'center',
-  justifyContent: 'center',
-  p: 0,
-  '&.Mui-selected, &.Mui-selected:hover': {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: '2px',
-  },
-};
-
-const iconButtonSx = {
-  height: '25px',
-  width: '25px',
-  borderRadius: '2px',
-  '& .MuiTouchRipple-root .MuiTouchRipple-child': {
-    borderRadius: '2px',
-  },
-};
+import { Tooltip } from './components/Tooltip/Tooltip';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from './components/ToggleGroup/ToggleGroup';
+import { ScrollArea } from './components/ScrollArea/ScrollArea';
 
 interface IProps {
   povs: RendererVideo[];
@@ -81,7 +58,6 @@ export default function PovSelection(props: IProps) {
 
     const cloudSelected = localPovIndex === cloudIndex;
     const diskSelected = localPovIndex === diskIndex;
-    const povSelected = cloudSelected || diskSelected;
 
     const cloudButtonColor = cloudSelected ? '#bb4420' : 'white';
     const diskButtonColor = diskSelected ? '#bb4420' : 'white';
@@ -100,10 +76,12 @@ export default function PovSelection(props: IProps) {
      * Update state variables following a change of selected point of view.
      */
     const handleChangePov = (
-      event: React.MouseEvent<HTMLElement>,
+      event: React.MouseEvent<HTMLElement> | undefined,
       povIndex: number
     ) => {
-      stopPropagation(event);
+      if (event) {
+        stopPropagation(event);
+      }
       setLocalPovIndex(povIndex);
       const video = povs[povIndex];
 
@@ -125,26 +103,20 @@ export default function PovSelection(props: IProps) {
      */
     const getCloudIcon = () => {
       let opacity = 1;
-      let title = 'Saved in the cloud';
-
-      let onClick = (
-        event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-      ) => {
-        handleChangePov(event, cloudIndex);
-      };
+      let title = 'Use cloud version';
 
       if (!haveCloudVideo) {
         opacity = 0.2;
         title = 'No cloud recording is saved';
-        onClick = stopPropagation;
       }
 
       return (
-        <Tooltip title={title}>
-          <IconButton
-            onMouseDown={stopPropagation}
-            onClick={onClick}
-            sx={iconButtonSx}
+        <Tooltip content={title}>
+          <ToggleGroupItem
+            value={cloudIndex.toString()}
+            disabled={!haveCloudVideo}
+            onClick={(e) => handleChangePov(e, cloudIndex)}
+            className="!pointer-events-auto"
           >
             <CloudIcon
               sx={{
@@ -154,7 +126,7 @@ export default function PovSelection(props: IProps) {
                 opacity,
               }}
             />
-          </IconButton>
+          </ToggleGroupItem>
         </Tooltip>
       );
     };
@@ -164,26 +136,19 @@ export default function PovSelection(props: IProps) {
      */
     const getDiskIcon = () => {
       let opacity = 1;
-      let title = 'Saved on local disk';
-
-      let onClick = (
-        event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-      ) => {
-        handleChangePov(event, diskIndex);
-      };
+      let title = 'Use local disk version';
 
       if (!haveDiskVideo) {
         opacity = 0.2;
         title = 'No disk recording is saved';
-        onClick = stopPropagation;
       }
 
       return (
-        <Tooltip title={title}>
-          <IconButton
-            onMouseDown={stopPropagation}
-            onClick={onClick}
-            sx={iconButtonSx}
+        <Tooltip content={title}>
+          <ToggleGroupItem
+            value={diskIndex.toString()}
+            disabled={!haveDiskVideo}
+            onClick={(e) => handleChangePov(e, diskIndex)}
           >
             <SaveIcon
               sx={{
@@ -193,21 +158,15 @@ export default function PovSelection(props: IProps) {
                 opacity,
               }}
             />
-          </IconButton>
+          </ToggleGroupItem>
         </Tooltip>
       );
     };
 
     return (
-      <ListItem
-        disablePadding
-        sx={{ width: '100%', height: '25px' }}
-        key={name}
-      >
-        <ListItemButton
-          onMouseDown={stopPropagation}
-          sx={listItemButtonSx}
-          selected={povSelected}
+      <div className="w-full h-auto rounded-md" key={name}>
+        <div
+          className="flex w-full h-full items-center content-center p-0"
           onClick={(event) => {
             if (haveCloudVideo) {
               handleChangePov(event, cloudIndex);
@@ -216,40 +175,21 @@ export default function PovSelection(props: IProps) {
             }
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              height: '25px',
-            }}
-          >
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                width: '50px',
-                minWidth: '50px',
-              }}
+          <div className="flex flex-row items-center content-center w-full h-full">
+            <ToggleGroup
+              type="single"
+              value={(diskSelected ? diskIndex : cloudIndex).toString()}
+              className="flex flex-row items-center content-end w-[50px] bg-[rgba(0,0,0,25%)]"
+              size="xs"
+              variant="outline"
             >
               {getCloudIcon()}
               {getDiskIcon()}
-            </Box>
-            <Box
-              component="img"
+            </ToggleGroup>
+            <img
+              className="h-[25px] w-[25px] border border-black rounded-sm box-border object-cover"
               src={icon}
-              sx={{
-                height: '25px',
-                width: '25px',
-                border: '1px solid black',
-                borderRadius: '2px',
-                boxSizing: 'border-box',
-                objectFit: 'cover',
-              }}
+              alt="class-icon"
             />
             <Box
               sx={{
@@ -265,21 +205,13 @@ export default function PovSelection(props: IProps) {
                 width: '100%',
               }}
             >
-              <Typography
-                noWrap
-                sx={{
-                  color: 'black',
-                  fontWeight: '600',
-                  fontSize: '0.75rem',
-                  fontFamily: 'Arial',
-                }}
-              >
+              <span className="font-sans text-black font-bold text-xs">
                 {name}
-              </Typography>
+              </span>
             </Box>
-          </Box>
-        </ListItemButton>
-      </ListItem>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -300,32 +232,32 @@ export default function PovSelection(props: IProps) {
     }, {});
   };
 
+  const povsArray = Object.values(groupByName(povs));
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        maxHeight: '100%',
-        width: '100%',
-      }}
-    >
-      <List
-        dense
-        sx={{
-          display: 'flex',
-          height: '100%',
-          maxHeight: '100%',
-          width: '250px',
-          flexDirection: 'column',
-          p: 0,
-          my: 1,
-          mx: 2,
-        }}
-      >
-        {Object.values(groupByName(povs)).map((g) => getGroupListItem(g))}
-      </List>
-    </Box>
+    <div className="flex items-center content-center flex-col max-h-full w-full relative">
+      {/* 
+        If we don't have more than three, we don't want to render a scrollable area.
+
+        This is because it's a faff to vertically center <3 elements within that area, so let's just forego it.
+      */}
+      {povsArray.length > 5 ? (
+        <>
+          <ScrollArea
+            className="h-[150px]"
+            scrollabilityIndicatorClasses="*:text-black"
+          >
+            <div className="flex w-[250px] flex-col p-0 my-1 mx-2">
+              {povsArray.map((g) => getGroupListItem(g))}
+            </div>
+          </ScrollArea>
+          <div className="w-full h-1 shadow-lg absolute bottom-0" />
+        </>
+      ) : (
+        <div className="flex w-[250px] h-full items-center flex-col p-0 my-1 mx-2">
+          {povsArray.map((g) => getGroupListItem(g))}
+        </div>
+      )}
+    </div>
   );
 }
