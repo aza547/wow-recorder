@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.0.0] - 2024-08-27
+### Changed
 - [PR 517](https://github.com/aza547/wow-recorder/pull/517) - Major rework of the UI, big thanks to Stephix for contributing this.
 - Upgrade OBS to 29 (and OSN to 0.24.43).
-### Added
 ### Fixed
 - [Issue 512](https://github.com/aza547/wow-recorder/issues/512) - Fix a bug where the manager would repeatedly retry configuration if the user got the password wrong.
 - Fixed an issue where you could not download a video if the cloud upload setting was disabled.
