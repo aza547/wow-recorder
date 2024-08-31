@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 521](https://github.com/aza547/wow-recorder/issues/521) - Add support for Deephaul Ravine.
 ### Fixed
 
 ## [6.0.0] - 2024-08-27

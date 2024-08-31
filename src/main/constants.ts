@@ -128,6 +128,7 @@ const retailBattlegrounds: NumberKeyToStringValueMapType = {
   726: 'Twin Peaks',
   489: 'Warsong Gulch',
   2106: 'Warsong Gulch',
+  2656: 'Deephaul Ravine',
 };
 
 /**
