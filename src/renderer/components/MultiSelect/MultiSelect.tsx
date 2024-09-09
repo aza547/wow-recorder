@@ -76,7 +76,6 @@ export const MultiSelect = React.forwardRef<
     const [selectedValues, setSelectedValues] =
       React.useState<string[]>(defaultValue);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
-    const [isAnimating] = React.useState(false);
 
     React.useEffect(() => {
       setSelectedValues(defaultValue);
@@ -164,6 +163,7 @@ export const MultiSelect = React.forwardRef<
           className="w-[var(--radix-popper-anchor-width)] p-0"
           align="start"
           onEscapeKeyDown={() => setIsPopoverOpen(false)}
+          side="right"
         >
           <Command>
             <CommandList>

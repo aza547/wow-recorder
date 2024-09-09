@@ -23,7 +23,7 @@ const RaidEncounterInfo: React.FC<IProps> = (props: IProps) => {
 
   const renderEncounterText = () => {
     return (
-      <span className="text-white font-sans font-semibold text-base text-shadow-instance">
+      <span className="text-white font-sans font-semibold text-base text-shadow-instance text-center">
         {encounterName}
       </span>
     );

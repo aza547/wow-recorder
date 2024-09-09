@@ -132,7 +132,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
           </div>
         </div>
         {config.recordRetail && (
-          <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+          <div className="flex flex-col w-1/4 min-w-60 max-w-120">
             <Label htmlFor="retailLogPath" className="flex items-center">
               Retail Log Path
               <Tooltip
@@ -201,7 +201,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
           </div>
         </div>
         {config.recordClassic && (
-          <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+          <div className="flex flex-col w-1/4 min-w-60 max-w-120">
             <Label htmlFor="classicLogPath" className="flex items-center">
               Classic Log Path
               <Tooltip
@@ -276,7 +276,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
           </div>
         </div>
         {config.recordEra && (
-          <div className="flex flex-col w-1/4 min-w-60 max-w-80">
+          <div className="flex flex-col w-1/4 min-w-60 max-w-120">
             <Label htmlFor="eraLogPath" className="flex items-center">
               Classic Era Log Path
               <Tooltip content={configSchema.eraLogPath.description} side="top">
