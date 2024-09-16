@@ -287,6 +287,25 @@ export const VideoPlayer = (props: IProps) => {
     }
   };
 
+  // By default the window hijacks media keys even when
+  // the window isn't focused or it is minimized
+  // so we override the action handlers
+  useEffect(() => {
+    ipc.on('window-focus-status', (arg: unknown) => {
+      const focused = arg as boolean;
+      if (focused) {
+        // unset action handlers when focused, making them work like initially
+        navigator.mediaSession.setActionHandler('play', null);
+        navigator.mediaSession.setActionHandler('pause', null);
+      } else {
+        navigator.mediaSession.setActionHandler('play', () => {});
+        navigator.mediaSession.setActionHandler('pause', () => {});
+      }
+      // note that this kind of solution doesn't work for the stop key for some reason.
+      // it seems to behave differently and it clears the entire session
+    });
+  }, []);
+
   /**
    * Handle the user clicking on the rate button by going to the next rate
    * option.
