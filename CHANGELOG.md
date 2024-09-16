@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 526](https://github.com/aza547/wow-recorder/issues/526) - Added the 3360x1440 resolution option.
 
 ### Fixed
-- Improve OBS signal handling to be more robust to timeouts.
 - [Issue 518](https://github.com/aza547/wow-recorder/issues/518) - Fix some minor UI issues.
+- Improve OBS signal handling to be more robust to timeouts.
+- Update TWW season 1 M+ timers.
 
 ## [6.0.1] - 2024-09-02
 ### Fixed
