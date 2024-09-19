@@ -67,7 +67,9 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
 
   if (category === VideoCategory.Raids) {
     const { difficulty } = metadata;
+
     const orderedDifficulty = ['lfr', 'normal', 'heroic', 'mythic'];
+    const orderedDifficultyIDs = ['LFR', 'N', 'HC', 'M'];
 
     const minDifficultyToUpload = cfg
       .get<string>('cloudUploadRaidMinDifficulty')
@@ -78,8 +80,8 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
       return true;
     }
 
-    const actualIndex = orderedDifficulty.indexOf(difficulty);
     const configuredIndex = orderedDifficulty.indexOf(minDifficultyToUpload);
+    const actualIndex = orderedDifficultyIDs.indexOf(difficulty);
 
     if (actualIndex < 0) {
       console.info('[configUtils] Unrecognised difficulty, not blocking');

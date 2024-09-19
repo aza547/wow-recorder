@@ -168,6 +168,9 @@ export default class VideoProcessQueue {
     this.videoQueue.write(item);
   };
 
+  /**
+   * Queue a video for upload.
+   */
   public queueUpload = async (item: UploadQueueItem) => {
     const alreadyQueued = this.inProgressUploads.includes(item.path);
 
@@ -180,6 +183,9 @@ export default class VideoProcessQueue {
     this.uploadQueue.write(item);
   };
 
+  /**
+   * Queue a video for download.
+   */
   public queueDownload = async (video: RendererVideo) => {
     const { videoName } = video;
     const alreadyQueued = this.inProgressDownloads.includes(video.videoName);

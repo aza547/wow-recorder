@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 518](https://github.com/aza547/wow-recorder/issues/518) - Fix some minor UI issues.
+- [Issue 529](https://github.com/aza547/wow-recorder/issues/529) - Raid upload difficulty threshold is no longer ignored.
 - Improve OBS signal handling to be more robust to timeouts.
 - Update TWW season 1 M+ timers.
 
