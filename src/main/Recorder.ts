@@ -1246,6 +1246,7 @@ export default class Recorder extends EventEmitter {
         settings.monitor_id = filtered[monitorIndex].value as string;
       } else {
         // Default to use the first monitor if index is undefined.
+        console.warn('[Recorder] Monitor', monitorIndex, 'not found');
         settings.monitor_id = filtered[0].value as string;
       }
     }
