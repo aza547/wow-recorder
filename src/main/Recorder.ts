@@ -1237,9 +1237,17 @@ export default class Recorder extends EventEmitter {
       // An "Auto" option appears as the first thing here so make sure we
       // don't select that; the frontend doesn't expect it and we end up
       // having multiple indexes corresponding to a single monitor.
-      settings.monitor_id = prop.details.items.filter(
+      const filtered = prop.details.items.filter(
         (item) => item.value !== 'Auto'
-      )[monitorIndex].value as string;
+      );
+
+      if (filtered[monitorIndex]) {
+        // The monitor selected is present so use it.
+        settings.monitor_id = filtered[monitorIndex].value as string;
+      } else {
+        // Default to use the first monitor if index is undefined.
+        settings.monitor_id = filtered[0].value as string;
+      }
     }
 
     this.monitorCaptureSource.update(settings);
