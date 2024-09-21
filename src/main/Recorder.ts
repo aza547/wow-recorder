@@ -997,22 +997,16 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    // Attempt to start OBS. If it doesn't start with a short timeout then try again
-    // with a longer timeout. If that still fails, we let the error go up the stack,
-    // which will signal to the manager that something is wrong.
-    this.startQueue.empty();
-    const started = this.startQueue.shift();
+    // Sleep for a second, without this sometimes OBS does not respond at all.
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    osn.NodeObs.OBS_service_startRecording();
 
-    try {
-      osn.NodeObs.OBS_service_startRecording();
-      const shortFuse = getPromiseBomb(5000, 'Short fuse expired');
-      await Promise.race([started, shortFuse]);
-    } catch {
-      console.warn('[Recorder] First start attempt timed out, will retry');
-      osn.NodeObs.OBS_service_startRecording();
-      const longFuse = getPromiseBomb(30000, 'Long fuse expired');
-      await Promise.race([started, longFuse]);
-    }
+    // Wait up to 30 seconds for OBS to signal it has started recording,
+    // really this shouldn't take nearly as long.
+    await Promise.race([
+      this.startQueue.shift(),
+      getPromiseBomb(30000, 'OBS timeout waiting for start'),
+    ]);
 
     this.startQueue.empty();
     this.startDate = new Date();
