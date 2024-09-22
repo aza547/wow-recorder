@@ -150,13 +150,6 @@ export default class Recorder extends EventEmitter {
   private resolution: keyof typeof obsResolutions = '1920x1080';
 
   /**
-   * Scale factor for resizing the video source if a user is running
-   * windowed mode and decides to resize their game. We can handle
-   * this cleanly, even mid-recording.
-   */
-  private videoScaleFactor = { x: 1, y: 1 };
-
-  /**
    * Timer object for checking the size of the game window and rescaling if
    * required.
    */
@@ -507,8 +500,6 @@ export default class Recorder extends EventEmitter {
     ].forEach((src) => {
       src.enabled = false;
     });
-
-    this.videoScaleFactor = { x: 1, y: 1 };
 
     if (obsCaptureMode === 'monitor_capture') {
       this.configureMonitorCaptureSource(monitorIndex);
@@ -1391,45 +1382,40 @@ export default class Recorder extends EventEmitter {
    * canvas.
    */
   private scaleVideoSourceSize() {
-    let activeSource;
-    let activeSceneItem;
+    let src;
+    let item;
 
     if (this.windowCaptureSource.enabled) {
-      activeSource = this.windowCaptureSource;
-      activeSceneItem = this.windowCaptureSceneItem;
+      src = this.windowCaptureSource;
+      item = this.windowCaptureSceneItem;
     } else if (this.gameCaptureSource.enabled) {
-      activeSource = this.gameCaptureSource;
-      activeSceneItem = this.gameCaptureSceneItem;
+      src = this.gameCaptureSource;
+      item = this.gameCaptureSceneItem;
     } else if (this.monitorCaptureSource.enabled) {
-      activeSource = this.monitorCaptureSource;
-      activeSceneItem = this.monitorCaptureSceneItem;
+      src = this.monitorCaptureSource;
+      item = this.monitorCaptureSceneItem;
     } else {
+      console.error('[Recorder] No video source to scale');
       return;
     }
 
-    if (activeSource.width === 0 || activeSource.height === 0) {
+    if (src.width === 0 || src.height === 0) {
       // This happens often, suspect it's before OBS gets a hook into a game
       // capture process.
       return;
     }
+
     const { width, height } = obsResolutions[this.resolution];
-    const xScaleFactor = Math.round((width / activeSource.width) * 100) / 100;
-    const yScaleFactor = Math.round((height / activeSource.height) * 100) / 100;
+    const xScaleFactor = Math.round((width / src.width) * 100) / 100;
+    const yScaleFactor = Math.round((height / src.height) * 100) / 100;
     const newScaleFactor = { x: xScaleFactor, y: yScaleFactor };
 
-    if (isEqual(this.videoScaleFactor, newScaleFactor)) {
+    if (isEqual(item.scale, newScaleFactor)) {
       return;
     }
 
-    console.info(
-      '[Recorder] Rescaling from',
-      this.videoScaleFactor,
-      'to',
-      newScaleFactor
-    );
-
-    this.videoScaleFactor = newScaleFactor;
-    activeSceneItem.scale = this.videoScaleFactor;
+    console.info('[Recorder] Rescaling from', item.scale, 'to', newScaleFactor);
+    item.scale = newScaleFactor;
   }
 
   /**

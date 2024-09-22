@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- An issue where the scene could end up wrongly scaled after multiple settings changes.
+- A bug with the 3440x1200 resolution.
 
 ## [6.0.2] - 2024-09-21
 ### Added
