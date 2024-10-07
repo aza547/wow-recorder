@@ -182,6 +182,14 @@ const createWindow = async () => {
     }
   });
 
+  mainWindow.on('focus', () => {
+    mainWindow?.webContents.send('window-focus-status', true);
+  });
+
+  mainWindow.on('blur', () => {
+    mainWindow?.webContents.send('window-focus-status', false);
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
