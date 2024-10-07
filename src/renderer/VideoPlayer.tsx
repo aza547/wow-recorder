@@ -304,6 +304,9 @@ export const VideoPlayer = (props: IProps) => {
       // note that this kind of solution doesn't work for the stop key for some reason.
       // it seems to behave differently and it clears the entire session
     });
+    return () => {
+      ipc.removeAllListeners('window-focus-status');
+    };
   }, []);
 
   /**
