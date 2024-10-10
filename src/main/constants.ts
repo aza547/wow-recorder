@@ -933,6 +933,7 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
   153: 'Frenzied',
   158: 'Voidbound',
   159: 'Oblivion',
+  160: 'Devour',
 };
 
 /**
