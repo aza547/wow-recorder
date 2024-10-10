@@ -280,9 +280,15 @@ export default class VideoFilter {
   private setDungeonFilters() {
     if (!this.video.result) {
       this.addStringFilter('abandoned');
-    } else if (this.video.upgradeLevel && this.video.upgradeLevel < 1) {
+    } else if (
+      this.video.upgradeLevel !== undefined &&
+      this.video.upgradeLevel < 1
+    ) {
       this.addStringFilter('depleted');
-    } else if (this.video.upgradeLevel && this.video.upgradeLevel > 0) {
+    } else if (
+      this.video.upgradeLevel !== undefined &&
+      this.video.upgradeLevel > 0
+    ) {
       this.addStringFilter('timed');
     }
 
