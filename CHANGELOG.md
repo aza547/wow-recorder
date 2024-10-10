@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
-- An issue where the scene could end up wrongly scaled after multiple settings changes.
+- [Issue 542](https://github.com/aza547/wow-recorder/issues/542) - Fix a bug with the Devour M+ affix not displaying an image.
+- [Issue 539](https://github.com/aza547/wow-recorder/issues/539) - Fix a bug where Mythic+ result search terms were misrepresented by the search bar.
+- Fix an issue where the scene could end up wrongly scaled after multiple settings changes.
 - A bug with the 3440x1200 resolution.
-- Fix a bug with the Devour M+ affix not displaying an image.
 
 ## [6.0.2] - 2024-09-21
 ### Added

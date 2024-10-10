@@ -278,10 +278,12 @@ export default class VideoFilter {
    * Set dungeon filters.
    */
   private setDungeonFilters() {
-    if (this.video.result) {
-      this.addStringFilter('timed');
-    } else {
+    if (!this.video.result) {
+      this.addStringFilter('abandoned');
+    } else if (this.video.upgradeLevel && this.video.upgradeLevel < 1) {
       this.addStringFilter('depleted');
+    } else if (this.video.upgradeLevel && this.video.upgradeLevel > 0) {
+      this.addStringFilter('timed');
     }
 
     if (this.video.zoneID !== undefined) {
