@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - An issue where the scene could end up wrongly scaled after multiple settings changes.
 - A bug with the 3440x1200 resolution.
+- Fix a bug with the Devour M+ affix not displaying an image.
 
 ## [6.0.2] - 2024-09-21
 ### Added
