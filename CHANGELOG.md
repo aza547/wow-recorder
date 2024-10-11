@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Relax the timer we expect OBS to stop in from 30s to 60s. 
+
 ### Added
 - Add cloud / disk as search filters.
 - [Issue 537](https://github.com/aza547/wow-recorder/issues/537) - Space bar can now be used to start/stop the video player.
