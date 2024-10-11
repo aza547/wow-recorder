@@ -1182,7 +1182,7 @@ export default class Recorder extends EventEmitter {
       // Filter the WoW windows, and reverse sort them alphabetically. This
       // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
       const windows = prop.details.items
-        .filter((item) => item.name.includes('[Wow.exe]: World of Warcraft'))
+        .filter(Recorder.windowMatch)
         .sort()
         .reverse();
 
@@ -1264,7 +1264,7 @@ export default class Recorder extends EventEmitter {
       // Filter the WoW windows, and reverse sort them alphabetically. This
       // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
       const windows = prop.details.items
-        .filter((item) => item.name.includes('[Wow.exe]: World of Warcraft'))
+        .filter(Recorder.windowMatch)
         .sort()
         .reverse();
 
@@ -1554,5 +1554,14 @@ export default class Recorder extends EventEmitter {
     property: osn.IProperty
   ): property is osn.IListProperty {
     return property.type === 6;
+  }
+
+  /**
+   * Check if the name of the window matches one of the known WoW window names.
+   */
+  private static windowMatch(item: { name: string; value: string | number }) {
+    const englishMatch = item.name.includes('[Wow.exe]: World of Warcraft');
+    const chineseMatch = item.name.includes('[Wow.exe]: 魔兽世界');
+    return englishMatch || chineseMatch;
   }
 }
