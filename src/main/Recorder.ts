@@ -777,19 +777,18 @@ export default class Recorder extends EventEmitter {
 
     this.faders = [];
 
-    this.audioInputDevices.forEach((device) => {
-      const index = this.audioInputDevices.indexOf(device);
-      const channel = this.audioInputChannels[index];
+    this.audioInputDevices.forEach((device, idx) => {
+      const channel = this.audioInputChannels[idx];
       this.removeAudioSource(device, channel);
-      this.audioInputDevices.splice(index, 1);
     });
 
-    this.audioOutputDevices.forEach((device) => {
-      const index = this.audioOutputDevices.indexOf(device);
-      const channel = this.audioOutputChannels[index];
+    this.audioOutputDevices.forEach((device, idx) => {
+      const channel = this.audioOutputChannels[idx];
       this.removeAudioSource(device, channel);
-      this.audioOutputDevices.splice(index, 1);
     });
+
+    this.audioInputDevices = [];
+    this.audioOutputDevices = [];
 
     this.obsMicState = MicStatus.NONE;
     this.emit('state-change');
@@ -1360,8 +1359,8 @@ export default class Recorder extends EventEmitter {
 
     const name =
       type === TAudioSourceType.input
-        ? `WCR Mic Input ${idx}`
-        : `WCR Speaker Input ${idx}`;
+        ? `WCR Mic Source ${idx}`
+        : `WCR Speaker Source ${idx}`;
 
     return osn.InputFactory.create(type, name, { device_id: id });
   }
