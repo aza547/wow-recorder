@@ -884,8 +884,8 @@ export default class Manager {
       const duration = args[2];
 
       const sourceMetadata = await getMetadataForVideo(source);
-      const clipMetadata = buildClipMetadata(sourceMetadata, duration);
       const now = new Date();
+      const clipMetadata = buildClipMetadata(sourceMetadata, duration, now);
 
       const clipQueueItem: VideoQueueItem = {
         source,

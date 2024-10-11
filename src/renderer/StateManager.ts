@@ -163,8 +163,25 @@ export default class StateManager {
     A: RendererVideo,
     B: RendererVideo
   ) {
-    const metricA = A.start ? A.start : A.mtime;
-    const metricB = B.start ? B.start : B.mtime;
+    let metricA;
+    let metricB;
+
+    if (A.clippedAt) {
+      metricA = A.clippedAt;
+    } else if (A.start) {
+      metricA = A.start;
+    } else {
+      metricA = A.mtime;
+    }
+
+    if (B.clippedAt) {
+      metricB = B.clippedAt;
+    } else if (B.start) {
+      metricB = B.start;
+    } else {
+      metricB = B.mtime;
+    }
+
     return metricB - metricA;
   }
 

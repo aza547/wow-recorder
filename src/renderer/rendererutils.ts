@@ -508,7 +508,16 @@ const getVideoTime = (video: RendererVideo) => {
 };
 
 const getVideoDate = (video: RendererVideo) => {
-  const date = video.start ? new Date(video.start) : new Date(video.mtime);
+  let date;
+
+  if (video.clippedAt) {
+    date = new Date(video.clippedAt);
+  } else if (video.start) {
+    date = new Date(video.start);
+  } else {
+    date = new Date(video.mtime);
+  }
+
   const day = date.getDate();
   const month = months[date.getMonth()].slice(0, 3);
   const dateAsString = `${day} ${month}`;

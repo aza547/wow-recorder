@@ -1354,7 +1354,7 @@ export default class Recorder extends EventEmitter {
     }
 
     return osn.InputFactory.create(
-      type,
+      type, // This seems like a collision?
       type === TAudioSourceType.input ? 'mic-audio' : 'desktop-audio',
       { device_id: id }
     );

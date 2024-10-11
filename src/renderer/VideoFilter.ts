@@ -196,6 +196,14 @@ export default class VideoFilter {
         }
       });
     }
+
+    if (this.video.cloud) {
+      this.addStringFilter('cloud');
+      this.addStringFilter('pro');
+    } else {
+      this.addStringFilter('disk');
+      this.addStringFilter('local');
+    }
   }
 
   /**

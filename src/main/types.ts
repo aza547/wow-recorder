@@ -186,6 +186,7 @@ type Metadata = {
   parentCategory?: VideoCategory; // present if it's a clip
   duration: number;
   start?: number; // epoch start time of activity
+  clippedAt?: number; // epoch time of clipping
   result: boolean;
   flavour: Flavour;
   zoneID?: number;

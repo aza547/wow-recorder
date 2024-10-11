@@ -692,12 +692,13 @@ const getPromiseBomb = (fuse: number, reason: string) => {
   return new Promise((_resolve, reject) => setTimeout(reject, fuse, reason));
 };
 
-const buildClipMetadata = (initial: Metadata, duration: number) => {
+const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
   const final = initial;
   final.duration = duration;
   final.parentCategory = initial.category;
   final.category = VideoCategory.Clips;
   final.protected = true;
+  final.clippedAt = date.getTime();
   return final;
 };
 
