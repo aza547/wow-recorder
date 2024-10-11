@@ -2,14 +2,11 @@ import Combatant from 'main/Combatant';
 import { Flavour, Metadata } from '../main/types';
 import { dungeonTimersByMapId, instanceNamesByZoneId } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
-
 import {
   ChallengeModeTimelineSegment,
   TimelineSegmentType,
 } from '../main/keystone';
-
 import Activity from './Activity';
-import { takeOwnershipStorageDir } from 'main/util';
 
 export default class ChallengeModeDungeon extends Activity {
   private _mapID: number;
