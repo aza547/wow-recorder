@@ -60,13 +60,19 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
 
       const neighbourDate = new Date(bestDate);
 
-      // Pulls longer than 3 hours apart are considered
-      // from different sessions and will reset the pull
-      // counter.
+      // Pulls longer than 6 hours apart are considered from different
+      // sessions and will reset the pull counter.
+      //
+      // This logic is really janky and should probably be rewritten. The
+      // problem here is that if checks for any videos within 6 hours.
+      //
+      // If there are videos on the border (e.g. day raiding) then the
+      // pull count can do weird things like decrement or not increment given
+      // the right timing conditions of the previous sessions raids.
       const withinThreshold = areDatesWithinSeconds(
         videoDate,
         neighbourDate,
-        3600 * 3
+        3600 * 6
       );
 
       if (

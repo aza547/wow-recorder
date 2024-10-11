@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 542](https://github.com/aza547/wow-recorder/issues/542) - Fix a bug with the Devour M+ affix not displaying an image.
 - [Issue 539](https://github.com/aza547/wow-recorder/issues/539) - Fix a bug where Mythic+ result search terms were misrepresented by the search bar.
 - [Issue 540](https://github.com/aza547/wow-recorder/issues/540) - Clips are now timestamped at the point of clipping and sorted accordingly, rather than inheriting from their parent video.
+- [Issue 543](https://github.com/aza547/wow-recorder/issues/543) - Fix a bug where the raid encounter pull counter could be wrong.
 - Fix an issue where the scene could end up wrongly scaled after multiple settings changes.
 - A bug with the 3440x1200 resolution.
 

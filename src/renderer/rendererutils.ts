@@ -821,8 +821,7 @@ const povNameSort = (a: RendererVideo, b: RendererVideo) => {
 
 const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
   const differenceMilliseconds = Math.abs(d1.getTime() - d2.getTime());
-  const millisecondsInMinute = sec * 1000; // 60 seconds * 1000 milliseconds
-  return differenceMilliseconds <= millisecondsInMinute;
+  return differenceMilliseconds <= sec * 1000;
 };
 
 const countUniquePovs = (povs: RendererVideo[]) => {
