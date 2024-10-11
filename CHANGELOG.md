@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 540](https://github.com/aza547/wow-recorder/issues/540) - Clips are now timestamped at the point of clipping and sorted accordingly, rather than inheriting from their parent video.
 - [Issue 543](https://github.com/aza547/wow-recorder/issues/543) - Fix a bug where the raid encounter pull counter could be wrong.
 - [Issue 457](https://github.com/aza547/wow-recorder/issues/457) - Stop keyboard media keys playing/pausing the video when the app is minimized.
+- [Issue 533](https://github.com/aza547/wow-recorder/issues/533) - Fix a bug where Challenger's Peril wasn't included in the keystone uprade level calculation.
 - Fix an issue where the scene could end up wrongly scaled after multiple settings changes.
 - A bug with the 3440x1200 resolution.
 

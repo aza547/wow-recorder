@@ -9,6 +9,7 @@ import {
 } from '../main/keystone';
 
 import Activity from './Activity';
+import { takeOwnershipStorageDir } from 'main/util';
 
 export default class ChallengeModeDungeon extends Activity {
   private _mapID: number;
@@ -82,6 +83,12 @@ export default class ChallengeModeDungeon extends Activity {
         "[ChallengeModeDungeon] Run didn't complete (abandoned, not a deplete)"
       );
       return 0;
+    }
+
+    if (this.affixes.includes(152)) {
+      // Seems that the Challenger's Peril affix is not covered by the
+      // CMDuration extracted from the logs, so correct for it here.
+      this.CMDuration += this.deaths.length * 10;
     }
 
     for (let i = this.timings.length - 1; i >= 0; i--) {
