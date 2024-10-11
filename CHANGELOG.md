@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - Add cloud / disk as search filters.
+- [Issue 537](https://github.com/aza547/wow-recorder/issues/537) - Space bar can now be used to start/stop the video player.
+
 ### Fixed
 - [Issue 542](https://github.com/aza547/wow-recorder/issues/542) - Fix a bug with the Devour M+ affix not displaying an image.
 - [Issue 539](https://github.com/aza547/wow-recorder/issues/539) - Fix a bug where Mythic+ result search terms were misrepresented by the search bar.

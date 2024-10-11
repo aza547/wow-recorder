@@ -721,8 +721,9 @@ export const VideoPlayer = (props: IProps) => {
       return;
     }
 
-    if (e.key === 'k') {
+    if (e.key === 'k' || e.key === ' ') {
       togglePlaying();
+      e.preventDefault();
     }
 
     if (e.key === 'j' || e.key === 'ArrowLeft') {
