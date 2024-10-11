@@ -312,24 +312,24 @@ export default class Recorder extends EventEmitter {
     // useful to always be able to access them even if we never enable the sources.
     this.windowCaptureSource = osn.InputFactory.create(
       'window_capture',
-      'WR Window Capture'
+      'WCR Window Capture'
     );
 
     this.gameCaptureSource = osn.InputFactory.create(
       'game_capture',
-      'WR Game Capture'
+      'WCR Game Capture'
     );
 
     this.monitorCaptureSource = osn.InputFactory.create(
       'monitor_capture',
-      'WR Monitor Capture'
+      'WCR Monitor Capture'
     );
 
     // In theory having this created so early isn't required, but may as well
     // and avoid a bunch of undefined checks. We will reconfigure it as required.
     this.overlayImageSource = osn.InputFactory.create(
       'image_source',
-      'WR Chat Overlay',
+      'WCR Chat Overlay',
       { file: getAssetPath('poster', 'chat-cover.png') }
     );
 
@@ -343,7 +343,7 @@ export default class Recorder extends EventEmitter {
     // The scene is an OBS construct that holds the sources, think of it as a
     // blank canvas we can add sources to. We could create it later but we can
     // once again avoid a bunch of undefined checks by doing it here.
-    this.scene = osn.SceneFactory.create('WR Scene');
+    this.scene = osn.SceneFactory.create('WCR Scene');
     osn.Global.setOutputSource(this.videoChannel, this.scene);
 
     // It might seem a bit weird that we add all the sources, but we disable
@@ -634,17 +634,17 @@ export default class Recorder extends EventEmitter {
       obsAudioSuppression,
     } = config;
 
-    // Pretty sure these arguments are doing nothing.
-    // See https://github.com/stream-labs/obs-studio-node/issues/1367.
-    const track1 = osn.AudioTrackFactory.create(160, 'track1');
-    osn.AudioTrackFactory.setAtIndex(track1, 1);
-
     audioInputDevices
       .split(',')
       .filter((id) => id)
-      .forEach((id) => {
-        console.info('[Recorder] Adding input source', id);
-        const obsSource = this.createOBSAudioSource(id, TAudioSourceType.input);
+      .forEach((id, idx) => {
+        console.info('[Recorder] Adding input source', id, idx);
+
+        const obsSource = this.createOBSAudioSource(
+          id,
+          idx,
+          TAudioSourceType.input
+        );
 
         const micFader = osn.FaderFactory.create(0);
         micFader.attach(obsSource);
@@ -724,11 +724,12 @@ export default class Recorder extends EventEmitter {
     audioOutputDevices
       .split(',')
       .filter((id) => id)
-      .forEach((id) => {
+      .forEach((id, idx) => {
         console.info('[Recorder] Adding output source', id);
 
         const obsSource = this.createOBSAudioSource(
           id,
+          idx,
           TAudioSourceType.output
         );
 
@@ -1346,18 +1347,23 @@ export default class Recorder extends EventEmitter {
   /**
    * Create an OBS audio source.
    */
-  private createOBSAudioSource(id: string, type: TAudioSourceType) {
-    console.info('[Recorder] Creating OBS audio source', id, type);
+  private createOBSAudioSource(
+    id: string,
+    idx: number,
+    type: TAudioSourceType
+  ) {
+    console.info('[Recorder] Creating OBS audio source', id, idx, type);
 
     if (!this.obsInitialized) {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    return osn.InputFactory.create(
-      type, // This seems like a collision?
-      type === TAudioSourceType.input ? 'mic-audio' : 'desktop-audio',
-      { device_id: id }
-    );
+    const name =
+      type === TAudioSourceType.input
+        ? `WCR Mic Input ${idx}`
+        : `WCR Speaker Input ${idx}`;
+
+    return osn.InputFactory.create(type, name, { device_id: id });
   }
 
   /**
