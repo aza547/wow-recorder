@@ -112,10 +112,6 @@ const CategoryPage = (props: IProps) => {
       ? names.includes(appState.selectedVideoName)
       : categoryState.indexOf(video) === 0;
 
-    const backgroundColor = selected
-      ? 'rgba(255, 255, 255, 0.1)'
-      : 'transparent';
-
     return (
       // eslint-disable-next-line jsx-a11y/interactive-supports-focus, jsx-a11y/click-events-have-key-events
       <div

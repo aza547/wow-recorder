@@ -12,7 +12,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Box, Slider, Typography } from '@mui/material';
+import { Box, Slider } from '@mui/material';
 import { Resizable } from 're-resizable';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
