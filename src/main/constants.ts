@@ -602,8 +602,8 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   503: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Ara-Kara, City of Echoes
   353: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Siege of Boralus
   502: [35 * 60, 35 * 60 * 0.8, 35 * 60 * 0.6], // City of Threads
-  505: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // The Dawnbreaker
-  507: [36 * 60, 29 * 60 + 12, 21 * 60 + 36], // Grim Batol
+  505: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // The Dawnbreaker
+  507: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Grim Batol
 };
 
 // Useful database for grabbing this stuff:
@@ -994,12 +994,14 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   151: { difficultyID: 'lfr', difficulty: 'T', partyType: 'raid' },
   175: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
   176: { difficultyID: 'normal', difficulty: '25N', partyType: 'raid' },
+  186: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
   193: { difficultyID: 'heroic', difficulty: '10HC', partyType: 'raid' },
   194: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
 
   // Classic era 10 man?
   198: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
   215: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
+  226: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
 };
 
 const categoryTabSx = {
