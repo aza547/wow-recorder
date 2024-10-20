@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix some M+ timers in TWW S1.
+- Add raid IDs for MC / BWL / ZG / Onyxia Era raids.
 
 ## [6.0.3] - 2024-10-12
 ### Changed
