@@ -994,12 +994,14 @@ const instanceDifficulty: InstanceDifficultyObjectType = {
   151: { difficultyID: 'lfr', difficulty: 'T', partyType: 'raid' },
   175: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
   176: { difficultyID: 'normal', difficulty: '25N', partyType: 'raid' },
+  186: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
   193: { difficultyID: 'heroic', difficulty: '10HC', partyType: 'raid' },
   194: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
 
   // Classic era 10 man?
   198: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
   215: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
+  226: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
 };
 
 const categoryTabSx = {
