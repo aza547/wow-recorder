@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [6.0.4] - 2024-10-27
+### Fixed
 - [Issue 544](https://github.com/aza547/wow-recorder/issues/544) - Fix the "cannot be closed on upgrade" bug.
 - Fix some M+ timers in TWW S1.
 - Add raid IDs for MC / BWL / ZG / Onyxia Era raids.
