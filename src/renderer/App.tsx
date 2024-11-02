@@ -23,6 +23,7 @@ import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
 import { useToast } from './components/Toast/useToast';
 import { ToastAction } from './components/Toast/Toast';
+import SideMenu from './SideMenu';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -166,20 +167,29 @@ const WarcraftRecorder = () => {
       <Toaster />
       <TooltipProvider>
         <RendererTitleBar />
-        <Layout
-          recorderStatus={recorderStatus}
-          stateManager={stateManager}
-          videoState={videoState}
-          appState={appState}
-          setAppState={setAppState}
-          persistentProgress={persistentProgress}
-          playerHeight={playerHeight}
-          error={error}
-          micStatus={micStatus}
-          crashes={crashes}
-          upgradeStatus={upgradeStatus}
-          savingStatus={savingStatus}
-        />
+        <div className="flex flex-row items-center h-full w-full font-sans">
+          <SideMenu
+            recorderStatus={recorderStatus}
+            videoState={videoState}
+            appState={appState}
+            setAppState={setAppState}
+            persistentProgress={persistentProgress}
+            error={error}
+            micStatus={micStatus}
+            crashes={crashes}
+            upgradeStatus={upgradeStatus}
+            savingStatus={savingStatus}
+          />
+          <Layout
+            recorderStatus={recorderStatus}
+            stateManager={stateManager}
+            videoState={videoState}
+            appState={appState}
+            setAppState={setAppState}
+            persistentProgress={persistentProgress}
+            playerHeight={playerHeight}
+          />
+        </div>
       </TooltipProvider>
     </Box>
   );
