@@ -2,7 +2,7 @@
 /* eslint-disable import/prefer-default-export */
 import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
 import { RecStatus, SaveStatus } from 'main/types';
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import {
   HoverCard,
@@ -194,20 +194,39 @@ const Status = ({ status, error, savingStatus }: StatusProps) => {
     number | false
   >(false);
 
+  const clearUploadProgressTimer = useRef<NodeJS.Timeout | null>(null);
+  const clearDownloadProgressTimer = useRef<NodeJS.Timeout | null>(null);
+
   React.useEffect(() => {
     const ipc = window.electron.ipcRenderer;
 
     ipc.on('updateUploadProgress', (progress) => {
       if (!progress || progress === 100) {
-        setTimeout(() => setUploadProgress(false), 1000);
+        clearUploadProgressTimer.current = setTimeout(
+          () => setUploadProgress(false),
+          1000
+        );
       }
+
+      if (clearUploadProgressTimer.current) {
+        clearTimeout(clearUploadProgressTimer.current);
+      }
+
       setUploadProgress(progress as number);
     });
 
     ipc.on('updateDownloadProgress', (progress) => {
       if (!progress || progress === 100) {
-        setTimeout(() => setDownloadProgress(false), 1000);
+        clearDownloadProgressTimer.current = setTimeout(
+          () => setDownloadProgress(false),
+          1000
+        );
       }
+
+      if (clearDownloadProgressTimer.current) {
+        clearTimeout(clearDownloadProgressTimer.current);
+      }
+
       setDownloadProgress(progress as number);
     });
 

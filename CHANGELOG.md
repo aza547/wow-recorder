@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix an issue where the upload/download icons would flicker.
 
 ## [6.0.4] - 2024-10-27
 ### Fixed
