@@ -201,6 +201,10 @@ const Status = ({ status, error, savingStatus }: StatusProps) => {
     const ipc = window.electron.ipcRenderer;
 
     ipc.on('updateUploadProgress', (progress) => {
+      if (clearUploadProgressTimer.current) {
+        clearTimeout(clearUploadProgressTimer.current);
+      }
+
       if (!progress || progress === 100) {
         clearUploadProgressTimer.current = setTimeout(
           () => setUploadProgress(false),
@@ -208,23 +212,19 @@ const Status = ({ status, error, savingStatus }: StatusProps) => {
         );
       }
 
-      if (clearUploadProgressTimer.current) {
-        clearTimeout(clearUploadProgressTimer.current);
-      }
-
       setUploadProgress(progress as number);
     });
 
     ipc.on('updateDownloadProgress', (progress) => {
+      if (clearDownloadProgressTimer.current) {
+        clearTimeout(clearDownloadProgressTimer.current);
+      }
+
       if (!progress || progress === 100) {
         clearDownloadProgressTimer.current = setTimeout(
           () => setDownloadProgress(false),
           1000
         );
-      }
-
-      if (clearDownloadProgressTimer.current) {
-        clearTimeout(clearDownloadProgressTimer.current);
       }
 
       setDownloadProgress(progress as number);
