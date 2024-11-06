@@ -111,7 +111,7 @@ export default class StateManager {
       // system clock etc.
       const d1 = new Date(video.start);
       const d2 = new Date(videoToCompare.start);
-      const closeStartTime = areDatesWithinSeconds(d1, d2, 10);
+      const closeStartTime = areDatesWithinSeconds(d1, d2, 60);
 
       if (sameHash && closeStartTime) {
         // The video is a different POV of the same activity, link them and
