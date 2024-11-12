@@ -613,7 +613,7 @@ const encoderFilter = (enc: string, highRes: boolean) => {
 
   // If we have a resolution above 4k, only the software encoder is valid.
   if (highRes) {
-    return encoder === ESupportedEncoders.OBS_X264;
+    return encoder === ESupportedEncoders.OBS_X264 || encoder === ESupportedEncoders.JIM_HEVC_NVENC;
   }
 
   return true;
