@@ -1193,7 +1193,7 @@ export default class Recorder extends EventEmitter {
 
     const { settings } = this.gameCaptureSource;
     settings.capture_mode = 'window';
-    settings.allow_transparency = true;
+    settings.allow_transparency = false;
     settings.priority = 1;
     settings.capture_cursor = captureCursor;
     settings.window = window;
