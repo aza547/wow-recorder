@@ -289,7 +289,9 @@ const RaidSelectionTable = (props: IProps) => {
                   <tr>
                     <td colSpan={row.getVisibleCells().length}>
                       <div className="flex border-secondary border border-t-0 rounded-b-sm">
-                        <div className="p-2 flex-shrink-0">{getViewpointSelection(row)}</div>
+                        <div className="p-2 flex-shrink-0">
+                          {getViewpointSelection(row)}
+                        </div>
                         <div className="flex justify-evenly w-full">
                           <div className="flex flex-col p-2 items-center justify-center">
                             {getRaidCompAndResult(row)}
