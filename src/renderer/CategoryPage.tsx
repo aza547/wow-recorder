@@ -4,6 +4,7 @@ import { AppState, RendererVideo } from 'main/types';
 import { List } from '@mui/material';
 import { scrollBarSx } from 'main/constants';
 import { MutableRefObject } from 'react';
+import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { VideoPlayer } from './VideoPlayer';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
@@ -20,6 +21,7 @@ import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
 import { cn } from './components/utils';
+import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 
 interface IProps {
   category: VideoCategory;
@@ -168,7 +170,7 @@ const CategoryPage = (props: IProps) => {
   const getVideoSelection = () => {
     return (
       <>
-        <div className="w-full flex justify-evenly border-b border-video-border items-center gap-x-5 px-2 pt-1 pb-4">
+        <div className="w-full flex justify-evenly items-center gap-x-5 px-4 pt-2">
           {!isClips && (
             <VideoMarkerToggles
               category={category}
@@ -180,25 +182,16 @@ const CategoryPage = (props: IProps) => {
             <SearchBar appState={appState} setAppState={setAppState} />
           </div>
         </div>
-        <Box
-          sx={{
-            height: '100%',
-            width: '100%',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            alignContent: 'center',
-            ...scrollBarSx,
-            '&::-webkit-scrollbar': {
-              width: '0.33em',
-            },
-          }}
-        >
-          <List sx={{ width: '100%', p: 0 }}>
-            {slicedState.map(mapActivityToListItem)}
-            {moreVideosRemain && getShowMoreButton()}
-          </List>
-        </Box>
+        <div className="w-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-4 pt-2 overflow-hidden">
+          <ScrollArea withScrollIndicators={false} className="h-full w-full">
+            <VideoSelectionTable
+              videoState={filteredState}
+              category={category}
+              appState={appState}
+              setAppState={setAppState}
+            />
+          </ScrollArea>
+        </div>
       </>
     );
   };

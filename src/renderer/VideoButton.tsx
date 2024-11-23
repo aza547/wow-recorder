@@ -37,9 +37,9 @@ import RaidEncounterInfo from './RaidEncounterInfo';
 import BattlegroundInfo from './BattlegroundInfo';
 import DungeonInfo from './DungeonInfo';
 import ArenaInfo from './ArenaInfo';
-import RaidCompAndResult from './RaidCompAndResult';
+import RaidCompAndResult from './RaidComp';
 import TagDialog from './TagDialog';
-import PovSelection from './PovSelection';
+// import PovSelection from './PovSelection';
 import { useSettings } from './useSettings';
 import StateManager from './StateManager';
 import { cn } from './components/utils';
@@ -372,7 +372,7 @@ export default function VideoButton(props: IProps) {
           />
         </div>
 
-        <div className="h-full w-1/3 flex items-center content-center">
+        {/* <div className="h-full w-1/3 flex items-center content-center">
           <PovSelection
             povs={povs}
             parentButtonSelected={selected}
@@ -381,7 +381,7 @@ export default function VideoButton(props: IProps) {
             setAppState={setAppState}
             persistentProgress={persistentProgress}
           />
-        </div>
+        </div> */}
 
         <Box
           sx={{

@@ -12,8 +12,8 @@ import {
 import path from 'path';
 import AuthError from '../utils/AuthError';
 
-const devMode =
-  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+const devMode = false;
+  // process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 /**
  * A client for retrieving resources from the cloud.
