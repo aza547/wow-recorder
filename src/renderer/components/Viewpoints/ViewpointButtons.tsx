@@ -27,7 +27,6 @@ import TagDialog from '../../TagDialog';
 
 interface IProps {
   povs: RendererVideo[];
-  parentButtonSelected: boolean;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
@@ -37,14 +36,8 @@ interface IProps {
 const ipc = window.electron.ipcRenderer;
 
 export default function ViewpointButtons(props: IProps) {
-  const {
-    parentButtonSelected,
-    appState,
-    setAppState,
-    persistentProgress,
-    povs,
-    stateManager,
-  } = props;
+  const { appState, setAppState, persistentProgress, povs, stateManager } =
+    props;
   const [config] = useSettings();
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
   const multiPov = povs.length > 1;

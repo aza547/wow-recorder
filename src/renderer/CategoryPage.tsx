@@ -189,6 +189,8 @@ const CategoryPage = (props: IProps) => {
               category={category}
               appState={appState}
               setAppState={setAppState}
+              stateManager={stateManager}
+              persistentProgress={persistentProgress}
             />
           </ScrollArea>
         </div>

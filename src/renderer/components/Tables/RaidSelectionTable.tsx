@@ -1,3 +1,6 @@
+/* eslint-disable no-nested-ternary */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { AppState, RendererVideo } from 'main/types';
 
 import {
@@ -19,6 +22,7 @@ import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrow
 import StateManager from 'renderer/StateManager';
 import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
 import RaidCompAndResult from 'renderer/RaidComp';
+import { CalendarDays, Hourglass } from 'lucide-react';
 import {
   getFormattedDuration,
   getInstanceDifficultyText,
@@ -36,10 +40,17 @@ interface IProps {
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   stateManager: MutableRefObject<StateManager>;
+  persistentProgress: MutableRefObject<number>;
 }
 
 const RaidSelectionTable = (props: IProps) => {
-  const { videoState, appState, setAppState, stateManager } = props;
+  const {
+    videoState,
+    appState,
+    setAppState,
+    stateManager,
+    persistentProgress,
+  } = props;
 
   const [selectedRowId, setSelectedRowId] = useState<string>('0');
   const [expanded, setExpanded] = useState<ExpandedState>({});
@@ -52,7 +63,7 @@ const RaidSelectionTable = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: video.videoName,
+        selectedVideoName: povs[0].videoName,
         playingVideo: povs[0],
       };
     });
@@ -101,7 +112,13 @@ const RaidSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Duration',
+        id: 'Duration',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Hourglass />
+            Duration
+          </span>
+        ),
         cell: (info) => {
           const rawValue = info.getValue() as RendererVideo;
           return getFormattedDuration(rawValue);
@@ -109,7 +126,13 @@ const RaidSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Date',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <CalendarDays />
+            Date
+          </span>
+        ),
+        id: 'Date',
         cell: (info) => {
           const rawValue = info.getValue() as RendererVideo;
           return `${getVideoTime(rawValue)} ${getVideoDate(rawValue)} `;
@@ -126,13 +149,14 @@ const RaidSelectionTable = (props: IProps) => {
       },
       {
         header: 'Details',
+        size: 60,
         cell: ({ row }) => {
           return (
             <Button
               onClick={row.getToggleExpandedHandler()}
               style={{ cursor: 'pointer' }}
             >
-              {row.getIsExpanded() ? (
+              {row.getIsExpanded() && selectedRowId === row.id ? (
                 <KeyboardDoubleArrowUpIcon />
               ) : (
                 <KeyboardDoubleArrowDownIcon />
@@ -142,7 +166,7 @@ const RaidSelectionTable = (props: IProps) => {
         },
       },
     ],
-    [videoState]
+    [selectedRowId, videoState]
   );
 
   const data = videoState;
@@ -166,11 +190,8 @@ const RaidSelectionTable = (props: IProps) => {
     return (
       <ViewpointSelection
         povs={povs}
-        parentButtonSelected
         appState={appState}
-        setLocalPovIndex={0}
         setAppState={setAppState}
-        persistentProgress={1}
       />
     );
   };
@@ -192,11 +213,8 @@ const RaidSelectionTable = (props: IProps) => {
     return (
       <ViewpointInfo
         povs={povs}
-        parentButtonSelected
         appState={appState}
-        setLocalPovIndex={0}
         setAppState={setAppState}
-        persistentProgress={1}
       />
     );
   };
@@ -208,11 +226,9 @@ const RaidSelectionTable = (props: IProps) => {
     return (
       <ViewpointButtons
         povs={povs}
-        parentButtonSelected
         appState={appState}
-        setLocalPovIndex={0}
         setAppState={setAppState}
-        persistentProgress={1}
+        persistentProgress={persistentProgress}
         stateManager={stateManager}
       />
     );
@@ -229,6 +245,7 @@ const RaidSelectionTable = (props: IProps) => {
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
+                    style={{ width: header.column.getSize() }}
                     className="text-left border-b border-video-border"
                   >
                     {header.isPlaceholder ? null : (
@@ -277,7 +294,11 @@ const RaidSelectionTable = (props: IProps) => {
                   }`}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td className="px-2 truncate" key={cell.id}>
+                    <td
+                      className="px-2 truncate"
+                      key={cell.id}
+                      style={{ width: cell.column.getSize() }}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -285,7 +306,7 @@ const RaidSelectionTable = (props: IProps) => {
                     </td>
                   ))}
                 </tr>
-                {row.getIsExpanded() && (
+                {row.getIsExpanded() && selectedRowId === row.id && (
                   <tr>
                     <td colSpan={row.getVisibleCells().length}>
                       <div className="flex border-secondary border border-t-0 rounded-b-sm">

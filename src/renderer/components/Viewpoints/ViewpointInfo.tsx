@@ -3,7 +3,6 @@
 import { Box } from '@mui/material';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject } from 'react';
-import { icon } from '@fortawesome/fontawesome-svg-core';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import { ToggleGroup, ToggleGroupItem } from '../ToggleGroup/ToggleGroup';
@@ -19,20 +18,12 @@ import { Tooltip } from '../Tooltip/Tooltip';
 
 interface IProps {
   povs: RendererVideo[];
-  parentButtonSelected: boolean;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
-  persistentProgress: MutableRefObject<number>;
 }
 
 export default function ViewpointInfo(props: IProps) {
-  const {
-    povs,
-    parentButtonSelected,
-    appState,
-    setAppState,
-    persistentProgress,
-  } = props;
+  const { povs, appState, setAppState } = props;
 
   const { playingVideo } = appState;
 
@@ -57,9 +48,6 @@ export default function ViewpointInfo(props: IProps) {
   const diskVideo = playerViewpoints.find((vid) => !vid.cloud);
   const cloudVideo = playerViewpoints.find((vid) => vid.cloud);
 
-  const cloudButtonColor = 1 ? '#bb4420' : 'white';
-  const diskButtonColor = 1 ? '#bb4420' : 'white';
-
   const setPlayingVideo = (v: RendererVideo | undefined) => {
     if (!v) {
       return;
@@ -78,30 +66,23 @@ export default function ViewpointInfo(props: IProps) {
    * Return the cloud icon.
    */
   const getCloudIcon = () => {
-    let opacity = 1;
-    let title = 'Use cloud version';
-    let value = 'none';
-
-    if (!cloudVideo) {
-      opacity = 0.2;
-      title = 'No cloud recording is saved';
-    } else {
-      value = cloudVideo.videoName;
-    }
+    const isSelected = appState.playingVideo === cloudVideo;
+    const color = cloudVideo ? 'white' : 'gray';
+    const opacity = isSelected ? 1 : 0.3;
 
     return (
-      <Tooltip content={title}>
+      <Tooltip content="Use cloud version">
         <ToggleGroupItem
-          value={value}
+          value="cloud"
           disabled={!cloudVideo}
           onClick={() => setPlayingVideo(cloudVideo)}
-          className="!pointer-events-auto"
+          className="h-[40px] w-[40px]"
         >
           <CloudIcon
             sx={{
-              height: '40px',
-              width: '40px',
-              color: cloudButtonColor,
+              height: '30px',
+              width: '30px',
+              color,
               opacity,
             }}
           />
@@ -114,32 +95,19 @@ export default function ViewpointInfo(props: IProps) {
    * Return the disk icon.
    */
   const getDiskIcon = () => {
-    let opacity = 1;
-    let title = 'Use local disk version';
-    let value = 'none';
-
-    if (!diskVideo) {
-      opacity = 0.2;
-      title = 'No disk recording is saved';
-    } else {
-      value = diskVideo.videoName;
-    }
+    const isSelected = appState.playingVideo === diskVideo;
+    const color = diskVideo ? 'white' : 'gray';
+    const opacity = isSelected ? 1 : 0.3;
 
     return (
-      <Tooltip content={title}>
+      <Tooltip content="Use local disk version">
         <ToggleGroupItem
-          value={value}
+          value="disk"
           disabled={!diskVideo}
           onClick={() => setPlayingVideo(diskVideo)}
+          className="h-[40px] w-[40px]"
         >
-          <SaveIcon
-            sx={{
-              height: '40px',
-              width: '40px',
-              color: diskButtonColor,
-              opacity,
-            }}
-          />
+          <SaveIcon sx={{ height: '30px', width: '30px', color, opacity }} />
         </ToggleGroupItem>
       </Tooltip>
     );
@@ -150,8 +118,7 @@ export default function ViewpointInfo(props: IProps) {
       <div className="flex flex-row items-center content-center w-full h-full mx-2">
         <ToggleGroup
           type="single"
-          value={(1 ? 'a' : 'b').toString()}
-          className="flex flex-row items-center content-end w-[100px] h-[50px] bg-[rgba(0,0,0,25%)]"
+          className="flex flex-row items-center w-[100px] h-[50px]"
           size="xs"
           variant="outline"
         >
