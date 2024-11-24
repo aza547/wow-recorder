@@ -11,19 +11,20 @@ import {
   getPlayerName,
   getPlayerRealm,
   getPlayerSpecID,
+  povNameSort,
 } from '../../rendererutils';
 import { specImages } from '../../images';
 import { Tooltip } from '../Tooltip/Tooltip';
 
 interface IProps {
-  povs: RendererVideo[];
+  video: RendererVideo;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
 export default function ViewpointInfo(props: IProps) {
-  const { povs, appState, setAppState } = props;
-
+  const { video, appState, setAppState } = props;
+  const povs = [video, ...video.multiPov].sort(povNameSort);
   const { playingVideo } = appState;
 
   if (!playingVideo) {

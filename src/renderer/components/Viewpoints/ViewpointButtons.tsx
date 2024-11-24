@@ -16,7 +16,7 @@ import {
   faMessage as faMessageOutline,
 } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { stopPropagation } from '../../rendererutils';
+import { povNameSort, stopPropagation } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { toast } from '../Toast/useToast';
@@ -26,7 +26,7 @@ import StateManager from '../../StateManager';
 import TagDialog from '../../TagDialog';
 
 interface IProps {
-  povs: RendererVideo[];
+  video: RendererVideo;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
@@ -36,8 +36,9 @@ interface IProps {
 const ipc = window.electron.ipcRenderer;
 
 export default function ViewpointButtons(props: IProps) {
-  const { appState, setAppState, persistentProgress, povs, stateManager } =
+  const { appState, setAppState, persistentProgress, video, stateManager } =
     props;
+  const povs = [video, ...video.multiPov].sort(povNameSort);
   const [config] = useSettings();
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
   const multiPov = povs.length > 1;

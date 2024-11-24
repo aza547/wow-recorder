@@ -11,17 +11,19 @@ import {
   getPlayerClass,
   isArenaUtil,
   isSoloShuffleUtil,
+  povNameSort,
 } from '../../rendererutils';
 import { specImages } from '../../images';
 
 interface IProps {
-  povs: RendererVideo[];
+  video: RendererVideo;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
 export default function ViewpointSelection(props: IProps) {
-  const { povs, appState, setAppState } = props;
+  const { video, appState, setAppState } = props;
+  const povs = [video, ...video.multiPov].sort(povNameSort);
   const { player, combatants } = povs[0];
 
   const isArena = isArenaUtil(povs[0]);
@@ -156,17 +158,17 @@ export default function ViewpointSelection(props: IProps) {
 
     const friendly = combatants.filter((c) => c._teamID === player._teamID);
     const enemy = combatants.filter((c) => c._teamID !== player._teamID);
-    let klazz = 'grid my-1 mx-1 max-w-[500px] ';
+    let gridClass = 'grid my-1 mx-1 max-w-[500px] ';
 
     // some tailwind shenanigans going on here when I try to do this more dynamically.
     // pretty sure it's scanning these files to decide what to bundle so needs these
     // hardcoded.
     if (friendly.length === 2) {
-      klazz += 'grid-cols-2';
+      gridClass += 'grid-cols-2';
     } else if (friendly.length === 3) {
-      klazz += 'grid-cols-3';
+      gridClass += 'grid-cols-3';
     } else {
-      klazz += 'grid-cols-5';
+      gridClass += 'grid-cols-5';
     }
 
     const renderVsIcon = () => {
@@ -179,9 +181,9 @@ export default function ViewpointSelection(props: IProps) {
 
     return (
       <div className="flex flex-col">
-        <div className={klazz}>{friendly.map(mapCombatants)}</div>
+        <div className={gridClass}>{friendly.map(mapCombatants)}</div>
         {!isSoloShuffleUtil(povs[0]) && renderVsIcon()}
-        <div className={klazz}>{enemy.map(mapCombatants)}</div>
+        <div className={gridClass}>{enemy.map(mapCombatants)}</div>
       </div>
     );
   };

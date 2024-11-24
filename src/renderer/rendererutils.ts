@@ -509,7 +509,41 @@ const getVideoTime = (video: RendererVideo) => {
   return timeAsString;
 };
 
+const videoToDate = (video: RendererVideo) => {
+  let date;
+
+  if (video.clippedAt) {
+    date = new Date(video.clippedAt);
+  } else if (video.start) {
+    date = new Date(video.start);
+  } else {
+    date = new Date(video.mtime);
+  }
+
+  return date;
+};
+
+const dateToHumanReadable = (date: Date) => {
+  const day = date.getDate();
+  const month = months[date.getMonth()].slice(0, 3);
+  // const year = date.getFullYear().toString().slice(2, 4);
+  const dateAsString = `${day} ${month}`;
+
+  const hours = date
+    .getHours()
+    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
+
+  const mins = date
+    .getMinutes()
+    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
+
+  const timeAsString = `${hours}:${mins}`;
+
+  return `${timeAsString} ${dateAsString}`;
+};
+
 const getVideoDate = (video: RendererVideo) => {
+  console.log(video);
   let date;
 
   if (video.clippedAt) {
@@ -521,6 +555,7 @@ const getVideoDate = (video: RendererVideo) => {
   }
 
   const day = date.getDate();
+  console.log(date, date.getMonth());
   const month = months[date.getMonth()].slice(0, 3);
   const dateAsString = `${day} ${month}`;
   return dateAsString;
@@ -963,4 +998,6 @@ export {
   getPullNumber,
   combatantNameSort,
   countUniqueViewpoints,
+  videoToDate,
+  dateToHumanReadable,
 };
