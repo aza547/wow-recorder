@@ -26,6 +26,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           display: 'flex',
           flexDirection: 'row',
           backgroundColor: 'transparent',
+          alignItems: 'center',
         }}
       >
         <Box
@@ -33,15 +34,15 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           component="img"
           src={Images.affixImages[affixID]}
           sx={{
-            height: '20px',
-            width: '20px',
+            height: '30px',
+            width: '30px',
             border: '1px solid black',
             borderRadius: '15%',
             boxSizing: 'border-box',
             objectFit: 'cover',
           }}
         />
-        <span className="text-white font-semibold text-xs text-shadow-instance ml-0.5">
+        <span className="text-white font-semibold text-sm text-shadow-instance ml-0.5 pl-1">
           {dungeonAffixesById[affixID]}
         </span>
       </Box>
@@ -50,7 +51,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
 
   const renderDungeonName = () => {
     return (
-      <span className="text-white font-semibold text-xs text-shadow-instance text-center">
+      <span className="text-white font-semibold text-lg text-shadow-instance text-center">
         {dungeonName}
       </span>
     );
@@ -58,7 +59,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
 
   const renderDungeonLevel = () => {
     return (
-      <span className="text-[#ff8000] font-semibold text-xs text-shadow-instance">
+      <span className="text-[#ff8000] font-semibold text-md text-shadow-instance">
         +{video.keystoneLevel || video.level}
       </span>
     );
@@ -131,7 +132,6 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
           justifyContent: 'center',
         }}
       >
-        {renderChests()}
         {renderDeaths()}
       </Box>
     );
@@ -144,26 +144,10 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
         flexDirection: 'row',
         backgroundColor: 'transparent',
         alignItems: 'center',
-        justifyContent: 'center',
       }}
     >
       <Box
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          width: '60%',
-          mx: 1,
-        }}
-      >
-        {renderDungeonResult()}
-        {renderDungeonName()}
-        {renderDungeonLevel()}
-      </Box>
-
-      <Box
-        sx={{
-          width: '40%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

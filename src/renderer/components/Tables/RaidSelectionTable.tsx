@@ -149,12 +149,13 @@ const RaidSelectionTable = (props: IProps) => {
       },
       {
         header: 'Details',
-        size: 60,
+        size: 50,
         cell: ({ row }) => {
           return (
             <Button
               onClick={row.getToggleExpandedHandler()}
               style={{ cursor: 'pointer' }}
+              size="sm"
             >
               {row.getIsExpanded() && selectedRowId === row.id ? (
                 <KeyboardDoubleArrowUpIcon />

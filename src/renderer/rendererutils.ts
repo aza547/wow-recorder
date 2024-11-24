@@ -379,13 +379,13 @@ const getResultColor = (video: RendererVideo) => {
       // a better way to pass it through. Generated with: https://cssgradient.io/.
       // The key is the number of wins.
       const soloShuffleResultColors = [
-        'rgb(53,  164, 50, 0.3)',
-        'rgb(46,  171, 27, 0.3)',
-        'rgb(112, 170, 30, 0.3)',
-        'rgb(171, 150, 30, 0.3)',
-        'rgb(171, 86,  26, 0.3)',
-        'rgb(175, 50,  23, 0.3)',
-        'rgb(156, 21,  21, 0.3)',
+        'rgb(53,  164, 50)',
+        'rgb(46,  171, 27)',
+        'rgb(112, 170, 30)',
+        'rgb(171, 150, 30)',
+        'rgb(171, 86,  26)',
+        'rgb(175, 50,  23)',
+        'rgb(156, 21,  21)',
       ].reverse();
 
       return soloShuffleResultColors[soloShuffleRoundsWon];
@@ -761,7 +761,7 @@ const getVideoResultText = (video: RendererVideo): string => {
       return 'Depleted';
     }
 
-    return String(upgradeLevel);
+    return String(`+${upgradeLevel}`);
   }
 
   if (isRaidUtil(video)) {
