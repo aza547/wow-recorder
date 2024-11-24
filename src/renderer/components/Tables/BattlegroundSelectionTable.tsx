@@ -14,19 +14,14 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Fragment, MutableRefObject, useMemo, useState } from 'react';
-import ViewpointSelection from 'renderer/components/Viewpoints/ViewpointSelection';
 import ViewpointInfo from 'renderer/components/Viewpoints/ViewpointInfo';
 import ViewpointButtons from 'renderer/components/Viewpoints/ViewpointButtons';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import StateManager from 'renderer/StateManager';
-import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
-import RaidCompAndResult from 'renderer/RaidComp';
 import { CalendarDays, Hourglass, MapPinned, Trophy } from 'lucide-react';
 import {
   getFormattedDuration,
-  getInstanceDifficultyText,
-  getPullNumber,
   getResultColor,
   getVideoDate,
   getVideoResultText,
@@ -171,57 +166,6 @@ const BattlegroundSelectionTable = (props: IProps) => {
     getExpandedRowModel: getExpandedRowModel(),
   });
 
-  const getViewpointSelection = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
-
-    return (
-      <ViewpointSelection
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-      />
-    );
-  };
-
-  const getRaidEncounterInfo = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    return <RaidEncounterInfo video={video} />;
-  };
-
-  const getRaidCompAndResult = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    return <RaidCompAndResult video={video} />;
-  };
-
-  const getViewpointInformation = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
-
-    return (
-      <ViewpointInfo
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-      />
-    );
-  };
-
-  const getViewpointButtons = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
-
-    return (
-      <ViewpointButtons
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-        persistentProgress={persistentProgress}
-        stateManager={stateManager}
-      />
-    );
-  };
-
   return (
     <div className="w-full flex justify-evenly border-b border-video-border items-center gap-x-5 p-2">
       <table className="table-fixed w-full">
@@ -299,8 +243,18 @@ const BattlegroundSelectionTable = (props: IProps) => {
                     <td colSpan={row.getVisibleCells().length}>
                       <div className="flex border-secondary border border-t-0 rounded-b-sm">
                         <div className="flex flex-col p-2 items-center justify-center w-full">
-                          {getViewpointInformation(row)}
-                          {getViewpointButtons(row)}
+                          <ViewpointInfo
+                            video={row.original}
+                            appState={appState}
+                            setAppState={setAppState}
+                          />
+                          <ViewpointButtons
+                            video={row.original}
+                            appState={appState}
+                            setAppState={setAppState}
+                            persistentProgress={persistentProgress}
+                            stateManager={stateManager}
+                          />
                         </div>
                       </div>
                     </td>

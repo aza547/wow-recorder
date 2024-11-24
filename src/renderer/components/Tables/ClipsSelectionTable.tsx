@@ -158,57 +158,6 @@ const ClipsSelectionTable = (props: IProps) => {
     getExpandedRowModel: getExpandedRowModel(),
   });
 
-  const getViewpointSelection = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
-
-    return (
-      <ViewpointSelection
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-      />
-    );
-  };
-
-  const getRaidEncounterInfo = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    return <RaidEncounterInfo video={video} />;
-  };
-
-  const getRaidCompAndResult = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    return <RaidCompAndResult video={video} />;
-  };
-
-  const getViewpointInformation = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
-
-    return (
-      <ViewpointInfo
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-      />
-    );
-  };
-
-  const getViewpointButtons = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
-
-    return (
-      <ViewpointButtons
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-        persistentProgress={persistentProgress}
-        stateManager={stateManager}
-      />
-    );
-  };
-
   return (
     <div className="w-full flex justify-evenly border-b border-video-border items-center gap-x-5 p-2">
       <table className="table-fixed w-full">
@@ -286,12 +235,26 @@ const ClipsSelectionTable = (props: IProps) => {
                     <td colSpan={row.getVisibleCells().length}>
                       <div className="flex border-secondary border border-t-0 rounded-b-sm">
                         <div className="p-2 flex-shrink-0">
-                          {getViewpointSelection(row)}
+                          <ViewpointSelection
+                            video={row.original}
+                            appState={appState}
+                            setAppState={setAppState}
+                          />
                         </div>
                         <div className="flex justify-evenly w-full">
                           <div className="flex flex-col p-2 items-center justify-center">
-                            {getViewpointInformation(row)}
-                            {getViewpointButtons(row)}
+                            <ViewpointInfo
+                              video={row.original}
+                              appState={appState}
+                              setAppState={setAppState}
+                            />
+                            <ViewpointButtons
+                              video={row.original}
+                              appState={appState}
+                              setAppState={setAppState}
+                              persistentProgress={persistentProgress}
+                              stateManager={stateManager}
+                            />
                           </div>
                         </div>
                       </div>

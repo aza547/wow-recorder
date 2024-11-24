@@ -4,12 +4,14 @@
 import { AppState, RendererVideo } from 'main/types';
 
 import {
+  Cell,
   ColumnDef,
   ExpandedState,
   flexRender,
   getCoreRowModel,
   getExpandedRowModel,
   getSortedRowModel,
+  Header,
   Row,
   useReactTable,
 } from '@tanstack/react-table';
@@ -20,7 +22,14 @@ import ViewpointButtons from 'renderer/components/Viewpoints/ViewpointButtons';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import StateManager from 'renderer/StateManager';
-import { CalendarDays, Eye, Hourglass, MapPinned, Swords, Trophy } from 'lucide-react';
+import {
+  CalendarDays,
+  Eye,
+  Hourglass,
+  MapPinned,
+  Swords,
+  Trophy,
+} from 'lucide-react';
 import DungeonInfo from 'renderer/DungeonInfo';
 import {
   countUniqueViewpoints,
@@ -196,156 +205,171 @@ const DungeonSelectionTable = (props: IProps) => {
     state: { expanded },
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(), // client-side sorting
+    getSortedRowModel: getSortedRowModel(),
     getRowCanExpand: () => true,
     getExpandedRowModel: getExpandedRowModel(),
   });
 
-  const getViewpointSelection = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
+  /**
+   * Render an individual header.
+   */
+  const renderIndividualHeader = (header: Header<RendererVideo, unknown>) => {
+    let tooltip;
+
+    if (header.column.getNextSortingOrder() === 'asc') {
+      tooltip = 'Click to sort ascending';
+    } else if (header.column.getNextSortingOrder() === 'desc') {
+      tooltip = 'Click to sort descending';
+    } else {
+      tooltip = 'Click to clear sort';
+    }
 
     return (
-      <ViewpointSelection
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-      />
+      <th
+        key={header.id}
+        colSpan={header.colSpan}
+        style={{ width: header.column.getSize() }}
+        className="text-left border-b border-video-border"
+      >
+        <div
+          className="cursor-pointer select-none px-2"
+          onClick={header.column.getToggleSortingHandler()}
+          title={tooltip}
+        >
+          {flexRender(header.column.columnDef.header, header.getContext())}
+          {/* {{
+            asc: ' 🔼',
+            desc: ' 🔽',
+          }[header.column.getIsSorted() as string] ?? null} */}
+        </div>
+      </th>
     );
   };
 
-  const getDungeonEncounterInfo = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    return <DungeonInfo video={video} />;
-  };
-
-  const getViewpointInformation = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
+  /**
+   * Render the header of the selection table.
+   */
+  const renderTableHeader = () => {
+    const groups = table.getHeaderGroups();
+    const { headers } = groups[0];
 
     return (
-      <ViewpointInfo
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-      />
+      <thead>
+        <tr>{headers.map(renderIndividualHeader)}</tr>
+      </thead>
     );
   };
 
-  const getViewpointButtons = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
+  /**
+   * Render a cell in the base row.
+   */
+  const renderBaseCell = (cell: Cell<RendererVideo, unknown>) => {
+    const width = cell.column.getSize();
 
     return (
-      <ViewpointButtons
-        povs={povs}
-        appState={appState}
-        setAppState={setAppState}
-        persistentProgress={persistentProgress}
-        stateManager={stateManager}
-      />
+      <td className="px-2 truncate" key={cell.id} style={{ width }}>
+        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      </td>
     );
   };
 
-  return (
-    <div className="w-full flex justify-evenly border-b border-video-border items-center gap-x-5 p-2">
-      <table className="table-fixed w-full">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <th
-                    key={header.id}
-                    colSpan={header.colSpan}
-                    style={{ width: header.column.getSize() }}
-                    className="text-left border-b border-video-border"
-                  >
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className={
-                          header.column.getCanSort()
-                            ? 'cursor-pointer select-none  px-2'
-                            : 'px-2'
-                        }
-                        onClick={header.column.getToggleSortingHandler()}
-                        title={
-                          header.column.getCanSort()
-                            ? header.column.getNextSortingOrder() === 'asc'
-                              ? 'Sort ascending'
-                              : header.column.getNextSortingOrder() === 'desc'
-                              ? 'Sort descending'
-                              : 'Clear sort'
-                            : undefined
-                        }
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {{
-                          asc: ' 🔼',
-                          desc: ' 🔽',
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </div>
-                    )}
-                  </th>
-                );
-              })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => {
-            return (
-              <Fragment key={row.id}>
-                <tr
-                  key={row.id}
-                  onClick={() => onRowClick(row)}
-                  className={`cursor-pointer hover:bg-secondary/80 ${
-                    row.id === selectedRowId ? 'bg-secondary/80' : ''
-                  }`}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      className="px-2 truncate"
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-                {row.getIsExpanded() && selectedRowId === row.id && (
-                  <tr>
-                    <td colSpan={row.getVisibleCells().length}>
-                      <div className="flex border-secondary border border-t-0 rounded-b-sm">
-                        <div className="p-2 flex-shrink-0">
-                          {getViewpointSelection(row)}
-                        </div>
-                        <div className="flex justify-evenly w-full">
-                          <div className="flex flex-col p-2 items-center justify-center">
-                            {getDungeonEncounterInfo(row)}
-                          </div>
-                          <div className="flex flex-col p-2 items-center justify-center">
-                            {getViewpointInformation(row)}
-                            {getViewpointButtons(row)}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
+  /**
+   * Render the base row.
+   */
+  const renderBaseRow = (row: Row<RendererVideo>, selected: boolean) => {
+    const cells = row.getVisibleCells();
+    let className = 'cursor-pointer hover:bg-secondary/80 ';
+
+    if (selected) {
+      className += 'bg-secondary/80';
+    }
+
+    return (
+      <tr key={row.id} className={className} onClick={() => onRowClick(row)}>
+        {cells.map(renderBaseCell)}
+      </tr>
+    );
+  };
+
+  /**
+   * Render the expanded row.
+   */
+  const renderExpandedRow = (row: Row<RendererVideo>) => {
+    const cells = row.getVisibleCells();
+
+    return (
+      <tr>
+        <td colSpan={cells.length}>
+          <div className="flex border-secondary border border-t-0 rounded-b-sm">
+            <div className="p-2 flex-shrink-0">
+              <ViewpointSelection
+                video={row.original}
+                appState={appState}
+                setAppState={setAppState}
+              />
+            </div>
+            <div className="flex justify-evenly w-full">
+              <div className="flex flex-col p-2 items-center justify-center">
+                <DungeonInfo video={row.original} />
+              </div>
+              <div className="flex flex-col p-2 items-center justify-center">
+                <ViewpointInfo
+                  video={row.original}
+                  appState={appState}
+                  setAppState={setAppState}
+                />
+                <ViewpointButtons
+                  video={row.original}
+                  appState={appState}
+                  setAppState={setAppState}
+                  persistentProgress={persistentProgress}
+                  stateManager={stateManager}
+                />
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  /**
+   * Render an individual row of the table.
+   */
+  const renderRow = (row: Row<RendererVideo>) => {
+    const selected = row.id === selectedRowId;
+
+    return (
+      <Fragment key={row.id}>
+        {renderBaseRow(row, selected)}
+        {row.getIsExpanded() && selected && renderExpandedRow(row)}
+      </Fragment>
+    );
+  };
+
+  /**
+   * Render the body of the selection table.
+   */
+  const renderTableBody = () => {
+    const { rows } = table.getRowModel();
+    return <tbody>{rows.map(renderRow)}</tbody>;
+  };
+
+  /**
+   * Render the whole component.
+   */
+  const renderTable = () => {
+    return (
+      <div className="w-full flex justify-evenly border-b border-video-border items-center gap-x-5 p-2">
+        <table className="table-fixed w-full">
+          {renderTableHeader()}
+          {renderTableBody()}
+        </table>
+      </div>
+    );
+  };
+
+  return renderTable();
 };
 
 export default DungeonSelectionTable;
