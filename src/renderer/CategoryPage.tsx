@@ -104,7 +104,6 @@ const CategoryPage = (props: IProps) => {
           <ScrollArea withScrollIndicators={false} className="h-full w-full">
             <VideoSelectionTable
               videoState={filteredState}
-              category={category}
               appState={appState}
               setAppState={setAppState}
               stateManager={stateManager}

@@ -543,7 +543,6 @@ const dateToHumanReadable = (date: Date) => {
 };
 
 const getVideoDate = (video: RendererVideo) => {
-  console.log(video);
   let date;
 
   if (video.clippedAt) {
@@ -555,7 +554,6 @@ const getVideoDate = (video: RendererVideo) => {
   }
 
   const day = date.getDate();
-  console.log(date, date.getMonth());
   const month = months[date.getMonth()].slice(0, 3);
   const dateAsString = `${day} ${month}`;
   return dateAsString;
