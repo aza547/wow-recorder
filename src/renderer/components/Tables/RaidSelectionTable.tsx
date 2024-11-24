@@ -22,8 +22,17 @@ import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrow
 import StateManager from 'renderer/StateManager';
 import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
 import RaidCompAndResult from 'renderer/RaidComp';
-import { CalendarDays, Hourglass } from 'lucide-react';
 import {
+  CalendarDays,
+  Hourglass,
+  Eye,
+  Trophy,
+  Gamepad2,
+  Hash,
+  Swords,
+} from 'lucide-react';
+import {
+  countUniqueViewpoints,
   getFormattedDuration,
   getInstanceDifficultyText,
   getPullNumber,
@@ -63,7 +72,6 @@ const RaidSelectionTable = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: povs[0].videoName,
         playingVideo: povs[0],
       };
     });
@@ -73,12 +81,24 @@ const RaidSelectionTable = (props: IProps) => {
     () => [
       {
         accessorKey: 'encounterName',
-        header: 'Encounter',
+        id: 'Encounter',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Gamepad2 />
+            Encounter
+          </span>
+        ),
         cell: (info) => info.getValue(),
       },
       {
         accessorFn: (v) => v,
-        header: 'Result',
+        id: 'Result',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Trophy />
+            Result
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
           const resultText = getVideoResultText(video);
@@ -96,7 +116,13 @@ const RaidSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Pull',
+        id: 'Pull',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Hash />
+            Pull
+          </span>
+        ),
         cell: (info) => {
           const rawValue = info.getValue() as RendererVideo;
           return getPullNumber(rawValue, videoState);
@@ -104,7 +130,13 @@ const RaidSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Difficulty',
+        id: 'Difficulty',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Swords />
+            Difficulty
+          </span>
+        ),
         cell: (info) => {
           const rawValue = info.getValue() as RendererVideo;
           return getInstanceDifficultyText(rawValue);
@@ -140,15 +172,20 @@ const RaidSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Viewpoints',
+        id: 'Viewpoints',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Eye />
+            Viewpoints
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
-          const povs = [video, ...video.multiPov];
-          return povs.length;
+          return countUniqueViewpoints(video);
         },
       },
       {
-        header: 'Details',
+        id: 'Details',
         size: 50,
         cell: ({ row }) => {
           return (
@@ -156,6 +193,7 @@ const RaidSelectionTable = (props: IProps) => {
               onClick={row.getToggleExpandedHandler()}
               style={{ cursor: 'pointer' }}
               size="sm"
+              variant="ghost"
             >
               {row.getIsExpanded() && selectedRowId === row.id ? (
                 <KeyboardDoubleArrowUpIcon />
@@ -170,12 +208,9 @@ const RaidSelectionTable = (props: IProps) => {
     [selectedRowId, videoState]
   );
 
-  const data = videoState;
-
   const table = useReactTable({
     columns,
-    data,
-    debugTable: true,
+    data: videoState,
     state: { expanded },
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),

@@ -20,14 +20,12 @@ import ViewpointButtons from 'renderer/components/Viewpoints/ViewpointButtons';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import StateManager from 'renderer/StateManager';
-import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
-import RaidCompAndResult from 'renderer/RaidComp';
-import { CalendarDays, Hourglass } from 'lucide-react';
+import { CalendarDays, Eye, Hourglass, MapPinned, Swords, Trophy } from 'lucide-react';
+import DungeonInfo from 'renderer/DungeonInfo';
 import {
+  countUniqueViewpoints,
   getDungeonName,
   getFormattedDuration,
-  getInstanceDifficultyText,
-  getPullNumber,
   getResultColor,
   getVideoDate,
   getVideoResultText,
@@ -35,7 +33,6 @@ import {
   povNameSort,
 } from '../../rendererutils';
 import { Button } from '../Button/Button';
-import DungeonInfo from 'renderer/DungeonInfo';
 
 interface IProps {
   videoState: RendererVideo[];
@@ -65,7 +62,6 @@ const DungeonSelectionTable = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: povs[0].videoName,
         playingVideo: povs[0],
       };
     });
@@ -75,7 +71,13 @@ const DungeonSelectionTable = (props: IProps) => {
     () => [
       {
         accessorFn: (v) => v,
-        header: 'Dungeon',
+        id: 'Map',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <MapPinned />
+            Map
+          </span>
+        ),
         cell: (info) => {
           const rawValue = info.getValue() as RendererVideo;
           return getDungeonName(rawValue);
@@ -83,7 +85,13 @@ const DungeonSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Result',
+        id: 'Result',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Trophy />
+            Result
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
           const resultText = getVideoResultText(video);
@@ -101,7 +109,13 @@ const DungeonSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Level',
+        id: 'Level',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Swords />
+            Difficulty
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
           return `+${video.keystoneLevel || video.level}`;
@@ -137,15 +151,20 @@ const DungeonSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Viewpoints',
+        id: 'Viewpoints',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Eye />
+            Viewpoints
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
-          const povs = [video, ...video.multiPov];
-          return povs.length;
+          return countUniqueViewpoints(video);
         },
       },
       {
-        header: 'Details',
+        id: 'Details',
         size: 50,
         cell: ({ row }) => {
           return (
@@ -153,6 +172,7 @@ const DungeonSelectionTable = (props: IProps) => {
               onClick={row.getToggleExpandedHandler()}
               style={{ cursor: 'pointer' }}
               size="sm"
+              variant="ghost"
             >
               {row.getIsExpanded() && selectedRowId === row.id ? (
                 <KeyboardDoubleArrowUpIcon />
@@ -164,7 +184,7 @@ const DungeonSelectionTable = (props: IProps) => {
         },
       },
     ],
-    [selectedRowId, videoState]
+    [selectedRowId]
   );
 
   const data = videoState;

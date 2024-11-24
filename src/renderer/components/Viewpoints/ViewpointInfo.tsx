@@ -2,7 +2,6 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { Box } from '@mui/material';
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject } from 'react';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import { ToggleGroup, ToggleGroupItem } from '../ToggleGroup/ToggleGroup';
@@ -13,7 +12,7 @@ import {
   getPlayerRealm,
   getPlayerSpecID,
 } from '../../rendererutils';
-import * as Images from '../../images';
+import { specImages } from '../../images';
 import { Tooltip } from '../Tooltip/Tooltip';
 
 interface IProps {
@@ -36,7 +35,7 @@ export default function ViewpointInfo(props: IProps) {
   const playerClass = getPlayerClass(playingVideo);
   const playerClassColor = getWoWClassColor(playerClass);
   const playerSpecID = getPlayerSpecID(playingVideo);
-  const specIcon = Images.specImages[playerSpecID];
+  const specIcon = specImages[playerSpecID as keyof typeof specImages];
 
   const pl = playingVideo.player;
 
@@ -57,7 +56,6 @@ export default function ViewpointInfo(props: IProps) {
       return {
         ...p,
         playingVideo: v,
-        selectedVideoName: v.videoName,
       };
     });
   };

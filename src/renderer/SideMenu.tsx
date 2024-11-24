@@ -151,9 +151,7 @@ const SideMenu = (props: IProps) => {
         videoFilterQuery: '',
         page: Pages.None,
         category: newCategory,
-        selectedVideoName: first?.videoName,
         playingVideo: first,
-        numVideosDisplayed: 10,
       };
     });
   };

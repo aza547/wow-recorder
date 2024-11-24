@@ -47,14 +47,7 @@ export default class StateManager {
    * applies them to the frontend.
    */
   public async refresh() {
-    if (this.raw.length === 0) {
-      console.time('getstate');
-      this.raw = (await this.ipc.invoke(
-        'getVideoState',
-        []
-      )) as RendererVideo[];
-      console.timeEnd('getstate');
-    }
+    this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
 
     console.time('correlate');
     const correlated = this.correlate();

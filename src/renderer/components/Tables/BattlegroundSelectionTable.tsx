@@ -22,7 +22,7 @@ import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrow
 import StateManager from 'renderer/StateManager';
 import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
 import RaidCompAndResult from 'renderer/RaidComp';
-import { CalendarDays, Hourglass } from 'lucide-react';
+import { CalendarDays, Hourglass, MapPinned, Trophy } from 'lucide-react';
 import {
   getFormattedDuration,
   getInstanceDifficultyText,
@@ -63,7 +63,6 @@ const BattlegroundSelectionTable = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: povs[0].videoName,
         playingVideo: povs[0],
       };
     });
@@ -73,12 +72,24 @@ const BattlegroundSelectionTable = (props: IProps) => {
     () => [
       {
         accessorKey: 'zoneName',
-        header: 'Map',
+        id: 'Map',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <MapPinned />
+            Map
+          </span>
+        ),
         cell: (info) => info.getValue(),
       },
       {
         accessorFn: (v) => v,
-        header: 'Result',
+        id: 'Result',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Trophy />
+            Result
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
           const resultText = getVideoResultText(video);
@@ -123,7 +134,7 @@ const BattlegroundSelectionTable = (props: IProps) => {
         },
       },
       {
-        header: 'Details',
+        id: 'Details',
         size: 50,
         cell: ({ row }) => {
           return (
@@ -131,6 +142,7 @@ const BattlegroundSelectionTable = (props: IProps) => {
               onClick={row.getToggleExpandedHandler()}
               style={{ cursor: 'pointer' }}
               size="sm"
+              variant="ghost"
             >
               {row.getIsExpanded() && selectedRowId === row.id ? (
                 <KeyboardDoubleArrowUpIcon />
@@ -142,7 +154,7 @@ const BattlegroundSelectionTable = (props: IProps) => {
         },
       },
     ],
-    [selectedRowId, videoState]
+    [selectedRowId]
   );
 
   const data = videoState;

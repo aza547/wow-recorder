@@ -1,8 +1,5 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
 import { AppState, RendererVideo } from 'main/types';
-import { List } from '@mui/material';
-import { scrollBarSx } from 'main/constants';
 import { MutableRefObject } from 'react';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { VideoPlayer } from './VideoPlayer';
@@ -16,11 +13,9 @@ import {
   povNameSort,
 } from './rendererutils';
 import VideoFilter from './VideoFilter';
-import VideoButton from './VideoButton';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
-import { cn } from './components/utils';
 import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 
 interface IProps {
@@ -46,7 +41,7 @@ const CategoryPage = (props: IProps) => {
     persistentProgress,
     playerHeight,
   } = props;
-  const { numVideosDisplayed, videoFilterQuery } = appState;
+  const { videoFilterQuery } = appState;
   const [config, setConfig] = useSettings();
   const categoryFilter = getVideoCategoryFilter(category);
   const categoryState = videoState.filter(categoryFilter);
@@ -56,9 +51,6 @@ const CategoryPage = (props: IProps) => {
   const filteredState = categoryState.filter((video) =>
     new VideoFilter(videoFilterQuery, video).filter()
   );
-
-  const slicedState = filteredState.slice(0, numVideosDisplayed);
-  const moreVideosRemain = slicedState.length !== filteredState.length;
 
   const getVideoPlayer = () => {
     const { playingVideo } = appState;
@@ -93,80 +85,6 @@ const CategoryPage = (props: IProps) => {
     );
   };
 
-  const handleChangeVideo = (index: number) => {
-    const video = videoState[index];
-    const povs = [video, ...video.multiPov].sort(povNameSort);
-    persistentProgress.current = 0;
-
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        selectedVideoName: video.videoName,
-        playingVideo: povs[0],
-      };
-    });
-  };
-
-  const mapActivityToListItem = (video: RendererVideo) => {
-    const povs = [video, ...video.multiPov].sort(povNameSort);
-    const names = povs.map((v) => v.videoName);
-    const selected = appState.selectedVideoName
-      ? names.includes(appState.selectedVideoName)
-      : categoryState.indexOf(video) === 0;
-
-    return (
-      // eslint-disable-next-line jsx-a11y/interactive-supports-focus, jsx-a11y/click-events-have-key-events
-      <div
-        className={cn('w-full p-2')}
-        key={video.videoSource}
-        onClick={() => handleChangeVideo(videoState.indexOf(video))}
-        role="button"
-      >
-        <VideoButton
-          key={video.videoSource}
-          video={video}
-          stateManager={stateManager}
-          videoState={videoState}
-          setAppState={setAppState}
-          selected={selected}
-          persistentProgress={persistentProgress}
-        />
-      </div>
-    );
-  };
-
-  const loadMoreVideos = () => {
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        numVideosDisplayed: prevState.numVideosDisplayed + 10,
-      };
-    });
-  };
-
-  const getShowMoreButton = () => {
-    return (
-      <Box
-        key="show-more-button-box"
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          width: '100%',
-          height: '50px',
-        }}
-      >
-        <Button
-          key="show-more-button"
-          variant="outline"
-          onClick={loadMoreVideos}
-        >
-          Load More
-        </Button>
-      </Box>
-    );
-  };
-
   const getVideoSelection = () => {
     return (
       <>
@@ -182,7 +100,7 @@ const CategoryPage = (props: IProps) => {
             <SearchBar appState={appState} setAppState={setAppState} />
           </div>
         </div>
-        <div className="w-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-4 pt-2 overflow-hidden">
+        <div className="w-full h-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-4 pt-2 overflow-hidden">
           <ScrollArea withScrollIndicators={false} className="h-full w-full">
             <VideoSelectionTable
               videoState={filteredState}

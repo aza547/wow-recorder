@@ -6,7 +6,7 @@ import {
   CloudDownload,
   CloudUpload,
   FolderOpen,
-  Link2,
+  Link as Link1,
   PackageX,
   Trash,
 } from 'lucide-react';
@@ -167,7 +167,7 @@ export default function ViewpointButtons(props: IProps) {
           variant="secondary"
           size="lgicon"
         >
-          <Link2 />
+          <Link1 />
         </Button>
       </Tooltip>
     );
@@ -247,7 +247,6 @@ export default function ViewpointButtons(props: IProps) {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: undefined,
         playingVideo: undefined,
       };
     });
@@ -288,7 +287,6 @@ export default function ViewpointButtons(props: IProps) {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: undefined,
         playingVideo: undefined,
       };
     });

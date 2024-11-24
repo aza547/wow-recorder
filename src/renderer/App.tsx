@@ -40,11 +40,9 @@ const WarcraftRecorder = () => {
   // calls the React set function appropriately.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 
-  const stateManager = useRef<StateManager | null>(null);
-
-  if (stateManager.current === null) {
-    stateManager.current = StateManager.getInstance(setVideoState);
-  }
+  const stateManager = useRef<StateManager>(
+    StateManager.getInstance(setVideoState)
+  );
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW
@@ -86,12 +84,6 @@ const WarcraftRecorder = () => {
     page: Pages.None,
     category: getCategoryFromConfig(config),
     playingVideo: undefined,
-    selectedVideoName: undefined,
-
-    // Limit the number of videos displayed for performance. User can load more
-    // by clicking the button, but mainline case will be to watch back recent
-    // videos.
-    numVideosDisplayed: 10,
 
     // Any text applied in the filter bar gets translated into a filter here.
     videoFilterQuery: '',

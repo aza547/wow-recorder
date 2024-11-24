@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import React from 'react';
 import { RendererVideo } from 'main/types';
 import { dungeonAffixesById } from 'main/constants';
-import * as Images from './images';
+import { affixImages } from './images';
 import { getDungeonName, getVideoResultText } from './rendererutils';
 import ChestIcon from '../../assets/icon/chest.png';
 import DeathIcon from '../../assets/icon/death.png';
@@ -32,7 +32,7 @@ const DungeonInfo: React.FC<IProps> = (props: IProps) => {
         <Box
           key={`child-${affixID}`}
           component="img"
-          src={Images.affixImages[affixID]}
+          src={affixImages[affixID as keyof typeof affixImages]}
           sx={{
             height: '30px',
             width: '30px',

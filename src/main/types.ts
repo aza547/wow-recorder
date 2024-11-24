@@ -310,8 +310,6 @@ type AppState = {
   page: Pages;
   category: VideoCategory;
   playingVideo: RendererVideo | undefined; // the video being played by the player
-  selectedVideoName: string | undefined;
-  numVideosDisplayed: number;
   videoFilterQuery: string;
   videoFullScreen: boolean;
 };

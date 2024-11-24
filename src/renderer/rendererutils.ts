@@ -36,6 +36,7 @@ import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
 import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'main/configSchema';
+import { Renderer } from 'react-dom';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -832,22 +833,6 @@ const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
   return differenceMilliseconds <= sec * 1000;
 };
 
-const countUniquePovs = (povs: RendererVideo[]) => {
-  let uniquePovs = 0;
-  const seenPovs: string[] = [];
-
-  for (let i = 0; i < povs.length; i++) {
-    const name = povs[i].player?._name;
-
-    if (name && !seenPovs.includes(name)) {
-      uniquePovs++;
-      seenPovs.push(name);
-    }
-  }
-
-  return uniquePovs;
-};
-
 const toFixedDigits = (n: number, d: number) =>
   n.toLocaleString('en-US', { minimumIntegerDigits: d, useGrouping: false });
 
@@ -913,6 +898,17 @@ const getPullNumber = (
   return dailyVideosInOrder.indexOf(video) + 1;
 };
 
+const countUniqueViewpoints = (video: RendererVideo) => {
+  const povs = [video, ...video.multiPov];
+
+  const unique = povs.filter(
+    (item, index, self) =>
+      self.findIndex((i) => i.player?._name === item.player?._name) === index
+  );
+
+  return unique.length;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -963,8 +959,8 @@ export {
   stopPropagation,
   povNameSort,
   areDatesWithinSeconds,
-  countUniquePovs,
   toFixedDigits,
   getPullNumber,
   combatantNameSort,
+  countUniqueViewpoints,
 };

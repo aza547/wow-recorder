@@ -20,13 +20,10 @@ import ViewpointButtons from 'renderer/components/Viewpoints/ViewpointButtons';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import StateManager from 'renderer/StateManager';
-import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
-import RaidCompAndResult from 'renderer/RaidComp';
-import { CalendarDays, Hourglass } from 'lucide-react';
+import { CalendarDays, Eye, Hourglass, Trophy, MapPinned } from 'lucide-react';
 import {
+  countUniqueViewpoints,
   getFormattedDuration,
-  getInstanceDifficultyText,
-  getPullNumber,
   getResultColor,
   getVideoDate,
   getVideoResultText,
@@ -63,7 +60,6 @@ const ArenaSelectionTable = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: povs[0].videoName,
         playingVideo: povs[0],
       };
     });
@@ -73,12 +69,24 @@ const ArenaSelectionTable = (props: IProps) => {
     () => [
       {
         accessorKey: 'zoneName',
-        header: 'Map',
+        id: 'Map',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <MapPinned />
+            Map
+          </span>
+        ),
         cell: (info) => info.getValue(),
       },
       {
         accessorFn: (v) => v,
-        header: 'Result',
+        id: 'Result',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Trophy />
+            Result
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
           const resultText = getVideoResultText(video);
@@ -124,15 +132,20 @@ const ArenaSelectionTable = (props: IProps) => {
       },
       {
         accessorFn: (v) => v,
-        header: 'Viewpoints',
+        id: 'Viewpoints',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Eye />
+            Viewpoints
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
-          const povs = [video, ...video.multiPov];
-          return povs.length;
+          return countUniqueViewpoints(video);
         },
       },
       {
-        header: 'Details',
+        id: 'Details',
         size: 50,
         cell: ({ row }) => {
           return (
@@ -140,6 +153,7 @@ const ArenaSelectionTable = (props: IProps) => {
               onClick={row.getToggleExpandedHandler()}
               style={{ cursor: 'pointer' }}
               size="sm"
+              variant="ghost"
             >
               {row.getIsExpanded() && selectedRowId === row.id ? (
                 <KeyboardDoubleArrowUpIcon />
@@ -151,7 +165,7 @@ const ArenaSelectionTable = (props: IProps) => {
         },
       },
     ],
-    [selectedRowId, videoState]
+    [selectedRowId]
   );
 
   const data = videoState;
@@ -179,16 +193,6 @@ const ArenaSelectionTable = (props: IProps) => {
         setAppState={setAppState}
       />
     );
-  };
-
-  const getRaidEncounterInfo = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    return <RaidEncounterInfo video={video} />;
-  };
-
-  const getRaidCompAndResult = (row: Row<RendererVideo>) => {
-    const video = row.original;
-    return <RaidCompAndResult video={video} />;
   };
 
   const getViewpointInformation = (row: Row<RendererVideo>) => {

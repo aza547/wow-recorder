@@ -2,8 +2,7 @@ import { Box } from '@mui/material';
 import React from 'react';
 import { RawCombatant, RendererVideo } from 'main/types';
 import { specializationById } from 'main/constants';
-import { getVideoResultText } from './rendererutils';
-import * as Images from './images';
+import { roleImages } from './images';
 import DeathIcon from '../../assets/icon/death.png';
 
 interface IProps {
@@ -45,67 +44,6 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
     roleCount[role]++;
   });
 
-  // const getPullNumber = () => {
-  //   const videoDate = video.start
-  //     ? new Date(video.start)
-  //     : new Date(video.mtime);
-
-  //   const dailyVideosInOrder: RendererVideo[] = [];
-
-  //   raidCategoryState.forEach((neighbourVideo) => {
-  //     const bestDate = neighbourVideo.start
-  //       ? neighbourVideo.start
-  //       : neighbourVideo.mtime;
-
-  //     const neighbourDate = new Date(bestDate);
-
-  //     // Pulls longer than 6 hours apart are considered from different
-  //     // sessions and will reset the pull counter.
-  //     //
-  //     // This logic is really janky and should probably be rewritten. The
-  //     // problem here is that if checks for any videos within 6 hours.
-  //     //
-  //     // If there are videos on the border (e.g. day raiding) then the
-  //     // pull count can do weird things like decrement or not increment given
-  //     // the right timing conditions of the previous sessions raids.
-  //     const withinThreshold = areDatesWithinSeconds(
-  //       videoDate,
-  //       neighbourDate,
-  //       3600 * 6
-  //     );
-
-  //     if (
-  //       video.encounterID === undefined ||
-  //       neighbourVideo.encounterID === undefined
-  //     ) {
-  //       return;
-  //     }
-
-  //     const sameEncounter = video.encounterID === neighbourVideo.encounterID;
-
-  //     if (
-  //       video.difficultyID === undefined ||
-  //       neighbourVideo.difficultyID === undefined
-  //     ) {
-  //       return;
-  //     }
-
-  //     const sameDifficulty = video.difficultyID === neighbourVideo.difficultyID;
-
-  //     if (withinThreshold && sameEncounter && sameDifficulty) {
-  //       dailyVideosInOrder.push(neighbourVideo);
-  //     }
-  //   });
-
-  //   dailyVideosInOrder.sort((A: RendererVideo, B: RendererVideo) => {
-  //     const bestTimeA = A.start ? A.start : A.mtime;
-  //     const bestTimeB = B.start ? B.start : B.mtime;
-  //     return bestTimeA - bestTimeB;
-  //   });
-
-  //   return dailyVideosInOrder.indexOf(video) + 1;
-  // };
-
   const renderCounter = (role: string) => {
     return (
       <Box
@@ -121,7 +59,7 @@ const RaidCompAndResult: React.FC<IProps> = (props: IProps) => {
         <Box
           key={`child-${role}`}
           component="img"
-          src={Images.roleImages[role]}
+          src={roleImages[role as keyof typeof roleImages]}
           sx={{
             height: '20px',
             width: '20px',

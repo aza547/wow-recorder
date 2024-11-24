@@ -22,14 +22,10 @@ import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrow
 import StateManager from 'renderer/StateManager';
 import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
 import RaidCompAndResult from 'renderer/RaidComp';
-import { CalendarDays, Hourglass } from 'lucide-react';
+import { CalendarDays, Hourglass, Gamepad2, MessageSquare } from 'lucide-react';
 import {
   getFormattedDuration,
-  getInstanceDifficultyText,
-  getPullNumber,
-  getResultColor,
   getVideoDate,
-  getVideoResultText,
   getVideoTime,
   povNameSort,
 } from '../../rendererutils';
@@ -63,7 +59,6 @@ const ClipsSelectionTable = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedVideoName: povs[0].videoName,
         playingVideo: povs[0],
       };
     });
@@ -73,12 +68,24 @@ const ClipsSelectionTable = (props: IProps) => {
     () => [
       {
         accessorKey: 'parentCategory',
-        header: 'Type',
+        id: 'Type',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <Gamepad2 />
+            Type
+          </span>
+        ),
         cell: (info) => info.getValue(),
       },
       {
         accessorFn: (v) => v,
-        header: 'Tag',
+        id: 'Tag',
+        header: () => (
+          <span className="inline-flex gap-x-1">
+            <MessageSquare />
+            Tag
+          </span>
+        ),
         cell: (info) => {
           const video = info.getValue() as RendererVideo;
           const { tag } = video;
@@ -114,7 +121,7 @@ const ClipsSelectionTable = (props: IProps) => {
         },
       },
       {
-        header: 'Details',
+        id: 'Details',
         size: 50,
         cell: ({ row }) => {
           return (
@@ -122,6 +129,7 @@ const ClipsSelectionTable = (props: IProps) => {
               onClick={row.getToggleExpandedHandler()}
               style={{ cursor: 'pointer' }}
               size="sm"
+              variant="ghost"
             >
               {row.getIsExpanded() && selectedRowId === row.id ? (
                 <KeyboardDoubleArrowUpIcon />
@@ -133,7 +141,7 @@ const ClipsSelectionTable = (props: IProps) => {
         },
       },
     ],
-    [selectedRowId, videoState]
+    [selectedRowId]
   );
 
   const data = videoState;
