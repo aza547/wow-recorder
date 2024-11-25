@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Redesign the video selection panel to be more performant and useful.
+
 ### Fixed
 - Fix an issue where the upload/download icons would flicker.
 - Relax pull grouping timer as apparently Windows does a bad job of automatically keeping you in sync with an NTP server. 
