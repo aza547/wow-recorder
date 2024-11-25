@@ -121,7 +121,8 @@ export default function ViewpointInfo(props: IProps) {
    * Return the cloud icon.
    */
   const getCloudIcon = () => {
-    const isSelected = videoToShow === cloudVideo;
+    const isSelected =
+      videoToShow.videoName === cloudVideo?.videoName && videoToShow.cloud;
     const color = cloudVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
 
@@ -154,7 +155,8 @@ export default function ViewpointInfo(props: IProps) {
    * Return the disk icon.
    */
   const getDiskIcon = () => {
-    const isSelected = videoToShow === diskVideo;
+    const isSelected =
+      videoToShow.videoName === diskVideo?.videoName && !videoToShow.cloud;
     const color = diskVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
 

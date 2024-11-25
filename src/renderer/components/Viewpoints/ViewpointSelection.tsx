@@ -52,10 +52,12 @@ export default function ViewpointSelection(props: IProps) {
 
       if (rv.cloud) {
         cloudVideo = rv;
-        currentlySelected = currentlySelected || playingVideo === cloudVideo;
+        currentlySelected =
+          currentlySelected || playingVideo?.videoName === cloudVideo.videoName;
       } else {
         diskVideo = rv;
-        currentlySelected = currentlySelected || playingVideo === diskVideo;
+        currentlySelected =
+          currentlySelected || playingVideo?.videoName === diskVideo.videoName;
       }
     });
 

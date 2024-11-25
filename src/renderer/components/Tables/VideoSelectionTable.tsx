@@ -482,7 +482,10 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const renderExpandedRow = (row: Row<RendererVideo>) => {
     const cells = row.getVisibleCells();
-    const selected = row.original === playingVideo;
+    const povs = [row.original, ...row.original.multiPov];
+    const selected = Boolean(
+      povs.find((p) => p.videoName === playingVideo?.videoName)
+    );
 
     const borderClass = selected
       ? 'border border-t-0 rounded-b-sm'
@@ -526,8 +529,10 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>) => {
-    const povs = [row.original, ...row.original.multiPov].sort(povNameSort);
-    const selected = Boolean(povs.find((p) => p === playingVideo));
+    const povs = [row.original, ...row.original.multiPov];
+    const selected = Boolean(
+      povs.find((p) => p.videoName === playingVideo?.videoName)
+    );
 
     return (
       <Fragment key={row.id}>

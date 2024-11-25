@@ -148,6 +148,11 @@ const WarcraftRecorder = () => {
     ipc.on('updateCrashes', updateCrashes);
   }, []);
 
+  // Debugging why we needed this hurt.
+  useEffect(() => {
+    stateManager.current.updateAppState(appState);
+  }, [appState]);
+
   return (
     <Box
       id="main-box"

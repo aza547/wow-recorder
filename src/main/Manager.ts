@@ -987,9 +987,12 @@ export default class Manager {
       } else {
         // Try to just delete the video from disk
         try {
-          const s = await deleteVideoDisk(src);
+          // Bit weird we have to check a boolean here given all the error handling
+          // going on. That's just me taking an easy way out rather than fixing this
+          // more elegantly. TL;DR deleteVideoDisk doesn't throw anything.
+          const success = await deleteVideoDisk(src);
 
-          if (!s) {
+          if (!success) {
             throw new Error('Failed deleting video, will mark for delete');
           }
         } catch (error) {

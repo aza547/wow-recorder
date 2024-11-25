@@ -58,6 +58,10 @@ export default class StateManager {
     this.setAppState = setAppState;
   }
 
+  public updateAppState(appState: AppState) {
+    this.appState = appState;
+  }
+
   /**
    * Sends an IPC request to the back end for the latest resources, and
    * applies them to the frontend.
