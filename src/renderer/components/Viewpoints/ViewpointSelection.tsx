@@ -38,22 +38,24 @@ export default function ViewpointSelection(props: IProps) {
     let unitClass: WoWCharacterClassType = 'UNKNOWN';
     let currentlySelected = false;
 
+    const { playingVideo } = appState;
+
+    let videoToShow = povs.find((p) => p === playingVideo);
+
+    if (!videoToShow) {
+      [videoToShow] = povs;
+    }
+
     matches.forEach((rv: RendererVideo) => {
       const v = matches[0];
       unitClass = getPlayerClass(v);
 
       if (rv.cloud) {
         cloudVideo = rv;
-
-        if (appState.playingVideo?.videoName === cloudVideo.videoName) {
-          currentlySelected = true;
-        }
+        currentlySelected = currentlySelected || playingVideo === cloudVideo;
       } else {
         diskVideo = rv;
-
-        if (appState.playingVideo?.videoName === diskVideo.videoName) {
-          currentlySelected = true;
-        }
+        currentlySelected = currentlySelected || playingVideo === diskVideo;
       }
     });
 
@@ -77,22 +79,22 @@ export default function ViewpointSelection(props: IProps) {
         stopPropagation(event);
       }
 
-      let video = null;
+      let v = null;
 
       if (diskVideo) {
-        video = diskVideo;
+        v = diskVideo;
       } else if (cloudVideo) {
-        video = cloudVideo;
+        v = cloudVideo;
       }
 
-      if (video == null) {
+      if (v == null) {
         return;
       }
 
       setAppState((prevState) => {
         return {
           ...prevState,
-          playingVideo: video,
+          playingVideo: v,
         };
       });
     };

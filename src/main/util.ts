@@ -179,19 +179,23 @@ const tryUnlink = async (file: string): Promise<boolean> => {
  */
 const deleteVideoDisk = async (videoPath: string) => {
   console.info('[Util] Deleting video', videoPath);
-  const success = await tryUnlink(videoPath);
+  const deletedMp4 = await tryUnlink(videoPath);
 
-  if (!success) {
-    // If we can't delete the video file, make sure we don't delete the metadata
-    // file either, which would leave the video file dangling.
-    return;
+  if (!deletedMp4) {
+    return false;
   }
 
   const metadataPath = getMetadataFileNameForVideo(videoPath);
-  await tryUnlink(metadataPath);
+  const deletedJson = await tryUnlink(metadataPath);
+
+  if (!deletedJson) {
+    return false;
+  }
 
   const thumbnailPath = getThumbnailFileNameForVideo(videoPath);
-  await tryUnlink(thumbnailPath);
+  const deletedPng = await tryUnlink(thumbnailPath);
+
+  return deletedPng;
 };
 
 /**

@@ -35,15 +35,6 @@ const WarcraftRecorder = () => {
   const upgradeNotified = useRef(false);
   const { toast } = useToast();
 
-  // The video state contains most of the frontend state, it's complex so
-  // frontend triggered modifications go through the StateManager class, which
-  // calls the React set function appropriately.
-  const [videoState, setVideoState] = useState<RendererVideo[]>([]);
-
-  const stateManager = useRef<StateManager>(
-    StateManager.getInstance(setVideoState)
-  );
-
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW
   );
@@ -91,6 +82,15 @@ const WarcraftRecorder = () => {
     // We use this to conditionally hide the recording preview.
     videoFullScreen: false,
   });
+
+  // The video state contains most of the frontend state, it's complex so
+  // frontend triggered modifications go through the StateManager class, which
+  // calls the React set function appropriately.
+  const [videoState, setVideoState] = useState<RendererVideo[]>([]);
+
+  const stateManager = useRef<StateManager>(
+    StateManager.getInstance(setVideoState, appState, setAppState)
+  );
 
   // Used to allow for hot switching of video players when moving between POVs.
   const persistentProgress = useRef(0);

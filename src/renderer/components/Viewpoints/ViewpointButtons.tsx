@@ -2,14 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useEffect, useState } from 'react';
-import {
-  CloudDownload,
-  CloudUpload,
-  FolderOpen,
-  Link as Link1,
-  PackageX,
-  Trash,
-} from 'lucide-react';
+import { FolderOpen, Link as Link1, PackageX, Trash } from 'lucide-react';
 import { faMessage, faStar } from '@fortawesome/free-solid-svg-icons';
 import {
   faStar as faStarOutline,
@@ -20,7 +13,6 @@ import { povNameSort, stopPropagation } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { toast } from '../Toast/useToast';
-import { useSettings } from '../../useSettings';
 import DeleteDialog from '../../DeleteDialog';
 import StateManager from '../../StateManager';
 import TagDialog from '../../TagDialog';
@@ -39,7 +31,7 @@ export default function ViewpointButtons(props: IProps) {
   const { appState, setAppState, persistentProgress, video, stateManager } =
     props;
   const povs = [video, ...video.multiPov].sort(povNameSort);
-  const [config] = useSettings();
+
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
   const multiPov = povs.length > 1;
 
@@ -62,25 +54,16 @@ export default function ViewpointButtons(props: IProps) {
   });
 
   const { playingVideo } = appState;
+  let videoToShow = povs.find((p) => p === playingVideo);
 
-  if (!playingVideo) {
-    return <></>;
+  if (!videoToShow) {
+    [videoToShow] = povs;
   }
 
-  const { cloud, videoName, videoSource, isProtected } = playingVideo;
-
-  const haveOnDisk =
-    !cloud ||
-    povs.filter((v) => v.videoName === videoName).filter((v) => !v.cloud)
-      .length > 0;
-
-  const haveInCloud =
-    cloud ||
-    povs.filter((v) => v.videoName === videoName).filter((v) => v.cloud)
-      .length > 0;
+  const { cloud, videoName, videoSource, isProtected } = videoToShow;
 
   const getTagButton = () => {
-    const { tag } = playingVideo;
+    const { tag } = videoToShow;
 
     let tagTooltip: string = tag || 'Add a tag';
 
@@ -90,7 +73,7 @@ export default function ViewpointButtons(props: IProps) {
 
     return (
       <TagDialog
-        video={playingVideo}
+        video={videoToShow}
         stateManager={stateManager}
         tooltipContent={tagTooltip}
       >
@@ -107,7 +90,7 @@ export default function ViewpointButtons(props: IProps) {
 
   const protectVideo = (event: React.SyntheticEvent) => {
     event.stopPropagation();
-    stateManager.current.toggleProtect(playingVideo);
+    stateManager.current.toggleProtect(videoToShow);
     const src = cloud ? videoName : videoSource;
     const bool = !isProtected;
 
@@ -199,50 +182,12 @@ export default function ViewpointButtons(props: IProps) {
     );
   };
 
-  const downloadVideo = async () => {
-    ipc.sendMessage('videoButton', ['download', playingVideo]);
-  };
-
-  const getDownloadButton = () => {
-    return (
-      <Tooltip content="Download to disk">
-        <Button
-          onMouseDown={stopPropagation}
-          onClick={downloadVideo}
-          variant="secondary"
-          size="lgicon"
-        >
-          <CloudDownload />
-        </Button>
-      </Tooltip>
-    );
-  };
-
-  const uploadVideo = async () => {
-    ipc.sendMessage('videoButton', ['upload', videoSource]);
-  };
-
-  const getUploadButton = () => {
-    return (
-      <Tooltip content="Upload to cloud">
-        <Button
-          onMouseDown={stopPropagation}
-          onClick={uploadVideo}
-          variant="secondary"
-          size="lgicon"
-        >
-          <CloudUpload />
-        </Button>
-      </Tooltip>
-    );
-  };
-
   const deleteVideo = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
 
     const src = cloud ? videoName : videoSource;
     window.electron.ipcRenderer.sendMessage('deleteVideo', [src, cloud]);
-    stateManager.current.deleteVideo(playingVideo);
+    stateManager.current.deleteVideo(videoToShow);
     persistentProgress.current = 0;
 
     setAppState((prevState) => {
@@ -325,8 +270,6 @@ export default function ViewpointButtons(props: IProps) {
       {getProtectVideoButton()}
       {cloud && getShareLinkButton()}
       {!cloud && getOpenButton()}
-      {cloud && !haveOnDisk && getDownloadButton()}
-      {!cloud && !haveInCloud && config.cloudUpload && getUploadButton()}
       {getDeleteSingleButton()}
       {multiPov && getDeleteAllButton()}
     </div>

@@ -6,6 +6,7 @@ import {
   getFormattedDuration,
   dateToHumanReadable,
   getDungeonName,
+  stopPropagation,
 } from 'renderer/rendererutils';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
@@ -41,17 +42,21 @@ export const populateDateCell = (info: CellContext<RendererVideo, unknown>) => {
 };
 
 export const populateDetailsCell = (
-  row: Row<RendererVideo>,
-  selectedRowId: string
+  ctx: CellContext<RendererVideo, unknown>
 ) => {
+  const { row } = ctx;
+
   return (
     <Button
-      onClick={row.getToggleExpandedHandler()}
+      onClick={(e) => {
+        row.getToggleExpandedHandler()();
+        stopPropagation(e);
+      }}
       style={{ cursor: 'pointer' }}
       size="sm"
       variant="ghost"
     >
-      {row.getIsExpanded() && selectedRowId === row.id ? (
+      {row.getIsExpanded() ? (
         <KeyboardDoubleArrowUpIcon />
       ) : (
         <KeyboardDoubleArrowDownIcon />

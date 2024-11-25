@@ -14,7 +14,13 @@ import {
   Row,
   useReactTable,
 } from '@tanstack/react-table';
-import { Fragment, MutableRefObject, useMemo, useState } from 'react';
+import {
+  Fragment,
+  MutableRefObject,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import ViewpointSelection from 'renderer/components/Viewpoints/ViewpointSelection';
 import ViewpointInfo from 'renderer/components/Viewpoints/ViewpointInfo';
 import ViewpointButtons from 'renderer/components/Viewpoints/ViewpointButtons';
@@ -22,6 +28,8 @@ import StateManager from 'renderer/StateManager';
 import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
 import RaidCompAndResult from 'renderer/RaidComp';
 import { VideoCategory } from 'types/VideoCategory';
+import DungeonInfo from 'renderer/DungeonInfo';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import {
   countUniqueViewpoints,
   getDungeonName,
@@ -43,7 +51,7 @@ import {
   TypeHeader,
   ViewpointsHeader,
 } from './Headers';
-import { difficultySort, durationSort } from './Sorting';
+import { durationSort, levelSort, resultSort } from './Sorting';
 import {
   populateDateCell,
   populateDetailsCell,
@@ -74,8 +82,14 @@ const VideoSelectionTable = (props: IProps) => {
     persistentProgress,
   } = props;
 
-  const [selectedRowId, setSelectedRowId] = useState<string>('0');
   const [expanded, setExpanded] = useState<ExpandedState>({});
+
+  /**
+   * Reset expanded on changing category.
+   */
+  useEffect(() => {
+    setExpanded({});
+  }, [appState.category]);
 
   /**
    * Mark the row as selected and update the video player to play the first
@@ -85,7 +99,6 @@ const VideoSelectionTable = (props: IProps) => {
     const video = row.original;
     const povs = [video, ...video.multiPov].sort(povNameSort);
 
-    setSelectedRowId(row.id);
     setAppState((prevState) => {
       return {
         ...prevState,
@@ -108,7 +121,7 @@ const VideoSelectionTable = (props: IProps) => {
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: difficultySort,
+        sortingFn: resultSort,
         header: ResultHeader,
         cell: populateResultCell,
       },
@@ -143,10 +156,10 @@ const VideoSelectionTable = (props: IProps) => {
       {
         id: 'Details',
         size: 50,
-        cell: ({ row }) => populateDetailsCell(row, selectedRowId),
+        cell: populateDetailsCell,
       },
     ],
-    [selectedRowId, videoState]
+    [videoState]
   );
 
   /**
@@ -163,7 +176,7 @@ const VideoSelectionTable = (props: IProps) => {
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: difficultySort,
+        sortingFn: resultSort,
         header: ResultHeader,
         cell: populateResultCell,
       },
@@ -188,10 +201,10 @@ const VideoSelectionTable = (props: IProps) => {
       {
         id: 'Details',
         size: 50,
-        cell: ({ row }) => populateDetailsCell(row, selectedRowId),
+        cell: populateDetailsCell,
       },
     ],
-    [selectedRowId]
+    []
   );
 
   /**
@@ -208,13 +221,14 @@ const VideoSelectionTable = (props: IProps) => {
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: difficultySort,
+        sortingFn: resultSort,
         header: ResultHeader,
         cell: populateResultCell,
       },
       {
         id: 'Level',
         accessorFn: (v) => v,
+        sortingFn: levelSort,
         header: LevelHeader,
         cell: populateLevelCell,
       },
@@ -239,10 +253,10 @@ const VideoSelectionTable = (props: IProps) => {
       {
         id: 'Details',
         size: 50,
-        cell: ({ row }) => populateDetailsCell(row, selectedRowId),
+        cell: populateDetailsCell,
       },
     ],
-    [selectedRowId]
+    []
   );
 
   /**
@@ -253,13 +267,13 @@ const VideoSelectionTable = (props: IProps) => {
     () => [
       {
         id: 'Map',
-        accessorFn: getDungeonName,
+        accessorKey: 'zoneName',
         header: MapHeader,
       },
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: difficultySort,
+        sortingFn: resultSort,
         header: ResultHeader,
         cell: populateResultCell,
       },
@@ -279,10 +293,10 @@ const VideoSelectionTable = (props: IProps) => {
       {
         id: 'Details',
         size: 50,
-        cell: ({ row }) => populateDetailsCell(row, selectedRowId),
+        cell: populateDetailsCell,
       },
     ],
-    [selectedRowId]
+    []
   );
 
   /**
@@ -318,13 +332,13 @@ const VideoSelectionTable = (props: IProps) => {
       {
         id: 'Details',
         size: 50,
-        cell: ({ row }) => populateDetailsCell(row, selectedRowId),
+        cell: populateDetailsCell,
       },
     ],
-    [selectedRowId]
+    []
   );
 
-  const { category } = appState;
+  const { category, playingVideo } = appState;
   let columns = raidColumns;
 
   if (category === VideoCategory.MythicPlus) {
@@ -380,15 +394,15 @@ const VideoSelectionTable = (props: IProps) => {
         className="text-left border-b border-video-border"
       >
         <div
-          className="cursor-pointer select-none px-2"
+          className="flex flex-row p-2 items-center cursor-pointer select-none"
           onClick={header.column.getToggleSortingHandler()}
           title={tooltip}
         >
           {flexRender(header.column.columnDef.header, header.getContext())}
-          {/* {{
-            asc: ' 🔼',
-            desc: ' 🔽',
-          }[header.column.getIsSorted() as string] ?? null} */}
+          {{
+            asc: <ArrowUp />,
+            desc: <ArrowDown />,
+          }[header.column.getIsSorted() as string] ?? null}
         </div>
       </th>
     );
@@ -440,15 +454,44 @@ const VideoSelectionTable = (props: IProps) => {
   };
 
   /**
+   * Renders content specific content. Not all content types are equal here.
+   */
+  const renderContentSpecificInfo = (row: Row<RendererVideo>) => {
+    if (category === VideoCategory.Raids) {
+      return (
+        <div className="flex flex-col p-2 items-center justify-center">
+          <RaidCompAndResult video={row.original} />
+          <RaidEncounterInfo video={row.original} />
+        </div>
+      );
+    }
+
+    if (category === VideoCategory.MythicPlus) {
+      return (
+        <div className="flex flex-col p-2 items-center justify-center">
+          <DungeonInfo video={row.original} />
+        </div>
+      );
+    }
+
+    return <></>;
+  };
+
+  /**
    * Render the expanded row.
    */
   const renderExpandedRow = (row: Row<RendererVideo>) => {
     const cells = row.getVisibleCells();
+    const selected = row.original === playingVideo;
+
+    const borderClass = selected
+      ? 'border border-t-0 rounded-b-sm'
+      : 'border rounded-sm';
 
     return (
       <tr>
         <td colSpan={cells.length}>
-          <div className="flex border-secondary border border-t-0 rounded-b-sm">
+          <div className={`flex border-secondary ${borderClass}`}>
             <div className="p-2 flex-shrink-0">
               <ViewpointSelection
                 video={row.original}
@@ -457,10 +500,7 @@ const VideoSelectionTable = (props: IProps) => {
               />
             </div>
             <div className="flex justify-evenly w-full">
-              <div className="flex flex-col p-2 items-center justify-center">
-                <RaidCompAndResult video={row.original} />
-                <RaidEncounterInfo video={row.original} />
-              </div>
+              {renderContentSpecificInfo(row)}
               <div className="flex flex-col p-2 items-center justify-center">
                 <ViewpointInfo
                   video={row.original}
@@ -486,12 +526,13 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>) => {
-    const selected = row.id === selectedRowId;
+    const povs = [row.original, ...row.original.multiPov].sort(povNameSort);
+    const selected = Boolean(povs.find((p) => p === playingVideo));
 
     return (
       <Fragment key={row.id}>
         {renderBaseRow(row, selected)}
-        {row.getIsExpanded() && selected && renderExpandedRow(row)}
+        {row.getIsExpanded() && renderExpandedRow(row)}
       </Fragment>
     );
   };

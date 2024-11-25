@@ -4,6 +4,8 @@ import { Box } from '@mui/material';
 import { AppState, RendererVideo } from 'main/types';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
+import { useSettings } from 'renderer/useSettings';
+import { CloudDownload, CloudUpload } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '../ToggleGroup/ToggleGroup';
 import {
   getPlayerClass,
@@ -16,6 +18,8 @@ import {
 import { specImages } from '../../images';
 import { Tooltip } from '../Tooltip/Tooltip';
 
+const ipc = window.electron.ipcRenderer;
+
 interface IProps {
   video: RendererVideo;
   appState: AppState;
@@ -26,19 +30,35 @@ export default function ViewpointInfo(props: IProps) {
   const { video, appState, setAppState } = props;
   const povs = [video, ...video.multiPov].sort(povNameSort);
   const { playingVideo } = appState;
+  const [config] = useSettings();
+  const { cloudUpload } = config;
 
-  if (!playingVideo) {
-    return <></>;
+  let videoToShow = povs.find((p) => p === playingVideo);
+
+  if (!videoToShow) {
+    [videoToShow] = povs;
   }
 
-  const playerName = getPlayerName(playingVideo);
-  const playerRealm = getPlayerRealm(playingVideo);
-  const playerClass = getPlayerClass(playingVideo);
+  const { cloud, videoName, videoSource } = videoToShow;
+
+  const haveOnDisk =
+    !cloud ||
+    povs.filter((v) => v.videoName === videoName).filter((v) => !v.cloud)
+      .length > 0;
+
+  const haveInCloud =
+    cloud ||
+    povs.filter((v) => v.videoName === videoName).filter((v) => v.cloud)
+      .length > 0;
+
+  const playerName = getPlayerName(videoToShow);
+  const playerRealm = getPlayerRealm(videoToShow);
+  const playerClass = getPlayerClass(videoToShow);
   const playerClassColor = getWoWClassColor(playerClass);
-  const playerSpecID = getPlayerSpecID(playingVideo);
+  const playerSpecID = getPlayerSpecID(videoToShow);
   const specIcon = specImages[playerSpecID as keyof typeof specImages];
 
-  const pl = playingVideo.player;
+  const pl = videoToShow.player;
 
   if (!pl) {
     return <></>;
@@ -61,13 +81,53 @@ export default function ViewpointInfo(props: IProps) {
     });
   };
 
+  const downloadVideo = async () => {
+    ipc.sendMessage('videoButton', ['download', videoToShow]);
+  };
+
+  const getDownloadButton = () => {
+    return (
+      <Tooltip content="Download to disk">
+        <ToggleGroupItem
+          value="cloud"
+          onClick={downloadVideo}
+          className="h-[40px] w-[40px]"
+        >
+          <CloudDownload />
+        </ToggleGroupItem>
+      </Tooltip>
+    );
+  };
+
+  const uploadVideo = async () => {
+    ipc.sendMessage('videoButton', ['upload', videoSource]);
+  };
+
+  const getUploadButton = () => {
+    return (
+      <Tooltip content="Upload to cloud">
+        <ToggleGroupItem
+          value="cloud"
+          onClick={uploadVideo}
+          className="h-[40px] w-[40px]"
+        >
+          <CloudUpload />
+        </ToggleGroupItem>
+      </Tooltip>
+    );
+  };
+
   /**
    * Return the cloud icon.
    */
   const getCloudIcon = () => {
-    const isSelected = appState.playingVideo === cloudVideo;
+    const isSelected = videoToShow === cloudVideo;
     const color = cloudVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
+
+    if (!haveInCloud && cloudUpload) {
+      return getUploadButton();
+    }
 
     return (
       <Tooltip content="Use cloud version">
@@ -94,9 +154,13 @@ export default function ViewpointInfo(props: IProps) {
    * Return the disk icon.
    */
   const getDiskIcon = () => {
-    const isSelected = appState.playingVideo === diskVideo;
+    const isSelected = videoToShow === diskVideo;
     const color = diskVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
+
+    if (!haveOnDisk && haveInCloud && cloudUpload) {
+      return getDownloadButton();
+    }
 
     return (
       <Tooltip content="Use local disk version">
@@ -122,7 +186,8 @@ export default function ViewpointInfo(props: IProps) {
           variant="outline"
         >
           {getCloudIcon()}
-          {getDiskIcon()}
+          {haveOnDisk && getDiskIcon()}
+          {!haveOnDisk && getDownloadButton()}
         </ToggleGroup>
       </div>
     );
