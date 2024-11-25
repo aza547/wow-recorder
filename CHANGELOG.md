@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix an issue where the upload/download icons would flicker.
 - Relax pull grouping timer as apparently Windows does a bad job of automatically keeping you in sync with an NTP server. 
 - [Issue 550](https://github.com/aza547/wow-recorder/issues/550) - Add the 90s Challenger's Peril correction to M+ chest calculation.
+- Fix a bug where deleted videos were sometimes not correctly deleted.
 
 ## [6.0.4] - 2024-10-27
 ### Fixed
