@@ -46,8 +46,13 @@ export default function ViewpointSelection(props: IProps) {
       [videoToShow] = povs;
     }
 
-    const v = matches[0];
-    unitClass = getPlayerClass(v);
+    if (matches.length > 0) {
+      // We only bother to get a class if we have a match. That way the
+      // combatants we have a viewpoint for will be colored, else they will
+      // be gray.
+      const v = matches[0];
+      unitClass = getPlayerClass(v);
+    }
 
     matches.forEach((rv: RendererVideo) => {
       if (rv.cloud) {
