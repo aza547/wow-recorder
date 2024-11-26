@@ -99,6 +99,8 @@ const VideoSelectionTable = (props: IProps) => {
     const video = row.original;
     const povs = [video, ...video.multiPov].sort(povNameSort);
 
+    persistentProgress.current = 0;
+
     setAppState((prevState) => {
       return {
         ...prevState,
