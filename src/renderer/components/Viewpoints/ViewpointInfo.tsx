@@ -58,13 +58,13 @@ export default function ViewpointInfo(props: IProps) {
   const playerSpecID = getPlayerSpecID(videoToShow);
   const specIcon = specImages[playerSpecID as keyof typeof specImages];
 
-  const pl = videoToShow.player;
+  const { player } = videoToShow;
 
-  if (!pl) {
+  if (!player) {
     return <></>;
   }
 
-  const playerViewpoints = povs.filter((p) => p.player?._name === pl._name);
+  const playerViewpoints = povs.filter((p) => p.player?._name === player._name);
   const diskVideo = playerViewpoints.find((vid) => !vid.cloud);
   const cloudVideo = playerViewpoints.find((vid) => vid.cloud);
 
@@ -73,9 +73,9 @@ export default function ViewpointInfo(props: IProps) {
       return;
     }
 
-    setAppState((p) => {
+    setAppState((prevState) => {
       return {
-        ...p,
+        ...prevState,
         playingVideo: v,
       };
     });

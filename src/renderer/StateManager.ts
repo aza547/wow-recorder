@@ -31,11 +31,9 @@ export default class StateManager {
     setAppState: React.Dispatch<React.SetStateAction<AppState>>
   ) {
     if (StateManager.instance) {
-      console.log('Returning existing state manager');
       return StateManager.instance;
     }
 
-    console.log('Make new state manager');
     StateManager.instance = new StateManager(
       setVideoState,
       appState,
@@ -69,13 +67,13 @@ export default class StateManager {
   public async refresh() {
     this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
 
-    console.time('correlate');
+    // console.time('correlate');
     const correlated = this.correlate();
-    console.timeEnd('correlate');
+    // console.timeEnd('correlate');
 
-    console.time('setstate');
+    // console.time('setstate');
     this.setVideoState(correlated);
-    console.timeEnd('setstate');
+    // console.timeEnd('setstate');
 
     const { category, videoFilterQuery, playingVideo } = this.appState;
 

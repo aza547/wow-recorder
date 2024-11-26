@@ -77,7 +77,7 @@ export default function ViewpointButtons(props: IProps) {
         stateManager={stateManager}
         tooltipContent={tagTooltip}
       >
-        <Button onMouseDown={stopPropagation} variant="secondary" size="lgicon">
+        <Button onMouseDown={stopPropagation} variant="secondary" size="xl">
           {tag ? (
             <FontAwesomeIcon icon={faMessage} size="lg" />
           ) : (
@@ -109,7 +109,7 @@ export default function ViewpointButtons(props: IProps) {
           onMouseDown={stopPropagation}
           onClick={protectVideo}
           variant="secondary"
-          size="lgicon"
+          size="xl"
         >
           {isProtected ? (
             <FontAwesomeIcon icon={faStar} size="lg" />
@@ -149,7 +149,7 @@ export default function ViewpointButtons(props: IProps) {
           onMouseDown={stopPropagation}
           onClick={getShareableLink}
           variant="secondary"
-          size="lgicon"
+          size="xl"
         >
           <Link1 />
         </Button>
@@ -174,7 +174,7 @@ export default function ViewpointButtons(props: IProps) {
           onMouseDown={stopPropagation}
           onClick={openLocation}
           variant="secondary"
-          size="lgicon"
+          size="xl"
         >
           <FolderOpen />
         </Button>
@@ -212,7 +212,7 @@ export default function ViewpointButtons(props: IProps) {
         <Button
           onMouseDown={stopPropagation}
           variant="secondary"
-          size="lgicon"
+          size="xl"
           onClick={onDeleteSingle}
         >
           <Trash />
@@ -255,7 +255,7 @@ export default function ViewpointButtons(props: IProps) {
         <Button
           onMouseDown={stopPropagation}
           variant="secondary"
-          size="lgicon"
+          size="xl"
           onClick={onDeleteAll}
         >
           <PackageX />

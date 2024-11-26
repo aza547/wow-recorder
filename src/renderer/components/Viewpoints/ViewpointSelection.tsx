@@ -46,10 +46,10 @@ export default function ViewpointSelection(props: IProps) {
       [videoToShow] = povs;
     }
 
-    matches.forEach((rv: RendererVideo) => {
-      const v = matches[0];
-      unitClass = getPlayerClass(v);
+    const v = matches[0];
+    unitClass = getPlayerClass(v);
 
+    matches.forEach((rv: RendererVideo) => {
       if (rv.cloud) {
         cloudVideo = rv;
         currentlySelected =
@@ -81,22 +81,25 @@ export default function ViewpointSelection(props: IProps) {
         stopPropagation(event);
       }
 
-      let v = null;
+      let selection: RendererVideo | undefined;
 
+      // When a user clicks on the raid frame selection, prioritize
+      // a disk video if it's available. Disk videos are slightly
+      // more responsive and can be clipped.
       if (diskVideo) {
-        v = diskVideo;
+        selection = diskVideo;
       } else if (cloudVideo) {
-        v = cloudVideo;
+        selection = cloudVideo;
       }
 
-      if (v == null) {
+      if (!selection) {
         return;
       }
 
       setAppState((prevState) => {
         return {
           ...prevState,
-          playingVideo: v,
+          playingVideo: selection,
         };
       });
     };

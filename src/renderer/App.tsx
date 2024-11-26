@@ -148,7 +148,11 @@ const WarcraftRecorder = () => {
     ipc.on('updateCrashes', updateCrashes);
   }, []);
 
-  // Debugging why we needed this hurt.
+  // Debugging why we needed this hurt. I think it's because when we call setAppState, it sets 
+  // appState to undefined and reassigns it in this component. However that leaves the StateManager
+  // singleton with a reference pointing to undefined which breaks the frontend. So here we reapply
+  // the appState to the StateManager every time it updates. This is almost certainly massively
+  // overengineered but for now it works.
   useEffect(() => {
     stateManager.current.updateAppState(appState);
   }, [appState]);
