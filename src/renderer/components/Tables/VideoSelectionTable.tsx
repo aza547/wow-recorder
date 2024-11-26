@@ -461,7 +461,6 @@ const VideoSelectionTable = (props: IProps) => {
       return (
         <div className="flex flex-col p-2 items-center justify-center">
           <RaidCompAndResult video={row.original} />
-          <RaidEncounterInfo video={row.original} />
         </div>
       );
     }

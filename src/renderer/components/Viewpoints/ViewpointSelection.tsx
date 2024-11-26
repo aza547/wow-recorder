@@ -61,7 +61,7 @@ export default function ViewpointSelection(props: IProps) {
       }
     });
 
-    let specIcon;
+    let specIcon: string | undefined;
 
     if (combatant._specID !== undefined) {
       const knownSpec = Object.prototype.hasOwnProperty.call(
@@ -130,23 +130,25 @@ export default function ViewpointSelection(props: IProps) {
             width: '100%',
           }}
         >
-          <Box
-            key={combatant._GUID}
-            component="img"
-            src={specIcon}
-            sx={{
-              display: 'flex',
-              position: 'absolute',
-              height: '15px',
-              width: '15px',
-              top: '2px',
-              left: '2px',
-              border: '1px solid black',
-              borderRadius: '15%',
-              boxSizing: 'border-box',
-              objectFit: 'cover',
-            }}
-          />
+          {specIcon && (
+            <Box
+              key={combatant._GUID}
+              component="img"
+              src={specIcon}
+              sx={{
+                display: 'flex',
+                position: 'absolute',
+                height: '15px',
+                width: '15px',
+                top: '2px',
+                left: '2px',
+                border: '1px solid black',
+                borderRadius: '15%',
+                boxSizing: 'border-box',
+                objectFit: 'cover',
+              }}
+            />
+          )}
           <span className="font-sans text-black font-bold text-[10px] truncate">
             {name}
           </span>
