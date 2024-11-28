@@ -33,7 +33,10 @@ export default function ViewpointInfo(props: IProps) {
   const [config] = useSettings();
   const { cloudUpload } = config;
 
-  let videoToShow = povs.find((p) => p === playingVideo);
+  let videoToShow = povs.find(
+    (p) =>
+      p.videoName === playingVideo?.videoName && p.cloud === playingVideo.cloud
+  );
 
   if (!videoToShow) {
     [videoToShow] = povs;

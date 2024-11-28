@@ -54,7 +54,11 @@ export default function ViewpointButtons(props: IProps) {
   });
 
   const { playingVideo } = appState;
-  let videoToShow = povs.find((p) => p === playingVideo);
+
+  let videoToShow = povs.find(
+    (p) =>
+      p.videoName === playingVideo?.videoName && p.cloud === playingVideo.cloud
+  );
 
   if (!videoToShow) {
     [videoToShow] = povs;

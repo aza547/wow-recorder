@@ -40,12 +40,6 @@ export default function ViewpointSelection(props: IProps) {
 
     const { playingVideo } = appState;
 
-    let videoToShow = povs.find((p) => p === playingVideo);
-
-    if (!videoToShow) {
-      [videoToShow] = povs;
-    }
-
     if (matches.length > 0) {
       // We only bother to get a class if we have a match. That way the
       // combatants we have a viewpoint for will be colored, else they will
