@@ -25,17 +25,15 @@ import ViewpointSelection from 'renderer/components/Viewpoints/ViewpointSelectio
 import ViewpointInfo from 'renderer/components/Viewpoints/ViewpointInfo';
 import ViewpointButtons from 'renderer/components/Viewpoints/ViewpointButtons';
 import StateManager from 'renderer/StateManager';
-import RaidEncounterInfo from 'renderer/RaidEncounterInfo';
 import RaidCompAndResult from 'renderer/RaidComp';
 import { VideoCategory } from 'types/VideoCategory';
 import DungeonInfo from 'renderer/DungeonInfo';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import {
-  countUniqueViewpoints,
   getDungeonName,
   getInstanceDifficultyText,
   getPullNumber,
-  povNameSort,
+  povDiskFirstNameSort,
   videoToDate,
 } from '../../rendererutils';
 import {
@@ -51,7 +49,12 @@ import {
   TypeHeader,
   ViewpointsHeader,
 } from './Headers';
-import { durationSort, levelSort, resultSort } from './Sorting';
+import {
+  durationSort,
+  levelSort,
+  resultSort,
+  viewPointCountSort,
+} from './Sorting';
 import {
   populateDateCell,
   populateDetailsCell,
@@ -61,6 +64,7 @@ import {
   populateMapCell,
   populateResultCell,
   populateTagCell,
+  populateViewpointCell,
 } from './Cells';
 
 interface IProps {
@@ -88,7 +92,8 @@ const VideoSelectionTable = (props: IProps) => {
   const [expanded, setExpanded] = useState<ExpandedState>({});
 
   /**
-   * Reset expanded on changing category.
+   * Reset expanded on changing category. Probably this could be
+   * higher in the stack rather than running post-render of a new category.
    */
   useEffect(() => {
     setExpanded({});
@@ -100,7 +105,7 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const onRowClick = (row: Row<RendererVideo>) => {
     const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povNameSort);
+    const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
 
     persistentProgress.current = 0;
 
@@ -110,6 +115,14 @@ const VideoSelectionTable = (props: IProps) => {
         playingVideo: povs[0],
       };
     });
+  };
+
+  /**
+   * Select the row and expand it.
+   */
+  const onRowDoubleClick = (row: Row<RendererVideo>) => {
+    onRowClick(row);
+    row.getToggleExpandedHandler()();
   };
 
   /**
@@ -156,8 +169,10 @@ const VideoSelectionTable = (props: IProps) => {
       },
       {
         id: 'Viewpoints',
-        accessorFn: (v) => countUniqueViewpoints(v),
+        accessorFn: (v) => v,
         header: ViewpointsHeader,
+        cell: populateViewpointCell,
+        sortingFn: viewPointCountSort,
       },
       {
         id: 'Details',
@@ -202,8 +217,10 @@ const VideoSelectionTable = (props: IProps) => {
       },
       {
         id: 'Viewpoints',
-        accessorFn: (v) => countUniqueViewpoints(v),
+        accessorFn: (v) => v,
         header: ViewpointsHeader,
+        cell: populateViewpointCell,
+        sortingFn: viewPointCountSort,
       },
       {
         id: 'Details',
@@ -255,8 +272,10 @@ const VideoSelectionTable = (props: IProps) => {
       },
       {
         id: 'Viewpoints',
-        accessorFn: (v) => countUniqueViewpoints(v),
+        accessorFn: (v) => v,
         header: ViewpointsHeader,
+        cell: populateViewpointCell,
+        sortingFn: viewPointCountSort,
       },
       {
         id: 'Details',
@@ -300,6 +319,13 @@ const VideoSelectionTable = (props: IProps) => {
         cell: populateDateCell,
       },
       {
+        id: 'Viewpoints',
+        accessorFn: (v) => v,
+        header: ViewpointsHeader,
+        cell: populateViewpointCell,
+        sortingFn: viewPointCountSort,
+      },
+      {
         id: 'Details',
         size: 50,
         cell: populateDetailsCell,
@@ -340,6 +366,13 @@ const VideoSelectionTable = (props: IProps) => {
         cell: populateDateCell,
       },
       {
+        id: 'Viewpoints',
+        accessorFn: (v) => v,
+        header: ViewpointsHeader,
+        cell: populateViewpointCell,
+        sortingFn: viewPointCountSort,
+      },
+      {
         id: 'Details',
         size: 50,
         cell: populateDetailsCell,
@@ -349,22 +382,30 @@ const VideoSelectionTable = (props: IProps) => {
   );
 
   const { category, playingVideo } = appState;
-  let columns = raidColumns;
+  let columns;
 
-  if (category === VideoCategory.MythicPlus) {
-    columns = dungeonColumns;
-  } else if (category === VideoCategory.Battlegrounds) {
-    columns = battlegroundColumns;
-  } else if (category === VideoCategory.Clips) {
-    columns = clipsColumns;
-  } else if (
-    category === VideoCategory.TwoVTwo ||
-    category === VideoCategory.ThreeVThree ||
-    category === VideoCategory.FiveVFive ||
-    category === VideoCategory.Skirmish ||
-    category === VideoCategory.SoloShuffle
-  ) {
-    columns = arenaColumns;
+  switch (category) {
+    case VideoCategory.Raids:
+      columns = raidColumns;
+      break;
+    case VideoCategory.MythicPlus:
+      columns = dungeonColumns;
+      break;
+    case VideoCategory.Battlegrounds:
+      columns = battlegroundColumns;
+      break;
+    case VideoCategory.Clips:
+      columns = clipsColumns;
+      break;
+    case VideoCategory.TwoVTwo:
+    case VideoCategory.ThreeVThree:
+    case VideoCategory.FiveVFive:
+    case VideoCategory.Skirmish:
+    case VideoCategory.SoloShuffle:
+      columns = arenaColumns;
+      break;
+    default:
+      throw new Error('Unrecognized category');
   }
 
   /**
@@ -458,7 +499,12 @@ const VideoSelectionTable = (props: IProps) => {
     }
 
     return (
-      <tr key={row.id} className={className} onClick={() => onRowClick(row)}>
+      <tr
+        key={row.id}
+        className={className}
+        onClick={() => onRowClick(row)}
+        onDoubleClick={() => onRowDoubleClick(row)}
+      >
         {cells.map(renderBaseCell)}
       </tr>
     );

@@ -809,16 +809,6 @@ const markForVideoForDelete = async (videoPath: string) => {
 };
 
 /**
- * Sort alphabetically by player name.
- */
-const povNameSort = (a: RendererVideo, b: RendererVideo) => {
-  const playerA = a.player?._name;
-  const playerB = b.player?._name;
-  if (!playerA || !playerB) return 0;
-  return playerA.localeCompare(playerB);
-};
-
-/**
  * Convert a RendererVideo type to a Metadata type, used when downloading
  * videos from cloud to disk.
  */
@@ -1035,7 +1025,6 @@ export {
   reverseChronologicalVideoSort,
   areDatesWithinSeconds,
   markForVideoForDelete,
-  povNameSort,
   rendererVideoToMetadata,
   cloudSignedMetadataToRendererVideo,
   exists,

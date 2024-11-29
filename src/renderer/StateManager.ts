@@ -1,7 +1,10 @@
 import { VideoCategory } from 'types/VideoCategory';
-import { filter } from 'lodash';
 import { AppState, RendererVideo } from '../main/types';
-import { areDatesWithinSeconds, getVideoCategoryFilter } from './rendererutils';
+import {
+  areDatesWithinSeconds,
+  getVideoCategoryFilter,
+  povDiskFirstNameSort,
+} from './rendererutils';
 import VideoFilter from './VideoFilter';
 
 /**
@@ -87,10 +90,13 @@ export default class StateManager {
         new VideoFilter(videoFilterQuery, video).filter()
       );
 
+      const first = filteredState[0];
+      const viewpoints = [first, ...first.multiPov].sort(povDiskFirstNameSort);
+
       this.setAppState((prevState) => {
         return {
           ...prevState,
-          playingVideo: filteredState[0],
+          playingVideo: viewpoints[0],
         };
       });
     }
@@ -111,12 +117,7 @@ export default class StateManager {
       StateManager.correlateVideo(video, correlated)
     );
 
-    correlated
-      .sort(StateManager.reverseChronologicalVideoSort)
-      .forEach((video) => {
-        video.multiPov.sort(StateManager.povNameSort);
-      });
-
+    correlated.sort(StateManager.reverseChronologicalVideoSort);
     return correlated;
   }
 
@@ -229,13 +230,6 @@ export default class StateManager {
     }
 
     return metricB - metricA;
-  }
-
-  private static povNameSort(a: RendererVideo, b: RendererVideo) {
-    const playerA = a.player?._name;
-    const playerB = b.player?._name;
-    if (!playerA || !playerB) return 0;
-    return playerA.localeCompare(playerB);
   }
 
   /**

@@ -6,9 +6,19 @@ import {
   getFormattedDuration,
   dateToHumanReadable,
   stopPropagation,
+  countUniqueViewpoints,
+  getPlayerClass,
+  getPlayerName,
+  getPlayerRealm,
+  getPlayerSpecID,
+  getWoWClassColor,
+  povDiskFirstNameSort,
 } from 'renderer/rendererutils';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
+import { Box } from '@mui/material';
+import { specializationById } from 'main/constants';
+import { specImages } from 'renderer/images';
 import { Button } from '../Button/Button';
 
 export const populateResultCell = (
@@ -86,4 +96,68 @@ export const populateLevelCell = (
 ) => {
   const video = info.getValue() as RendererVideo;
   return `+${video.keystoneLevel || video.level}`;
+};
+
+export const populateViewpointCell = (
+  info: CellContext<RendererVideo, unknown>
+) => {
+  const video = info.getValue() as RendererVideo;
+  const count = countUniqueViewpoints(video);
+
+  // Prioritize the any videos with a disk copy as that's likely to be the
+  // local users viewpoint so most relevant to them.
+  const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
+  const first = povs[0];
+  const { player } = first;
+
+  if (!player || !player._specID) {
+    // We don't have enough to render a spec icon and name so
+    // just return the viewpoint count.
+    return <div>{count}</div>;
+  }
+
+  const playerName = getPlayerName(first);
+  const playerClass = getPlayerClass(first);
+  const playerClassColor = getWoWClassColor(playerClass);
+  const playerSpecID = getPlayerSpecID(first);
+  const specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+  const renderSpecAndName = () => {
+    return (
+      <>
+        <Box
+          key={player._GUID}
+          component="img"
+          src={specIcon}
+          sx={{
+            display: 'flex',
+            height: '25px',
+            width: '25px',
+            border: '1px solid black',
+            borderRadius: '15%',
+            boxSizing: 'border-box',
+            objectFit: 'cover',
+          }}
+        />
+        <div
+          className="font-sans font-semibold text-md text-shadow-instance mx-1"
+          style={{ color: playerClassColor }}
+        >
+          {playerName}
+        </div>
+      </>
+    );
+  };
+
+  const renderRemainingCount = () => {
+    if (count > 1) return <div>{`+${count - 1}`}</div>;
+    return <></>;
+  };
+
+  return (
+    <div className="flex ">
+      {renderSpecAndName()}
+      {renderRemainingCount()}
+    </div>
+  );
 };

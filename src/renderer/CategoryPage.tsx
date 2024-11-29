@@ -10,7 +10,7 @@ import { useSettings } from './useSettings';
 import {
   getFirstInCategory,
   getVideoCategoryFilter,
-  povNameSort,
+  povDiskFirstNameSort,
 } from './rendererutils';
 import VideoFilter from './VideoFilter';
 import StateManager from './StateManager';
@@ -68,7 +68,7 @@ const CategoryPage = (props: IProps) => {
       }
 
       const povs = [firstInCategory, ...firstInCategory.multiPov].sort(
-        povNameSort
+        povDiskFirstNameSort
       );
 
       [videoToPlay] = povs;

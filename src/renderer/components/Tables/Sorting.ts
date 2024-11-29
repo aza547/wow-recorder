@@ -1,6 +1,9 @@
 import { Row } from '@tanstack/react-table';
 import { RendererVideo } from 'main/types';
-import { getVideoResultText } from 'renderer/rendererutils';
+import {
+  countUniqueViewpoints,
+  getVideoResultText,
+} from 'renderer/rendererutils';
 
 export const resultSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
   const resultA = getVideoResultText(a.original);
@@ -17,5 +20,14 @@ export const levelSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
 export const durationSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
   const resultA = a.original.duration;
   const resultB = b.original.duration;
+  return resultA - resultB;
+};
+
+export const viewPointCountSort = (
+  a: Row<RendererVideo>,
+  b: Row<RendererVideo>
+) => {
+  const resultA = countUniqueViewpoints(a.original);
+  const resultB = countUniqueViewpoints(b.original);
   return resultA - resultB;
 };

@@ -14,7 +14,7 @@ import {
   getPlayerName,
   getPlayerRealm,
   getPlayerSpecID,
-  povNameSort,
+  povDiskFirstNameSort,
 } from '../../rendererutils';
 import { specImages } from '../../images';
 import { Tooltip } from '../Tooltip/Tooltip';
@@ -30,15 +30,12 @@ interface IProps {
 
 export default function ViewpointInfo(props: IProps) {
   const { video, appState, setAppState, persistentProgress } = props;
-  const povs = [video, ...video.multiPov].sort(povNameSort);
+  const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
   const { playingVideo } = appState;
   const [config] = useSettings();
   const { cloudUpload } = config;
 
-  let videoToShow = povs.find(
-    (p) =>
-      p.videoName === playingVideo?.videoName && p.cloud === playingVideo.cloud
-  );
+  let videoToShow = povs.find((p) => p.uniqueId === playingVideo?.uniqueId);
 
   if (!videoToShow) {
     [videoToShow] = povs;
@@ -132,8 +129,7 @@ export default function ViewpointInfo(props: IProps) {
    * Return the cloud icon.
    */
   const getCloudIcon = () => {
-    const isSelected =
-      videoToShow.videoName === cloudVideo?.videoName && videoToShow.cloud;
+    const isSelected = videoToShow.uniqueId === cloudVideo?.uniqueId;
     const color = cloudVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
 
@@ -166,8 +162,7 @@ export default function ViewpointInfo(props: IProps) {
    * Return the disk icon.
    */
   const getDiskIcon = () => {
-    const isSelected =
-      videoToShow.videoName === diskVideo?.videoName && !videoToShow.cloud;
+    const isSelected = videoToShow.uniqueId !== cloudVideo?.uniqueId;
     const color = diskVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
 
