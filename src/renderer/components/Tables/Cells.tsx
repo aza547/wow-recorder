@@ -5,7 +5,6 @@ import {
   getResultColor,
   getFormattedDuration,
   dateToHumanReadable,
-  getDungeonName,
   stopPropagation,
 } from 'renderer/rendererutils';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
@@ -36,9 +35,26 @@ export const populateDurationCell = (
   return getFormattedDuration(rawValue);
 };
 
+export const populateEncounterNameCell = (
+  info: CellContext<RendererVideo, unknown>
+) => {
+  const encounter = info.getValue() as RendererVideo;
+  return <div className="truncate">{encounter}</div>;
+};
+
+export const populateMapCell = (info: CellContext<RendererVideo, unknown>) => {
+  const map = info.getValue() as RendererVideo;
+  return <div className="truncate">{map}</div>;
+};
+
 export const populateDateCell = (info: CellContext<RendererVideo, unknown>) => {
   const date = info.getValue() as Date;
   return dateToHumanReadable(date);
+};
+
+export const populateTagCell = (info: CellContext<RendererVideo, unknown>) => {
+  const tag = info.getValue() as RendererVideo;
+  return <div className="truncate">{tag}</div>;
 };
 
 export const populateDetailsCell = (
@@ -52,7 +68,7 @@ export const populateDetailsCell = (
         row.getToggleExpandedHandler()();
         stopPropagation(e);
       }}
-      style={{ cursor: 'pointer' }}
+      className="cursor-pointer"
       size="sm"
       variant="ghost"
     >

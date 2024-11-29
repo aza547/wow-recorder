@@ -56,8 +56,11 @@ import {
   populateDateCell,
   populateDetailsCell,
   populateDurationCell,
+  populateEncounterNameCell,
   populateLevelCell,
+  populateMapCell,
   populateResultCell,
+  populateTagCell,
 } from './Cells';
 
 interface IProps {
@@ -119,6 +122,7 @@ const VideoSelectionTable = (props: IProps) => {
         id: 'Encounter',
         accessorKey: 'encounterName',
         header: EncounterHeader,
+        cell: populateEncounterNameCell,
       },
       {
         id: 'Result',
@@ -174,6 +178,7 @@ const VideoSelectionTable = (props: IProps) => {
         id: 'Map',
         accessorKey: 'zoneName',
         header: MapHeader,
+        cell: populateMapCell,
       },
       {
         id: 'Result',
@@ -219,6 +224,7 @@ const VideoSelectionTable = (props: IProps) => {
         id: 'Map',
         accessorFn: getDungeonName,
         header: MapHeader,
+        cell: populateMapCell,
       },
       {
         id: 'Result',
@@ -271,6 +277,7 @@ const VideoSelectionTable = (props: IProps) => {
         id: 'Map',
         accessorKey: 'zoneName',
         header: MapHeader,
+        cell: populateMapCell,
       },
       {
         id: 'Result',
@@ -317,6 +324,7 @@ const VideoSelectionTable = (props: IProps) => {
         id: 'Tag',
         accessorFn: (v) => v.tag,
         header: TagHeader,
+        cell: populateTagCell,
       },
       {
         id: 'Duration',
@@ -367,6 +375,7 @@ const VideoSelectionTable = (props: IProps) => {
     columns,
     data: videoState,
     state: { expanded },
+    getRowId: (row) => row.uniqueId,
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -431,7 +440,7 @@ const VideoSelectionTable = (props: IProps) => {
     const width = cell.column.getSize();
 
     return (
-      <td className="px-2 truncate" key={cell.id} style={{ width }}>
+      <td className="px-2" key={cell.id} style={{ width }}>
         {flexRender(cell.column.columnDef.cell, cell.getContext())}
       </td>
     );

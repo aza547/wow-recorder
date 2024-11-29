@@ -232,15 +232,19 @@ const loadVideoDetailsDisk = async (
     const metadata = await getMetadataForVideo(video.name);
     const thumbnailSource = getThumbnailFileNameForVideo(video.name);
 
+    const videoName = path.basename(video.name, '.mp4');
+    const uniqueId = `${videoName}-disk`;
+
     return {
       ...metadata,
-      videoName: path.basename(video.name, '.mp4'),
+      videoName,
       mtime: video.mtime,
       videoSource: video.name,
       thumbnailSource,
       isProtected: Boolean(metadata.protected),
       cloud: false,
       multiPov: [],
+      uniqueId,
     };
   } catch (error) {
     // Just log it and rethrow. Want this to be diagnosable.
@@ -837,6 +841,7 @@ const cloudSignedMetadataToRendererVideo = (metadata: CloudSignedMetadata) => {
   // For cloud videos, the signed URLs are the sources.
   const videoSource = metadata.signedVideoKey;
   const thumbnailSource = metadata.signedThumbnailKey;
+  const uniqueId = `${metadata.videoName}-cloud`;
 
   // We don't want the signed properties themselves.
   const mutable: any = metadata;
@@ -851,6 +856,7 @@ const cloudSignedMetadataToRendererVideo = (metadata: CloudSignedMetadata) => {
     cloud: true,
     isProtected: Boolean(mutable.protected),
     mtime: 0,
+    uniqueId,
   };
 
   return video;

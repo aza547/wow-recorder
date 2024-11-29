@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 import { AppState, RawCombatant, RendererVideo } from 'main/types';
 import { X } from 'lucide-react';
 import { specializationById, WoWCharacterClassType } from 'main/constants';
+import { MutableRefObject } from 'react';
 import {
   getWoWClassColor,
   stopPropagation,
@@ -19,10 +20,11 @@ interface IProps {
   video: RendererVideo;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+  persistentProgress: MutableRefObject<number>;
 }
 
 export default function ViewpointSelection(props: IProps) {
-  const { video, appState, setAppState } = props;
+  const { video, appState, setAppState, persistentProgress } = props;
   const povs = [video, ...video.multiPov].sort(povNameSort);
   const { player, combatants } = povs[0];
 
@@ -93,6 +95,13 @@ export default function ViewpointSelection(props: IProps) {
 
       if (!selection) {
         return;
+      }
+
+      const sameActivity =
+        appState.playingVideo?.uniqueHash === selection.uniqueHash;
+
+      if (!sameActivity) {
+        persistentProgress.current = 0;
       }
 
       setAppState((prevState) => {

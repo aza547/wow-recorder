@@ -6,6 +6,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import { useSettings } from 'renderer/useSettings';
 import { CloudDownload, CloudUpload } from 'lucide-react';
+import { MutableRefObject } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '../ToggleGroup/ToggleGroup';
 import {
   getPlayerClass,
@@ -24,10 +25,11 @@ interface IProps {
   video: RendererVideo;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+  persistentProgress: MutableRefObject<number>;
 }
 
 export default function ViewpointInfo(props: IProps) {
-  const { video, appState, setAppState } = props;
+  const { video, appState, setAppState, persistentProgress } = props;
   const povs = [video, ...video.multiPov].sort(povNameSort);
   const { playingVideo } = appState;
   const [config] = useSettings();
@@ -74,6 +76,12 @@ export default function ViewpointInfo(props: IProps) {
   const setPlayingVideo = (v: RendererVideo | undefined) => {
     if (!v) {
       return;
+    }
+
+    const sameActivity = appState.playingVideo?.uniqueHash === v.uniqueHash;
+
+    if (!sameActivity) {
+      persistentProgress.current = 0;
     }
 
     setAppState((prevState) => {
