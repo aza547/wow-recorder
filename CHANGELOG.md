@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Relax pull grouping timer as apparently Windows does a bad job of automatically keeping you in sync with an NTP server. 
 - [Issue 550](https://github.com/aza547/wow-recorder/issues/550) - Add the 90s Challenger's Peril correction to M+ chest calculation.
 - Fix a bug where deleted videos were sometimes not correctly deleted.
+- Fix an issue where the CMAA 2 setting in WoW could cause blurry video. 
 
 ## [6.0.4] - 2024-10-27
 ### Fixed
