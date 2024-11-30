@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [6.1.0] - 2024-11-30
+### Added
 - Redesign the video selection panel to be more performant and useful.
 - [Issue 538](https://github.com/aza547/wow-recorder/issues/538) - Pro users can now use a gif as their custom chat overlay.
 
