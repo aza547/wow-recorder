@@ -1,4 +1,5 @@
 import { Size } from 'electron';
+import { uniqueId } from 'lodash';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
@@ -262,6 +263,10 @@ type RendererVideo = Metadata & {
   isProtected: boolean;
   cloud: boolean;
   multiPov: RendererVideo[];
+
+  // Used by frontend to uniquely identify a video, as videoName
+  // is identical for a disk and cloud viewpoint.
+  uniqueId: string;
 };
 
 type SoloShuffleTimelineSegment = {
@@ -310,8 +315,6 @@ type AppState = {
   page: Pages;
   category: VideoCategory;
   playingVideo: RendererVideo | undefined; // the video being played by the player
-  selectedVideoName: string | undefined;
-  numVideosDisplayed: number;
   videoFilterQuery: string;
   videoFullScreen: boolean;
 };

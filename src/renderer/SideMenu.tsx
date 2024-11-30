@@ -28,7 +28,7 @@ import {
   getCategoryIndex,
   getFirstInCategory,
   getVideoCategoryFilter,
-  povNameSort,
+  povDiskFirstNameSort,
 } from './rendererutils';
 import Menu from './components/Menu';
 import Separator from './components/Separator/Separator';
@@ -137,7 +137,7 @@ const SideMenu = (props: IProps) => {
 
     if (firstInCategory) {
       const povs = [firstInCategory, ...firstInCategory.multiPov].sort(
-        povNameSort
+        povDiskFirstNameSort
       );
 
       [first] = povs;
@@ -151,9 +151,7 @@ const SideMenu = (props: IProps) => {
         videoFilterQuery: '',
         page: Pages.None,
         category: newCategory,
-        selectedVideoName: first?.videoName,
         playingVideo: first,
-        numVideosDisplayed: 10,
       };
     });
   };

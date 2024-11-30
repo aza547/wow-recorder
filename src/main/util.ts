@@ -179,19 +179,23 @@ const tryUnlink = async (file: string): Promise<boolean> => {
  */
 const deleteVideoDisk = async (videoPath: string) => {
   console.info('[Util] Deleting video', videoPath);
-  const success = await tryUnlink(videoPath);
+  const deletedMp4 = await tryUnlink(videoPath);
 
-  if (!success) {
-    // If we can't delete the video file, make sure we don't delete the metadata
-    // file either, which would leave the video file dangling.
-    return;
+  if (!deletedMp4) {
+    return false;
   }
 
   const metadataPath = getMetadataFileNameForVideo(videoPath);
-  await tryUnlink(metadataPath);
+  const deletedJson = await tryUnlink(metadataPath);
+
+  if (!deletedJson) {
+    return false;
+  }
 
   const thumbnailPath = getThumbnailFileNameForVideo(videoPath);
-  await tryUnlink(thumbnailPath);
+  const deletedPng = await tryUnlink(thumbnailPath);
+
+  return deletedPng;
 };
 
 /**
@@ -228,15 +232,19 @@ const loadVideoDetailsDisk = async (
     const metadata = await getMetadataForVideo(video.name);
     const thumbnailSource = getThumbnailFileNameForVideo(video.name);
 
+    const videoName = path.basename(video.name, '.mp4');
+    const uniqueId = `${videoName}-disk`;
+
     return {
       ...metadata,
-      videoName: path.basename(video.name, '.mp4'),
+      videoName,
       mtime: video.mtime,
       videoSource: video.name,
       thumbnailSource,
       isProtected: Boolean(metadata.protected),
       cloud: false,
       multiPov: [],
+      uniqueId,
     };
   } catch (error) {
     // Just log it and rethrow. Want this to be diagnosable.
@@ -801,16 +809,6 @@ const markForVideoForDelete = async (videoPath: string) => {
 };
 
 /**
- * Sort alphabetically by player name.
- */
-const povNameSort = (a: RendererVideo, b: RendererVideo) => {
-  const playerA = a.player?._name;
-  const playerB = b.player?._name;
-  if (!playerA || !playerB) return 0;
-  return playerA.localeCompare(playerB);
-};
-
-/**
  * Convert a RendererVideo type to a Metadata type, used when downloading
  * videos from cloud to disk.
  */
@@ -833,6 +831,7 @@ const cloudSignedMetadataToRendererVideo = (metadata: CloudSignedMetadata) => {
   // For cloud videos, the signed URLs are the sources.
   const videoSource = metadata.signedVideoKey;
   const thumbnailSource = metadata.signedThumbnailKey;
+  const uniqueId = `${metadata.videoName}-cloud`;
 
   // We don't want the signed properties themselves.
   const mutable: any = metadata;
@@ -847,6 +846,7 @@ const cloudSignedMetadataToRendererVideo = (metadata: CloudSignedMetadata) => {
     cloud: true,
     isProtected: Boolean(mutable.protected),
     mtime: 0,
+    uniqueId,
   };
 
   return video;
@@ -1025,7 +1025,6 @@ export {
   reverseChronologicalVideoSort,
   areDatesWithinSeconds,
   markForVideoForDelete,
-  povNameSort,
   rendererVideoToMetadata,
   cloudSignedMetadataToRendererVideo,
   exists,

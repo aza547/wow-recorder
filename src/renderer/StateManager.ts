@@ -1,6 +1,11 @@
 import { VideoCategory } from 'types/VideoCategory';
-import { RendererVideo } from '../main/types';
-import { areDatesWithinSeconds } from './rendererutils';
+import { AppState, RendererVideo } from '../main/types';
+import {
+  areDatesWithinSeconds,
+  getVideoCategoryFilter,
+  povDiskFirstNameSort,
+} from './rendererutils';
+import VideoFilter from './VideoFilter';
 
 /**
  * The video state, and utility mutation methods.
@@ -14,19 +19,29 @@ export default class StateManager {
 
   private setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
 
+  private appState: AppState;
+
+  private setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+
   /**
    * This is a singleton which allows us to avoid complications of the useRef hook recreating
    * the class on each render but discarding it if it's already set; that doesn't work nicely
    * when we set listeners in the class.
    */
   public static getInstance(
-    setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>
+    setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>,
+    appState: AppState,
+    setAppState: React.Dispatch<React.SetStateAction<AppState>>
   ) {
     if (StateManager.instance) {
       return StateManager.instance;
     }
 
-    StateManager.instance = new StateManager(setVideoState);
+    StateManager.instance = new StateManager(
+      setVideoState,
+      appState,
+      setAppState
+    );
 
     return StateManager.instance;
   }
@@ -35,9 +50,17 @@ export default class StateManager {
    * Constructor.
    */
   constructor(
-    setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>
+    setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>,
+    appState: AppState,
+    setAppState: React.Dispatch<React.SetStateAction<AppState>>
   ) {
     this.setVideoState = setVideoState;
+    this.appState = appState;
+    this.setAppState = setAppState;
+  }
+
+  public updateAppState(appState: AppState) {
+    this.appState = appState;
   }
 
   /**
@@ -46,8 +69,37 @@ export default class StateManager {
    */
   public async refresh() {
     this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
+
+    // console.time('correlate');
     const correlated = this.correlate();
+    // console.timeEnd('correlate');
+
+    // console.time('setstate');
     this.setVideoState(correlated);
+    // console.timeEnd('setstate');
+
+    const { category, videoFilterQuery, playingVideo } = this.appState;
+
+    if (!playingVideo) {
+      // If we haven't yet selected a video, then select the first
+      // in the currently selected category.
+      const categoryFilter = getVideoCategoryFilter(category);
+      const categoryState = correlated.filter(categoryFilter);
+
+      const filteredState = categoryState.filter((video) =>
+        new VideoFilter(videoFilterQuery, video).filter()
+      );
+
+      const first = filteredState[0];
+      const viewpoints = [first, ...first.multiPov].sort(povDiskFirstNameSort);
+
+      this.setAppState((prevState) => {
+        return {
+          ...prevState,
+          playingVideo: viewpoints[0],
+        };
+      });
+    }
   }
 
   private correlate() {
@@ -65,12 +117,7 @@ export default class StateManager {
       StateManager.correlateVideo(video, correlated)
     );
 
-    correlated
-      .sort(StateManager.reverseChronologicalVideoSort)
-      .forEach((video) => {
-        video.multiPov.sort(StateManager.povNameSort);
-      });
-
+    correlated.sort(StateManager.reverseChronologicalVideoSort);
     return correlated;
   }
 
@@ -183,13 +230,6 @@ export default class StateManager {
     }
 
     return metricB - metricA;
-  }
-
-  private static povNameSort(a: RendererVideo, b: RendererVideo) {
-    const playerA = a.player?._name;
-    const playerB = b.player?._name;
-    if (!playerA || !playerB) return 0;
-    return playerA.localeCompare(playerB);
   }
 
   /**

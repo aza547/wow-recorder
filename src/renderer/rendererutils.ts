@@ -29,12 +29,14 @@ import {
   RendererVideo,
   SoloShuffleTimelineSegment,
   VideoMarker,
+  RawCombatant,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
 import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'main/configSchema';
+import { Renderer } from 'react-dom';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -378,13 +380,13 @@ const getResultColor = (video: RendererVideo) => {
       // a better way to pass it through. Generated with: https://cssgradient.io/.
       // The key is the number of wins.
       const soloShuffleResultColors = [
-        'rgb(53,  164, 50, 0.3)',
-        'rgb(46,  171, 27, 0.3)',
-        'rgb(112, 170, 30, 0.3)',
-        'rgb(171, 150, 30, 0.3)',
-        'rgb(171, 86,  26, 0.3)',
-        'rgb(175, 50,  23, 0.3)',
-        'rgb(156, 21,  21, 0.3)',
+        'rgb(53,  164, 50)',
+        'rgb(46,  171, 27)',
+        'rgb(112, 170, 30)',
+        'rgb(171, 150, 30)',
+        'rgb(171, 86,  26)',
+        'rgb(175, 50,  23)',
+        'rgb(156, 21,  21)',
       ].reverse();
 
       return soloShuffleResultColors[soloShuffleRoundsWon];
@@ -505,6 +507,39 @@ const getVideoTime = (video: RendererVideo) => {
 
   const timeAsString = `${hours}:${mins}`;
   return timeAsString;
+};
+
+const videoToDate = (video: RendererVideo) => {
+  let date;
+
+  if (video.clippedAt) {
+    date = new Date(video.clippedAt);
+  } else if (video.start) {
+    date = new Date(video.start);
+  } else {
+    date = new Date(video.mtime);
+  }
+
+  return date;
+};
+
+const dateToHumanReadable = (date: Date) => {
+  const day = date.getDate();
+  const month = months[date.getMonth()].slice(0, 3);
+  // const year = date.getFullYear().toString().slice(2, 4);
+  const dateAsString = `${day} ${month}`;
+
+  const hours = date
+    .getHours()
+    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
+
+  const mins = date
+    .getMinutes()
+    .toLocaleString('en-US', { minimumIntegerDigits: 2 });
+
+  const timeAsString = `${hours}:${mins}`;
+
+  return `${timeAsString} ${dateAsString}`;
 };
 
 const getVideoDate = (video: RendererVideo) => {
@@ -760,7 +795,7 @@ const getVideoResultText = (video: RendererVideo): string => {
       return 'Depleted';
     }
 
-    return String(upgradeLevel);
+    return String(`+${upgradeLevel}`);
   }
 
   if (isRaidUtil(video)) {
@@ -812,9 +847,28 @@ const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
   event.preventDefault();
 };
 
-const povNameSort = (a: RendererVideo, b: RendererVideo) => {
+const povDiskFirstNameSort = (a: RendererVideo, b: RendererVideo) => {
+  const diskA = !a.cloud;
+  const diskB = !b.cloud;
+
+  if (diskA && !diskB) {
+    return -1;
+  }
+
+  if (diskB && !diskA) {
+    return 1;
+  }
+
   const playerA = a.player?._name;
   const playerB = b.player?._name;
+
+  if (!playerA || !playerB) return 0;
+  return playerA.localeCompare(playerB);
+};
+
+const combatantNameSort = (a: RawCombatant, b: RawCombatant) => {
+  const playerA = a._name;
+  const playerB = b._name;
   if (!playerA || !playerB) return 0;
   return playerA.localeCompare(playerB);
 };
@@ -824,24 +878,81 @@ const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
   return differenceMilliseconds <= sec * 1000;
 };
 
-const countUniquePovs = (povs: RendererVideo[]) => {
-  let uniquePovs = 0;
-  const seenPovs: string[] = [];
-
-  for (let i = 0; i < povs.length; i++) {
-    const name = povs[i].player?._name;
-
-    if (name && !seenPovs.includes(name)) {
-      uniquePovs++;
-      seenPovs.push(name);
-    }
-  }
-
-  return uniquePovs;
-};
-
 const toFixedDigits = (n: number, d: number) =>
   n.toLocaleString('en-US', { minimumIntegerDigits: d, useGrouping: false });
+
+const getPullNumber = (
+  video: RendererVideo,
+  raidCategoryState: RendererVideo[]
+) => {
+  const videoDate = video.start ? new Date(video.start) : new Date(video.mtime);
+
+  const dailyVideosInOrder: RendererVideo[] = [];
+
+  raidCategoryState.forEach((neighbourVideo) => {
+    const bestDate = neighbourVideo.start
+      ? neighbourVideo.start
+      : neighbourVideo.mtime;
+
+    const neighbourDate = new Date(bestDate);
+
+    // Pulls longer than 6 hours apart are considered from different
+    // sessions and will reset the pull counter.
+    //
+    // This logic is really janky and should probably be rewritten. The
+    // problem here is that if checks for any videos within 6 hours.
+    //
+    // If there are videos on the border (e.g. day raiding) then the
+    // pull count can do weird things like decrement or not increment given
+    // the right timing conditions of the previous sessions raids.
+    const withinThreshold = areDatesWithinSeconds(
+      videoDate,
+      neighbourDate,
+      3600 * 6
+    );
+
+    if (
+      video.encounterID === undefined ||
+      neighbourVideo.encounterID === undefined
+    ) {
+      return;
+    }
+
+    const sameEncounter = video.encounterID === neighbourVideo.encounterID;
+
+    if (
+      video.difficultyID === undefined ||
+      neighbourVideo.difficultyID === undefined
+    ) {
+      return;
+    }
+
+    const sameDifficulty = video.difficultyID === neighbourVideo.difficultyID;
+
+    if (withinThreshold && sameEncounter && sameDifficulty) {
+      dailyVideosInOrder.push(neighbourVideo);
+    }
+  });
+
+  dailyVideosInOrder.sort((A: RendererVideo, B: RendererVideo) => {
+    const bestTimeA = A.start ? A.start : A.mtime;
+    const bestTimeB = B.start ? B.start : B.mtime;
+    return bestTimeA - bestTimeB;
+  });
+
+  return dailyVideosInOrder.indexOf(video) + 1;
+};
+
+const countUniqueViewpoints = (video: RendererVideo) => {
+  const povs = [video, ...video.multiPov];
+
+  const unique = povs.filter(
+    (item, index, self) =>
+      self.findIndex((i) => i.player?._name === item.player?._name) === index
+  );
+
+  return unique.length;
+};
 
 export {
   getFormattedDuration,
@@ -891,8 +1002,12 @@ export {
   getCategoryIndex,
   getFirstInCategory,
   stopPropagation,
-  povNameSort,
+  povDiskFirstNameSort,
   areDatesWithinSeconds,
-  countUniquePovs,
   toFixedDigits,
+  getPullNumber,
+  combatantNameSort,
+  countUniqueViewpoints,
+  videoToDate,
+  dateToHumanReadable,
 };

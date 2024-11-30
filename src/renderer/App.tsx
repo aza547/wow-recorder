@@ -35,15 +35,6 @@ const WarcraftRecorder = () => {
   const upgradeNotified = useRef(false);
   const { toast } = useToast();
 
-  // The video state contains most of the frontend state, it's complex so
-  // frontend triggered modifications go through the StateManager class, which
-  // calls the React set function appropriately.
-  const [videoState, setVideoState] = useState<RendererVideo[]>([]);
-
-  const stateManager = useRef<StateManager>(
-    StateManager.getInstance(setVideoState)
-  );
-
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
     RecStatus.WaitingForWoW
   );
@@ -84,12 +75,6 @@ const WarcraftRecorder = () => {
     page: Pages.None,
     category: getCategoryFromConfig(config),
     playingVideo: undefined,
-    selectedVideoName: undefined,
-
-    // Limit the number of videos displayed for performance. User can load more
-    // by clicking the button, but mainline case will be to watch back recent
-    // videos.
-    numVideosDisplayed: 10,
 
     // Any text applied in the filter bar gets translated into a filter here.
     videoFilterQuery: '',
@@ -97,6 +82,15 @@ const WarcraftRecorder = () => {
     // We use this to conditionally hide the recording preview.
     videoFullScreen: false,
   });
+
+  // The video state contains most of the frontend state, it's complex so
+  // frontend triggered modifications go through the StateManager class, which
+  // calls the React set function appropriately.
+  const [videoState, setVideoState] = useState<RendererVideo[]>([]);
+
+  const stateManager = useRef<StateManager>(
+    StateManager.getInstance(setVideoState, appState, setAppState)
+  );
 
   // Used to allow for hot switching of video players when moving between POVs.
   const persistentProgress = useRef(0);
@@ -153,6 +147,15 @@ const WarcraftRecorder = () => {
     ipc.on('updateMicStatus', updateMicStatus);
     ipc.on('updateCrashes', updateCrashes);
   }, []);
+
+  // Debugging why we needed this hurt. I think it's because when we call setAppState, it sets 
+  // appState to undefined and reassigns it in this component. However that leaves the StateManager
+  // singleton with a reference pointing to undefined which breaks the frontend. So here we reapply
+  // the appState to the StateManager every time it updates. This is almost certainly massively
+  // overengineered but for now it works.
+  useEffect(() => {
+    stateManager.current.updateAppState(appState);
+  }, [appState]);
 
   return (
     <Box

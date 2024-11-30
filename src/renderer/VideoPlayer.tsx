@@ -595,7 +595,7 @@ export const VideoPlayer = (props: IProps) => {
 
     return (
       <div className="mx-1 flex">
-        <span className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold">
+        <span className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold font-mono">
           {secToMmSs(current)} / {secToMmSs(max)}
         </span>
       </div>

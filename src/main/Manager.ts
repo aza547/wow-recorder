@@ -987,7 +987,14 @@ export default class Manager {
       } else {
         // Try to just delete the video from disk
         try {
-          await deleteVideoDisk(src);
+          // Bit weird we have to check a boolean here given all the error handling
+          // going on. That's just me taking an easy way out rather than fixing this
+          // more elegantly. TL;DR deleteVideoDisk doesn't throw anything.
+          const success = await deleteVideoDisk(src);
+
+          if (!success) {
+            throw new Error('Failed deleting video, will mark for delete');
+          }
         } catch (error) {
           // If that didn't work for any reason, try to at least mark it for deletion,
           // so that it can be picked up on refresh and we won't show videos the user
