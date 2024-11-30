@@ -795,9 +795,12 @@ export default class Manager {
       throw new Error('Overlay image was not provided for custom overlay.');
     }
 
-    if (!chatOverlayOwnImagePath.endsWith('.png')) {
-      console.warn('[Manager] Overlay image must be a PNG file');
-      throw new Error('Overlay image must be a PNG file');
+    if (
+      !chatOverlayOwnImagePath.endsWith('.png') &&
+      !chatOverlayOwnImagePath.endsWith('.gif')
+    ) {
+      console.warn('[Manager] Overlay image must be a .png or .gif file');
+      throw new Error('Overlay image must be a .png or .gif file');
     }
 
     const fileExists = await exists(chatOverlayOwnImagePath);
