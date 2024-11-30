@@ -475,6 +475,7 @@ export default class Recorder extends EventEmitter {
 
       case ESupportedEncoders.AMD_AMF_H264:
       case ESupportedEncoders.JIM_NVENC:
+      case ESupportedEncoders.JIM_HEVC_NVENC:
         // These settings are identical for AMD and NVENC encoders.
         Recorder.applySetting('Output', 'Recrate_control', 'CQP');
         Recorder.applySetting('Output', 'Reccqp', cqp);
