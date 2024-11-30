@@ -213,10 +213,13 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setMaxStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    const parsedValue = parseInt(inputValue, 10);
+
     setConfig((prevState) => {
       return {
         ...prevState,
-        maxStorage: parseInt(event.target.value, 10),
+        maxStorage: Number.isNaN(parsedValue) ? 0 : parsedValue,
       };
     });
   };
