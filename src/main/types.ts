@@ -1,5 +1,4 @@
 import { Size } from 'electron';
-import { uniqueId } from 'lodash';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
