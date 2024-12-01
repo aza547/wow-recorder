@@ -45,6 +45,7 @@ import {
   MapHeader,
   PullHeader,
   ResultHeader,
+  SelectHeader,
   TagHeader,
   TypeHeader,
   ViewpointsHeader,
@@ -63,6 +64,7 @@ import {
   populateLevelCell,
   populateMapCell,
   populateResultCell,
+  populateSelectCell,
   populateTagCell,
   populateViewpointCell,
 } from './Cells';
@@ -132,6 +134,13 @@ const VideoSelectionTable = (props: IProps) => {
   const raidColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
+        id: 'Select',
+        size: 50,
+        header: SelectHeader,
+        cell: populateSelectCell,
+        enableSorting: false,
+      },
+      {
         id: 'Encounter',
         accessorKey: 'encounterName',
         header: EncounterHeader,
@@ -190,6 +199,13 @@ const VideoSelectionTable = (props: IProps) => {
   const arenaColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
+        id: 'Select',
+        size: 50,
+        header: SelectHeader,
+        cell: populateSelectCell,
+        enableSorting: false,
+      },
+      {
         id: 'Map',
         accessorKey: 'zoneName',
         header: MapHeader,
@@ -237,6 +253,13 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const dungeonColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
+      {
+        id: 'Select',
+        size: 50,
+        header: SelectHeader,
+        cell: populateSelectCell,
+        enableSorting: false,
+      },
       {
         id: 'Map',
         accessorFn: getDungeonName,
@@ -293,6 +316,13 @@ const VideoSelectionTable = (props: IProps) => {
   const battlegroundColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
+        id: 'Select',
+        size: 50,
+        header: SelectHeader,
+        cell: populateSelectCell,
+        enableSorting: false,
+      },
+      {
         id: 'Map',
         accessorKey: 'zoneName',
         header: MapHeader,
@@ -340,6 +370,13 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const clipsColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
+      {
+        id: 'Select',
+        size: 50,
+        header: SelectHeader,
+        cell: populateSelectCell,
+        enableSorting: false,
+      },
       {
         id: 'Type',
         accessorKey: 'parentCategory',
@@ -430,12 +467,18 @@ const VideoSelectionTable = (props: IProps) => {
   const renderIndividualHeader = (header: Header<RendererVideo, unknown>) => {
     let tooltip;
 
-    if (header.column.getNextSortingOrder() === 'asc') {
-      tooltip = 'Click to sort ascending';
-    } else if (header.column.getNextSortingOrder() === 'desc') {
-      tooltip = 'Click to sort descending';
-    } else {
-      tooltip = 'Click to clear sort';
+    if (header.column.getCanSort()) {
+      if (header.column.getNextSortingOrder() === 'asc') {
+        tooltip = 'Click to sort ascending';
+      } else if (header.column.getNextSortingOrder() === 'desc') {
+        tooltip = 'Click to sort descending';
+      } else {
+        tooltip = 'Click to clear sort';
+      }
+    }
+
+    if (header.id === 'Select') {
+      tooltip = 'Click to select all';
     }
 
     return (
@@ -556,6 +599,7 @@ const VideoSelectionTable = (props: IProps) => {
                 video={row.original}
                 appState={appState}
                 setAppState={setAppState}
+                persistentProgress={persistentProgress}
               />
             </div>
             <div className="flex justify-evenly w-full">
@@ -565,6 +609,7 @@ const VideoSelectionTable = (props: IProps) => {
                   video={row.original}
                   appState={appState}
                   setAppState={setAppState}
+                  persistentProgress={persistentProgress}
                 />
                 <ViewpointButtons
                   video={row.original}
