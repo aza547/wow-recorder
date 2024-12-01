@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject } from 'react';
+import { Trash } from 'lucide-react';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { VideoPlayer } from './VideoPlayer';
 import { VideoCategory } from '../types/VideoCategory';
@@ -8,11 +9,12 @@ import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
 import { getVideoCategoryFilter } from './rendererutils';
-import VideoFilter from './VideoFilter';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
 import VideoSelectionTable from './components/Tables/VideoSelectionTable';
+import useTable from './components/Tables/TableData';
+import DeleteDialog from './DeleteDialog';
 
 interface IProps {
   category: VideoCategory;
@@ -37,16 +39,12 @@ const CategoryPage = (props: IProps) => {
     persistentProgress,
     playerHeight,
   } = props;
-  const { videoFilterQuery } = appState;
   const [config, setConfig] = useSettings();
-  const categoryFilter = getVideoCategoryFilter(category);
+  const categoryFilter = getVideoCategoryFilter(VideoCategory.Raids);
   const categoryState = videoState.filter(categoryFilter);
+  const table = useTable(videoState, appState);
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
-
-  const filteredState = categoryState.filter((video) =>
-    new VideoFilter(videoFilterQuery, video).filter()
-  );
 
   const getVideoPlayer = () => {
     const { playingVideo } = appState;
@@ -66,7 +64,28 @@ const CategoryPage = (props: IProps) => {
     );
   };
 
+  const getAllSelectedViewpoints = () => {
+    const { rows } = table.getSelectedRowModel();
+    const parents = rows.map((r) => r.original);
+    const children = parents.flatMap((v) => v.multiPov);
+    return parents.concat(children);
+  };
+
+  const bulkDelete = () => {
+    const viewpoints = getAllSelectedViewpoints();
+
+    viewpoints.forEach((v) => {
+      const src = v.cloud ? v.videoName : v.videoSource;
+      window.electron.ipcRenderer.sendMessage('deleteVideo', [src, v.cloud]);
+    });
+
+    stateManager.current.bulkDeleteVideo(viewpoints);
+  };
+
   const getVideoSelection = () => {
+    const viewpoints = getAllSelectedViewpoints();
+    const deleteWarning = `This will permanently delete ${viewpoints.length} recordings.`;
+
     return (
       <>
         <div className="w-full flex justify-evenly items-center gap-x-5 px-4 pt-2">
@@ -80,11 +99,27 @@ const CategoryPage = (props: IProps) => {
           <div className="flex-grow">
             <SearchBar appState={appState} setAppState={setAppState} />
           </div>
+          <div className="pt-6">
+            <DeleteDialog
+              onDelete={bulkDelete}
+              tooltipContent="Delete selected"
+              warning={deleteWarning}
+              skipPossible={false}
+            >
+              <Button
+                variant="ghost"
+                size="xs"
+                disabled={viewpoints.length < 1}
+              >
+                <Trash size={20} />
+              </Button>
+            </DeleteDialog>
+          </div>
         </div>
         <div className="w-full h-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-4 pt-2 overflow-hidden">
           <ScrollArea withScrollIndicators={false} className="h-full w-full">
             <VideoSelectionTable
-              videoState={filteredState}
+              table={table}
               appState={appState}
               setAppState={setAppState}
               stateManager={stateManager}

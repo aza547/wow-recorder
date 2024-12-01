@@ -168,6 +168,7 @@ export const populateSelectCell = (
     <Checkbox
       checked={row.getIsSelected()}
       onClick={row.getToggleSelectedHandler()}
+      onDoubleClick={stopPropagation}
       sx={{
         color: 'gray',
         '&.Mui-checked': {
