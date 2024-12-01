@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix a bug where it was possible to set your storage path and buffer path to the same thing.
 
 ## [6.1.0] - 2024-11-30
 ### Added

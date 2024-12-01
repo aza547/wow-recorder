@@ -744,7 +744,7 @@ export default class Manager {
       throw new Error('Buffer Storage Path is invalid.');
     }
 
-    if (storagePath === obsPath) {
+    if (path.resolve(storagePath) === path.resolve(obsPath)) {
       console.warn(
         '[Manager] Validation failed: Storage Path is the same as Buffer Path'
       );
