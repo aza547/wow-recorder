@@ -7,11 +7,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import {
-  getFirstInCategory,
-  getVideoCategoryFilter,
-  povDiskFirstNameSort,
-} from './rendererutils';
+import { getVideoCategoryFilter } from './rendererutils';
 import VideoFilter from './VideoFilter';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
@@ -54,30 +50,15 @@ const CategoryPage = (props: IProps) => {
 
   const getVideoPlayer = () => {
     const { playingVideo } = appState;
-    let videoToPlay: RendererVideo;
 
-    if (playingVideo !== undefined) {
-      videoToPlay = playingVideo;
-    } else {
-      const firstInCategory = getFirstInCategory(videoState, category);
-
-      if (firstInCategory === undefined) {
-        // This should never happen, we only load the player if we
-        // have atleast one video to show.
-        throw new Error('firstInCategory was undefined');
-      }
-
-      const povs = [firstInCategory, ...firstInCategory.multiPov].sort(
-        povDiskFirstNameSort
-      );
-
-      [videoToPlay] = povs;
+    if (playingVideo === undefined) {
+      return <></>;
     }
 
     return (
       <VideoPlayer
-        key={videoToPlay.videoSource}
-        video={videoToPlay}
+        key={playingVideo.videoSource}
+        video={playingVideo}
         persistentProgress={persistentProgress}
         config={config}
         playerHeight={playerHeight}

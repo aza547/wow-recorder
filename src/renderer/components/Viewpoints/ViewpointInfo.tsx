@@ -14,7 +14,7 @@ import {
   getPlayerName,
   getPlayerRealm,
   getPlayerSpecID,
-  povDiskFirstNameSort,
+  povCloudFirstNameSort,
 } from '../../rendererutils';
 import { specImages } from '../../images';
 import { Tooltip } from '../Tooltip/Tooltip';
@@ -30,7 +30,7 @@ interface IProps {
 
 export default function ViewpointInfo(props: IProps) {
   const { video, appState, setAppState, persistentProgress } = props;
-  const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
+  const povs = [video, ...video.multiPov].sort(povCloudFirstNameSort);
   const { playingVideo } = appState;
   const [config] = useSettings();
   const { cloudUpload } = config;

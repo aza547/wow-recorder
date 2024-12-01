@@ -28,7 +28,7 @@ import {
   getCategoryIndex,
   getFirstInCategory,
   getVideoCategoryFilter,
-  povDiskFirstNameSort,
+  povCloudFirstNameSort,
 } from './rendererutils';
 import Menu from './components/Menu';
 import Separator from './components/Separator/Separator';
@@ -137,7 +137,7 @@ const SideMenu = (props: IProps) => {
 
     if (firstInCategory) {
       const povs = [firstInCategory, ...firstInCategory.multiPov].sort(
-        povDiskFirstNameSort
+        povCloudFirstNameSort
       );
 
       [first] = povs;

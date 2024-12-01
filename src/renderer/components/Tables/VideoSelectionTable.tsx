@@ -33,7 +33,7 @@ import {
   getDungeonName,
   getInstanceDifficultyText,
   getPullNumber,
-  povDiskFirstNameSort,
+  povCloudFirstNameSort,
   videoToDate,
 } from '../../rendererutils';
 import {
@@ -105,7 +105,7 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const onRowClick = (row: Row<RendererVideo>) => {
     const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
+    const povs = [video, ...video.multiPov].sort(povCloudFirstNameSort);
 
     persistentProgress.current = 0;
 

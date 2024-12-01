@@ -1,4 +1,4 @@
-import { CellContext, Row } from '@tanstack/react-table';
+import { CellContext } from '@tanstack/react-table';
 import { RendererVideo } from 'main/types';
 import {
   getVideoResultText,
@@ -9,7 +9,6 @@ import {
   countUniqueViewpoints,
   getPlayerClass,
   getPlayerName,
-  getPlayerRealm,
   getPlayerSpecID,
   getWoWClassColor,
   povDiskFirstNameSort,
@@ -17,7 +16,6 @@ import {
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import { Box } from '@mui/material';
-import { specializationById } from 'main/constants';
 import { specImages } from 'renderer/images';
 import { Button } from '../Button/Button';
 

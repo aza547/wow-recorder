@@ -847,6 +847,14 @@ const stopPropagation = (event: React.MouseEvent<HTMLElement>) => {
   event.preventDefault();
 };
 
+const povNameSort = (a: RendererVideo, b: RendererVideo) => {
+  const playerA = a.player?._name;
+  const playerB = b.player?._name;
+
+  if (!playerA || !playerB) return 0;
+  return playerA.localeCompare(playerB);
+};
+
 const povDiskFirstNameSort = (a: RendererVideo, b: RendererVideo) => {
   const diskA = !a.cloud;
   const diskB = !b.cloud;
@@ -859,11 +867,22 @@ const povDiskFirstNameSort = (a: RendererVideo, b: RendererVideo) => {
     return 1;
   }
 
-  const playerA = a.player?._name;
-  const playerB = b.player?._name;
+  return povNameSort(a, b);
+};
 
-  if (!playerA || !playerB) return 0;
-  return playerA.localeCompare(playerB);
+const povCloudFirstNameSort = (a: RendererVideo, b: RendererVideo) => {
+  const diskA = !a.cloud;
+  const diskB = !b.cloud;
+
+  if (diskA && !diskB) {
+    return 1;
+  }
+
+  if (diskB && !diskA) {
+    return -1;
+  }
+
+  return povNameSort(a, b);
 };
 
 const combatantNameSort = (a: RawCombatant, b: RawCombatant) => {
@@ -1002,6 +1021,7 @@ export {
   getCategoryIndex,
   getFirstInCategory,
   stopPropagation,
+  povCloudFirstNameSort,
   povDiskFirstNameSort,
   areDatesWithinSeconds,
   toFixedDigits,

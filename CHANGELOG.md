@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Prefer selecting cloud stored videos over disk stored videos.
+
 ### Added
 ### Fixed
 - Fix a bug where it was possible to set your storage path and buffer path to the same thing.

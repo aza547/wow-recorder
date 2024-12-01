@@ -3,7 +3,7 @@ import { AppState, RendererVideo } from '../main/types';
 import {
   areDatesWithinSeconds,
   getVideoCategoryFilter,
-  povDiskFirstNameSort,
+  povCloudFirstNameSort,
 } from './rendererutils';
 import VideoFilter from './VideoFilter';
 
@@ -91,7 +91,7 @@ export default class StateManager {
       );
 
       const first = filteredState[0];
-      const viewpoints = [first, ...first.multiPov].sort(povDiskFirstNameSort);
+      const viewpoints = [first, ...first.multiPov].sort(povCloudFirstNameSort);
 
       this.setAppState((prevState) => {
         return {
