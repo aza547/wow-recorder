@@ -1411,9 +1411,11 @@ export default class Recorder extends EventEmitter {
     }
 
     const { width, height } = obsResolutions[this.resolution];
-    const xScaleFactor = Math.round((width / src.width) * 100) / 100;
-    const yScaleFactor = Math.round((height / src.height) * 100) / 100;
-    const newScaleFactor = { x: xScaleFactor, y: yScaleFactor };
+
+    const newScaleFactor = {
+      x: width / src.width,
+      y: height / src.height,
+    };
 
     if (isEqual(item.scale, newScaleFactor)) {
       return;

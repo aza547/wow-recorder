@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 ### Fixed
-- Fix a bug where it was possible to set your storage path and buffer path to the same thing.
+- [Issue 558](https://github.com/aza547/wow-recorder/issues/558) - Fix a bug where it was possible to set your storage path and buffer path to the same thing.
+- [Issue 558](https://github.com/aza547/wow-recorder/issues/558) - Fix a bug where we would rescale the scene too often under some conditions.
 
 ## [6.1.0] - 2024-11-30
 ### Added
