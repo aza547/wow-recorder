@@ -84,7 +84,10 @@ const CategoryPage = (props: IProps) => {
 
   const getVideoSelection = () => {
     const viewpoints = getAllSelectedViewpoints();
-    const deleteWarning = `This will permanently delete ${viewpoints.length} recordings.`;
+
+    const deleteWarning = `This will permanently delete ${
+      viewpoints.length
+    } recording${viewpoints.length > 1 ? 's' : ''}.`;
 
     return (
       <>
