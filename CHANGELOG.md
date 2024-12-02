@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prefer selecting cloud stored videos over disk stored videos.
 
 ### Added
-- [Issue 558](https://github.com/aza547/wow-recorder/issues/488) - Added a bulk delete option.
+- [Issue 488](https://github.com/aza547/wow-recorder/issues/488) - Added a bulk delete option.
 
 ### Fixed
 - [Issue 558](https://github.com/aza547/wow-recorder/issues/558) - Fix a bug where it was possible to set your storage path and buffer path to the same thing.
