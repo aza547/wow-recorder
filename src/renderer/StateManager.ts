@@ -186,6 +186,19 @@ export default class StateManager {
     }
   }
 
+  public async bulkDeleteVideo(videos: RendererVideo[]) {
+    videos.forEach((v) => {
+      const index = this.raw.indexOf(v);
+
+      if (index > -1) {
+        this.raw.splice(index, 1);
+      }
+    });
+
+    const correlated = this.correlate();
+    this.setVideoState(correlated);
+  }
+
   public async toggleProtect(video: RendererVideo) {
     const index = this.raw.indexOf(video);
 

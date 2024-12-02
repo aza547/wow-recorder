@@ -15,7 +15,7 @@ import {
 } from 'renderer/rendererutils';
 import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
-import { Box } from '@mui/material';
+import { Box, Checkbox } from '@mui/material';
 import { specImages } from 'renderer/images';
 import { Button } from '../Button/Button';
 
@@ -157,5 +157,27 @@ export const populateViewpointCell = (
       {renderSpecAndName()}
       {renderRemainingCount()}
     </div>
+  );
+};
+
+export const populateSelectCell = (
+  ctx: CellContext<RendererVideo, unknown>
+) => {
+  const { row } = ctx;
+  return (
+    <Checkbox
+      checked={row.getIsSelected()}
+      onClick={row.getToggleSelectedHandler()}
+      onDoubleClick={stopPropagation}
+      sx={{
+        color: 'gray',
+        '&.Mui-checked': {
+          color: 'gray',
+        },
+        '&:hover': {
+          backgroundColor: 'rgba(128, 128, 128, 0.05)',
+        },
+      }}
+    />
   );
 };

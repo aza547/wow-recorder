@@ -209,7 +209,11 @@ export default function ViewpointButtons(props: IProps) {
 
   const getDeleteSingleButton = () => {
     return (
-      <DeleteDialog onDelete={(e) => deleteVideo(e)} tooltipContent="Delete">
+      <DeleteDialog
+        onDelete={(e) => deleteVideo(e)}
+        tooltipContent="Delete"
+        skipPossible
+      >
         <Button
           onMouseDown={stopPropagation}
           variant="secondary"
@@ -222,49 +226,6 @@ export default function ViewpointButtons(props: IProps) {
     );
   };
 
-  const deleteAllPovs = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-
-    povs.forEach((p) => {
-      const src = p.cloud ? p.videoName : p.videoSource;
-      window.electron.ipcRenderer.sendMessage('deleteVideo', [src, p.cloud]);
-      stateManager.current.deleteVideo(p);
-    });
-
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        playingVideo: undefined,
-      };
-    });
-  };
-
-  const onDeleteAll = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-
-    if (ctrlDown) {
-      deleteAllPovs(event);
-    }
-  };
-
-  const getDeleteAllButton = () => {
-    return (
-      <DeleteDialog
-        onDelete={(e) => deleteAllPovs(e)}
-        tooltipContent="Delete all points of view"
-      >
-        <Button
-          onMouseDown={stopPropagation}
-          variant="secondary"
-          size="xl"
-          onClick={onDeleteAll}
-        >
-          <PackageX />
-        </Button>
-      </DeleteDialog>
-    );
-  };
-
   return (
     <div className="flex flex-row items-center content-center gap-x-2 py-1 pr-10">
       {getTagButton()}
@@ -272,7 +233,6 @@ export default function ViewpointButtons(props: IProps) {
       {cloud && getShareLinkButton()}
       {!cloud && getOpenButton()}
       {getDeleteSingleButton()}
-      {multiPov && getDeleteAllButton()}
     </div>
   );
 }

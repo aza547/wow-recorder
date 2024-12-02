@@ -15,13 +15,34 @@ type DeleteDialogProps = {
   children: React.ReactNode;
   onDelete: (event: React.MouseEvent<HTMLElement>) => void;
   tooltipContent: string;
+  warning?: string;
+  skipPossible: boolean;
 };
 
 const DeleteDialog = ({
   children,
   onDelete,
   tooltipContent,
+  warning,
+  skipPossible,
 }: DeleteDialogProps) => {
+  const getWarningMessage = () => {
+    return <div className="text-sm">{warning}</div>;
+  };
+
+  const getSkipMessage = () => {
+    return (
+      <div className="text-sm">
+        Hold{' '}
+        <img
+          src={ControlIcon}
+          className="h-[32px] inline-flex mx-1"
+          alt="ctrlIcon"
+        />{' '}
+        to skip this prompt.
+      </div>
+    );
+  };
   return (
     <Dialog>
       <Tooltip content={tooltipContent}>
@@ -31,15 +52,8 @@ const DeleteDialog = ({
         <DialogHeader>
           <DialogTitle>Are you sure?</DialogTitle>
         </DialogHeader>
-        <div className="text-sm">
-          Hold{' '}
-          <img
-            src={ControlIcon}
-            className="h-[32px] inline-flex mx-1"
-            alt="ctrlIcon"
-          />{' '}
-          to skip this prompt.
-        </div>
+        {warning && getWarningMessage()}
+        {skipPossible && getSkipMessage()}
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="ghost">Cancel</Button>
@@ -53,6 +67,10 @@ const DeleteDialog = ({
       </DialogContent>
     </Dialog>
   );
+};
+
+DeleteDialog.defaultProps = {
+  warning: '',
 };
 
 export default DeleteDialog;

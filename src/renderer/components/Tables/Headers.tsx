@@ -1,3 +1,5 @@
+import { Checkbox } from '@mui/material';
+import { HeaderContext } from '@tanstack/react-table';
 import {
   CalendarDays,
   Eye,
@@ -9,6 +11,7 @@ import {
   Swords,
   Trophy,
 } from 'lucide-react';
+import { RendererVideo } from 'main/types';
 
 export const EncounterHeader = () => (
   <span className="inline-flex gap-x-1">
@@ -86,3 +89,23 @@ export const TagHeader = () => (
     Tag
   </span>
 );
+
+export const SelectHeader = (ctx: HeaderContext<RendererVideo, unknown>) => {
+  const { table } = ctx;
+
+  return (
+    <Checkbox
+      checked={table.getIsAllRowsSelected()}
+      onClick={table.getToggleAllRowsSelectedHandler()}
+      sx={{
+        color: 'gray',
+        '&.Mui-checked': {
+          color: 'gray',
+        },
+        '&:hover': {
+          backgroundColor: 'rgba(128, 128, 128, 0.05)',
+        },
+      }}
+    />
+  );
+};
