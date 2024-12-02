@@ -40,10 +40,12 @@ const CategoryPage = (props: IProps) => {
     playerHeight,
   } = props;
   const [config, setConfig] = useSettings();
-  const categoryFilter = getVideoCategoryFilter(VideoCategory.Raids);
-  const categoryState = videoState.filter(categoryFilter);
   const table = useTable(videoState, appState);
+
+  const categoryFilter = getVideoCategoryFilter(category);
+  const categoryState = videoState.filter(categoryFilter);
   const haveVideos = categoryState.length > 0;
+
   const isClips = category === VideoCategory.Clips;
 
   const getVideoPlayer = () => {

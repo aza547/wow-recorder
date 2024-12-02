@@ -91,6 +91,11 @@ export default class StateManager {
       );
 
       const first = filteredState[0];
+
+      if (!first) {
+        return;
+      }
+
       const viewpoints = [first, ...first.multiPov].sort(povCloudFirstNameSort);
 
       this.setAppState((prevState) => {
