@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.2.0] - 2024-12-02
+### Changed
 - Prefer selecting cloud stored videos over disk stored videos.
 
 ### Added
