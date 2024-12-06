@@ -73,18 +73,27 @@ const CategoryPage = (props: IProps) => {
     return parents.concat(children);
   };
 
-  const bulkDelete = () => {
-    const viewpoints = getAllSelectedViewpoints();
-    window.electron.ipcRenderer.sendMessage('deleteVideosBulk', viewpoints);
-    stateManager.current.bulkDeleteVideo(viewpoints);
+  const bulkDelete = (videos: RendererVideo[]) => {
+    window.electron.ipcRenderer.sendMessage('deleteVideosBulk', videos);
+    stateManager.current.bulkDeleteVideo(videos);
   };
 
   const getVideoSelection = () => {
     const viewpoints = getAllSelectedViewpoints();
+    const prot = viewpoints.filter((v) => v.isProtected);
+    const unprot = viewpoints.filter((v) => !v.isProtected);
 
-    const deleteWarning = `This will permanently delete ${
-      viewpoints.length
-    } recording${viewpoints.length > 1 ? 's' : ''}.`;
+    let deleteWarning = `This will permanently delete ${
+      unprot.length
+    } recording${unprot.length > 1 ? 's' : ''}. `;
+
+    if (prot.length > 0) {
+      deleteWarning += `The selection includes ${
+        prot.length
+      } starred recording${
+        prot.length > 1 ? 's' : ''
+      } which will not be deleted.`;
+    }
 
     return (
       <>
@@ -101,7 +110,7 @@ const CategoryPage = (props: IProps) => {
           </div>
           <div className="pt-6">
             <DeleteDialog
-              onDelete={bulkDelete}
+              onDelete={() => bulkDelete(unprot)}
               tooltipContent="Delete selected"
               warning={deleteWarning}
               skipPossible={false}

@@ -12,7 +12,7 @@ import RaidCompAndResult from 'renderer/RaidComp';
 import { VideoCategory } from 'types/VideoCategory';
 import DungeonInfo from 'renderer/DungeonInfo';
 import { ArrowDown, ArrowUp } from 'lucide-react';
-import { povCloudFirstNameSort } from '../../rendererutils';
+import { povDiskFirstNameSort } from '../../rendererutils';
 
 interface IProps {
   table: Table<RendererVideo>;
@@ -39,7 +39,7 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const onRowClick = (row: Row<RendererVideo>) => {
     const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povCloudFirstNameSort);
+    const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
 
     persistentProgress.current = 0;
 

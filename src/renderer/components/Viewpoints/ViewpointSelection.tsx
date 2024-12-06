@@ -12,7 +12,7 @@ import {
   getPlayerClass,
   isArenaUtil,
   isSoloShuffleUtil,
-  povCloudFirstNameSort,
+  povDiskFirstNameSort,
 } from '../../rendererutils';
 import { specImages } from '../../images';
 
@@ -25,7 +25,7 @@ interface IProps {
 
 export default function ViewpointSelection(props: IProps) {
   const { video, appState, setAppState, persistentProgress } = props;
-  const povs = [video, ...video.multiPov].sort(povCloudFirstNameSort);
+  const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
   const { player, combatants } = povs[0];
 
   const isArena = isArenaUtil(povs[0]);

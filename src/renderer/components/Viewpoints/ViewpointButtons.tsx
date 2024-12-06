@@ -9,7 +9,7 @@ import {
   faMessage as faMessageOutline,
 } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { povCloudFirstNameSort, stopPropagation } from '../../rendererutils';
+import { povDiskFirstNameSort, stopPropagation } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { toast } from '../Toast/useToast';
@@ -30,10 +30,8 @@ const ipc = window.electron.ipcRenderer;
 export default function ViewpointButtons(props: IProps) {
   const { appState, setAppState, persistentProgress, video, stateManager } =
     props;
-  const povs = [video, ...video.multiPov].sort(povCloudFirstNameSort);
-
+  const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
-  const multiPov = povs.length > 1;
 
   /**
    * Sets up event listeners so that users can skip the "Are you sure you want
