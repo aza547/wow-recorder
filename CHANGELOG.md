@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.2.0] - 2024-12-06
 
 ### Added
 - [Issue 488](https://github.com/aza547/wow-recorder/issues/488) - Added a bulk delete option.
