@@ -985,30 +985,15 @@ export default class Manager {
       const cloud = args[1] as string;
 
       if (cloud) {
-        // No special handling for cloud storage.
-        await this.deleteVideoCloud(src);
+        this.deleteVideoCloud(src);
       } else {
-        // Try to just delete the video from disk
-        try {
-          // Bit weird we have to check a boolean here given all the error handling
-          // going on. That's just me taking an easy way out rather than fixing this
-          // more elegantly. TL;DR deleteVideoDisk doesn't throw anything.
-          const success = await deleteVideoDisk(src);
-
-          if (!success) {
-            throw new Error('Failed deleting video, will mark for delete');
-          }
-        } catch (error) {
-          // If that didn't work for any reason, try to at least mark it for deletion,
-          // so that it can be picked up on refresh and we won't show videos the user
-          // intended to delete
-          console.warn(
-            '[Manager] Failed to directly delete video on disk:',
-            String(error)
-          );
-          markForVideoForDelete(src);
-        }
+        this.deleteVideoDisk(src);
       }
+    });
+
+    ipcMain.on('deleteVideosBulk', async (_event, args) => {
+      const videos = args as RendererVideo[];
+      this.deleteVideoCloudBulk(videos);
     });
 
     /**
@@ -1159,10 +1144,50 @@ export default class Manager {
   private deleteVideoCloud = async (videoName: string) => {
     try {
       assert(this.cloudClient);
-      await this.cloudClient.deleteVideo(videoName);
+      await this.cloudClient.deleteVideo(videoName, true);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
       console.warn('[Manager] Failed to delete', videoName, String(error));
+    }
+  };
+
+  /**
+   * Delete a video from the disk, and it's accompanying metadata and thumbnail.
+   */
+  private deleteVideoDisk = async (videoName: string) => {
+    try {
+      // Bit weird we have to check a boolean here given all the error handling
+      // going on. That's just me taking an easy way out rather than fixing this
+      // more elegantly. TL;DR deleteVideoDisk doesn't throw anything.
+      const success = await deleteVideoDisk(videoName);
+
+      if (!success) {
+        throw new Error('Failed deleting video, will mark for delete');
+      }
+    } catch (error) {
+      // If that didn't work for any reason, try to at least mark it for deletion,
+      // so that it can be picked up on refresh and we won't show videos the user
+      // intended to delete
+      console.warn(
+        '[Manager] Failed to directly delete video on disk:',
+        String(error)
+      );
+
+      markForVideoForDelete(videoName);
+    }
+  };
+
+  /**
+   * Delete a video from the cloud, and it's accompanying metadata and thumbnail.
+   */
+  private deleteVideoCloudBulk = async (videos: RendererVideo[]) => {
+    try {
+      assert(this.cloudClient);
+      const names = videos.map((v) => v.videoName);
+      await this.cloudClient.bulkDeleteVideos(names);
+    } catch (error) {
+      // Just log this and quietly swallow it. Nothing more we can do.
+      console.warn('[Manager] Failed to bulk delete', String(error));
     }
   };
 

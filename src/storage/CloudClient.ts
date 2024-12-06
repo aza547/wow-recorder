@@ -13,7 +13,7 @@ import path from 'path';
 import AuthError from '../utils/AuthError';
 
 const devMode = false;
-  // process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+// process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 /**
  * A client for retrieving resources from the cloud.
@@ -129,7 +129,7 @@ export default class CloudClient extends EventEmitter {
   /**
    * Delete a video.
    */
-  public async deleteVideo(videoName: string) {
+  public async deleteVideo(videoName: string, updateMtime = true) {
     console.info('[CloudClient] Deleting video', videoName);
 
     const encGuild = encodeURIComponent(this.bucket);
@@ -156,6 +156,19 @@ export default class CloudClient extends EventEmitter {
     }
 
     console.info('[CloudClient] Deleted', videoName);
+
+    if (updateMtime) {
+      console.info('[CloudClient] Update mtime after deleting:', videoName);
+      await this.updateLastMod();
+    }
+  }
+
+  /**
+   * Delete a set of cloud videos, updating the mtime after we're done.
+   */
+  public async bulkDeleteVideos(videos: string[]) {
+    const promises = videos.map((v) => this.deleteVideo(v, false));
+    await Promise.all(promises);
     await this.updateLastMod();
   }
 
@@ -606,11 +619,23 @@ export default class CloudClient extends EventEmitter {
   private async updateLastMod() {
     const mtime = new Date().getTime().toString();
     console.info('[CloudClient] Updating last mod time to', mtime);
+
     this.bucketLastMod = mtime;
     const encbucket = encodeURIComponent(this.bucket);
     const url = `${this.apiEndpoint}/${encbucket}/mtime/${mtime}`;
     const headers = { Authorization: this.authHeader };
-    await axios.post(url, undefined, { headers });
+
+    const response = await axios.post(url, undefined, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failed to update mtime', status, data);
+      throw new Error('Failed to update mtime');
+    }
   }
 
   /**

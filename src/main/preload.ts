@@ -24,6 +24,7 @@ export type Channels =
   | 'getCloudStatus'
   | 'getDiskStatus'
   | 'deleteVideo'
+  | 'deleteVideosBulk'
   | 'writeClipboard'
   | 'getShareableLink';
 

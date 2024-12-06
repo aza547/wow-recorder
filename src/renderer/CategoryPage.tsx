@@ -75,12 +75,7 @@ const CategoryPage = (props: IProps) => {
 
   const bulkDelete = () => {
     const viewpoints = getAllSelectedViewpoints();
-
-    viewpoints.forEach((v) => {
-      const src = v.cloud ? v.videoName : v.videoSource;
-      window.electron.ipcRenderer.sendMessage('deleteVideo', [src, v.cloud]);
-    });
-
+    window.electron.ipcRenderer.sendMessage('deleteVideosBulk', viewpoints);
     stateManager.current.bulkDeleteVideo(viewpoints);
   };
 
