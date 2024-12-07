@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Pages, RecStatus, AppState, RendererVideo } from 'main/types';
 import { MutableRefObject } from 'react';
+import { ConfigurationSchema } from 'main/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
@@ -14,6 +15,8 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
+  config: ConfigurationSchema;
+  setConfig: React.Dispatch<React.SetStateAction<ConfigurationSchema>>;
 }
 
 /**
@@ -28,6 +31,8 @@ const Layout = (props: IProps) => {
     setAppState,
     persistentProgress,
     playerHeight,
+    config,
+    setConfig,
   } = props;
   const { page, category } = appState;
 
@@ -46,7 +51,13 @@ const Layout = (props: IProps) => {
   };
 
   const renderSettingsPage = () => {
-    return <SettingsPage recorderStatus={recorderStatus} />;
+    return (
+      <SettingsPage
+        recorderStatus={recorderStatus}
+        config={config}
+        setConfig={setConfig}
+      />
+    );
   };
 
   const renderSceneEditor = () => {

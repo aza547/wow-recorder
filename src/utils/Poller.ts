@@ -92,17 +92,23 @@ export default class Poller extends EventEmitter {
       const json = JSON.parse(data);
 
       const { Retail, Classic } = json;
-      const { recordRetail, recordClassic } = this.flavourConfig;
+      const { recordRetail, recordClassic, recordEra } = this.flavourConfig;
 
       const retailCheck = Retail && recordRetail;
       const classicCheck = Classic && recordClassic;
+      const eraCheck = Classic && recordEra;
 
       // We don't care to do anything better in the scenario of multiple
       // processes running. We don't support users multi-boxing.
-      if (!this.isWowRunning && (retailCheck || classicCheck)) {
+      if (!this.isWowRunning && (retailCheck || classicCheck || eraCheck)) {
         this.isWowRunning = true;
         this.emit('wowProcessStart');
-      } else if (this.isWowRunning && !retailCheck && !classicCheck) {
+      } else if (
+        this.isWowRunning &&
+        !retailCheck &&
+        !classicCheck &&
+        !eraCheck
+      ) {
         this.isWowRunning = false;
         this.emit('wowProcessStop');
       }

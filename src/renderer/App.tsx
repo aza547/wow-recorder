@@ -28,7 +28,7 @@ import SideMenu from './SideMenu';
 const ipc = window.electron.ipcRenderer;
 
 const WarcraftRecorder = () => {
-  const [config] = useSettings();
+  const [config, setConfig] = useSettings();
   const [error, setError] = useState<string>('');
   const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
   const [crashes, setCrashes] = useState<Crashes>([]);
@@ -148,7 +148,7 @@ const WarcraftRecorder = () => {
     ipc.on('updateCrashes', updateCrashes);
   }, []);
 
-  // Debugging why we needed this hurt. I think it's because when we call setAppState, it sets 
+  // Debugging why we needed this hurt. I think it's because when we call setAppState, it sets
   // appState to undefined and reassigns it in this component. However that leaves the StateManager
   // singleton with a reference pointing to undefined which breaks the frontend. So here we reapply
   // the appState to the StateManager every time it updates. This is almost certainly massively
@@ -182,6 +182,7 @@ const WarcraftRecorder = () => {
             crashes={crashes}
             upgradeStatus={upgradeStatus}
             savingStatus={savingStatus}
+            config={config}
           />
           <Layout
             recorderStatus={recorderStatus}
@@ -191,6 +192,8 @@ const WarcraftRecorder = () => {
             setAppState={setAppState}
             persistentProgress={persistentProgress}
             playerHeight={playerHeight}
+            config={config}
+            setConfig={setConfig}
           />
         </div>
       </TooltipProvider>

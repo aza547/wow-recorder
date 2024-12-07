@@ -1,6 +1,7 @@
 import { Crashes, MicStatus, RecStatus, SaveStatus } from 'main/types';
 
 import { cn } from 'renderer/components/utils';
+import { ConfigurationSchema } from 'main/configSchema';
 import MicrophoneStatus from './MicStatus';
 import Status from './Status';
 import CrashStatus from './CrashStatus';
@@ -11,6 +12,7 @@ type ApplicationStatusCardProps = {
   micStatus: MicStatus;
   crashes: Crashes;
   savingStatus: SaveStatus;
+  config: ConfigurationSchema;
 };
 
 const ApplicationStatusCard = ({
@@ -19,6 +21,7 @@ const ApplicationStatusCard = ({
   micStatus,
   crashes,
   savingStatus,
+  config,
 }: ApplicationStatusCardProps) => {
   const hasExtraBar = !!(micStatus || crashes?.length);
   return (
@@ -42,6 +45,7 @@ const ApplicationStatusCard = ({
           status={recorderStatus}
           error={error}
           savingStatus={savingStatus}
+          config={config}
         />
       </div>
       <div

@@ -1,6 +1,7 @@
 /* eslint-disable react/require-default-props */
 /* eslint-disable import/prefer-default-export */
 import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
+import { ConfigurationSchema } from 'main/configSchema';
 import { RecStatus, SaveStatus } from 'main/types';
 import React, { useRef } from 'react';
 import { Button } from 'renderer/components/Button/Button';
@@ -14,7 +15,6 @@ import StatusLight, {
   StatusLightProps,
 } from 'renderer/components/StatusLight/StatusLight';
 import { cn } from 'renderer/components/utils';
-import { useSettings } from 'renderer/useSettings';
 
 type StatusInfo = {
   statusTitle: string;
@@ -26,29 +26,34 @@ type StatusProps = {
   status: RecStatus;
   error: string;
   savingStatus: SaveStatus;
+  config: ConfigurationSchema;
 };
 
-const Status = ({ status, error, savingStatus }: StatusProps) => {
+const Status = ({ status, error, savingStatus, config }: StatusProps) => {
   const stopRecording = () => {
     window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
   };
 
-  const [config] = useSettings();
-
   const getConfiguredFlavours = () => {
-    if (config.recordRetail && config.recordClassic) {
-      return 'Retail and Classic';
-    }
+    const flavours: string[] = [];
 
     if (config.recordRetail) {
-      return 'Retail';
+      flavours.push('Retail');
     }
 
     if (config.recordClassic) {
-      return 'Classic';
+      flavours.push('Classic');
     }
 
-    return 'nothing. You likely want to enable retail, classic, or both in the app settings';
+    if (config.recordEra) {
+      flavours.push('Era');
+    }
+
+    if (flavours.length > 0) {
+      return `${flavours.join(', ')}.`;
+    }
+
+    return 'nothing. You likely want to enable some game modes in the game settings tab.';
   };
 
   // The short recording status descriptor used on the status card
@@ -138,6 +143,12 @@ const Status = ({ status, error, savingStatus }: StatusProps) => {
             <li>
               <span className="font-bold">Classic:</span>{' '}
               <code>{config.classicLogPath}</code>
+            </li>
+          )}
+          {config.recordEra && (
+            <li>
+              <span className="font-bold">Era:</span>{' '}
+              <code>{config.eraLogPath}</code>
             </li>
           )}
         </ul>

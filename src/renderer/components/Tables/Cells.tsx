@@ -46,12 +46,12 @@ export const populateDurationCell = (
 export const populateEncounterNameCell = (
   info: CellContext<RendererVideo, unknown>
 ) => {
-  const encounter = info.getValue() as RendererVideo;
+  const encounter = info.getValue() as string;
   return <div className="truncate">{encounter}</div>;
 };
 
 export const populateMapCell = (info: CellContext<RendererVideo, unknown>) => {
-  const map = info.getValue() as RendererVideo;
+  const map = info.getValue() as string;
   return <div className="truncate">{map}</div>;
 };
 
@@ -61,7 +61,7 @@ export const populateDateCell = (info: CellContext<RendererVideo, unknown>) => {
 };
 
 export const populateTagCell = (info: CellContext<RendererVideo, unknown>) => {
-  const tag = info.getValue() as RendererVideo;
+  const tag = info.getValue() as string;
   return <div className="truncate">{tag}</div>;
 };
 

@@ -1,8 +1,8 @@
 import { ConfigurationSchema, configSchema } from 'main/configSchema';
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { RecStatus } from 'main/types';
 import { Info } from 'lucide-react';
-import { setConfigValues, useSettings } from './useSettings';
+import { setConfigValues } from './useSettings';
 import { pathSelect } from './rendererutils';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
@@ -12,13 +12,14 @@ import TextBanner from './components/TextBanner/TextBanner';
 
 interface IProps {
   recorderStatus: RecStatus;
+  config: ConfigurationSchema;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const ipc = window.electron.ipcRenderer;
 
 const FlavourSettings: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus } = props;
-  const [config, setConfig] = useSettings();
+  const { recorderStatus, config, setConfig } = props;
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {

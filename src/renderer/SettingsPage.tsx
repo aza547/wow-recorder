@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { RecStatus } from 'main/types';
+import { ConfigurationSchema } from 'main/configSchema';
 import GeneralSettings from './GeneralSettings';
 import WindowsSettings from './WindowsSettings';
 import FlavourSettings from './FlavourSettings';
@@ -17,6 +18,8 @@ import { ScrollArea } from './components/ScrollArea/ScrollArea';
 
 interface IProps {
   recorderStatus: RecStatus;
+  config: ConfigurationSchema;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
@@ -24,7 +27,7 @@ const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
 );
 
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus } = props;
+  const { recorderStatus, config, setConfig } = props;
 
   return (
     <div className="w-full h-full bg-background-higher pt-[32px] px-4">
@@ -58,7 +61,11 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
               <div>
                 <CategoryHeading>Game Settings</CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <FlavourSettings recorderStatus={recorderStatus} />
+                <FlavourSettings
+                  recorderStatus={recorderStatus}
+                  config={config}
+                  setConfig={setConfig}
+                />
               </div>
               <div>
                 <CategoryHeading>PvE Settings</CategoryHeading>

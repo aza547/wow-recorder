@@ -22,6 +22,7 @@ import {
   UpgradeStatus,
 } from 'main/types';
 import { MutableRefObject, useEffect, useState } from 'react';
+import { ConfigurationSchema } from 'main/configSchema';
 import { VideoCategory } from '../types/VideoCategory';
 import { setConfigValue } from './useSettings';
 import {
@@ -50,6 +51,7 @@ interface IProps {
   crashes: Crashes;
   upgradeStatus: UpgradeStatus;
   savingStatus: SaveStatus;
+  config: ConfigurationSchema;
 }
 
 const SideMenu = (props: IProps) => {
@@ -64,6 +66,7 @@ const SideMenu = (props: IProps) => {
     crashes,
     upgradeStatus,
     savingStatus,
+    config,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
@@ -173,6 +176,7 @@ const SideMenu = (props: IProps) => {
         micStatus={micStatus}
         crashes={crashes}
         savingStatus={savingStatus}
+        config={config}
       />
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"
