@@ -550,11 +550,9 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   // Shadowlands
   377: [43 * 60, 34 * 60 + 25, 25 * 60 + 49],
   378: [32 * 60, 25 * 60 + 36, 19 * 60 + 12],
-  375: [30 * 60, 24 * 60, 18 * 60], // Mists of Tirna Scithe
   379: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
   380: [41 * 60, 32 * 60 + 48, 24 * 60 + 36],
   381: [39 * 60, 31 * 60 + 12, 23 * 60 + 24],
-  376: [32 * 60, 25 * 60 + 36, 19 * 60 + 12], // The Necrotic Wake
   382: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
   227: [42 * 60, 33 * 60 + 36, 25 * 60 + 12],
   234: [35 * 60, 28 * 60, 21 * 60],
@@ -598,12 +596,14 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   // TWW S1
   // Don't have exact timers yet so for now have assumed 0.8 and 0.6 multipliers.
   // https://overgear.com/guides/wow/the-war-within-mythic-guide/.
-  501: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // The Stonevault
-  503: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // Ara-Kara, City of Echoes
-  353: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // Siege of Boralus
-  502: [35 * 60, 35 * 60 * 0.8, 35 * 60 * 0.6], // City of Threads
-  505: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // The Dawnbreaker
-  507: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Grim Batol
+  501: [34 * 60 + 30, 27 * 60 + 54, 21 * 60 + 18], // The Stonevault
+  503: [31 * 60 + 30, 25 * 60 + 30, 19 * 60 + 30], // Ara-Kara, City of Echoes
+  502: [36 * 60 + 30, 29 * 60 + 30, 22 * 60 + 30], // City of Threads
+  505: [32 * 60 + 30, 26 * 60 + 18, 20 * 60 + 6], // The Dawnbreaker
+  507: [35 * 60 + 30, 28 * 60 + 42, 21 * 60 + 54], // Grim Batol
+  353: [34 * 60 + 30, 27 * 60 + 54, 21 * 60 + 18], // Siege of Boralus
+  375: [31 * 60 + 30, 25 * 60 + 30, 19 * 60 + 30], // Mists of Tirna Scithe
+  376: [32 * 60 + 30, 26 * 60 + 18, 20 * 60 + 6], // The Necrotic Wake
 };
 
 // Useful database for grabbing this stuff:
