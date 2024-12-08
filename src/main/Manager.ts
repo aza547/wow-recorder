@@ -993,7 +993,12 @@ export default class Manager {
 
     ipcMain.on('deleteVideosBulk', async (_event, args) => {
       const videos = args as RendererVideo[];
-      this.deleteVideoCloudBulk(videos);
+
+      const cloud = videos.filter((v) => v.cloud);
+      const disk = videos.filter((v) => !v.cloud);
+
+      disk.map((v) => v.videoSource).forEach(this.deleteVideoDisk);
+      this.deleteVideoCloudBulk(cloud);
     });
 
     /**

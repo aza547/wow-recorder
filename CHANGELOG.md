@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix a bug where Classic Era was not recording.
 - Fix a bug where the status card would not update after a game mode config change.
 - Fix a bug where Challenger's Peril wasn't being accounted for in M+ dungeon timers.
+- Fix a bug where bulk deleting videos wouldn't delete disk based videos.
 
 ## [6.2.0] - 2024-12-06
 
