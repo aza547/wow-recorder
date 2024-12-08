@@ -195,7 +195,7 @@ export default class RetailLogHandler extends LogHandler {
 
     const startTime = line.date();
     const level = parseInt(line.arg(4), 10);
-    const affixes = line.arg(5);
+    const affixes = line.arg(5).map(Number);
     const minLevelToRecord = this.cfg.get<number>('minKeystoneLevel');
 
     if (level < minLevelToRecord) {

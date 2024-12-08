@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix a bug where Challenger's Peril wasn't being accounted for in M+ dungeon timers.
+
+## [6.2.1] - 2024-12-08
+### Fixed
 - Fix a bug where Classic Era was not recording.
 - Fix a bug where the status card would not update after a game mode config change.
 
