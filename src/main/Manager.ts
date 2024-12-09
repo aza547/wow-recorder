@@ -998,7 +998,10 @@ export default class Manager {
       const disk = videos.filter((v) => !v.cloud);
 
       disk.map((v) => v.videoSource).forEach(this.deleteVideoDisk);
-      this.deleteVideoCloudBulk(cloud);
+
+      if (cloud.length > 0) {
+        this.deleteVideoCloudBulk(cloud);
+      }
     });
 
     /**

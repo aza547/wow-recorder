@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix a bug where the status card would not update after a game mode config change.
 - Fix a bug where Challenger's Peril wasn't being accounted for in M+ dungeon timers.
 - Fix a bug where bulk deleting videos wouldn't delete disk based videos.
+- Fix a bug where bulk deleting videos when not a Pro user would crash the app.
 
 ## [6.2.0] - 2024-12-06
 
