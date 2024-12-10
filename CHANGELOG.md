@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve responsiveness of viewpoint switching, and retain playing state.
 
 ### Added
+- Add difficulty IDs for Classic Era Phase 6 raids.
 
 ### Fixed
 
