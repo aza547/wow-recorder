@@ -2,7 +2,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
-import { app, BrowserWindow, Display, net, screen } from 'electron';
+import { app, BrowserWindow, ClientRequestConstructorOptions, Display, net, screen } from 'electron';
 import {
   EventType,
   uIOhook,
@@ -438,7 +438,7 @@ const getAvailableDisplays = (): OurDisplayType[] => {
  * new version, sends a message to the main window to display a notification.
  */
 const checkAppUpdate = (mainWindow: BrowserWindow | null = null) => {
-  const options = {
+  const options: ClientRequestConstructorOptions = {
     hostname: 'api.github.com',
     protocol: 'https:',
     path: '/repos/aza547/wow-recorder/releases/latest',
