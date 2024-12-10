@@ -82,9 +82,12 @@ export default function ViewpointInfo(props: IProps) {
     }
 
     setAppState((prevState) => {
+      const playing = sameActivity ? prevState.playing : false;
+
       return {
         ...prevState,
         playingVideo: v,
+        playing,
       };
     });
   };

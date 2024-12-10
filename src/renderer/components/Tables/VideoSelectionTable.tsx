@@ -47,6 +47,7 @@ const VideoSelectionTable = (props: IProps) => {
       return {
         ...prevState,
         playingVideo: povs[0],
+        playing: false,
       };
     });
   };

@@ -62,6 +62,8 @@ const CategoryPage = (props: IProps) => {
         persistentProgress={persistentProgress}
         config={config}
         playerHeight={playerHeight}
+        appState={appState}
+        setAppState={setAppState}
       />
     );
   };

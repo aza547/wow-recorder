@@ -155,6 +155,7 @@ const SideMenu = (props: IProps) => {
         page: Pages.None,
         category: newCategory,
         playingVideo: first,
+        playing: false,
       };
     });
   };

@@ -1,4 +1,5 @@
 import {
+  AppState,
   DeathMarkers,
   RendererVideo,
   SliderMark,
@@ -7,12 +8,13 @@ import {
 } from 'main/types';
 import {
   MutableRefObject,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react';
-import { Box, Slider } from '@mui/material';
+import { Backdrop, Box, CircularProgress, Slider } from '@mui/material';
 import { Resizable } from 're-resizable';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -48,6 +50,8 @@ interface IProps {
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
   config: ConfigurationSchema;
+  appState: AppState;
+  setAppState: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -77,13 +81,19 @@ const sliderSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const { video, persistentProgress, config, playerHeight } = props;
+  const {
+    video,
+    persistentProgress,
+    config,
+    playerHeight,
+    appState,
+    setAppState,
+  } = props;
   const { videoSource, cloud } = video;
 
   const player = useRef<ReactPlayer>(null);
   const progressSlider = useRef<HTMLSpanElement>(null);
 
-  const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);
@@ -95,11 +105,15 @@ export const VideoPlayer = (props: IProps) => {
   // the coloring of the progress slider remains correct across a resize.
   const [, setWidth] = useState<number>(0);
 
+  // We show a progress spinner until the video is ready to play.
+  const [spinner, setSpinner] = useState<boolean>(true);
+
   // On the initial seek we will attempt to resume playback from the
   // persistentProgress prop. The ideas is that when switching between
   // different POVs of the same activity we want to play from the same
   // point.
-  let initialSeek = false;
+  const timestamp = `#t=${persistentProgress.current}`;
+  const src = useRef<string>(videoSource + timestamp);
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -111,6 +125,18 @@ export const VideoPlayer = (props: IProps) => {
 
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
+
+  const setPlaying = useCallback(
+    (v: boolean) => {
+      setAppState((prevState) => {
+        return {
+          ...prevState,
+          playing: v,
+        };
+      });
+    },
+    [setAppState]
+  );
 
   /**
    * Return a death marker appropriate for the MUI slider component.
@@ -378,10 +404,7 @@ export const VideoPlayer = (props: IProps) => {
       return;
     }
 
-    if (!initialSeek) {
-      player.current.seekTo(persistentProgress.current, 'seconds');
-      initialSeek = true;
-    }
+    setSpinner(false);
 
     if (duration > 0) {
       return;
@@ -513,25 +536,41 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderPlayer = () => {
     return (
-      <ReactPlayer
-        id="react-player"
-        ref={player}
-        height="calc(100% - 40px)"
-        width="100%"
-        url={videoSource}
-        style={style}
-        playing={playing}
-        volume={volume}
-        muted={muted}
-        playbackRate={playbackRate}
-        progressInterval={progressInterval}
-        onProgress={onProgress}
-        onClick={togglePlaying}
-        onDoubleClick={toggleFullscreen}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onReady={onReady}
-      />
+      <>
+        <ReactPlayer
+          id="react-player"
+          ref={player}
+          height="calc(100% - 40px)"
+          width="100%"
+          url={src.current}
+          style={style}
+          playing={appState.playing}
+          volume={volume}
+          muted={muted}
+          playbackRate={playbackRate}
+          progressInterval={progressInterval}
+          onProgress={onProgress}
+          onClick={togglePlaying}
+          onDoubleClick={toggleFullscreen}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onReady={onReady}
+        />
+        <Backdrop
+          sx={{
+            position: 'absolute', // Absolute within the parent container
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 1, // Make sure it's above the content
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+          open={spinner}
+        >
+          <CircularProgress color="inherit" />
+        </Backdrop>
+      </>
     );
   };
 
@@ -541,8 +580,10 @@ export const VideoPlayer = (props: IProps) => {
   const renderPlayPause = () => {
     return (
       <Button variant="ghost" size="xs" onClick={togglePlaying}>
-        {playing && <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />}
-        {!playing && (
+        {appState.playing && (
+          <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />
+        )}
+        {!appState.playing && (
           <PlayArrowIcon sx={{ color: 'white', fontSize: '22px' }} />
         )}
       </Button>

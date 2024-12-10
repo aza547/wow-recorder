@@ -105,9 +105,12 @@ export default function ViewpointSelection(props: IProps) {
       }
 
       setAppState((prevState) => {
+        const playing = sameActivity ? prevState.playing : false;
+
         return {
           ...prevState,
           playingVideo: selection,
+          playing,
         };
       });
     };

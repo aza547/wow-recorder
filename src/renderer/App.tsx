@@ -81,6 +81,9 @@ const WarcraftRecorder = () => {
 
     // We use this to conditionally hide the recording preview.
     videoFullScreen: false,
+
+    // This allows us to retain the playing state of the video when switching viewpoints.
+    playing: false,
   });
 
   // The video state contains most of the frontend state, it's complex so

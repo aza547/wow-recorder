@@ -316,6 +316,7 @@ type AppState = {
   playingVideo: RendererVideo | undefined; // the video being played by the player
   videoFilterQuery: string;
   videoFullScreen: boolean;
+  playing: boolean;
 };
 
 type TPreviewPosition = {

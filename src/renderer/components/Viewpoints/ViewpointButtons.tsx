@@ -193,6 +193,7 @@ export default function ViewpointButtons(props: IProps) {
       return {
         ...prevState,
         playingVideo: undefined,
+        playing: false,
       };
     });
   };
