@@ -6,13 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.3.0] - 2024-12-12
+### Changed
 - Improve responsiveness of viewpoint switching, and retain playing state.
 - Update Electron from version 24.4.0 to 33.2.0, and other related packages.
 
 ### Added
 - Add difficulty IDs for Classic Era Phase 6 raids.
 
-### Fixed
 
 ## [6.2.1] - 2024-12-08
 ### Fixed
