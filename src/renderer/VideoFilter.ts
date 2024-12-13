@@ -115,10 +115,12 @@ export default class VideoFilter {
    */
   private setProtectedFilter(video: RendererVideo) {
     if (video.isProtected) {
+      this.addStringFilter('starred');
       this.addStringFilter('bookmarked');
       this.addStringFilter('saved');
       this.addStringFilter('protected');
-      this.addStringFilter('favourited favorited');
+      this.addStringFilter('favorited');
+      this.addStringFilter('favourited');
     }
   }
 
