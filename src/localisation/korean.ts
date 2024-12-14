@@ -199,6 +199,47 @@ const KOREAN: Translations = {
   [Phrase.HorizontalLabel]: '샘플 텍스트',
   [Phrase.VerticalLabel]: '샘플 텍스트',
   [Phrase.ScaleLabel]: '샘플 텍스트',
+
+  [Phrase.TableHeaderEncounter]: '샘플 텍스트',
+  [Phrase.TableHeaderResult]: '샘플 텍스트',
+  [Phrase.TableHeaderPull]: '샘플 텍스트',
+  [Phrase.TableHeaderDifficulty]: '샘플 텍스트',
+  [Phrase.TableHeaderDuration]: '샘플 텍스트',
+  [Phrase.TableHeaderDate]: '샘플 텍스트',
+  [Phrase.TableHeaderViewpoints]: '샘플 텍스트',
+  [Phrase.TableHeaderMap]: '샘플 텍스트',
+  [Phrase.TableHeaderType]: '샘플 텍스트',
+  [Phrase.TableHeaderTag]: '샘플 텍스트',
+
+  [Phrase.SearchLabel]: '샘플 텍스트',
+  [Phrase.SearchSuggestionMythicPlus]: '샘플 텍스트',
+  [Phrase.SearchSuggestionRaid]: '샘플 텍스트',
+  [Phrase.SearchSuggestionBattlegrounds]: '샘플 텍스트',
+  [Phrase.SearchSuggestionSoloShuffle]: '샘플 텍스트',
+  [Phrase.SearchSuggestionDefault]: '샘플 텍스트',
+
+  [Phrase.ShowRoundsLabel]: '샘플 텍스트',
+  [Phrase.ShowDeathsLabel]: '샘플 텍스트',
+  [Phrase.ShowEncountersLabel]: '샘플 텍스트',
+
+  [Phrase.FullScreenTooltip]: '샘플 텍스트',
+  [Phrase.PlaybackSpeedTooltip]: '샘플 텍스트',
+  [Phrase.ClipTooltip]: '샘플 텍스트',
+  [Phrase.ClipUnavailableTooltip]: '샘플 텍스트',
+  [Phrase.ConfirmTooltip]: '샘플 텍스트',
+  [Phrase.CancelTooltip]: '샘플 텍스트',
+
+  [Phrase.TagButtonTooltip]: '샘플 텍스트',
+  [Phrase.StarButtonTooltip]: '샘플 텍스트',
+  [Phrase.UnstarButtonTooltip]: '샘플 텍스트',
+  [Phrase.OpenFolderButtonTooltip]: '샘플 텍스트',
+  [Phrase.DeleteButtonTooltip]: '샘플 텍스트',
+  [Phrase.BulkDeleteButtonTooltip]: '샘플 텍스트',
+  [Phrase.ShareLinkButtonTooltip]: '샘플 텍스트',
+  [Phrase.CloudButtonTooltip]: '샘플 텍스트',
+  [Phrase.DiskButtonTooltip]: '샘플 텍스트',
+  [Phrase.UploadButtonTooltip]: '샘플 텍스트',
+  [Phrase.DownloadButtonTooltip]: '샘플 텍스트',
 };
 
 export default KOREAN;

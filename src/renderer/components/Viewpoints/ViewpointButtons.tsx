@@ -9,6 +9,7 @@ import {
   faMessage as faMessageOutline,
 } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { povDiskFirstNameSort, stopPropagation } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
@@ -64,7 +65,8 @@ export default function ViewpointButtons(props: IProps) {
   const getTagButton = () => {
     const { tag } = videoToShow;
 
-    let tagTooltip: string = tag || 'Add a tag';
+    let tagTooltip: string =
+      tag || getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
 
     if (tagTooltip.length > 50) {
       tagTooltip = `${tagTooltip.slice(0, 50)}...`;
@@ -103,7 +105,13 @@ export default function ViewpointButtons(props: IProps) {
 
   const getProtectVideoButton = () => {
     return (
-      <Tooltip content={isProtected ? 'Age out' : 'Never age out'}>
+      <Tooltip
+        content={
+          isProtected
+            ? getLocalePhrase(appState.language, Phrase.UnstarButtonTooltip)
+            : getLocalePhrase(appState.language, Phrase.StarButtonTooltip)
+        }
+      >
         <Button
           onMouseDown={stopPropagation}
           onClick={protectVideo}
@@ -143,7 +151,12 @@ export default function ViewpointButtons(props: IProps) {
 
   const getShareLinkButton = () => {
     return (
-      <Tooltip content="Get shareable link">
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.ShareLinkButtonTooltip
+        )}
+      >
         <Button
           onMouseDown={stopPropagation}
           onClick={getShareableLink}
@@ -168,7 +181,12 @@ export default function ViewpointButtons(props: IProps) {
 
   const getOpenButton = () => {
     return (
-      <Tooltip content="Open location">
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.OpenFolderButtonTooltip
+        )}
+      >
         <Button
           onMouseDown={stopPropagation}
           onClick={openLocation}
@@ -210,7 +228,10 @@ export default function ViewpointButtons(props: IProps) {
     return (
       <DeleteDialog
         onDelete={(e) => deleteVideo(e)}
-        tooltipContent="Delete"
+        tooltipContent={getLocalePhrase(
+          appState.language,
+          Phrase.DeleteButtonTooltip
+        )}
         skipPossible
       >
         <Button

@@ -4,6 +4,7 @@ enum Phrase {
   SetupInstructions,
   ClipsDisplayedHere,
   NoClipsSaved,
+
   StoragePathDescription,
   SeparateBufferPathDescription,
   BufferStoragePathDescription,
@@ -195,11 +196,52 @@ enum Phrase {
   HorizontalLabel,
   VerticalLabel,
   ScaleLabel,
+
+  TableHeaderEncounter,
+  TableHeaderResult,
+  TableHeaderPull,
+  TableHeaderDifficulty,
+  TableHeaderDuration,
+  TableHeaderDate,
+  TableHeaderViewpoints,
+  TableHeaderMap,
+  TableHeaderType,
+  TableHeaderTag,
+
+  SearchLabel,
+  SearchSuggestionMythicPlus,
+  SearchSuggestionRaid,
+  SearchSuggestionBattlegrounds,
+  SearchSuggestionSoloShuffle,
+  SearchSuggestionDefault,
+
+  ShowDeathsLabel,
+  ShowEncountersLabel,
+  ShowRoundsLabel,
+
+  FullScreenTooltip,
+  PlaybackSpeedTooltip,
+  ClipTooltip,
+  ClipUnavailableTooltip,
+  ConfirmTooltip,
+  CancelTooltip,
+
+  TagButtonTooltip,
+  StarButtonTooltip,
+  UnstarButtonTooltip,
+  OpenFolderButtonTooltip,
+  DeleteButtonTooltip,
+  BulkDeleteButtonTooltip,
+  ShareLinkButtonTooltip,
+  CloudButtonTooltip,
+  DiskButtonTooltip,
+  UploadButtonTooltip,
+  DownloadButtonTooltip,
 }
 
 enum Language {
   ENGLISH = 'English',
-  KOREAN = 'Korean',
+  KOREAN = '한글',
 }
 
 type Translations = {

@@ -1,7 +1,9 @@
 import { VideoCategory } from 'types/VideoCategory';
 import { useEffect, useRef } from 'react';
 import { ConfigurationSchema } from 'main/configSchema';
-import { DeathMarkers } from 'main/types';
+import { AppState, DeathMarkers } from 'main/types';
+import { getLocalePhrase } from 'localisation/translations';
+import { Phrase } from 'localisation/types';
 import { setConfigValues } from './useSettings';
 import {
   convertNumToDeathMarkers,
@@ -17,11 +19,12 @@ interface IProps {
   config: ConfigurationSchema;
   setConfig: React.Dispatch<React.SetStateAction<ConfigurationSchema>>;
   category: VideoCategory;
+  appState: AppState;
 }
 
 const VideoMarkerToggles = (props: IProps) => {
   const initialRender = useRef(true);
-  const { category, config, setConfig } = props;
+  const { category, config, setConfig, appState } = props;
   const deathMarkers = convertNumToDeathMarkers(config.deathMarkers);
 
   useEffect(() => {
@@ -70,7 +73,9 @@ const VideoMarkerToggles = (props: IProps) => {
   const renderDeathSelection = () => {
     return (
       <div>
-        <Label>Show deaths</Label>
+        <Label>
+          {getLocalePhrase(appState.language, Phrase.ShowDeathsLabel)}
+        </Label>
         <ToggleGroup
           type="single"
           value={deathMarkers}
@@ -95,7 +100,9 @@ const VideoMarkerToggles = (props: IProps) => {
   const renderEncounterSelection = () => {
     return (
       <div>
-        <Label>Show Encounters</Label>
+        <Label>
+          {getLocalePhrase(appState.language, Phrase.ShowEncountersLabel)}
+        </Label>
         <ToggleGroup
           type="single"
           value={config.encounterMarkers.toString()}
@@ -113,7 +120,9 @@ const VideoMarkerToggles = (props: IProps) => {
   const renderRoundSelection = () => {
     return (
       <div>
-        <Label>Show Rounds</Label>
+        <Label>
+          {getLocalePhrase(appState.language, Phrase.ShowRoundsLabel)}
+        </Label>
         <ToggleGroup
           type="single"
           value={config.roundMarkers.toString()}

@@ -253,7 +253,7 @@ const ChatOverlayControls = (props: IProps) => {
     return (
       <div className="flex gap-x-3 items-center">
         <Label className="flex items-center h-[20px] w-[40px] mb-0">
-          Scale
+          {getLocalePhrase(appState.language, Phrase.ScaleLabel)}
         </Label>
         <div className="flex w-48 h-[20px] items-center">
           <Slider

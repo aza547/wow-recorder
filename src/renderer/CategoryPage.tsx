@@ -106,6 +106,7 @@ const CategoryPage = (props: IProps) => {
               category={category}
               config={config}
               setConfig={setConfig}
+              appState={appState}
             />
           )}
           <div className="flex-grow">
@@ -114,7 +115,10 @@ const CategoryPage = (props: IProps) => {
           <div className="pt-6">
             <DeleteDialog
               onDelete={() => bulkDelete(unprot)}
-              tooltipContent="Delete selected"
+              tooltipContent={getLocalePhrase(
+                appState.language,
+                Phrase.BulkDeleteButtonTooltip
+              )}
               warning={deleteWarning}
               skipPossible={false}
             >

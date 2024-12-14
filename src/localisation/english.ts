@@ -199,6 +199,47 @@ const ENGLISH: Translations = {
   [Phrase.HorizontalLabel]: 'Horizontal',
   [Phrase.VerticalLabel]: 'Vertical',
   [Phrase.ScaleLabel]: 'Scale',
+
+  [Phrase.TableHeaderEncounter]: 'Encounter',
+  [Phrase.TableHeaderResult]: 'Result',
+  [Phrase.TableHeaderPull]: 'Pull',
+  [Phrase.TableHeaderDifficulty]: 'Difficulty',
+  [Phrase.TableHeaderDuration]: 'Duration',
+  [Phrase.TableHeaderDate]: 'Date',
+  [Phrase.TableHeaderViewpoints]: 'Viewpoints',
+  [Phrase.TableHeaderMap]: 'Map',
+  [Phrase.TableHeaderType]: 'Type',
+  [Phrase.TableHeaderTag]: 'Tag',
+
+  [Phrase.SearchLabel]: 'Search',
+  [Phrase.SearchSuggestionMythicPlus]: 'Try: timed temple yesterday +18 priest bookmarked fortified',
+  [Phrase.SearchSuggestionRaid]: 'Try: kill today retail mythic destruction bookmarked',
+  [Phrase.SearchSuggestionBattlegrounds]: 'Try: warsong gulch bookmarked',
+  [Phrase.SearchSuggestionSoloShuffle]: 'Try: dalaran 6-0 bookmarked',
+  [Phrase.SearchSuggestionDefault]: 'Try: win enigma crucible arcane bookmarked',
+
+  [Phrase.ShowRoundsLabel]: 'Show Rounds',
+  [Phrase.ShowDeathsLabel]: 'Show Deaths',
+  [Phrase.ShowEncountersLabel]: 'Show Encounters',
+
+  [Phrase.FullScreenTooltip]: 'Fullscreen',
+  [Phrase.PlaybackSpeedTooltip]: 'Playback Speed',
+  [Phrase.ClipTooltip]: 'Clip',
+  [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos',
+  [Phrase.ConfirmTooltip]: 'Confirm',
+  [Phrase.CancelTooltip]: 'Cancel',
+
+  [Phrase.TagButtonTooltip]: 'Add a tag',
+  [Phrase.StarButtonTooltip]: 'Never age out',
+  [Phrase.UnstarButtonTooltip]: 'Age out',
+  [Phrase.OpenFolderButtonTooltip]: 'Open location',
+  [Phrase.DeleteButtonTooltip]: 'Delete',
+  [Phrase.BulkDeleteButtonTooltip]: 'Delete selected',
+  [Phrase.ShareLinkButtonTooltip]: 'Get shareable link',
+  [Phrase.CloudButtonTooltip]: 'Use cloud version',
+  [Phrase.DiskButtonTooltip]: 'Use local disk version',
+  [Phrase.UploadButtonTooltip]: 'Upload to cloud',
+  [Phrase.DownloadButtonTooltip]: 'Download to disk',
 };
 
 export default ENGLISH;

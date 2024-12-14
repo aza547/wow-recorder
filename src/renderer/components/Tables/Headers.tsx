@@ -1,5 +1,7 @@
 import { Checkbox } from '@mui/material';
 import { HeaderContext } from '@tanstack/react-table';
+import { getLocalePhrase } from 'localisation/translations';
+import { Language, Phrase } from 'localisation/types';
 import {
   CalendarDays,
   Eye,
@@ -13,80 +15,80 @@ import {
 } from 'lucide-react';
 import { RendererVideo } from 'main/types';
 
-export const EncounterHeader = () => (
+export const EncounterHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Gamepad2 />
-    Encounter
+    {getLocalePhrase(language, Phrase.TableHeaderEncounter)}
   </span>
 );
 
-export const ResultHeader = () => (
+export const ResultHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Trophy />
-    Result
+    {getLocalePhrase(language, Phrase.TableHeaderResult)}
   </span>
 );
 
-export const PullHeader = () => (
+export const PullHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Hash />
-    Pull
+    {getLocalePhrase(language, Phrase.TableHeaderPull)}
   </span>
 );
 
-export const DifficultyHeader = () => (
+export const DifficultyHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Swords />
-    Difficulty
+    {getLocalePhrase(language, Phrase.TableHeaderDifficulty)}
   </span>
 );
 
-export const DurationHeader = () => (
+export const DurationHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Hourglass />
-    Duration
+    {getLocalePhrase(language, Phrase.TableHeaderDuration)}
   </span>
 );
 
-export const DateHeader = () => (
+export const DateHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <CalendarDays />
-    Date
+    {getLocalePhrase(language, Phrase.TableHeaderDate)}
   </span>
 );
 
-export const ViewpointsHeader = () => (
+export const ViewpointsHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Eye />
-    Viewpoints
+    {getLocalePhrase(language, Phrase.TableHeaderViewpoints)}
   </span>
 );
 
-export const MapHeader = () => (
+export const MapHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <MapPinned />
-    Map
+    {getLocalePhrase(language, Phrase.TableHeaderMap)}
   </span>
 );
 
-export const LevelHeader = () => (
+export const LevelHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Swords />
-    Difficulty
+    {getLocalePhrase(language, Phrase.TableHeaderDifficulty)}
   </span>
 );
 
-export const TypeHeader = () => (
+export const TypeHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Gamepad2 />
-    Type
+    {getLocalePhrase(language, Phrase.TableHeaderType)}
   </span>
 );
 
-export const TagHeader = () => (
+export const TagHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <MessageSquare />
-    Tag
+    {getLocalePhrase(language, Phrase.TableHeaderTag)}
   </span>
 );
 

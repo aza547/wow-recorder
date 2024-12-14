@@ -7,6 +7,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import { useSettings } from 'renderer/useSettings';
 import { CloudDownload, CloudUpload } from 'lucide-react';
 import { MutableRefObject } from 'react';
+import { getLocalePhrase } from 'localisation/translations';
+import { Phrase } from 'localisation/types';
 import { ToggleGroup, ToggleGroupItem } from '../ToggleGroup/ToggleGroup';
 import {
   getPlayerClass,
@@ -98,7 +100,12 @@ export default function ViewpointInfo(props: IProps) {
 
   const getDownloadButton = () => {
     return (
-      <Tooltip content="Download to disk">
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.DownloadButtonTooltip
+        )}
+      >
         <ToggleGroupItem
           value="cloud"
           onClick={downloadVideo}
@@ -116,7 +123,9 @@ export default function ViewpointInfo(props: IProps) {
 
   const getUploadButton = () => {
     return (
-      <Tooltip content="Upload to cloud">
+      <Tooltip
+        content={getLocalePhrase(appState.language, Phrase.UploadButtonTooltip)}
+      >
         <ToggleGroupItem
           value="cloud"
           onClick={uploadVideo}
@@ -141,7 +150,9 @@ export default function ViewpointInfo(props: IProps) {
     }
 
     return (
-      <Tooltip content="Use cloud version">
+      <Tooltip
+        content={getLocalePhrase(appState.language, Phrase.CloudButtonTooltip)}
+      >
         <ToggleGroupItem
           value="cloud"
           disabled={!cloudVideo}
@@ -174,7 +185,9 @@ export default function ViewpointInfo(props: IProps) {
     }
 
     return (
-      <Tooltip content="Use local disk version">
+      <Tooltip
+        content={getLocalePhrase(appState.language, Phrase.DiskButtonTooltip)}
+      >
         <ToggleGroupItem
           value="disk"
           disabled={!diskVideo}

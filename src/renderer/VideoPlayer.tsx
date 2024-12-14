@@ -30,6 +30,7 @@ import { OnProgressProps } from 'react-player/base';
 import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
 import { ConfigurationSchema } from 'main/configSchema';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import DeathIcon from '../../assets/icon/death.png';
 import {
   convertNumToDeathMarkers,
@@ -650,7 +651,12 @@ export const VideoPlayer = (props: IProps) => {
     const playbackRateText = `${playbackRate}x`;
 
     return (
-      <Tooltip content="Playback Speed">
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.PlaybackSpeedTooltip
+        )}
+      >
         <Button variant="ghost" size="xs" onClick={handleRateChange}>
           {playbackRateText}
         </Button>
@@ -663,7 +669,9 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderClipButton = () => {
     const color = cloud ? 'rgba(239, 239, 240, 0.25)' : 'white';
-    const tooltip = cloud ? 'You can only clip locally saved videos' : 'Clip';
+    const tooltip = cloud
+      ? getLocalePhrase(appState.language, Phrase.ClipUnavailableTooltip)
+      : getLocalePhrase(appState.language, Phrase.ClipTooltip);
 
     return (
       <Tooltip content={tooltip}>
@@ -698,7 +706,9 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderClipFinishedButton = () => {
     return (
-      <Tooltip content="Confirm">
+      <Tooltip
+        content={getLocalePhrase(appState.language, Phrase.ConfirmTooltip)}
+      >
         <Button variant="ghost" size="xs" onClick={doClip}>
           <DoneIcon sx={{ color: 'white' }} />
         </Button>
@@ -708,7 +718,9 @@ export const VideoPlayer = (props: IProps) => {
 
   const renderClipCancelButton = () => {
     return (
-      <Tooltip content="Cancel">
+      <Tooltip
+        content={getLocalePhrase(appState.language, Phrase.CancelTooltip)}
+      >
         <Button variant="ghost" size="xs" onClick={() => setClipMode(false)}>
           <ClearIcon sx={{ color: 'white' }} />
         </Button>
@@ -721,7 +733,9 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderFullscreenButton = () => {
     return (
-      <Tooltip content="Fullscreen">
+      <Tooltip
+        content={getLocalePhrase(appState.language, Phrase.FullScreenTooltip)}
+      >
         <Button variant="ghost" size="xs" onClick={toggleFullscreen}>
           <FullscreenIcon sx={{ color: 'white' }} />
         </Button>
