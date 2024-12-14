@@ -2,7 +2,7 @@ import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'main/configSchema';
 import { Info } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
-import { getLocalePhrase, Language } from 'localisation/translations';
+import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 import { AppState } from 'main/types';
 import {
   Select,
@@ -66,7 +66,7 @@ const WindowsSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
-          Language
+          {getLocalePhrase(appState.language, Phrase.LanguageLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
