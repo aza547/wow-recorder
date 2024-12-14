@@ -1,8 +1,10 @@
 /* eslint-disable react/require-default-props */
 /* eslint-disable import/prefer-default-export */
+import { getLocalePhrase } from 'localisation/translations';
+import { Phrase } from 'localisation/types';
 import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
 import { ConfigurationSchema } from 'main/configSchema';
-import { RecStatus, SaveStatus } from 'main/types';
+import { AppState, RecStatus, SaveStatus } from 'main/types';
 import React, { useRef } from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import {
@@ -27,9 +29,16 @@ type StatusProps = {
   error: string;
   savingStatus: SaveStatus;
   config: ConfigurationSchema;
+  appState: AppState;
 };
 
-const Status = ({ status, error, savingStatus, config }: StatusProps) => {
+const Status = ({
+  status,
+  error,
+  savingStatus,
+  config,
+  appState,
+}: StatusProps) => {
   const stopRecording = () => {
     window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
   };
@@ -38,33 +47,57 @@ const Status = ({ status, error, savingStatus, config }: StatusProps) => {
     const flavours: string[] = [];
 
     if (config.recordRetail) {
-      flavours.push('Retail');
+      const s = getLocalePhrase(appState.language, Phrase.Retail);
+      flavours.push(s);
     }
 
     if (config.recordClassic) {
-      flavours.push('Classic');
+      const s = getLocalePhrase(appState.language, Phrase.Classic);
+      flavours.push(s);
     }
 
     if (config.recordEra) {
-      flavours.push('Era');
+      const s = getLocalePhrase(appState.language, Phrase.Era);
+      flavours.push(s);
     }
 
     if (flavours.length > 0) {
       return `${flavours.join(', ')}.`;
     }
 
-    return 'nothing. You likely want to enable some game modes in the game settings tab.';
+    return getLocalePhrase(appState.language, Phrase.StatusDescriptionNothing);
   };
 
   // The short recording status descriptor used on the status card
   const RecStatusTitle: Record<RecStatus, string> = {
-    [RecStatus.Recording]: 'Recording',
-    [RecStatus.WaitingForWoW]: 'Waiting',
-    [RecStatus.InvalidConfig]: 'Invalid',
-    [RecStatus.ReadyToRecord]: 'Ready',
-    [RecStatus.FatalError]: 'Error',
-    [RecStatus.Overrunning]: 'Overrunning',
-    [RecStatus.Reconfiguring]: 'Reconfiguring',
+    [RecStatus.Recording]: getLocalePhrase(
+      appState.language,
+      Phrase.StatusTitleRecording
+    ),
+    [RecStatus.WaitingForWoW]: getLocalePhrase(
+      appState.language,
+      Phrase.StatusTitleWaiting
+    ),
+    [RecStatus.InvalidConfig]: getLocalePhrase(
+      appState.language,
+      Phrase.StatusTitleInvalid
+    ),
+    [RecStatus.ReadyToRecord]: getLocalePhrase(
+      appState.language,
+      Phrase.StatusTitleReady
+    ),
+    [RecStatus.FatalError]: getLocalePhrase(
+      appState.language,
+      Phrase.StatusTitleFatalError
+    ),
+    [RecStatus.Overrunning]: getLocalePhrase(
+      appState.language,
+      Phrase.StatusTitleOverrunning
+    ),
+    [RecStatus.Reconfiguring]: getLocalePhrase(
+      appState.language,
+      Phrase.StatusTitleReconfiguring
+    ),
   };
 
   // The variant applied to the StatusLight on the card, for each status
@@ -84,17 +117,21 @@ const Status = ({ status, error, savingStatus, config }: StatusProps) => {
     [RecStatus.Recording]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          Warcraft Recorder is currently recording
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionRecording
+          )}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          You can force the recording to end. Normally this should not be
-          required. This can help end a failed Mythic+ run that would otherwise
-          need a few minutes to wrap up.
+          {getLocalePhrase(appState.language, Phrase.StatusDescriptionForceEnd)}
         </p>
         <div className="flex w-full justify-end">
           <Button size="sm" onClick={stopRecording} className="mt-2 w-1/3">
-            Force Stop
+            {getLocalePhrase(
+              appState.language,
+              Phrase.StatusButtonForceEndLabel
+            )}
           </Button>
         </div>
       </div>
@@ -102,22 +139,32 @@ const Status = ({ status, error, savingStatus, config }: StatusProps) => {
     [RecStatus.WaitingForWoW]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          Waiting for World of Warcraft to start
+          {getLocalePhrase(appState.language, Phrase.StatusDescriptionWaiting)}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          Warcraft Recorder is configured to record {getConfiguredFlavours()}
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionConfiguredToRecord
+          )}{' '}
+          {getConfiguredFlavours()}
         </p>
       </div>
     ),
     [RecStatus.InvalidConfig]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          Warcraft Recorder is misconfigured
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionMisconfigured
+          )}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          Please resolve the error below
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionPleaseResolve
+          )}
         </p>
         <p className="text-xs text-error-text">{error}</p>
       </div>
@@ -125,54 +172,82 @@ const Status = ({ status, error, savingStatus, config }: StatusProps) => {
     [RecStatus.ReadyToRecord]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          Detected World of Warcraft is running
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionDetectedRunning
+          )}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          Warcraft Recorder is waiting for a recordable event to appear in the
-          combat log. Watching log paths:
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionWatchingLogs
+          )}
+          {': '}
         </p>
         <ul className="text-xs text-popover-foreground/60 list-disc pl-4">
           {config.recordRetail && (
             <li>
-              <span className="font-bold">Retail:</span>{' '}
+              <span className="font-bold">
+                {getLocalePhrase(appState.language, Phrase.Retail)}
+                {': '}
+              </span>
               <code>{config.retailLogPath}</code>
             </li>
           )}
           {config.recordClassic && (
             <li>
-              <span className="font-bold">Classic:</span>{' '}
+              <span className="font-bold">
+                {getLocalePhrase(appState.language, Phrase.Classic)}
+                {': '}
+              </span>
               <code>{config.classicLogPath}</code>
             </li>
           )}
           {config.recordEra && (
             <li>
-              <span className="font-bold">Era:</span>{' '}
+              <span className="font-bold">
+                {getLocalePhrase(appState.language, Phrase.Era)}
+                {': '}
+              </span>
               <code>{config.eraLogPath}</code>
             </li>
           )}
         </ul>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          <span className="font-bold">Tip</span>: If recordings do not start,
-          check your logging settings in-game and confirm your log path
-          configuration is correct.
+          <span className="font-bold">
+            {getLocalePhrase(appState.language, Phrase.StatusDescriptionTip)}
+            {': '}
+          </span>
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionIfNoRecording
+          )}
         </p>
       </div>
     ),
     [RecStatus.FatalError]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          Warcraft Recorder has hit a fatal error
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionFatalError
+          )}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          Please try to resolve the error below, then restart the application.
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionPleaseResolve
+          )}
         </p>
         <p className="text-xs text-error-text">{error}</p>
         <p className="text-xs text-popover-foreground/60">
-          If this problem is recurring, please ask for help in Discord. See the
-          pins in the #help channel for advice on getting help.
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionIfRecurring
+          )}
         </p>
       </div>
     ),
@@ -181,8 +256,10 @@ const Status = ({ status, error, savingStatus, config }: StatusProps) => {
         <h2 className="text-sm font-semibold">Overrunning ...</h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          Warcraft Recorder has detected an activity has completed successfuly
-          and is recording a few seconds extra to catch the aftermath.
+          {getLocalePhrase(
+            appState.language,
+            Phrase.StatusDescriptionOverrunning
+          )}
         </p>
       </div>
     ),
@@ -261,7 +338,7 @@ const Status = ({ status, error, savingStatus, config }: StatusProps) => {
           />
           <div className="ml-4 py-2 font-sans flex flex-col justify-around">
             <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
-              Status
+              {getLocalePhrase(appState.language, Phrase.StatusHeading)}
             </span>
 
             <span

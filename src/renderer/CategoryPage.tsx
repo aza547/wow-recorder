@@ -86,16 +86,30 @@ const CategoryPage = (props: IProps) => {
     const prot = viewpoints.filter((v) => v.isProtected);
     const unprot = viewpoints.filter((v) => !v.isProtected);
 
-    let deleteWarning = `This will permanently delete ${
-      unprot.length
-    } recording${unprot.length > 1 ? 's' : ''}. `;
+    let deleteWarning = `${getLocalePhrase(
+      appState.language,
+      Phrase.ThisWillPermanentlyDelete
+    )} ${unprot.length} ${getLocalePhrase(
+      appState.language,
+      Phrase.RecordingsFullStop
+    )}`;
 
     if (prot.length > 0) {
-      deleteWarning += `The selection includes ${
-        prot.length
-      } starred recording${
-        prot.length > 1 ? 's' : ''
-      } which will not be deleted.`;
+      deleteWarning += ' ';
+
+      deleteWarning += getLocalePhrase(
+        appState.language,
+        Phrase.ThisSelectionIncludes
+      );
+
+      deleteWarning += ' ';
+      deleteWarning += prot.length;
+      deleteWarning += ' ';
+
+      deleteWarning += getLocalePhrase(
+        appState.language,
+        Phrase.StarredRecordingNotDeleted
+      );
     }
 
     return (
@@ -121,6 +135,7 @@ const CategoryPage = (props: IProps) => {
               )}
               warning={deleteWarning}
               skipPossible={false}
+              appState={appState}
             >
               <Button
                 variant="ghost"

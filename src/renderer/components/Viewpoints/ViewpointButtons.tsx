@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useEffect, useState } from 'react';
-import { FolderOpen, Link as Link1, PackageX, Trash } from 'lucide-react';
+import { FolderOpen, Link as Link1, Trash } from 'lucide-react';
 import { faMessage, faStar } from '@fortawesome/free-solid-svg-icons';
 import {
   faStar as faStarOutline,
@@ -233,6 +233,7 @@ export default function ViewpointButtons(props: IProps) {
           Phrase.DeleteButtonTooltip
         )}
         skipPossible
+        appState={appState}
       >
         <Button
           onMouseDown={stopPropagation}

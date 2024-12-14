@@ -13,6 +13,7 @@ import {
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { ArrowBigDownDash } from 'lucide-react';
+import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import './App.css';
@@ -44,28 +45,6 @@ const WarcraftRecorder = () => {
     link: undefined,
   });
 
-  useEffect(() => {
-    if (upgradeNotified.current) return;
-
-    if (upgradeStatus.available) {
-      toast({
-        title: 'Update available!',
-        description:
-          'There is an update available for Warcraft Recorder. Please click the button below to download it.',
-        action: (
-          <ToastAction
-            altText="Download"
-            onClick={() => ipc.sendMessage('openURL', [upgradeStatus.link])}
-          >
-            <ArrowBigDownDash /> Download
-          </ToastAction>
-        ),
-        duration: 60000, // stay up for a minute I guess
-      });
-      upgradeNotified.current = true;
-    }
-  }, [upgradeStatus, upgradeNotified, toast]);
-
   const [savingStatus, setSavingStatus] = useState<SaveStatus>(
     SaveStatus.NotSaving
   );
@@ -86,8 +65,44 @@ const WarcraftRecorder = () => {
     playing: false,
 
     // The language the client is in.
-    language: config.language,
+    language: config.language as Language,
   });
+
+  useEffect(() => {
+    if (upgradeNotified.current) return;
+
+    const title = getLocalePhrase(
+      appState.language,
+      Phrase.UpdateAvailableTitle
+    );
+
+    const description = getLocalePhrase(
+      appState.language,
+      Phrase.UpdateAvailableText
+    );
+
+    const buttonText = getLocalePhrase(
+      appState.language,
+      Phrase.UpdateAvailableDownloadButtonText
+    );
+
+    if (upgradeStatus.available) {
+      toast({
+        title,
+        description,
+        action: (
+          <ToastAction
+            altText={buttonText}
+            onClick={() => ipc.sendMessage('openURL', [upgradeStatus.link])}
+          >
+            <ArrowBigDownDash /> {buttonText}
+          </ToastAction>
+        ),
+        duration: 60000, // stay up for a minute I guess
+      });
+      upgradeNotified.current = true;
+    }
+  }, [upgradeStatus, upgradeNotified, toast, appState.language]);
 
   // The video state contains most of the frontend state, it's complex so
   // frontend triggered modifications go through the StateManager class, which

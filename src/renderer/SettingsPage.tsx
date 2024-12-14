@@ -37,9 +37,18 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
     <div className="w-full h-full bg-background-higher pt-[32px] px-4">
       <Tabs defaultValue="application" className="w-full">
         <TabsList>
-          <TabsTrigger value="application">Application</TabsTrigger>
-          <TabsTrigger value="game">Game</TabsTrigger>
-          <TabsTrigger value="pro">Pro</TabsTrigger>
+          <TabsTrigger value="application">
+            {getLocalePhrase(
+              appState.language,
+              Phrase.SettingsPageApplicationHeader
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="game">
+            {getLocalePhrase(appState.language, Phrase.SettingsPageGameHeader)}
+          </TabsTrigger>
+          <TabsTrigger value="pro">
+            {getLocalePhrase(appState.language, Phrase.SettingsPageProHeader)}
+          </TabsTrigger>
         </TabsList>
         <ScrollArea
           withScrollIndicators={false}

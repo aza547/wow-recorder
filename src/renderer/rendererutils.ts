@@ -36,8 +36,7 @@ import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
 import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'main/configSchema';
-import { Renderer } from 'react-dom';
-import { Language } from 'localisation/translations';
+import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -775,7 +774,10 @@ const secToMmSs = (s: number) => {
  * Get a result text appropriate for the video category that signifies a
  * win or a loss, of some sort.
  */
-const getVideoResultText = (video: RendererVideo): string => {
+const getVideoResultText = (
+  video: RendererVideo,
+  language: Language
+): string => {
   const {
     result,
     upgradeLevel,
@@ -785,7 +787,7 @@ const getVideoResultText = (video: RendererVideo): string => {
 
   if (isMythicPlusUtil(video)) {
     if (!result) {
-      return 'Abandoned';
+      return getLocalePhrase(language, Phrase.Abandoned);
     }
 
     if (upgradeLevel === undefined) {
@@ -793,14 +795,16 @@ const getVideoResultText = (video: RendererVideo): string => {
     }
 
     if (upgradeLevel < 1) {
-      return 'Depleted';
+      return getLocalePhrase(language, Phrase.Depleted);
     }
 
     return String(`+${upgradeLevel}`);
   }
 
   if (isRaidUtil(video)) {
-    return result ? 'Kill' : 'Wipe';
+    return result
+      ? getLocalePhrase(language, Phrase.Kill)
+      : getLocalePhrase(language, Phrase.Wipe);
   }
 
   if (isSoloShuffleUtil(video)) {
@@ -816,7 +820,9 @@ const getVideoResultText = (video: RendererVideo): string => {
     return `${wins} - ${losses}`;
   }
 
-  return result ? 'Win' : 'Loss';
+  return result
+    ? getLocalePhrase(language, Phrase.Win)
+    : getLocalePhrase(language, Phrase.Loss);
 };
 
 const getCategoryFromConfig = (config: ConfigurationSchema) => {

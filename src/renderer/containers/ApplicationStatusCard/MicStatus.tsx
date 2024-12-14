@@ -1,11 +1,21 @@
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { Mic, MicOff } from 'lucide-react';
-import { MicStatus } from 'main/types';
+import { AppState, MicStatus } from 'main/types';
 import { Tooltip } from 'renderer/components/Tooltip/Tooltip';
 
-const MicrophoneStatus = ({ micStatus }: { micStatus: MicStatus }) => {
+const MicrophoneStatus = ({
+  micStatus,
+  appState,
+}: {
+  micStatus: MicStatus;
+  appState: AppState;
+}) => {
   if (micStatus === MicStatus.LISTENING) {
     return (
-      <Tooltip content="Listening" side="right">
+      <Tooltip
+        content={getLocalePhrase(appState.language, Phrase.MicListeningTooltip)}
+        side="right"
+      >
         <Mic size={20} />
       </Tooltip>
     );
@@ -13,7 +23,10 @@ const MicrophoneStatus = ({ micStatus }: { micStatus: MicStatus }) => {
 
   if (micStatus === MicStatus.MUTED) {
     return (
-      <Tooltip content="Muted" side="right">
+      <Tooltip
+        content={getLocalePhrase(appState.language, Phrase.MicMutedTooltip)}
+        side="right"
+      >
         <MicOff size={20} />
       </Tooltip>
     );

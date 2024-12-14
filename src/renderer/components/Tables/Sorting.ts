@@ -1,13 +1,18 @@
 import { Row } from '@tanstack/react-table';
+import { Language } from 'localisation/types';
 import { RendererVideo } from 'main/types';
 import {
   countUniqueViewpoints,
   getVideoResultText,
 } from 'renderer/rendererutils';
 
-export const resultSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
-  const resultA = getVideoResultText(a.original);
-  const resultB = getVideoResultText(b.original);
+export const resultSort = (
+  a: Row<RendererVideo>,
+  b: Row<RendererVideo>,
+  language: Language
+) => {
+  const resultA = getVideoResultText(a.original, language);
+  const resultB = getVideoResultText(b.original, language);
   return resultB.localeCompare(resultA);
 };
 

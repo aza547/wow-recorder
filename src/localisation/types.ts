@@ -237,6 +237,70 @@ enum Phrase {
   DiskButtonTooltip,
   UploadButtonTooltip,
   DownloadButtonTooltip,
+
+  StatusTitleRecording,
+  StatusTitleWaiting,
+  StatusTitleInvalid,
+  StatusTitleReady,
+  StatusTitleFatalError,
+  StatusTitleOverrunning,
+  StatusTitleReconfiguring,
+
+  StatusDescriptionRecording,
+  StatusDescriptionForceEnd,
+  StatusDescriptionWaiting,
+  StatusDescriptionConfiguredToRecord,
+  StatusDescriptionMisconfigured,
+  StatusDescriptionResolveError,
+  StatusDescriptionDetectedRunning,
+  StatusDescriptionWatchingLogs,
+  StatusDescriptionTip,
+  StatusDescriptionIfNoRecording,
+  StatusDescriptionFatalError,
+  StatusDescriptionPleaseResolve,
+  StatusDescriptionIfRecurring,
+  StatusDescriptionOverrunning,
+  StatusDescriptionNothing,
+
+  StatusHeading,
+  StatusButtonForceEndLabel,
+
+  Retail,
+  Classic,
+  Era,
+
+  MicListeningTooltip,
+  MicMutedTooltip,
+
+  CrashHappenedText,
+
+  SettingsPageApplicationHeader,
+  SettingsPageGameHeader,
+  SettingsPageProHeader,
+
+  UpdateAvailableTitle,
+  UpdateAvailableText,
+  UpdateAvailableDownloadButtonText,
+
+  TestButtonHeading,
+
+  SystemTrayQuit,
+  SystemTrayOpen,
+
+  Kill,
+  Wipe,
+  Win,
+  Loss,
+  Abandoned,
+  Depleted,
+
+  AreYouSure,
+  ThisWillPermanentlyDelete,
+  RecordingsFullStop,
+  ThisSelectionIncludes,
+  StarredRecordingNotDeleted,
+  Hold,
+  ToSkip,
 }
 
 enum Language {

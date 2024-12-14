@@ -17,13 +17,15 @@ import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp
 import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import { Box, Checkbox } from '@mui/material';
 import { specImages } from 'renderer/images';
+import { Language } from 'localisation/types';
 import { Button } from '../Button/Button';
 
 export const populateResultCell = (
-  info: CellContext<RendererVideo, unknown>
+  info: CellContext<RendererVideo, unknown>,
+  language: Language
 ) => {
   const video = info.getValue() as RendererVideo;
-  const resultText = getVideoResultText(video);
+  const resultText = getVideoResultText(video, language);
   const resultColor = getResultColor(video);
 
   return (

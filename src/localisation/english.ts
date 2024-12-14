@@ -240,6 +240,70 @@ const ENGLISH: Translations = {
   [Phrase.DiskButtonTooltip]: 'Use local disk version',
   [Phrase.UploadButtonTooltip]: 'Upload to cloud',
   [Phrase.DownloadButtonTooltip]: 'Download to disk',
+
+  [Phrase.StatusTitleRecording]: 'Recording',
+  [Phrase.StatusTitleWaiting]: 'Waiting',
+  [Phrase.StatusTitleInvalid]: 'Invalid',
+  [Phrase.StatusTitleReady]: 'Ready',
+  [Phrase.StatusTitleFatalError]: 'Error',
+  [Phrase.StatusTitleOverrunning]: 'Overrunning',
+  [Phrase.StatusTitleReconfiguring]: 'Reconfiguring',
+
+  [Phrase.StatusDescriptionRecording]: 'Warcraft Recorder is currently recording',
+  [Phrase.StatusDescriptionForceEnd]: 'You can force the recording to end. Normally this should not be required. This can help end a failed Mythic+ run that would otherwise need a few minutes to wrap up.',
+  [Phrase.StatusDescriptionWaiting]: 'Waiting for World of Warcraft to start',
+  [Phrase.StatusDescriptionConfiguredToRecord]: 'Warcraft Recorder is configured to record',
+  [Phrase.StatusDescriptionMisconfigured]: 'Warcraft Recorder is misconfigured',
+  [Phrase.StatusDescriptionResolveError]: 'Please resolve the error below',
+  [Phrase.StatusDescriptionDetectedRunning]: 'Detected World of Warcraft is running',
+  [Phrase.StatusDescriptionWatchingLogs]: 'Warcraft Recorder is waiting for a recordable event to appear in the combat log. Watching log paths',
+  [Phrase.StatusDescriptionTip]: 'Tip',
+  [Phrase.StatusDescriptionIfNoRecording]: 'If recordings do not start, check your logging settings in-game and confirm your log path configuration is correct.',
+  [Phrase.StatusDescriptionFatalError]: 'Warcraft Recorder has hit a fatal error',
+  [Phrase.StatusDescriptionPleaseResolve]: 'Please try to resolve the error below, then restart the application.',
+  [Phrase.StatusDescriptionIfRecurring]: 'If this problem is recurring, please ask for help in Discord. See the pins in the #help channel for advice on getting help.',
+  [Phrase.StatusDescriptionOverrunning]: 'Warcraft Recorder has detected an activity has completed successfuly and is recording a few seconds extra to catch the aftermath.',
+  [Phrase.StatusDescriptionNothing]: 'nothing. You likely want to enable some game modes in the game settings tab.',
+  
+  [Phrase.StatusHeading]: 'Status',
+  [Phrase.StatusButtonForceEndLabel]: 'Force Stop',
+
+  [Phrase.Retail]: 'Retail',
+  [Phrase.Classic]: 'Classic',
+  [Phrase.Era]: 'Era',
+
+  [Phrase.MicListeningTooltip]: 'Listening',
+  [Phrase.MicMutedTooltip]: 'Muted',
+
+  [Phrase.CrashHappenedText]: 'An OBS crash has occured and has been recovered from. This should not happen in normal operation. You may wish to seek help by sharing your WR and OBS logs in discord.',
+
+  [Phrase.SettingsPageApplicationHeader]: 'Application',
+  [Phrase.SettingsPageGameHeader]: 'Game',
+  [Phrase.SettingsPageProHeader]: 'Pro',
+
+  [Phrase.UpdateAvailableTitle]: 'Update available!',
+  [Phrase.UpdateAvailableText]: 'There is an update available for Warcraft Recorder. Please click the button below to download it.',
+  [Phrase.UpdateAvailableDownloadButtonText]: 'Download',
+
+  [Phrase.TestButtonHeading]: 'Select a category to test',
+
+  [Phrase.SystemTrayOpen]: 'Open',
+  [Phrase.SystemTrayQuit]: 'Quit',
+
+  [Phrase.Kill]: 'Kill',
+  [Phrase.Wipe]: 'Wipe',
+  [Phrase.Win]: 'Win',
+  [Phrase.Loss]: 'Loss',
+  [Phrase.Abandoned]: 'Abandoned',
+  [Phrase.Depleted]: 'Depleted',
+  
+  [Phrase.AreYouSure]: 'Are you sure?',
+  [Phrase.ThisWillPermanentlyDelete]: 'This will permanently delete',
+  [Phrase.RecordingsFullStop]: 'recording(s).',
+  [Phrase.ThisSelectionIncludes]: 'The selection includes',
+  [Phrase.StarredRecordingNotDeleted]: 'starred recording(s) which will not be deleted.',
+  [Phrase.Hold]: 'Hold',
+  [Phrase.ToSkip]: 'to skip this prompt in future.',
 };
 
 export default ENGLISH;

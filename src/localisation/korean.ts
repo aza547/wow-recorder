@@ -240,6 +240,68 @@ const KOREAN: Translations = {
   [Phrase.DiskButtonTooltip]: '샘플 텍스트',
   [Phrase.UploadButtonTooltip]: '샘플 텍스트',
   [Phrase.DownloadButtonTooltip]: '샘플 텍스트',
+
+  [Phrase.StatusTitleRecording]: '샘플 텍스트',
+  [Phrase.StatusTitleWaiting]: '샘플 텍스트',
+  [Phrase.StatusTitleInvalid]: '샘플 텍스트',
+  [Phrase.StatusTitleReady]: '샘플 텍스트',
+  [Phrase.StatusTitleFatalError]: '샘플 텍스트',
+  [Phrase.StatusTitleOverrunning]: '샘플 텍스트',
+  [Phrase.StatusTitleReconfiguring]: '샘플 텍스트',
+
+  [Phrase.StatusDescriptionRecording]: '샘플 텍스트',
+  [Phrase.StatusDescriptionForceEnd]: '샘플 텍스트',
+  [Phrase.StatusDescriptionWaiting]: '샘플 텍스트',
+  [Phrase.StatusDescriptionConfiguredToRecord]: '샘플 텍스트',
+  [Phrase.StatusDescriptionMisconfigured]: '샘플 텍스트',
+  [Phrase.StatusDescriptionResolveError]: '샘플 텍스트',
+  [Phrase.StatusDescriptionDetectedRunning]: '샘플 텍스트',
+  [Phrase.StatusDescriptionWatchingLogs]: '샘플 텍스트',
+  [Phrase.StatusDescriptionTip]: '샘플 텍스트',
+  [Phrase.StatusDescriptionIfNoRecording]: '샘플 텍스트',
+  [Phrase.StatusDescriptionFatalError]: '샘플 텍스트',
+  [Phrase.StatusDescriptionPleaseResolve]: '샘플 텍스트',
+  [Phrase.StatusDescriptionIfRecurring]: '샘플 텍스트',
+  [Phrase.StatusDescriptionOverrunning]: '샘플 텍스트',
+  [Phrase.StatusDescriptionNothing]: '샘플 텍스트',
+  
+  [Phrase.StatusHeading]: '샘플 텍스트',
+  [Phrase.StatusButtonForceEndLabel]: '샘플 텍스트',
+
+  [Phrase.Retail]: '샘플 텍스트',
+  [Phrase.Classic]: '샘플 텍스트',
+  [Phrase.Era]: '샘플 텍스트',
+
+  [Phrase.MicListeningTooltip]: '샘플 텍스트',
+  [Phrase.MicMutedTooltip]: '샘플 텍스트',
+  [Phrase.CrashHappenedText]: '샘플 텍스트',
+
+  [Phrase.SettingsPageApplicationHeader]: '샘플 텍스트',
+  [Phrase.SettingsPageGameHeader]: '샘플 텍스트',
+  [Phrase.SettingsPageProHeader]: '샘플 텍스트',
+
+  [Phrase.UpdateAvailableTitle]: '샘플 텍스트',
+  [Phrase.UpdateAvailableText]: '샘플 텍스트',
+  [Phrase.UpdateAvailableDownloadButtonText]: '샘플 텍스트',
+  [Phrase.TestButtonHeading]: '샘플 텍스트',
+  
+  [Phrase.SystemTrayOpen]: '샘플 텍스트',
+  [Phrase.SystemTrayQuit]: '샘플 텍스트',
+
+  [Phrase.Kill]: '샘플 텍스트',
+  [Phrase.Wipe]: '샘플 텍스트',
+  [Phrase.Win]: '샘플 텍스트',
+  [Phrase.Loss]: '샘플 텍스트',
+  [Phrase.Abandoned]: '샘플 텍스트',
+  [Phrase.Depleted]: '샘플 텍스트',
+
+  [Phrase.AreYouSure]: '샘플 텍스트',
+  [Phrase.ThisWillPermanentlyDelete]: '샘플 텍스트',
+  [Phrase.RecordingsFullStop]: '샘플 텍스트',
+  [Phrase.ThisSelectionIncludes]: '샘플 텍스트',
+  [Phrase.StarredRecordingNotDeleted]: '샘플 텍스트',
+  [Phrase.Hold]: '샘플 텍스트',
+  [Phrase.ToSkip]: '샘플 텍스트',
 };
 
 export default KOREAN;

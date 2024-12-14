@@ -183,6 +183,7 @@ const SideMenu = (props: IProps) => {
         crashes={crashes}
         savingStatus={savingStatus}
         config={config}
+        appState={appState}
       />
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"

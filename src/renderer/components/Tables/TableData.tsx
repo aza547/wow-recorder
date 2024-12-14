@@ -90,9 +90,9 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: resultSort,
+        sortingFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
-        cell: populateResultCell,
+        cell: (c) => populateResultCell(c, language),
       },
       {
         id: 'Pull',
@@ -155,9 +155,9 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: resultSort,
+        sortingFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
-        cell: populateResultCell,
+        cell: (c) => populateResultCell(c, language),
       },
       {
         id: 'Duration',
@@ -210,9 +210,9 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: resultSort,
+        sortingFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
-        cell: populateResultCell,
+        cell: (c) => populateResultCell(c, language),
       },
       {
         id: 'Level',
@@ -272,9 +272,9 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Result',
         accessorFn: (v) => v,
-        sortingFn: resultSort,
+        sortingFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
-        cell: populateResultCell,
+        cell: (c) => populateResultCell(c, language),
       },
       {
         id: 'Duration',

@@ -14,6 +14,7 @@ import os from 'os';
 import { uIOhook } from 'uiohook-napi';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import assert from 'assert';
+import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 import {
   resolveHtmlPath,
   openSystemExplorer,
@@ -93,16 +94,19 @@ const installExtensions = async () => {
 const setupTray = () => {
   tray = new Tray(getAssetPath('./icon/small-icon.png'));
 
+  // This wont update without an app restart but whatever.
+  const language = cfg.get<string>('language') as Language;
+
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Open',
+      label: getLocalePhrase(language, Phrase.SystemTrayOpen),
       click() {
         console.info('[Main] User clicked open on tray icon');
         if (mainWindow) mainWindow.show();
       },
     },
     {
-      label: 'Quit',
+      label: getLocalePhrase(language, Phrase.SystemTrayQuit),
       click() {
         console.info('[Main] User clicked close on tray icon');
 

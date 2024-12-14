@@ -51,7 +51,9 @@ const TestButton: React.FC<IProps> = (props: IProps) => {
     if (ready) {
       return (
         <div className="flex flex-col gap-y-2">
-          <h2 className="text-sm font-semibold">Select a category to test</h2>
+          <h2 className="text-sm font-semibold">
+            {getLocalePhrase(appState.language, Phrase.TestButtonHeading)}
+          </h2>
           <Separator className="my-1" />
           {testCategories.map((category: VideoCategory) => {
             return (
