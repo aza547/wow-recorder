@@ -36,7 +36,7 @@ import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
 import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'main/configSchema';
-import { Renderer } from 'react-dom';
+import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -67,7 +67,7 @@ const getFormattedDuration = (video: RendererVideo) => {
  * Return an array of death markers for a video.
  * @param video the RendereVideo data type for the video
  */
-const getOwnDeathMarkers = (video: RendererVideo) => {
+const getOwnDeathMarkers = (video: RendererVideo, language: Language) => {
   const videoMarkers: VideoMarker[] = [];
   const { player } = video;
 
@@ -77,7 +77,9 @@ const getOwnDeathMarkers = (video: RendererVideo) => {
 
   video.deaths.forEach((death: PlayerDeathType) => {
     const [name] = ambiguate(death.name);
-    const markerText = `Death (${name})`;
+
+    let markerText = getLocalePhrase(language, Phrase.Death);
+    markerText += ` (${name})`;
     let color: string;
 
     if (death.friendly) {
@@ -108,7 +110,7 @@ const getOwnDeathMarkers = (video: RendererVideo) => {
  * @param video the RendereVideo data type for the video
  * @param ownOnly true if should only get the players deaths
  */
-const getAllDeathMarkers = (video: RendererVideo) => {
+const getAllDeathMarkers = (video: RendererVideo, language: Language) => {
   const videoMarkers: VideoMarker[] = [];
 
   if (video.deaths === undefined) {
@@ -143,7 +145,8 @@ const getAllDeathMarkers = (video: RendererVideo) => {
 
   singleDeaths.forEach((death: PlayerDeathType) => {
     const [name] = ambiguate(death.name);
-    const markerText = `Death (${name})`;
+    let markerText = getLocalePhrase(language, Phrase.Death);
+    markerText += ` (${name})`;
     let color: string;
 
     if (death.friendly) {
@@ -161,7 +164,8 @@ const getAllDeathMarkers = (video: RendererVideo) => {
   });
 
   simultaenousDeaths.forEach((death: PlayerDeathType) => {
-    const markerText = `Death (multiple)`;
+    let markerText = getLocalePhrase(language, Phrase.Death);
+    markerText += ` (multiple)`;
     let color: string;
 
     if (death.friendly) {
@@ -270,7 +274,7 @@ const getWoWClassColor = (unitClass: WoWCharacterClassType) => {
   return WoWClassColor[unitClass];
 };
 
-const getInstanceDifficultyText = (video: RendererVideo) => {
+const getInstanceDifficultyText = (video: RendererVideo, lang: Language) => {
   const { difficultyID } = video;
 
   if (difficultyID === undefined) {
@@ -286,8 +290,8 @@ const getInstanceDifficultyText = (video: RendererVideo) => {
     return '';
   }
 
-  const difficulty = instanceDifficulty[difficultyID].difficultyID;
-  return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+  const { phrase } = instanceDifficulty[difficultyID];
+  return getLocalePhrase(lang, phrase);
 };
 
 /**
@@ -654,8 +658,21 @@ const encoderFilter = (enc: string, highRes: boolean) => {
   return true;
 };
 
-const mapEncoderToString = (enc: Encoder) => {
-  return `${enc.type} (${enc.name})`;
+const mapEncoderToString = (enc: Encoder, lang: Language) => {
+  let encoderAsString = enc.name;
+
+  switch (enc.type) {
+    case EncoderType.HARDWARE:
+      encoderAsString += ` (${getLocalePhrase(lang, Phrase.Hardware)})`;
+      break;
+    case EncoderType.SOFTWARE:
+      encoderAsString += ` (${getLocalePhrase(lang, Phrase.Software)})`;
+      break;
+    default:
+      break;
+  }
+
+  return encoderAsString;
 };
 
 const mapStringToEncoder = (enc: string): Encoder => {
@@ -774,7 +791,10 @@ const secToMmSs = (s: number) => {
  * Get a result text appropriate for the video category that signifies a
  * win or a loss, of some sort.
  */
-const getVideoResultText = (video: RendererVideo): string => {
+const getVideoResultText = (
+  video: RendererVideo,
+  language: Language
+): string => {
   const {
     result,
     upgradeLevel,
@@ -784,7 +804,7 @@ const getVideoResultText = (video: RendererVideo): string => {
 
   if (isMythicPlusUtil(video)) {
     if (!result) {
-      return 'Abandoned';
+      return getLocalePhrase(language, Phrase.Abandoned);
     }
 
     if (upgradeLevel === undefined) {
@@ -792,14 +812,16 @@ const getVideoResultText = (video: RendererVideo): string => {
     }
 
     if (upgradeLevel < 1) {
-      return 'Depleted';
+      return getLocalePhrase(language, Phrase.Depleted);
     }
 
     return String(`+${upgradeLevel}`);
   }
 
   if (isRaidUtil(video)) {
-    return result ? 'Kill' : 'Wipe';
+    return result
+      ? getLocalePhrase(language, Phrase.Kill)
+      : getLocalePhrase(language, Phrase.Wipe);
   }
 
   if (isSoloShuffleUtil(video)) {
@@ -815,7 +837,9 @@ const getVideoResultText = (video: RendererVideo): string => {
     return `${wins} - ${losses}`;
   }
 
-  return result ? 'Win' : 'Loss';
+  return result
+    ? getLocalePhrase(language, Phrase.Win)
+    : getLocalePhrase(language, Phrase.Loss);
 };
 
 const getCategoryFromConfig = (config: ConfigurationSchema) => {

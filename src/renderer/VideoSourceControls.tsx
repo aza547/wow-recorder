@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { OurDisplayType } from 'main/types';
+import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'main/configSchema';
 import { Info } from 'lucide-react';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
 import {
@@ -13,7 +14,12 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
 
-const VideoSourceControls: React.FC = () => {
+interface IProps {
+  appState: AppState;
+}
+
+const VideoSourceControls = (props: IProps) => {
+  const { appState } = props;
   const [config, setConfig] = useSettings();
   const [displays, setDisplays] = useState<OurDisplayType[]>([]);
   const initialRender = React.useRef(true);
@@ -81,9 +87,12 @@ const VideoSourceControls: React.FC = () => {
     return (
       <div>
         <Label className="flex items-center">
-          Capture Mode
+          {getLocalePhrase(appState.language, Phrase.CaptureModeLabel)}
           <Tooltip
-            content={configSchema.obsCaptureMode.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.obsCaptureMode.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -96,9 +105,15 @@ const VideoSourceControls: React.FC = () => {
           type="single"
           variant="outline"
         >
-          <ToggleGroupItem value="window_capture">Window</ToggleGroupItem>
-          <ToggleGroupItem value="game_capture">Game</ToggleGroupItem>
-          <ToggleGroupItem value="monitor_capture">Monitor</ToggleGroupItem>
+          <ToggleGroupItem value="window_capture">
+            {getLocalePhrase(appState.language, Phrase.WindowCaptureValue)}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="game_capture">
+            {getLocalePhrase(appState.language, Phrase.GameCaptureValue)}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="monitor_capture">
+            {getLocalePhrase(appState.language, Phrase.MonitorCaptureValue)}
+          </ToggleGroupItem>
         </ToggleGroup>
       </div>
     );
@@ -112,8 +127,14 @@ const VideoSourceControls: React.FC = () => {
     return (
       <div>
         <Label className="flex items-center">
-          Monitor
-          <Tooltip content={configSchema.monitorIndex.description} side="right">
+          {getLocalePhrase(appState.language, Phrase.MonitorLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.monitorIndex.description
+            )}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -138,9 +159,12 @@ const VideoSourceControls: React.FC = () => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label className="flex items-center">
-          Capture Cursor
+          {getLocalePhrase(appState.language, Phrase.CaptureCursorLabel)}
           <Tooltip
-            content={configSchema.captureCursor.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.captureCursor.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />

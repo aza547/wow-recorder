@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 559](https://github.com/aza547/wow-recorder/issues/559) - Don't group clips in the UI, it's confusing. 
 
 ### Added
+- [Issue 566](https://github.com/aza547/wow-recorder/issues/566) - Add localisation support.
+
 ### Fixed
 
 ## [6.3.0] - 2024-12-12

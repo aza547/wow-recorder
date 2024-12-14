@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { configSchema } from 'main/configSchema';
-import { DiskStatus, RecStatus } from 'main/types';
+import { AppState, DiskStatus, RecStatus } from 'main/types';
 import { useEffect, useRef, useState } from 'react';
 import { HardDrive, Info } from 'lucide-react';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
 import { Input } from './components/Input/Input';
@@ -14,12 +15,13 @@ import TextBanner from './components/TextBanner/TextBanner';
 
 interface IProps {
   recorderStatus: RecStatus;
+  appState: AppState;
 }
 
 const ipc = window.electron.ipcRenderer;
 
 const GeneralSettings: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus } = props;
+  const { recorderStatus, appState } = props;
   const [config, setConfig] = useSettings();
   const initialRenderVideoConfig = useRef(true);
 
@@ -86,7 +88,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <TextBanner>
-        These settings cannot be modified while a recording is active.
+        {getLocalePhrase(appState.language, Phrase.SettingsDisabledText)}
       </TextBanner>
     );
   };
@@ -114,8 +116,14 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label htmlFor="storagePath" className="flex items-center">
-          Disk Storage Folder
-          <Tooltip content={configSchema.storagePath.description} side="top">
+          {getLocalePhrase(appState.language, Phrase.DiskStorageFolderLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.storagePath.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -161,9 +169,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label htmlFor="separateBufferPath" className="flex items-center">
-          Separate Buffer Folder
+          {getLocalePhrase(appState.language, Phrase.SeparateBufferFolderLabel)}
           <Tooltip
-            content={configSchema.separateBufferPath.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.separateBufferPath.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -192,9 +203,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
         <Label htmlFor="bufferStoragePath" className="flex items-center">
-          Buffer Folder
+          {getLocalePhrase(appState.language, Phrase.BufferFolderLabel)}
           <Tooltip
-            content={configSchema.bufferStoragePath.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.bufferStoragePath.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -232,8 +246,14 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
         <Label htmlFor="maxDiskStorage" className="flex items-center">
-          Max Disk Storage (GB)
-          <Tooltip content={configSchema.maxStorage.description} side="top">
+          {getLocalePhrase(appState.language, Phrase.MaxDiskStorageLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.maxStorage.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -254,12 +274,11 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     const max = Math.round(diskStatus.maxUsageGB);
     let perc = max === 0 ? 100 : (100 * usage) / max;
     if (perc > 100) perc = 100;
-    const text =
-      max === 0 ? `${usage}GB of Unlimited` : `${usage}GB of ${max}GB`;
+    const text = max === 0 ? `${usage}GB / ∞` : `${usage}GB / ${max}GB`;
 
     return (
       <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
-        <Tooltip content="Disk usage">
+        <Tooltip content={getLocalePhrase(appState.language, Phrase.DiskUsage)}>
           <HardDrive />
         </Tooltip>
         <Progress value={perc} className="h-3" />

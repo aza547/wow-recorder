@@ -2,13 +2,14 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useEffect, useState } from 'react';
-import { FolderOpen, Link as Link1, PackageX, Trash } from 'lucide-react';
+import { FolderOpen, Link as Link1, Trash } from 'lucide-react';
 import { faMessage, faStar } from '@fortawesome/free-solid-svg-icons';
 import {
   faStar as faStarOutline,
   faMessage as faMessageOutline,
 } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { povDiskFirstNameSort, stopPropagation } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
@@ -64,7 +65,8 @@ export default function ViewpointButtons(props: IProps) {
   const getTagButton = () => {
     const { tag } = videoToShow;
 
-    let tagTooltip: string = tag || 'Add a tag';
+    let tagTooltip: string =
+      tag || getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
 
     if (tagTooltip.length > 50) {
       tagTooltip = `${tagTooltip.slice(0, 50)}...`;
@@ -75,6 +77,7 @@ export default function ViewpointButtons(props: IProps) {
         video={videoToShow}
         stateManager={stateManager}
         tooltipContent={tagTooltip}
+        appState={appState}
       >
         <Button onMouseDown={stopPropagation} variant="secondary" size="xl">
           {tag ? (
@@ -103,7 +106,13 @@ export default function ViewpointButtons(props: IProps) {
 
   const getProtectVideoButton = () => {
     return (
-      <Tooltip content={isProtected ? 'Age out' : 'Never age out'}>
+      <Tooltip
+        content={
+          isProtected
+            ? getLocalePhrase(appState.language, Phrase.UnstarButtonTooltip)
+            : getLocalePhrase(appState.language, Phrase.StarButtonTooltip)
+        }
+      >
         <Button
           onMouseDown={stopPropagation}
           onClick={protectVideo}
@@ -127,14 +136,23 @@ export default function ViewpointButtons(props: IProps) {
     try {
       await ipc.invoke('getShareableLink', [videoName]);
       toast({
-        title: 'Shareable link generated and placed in clipboard',
-        description: 'This link will be valid for up to 30 days.',
+        title: getLocalePhrase(appState.language, Phrase.ShareableLinkTitle),
+        description: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkText
+        ),
         duration: 5000,
       });
     } catch (error) {
       toast({
-        title: 'Failed to generate link',
-        description: 'Please see logs for more details',
+        title: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkFailedTitle
+        ),
+        description: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkFailedText
+        ),
         variant: 'destructive',
         duration: 5000,
       });
@@ -143,7 +161,12 @@ export default function ViewpointButtons(props: IProps) {
 
   const getShareLinkButton = () => {
     return (
-      <Tooltip content="Get shareable link">
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.ShareLinkButtonTooltip
+        )}
+      >
         <Button
           onMouseDown={stopPropagation}
           onClick={getShareableLink}
@@ -168,7 +191,12 @@ export default function ViewpointButtons(props: IProps) {
 
   const getOpenButton = () => {
     return (
-      <Tooltip content="Open location">
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.OpenFolderButtonTooltip
+        )}
+      >
         <Button
           onMouseDown={stopPropagation}
           onClick={openLocation}
@@ -210,8 +238,12 @@ export default function ViewpointButtons(props: IProps) {
     return (
       <DeleteDialog
         onDelete={(e) => deleteVideo(e)}
-        tooltipContent="Delete"
+        tooltipContent={getLocalePhrase(
+          appState.language,
+          Phrase.DeleteButtonTooltip
+        )}
         skipPossible
+        appState={appState}
       >
         <Button
           onMouseDown={stopPropagation}

@@ -9,6 +9,8 @@ import {
 } from 'main/constants';
 import { Flavour, RendererVideo } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
+import { Language, Phrase } from 'localisation/types';
+import { getLocalePhrase } from 'localisation/translations';
 import {
   isArenaUtil,
   isBattlegroundUtil,
@@ -377,23 +379,23 @@ export default class VideoFilter {
   /**
    * Get some suggestions to show in the GUI.
    */
-  static getSuggestions(category: VideoCategory) {
+  static getSuggestions(language: Language, category: VideoCategory) {
     if (category === VideoCategory.MythicPlus) {
-      return 'Try: timed temple yesterday +18 priest bookmarked fortified';
+      return getLocalePhrase(language, Phrase.SearchSuggestionMythicPlus);
     }
 
     if (category === VideoCategory.Raids) {
-      return 'Try: kill today retail mythic destruction bookmarked';
+      return getLocalePhrase(language, Phrase.SearchSuggestionRaid);
     }
 
     if (category === VideoCategory.Battlegrounds) {
-      return 'Try: warsong gulch bookmarked';
+      return getLocalePhrase(language, Phrase.SearchSuggestionBattlegrounds);
     }
 
     if (category === VideoCategory.SoloShuffle) {
-      return 'Try: dalaran 6-0 bookmarked';
+      return getLocalePhrase(language, Phrase.SearchSuggestionSoloShuffle);
     }
 
-    return 'Try: win enigma crucible arcane bookmarked';
+    return getLocalePhrase(language, Phrase.SearchSuggestionDefault);
   }
 }

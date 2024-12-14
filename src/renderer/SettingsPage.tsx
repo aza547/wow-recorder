@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction } from 'react';
-import { RecStatus } from 'main/types';
+import { AppState, RecStatus } from 'main/types';
 import { ConfigurationSchema } from 'main/configSchema';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
 import WindowsSettings from './WindowsSettings';
 import FlavourSettings from './FlavourSettings';
@@ -15,11 +16,14 @@ import {
 } from './components/Tabs/Tabs';
 import Separator from './components/Separator/Separator';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
+import LocaleSettings from './LocaleSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
+  appState: AppState;
+  setAppState: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
@@ -27,15 +31,24 @@ const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
 );
 
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, config, setConfig } = props;
+  const { recorderStatus, config, setConfig, appState, setAppState } = props;
 
   return (
     <div className="w-full h-full bg-background-higher pt-[32px] px-4">
       <Tabs defaultValue="application" className="w-full">
         <TabsList>
-          <TabsTrigger value="application">Application</TabsTrigger>
-          <TabsTrigger value="game">Game</TabsTrigger>
-          <TabsTrigger value="pro">Pro</TabsTrigger>
+          <TabsTrigger value="application">
+            {getLocalePhrase(
+              appState.language,
+              Phrase.SettingsPageApplicationHeader
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="game">
+            {getLocalePhrase(appState.language, Phrase.SettingsPageGameHeader)}
+          </TabsTrigger>
+          <TabsTrigger value="pro">
+            {getLocalePhrase(appState.language, Phrase.SettingsPageProHeader)}
+          </TabsTrigger>
         </TabsList>
         <ScrollArea
           withScrollIndicators={false}
@@ -44,14 +57,42 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
           <TabsContent value="application">
             <div className="p-4 flex flex-col gap-y-8">
               <div>
-                <CategoryHeading>General Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.GeneralSettingsLabel
+                  )}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <GeneralSettings recorderStatus={recorderStatus} />
+                <GeneralSettings
+                  recorderStatus={recorderStatus}
+                  appState={appState}
+                />
               </div>
               <div>
-                <CategoryHeading>Windows Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.WindowsSettingsLabel
+                  )}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <WindowsSettings />
+                <WindowsSettings appState={appState} />
+              </div>
+              <div>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.LocaleSettingsLabel
+                  )}
+                </CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <LocaleSettings
+                  config={config}
+                  setConfig={setConfig}
+                  appState={appState}
+                  setAppState={setAppState}
+                />
               </div>
             </div>
           </TabsContent>
@@ -59,32 +100,47 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
           <TabsContent value="game">
             <div className="p-4 flex flex-col gap-y-8">
               <div>
-                <CategoryHeading>Game Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(appState.language, Phrase.GameSettingsLabel)}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <FlavourSettings
                   recorderStatus={recorderStatus}
                   config={config}
                   setConfig={setConfig}
+                  appState={appState}
                 />
               </div>
               <div>
-                <CategoryHeading>PvE Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(appState.language, Phrase.PVESettingsLabel)}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <PVESettings />
+                <PVESettings appState={appState} />
               </div>
               <div>
-                <CategoryHeading>PvP Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(appState.language, Phrase.PVPSettingsLabel)}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <PVPSettings />
+                <PVPSettings appState={appState} />
               </div>
             </div>
           </TabsContent>
           <TabsContent value="pro">
             <div className="p-4 flex flex-col gap-y-8">
               <div>
-                <CategoryHeading>Cloud Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.CloudSettingsLabel
+                  )}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <CloudSettings recorderStatus={recorderStatus} />
+                <CloudSettings
+                  recorderStatus={recorderStatus}
+                  appState={appState}
+                />
               </div>
             </div>
           </TabsContent>

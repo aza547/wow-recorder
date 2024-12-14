@@ -1,5 +1,7 @@
 import { AppState } from 'main/types';
 import { useEffect, useState } from 'react';
+import { getLocalePhrase } from 'localisation/translations';
+import { Phrase } from 'localisation/types';
 import VideoFilter from './VideoFilter';
 import { Input } from './components/Input/Input';
 import Label from './components/Label/Label';
@@ -44,11 +46,13 @@ const SearchBar = (props: IProps) => {
 
   return (
     <div>
-      <Label htmlFor="search-bar">Search</Label>
+      <Label htmlFor="search-bar">
+        {getLocalePhrase(appState.language, Phrase.SearchLabel)}
+      </Label>
       <Input
         className="w-full"
         spellCheck={false}
-        placeholder={VideoFilter.getSuggestions(category)}
+        placeholder={VideoFilter.getSuggestions(appState.language, category)}
         id="search-bar"
         name="search-bar"
         value={searchText}

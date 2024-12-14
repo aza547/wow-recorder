@@ -23,6 +23,11 @@ import {
 } from 'main/types';
 import { MutableRefObject, useEffect, useState } from 'react';
 import { ConfigurationSchema } from 'main/configSchema';
+import {
+  getLocaleCategoryLabel,
+  getLocalePhrase,
+  Phrase,
+} from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import { setConfigValue } from './useSettings';
 import {
@@ -103,7 +108,7 @@ const SideMenu = (props: IProps) => {
             tabIcon
           )}
         </Menu.Item.Icon>
-        {tabCategory}
+        {getLocaleCategoryLabel(appState.language, tabCategory)}
         <Menu.Item.Badge value={numVideos} />
       </Menu.Item>
     );
@@ -115,7 +120,7 @@ const SideMenu = (props: IProps) => {
         <Menu.Item.Icon>
           <Cog />
         </Menu.Item.Icon>
-        General
+        {getLocalePhrase(appState.language, Phrase.GeneralButtonText)}
       </Menu.Item>
     );
   };
@@ -126,7 +131,7 @@ const SideMenu = (props: IProps) => {
         <Menu.Item.Icon>
           <MonitorCog />
         </Menu.Item.Icon>
-        Scene
+        {getLocalePhrase(appState.language, Phrase.SceneButtonText)}
       </Menu.Item>
     );
   };
@@ -178,6 +183,7 @@ const SideMenu = (props: IProps) => {
         crashes={crashes}
         savingStatus={savingStatus}
         config={config}
+        appState={appState}
       />
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"
@@ -187,7 +193,9 @@ const SideMenu = (props: IProps) => {
           initialValue={appState.page === Pages.None ? category : false}
           onChange={handleChangeCategory}
         >
-          <Menu.Label>Recordings</Menu.Label>
+          <Menu.Label>
+            {getLocalePhrase(appState.language, Phrase.RecordingsHeading)}
+          </Menu.Label>
           {renderCategoryTab(VideoCategory.TwoVTwo, <Dice2 />)}
           {renderCategoryTab(VideoCategory.ThreeVThree, <Dice3 />)}
           {renderCategoryTab(VideoCategory.FiveVFive, <Dice5 />)}
@@ -209,7 +217,9 @@ const SideMenu = (props: IProps) => {
           initialValue={appState.page !== Pages.None ? appState.page : false}
           onChange={handleChangePage}
         >
-          <Menu.Label>Settings</Menu.Label>
+          <Menu.Label>
+            {getLocalePhrase(appState.language, Phrase.SettingsHeading)}
+          </Menu.Label>
           {renderSettingsTab()}
           {renderSceneTab()}
         </Menu>
@@ -217,14 +227,14 @@ const SideMenu = (props: IProps) => {
       <div className="mt-auto w-full">
         <Separator className="mb-4" />
         <div className="flex items-center justify-center gap-x-4">
-          <UpgradeNotifier upgradeStatus={upgradeStatus} />
-          <LogsButton />
-          <TestButton recorderStatus={recorderStatus} />
-          <DiscordButton />
+          <UpgradeNotifier upgradeStatus={upgradeStatus} appState={appState} />
+          <LogsButton appState={appState} />
+          <TestButton recorderStatus={recorderStatus} appState={appState} />
+          <DiscordButton appState={appState} />
         </div>
         {!!appVersion && (
           <div className="w-full mt-1 text-foreground font-sans text-[11px] font-bold text-center opacity-75">
-            Version {appVersion}
+            {getLocalePhrase(appState.language, Phrase.Version)} {appVersion}
           </div>
         )}
       </div>

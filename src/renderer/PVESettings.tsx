@@ -1,6 +1,8 @@
 import { configSchema, ConfigurationSchema } from 'main/configSchema';
 import React from 'react';
 import { Info } from 'lucide-react';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { AppState } from 'main/types';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
@@ -14,9 +16,19 @@ import {
   SelectValue,
 } from './components/Select/Select';
 
-const raidDifficultyOptions = ['LFR', 'Normal', 'Heroic', 'Mythic'];
+const raidDifficultyOptions = [
+  { name: 'LFR', phrase: Phrase.LFR },
+  { name: 'Normal', phrase: Phrase.Normal },
+  { name: 'Heroic', phrase: Phrase.Heroic },
+  { name: 'Mythic', phrase: Phrase.Mythic },
+];
 
-const PVESettings: React.FC = () => {
+interface IProps {
+  appState: AppState;
+}
+
+const PVESettings = (props: IProps) => {
+  const { appState } = props;
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
 
@@ -70,8 +82,14 @@ const PVESettings: React.FC = () => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="recordRaids" className="flex items-center">
-          Record Raids
-          <Tooltip content={configSchema.recordRaids.description} side="top">
+          {getLocalePhrase(appState.language, Phrase.RecordRaidsLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.recordRaids.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -101,9 +119,15 @@ const PVESettings: React.FC = () => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="minEncounterDuration" className="flex items-center">
-          Minimum Encounter Duration (sec)
+          {getLocalePhrase(
+            appState.language,
+            Phrase.MinimumEncounterDurationLabel
+          )}
           <Tooltip
-            content={configSchema.minEncounterDuration.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.minEncounterDuration.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -137,9 +161,15 @@ const PVESettings: React.FC = () => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="minRaidDifficulty" className="flex items-center">
-          Minimum Raid Difficulty
+          {getLocalePhrase(
+            appState.language,
+            Phrase.MinimumRaidDifficultyLabel
+          )}
           <Tooltip
-            content={configSchema.minRaidDifficulty.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.minRaidDifficulty.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -154,9 +184,9 @@ const PVESettings: React.FC = () => {
             <SelectValue placeholder="Select a difficulty" />
           </SelectTrigger>
           <SelectContent>
-            {raidDifficultyOptions.map((difficulty: string) => (
-              <SelectItem key={difficulty} value={difficulty}>
-                {difficulty}
+            {raidDifficultyOptions.map((difficulty) => (
+              <SelectItem key={difficulty.name} value={difficulty.name}>
+                {getLocalePhrase(appState.language, difficulty.phrase)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -189,8 +219,14 @@ const PVESettings: React.FC = () => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="raidOverrun" className="flex items-center">
-          Raid Overrun (sec)
-          <Tooltip content={configSchema.raidOverrun.description} side="top">
+          {getLocalePhrase(appState.language, Phrase.RaidOverrunLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.raidOverrun.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -229,8 +265,14 @@ const PVESettings: React.FC = () => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="dungeonOverrun" className="flex items-center">
-          Mythic+ Overrun (sec)
-          <Tooltip content={configSchema.dungeonOverrun.description} side="top">
+          {getLocalePhrase(appState.language, Phrase.MythicPlusOverrunLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.dungeonOverrun.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -258,8 +300,14 @@ const PVESettings: React.FC = () => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="recordDungeons" className="flex items-center">
-          Record Mythic+
-          <Tooltip content={configSchema.recordDungeons.description} side="top">
+          {getLocalePhrase(appState.language, Phrase.RecordMythicPlusLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.recordDungeons.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -287,9 +335,12 @@ const PVESettings: React.FC = () => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="minKeystoneLevel" className="flex items-center">
-          Minimum Keystone Level
+          {getLocalePhrase(appState.language, Phrase.MinimumKeystoneLevelLabel)}
           <Tooltip
-            content={configSchema.minKeystoneLevel.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.minKeystoneLevel.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />

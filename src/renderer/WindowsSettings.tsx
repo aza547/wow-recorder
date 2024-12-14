@@ -1,10 +1,17 @@
 import * as React from 'react';
 import { ConfigurationSchema } from 'main/configSchema';
+import { AppState } from 'main/types';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 
-const WindowsSettings = () => {
+interface IProps {
+  appState: AppState;
+}
+
+const WindowsSettings = (props: IProps) => {
+  const { appState } = props;
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
 
@@ -41,12 +48,14 @@ const WindowsSettings = () => {
 
   const getSwitchForm = (
     preference: keyof ConfigurationSchema,
-    label: string,
+    label: Phrase,
     changeFn: (checked: boolean) => void
   ) => {
     return (
       <div className="flex flex-col">
-        <Label htmlFor="separateBufferPath">{label}</Label>
+        <Label htmlFor="separateBufferPath">
+          {getLocalePhrase(appState.language, label)}
+        </Label>
         <div className="flex h-10 items-center">
           {getSwitch(preference, changeFn)}
         </div>
@@ -92,10 +101,22 @@ const WindowsSettings = () => {
 
   return (
     <div className="flex flex-row flex-wrap gap-x-8">
-      {getSwitchForm('startUp', 'Run on Startup', setRunOnStartup)}
-      {getSwitchForm('startMinimized', 'Start Minimized', setStartMinimized)}
-      {getSwitchForm('minimizeOnQuit', 'Minimize on Quit', setMinimizeOnQuit)}
-      {getSwitchForm('minimizeToTray', 'Minimize to Tray', setMinimizeToTray)}
+      {getSwitchForm('startUp', Phrase.RunOnStartupLabel, setRunOnStartup)}
+      {getSwitchForm(
+        'startMinimized',
+        Phrase.StartMinimizedLabel,
+        setStartMinimized
+      )}
+      {getSwitchForm(
+        'minimizeOnQuit',
+        Phrase.MinimizeOnQuitLabel,
+        setMinimizeOnQuit
+      )}
+      {getSwitchForm(
+        'minimizeToTray',
+        Phrase.MinimizeToTrayLabel,
+        setMinimizeToTray
+      )}
     </div>
   );
 };

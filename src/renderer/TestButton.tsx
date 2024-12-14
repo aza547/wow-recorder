@@ -1,7 +1,12 @@
 import React from 'react';
 import { VideoCategory } from 'types/VideoCategory';
-import { RecStatus } from 'main/types';
+import { AppState, RecStatus } from 'main/types';
 import { FlaskConical } from 'lucide-react';
+import {
+  getLocaleCategoryLabel,
+  getLocalePhrase,
+  Phrase,
+} from 'localisation/translations';
 import { Button } from './components/Button/Button';
 import {
   HoverCard,
@@ -14,10 +19,11 @@ const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   recorderStatus: RecStatus;
+  appState: AppState;
 }
 
 const TestButton: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus } = props;
+  const { recorderStatus, appState } = props;
 
   const testCategories = [
     VideoCategory.TwoVTwo,
@@ -45,7 +51,9 @@ const TestButton: React.FC<IProps> = (props: IProps) => {
     if (ready) {
       return (
         <div className="flex flex-col gap-y-2">
-          <h2 className="text-sm font-semibold">Select a category to test</h2>
+          <h2 className="text-sm font-semibold">
+            {getLocalePhrase(appState.language, Phrase.TestButtonHeading)}
+          </h2>
           <Separator className="my-1" />
           {testCategories.map((category: VideoCategory) => {
             return (
@@ -56,7 +64,7 @@ const TestButton: React.FC<IProps> = (props: IProps) => {
                   runTest(e, category);
                 }}
               >
-                {category}
+                {getLocaleCategoryLabel(appState.language, category)}
               </Button>
             );
           })}
@@ -66,9 +74,7 @@ const TestButton: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col gap-y-2">
         <p className="text-xs text-popover-foreground/60">
-          Unable to run a test right now. To run a test, World of Warcraft must
-          be running, your settings must be valid, and you must not currently be
-          in an activity.
+          {getLocalePhrase(appState.language, Phrase.TestButtonUnable)}
         </p>
       </div>
     );

@@ -1,4 +1,5 @@
 import { Size } from 'electron';
+import { Language } from 'localisation/translations';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
@@ -317,6 +318,7 @@ type AppState = {
   videoFilterQuery: string;
   videoFullScreen: boolean;
   playing: boolean;
+  language: Language;
 };
 
 type TPreviewPosition = {
@@ -332,8 +334,8 @@ enum DeviceType {
 }
 
 enum EncoderType {
-  HARDWARE = 'Hardware',
-  SOFTWARE = 'Software',
+  HARDWARE,
+  SOFTWARE,
 }
 
 type Encoder = {

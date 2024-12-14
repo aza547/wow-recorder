@@ -1,3 +1,5 @@
+import { Phrase } from 'localisation/translations';
+
 export type ConfigurationSchema = {
   storagePath: string;
   bufferStoragePath: string;
@@ -72,6 +74,7 @@ export type ConfigurationSchema = {
   cloudUploadBattlegrounds: boolean;
   cloudUploadRaidMinDifficulty: string;
   cloudUploadDungeonMinLevel: number;
+  language: string;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -81,405 +84,383 @@ export type ConfigurationSchemaKey = keyof ConfigurationSchema;
  */
 export const configSchema = {
   storagePath: {
-    description:
-      'Location to store the recordings. Warcraft Recorder takes ownership of this directory, it should be empty on initial setup and you should not modify the contents in-place.',
+    description: Phrase.StoragePathDescription,
     type: 'string',
     default: '',
   },
   separateBufferPath: {
-    description:
-      'Enable storing temporary recordings in a seperate location. This should always be a local location. This feature is intended for people who want their final recordings to be on an NFS drive but not incur the network traffic of constantly recording to it.',
+    description: Phrase.SeparateBufferPathDescription,
     type: 'boolean',
     default: false,
   },
   bufferStoragePath: {
-    description:
-      'Location to store temporary recordings. If left unset this will default to a folder inside the Storage Path.',
+    description: Phrase.BufferStoragePathDescription,
     type: 'string',
     default: '',
   },
   retailLogPath: {
-    description:
-      'Location of the World of Warcraft logs folder for your retail installation, e.g. "D:\\World of Warcraft\\_retail_\\Logs".',
+    description: Phrase.RetailLogPathDescription,
     type: 'string',
     default: '',
   },
   classicLogPath: {
-    description:
-      'Location of the World of Warcraft logs folder for your classic installation, e.g. "D:\\World of Warcraft\\_classic_\\Logs".',
+    description: Phrase.ClassicLogPathDescription,
     type: 'string',
     default: '',
   },
   eraLogPath: {
-    description:
-      'Location of the World of Warcraft logs folder for your classic era installation, e.g. "D:\\World of Warcraft\\_classic_era_\\Logs".',
+    description: Phrase.EraLogPathDescription,
     type: 'string',
     default: '',
   },
   maxStorage: {
-    description:
-      'Maximum allowed storage that the application will consume for video files. The oldest videos will be deleted one by one to remain under the limit. Recording will not stop. Set to 0 to signify unlimited.',
+    description: Phrase.MaxStorageDescription,
     type: 'integer',
     default: 0,
     minimum: 0,
   },
   monitorIndex: {
-    description:
-      'The monitor to record. Only applicible if monitor capture is selected.',
+    description: Phrase.MonitorIndexDescription,
     type: 'integer',
     default: 1,
     minimum: 1,
     maximum: 4,
   },
   selectedCategory: {
-    description: 'Last selected video category in the UI.',
+    description: Phrase.SelectedCategoryDescription,
     type: 'integer',
     default: 1,
   },
   audioInputDevices: {
-    description: 'Audio input devices to be included in the recording.',
+    description: Phrase.AudioInputDevicesDescription,
     type: 'string',
     default: '',
   },
   audioOutputDevices: {
-    description: 'Audio output devices to be included in the recording.',
+    description: Phrase.AudioOutputDevicesDescription,
     type: 'string',
     default: '',
   },
   minEncounterDuration: {
-    description:
-      'Encounters shorter than this duration will not be recorded. This setting is aimed at avoiding saving boss resets.',
+    description: Phrase.MinEncounterDurationDescription,
     type: 'integer',
     default: 15,
     maximum: 10000,
   },
   startUp: {
-    description: 'Automatically start the application when Windows starts.',
+    description: Phrase.StartUpDescription,
     type: 'boolean',
     default: false,
   },
   startMinimized: {
-    description: 'Open to the Windows system tray.',
+    description: Phrase.StartMinimizedDescription,
     type: 'boolean',
     default: false,
   },
   obsOutputResolution: {
-    description:
-      'Resolution of videos as saved on disk. Set this to the size of your WoW monitor, or less if you want to scale down.',
+    description: Phrase.ObsOutputResolutionDescription,
     type: 'string',
     default: '1920x1080',
   },
   obsFPS: {
-    description:
-      'The number of frames per second to record the video at. Lower FPS gives smaller video size, but also more choppy playback.',
+    description: Phrase.ObsFPSDescription,
     type: 'integer',
     default: 60,
     minimum: 15,
     maximum: 60,
   },
   obsForceMono: {
-    description:
-      'Whether to force the audio of your input device to mono. Enable if your microphone audio is only playing out of one stereo channel.',
+    description: Phrase.ObsForceMonoDescription,
     type: 'boolean',
     default: true,
   },
   obsQuality: {
-    description:
-      'Quality to record at. Higher quality works your encoder harder and uses more disk space per video.',
+    description: Phrase.ObsQualityDescription,
     type: 'string',
     default: 'Moderate',
   },
   obsCaptureMode: {
-    description:
-      'The capture mode OBS should use to record. See the #faq channel in discord for more details.',
+    description: Phrase.ObsCaptureModeDescription,
     type: 'string',
     default: 'window_capture',
   },
   obsRecEncoder: {
-    description:
-      'The video encoder to use. Hardware encoders are typically preferable, usually giving better performance, but are specific to your graphics card.',
+    description: Phrase.ObsRecEncoderDescription,
     type: 'string',
     default: 'obs_x264',
   },
   recordRetail: {
-    description: 'Whether the application should record retail.',
+    description: Phrase.RecordRetailDescription,
     type: 'boolean',
     default: false,
   },
   recordClassic: {
-    description: 'Whether the application should record classic.',
+    description: Phrase.RecordClassicDescription,
     type: 'boolean',
     default: false,
   },
   recordEra: {
-    description: 'Whether the application should record classic era.',
+    description: Phrase.RecordEraDescription,
     type: 'boolean',
     default: false,
   },
   recordRaids: {
-    description: 'Whether the application should record raids.',
+    description: Phrase.RecordRaidsDescription,
     type: 'boolean',
     default: true,
   },
   recordDungeons: {
-    description: 'Whether the application should record Mythic+.',
+    description: Phrase.RecordDungeonsDescription,
     type: 'boolean',
     default: true,
   },
   recordTwoVTwo: {
-    description: 'Whether the application should record 2v2.',
+    description: Phrase.RecordTwoVTwoDescription,
     type: 'boolean',
     default: true,
   },
   recordThreeVThree: {
-    description: 'Whether the application should record 3v3.',
+    description: Phrase.RecordThreeVThreeDescription,
     type: 'boolean',
     default: true,
   },
   recordFiveVFive: {
-    description: 'Whether the application should record 5v5.',
+    description: Phrase.RecordFiveVFiveDescription,
     type: 'boolean',
     default: true,
   },
   recordSkirmish: {
-    description: 'Whether the application should record skirmishes.',
+    description: Phrase.RecordSkirmishDescription,
     type: 'boolean',
     default: true,
   },
   recordSoloShuffle: {
-    description: 'Whether the application should record solo shuffle.',
+    description: Phrase.RecordSoloShuffleDescription,
     type: 'boolean',
     default: true,
   },
   recordBattlegrounds: {
-    description: 'Whether the application should record battlegrounds.',
+    description: Phrase.RecordBattlegroundsDescription,
     type: 'boolean',
     default: true,
   },
   captureCursor: {
-    description: 'Whether the cursor should be included in recordings.',
+    description: Phrase.CaptureCursorDescription,
     type: 'boolean',
     default: false,
   },
   minKeystoneLevel: {
-    description: 'The minimum keystone level to record.',
+    description: Phrase.MinKeystoneLevelDescription,
     type: 'integer',
     default: 2,
   },
   minRaidDifficulty: {
-    description:
-      'The minimum raid difficulty to record. Only applies to retail.',
+    description: Phrase.MinRaidDifficultyDescription,
     type: 'string',
     default: 'LFR',
   },
   minimizeOnQuit: {
-    description: 'Whether the close button should minimize rather than quit.',
+    description: Phrase.MinimizeOnQuitDescription,
     type: 'boolean',
     default: true,
   },
   minimizeToTray: {
-    description:
-      'Whether the minimize button should minimize to the system tray or the taskbar.',
+    description: Phrase.MinimizeToTrayDescription,
     type: 'boolean',
     default: true,
   },
   chatOverlayEnabled: {
-    description: 'If a chat overlay should be added to the scene.',
+    description: Phrase.ChatOverlayEnabledDescription,
     type: 'boolean',
     default: false,
   },
   chatOverlayOwnImage: {
-    description:
-      'If a custom image should be used as the chat overlay. This feature is only available to Pro users.',
+    description: Phrase.ChatOverlayOwnImageDescription,
     type: 'boolean',
     default: false,
   },
   chatOverlayOwnImagePath: {
-    description:
-      'The PNG file to use as a chat overlay. This feature is only available to Pro users.',
+    description: Phrase.ChatOverlayOwnImagePathDescription,
     type: 'string',
     default: '',
   },
   chatOverlayWidth: {
-    description: 'The width of the chat overlay.',
+    description: Phrase.ChatOverlayWidthDescription,
     type: 'integer',
     default: 700,
   },
   chatOverlayHeight: {
-    description: 'The height of the chat overlay.',
+    description: Phrase.ChatOverlayHeightDescription,
     type: 'integer',
     default: 230,
   },
   chatOverlayScale: {
-    description: 'The scale of the chat overlay.',
+    description: Phrase.ChatOverlayScaleDescription,
     type: 'integer',
     default: 1,
   },
   chatOverlayXPosition: {
-    description: 'The x-position of the chat overlay.',
+    description: Phrase.ChatOverlayXPositionDescription,
     type: 'integer',
     default: 0,
   },
   chatOverlayYPosition: {
-    description: 'The y-position of the chat overlay.',
+    description: Phrase.ChatOverlayYPositionDescription,
     type: 'integer',
     default: 870,
   },
   speakerVolume: {
-    description: 'The volume of your speakers in the recording, from 0 to 1.',
+    description: Phrase.SpeakerVolumeDescription,
     type: 'integer',
     default: 1,
   },
   micVolume: {
-    description: 'The volume of your mic in the recording, from 0 to 1.',
+    description: Phrase.MicVolumeDescription,
     type: 'integer',
     default: 1,
   },
   deathMarkers: {
-    description: 'Death markers to display on the video timeline.',
+    description: Phrase.DeathMarkersDescription,
     type: 'integer',
     default: 1,
   },
   encounterMarkers: {
-    description: 'Death markers to display on the video timeline.',
+    description: Phrase.EncounterMarkersDescription,
     type: 'integer',
     default: true,
   },
   roundMarkers: {
-    description: 'Death markers to display on the video timeline.',
+    description: Phrase.RoundMarkersDescription,
     type: 'boolean',
     default: true,
   },
   pushToTalk: {
-    description:
-      'If the input audio devices should be recorded all the time, or only when a hotkey is held down.',
+    description: Phrase.PushToTalkDescription,
     type: 'boolean',
     default: false,
   },
   pushToTalkKey: {
-    description: 'The push to talk hotkey, represented by the key code.',
+    description: Phrase.PushToTalkKeyDescription,
     type: 'integer',
     default: -1,
   },
   pushToTalkMouseButton: {
-    description: 'The push to talk mouse button.',
+    description: Phrase.PushToTalkMouseButtonDescription,
     type: 'integer',
     default: -1,
   },
   pushToTalkModifiers: {
-    description:
-      'A comma seperated list of modifiers required in conjunction with the push to talk hotkey.',
+    description: Phrase.PushToTalkModifiersDescription,
     type: 'string',
     default: '',
   },
   obsAudioSuppression: {
-    description:
-      'Suppress background noise picked up by your microphone, this can help reduce keyboard clacking, breathing, etc.',
+    description: Phrase.ObsAudioSuppressionDescription,
     type: 'boolean',
     default: true,
   },
   raidOverrun: {
-    description: 'Number of seconds to record after a boss has been killed.',
+    description: Phrase.RaidOverrunDescription,
     type: 'integer',
     default: 15,
     minimum: 0,
     maximum: 60,
   },
   dungeonOverrun: {
-    description:
-      'Number of seconds to record after a dungeon has been completed.',
+    description: Phrase.DungeonOverrunDescription,
     type: 'integer',
     default: 5,
     minimum: 0,
     maximum: 60,
   },
   cloudStorage: {
-    description: 'Enable the ability to play videos from the cloud.',
+    description: Phrase.CloudStorageDescription,
     type: 'boolean',
     default: false,
   },
   cloudUpload: {
-    description:
-      'Upload your videos to the cloud, this enables both automatic upload on completion of a recording, as well as the ability to manually upload existing videos.',
+    description: Phrase.CloudUploadDescription,
     type: 'boolean',
     default: false,
   },
   cloudUploadRateLimit: {
-    description:
-      'If upload to the cloud should be rate limited. Useful if you are finding uploading is causing you to lag.',
+    description: Phrase.CloudUploadRateLimitDescription,
     type: 'boolean',
     default: false,
   },
   cloudUploadRateLimitMbps: {
-    description: 'The upload rate limit in MB/s ',
+    description: Phrase.CloudUploadRateLimitMbpsDescription,
     type: 'integer',
     default: 100,
   },
   cloudAccountName: {
-    description: 'Your Warcraft Recorder account username.',
+    description: Phrase.CloudAccountNameDescription,
     type: 'string',
     default: '',
   },
   cloudAccountPassword: {
-    description: 'Your Warcraft Recorder account password.',
+    description: Phrase.CloudAccountPasswordDescription,
     type: 'string',
     default: '',
   },
   cloudGuildName: {
-    description: 'The guild or group your account is affiliated with.',
+    description: Phrase.CloudGuildNameDescription,
     type: 'string',
     default: '',
   },
   cloudUpload2v2: {
-    description: 'If 2v2 recordings should be uploaded to the cloud.',
+    description: Phrase.CloudUpload2v2Description,
     type: 'boolean',
     default: true,
   },
   cloudUpload3v3: {
-    description: 'If 3v3 recordings should be uploaded to the cloud.',
+    description: Phrase.CloudUpload3v3Description,
     type: 'boolean',
     default: true,
   },
   cloudUpload5v5: {
-    description: 'If 5v5 recordings should be uploaded to the cloud.',
+    description: Phrase.CloudUpload5v5Description,
     type: 'boolean',
     default: true,
   },
   cloudUploadSkirmish: {
-    description: 'If skirmish recordings should be uploaded to the cloud.',
+    description: Phrase.CloudUploadSkirmishDescription,
     type: 'boolean',
     default: true,
   },
   cloudUploadSoloShuffle: {
-    description: 'If solo shuffle recordings should be uploaded to the cloud.',
+    description: Phrase.CloudUploadSoloShuffleDescription,
     type: 'boolean',
     default: true,
   },
   cloudUploadDungeons: {
-    description: 'If mythic+ recordings should be uploaded to the cloud.',
+    description: Phrase.CloudUploadDungeonsDescription,
     type: 'boolean',
     default: true,
   },
   cloudUploadRaids: {
-    description:
-      'If raid encounter recordings should be uploaded to the cloud.',
+    description: Phrase.CloudUploadRaidsDescription,
     type: 'boolean',
     default: true,
   },
   cloudUploadBattlegrounds: {
-    description: 'If battleground recordings should be uploaded to the cloud.',
+    description: Phrase.CloudUploadBattlegroundsDescription,
     type: 'boolean',
     default: true,
   },
   cloudUploadRaidMinDifficulty: {
-    description:
-      'The minimum raid encounter difficulty for automatic cloud uploading.',
+    description: Phrase.CloudUploadRaidMinDifficultyDescription,
     type: 'string',
     default: 'LFR',
   },
   cloudUploadDungeonMinLevel: {
-    description: 'The minimum keystone level for automatic cloud uploading.',
+    description: Phrase.CloudUploadDungeonMinLevelDescription,
     type: 'integer',
     default: 2,
+  },
+  language: {
+    description: Phrase.LanguageDescription,
+    type: 'string',
+    default: 'English',
   },
 };

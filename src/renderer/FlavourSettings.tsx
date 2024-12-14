@@ -1,7 +1,8 @@
 import { ConfigurationSchema, configSchema } from 'main/configSchema';
 import React, { Dispatch, SetStateAction } from 'react';
-import { RecStatus } from 'main/types';
+import { AppState, RecStatus } from 'main/types';
 import { Info } from 'lucide-react';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
 import { pathSelect } from './rendererutils';
 import Switch from './components/Switch/Switch';
@@ -14,12 +15,13 @@ interface IProps {
   recorderStatus: RecStatus;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
+  appState: AppState;
 }
 
 const ipc = window.electron.ipcRenderer;
 
 const FlavourSettings: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, config, setConfig } = props;
+  const { recorderStatus, config, setConfig, appState } = props;
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
@@ -61,7 +63,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <TextBanner>
-        These settings cannot be modified while a recording is active.
+        {getLocalePhrase(appState.language, Phrase.SettingsDisabledText)}
       </TextBanner>
     );
   };
@@ -123,8 +125,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[140px]">
           <Label htmlFor="recordRetail" className="flex items-center">
-            Record Retail
-            <Tooltip content={configSchema.recordRetail.description} side="top">
+            {getLocalePhrase(appState.language, Phrase.RecordRetailLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.recordRetail.description
+              )}
+              side="top"
+            >
               <Info size={20} className="inline-flex ml-2" />
             </Tooltip>
           </Label>
@@ -135,9 +143,12 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordRetail && (
           <div className="flex flex-col w-1/4 min-w-60 max-w-120">
             <Label htmlFor="retailLogPath" className="flex items-center">
-              Retail Log Path
+              {getLocalePhrase(appState.language, Phrase.RetailLogPathLabel)}
               <Tooltip
-                content={configSchema.retailLogPath.description}
+                content={getLocalePhrase(
+                  appState.language,
+                  configSchema.retailLogPath.description
+                )}
                 side="top"
               >
                 <Info size={20} className="inline-flex ml-2" />
@@ -152,7 +163,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             />
             {config.retailLogPath === '' && (
               <span className="text-error text-sm">
-                Invalid retail log path
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.InvalidRetailLogPathText
+                )}
               </span>
             )}
           </div>
@@ -189,9 +203,12 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[140px]">
           <Label htmlFor="recordClassic" className="flex items-center">
-            Record Classic
+            {getLocalePhrase(appState.language, Phrase.RecordClassicLabel)}
             <Tooltip
-              content={configSchema.recordClassic.description}
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.recordClassic.description
+              )}
               side="top"
             >
               <Info size={20} className="inline-flex ml-2" />
@@ -204,9 +221,12 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordClassic && (
           <div className="flex flex-col w-1/4 min-w-60 max-w-120">
             <Label htmlFor="classicLogPath" className="flex items-center">
-              Classic Log Path
+              {getLocalePhrase(appState.language, Phrase.ClassicLogPathLabel)}
               <Tooltip
-                content={configSchema.classicLogPath.description}
+                content={getLocalePhrase(
+                  appState.language,
+                  configSchema.classicLogPath.description
+                )}
                 side="top"
               >
                 <Info size={20} className="inline-flex ml-2" />
@@ -221,7 +241,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             />
             {config.classicLogPath === '' && (
               <span className="text-error text-sm">
-                Invalid classic log path
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.InvalidClassicLogPathText
+                )}
               </span>
             )}
           </div>
@@ -267,8 +290,14 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-row gap-x-6">
         <div className="flex flex-col w-[140px]">
           <Label htmlFor="recordEra" className="flex items-center">
-            Record Classic Era
-            <Tooltip content={configSchema.recordEra.description} side="top">
+            {getLocalePhrase(appState.language, Phrase.RecordClassicEraLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.recordEra.description
+              )}
+              side="top"
+            >
               <Info size={20} className="inline-flex ml-2" />
             </Tooltip>
           </Label>
@@ -279,8 +308,17 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordEra && (
           <div className="flex flex-col w-1/4 min-w-60 max-w-120">
             <Label htmlFor="eraLogPath" className="flex items-center">
-              Classic Era Log Path
-              <Tooltip content={configSchema.eraLogPath.description} side="top">
+              {getLocalePhrase(
+                appState.language,
+                Phrase.ClassicEraLogPathLabel
+              )}
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  configSchema.eraLogPath.description
+                )}
+                side="top"
+              >
                 <Info size={20} className="inline-flex ml-2" />
               </Tooltip>
             </Label>
@@ -293,7 +331,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             />
             {config.eraLogPath === '' && (
               <span className="text-error text-xs font-semibold mt-1">
-                Invalid Classic Era log path
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.InvalidClassicEraLogPathText
+                )}
               </span>
             )}
           </div>

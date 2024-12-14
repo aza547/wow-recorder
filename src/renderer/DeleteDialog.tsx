@@ -1,3 +1,5 @@
+import { AppState } from 'main/types';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import {
   Dialog,
   DialogClose,
@@ -17,6 +19,7 @@ type DeleteDialogProps = {
   tooltipContent: string;
   warning?: string;
   skipPossible: boolean;
+  appState: AppState;
 };
 
 const DeleteDialog = ({
@@ -25,6 +28,7 @@ const DeleteDialog = ({
   tooltipContent,
   warning,
   skipPossible,
+  appState,
 }: DeleteDialogProps) => {
   const getWarningMessage = () => {
     return <div className="text-sm">{warning}</div>;
@@ -33,13 +37,13 @@ const DeleteDialog = ({
   const getSkipMessage = () => {
     return (
       <div className="text-sm">
-        Hold{' '}
+        {getLocalePhrase(appState.language, Phrase.Hold)}
         <img
           src={ControlIcon}
           className="h-[32px] inline-flex mx-1"
           alt="ctrlIcon"
-        />{' '}
-        to skip this prompt.
+        />
+        {getLocalePhrase(appState.language, Phrase.ToSkip)}
       </div>
     );
   };
@@ -50,17 +54,21 @@ const DeleteDialog = ({
       </Tooltip>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Are you sure?</DialogTitle>
+          <DialogTitle>
+            {getLocalePhrase(appState.language, Phrase.AreYouSure)}
+          </DialogTitle>
         </DialogHeader>
         {warning && getWarningMessage()}
         {skipPossible && getSkipMessage()}
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="ghost">Cancel</Button>
+            <Button variant="ghost">
+              {getLocalePhrase(appState.language, Phrase.CancelTooltip)}
+            </Button>
           </DialogClose>
           <DialogClose asChild>
             <Button variant="destructive" type="submit" onClick={onDelete}>
-              Delete
+              {getLocalePhrase(appState.language, Phrase.DeleteButtonTooltip)}
             </Button>
           </DialogClose>
         </DialogFooter>
