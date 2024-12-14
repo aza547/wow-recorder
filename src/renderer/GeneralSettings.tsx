@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { configSchema } from 'main/configSchema';
-import { DiskStatus, RecStatus } from 'main/types';
+import { AppState, DiskStatus, RecStatus } from 'main/types';
 import { useEffect, useRef, useState } from 'react';
 import { HardDrive, Info } from 'lucide-react';
+import { getLocalePhrase, Language } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
 import { Input } from './components/Input/Input';
@@ -14,12 +15,13 @@ import TextBanner from './components/TextBanner/TextBanner';
 
 interface IProps {
   recorderStatus: RecStatus;
+  appState: AppState;
 }
 
 const ipc = window.electron.ipcRenderer;
 
 const GeneralSettings: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus } = props;
+  const { recorderStatus, appState } = props;
   const [config, setConfig] = useSettings();
   const initialRenderVideoConfig = useRef(true);
 
@@ -115,7 +117,13 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-col">
         <Label htmlFor="storagePath" className="flex items-center">
           Disk Storage Folder
-          <Tooltip content={configSchema.storagePath.description} side="top">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.storagePath.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>

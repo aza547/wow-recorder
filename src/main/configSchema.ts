@@ -1,3 +1,5 @@
+import { Phrase } from 'localisation/translations';
+
 export type ConfigurationSchema = {
   storagePath: string;
   bufferStoragePath: string;
@@ -82,8 +84,7 @@ export type ConfigurationSchemaKey = keyof ConfigurationSchema;
  */
 export const configSchema = {
   storagePath: {
-    description:
-      'Location to store the recordings. Warcraft Recorder takes ownership of this directory, it should be empty on initial setup and you should not modify the contents in-place.',
+    description: Phrase.StoragePathDescription,
     type: 'string',
     default: '',
   },

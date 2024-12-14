@@ -49,7 +49,10 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
               <div>
                 <CategoryHeading>General Settings</CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <GeneralSettings recorderStatus={recorderStatus} />
+                <GeneralSettings
+                  recorderStatus={recorderStatus}
+                  appState={appState}
+                />
               </div>
               <div>
                 <CategoryHeading>Windows Settings</CategoryHeading>

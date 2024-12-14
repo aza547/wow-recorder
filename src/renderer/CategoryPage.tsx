@@ -2,7 +2,7 @@ import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject } from 'react';
 import { Trash } from 'lucide-react';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { VideoPlayer } from './VideoPlayer';
 import { VideoCategory } from '../types/VideoCategory';
