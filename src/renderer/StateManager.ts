@@ -140,11 +140,16 @@ export default class StateManager {
       const videoToCompare = videos[i];
       const sameHash = videoToCompare.uniqueHash === video.uniqueHash;
 
-      const clipCompare = videoToCompare.category === VideoCategory.Clips;
-      const isClip = video.category === VideoCategory.Clips;
+      const isVideoClip = video.category === VideoCategory.Clips;
+      const isCompareClip = videoToCompare.category === VideoCategory.Clips;
 
-      if ((clipCompare && !isClip) || (isClip && !clipCompare)) {
-        // We only correlate clips with other clips. Go next.
+      if (
+        (isVideoClip || isCompareClip) &&
+        video.videoName !== videoToCompare.videoName
+      ) {
+        // Only correlate clips if they are the literally the same video
+        // with different storage. Otherwise we end up grouping from the
+        // parent hash which is confusing.
         // eslint-disable-next-line no-continue
         continue;
       }
