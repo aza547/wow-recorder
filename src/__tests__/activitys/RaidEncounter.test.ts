@@ -2,6 +2,7 @@ import { specializationById } from '../../main/constants';
 import RaidEncounter from '../../activitys/RaidEncounter';
 import { Flavour } from '../../main/types';
 import Combatant from '../../main/Combatant';
+import { Phrase } from '../../localisation/types';
 
 const getRandomSpecID = () => {
   const keys = Object.keys(specializationById);
@@ -51,6 +52,7 @@ test('Basic Raid Encounter', () => {
     difficultyID: 'mythic',
     difficulty: 'M',
     partyType: 'raid',
+    phrase: Phrase.Mythic,
   });
 
   expect(raidEncounter.resultInfo).toBe('Kill');

@@ -1,4 +1,4 @@
-import { Phrase } from 'localisation/types';
+import { Phrase } from '../localisation/types';
 import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchemaKey } from './configSchema';
 
