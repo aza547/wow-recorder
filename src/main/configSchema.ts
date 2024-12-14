@@ -72,6 +72,7 @@ export type ConfigurationSchema = {
   cloudUploadBattlegrounds: boolean;
   cloudUploadRaidMinDifficulty: string;
   cloudUploadDungeonMinLevel: number;
+  language: string;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -481,5 +482,10 @@ export const configSchema = {
     description: 'The minimum keystone level for automatic cloud uploading.',
     type: 'integer',
     default: 2,
+  },
+  language: {
+    description: 'The language to use in the application.',
+    type: 'string',
+    default: 'English',
   },
 };

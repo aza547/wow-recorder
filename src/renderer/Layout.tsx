@@ -56,6 +56,8 @@ const Layout = (props: IProps) => {
         recorderStatus={recorderStatus}
         config={config}
         setConfig={setConfig}
+        appState={appState}
+        setAppState={setAppState}
       />
     );
   };

@@ -84,6 +84,9 @@ const WarcraftRecorder = () => {
 
     // This allows us to retain the playing state of the video when switching viewpoints.
     playing: false,
+
+    // The language the client is in.
+    language: config.language,
   });
 
   // The video state contains most of the frontend state, it's complex so

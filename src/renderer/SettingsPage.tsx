@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction } from 'react';
-import { RecStatus } from 'main/types';
+import { AppState, RecStatus } from 'main/types';
 import { ConfigurationSchema } from 'main/configSchema';
 import GeneralSettings from './GeneralSettings';
 import WindowsSettings from './WindowsSettings';
@@ -15,11 +15,14 @@ import {
 } from './components/Tabs/Tabs';
 import Separator from './components/Separator/Separator';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
+import LocaleSettings from './LocaleSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
   config: ConfigurationSchema;
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
+  appState: AppState;
+  setAppState: React.Dispatch<React.SetStateAction<AppState>>;
 }
 
 const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
@@ -27,7 +30,7 @@ const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
 );
 
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, config, setConfig } = props;
+  const { recorderStatus, config, setConfig, appState, setAppState } = props;
 
   return (
     <div className="w-full h-full bg-background-higher pt-[32px] px-4">
@@ -52,6 +55,16 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <CategoryHeading>Windows Settings</CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <WindowsSettings />
+              </div>
+              <div>
+                <CategoryHeading>Locale Settings</CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <LocaleSettings
+                  config={config}
+                  setConfig={setConfig}
+                  appState={appState}
+                  setAppState={setAppState}
+                />
               </div>
             </div>
           </TabsContent>

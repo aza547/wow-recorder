@@ -2,6 +2,7 @@ import { Size } from 'electron';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
+import { Language } from 'localisation/translations';
 
 /**
  * Application recording status.
@@ -317,6 +318,7 @@ type AppState = {
   videoFilterQuery: string;
   videoFullScreen: boolean;
   playing: boolean;
+  language: Language;
 };
 
 type TPreviewPosition = {
