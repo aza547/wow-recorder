@@ -1,6 +1,8 @@
 import { Box } from '@mui/material';
 import React from 'react';
 import { AppState, RecStatus } from 'main/types';
+import { Phrase } from 'localisation/types';
+import { getLocalePhrase } from 'localisation/translations';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
 import VideoSourceControls from './VideoSourceControls';
@@ -38,10 +40,18 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
       </Box>
       <Tabs defaultValue="source" className="w-full h-[40%] px-4">
         <TabsList>
-          <TabsTrigger value="source">Source</TabsTrigger>
-          <TabsTrigger value="video">Video</TabsTrigger>
-          <TabsTrigger value="audio">Audio</TabsTrigger>
-          <TabsTrigger value="overlay">Overlay</TabsTrigger>
+          <TabsTrigger value="source">
+            {getLocalePhrase(appState.language, Phrase.SourceHeading)}
+          </TabsTrigger>
+          <TabsTrigger value="video">
+            {getLocalePhrase(appState.language, Phrase.VideoHeading)}
+          </TabsTrigger>
+          <TabsTrigger value="audio">
+            {getLocalePhrase(appState.language, Phrase.AudioHeading)}
+          </TabsTrigger>
+          <TabsTrigger value="overlay">
+            {getLocalePhrase(appState.language, Phrase.OverlayHeading)}
+          </TabsTrigger>
         </TabsList>
         <ScrollArea
           withScrollIndicators={false}

@@ -1,7 +1,7 @@
 import { configSchema, ConfigurationSchema } from 'main/configSchema';
 import React from 'react';
 import { Info } from 'lucide-react';
-import { getLocalePhrase } from 'localisation/translations';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { AppState } from 'main/types';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
@@ -77,7 +77,7 @@ const PVESettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="recordRaids" className="flex items-center">
-          Record Raids
+          {getLocalePhrase(appState.language, Phrase.RecordRaidsLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -114,7 +114,10 @@ const PVESettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="minEncounterDuration" className="flex items-center">
-          Minimum Encounter Duration (sec)
+          {getLocalePhrase(
+            appState.language,
+            Phrase.MinimumEncounterDurationLabel
+          )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -153,7 +156,10 @@ const PVESettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="minRaidDifficulty" className="flex items-center">
-          Minimum Raid Difficulty
+          {getLocalePhrase(
+            appState.language,
+            Phrase.MinimumRaidDifficultyLabel
+          )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -208,7 +214,7 @@ const PVESettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="raidOverrun" className="flex items-center">
-          Raid Overrun (sec)
+          {getLocalePhrase(appState.language, Phrase.RaidOverrunLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -254,7 +260,7 @@ const PVESettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="dungeonOverrun" className="flex items-center">
-          Mythic+ Overrun (sec)
+          {getLocalePhrase(appState.language, Phrase.MythicPlusOverrunLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -289,7 +295,7 @@ const PVESettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="recordDungeons" className="flex items-center">
-          Record Mythic+
+          {getLocalePhrase(appState.language, Phrase.RecordMythicPlusLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -324,7 +330,7 @@ const PVESettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="minKeystoneLevel" className="flex items-center">
-          Minimum Keystone Level
+          {getLocalePhrase(appState.language, Phrase.MinimumKeystoneLevelLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,

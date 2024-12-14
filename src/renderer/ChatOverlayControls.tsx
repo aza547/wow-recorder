@@ -2,7 +2,7 @@ import React from 'react';
 import { configSchema } from 'main/configSchema';
 import { Info, Lock } from 'lucide-react';
 import { AppState } from 'main/types';
-import { getLocalePhrase } from 'localisation/translations';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues, getConfigValue } from './useSettings';
 import { fileSelect } from './rendererutils';
 import Label from './components/Label/Label';
@@ -112,7 +112,7 @@ const ChatOverlayControls = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label className="flex items-center">
-          Chat Overlay
+          {getLocalePhrase(appState.language, Phrase.ChatOverlayLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -137,7 +137,7 @@ const ChatOverlayControls = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label className="flex items-center gap-x-2">
-          Own Image
+          {getLocalePhrase(appState.language, Phrase.OwnImageLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -171,7 +171,7 @@ const ChatOverlayControls = (props: IProps) => {
       <div className="flex flex-col gap-y-4">
         <div className="flex gap-x-3 items-center">
           <Label className="flex items-center h-[20px] w-[40px] mb-0">
-            Width
+            {getLocalePhrase(appState.language, Phrase.WidthLabel)}
           </Label>
           <div className="flex w-48 h-[20px] items-center">
             <Slider
@@ -186,7 +186,7 @@ const ChatOverlayControls = (props: IProps) => {
         </div>
         <div className="flex gap-x-3 items-center">
           <Label className="flex items-center h-[20px] w-[40px] mb-0">
-            Height
+            {getLocalePhrase(appState.language, Phrase.HeightLabel)}
           </Label>
           <div className="flex w-48 h-[20px] items-center">
             <Slider
@@ -208,7 +208,7 @@ const ChatOverlayControls = (props: IProps) => {
       <div className="flex flex-col gap-y-4">
         <div className="flex gap-x-3 items-center">
           <Label className="flex items-center h-[20px] w-[60px] mb-0">
-            Horizontal
+            {getLocalePhrase(appState.language, Phrase.HorizontalLabel)}
           </Label>
           <div className="flex w-48 h-[20px] items-center">
             <Slider
@@ -223,7 +223,7 @@ const ChatOverlayControls = (props: IProps) => {
         </div>
         <div className="flex gap-x-3 items-center">
           <Label className="flex items-center h-[20px] w-[60px] mb-0">
-            Vertical
+            {getLocalePhrase(appState.language, Phrase.VerticalLabel)}
           </Label>
           <div className="flex w-48 h-[20px] items-center">
             <Slider
@@ -288,7 +288,7 @@ const ChatOverlayControls = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
         <Label htmlFor="bufferStoragePath" className="flex items-center">
-          Image Path
+          {getLocalePhrase(appState.language, Phrase.ImagePathLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,

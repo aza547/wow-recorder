@@ -3,7 +3,7 @@ import { configSchema } from 'main/configSchema';
 import { AppState, DiskStatus, RecStatus } from 'main/types';
 import { useEffect, useRef, useState } from 'react';
 import { HardDrive, Info } from 'lucide-react';
-import { getLocalePhrase, Language } from 'localisation/translations';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
 import { Input } from './components/Input/Input';
@@ -116,7 +116,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label htmlFor="storagePath" className="flex items-center">
-          Disk Storage Folder
+          {getLocalePhrase(appState.language, Phrase.DiskStorageFolderLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -169,7 +169,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label htmlFor="separateBufferPath" className="flex items-center">
-          Separate Buffer Folder
+          {getLocalePhrase(appState.language, Phrase.SeparateBufferFolderLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -203,7 +203,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
         <Label htmlFor="bufferStoragePath" className="flex items-center">
-          Buffer Folder
+          {getLocalePhrase(appState.language, Phrase.BufferFolderLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -246,7 +246,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
         <Label htmlFor="maxDiskStorage" className="flex items-center">
-          Max Disk Storage (GB)
+          {getLocalePhrase(appState.language, Phrase.MaxDiskStorageLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,

@@ -4,7 +4,7 @@ import { obsResolutions } from 'main/constants';
 import { configSchema } from 'main/configSchema';
 import { ESupportedEncoders, QualityPresets } from 'main/obsEnums';
 import { Info } from 'lucide-react';
-import { getLocalePhrase } from 'localisation/translations';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   encoderFilter,
@@ -126,7 +126,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
-          Canvas Resolution
+          {getLocalePhrase(appState.language, Phrase.CanvasResolutionLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -178,7 +178,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     return (
       <div>
         <Label className="flex items-center">
-          FPS
+          {getLocalePhrase(appState.language, Phrase.FPSLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -245,7 +245,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
-          Quality
+          {getLocalePhrase(appState.language, Phrase.QualityLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -293,7 +293,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
-          Video Encoder
+          {getLocalePhrase(appState.language, Phrase.VideoEncoderLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,

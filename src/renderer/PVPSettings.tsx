@@ -1,10 +1,17 @@
 import { ConfigurationSchema } from 'main/configSchema';
 import React from 'react';
+import { AppState } from 'main/types';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 
-const PVPSettings: React.FC = () => {
+interface IProps {
+  appState: AppState;
+}
+
+const PVPSettings = (props: IProps) => {
+  const { appState } = props;
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
 
@@ -45,13 +52,13 @@ const PVPSettings: React.FC = () => {
 
   const getSwitchForm = (
     preference: keyof ConfigurationSchema,
-    label: string,
+    label: Phrase,
     changeFn: (checked: boolean) => void
   ) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor={preference} className="flex items-center">
-          {label}
+          {getLocalePhrase(appState.language, label)}
         </Label>
         <div className="flex h-10 items-center">
           {getSwitch(preference, changeFn)}
@@ -116,14 +123,22 @@ const PVPSettings: React.FC = () => {
 
   return (
     <div className="flex flex-row flex-wrap gap-x-4">
-      {getSwitchForm('recordTwoVTwo', 'Record 2v2', setRecord2v2)}
-      {getSwitchForm('recordThreeVThree', 'Record 3v3', setRecord3v3)}
-      {getSwitchForm('recordFiveVFive', 'Record 5v5', setRecord5v5)}
-      {getSwitchForm('recordSkirmish', 'Record Skirmish', setRecordSkirmish)}
-      {getSwitchForm('recordSoloShuffle', 'Record Solo Shuffle', setRecordSolo)}
+      {getSwitchForm('recordTwoVTwo', Phrase.Record2v2Label, setRecord2v2)}
+      {getSwitchForm('recordThreeVThree', Phrase.Record3v3Label, setRecord3v3)}
+      {getSwitchForm('recordFiveVFive', Phrase.Record5v5Label, setRecord5v5)}
+      {getSwitchForm(
+        'recordSkirmish',
+        Phrase.RecordSkirmishLabel,
+        setRecordSkirmish
+      )}
+      {getSwitchForm(
+        'recordSoloShuffle',
+        Phrase.RecordSoloShuffleLabel,
+        setRecordSolo
+      )}
       {getSwitchForm(
         'recordBattlegrounds',
-        'Record Battlegrounds',
+        Phrase.RecordBattlegroundsLabel,
         setRecordBgs
       )}
     </div>

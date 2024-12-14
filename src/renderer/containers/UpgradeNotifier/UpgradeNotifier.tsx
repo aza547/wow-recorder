@@ -1,5 +1,6 @@
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { ArrowBigDownDash } from 'lucide-react';
-import { UpgradeStatus } from 'main/types';
+import { AppState, UpgradeStatus } from 'main/types';
 import React from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import { Tooltip } from 'renderer/components/Tooltip/Tooltip';
@@ -8,6 +9,7 @@ const ipc = window.electron.ipcRenderer;
 
 type UpgradeNotifierProps = {
   upgradeStatus: UpgradeStatus;
+  appState: AppState;
 };
 
 function arePropsEqual(
@@ -21,11 +23,16 @@ function arePropsEqual(
 }
 
 const UpgradeNotifier = React.memo(
-  ({ upgradeStatus }: UpgradeNotifierProps) => {
+  ({ upgradeStatus, appState }: UpgradeNotifierProps) => {
     if (!upgradeStatus.available) return null;
 
     return (
-      <Tooltip content="An update is available">
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.UpdateAvailableTooltip
+        )}
+      >
         <Button
           variant="ghost"
           type="button"

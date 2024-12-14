@@ -1,6 +1,7 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import { AppState, RecStatus } from 'main/types';
 import { ConfigurationSchema } from 'main/configSchema';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
 import WindowsSettings from './WindowsSettings';
 import FlavourSettings from './FlavourSettings';
@@ -47,7 +48,12 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
           <TabsContent value="application">
             <div className="p-4 flex flex-col gap-y-8">
               <div>
-                <CategoryHeading>General Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.GeneralSettingsLabel
+                  )}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <GeneralSettings
                   recorderStatus={recorderStatus}
@@ -55,12 +61,22 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 />
               </div>
               <div>
-                <CategoryHeading>Windows Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.WindowsSettingsLabel
+                  )}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <WindowsSettings />
+                <WindowsSettings appState={appState} />
               </div>
               <div>
-                <CategoryHeading>Locale Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.LocaleSettingsLabel
+                  )}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <LocaleSettings
                   config={config}
@@ -75,7 +91,9 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
           <TabsContent value="game">
             <div className="p-4 flex flex-col gap-y-8">
               <div>
-                <CategoryHeading>Game Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(appState.language, Phrase.GameSettingsLabel)}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <FlavourSettings
                   recorderStatus={recorderStatus}
@@ -85,21 +103,30 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 />
               </div>
               <div>
-                <CategoryHeading>PvE Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(appState.language, Phrase.PVESettingsLabel)}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <PVESettings appState={appState}/>
+                <PVESettings appState={appState} />
               </div>
               <div>
-                <CategoryHeading>PvP Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(appState.language, Phrase.PVPSettingsLabel)}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <PVPSettings />
+                <PVPSettings appState={appState} />
               </div>
             </div>
           </TabsContent>
           <TabsContent value="pro">
             <div className="p-4 flex flex-col gap-y-8">
               <div>
-                <CategoryHeading>Cloud Settings</CategoryHeading>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.CloudSettingsLabel
+                  )}
+                </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <CloudSettings
                   recorderStatus={recorderStatus}

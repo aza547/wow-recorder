@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'main/configSchema';
 import { Info } from 'lucide-react';
-import { getLocalePhrase } from 'localisation/translations';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
 import {
@@ -87,7 +87,7 @@ const VideoSourceControls = (props: IProps) => {
     return (
       <div>
         <Label className="flex items-center">
-          Capture Mode
+          {getLocalePhrase(appState.language, Phrase.CaptureModeLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -121,7 +121,7 @@ const VideoSourceControls = (props: IProps) => {
     return (
       <div>
         <Label className="flex items-center">
-          Monitor
+          {getLocalePhrase(appState.language, Phrase.MonitorLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -153,7 +153,7 @@ const VideoSourceControls = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label className="flex items-center">
-          Capture Cursor
+          {getLocalePhrase(appState.language, Phrase.CaptureCursorLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,

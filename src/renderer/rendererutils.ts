@@ -37,6 +37,7 @@ import { ESupportedEncoders } from 'main/obsEnums';
 import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'main/configSchema';
 import { Renderer } from 'react-dom';
+import { Language } from 'localisation/translations';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
