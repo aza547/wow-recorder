@@ -1,8 +1,8 @@
 import { Size } from 'electron';
+import { Language } from 'localisation/translations';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from './ConfigService';
-import { Language } from 'localisation/translations';
 
 /**
  * Application recording status.
@@ -334,8 +334,8 @@ enum DeviceType {
 }
 
 enum EncoderType {
-  HARDWARE = 'Hardware',
-  SOFTWARE = 'Software',
+  HARDWARE,
+  SOFTWARE,
 }
 
 type Encoder = {

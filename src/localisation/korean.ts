@@ -7,7 +7,6 @@ const KOREAN: Translations = {
   [Phrase.SetupInstructions]: '샘플 텍스트',
   [Phrase.ClipsDisplayedHere]: '샘플 텍스트',
   [Phrase.NoClipsSaved]: '샘플 텍스트',
-
   [Phrase.StoragePathDescription]: '샘플 텍스트',
   [Phrase.SeparateBufferPathDescription]: '샘플 텍스트',
   [Phrase.BufferStoragePathDescription]: '샘플 텍스트',
@@ -82,7 +81,6 @@ const KOREAN: Translations = {
   [Phrase.CloudUploadRaidMinDifficultyDescription]: '샘플 텍스트',
   [Phrase.CloudUploadDungeonMinLevelDescription]: '샘플 텍스트',
   [Phrase.LanguageDescription]: '샘플 텍스트',
-  
   [Phrase.RecordingsHeading]: '샘플 텍스트',
   [Phrase.SettingsHeading]: '샘플 텍스트',
   [Phrase.GeneralButtonText]: '샘플 텍스트',
@@ -101,7 +99,6 @@ const KOREAN: Translations = {
   [Phrase.LogsButtonLabel]: '샘플 텍스트',
   [Phrase.DiscordButtonLabel]: '샘플 텍스트',
   [Phrase.TestButtonUnable]: '샘플 텍스트',
-  
   [Phrase.GeneralSettingsLabel]: '샘플 텍스트',
   [Phrase.DiskStorageFolderLabel]: '샘플 텍스트',
   [Phrase.SeparateBufferFolderLabel]: '샘플 텍스트',
@@ -114,7 +111,6 @@ const KOREAN: Translations = {
   [Phrase.MinimizeToTrayLabel]: '샘플 텍스트',
   [Phrase.LocaleSettingsLabel]: '샘플 텍스트',
   [Phrase.LanguageLabel]: '샘플 텍스트',
-
   [Phrase.GameSettingsLabel]: '샘플 텍스트',
   [Phrase.RecordRetailLabel]: '샘플 텍스트',
   [Phrase.RetailLogPathLabel]: '샘플 텍스트',
@@ -122,7 +118,6 @@ const KOREAN: Translations = {
   [Phrase.ClassicLogPathLabel]: '샘플 텍스트',
   [Phrase.RecordClassicEraLabel]: '샘플 텍스트',
   [Phrase.ClassicEraLogPathLabel]: '샘플 텍스트',
-
   [Phrase.PVESettingsLabel]: '샘플 텍스트',
   [Phrase.RecordRaidsLabel]: '샘플 텍스트',
   [Phrase.MinimumEncounterDurationLabel]: '샘플 텍스트',
@@ -131,7 +126,6 @@ const KOREAN: Translations = {
   [Phrase.RecordMythicPlusLabel]: '샘플 텍스트',
   [Phrase.MinimumKeystoneLevelLabel]: '샘플 텍스트',
   [Phrase.MythicPlusOverrunLabel]: '샘플 텍스트',
-
   [Phrase.PVPSettingsLabel]: '샘플 텍스트',
   [Phrase.Record2v2Label]: '샘플 텍스트',
   [Phrase.Record3v3Label]: '샘플 텍스트',
@@ -139,13 +133,11 @@ const KOREAN: Translations = {
   [Phrase.RecordSkirmishLabel]: '샘플 텍스트',
   [Phrase.RecordSoloShuffleLabel]: '샘플 텍스트',
   [Phrase.RecordBattlegroundsLabel]: '샘플 텍스트',
-
   [Phrase.CloudSettingsLabel]: '샘플 텍스트',
   [Phrase.CloudPlaybackLabel]: '샘플 텍스트',
   [Phrase.UserEmailLabel]: '샘플 텍스트',
   [Phrase.PasswordLabel]: '샘플 텍스트',
   [Phrase.GuildNameLabel]: '샘플 텍스트',
-
   [Phrase.CloudUploadLabel]: '샘플 텍스트',
   [Phrase.UploadRateLimitToggleLabel]: '샘플 텍스트',
   [Phrase.UploadRateLimitValueLabel]: '샘플 텍스트',
@@ -159,7 +151,6 @@ const KOREAN: Translations = {
   [Phrase.UploadSkirmishLabel]: '샘플 텍스트',
   [Phrase.UploadSoloShuffleLabel]: '샘플 텍스트',
   [Phrase.UploadBattlgroundsLabel]: '샘플 텍스트',
-
   [Phrase.SettingsDisabledText]: '샘플 텍스트',
   [Phrase.SomeSettingsDisabledText]: '샘플 텍스트',
   [Phrase.InvalidRetailLogPathText]: '샘플 텍스트',
@@ -167,30 +158,25 @@ const KOREAN: Translations = {
   [Phrase.InvalidClassicEraLogPathText]: '샘플 텍스트',
   [Phrase.CannotBeEmpty]: '샘플 텍스트',
   [Phrase.OneOrGreater]: '샘플 텍스트',
-
   [Phrase.SourceHeading]: '샘플 텍스트',
   [Phrase.VideoHeading]: '샘플 텍스트',
   [Phrase.AudioHeading]: '샘플 텍스트',
   [Phrase.OverlayHeading]: '샘플 텍스트',
-
   [Phrase.CaptureModeLabel]: '샘플 텍스트',
   [Phrase.WindowCaptureValue]: '샘플 텍스트',
   [Phrase.GameCaptureValue]: '샘플 텍스트',
   [Phrase.MonitorCaptureValue]: '샘플 텍스트',
   [Phrase.MonitorLabel]: '샘플 텍스트',
   [Phrase.CaptureCursorLabel]: '샘플 텍스트',
-  
   [Phrase.FPSLabel]: '샘플 텍스트',
   [Phrase.CanvasResolutionLabel]: '샘플 텍스트',
   [Phrase.QualityLabel]: '샘플 텍스트',
   [Phrase.VideoEncoderLabel]: '샘플 텍스트',
-
   [Phrase.SpeakersLabel]: '샘플 텍스트',
   [Phrase.MicrophonesLabel]: '샘플 텍스트',
   [Phrase.AudioSuppressionLabel]: '샘플 텍스트',
   [Phrase.MonoInputLabel]: '샘플 텍스트',
   [Phrase.PushToTalkLabel]: '샘플 텍스트',
-
   [Phrase.ChatOverlayLabel]: '샘플 텍스트',
   [Phrase.OwnImageLabel]: '샘플 텍스트',
   [Phrase.ImagePathLabel]: '샘플 텍스트',
@@ -199,7 +185,6 @@ const KOREAN: Translations = {
   [Phrase.HorizontalLabel]: '샘플 텍스트',
   [Phrase.VerticalLabel]: '샘플 텍스트',
   [Phrase.ScaleLabel]: '샘플 텍스트',
-
   [Phrase.TableHeaderEncounter]: '샘플 텍스트',
   [Phrase.TableHeaderResult]: '샘플 텍스트',
   [Phrase.TableHeaderPull]: '샘플 텍스트',
@@ -210,25 +195,21 @@ const KOREAN: Translations = {
   [Phrase.TableHeaderMap]: '샘플 텍스트',
   [Phrase.TableHeaderType]: '샘플 텍스트',
   [Phrase.TableHeaderTag]: '샘플 텍스트',
-
   [Phrase.SearchLabel]: '샘플 텍스트',
   [Phrase.SearchSuggestionMythicPlus]: '샘플 텍스트',
   [Phrase.SearchSuggestionRaid]: '샘플 텍스트',
   [Phrase.SearchSuggestionBattlegrounds]: '샘플 텍스트',
   [Phrase.SearchSuggestionSoloShuffle]: '샘플 텍스트',
   [Phrase.SearchSuggestionDefault]: '샘플 텍스트',
-
   [Phrase.ShowRoundsLabel]: '샘플 텍스트',
   [Phrase.ShowDeathsLabel]: '샘플 텍스트',
   [Phrase.ShowEncountersLabel]: '샘플 텍스트',
-
   [Phrase.FullScreenTooltip]: '샘플 텍스트',
   [Phrase.PlaybackSpeedTooltip]: '샘플 텍스트',
   [Phrase.ClipTooltip]: '샘플 텍스트',
   [Phrase.ClipUnavailableTooltip]: '샘플 텍스트',
   [Phrase.ConfirmTooltip]: '샘플 텍스트',
   [Phrase.CancelTooltip]: '샘플 텍스트',
-
   [Phrase.TagButtonTooltip]: '샘플 텍스트',
   [Phrase.StarButtonTooltip]: '샘플 텍스트',
   [Phrase.UnstarButtonTooltip]: '샘플 텍스트',
@@ -240,7 +221,6 @@ const KOREAN: Translations = {
   [Phrase.DiskButtonTooltip]: '샘플 텍스트',
   [Phrase.UploadButtonTooltip]: '샘플 텍스트',
   [Phrase.DownloadButtonTooltip]: '샘플 텍스트',
-
   [Phrase.StatusTitleRecording]: '샘플 텍스트',
   [Phrase.StatusTitleWaiting]: '샘플 텍스트',
   [Phrase.StatusTitleInvalid]: '샘플 텍스트',
@@ -248,7 +228,6 @@ const KOREAN: Translations = {
   [Phrase.StatusTitleFatalError]: '샘플 텍스트',
   [Phrase.StatusTitleOverrunning]: '샘플 텍스트',
   [Phrase.StatusTitleReconfiguring]: '샘플 텍스트',
-
   [Phrase.StatusDescriptionRecording]: '샘플 텍스트',
   [Phrase.StatusDescriptionForceEnd]: '샘플 텍스트',
   [Phrase.StatusDescriptionWaiting]: '샘플 텍스트',
@@ -264,37 +243,29 @@ const KOREAN: Translations = {
   [Phrase.StatusDescriptionIfRecurring]: '샘플 텍스트',
   [Phrase.StatusDescriptionOverrunning]: '샘플 텍스트',
   [Phrase.StatusDescriptionNothing]: '샘플 텍스트',
-  
   [Phrase.StatusHeading]: '샘플 텍스트',
   [Phrase.StatusButtonForceEndLabel]: '샘플 텍스트',
-
   [Phrase.Retail]: '샘플 텍스트',
   [Phrase.Classic]: '샘플 텍스트',
   [Phrase.Era]: '샘플 텍스트',
-
   [Phrase.MicListeningTooltip]: '샘플 텍스트',
   [Phrase.MicMutedTooltip]: '샘플 텍스트',
   [Phrase.CrashHappenedText]: '샘플 텍스트',
-
   [Phrase.SettingsPageApplicationHeader]: '샘플 텍스트',
   [Phrase.SettingsPageGameHeader]: '샘플 텍스트',
   [Phrase.SettingsPageProHeader]: '샘플 텍스트',
-
   [Phrase.UpdateAvailableTitle]: '샘플 텍스트',
   [Phrase.UpdateAvailableText]: '샘플 텍스트',
   [Phrase.UpdateAvailableDownloadButtonText]: '샘플 텍스트',
   [Phrase.TestButtonHeading]: '샘플 텍스트',
-  
   [Phrase.SystemTrayOpen]: '샘플 텍스트',
   [Phrase.SystemTrayQuit]: '샘플 텍스트',
-
   [Phrase.Kill]: '샘플 텍스트',
   [Phrase.Wipe]: '샘플 텍스트',
   [Phrase.Win]: '샘플 텍스트',
   [Phrase.Loss]: '샘플 텍스트',
   [Phrase.Abandoned]: '샘플 텍스트',
   [Phrase.Depleted]: '샘플 텍스트',
-
   [Phrase.AreYouSure]: '샘플 텍스트',
   [Phrase.ThisWillPermanentlyDelete]: '샘플 텍스트',
   [Phrase.RecordingsFullStop]: '샘플 텍스트',
@@ -302,6 +273,48 @@ const KOREAN: Translations = {
   [Phrase.StarredRecordingNotDeleted]: '샘플 텍스트',
   [Phrase.Hold]: '샘플 텍스트',
   [Phrase.ToSkip]: '샘플 텍스트',
+  [Phrase.Death]: '샘플 텍스트',
+  [Phrase.AddADescription]: '샘플 텍스트n',
+  [Phrase.TagDialogText]: '샘플 텍스트',
+  [Phrase.Clear]: '샘플 텍스트',
+  [Phrase.Save]: '샘플 텍스트',
+  [Phrase.ShareableLinkTitle]: '샘플 텍스트',
+  [Phrase.ShareableLinkText]: '샘플 텍스트',
+  [Phrase.ShareableLinkFailedTitle]: '샘플 텍스트',
+  [Phrase.ShareableLinkFailedText]: '샘플 텍스트',
+  [Phrase.CloudUsage]: '샘플 텍스트',
+  [Phrase.DiskUsage]: '샘플 텍스트',
+  [Phrase.Hardware]: '샘플 텍스트',
+  [Phrase.Software]: '샘플',
+  [Phrase.All]: '샘플',
+  [Phrase.Own]: '샘플',
+  [Phrase.None]: '샘플',
+  [Phrase.On]: '샘플',
+  [Phrase.Off]: '샘플',
+  [Phrase.Ultra]: '샘플 텍스트',
+  [Phrase.High]: '샘플 텍스트',
+  [Phrase.Moderate]: '샘플 텍스트',
+  [Phrase.Low]: '샘플 텍스트',
+  [Phrase.LFR]: '샘플 텍스트',
+  [Phrase.Normal]: '샘플 텍스트',
+  [Phrase.Heroic]: '샘플 텍스트',
+  [Phrase.Mythic]: '샘플 텍스트',
+  [Phrase.Pvp]: '샘플 텍스트',
+  [Phrase.ErrorAccountEmpty]: '샘플 텍스트',
+  [Phrase.ErrorPasswordEmpty]: '샘플 텍스트.',
+  [Phrase.ErrorGuildEmpty]: '샘플 텍스트',
+  [Phrase.ErrorUserNotAuthorizedPlayback]: '샘플 텍스트',
+  [Phrase.ErrorUserNotAuthorizedUpload]: '샘플 텍스트',
+  [Phrase.ErrorStoragePathInvalid]: '샘플 텍스트',
+  [Phrase.ErrorBufferPathInvalid]: '샘플 텍스트',
+  [Phrase.ErrorStoragePathSameAsBufferPath]: '샘플 텍스트',
+  [Phrase.ErrorCustomOverlayNotAllowed]: '샘플 텍스트',
+  [Phrase.ErrorNoCustomImage]: '샘플 텍스트',
+  [Phrase.ErrorCustomImageFileType]: '샘플 텍스트',
+  [Phrase.ErrorCustomImageNotExist]: '샘플 텍스트',
+  [Phrase.InvalidRetailLogPath]: '샘플 텍스트',
+  [Phrase.InvalidClassicLogPath]: '샘플 텍스트',
+  [Phrase.InvalidEraLogPath]: '샘플 텍스트',
 };
 
 export default KOREAN;

@@ -16,7 +16,12 @@ import {
   SelectValue,
 } from './components/Select/Select';
 
-const raidDifficultyOptions = ['LFR', 'Normal', 'Heroic', 'Mythic'];
+const raidDifficultyOptions = [
+  { name: 'LFR', phrase: Phrase.LFR },
+  { name: 'Normal', phrase: Phrase.Normal },
+  { name: 'Heroic', phrase: Phrase.Heroic },
+  { name: 'Mythic', phrase: Phrase.Mythic },
+];
 
 interface IProps {
   appState: AppState;
@@ -179,9 +184,9 @@ const PVESettings = (props: IProps) => {
             <SelectValue placeholder="Select a difficulty" />
           </SelectTrigger>
           <SelectContent>
-            {raidDifficultyOptions.map((difficulty: string) => (
-              <SelectItem key={difficulty} value={difficulty}>
-                {difficulty}
+            {raidDifficultyOptions.map((difficulty) => (
+              <SelectItem key={difficulty.name} value={difficulty.name}>
+                {getLocalePhrase(appState.language, difficulty.phrase)}
               </SelectItem>
             ))}
           </SelectContent>

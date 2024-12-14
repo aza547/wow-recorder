@@ -4,7 +4,6 @@ enum Phrase {
   SetupInstructions,
   ClipsDisplayedHere,
   NoClipsSaved,
-
   StoragePathDescription,
   SeparateBufferPathDescription,
   BufferStoragePathDescription,
@@ -97,13 +96,11 @@ enum Phrase {
   LogsButtonLabel,
   DiscordButtonLabel,
   TestButtonUnable,
-
   GeneralSettingsLabel,
   DiskStorageFolderLabel,
   SeparateBufferFolderLabel,
   BufferFolderLabel,
   MaxDiskStorageLabel,
-
   WindowsSettingsLabel,
   RunOnStartupLabel,
   StartMinimizedLabel,
@@ -111,7 +108,6 @@ enum Phrase {
   MinimizeToTrayLabel,
   LocaleSettingsLabel,
   LanguageLabel,
-
   GameSettingsLabel,
   RecordRetailLabel,
   RetailLogPathLabel,
@@ -119,7 +115,6 @@ enum Phrase {
   ClassicLogPathLabel,
   RecordClassicEraLabel,
   ClassicEraLogPathLabel,
-
   PVESettingsLabel,
   RecordRaidsLabel,
   MinimumEncounterDurationLabel,
@@ -128,7 +123,6 @@ enum Phrase {
   RecordMythicPlusLabel,
   MinimumKeystoneLevelLabel,
   MythicPlusOverrunLabel,
-
   PVPSettingsLabel,
   Record2v2Label,
   Record3v3Label,
@@ -136,13 +130,11 @@ enum Phrase {
   RecordSkirmishLabel,
   RecordSoloShuffleLabel,
   RecordBattlegroundsLabel,
-
   CloudSettingsLabel,
   CloudPlaybackLabel,
   UserEmailLabel,
   PasswordLabel,
   GuildNameLabel,
-
   CloudUploadLabel,
   UploadRateLimitToggleLabel,
   UploadRateLimitValueLabel,
@@ -156,7 +148,6 @@ enum Phrase {
   UploadSkirmishLabel,
   UploadSoloShuffleLabel,
   UploadBattlgroundsLabel,
-
   SettingsDisabledText,
   SomeSettingsDisabledText,
   InvalidRetailLogPathText,
@@ -164,30 +155,25 @@ enum Phrase {
   InvalidClassicEraLogPathText,
   CannotBeEmpty,
   OneOrGreater,
-
   SourceHeading,
   VideoHeading,
   AudioHeading,
   OverlayHeading,
-
   CaptureModeLabel,
   WindowCaptureValue,
   GameCaptureValue,
   MonitorCaptureValue,
   MonitorLabel,
   CaptureCursorLabel,
-
   FPSLabel,
   CanvasResolutionLabel,
   QualityLabel,
   VideoEncoderLabel,
-
   SpeakersLabel,
   MicrophonesLabel,
   AudioSuppressionLabel,
   MonoInputLabel,
   PushToTalkLabel,
-
   ChatOverlayLabel,
   OwnImageLabel,
   ImagePathLabel,
@@ -196,7 +182,6 @@ enum Phrase {
   HorizontalLabel,
   VerticalLabel,
   ScaleLabel,
-
   TableHeaderEncounter,
   TableHeaderResult,
   TableHeaderPull,
@@ -207,25 +192,21 @@ enum Phrase {
   TableHeaderMap,
   TableHeaderType,
   TableHeaderTag,
-
   SearchLabel,
   SearchSuggestionMythicPlus,
   SearchSuggestionRaid,
   SearchSuggestionBattlegrounds,
   SearchSuggestionSoloShuffle,
   SearchSuggestionDefault,
-
   ShowDeathsLabel,
   ShowEncountersLabel,
   ShowRoundsLabel,
-
   FullScreenTooltip,
   PlaybackSpeedTooltip,
   ClipTooltip,
   ClipUnavailableTooltip,
   ConfirmTooltip,
   CancelTooltip,
-
   TagButtonTooltip,
   StarButtonTooltip,
   UnstarButtonTooltip,
@@ -237,7 +218,6 @@ enum Phrase {
   DiskButtonTooltip,
   UploadButtonTooltip,
   DownloadButtonTooltip,
-
   StatusTitleRecording,
   StatusTitleWaiting,
   StatusTitleInvalid,
@@ -245,7 +225,6 @@ enum Phrase {
   StatusTitleFatalError,
   StatusTitleOverrunning,
   StatusTitleReconfiguring,
-
   StatusDescriptionRecording,
   StatusDescriptionForceEnd,
   StatusDescriptionWaiting,
@@ -261,39 +240,29 @@ enum Phrase {
   StatusDescriptionIfRecurring,
   StatusDescriptionOverrunning,
   StatusDescriptionNothing,
-
   StatusHeading,
   StatusButtonForceEndLabel,
-
   Retail,
   Classic,
   Era,
-
   MicListeningTooltip,
   MicMutedTooltip,
-
   CrashHappenedText,
-
   SettingsPageApplicationHeader,
   SettingsPageGameHeader,
   SettingsPageProHeader,
-
   UpdateAvailableTitle,
   UpdateAvailableText,
   UpdateAvailableDownloadButtonText,
-
   TestButtonHeading,
-
   SystemTrayQuit,
   SystemTrayOpen,
-
   Kill,
   Wipe,
   Win,
   Loss,
   Abandoned,
   Depleted,
-
   AreYouSure,
   ThisWillPermanentlyDelete,
   RecordingsFullStop,
@@ -301,11 +270,53 @@ enum Phrase {
   StarredRecordingNotDeleted,
   Hold,
   ToSkip,
+  Death,
+  AddADescription,
+  TagDialogText,
+  Clear,
+  Save,
+  ShareableLinkTitle,
+  ShareableLinkText,
+  ShareableLinkFailedTitle,
+  ShareableLinkFailedText,
+  CloudUsage,
+  DiskUsage,
+  Hardware,
+  Software,
+  All,
+  Own,
+  None,
+  On,
+  Off,
+  Ultra,
+  High,
+  Moderate,
+  Low,
+  LFR,
+  Normal,
+  Heroic,
+  Mythic,
+  Pvp,
+  ErrorAccountEmpty,
+  ErrorPasswordEmpty,
+  ErrorGuildEmpty,
+  ErrorUserNotAuthorizedPlayback,
+  ErrorUserNotAuthorizedUpload,
+  ErrorStoragePathInvalid,
+  ErrorBufferPathInvalid,
+  ErrorStoragePathSameAsBufferPath,
+  ErrorCustomOverlayNotAllowed,
+  ErrorNoCustomImage,
+  ErrorCustomImageFileType,
+  ErrorCustomImageNotExist,
+  InvalidRetailLogPath,
+  InvalidClassicLogPath,
+  InvalidEraLogPath,
 }
 
 enum Language {
   ENGLISH = 'English',
-  KOREAN = '한글',
+  // KOREAN = '한글', // TODO: Uncomment this when Korean translations are done.
 }
 
 type Translations = {

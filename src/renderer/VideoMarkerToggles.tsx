@@ -84,13 +84,13 @@ const VideoMarkerToggles = (props: IProps) => {
           variant="outline"
         >
           <ToggleGroupItem value={DeathMarkers.ALL}>
-            {DeathMarkers.ALL}
+            {getLocalePhrase(appState.language, Phrase.All)}
           </ToggleGroupItem>
           <ToggleGroupItem value={DeathMarkers.OWN}>
-            {DeathMarkers.OWN}
+            {getLocalePhrase(appState.language, Phrase.Own)}
           </ToggleGroupItem>
           <ToggleGroupItem value={DeathMarkers.NONE}>
-            {DeathMarkers.NONE}
+            {getLocalePhrase(appState.language, Phrase.None)}
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
@@ -110,8 +110,12 @@ const VideoMarkerToggles = (props: IProps) => {
           variant="outline"
           onValueChange={setEncounterMarkers}
         >
-          <ToggleGroupItem value="true">On</ToggleGroupItem>
-          <ToggleGroupItem value="false">Off</ToggleGroupItem>
+          <ToggleGroupItem value="true">
+            {getLocalePhrase(appState.language, Phrase.On)}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="false">
+            {getLocalePhrase(appState.language, Phrase.Off)}
+          </ToggleGroupItem>
         </ToggleGroup>
       </div>
     );
@@ -130,8 +134,12 @@ const VideoMarkerToggles = (props: IProps) => {
           variant="outline"
           onValueChange={setRoundMarkers}
         >
-          <ToggleGroupItem value="true">On</ToggleGroupItem>
-          <ToggleGroupItem value="false">Off</ToggleGroupItem>
+          <ToggleGroupItem value="true">
+            {getLocalePhrase(appState.language, Phrase.On)}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="false">
+            {getLocalePhrase(appState.language, Phrase.Off)}
+          </ToggleGroupItem>
         </ToggleGroup>
       </div>
     );

@@ -105,9 +105,15 @@ const VideoSourceControls = (props: IProps) => {
           type="single"
           variant="outline"
         >
-          <ToggleGroupItem value="window_capture">Window</ToggleGroupItem>
-          <ToggleGroupItem value="game_capture">Game</ToggleGroupItem>
-          <ToggleGroupItem value="monitor_capture">Monitor</ToggleGroupItem>
+          <ToggleGroupItem value="window_capture">
+            {getLocalePhrase(appState.language, Phrase.WindowCaptureValue)}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="game_capture">
+            {getLocalePhrase(appState.language, Phrase.GameCaptureValue)}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="monitor_capture">
+            {getLocalePhrase(appState.language, Phrase.MonitorCaptureValue)}
+          </ToggleGroupItem>
         </ToggleGroup>
       </div>
     );

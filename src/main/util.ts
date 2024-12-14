@@ -2,7 +2,14 @@
 import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
-import { app, BrowserWindow, ClientRequestConstructorOptions, Display, net, screen } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ClientRequestConstructorOptions,
+  Display,
+  net,
+  screen,
+} from 'electron';
 import {
   EventType,
   uIOhook,
@@ -530,46 +537,6 @@ const getWowFlavour = (pathSpec: string): string => {
 const addCrashToUI = (mainWindow: BrowserWindow, crashData: CrashData) => {
   console.info('[Util] Updating crashes with:', crashData);
   mainWindow.webContents.send('updateCrashes', crashData);
-};
-
-/**
- * Checks the flavour config is valid.
- * @throws an error describing why the config is invalid
- */
-const validateFlavour = (config: FlavourConfig) => {
-  const {
-    recordRetail,
-    retailLogPath,
-    recordClassic,
-    classicLogPath,
-    recordEra,
-    eraLogPath,
-  } = config;
-
-  if (recordRetail) {
-    const validFlavours = ['wow', 'wowxptr', 'wow_beta'];
-    const validPath = validFlavours.includes(getWowFlavour(retailLogPath));
-
-    if (!validPath) {
-      console.error('[Util] Invalid retail log path', retailLogPath);
-      throw new Error('Invalid retail log path');
-    }
-  }
-
-  if (recordClassic) {
-    const validFlavours = ['wow_classic', 'wow_classic_beta'];
-    const validPath = validFlavours.includes(getWowFlavour(classicLogPath));
-
-    if (!validPath) {
-      console.error('[Util] Invalid classic log path', classicLogPath);
-      throw new Error('Invalid classic log path');
-    }
-  }
-
-  if (recordEra && getWowFlavour(eraLogPath) !== 'wow_classic_era') {
-    console.error('[Util] Invalid era log path', eraLogPath);
-    throw new Error('Invalid era log path');
-  }
 };
 
 const isPushToTalkHotkey = (

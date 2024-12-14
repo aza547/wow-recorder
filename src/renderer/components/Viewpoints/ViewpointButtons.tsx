@@ -77,6 +77,7 @@ export default function ViewpointButtons(props: IProps) {
         video={videoToShow}
         stateManager={stateManager}
         tooltipContent={tagTooltip}
+        appState={appState}
       >
         <Button onMouseDown={stopPropagation} variant="secondary" size="xl">
           {tag ? (
@@ -135,14 +136,23 @@ export default function ViewpointButtons(props: IProps) {
     try {
       await ipc.invoke('getShareableLink', [videoName]);
       toast({
-        title: 'Shareable link generated and placed in clipboard',
-        description: 'This link will be valid for up to 30 days.',
+        title: getLocalePhrase(appState.language, Phrase.ShareableLinkTitle),
+        description: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkText
+        ),
         duration: 5000,
       });
     } catch (error) {
       toast({
-        title: 'Failed to generate link',
-        description: 'Please see logs for more details',
+        title: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkFailedTitle
+        ),
+        description: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkFailedText
+        ),
         variant: 'destructive',
         duration: 5000,
       });

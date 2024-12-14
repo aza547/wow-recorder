@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { uIOhook } from 'uiohook-napi';
 import assert from 'assert';
+import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 import AuthError from '../utils/AuthError';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
@@ -13,7 +14,6 @@ import {
   checkDisk,
   getMetadataForVideo,
   getOBSFormattedDate,
-  validateFlavour,
   tagVideoDisk,
   toggleVideoProtectedDisk,
   openSystemExplorer,
@@ -26,6 +26,7 @@ import {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   deleteVideoDisk,
+  getWowFlavour,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -132,7 +133,7 @@ export default class Manager {
       valid: false,
       current: this.obsBaseCfg,
       get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: async (config: ObsBaseConfig) => Manager.validateBaseCfg(config),
+      validate: async (config: ObsBaseConfig) => this.validateBaseCfg(config),
       configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
     },
     {
@@ -140,7 +141,7 @@ export default class Manager {
       valid: false,
       current: this.obsVideoCfg,
       get: (cfg: ConfigService) => getObsVideoConfig(cfg),
-      validate: async (config: ObsVideoConfig) => Manager.validateVideoConfig(config),
+      validate: async () => {},
       configure: async (config: ObsVideoConfig) => this.configureObsVideo(config),
     },
     {
@@ -156,7 +157,7 @@ export default class Manager {
       valid: false,
       current: this.flavourCfg,
       get: (cfg: ConfigService) => getFlavourConfig(cfg),
-      validate: async (config: FlavourConfig) => validateFlavour(config),
+      validate: async (config: FlavourConfig) => this.validateFlavour(config),
       configure: async (config: FlavourConfig) => this.configureFlavour(config),
     },
     {
@@ -164,7 +165,7 @@ export default class Manager {
       valid: false,
       current: this.overlayCfg,
       get: (cfg: ConfigService) => getOverlayConfig(cfg),
-      validate: async (config: ObsOverlayConfig) => Manager.validateOverlayConfig(config),
+      validate: async (config: ObsOverlayConfig) => this.validateOverlayConfig(config),
       configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
     },
     /* eslint-enable prettier/prettier */
@@ -626,17 +627,17 @@ export default class Manager {
     this.recorder.configureOverlayImageSource(config);
   }
 
-  private static async validateBaseCfg(config: ObsBaseConfig) {
+  private async validateBaseCfg(config: ObsBaseConfig) {
     const { cloudStorage } = config;
 
-    await Manager.validateBaseConfig(config);
+    await this.validateBaseConfig(config);
 
     if (cloudStorage) {
-      await Manager.validateCloudBaseConfig(config);
+      await this.validateCloudBaseConfig(config);
     }
   }
 
-  private static async validateCloudBaseConfig(config: ObsBaseConfig) {
+  private async validateCloudBaseConfig(config: ObsBaseConfig) {
     const {
       cloudAccountName,
       cloudAccountPassword,
@@ -646,17 +647,17 @@ export default class Manager {
 
     if (!cloudAccountName) {
       console.warn('[Manager] Empty account name');
-      throw new Error('Account name must not be empty.');
+      throw new Error(this.getLocaleError(Phrase.ErrorAccountEmpty));
     }
 
     if (!cloudAccountPassword) {
       console.warn('[Manager] Empty account key');
-      throw new Error('Password must not be empty.');
+      throw new Error(this.getLocaleError(Phrase.ErrorPasswordEmpty));
     }
 
     if (!cloudGuildName) {
       console.warn('[Manager] Empty guild name');
-      throw new Error('Guild name must not be empty.');
+      throw new Error(this.getLocaleError(Phrase.ErrorGuildEmpty));
     }
 
     let raceWinner;
@@ -696,15 +697,17 @@ export default class Manager {
     const { read, write } = raceWinner as CheckAuthResponse;
 
     if (!read) {
-      throw new Error('User is not authorized to access the guild.');
+      throw new Error(
+        this.getLocaleError(Phrase.ErrorUserNotAuthorizedPlayback)
+      );
     }
 
     if (!write && cloudUpload) {
-      throw new Error('User is not authorized to upload to the guild.');
+      throw new Error(this.getLocaleError(Phrase.ErrorUserNotAuthorizedUpload));
     }
   }
 
-  private static async validateBaseConfig(config: ObsBaseConfig) {
+  private async validateBaseConfig(config: ObsBaseConfig) {
     const { storagePath, maxStorage, obsPath } = config;
 
     if (!storagePath) {
@@ -713,7 +716,7 @@ export default class Manager {
         storagePath
       );
 
-      throw new Error('Storage path is invalid.');
+      throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
     }
 
     if (!fs.existsSync(path.dirname(storagePath))) {
@@ -722,14 +725,14 @@ export default class Manager {
         storagePath
       );
 
-      throw new Error('Storage Path is invalid.');
+      throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
     }
 
     await checkDisk(storagePath, maxStorage);
 
     if (!obsPath) {
       console.warn('[Manager] Validation failed: `obsPath` is falsy', obsPath);
-      throw new Error('Buffer Storage Path is invalid.');
+      throw new Error(this.getLocaleError(Phrase.ErrorBufferPathInvalid));
     }
 
     const obsParentDir = path.dirname(obsPath);
@@ -741,7 +744,7 @@ export default class Manager {
         obsPath
       );
 
-      throw new Error('Buffer Storage Path is invalid.');
+      throw new Error(this.getLocaleError(Phrase.ErrorBufferPathInvalid));
     }
 
     if (path.resolve(storagePath) === path.resolve(obsPath)) {
@@ -749,7 +752,9 @@ export default class Manager {
         '[Manager] Validation failed: Storage Path is the same as Buffer Path'
       );
 
-      throw new Error('Storage Path is the same as Buffer Path');
+      throw new Error(
+        this.getLocaleError(Phrase.ErrorStoragePathSameAsBufferPath)
+      );
     }
 
     const obsDirExists = await exists(obsPath);
@@ -773,9 +778,47 @@ export default class Manager {
     }
   }
 
-  private static async validateVideoConfig(config: ObsVideoConfig) {}
+  /**
+   * Checks the flavour config is valid.
+   * @throws an error describing why the config is invalid
+   */
+  private validateFlavour = (config: FlavourConfig) => {
+    const {
+      recordRetail,
+      retailLogPath,
+      recordClassic,
+      classicLogPath,
+      recordEra,
+      eraLogPath,
+    } = config;
 
-  private static async validateOverlayConfig(config: ObsOverlayConfig) {
+    if (recordRetail) {
+      const validFlavours = ['wow', 'wowxptr', 'wow_beta'];
+      const validPath = validFlavours.includes(getWowFlavour(retailLogPath));
+
+      if (!validPath) {
+        console.error('[Util] Invalid retail log path', retailLogPath);
+        throw new Error(this.getLocaleError(Phrase.InvalidRetailLogPath));
+      }
+    }
+
+    if (recordClassic) {
+      const validFlavours = ['wow_classic', 'wow_classic_beta'];
+      const validPath = validFlavours.includes(getWowFlavour(classicLogPath));
+
+      if (!validPath) {
+        console.error('[Util] Invalid classic log path', classicLogPath);
+        throw new Error(this.getLocaleError(Phrase.InvalidClassicLogPath));
+      }
+    }
+
+    if (recordEra && getWowFlavour(eraLogPath) !== 'wow_classic_era') {
+      console.error('[Util] Invalid era log path', eraLogPath);
+      throw new Error(this.getLocaleError(Phrase.InvalidEraLogPath));
+    }
+  };
+
+  private async validateOverlayConfig(config: ObsOverlayConfig) {
     const { chatOverlayOwnImage, chatOverlayOwnImagePath, cloudStorage } =
       config;
 
@@ -785,14 +828,15 @@ export default class Manager {
 
     if (!cloudStorage) {
       console.warn('[Manager] To use a custom overlay, enable cloud storage');
-      throw new Error('To use a custom overlay, enable cloud storage.');
+      throw new Error(this.getLocaleError(Phrase.ErrorCustomOverlayNotAllowed));
     }
 
     if (!chatOverlayOwnImagePath) {
       console.warn(
         '[Manager] Overlay image was not provided for custom overlay'
       );
-      throw new Error('Overlay image was not provided for custom overlay.');
+
+      throw new Error(this.getLocaleError(Phrase.ErrorNoCustomImage));
     }
 
     if (
@@ -800,14 +844,16 @@ export default class Manager {
       !chatOverlayOwnImagePath.endsWith('.gif')
     ) {
       console.warn('[Manager] Overlay image must be a .png or .gif file');
-      throw new Error('Overlay image must be a .png or .gif file');
+      throw new Error(this.getLocaleError(Phrase.ErrorCustomImageFileType));
     }
 
     const fileExists = await exists(chatOverlayOwnImagePath);
 
     if (!fileExists) {
       console.warn(`[Manager] ${chatOverlayOwnImagePath} does not exist`);
-      throw new Error(`${chatOverlayOwnImagePath} does not exist`);
+      let errorMsg = this.getLocaleError(Phrase.ErrorCustomImageFileType);
+      errorMsg += `: ${chatOverlayOwnImagePath}`;
+      throw new Error(errorMsg);
     }
   }
 
@@ -1228,4 +1274,12 @@ export default class Manager {
       console.warn('[Manager] Failed to tag', videoName, String(error));
     }
   };
+
+  /**
+   * Return a language appropriate error string.
+   */
+  private getLocaleError(phrase: Phrase) {
+    const lang = this.cfg.get<string>('language') as Language;
+    return getLocalePhrase(lang, phrase);
+  }
 }

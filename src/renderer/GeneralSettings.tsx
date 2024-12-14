@@ -88,7 +88,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <TextBanner>
-        These settings cannot be modified while a recording is active.
+        {getLocalePhrase(appState.language, Phrase.SettingsDisabledText)}
       </TextBanner>
     );
   };
@@ -274,12 +274,11 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     const max = Math.round(diskStatus.maxUsageGB);
     let perc = max === 0 ? 100 : (100 * usage) / max;
     if (perc > 100) perc = 100;
-    const text =
-      max === 0 ? `${usage}GB of Unlimited` : `${usage}GB of ${max}GB`;
+    const text = max === 0 ? `${usage}GB / ∞` : `${usage}GB / ${max}GB`;
 
     return (
       <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
-        <Tooltip content="Disk usage">
+        <Tooltip content={getLocalePhrase(appState.language, Phrase.DiskUsage)}>
           <HardDrive />
         </Tooltip>
         <Progress value={perc} className="h-3" />

@@ -1,3 +1,4 @@
+import { Phrase } from 'localisation/types';
 import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchemaKey } from './configSchema';
 
@@ -959,6 +960,7 @@ type InstanceDifficultyType = {
   difficultyID: InstanceDifficultyIdType;
   difficulty: string;
   partyType: InstanceDifficultyPartyType;
+  phrase: Phrase;
 };
 type InstanceDifficultyObjectType = {
   [key: number]: InstanceDifficultyType;
@@ -966,43 +968,179 @@ type InstanceDifficultyObjectType = {
 
 // See https://wowpedia.fandom.com/wiki/DifficultyID.
 const instanceDifficulty: InstanceDifficultyObjectType = {
-  1: { difficultyID: 'normal', difficulty: 'N', partyType: 'party' },
-  2: { difficultyID: 'heroic', difficulty: 'HC', partyType: 'party' },
-  3: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
-  4: { difficultyID: 'normal', difficulty: '25N', partyType: 'raid' },
-  5: { difficultyID: 'heroic', difficulty: '10HC', partyType: 'raid' },
-  6: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
-  7: { difficultyID: 'lfr', difficulty: 'LFR', partyType: 'raid' },
+  1: {
+    difficultyID: 'normal',
+    difficulty: 'N',
+    partyType: 'party',
+    phrase: Phrase.Normal,
+  },
+  2: {
+    difficultyID: 'heroic',
+    difficulty: 'HC',
+    partyType: 'party',
+    phrase: Phrase.Heroic,
+  },
+  3: {
+    difficultyID: 'normal',
+    difficulty: '10N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  4: {
+    difficultyID: 'normal',
+    difficulty: '25N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  5: {
+    difficultyID: 'heroic',
+    difficulty: '10HC',
+    partyType: 'raid',
+    phrase: Phrase.Heroic,
+  },
+  6: {
+    difficultyID: 'heroic',
+    difficulty: '25HC',
+    partyType: 'raid',
+    phrase: Phrase.Heroic,
+  },
+  7: {
+    difficultyID: 'lfr',
+    difficulty: 'LFR',
+    partyType: 'raid',
+    phrase: Phrase.LFR,
+  },
   8: {
     difficultyID: 'mythic',
     difficulty: 'Mythic Keystone',
     partyType: 'party',
+    phrase: Phrase.Mythic,
   },
-  9: { difficultyID: 'normal', difficulty: '40', partyType: 'raid' },
+  9: {
+    difficultyID: 'normal',
+    difficulty: '40',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
 
   // Retail raids
-  14: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
-  15: { difficultyID: 'heroic', difficulty: 'HC', partyType: 'raid' },
-  16: { difficultyID: 'mythic', difficulty: 'M', partyType: 'raid' },
-  17: { difficultyID: 'lfr', difficulty: 'LFR', partyType: 'raid' },
+  14: {
+    difficultyID: 'normal',
+    difficulty: 'N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  15: {
+    difficultyID: 'heroic',
+    difficulty: 'HC',
+    partyType: 'raid',
+    phrase: Phrase.Heroic,
+  },
+  16: {
+    difficultyID: 'mythic',
+    difficulty: 'M',
+    partyType: 'raid',
+    phrase: Phrase.Mythic,
+  },
+  17: {
+    difficultyID: 'lfr',
+    difficulty: 'LFR',
+    partyType: 'raid',
+    phrase: Phrase.LFR,
+  },
 
-  23: { difficultyID: 'mythic', difficulty: 'M', partyType: 'party' },
-  24: { difficultyID: 'normal', difficulty: 'T', partyType: 'party' },
-  33: { difficultyID: 'normal', difficulty: 'T', partyType: 'raid' },
-  34: { difficultyID: 'pvp', difficulty: 'PvP', partyType: 'pvp' },
-  150: { difficultyID: 'normal', difficulty: 'N', partyType: 'party' },
-  151: { difficultyID: 'lfr', difficulty: 'T', partyType: 'raid' },
-  175: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
-  176: { difficultyID: 'normal', difficulty: '25N', partyType: 'raid' },
-  185: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
-  186: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
-  193: { difficultyID: 'heroic', difficulty: '10HC', partyType: 'raid' },
-  194: { difficultyID: 'heroic', difficulty: '25HC', partyType: 'raid' },
+  23: {
+    difficultyID: 'mythic',
+    difficulty: 'M',
+    partyType: 'party',
+    phrase: Phrase.Mythic,
+  },
+  24: {
+    difficultyID: 'normal',
+    difficulty: 'T',
+    partyType: 'party',
+    phrase: Phrase.Normal,
+  },
+  33: {
+    difficultyID: 'normal',
+    difficulty: 'T',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  34: {
+    difficultyID: 'pvp',
+    difficulty: 'PvP',
+    partyType: 'pvp',
+    phrase: Phrase.Pvp,
+  },
+  150: {
+    difficultyID: 'normal',
+    difficulty: 'N',
+    partyType: 'party',
+    phrase: Phrase.Normal,
+  },
+  151: {
+    difficultyID: 'lfr',
+    difficulty: 'T',
+    partyType: 'raid',
+    phrase: Phrase.LFR,
+  },
+  175: {
+    difficultyID: 'normal',
+    difficulty: '10N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  176: {
+    difficultyID: 'normal',
+    difficulty: '25N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  185: {
+    difficultyID: 'normal',
+    difficulty: 'N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  186: {
+    difficultyID: 'normal',
+    difficulty: 'N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  193: {
+    difficultyID: 'heroic',
+    difficulty: '10HC',
+    partyType: 'raid',
+    phrase: Phrase.Heroic,
+  },
+  194: {
+    difficultyID: 'heroic',
+    difficulty: '25HC',
+    partyType: 'raid',
+    phrase: Phrase.Heroic,
+  },
 
   // Classic era 10 man?
-  198: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
-  215: { difficultyID: 'normal', difficulty: '10N', partyType: 'raid' },
-  226: { difficultyID: 'normal', difficulty: 'N', partyType: 'raid' },
+  198: {
+    difficultyID: 'normal',
+    difficulty: '10N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  215: {
+    difficultyID: 'normal',
+    difficulty: '10N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
+  226: {
+    difficultyID: 'normal',
+    difficulty: 'N',
+    partyType: 'raid',
+    phrase: Phrase.Normal,
+  },
 };
 
 const categoryTabSx = {

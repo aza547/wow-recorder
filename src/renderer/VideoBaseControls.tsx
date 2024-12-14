@@ -225,7 +225,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
 
     return (
       <TextBanner>
-        These settings cannot be modified while a recording is active.
+        {getLocalePhrase(appState.language, Phrase.SettingsDisabledText)}
       </TextBanner>
     );
   };
@@ -238,6 +238,21 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     const cloudFilter = (quality: QualityPresets) => {
       if (config.cloudUpload) return quality !== QualityPresets.ULTRA;
       return true;
+    };
+
+    const translateQuality = (p: QualityPresets) => {
+      switch (p) {
+        case QualityPresets.ULTRA:
+          return getLocalePhrase(appState.language, Phrase.Ultra);
+        case QualityPresets.HIGH:
+          return getLocalePhrase(appState.language, Phrase.High);
+        case QualityPresets.MODERATE:
+          return getLocalePhrase(appState.language, Phrase.Moderate);
+        case QualityPresets.LOW:
+          return getLocalePhrase(appState.language, Phrase.Low);
+        default:
+          throw new Error('Unknown quality');
+      }
     };
 
     const options = Object.values(QualityPresets).filter(cloudFilter);
@@ -267,7 +282,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <SelectContent>
             {options.map((option) => (
               <SelectItem key={option} value={option}>
-                {option}
+                {translateQuality(option)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -291,7 +306,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     }
 
     return (
-      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+      <div className="flex flex-col w-1/4 min-w-60 max-w-80">
         <Label className="flex items-center">
           {getLocalePhrase(appState.language, Phrase.VideoEncoderLabel)}
           <Tooltip
@@ -315,7 +330,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <SelectContent>
             {encoders.map((encoder) => (
               <SelectItem key={encoder.name} value={encoder.name}>
-                {mapEncoderToString(encoder)}
+                {mapEncoderToString(encoder, appState.language)}
               </SelectItem>
             ))}
           </SelectContent>

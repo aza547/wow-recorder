@@ -176,11 +176,11 @@ export const VideoPlayer = (props: IProps) => {
     const deathMarkerConfig = convertNumToDeathMarkers(config.deathMarkers);
 
     if (deathMarkerConfig === DeathMarkers.ALL) {
-      getAllDeathMarkers(video)
+      getAllDeathMarkers(video, appState.language)
         .map(getDeathMark)
         .forEach((m) => marks.push(m));
     } else if (deathMarkerConfig === DeathMarkers.OWN) {
-      getOwnDeathMarkers(video)
+      getOwnDeathMarkers(video, appState.language)
         .map(getDeathMark)
         .forEach((m) => marks.push(m));
     }

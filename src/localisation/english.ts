@@ -7,7 +7,6 @@ const ENGLISH: Translations = {
   [Phrase.SetupInstructions]: 'Setup Instructions',
   [Phrase.ClipsDisplayedHere]: 'Videos you clip will be displayed here.',
   [Phrase.NoClipsSaved]: 'You have no clips saved',
-
   [Phrase.StoragePathDescription]: 'Location to store the recordings. Warcraft Recorder takes ownership of this directory, it should be empty on initial setup and you should not modify the contents in-place.',
   [Phrase.SeparateBufferPathDescription]: 'Enable storing temporary recordings in a seperate location. This should always be a local location. This feature is intended for people who want their final recordings to be on an NFS drive but not incur the network traffic of constantly recording to it.',
   [Phrase.BufferStoragePathDescription]: 'Location to store temporary recordings. If left unset this will default to a folder inside the Storage Path.',
@@ -82,7 +81,6 @@ const ENGLISH: Translations = {
   [Phrase.CloudUploadRaidMinDifficultyDescription]: 'The minimum raid encounter difficulty for automatic cloud uploading.',
   [Phrase.CloudUploadDungeonMinLevelDescription]: 'The minimum keystone level for automatic cloud uploading.',
   [Phrase.LanguageDescription]: 'The language to use in the application.',
-  
   [Phrase.RecordingsHeading]: 'Recordings',
   [Phrase.SettingsHeading]: 'Settings',
   [Phrase.GeneralButtonText]: 'General',
@@ -101,7 +99,6 @@ const ENGLISH: Translations = {
   [Phrase.LogsButtonLabel]: 'Logs',
   [Phrase.DiscordButtonLabel]: 'Discord',
   [Phrase.TestButtonUnable]: 'Unable to run a test right now. To run a test, World of Warcraft must be running, your settings must be valid, and you must not currently be in an activity.',
-  
   [Phrase.GeneralSettingsLabel]: 'General Settings',
   [Phrase.DiskStorageFolderLabel]: 'Disk Storage Folder',
   [Phrase.SeparateBufferFolderLabel]: 'Separate Buffer Folder',
@@ -114,7 +111,6 @@ const ENGLISH: Translations = {
   [Phrase.MinimizeToTrayLabel]: 'Minimize To Tray',
   [Phrase.LocaleSettingsLabel]: 'Locale Settings',
   [Phrase.LanguageLabel]: 'Language',
-
   [Phrase.GameSettingsLabel]: 'Game Settings',
   [Phrase.RecordRetailLabel]: 'Record Retail',
   [Phrase.RetailLogPathLabel]: 'Retail Log Path',
@@ -122,7 +118,6 @@ const ENGLISH: Translations = {
   [Phrase.ClassicLogPathLabel]: 'Classic Log Path',
   [Phrase.RecordClassicEraLabel]: 'Record Classic Era',
   [Phrase.ClassicEraLogPathLabel]: 'Classic Era Log Path',
-
   [Phrase.PVESettingsLabel]: 'PvE Settings',
   [Phrase.RecordRaidsLabel]: 'Record Raids',
   [Phrase.MinimumEncounterDurationLabel]: 'Minimum Encounter Duration (sec)',
@@ -131,7 +126,6 @@ const ENGLISH: Translations = {
   [Phrase.RecordMythicPlusLabel]: 'Record Mythic+',
   [Phrase.MinimumKeystoneLevelLabel]: 'Minimum Keystone Level',
   [Phrase.MythicPlusOverrunLabel]: 'Mythic+ Overrun (sec)',
-
   [Phrase.PVPSettingsLabel]: 'PvP Settings',
   [Phrase.Record2v2Label]: 'Record 2v2',
   [Phrase.Record3v3Label]: 'Record 3v3',
@@ -139,13 +133,11 @@ const ENGLISH: Translations = {
   [Phrase.RecordSkirmishLabel]: 'Record Skirmish',
   [Phrase.RecordSoloShuffleLabel]: 'Record Solo Shuffle',
   [Phrase.RecordBattlegroundsLabel]: 'Record Battlegrounds',
-
   [Phrase.CloudSettingsLabel]: 'Cloud Settings',
   [Phrase.CloudPlaybackLabel]: 'Cloud Playback',
   [Phrase.UserEmailLabel]: 'User or Email',
   [Phrase.PasswordLabel]: 'Password',
   [Phrase.GuildNameLabel]: 'Guild Name',
-
   [Phrase.CloudUploadLabel]: 'Cloud Upload',
   [Phrase.UploadRateLimitToggleLabel]: 'Upload Rate Limit',
   [Phrase.UploadRateLimitValueLabel]: 'Upload Rate Limit (MB/s)',
@@ -159,7 +151,6 @@ const ENGLISH: Translations = {
   [Phrase.UploadSkirmishLabel]: 'Upload Skirmish',
   [Phrase.UploadSoloShuffleLabel]: 'Upload Solo SHuffle',
   [Phrase.UploadBattlgroundsLabel]: 'Upload Battlegrounds',
-
   [Phrase.SettingsDisabledText]: 'These settings cannot be modified while a recording is active.',
   [Phrase.SomeSettingsDisabledText]: 'Some settings in this category are currently hidden as they cannot be modified while a recording is active.',
   [Phrase.InvalidRetailLogPathText]: 'Invalid retail log path',
@@ -167,30 +158,25 @@ const ENGLISH: Translations = {
   [Phrase.InvalidClassicEraLogPathText]: 'Invalid classic era log path.',
   [Phrase.CannotBeEmpty]: 'Cannot be empty',
   [Phrase.OneOrGreater]: 'Must be 1 or greater',
-
   [Phrase.SourceHeading]: 'Source',
   [Phrase.VideoHeading]: 'Video',
   [Phrase.AudioHeading]: 'Audio',
   [Phrase.OverlayHeading]: 'Overlay',
-
   [Phrase.CaptureModeLabel]: 'Capture Mode',
   [Phrase.WindowCaptureValue]: 'Window',
   [Phrase.GameCaptureValue]: 'Game',
   [Phrase.MonitorCaptureValue]: 'Monitor',
   [Phrase.MonitorLabel]: 'Monitor',
   [Phrase.CaptureCursorLabel]: 'Capture Cursor',
-  
   [Phrase.FPSLabel]: 'FPS',
   [Phrase.CanvasResolutionLabel]: 'Canvas Resolution',
   [Phrase.QualityLabel]: 'Quality',
   [Phrase.VideoEncoderLabel]: 'Video Encoder',
-
   [Phrase.SpeakersLabel]: 'Speakers',
   [Phrase.MicrophonesLabel]: 'Microphones',
   [Phrase.AudioSuppressionLabel]: 'Audio Suppression',
   [Phrase.MonoInputLabel]: 'Mono Input',
   [Phrase.PushToTalkLabel]: 'Push To Talk',
-
   [Phrase.ChatOverlayLabel]: 'Chat Overlay',
   [Phrase.OwnImageLabel]: 'Own Image',
   [Phrase.ImagePathLabel]: 'Image Path',
@@ -199,7 +185,6 @@ const ENGLISH: Translations = {
   [Phrase.HorizontalLabel]: 'Horizontal',
   [Phrase.VerticalLabel]: 'Vertical',
   [Phrase.ScaleLabel]: 'Scale',
-
   [Phrase.TableHeaderEncounter]: 'Encounter',
   [Phrase.TableHeaderResult]: 'Result',
   [Phrase.TableHeaderPull]: 'Pull',
@@ -210,25 +195,21 @@ const ENGLISH: Translations = {
   [Phrase.TableHeaderMap]: 'Map',
   [Phrase.TableHeaderType]: 'Type',
   [Phrase.TableHeaderTag]: 'Tag',
-
   [Phrase.SearchLabel]: 'Search',
   [Phrase.SearchSuggestionMythicPlus]: 'Try: timed temple yesterday +18 priest bookmarked fortified',
   [Phrase.SearchSuggestionRaid]: 'Try: kill today retail mythic destruction bookmarked',
   [Phrase.SearchSuggestionBattlegrounds]: 'Try: warsong gulch bookmarked',
   [Phrase.SearchSuggestionSoloShuffle]: 'Try: dalaran 6-0 bookmarked',
   [Phrase.SearchSuggestionDefault]: 'Try: win enigma crucible arcane bookmarked',
-
   [Phrase.ShowRoundsLabel]: 'Show Rounds',
   [Phrase.ShowDeathsLabel]: 'Show Deaths',
   [Phrase.ShowEncountersLabel]: 'Show Encounters',
-
   [Phrase.FullScreenTooltip]: 'Fullscreen',
   [Phrase.PlaybackSpeedTooltip]: 'Playback Speed',
   [Phrase.ClipTooltip]: 'Clip',
   [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos',
   [Phrase.ConfirmTooltip]: 'Confirm',
   [Phrase.CancelTooltip]: 'Cancel',
-
   [Phrase.TagButtonTooltip]: 'Add a tag',
   [Phrase.StarButtonTooltip]: 'Never age out',
   [Phrase.UnstarButtonTooltip]: 'Age out',
@@ -240,7 +221,6 @@ const ENGLISH: Translations = {
   [Phrase.DiskButtonTooltip]: 'Use local disk version',
   [Phrase.UploadButtonTooltip]: 'Upload to cloud',
   [Phrase.DownloadButtonTooltip]: 'Download to disk',
-
   [Phrase.StatusTitleRecording]: 'Recording',
   [Phrase.StatusTitleWaiting]: 'Waiting',
   [Phrase.StatusTitleInvalid]: 'Invalid',
@@ -248,7 +228,6 @@ const ENGLISH: Translations = {
   [Phrase.StatusTitleFatalError]: 'Error',
   [Phrase.StatusTitleOverrunning]: 'Overrunning',
   [Phrase.StatusTitleReconfiguring]: 'Reconfiguring',
-
   [Phrase.StatusDescriptionRecording]: 'Warcraft Recorder is currently recording',
   [Phrase.StatusDescriptionForceEnd]: 'You can force the recording to end. Normally this should not be required. This can help end a failed Mythic+ run that would otherwise need a few minutes to wrap up.',
   [Phrase.StatusDescriptionWaiting]: 'Waiting for World of Warcraft to start',
@@ -264,39 +243,29 @@ const ENGLISH: Translations = {
   [Phrase.StatusDescriptionIfRecurring]: 'If this problem is recurring, please ask for help in Discord. See the pins in the #help channel for advice on getting help.',
   [Phrase.StatusDescriptionOverrunning]: 'Warcraft Recorder has detected an activity has completed successfuly and is recording a few seconds extra to catch the aftermath.',
   [Phrase.StatusDescriptionNothing]: 'nothing. You likely want to enable some game modes in the game settings tab.',
-  
   [Phrase.StatusHeading]: 'Status',
   [Phrase.StatusButtonForceEndLabel]: 'Force Stop',
-
   [Phrase.Retail]: 'Retail',
   [Phrase.Classic]: 'Classic',
   [Phrase.Era]: 'Era',
-
   [Phrase.MicListeningTooltip]: 'Listening',
   [Phrase.MicMutedTooltip]: 'Muted',
-
   [Phrase.CrashHappenedText]: 'An OBS crash has occured and has been recovered from. This should not happen in normal operation. You may wish to seek help by sharing your WR and OBS logs in discord.',
-
   [Phrase.SettingsPageApplicationHeader]: 'Application',
   [Phrase.SettingsPageGameHeader]: 'Game',
   [Phrase.SettingsPageProHeader]: 'Pro',
-
   [Phrase.UpdateAvailableTitle]: 'Update available!',
   [Phrase.UpdateAvailableText]: 'There is an update available for Warcraft Recorder. Please click the button below to download it.',
   [Phrase.UpdateAvailableDownloadButtonText]: 'Download',
-
   [Phrase.TestButtonHeading]: 'Select a category to test',
-
   [Phrase.SystemTrayOpen]: 'Open',
   [Phrase.SystemTrayQuit]: 'Quit',
-
   [Phrase.Kill]: 'Kill',
   [Phrase.Wipe]: 'Wipe',
   [Phrase.Win]: 'Win',
   [Phrase.Loss]: 'Loss',
   [Phrase.Abandoned]: 'Abandoned',
   [Phrase.Depleted]: 'Depleted',
-  
   [Phrase.AreYouSure]: 'Are you sure?',
   [Phrase.ThisWillPermanentlyDelete]: 'This will permanently delete',
   [Phrase.RecordingsFullStop]: 'recording(s).',
@@ -304,6 +273,48 @@ const ENGLISH: Translations = {
   [Phrase.StarredRecordingNotDeleted]: 'starred recording(s) which will not be deleted.',
   [Phrase.Hold]: 'Hold',
   [Phrase.ToSkip]: 'to skip this prompt in future.',
+  [Phrase.Death]: 'Death',
+  [Phrase.AddADescription]: 'Add a Description',
+  [Phrase.TagDialogText]: 'This description is queryable in the search bar.',
+  [Phrase.Clear]: 'Clear',
+  [Phrase.Save]: 'Save',
+  [Phrase.ShareableLinkTitle]: 'Shareable link generated and placed in clipboard',
+  [Phrase.ShareableLinkText]: 'This link will be valid for up to 30 days',
+  [Phrase.ShareableLinkFailedTitle]: 'Failed to generate link',
+  [Phrase.ShareableLinkFailedText]: 'Please see logs for more details',
+  [Phrase.CloudUsage]: 'Cloud usage',
+  [Phrase.DiskUsage]: 'Disk usage',
+  [Phrase.Hardware]: 'Hardware',
+  [Phrase.Software]: 'Software',
+  [Phrase.All]: 'All',
+  [Phrase.Own]: 'Own',
+  [Phrase.None]: 'None',
+  [Phrase.On]: 'On',
+  [Phrase.Off]: 'Off',
+  [Phrase.Ultra]: 'Ultra',
+  [Phrase.High]: 'High',
+  [Phrase.Moderate]: 'Moderate',
+  [Phrase.Low]: 'Low',
+  [Phrase.LFR]: 'Lfr',
+  [Phrase.Normal]: 'Normal',
+  [Phrase.Heroic]: 'Heroic',
+  [Phrase.Mythic]: 'Mythic',
+  [Phrase.Pvp]: 'PVP',
+  [Phrase.ErrorAccountEmpty]: 'Account name must not be empty.',
+  [Phrase.ErrorPasswordEmpty]: 'Password must not be empty.',
+  [Phrase.ErrorGuildEmpty]: 'Guild name must not be empty.',
+  [Phrase.ErrorUserNotAuthorizedPlayback]: 'User is not authorized to access the guild.',
+  [Phrase.ErrorUserNotAuthorizedUpload]: 'User is not authorized to upload to the guild.',
+  [Phrase.ErrorStoragePathInvalid]: 'Storage path is invalid.',
+  [Phrase.ErrorBufferPathInvalid]: 'Buffer Storage Path is invalid.',
+  [Phrase.ErrorStoragePathSameAsBufferPath]: 'Storage Path is the same as Buffer Path.',
+  [Phrase.ErrorCustomOverlayNotAllowed]: 'To use a custom overlay, enable cloud storage.',
+  [Phrase.ErrorNoCustomImage]: 'Overlay image was not provided for custom overlay.',
+  [Phrase.ErrorCustomImageFileType]: 'Overlay image must be a .png or .gif file.',
+  [Phrase.ErrorCustomImageNotExist]: 'Specified file does not exist.',
+  [Phrase.InvalidRetailLogPath]: 'Invalid retail log path.',
+  [Phrase.InvalidClassicLogPath]: 'Invalid classic log path.',
+  [Phrase.InvalidEraLogPath]: 'Invalid era log path.',
 };
 
 export default ENGLISH;

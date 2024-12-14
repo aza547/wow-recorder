@@ -22,7 +22,12 @@ import TextBanner from './components/TextBanner/TextBanner';
 
 const ipc = window.electron.ipcRenderer;
 
-const raidDifficultyOptions = ['LFR', 'Normal', 'Heroic', 'Mythic'];
+const raidDifficultyOptions = [
+  { name: 'LFR', phrase: Phrase.LFR },
+  { name: 'Normal', phrase: Phrase.Normal },
+  { name: 'Heroic', phrase: Phrase.Heroic },
+  { name: 'Mythic', phrase: Phrase.Mythic },
+];
 
 let debounceTimer: NodeJS.Timer | undefined;
 
@@ -190,7 +195,10 @@ const CloudSettings = (props: IProps) => {
           htmlFor="cloudUploadRaidMinDifficulty"
           className="flex items-center"
         >
-          Upload Difficulty Threshold
+          {getLocalePhrase(
+            appState.language,
+            Phrase.UploadDifficultyThresholdLabel
+          )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -210,9 +218,9 @@ const CloudSettings = (props: IProps) => {
             <SelectValue placeholder="Select a difficulty" />
           </SelectTrigger>
           <SelectContent>
-            {raidDifficultyOptions.map((difficulty: string) => (
-              <SelectItem key={difficulty} value={difficulty}>
-                {difficulty}
+            {raidDifficultyOptions.map((difficulty) => (
+              <SelectItem key={difficulty.name} value={difficulty.name}>
+                {getLocalePhrase(appState.language, difficulty.phrase)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -530,13 +538,15 @@ const CloudSettings = (props: IProps) => {
 
     return (
       <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
-        <Tooltip content="Cloud usage">
+        <Tooltip
+          content={getLocalePhrase(appState.language, Phrase.CloudUsage)}
+        >
           <Cloud size={24} />
         </Tooltip>
 
         <Progress value={perc} className="h-3" />
         <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
-          {Math.round(usage)}GB of {Math.round(max)}GB
+          {Math.round(usage)}GB / {Math.round(max)}GB
         </span>
       </div>
     );

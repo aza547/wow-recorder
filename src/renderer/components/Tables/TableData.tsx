@@ -101,7 +101,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       },
       {
         id: 'Difficulty',
-        accessorFn: (v) => getInstanceDifficultyText(v),
+        accessorFn: (v) => getInstanceDifficultyText(v, language),
         header: () => DifficultyHeader(language),
       },
       {
