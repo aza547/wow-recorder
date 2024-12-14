@@ -1,13 +1,12 @@
 import { Box } from '@mui/material';
 import React from 'react';
-import { RecStatus } from 'main/types';
+import { AppState, RecStatus } from 'main/types';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
 import VideoSourceControls from './VideoSourceControls';
 import AudioSourceControls from './AudioSourceControls';
 import VideoBaseControls from './VideoBaseControls';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import Separator from './components/Separator/Separator';
 import {
   Tabs,
   TabsContent,
@@ -16,15 +15,12 @@ import {
 } from './components/Tabs/Tabs';
 
 interface IProps {
+  appState: AppState;
   recorderStatus: RecStatus;
 }
 
-const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-foreground-lighter font-bold">{children}</h2>
-);
-
 const SceneEditor: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus } = props;
+  const { recorderStatus, appState } = props;
 
   return (
     <Box
@@ -53,22 +49,25 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         >
           <TabsContent value="source">
             <div className="p-4">
-              <VideoSourceControls />
+              <VideoSourceControls appState={appState} />
             </div>
           </TabsContent>
           <TabsContent value="video">
             <div className="p-4">
-              <VideoBaseControls recorderStatus={recorderStatus} />
+              <VideoBaseControls
+                recorderStatus={recorderStatus}
+                appState={appState}
+              />
             </div>
           </TabsContent>
           <TabsContent value="audio">
             <div className="p-4">
-              <AudioSourceControls />
+              <AudioSourceControls appState={appState} />
             </div>
           </TabsContent>
           <TabsContent value="overlay">
             <div className="p-4">
-              <ChatOverlayControls />
+              <ChatOverlayControls appState={appState} />
             </div>
           </TabsContent>
         </ScrollArea>

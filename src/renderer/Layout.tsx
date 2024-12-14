@@ -63,7 +63,7 @@ const Layout = (props: IProps) => {
   };
 
   const renderSceneEditor = () => {
-    return <SceneEditor recorderStatus={recorderStatus} />;
+    return <SceneEditor recorderStatus={recorderStatus} appState={appState} />;
   };
 
   return (

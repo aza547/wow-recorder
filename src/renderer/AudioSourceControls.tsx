@@ -1,7 +1,8 @@
-import { DeviceType, IOBSDevice } from 'main/types';
+import { AppState, DeviceType, IOBSDevice } from 'main/types';
 import React from 'react';
 import { configSchema } from 'main/configSchema';
 import { Info, Volume1, Volume2 } from 'lucide-react';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   blurAll,
@@ -22,7 +23,12 @@ import { Input } from './components/Input/Input';
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timer | undefined;
 
-const AudioSourceControls: React.FC = () => {
+interface IProps {
+  appState: AppState;
+}
+
+const AudioSourceControls = (props: IProps) => {
+  const { appState } = props;
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
 
@@ -149,7 +155,10 @@ const AudioSourceControls: React.FC = () => {
         <Label className="flex items-center">
           Speakers
           <Tooltip
-            content={configSchema.audioOutputDevices.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.audioOutputDevices.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -205,7 +214,10 @@ const AudioSourceControls: React.FC = () => {
         <Label className="flex items-center">
           Microphones
           <Tooltip
-            content={configSchema.audioInputDevices.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.audioInputDevices.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -287,7 +299,13 @@ const AudioSourceControls: React.FC = () => {
       <div className="flex flex-col w-[140px]">
         <Label className="flex items-center">
           Mono Input
-          <Tooltip content={configSchema.obsForceMono.description} side="right">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.obsForceMono.description
+            )}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -306,7 +324,13 @@ const AudioSourceControls: React.FC = () => {
       <div className="flex flex-col w-[140px]">
         <Label className="flex items-center">
           Push to Talk
-          <Tooltip content={configSchema.pushToTalk.description} side="right">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.pushToTalk.description
+            )}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -355,7 +379,10 @@ const AudioSourceControls: React.FC = () => {
         <Label htmlFor="pttKey" className="flex items-center">
           Push to Talk Key
           <Tooltip
-            content={configSchema.pushToTalkKey.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.pushToTalkKey.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -378,7 +405,10 @@ const AudioSourceControls: React.FC = () => {
         <Label className="flex items-center">
           Audio Suppression
           <Tooltip
-            content={configSchema.obsAudioSuppression.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.obsAudioSuppression.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />

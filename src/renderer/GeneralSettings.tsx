@@ -171,7 +171,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         <Label htmlFor="separateBufferPath" className="flex items-center">
           Separate Buffer Folder
           <Tooltip
-            content={configSchema.separateBufferPath.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.separateBufferPath.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -202,7 +205,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         <Label htmlFor="bufferStoragePath" className="flex items-center">
           Buffer Folder
           <Tooltip
-            content={configSchema.bufferStoragePath.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.bufferStoragePath.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -241,7 +247,13 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
         <Label htmlFor="maxDiskStorage" className="flex items-center">
           Max Disk Storage (GB)
-          <Tooltip content={configSchema.maxStorage.description} side="top">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.maxStorage.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>

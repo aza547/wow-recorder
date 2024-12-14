@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'main/configSchema';
-import { CloudStatus, RecStatus } from 'main/types';
+import { AppState, CloudStatus, RecStatus } from 'main/types';
 import { useState } from 'react';
 import { Cloud, Info } from 'lucide-react';
+import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
@@ -27,10 +28,11 @@ let debounceTimer: NodeJS.Timer | undefined;
 
 interface IProps {
   recorderStatus: RecStatus;
+  appState: AppState;
 }
 
 const CloudSettings = (props: IProps) => {
-  const { recorderStatus } = props;
+  const { recorderStatus, appState } = props;
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
 
@@ -152,7 +154,13 @@ const CloudSettings = (props: IProps) => {
       <div className="flex flex-col w-[140px]">
         <Label htmlFor={preference} className="flex items-center">
           {label}
-          <Tooltip content={configSchema[preference].description} side="top">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema[preference].description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -185,7 +193,10 @@ const CloudSettings = (props: IProps) => {
         >
           Upload Difficulty Threshold
           <Tooltip
-            content={configSchema.cloudUploadRaidMinDifficulty.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadRaidMinDifficulty.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -237,7 +248,10 @@ const CloudSettings = (props: IProps) => {
         >
           Upload Level Threshold
           <Tooltip
-            content={configSchema.cloudUploadDungeonMinLevel.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadDungeonMinLevel.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -292,7 +306,13 @@ const CloudSettings = (props: IProps) => {
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="cloudStorage" className="flex items-center">
           Cloud Playback
-          <Tooltip content={configSchema.cloudStorage.description} side="top">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudStorage.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -312,7 +332,13 @@ const CloudSettings = (props: IProps) => {
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="cloudUpload" className="flex items-center">
           Cloud Upload
-          <Tooltip content={configSchema.cloudUpload.description} side="top">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUpload.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -342,7 +368,10 @@ const CloudSettings = (props: IProps) => {
         <Label htmlFor="cloudUploadRateLimit" className="flex items-center">
           Upload Rate Limit
           <Tooltip
-            content={configSchema.cloudUploadRateLimit.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadRateLimit.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -376,7 +405,10 @@ const CloudSettings = (props: IProps) => {
         <Label htmlFor="cloudAccountName" className="flex items-center">
           User / Email
           <Tooltip
-            content={configSchema.cloudAccountName.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudAccountName.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -419,7 +451,10 @@ const CloudSettings = (props: IProps) => {
         <Label htmlFor="cloudAccountPassword" className="flex items-center">
           Password
           <Tooltip
-            content={configSchema.cloudAccountPassword.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudAccountPassword.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -460,7 +495,13 @@ const CloudSettings = (props: IProps) => {
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
         <Label htmlFor="cloudGuildName" className="flex items-center">
           Guild Name
-          <Tooltip content={configSchema.cloudGuildName.description} side="top">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudGuildName.description
+            )}
+            side="top"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -547,7 +588,10 @@ const CloudSettings = (props: IProps) => {
         <Label htmlFor="cloudUploadRateLimitMbps" className="flex items-center">
           Upload Rate Limit (MB/s)
           <Tooltip
-            content={configSchema.cloudUploadRateLimitMbps.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadRateLimitMbps.description
+            )}
             side="top"
           >
             <Info size={20} className="inline-flex ml-2" />

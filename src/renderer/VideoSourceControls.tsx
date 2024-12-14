@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { OurDisplayType } from 'main/types';
+import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'main/configSchema';
 import { Info } from 'lucide-react';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
 import {
@@ -13,7 +14,12 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 
 const ipc = window.electron.ipcRenderer;
 
-const VideoSourceControls: React.FC = () => {
+interface IProps {
+  appState: AppState;
+}
+
+const VideoSourceControls = (props: IProps) => {
+  const { appState } = props;
   const [config, setConfig] = useSettings();
   const [displays, setDisplays] = useState<OurDisplayType[]>([]);
   const initialRender = React.useRef(true);
@@ -83,7 +89,10 @@ const VideoSourceControls: React.FC = () => {
         <Label className="flex items-center">
           Capture Mode
           <Tooltip
-            content={configSchema.obsCaptureMode.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.obsCaptureMode.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -113,7 +122,13 @@ const VideoSourceControls: React.FC = () => {
       <div>
         <Label className="flex items-center">
           Monitor
-          <Tooltip content={configSchema.monitorIndex.description} side="right">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.monitorIndex.description
+            )}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -140,7 +155,10 @@ const VideoSourceControls: React.FC = () => {
         <Label className="flex items-center">
           Capture Cursor
           <Tooltip
-            content={configSchema.captureCursor.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.captureCursor.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />

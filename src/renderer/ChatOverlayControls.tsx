@@ -1,6 +1,8 @@
 import React from 'react';
 import { configSchema } from 'main/configSchema';
 import { Info, Lock } from 'lucide-react';
+import { AppState } from 'main/types';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues, getConfigValue } from './useSettings';
 import { fileSelect } from './rendererutils';
 import Label from './components/Label/Label';
@@ -11,7 +13,12 @@ import Slider from './components/Slider/Slider';
 
 const ipc = window.electron.ipcRenderer;
 
-const ChatOverlayControls: React.FC = () => {
+interface IProps {
+  appState: AppState;
+}
+
+const ChatOverlayControls = (props: IProps) => {
+  const { appState } = props;
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
   const resolution = getConfigValue<string>('obsOutputResolution');
@@ -107,7 +114,10 @@ const ChatOverlayControls: React.FC = () => {
         <Label className="flex items-center">
           Chat Overlay
           <Tooltip
-            content={configSchema.chatOverlayEnabled.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.chatOverlayEnabled.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -129,7 +139,10 @@ const ChatOverlayControls: React.FC = () => {
         <Label className="flex items-center gap-x-2">
           Own Image
           <Tooltip
-            content={configSchema.chatOverlayOwnImage.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.chatOverlayOwnImage.description
+            )}
             side="right"
           >
             {config.cloudStorage ? (
@@ -277,7 +290,10 @@ const ChatOverlayControls: React.FC = () => {
         <Label htmlFor="bufferStoragePath" className="flex items-center">
           Image Path
           <Tooltip
-            content={configSchema.chatOverlayOwnImagePath.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.chatOverlayOwnImagePath.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />

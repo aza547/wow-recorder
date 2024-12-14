@@ -1,9 +1,10 @@
 import { FC, useEffect, useRef, useState } from 'react';
-import { Encoder, RecStatus } from 'main/types';
+import { AppState, Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
 import { configSchema } from 'main/configSchema';
 import { ESupportedEncoders, QualityPresets } from 'main/obsEnums';
 import { Info } from 'lucide-react';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   encoderFilter,
@@ -33,6 +34,7 @@ const fpsOptions = [10, 20, 30, 60];
 
 interface IProps {
   recorderStatus: RecStatus;
+  appState: AppState;
 }
 
 /**
@@ -47,7 +49,7 @@ interface IProps {
  */
 const VideoBaseControls: FC<IProps> = (props: IProps) => {
   const [config, setConfig] = useSettings();
-  const { recorderStatus } = props;
+  const { recorderStatus, appState } = props;
   const initialRender = useRef(true);
   const highRes = isHighRes(config.obsOutputResolution);
   const [encoders, setEncoders] = useState<Encoder[]>([]);
@@ -126,7 +128,10 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
         <Label className="flex items-center">
           Canvas Resolution
           <Tooltip
-            content={configSchema.obsOutputResolution.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.obsOutputResolution.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />
@@ -174,7 +179,13 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       <div>
         <Label className="flex items-center">
           FPS
-          <Tooltip content={configSchema.obsFPS.description} side="right">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.obsFPS.description
+            )}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -235,7 +246,13 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label className="flex items-center">
           Quality
-          <Tooltip content={configSchema.obsQuality.description} side="right">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.obsQuality.description
+            )}
+            side="right"
+          >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
@@ -278,7 +295,10 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
         <Label className="flex items-center">
           Video Encoder
           <Tooltip
-            content={configSchema.obsRecEncoder.description}
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.obsRecEncoder.description
+            )}
             side="right"
           >
             <Info size={20} className="inline-flex ml-2" />

@@ -81,12 +81,13 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                   recorderStatus={recorderStatus}
                   config={config}
                   setConfig={setConfig}
+                  appState={appState}
                 />
               </div>
               <div>
                 <CategoryHeading>PvE Settings</CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <PVESettings />
+                <PVESettings appState={appState}/>
               </div>
               <div>
                 <CategoryHeading>PvP Settings</CategoryHeading>
@@ -100,7 +101,10 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
               <div>
                 <CategoryHeading>Cloud Settings</CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <CloudSettings recorderStatus={recorderStatus} />
+                <CloudSettings
+                  recorderStatus={recorderStatus}
+                  appState={appState}
+                />
               </div>
             </div>
           </TabsContent>
