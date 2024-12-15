@@ -24,8 +24,9 @@ const data: LocalizationDataType = {
   [Language.KLINGON]: KlingonTranslations,
 };
 ```
+5. Optionally update the VideoFilter class to include search strings for the new language. These won't translate automatically. If you skip this the search bar won't be usable in the new language.
 
-5. That's it. You should now be able to select the new language in the settings page.
+6. That's it. You should now be able to select the new language in the settings page.
 
 # How To Add User-Facing Strings 
 I've just added localisation support to the client. All users facing text in the application should now be populated via the localisation infrastructure. 

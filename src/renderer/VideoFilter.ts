@@ -20,7 +20,9 @@ import {
 } from './rendererutils';
 
 /**
- * VideoFilter class.
+ * VideoFilter class. This is one of the only places where we don't
+ * handle localisation through the localisation infrastructure. It's
+ * easier to just add all the languages into this class.
  *
  * TO DO:
  * - Improve suggestions / autogenerate them
@@ -123,6 +125,7 @@ export default class VideoFilter {
       this.addStringFilter('protected');
       this.addStringFilter('favorited');
       this.addStringFilter('favourited');
+      this.addStringFilter('북마크');
     }
   }
 
@@ -136,7 +139,7 @@ export default class VideoFilter {
       // as filters.
       video.tag
         .split(/[\s+]/)
-        .map((word) => word.replace(/[^a-zA-Z]/g, ''))
+        .map((word) => word.replace(/[^가-힣a-zA-Z]/g, ''))
         .filter((word) => word)
         .forEach((word) => this.addStringFilter(word));
     }
@@ -170,8 +173,10 @@ export default class VideoFilter {
 
     if (isToday) {
       this.addStringFilter('today');
+      this.addStringFilter('오늘');
     } else if (isYesterday) {
       this.addStringFilter('yesterday');
+      this.addStringFilter('어제');
     }
 
     if (this.video.flavour === Flavour.Retail) {
@@ -220,14 +225,20 @@ export default class VideoFilter {
 
       if (wins !== undefined && played !== undefined) {
         const losses = played - wins;
-        this.addStringFilter(`${wins}-${losses}}`);
-        this.addStringFilter(`${wins}/${losses}}`);
-        this.addStringFilter(`${wins}:${losses}}`);
+        this.addStringFilter(`${wins}-${losses}`);
+        this.addStringFilter(`${wins}/${losses}`);
+        this.addStringFilter(`${wins}:${losses}`);
+        this.addStringFilter(`${wins}대${losses}`);
+        this.addStringFilter(`${wins}승${losses}패`);
+        this.addStringFilter(`${wins}승`);
+        this.addStringFilter(`${losses}패`);
       }
     } else if (this.video.result) {
       this.addStringFilter('win');
+      this.addStringFilter('승리');
     } else {
       this.addStringFilter('loss');
+      this.addStringFilter('패배');
     }
 
     if (this.video.zoneID !== undefined) {
@@ -248,8 +259,10 @@ export default class VideoFilter {
   private setRaidFilters() {
     if (this.video.result) {
       this.addStringFilter('kill');
+      this.addStringFilter('킬');
     } else {
       this.addStringFilter('wipe');
+      this.addStringFilter('전멸');
     }
 
     if (this.video.zoneID !== undefined) {
@@ -277,12 +290,16 @@ export default class VideoFilter {
 
     if (this.video.difficultyID === 17) {
       this.addStringFilter('lfr looking for raid');
+      this.addStringFilter('공찾');
     } else if (this.video.difficultyID === 14) {
       this.addStringFilter('normal');
+      this.addStringFilter('일반');
     } else if (this.video.difficultyID === 15) {
       this.addStringFilter('heroic hc');
+      this.addStringFilter('영웅');
     } else if (this.video.difficultyID === 16) {
       this.addStringFilter('mythic');
+      this.addStringFilter('신화');
     }
   }
 
@@ -292,16 +309,19 @@ export default class VideoFilter {
   private setDungeonFilters() {
     if (!this.video.result) {
       this.addStringFilter('abandoned');
+      this.addStringFilter('탈주');
     } else if (
       this.video.upgradeLevel !== undefined &&
       this.video.upgradeLevel < 1
     ) {
       this.addStringFilter('depleted');
+      this.addStringFilter('소진');
     } else if (
       this.video.upgradeLevel !== undefined &&
       this.video.upgradeLevel > 0
     ) {
       this.addStringFilter('timed');
+      this.addStringFilter('완료');
     }
 
     if (this.video.zoneID !== undefined) {
@@ -336,8 +356,10 @@ export default class VideoFilter {
   private setBattlegroundFilters() {
     if (this.video.result) {
       this.addStringFilter('win');
+      this.addStringFilter('승리');
     } else {
       this.addStringFilter('loss');
+      this.addStringFilter('패배');
     }
 
     if (this.video.zoneID !== undefined) {
