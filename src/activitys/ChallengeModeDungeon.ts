@@ -1,4 +1,7 @@
 import Combatant from 'main/Combatant';
+import { Language, Phrase } from 'localisation/types';
+import ConfigService from 'main/ConfigService';
+import { getLocalePhrase } from 'localisation/translations';
 import { Flavour, Metadata } from '../main/types';
 import { dungeonTimersByMapId, instanceNamesByZoneId } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
@@ -128,7 +131,10 @@ export default class ChallengeModeDungeon extends Activity {
       return `+${this.upgradeLevel}`;
     }
 
-    return 'Abandoned';
+    const cfg = ConfigService.getInstance();
+    const language = cfg.get<string>('language') as Language;
+
+    return getLocalePhrase(language, Phrase.Abandoned);
   }
 
   endChallengeMode(endDate: Date, CMDuration: number, result: boolean) {

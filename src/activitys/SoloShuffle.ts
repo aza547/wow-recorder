@@ -1,4 +1,7 @@
 import Combatant from 'main/Combatant';
+import ConfigService from 'main/ConfigService';
+import { Language, Phrase } from 'localisation/types';
+import { getLocalePhrase } from 'localisation/translations';
 import {
   Flavour,
   Metadata,
@@ -215,7 +218,15 @@ export default class SoloShuffle extends Activity {
   }
 
   getFileName() {
-    let fileName = `${this.category} ${this.zoneName} (${this.resultInfo})`;
+    const cfg = ConfigService.getInstance();
+    const language = cfg.get<string>('language') as Language;
+
+    const category = getLocalePhrase(
+      language,
+      Phrase.VideoCategorySoloShuffleLabel
+    );
+
+    let fileName = `${category} ${this.zoneName} (${this.resultInfo})`;
 
     try {
       if (this.player.name !== undefined) {

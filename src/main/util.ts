@@ -153,6 +153,32 @@ const getThumbnailFileNameForVideo = (video: string) => {
 };
 
 /**
+ * The Korean build of WCR had translated video categories. Now that
+ * they are going to use the main build with the localisation feature,
+ * this translates them back to english so we can process them. This is
+ * purely to bridge the gap, and in theory could be removed in the future.
+ */
+const convertKoreanVideoCategory = (
+  metadata: Metadata | CloudSignedMetadata
+) => {
+  const raw = metadata as any;
+
+  if (raw.category === '연습전투') {
+    raw.category = VideoCategory.Skirmish;
+  } else if (raw.category === '1인전') {
+    raw.category = VideoCategory.SoloShuffle;
+  } else if (raw.category === '쐐기+') {
+    raw.category = VideoCategory.MythicPlus;
+  } else if (raw.category === '레이드') {
+    raw.category = VideoCategory.Raids;
+  } else if (raw.category === '전장') {
+    raw.category = VideoCategory.Battlegrounds;
+  } else if (raw.category === '클립') {
+    raw.category = VideoCategory.Clips;
+  }
+};
+
+/**
  * Get the metadata object for a video from the accompanying JSON file.
  */
 const getMetadataForVideo = async (video: string) => {
@@ -160,6 +186,7 @@ const getMetadataForVideo = async (video: string) => {
   await fspromise.access(metadataFilePath);
   const metadataJSON = await fspromise.readFile(metadataFilePath);
   const metadata = JSON.parse(metadataJSON.toString()) as Metadata;
+  convertKoreanVideoCategory(metadata);
   return metadata;
 };
 
@@ -996,4 +1023,5 @@ export {
   isFolderOwned,
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
+  convertKoreanVideoCategory,
 };

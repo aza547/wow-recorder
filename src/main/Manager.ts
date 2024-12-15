@@ -27,6 +27,7 @@ import {
   takeOwnershipBufferDir,
   deleteVideoDisk,
   getWowFlavour,
+  convertKoreanVideoCategory,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -1185,6 +1186,7 @@ export default class Manager {
     try {
       assert(this.cloudClient);
       const cloudSigned = await this.cloudClient.getState();
+      cloudSigned.forEach(convertKoreanVideoCategory);
       return cloudSigned.map(cloudSignedMetadataToRendererVideo);
     } catch (error) {
       console.error('[Manager] Failed to get state:', String(error));

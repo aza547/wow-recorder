@@ -1,4 +1,7 @@
 import Combatant from 'main/Combatant';
+import { getLocalePhrase } from 'localisation/translations';
+import { Language, Phrase } from 'localisation/types';
+import ConfigService from 'main/ConfigService';
 import { Flavour, Metadata } from '../main/types';
 import { classicArenas, retailArenas } from '../main/constants';
 import Activity from './Activity';
@@ -28,11 +31,14 @@ export default class ArenaMatch extends Activity {
       throw new Error('[ArenaMatch] Tried to get result info but no result');
     }
 
+    const cfg = ConfigService.getInstance();
+    const language = cfg.get<string>('language') as Language;
+
     if (this.result) {
-      return 'Win';
+      return getLocalePhrase(language, Phrase.Win);
     }
 
-    return 'Loss';
+    return getLocalePhrase(language, Phrase.Loss);
   }
 
   get zoneName() {
@@ -92,7 +98,26 @@ export default class ArenaMatch extends Activity {
   }
 
   getFileName() {
-    let fileName = `${this.category} ${this.zoneName} (${this.resultInfo})`;
+    const cfg = ConfigService.getInstance();
+    const language = cfg.get<string>('language') as Language;
+
+    let phrase;
+
+    if (this.category === VideoCategory.TwoVTwo) {
+      phrase = Phrase.VideoCategoryTwoVTwoLabel;
+    } else if (this.category === VideoCategory.ThreeVThree) {
+      phrase = Phrase.VideoCategoryThreeVThreeLabel;
+    } else if (this.category === VideoCategory.FiveVFive) {
+      phrase = Phrase.VideoCategoryFiveVFiveLabel;
+    } else if (this.category === VideoCategory.Skirmish) {
+      phrase = Phrase.VideoCategorySkirmishLabel;
+    } else {
+      console.error('Unrecognized arena category', this.category);
+      throw new Error('Unrecongized arena category');
+    }
+
+    const categoryText = getLocalePhrase(language, phrase);
+    let fileName = `${categoryText} ${this.zoneName} (${this.resultInfo})`;
 
     try {
       if (this.player.name !== undefined) {

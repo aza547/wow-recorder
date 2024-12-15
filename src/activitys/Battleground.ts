@@ -1,4 +1,7 @@
 import { Flavour, Metadata } from 'main/types';
+import { Language, Phrase } from 'localisation/types';
+import ConfigService from 'main/ConfigService';
+import { getLocalePhrase } from 'localisation/translations';
 import { classicBattlegrounds, retailBattlegrounds } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
@@ -74,7 +77,13 @@ export default class Battleground extends Activity {
   }
 
   getFileName(): string {
-    const resultText = this.estimateResult() ? 'Win' : 'Loss';
+    const cfg = ConfigService.getInstance();
+    const language = cfg.get<string>('language') as Language;
+
+    const resultText = this.estimateResult()
+      ? getLocalePhrase(language, Phrase.Win)
+      : getLocalePhrase(language, Phrase.Loss);
+
     let fileName = `${this.battlegroundName} (${resultText})`;
 
     try {
