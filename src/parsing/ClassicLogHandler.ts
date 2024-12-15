@@ -232,7 +232,8 @@ export default class ClassicLogHandler extends LogHandler {
       startDate,
       category,
       zoneID,
-      Flavour.Classic
+      Flavour.Classic,
+      this.cfg
     );
 
     await this.startActivity(activity);
@@ -414,7 +415,8 @@ export default class ClassicLogHandler extends LogHandler {
       startTime,
       category,
       zoneID,
-      Flavour.Classic
+      Flavour.Classic,
+      this.cfg
     );
 
     await this.startActivity(activity);

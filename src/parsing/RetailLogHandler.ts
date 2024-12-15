@@ -114,7 +114,7 @@ export default class RetailLogHandler extends LogHandler {
 
     if (!this.activity && category === VideoCategory.SoloShuffle) {
       console.info('[RetailLogHandler] Fresh Solo Shuffle game starting');
-      const activity = new SoloShuffle(startTime, zoneID);
+      const activity = new SoloShuffle(startTime, zoneID, this.cfg);
       await this.startActivity(activity);
     } else if (this.activity && category === VideoCategory.SoloShuffle) {
       console.info(
@@ -129,7 +129,8 @@ export default class RetailLogHandler extends LogHandler {
         startTime,
         category,
         zoneID,
-        Flavour.Retail
+        Flavour.Retail,
+        this.cfg
       );
 
       await this.startActivity(activity);
@@ -208,7 +209,8 @@ export default class RetailLogHandler extends LogHandler {
       zoneID,
       mapID,
       level,
-      affixes
+      affixes,
+      this.cfg
     );
 
     const initialSegment = new ChallengeModeTimelineSegment(
@@ -537,7 +539,8 @@ export default class RetailLogHandler extends LogHandler {
       startTime,
       category,
       zoneID,
-      Flavour.Retail
+      Flavour.Retail,
+      this.cfg
     );
 
     await this.startActivity(activity);

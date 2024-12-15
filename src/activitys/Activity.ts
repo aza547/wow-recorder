@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import ConfigService from 'main/ConfigService';
 import { PlayerDeathType, Flavour, Metadata } from '../main/types';
 import Combatant from '../main/Combatant';
 import { VideoCategory } from '../types/VideoCategory';
@@ -29,13 +30,21 @@ export default abstract class Activity {
 
   protected hash = crypto.createHash('md5');
 
-  constructor(startDate: Date, category: VideoCategory, flavour: Flavour) {
+  protected cfg: ConfigService;
+
+  constructor(
+    startDate: Date,
+    category: VideoCategory,
+    flavour: Flavour,
+    cfg: ConfigService
+  ) {
     this._result = false;
     this._combatantMap = new Map();
     this._startDate = startDate;
     this._category = category;
     this._deaths = [];
     this._flavour = flavour;
+    this.cfg = cfg;
   }
 
   abstract getMetadata(): Metadata;

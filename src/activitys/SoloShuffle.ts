@@ -24,8 +24,8 @@ import { VideoCategory } from '../types/VideoCategory';
 export default class SoloShuffle extends Activity {
   private rounds: ArenaMatch[] = [];
 
-  constructor(startDate: Date, zoneID: number) {
-    super(startDate, VideoCategory.SoloShuffle, Flavour.Retail);
+  constructor(startDate: Date, zoneID: number, cfg: ConfigService) {
+    super(startDate, VideoCategory.SoloShuffle, Flavour.Retail, cfg);
     this._zoneID = zoneID;
     this.overrun = 3;
     this.startRound(startDate);
@@ -103,7 +103,8 @@ export default class SoloShuffle extends Activity {
       startDate,
       VideoCategory.SoloShuffle,
       this.zoneID,
-      Flavour.Retail
+      Flavour.Retail,
+      this.cfg
     );
 
     this.rounds.push(newRound);
@@ -218,8 +219,7 @@ export default class SoloShuffle extends Activity {
   }
 
   getFileName() {
-    const cfg = ConfigService.getInstance();
-    const language = cfg.get<string>('language') as Language;
+    const language = this.cfg.get<string>('language') as Language;
 
     const category = getLocalePhrase(
       language,

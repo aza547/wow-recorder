@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [Issue 566](https://github.com/aza547/wow-recorder/issues/566) - Add localisation support.
+- [Issue 566](https://github.com/aza547/wow-recorder/issues/566) - Add Korean translations.
 
 ### Fixed
 

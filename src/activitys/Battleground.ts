@@ -14,9 +14,10 @@ export default class Battleground extends Activity {
     startDate: Date,
     category: VideoCategory,
     zoneID: number,
-    flavour: Flavour
+    flavour: Flavour,
+    cfg: ConfigService
   ) {
-    super(startDate, category, flavour);
+    super(startDate, category, flavour, cfg);
     this.zoneID = zoneID;
     this.overrun = 3;
   }
@@ -77,8 +78,7 @@ export default class Battleground extends Activity {
   }
 
   getFileName(): string {
-    const cfg = ConfigService.getInstance();
-    const language = cfg.get<string>('language') as Language;
+    const language = this.cfg.get<string>('language') as Language;
 
     const resultText = this.estimateResult()
       ? getLocalePhrase(language, Phrase.Win)

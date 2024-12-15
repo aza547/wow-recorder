@@ -1,7 +1,7 @@
-import Combatant from 'main/Combatant';
-import { Language, Phrase } from 'localisation/types';
-import ConfigService from 'main/ConfigService';
-import { getLocalePhrase } from 'localisation/translations';
+import Combatant from '../main/Combatant';
+import ConfigService from '../main/ConfigService';
+import { Language, Phrase } from '../localisation/types';
+import { getLocalePhrase } from '../localisation/translations';
 import { Flavour, Metadata } from '../main/types';
 import { dungeonTimersByMapId, instanceNamesByZoneId } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
@@ -29,9 +29,10 @@ export default class ChallengeModeDungeon extends Activity {
     zoneID: number,
     mapID: number,
     level: number,
-    affixes: number[]
+    affixes: number[],
+    cfg: ConfigService
   ) {
-    super(startDate, VideoCategory.MythicPlus, Flavour.Retail);
+    super(startDate, VideoCategory.MythicPlus, Flavour.Retail, cfg);
     this._zoneID = zoneID;
     this._mapID = mapID;
     this._level = level;
@@ -131,9 +132,7 @@ export default class ChallengeModeDungeon extends Activity {
       return `+${this.upgradeLevel}`;
     }
 
-    const cfg = ConfigService.getInstance();
-    const language = cfg.get<string>('language') as Language;
-
+    const language = this.cfg.get<string>('language') as Language;
     return getLocalePhrase(language, Phrase.Abandoned);
   }
 

@@ -110,7 +110,8 @@ export default abstract class LogHandler extends EventEmitter {
       encounterID,
       encounterName,
       difficultyID,
-      flavour
+      flavour,
+      this.cfg
     );
 
     await this.startActivity(activity);

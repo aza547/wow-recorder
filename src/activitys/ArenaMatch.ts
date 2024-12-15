@@ -15,9 +15,10 @@ export default class ArenaMatch extends Activity {
     startDate: Date,
     category: VideoCategory,
     zoneID: number,
-    flavour: Flavour
+    flavour: Flavour,
+    cfg: ConfigService
   ) {
-    super(startDate, category, flavour);
+    super(startDate, category, flavour, cfg);
     this._zoneID = zoneID;
     this.overrun = 3;
   }
@@ -31,8 +32,7 @@ export default class ArenaMatch extends Activity {
       throw new Error('[ArenaMatch] Tried to get result info but no result');
     }
 
-    const cfg = ConfigService.getInstance();
-    const language = cfg.get<string>('language') as Language;
+    const language = this.cfg.get<string>('language') as Language;
 
     if (this.result) {
       return getLocalePhrase(language, Phrase.Win);
@@ -98,8 +98,7 @@ export default class ArenaMatch extends Activity {
   }
 
   getFileName() {
-    const cfg = ConfigService.getInstance();
-    const language = cfg.get<string>('language') as Language;
+    const language = this.cfg.get<string>('language') as Language;
 
     let phrase;
 

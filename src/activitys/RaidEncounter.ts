@@ -1,8 +1,12 @@
 import { Flavour, Metadata, RaidInstanceType } from 'main/types';
 
-import Combatant from 'main/Combatant';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
-import ConfigService from 'main/ConfigService';
+import Combatant from '../main/Combatant';
+import ConfigService from '../main/ConfigService';
+import {
+  getLocalePhrase,
+  Language,
+  Phrase,
+} from '../localisation/translations';
 import { instanceDifficulty, raidInstances } from '../main/constants';
 
 import { VideoCategory } from '../types/VideoCategory';
@@ -23,9 +27,10 @@ export default class RaidEncounter extends Activity {
     encounterID: number,
     encounterName: string,
     difficultyID: number,
-    flavour: Flavour
+    flavour: Flavour,
+    cfg: ConfigService
   ) {
-    super(startDate, VideoCategory.Raids, flavour);
+    super(startDate, VideoCategory.Raids, flavour, cfg);
     this._difficultyID = difficultyID;
     this._encounterID = encounterID;
     this._encounterName = encounterName;
@@ -91,8 +96,7 @@ export default class RaidEncounter extends Activity {
       throw new Error('[RaidEncounter] Tried to get result info but no result');
     }
 
-    const cfg = ConfigService.getInstance();
-    const language = cfg.get<string>('language') as Language;
+    const language = this.cfg.get<string>('language') as Language;
 
     if (this.result) {
       return getLocalePhrase(language, Phrase.Kill);
