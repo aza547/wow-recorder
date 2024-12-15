@@ -177,6 +177,13 @@ const ENGLISH: Translations = {
   [Phrase.AudioSuppressionLabel]: 'Audio Suppression',
   [Phrase.MonoInputLabel]: 'Mono Input',
   [Phrase.PushToTalkLabel]: 'Push To Talk',
+  [Phrase.PushToTalkKeyLabel]: 'Push To Talk Key',
+
+  [Phrase.PressAnyKeyCombination]: 'Press any key combination...',
+  [Phrase.ClickToBind]: 'Click to bind',
+  [Phrase.ClickToRebind]: 'Click to rebind',
+  [Phrase.Mouse]: 'Mouse',
+
   [Phrase.ChatOverlayLabel]: 'Chat Overlay',
   [Phrase.OwnImageLabel]: 'Own Image',
   [Phrase.ImagePathLabel]: 'Image Path',
@@ -315,6 +322,8 @@ const ENGLISH: Translations = {
   [Phrase.InvalidRetailLogPath]: 'Invalid retail log path.',
   [Phrase.InvalidClassicLogPath]: 'Invalid classic log path.',
   [Phrase.InvalidEraLogPath]: 'Invalid era log path.',
+  [Phrase.SelectAnOutputDevice]: 'Select an output device',
+  [Phrase.SelectAnInputDevice]: 'Select an input device',
 };
 
 export default ENGLISH;

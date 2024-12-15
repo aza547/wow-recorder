@@ -177,6 +177,11 @@ const KOREAN: Translations = {
   [Phrase.AudioSuppressionLabel]: '샘플 텍스트',
   [Phrase.MonoInputLabel]: '샘플 텍스트',
   [Phrase.PushToTalkLabel]: '샘플 텍스트',
+  [Phrase.PushToTalkKeyLabel]: '샘플 텍스트',
+  [Phrase.PressAnyKeyCombination]: '샘플 텍스트',
+  [Phrase.ClickToBind]: '샘플 텍스트',
+  [Phrase.ClickToRebind]: '샘플 텍스트',
+  [Phrase.Mouse]: '샘플 텍스트',
   [Phrase.ChatOverlayLabel]: '샘플 텍스트',
   [Phrase.OwnImageLabel]: '샘플 텍스트',
   [Phrase.ImagePathLabel]: '샘플 텍스트',
@@ -315,6 +320,8 @@ const KOREAN: Translations = {
   [Phrase.InvalidRetailLogPath]: '샘플 텍스트',
   [Phrase.InvalidClassicLogPath]: '샘플 텍스트',
   [Phrase.InvalidEraLogPath]: '샘플 텍스트',
+  [Phrase.SelectAnOutputDevice]: '샘플 텍스트',
+  [Phrase.SelectAnInputDevice]: '샘플 텍스트',
 };
 
 export default KOREAN;

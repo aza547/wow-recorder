@@ -174,6 +174,11 @@ enum Phrase {
   AudioSuppressionLabel,
   MonoInputLabel,
   PushToTalkLabel,
+  PushToTalkKeyLabel,
+  PressAnyKeyCombination,
+  ClickToBind,
+  ClickToRebind,
+  Mouse,
   ChatOverlayLabel,
   OwnImageLabel,
   ImagePathLabel,
@@ -312,11 +317,13 @@ enum Phrase {
   InvalidRetailLogPath,
   InvalidClassicLogPath,
   InvalidEraLogPath,
+  SelectAnOutputDevice,
+  SelectAnInputDevice,
 }
 
 enum Language {
   ENGLISH = 'English',
-  // KOREAN = '한글', // TODO: Uncomment this when Korean translations are done.
+  KOREAN = '한국어', // TODO: Uncomment this when Korean translations are done.
 }
 
 type Translations = {

@@ -171,7 +171,10 @@ const AudioSourceControls = (props: IProps) => {
           }))}
           onValueChange={(values) => onDeviceChange(DeviceType.OUTPUT, values)}
           defaultValue={output}
-          placeholder="Select an output device"
+          placeholder={getLocalePhrase(
+            appState.language,
+            Phrase.SelectAnOutputDevice
+          )}
           maxCount={1}
         />
       </div>
@@ -230,7 +233,10 @@ const AudioSourceControls = (props: IProps) => {
           }))}
           onValueChange={(values) => onDeviceChange(DeviceType.INPUT, values)}
           defaultValue={input}
-          placeholder="Select an input device"
+          placeholder={getLocalePhrase(
+            appState.language,
+            Phrase.SelectAnInputDevice
+          )}
           maxCount={1}
         />
       </div>
@@ -355,7 +361,11 @@ const AudioSourceControls = (props: IProps) => {
       const key = getKeyByValue(UiohookKeyMap, keyCode);
       if (key !== undefined) keys.push(key);
     } else if (mouseButton > 0) {
-      keys.push(`Mouse ${event.mouseButton}`);
+      keys.push(
+        `${getLocalePhrase(appState.language, Phrase.Mouse)} ${
+          event.mouseButton
+        }`
+      );
     }
 
     return keys.join('+');
@@ -363,21 +373,24 @@ const AudioSourceControls = (props: IProps) => {
 
   const getHotkeyString = () => {
     if (pttHotKeyFieldFocused) {
-      return 'Press any key combination...';
+      return getLocalePhrase(appState.language, Phrase.PressAnyKeyCombination);
     }
 
     if (pttHotKey !== null) {
-      return `${getKeyPressEventString(pttHotKey)} (Click to re-bind)`;
+      return `${getKeyPressEventString(pttHotKey)} (${getLocalePhrase(
+        appState.language,
+        Phrase.ClickToRebind
+      )})`;
     }
 
-    return 'Click to bind';
+    return getLocalePhrase(appState.language, Phrase.ClickToBind);
   };
 
   const getPushToTalkSelect = () => {
     return (
       <div className="flex flex-col">
         <Label htmlFor="pttKey" className="flex items-center">
-          Push to Talk Key
+          {getLocalePhrase(appState.language, Phrase.PushToTalkLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
