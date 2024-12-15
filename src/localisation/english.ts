@@ -178,12 +178,10 @@ const ENGLISH: Translations = {
   [Phrase.MonoInputLabel]: 'Mono Input',
   [Phrase.PushToTalkLabel]: 'Push To Talk',
   [Phrase.PushToTalkKeyLabel]: 'Push To Talk Key',
-
   [Phrase.PressAnyKeyCombination]: 'Press any key combination...',
   [Phrase.ClickToBind]: 'Click to bind',
   [Phrase.ClickToRebind]: 'Click to rebind',
   [Phrase.Mouse]: 'Mouse',
-
   [Phrase.ChatOverlayLabel]: 'Chat Overlay',
   [Phrase.OwnImageLabel]: 'Own Image',
   [Phrase.ImagePathLabel]: 'Image Path',
