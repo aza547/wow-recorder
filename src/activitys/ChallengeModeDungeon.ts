@@ -87,9 +87,7 @@ export default class ChallengeModeDungeon extends Activity {
     }
 
     if (this.affixes.includes(152)) {
-      // Seems that the Challenger's Peril affix is not covered by the
-      // CMDuration extracted from the logs, so correct for it here.
-      this.CMDuration += this.deaths.length * 10;
+      // Challenger's Peril
       this.CMDuration -= 90;
     }
 

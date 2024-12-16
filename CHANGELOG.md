@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 - [Issue 559](https://github.com/aza547/wow-recorder/issues/559) - Don't group clips in the UI, it's confusing. 
+- Fix an issue where Challenger's Peril was being accounted for twice.
 
 ### Added
 - [Issue 566](https://github.com/aza547/wow-recorder/issues/566) - Add localisation support.
