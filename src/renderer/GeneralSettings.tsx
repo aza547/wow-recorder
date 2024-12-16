@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { configSchema } from 'main/configSchema';
+import { configSchema } from 'config/configSchema';
 import { AppState, DiskStatus, RecStatus } from 'main/types';
 import { useEffect, useRef, useState } from 'react';
 import { HardDrive, Info } from 'lucide-react';

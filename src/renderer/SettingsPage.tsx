@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import { AppState, RecStatus } from 'main/types';
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
 import WindowsSettings from './WindowsSettings';

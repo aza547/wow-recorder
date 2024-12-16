@@ -1,4 +1,4 @@
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import * as React from 'react';
 
 export const getConfigValue = <T>(configKey: string): T => {

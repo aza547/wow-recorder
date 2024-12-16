@@ -1,6 +1,9 @@
 import { PlayerDeathType } from 'main/types';
 import ChallengeModeDungeon from '../../activitys/ChallengeModeDungeon';
 import Combatant from '../../main/Combatant';
+import TestConfigService from '../../utils/TestConfigService';
+
+const cfg = new TestConfigService();
 
 const getPlayerDeath = (deathDate: Date, rel: number, isFriendly: boolean) => {
   const playerDeath: PlayerDeathType = {
@@ -35,7 +38,8 @@ test('Basic Challenge Mode', () => {
     1822,
     353,
     10,
-    [159, 10, 152, 9] // Peril included
+    [159, 10, 152, 9], // Peril included
+    cfg
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -85,7 +89,8 @@ test('Hard Depleted Challenge Mode', () => {
     1822,
     353,
     10,
-    [159, 10, 152, 9] // Peril included
+    [159, 10, 152, 9], // Peril included
+    cfg
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -135,7 +140,8 @@ test('Peril Timed Challenge Mode', () => {
     1822,
     353,
     10,
-    [159, 10, 152, 9] // Peril included so we get +90 on the timer
+    [159, 10, 152, 9], // Peril included so we get +90 on the timer
+    cfg
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -173,7 +179,8 @@ test('Peril Depleted Challenge Mode', () => {
     1822,
     353,
     10,
-    [159, 10, 152, 9] // Peril included so we get +90 on the timer
+    [159, 10, 152, 9], // Peril included so we get +90 on the timer
+    cfg
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -183,7 +190,7 @@ test('Peril Depleted Challenge Mode', () => {
   dungeon.playerGUID = testCombatants[0].GUID;
 
   for (let j = 0; j < 3; j++) {
-    // Add 3 deaths, so +45s on the timer.
+    // Adding the deaths because why not but this isn't required for this test.
     const relative = (j + 1) * 60;
 
     const death = getPlayerDeath(
@@ -195,13 +202,14 @@ test('Peril Depleted Challenge Mode', () => {
     dungeon.addDeath(death);
   }
 
-  dungeon.endChallengeMode(endDate, 34 * 60 + 10, true);
+  // Add 3 deaths, so +45s on the timer.
+  dungeon.endChallengeMode(endDate, 34 * 60 + 45, true);
 
   const expectedDuration = (endDate.getTime() - startDate.getTime()) / 1000;
 
   expect(dungeon.duration).toBe(expectedDuration);
   expect(dungeon.deaths.length).toBe(3);
-  expect(dungeon.CMDuration).toBe(34 * 60 + 10);
+  expect(dungeon.CMDuration).toBe(34 * 60 + 45);
 
   expect(dungeon.result).toBe(true);
   expect(dungeon.upgradeLevel).toBe(0);

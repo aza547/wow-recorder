@@ -49,7 +49,7 @@ import {
   TObsValue,
   TPreviewPosition,
 } from './types';
-import ConfigService from './ConfigService';
+import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
 import { getOverlayConfig } from '../utils/configUtils';
 

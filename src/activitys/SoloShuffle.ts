@@ -1,7 +1,7 @@
 import Combatant from 'main/Combatant';
-import ConfigService from 'main/ConfigService';
-import { Language, Phrase } from 'localisation/types';
-import { getLocalePhrase } from 'localisation/translations';
+import { IConfigService } from 'config/ConfigService';
+import { Language, Phrase } from '../localisation/types';
+import { getLocalePhrase } from '../localisation/translations';
 import {
   Flavour,
   Metadata,
@@ -24,7 +24,7 @@ import { VideoCategory } from '../types/VideoCategory';
 export default class SoloShuffle extends Activity {
   private rounds: ArenaMatch[] = [];
 
-  constructor(startDate: Date, zoneID: number, cfg: ConfigService) {
+  constructor(startDate: Date, zoneID: number, cfg: IConfigService) {
     super(startDate, VideoCategory.SoloShuffle, Flavour.Retail, cfg);
     this._zoneID = zoneID;
     this.overrun = 3;

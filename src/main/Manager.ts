@@ -34,7 +34,7 @@ import Poller from '../utils/Poller';
 import ClassicLogHandler from '../parsing/ClassicLogHandler';
 import RetailLogHandler from '../parsing/RetailLogHandler';
 import Recorder from './Recorder';
-import ConfigService from './ConfigService';
+import ConfigService from '../config/ConfigService';
 import {
   ObsBaseConfig,
   ObsVideoConfig,

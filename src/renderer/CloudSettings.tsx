@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { configSchema, ConfigurationSchema } from 'main/configSchema';
+import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { AppState, CloudStatus, RecStatus } from 'main/types';
 import { useState } from 'react';
 import { Cloud, Info } from 'lucide-react';

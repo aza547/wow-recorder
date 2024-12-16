@@ -1,4 +1,4 @@
-import { ConfigurationSchema, configSchema } from 'main/configSchema';
+import { ConfigurationSchema, configSchema } from 'config/configSchema';
 import React, { Dispatch, SetStateAction } from 'react';
 import { AppState, RecStatus } from 'main/types';
 import { Info } from 'lucide-react';

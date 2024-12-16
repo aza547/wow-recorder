@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron';
 import { FileInfo, FileSortDirection } from '../main/types';
-import ConfigService from '../main/ConfigService';
+import ConfigService from '../config/ConfigService';
 import {
   deleteVideoDisk,
   getMetadataForVideo,

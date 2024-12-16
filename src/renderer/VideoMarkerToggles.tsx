@@ -1,6 +1,6 @@
 import { VideoCategory } from 'types/VideoCategory';
 import { useEffect, useRef } from 'react';
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import { AppState, DeathMarkers } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/types';

@@ -6,7 +6,7 @@ import {
   SaveStatus,
 } from 'main/types';
 import { cn } from 'renderer/components/utils';
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import MicrophoneStatus from './MicStatus';
 import Status from './Status';
 import CrashStatus from './CrashStatus';

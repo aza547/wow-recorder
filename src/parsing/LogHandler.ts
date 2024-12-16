@@ -4,7 +4,7 @@ import VideoProcessQueue from '../main/VideoProcessQueue';
 import Poller from '../utils/Poller';
 import Combatant from '../main/Combatant';
 import CombatLogWatcher from './CombatLogWatcher';
-import ConfigService from '../main/ConfigService';
+import ConfigService from '../config/ConfigService';
 import { instanceDifficulty } from '../main/constants';
 import Recorder from '../main/Recorder';
 import { Flavour, PlayerDeathType, VideoQueueItem } from '../main/types';

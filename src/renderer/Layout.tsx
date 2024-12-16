@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Pages, RecStatus, AppState, RendererVideo } from 'main/types';
 import { MutableRefObject } from 'react';
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';

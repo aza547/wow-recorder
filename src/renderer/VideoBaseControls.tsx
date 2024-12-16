@@ -1,7 +1,7 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { AppState, Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
-import { configSchema } from 'main/configSchema';
+import { configSchema } from 'config/configSchema';
 import { ESupportedEncoders, QualityPresets } from 'main/obsEnums';
 import { Info } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';

@@ -7,7 +7,7 @@ import {
   Metadata,
 } from 'main/types';
 import path from 'path';
-import ConfigService from '../main/ConfigService';
+import ConfigService from '../config/ConfigService';
 import { categoryRecordingSettings } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import { ESupportedEncoders } from '../main/obsEnums';

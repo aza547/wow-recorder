@@ -1,6 +1,6 @@
 import { AppState, DeviceType, IOBSDevice } from 'main/types';
 import React from 'react';
-import { configSchema } from 'main/configSchema';
+import { configSchema } from 'config/configSchema';
 import { Info, Volume1, Volume2 } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';

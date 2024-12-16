@@ -1,4 +1,4 @@
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import React from 'react';
 import { AppState } from 'main/types';
 import { getLocalePhrase, Phrase } from 'localisation/translations';

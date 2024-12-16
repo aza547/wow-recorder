@@ -1,6 +1,9 @@
 import { Flavour, PlayerDeathType } from '../../main/types';
 import Battleground from '../../activitys/Battleground';
 import { VideoCategory } from '../../types/VideoCategory';
+import TestConfigService from '../../utils/TestConfigService';
+
+const cfg = new TestConfigService();
 
 const getPlayerDeath = () => {
   const playerDeath: PlayerDeathType = {
@@ -21,7 +24,8 @@ test('Basic Battleground', () => {
     startDate,
     VideoCategory.Battlegrounds,
     761,
-    Flavour.Retail
+    Flavour.Retail,
+    cfg
   );
 
   const death = getPlayerDeath();

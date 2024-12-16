@@ -1,4 +1,4 @@
-import { VideoCategory } from 'types/VideoCategory';
+import { VideoCategory } from '../types/VideoCategory';
 import { Language, LocalizationDataType, Phrase } from './types';
 import EnglishTranslations from './english';
 import KoreanTranslations from './korean';

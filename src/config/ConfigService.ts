@@ -4,7 +4,52 @@ import path from 'path';
 import { EventEmitter } from 'stream';
 import { configSchema, ConfigurationSchema } from './configSchema';
 
-export default class ConfigService extends EventEmitter {
+/**
+ * Interface for the ConfigService class.
+ */
+export interface IConfigService extends EventEmitter {
+  /**
+   * Check if a specific configuration key exists.
+   * @param key - The configuration key to check.
+   */
+  has(key: keyof ConfigurationSchema): boolean;
+
+  /**
+   * Get the value of a specific configuration key.
+   * @param key - The configuration key to retrieve.
+   */
+  get<T>(key: keyof ConfigurationSchema): T;
+
+  /**
+   * Set the value of a specific configuration key.
+   * @param key - The configuration key to set.
+   * @param value - The value to set for the key.
+   */
+  set(key: keyof ConfigurationSchema, value: any): void;
+
+  /**
+   * Get the value of a configuration key as a number.
+   * @param key - The configuration key to retrieve.
+   */
+  getNumber(key: keyof ConfigurationSchema): number;
+
+  /**
+   * Get the value of a configuration key as a string.
+   * @param key - The configuration key to retrieve.
+   */
+  getString(key: keyof ConfigurationSchema): string;
+
+  /**
+   * Get the value of a configuration key formatted as a file path.
+   * @param key - The configuration key to retrieve.
+   */
+  getPath(key: keyof ConfigurationSchema): string;
+}
+
+export default class ConfigService
+  extends EventEmitter
+  implements IConfigService
+{
   /**
    * Singleton instance of class.
    */

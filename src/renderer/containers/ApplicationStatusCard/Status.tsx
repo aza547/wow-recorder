@@ -3,7 +3,7 @@
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/types';
 import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import { AppState, RecStatus, SaveStatus } from 'main/types';
 import React, { useRef } from 'react';
 import { Button } from 'renderer/components/Button/Button';

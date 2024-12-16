@@ -3,7 +3,7 @@ import path from 'path';
 import assert from 'assert';
 import { shouldUpload } from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
-import ConfigService from './ConfigService';
+import ConfigService from '../config/ConfigService';
 import {
   CloudMetadata,
   CloudStatus,

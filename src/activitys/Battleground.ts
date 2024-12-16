@@ -1,7 +1,7 @@
 import { Flavour, Metadata } from 'main/types';
-import { Language, Phrase } from 'localisation/types';
-import ConfigService from 'main/ConfigService';
-import { getLocalePhrase } from 'localisation/translations';
+import { Language, Phrase } from '../localisation/types';
+import { getLocalePhrase } from '../localisation/translations';
+import { IConfigService } from '../config/ConfigService';
 import { classicBattlegrounds, retailBattlegrounds } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
@@ -15,7 +15,7 @@ export default class Battleground extends Activity {
     category: VideoCategory,
     zoneID: number,
     flavour: Flavour,
-    cfg: ConfigService
+    cfg: IConfigService
   ) {
     super(startDate, category, flavour, cfg);
     this.zoneID = zoneID;

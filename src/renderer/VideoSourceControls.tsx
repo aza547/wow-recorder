@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
-import { configSchema } from 'main/configSchema';
+import { configSchema } from 'config/configSchema';
 import { Info } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';

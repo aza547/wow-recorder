@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { configSchema, ConfigurationSchema } from 'main/configSchema';
+import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { Info } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { getLocalePhrase, Language, Phrase } from 'localisation/translations';

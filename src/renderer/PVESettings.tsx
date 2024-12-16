@@ -1,4 +1,4 @@
-import { configSchema, ConfigurationSchema } from 'main/configSchema';
+import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import React from 'react';
 import { Info } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';

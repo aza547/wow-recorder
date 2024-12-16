@@ -22,7 +22,7 @@ import {
   UpgradeStatus,
 } from 'main/types';
 import { MutableRefObject, useEffect, useState } from 'react';
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import {
   getLocaleCategoryLabel,
   getLocalePhrase,

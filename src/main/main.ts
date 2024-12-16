@@ -26,7 +26,7 @@ import {
   nextKeyPressPromise,
 } from './util';
 import { OurDisplayType, VideoPlayerSettings } from './types';
-import ConfigService from './ConfigService';
+import ConfigService from '../config/ConfigService';
 import Manager from './Manager';
 
 const logDir = setupApplicationLogging();

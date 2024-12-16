@@ -1,7 +1,7 @@
 import { Flavour, Metadata, RaidInstanceType } from 'main/types';
 
 import Combatant from '../main/Combatant';
-import ConfigService from '../main/ConfigService';
+import { IConfigService } from '../config/ConfigService';
 import {
   getLocalePhrase,
   Language,
@@ -28,7 +28,7 @@ export default class RaidEncounter extends Activity {
     encounterName: string,
     difficultyID: number,
     flavour: Flavour,
-    cfg: ConfigService
+    cfg: IConfigService
   ) {
     super(startDate, VideoCategory.Raids, flavour, cfg);
     this._difficultyID = difficultyID;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { configSchema } from 'main/configSchema';
+import { configSchema } from 'config/configSchema';
 import { Info, Lock } from 'lucide-react';
 import { AppState } from 'main/types';
 import { getLocalePhrase, Phrase } from 'localisation/translations';

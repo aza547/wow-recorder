@@ -29,7 +29,7 @@ import DoneIcon from '@mui/icons-material/Done';
 import { OnProgressProps } from 'react-player/base';
 import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
-import { ConfigurationSchema } from 'main/configSchema';
+import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import DeathIcon from '../../assets/icon/death.png';
 import {
