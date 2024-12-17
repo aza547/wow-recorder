@@ -841,8 +841,8 @@ export default class Manager {
     }
 
     if (
-      !chatOverlayOwnImagePath.endsWith('.png') &&
-      !chatOverlayOwnImagePath.endsWith('.gif')
+      !chatOverlayOwnImagePath.toLocaleUpperCase().endsWith('.png') &&
+      !chatOverlayOwnImagePath.toLocaleUpperCase().endsWith('.gif')
     ) {
       console.warn('[Manager] Overlay image must be a .png or .gif file');
       throw new Error(this.getLocaleError(Phrase.ErrorCustomImageFileType));
