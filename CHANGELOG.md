@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 566](https://github.com/aza547/wow-recorder/issues/566) - Add Korean translations.
 
 ### Fixed
+- [Issue 572](https://github.com/aza547/wow-recorder/issues/572) - Fix upload bug.
+- Stop upload/download trackers flickering on 0%. 
 
 ## [6.3.0] - 2024-12-12
 ### Changed
@@ -22,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Add difficulty IDs for Classic Era Phase 6 raids.
-
 
 ## [6.2.1] - 2024-12-08
 ### Fixed

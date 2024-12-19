@@ -293,7 +293,7 @@ const Status = ({
         clearTimeout(clearUploadProgressTimer.current);
       }
 
-      if (!progress || progress === 100) {
+      if (progress === null || progress === undefined || progress === 100) {
         clearUploadProgressTimer.current = setTimeout(
           () => setUploadProgress(false),
           1000
@@ -308,7 +308,7 @@ const Status = ({
         clearTimeout(clearDownloadProgressTimer.current);
       }
 
-      if (!progress || progress === 100) {
+      if (progress === null || progress === undefined || progress === 100) {
         clearDownloadProgressTimer.current = setTimeout(
           () => setDownloadProgress(false),
           1000

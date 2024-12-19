@@ -807,7 +807,7 @@ export default class CloudClient extends EventEmitter {
 
         const stream = fs.createReadStream(file, {
           start: offset,
-          end: offset + bytes,
+          end: offset + bytes - 1,
         });
 
         try {
