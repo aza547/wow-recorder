@@ -323,7 +323,7 @@ enum Phrase {
 
 enum Language {
   ENGLISH = 'English',
-  KOREAN = '한국어', // TODO: Uncomment this when Korean translations are done.
+  KOREAN = '한국어',
   GERMAN = 'German',
 }
 
