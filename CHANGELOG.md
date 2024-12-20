@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - German language support.
 
 ### Fixed
+- Fix a bug where you couldn't configure a custom chat overlay.
 
 ## [6.4.0] - 2024-12-19
 ### Changed
