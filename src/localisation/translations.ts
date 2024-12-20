@@ -2,10 +2,13 @@ import { VideoCategory } from '../types/VideoCategory';
 import { Language, LocalizationDataType, Phrase } from './types';
 import EnglishTranslations from './english';
 import KoreanTranslations from './korean';
+import GermanTranslations from './german';
+
 
 const data: LocalizationDataType = {
   [Language.ENGLISH]: EnglishTranslations,
   [Language.KOREAN]: KoreanTranslations,
+  [Language.GERMAN]: GermanTranslations,
 };
 
 const getLocalePhrase = (lang: Language, phrase: Phrase) => data[lang][phrase];
