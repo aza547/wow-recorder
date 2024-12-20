@@ -17,7 +17,6 @@ import {
   fixPathWhenPackaged,
   tryUnlink,
   writeMetadataFile,
-  getThumbnailFileNameForVideo,
   getMetadataForVideo,
   rendererVideoToMetadata,
   getFileInfo,
@@ -201,7 +200,7 @@ export default class VideoProcessQueue {
 
   /**
    * Process a video by cutting it to size and saving it to disk, also
-   * writes out the metadata JSON file and thumbnail PNG image.
+   * writes out the metadata JSON file.
    */
   private async processVideoQueueItem(
     data: VideoQueueItem,
@@ -219,7 +218,6 @@ export default class VideoProcessQueue {
       );
 
       await writeMetadataFile(videoPath, data.metadata);
-      await VideoProcessQueue.getThumbnail(videoPath);
 
       if (data.deleteSource) {
         console.info('[VideoProcessQueue] Deleting source video file');
@@ -274,10 +272,6 @@ export default class VideoProcessQueue {
       await this.cloudClient.putFile(item.path, rateLimit, progressCallback);
       progressCallback(100);
 
-      // Upload the thumbnail.
-      const thumbNailPath = getThumbnailFileNameForVideo(item.path);
-      await this.cloudClient.putFile(thumbNailPath, rateLimit);
-
       // Now add the metadata.
       const metadata = await getMetadataForVideo(item.path);
 
@@ -287,7 +281,6 @@ export default class VideoProcessQueue {
         uniqueHash: metadata.uniqueHash || '',
         videoName: path.basename(item.path, '.mp4'),
         videoKey: path.basename(item.path),
-        thumbnailKey: path.basename(item.path.replace('mp4', 'png')),
       };
 
       if (cloudMetadata.level) {
@@ -328,7 +321,7 @@ export default class VideoProcessQueue {
     done: () => void
   ): Promise<void> {
     const storageDir = this.cfg.get<string>('storagePath');
-    const { videoName, videoSource, thumbnailSource } = video;
+    const { videoName, videoSource } = video;
 
     let lastProgress = 0;
 
@@ -344,20 +337,12 @@ export default class VideoProcessQueue {
     try {
       assert(this.cloudClient);
 
-      await Promise.all([
-        this.cloudClient.getAsFile(
-          `${videoName}.mp4`,
-          videoSource,
-          storageDir,
-          progressCallback
-        ),
-
-        this.cloudClient.getAsFile(
-          `${videoName}.png`,
-          thumbnailSource,
-          storageDir
-        ),
-      ]);
+      await this.cloudClient.getAsFile(
+        `${videoName}.mp4`,
+        videoSource,
+        storageDir,
+        progressCallback
+      );
 
       // Spread to force this to be cloned, avoiding modifying the original input,
       // which is used again later. This manifested as a bug that prevented us clearing
@@ -486,10 +471,11 @@ export default class VideoProcessQueue {
 
     await this.cloudClient.runHousekeeping();
     const usage = await this.cloudClient.getUsage();
+    const limit = await this.cloudClient.getMaxStorage();
 
     const status: CloudStatus = {
-      usageGB: usage / 1024 ** 3,
-      maxUsageGB: await this.cloudClient.getMaxStorage(),
+      usage,
+      limit,
     };
 
     this.mainWindow.webContents.send('updateCloudStatus', status);
@@ -616,47 +602,6 @@ export default class VideoProcessQueue {
         .on('end', handleEnd)
         .on('error', handleErr)
         .run();
-    });
-  }
-
-  /**
-   * Takes an input video file and writes a screenshot a second into the
-   * video to disk. Going further into the file seems computationally
-   * expensive, so we avoid that.
-   *
-   * @param {string} video full path to initial MP4 file
-   */
-  private static async getThumbnail(video: string) {
-    const thumbnailPath = getThumbnailFileNameForVideo(video);
-    const thumbnailFile = path.basename(thumbnailPath);
-    const thumbnailDir = path.dirname(thumbnailPath);
-
-    return new Promise<void>((resolve) => {
-      const handleEnd = () => {
-        console.info('[VideoProcessQueue] Got thumbnail for', video);
-        resolve();
-      };
-
-      const handleError = (err: unknown) => {
-        console.error(
-          '[VideoProcessQueue] Error getting thumbnail for',
-          video,
-          String(err)
-        );
-
-        throw new Error(String(err));
-      };
-
-      const screenshotConfig = {
-        timestamps: [0],
-        folder: thumbnailDir,
-        filename: thumbnailFile,
-      };
-
-      ffmpeg(video)
-        .on('end', handleEnd)
-        .on('error', handleError)
-        .screenshots(screenshotConfig);
     });
   }
 }

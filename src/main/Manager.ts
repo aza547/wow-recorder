@@ -427,11 +427,11 @@ export default class Manager {
 
     try {
       const usage = await this.cloudClient.getUsage();
-      const maxUsageGB = await this.cloudClient.getMaxStorage();
+      const limit = await this.cloudClient.getMaxStorage();
 
       const status: CloudStatus = {
-        usageGB: usage / 1024 ** 3,
-        maxUsageGB,
+        usage,
+        limit,
       };
 
       this.mainWindow.webContents.send('updateCloudStatus', status);
@@ -1195,12 +1195,12 @@ export default class Manager {
   }
 
   /**
-   * Delete a video from the cloud, and it's accompanying metadata and thumbnail.
+   * Delete a video from the cloud, and it's accompanying metadata.
    */
   private deleteVideoCloud = async (videoName: string) => {
     try {
       assert(this.cloudClient);
-      await this.cloudClient.deleteVideo(videoName, true);
+      await this.cloudClient.deleteVideo(videoName);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
       console.warn('[Manager] Failed to delete', videoName, String(error));
@@ -1208,7 +1208,7 @@ export default class Manager {
   };
 
   /**
-   * Delete a video from the disk, and it's accompanying metadata and thumbnail.
+   * Delete a video from the disk, and it's accompanying metadata.
    */
   private deleteVideoDisk = async (videoName: string) => {
     try {
@@ -1234,7 +1234,7 @@ export default class Manager {
   };
 
   /**
-   * Delete a video from the cloud, and it's accompanying metadata and thumbnail.
+   * Delete a video from the cloud, and it's accompanying metadata.
    */
   private deleteVideoCloudBulk = async (videos: RendererVideo[]) => {
     try {

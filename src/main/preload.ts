@@ -12,7 +12,6 @@ export type Channels =
   | 'videoPlayerSettings'
   | 'recorder'
   | 'config'
-  | 'prepareThumbnail'
   | 'preview'
   | 'getEncoders'
   | 'selectPath'

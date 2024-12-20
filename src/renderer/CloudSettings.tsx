@@ -42,8 +42,8 @@ const CloudSettings = (props: IProps) => {
   const initialRender = React.useRef(true);
 
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>({
-    usageGB: 0,
-    maxUsageGB: 0,
+    limit: 0,
+    limit: 0,
   });
 
   React.useEffect(() => {
