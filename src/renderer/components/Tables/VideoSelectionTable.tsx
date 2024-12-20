@@ -93,7 +93,7 @@ const VideoSelectionTable = (props: IProps) => {
         key={header.id}
         colSpan={header.colSpan}
         style={{ width: header.column.getSize() }}
-        className="text-left border-b border-video-border"
+        className="text-left border-t border-b border-video-border"
       >
         <div
           className="flex flex-row p-2 items-center cursor-pointer select-none"
@@ -315,7 +315,7 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const renderTable = () => {
     return (
-      <div className="w-full flex-col justify-evenly border-b border-video-border items-center gap-x-5 p-2">
+      <div className="w-full flex-col justify-evenly border-video-border items-center gap-x-5 p-2">
         <table className="table-fixed w-full">
           {renderTableHeader()}
           {renderTableBody()}

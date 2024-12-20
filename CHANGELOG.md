@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Tidy up some borders in the video table.
 
 ## [6.4.1] - 2024-12-20
 ### Added
