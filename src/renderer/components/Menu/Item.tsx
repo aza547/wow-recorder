@@ -50,7 +50,7 @@ type MenuBadgeProps = {
 const MenuBadge = ({ value }: MenuBadgeProps) => {
   return value ? (
     <Badge variant="default" className="ml-auto">
-      {value <= 999 ? value : '999+'}
+      {value <= 99999 ? value : '99999+'}
     </Badge>
   ) : null;
 };
