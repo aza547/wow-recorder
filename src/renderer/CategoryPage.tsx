@@ -147,7 +147,7 @@ const CategoryPage = (props: IProps) => {
             </DeleteDialog>
           </div>
         </div>
-        <div className="w-full h-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-4 pt-2 overflow-hidden">
+        <div className="w-full h-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-1 py-1 overflow-hidden">
           <ScrollArea withScrollIndicators={false} className="h-full w-full">
             <VideoSelectionTable
               table={table}

@@ -11,8 +11,16 @@ import StateManager from 'renderer/StateManager';
 import RaidCompAndResult from 'renderer/RaidComp';
 import { VideoCategory } from 'types/VideoCategory';
 import DungeonInfo from 'renderer/DungeonInfo';
-import { ArrowDown, ArrowUp } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
 import { povDiskFirstNameSort } from '../../rendererutils';
+import { Button } from '../Button/Button';
 
 interface IProps {
   table: Table<RendererVideo>;
@@ -85,7 +93,7 @@ const VideoSelectionTable = (props: IProps) => {
         key={header.id}
         colSpan={header.colSpan}
         style={{ width: header.column.getSize() }}
-        className="text-left border-b border-video-border"
+        className="text-left border-t border-b border-video-border"
       >
         <div
           className="flex flex-row p-2 items-center cursor-pointer select-none"
@@ -185,9 +193,7 @@ const VideoSelectionTable = (props: IProps) => {
       povs.find((p) => p.videoName === playingVideo?.videoName)
     );
 
-    const borderClass = selected
-      ? 'border border-t-0 rounded-b-sm'
-      : 'border rounded-sm';
+    const borderClass = selected ? 'border border-t-0' : 'border';
 
     return (
       <tr>
@@ -251,15 +257,70 @@ const VideoSelectionTable = (props: IProps) => {
   };
 
   /**
+   * For performance reasons we render videos in pages of 100. The component
+   * returns buttons to navigate the pages in the list.
+   */
+  const renderPagnationButtons = () => {
+    const current = table.getState().pagination.pageIndex + 1;
+    const total = table.getPageCount().toLocaleString();
+    const indicator = `${current} / ${total}`;
+
+    return (
+      <div className="flex w-full justify-center items-center gap-2 border-t border-video-border pt-2">
+        <Button
+          className="border rounded p-1"
+          onClick={() => table.firstPage()}
+          disabled={!table.getCanPreviousPage()}
+          size="sm"
+          variant="secondary"
+        >
+          <ChevronsLeft />
+        </Button>
+        <Button
+          className="border rounded p-1"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          size="sm"
+          variant="secondary"
+        >
+          <ChevronLeft />
+        </Button>
+        <Button
+          className="border rounded p-1"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          size="sm"
+          variant="secondary"
+        >
+          <ChevronRight />
+        </Button>
+        <Button
+          className="border rounded p-1"
+          onClick={() => table.lastPage()}
+          disabled={!table.getCanNextPage()}
+          size="sm"
+          variant="secondary"
+        >
+          <ChevronsRight />
+        </Button>
+        <span className="flex items-center gap-1">
+          <strong>{indicator}</strong>
+        </span>
+      </div>
+    );
+  };
+
+  /**
    * Render the whole component.
    */
   const renderTable = () => {
     return (
-      <div className="w-full flex justify-evenly border-b border-video-border items-center gap-x-5 p-2">
+      <div className="w-full flex-col justify-evenly border-video-border items-center gap-x-5 p-2">
         <table className="table-fixed w-full">
           {renderTableHeader()}
           {renderTableBody()}
         </table>
+        {renderPagnationButtons()}
       </div>
     );
   };

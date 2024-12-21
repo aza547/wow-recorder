@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Tidy up some borders in the video table.
+- Let video category counters go higher than 999.
+
+## [6.4.1] - 2024-12-20
+### Added
+- German language support.
+
+### Fixed
+- Fix a bug where you couldn't configure a custom chat overlay.
+- Add pagnation to video lists to avoid performance problems with a large number of videos.
 
 ## [6.4.0] - 2024-12-19
 ### Changed

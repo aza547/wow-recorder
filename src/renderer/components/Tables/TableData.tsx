@@ -3,7 +3,9 @@ import {
   ExpandedState,
   getCoreRowModel,
   getExpandedRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
+  PaginationState,
   useReactTable,
 } from '@tanstack/react-table';
 import { RendererVideo, AppState } from 'main/types';
@@ -58,6 +60,14 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
    */
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [rowSelection, setRowSelection] = useState({});
+
+  /**
+   * Controls the table pagnation.
+   */
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 100,
+  });
 
   /**
    * Reset expanded on changing category. Probably this could be
@@ -404,7 +414,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const table = useReactTable({
     columns,
     data: filteredState,
-    state: { expanded, rowSelection },
+    state: { expanded, pagination, rowSelection },
     getRowId: (row) => row.uniqueId,
     onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
@@ -413,6 +423,8 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
     getExpandedRowModel: getExpandedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
   });
 
   return table;
