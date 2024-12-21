@@ -140,6 +140,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <CloudSettings
                   recorderStatus={recorderStatus}
                   appState={appState}
+                  setAppState={setAppState}
                 />
               </div>
             </div>

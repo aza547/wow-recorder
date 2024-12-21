@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
-import { AppState, CloudStatus, RecStatus } from 'main/types';
-import { useState } from 'react';
+import { AppState, RecStatus } from 'main/types';
+import { Dispatch } from 'react';
 import { Cloud, Info } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
@@ -41,17 +41,10 @@ const CloudSettings = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
 
-  const [cloudStatus, setCloudStatus] = useState<CloudStatus>({
-    limit: 0,
-    limit: 0,
-  });
-
   React.useEffect(() => {
     if (initialRender.current) {
       // Drop out on initial render after getting the cloud status,
       // we don't need to set config. The first time we load.
-      ipc.sendMessage('getCloudStatus', []);
-      initialRender.current = false;
       return;
     }
 
@@ -105,12 +98,6 @@ const CloudSettings = (props: IProps) => {
     config.cloudUploadDungeonMinLevel,
     config.chatOverlayOwnImage,
   ]);
-
-  React.useEffect(() => {
-    ipc.on('updateCloudStatus', (status) => {
-      setCloudStatus(status as CloudStatus);
-    });
-  }, []);
 
   const isComponentDisabled = () => {
     const isRecording = recorderStatus === RecStatus.Recording;
@@ -532,9 +519,10 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getCloudUsageBar = () => {
-    const usage = cloudStatus.usageGB;
-    const max = cloudStatus.maxUsageGB;
-    const perc = Math.round((100 * usage) / max);
+    const { usage, limit } = appState.cloudStatus;
+    const usageGB = usage / 1024 ** 3;
+    const limitGB = limit / 1024 ** 3;
+    const perc = Math.round((100 * usage) / limit);
 
     return (
       <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
@@ -546,7 +534,7 @@ const CloudSettings = (props: IProps) => {
 
         <Progress value={perc} className="h-3" />
         <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
-          {Math.round(usage)}GB / {Math.round(max)}GB
+          {Math.round(usageGB)}GB / {Math.round(limitGB)}GB
         </span>
       </div>
     );

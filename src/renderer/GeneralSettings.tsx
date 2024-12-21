@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { configSchema } from 'config/configSchema';
-import { AppState, DiskStatus, RecStatus } from 'main/types';
-import { useEffect, useRef, useState } from 'react';
+import { AppState, RecStatus } from 'main/types';
+import { useEffect, useRef } from 'react';
 import { HardDrive, Info } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
@@ -25,22 +25,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const initialRenderVideoConfig = useRef(true);
 
-  const [diskStatus, setDiskStatus] = useState<DiskStatus>({
-    usageGB: 0,
-    maxUsageGB: 0,
-  });
-
-  React.useEffect(() => {
-    ipc.on('updateDiskStatus', (status) => {
-      setDiskStatus(status as DiskStatus);
-    });
-  }, []);
-
   useEffect(() => {
-    // Populate the progress bar on initial mount, and also on config
-    // change; the user could change cloud accounts.
-    ipc.sendMessage('getDiskStatus', []);
-
     if (initialRenderVideoConfig.current) {
       // Drop out if initial render, we don't care about settings
       // changes until the user has had a chance to make some.
@@ -270,8 +255,8 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const getDiskUsageBar = () => {
-    const usage = Math.round(diskStatus.usageGB);
-    const max = Math.round(diskStatus.maxUsageGB);
+    const usage = Math.round(appState.diskStatus.usage / 1024 ** 3);
+    const max = Math.round(appState.diskStatus.limit / 1024 ** 3);
     let perc = max === 0 ? 100 : (100 * usage) / max;
     if (perc > 100) perc = 100;
     const text = max === 0 ? `${usage}GB / ∞` : `${usage}GB / ${max}GB`;

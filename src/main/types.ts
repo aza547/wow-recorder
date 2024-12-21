@@ -316,6 +316,8 @@ type AppState = {
   videoFullScreen: boolean;
   playing: boolean;
   language: Language;
+  cloudStatus: CloudStatus;
+  diskStatus: DiskStatus;
 };
 
 type TPreviewPosition = {
@@ -437,8 +439,8 @@ type CloudStatus = {
 };
 
 type DiskStatus = {
-  usageGB: number;
-  maxUsageGB: number;
+  usage: number;
+  limit: number;
 };
 
 type CloudObject = {

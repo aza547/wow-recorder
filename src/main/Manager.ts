@@ -446,12 +446,8 @@ export default class Manager {
    */
   private async refreshDiskStatus() {
     const usage = await new DiskSizeMonitor(this.mainWindow).usage();
-
-    const status: DiskStatus = {
-      usageGB: usage / 1024 ** 3,
-      maxUsageGB: this.cfg.get<number>('maxStorage'),
-    };
-
+    const limit = this.cfg.get<number>('maxStorage') * 1024 ** 3;
+    const status: DiskStatus = { usage, limit };
     this.mainWindow.webContents.send('updateDiskStatus', status);
   }
 
@@ -960,11 +956,6 @@ export default class Manager {
       this.manage();
     });
 
-    // Respond to a request from frontend for the cloud or disk usage
-    // status; this populates the storage progress bars.
-    ipcMain.on('getCloudStatus', () => this.refreshCloudStatus());
-    ipcMain.on('getDiskStatus', () => this.refreshDiskStatus());
-
     // VideoButton event listeners.
     ipcMain.on('videoButton', async (_event, args) => {
       const action = args[0] as string;
@@ -1250,12 +1241,17 @@ export default class Manager {
   /**
    * Toggle protection on a video in the cloud.
    */
-  private protectVideoCloud = async (videoName: string, bool: boolean) => {
-    console.info('[Manager] User protected', videoName, bool);
+  private protectVideoCloud = async (videoName: string, protect: boolean) => {
+    console.info('[Manager] User protected', videoName, protect);
 
     try {
       assert(this.cloudClient);
-      await this.cloudClient.protectVideo(videoName, bool);
+
+      if (protect) {
+        await this.cloudClient.protectVideo(videoName);
+      } else {
+        await this.cloudClient.unprotectVideo(videoName);
+      }
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
       console.warn('[Manager] Failed to protect', videoName, String(error));
