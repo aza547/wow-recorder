@@ -884,6 +884,7 @@ export default class CloudClient extends EventEmitter {
     }
 
     const { id } = data;
+    console.info('[CloudClient] Got shareable link', videoName, id);
     return `${this.website}/link/${id}`;
   }
 }

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { AppState, RecStatus } from 'main/types';
-import { Dispatch } from 'react';
 import { Cloud, Info } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
@@ -45,6 +44,7 @@ const CloudSettings = (props: IProps) => {
     if (initialRender.current) {
       // Drop out on initial render after getting the cloud status,
       // we don't need to set config. The first time we load.
+      initialRender.current = false;
       return;
     }
 
