@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Simplified Chinese language support.
+
 ### Fixed
 - Tidy up some borders in the video table.
 - Let video category counters go higher than 999.
