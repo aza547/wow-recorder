@@ -325,6 +325,7 @@ enum Language {
   ENGLISH = 'English',
   KOREAN = '한국어',
   GERMAN = 'German',
+  CHINESE_SIMPLIFIED = '简体中文',
 }
 
 type Translations = {
