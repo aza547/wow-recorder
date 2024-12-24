@@ -3,12 +3,13 @@ import { Language, LocalizationDataType, Phrase } from './types';
 import EnglishTranslations from './english';
 import KoreanTranslations from './korean';
 import GermanTranslations from './german';
-
+import ChineseSimplifiedTranslations from './chineseSimplified';
 
 const data: LocalizationDataType = {
   [Language.ENGLISH]: EnglishTranslations,
   [Language.KOREAN]: KoreanTranslations,
   [Language.GERMAN]: GermanTranslations,
+  [Language.CHINESE_SIMPLIFIED]: ChineseSimplifiedTranslations,
 };
 
 const getLocalePhrase = (lang: Language, phrase: Phrase) => data[lang][phrase];
