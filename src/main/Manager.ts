@@ -427,7 +427,7 @@ export default class Manager {
 
     try {
       const usage = await this.cloudClient.getUsage();
-      const limit = await this.cloudClient.getMaxStorage();
+      const limit = await this.cloudClient.getStorageLimit();
 
       const status: CloudStatus = {
         usage,

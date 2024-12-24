@@ -472,7 +472,7 @@ export default class VideoProcessQueue {
     await this.cloudClient.runHousekeeping();
 
     const usage = await this.cloudClient.getUsage();
-    const limit = await this.cloudClient.getMaxStorage();
+    const limit = await this.cloudClient.getStorageLimit();
     const status: CloudStatus = { usage, limit };
 
     this.mainWindow.webContents.send('updateCloudStatus', status);

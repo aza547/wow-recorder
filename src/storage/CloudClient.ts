@@ -488,11 +488,11 @@ export default class CloudClient extends EventEmitter {
   /**
    * Get guild max storage.
    */
-  public async getMaxStorage() {
-    console.info('[CloudClient] Get max storage from API');
+  public async getStorageLimit() {
+    console.info('[CloudClient] Get storage limit from API');
     const headers = { Authorization: this.authHeader };
     const guild = encodeURIComponent(this.guild);
-    const url = `${this.api}/guild/${guild}/storage`;
+    const url = `${this.api}/guild/${guild}/limit`;
 
     const response = await axios.get(url, {
       headers,
@@ -513,7 +513,7 @@ export default class CloudClient extends EventEmitter {
 
     const { bytes } = data;
 
-    console.info('[CloudClient] Max storage was', bytes);
+    console.info('[CloudClient] Storage limit was', bytes);
     return bytes;
   }
 
