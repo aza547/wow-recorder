@@ -19,7 +19,7 @@ export type ConfigurationSchema = {
   obsFPS: number;
   obsForceMono: boolean;
   obsQuality: string;
-  obsCaptureMode: string; // 'window_capture' or 'game_capture' or 'monitor_capture'
+  obsCaptureMode: string; // 'window_capture' or 'game_capture' or 'monitor_capture' or 'display_capture'
   obsRecEncoder: string;
   recordRetail: boolean;
   recordClassic: boolean;

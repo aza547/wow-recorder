@@ -1,40 +1,6 @@
-import { BrowserWindow, screen } from 'electron';
-import path from 'path';
-import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { isEqual } from 'lodash';
-import { IFader, IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
-import WaitQueue from 'wait-queue';
 
-import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
-import { EventEmitter } from 'stream';
-import Queue from 'queue-promise';
-import {
-  EColorSpace,
-  EFPSType,
-  EOBSOutputSignal,
-  ERangeType,
-  ERecordingState,
-  EScaleType,
-  ESourceFlags,
-  ESupportedEncoders,
-  EVideoFormat,
-  QualityPresets,
-} from './obsEnums';
-
-import {
-  deferredPromiseHelper,
-  fixPathWhenPackaged,
-  getAssetPath,
-  getSortedVideos,
-  isPushToTalkHotkey,
-  convertUioHookEvent,
-  tryUnlink,
-  getPromiseBomb,
-  takeOwnershipBufferDir,
-  exists,
-} from './util';
-
+import { BrowserWindow, screen } from 'electron';
 import {
   CrashData,
   IOBSDevice,
@@ -49,9 +15,47 @@ import {
   TObsValue,
   TPreviewPosition,
 } from './types';
+import {
+  EColorSpace,
+  EFPSType,
+  EOBSOutputSignal,
+  ERangeType,
+  ERecordingState,
+  EScaleType,
+  ESourceFlags,
+  ESupportedEncoders,
+  EVideoFormat,
+  QualityPresets,
+} from './obsEnums';
+import { IFader, IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
+import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
+import {
+  convertUioHookEvent,
+  deferredPromiseHelper,
+  exists,
+  fixPathWhenPackaged,
+  getAssetPath,
+  getPromiseBomb,
+  getSortedVideos,
+  isPushToTalkHotkey,
+  takeOwnershipBufferDir,
+  tryUnlink,
+} from './util';
+
 import ConfigService from '../config/ConfigService';
-import { obsResolutions } from './constants';
+import { EventEmitter } from 'stream';
+import Queue from 'queue-promise';
+import WaitQueue from 'wait-queue';
+import fs from 'fs';
 import { getOverlayConfig } from '../utils/configUtils';
+import { isEqual } from 'lodash';
+import { obsResolutions } from './constants';
+import path from 'path';
+
+let nodeWindowRendering: any;
+if (process.platform === 'darwin') {
+  nodeWindowRendering = require('node-window-rendering');
+}
 
 const { v4: uuidfn } = require('uuid');
 
@@ -128,6 +132,7 @@ export default class Recorder extends EventEmitter {
 
   /**
    * The game capture source.
+   * Available only on Windows.
    */
   private gameCaptureSource: IInput;
 
@@ -293,6 +298,8 @@ export default class Recorder extends EventEmitter {
     range: ERangeType.Partial as unknown as osn.ERangeType,
   };
 
+  private macOSWindow: boolean = false;
+
   /**
    * Contructor.
    */
@@ -307,6 +314,9 @@ export default class Recorder extends EventEmitter {
     this.context = osn.VideoFactory.create();
     this.context.video = this.defaultVideoContext;
 
+    const obsAvailableTypes = osn.InputFactory.types();
+    console.info('[Recorder] Available OBS input types:', obsAvailableTypes);
+
     // We create all the sources we might need to use here, as the source API
     // provided by OSN provides mechanisms for retrieving valid settings; it's
     // useful to always be able to access them even if we never enable the sources.
@@ -316,13 +326,22 @@ export default class Recorder extends EventEmitter {
     );
 
     this.gameCaptureSource = osn.InputFactory.create(
-      'game_capture',
+      // 'game_capture',
+      'mac_screen_capture',
       'WCR Game Capture'
     );
 
     this.monitorCaptureSource = osn.InputFactory.create(
-      'monitor_capture',
-      'WCR Monitor Capture'
+      // 'monitor_capture',
+      'display_capture',
+      'WCR Monitor Capture',
+      { monitor: 0 }
+    );
+
+    console.info('gameCaptureSource', this.gameCaptureSource);
+    console.info(
+      'constructor: monitorCaptureSource',
+      this.monitorCaptureSource
     );
 
     // In theory having this created so early isn't required, but may as well
@@ -501,7 +520,9 @@ export default class Recorder extends EventEmitter {
       src.enabled = false;
     });
 
-    if (obsCaptureMode === 'monitor_capture') {
+    console.info("Configure video sources", obsCaptureMode, monitorIndex, captureCursor);
+
+    if (['monitor_capture', 'display_capture'].includes(obsCaptureMode)) {
       this.configureMonitorCaptureSource(monitorIndex);
     } else if (obsCaptureMode === 'game_capture') {
       this.configureGameCaptureSource(captureCursor);
@@ -714,10 +735,16 @@ export default class Recorder extends EventEmitter {
       };
 
       /* eslint-disable prettier/prettier */
-      uIOhook.on('keydown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
+      uIOhook.on('keydown', (e) =>
+        pttHandler(() => this.unmuteInputDevices(), e)
+      );
       uIOhook.on('keyup', (e) => pttHandler(() => this.muteInputDevices(), e));
-      uIOhook.on('mousedown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
-      uIOhook.on('mouseup', (e) => pttHandler(() => this.muteInputDevices(), e));
+      uIOhook.on('mousedown', (e) =>
+        pttHandler(() => this.unmuteInputDevices(), e)
+      );
+      uIOhook.on('mouseup', (e) =>
+        pttHandler(() => this.muteInputDevices(), e)
+      );
       /* eslint-enable prettier/prettier */
     }
 
@@ -921,6 +948,10 @@ export default class Recorder extends EventEmitter {
       y: winBounds.y,
     });
 
+    let initY = 0;
+    const displayY = Math.floor(winBounds.y);
+    if (initY === 0) initY = displayY;
+
     const { scaleFactor } = currentScreen;
     this.previewLocation = { width, height, xPos, yPos };
 
@@ -930,11 +961,30 @@ export default class Recorder extends EventEmitter {
       height * scaleFactor
     );
 
-    osn.NodeObs.OBS_content_moveDisplay(
-      this.previewName,
-      xPos * scaleFactor,
-      yPos * scaleFactor
-    );
+    if (process.platform === 'darwin') {
+      if (this.macOSWindow) {
+        nodeWindowRendering.destroyWindow(this.previewName);
+        nodeWindowRendering.destroyIOSurface(this.previewName);
+      }
+      const surface = osn.NodeObs.OBS_content_createIOSurface(this.previewName);
+      nodeWindowRendering.createWindow(
+        this.previewName,
+        this.mainWindow.getNativeWindowHandle()
+      );
+      nodeWindowRendering.connectIOSurface(this.previewName, surface);
+      nodeWindowRendering.moveWindow(
+        this.previewName,
+        xPos * scaleFactor,
+        yPos * scaleFactor,
+      );
+      this.macOSWindow = true;
+    } else {
+      osn.NodeObs.OBS_content_moveDisplay(
+        this.previewName,
+        xPos * scaleFactor,
+        yPos * scaleFactor
+      );
+    }
   }
 
   /**
@@ -1208,6 +1258,10 @@ export default class Recorder extends EventEmitter {
    */
   private configureMonitorCaptureSource(monitorIndex: number) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
+    console.info(
+      'configureMonitorCaptureSource: monitorCaptureSource',
+      this.monitorCaptureSource
+    );
     let prop = this.monitorCaptureSource.properties.first();
 
     while (prop && prop.name !== 'monitor_id') {
@@ -1256,6 +1310,8 @@ export default class Recorder extends EventEmitter {
     // Search the game capture source for WoW options.
     let prop = this.windowCaptureSource.properties.first();
 
+    console.log("Prop", prop);
+
     while (prop && prop.name !== 'window') {
       prop = prop.next();
     }
@@ -1263,6 +1319,7 @@ export default class Recorder extends EventEmitter {
     if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
       // Filter the WoW windows, and reverse sort them alphabetically. This
       // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
+      console.log("All window names", prop.details.items);
       const windows = prop.details.items
         .filter(Recorder.windowMatch)
         .sort()
@@ -1568,7 +1625,8 @@ export default class Recorder extends EventEmitter {
    */
   private static windowMatch(item: { name: string; value: string | number }) {
     const englishMatch = item.name.includes('[Wow.exe]: World of Warcraft');
+    const macOsMatch = item.name.includes('[Wow] World of Warcraft');
     const chineseMatch = item.name.includes('[Wow.exe]: 魔兽世界');
-    return englishMatch || chineseMatch;
+    return englishMatch || chineseMatch || macOsMatch;
   }
 }

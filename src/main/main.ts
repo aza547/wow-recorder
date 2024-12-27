@@ -1,36 +1,54 @@
-/* eslint global-require: off, no-console: off, promise/always-return: off */
-import path from 'path';
 import {
-  app,
   BrowserWindow,
-  shell,
-  ipcMain,
-  dialog,
-  Tray,
   Menu,
+  Tray,
+  app,
   clipboard,
+  dialog,
+  ipcMain,
+  shell,
+  systemPreferences,
 } from 'electron';
-import os from 'os';
-import { uIOhook } from 'uiohook-napi';
-import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
-import assert from 'assert';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { Language, Phrase, getLocalePhrase } from 'localisation/translations';
+import { OurDisplayType, VideoPlayerSettings } from './types';
 import {
-  resolveHtmlPath,
-  openSystemExplorer,
-  setupApplicationLogging,
-  getAvailableDisplays,
   checkAppUpdate,
   getAssetPath,
-  nextMousePressPromise,
+  getAvailableDisplays,
   nextKeyPressPromise,
+  nextMousePressPromise,
+  openSystemExplorer,
+  resolveHtmlPath,
+  setupApplicationLogging,
 } from './util';
-import { OurDisplayType, VideoPlayerSettings } from './types';
+
 import ConfigService from '../config/ConfigService';
 import Manager from './Manager';
+import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import assert from 'assert';
+import os from 'os';
+/* eslint global-require: off, no-console: off, promise/always-return: off */
+import path from 'path';
+import { uIOhook } from 'uiohook-napi';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
+
+if (process.platform === 'darwin') {
+  try {
+    // prompt for permissions on macOS
+    const types: Array<'camera' | 'microphone' | 'screen'> = ['camera', 'microphone', 'screen'];
+    const accessPerms: Record<string, string> = {};
+
+    for (const type of types) {
+      const status = systemPreferences.getMediaAccessStatus(type);
+      accessPerms[type] = status;
+    }
+    console.info('[Main] macOS permissions:', accessPerms);
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 console.info('[Main] App starting, version:', appVersion);
 console.info('[Main] On OS:', os.platform(), os.release());

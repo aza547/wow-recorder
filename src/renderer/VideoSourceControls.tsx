@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
-import { configSchema } from 'config/configSchema';
-import { Info } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
-import { useSettings, setConfigValues } from './useSettings';
-import Label from './components/Label/Label';
+import { Phrase, getLocalePhrase } from 'localisation/translations';
+import React, { useState } from 'react';
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from './components/ToggleGroup/ToggleGroup';
+import { setConfigValues, useSettings } from './useSettings';
+
+import { Info } from 'lucide-react';
+import Label from './components/Label/Label';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { configSchema } from 'config/configSchema';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -23,10 +24,12 @@ const VideoSourceControls = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const [displays, setDisplays] = useState<OurDisplayType[]>([]);
   const initialRender = React.useRef(true);
+  console.log('VideoSourceControls: displays', displays);
 
   React.useEffect(() => {
     const getDisplays = async () => {
       const allDisplays = await ipc.invoke('getAllDisplays', []);
+      console.log('VideoSourceControls: allDisplays', allDisplays);
       setDisplays(allDisplays);
     };
 
@@ -111,7 +114,8 @@ const VideoSourceControls = (props: IProps) => {
           <ToggleGroupItem value="game_capture">
             {getLocalePhrase(appState.language, Phrase.GameCaptureValue)}
           </ToggleGroupItem>
-          <ToggleGroupItem value="monitor_capture">
+          {/* <ToggleGroupItem value="monitor_capture"> */}
+          <ToggleGroupItem value="display_capture">
             {getLocalePhrase(appState.language, Phrase.MonitorCaptureValue)}
           </ToggleGroupItem>
         </ToggleGroup>
@@ -120,7 +124,8 @@ const VideoSourceControls = (props: IProps) => {
   };
 
   const getMonitorToggle = () => {
-    if (config.obsCaptureMode !== 'monitor_capture') {
+    // if (config.obsCaptureMode !== 'monitor_capture') {
+    if (config.obsCaptureMode !== 'display_capture') {
       return <></>;
     }
 

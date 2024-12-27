@@ -37,6 +37,8 @@ export const enum EOBSInputTypes {
   TextFT2 = 'text_ft2_source',
   VLCSource = 'vlc_source',
   MonitorCapture = 'monitor_capture',
+  DisplayCapture = 'display_capture',
+  MacScreenCapture = 'mac_screen_capture',
   WindowCapture = 'window_capture',
   GameCapture = 'game_capture',
   DShowInput = 'dshow_input',
