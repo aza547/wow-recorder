@@ -814,6 +814,7 @@ const rendererVideoToMetadata = (video: RendererVideo) => {
   delete data.isProtected;
   delete data.cloud;
   delete data.multiPov;
+  delete data.uniqueId;
   return data as Metadata;
 };
 
