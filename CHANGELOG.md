@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Use new API endpoint.
+
 ### Added
 - Simplified Chinese language support.
 
