@@ -341,7 +341,7 @@ export default class CloudClient extends EventEmitter {
     const url = `${this.api}/guild/${guild}/create-multipart-upload`;
 
     const body = {
-      key: encodeURIComponent(key),
+      key,
       total: length,
       part: this.multiPartSizeBytes,
     };
@@ -373,12 +373,12 @@ export default class CloudClient extends EventEmitter {
     console.info('[CloudClient] Complete signed multipart upload', key);
 
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.guild);
-    const enckey = encodeURIComponent(key);
-    const url = `${this.api}/${encbucket}/complete-multipart-upload/${enckey}`;
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/complete-multipart-upload`;
 
     const body: CompleteMultiPartUploadRequestBody = {
       etags,
+      key,
     };
 
     const rsp = await axios.post(url, body, {

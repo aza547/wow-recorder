@@ -465,6 +465,7 @@ type CreateMultiPartUploadResponseBody = {
 
 type CompleteMultiPartUploadRequestBody = {
   etags: string[];
+  key: string;
 };
 
 type CheckAuthResponse = {
