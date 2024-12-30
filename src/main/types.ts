@@ -223,7 +223,6 @@ type Metadata = {
 type CloudMetadata = Metadata & {
   videoName: string;
   videoKey: string;
-  thumbnailKey: string;
   start: number;
   uniqueHash: string;
 };
@@ -235,7 +234,6 @@ type CloudMetadata = Metadata & {
  */
 type CloudSignedMetadata = CloudMetadata & {
   signedVideoKey: string;
-  signedThumbnailKey: string;
 };
 
 /**
@@ -259,7 +257,6 @@ type RendererVideo = Metadata & {
   videoName: string;
   mtime: number;
   videoSource: string;
-  thumbnailSource: string;
   isProtected: boolean;
   cloud: boolean;
   multiPov: RendererVideo[];
@@ -319,6 +316,8 @@ type AppState = {
   videoFullScreen: boolean;
   playing: boolean;
   language: Language;
+  cloudStatus: CloudStatus;
+  diskStatus: DiskStatus;
 };
 
 type TPreviewPosition = {
@@ -435,13 +434,14 @@ type SliderMark = {
 };
 
 type CloudStatus = {
-  usageGB: number;
-  maxUsageGB: number;
+  usage: number;
+  limit: number;
+  guilds: string[];
 };
 
 type DiskStatus = {
-  usageGB: number;
-  maxUsageGB: number;
+  usage: number;
+  limit: number;
 };
 
 type CloudObject = {
@@ -466,6 +466,7 @@ type CreateMultiPartUploadResponseBody = {
 
 type CompleteMultiPartUploadRequestBody = {
   etags: string[];
+  key: string;
 };
 
 type CheckAuthResponse = {

@@ -10,6 +10,8 @@ import {
   AppState,
   UpgradeStatus,
   RendererVideo,
+  CloudStatus,
+  DiskStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { ArrowBigDownDash } from 'lucide-react';
@@ -66,6 +68,10 @@ const WarcraftRecorder = () => {
 
     // The language the client is in.
     language: config.language as Language,
+
+    // The cloud storage usage and limit.
+    cloudStatus: { usage: 0, limit: 0, guilds: [] },
+    diskStatus: { usage: 0, limit: 0 },
   });
 
   useEffect(() => {
@@ -120,6 +126,7 @@ const WarcraftRecorder = () => {
   const playerHeight = useRef(500);
 
   const doRefresh = async () => {
+    ipc.sendMessage('refreshFrontend', []);
     stateManager.current.refresh();
 
     setAppState((prevState) => {
@@ -159,6 +166,24 @@ const WarcraftRecorder = () => {
     setCrashes((prevArray) => [...prevArray, crash as CrashData]);
   };
 
+  const updateDiskStatus = (status: unknown) => {
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        diskStatus: status as DiskStatus,
+      };
+    });
+  };
+
+  const updateCloudStatus = (status: unknown) => {
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        cloudStatus: status as CloudStatus,
+      };
+    });
+  };
+
   useEffect(() => {
     doRefresh();
     ipc.on('refreshState', doRefresh);
@@ -167,6 +192,8 @@ const WarcraftRecorder = () => {
     ipc.on('updateUpgradeStatus', updateUpgradeStatus);
     ipc.on('updateMicStatus', updateMicStatus);
     ipc.on('updateCrashes', updateCrashes);
+    ipc.on('updateDiskStatus', updateDiskStatus);
+    ipc.on('updateCloudStatus', updateCloudStatus);
   }, []);
 
   // Debugging why we needed this hurt. I think it's because when we call setAppState, it sets

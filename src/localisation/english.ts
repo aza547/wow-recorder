@@ -137,7 +137,7 @@ const ENGLISH: Translations = {
   [Phrase.CloudPlaybackLabel]: 'Cloud Playback',
   [Phrase.UserEmailLabel]: 'User or Email',
   [Phrase.PasswordLabel]: 'Password',
-  [Phrase.GuildNameLabel]: 'Guild Name',
+  [Phrase.GuildNameLabel]: 'Guild',
   [Phrase.CloudUploadLabel]: 'Cloud Upload',
   [Phrase.UploadRateLimitToggleLabel]: 'Upload Rate Limit',
   [Phrase.UploadRateLimitValueLabel]: 'Upload Rate Limit (MB/s)',

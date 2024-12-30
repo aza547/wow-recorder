@@ -12,7 +12,6 @@ export type Channels =
   | 'videoPlayerSettings'
   | 'recorder'
   | 'config'
-  | 'prepareThumbnail'
   | 'preview'
   | 'getEncoders'
   | 'selectPath'
@@ -21,12 +20,11 @@ export type Channels =
   | 'overlay'
   | 'getNextKeyPress'
   | 'clip'
-  | 'getCloudStatus'
-  | 'getDiskStatus'
   | 'deleteVideo'
   | 'deleteVideosBulk'
   | 'writeClipboard'
-  | 'getShareableLink';
+  | 'getShareableLink'
+  | 'refreshFrontend';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

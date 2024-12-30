@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
-import { AppState, CloudStatus, RecStatus } from 'main/types';
-import { useState } from 'react';
+import { AppState, RecStatus } from 'main/types';
 import { Cloud, Info } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
@@ -41,16 +40,10 @@ const CloudSettings = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
 
-  const [cloudStatus, setCloudStatus] = useState<CloudStatus>({
-    usageGB: 0,
-    maxUsageGB: 0,
-  });
-
   React.useEffect(() => {
     if (initialRender.current) {
       // Drop out on initial render after getting the cloud status,
       // we don't need to set config. The first time we load.
-      ipc.sendMessage('getCloudStatus', []);
       initialRender.current = false;
       return;
     }
@@ -105,12 +98,6 @@ const CloudSettings = (props: IProps) => {
     config.cloudUploadDungeonMinLevel,
     config.chatOverlayOwnImage,
   ]);
-
-  React.useEffect(() => {
-    ipc.on('updateCloudStatus', (status) => {
-      setCloudStatus(status as CloudStatus);
-    });
-  }, []);
 
   const isComponentDisabled = () => {
     const isRecording = recorderStatus === RecStatus.Recording;
@@ -487,11 +474,11 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setCloudGuild = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setCloudGuild = (value: string) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudGuildName: event.target.value,
+        cloudGuildName: value,
       };
     });
   };
@@ -500,6 +487,8 @@ const CloudSettings = (props: IProps) => {
     if (isComponentDisabled() || !config.cloudStorage) {
       return <></>;
     }
+
+    const { guilds } = appState.cloudStatus;
 
     return (
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
@@ -515,26 +504,27 @@ const CloudSettings = (props: IProps) => {
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
-        <Input
-          name="cloudGuildName"
-          value={config.cloudGuildName}
-          onChange={setCloudGuild}
-          spellCheck={false}
-          required
-        />
-        {config.cloudGuildName === '' && (
-          <span className="text-error text-xs font-semibold mt-1">
-            {getLocalePhrase(appState.language, Phrase.CannotBeEmpty)}
-          </span>
-        )}
+        <Select onValueChange={setCloudGuild} value={config.cloudGuildName}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a guild" />
+          </SelectTrigger>
+          <SelectContent>
+            {guilds.map((guild) => (
+              <SelectItem key={guild} value={guild}>
+                {guild}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     );
   };
 
   const getCloudUsageBar = () => {
-    const usage = cloudStatus.usageGB;
-    const max = cloudStatus.maxUsageGB;
-    const perc = Math.round((100 * usage) / max);
+    const { usage, limit } = appState.cloudStatus;
+    const usageGB = usage / 1024 ** 3;
+    const limitGB = limit / 1024 ** 3;
+    const perc = Math.round((100 * usage) / limit);
 
     return (
       <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
@@ -546,7 +536,7 @@ const CloudSettings = (props: IProps) => {
 
         <Progress value={perc} className="h-3" />
         <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
-          {Math.round(usage)}GB / {Math.round(max)}GB
+          {Math.round(usageGB)}GB / {Math.round(limitGB)}GB
         </span>
       </div>
     );

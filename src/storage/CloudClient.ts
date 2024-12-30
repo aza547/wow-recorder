@@ -12,25 +12,25 @@ import {
 import path from 'path';
 import AuthError from '../utils/AuthError';
 
-const devMode = false;
-// process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
-
 /**
  * A client for retrieving resources from the cloud.
  */
 export default class CloudClient extends EventEmitter {
   /**
+   * The username of the cloud user.
+   */
+  private user: string;
+
+  /**
    * The bucket name we're configured to target. Expected to be the name of
    * the guild as configured in the settings.
    */
-  private bucket: string;
+  private guild: string;
 
   /**
-   * The last modified time of the bucket as per the mtime object. This is
-   * to avoid needing to do multiple list operations on the bucket to determine
-   * if anything has changed, a get on a single object is much cheaper.
+   * The last modified time of the shared storage.
    */
-  private bucketLastMod = '0';
+  private bucketLastMod = 0;
 
   /**
    * The auth header for the WR API, which uses basic HTTP auth using the cloud
@@ -48,9 +48,7 @@ export default class CloudClient extends EventEmitter {
    * manipulation of video state from the video database, and various
    * bits of R2 interaction.
    */
-  private apiEndpoint = devMode
-    ? 'https://warcraft-recorder-dev.alex-kershaw4.workers.dev'
-    : 'https://warcraft-recorder-api-v3.alex-kershaw4.workers.dev';
+  private api = 'https://api.warcraftrecorder.com/api';
 
   /**
    * The WR website, used by the client to build shareable links.
@@ -71,10 +69,11 @@ export default class CloudClient extends EventEmitter {
   /**
    * Constructor.
    */
-  constructor(user: string, pass: string, bucket: string) {
+  constructor(user: string, pass: string, guild: string) {
     super();
-    console.info('[CloudClient] Creating cloud client with', user, bucket);
-    this.bucket = bucket;
+    console.info('[CloudClient] Creating cloud client with', user, guild);
+    this.user = user;
+    this.guild = guild;
     this.authHeader = CloudClient.createAuthHeader(user, pass);
   }
 
@@ -92,10 +91,18 @@ export default class CloudClient extends EventEmitter {
    */
   public async getState(): Promise<CloudSignedMetadata[]> {
     console.info('[CloudClient] Getting video state');
-    const encGuild = encodeURIComponent(this.bucket);
-    const url = `${this.apiEndpoint}/${encGuild}/videos`;
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/video`;
     const headers = { Authorization: this.authHeader };
     const response = await axios.get(url, { headers });
+
+    console.info(
+      '[CloudClient] Got video state with',
+      response.data.length,
+      'videos'
+    );
+
     return response.data;
   }
 
@@ -104,8 +111,9 @@ export default class CloudClient extends EventEmitter {
    */
   public async postVideo(metadata: CloudMetadata) {
     console.info('[CloudClient] Adding video to database', metadata.videoName);
-    const encGuild = encodeURIComponent(this.bucket);
-    const url = `${this.apiEndpoint}/${encGuild}/videos`;
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/video`;
     const headers = { Authorization: this.authHeader };
 
     const response = await axios.post(url, metadata, {
@@ -124,18 +132,24 @@ export default class CloudClient extends EventEmitter {
 
       throw new Error('Failed to add a video to database');
     }
+
+    console.info(
+      '[CloudClient] Added',
+      metadata.videoName,
+      'to video database.'
+    );
   }
 
   /**
    * Delete a video.
    */
-  public async deleteVideo(videoName: string, updateMtime = true) {
+  public async deleteVideo(videoName: string) {
     console.info('[CloudClient] Deleting video', videoName);
 
-    const encGuild = encodeURIComponent(this.bucket);
-    const encName = encodeURIComponent(videoName);
+    const guild = encodeURIComponent(this.guild);
+    const video = encodeURIComponent(videoName);
 
-    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}`;
+    const url = `${this.api}/guild/${guild}/video/${video}`;
     const headers = { Authorization: this.authHeader };
 
     const response = await axios.delete(url, {
@@ -156,34 +170,28 @@ export default class CloudClient extends EventEmitter {
     }
 
     console.info('[CloudClient] Deleted', videoName);
-
-    if (updateMtime) {
-      console.info('[CloudClient] Update mtime after deleting:', videoName);
-      await this.updateLastMod();
-    }
   }
 
   /**
    * Delete a set of cloud videos, updating the mtime after we're done.
    */
   public async bulkDeleteVideos(videos: string[]) {
-    const promises = videos.map((v) => this.deleteVideo(v, false));
+    const promises = videos.map((v) => this.deleteVideo(v));
     await Promise.all(promises);
-    await this.updateLastMod();
   }
 
   /**
    * Protect a video.
    */
-  public async protectVideo(videoName: string, bool: boolean) {
-    console.info('[CloudClient] Set protected', bool, videoName);
-    const encGuild = encodeURIComponent(this.bucket);
-    const encName = encodeURIComponent(videoName);
-    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}/protected`;
-    const headers = { Authorization: this.authHeader };
-    const body = bool ? 'true' : 'false';
+  public async protectVideo(videoName: string) {
+    console.info('[CloudClient] Attempt to set protected', videoName);
 
-    const response = await axios.post(url, body, {
+    const guild = encodeURIComponent(this.guild);
+    const video = encodeURIComponent(videoName);
+    const url = `${this.api}/guild/${guild}/video/${video}/protected`;
+    const headers = { Authorization: this.authHeader };
+
+    const response = await axios.put(url, undefined, {
       headers,
       validateStatus: () => true,
     });
@@ -194,6 +202,34 @@ export default class CloudClient extends EventEmitter {
       console.error('[CloudClient] Failed to protect a video', status, data);
       throw new Error('Failed to protect a video');
     }
+
+    console.info('[CloudClient] Successfully set protected', videoName);
+  }
+
+  /**
+   * Unprotect a video.
+   */
+  public async unprotectVideo(videoName: string) {
+    console.info('[CloudClient] Attempt to set unprotected', videoName);
+
+    const guild = encodeURIComponent(this.guild);
+    const video = encodeURIComponent(videoName);
+    const url = `${this.api}/guild/${guild}/video/${video}/protected`;
+    const headers = { Authorization: this.authHeader };
+
+    const response = await axios.delete(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failed to unprotect a video', status, data);
+      throw new Error('Failed to unprotect a video');
+    }
+
+    console.info('[CloudClient] Successfully set unprotected', videoName);
   }
 
   /**
@@ -201,12 +237,14 @@ export default class CloudClient extends EventEmitter {
    */
   public async tagVideo(videoName: string, tag: string) {
     console.info('[CloudClient] Set tag', tag, videoName);
-    const encGuild = encodeURIComponent(this.bucket);
-    const encName = encodeURIComponent(videoName);
-    const url = `${this.apiEndpoint}/${encGuild}/videos/${encName}/tag`;
-    const headers = { Authorization: this.authHeader };
 
-    const response = await axios.post(url, tag, {
+    const guild = encodeURIComponent(this.guild);
+    const video = encodeURIComponent(videoName);
+    const url = `${this.api}/guild/${guild}/video/${video}/tag`;
+    const headers = { Authorization: this.authHeader };
+    const body = { tag };
+
+    const response = await axios.put(url, body, {
       headers,
       validateStatus: () => true,
     });
@@ -217,6 +255,8 @@ export default class CloudClient extends EventEmitter {
       console.error('[CloudClient] Failed to tag a video', status, data);
       throw new Error('Failed to tag a video');
     }
+
+    console.info('[CloudClient] Successfully set tag', tag, videoName);
   }
 
   /**
@@ -232,20 +272,20 @@ export default class CloudClient extends EventEmitter {
     console.info('[CloudClient] Downloading file from cloud store', key);
 
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const enckey = encodeURIComponent(key);
+    const encGuild = encodeURIComponent(this.guild);
+    const encKey = encodeURIComponent(key);
 
-    const sizeUrl = `${this.apiEndpoint}/${encbucket}/size/${enckey}`;
+    const sizeUrl = `${this.api}/guild/${encGuild}/video/${encKey}/size`;
     const sizeRsp = await axios.get(sizeUrl, { headers });
     const sizeData = sizeRsp.data;
-    const { size } = sizeData;
+    const { bytes } = sizeData;
 
-    console.info('[CloudClient] Bytes to download', size, 'for key', key);
+    console.info('[CloudClient] Bytes to download', bytes, 'for key', key);
 
     const config: AxiosRequestConfig = {
       responseType: 'stream',
       onDownloadProgress: (event) =>
-        progressCallback(Math.round((100 * event.loaded) / size)),
+        progressCallback(Math.round((100 * event.loaded) / bytes)),
     };
 
     const response = await axios.get(url, config);
@@ -266,15 +306,20 @@ export default class CloudClient extends EventEmitter {
    * against malicious uploads; the content length is included in the header
    * and the WR API checks the current bucket usage before approving.
    */
-  private async signPutUrl(key: string, length: number) {
-    console.info('[CloudClient] Getting signed PUT URL', key, length);
+  private async signPutUrl(key: string, bytes: number) {
+    console.info('[CloudClient] Getting signed PUT URL', key, bytes);
 
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const enckey = encodeURIComponent(key);
-    const url = `${this.apiEndpoint}/${encbucket}/upload/${enckey}/${length}`;
+    const guild = encodeURIComponent(this.guild);
 
-    const response = await axios.get(url, {
+    const url = `${this.api}/guild/${guild}/upload`;
+
+    const body = {
+      key,
+      bytes,
+    };
+
+    const response = await axios.post(url, body, {
       headers,
       validateStatus: () => true,
     });
@@ -306,11 +351,16 @@ export default class CloudClient extends EventEmitter {
     console.info('[CloudClient] Create signed multipart upload', key, length);
 
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const enckey = encodeURIComponent(key);
-    const url = `${this.apiEndpoint}/${encbucket}/create-multipart-upload/${enckey}/${length}/${this.multiPartSizeBytes}`;
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/create-multipart-upload`;
 
-    const response = await axios.get(url, {
+    const body = {
+      key,
+      total: length,
+      part: this.multiPartSizeBytes,
+    };
+
+    const response = await axios.post(url, body, {
       headers,
       validateStatus: () => true,
     });
@@ -337,12 +387,12 @@ export default class CloudClient extends EventEmitter {
     console.info('[CloudClient] Complete signed multipart upload', key);
 
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const enckey = encodeURIComponent(key);
-    const url = `${this.apiEndpoint}/${encbucket}/complete-multipart-upload/${enckey}`;
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/complete-multipart-upload`;
 
     const body: CompleteMultiPartUploadRequestBody = {
       etags,
+      key,
     };
 
     const rsp = await axios.post(url, body, {
@@ -361,35 +411,6 @@ export default class CloudClient extends EventEmitter {
 
       throw new Error('Failed to complete multipart upload');
     }
-  }
-
-  /**
-   * Write a JSON string into R2.
-   */
-  public async putJsonString(str: string, key: string) {
-    console.info('[CloudClient] PUT JSON string with key', key);
-
-    // Must convert to UTF-8 to avoid encoding shenanigans here with
-    // handling special characters.
-    const buffer = Buffer.from(str, 'utf-8');
-    const signedUrl = await this.signPutUrl(key, buffer.length);
-
-    const rsp = await axios.put(signedUrl, buffer, {
-      headers: {
-        'Content-Length': buffer.length,
-        'Content-Type': 'application/json',
-      },
-      validateStatus: () => true,
-    });
-
-    const { status, data } = rsp;
-
-    if (status >= 400) {
-      console.error('[CloudClient] JSON upload failed', key, status, data);
-      throw new Error('Uploading a JSON string to the cloud failed');
-    }
-
-    await this.updateLastMod();
   }
 
   /**
@@ -422,8 +443,6 @@ export default class CloudClient extends EventEmitter {
     } else {
       await this.doMultiPartUpload(file, rate, progressCallback);
     }
-
-    await this.updateLastMod();
   }
 
   /**
@@ -471,23 +490,23 @@ export default class CloudClient extends EventEmitter {
   public async getUsage() {
     console.info('[CloudClient] Get usage from API');
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const url = `${this.apiEndpoint}/${encbucket}/usage`;
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/usage`;
     const response = await axios.get(url, { headers });
     const { data } = response;
-    const usage = parseInt(data.usage, 10);
-    console.info('[CloudClient] Usage was', usage);
-    return usage;
+    const { bytes } = data;
+    console.info('[CloudClient] Usage was', bytes);
+    return bytes;
   }
 
   /**
    * Get guild max storage.
    */
-  public async getMaxStorage() {
-    console.info('[CloudClient] Get max storage from API');
+  public async getStorageLimit() {
+    console.info('[CloudClient] Get storage limit from API');
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const url = `${this.apiEndpoint}/${encbucket}/storage`;
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/limit`;
 
     const response = await axios.get(url, {
       headers,
@@ -506,8 +525,40 @@ export default class CloudClient extends EventEmitter {
       throw new Error('Error logging into cloud store');
     }
 
-    console.info('[CloudClient] Max storage was', data.maxGB);
-    return data.maxGB;
+    const { bytes } = data;
+
+    console.info('[CloudClient] Storage limit was', bytes);
+    return bytes;
+  }
+
+  /**
+   * Get the guilds the user is affiliated with.
+   */
+  public async getUserAffiliations(): Promise<string[]> {
+    console.info('[CloudClient] Get user affiliations');
+
+    const headers = { Authorization: this.authHeader };
+    const url = `${this.api}/user/affiliations`;
+
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status === 401) {
+      console.error('[CloudClient] 401 response from worker', data);
+      throw new Error('Login to cloud store failed, check your credentials');
+    }
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failure response from worker', status, data);
+      throw new Error('Error logging into cloud store');
+    }
+
+    console.info('[CloudClient] Got guild affiliations', data);
+    return data.map((aff: any) => aff.guildName);
   }
 
   /**
@@ -518,8 +569,8 @@ export default class CloudClient extends EventEmitter {
     console.info('[CloudClient] Run housekeeper');
 
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const url = `${this.apiEndpoint}/${encbucket}/housekeeping`;
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/housekeeper`;
 
     const response = await axios.post(url, undefined, {
       headers,
@@ -547,8 +598,8 @@ export default class CloudClient extends EventEmitter {
    */
   public async checkAuth(): Promise<CheckAuthResponse> {
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const url = `${this.apiEndpoint}/${encbucket}/auth`;
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/auth`;
 
     const response = await axios.get(url, {
       headers,
@@ -582,10 +633,10 @@ export default class CloudClient extends EventEmitter {
    * Get the mtime object from R2, this keeps track of the most recent
    * modification time to any R2 data.
    */
-  private async getMtime(): Promise<string> {
+  private async getMtime(): Promise<number> {
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.bucket);
-    const url = `${this.apiEndpoint}/${encbucket}/mtime`;
+    const guild = encodeURIComponent(this.guild);
+    const url = `${this.api}/guild/${guild}/mtime`;
     const response = await axios.get(url, { headers });
     const { data } = response;
     const { mtime } = data;
@@ -608,33 +659,6 @@ export default class CloudClient extends EventEmitter {
 
       this.emit('change');
       this.bucketLastMod = mtime;
-    }
-  }
-
-  /**
-   * Update the mtime object in R2 to reflect the most recent mod time, typically
-   * should call this whenever you update an object to trigger other clients to
-   * refresh.
-   */
-  private async updateLastMod() {
-    const mtime = new Date().getTime().toString();
-    console.info('[CloudClient] Updating last mod time to', mtime);
-
-    this.bucketLastMod = mtime;
-    const encbucket = encodeURIComponent(this.bucket);
-    const url = `${this.apiEndpoint}/${encbucket}/mtime/${mtime}`;
-    const headers = { Authorization: this.authHeader };
-
-    const response = await axios.post(url, undefined, {
-      headers,
-      validateStatus: () => true,
-    });
-
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failed to update mtime', status, data);
-      throw new Error('Failed to update mtime');
     }
   }
 
@@ -885,13 +909,13 @@ export default class CloudClient extends EventEmitter {
   public async getShareableLink(videoName: string) {
     console.info('[CloudClient] Getting shareable link', videoName);
 
-    const encGuild = encodeURIComponent(this.bucket);
-    const encName = encodeURIComponent(videoName);
+    const guild = encodeURIComponent(this.guild);
+    const video = encodeURIComponent(videoName);
 
-    const url = `${this.apiEndpoint}/${encGuild}/link/${encName}`;
+    const url = `${this.api}/guild/${guild}/video/${video}/link`;
     const headers = { Authorization: this.authHeader };
 
-    const response = await axios.get(url, {
+    const response = await axios.post(url, undefined, {
       headers,
       validateStatus: () => true,
     });
@@ -904,6 +928,7 @@ export default class CloudClient extends EventEmitter {
     }
 
     const { id } = data;
+    console.info('[CloudClient] Got shareable link', videoName, id);
     return `${this.website}/link/${id}`;
   }
 }

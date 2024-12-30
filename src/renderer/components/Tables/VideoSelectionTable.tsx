@@ -268,7 +268,7 @@ const VideoSelectionTable = (props: IProps) => {
     return (
       <div className="flex w-full justify-center items-center gap-2 border-t border-video-border pt-2">
         <Button
-          className="border rounded p-1"
+          className="p-1"
           onClick={() => table.firstPage()}
           disabled={!table.getCanPreviousPage()}
           size="sm"
@@ -277,7 +277,7 @@ const VideoSelectionTable = (props: IProps) => {
           <ChevronsLeft />
         </Button>
         <Button
-          className="border rounded p-1"
+          className="p-1"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
           size="sm"
@@ -286,7 +286,7 @@ const VideoSelectionTable = (props: IProps) => {
           <ChevronLeft />
         </Button>
         <Button
-          className="border rounded p-1"
+          className="p-1"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
           size="sm"
@@ -295,7 +295,7 @@ const VideoSelectionTable = (props: IProps) => {
           <ChevronRight />
         </Button>
         <Button
-          className="border rounded p-1"
+          className="p-1"
           onClick={() => table.lastPage()}
           disabled={!table.getCanNextPage()}
           size="sm"

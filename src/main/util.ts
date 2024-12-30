@@ -144,15 +144,6 @@ const getMetadataFileNameForVideo = (video: string) => {
 };
 
 /**
- * Get the filename for the thumbnail file associated with the given video file.
- */
-const getThumbnailFileNameForVideo = (video: string) => {
-  const videoFileName = path.basename(video, '.mp4');
-  const videoDirName = path.dirname(video);
-  return path.join(videoDirName, `${videoFileName}.png`);
-};
-
-/**
  * The Korean build of WCR had translated video categories. Now that
  * they are going to use the main build with the localisation feature,
  * this translates them back to english so we can process them. This is
@@ -221,14 +212,7 @@ const deleteVideoDisk = async (videoPath: string) => {
   const metadataPath = getMetadataFileNameForVideo(videoPath);
   const deletedJson = await tryUnlink(metadataPath);
 
-  if (!deletedJson) {
-    return false;
-  }
-
-  const thumbnailPath = getThumbnailFileNameForVideo(videoPath);
-  const deletedPng = await tryUnlink(thumbnailPath);
-
-  return deletedPng;
+  return deletedJson;
 };
 
 /**
@@ -263,7 +247,6 @@ const loadVideoDetailsDisk = async (
 ): Promise<RendererVideo> => {
   try {
     const metadata = await getMetadataForVideo(video.name);
-    const thumbnailSource = getThumbnailFileNameForVideo(video.name);
 
     const videoName = path.basename(video.name, '.mp4');
     const uniqueId = `${videoName}-disk`;
@@ -273,7 +256,6 @@ const loadVideoDetailsDisk = async (
       videoName,
       mtime: video.mtime,
       videoSource: video.name,
-      thumbnailSource,
       isProtected: Boolean(metadata.protected),
       cloud: false,
       multiPov: [],
@@ -810,7 +792,6 @@ const rendererVideoToMetadata = (video: RendererVideo) => {
   delete data.videoSource;
   delete data.videoName;
   delete data.mtime;
-  delete data.thumbnailSource;
   delete data.isProtected;
   delete data.cloud;
   delete data.multiPov;
@@ -824,18 +805,15 @@ const rendererVideoToMetadata = (video: RendererVideo) => {
 const cloudSignedMetadataToRendererVideo = (metadata: CloudSignedMetadata) => {
   // For cloud videos, the signed URLs are the sources.
   const videoSource = metadata.signedVideoKey;
-  const thumbnailSource = metadata.signedThumbnailKey;
   const uniqueId = `${metadata.videoName}-cloud`;
 
   // We don't want the signed properties themselves.
   const mutable: any = metadata;
   delete mutable.signedVideoKey;
-  delete mutable.signedThumbnailKey;
 
   const video: RendererVideo = {
     ...mutable,
     videoSource,
-    thumbnailSource,
     multiPov: [],
     cloud: true,
     isProtected: Boolean(mutable.protected),
@@ -923,10 +901,9 @@ const takeOwnershipStorageDir = async (dir: string) => {
     const mp4 = mp4s[i];
     const base = path.basename(mp4, '.mp4');
 
-    const thumbnail = `${base}.png`;
     const metadata = `${base}.json`;
 
-    if (!files.includes(thumbnail) || !files.includes(metadata)) {
+    if (!files.includes(metadata)) {
       console.warn('[Util] Mismatch of files in storage dir', base);
       throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
     }
@@ -1000,7 +977,6 @@ export {
   checkAppUpdate,
   getMetadataForVideo,
   deferredPromiseHelper,
-  getThumbnailFileNameForVideo,
   getAssetPath,
   getWowFlavour,
   isPushToTalkHotkey,

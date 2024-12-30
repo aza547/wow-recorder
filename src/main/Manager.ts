@@ -291,7 +291,21 @@ export default class Manager {
       }
 
       if (!stage.valid) {
+        const loggable = { ...newConfig };
+
+        if (loggable.cloudAccountPassword) {
+          loggable.cloudAccountPassword = '**********';
+        }
+
+        console.info(
+          '[Manager] Validating and configuring stage',
+          stage.name,
+          'with',
+          loggable
+        );
+
         try {
+          console.info('[Manager] Now validating stage', stage.name);
           await stage.validate(newConfig);
         } catch (error) {
           // If this stage isn't valid we won't go further, set the frontend
@@ -301,7 +315,7 @@ export default class Manager {
 
           if (error instanceof RetryableConfigError) {
             // If we hit a RetryableConfigError, typically a network
-            // issue, then retry in a bit. This covers us if WR starts
+            // issue, then retry in a bit. This covers us if WCR starts
             // while the network is offline etc.
             this.retryTimer = setTimeout(() => this.manage(), error.time);
           }
@@ -309,19 +323,7 @@ export default class Manager {
           return;
         }
 
-        const loggable = { ...newConfig };
-
-        if (loggable.cloudAccountPassword) {
-          loggable.cloudAccountPassword = '**********';
-        }
-
-        console.info(
-          '[Manager] Configuring stage',
-          stage.name,
-          'with',
-          loggable
-        );
-
+        console.info('[Manager] Now configuring stage', stage.name);
         await stage.configure(newConfig);
 
         // We've validated and configured the new config, mark the stage as
@@ -426,12 +428,18 @@ export default class Manager {
     }
 
     try {
-      const usage = await this.cloudClient.getUsage();
-      const maxUsageGB = await this.cloudClient.getMaxStorage();
+      const usagePromise = this.cloudClient.getUsage();
+      const limitPromise = this.cloudClient.getStorageLimit();
+      const guildsPromise = this.cloudClient.getUserAffiliations();
+
+      const usage = await usagePromise;
+      const limit = await limitPromise;
+      const guilds = await guildsPromise;
 
       const status: CloudStatus = {
-        usageGB: usage / 1024 ** 3,
-        maxUsageGB,
+        usage,
+        limit,
+        guilds,
       };
 
       this.mainWindow.webContents.send('updateCloudStatus', status);
@@ -446,12 +454,8 @@ export default class Manager {
    */
   private async refreshDiskStatus() {
     const usage = await new DiskSizeMonitor(this.mainWindow).usage();
-
-    const status: DiskStatus = {
-      usageGB: usage / 1024 ** 3,
-      maxUsageGB: this.cfg.get<number>('maxStorage'),
-    };
-
+    const limit = this.cfg.get<number>('maxStorage') * 1024 ** 3;
+    const status: DiskStatus = { usage, limit };
     this.mainWindow.webContents.send('updateDiskStatus', status);
   }
 
@@ -960,11 +964,6 @@ export default class Manager {
       this.manage();
     });
 
-    // Respond to a request from frontend for the cloud or disk usage
-    // status; this populates the storage progress bars.
-    ipcMain.on('getCloudStatus', () => this.refreshCloudStatus());
-    ipcMain.on('getDiskStatus', () => this.refreshDiskStatus());
-
     // VideoButton event listeners.
     ipcMain.on('videoButton', async (_event, args) => {
       const action = args[0] as string;
@@ -1059,6 +1058,16 @@ export default class Manager {
       const videoName = args[0];
       const shareable = await this.cloudClient.getShareableLink(videoName);
       clipboard.writeText(shareable);
+    });
+
+    /**
+     * Called when the user triggers a refresh (with F5 or Ctrl + R) to repopulate
+     * status fields on the frontend.
+     */
+    ipcMain.on('refreshFrontend', async () => {
+      this.refreshStatus();
+      this.refreshDiskStatus();
+      this.refreshCloudStatus();
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
@@ -1195,12 +1204,12 @@ export default class Manager {
   }
 
   /**
-   * Delete a video from the cloud, and it's accompanying metadata and thumbnail.
+   * Delete a video from the cloud, and it's accompanying metadata.
    */
   private deleteVideoCloud = async (videoName: string) => {
     try {
       assert(this.cloudClient);
-      await this.cloudClient.deleteVideo(videoName, true);
+      await this.cloudClient.deleteVideo(videoName);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
       console.warn('[Manager] Failed to delete', videoName, String(error));
@@ -1208,7 +1217,7 @@ export default class Manager {
   };
 
   /**
-   * Delete a video from the disk, and it's accompanying metadata and thumbnail.
+   * Delete a video from the disk, and it's accompanying metadata.
    */
   private deleteVideoDisk = async (videoName: string) => {
     try {
@@ -1234,7 +1243,7 @@ export default class Manager {
   };
 
   /**
-   * Delete a video from the cloud, and it's accompanying metadata and thumbnail.
+   * Delete a video from the cloud, and it's accompanying metadata.
    */
   private deleteVideoCloudBulk = async (videos: RendererVideo[]) => {
     try {
@@ -1250,12 +1259,17 @@ export default class Manager {
   /**
    * Toggle protection on a video in the cloud.
    */
-  private protectVideoCloud = async (videoName: string, bool: boolean) => {
-    console.info('[Manager] User protected', videoName, bool);
+  private protectVideoCloud = async (videoName: string, protect: boolean) => {
+    console.info('[Manager] User protected', videoName, protect);
 
     try {
       assert(this.cloudClient);
-      await this.cloudClient.protectVideo(videoName, bool);
+
+      if (protect) {
+        await this.cloudClient.protectVideo(videoName);
+      } else {
+        await this.cloudClient.unprotectVideo(videoName);
+      }
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
       console.warn('[Manager] Failed to protect', videoName, String(error));
