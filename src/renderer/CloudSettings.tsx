@@ -474,11 +474,11 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const setCloudGuild = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const setCloudGuild = (value: string) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudGuildName: event.target.value,
+        cloudGuildName: value,
       };
     });
   };
@@ -487,6 +487,8 @@ const CloudSettings = (props: IProps) => {
     if (isComponentDisabled() || !config.cloudStorage) {
       return <></>;
     }
+
+    const { guilds } = appState.cloudStatus;
 
     return (
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
@@ -502,18 +504,18 @@ const CloudSettings = (props: IProps) => {
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
-        <Input
-          name="cloudGuildName"
-          value={config.cloudGuildName}
-          onChange={setCloudGuild}
-          spellCheck={false}
-          required
-        />
-        {config.cloudGuildName === '' && (
-          <span className="text-error text-xs font-semibold mt-1">
-            {getLocalePhrase(appState.language, Phrase.CannotBeEmpty)}
-          </span>
-        )}
+        <Select onValueChange={setCloudGuild} value={config.cloudGuildName}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a guild" />
+          </SelectTrigger>
+          <SelectContent>
+            {guilds.map((guild) => (
+              <SelectItem key={guild} value={guild}>
+                {guild}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     );
   };

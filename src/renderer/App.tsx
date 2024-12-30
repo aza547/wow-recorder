@@ -70,7 +70,7 @@ const WarcraftRecorder = () => {
     language: config.language as Language,
 
     // The cloud storage usage and limit.
-    cloudStatus: { usage: 0, limit: 0 },
+    cloudStatus: { usage: 0, limit: 0, guilds: [] },
     diskStatus: { usage: 0, limit: 0 },
   });
 
@@ -126,6 +126,7 @@ const WarcraftRecorder = () => {
   const playerHeight = useRef(500);
 
   const doRefresh = async () => {
+    ipc.sendMessage('refreshFrontend', []);
     stateManager.current.refresh();
 
     setAppState((prevState) => {

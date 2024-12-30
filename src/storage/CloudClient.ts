@@ -17,6 +17,11 @@ import AuthError from '../utils/AuthError';
  */
 export default class CloudClient extends EventEmitter {
   /**
+   * The username of the cloud user.
+   */
+  private user: string;
+
+  /**
    * The bucket name we're configured to target. Expected to be the name of
    * the guild as configured in the settings.
    */
@@ -67,6 +72,7 @@ export default class CloudClient extends EventEmitter {
   constructor(user: string, pass: string, guild: string) {
     super();
     console.info('[CloudClient] Creating cloud client with', user, guild);
+    this.user = user;
     this.guild = guild;
     this.authHeader = CloudClient.createAuthHeader(user, pass);
   }
@@ -85,10 +91,18 @@ export default class CloudClient extends EventEmitter {
    */
   public async getState(): Promise<CloudSignedMetadata[]> {
     console.info('[CloudClient] Getting video state');
+
     const guild = encodeURIComponent(this.guild);
     const url = `${this.api}/guild/${guild}/video`;
     const headers = { Authorization: this.authHeader };
     const response = await axios.get(url, { headers });
+
+    console.info(
+      '[CloudClient] Got video state with',
+      response.data.length,
+      'videos'
+    );
+
     return response.data;
   }
 
@@ -258,20 +272,20 @@ export default class CloudClient extends EventEmitter {
     console.info('[CloudClient] Downloading file from cloud store', key);
 
     const headers = { Authorization: this.authHeader };
-    const encbucket = encodeURIComponent(this.guild);
-    const enckey = encodeURIComponent(key);
+    const encGuild = encodeURIComponent(this.guild);
+    const encKey = encodeURIComponent(key);
 
-    const sizeUrl = `${this.api}/${encbucket}/size/${enckey}`;
+    const sizeUrl = `${this.api}/guild/${encGuild}/video/${encKey}/size`;
     const sizeRsp = await axios.get(sizeUrl, { headers });
     const sizeData = sizeRsp.data;
-    const { size } = sizeData;
+    const { bytes } = sizeData;
 
-    console.info('[CloudClient] Bytes to download', size, 'for key', key);
+    console.info('[CloudClient] Bytes to download', bytes, 'for key', key);
 
     const config: AxiosRequestConfig = {
       responseType: 'stream',
       onDownloadProgress: (event) =>
-        progressCallback(Math.round((100 * event.loaded) / size)),
+        progressCallback(Math.round((100 * event.loaded) / bytes)),
     };
 
     const response = await axios.get(url, config);
@@ -515,6 +529,36 @@ export default class CloudClient extends EventEmitter {
 
     console.info('[CloudClient] Storage limit was', bytes);
     return bytes;
+  }
+
+  /**
+   * Get the guilds the user is affiliated with.
+   */
+  public async getUserAffiliations(): Promise<string[]> {
+    console.info('[CloudClient] Get user affiliations');
+
+    const headers = { Authorization: this.authHeader };
+    const url = `${this.api}/user/affiliations`;
+
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status === 401) {
+      console.error('[CloudClient] 401 response from worker', data);
+      throw new Error('Login to cloud store failed, check your credentials');
+    }
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failure response from worker', status, data);
+      throw new Error('Error logging into cloud store');
+    }
+
+    console.info('[CloudClient] Got guild affiliations', data);
+    return data.map((aff: any) => aff.guildName);
   }
 
   /**

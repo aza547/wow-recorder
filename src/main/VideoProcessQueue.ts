@@ -452,8 +452,8 @@ export default class VideoProcessQueue {
     const usage = await sizeMonitor.usage();
 
     const status: DiskStatus = {
-      usageGB: usage / 1024 ** 3,
-      maxUsageGB: this.cfg.get<number>('maxStorage'),
+      usage,
+      limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
     };
 
     this.mainWindow.webContents.send('updateDiskStatus', status);
@@ -471,9 +471,19 @@ export default class VideoProcessQueue {
 
     await this.cloudClient.runHousekeeping();
 
-    const usage = await this.cloudClient.getUsage();
-    const limit = await this.cloudClient.getStorageLimit();
-    const status: CloudStatus = { usage, limit };
+    const usagePromise = this.cloudClient.getUsage();
+    const limitPromise = this.cloudClient.getStorageLimit();
+    const guildsPromise = this.cloudClient.getUserAffiliations();
+
+    const usage = await usagePromise;
+    const limit = await limitPromise;
+    const guilds = await guildsPromise;
+
+    const status: CloudStatus = {
+      usage,
+      limit,
+      guilds,
+    };
 
     this.mainWindow.webContents.send('updateCloudStatus', status);
     this.mainWindow.webContents.send('refreshState');
@@ -489,8 +499,8 @@ export default class VideoProcessQueue {
     const usage = await sizeMonitor.usage();
 
     const status: DiskStatus = {
-      usageGB: usage / 1024 ** 3,
-      maxUsageGB: this.cfg.get<number>('maxStorage'),
+      usage,
+      limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
     };
 
     this.mainWindow.webContents.send('updateDiskStatus', status);

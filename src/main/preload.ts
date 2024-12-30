@@ -23,7 +23,8 @@ export type Channels =
   | 'deleteVideo'
   | 'deleteVideosBulk'
   | 'writeClipboard'
-  | 'getShareableLink';
+  | 'getShareableLink'
+  | 'refreshFrontend';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

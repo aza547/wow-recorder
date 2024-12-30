@@ -436,6 +436,7 @@ type SliderMark = {
 type CloudStatus = {
   usage: number;
   limit: number;
+  guilds: string[];
 };
 
 type DiskStatus = {

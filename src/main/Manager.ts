@@ -291,7 +291,21 @@ export default class Manager {
       }
 
       if (!stage.valid) {
+        const loggable = { ...newConfig };
+
+        if (loggable.cloudAccountPassword) {
+          loggable.cloudAccountPassword = '**********';
+        }
+
+        console.info(
+          '[Manager] Validating and configuring stage',
+          stage.name,
+          'with',
+          loggable
+        );
+
         try {
+          console.info('[Manager] Now validating stage', stage.name);
           await stage.validate(newConfig);
         } catch (error) {
           // If this stage isn't valid we won't go further, set the frontend
@@ -301,7 +315,7 @@ export default class Manager {
 
           if (error instanceof RetryableConfigError) {
             // If we hit a RetryableConfigError, typically a network
-            // issue, then retry in a bit. This covers us if WR starts
+            // issue, then retry in a bit. This covers us if WCR starts
             // while the network is offline etc.
             this.retryTimer = setTimeout(() => this.manage(), error.time);
           }
@@ -309,19 +323,7 @@ export default class Manager {
           return;
         }
 
-        const loggable = { ...newConfig };
-
-        if (loggable.cloudAccountPassword) {
-          loggable.cloudAccountPassword = '**********';
-        }
-
-        console.info(
-          '[Manager] Configuring stage',
-          stage.name,
-          'with',
-          loggable
-        );
-
+        console.info('[Manager] Now configuring stage', stage.name);
         await stage.configure(newConfig);
 
         // We've validated and configured the new config, mark the stage as
@@ -426,12 +428,18 @@ export default class Manager {
     }
 
     try {
-      const usage = await this.cloudClient.getUsage();
-      const limit = await this.cloudClient.getStorageLimit();
+      const usagePromise = this.cloudClient.getUsage();
+      const limitPromise = this.cloudClient.getStorageLimit();
+      const guildsPromise = this.cloudClient.getUserAffiliations();
+
+      const usage = await usagePromise;
+      const limit = await limitPromise;
+      const guilds = await guildsPromise;
 
       const status: CloudStatus = {
         usage,
         limit,
+        guilds,
       };
 
       this.mainWindow.webContents.send('updateCloudStatus', status);
@@ -1050,6 +1058,16 @@ export default class Manager {
       const videoName = args[0];
       const shareable = await this.cloudClient.getShareableLink(videoName);
       clipboard.writeText(shareable);
+    });
+
+    /**
+     * Called when the user triggers a refresh (with F5 or Ctrl + R) to repopulate
+     * status fields on the frontend.
+     */
+    ipcMain.on('refreshFrontend', async () => {
+      this.refreshStatus();
+      this.refreshDiskStatus();
+      this.refreshCloudStatus();
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
