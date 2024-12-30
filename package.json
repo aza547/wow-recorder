@@ -146,7 +146,6 @@
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@mui/icons-material": "^5.8.4",
-    "@mui/lab": "^5.0.0-alpha.80",
     "@mui/material": "^5.6.4",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-hover-card": "^1.1.1",
