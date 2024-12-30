@@ -1066,8 +1066,11 @@ export default class Manager {
      */
     ipcMain.on('refreshFrontend', async () => {
       this.refreshStatus();
-      this.refreshDiskStatus();
-      this.refreshCloudStatus();
+
+      if (this.configValid) {
+        await this.refreshDiskStatus();
+        await this.refreshCloudStatus();
+      }
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
