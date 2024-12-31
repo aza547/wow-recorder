@@ -1223,7 +1223,7 @@ export default class Recorder extends EventEmitter {
       // don't select that; the frontend doesn't expect it and we end up
       // having multiple indexes corresponding to a single monitor.
       const filtered = prop.details.items.filter(
-        (item) => item.value !== 'Auto'
+        (item) => item.value !== 'Auto',
       );
 
       if (filtered[monitorIndex]) {
@@ -1569,6 +1569,7 @@ export default class Recorder extends EventEmitter {
   private static windowMatch(item: { name: string; value: string | number }) {
     const englishMatch = item.name.includes('[Wow.exe]: World of Warcraft');
     const chineseMatch = item.name.includes('[Wow.exe]: 魔兽世界');
-    return englishMatch || chineseMatch;
+    const koreanMatch = item.name.includes('[Wow.exe]: 월드 오브 워크래프트');
+    return englishMatch || chineseMatch || koreanMatch;
   }
 }

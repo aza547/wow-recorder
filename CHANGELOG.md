@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Tidy up some borders in the video table.
 - Let video category counters go higher than 999.
+- [Issue 571](https://github.com/aza547/wow-recorder/issues/571) - Fix non-english client game/window capture detection.
 
 ## [6.4.1] - 2024-12-20
 ### Added

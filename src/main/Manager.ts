@@ -466,8 +466,14 @@ export default class Manager {
    */
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
-    const config = getObsAudioConfig(this.cfg);
-    this.recorder.configureAudioSources(config);
+
+    // Re-run the video config to ensure we're using the correct
+    // source. See Issue 571.
+    const videoConfig = getObsVideoConfig(this.cfg);
+    this.recorder.configureVideoSources(videoConfig);
+
+    const audioConfig = getObsAudioConfig(this.cfg);
+    this.recorder.configureAudioSources(audioConfig);
 
     try {
       await this.recorder.start();
