@@ -466,10 +466,8 @@ export default class Manager {
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
 
-    // Re-run the video config to ensure we're using the correct
-    // source. See Issue 571.
     const videoConfig = getObsVideoConfig(this.cfg);
-    this.recorder.configureVideoSources(videoConfig);
+    this.recorder.configureVideoSources(videoConfig, this.poller.isWowRunning);
 
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);
@@ -493,17 +491,16 @@ export default class Manager {
 
     if (this.retailLogHandler && this.retailLogHandler.activity) {
       await this.retailLogHandler.forceEndActivity();
-      this.recorder.removeAudioSources();
     } else if (this.classicLogHandler && this.classicLogHandler.activity) {
       await this.classicLogHandler.forceEndActivity();
-      this.recorder.removeAudioSources();
     } else if (this.eraLogHandler && this.eraLogHandler.activity) {
       await this.eraLogHandler.forceEndActivity();
-      this.recorder.removeAudioSources();
     } else {
       await this.recorder.stop();
-      this.recorder.removeAudioSources();
     }
+
+    this.recorder.clearFindWindowInterval();
+    await this.recorder.removeAudioSources();
   }
 
   /**
@@ -555,7 +552,7 @@ export default class Manager {
    * Configure video settings in OBS. This can all be changed live.
    */
   private configureObsVideo(config: ObsVideoConfig) {
-    this.recorder.configureVideoSources(config);
+    this.recorder.configureVideoSources(config, this.poller.isWowRunning);
   }
 
   /**

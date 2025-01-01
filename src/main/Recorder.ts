@@ -136,6 +136,29 @@ export default class Recorder extends EventEmitter {
   private monitorCaptureSource: IInput;
 
   /**
+   * The dummy window capture source.
+   */
+  private dummyWindowCaptureSource: IInput;
+
+  /**
+   * The dummy game capture source.
+   */
+  private dummyGameCaptureSource: IInput;
+
+  /**
+   * Timer for latching onto a window for either game capture or
+   * window capture. Often this does not appear immediately on
+   * the WoW process starting.
+   */
+  private findWindowInterval?: NodeJS.Timeout;
+
+  /**
+   * We wait 5s between each attempt to latch on to game or window
+   * capture sources.
+   */
+  private findWindowIntervalDuration = 5000;
+
+  /**
    * The image source to be used for the overlay, we create this
    * ahead of time regardless of if the user has the overlay enabled.
    */
@@ -324,6 +347,16 @@ export default class Recorder extends EventEmitter {
       'WCR Monitor Capture',
     );
 
+    this.dummyWindowCaptureSource = osn.InputFactory.create(
+      'window_capture',
+      'WCR Dummy Window Capture',
+    );
+
+    this.dummyGameCaptureSource = osn.InputFactory.create(
+      'game_capture',
+      'WCR Dummy Game Capture',
+    );
+
     // In theory having this created so early isn't required, but may as well
     // and avoid a bunch of undefined checks. We will reconfigure it as required.
     this.overlayImageSource = osn.InputFactory.create(
@@ -488,8 +521,9 @@ export default class Recorder extends EventEmitter {
   /**
    * Configures the video source in OBS.
    */
-  public configureVideoSources(config: ObsVideoConfig) {
+  public configureVideoSources(config: ObsVideoConfig, isWowRunning: boolean) {
     const { obsCaptureMode, monitorIndex, captureCursor } = config;
+    this.clearFindWindowInterval();
 
     [
       this.windowCaptureSource,
@@ -501,13 +535,22 @@ export default class Recorder extends EventEmitter {
     });
 
     if (obsCaptureMode === 'monitor_capture') {
+      // We don't care if WoW is running or not for monitor capture.
       this.configureMonitorCaptureSource(monitorIndex);
-    } else if (obsCaptureMode === 'game_capture') {
-      this.configureGameCaptureSource(captureCursor);
-    } else if (obsCaptureMode === 'window_capture') {
-      this.configureWindowCaptureSource(captureCursor);
+    }
+
+    if (!isWowRunning) {
+      // Don't try to configure game or window capture sources if WoW isn't
+      // running. We won't be able to find them.
+      console.info("[Recorder] WoW isn't running");
     } else {
-      throw new Error(`[Recorder] Unexpected mode: ${obsCaptureMode}`);
+      console.info('[Recorder] WoW is running');
+
+      if (obsCaptureMode === 'game_capture') {
+        this.configureGameCaptureSource(captureCursor);
+      } else if (obsCaptureMode === 'window_capture') {
+        this.configureWindowCaptureSource(captureCursor);
+      }
     }
 
     const overlayCfg = getOverlayConfig(this.cfg);
@@ -794,6 +837,16 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
+   * Cancel the find window interval timer.
+   */
+  public clearFindWindowInterval() {
+    if (this.findWindowInterval) {
+      clearInterval(this.findWindowInterval);
+      this.findWindowInterval = undefined;
+    }
+  }
+
+  /**
    * Release all OBS resources and shut it down.
    */
   public shutdownOBS() {
@@ -808,11 +861,15 @@ export default class Recorder extends EventEmitter {
       clearInterval(this.videoSourceSizeInterval);
     }
 
+    this.clearFindWindowInterval();
+
     [
       this.windowCaptureSource,
       this.gameCaptureSource,
       this.monitorCaptureSource,
       this.overlayImageSource,
+      this.dummyWindowCaptureSource,
+      this.dummyGameCaptureSource,
     ].forEach((src) => {
       src.release();
     });
@@ -1161,47 +1218,39 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Creates a game capture source.
+   * Creates a window capture source. In TWW, the retail and classic Window names
+   * diverged slightly, so while this was previously a hardcoded string, now we
+   * search for it in the OSN sources API.
+   */
+  private configureWindowCaptureSource(captureCursor: boolean) {
+    console.info('[Recorder] Configuring OBS for Window Capture');
+
+    this.findWindowInterval = setInterval(
+      () => this.tryAttachWindowCaptureSource(captureCursor),
+      this.findWindowIntervalDuration,
+    );
+
+    // Call immediately to avoid the first interval delay. Will clear
+    // the interval if it is successful. Common case is that WoW has
+    // been open for a while and this immediately succeeds.
+    this.tryAttachWindowCaptureSource(captureCursor);
+  }
+
+  /**
+   * Configures the game capture source.
    */
   private configureGameCaptureSource(captureCursor: boolean) {
     console.info('[Recorder] Configuring OBS for Game Capture');
 
-    // This is the name of the retail window, we fall back to this
-    // if we don't find something in the game capture source.
-    let window = 'World of Warcraft:waApplication Window:Wow.exe';
+    this.findWindowInterval = setInterval(
+      () => this.tryAttachGameCaptureSource(captureCursor),
+      this.findWindowIntervalDuration,
+    );
 
-    // Search the game capture source for WoW options.
-    let prop = this.gameCaptureSource.properties.first();
-
-    while (prop && prop.name !== 'window') {
-      prop = prop.next();
-    }
-
-    if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
-      const items = prop.details.items;
-      const names = items.map((item) => item.name);
-      console.info('[Recorder] Saw the following windows:', names);
-
-      // Filter the WoW windows, and reverse sort them alphabetically. This
-      // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
-      const match = items.sort().reverse().find(Recorder.windowMatch);
-
-      if (match) {
-        window = String(match.value);
-        console.info('[Recorder] Found a game capture match:', window);
-      }
-    }
-
-    const { settings } = this.gameCaptureSource;
-    settings.capture_mode = 'window';
-    settings.allow_transparency = false;
-    settings.priority = 1;
-    settings.capture_cursor = captureCursor;
-    settings.window = window;
-
-    this.gameCaptureSource.update(settings);
-    this.gameCaptureSource.save();
-    this.gameCaptureSource.enabled = true;
+    // Call immediately to avoid the first interval delay. Will clear
+    // the interval if it is successful. Common case is that WoW has
+    // been open for a while and this immediately succeeds.
+    this.tryAttachGameCaptureSource(captureCursor);
   }
 
   /**
@@ -1240,55 +1289,6 @@ export default class Recorder extends EventEmitter {
     this.monitorCaptureSource.update(settings);
     this.monitorCaptureSource.save();
     this.monitorCaptureSource.enabled = true;
-  }
-
-  /**
-   * Creates a window capture source. In TWW, the retail and classic Window names
-   * diverged slightly, so while this was previously a hardcoded string, now we
-   * search for it in the OSN sources API.
-   */
-  private configureWindowCaptureSource(captureCursor: boolean) {
-    console.info('[Recorder] Configuring OBS for Window Capture');
-
-    // This is the name of the retail window, we fall back to this
-    // if we don't find something in the window capture source.
-    let window = 'World of Warcraft:waApplication Window:Wow.exe';
-
-    // Search the game capture source for WoW options.
-    let prop = this.windowCaptureSource.properties.first();
-
-    while (prop && prop.name !== 'window') {
-      prop = prop.next();
-    }
-
-    if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
-      const items = prop.details.items;
-      const names = items.map((item) => item.name);
-      console.info('[Recorder] Saw the following windows:', names);
-
-      // Filter the WoW windows, and reverse sort them alphabetically. This
-      // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
-      const match = items.sort().reverse().find(Recorder.windowMatch);
-
-      if (match) {
-        window = String(match.value);
-        console.info('[Recorder] Found a window capture match:', window);
-      }
-    }
-
-    // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
-    // captures behind the WoW window. Not sure why, some googling suggested Windows theme issues.
-    // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
-    const { settings } = this.windowCaptureSource;
-    settings.method = 2;
-    settings.cursor = captureCursor;
-    settings.window = window;
-
-    this.windowCaptureSource.update(settings);
-    this.windowCaptureSource.save();
-
-    // Enable the source which is what actually makes it show up in the scene.
-    this.windowCaptureSource.enabled = true;
   }
 
   /**
@@ -1403,7 +1403,7 @@ export default class Recorder extends EventEmitter {
       src = this.monitorCaptureSource;
       item = this.monitorCaptureSceneItem;
     } else {
-      console.error('[Recorder] No video source to scale');
+      // No log here as as may be frequent.
       return;
     }
 
@@ -1570,9 +1570,96 @@ export default class Recorder extends EventEmitter {
    * Check if the name of the window matches one of the known WoW window names.
    */
   private static windowMatch(item: { name: string; value: string | number }) {
-    const englishMatch = item.name.includes('[Wow.exe]: World of Warcraft');
-    const chineseMatch = item.name.includes('[Wow.exe]: 魔兽世界');
-    const koreanMatch = item.name.includes('[Wow.exe]: 월드 오브 워크래프트');
-    return englishMatch || chineseMatch || koreanMatch;
+    return item.name.startsWith('[Wow.exe]: ');
+  }
+
+  /**
+   * Find a window appropriate for capture by the provided source. This
+   * is logically the same and can be used for both Window and Game capture
+   * modes.
+   */
+  private static findWowWindow(src: IInput) {
+    let prop = src.properties.first();
+
+    while (prop && prop.name !== 'window') {
+      prop = prop.next();
+    }
+
+    if (prop.name !== 'window' || !Recorder.isObsListProperty(prop)) {
+      console.warn('[Recorder] Did not find window property');
+      return undefined;
+    }
+
+    const items = prop.details.items;
+    const names = items.map((item) => item.name);
+    console.info('[Recorder] Saw the following windows:', names);
+    const match = items.find(Recorder.windowMatch);
+
+    if (!match) {
+      return undefined;
+    }
+
+    const window = String(match.value);
+    console.info('[Recorder] Found a match:', window);
+    return window;
+  }
+
+  /**
+   * Try to attach to a game capture source for WoW. If the window is not
+   * found, do nothing.
+   */
+  private tryAttachGameCaptureSource(captureCursor: boolean) {
+    const window = Recorder.findWowWindow(this.dummyGameCaptureSource);
+
+    if (!window) {
+      console.info('[Recorder] Game capture window not found, will retry');
+      return;
+    }
+
+    console.info('[Recorder] Game capture window found', window);
+
+    const { settings } = this.gameCaptureSource;
+    settings.capture_mode = 'window';
+    settings.allow_transparency = false;
+    settings.priority = 1;
+    settings.capture_cursor = captureCursor;
+    settings.window = window;
+
+    this.gameCaptureSource.update(settings);
+    this.gameCaptureSource.save();
+    this.gameCaptureSource.enabled = true;
+
+    console.info('[Recorder] Game capture source configured');
+    this.clearFindWindowInterval();
+  }
+
+  /**
+   * Try to attach to a window capture source for WoW. If the window is not
+   * found, do nothing.
+   */
+  private tryAttachWindowCaptureSource(captureCursor: boolean) {
+    const window = Recorder.findWowWindow(this.dummyWindowCaptureSource);
+
+    if (!window) {
+      console.info('[Recorder] Window capture window not found, will retry');
+      return;
+    }
+
+    console.info('[Recorder] Window capture window found', window);
+
+    // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
+    // captures behind the WoW window. Not sure why, some googling suggested Windows theme issues.
+    // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
+    const { settings } = this.windowCaptureSource;
+    settings.method = 2;
+    settings.cursor = captureCursor;
+    settings.window = window;
+
+    this.windowCaptureSource.update(settings);
+    this.windowCaptureSource.save();
+    this.windowCaptureSource.enabled = true;
+
+    console.info('[Recorder] Window capture source configured');
+    this.clearFindWindowInterval();
   }
 }
