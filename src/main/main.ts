@@ -31,7 +31,7 @@ import Manager from './Manager';
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
 
-console.info('[Main] App starting1, version:', appVersion);
+console.info('[Main] App starting, version:', appVersion);
 console.info('[Main] On OS:', os.platform(), os.release());
 console.info(
   '[Main] In timezone:',
