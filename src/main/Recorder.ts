@@ -1178,15 +1178,17 @@ export default class Recorder extends EventEmitter {
     }
 
     if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
+      const items = prop.details.items;
+      const names = items.map((item) => item.name);
+      console.info('[Recorder] Saw the following windows:', names);
+
       // Filter the WoW windows, and reverse sort them alphabetically. This
       // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
-      const windows = prop.details.items
-        .filter(Recorder.windowMatch)
-        .sort()
-        .reverse();
+      const match = items.sort().reverse().find(Recorder.windowMatch);
 
-      if (windows.length) {
-        window = windows[0].value as string;
+      if (match) {
+        window = String(match.value);
+        console.info('[Recorder] Found a game capture match:', window);
       }
     }
 
@@ -1260,15 +1262,17 @@ export default class Recorder extends EventEmitter {
     }
 
     if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
+      const items = prop.details.items;
+      const names = items.map((item) => item.name);
+      console.info('[Recorder] Saw the following windows:', names);
+
       // Filter the WoW windows, and reverse sort them alphabetically. This
       // is deliberate so that "waApplication" wins over the legacy "gxWindowClass".
-      const windows = prop.details.items
-        .filter(Recorder.windowMatch)
-        .sort()
-        .reverse();
+      const match = items.sort().reverse().find(Recorder.windowMatch);
 
-      if (windows.length) {
-        window = windows[0].value as string;
+      if (match) {
+        window = String(match.value);
+        console.info('[Recorder] Found a window capture match:', window);
       }
     }
 
