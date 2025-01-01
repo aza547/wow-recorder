@@ -2,7 +2,6 @@
   "rules": {
     "no-console": "off",
     "global-require": "off",
-    "import/no-dynamic-require": "off",
-    "no-underscore-dangle": "off"
+    "import/no-dynamic-require": "off"
   }
 }

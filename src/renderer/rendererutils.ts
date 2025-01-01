@@ -17,7 +17,10 @@ import {
   WoWCharacterClassType,
   WoWClassColor,
 } from 'main/constants';
-import { TimelineSegmentType } from 'main/keystone';
+import {
+  RawChallengeModeTimelineSegment,
+  TimelineSegmentType,
+} from 'main/keystone';
 import {
   MarkerColors,
   DeathMarkers,
@@ -25,7 +28,6 @@ import {
   EncoderType,
   IOBSDevice,
   PlayerDeathType,
-  RawChallengeModeTimelineSegment,
   RendererVideo,
   SoloShuffleTimelineSegment,
   VideoMarker,

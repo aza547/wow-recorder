@@ -567,7 +567,6 @@ export {
   TAudioSourceType,
   AppState,
   RawCombatant,
-  RawChallengeModeTimelineSegment,
   TPreviewPosition,
   DeviceType,
   Pages,

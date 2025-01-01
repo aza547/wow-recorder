@@ -1,25 +1,20 @@
 {
   "compilerOptions": {
-    "target": "es2021",
+    "incremental": true,
+    "target": "es2022",
     "module": "commonjs",
-    "lib": ["dom", "es2021"],
-    "declaration": true,
-    "declarationMap": true,
+    "lib": ["dom", "es2022"],
     "jsx": "react-jsx",
     "strict": true,
-    "pretty": true,
     "sourceMap": true,
-    "baseUrl": "./src",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "outDir": "release/app/dist",
+    "outDir": ".erb/dll",
+    "baseUrl": "./src",
+    "types": ["node"],
     "paths": {
       "@components/*": ["./src/renderer/components/*"]
     }
