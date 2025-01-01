@@ -37,7 +37,7 @@ const WindowsSettings = (props: IProps) => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (checked: boolean) => void
+    changeFn: (checked: boolean) => void,
   ) => (
     <Switch
       checked={Boolean(config[preference])}
@@ -49,7 +49,7 @@ const WindowsSettings = (props: IProps) => {
   const getSwitchForm = (
     preference: keyof ConfigurationSchema,
     label: Phrase,
-    changeFn: (checked: boolean) => void
+    changeFn: (checked: boolean) => void,
   ) => {
     return (
       <div className="flex flex-col">
@@ -105,17 +105,17 @@ const WindowsSettings = (props: IProps) => {
       {getSwitchForm(
         'startMinimized',
         Phrase.StartMinimizedLabel,
-        setStartMinimized
+        setStartMinimized,
       )}
       {getSwitchForm(
         'minimizeOnQuit',
         Phrase.MinimizeOnQuitLabel,
-        setMinimizeOnQuit
+        setMinimizeOnQuit,
       )}
       {getSwitchForm(
         'minimizeToTray',
         Phrase.MinimizeToTrayLabel,
-        setMinimizeToTray
+        setMinimizeToTray,
       )}
     </div>
   );

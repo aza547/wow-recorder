@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useEffect, useState } from 'react';
 import { FolderOpen, Link as Link1, Trash } from 'lucide-react';
@@ -139,19 +137,19 @@ export default function ViewpointButtons(props: IProps) {
         title: getLocalePhrase(appState.language, Phrase.ShareableLinkTitle),
         description: getLocalePhrase(
           appState.language,
-          Phrase.ShareableLinkText
+          Phrase.ShareableLinkText,
         ),
         duration: 5000,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: getLocalePhrase(
           appState.language,
-          Phrase.ShareableLinkFailedTitle
+          Phrase.ShareableLinkFailedTitle,
         ),
         description: getLocalePhrase(
           appState.language,
-          Phrase.ShareableLinkFailedText
+          Phrase.ShareableLinkFailedText,
         ),
         variant: 'destructive',
         duration: 5000,
@@ -164,7 +162,7 @@ export default function ViewpointButtons(props: IProps) {
       <Tooltip
         content={getLocalePhrase(
           appState.language,
-          Phrase.ShareLinkButtonTooltip
+          Phrase.ShareLinkButtonTooltip,
         )}
       >
         <Button
@@ -194,7 +192,7 @@ export default function ViewpointButtons(props: IProps) {
       <Tooltip
         content={getLocalePhrase(
           appState.language,
-          Phrase.OpenFolderButtonTooltip
+          Phrase.OpenFolderButtonTooltip,
         )}
       >
         <Button
@@ -240,7 +238,7 @@ export default function ViewpointButtons(props: IProps) {
         onDelete={(e) => deleteVideo(e)}
         tooltipContent={getLocalePhrase(
           appState.language,
-          Phrase.DeleteButtonTooltip
+          Phrase.DeleteButtonTooltip,
         )}
         skipPossible
         appState={appState}

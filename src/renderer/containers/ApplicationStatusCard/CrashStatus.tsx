@@ -29,7 +29,7 @@ const CrashStatus = ({
             {crashes.map((crash: CrashData) => {
               const dateString = crash.date.toLocaleString();
               return (
-                <li>
+                <li key={crash.date.toISOString()}>
                   <span className="font-bold">{dateString}:</span>{' '}
                   <code>{crash.reason}</code>
                 </li>

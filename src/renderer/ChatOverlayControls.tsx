@@ -116,7 +116,7 @@ const ChatOverlayControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.chatOverlayEnabled.description
+              configSchema.chatOverlayEnabled.description,
             )}
             side="right"
           >
@@ -141,7 +141,7 @@ const ChatOverlayControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.chatOverlayOwnImage.description
+              configSchema.chatOverlayOwnImage.description,
             )}
             side="right"
           >
@@ -292,7 +292,7 @@ const ChatOverlayControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.chatOverlayOwnImagePath.description
+              configSchema.chatOverlayOwnImagePath.description,
             )}
             side="right"
           >

@@ -200,7 +200,6 @@ const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
   };
 };
 
-// eslint-disable-next-line import/prefer-default-export
 export {
   allowRecordCategory,
   shouldUpload,

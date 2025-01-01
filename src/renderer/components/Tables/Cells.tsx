@@ -22,7 +22,7 @@ import { Button } from '../Button/Button';
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
-  language: Language
+  language: Language,
 ) => {
   const video = info.getValue() as RendererVideo;
   const resultText = getVideoResultText(video, language);
@@ -39,14 +39,14 @@ export const populateResultCell = (
 };
 
 export const populateDurationCell = (
-  info: CellContext<RendererVideo, unknown>
+  info: CellContext<RendererVideo, unknown>,
 ) => {
   const rawValue = info.getValue() as RendererVideo;
   return getFormattedDuration(rawValue);
 };
 
 export const populateEncounterNameCell = (
-  info: CellContext<RendererVideo, unknown>
+  info: CellContext<RendererVideo, unknown>,
 ) => {
   const encounter = info.getValue() as string;
   return <div className="truncate">{encounter}</div>;
@@ -68,7 +68,7 @@ export const populateTagCell = (info: CellContext<RendererVideo, unknown>) => {
 };
 
 export const populateDetailsCell = (
-  ctx: CellContext<RendererVideo, unknown>
+  ctx: CellContext<RendererVideo, unknown>,
 ) => {
   const { row } = ctx;
 
@@ -92,14 +92,14 @@ export const populateDetailsCell = (
 };
 
 export const populateLevelCell = (
-  info: CellContext<RendererVideo, unknown>
+  info: CellContext<RendererVideo, unknown>,
 ) => {
   const video = info.getValue() as RendererVideo;
   return `+${video.keystoneLevel || video.level}`;
 };
 
 export const populateViewpointCell = (
-  info: CellContext<RendererVideo, unknown>
+  info: CellContext<RendererVideo, unknown>,
 ) => {
   const video = info.getValue() as RendererVideo;
   const count = countUniqueViewpoints(video);
@@ -163,7 +163,7 @@ export const populateViewpointCell = (
 };
 
 export const populateSelectCell = (
-  ctx: CellContext<RendererVideo, unknown>
+  ctx: CellContext<RendererVideo, unknown>,
 ) => {
   const { row } = ctx;
   return (

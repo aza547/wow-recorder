@@ -9,7 +9,7 @@ import {
 export const resultSort = (
   a: Row<RendererVideo>,
   b: Row<RendererVideo>,
-  language: Language
+  language: Language,
 ) => {
   const resultA = getVideoResultText(a.original, language);
   const resultB = getVideoResultText(b.original, language);
@@ -30,7 +30,7 @@ export const durationSort = (a: Row<RendererVideo>, b: Row<RendererVideo>) => {
 
 export const viewPointCountSort = (
   a: Row<RendererVideo>,
-  b: Row<RendererVideo>
+  b: Row<RendererVideo>,
 ) => {
   const resultA = countUniqueViewpoints(a.original);
   const resultB = countUniqueViewpoints(b.original);

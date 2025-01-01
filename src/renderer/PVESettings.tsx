@@ -60,7 +60,7 @@ const PVESettings = (props: IProps) => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (checked: boolean) => void
+    changeFn: (checked: boolean) => void,
   ) => (
     <Switch
       checked={Boolean(config[preference])}
@@ -86,7 +86,7 @@ const PVESettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.recordRaids.description
+              configSchema.recordRaids.description,
             )}
             side="top"
           >
@@ -101,7 +101,7 @@ const PVESettings = (props: IProps) => {
   };
 
   const setMinEncounterDuration = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setConfig((prevState) => {
       return {
@@ -121,12 +121,12 @@ const PVESettings = (props: IProps) => {
         <Label htmlFor="minEncounterDuration" className="flex items-center">
           {getLocalePhrase(
             appState.language,
-            Phrase.MinimumEncounterDurationLabel
+            Phrase.MinimumEncounterDurationLabel,
           )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.minEncounterDuration.description
+              configSchema.minEncounterDuration.description,
             )}
             side="top"
           >
@@ -163,12 +163,12 @@ const PVESettings = (props: IProps) => {
         <Label htmlFor="minRaidDifficulty" className="flex items-center">
           {getLocalePhrase(
             appState.language,
-            Phrase.MinimumRaidDifficultyLabel
+            Phrase.MinimumRaidDifficultyLabel,
           )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.minRaidDifficulty.description
+              configSchema.minRaidDifficulty.description,
             )}
             side="top"
           >
@@ -223,7 +223,7 @@ const PVESettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.raidOverrun.description
+              configSchema.raidOverrun.description,
             )}
             side="top"
           >
@@ -269,7 +269,7 @@ const PVESettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.dungeonOverrun.description
+              configSchema.dungeonOverrun.description,
             )}
             side="top"
           >
@@ -304,7 +304,7 @@ const PVESettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.recordDungeons.description
+              configSchema.recordDungeons.description,
             )}
             side="top"
           >
@@ -339,7 +339,7 @@ const PVESettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.minKeystoneLevel.description
+              configSchema.minKeystoneLevel.description,
             )}
             side="top"
           >

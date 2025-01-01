@@ -15,6 +15,28 @@ export default [
   {
     rules: {
       'react/react-in-jsx-scope': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
     },
+    settings: { react: { version: 'detect' } },
+    ignores: [
+      'logs',
+      '*.log',
+      'pids',
+      '*.pid',
+      '*.seed',
+      'coverage',
+      '.eslintcache',
+      'node_modules',
+      '.DS_Store',
+      'release/app/dist',
+      'release/build',
+      '.erb/dll',
+      '.idea',
+      'npm-debug.log.*',
+      '*.css.d.ts',
+      '*.sass.d.ts',
+      '*.scss.d.ts',
+      '!.erb',
+    ],
   },
 ];

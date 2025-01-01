@@ -105,7 +105,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.storagePath.description
+              configSchema.storagePath.description,
             )}
             side="top"
           >
@@ -158,7 +158,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.separateBufferPath.description
+              configSchema.separateBufferPath.description,
             )}
             side="top"
           >
@@ -192,7 +192,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.bufferStoragePath.description
+              configSchema.bufferStoragePath.description,
             )}
             side="top"
           >
@@ -235,7 +235,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.maxStorage.description
+              configSchema.maxStorage.description,
             )}
             side="top"
           >

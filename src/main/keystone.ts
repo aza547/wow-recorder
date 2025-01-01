@@ -21,7 +21,7 @@ class ChallengeModeTimelineSegment {
     public segmentType: TimelineSegmentType,
     public logStart: Date,
     public timestamp: number,
-    public encounterId?: number
+    public encounterId?: number,
   ) {
     // Initially, let's set this to log start date to avoid logEnd
     // potentially being undefined.

@@ -87,7 +87,7 @@ const SideMenu = (props: IProps) => {
 
   const renderCategoryTab = (
     tabCategory: VideoCategory,
-    tabIcon: string | React.ReactNode
+    tabIcon: string | React.ReactNode,
   ) => {
     const categoryFilter = getVideoCategoryFilter(tabCategory);
     const categoryState = videoState.filter(categoryFilter);
@@ -145,7 +145,7 @@ const SideMenu = (props: IProps) => {
 
     if (firstInCategory) {
       const povs = [firstInCategory, ...firstInCategory.multiPov].sort(
-        povDiskFirstNameSort
+        povDiskFirstNameSort,
       );
 
       [first] = povs;
@@ -203,11 +203,11 @@ const SideMenu = (props: IProps) => {
           {renderCategoryTab(VideoCategory.SoloShuffle, <Swords />)}
           {renderCategoryTab(
             VideoCategory.MythicPlus,
-            <FontAwesomeIcon icon={faDungeon} size="xl" />
+            <FontAwesomeIcon icon={faDungeon} size="xl" />,
           )}
           {renderCategoryTab(
             VideoCategory.Raids,
-            <FontAwesomeIcon icon={faDragon} size="lg" />
+            <FontAwesomeIcon icon={faDragon} size="lg" />,
           )}
           {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
           {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}

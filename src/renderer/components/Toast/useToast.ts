@@ -57,7 +57,6 @@ const listeners: Array<(state: State) => void> = [];
 let memoryState: State = { toasts: [] };
 
 function dispatch(action: Action) {
-  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   memoryState = reducer(memoryState, action);
   listeners.forEach((listener) => {
     listener(memoryState);
@@ -81,7 +80,6 @@ const addToRemoveQueue = (toastId: string) => {
 };
 
 export const reducer = (state: State, action: Action): State => {
-  // eslint-disable-next-line default-case
   switch (action.type) {
     case 'ADD_TOAST':
     default:
@@ -94,7 +92,7 @@ export const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t
+          t.id === action.toast.id ? { ...t, ...action.toast } : t,
         ),
       };
 
@@ -119,7 +117,7 @@ export const reducer = (state: State, action: Action): State => {
                 ...t,
                 open: false,
               }
-            : t
+            : t,
         ),
       };
     }

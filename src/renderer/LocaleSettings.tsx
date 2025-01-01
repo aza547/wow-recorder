@@ -70,7 +70,7 @@ const WindowsSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.language.description
+              configSchema.language.description,
             )}
             side="right"
           >

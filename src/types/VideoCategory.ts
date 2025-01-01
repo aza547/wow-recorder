@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 export enum VideoCategory {
   TwoVTwo = '2v2',
   ThreeVThree = '3v3',

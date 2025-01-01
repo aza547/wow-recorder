@@ -70,7 +70,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (checked: boolean) => void
+    changeFn: (checked: boolean) => void,
   ) => (
     <Switch
       checked={Boolean(config[preference])}
@@ -129,7 +129,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             <Tooltip
               content={getLocalePhrase(
                 appState.language,
-                configSchema.recordRetail.description
+                configSchema.recordRetail.description,
               )}
               side="top"
             >
@@ -147,7 +147,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               <Tooltip
                 content={getLocalePhrase(
                   appState.language,
-                  configSchema.retailLogPath.description
+                  configSchema.retailLogPath.description,
                 )}
                 side="top"
               >
@@ -165,7 +165,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               <span className="text-error text-sm">
                 {getLocalePhrase(
                   appState.language,
-                  Phrase.InvalidRetailLogPathText
+                  Phrase.InvalidRetailLogPathText,
                 )}
               </span>
             )}
@@ -207,7 +207,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             <Tooltip
               content={getLocalePhrase(
                 appState.language,
-                configSchema.recordClassic.description
+                configSchema.recordClassic.description,
               )}
               side="top"
             >
@@ -225,7 +225,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               <Tooltip
                 content={getLocalePhrase(
                   appState.language,
-                  configSchema.classicLogPath.description
+                  configSchema.classicLogPath.description,
                 )}
                 side="top"
               >
@@ -243,7 +243,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               <span className="text-error text-sm">
                 {getLocalePhrase(
                   appState.language,
-                  Phrase.InvalidClassicLogPathText
+                  Phrase.InvalidClassicLogPathText,
                 )}
               </span>
             )}
@@ -294,7 +294,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             <Tooltip
               content={getLocalePhrase(
                 appState.language,
-                configSchema.recordEra.description
+                configSchema.recordEra.description,
               )}
               side="top"
             >
@@ -310,12 +310,12 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
             <Label htmlFor="eraLogPath" className="flex items-center">
               {getLocalePhrase(
                 appState.language,
-                Phrase.ClassicEraLogPathLabel
+                Phrase.ClassicEraLogPathLabel,
               )}
               <Tooltip
                 content={getLocalePhrase(
                   appState.language,
-                  configSchema.eraLogPath.description
+                  configSchema.eraLogPath.description,
                 )}
                 side="top"
               >
@@ -333,7 +333,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
               <span className="text-error text-xs font-semibold mt-1">
                 {getLocalePhrase(
                   appState.language,
-                  Phrase.InvalidClassicEraLogPathText
+                  Phrase.InvalidClassicEraLogPathText,
                 )}
               </span>
             )}

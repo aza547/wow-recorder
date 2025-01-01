@@ -142,7 +142,7 @@ export default class ConfigService
 
         default: {
           console.error(
-            '[ConfigService] Unrecognised config call, should be one of get, set or set_values'
+            '[ConfigService] Unrecognised config call, should be one of get, set or set_values',
           );
         }
       }
@@ -156,7 +156,7 @@ export default class ConfigService
   get<T>(key: keyof ConfigurationSchema): T {
     if (!configSchema[key]) {
       throw Error(
-        `[Config Service] Attempted to get invalid configuration key '${key}'`
+        `[Config Service] Attempted to get invalid configuration key '${key}'`,
       );
     }
 
@@ -179,7 +179,7 @@ export default class ConfigService
   set(key: keyof ConfigurationSchema, value: any): void {
     if (!configSchema[key]) {
       throw Error(
-        `[Config Service] Attempted to set invalid configuration key '${key}'`
+        `[Config Service] Attempted to set invalid configuration key '${key}'`,
       );
     }
 
@@ -217,7 +217,7 @@ export default class ConfigService
   private cleanupStore(): void {
     const configSchemaKeys = Object.keys(configSchema);
     const keysToDelete = Object.keys(this._store.store).filter(
-      (k) => !configSchemaKeys.includes(k)
+      (k) => !configSchemaKeys.includes(k),
     );
 
     if (!keysToDelete.length) {
@@ -232,7 +232,7 @@ export default class ConfigService
 
     console.info(
       '[Config Service] Deleted deprecated keys from configuration store',
-      keysToDelete
+      keysToDelete,
     );
   }
 

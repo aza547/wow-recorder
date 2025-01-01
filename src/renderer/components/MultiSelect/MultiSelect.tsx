@@ -1,9 +1,6 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable import/prefer-default-export */
-/* eslint-disable react/require-default-props */
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { CheckIcon, XCircle, ChevronDown } from 'lucide-react';
+import { CheckIcon, ChevronDown } from 'lucide-react';
 
 import { cn } from '../utils';
 import { Button } from '../Button/Button';
@@ -33,7 +30,7 @@ const multiSelectVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  }
+  },
 );
 
 interface MultiSelectProps
@@ -71,7 +68,7 @@ export const MultiSelect = React.forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [selectedValues, setSelectedValues] =
       React.useState<string[]>(defaultValue);
@@ -107,7 +104,7 @@ export const MultiSelect = React.forwardRef<
             className={cn(
               'flex h-full w-auto px-3 py-2 bg-card rounded-md border border-background min-h-10 items-center justify-between hover:bg-card',
               'text-sm ring-offset-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-card/80',
-              className
+              className,
             )}
           >
             {selectedValues.length > 0 ? (
@@ -177,7 +174,7 @@ export const MultiSelect = React.forwardRef<
                       onSelect={() => toggleOption(option.value)}
                       className={cn(
                         'cursor-pointer text-card-foreground py-2 pl-4 text-sm',
-                        'hover:bg-primary hover:text-primary-foreground'
+                        'hover:bg-primary hover:text-primary-foreground',
                       )}
                     >
                       <div
@@ -185,7 +182,7 @@ export const MultiSelect = React.forwardRef<
                           'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-card-foreground',
                           isSelected
                             ? 'bg-primary text-primary-foreground border-none'
-                            : 'opacity-50 [&_svg]:invisible'
+                            : 'opacity-50 [&_svg]:invisible',
                         )}
                       >
                         <CheckIcon className="h-4 w-4" />
@@ -203,7 +200,7 @@ export const MultiSelect = React.forwardRef<
         </PopoverContent>
       </Popover>
     );
-  }
+  },
 );
 
 MultiSelect.displayName = 'MultiSelect';

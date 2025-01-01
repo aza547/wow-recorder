@@ -180,7 +180,7 @@ export default class CombatLogWatcher extends EventEmitter {
         '[CombatLogParser] Read attempted for',
         bytes,
         'bytes, but read',
-        bytesRead
+        bytesRead,
       );
     }
 

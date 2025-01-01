@@ -41,7 +41,7 @@ const AudioSourceControls = (props: IProps) => {
     React.useState(false);
 
   const [pttHotKey, setPttHotKey] = React.useState<PTTKeyPressEvent>(
-    getPTTKeyPressEventFromConfig(config)
+    getPTTKeyPressEventFromConfig(config),
   );
 
   React.useEffect(() => {
@@ -119,18 +119,18 @@ const AudioSourceControls = (props: IProps) => {
 
   const input = standardizeAudioDeviceNames(
     config.audioInputDevices,
-    audioDevices
+    audioDevices,
   );
 
   const output = standardizeAudioDeviceNames(
     config.audioOutputDevices,
-    audioDevices
+    audioDevices,
   );
 
   const onDeviceChange = (type: DeviceType, values: string[]) => {
     const standardizedValues = standardizeAudioDeviceNames(
       values,
-      audioDevices
+      audioDevices,
     ).join();
     if (type === DeviceType.INPUT) {
       setConfig((prevState) => {
@@ -157,7 +157,7 @@ const AudioSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.audioOutputDevices.description
+              configSchema.audioOutputDevices.description,
             )}
             side="right"
           >
@@ -173,7 +173,7 @@ const AudioSourceControls = (props: IProps) => {
           defaultValue={output}
           placeholder={getLocalePhrase(
             appState.language,
-            Phrase.SelectAnOutputDevice
+            Phrase.SelectAnOutputDevice,
           )}
           maxCount={1}
         />
@@ -219,7 +219,7 @@ const AudioSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.audioInputDevices.description
+              configSchema.audioInputDevices.description,
             )}
             side="right"
           >
@@ -235,7 +235,7 @@ const AudioSourceControls = (props: IProps) => {
           defaultValue={input}
           placeholder={getLocalePhrase(
             appState.language,
-            Phrase.SelectAnInputDevice
+            Phrase.SelectAnInputDevice,
           )}
           maxCount={1}
         />
@@ -308,7 +308,7 @@ const AudioSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.obsForceMono.description
+              configSchema.obsForceMono.description,
             )}
             side="right"
           >
@@ -333,7 +333,7 @@ const AudioSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.pushToTalk.description
+              configSchema.pushToTalk.description,
             )}
             side="right"
           >
@@ -364,7 +364,7 @@ const AudioSourceControls = (props: IProps) => {
       keys.push(
         `${getLocalePhrase(appState.language, Phrase.Mouse)} ${
           event.mouseButton
-        }`
+        }`,
       );
     }
 
@@ -379,7 +379,7 @@ const AudioSourceControls = (props: IProps) => {
     if (pttHotKey !== null) {
       return `${getKeyPressEventString(pttHotKey)} (${getLocalePhrase(
         appState.language,
-        Phrase.ClickToRebind
+        Phrase.ClickToRebind,
       )})`;
     }
 
@@ -394,7 +394,7 @@ const AudioSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.pushToTalkKey.description
+              configSchema.pushToTalkKey.description,
             )}
             side="right"
           >
@@ -420,7 +420,7 @@ const AudioSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.obsAudioSuppression.description
+              configSchema.obsAudioSuppression.description,
             )}
             side="right"
           >

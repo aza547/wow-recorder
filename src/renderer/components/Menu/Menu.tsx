@@ -1,5 +1,3 @@
-/* eslint-disable react/require-default-props */
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Disabled the above because the only other option here is to make this context
 // with generics, which is just an unnecessary PITA.
@@ -27,7 +25,7 @@ export const useMenuContext = (): MenuContextType => {
 
   if (!menuContext) {
     throw new Error(
-      'useMenuContext has to be used within a MenuContextProvider'
+      'useMenuContext has to be used within a MenuContextProvider',
     );
   }
 

@@ -39,7 +39,7 @@ const WarcraftRecorder = () => {
   const { toast } = useToast();
 
   const [recorderStatus, setRecorderStatus] = useState<RecStatus>(
-    RecStatus.WaitingForWoW
+    RecStatus.WaitingForWoW,
   );
 
   const [upgradeStatus, setUpgradeStatus] = useState<UpgradeStatus>({
@@ -48,7 +48,7 @@ const WarcraftRecorder = () => {
   });
 
   const [savingStatus, setSavingStatus] = useState<SaveStatus>(
-    SaveStatus.NotSaving
+    SaveStatus.NotSaving,
   );
 
   const [appState, setAppState] = useState<AppState>({
@@ -79,17 +79,17 @@ const WarcraftRecorder = () => {
 
     const title = getLocalePhrase(
       appState.language,
-      Phrase.UpdateAvailableTitle
+      Phrase.UpdateAvailableTitle,
     );
 
     const description = getLocalePhrase(
       appState.language,
-      Phrase.UpdateAvailableText
+      Phrase.UpdateAvailableText,
     );
 
     const buttonText = getLocalePhrase(
       appState.language,
-      Phrase.UpdateAvailableDownloadButtonText
+      Phrase.UpdateAvailableDownloadButtonText,
     );
 
     if (upgradeStatus.available) {
@@ -116,7 +116,7 @@ const WarcraftRecorder = () => {
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 
   const stateManager = useRef<StateManager>(
-    StateManager.getInstance(setVideoState, appState, setAppState)
+    StateManager.getInstance(setVideoState, appState, setAppState),
   );
 
   // Used to allow for hot switching of video players when moving between POVs.

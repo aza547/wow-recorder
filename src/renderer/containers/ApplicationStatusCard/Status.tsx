@@ -1,5 +1,3 @@
-/* eslint-disable react/require-default-props */
-/* eslint-disable import/prefer-default-export */
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/types';
 import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
@@ -72,31 +70,31 @@ const Status = ({
   const RecStatusTitle: Record<RecStatus, string> = {
     [RecStatus.Recording]: getLocalePhrase(
       appState.language,
-      Phrase.StatusTitleRecording
+      Phrase.StatusTitleRecording,
     ),
     [RecStatus.WaitingForWoW]: getLocalePhrase(
       appState.language,
-      Phrase.StatusTitleWaiting
+      Phrase.StatusTitleWaiting,
     ),
     [RecStatus.InvalidConfig]: getLocalePhrase(
       appState.language,
-      Phrase.StatusTitleInvalid
+      Phrase.StatusTitleInvalid,
     ),
     [RecStatus.ReadyToRecord]: getLocalePhrase(
       appState.language,
-      Phrase.StatusTitleReady
+      Phrase.StatusTitleReady,
     ),
     [RecStatus.FatalError]: getLocalePhrase(
       appState.language,
-      Phrase.StatusTitleFatalError
+      Phrase.StatusTitleFatalError,
     ),
     [RecStatus.Overrunning]: getLocalePhrase(
       appState.language,
-      Phrase.StatusTitleOverrunning
+      Phrase.StatusTitleOverrunning,
     ),
     [RecStatus.Reconfiguring]: getLocalePhrase(
       appState.language,
-      Phrase.StatusTitleReconfiguring
+      Phrase.StatusTitleReconfiguring,
     ),
   };
 
@@ -119,7 +117,7 @@ const Status = ({
         <h2 className="text-sm font-semibold">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionRecording
+            Phrase.StatusDescriptionRecording,
           )}
         </h2>
         <Separator className="my-1" />
@@ -130,7 +128,7 @@ const Status = ({
           <Button size="sm" onClick={stopRecording} className="mt-2 w-1/3">
             {getLocalePhrase(
               appState.language,
-              Phrase.StatusButtonForceEndLabel
+              Phrase.StatusButtonForceEndLabel,
             )}
           </Button>
         </div>
@@ -145,7 +143,7 @@ const Status = ({
         <p className="text-xs text-popover-foreground/60">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionConfiguredToRecord
+            Phrase.StatusDescriptionConfiguredToRecord,
           )}{' '}
           {getConfiguredFlavours()}
         </p>
@@ -156,14 +154,14 @@ const Status = ({
         <h2 className="text-sm font-semibold">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionMisconfigured
+            Phrase.StatusDescriptionMisconfigured,
           )}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionPleaseResolve
+            Phrase.StatusDescriptionPleaseResolve,
           )}
         </p>
         <p className="text-xs text-error-text">{error}</p>
@@ -174,14 +172,14 @@ const Status = ({
         <h2 className="text-sm font-semibold">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionDetectedRunning
+            Phrase.StatusDescriptionDetectedRunning,
           )}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionWatchingLogs
+            Phrase.StatusDescriptionWatchingLogs,
           )}
           {': '}
         </p>
@@ -222,7 +220,7 @@ const Status = ({
           </span>
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionIfNoRecording
+            Phrase.StatusDescriptionIfNoRecording,
           )}
         </p>
       </div>
@@ -232,21 +230,21 @@ const Status = ({
         <h2 className="text-sm font-semibold">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionFatalError
+            Phrase.StatusDescriptionFatalError,
           )}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionPleaseResolve
+            Phrase.StatusDescriptionPleaseResolve,
           )}
         </p>
         <p className="text-xs text-error-text">{error}</p>
         <p className="text-xs text-popover-foreground/60">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionIfRecurring
+            Phrase.StatusDescriptionIfRecurring,
           )}
         </p>
       </div>
@@ -258,7 +256,7 @@ const Status = ({
         <p className="text-xs text-popover-foreground/60">
           {getLocalePhrase(
             appState.language,
-            Phrase.StatusDescriptionOverrunning
+            Phrase.StatusDescriptionOverrunning,
           )}
         </p>
       </div>
@@ -276,7 +274,7 @@ const Status = ({
     };
 
   const [uploadProgress, setUploadProgress] = React.useState<number | false>(
-    false
+    false,
   );
   const [downloadProgress, setDownloadProgress] = React.useState<
     number | false
@@ -296,7 +294,7 @@ const Status = ({
       if (progress === null || progress === undefined || progress === 100) {
         clearUploadProgressTimer.current = setTimeout(
           () => setUploadProgress(false),
-          1000
+          1000,
         );
       }
 
@@ -311,7 +309,7 @@ const Status = ({
       if (progress === null || progress === undefined || progress === 100) {
         clearDownloadProgressTimer.current = setTimeout(
           () => setDownloadProgress(false),
-          1000
+          1000,
         );
       }
 
@@ -344,7 +342,7 @@ const Status = ({
             <span
               className={cn(
                 'text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground',
-                { '': !!statusDescription }
+                { '': !!statusDescription },
               )}
             >
               {statusTitle}

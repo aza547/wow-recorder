@@ -26,7 +26,7 @@ export default function RendererTitleBar() {
         type="button"
         className={cn(
           'w-8 h-8 bg-transparent border-0 text-white text-base outline-none hover:bg-foreground',
-          className
+          className,
         )}
         {...props}
       >

@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 
@@ -14,7 +13,7 @@ const TabsList = React.forwardRef<
     ref={ref}
     className={cn(
       'inline-flex h-10 items-center justify-start px-4 py-0 text-foreground border-b border-foreground/60 w-full gap-x-2',
-      className
+      className,
     )}
     {...props}
   />
@@ -32,7 +31,7 @@ const TabsTrigger = React.forwardRef<
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
       'disabled:pointer-events-none disabled:opacity-50',
       'data-[state=active]:text-foreground-lighter data-[state=active]:shadow-[0px_-1px_0px_0px_rgba(188,68,32)_inset,0px_1px_0px_0px__rgba(188,68,32)]',
-      className
+      className,
     )}
     {...props}
   />
@@ -47,7 +46,7 @@ const TabsContent = React.forwardRef<
     ref={ref}
     className={cn(
       'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-      className
+      className,
     )}
     {...props}
   />

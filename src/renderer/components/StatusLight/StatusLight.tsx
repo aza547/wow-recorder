@@ -1,4 +1,3 @@
-/* eslint-disable react/require-default-props */
 import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
@@ -48,7 +47,7 @@ const StatusLight = ({
           statusLightForegroundVariants({
             variant,
             className: foregroundClasses,
-          })
+          }),
         )}
       />
     </div>

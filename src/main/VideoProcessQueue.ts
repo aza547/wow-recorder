@@ -204,7 +204,7 @@ export default class VideoProcessQueue {
    */
   private async processVideoQueueItem(
     data: VideoQueueItem,
-    done: () => void
+    done: () => void,
   ): Promise<void> {
     try {
       const outputDir = this.cfg.get<string>('storagePath');
@@ -214,7 +214,7 @@ export default class VideoProcessQueue {
         outputDir,
         data.suffix,
         data.offset,
-        data.duration
+        data.duration,
       );
 
       await writeMetadataFile(videoPath, data.metadata);
@@ -234,7 +234,7 @@ export default class VideoProcessQueue {
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
-        String(error)
+        String(error),
       );
     }
 
@@ -246,7 +246,7 @@ export default class VideoProcessQueue {
    */
   private async processUploadQueueItem(
     item: UploadQueueItem,
-    done: () => void
+    done: () => void,
   ): Promise<void> {
     let lastProgress = 0;
 
@@ -304,7 +304,7 @@ export default class VideoProcessQueue {
       console.error(
         '[VideoProcessQueue] Error processing video:',
         String(error),
-        error
+        error,
       );
       progressCallback(100);
     }
@@ -318,7 +318,7 @@ export default class VideoProcessQueue {
    */
   private async processDownloadQueueItem(
     video: RendererVideo,
-    done: () => void
+    done: () => void,
   ): Promise<void> {
     const storageDir = this.cfg.get<string>('storagePath');
     const { videoName, videoSource } = video;
@@ -341,7 +341,7 @@ export default class VideoProcessQueue {
         `${videoName}.mp4`,
         videoSource,
         storageDir,
-        progressCallback
+        progressCallback,
       );
 
       // Spread to force this to be cloned, avoiding modifying the original input,
@@ -354,7 +354,7 @@ export default class VideoProcessQueue {
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error downloading video:',
-        String(error)
+        String(error),
       );
     }
 
@@ -416,7 +416,7 @@ export default class VideoProcessQueue {
     this.mainWindow.webContents.send('refreshState');
 
     this.inProgressUploads = this.inProgressUploads.filter(
-      (p) => p !== item.path
+      (p) => p !== item.path,
     );
   }
 
@@ -438,7 +438,7 @@ export default class VideoProcessQueue {
     this.mainWindow.webContents.send('refreshState');
 
     this.inProgressDownloads = this.inProgressDownloads.filter(
-      (p) => p !== videoName
+      (p) => p !== videoName,
     );
   }
 
@@ -524,7 +524,7 @@ export default class VideoProcessQueue {
   private static getOutputVideoPath(
     sourceFile: string,
     outputDir: string,
-    suffix: string | undefined
+    suffix: string | undefined,
   ) {
     let videoName = path.basename(sourceFile, '.mp4');
 
@@ -559,13 +559,13 @@ export default class VideoProcessQueue {
     outputDir: string,
     suffix: string | undefined,
     offset: number,
-    duration: number
+    duration: number,
   ): Promise<string> {
     const startTime = VideoProcessQueue.getStartTime(offset);
     const outputPath = VideoProcessQueue.getOutputVideoPath(
       sourceFile,
       outputDir,
-      suffix
+      suffix,
     );
 
     console.info('[VideoProcessQueue] Start time:', startTime);

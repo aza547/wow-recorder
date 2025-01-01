@@ -130,7 +130,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.obsOutputResolution.description
+              configSchema.obsOutputResolution.description,
             )}
             side="right"
           >
@@ -182,7 +182,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.obsFPS.description
+              configSchema.obsFPS.description,
             )}
             side="right"
           >
@@ -264,7 +264,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.obsQuality.description
+              configSchema.obsQuality.description,
             )}
             side="right"
           >
@@ -312,7 +312,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.obsRecEncoder.description
+              configSchema.obsRecEncoder.description,
             )}
             side="right"
           >

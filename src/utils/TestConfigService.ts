@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable class-methods-use-this */
+
 import EventEmitter from 'events';
 import { ConfigurationSchema } from 'config/configSchema';
 import { IConfigService } from '../config/ConfigService';

@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { Box } from '@mui/material';
 import { AppState, RendererVideo } from 'main/types';
 import CloudIcon from '@mui/icons-material/Cloud';
@@ -103,7 +101,7 @@ export default function ViewpointInfo(props: IProps) {
       <Tooltip
         content={getLocalePhrase(
           appState.language,
-          Phrase.DownloadButtonTooltip
+          Phrase.DownloadButtonTooltip,
         )}
       >
         <ToggleGroupItem

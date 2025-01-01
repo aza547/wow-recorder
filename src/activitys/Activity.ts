@@ -36,7 +36,7 @@ export default abstract class Activity {
     startDate: Date,
     category: VideoCategory,
     flavour: Flavour,
-    cfg: IConfigService
+    cfg: IConfigService,
   ) {
     this._result = false;
     this._combatantMap = new Map();
@@ -178,7 +178,7 @@ export default abstract class Activity {
    */
   getUniqueHash(): string {
     const deterministicFields = [this.category, this.flavour, this.result].map(
-      (f) => f.toString()
+      (f) => f.toString(),
     );
 
     const sortedNames: string[] = [];

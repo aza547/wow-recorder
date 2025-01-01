@@ -101,7 +101,7 @@ export const getSettings = (): ConfigurationSchema => {
 
 export const useSettings = (): [
   ConfigurationSchema,
-  React.Dispatch<React.SetStateAction<ConfigurationSchema>>
+  React.Dispatch<React.SetStateAction<ConfigurationSchema>>,
 ] => {
   const configValues = getSettings();
   return React.useState<ConfigurationSchema>(configValues);

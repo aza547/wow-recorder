@@ -1,6 +1,3 @@
-/* eslint-disable react/require-default-props */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable jsx-a11y/interactive-supports-focus */
 import { PropsWithChildren, ReactNode } from 'react';
 import { useMenuContext } from './Menu';
 import { cn } from '../utils';
@@ -29,7 +26,7 @@ const Root = ({
           'bg-card text-card-foreground border-t border-t-[rgba(255,255,255,0.2)] shadow-[0_1px_2px_rgba(0,0,0,0.5)]':
             currentValue === value,
         },
-        className
+        className,
       )}
       onClick={() => onValueChange(value)}
       role="button"

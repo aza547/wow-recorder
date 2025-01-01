@@ -25,7 +25,7 @@ test('Basic Battleground', () => {
     VideoCategory.Battlegrounds,
     761,
     Flavour.Retail,
-    cfg
+    cfg,
   );
 
   const death = getPlayerDeath();

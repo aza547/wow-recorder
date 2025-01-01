@@ -15,7 +15,7 @@ export default class Battleground extends Activity {
     category: VideoCategory,
     zoneID: number,
     flavour: Flavour,
-    cfg: IConfigService
+    cfg: IConfigService,
   ) {
     super(startDate, category, flavour, cfg);
     this.zoneID = zoneID;
@@ -29,7 +29,7 @@ export default class Battleground extends Activity {
 
     const isRetailBattleground = Object.prototype.hasOwnProperty.call(
       retailBattlegrounds,
-      this.zoneID
+      this.zoneID,
     );
 
     if (isRetailBattleground) {
@@ -38,7 +38,7 @@ export default class Battleground extends Activity {
 
     const isClassicBattleground = Object.prototype.hasOwnProperty.call(
       classicBattlegrounds,
-      this.zoneID
+      this.zoneID,
     );
 
     if (isClassicBattleground) {

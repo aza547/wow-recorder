@@ -40,7 +40,6 @@ const RecorderPreview: React.FC = () => {
     show();
     setupResizeObserver();
     return cleanup;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

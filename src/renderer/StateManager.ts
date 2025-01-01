@@ -31,7 +31,7 @@ export default class StateManager {
   public static getInstance(
     setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>,
     appState: AppState,
-    setAppState: React.Dispatch<React.SetStateAction<AppState>>
+    setAppState: React.Dispatch<React.SetStateAction<AppState>>,
   ) {
     if (StateManager.instance) {
       return StateManager.instance;
@@ -40,7 +40,7 @@ export default class StateManager {
     StateManager.instance = new StateManager(
       setVideoState,
       appState,
-      setAppState
+      setAppState,
     );
 
     return StateManager.instance;
@@ -52,7 +52,7 @@ export default class StateManager {
   constructor(
     setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>,
     appState: AppState,
-    setAppState: React.Dispatch<React.SetStateAction<AppState>>
+    setAppState: React.Dispatch<React.SetStateAction<AppState>>,
   ) {
     this.setVideoState = setVideoState;
     this.appState = appState;
@@ -87,7 +87,7 @@ export default class StateManager {
       const categoryState = correlated.filter(categoryFilter);
 
       const filteredState = categoryState.filter((video) =>
-        new VideoFilter(videoFilterQuery, video).filter()
+        new VideoFilter(videoFilterQuery, video).filter(),
       );
 
       const first = filteredState[0];
@@ -115,11 +115,11 @@ export default class StateManager {
     const diskVideos = this.raw.filter((video) => !video.cloud);
 
     cloudVideos.forEach((video) =>
-      StateManager.correlateVideo(video, correlated)
+      StateManager.correlateVideo(video, correlated),
     );
 
     diskVideos.forEach((video) =>
-      StateManager.correlateVideo(video, correlated)
+      StateManager.correlateVideo(video, correlated),
     );
 
     correlated.sort(StateManager.reverseChronologicalVideoSort);
@@ -150,14 +150,14 @@ export default class StateManager {
         // Only correlate clips if they are the literally the same video
         // with different storage. Otherwise we end up grouping from the
         // parent hash which is confusing.
-        // eslint-disable-next-line no-continue
+
         continue;
       }
 
       if (!sameHash || videoToCompare.start === undefined) {
         // Mismatching hash or no start time so either these videos or
         // not correlated or we can't prove they are these are correlated.
-        // eslint-disable-next-line no-continue
+
         continue;
       }
 
@@ -231,7 +231,7 @@ export default class StateManager {
 
   private static reverseChronologicalVideoSort(
     A: RendererVideo,
-    B: RendererVideo
+    B: RendererVideo,
   ) {
     let metricA;
     let metricB;

@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import { BrowserWindow, app, clipboard, ipcMain, powerMonitor } from 'electron';
 import { isEqual } from 'lodash';
 import path from 'path';
@@ -184,7 +183,7 @@ export default class Manager {
     this.recorder = new Recorder(this.mainWindow);
 
     this.recorder.on('crash', (crashData) =>
-      this.recoverRecorderFromCrash(crashData)
+      this.recoverRecorderFromCrash(crashData),
     );
 
     this.recorder.on('state-change', () => this.refreshStatus());
@@ -301,7 +300,7 @@ export default class Manager {
           '[Manager] Validating and configuring stage',
           stage.name,
           'with',
-          loggable
+          loggable,
         );
 
         try {
@@ -364,7 +363,7 @@ export default class Manager {
     if (this.reconfiguring) {
       this.mainWindow.webContents.send(
         'updateRecStatus',
-        RecStatus.Reconfiguring
+        RecStatus.Reconfiguring,
       );
       return;
     }
@@ -372,7 +371,7 @@ export default class Manager {
     if (!this.configValid) {
       this.refreshRecStatus(
         RecStatus.InvalidConfig,
-        String(this.configMessage)
+        String(this.configMessage),
       );
       return;
     }
@@ -478,7 +477,7 @@ export default class Manager {
     try {
       await this.recorder.start();
     } catch (error) {
-      console.error('[Manager] OBS failed to record when WoW started');
+      console.error('[Manager] OBS failed to record when WoW started', error);
     }
   }
 
@@ -489,7 +488,7 @@ export default class Manager {
    */
   private async onWowStopped() {
     console.info(
-      '[Manager] Detected WoW not running, or Windows going inactive'
+      '[Manager] Detected WoW not running, or Windows going inactive',
     );
 
     if (this.retailLogHandler && this.retailLogHandler.activity) {
@@ -531,7 +530,7 @@ export default class Manager {
       this.cloudClient = new CloudClient(
         cloudAccountName,
         cloudAccountPassword,
-        cloudGuildName
+        cloudGuildName,
       );
 
       this.cloudClient.on('change', () => {
@@ -599,7 +598,7 @@ export default class Manager {
         this.mainWindow,
         this.recorder,
         this.videoProcessQueue,
-        config.retailLogPath
+        config.retailLogPath,
       );
 
       this.retailLogHandler.on('state-change', () => this.refreshStatus());
@@ -610,7 +609,7 @@ export default class Manager {
         this.mainWindow,
         this.recorder,
         this.videoProcessQueue,
-        config.classicLogPath
+        config.classicLogPath,
       );
 
       this.classicLogHandler.on('state-change', () => this.refreshStatus());
@@ -621,7 +620,7 @@ export default class Manager {
         this.mainWindow,
         this.recorder,
         this.videoProcessQueue,
-        config.eraLogPath
+        config.eraLogPath,
       );
 
       this.eraLogHandler.on('state-change', () => this.refreshStatus());
@@ -666,6 +665,19 @@ export default class Manager {
       throw new Error(this.getLocaleError(Phrase.ErrorPasswordEmpty));
     }
 
+    const guilds = await CloudClient.getUserAffiliations(
+      cloudAccountName,
+      cloudAccountPassword,
+    );
+
+    const status: CloudStatus = {
+      usage: 0,
+      limit: 0,
+      guilds,
+    };
+
+    this.mainWindow.webContents.send('updateCloudStatus', status);
+
     if (!cloudGuildName) {
       console.warn('[Manager] Empty guild name');
       throw new Error(this.getLocaleError(Phrase.ErrorGuildEmpty));
@@ -677,7 +689,7 @@ export default class Manager {
       const client = new CloudClient(
         cloudAccountName,
         cloudAccountPassword,
-        cloudGuildName
+        cloudGuildName,
       );
 
       raceWinner = await Promise.race([
@@ -699,7 +711,7 @@ export default class Manager {
 
       throw new RetryableConfigError(
         'Failed to authenticate with the cloud store.',
-        10000
+        10000,
       );
     }
 
@@ -709,7 +721,7 @@ export default class Manager {
 
     if (!read) {
       throw new Error(
-        this.getLocaleError(Phrase.ErrorUserNotAuthorizedPlayback)
+        this.getLocaleError(Phrase.ErrorUserNotAuthorizedPlayback),
       );
     }
 
@@ -724,7 +736,7 @@ export default class Manager {
     if (!storagePath) {
       console.warn(
         '[Manager] Validation failed: `storagePath` is falsy',
-        storagePath
+        storagePath,
       );
 
       throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
@@ -733,7 +745,7 @@ export default class Manager {
     if (!fs.existsSync(path.dirname(storagePath))) {
       console.warn(
         '[Manager] Validation failed, storagePath does not exist',
-        storagePath
+        storagePath,
       );
 
       throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
@@ -752,7 +764,7 @@ export default class Manager {
     if (!obsParentDirExists) {
       console.warn(
         '[Manager] Validation failed, obsPath does not exist',
-        obsPath
+        obsPath,
       );
 
       throw new Error(this.getLocaleError(Phrase.ErrorBufferPathInvalid));
@@ -760,11 +772,11 @@ export default class Manager {
 
     if (path.resolve(storagePath) === path.resolve(obsPath)) {
       console.warn(
-        '[Manager] Validation failed: Storage Path is the same as Buffer Path'
+        '[Manager] Validation failed: Storage Path is the same as Buffer Path',
       );
 
       throw new Error(
-        this.getLocaleError(Phrase.ErrorStoragePathSameAsBufferPath)
+        this.getLocaleError(Phrase.ErrorStoragePathSameAsBufferPath),
       );
     }
 
@@ -844,7 +856,7 @@ export default class Manager {
 
     if (!chatOverlayOwnImagePath) {
       console.warn(
-        '[Manager] Overlay image was not provided for custom overlay'
+        '[Manager] Overlay image was not provided for custom overlay',
       );
 
       throw new Error(this.getLocaleError(Phrase.ErrorNoCustomImage));
@@ -925,7 +937,7 @@ export default class Manager {
           input: inputDevices,
           output: outputDevices,
         };
-      }
+      },
     );
 
     // Test listener, to enable the test button to start a test.
@@ -1172,7 +1184,7 @@ export default class Manager {
 
     if (retailOverrunning || classicOverrunning || eraOverrunning) {
       console.info(
-        '[Manager] Not restarting recorder as an activity is overrunning'
+        '[Manager] Not restarting recorder as an activity is overrunning',
       );
       return;
     }
@@ -1244,7 +1256,7 @@ export default class Manager {
       // intended to delete
       console.warn(
         '[Manager] Failed to directly delete video on disk:',
-        String(error)
+        String(error),
       );
 
       markForVideoForDelete(videoName);

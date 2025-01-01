@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import * as React from 'react';
 import * as ProgressPrimitive from '@radix-ui/react-progress';
 
@@ -12,7 +11,7 @@ const Progress = React.forwardRef<
     ref={ref}
     className={cn(
       'relative h-4 w-full overflow-hidden rounded-full bg-card',
-      className
+      className,
     )}
     {...props}
   >

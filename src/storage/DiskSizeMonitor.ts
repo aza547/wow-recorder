@@ -41,13 +41,13 @@ export default class DiskSizeMonitor {
 
     const files = await getSortedVideos(
       storageDir,
-      FileSortDirection.OldestFirst
+      FileSortDirection.OldestFirst,
     );
 
     console.info(
       '[DiskSizeMonitor] Running, size limit is',
       maxStorageGB,
-      'GB'
+      'GB',
     );
 
     const unprotectedFiles = await asyncFilter(
@@ -60,12 +60,12 @@ export default class DiskSizeMonitor {
         } catch {
           console.error(
             '[DiskSizeMonitor] Failed to get metadata for',
-            file.name
+            file.name,
           );
           await deleteVideoDisk(file.name);
           return false;
         }
-      }
+      },
     );
 
     const filesForDeletion = unprotectedFiles.filter((file) => {
@@ -74,13 +74,13 @@ export default class DiskSizeMonitor {
     });
 
     console.info(
-      `[DiskSizeMonitor] Deleting ${filesForDeletion.length} old video(s)`
+      `[DiskSizeMonitor] Deleting ${filesForDeletion.length} old video(s)`,
     );
 
     await Promise.all(
       filesForDeletion.map(async (file) => {
         await deleteVideoDisk(file.name);
-      })
+      }),
     );
 
     if (filesForDeletion.length > 0) {

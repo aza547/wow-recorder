@@ -14,7 +14,7 @@ type UpgradeNotifierProps = {
 
 function arePropsEqual(
   oldProps: UpgradeNotifierProps,
-  newProps: UpgradeNotifierProps
+  newProps: UpgradeNotifierProps,
 ): boolean {
   return (
     oldProps.upgradeStatus.available === newProps.upgradeStatus.available &&
@@ -30,7 +30,7 @@ const UpgradeNotifier = React.memo(
       <Tooltip
         content={getLocalePhrase(
           appState.language,
-          Phrase.UpdateAvailableTooltip
+          Phrase.UpdateAvailableTooltip,
         )}
       >
         <Button
@@ -44,7 +44,7 @@ const UpgradeNotifier = React.memo(
       </Tooltip>
     );
   },
-  arePropsEqual
+  arePropsEqual,
 );
 
 export default UpgradeNotifier;

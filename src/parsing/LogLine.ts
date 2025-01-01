@@ -61,7 +61,7 @@ export default class LogLine {
       // In TWW, Blizzard changed the timestamp format to include the year.
       // e.g. "7/27/2024 21:39:13.0951"
       const [month, day, year, hours, mins, secs] = timeParts.map((v) =>
-        parseInt(v, 10)
+        parseInt(v, 10),
       );
 
       dateObj.setMonth(month - 1);
@@ -75,7 +75,7 @@ export default class LogLine {
       // Non-TWW timestamp, doesn't include year.
       // e.g. "4/9 20:04:44.359"
       const [month, day, hours, mins, secs] = timeParts.map((v) =>
-        parseInt(v, 10)
+        parseInt(v, 10),
       );
 
       dateObj.setMonth(month - 1);
@@ -182,7 +182,7 @@ export default class LogLine {
 
     if (openListCount > 0) {
       throw new Error(
-        `Unexpected EOL. There are ${openListCount} open list(s).`
+        `Unexpected EOL. There are ${openListCount} open list(s).`,
       );
     }
   }

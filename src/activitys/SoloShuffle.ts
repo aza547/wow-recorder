@@ -104,7 +104,7 @@ export default class SoloShuffle extends Activity {
       VideoCategory.SoloShuffle,
       this.zoneID,
       Flavour.Retail,
-      this.cfg
+      this.cfg,
     );
 
     this.rounds.push(newRound);
@@ -120,14 +120,14 @@ export default class SoloShuffle extends Activity {
     if (this.currentRound.deaths.length > 0) {
       console.info(
         '[Solo Shuffle] Already have a death in this round',
-        this.currentRound.deaths
+        this.currentRound.deaths,
       );
       return;
     }
 
     if (!this.player || this.player.teamID === undefined) {
       console.error(
-        "[Solo Shuffle] Tried to add a death but don't know the player"
+        "[Solo Shuffle] Tried to add a death but don't know the player",
       );
       return;
     }
@@ -196,7 +196,7 @@ export default class SoloShuffle extends Activity {
   getMetadata(): Metadata {
     const rawCombatants = Array.from(
       // Just use the combatants from the final round.
-      this.currentRound.combatantMap.values()
+      this.currentRound.combatantMap.values(),
     ).map((combatant: Combatant) => combatant.getRaw());
 
     return {
@@ -223,7 +223,7 @@ export default class SoloShuffle extends Activity {
 
     const category = getLocalePhrase(
       language,
-      Phrase.VideoCategorySoloShuffleLabel
+      Phrase.VideoCategorySoloShuffleLabel,
     );
 
     let fileName = `${category} ${this.zoneName} (${this.resultInfo})`;

@@ -119,7 +119,7 @@ const CloudSettings = (props: IProps) => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (checked: boolean) => void
+    changeFn: (checked: boolean) => void,
   ) => (
     <Switch
       checked={Boolean(config[preference])}
@@ -130,7 +130,7 @@ const CloudSettings = (props: IProps) => {
 
   const getSwitchForm = (
     preference: keyof ConfigurationSchema,
-    label: Phrase
+    label: Phrase,
   ) => {
     const changeFn = (checked: boolean) => {
       setConfig((prevState) => {
@@ -148,7 +148,7 @@ const CloudSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema[preference].description
+              configSchema[preference].description,
             )}
             side="top"
           >
@@ -184,12 +184,12 @@ const CloudSettings = (props: IProps) => {
         >
           {getLocalePhrase(
             appState.language,
-            Phrase.UploadDifficultyThresholdLabel
+            Phrase.UploadDifficultyThresholdLabel,
           )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudUploadRaidMinDifficulty.description
+              configSchema.cloudUploadRaidMinDifficulty.description,
             )}
             side="top"
           >
@@ -244,7 +244,7 @@ const CloudSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudUploadDungeonMinLevel.description
+              configSchema.cloudUploadDungeonMinLevel.description,
             )}
             side="top"
           >
@@ -303,7 +303,7 @@ const CloudSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudStorage.description
+              configSchema.cloudStorage.description,
             )}
             side="top"
           >
@@ -329,7 +329,7 @@ const CloudSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudUpload.description
+              configSchema.cloudUpload.description,
             )}
             side="top"
           >
@@ -362,12 +362,12 @@ const CloudSettings = (props: IProps) => {
         <Label htmlFor="cloudUploadRateLimit" className="flex items-center">
           {getLocalePhrase(
             appState.language,
-            Phrase.UploadRateLimitToggleLabel
+            Phrase.UploadRateLimitToggleLabel,
           )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudUploadRateLimit.description
+              configSchema.cloudUploadRateLimit.description,
             )}
             side="top"
           >
@@ -382,7 +382,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setCloudAccountName = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setConfig((prevState) => {
       return {
@@ -404,7 +404,7 @@ const CloudSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudAccountName.description
+              configSchema.cloudAccountName.description,
             )}
             side="top"
           >
@@ -428,7 +428,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setCloudPassword = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setConfig((prevState) => {
       return {
@@ -450,7 +450,7 @@ const CloudSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudAccountPassword.description
+              configSchema.cloudAccountPassword.description,
             )}
             side="top"
           >
@@ -497,7 +497,7 @@ const CloudSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudGuildName.description
+              configSchema.cloudGuildName.description,
             )}
             side="top"
           >
@@ -562,11 +562,11 @@ const CloudSettings = (props: IProps) => {
           {getSwitchForm('cloudUploadSkirmish', Phrase.UploadSkirmishLabel)}
           {getSwitchForm(
             'cloudUploadSoloShuffle',
-            Phrase.UploadSoloShuffleLabel
+            Phrase.UploadSoloShuffleLabel,
           )}
           {getSwitchForm(
             'cloudUploadBattlegrounds',
-            Phrase.UploadBattlgroundsLabel
+            Phrase.UploadBattlgroundsLabel,
           )}
         </div>
       </>
@@ -598,7 +598,7 @@ const CloudSettings = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.cloudUploadRateLimitMbps.description
+              configSchema.cloudUploadRateLimitMbps.description,
             )}
             side="top"
           >

@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import * as React from 'react';
 import * as ToggleGroupPrimitive from '@radix-ui/react-toggle-group';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -27,7 +26,7 @@ const toggleGroupVariants = cva(
         xs: 'h-6',
       },
     },
-  }
+  },
 );
 
 const ToggleGroup = React.forwardRef<
@@ -63,7 +62,7 @@ const ToggleGroupItem = React.forwardRef<
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        className
+        className,
       )}
       {...props}
     >

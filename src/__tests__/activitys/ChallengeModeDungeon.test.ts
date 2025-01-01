@@ -39,7 +39,7 @@ test('Basic Challenge Mode', () => {
     353,
     10,
     [159, 10, 152, 9], // Peril included
-    cfg
+    cfg,
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -54,7 +54,7 @@ test('Basic Challenge Mode', () => {
     const death = getPlayerDeath(
       getRelativeDate(startDate, relative),
       relative,
-      false
+      false,
     );
 
     dungeon.addDeath(death);
@@ -90,7 +90,7 @@ test('Hard Depleted Challenge Mode', () => {
     353,
     10,
     [159, 10, 152, 9], // Peril included
-    cfg
+    cfg,
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -105,7 +105,7 @@ test('Hard Depleted Challenge Mode', () => {
     const death = getPlayerDeath(
       getRelativeDate(startDate, relative),
       relative,
-      false
+      false,
     );
 
     dungeon.addDeath(death);
@@ -141,7 +141,7 @@ test('Peril Timed Challenge Mode', () => {
     353,
     10,
     [159, 10, 152, 9], // Peril included so we get +90 on the timer
-    cfg
+    cfg,
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -180,7 +180,7 @@ test('Peril Depleted Challenge Mode', () => {
     353,
     10,
     [159, 10, 152, 9], // Peril included so we get +90 on the timer
-    cfg
+    cfg,
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -196,7 +196,7 @@ test('Peril Depleted Challenge Mode', () => {
     const death = getPlayerDeath(
       getRelativeDate(startDate, relative),
       relative,
-      false
+      false,
     );
 
     dungeon.addDeath(death);

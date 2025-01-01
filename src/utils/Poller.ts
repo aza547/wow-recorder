@@ -114,7 +114,7 @@ export default class Poller extends EventEmitter {
       }
     } catch (error) {
       // Think we can hit this on sleeping/resuming from sleep.
-      console.warn('Failed parsing JSON from rust-ps:', data);
+      console.warn('Failed parsing JSON from rust-ps:', error, data);
     }
   };
 

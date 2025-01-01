@@ -16,7 +16,7 @@ const getLocalePhrase = (lang: Language, phrase: Phrase) => data[lang][phrase];
 
 const getLocaleCategoryLabel = (
   lang: Language,
-  videoCategory: VideoCategory
+  videoCategory: VideoCategory,
 ) => {
   switch (videoCategory) {
     case VideoCategory.TwoVTwo:

@@ -91,7 +91,7 @@ const VideoSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.obsCaptureMode.description
+              configSchema.obsCaptureMode.description,
             )}
             side="right"
           >
@@ -131,7 +131,7 @@ const VideoSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.monitorIndex.description
+              configSchema.monitorIndex.description,
             )}
             side="right"
           >
@@ -146,7 +146,10 @@ const VideoSourceControls = (props: IProps) => {
           size="sm"
         >
           {displays.map((display: OurDisplayType) => (
-            <ToggleGroupItem value={display.index.toString()}>
+            <ToggleGroupItem
+              value={display.index.toString()}
+              key={display.index}
+            >
               {display.index + 1}
             </ToggleGroupItem>
           ))}
@@ -163,7 +166,7 @@ const VideoSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.captureCursor.description
+              configSchema.captureCursor.description,
             )}
             side="right"
           >

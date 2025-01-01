@@ -21,7 +21,7 @@ test('Basic Arena Match', () => {
     VideoCategory.TwoVTwo,
     1672,
     Flavour.Retail,
-    cfg
+    cfg,
   );
 
   arenaMatch.playerGUID = testCombatants[0].GUID;

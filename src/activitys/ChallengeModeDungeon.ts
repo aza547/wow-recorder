@@ -30,7 +30,7 @@ export default class ChallengeModeDungeon extends Activity {
     mapID: number,
     level: number,
     affixes: number[],
-    cfg: IConfigService
+    cfg: IConfigService,
   ) {
     super(startDate, VideoCategory.MythicPlus, Flavour.Retail, cfg);
     this._zoneID = zoneID;
@@ -81,7 +81,7 @@ export default class ChallengeModeDungeon extends Activity {
 
     if (!this.CMDuration) {
       console.info(
-        "[ChallengeModeDungeon] Run didn't complete (abandoned, not a deplete)"
+        "[ChallengeModeDungeon] Run didn't complete (abandoned, not a deplete)",
       );
       return 0;
     }
@@ -111,7 +111,7 @@ export default class ChallengeModeDungeon extends Activity {
 
     const isRecognisedMythicPlus = Object.prototype.hasOwnProperty.call(
       instanceNamesByZoneId,
-      this.zoneID
+      this.zoneID,
     );
 
     if (isRecognisedMythicPlus) {
@@ -140,7 +140,7 @@ export default class ChallengeModeDungeon extends Activity {
 
     if (lastSegment && lastSegment.length() < 10000) {
       console.debug(
-        "[ChallengeModeDungeon] Removing last timeline segment because it's too short."
+        "[ChallengeModeDungeon] Removing last timeline segment because it's too short.",
       );
       this.removeLastTimelineSegment();
     }
@@ -151,7 +151,7 @@ export default class ChallengeModeDungeon extends Activity {
 
   addTimelineSegment(
     segment: ChallengeModeTimelineSegment,
-    endPrevious?: Date
+    endPrevious?: Date,
   ) {
     if (endPrevious) {
       this.endCurrentTimelineSegment(endPrevious);
@@ -179,11 +179,11 @@ export default class ChallengeModeDungeon extends Activity {
 
   getMetadata(): Metadata {
     const rawCombatants = Array.from(this.combatantMap.values()).map(
-      (combatant: Combatant) => combatant.getRaw()
+      (combatant: Combatant) => combatant.getRaw(),
     );
 
     const rawSegments = this.timeline.map(
-      (segment: ChallengeModeTimelineSegment) => segment.getRaw()
+      (segment: ChallengeModeTimelineSegment) => segment.getRaw(),
     );
 
     return {

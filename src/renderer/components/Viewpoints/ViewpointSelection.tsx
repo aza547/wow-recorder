@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { Box } from '@mui/material';
 import { AppState, RawCombatant, RendererVideo } from 'main/types';
 import { X } from 'lucide-react';
@@ -67,7 +65,7 @@ export default function ViewpointSelection(props: IProps) {
     if (combatant._specID !== undefined) {
       const knownSpec = Object.prototype.hasOwnProperty.call(
         specializationById,
-        combatant._specID
+        combatant._specID,
       );
 
       if (knownSpec) {
@@ -76,7 +74,7 @@ export default function ViewpointSelection(props: IProps) {
     }
 
     const handleChangePov = (
-      event: React.MouseEvent<HTMLElement> | undefined
+      event: React.MouseEvent<HTMLElement> | undefined,
     ) => {
       if (event) {
         stopPropagation(event);

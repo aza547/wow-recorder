@@ -41,7 +41,7 @@ const PVPSettings = (props: IProps) => {
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
-    changeFn: (checked: boolean) => void
+    changeFn: (checked: boolean) => void,
   ) => (
     <Switch
       checked={Boolean(config[preference])}
@@ -53,7 +53,7 @@ const PVPSettings = (props: IProps) => {
   const getSwitchForm = (
     preference: keyof ConfigurationSchema,
     label: Phrase,
-    changeFn: (checked: boolean) => void
+    changeFn: (checked: boolean) => void,
   ) => {
     return (
       <div className="flex flex-col w-[140px]">
@@ -129,17 +129,17 @@ const PVPSettings = (props: IProps) => {
       {getSwitchForm(
         'recordSkirmish',
         Phrase.RecordSkirmishLabel,
-        setRecordSkirmish
+        setRecordSkirmish,
       )}
       {getSwitchForm(
         'recordSoloShuffle',
         Phrase.RecordSoloShuffleLabel,
-        setRecordSolo
+        setRecordSolo,
       )}
       {getSwitchForm(
         'recordBattlegrounds',
         Phrase.RecordBattlegroundsLabel,
-        setRecordBgs
+        setRecordBgs,
       )}
     </div>
   );

@@ -35,7 +35,7 @@ export default class RetailLogHandler extends LogHandler {
     mainWindow: BrowserWindow,
     recorder: Recorder,
     videoProcessQueue: VideoProcessQueue,
-    logPath: string
+    logPath: string,
   ) {
     super(mainWindow, recorder, videoProcessQueue, logPath, 10);
 
@@ -82,7 +82,7 @@ export default class RetailLogHandler extends LogHandler {
     // events to keep track of the rounds.
     if (this.activity && this.activity.category !== VideoCategory.SoloShuffle) {
       console.error(
-        '[RetailLogHandler] Another activity in progress and not a Solo Shuffle'
+        '[RetailLogHandler] Another activity in progress and not a Solo Shuffle',
       );
       return;
     }
@@ -107,7 +107,7 @@ export default class RetailLogHandler extends LogHandler {
     } else {
       console.error(
         '[RetailLogHandler] Unrecognised arena category:',
-        arenaType
+        arenaType,
       );
       return;
     }
@@ -118,7 +118,7 @@ export default class RetailLogHandler extends LogHandler {
       await this.startActivity(activity);
     } else if (this.activity && category === VideoCategory.SoloShuffle) {
       console.info(
-        '[RetailLogHandler] New round of existing Solo Shuffle starting'
+        '[RetailLogHandler] New round of existing Solo Shuffle starting',
       );
       const soloShuffle = this.activity as SoloShuffle;
       soloShuffle.startRound(startTime);
@@ -130,7 +130,7 @@ export default class RetailLogHandler extends LogHandler {
         category,
         zoneID,
         Flavour.Retail,
-        this.cfg
+        this.cfg,
       );
 
       await this.startActivity(activity);
@@ -161,7 +161,7 @@ export default class RetailLogHandler extends LogHandler {
   private async handleChallengeModeStartLine(line: LogLine) {
     console.debug(
       '[RetailLogHandler] Handling CHALLENGE_MODE_START line:',
-      line
+      line,
     );
 
     if (this.activity && this.activity.category === VideoCategory.MythicPlus) {
@@ -176,7 +176,7 @@ export default class RetailLogHandler extends LogHandler {
 
     const unknownMap = !Object.prototype.hasOwnProperty.call(
       dungeonsByMapId,
-      mapID
+      mapID,
     );
 
     if (unknownMap) {
@@ -186,7 +186,7 @@ export default class RetailLogHandler extends LogHandler {
 
     const unknownTimer = !Object.prototype.hasOwnProperty.call(
       dungeonTimersByMapId,
-      mapID
+      mapID,
     );
 
     if (unknownTimer) {
@@ -210,13 +210,13 @@ export default class RetailLogHandler extends LogHandler {
       mapID,
       level,
       affixes,
-      this.cfg
+      this.cfg,
     );
 
     const initialSegment = new ChallengeModeTimelineSegment(
       TimelineSegmentType.Trash,
       activity.startDate,
-      0
+      0,
     );
 
     activity.addTimelineSegment(initialSegment);
@@ -228,7 +228,7 @@ export default class RetailLogHandler extends LogHandler {
 
     if (!this.activity) {
       console.error(
-        '[RetailLogHandler] Challenge mode stop with no active ChallengeModeDungeon'
+        '[RetailLogHandler] Challenge mode stop with no active ChallengeModeDungeon',
       );
       return;
     }
@@ -259,7 +259,7 @@ export default class RetailLogHandler extends LogHandler {
     if (!this.activity) {
       const knownDungeonEncounter = Object.prototype.hasOwnProperty.call(
         dungeonEncounters,
-        encounterID
+        encounterID,
       );
 
       if (knownDungeonEncounter) {
@@ -267,7 +267,7 @@ export default class RetailLogHandler extends LogHandler {
         //   - It's a regular dungeon, we don't record those
         //   - It's a M+ below the recording threshold
         console.info(
-          '[RetailLogHandler] Known dungeon encounter and not in M+, not recording'
+          '[RetailLogHandler] Known dungeon encounter and not in M+, not recording',
         );
 
         return;
@@ -288,7 +288,7 @@ export default class RetailLogHandler extends LogHandler {
         console.info(
           '[RetailLogHandler] Not recording as threshold not met by',
           actualIndex,
-          configuredIndex
+          configuredIndex,
         );
         return;
       }
@@ -302,7 +302,7 @@ export default class RetailLogHandler extends LogHandler {
 
     if (!isChallengeMode) {
       console.error(
-        '[RetailLogHandler] Encounter is already in progress and not a ChallengeMode'
+        '[RetailLogHandler] Encounter is already in progress and not a ChallengeMode',
       );
       return;
     }
@@ -314,12 +314,12 @@ export default class RetailLogHandler extends LogHandler {
       TimelineSegmentType.BossEncounter,
       eventDate,
       this.getRelativeTimestampForTimelineSegment(eventDate),
-      encounterID
+      encounterID,
     );
 
     activeChallengeMode.addTimelineSegment(segment, eventDate);
     console.debug(
-      `[RetailLogHandler] Starting new boss encounter: ${dungeonEncounters[encounterID]}`
+      `[RetailLogHandler] Starting new boss encounter: ${dungeonEncounters[encounterID]}`,
     );
   }
 
@@ -328,7 +328,7 @@ export default class RetailLogHandler extends LogHandler {
 
     if (!this.activity) {
       console.error(
-        '[RetailLogHandler] Encounter end event spotted but not in activity'
+        '[RetailLogHandler] Encounter end event spotted but not in activity',
       );
 
       return;
@@ -339,7 +339,7 @@ export default class RetailLogHandler extends LogHandler {
 
     if (!isChallengeMode) {
       console.debug(
-        '[RetailLogHandler] Must be raid encounter, calling super method.'
+        '[RetailLogHandler] Must be raid encounter, calling super method.',
       );
       await super.handleEncounterEndLine(line);
     } else {
@@ -357,13 +357,13 @@ export default class RetailLogHandler extends LogHandler {
       const segment = new ChallengeModeTimelineSegment(
         TimelineSegmentType.Trash,
         eventDate,
-        this.getRelativeTimestampForTimelineSegment(eventDate)
+        this.getRelativeTimestampForTimelineSegment(eventDate),
       );
 
       // Add a trash segment as the boss encounter ended
       activeChallengeMode.addTimelineSegment(segment, eventDate);
       console.debug(
-        `[RetailLogHandler] Ending boss encounter: ${dungeonEncounters[encounterID]}`
+        `[RetailLogHandler] Ending boss encounter: ${dungeonEncounters[encounterID]}`,
       );
     }
   }
@@ -374,7 +374,7 @@ export default class RetailLogHandler extends LogHandler {
 
     const isZoneBG = Object.prototype.hasOwnProperty.call(
       retailBattlegrounds,
-      zoneID
+      zoneID,
     );
 
     if (this.activity) {
@@ -390,24 +390,24 @@ export default class RetailLogHandler extends LogHandler {
       } else if (isActivityArena) {
         if (zoneID === this.activity.zoneID) {
           console.info(
-            '[RetailLogHandler] ZONE_CHANGE within arena, no action taken'
+            '[RetailLogHandler] ZONE_CHANGE within arena, no action taken',
           );
         } else {
           console.info(
-            '[RetailLogHandler] ZONE_CHANGE out of arena, ending match'
+            '[RetailLogHandler] ZONE_CHANGE out of arena, ending match',
           );
           await this.zoneChangeStop(line);
         }
       } else if (isZoneBG && !isActivityBG) {
         console.error(
-          '[RetailLogHandler] Zoned into BG but in a different activity'
+          '[RetailLogHandler] Zoned into BG but in a different activity',
         );
 
         await this.forceEndActivity();
       } else {
         console.info(
           '[RetailLogHandler] Unknown zone change, no action taken: ',
-          zoneID
+          zoneID,
         );
       }
     } else if (isZoneBG) {
@@ -421,7 +421,7 @@ export default class RetailLogHandler extends LogHandler {
   private handleCombatantInfoLine(line: LogLine): void {
     if (!this.activity) {
       console.error(
-        '[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO'
+        '[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO',
       );
       return;
     }
@@ -443,7 +443,7 @@ export default class RetailLogHandler extends LogHandler {
       '[RetailLogHandler] Adding combatant from COMBATANT_INFO',
       GUID,
       teamID,
-      specID
+      specID,
     );
 
     const newCombatant = new Combatant(GUID, teamID, specID);
@@ -464,7 +464,7 @@ export default class RetailLogHandler extends LogHandler {
       srcGUID,
       srcNameRealm,
       srcFlags,
-      this.isBattleground()
+      this.isBattleground(),
     );
   }
 
@@ -481,7 +481,7 @@ export default class RetailLogHandler extends LogHandler {
       srcGUID,
       srcNameRealm,
       srcFlags,
-      this.isBattleground()
+      this.isBattleground(),
     );
 
     if (
@@ -500,7 +500,7 @@ export default class RetailLogHandler extends LogHandler {
 
     const knownSpell = Object.prototype.hasOwnProperty.call(
       retailUniqueSpecSpells,
-      spellName
+      spellName,
     );
 
     if (knownSpell) {
@@ -511,7 +511,7 @@ export default class RetailLogHandler extends LogHandler {
   private getRelativeTimestampForTimelineSegment(eventDate: Date) {
     if (!this.activity) {
       console.error(
-        '[RetailLogHandler] getRelativeTimestampForTimelineSegment called but no active activity'
+        '[RetailLogHandler] getRelativeTimestampForTimelineSegment called but no active activity',
       );
 
       return 0;
@@ -526,7 +526,7 @@ export default class RetailLogHandler extends LogHandler {
   private async battlegroundStart(line: LogLine) {
     if (this.activity) {
       console.error(
-        "[RetailLogHandler] Another activity in progress, can't start battleground"
+        "[RetailLogHandler] Another activity in progress, can't start battleground",
       );
       return;
     }
@@ -540,7 +540,7 @@ export default class RetailLogHandler extends LogHandler {
       category,
       zoneID,
       Flavour.Retail,
-      this.cfg
+      this.cfg,
     );
 
     await this.startActivity(activity);
@@ -549,7 +549,7 @@ export default class RetailLogHandler extends LogHandler {
   private async battlegroundEnd(line: LogLine) {
     if (!this.activity) {
       console.error(
-        "[RetailLogHandler] Can't stop battleground as no active activity"
+        "[RetailLogHandler] Can't stop battleground as no active activity",
       );
       return;
     }

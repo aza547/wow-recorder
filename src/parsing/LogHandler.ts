@@ -58,7 +58,7 @@ export default abstract class LogHandler extends EventEmitter {
     recorder: Recorder,
     videoProcessQueue: VideoProcessQueue,
     logPath: string,
-    dataTimeout: number
+    dataTimeout: number,
   ) {
     super();
 
@@ -90,7 +90,7 @@ export default abstract class LogHandler extends EventEmitter {
 
     const isRecognisedDifficulty = Object.prototype.hasOwnProperty.call(
       instanceDifficulty,
-      difficultyID
+      difficultyID,
     );
 
     if (!isRecognisedDifficulty) {
@@ -111,7 +111,7 @@ export default abstract class LogHandler extends EventEmitter {
       encounterName,
       difficultyID,
       flavour,
-      this.cfg
+      this.cfg,
     );
 
     await this.startActivity(activity);
@@ -192,7 +192,7 @@ export default abstract class LogHandler extends EventEmitter {
     }
 
     console.info(
-      `[LogHandler] Start recording a video for category: ${category}`
+      `[LogHandler] Start recording a video for category: ${category}`,
     );
 
     try {
@@ -216,7 +216,7 @@ export default abstract class LogHandler extends EventEmitter {
     }
 
     console.info(
-      `[LogHandler] Ending recording video for category: ${this.activity.category}`
+      `[LogHandler] Ending recording video for category: ${this.activity.category}`,
     );
 
     // It's important we clear the activity before we call stop as stop will
@@ -244,7 +244,7 @@ export default abstract class LogHandler extends EventEmitter {
       videoFile = this.recorder.lastFile;
       this.poller.start();
     } catch (error) {
-      console.error('[LogHandler] Failed to stop OBS, discarding video');
+      console.error('[LogHandler] Failed to stop OBS, discarding video', error);
       return;
     }
 
@@ -282,7 +282,7 @@ export default abstract class LogHandler extends EventEmitter {
       // where we don't have long enough to get a GUID for the player.
       console.warn(
         '[LogHandler] Discarding video as failed to get Metadata:',
-        String(error)
+        String(error),
       );
     }
   }
@@ -291,7 +291,7 @@ export default abstract class LogHandler extends EventEmitter {
     console.info(
       `[LogHandler] Haven't received data for combatlog in ${
         ms / 1000
-      } seconds.`
+      } seconds.`,
     );
 
     if (this.activity) {
@@ -356,7 +356,7 @@ export default abstract class LogHandler extends EventEmitter {
     srcGUID: string,
     srcNameRealm: string,
     srcFlags: number,
-    allowNew: boolean
+    allowNew: boolean,
   ) {
     let combatant: Combatant | undefined;
 

@@ -1,4 +1,3 @@
-/* eslint global-require: off, no-console: off, promise/always-return: off */
 import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
@@ -95,7 +94,7 @@ export const getFileInfo = async (pathSpec: string): Promise<FileInfo> => {
 const getSortedFiles = async (
   dir: string,
   pattern: string,
-  sortDirection: FileSortDirection = FileSortDirection.NewestFirst
+  sortDirection: FileSortDirection = FileSortDirection.NewestFirst,
 ): Promise<FileInfo[]> => {
   // We use fs.promises.readdir here instead of glob, which we used to
   // use but it caused problems with NFS paths, see this issue:
@@ -113,7 +112,7 @@ const getSortedFiles = async (
     // suspect something in getFileInfo isn't as async as it could be.
     // If that can be solved, then we can drop the await here and then
     // do an await Promises.all() on the following line.
-    // eslint-disable-next-line no-await-in-loop
+
     mappedFileInfo.push(await getFileInfo(files[i]));
   }
 
@@ -129,7 +128,7 @@ const getSortedFiles = async (
  */
 const getSortedVideos = async (
   storageDir: string,
-  sortDirection: FileSortDirection = FileSortDirection.NewestFirst
+  sortDirection: FileSortDirection = FileSortDirection.NewestFirst,
 ): Promise<FileInfo[]> => {
   return getSortedFiles(storageDir, '.*\\.mp4', sortDirection);
 };
@@ -150,7 +149,7 @@ const getMetadataFileNameForVideo = (video: string) => {
  * purely to bridge the gap, and in theory could be removed in the future.
  */
 const convertKoreanVideoCategory = (
-  metadata: Metadata | CloudSignedMetadata
+  metadata: Metadata | CloudSignedMetadata,
 ) => {
   const raw = metadata as any;
 
@@ -243,7 +242,7 @@ const delayedDeleteVideo = (video: RendererVideo) => {
  * Load video details from the metadata and add it to videoState.
  */
 const loadVideoDetailsDisk = async (
-  video: FileInfo
+  video: FileInfo,
 ): Promise<RendererVideo> => {
   try {
     const metadata = await getMetadataForVideo(video.name);
@@ -269,7 +268,7 @@ const loadVideoDetailsDisk = async (
 };
 
 const loadAllVideosDisk = async (
-  storageDir: string
+  storageDir: string,
 ): Promise<RendererVideo[]> => {
   if (!storageDir) {
     return [];
@@ -282,7 +281,7 @@ const loadAllVideosDisk = async (
   }
 
   const videoDetailPromises = videos.map((video) =>
-    loadVideoDetailsDisk(video)
+    loadVideoDetailsDisk(video),
   );
 
   // Await all the videoDetailsPromises to settle, and then remove any
@@ -335,7 +334,8 @@ const toggleVideoProtectedDisk = async (videoPath: string) => {
     metadata = await getMetadataForVideo(videoPath);
   } catch (err) {
     console.error(
-      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`
+      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
+      err,
     );
 
     return;
@@ -348,7 +348,7 @@ const toggleVideoProtectedDisk = async (videoPath: string) => {
     metadata.protected = !metadata.protected;
 
     console.info(
-      `[Util] User toggled protection on ${videoPath}, now ${metadata.protected}`
+      `[Util] User toggled protection on ${videoPath}, now ${metadata.protected}`,
     );
   }
 
@@ -365,7 +365,8 @@ const tagVideoDisk = async (videoPath: string, tag: string) => {
     metadata = await getMetadataForVideo(videoPath);
   } catch (err) {
     console.error(
-      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`
+      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
+      err,
     );
 
     return;
@@ -475,7 +476,7 @@ const checkAppUpdate = (mainWindow: BrowserWindow | null = null) => {
     response.on('end', () => {
       if (response.statusCode !== 200) {
         console.error(
-          `[Main] Failed to check for updates, status code: ${response.statusCode}`
+          `[Main] Failed to check for updates, status code: ${response.statusCode}`,
         );
         return;
       }
@@ -525,7 +526,7 @@ const getAssetPath = (...paths: string[]): string => {
  */
 const getWowFlavour = (pathSpec: string): string => {
   const flavourInfoFile = path.normalize(
-    path.join(pathSpec, '../.flavor.info')
+    path.join(pathSpec, '../.flavor.info'),
   );
 
   // If this file doesn't exist, it's not a subdirectory of a WoW flavour.
@@ -549,7 +550,7 @@ const addCrashToUI = (mainWindow: BrowserWindow, crashData: CrashData) => {
 
 const isPushToTalkHotkey = (
   config: ObsAudioConfig,
-  event: PTTKeyPressEvent
+  event: PTTKeyPressEvent,
 ) => {
   const { keyCode, mouseButton, altKey, ctrlKey, shiftKey, metaKey } = event;
   const { pushToTalkKey, pushToTalkMouseButton, pushToTalkModifiers } = config;
@@ -583,7 +584,7 @@ const isPushToTalkHotkey = (
 
 const convertUioHookKeyPressEvent = (
   event: UiohookKeyboardEvent,
-  type: PTTEventType
+  type: PTTEventType,
 ): PTTKeyPressEvent => {
   return {
     altKey: event.altKey,
@@ -598,7 +599,7 @@ const convertUioHookKeyPressEvent = (
 
 const convertUioHookMousePressEvent = (
   event: UiohookMouseEvent,
-  type: PTTEventType
+  type: PTTEventType,
 ): PTTKeyPressEvent => {
   return {
     altKey: event.altKey,
@@ -612,33 +613,33 @@ const convertUioHookMousePressEvent = (
 };
 
 const convertUioHookEvent = (
-  event: UiohookKeyboardEvent | UiohookMouseEvent
+  event: UiohookKeyboardEvent | UiohookMouseEvent,
 ): PTTKeyPressEvent => {
   if (event.type === EventType.EVENT_KEY_PRESSED) {
     return convertUioHookKeyPressEvent(
       event as UiohookKeyboardEvent,
-      PTTEventType.EVENT_MOUSE_PRESSED
+      PTTEventType.EVENT_MOUSE_PRESSED,
     );
   }
 
   if (event.type === EventType.EVENT_KEY_RELEASED) {
     return convertUioHookKeyPressEvent(
       event as UiohookKeyboardEvent,
-      PTTEventType.EVENT_KEY_RELEASED
+      PTTEventType.EVENT_KEY_RELEASED,
     );
   }
 
   if (event.type === EventType.EVENT_MOUSE_PRESSED) {
     return convertUioHookMousePressEvent(
       event as UiohookMouseEvent,
-      PTTEventType.EVENT_MOUSE_PRESSED
+      PTTEventType.EVENT_MOUSE_PRESSED,
     );
   }
 
   if (event.type === EventType.EVENT_MOUSE_RELEASED) {
     return convertUioHookMousePressEvent(
       event as UiohookMouseEvent,
-      PTTEventType.EVENT_MOUSE_RELEASED
+      PTTEventType.EVENT_MOUSE_RELEASED,
     );
   }
 
@@ -778,7 +779,7 @@ const markForVideoForDelete = async (videoPath: string) => {
     console.error(
       '[Util] Failed to mark a video for deletion',
       videoPath,
-      String(error)
+      String(error),
     );
   }
 };
@@ -885,7 +886,7 @@ const takeOwnershipStorageDir = async (dir: string) => {
       unexpected.length,
       'unexpected files in storage dir',
       dir,
-      unexpected
+      unexpected,
     );
 
     throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
@@ -939,7 +940,7 @@ const takeOwnershipBufferDir = async (dir: string) => {
       unexpected.length,
       'unexpected files in buffer dir',
       dir,
-      unexpected
+      unexpected,
     );
 
     throw new Error(`Can not take ownership of ${dir}. ${helptext}`);

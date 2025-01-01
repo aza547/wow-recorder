@@ -1,4 +1,3 @@
-/* eslint-disable react/require-default-props */
 import { ShieldAlert } from 'lucide-react';
 import { PropsWithChildren } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -20,7 +19,7 @@ const textBannerVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  }
+  },
 );
 
 const TextBanner = ({

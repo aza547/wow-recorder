@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
@@ -190,7 +188,7 @@ const VideoSelectionTable = (props: IProps) => {
     const cells = row.getVisibleCells();
     const povs = [row.original, ...row.original.multiPov];
     const selected = Boolean(
-      povs.find((p) => p.videoName === playingVideo?.videoName)
+      povs.find((p) => p.videoName === playingVideo?.videoName),
     );
 
     const borderClass = selected ? 'border border-t-0' : 'border';
@@ -237,7 +235,7 @@ const VideoSelectionTable = (props: IProps) => {
   const renderRow = (row: Row<RendererVideo>) => {
     const povs = [row.original, ...row.original.multiPov];
     const selected = Boolean(
-      povs.find((p) => p.videoName === playingVideo?.videoName)
+      povs.find((p) => p.videoName === playingVideo?.videoName),
     );
 
     return (

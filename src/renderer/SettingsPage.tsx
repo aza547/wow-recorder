@@ -40,7 +40,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
           <TabsTrigger value="application">
             {getLocalePhrase(
               appState.language,
-              Phrase.SettingsPageApplicationHeader
+              Phrase.SettingsPageApplicationHeader,
             )}
           </TabsTrigger>
           <TabsTrigger value="game">
@@ -60,7 +60,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <CategoryHeading>
                   {getLocalePhrase(
                     appState.language,
-                    Phrase.GeneralSettingsLabel
+                    Phrase.GeneralSettingsLabel,
                   )}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
@@ -73,7 +73,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <CategoryHeading>
                   {getLocalePhrase(
                     appState.language,
-                    Phrase.WindowsSettingsLabel
+                    Phrase.WindowsSettingsLabel,
                   )}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
@@ -83,7 +83,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <CategoryHeading>
                   {getLocalePhrase(
                     appState.language,
-                    Phrase.LocaleSettingsLabel
+                    Phrase.LocaleSettingsLabel,
                   )}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
@@ -133,7 +133,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <CategoryHeading>
                   {getLocalePhrase(
                     appState.language,
-                    Phrase.CloudSettingsLabel
+                    Phrase.CloudSettingsLabel,
                   )}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />

@@ -48,9 +48,8 @@ export const enum EOBSInputTypes {
 }
 
 export const ESourceFlags = {
-  // eslint-disable-next-line no-bitwise
   Unbuffered: 1 << 0,
-  // eslint-disable-next-line no-bitwise
+
   ForceMono: 1 << 1,
 };
 

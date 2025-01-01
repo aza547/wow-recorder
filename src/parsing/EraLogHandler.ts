@@ -17,7 +17,7 @@ export default class EraLogHandler extends LogHandler {
     mainWindow: BrowserWindow,
     recorder: Recorder,
     videoProcessQueue: VideoProcessQueue,
-    logPath: string
+    logPath: string,
   ) {
     super(mainWindow, recorder, videoProcessQueue, logPath, 2);
 
@@ -50,7 +50,7 @@ export default class EraLogHandler extends LogHandler {
   private handleCombatantInfoLine(line: LogLine): void {
     if (!this.activity) {
       console.warn(
-        '[EraLogHandler] No activity in progress, ignoring COMBATANT_INFO'
+        '[EraLogHandler] No activity in progress, ignoring COMBATANT_INFO',
       );
       return;
     }
@@ -69,7 +69,7 @@ export default class EraLogHandler extends LogHandler {
       '[EraLogHandler] Adding combatant from COMBATANT_INFO',
       GUID,
       teamID,
-      specID
+      specID,
     );
 
     const newCombatant = new Combatant(GUID, teamID, specID);
@@ -108,7 +108,7 @@ export default class EraLogHandler extends LogHandler {
     if (!combatant.specID) {
       const knownSpell = Object.prototype.hasOwnProperty.call(
         classicUniqueSpecSpells,
-        spellName
+        spellName,
       );
 
       if (knownSpell) {
@@ -120,7 +120,7 @@ export default class EraLogHandler extends LogHandler {
   protected processEraCombatant(
     srcGUID: string,
     srcNameRealm: string,
-    srcFlags: number
+    srcFlags: number,
   ) {
     if (!this.activity) {
       return undefined;
@@ -130,7 +130,7 @@ export default class EraLogHandler extends LogHandler {
       srcGUID,
       srcNameRealm,
       srcFlags,
-      false
+      false,
     );
 
     if (combatant === undefined) {

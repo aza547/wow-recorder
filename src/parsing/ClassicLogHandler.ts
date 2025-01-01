@@ -24,7 +24,7 @@ export default class ClassicLogHandler extends LogHandler {
     mainWindow: BrowserWindow,
     recorder: Recorder,
     videoProcessQueue: VideoProcessQueue,
-    logPath: string
+    logPath: string,
   ) {
     super(mainWindow, recorder, videoProcessQueue, logPath, 2);
 
@@ -76,7 +76,7 @@ export default class ClassicLogHandler extends LogHandler {
       srcFlags,
       destGUID,
       destNameRealm,
-      destFlags
+      destFlags,
     );
 
     if (combatant === undefined) {
@@ -96,7 +96,7 @@ export default class ClassicLogHandler extends LogHandler {
         const newStartDate = line.date();
         console.info(
           '[ClassicLogHandler] Adjusting game start date:',
-          newStartDate
+          newStartDate,
         );
         this.activity.startDate = newStartDate;
       }
@@ -105,7 +105,7 @@ export default class ClassicLogHandler extends LogHandler {
     if (combatant.specID === undefined) {
       const knownSpell = Object.prototype.hasOwnProperty.call(
         classicUniqueSpecAuras,
-        spellName
+        spellName,
       );
 
       if (knownSpell) {
@@ -121,12 +121,12 @@ export default class ClassicLogHandler extends LogHandler {
 
     const isZoneArena = Object.prototype.hasOwnProperty.call(
       classicArenas,
-      zoneID
+      zoneID,
     );
 
     const isZoneBG = Object.prototype.hasOwnProperty.call(
       classicBattlegrounds,
-      zoneID
+      zoneID,
     );
 
     if (this.activity) {
@@ -197,7 +197,7 @@ export default class ClassicLogHandler extends LogHandler {
       srcFlags,
       destGUID,
       destNameRealm,
-      destFlags
+      destFlags,
     );
 
     if (combatant === undefined) {
@@ -208,7 +208,7 @@ export default class ClassicLogHandler extends LogHandler {
     if (combatant.specID === undefined) {
       const knownSpell = Object.prototype.hasOwnProperty.call(
         classicUniqueSpecSpells,
-        spellName
+        spellName,
       );
 
       if (knownSpell) {
@@ -220,7 +220,7 @@ export default class ClassicLogHandler extends LogHandler {
   private async startArena(startDate: Date, zoneID: number) {
     if (this.activity) {
       console.error(
-        "[ClassicLogHandler] Another activity in progress, can't start arena"
+        "[ClassicLogHandler] Another activity in progress, can't start arena",
       );
       return;
     }
@@ -233,7 +233,7 @@ export default class ClassicLogHandler extends LogHandler {
       category,
       zoneID,
       Flavour.Classic,
-      this.cfg
+      this.cfg,
     );
 
     await this.startActivity(activity);
@@ -242,7 +242,7 @@ export default class ClassicLogHandler extends LogHandler {
   private async endArena(endDate: Date) {
     if (!this.activity) {
       console.error(
-        '[ClassicLogHandler] Arena stop with no active arena match'
+        '[ClassicLogHandler] Arena stop with no active arena match',
       );
       return;
     }
@@ -255,7 +255,7 @@ export default class ClassicLogHandler extends LogHandler {
     const combatantMapSize = arenaMatch.combatantMap.size;
     console.info(
       '[ClassicLogHandler] Number of combatants found: ',
-      combatantMapSize
+      combatantMapSize,
     );
 
     if (combatantMapSize < 5) {
@@ -296,7 +296,7 @@ export default class ClassicLogHandler extends LogHandler {
     srcFlags: number,
     destGUID: string,
     destNameRealm: string,
-    destFlags: number
+    destFlags: number,
   ) {
     if (!this.activity) {
       return undefined;
@@ -345,7 +345,7 @@ export default class ClassicLogHandler extends LogHandler {
       srcGUID,
       srcNameRealm,
       srcFlags,
-      true
+      true,
     );
 
     if (combatant === undefined) {
@@ -384,7 +384,7 @@ export default class ClassicLogHandler extends LogHandler {
 
     if (aliveFriends < 1) {
       console.info(
-        '[ClassicLogHandler] No friendly players left so ending game.'
+        '[ClassicLogHandler] No friendly players left so ending game.',
       );
       this.endArena(deathDate);
       return;
@@ -402,7 +402,7 @@ export default class ClassicLogHandler extends LogHandler {
   private async battlegroundStart(line: LogLine) {
     if (this.activity) {
       console.error(
-        "[ClassicLogHandler] Another activity in progress, can't start battleground"
+        "[ClassicLogHandler] Another activity in progress, can't start battleground",
       );
       return;
     }
@@ -416,7 +416,7 @@ export default class ClassicLogHandler extends LogHandler {
       category,
       zoneID,
       Flavour.Classic,
-      this.cfg
+      this.cfg,
     );
 
     await this.startActivity(activity);
@@ -425,7 +425,7 @@ export default class ClassicLogHandler extends LogHandler {
   private async battlegroundEnd(line: LogLine) {
     if (!this.activity) {
       console.error(
-        "[ClassicLogHandler] Can't stop battleground as no active activity"
+        "[ClassicLogHandler] Can't stop battleground as no active activity",
       );
       return;
     }

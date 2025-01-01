@@ -36,7 +36,7 @@ test('Basic Raid Encounter', () => {
     'Raszageth',
     16,
     Flavour.Retail,
-    cfg
+    cfg,
   );
 
   const testCombatants = getCombatants(20);
@@ -50,7 +50,7 @@ test('Basic Raid Encounter', () => {
 
   expect(raidEncounter.duration).toBe(600);
   expect(raidEncounter.getFileName()).toBe(
-    'Vault of the Incarnates, Raszageth [M] (Kill)'
+    'Vault of the Incarnates, Raszageth [M] (Kill)',
   );
 
   expect(raidEncounter.difficulty).toStrictEqual({

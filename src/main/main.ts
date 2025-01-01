@@ -1,4 +1,3 @@
-/* eslint global-require: off, no-console: off, promise/always-return: off */
 import path from 'path';
 import {
   app,
@@ -36,7 +35,7 @@ console.info('[Main] App starting1, version:', appVersion);
 console.info('[Main] On OS:', os.platform(), os.release());
 console.info(
   '[Main] In timezone:',
-  Intl.DateTimeFormat().resolvedOptions().timeZone
+  Intl.DateTimeFormat().resolvedOptions().timeZone,
 );
 
 let mainWindow: BrowserWindow | null = null;
@@ -83,7 +82,7 @@ const installExtensions = async () => {
   return installer
     .default(
       extensions.map((name) => installer[name]),
-      forceDownload
+      forceDownload,
     )
     .catch(console.log);
 };
@@ -167,7 +166,7 @@ const createWindow = async () => {
     // This shows the correct version on a release build, not during development.
     mainWindow.webContents.send(
       'updateVersionDisplay',
-      `Warcraft Recorder v${appVersion}`
+      `Warcraft Recorder v${appVersion}`,
     );
 
     assert(manager);
@@ -389,7 +388,7 @@ app
 
     if (!singleInstanceLock) {
       console.warn(
-        '[Main] Blocked attempt to launch a second instance of the application'
+        '[Main] Blocked attempt to launch a second instance of the application',
       );
 
       app.quit();

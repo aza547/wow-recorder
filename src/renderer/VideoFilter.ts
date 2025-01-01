@@ -102,7 +102,7 @@ export default class VideoFilter {
     if (player._specID) {
       const isKnownSpec = Object.prototype.hasOwnProperty.call(
         specializationById,
-        player._specID
+        player._specID,
       );
 
       if (isKnownSpec) {
@@ -126,7 +126,7 @@ export default class VideoFilter {
       this.addStringFilter('favorited');
       this.addStringFilter('favourited');
       this.addStringFilter('북마크');
-      this.addStringFilter('lezezeichen')
+      this.addStringFilter('lezezeichen');
     }
   }
 
@@ -175,11 +175,11 @@ export default class VideoFilter {
     if (isToday) {
       this.addStringFilter('today');
       this.addStringFilter('오늘');
-      this.addStringFilter('heute')
+      this.addStringFilter('heute');
     } else if (isYesterday) {
       this.addStringFilter('yesterday');
       this.addStringFilter('어제');
-      this.addStringFilter('gestern')
+      this.addStringFilter('gestern');
     }
 
     if (this.video.flavour === Flavour.Retail) {
@@ -199,7 +199,7 @@ export default class VideoFilter {
 
         const isKnownSpec = Object.prototype.hasOwnProperty.call(
           specializationById,
-          combatant._specID
+          combatant._specID,
         );
 
         if (isKnownSpec) {
@@ -239,17 +239,17 @@ export default class VideoFilter {
     } else if (this.video.result) {
       this.addStringFilter('win');
       this.addStringFilter('승리');
-      this.addStringFilter('sieg')
+      this.addStringFilter('sieg');
     } else {
       this.addStringFilter('loss');
       this.addStringFilter('패배');
-      this.addStringFilter('niederlage')
+      this.addStringFilter('niederlage');
     }
 
     if (this.video.zoneID !== undefined) {
       const isKnownArena = Object.prototype.hasOwnProperty.call(
         retailArenas,
-        this.video.zoneID
+        this.video.zoneID,
       );
 
       if (isKnownArena) {
@@ -265,11 +265,11 @@ export default class VideoFilter {
     if (this.video.result) {
       this.addStringFilter('kill');
       this.addStringFilter('킬');
-      this.addStringFilter('sieg')
+      this.addStringFilter('sieg');
     } else {
       this.addStringFilter('wipe');
       this.addStringFilter('전멸');
-      this.addStringFilter('niederlage')
+      this.addStringFilter('niederlage');
     }
 
     if (this.video.zoneID !== undefined) {
@@ -283,7 +283,7 @@ export default class VideoFilter {
     if (this.video.encounterID !== undefined) {
       const knownEncounter = Object.prototype.hasOwnProperty.call(
         raidEncountersById,
-        this.video.encounterID
+        this.video.encounterID,
       );
 
       if (knownEncounter) {
@@ -298,18 +298,18 @@ export default class VideoFilter {
     if (this.video.difficultyID === 17) {
       this.addStringFilter('lfr looking for raid');
       this.addStringFilter('공찾');
-      this.addStringFilter('Raid Finder')
+      this.addStringFilter('Raid Finder');
     } else if (this.video.difficultyID === 14) {
       this.addStringFilter('normal');
       this.addStringFilter('일반');
     } else if (this.video.difficultyID === 15) {
       this.addStringFilter('heroic hc');
       this.addStringFilter('영웅');
-      this.addStringFilter('heroisch')
+      this.addStringFilter('heroisch');
     } else if (this.video.difficultyID === 16) {
       this.addStringFilter('mythic');
       this.addStringFilter('신화');
-      this.addStringFilter('mythisch')
+      this.addStringFilter('mythisch');
     }
   }
 
@@ -320,7 +320,7 @@ export default class VideoFilter {
     if (!this.video.result) {
       this.addStringFilter('abandoned');
       this.addStringFilter('탈주');
-      this.addStringFilter('abgebrochen')
+      this.addStringFilter('abgebrochen');
     } else if (
       this.video.upgradeLevel !== undefined &&
       this.video.upgradeLevel < 1
@@ -338,7 +338,7 @@ export default class VideoFilter {
     if (this.video.zoneID !== undefined) {
       const isKnownDungeon = Object.prototype.hasOwnProperty.call(
         dungeonsByZoneId,
-        this.video.zoneID
+        this.video.zoneID,
       );
 
       if (isKnownDungeon) {
@@ -368,17 +368,17 @@ export default class VideoFilter {
     if (this.video.result) {
       this.addStringFilter('win');
       this.addStringFilter('승리');
-      this.addStringFilter('sieg')
+      this.addStringFilter('sieg');
     } else {
       this.addStringFilter('loss');
       this.addStringFilter('패배');
-      this.addStringFilter('niederlage')
+      this.addStringFilter('niederlage');
     }
 
     if (this.video.zoneID !== undefined) {
       const isKnownBattleground = Object.prototype.hasOwnProperty.call(
         retailBattlegrounds,
-        this.video.zoneID
+        this.video.zoneID,
       );
 
       if (isKnownBattleground) {

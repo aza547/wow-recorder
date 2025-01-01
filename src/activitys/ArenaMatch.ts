@@ -16,7 +16,7 @@ export default class ArenaMatch extends Activity {
     category: VideoCategory,
     zoneID: number,
     flavour: Flavour,
-    cfg: IConfigService
+    cfg: IConfigService,
   ) {
     super(startDate, category, flavour, cfg);
     this._zoneID = zoneID;
@@ -61,7 +61,7 @@ export default class ArenaMatch extends Activity {
   determineArenaMatchResult(winningTeamID: number): boolean {
     if (!this.playerGUID) {
       console.error(
-        "[ArenaMatch] Haven't identified player so no results possible"
+        "[ArenaMatch] Haven't identified player so no results possible",
       );
       return false;
     }
@@ -78,7 +78,7 @@ export default class ArenaMatch extends Activity {
 
   getMetadata(): Metadata {
     const rawCombatants = Array.from(this.combatantMap.values()).map(
-      (combatant: Combatant) => combatant.getRaw()
+      (combatant: Combatant) => combatant.getRaw(),
     );
 
     return {

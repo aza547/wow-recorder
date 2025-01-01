@@ -14,11 +14,11 @@ let testRunning = false;
 
 const sendTestCombatLogLine = (
   watcher: CombatLogWatcher,
-  line: string
+  line: string,
 ): void => {
   console.debug(
     '[test] Sending test combat log line to the Combat Log Parser',
-    line
+    line,
   );
 
   watcher.handleLogLine(line);
@@ -31,7 +31,7 @@ const sendTestCombatLogLine = (
 const getAdjustedDate = (seconds = 0): string => {
   const now = new Date(new Date().getTime() + seconds * 1000);
   return `${now.getMonth() + 1}/${now.getDate()} ${now.toLocaleTimeString(
-    'en-GB'
+    'en-GB',
   )}.000`;
 };
 
@@ -42,13 +42,13 @@ const getAdjustedDate = (seconds = 0): string => {
 export const runRetailRecordingTest = (
   category: VideoCategory,
   watcher: CombatLogWatcher,
-  endTest = true
+  endTest = true,
 ) => {
   console.info('[test] User pressed the test button!');
 
   if (!endTest) {
     console.info(
-      '[test] The test will NOT end on its own and needs to be stopped manually.'
+      '[test] The test will NOT end on its own and needs to be stopped manually.',
     );
   }
 
@@ -113,13 +113,13 @@ export const runRetailRecordingTest = (
  */
 export const runClassicRecordingTest = (
   parser: CombatLogWatcher,
-  endTest = true
+  endTest = true,
 ) => {
   console.info('[test] User pressed the test button!');
 
   if (!endTest) {
     console.info(
-      '[test] The test will NOT end on its own and needs to be stopped manually.'
+      '[test] The test will NOT end on its own and needs to be stopped manually.',
     );
   }
 

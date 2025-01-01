@@ -1,6 +1,3 @@
-/* eslint-disable no-inner-declarations */
-/* eslint-disable react/require-default-props */
-/* eslint-disable react/prop-types */
 import * as React from 'react';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 
@@ -20,7 +17,7 @@ const ScrollBar = React.forwardRef<
         'h-full w-2 border-l border-l-transparent p-[1px]',
       orientation === 'horizontal' &&
         'h-2 flex-col border-t border-t-transparent p-[1px]',
-      className
+      className,
     )}
     {...props}
   >
@@ -46,14 +43,14 @@ const ScrollabilityIndicator = ({
       'w-full flex h-2 absolute left-0 items-center justify-center transition-all text-foreground-lighter',
       { 'bottom-0': direction === 'down' },
       { '-top-[-2px]': direction === 'up' },
-      scrollabilityIndicatorClasses
+      scrollabilityIndicatorClasses,
     )}
   >
     <div
       className={cn(
         'w-[90%] absolute bottom-0 left-1/2 -translate-x-1/2 shadow-[0_0_8px_3px_rgba(0,0,0,0.73)]',
         { 'bottom-0': direction === 'down' },
-        { 'bottom-[8px]': direction === 'up' }
+        { 'bottom-[8px]': direction === 'up' },
       )}
     />
     {direction === 'down' ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
@@ -142,7 +139,7 @@ const ScrollArea = React.forwardRef<
       scrollabilityIndicatorClasses = '',
       ...props
     },
-    ref
+    ref,
   ) => {
     const viewportRef = React.useRef<HTMLDivElement>();
     const [viewport, setViewport] = React.useState<HTMLDivElement>();
@@ -180,7 +177,7 @@ const ScrollArea = React.forwardRef<
         <ScrollAreaPrimitive.Corner />
       </ScrollAreaPrimitive.Root>
     );
-  }
+  },
 );
 ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;
 

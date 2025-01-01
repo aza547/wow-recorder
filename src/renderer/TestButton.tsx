@@ -36,7 +36,7 @@ const TestButton: React.FC<IProps> = (props: IProps) => {
 
   const runTest = (
     event: React.MouseEvent<HTMLButtonElement>,
-    category: VideoCategory
+    category: VideoCategory,
   ) => {
     // 'Click' will perform a normal test
     // 'Ctrl-Alt-Click' will initiate a test but won't finish it

@@ -140,7 +140,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateDetailsCell,
       },
     ],
-    [language, videoState]
+    [language, videoState],
   );
 
   /**
@@ -195,7 +195,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateDetailsCell,
       },
     ],
-    [language]
+    [language],
   );
 
   /**
@@ -257,7 +257,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateDetailsCell,
       },
     ],
-    [language]
+    [language],
   );
 
   /**
@@ -312,7 +312,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateDetailsCell,
       },
     ],
-    [language]
+    [language],
   );
 
   /**
@@ -366,7 +366,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateDetailsCell,
       },
     ],
-    [language]
+    [language],
   );
 
   let columns;

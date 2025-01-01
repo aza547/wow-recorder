@@ -28,7 +28,7 @@ export default class RaidEncounter extends Activity {
     encounterName: string,
     difficultyID: number,
     flavour: Flavour,
-    cfg: IConfigService
+    cfg: IConfigService,
   ) {
     super(startDate, VideoCategory.Raids, flavour, cfg);
     this._difficultyID = difficultyID;
@@ -70,7 +70,7 @@ export default class RaidEncounter extends Activity {
 
   get raid(): RaidInstanceType {
     const raids = raidInstances.filter((raid) =>
-      Object.prototype.hasOwnProperty.call(raid.encounters, this.encounterID)
+      Object.prototype.hasOwnProperty.call(raid.encounters, this.encounterID),
     );
 
     const raid = raids.pop();
@@ -108,12 +108,12 @@ export default class RaidEncounter extends Activity {
   get difficulty() {
     const isRecognisedDifficulty = Object.prototype.hasOwnProperty.call(
       instanceDifficulty,
-      this.difficultyID
+      this.difficultyID,
     );
 
     if (!isRecognisedDifficulty) {
       throw new Error(
-        `[RaidEncounters] Unknown difficulty ID: ${this.difficultyID}`
+        `[RaidEncounters] Unknown difficulty ID: ${this.difficultyID}`,
       );
     }
 
@@ -122,7 +122,7 @@ export default class RaidEncounter extends Activity {
 
   getMetadata(): Metadata {
     const rawCombatants = Array.from(this.combatantMap.values()).map(
-      (combatant: Combatant) => combatant.getRaw()
+      (combatant: Combatant) => combatant.getRaw(),
     );
 
     return {
