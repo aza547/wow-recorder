@@ -88,10 +88,10 @@ const CategoryPage = (props: IProps) => {
 
     let deleteWarning = `${getLocalePhrase(
       appState.language,
-      Phrase.ThisWillPermanentlyDelete
+      Phrase.ThisWillPermanentlyDelete,
     )} ${unprot.length} ${getLocalePhrase(
       appState.language,
-      Phrase.RecordingsFullStop
+      Phrase.RecordingsFullStop,
     )}`;
 
     if (prot.length > 0) {
@@ -99,7 +99,7 @@ const CategoryPage = (props: IProps) => {
 
       deleteWarning += getLocalePhrase(
         appState.language,
-        Phrase.ThisSelectionIncludes
+        Phrase.ThisSelectionIncludes,
       );
 
       deleteWarning += ' ';
@@ -108,7 +108,7 @@ const CategoryPage = (props: IProps) => {
 
       deleteWarning += getLocalePhrase(
         appState.language,
-        Phrase.StarredRecordingNotDeleted
+        Phrase.StarredRecordingNotDeleted,
       );
     }
 
@@ -131,7 +131,7 @@ const CategoryPage = (props: IProps) => {
               onDelete={() => bulkDelete(unprot)}
               tooltipContent={getLocalePhrase(
                 appState.language,
-                Phrase.BulkDeleteButtonTooltip
+                Phrase.BulkDeleteButtonTooltip,
               )}
               warning={deleteWarning}
               skipPossible={false}

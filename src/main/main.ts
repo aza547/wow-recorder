@@ -198,7 +198,7 @@ const createWindow = async () => {
     mainWindow = null;
   });
 
-  await mainWindow.loadURL(resolveHtmlPath('mainWindow.index.html'));
+  await mainWindow.loadURL(resolveHtmlPath('index.html'));
   manager.refreshStatus();
   setupTray();
 

@@ -136,7 +136,7 @@ export const VideoPlayer = (props: IProps) => {
         };
       });
     },
-    [setAppState]
+    [setAppState],
   );
 
   /**
@@ -212,7 +212,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const markersToLinearGradient = (
     markers: VideoMarker[],
-    fillerColor: string
+    fillerColor: string,
   ) => {
     if (!progressSlider.current || duration === 0 || isClip(video)) {
       // Initial render shows a flash of the default color without this,
@@ -286,7 +286,7 @@ export const VideoPlayer = (props: IProps) => {
     // like: "rgba(0, 0, 0, 1) -> rgba(0, 0, 0, 0.4)"
     return markersToLinearGradient(activeMarkers, fillerColor).replace(
       /, 1\)/g,
-      ', 0.4)'
+      ', 0.4)',
     );
   };
 
@@ -366,7 +366,7 @@ export const VideoPlayer = (props: IProps) => {
   const handleProgressSliderChange = (
     _event: Event,
     value: number | number[],
-    index: number
+    index: number,
   ) => {
     if (!player.current) {
       return;
@@ -654,7 +654,7 @@ export const VideoPlayer = (props: IProps) => {
       <Tooltip
         content={getLocalePhrase(
           appState.language,
-          Phrase.PlaybackSpeedTooltip
+          Phrase.PlaybackSpeedTooltip,
         )}
       >
         <Button variant="ghost" size="xs" onClick={handleRateChange}>
@@ -818,7 +818,6 @@ export const VideoPlayer = (props: IProps) => {
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // This hook updates some state to force a re-render on window resize,

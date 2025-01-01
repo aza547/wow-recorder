@@ -52,8 +52,7 @@ import {
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
 import { getOverlayConfig } from '../utils/configUtils';
-
-const { v4: uuidfn } = require('uuid');
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Class for handing the interface between Warcraft Recorder and OBS.
@@ -94,7 +93,7 @@ export default class Recorder extends EventEmitter {
    * server. On a change of settings, we destroy the recorder object and
    * create a new one, with a different UUID.
    */
-  private uuid: string = uuidfn();
+  private uuid: string = uuidv4();
 
   /**
    * OBS IScene object.
@@ -153,7 +152,7 @@ export default class Recorder extends EventEmitter {
    * Timer object for checking the size of the game window and rescaling if
    * required.
    */
-  private videoSourceSizeInterval?: NodeJS.Timer;
+  private videoSourceSizeInterval?: NodeJS.Timeout;
 
   /**
    * Arbritrarily chosen channel numbers for video input. We only ever
@@ -312,17 +311,17 @@ export default class Recorder extends EventEmitter {
     // useful to always be able to access them even if we never enable the sources.
     this.windowCaptureSource = osn.InputFactory.create(
       'window_capture',
-      'WCR Window Capture'
+      'WCR Window Capture',
     );
 
     this.gameCaptureSource = osn.InputFactory.create(
       'game_capture',
-      'WCR Game Capture'
+      'WCR Game Capture',
     );
 
     this.monitorCaptureSource = osn.InputFactory.create(
       'monitor_capture',
-      'WCR Monitor Capture'
+      'WCR Monitor Capture',
     );
 
     // In theory having this created so early isn't required, but may as well
@@ -330,7 +329,7 @@ export default class Recorder extends EventEmitter {
     this.overlayImageSource = osn.InputFactory.create(
       'image_source',
       'WCR Chat Overlay',
-      { file: getAssetPath('poster', 'chat-cover.png') }
+      { file: getAssetPath('poster', 'chat-cover.png') },
     );
 
     // Connects the signal handler, we get feedback from OBS by way of
@@ -528,7 +527,7 @@ export default class Recorder extends EventEmitter {
     osn.NodeObs.OBS_content_moveDisplay(
       this.previewName,
       this.previewLocation.xPos,
-      this.previewLocation.yPos
+      this.previewLocation.yPos,
     );
   }
 
@@ -643,7 +642,7 @@ export default class Recorder extends EventEmitter {
         const obsSource = this.createOBSAudioSource(
           id,
           idx,
-          TAudioSourceType.input
+          TAudioSourceType.input,
         );
 
         const micFader = osn.FaderFactory.create(0);
@@ -655,7 +654,7 @@ export default class Recorder extends EventEmitter {
           const filter = osn.FilterFactory.create(
             'noise_suppress_filter_v2',
             'filter',
-            { method: 'rnnoise', suppress_level: -30, intensity: 1 }
+            { method: 'rnnoise', suppress_level: -30, intensity: 1 },
           );
 
           obsSource.addFilter(filter);
@@ -667,12 +666,12 @@ export default class Recorder extends EventEmitter {
     if (this.audioInputDevices.length > this.audioInputChannels.length) {
       console.warn(
         '[Recorder] Too many audio input devices, configuring first',
-        this.audioInputChannels.length
+        this.audioInputChannels.length,
       );
 
       this.audioInputDevices = this.audioInputDevices.slice(
         0,
-        this.audioInputChannels.length
+        this.audioInputChannels.length,
       );
     }
 
@@ -704,7 +703,7 @@ export default class Recorder extends EventEmitter {
 
       const pttHandler = (
         fn: () => void,
-        event: UiohookKeyboardEvent | UiohookMouseEvent
+        event: UiohookKeyboardEvent | UiohookMouseEvent,
       ) => {
         const convertedEvent = convertUioHookEvent(event);
 
@@ -730,7 +729,7 @@ export default class Recorder extends EventEmitter {
         const obsSource = this.createOBSAudioSource(
           id,
           idx,
-          TAudioSourceType.output
+          TAudioSourceType.output,
         );
 
         const speakerFader = osn.FaderFactory.create(0);
@@ -743,12 +742,12 @@ export default class Recorder extends EventEmitter {
     if (this.audioOutputDevices.length > this.audioOutputChannels.length) {
       console.warn(
         '[Recorder] Too many audio output devices, configuring first',
-        this.audioOutputChannels.length
+        this.audioOutputChannels.length,
       );
 
       this.audioOutputDevices = this.audioOutputDevices.slice(
         0,
-        this.audioOutputChannels.length
+        this.audioOutputChannels.length,
       );
     }
 
@@ -880,7 +879,7 @@ export default class Recorder extends EventEmitter {
     const encoders = Recorder.getAvailableValues(
       'Output',
       'Recording',
-      'RecEncoder'
+      'RecEncoder',
     );
 
     console.info('[Recorder]', encoders);
@@ -896,13 +895,13 @@ export default class Recorder extends EventEmitter {
     width: number,
     height: number,
     xPos: number,
-    yPos: number
+    yPos: number,
   ) {
     if (!this.previewCreated) {
       osn.NodeObs.OBS_content_createSourcePreviewDisplay(
         this.mainWindow.getNativeWindowHandle(),
         this.scene.name,
-        this.previewName
+        this.previewName,
       );
 
       osn.NodeObs.OBS_content_resizeDisplay(this.previewName, 0, 0);
@@ -927,13 +926,13 @@ export default class Recorder extends EventEmitter {
     osn.NodeObs.OBS_content_resizeDisplay(
       this.previewName,
       width * scaleFactor,
-      height * scaleFactor
+      height * scaleFactor,
     );
 
     osn.NodeObs.OBS_content_moveDisplay(
       this.previewName,
       xPos * scaleFactor,
-      yPos * scaleFactor
+      yPos * scaleFactor,
     );
   }
 
@@ -1060,20 +1059,20 @@ export default class Recorder extends EventEmitter {
 
       osn.NodeObs.SetWorkingDirectory(
         fixPathWhenPackaged(
-          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node')
-        )
+          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node'),
+        ),
       );
 
       const initResult = osn.NodeObs.OBS_API_initAPI(
         'en-US',
         fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
         '1.0.0',
-        ''
+        '',
       );
 
       if (initResult !== 0) {
         throw new Error(
-          `OBS process initialization failed with code ${initResult}`
+          `OBS process initialization failed with code ${initResult}`,
         );
       }
     } catch (e) {
@@ -1311,7 +1310,7 @@ export default class Recorder extends EventEmitter {
     console.info(
       '[Recorder] Adding OBS audio source',
       obsInput.name,
-      obsInput.id
+      obsInput.id,
     );
 
     if (!this.obsInitialized) {
@@ -1336,7 +1335,7 @@ export default class Recorder extends EventEmitter {
     console.info(
       '[Recorder] Removing OBS audio source',
       source.name,
-      source.id
+      source.id,
     );
 
     osn.Global.setOutputSource(channel, null as unknown as ISource);
@@ -1349,7 +1348,7 @@ export default class Recorder extends EventEmitter {
   private createOBSAudioSource(
     id: string,
     idx: number,
-    type: TAudioSourceType
+    type: TAudioSourceType,
   ) {
     console.info('[Recorder] Creating OBS audio source', id, idx, type);
 
@@ -1488,7 +1487,7 @@ export default class Recorder extends EventEmitter {
   private static applySetting(
     category: string,
     parameter: string,
-    value: string | number
+    value: string | number,
   ) {
     console.info('[Recorder] Apply setting', category, parameter, value);
 
@@ -1515,13 +1514,13 @@ export default class Recorder extends EventEmitter {
   private static getAvailableValues(
     category: string,
     subcategory: string,
-    parameter: string
+    parameter: string,
   ) {
     console.info(
       '[Recorder] Get available values for',
       category,
       subcategory,
-      parameter
+      parameter,
     );
 
     const categorySettings =
@@ -1532,7 +1531,7 @@ export default class Recorder extends EventEmitter {
     }
 
     const subcategorySettings = categorySettings.find(
-      (sub: ISettingsSubCategory) => sub.nameSubCategory === subcategory
+      (sub: ISettingsSubCategory) => sub.nameSubCategory === subcategory,
     );
 
     if (!subcategorySettings) {
@@ -1540,17 +1539,17 @@ export default class Recorder extends EventEmitter {
     }
 
     const parameterSettings = subcategorySettings.parameters.find(
-      (param: IObsInput<TObsValue>) => param.name === parameter
+      (param: IObsInput<TObsValue>) => param.name === parameter,
     );
 
     if (!parameterSettings) {
       throw new Error(
-        `No parameter found: ${parameter} in ${category} -> ${subcategory}`
+        `No parameter found: ${parameter} in ${category} -> ${subcategory}`,
       );
     }
 
     return parameterSettings.values.map(
-      (value: TObsValue) => Object.values(value)[0]
+      (value: TObsValue) => Object.values(value)[0],
     );
   }
 
@@ -1558,7 +1557,7 @@ export default class Recorder extends EventEmitter {
    * Type guard for an OBS list property.
    */
   private static isObsListProperty(
-    property: osn.IProperty
+    property: osn.IProperty,
   ): property is osn.IListProperty {
     return property.type === 6;
   }

@@ -17,7 +17,10 @@ import {
   WoWCharacterClassType,
   WoWClassColor,
 } from 'main/constants';
-import { TimelineSegmentType } from 'main/keystone';
+import {
+  TimelineSegmentType,
+  RawChallengeModeTimelineSegment,
+} from 'main/keystone';
 import {
   MarkerColors,
   DeathMarkers,
@@ -25,7 +28,6 @@ import {
   EncoderType,
   IOBSDevice,
   PlayerDeathType,
-  RawChallengeModeTimelineSegment,
   RendererVideo,
   SoloShuffleTimelineSegment,
   VideoMarker,
@@ -128,7 +130,7 @@ const getAllDeathMarkers = (video: RendererVideo, language: Language) => {
       acc[timestamp].push(obj);
       return acc;
     },
-    {}
+    {},
   );
 
   const singleDeaths = Object.entries(groupedDeathsByTimestamp)
@@ -249,7 +251,7 @@ const getEncounterMarkers = (video: RendererVideo) => {
       const segmentStart = new Date(segment.logStart);
 
       const segmentDuration = Math.floor(
-        (segmentEnd.getTime() - segmentStart.getTime()) / 1000
+        (segmentEnd.getTime() - segmentStart.getTime()) / 1000,
       );
 
       let markerText = '';
@@ -264,7 +266,7 @@ const getEncounterMarkers = (video: RendererVideo) => {
         color: MarkerColors.ENCOUNTER,
         duration: segmentDuration,
       });
-    }
+    },
   );
 
   return videoMarkers;
@@ -283,7 +285,7 @@ const getInstanceDifficultyText = (video: RendererVideo, lang: Language) => {
 
   const knownDifficulty = Object.prototype.hasOwnProperty.call(
     instanceDifficulty,
-    difficultyID
+    difficultyID,
   );
 
   if (!knownDifficulty) {
@@ -302,7 +304,7 @@ const getInstanceDifficultyText = (video: RendererVideo, lang: Language) => {
 const getEncounterNameById = (encounterId: number): string => {
   const recognisedEncounter = Object.prototype.hasOwnProperty.call(
     instanceEncountersById,
-    encounterId
+    encounterId,
   );
 
   if (recognisedEncounter) {
@@ -455,7 +457,7 @@ const getPlayerSpecID = (video: RendererVideo) => {
 
   const knownSpec = Object.prototype.hasOwnProperty.call(
     specializationById,
-    player._specID
+    player._specID,
   );
 
   if (!knownSpec) {
@@ -572,7 +574,7 @@ const getVideoDate = (video: RendererVideo) => {
  */
 const getAudioDeviceDescription = (
   id: string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] }
+  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
 ) => {
   let result = 'Unknown';
 
@@ -599,7 +601,7 @@ const getAudioDeviceDescription = (
  */
 const isKnownAudioDevice = (
   id: string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] }
+  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
 ) => {
   if (getAudioDeviceDescription(id, availableAudioDevices) === 'Unknown') {
     return false;
@@ -617,7 +619,7 @@ const isKnownAudioDevice = (
  */
 const standardizeAudioDeviceNames = (
   deviceNames: string[] | string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] }
+  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
 ): string[] => {
   let normalizedDeviceNames: string[];
 
@@ -628,7 +630,7 @@ const standardizeAudioDeviceNames = (
   }
 
   return normalizedDeviceNames.filter((id) =>
-    isKnownAudioDevice(id, availableAudioDevices)
+    isKnownAudioDevice(id, availableAudioDevices),
   );
 };
 
@@ -711,7 +713,7 @@ const convertDeathMarkersToNum = (d: DeathMarkers) => {
 };
 
 const getPTTKeyPressEventFromConfig = (
-  config: ConfigurationSchema
+  config: ConfigurationSchema,
 ): PTTKeyPressEvent => {
   const ctrl = config.pushToTalkModifiers.includes('ctrl');
   const win = config.pushToTalkModifiers.includes('win');
@@ -793,7 +795,7 @@ const secToMmSs = (s: number) => {
  */
 const getVideoResultText = (
   video: RendererVideo,
-  language: Language
+  language: Language,
 ): string => {
   const {
     result,
@@ -858,7 +860,7 @@ const getVideoCategoryFilter = (category: VideoCategory) => {
 
 const getFirstInCategory = (
   videos: RendererVideo[],
-  category: VideoCategory
+  category: VideoCategory,
 ) => {
   return videos.find((video) => video.category === category);
 };
@@ -926,7 +928,7 @@ const toFixedDigits = (n: number, d: number) =>
 
 const getPullNumber = (
   video: RendererVideo,
-  raidCategoryState: RendererVideo[]
+  raidCategoryState: RendererVideo[],
 ) => {
   const videoDate = video.start ? new Date(video.start) : new Date(video.mtime);
 
@@ -951,7 +953,7 @@ const getPullNumber = (
     const withinThreshold = areDatesWithinSeconds(
       videoDate,
       neighbourDate,
-      3600 * 6
+      3600 * 6,
     );
 
     if (
@@ -991,7 +993,7 @@ const countUniqueViewpoints = (video: RendererVideo) => {
 
   const unique = povs.filter(
     (item, index, self) =>
-      self.findIndex((i) => i.player?._name === item.player?._name) === index
+      self.findIndex((i) => i.player?._name === item.player?._name) === index,
   );
 
   return unique.length;

@@ -26,7 +26,7 @@ const DeleteDialog = ({
   children,
   onDelete,
   tooltipContent,
-  warning,
+  warning = '',
   skipPossible,
   appState,
 }: DeleteDialogProps) => {
@@ -75,10 +75,6 @@ const DeleteDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
-
-DeleteDialog.defaultProps = {
-  warning: '',
 };
 
 export default DeleteDialog;

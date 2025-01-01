@@ -1,5 +1,5 @@
 import { Size } from 'electron';
-import { Language } from 'localisation/translations';
+import { Language } from '../localisation/translations';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from '../config/ConfigService';
@@ -126,7 +126,7 @@ enum FileSortDirection {
 type FileFinderCallbackType = (
   dir: string,
   pattern: string,
-  sortDirection?: FileSortDirection
+  sortDirection?: FileSortDirection,
 ) => Promise<FileInfo[]>;
 
 /**
@@ -567,7 +567,6 @@ export {
   TAudioSourceType,
   AppState,
   RawCombatant,
-  RawChallengeModeTimelineSegment,
   TPreviewPosition,
   DeviceType,
   Pages,
