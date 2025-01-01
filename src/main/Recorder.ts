@@ -159,6 +159,16 @@ export default class Recorder extends EventEmitter {
   private findWindowIntervalDuration = 5000;
 
   /**
+   * The current number of attempts to find a window to capture.
+   */
+  private findWindowAttempts = 0;
+
+  /**
+   * The maximum number of attempts to find a window to capture.
+   */
+  private findWindowAttemptLimit = 10;
+
+  /**
    * The image source to be used for the overlay, we create this
    * ahead of time regardless of if the user has the overlay enabled.
    */
@@ -840,6 +850,8 @@ export default class Recorder extends EventEmitter {
    * Cancel the find window interval timer.
    */
   public clearFindWindowInterval() {
+    this.findWindowAttempts = 0;
+
     if (this.findWindowInterval) {
       clearInterval(this.findWindowInterval);
       this.findWindowInterval = undefined;
@@ -1570,7 +1582,10 @@ export default class Recorder extends EventEmitter {
    * Check if the name of the window matches one of the known WoW window names.
    */
   private static windowMatch(item: { name: string; value: string | number }) {
-    return item.name.startsWith('[Wow.exe]: ');
+    return (
+      item.name.startsWith('[Wow.exe]: ') ||
+      item.name.startsWith('[WowClassic.exe]: ')
+    );
   }
 
   /**
@@ -1609,6 +1624,19 @@ export default class Recorder extends EventEmitter {
    * found, do nothing.
    */
   private tryAttachGameCaptureSource(captureCursor: boolean) {
+    this.findWindowAttempts++;
+
+    if (this.findWindowAttempts > this.findWindowAttemptLimit) {
+      console.error('[Recorder] Exceeded find window attempts, giving up');
+      this.clearFindWindowInterval();
+      return;
+    }
+
+    console.info(
+      '[Recorder] Looking for game capture source, attempt',
+      this.findWindowAttempts,
+    );
+
     const window = Recorder.findWowWindow(this.dummyGameCaptureSource);
 
     if (!window) {
@@ -1638,6 +1666,19 @@ export default class Recorder extends EventEmitter {
    * found, do nothing.
    */
   private tryAttachWindowCaptureSource(captureCursor: boolean) {
+    this.findWindowAttempts++;
+
+    if (this.findWindowAttempts > this.findWindowAttemptLimit) {
+      console.error('[Recorder] Exceeded find window attempts, giving up');
+      this.clearFindWindowInterval();
+      return;
+    }
+
+    console.info(
+      '[Recorder] Looking for window capture source, attempt',
+      this.findWindowAttempts,
+    );
+
     const window = Recorder.findWowWindow(this.dummyWindowCaptureSource);
 
     if (!window) {
