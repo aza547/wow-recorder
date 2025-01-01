@@ -1606,8 +1606,6 @@ export default class Recorder extends EventEmitter {
     }
 
     const items = prop.details.items;
-    const names = items.map((item) => item.name);
-    console.info('[Recorder] Saw the following windows:', names);
     const match = items.find(Recorder.windowMatch);
 
     if (!match) {
