@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { povDiskFirstNameSort } from '../../rendererutils';
 import { Button } from '../Button/Button';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 
 interface IProps {
   table: Table<RendererVideo>;
@@ -74,16 +75,16 @@ const VideoSelectionTable = (props: IProps) => {
 
     if (header.column.getCanSort()) {
       if (header.column.getNextSortingOrder() === 'asc') {
-        tooltip = 'Click to sort ascending';
+        tooltip = getLocalePhrase(appState.language, Phrase.ClickToSortAsc);
       } else if (header.column.getNextSortingOrder() === 'desc') {
-        tooltip = 'Click to sort descending';
+        tooltip = getLocalePhrase(appState.language, Phrase.ClickToSortDec);
       } else {
-        tooltip = 'Click to clear sort';
+        tooltip = getLocalePhrase(appState.language, Phrase.ClickToClearSort);
       }
     }
 
     if (header.id === 'Select') {
-      tooltip = 'Click to select all';
+      tooltip = getLocalePhrase(appState.language, Phrase.ClickToSelectAll);
     }
 
     return (

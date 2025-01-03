@@ -322,6 +322,10 @@ const KOREAN: Translations = {
   [Phrase.InvalidEraLogPath]: '잘못된 시대 로그 경로',
   [Phrase.SelectAnOutputDevice]: '출력 장치 선택',
   [Phrase.SelectAnInputDevice]: '입력 장치 선택',
+  [Phrase.ClickToSelectAll]: '모두 선택하려면 클릭하세요',
+  [Phrase.ClickToSortAsc]: '오름차순으로 정렬하려면 클릭하세요',
+  [Phrase.ClickToSortDec]: '내림차순으로 정렬하려면 클릭하세요',
+  [Phrase.ClickToClearSort]: '정렬을 취소하려면 클릭하세요',
 };
 
 export default KOREAN;

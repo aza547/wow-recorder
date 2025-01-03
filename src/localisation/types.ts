@@ -319,6 +319,10 @@ enum Phrase {
   InvalidEraLogPath,
   SelectAnOutputDevice,
   SelectAnInputDevice,
+  ClickToSelectAll,
+  ClickToSortAsc,
+  ClickToSortDec,
+  ClickToClearSort,
 }
 
 enum Language {

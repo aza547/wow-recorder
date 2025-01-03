@@ -322,6 +322,10 @@ const GERMAN: Translations = {
   [Phrase.InvalidEraLogPath]: 'Ungültiger Classic Era Log Pfad.',
   [Phrase.SelectAnOutputDevice]: 'Wähle ein Audioausgabegerät',
   [Phrase.SelectAnInputDevice]: 'Wähle ein Audioeingabegerät.',
+  [Phrase.ClickToSelectAll]: 'Klicken Sie, um alle auszuwählen',
+  [Phrase.ClickToSortAsc]: 'Klicken Sie, um aufsteigend zu sortieren',
+  [Phrase.ClickToSortDec]: 'Klicken Sie, um absteigend zu sortieren',
+  [Phrase.ClickToClearSort]: 'Klicken Sie, um die Sortierung zu löschen',
 };
 
 export default GERMAN;

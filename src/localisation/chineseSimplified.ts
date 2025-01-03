@@ -322,6 +322,10 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.InvalidEraLogPath]: '无效的经典旧世服日志路径。',
   [Phrase.SelectAnOutputDevice]: '请选择一个输出设备',
   [Phrase.SelectAnInputDevice]: '请选择一个输入设备',
+  [Phrase.ClickToSelectAll]: '单击以选择全部',
+  [Phrase.ClickToSortAsc]: '点击升序排序',
+  [Phrase.ClickToSortDec]: '点击降序排序',
+  [Phrase.ClickToClearSort]: '单击以清除排序',
 };
 
 export default CHINESE_SIMPLIFIED;

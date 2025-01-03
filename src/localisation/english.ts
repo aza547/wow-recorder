@@ -322,6 +322,10 @@ const ENGLISH: Translations = {
   [Phrase.InvalidEraLogPath]: 'Invalid classic era log path.',
   [Phrase.SelectAnOutputDevice]: 'Select an output device',
   [Phrase.SelectAnInputDevice]: 'Select an input device',
+  [Phrase.ClickToSelectAll]: 'Click to select all',
+  [Phrase.ClickToSortAsc]: 'Click to sort ascending',
+  [Phrase.ClickToSortDec]: 'Click to sort descending',
+  [Phrase.ClickToClearSort]: 'Click to clear sort',
 };
 
 export default ENGLISH;
