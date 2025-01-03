@@ -100,13 +100,21 @@ export default class CloudClient extends EventEmitter {
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.api}/guild/${guild}/video`;
     const headers = { Authorization: this.authHeader };
-    const response = await axios.get(url, { headers });
+
+    const mtimePromise = this.getMtime();
+    const statePromise = axios.get(url, { headers });
+
+    const response = await statePromise;
 
     console.info(
       '[CloudClient] Got video state with',
       response.data.length,
       'videos',
     );
+
+    // Update mtime to avoid multiple refreshes.
+    const mtime = await mtimePromise;
+    this.bucketLastMod = mtime;
 
     return response.data;
   }
