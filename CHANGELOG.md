@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.5.0] - 2025-01-03
+### Changed
 - Use new API endpoint.
 - Replace the guild text field with a dropdown. 
 
