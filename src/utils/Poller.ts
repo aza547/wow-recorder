@@ -68,7 +68,7 @@ export default class Poller extends EventEmitter {
   }
 
   reset() {
-    console.info('Reset process poller');
+    console.info('[Poller] Reset process poller');
     this.isWowRunning = false;
 
     if (this.child) {
@@ -78,7 +78,7 @@ export default class Poller extends EventEmitter {
   }
 
   start() {
-    console.info('Start process poller');
+    console.info('[Poller] Start process poller');
     this.reset();
     this.poll();
   }
