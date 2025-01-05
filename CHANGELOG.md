@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [6.5.1] - 2025-01-05
+### Fixed
 - Fix some missing translations.
 - Fix a bug with Window capture mode not correctly setting up the scene.
 
