@@ -1594,6 +1594,14 @@ export default class Recorder extends EventEmitter {
    * modes.
    */
   private static findWowWindow(src: IInput) {
+    // The source properties are cached by OSN, so update an irrelevant
+    // setting to force a refresh. This relies on some internals of OSN
+    // which update the cache to refresh on calling the update function.
+    // See "osn::ISource::Update" in isource.cpp for more details.
+    const { settings } = src;
+    settings.refresh = uuidv4();
+    src.update(settings);
+
     let prop = src.properties.first();
 
     while (prop && prop.name !== 'window') {
