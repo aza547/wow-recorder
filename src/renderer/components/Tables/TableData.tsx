@@ -51,6 +51,7 @@ import {
   viewPointCountSort,
   levelSort,
 } from './Sorting';
+import { getLocaleCategoryLabel } from 'localisation/translations';
 
 const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const { category, language } = appState;
@@ -332,7 +333,10 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         id: 'Type',
         accessorKey: 'parentCategory',
         header: () => TypeHeader(language),
-        cell: (info) => info.getValue(),
+        cell: (info) => {
+          const category = info.getValue();
+          return getLocaleCategoryLabel(language, category as VideoCategory);
+        },
       },
       {
         id: 'Tag',
