@@ -326,6 +326,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ClickToSortAsc]: '点击升序排序',
   [Phrase.ClickToSortDec]: '点击降序排序',
   [Phrase.ClickToClearSort]: '单击以清除排序',
+  [Phrase.Start]: '开始',
+  [Phrase.End]: '结尾',
 };
 
 export default CHINESE_SIMPLIFIED;

@@ -326,6 +326,8 @@ const GERMAN: Translations = {
   [Phrase.ClickToSortAsc]: 'Klicken Sie, um aufsteigend zu sortieren',
   [Phrase.ClickToSortDec]: 'Klicken Sie, um absteigend zu sortieren',
   [Phrase.ClickToClearSort]: 'Klicken Sie, um die Sortierung zu löschen',
+  [Phrase.Start]: 'Start',
+  [Phrase.End]: 'Ende',
 };
 
 export default GERMAN;

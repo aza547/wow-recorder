@@ -426,9 +426,11 @@ export const VideoPlayer = (props: IProps) => {
     if (clipMode) {
       const getLabel = (value: number, index: number) => {
         if (clipMode) {
-          if (index === 0) return `Start (${secToMmSs(value)})`;
+          if (index === 0)
+            return `${getLocalePhrase(appState.language, Phrase.Start)} (${secToMmSs(value)})`;
           if (index === 1) return secToMmSs(value);
-          if (index === 2) return `End (${secToMmSs(value)})`;
+          if (index === 2)
+            return `${getLocalePhrase(appState.language, Phrase.End)} (${secToMmSs(value)})`;
         }
 
         return secToMmSs(value);

@@ -326,6 +326,8 @@ const KOREAN: Translations = {
   [Phrase.ClickToSortAsc]: '오름차순으로 정렬하려면 클릭하세요',
   [Phrase.ClickToSortDec]: '내림차순으로 정렬하려면 클릭하세요',
   [Phrase.ClickToClearSort]: '정렬을 취소하려면 클릭하세요',
+  [Phrase.Start]: '시작',
+  [Phrase.End]: '끝',
 };
 
 export default KOREAN;

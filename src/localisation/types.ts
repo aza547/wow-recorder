@@ -323,6 +323,8 @@ enum Phrase {
   ClickToSortAsc,
   ClickToSortDec,
   ClickToClearSort,
+  Start,
+  End,
 }
 
 enum Language {
