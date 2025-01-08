@@ -309,6 +309,7 @@ export default class Manager {
         } catch (error) {
           // If this stage isn't valid we won't go further, set the frontend
           // stage to reflect what's wrong and drop out.
+          console.warn('[Manager] Failed validating stage', stage.name, error);
           this.reconfiguring = false;
           this.setConfigInvalid(String(error));
 
