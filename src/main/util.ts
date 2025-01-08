@@ -166,6 +166,20 @@ const convertKoreanVideoCategory = (
   } else if (raw.category === '클립') {
     raw.category = VideoCategory.Clips;
   }
+
+  if (raw.parentCategory === '연습전투') {
+    raw.parentCategory = VideoCategory.Skirmish;
+  } else if (raw.parentCategory === '1인전') {
+    raw.parentCategory = VideoCategory.SoloShuffle;
+  } else if (raw.parentCategory === '쐐기+') {
+    raw.parentCategory = VideoCategory.MythicPlus;
+  } else if (raw.parentCategory === '레이드') {
+    raw.parentCategory = VideoCategory.Raids;
+  } else if (raw.parentCategory === '전장') {
+    raw.parentCategory = VideoCategory.Battlegrounds;
+  } else if (raw.parentCategory === '클립') {
+    raw.parentCategory = VideoCategory.Clips;
+  }
 };
 
 /**
