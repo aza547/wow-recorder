@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix some missing translations.
 - Fix a bug with Window capture mode not correctly setting up the scene.
+- [Issue 579](https://github.com/aza547/wow-recorder/issues/579) - Fix a bug where clipped videos were counting towards pull count.
 
 ## [6.5.0] - 2025-01-03
 ### Changed
