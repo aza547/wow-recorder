@@ -926,13 +926,14 @@ const areDatesWithinSeconds = (d1: Date, d2: Date, sec: number) => {
 const toFixedDigits = (n: number, d: number) =>
   n.toLocaleString('en-US', { minimumIntegerDigits: d, useGrouping: false });
 
-const getPullNumber = (
-  video: RendererVideo,
-  raidCategoryState: RendererVideo[],
-) => {
+const getPullNumber = (video: RendererVideo, videoState: RendererVideo[]) => {
   const videoDate = video.start ? new Date(video.start) : new Date(video.mtime);
 
   const dailyVideosInOrder: RendererVideo[] = [];
+
+  const raidCategoryState = videoState.filter(
+    (video) => video.category === VideoCategory.Raids,
+  );
 
   raidCategoryState.forEach((neighbourVideo) => {
     const bestDate = neighbourVideo.start
