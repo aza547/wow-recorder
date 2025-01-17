@@ -199,12 +199,19 @@ const CategoryPage = (props: IProps) => {
     );
   };
 
+  if (!haveVideos) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full w-full bg-background-higher pt-[32px]">
+        {!isClips && renderFirstTimeUserPrompt()}
+        {isClips && renderFirstTimeClipPrompt()}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full w-full bg-background-higher pt-[32px]">
       {haveVideos && getVideoPlayer()}
       {haveVideos && getVideoSelection()}
-      {!haveVideos && !isClips && renderFirstTimeUserPrompt()}
-      {!haveVideos && isClips && renderFirstTimeClipPrompt()}
     </div>
   );
 };
