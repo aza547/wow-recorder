@@ -199,19 +199,23 @@ const CategoryPage = (props: IProps) => {
     );
   };
 
-  if (!haveVideos) {
+  const renderVideoPage = () => {
     return (
-      <div className="flex flex-col items-center justify-center h-full w-full bg-background-higher pt-[32px]">
-        {!isClips && renderFirstTimeUserPrompt()}
-        {isClips && renderFirstTimeClipPrompt()}
+      <div className="flex flex-col h-full w-full bg-background-higher pt-[32px]">
+        {getVideoPlayer()}
+        {getVideoSelection()}
       </div>
     );
+  };
+
+  if (haveVideos) {
+    return renderVideoPage();
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-background-higher pt-[32px]">
-      {haveVideos && getVideoPlayer()}
-      {haveVideos && getVideoSelection()}
+    <div className="flex flex-col items-center justify-center h-full w-full bg-background-higher pt-[32px]">
+      {isClips && renderFirstTimeClipPrompt()}
+      {!isClips && renderFirstTimeUserPrompt()}
     </div>
   );
 };
