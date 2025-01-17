@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 587](https://github.com/aza547/wow-recorder/issues/587) - Fixes issues with the video player covering title bar.
 
 ## [6.5.1] - 2025-01-05
 ### Fixed

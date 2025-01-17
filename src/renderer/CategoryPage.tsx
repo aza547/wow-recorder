@@ -200,7 +200,7 @@ const CategoryPage = (props: IProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full bg-background-higher pt-[32px]">
+    <div className="flex flex-col h-full w-full bg-background-higher pt-[32px]">
       {haveVideos && getVideoPlayer()}
       {haveVideos && getVideoSelection()}
       {!haveVideos && !isClips && renderFirstTimeUserPrompt()}
