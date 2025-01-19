@@ -7,7 +7,12 @@ import {
   retailBattlegrounds,
   specializationById,
 } from 'main/constants';
-import { Flavour, RendererVideo } from 'main/types';
+import {
+  Flavour,
+  RawCombatant,
+  RendererVideo,
+  SearchBarSuggestion,
+} from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
 import { Language, Phrase } from 'localisation/types';
 import { getLocalePhrase } from 'localisation/translations';
@@ -412,25 +417,103 @@ export default class VideoFilter {
   }
 
   /**
-   * Get some suggestions to show in the GUI.
+   * Get suggestions to show in the GUI.
    */
-  static getSuggestions(language: Language, category: VideoCategory) {
-    if (category === VideoCategory.MythicPlus) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionMythicPlus);
-    }
+  static getSuggestions(categoryState: RendererVideo[]) {
+    const category = categoryState[0].category;
+
+    const resultSuggestions: SearchBarSuggestion[] = [];
+    const playerSuggestions: SearchBarSuggestion[] = [];
+    const specSuggestions: SearchBarSuggestion[] = [];
+    const encounterSuggestions: SearchBarSuggestion[] = [];
 
     if (category === VideoCategory.Raids) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionRaid);
+      resultSuggestions.push({
+        value: 'Kill',
+      });
+
+      resultSuggestions.push({
+        value: 'Wipe',
+      });
     }
 
-    if (category === VideoCategory.Battlegrounds) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionBattlegrounds);
-    }
+    categoryState.forEach((video) => {
+      if (video.player) {
+        if (video.player?._name) {
+          const suggestion: SearchBarSuggestion = {
+            value: video.player._name,
+            specID: video.player._specID,
+          };
 
-    if (category === VideoCategory.SoloShuffle) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionSoloShuffle);
-    }
+          playerSuggestions.push(suggestion);
+        }
 
-    return getLocalePhrase(language, Phrase.SearchSuggestionDefault);
+        if (video.player._specID) {
+          const isKnownSpec = Object.prototype.hasOwnProperty.call(
+            specializationById,
+            video.player._specID,
+          );
+
+          if (isKnownSpec) {
+            const specSuggestion: SearchBarSuggestion = {
+              value: specializationById[video.player._specID].name,
+              specID: video.player._specID,
+            };
+
+            specSuggestions.push(specSuggestion);
+          }
+        }
+      }
+
+      if (video.encounterName) {
+        const encounterSuggestion: SearchBarSuggestion = {
+          value: video.encounterName,
+          icon: 'Encounter',
+        };
+
+        encounterSuggestions.push(encounterSuggestion);
+      }
+    });
+
+    const uniquePlayers = Array.from(
+      new Map(playerSuggestions.map((item) => [item.value, item])).values(),
+    );
+
+    const uniqueSpecs = Array.from(
+      new Map(specSuggestions.map((item) => [item.value, item])).values(),
+    );
+
+    const uniqueEncounters = Array.from(
+      new Map(encounterSuggestions.map((item) => [item.value, item])).values(),
+    );
+
+    //TODO:
+    // - Results
+    // - Dates
+    // - Encounters
+    // - Protected
+    // - Tagged
+    // - Flavour
+    // - Cloud / Disk
+    const suggestions = [
+      {
+        title: 'Result',
+        suggestions: resultSuggestions,
+      },
+      {
+        title: 'Player',
+        suggestions: uniquePlayers,
+      },
+      {
+        title: 'Spec',
+        suggestions: uniqueSpecs,
+      },
+      {
+        title: 'Encounters',
+        suggestions: uniqueEncounters,
+      },
+    ];
+
+    return suggestions;
   }
 }

@@ -474,6 +474,17 @@ type CheckAuthResponse = {
   write: boolean;
 };
 
+type SearchBarSuggestion = {
+  value: string;
+  specID?: number;
+  icon?: string;
+};
+
+type SearchBarSuggestionSection = {
+  title: string;
+  suggestions: SearchBarSuggestion[];
+};
+
 export interface ISettingsSubCategory {
   nameSubCategory: string;
   codeSubCategory?: string;
@@ -595,4 +606,6 @@ export {
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
   CheckAuthResponse,
+  SearchBarSuggestion,
+  SearchBarSuggestionSection,
 };
