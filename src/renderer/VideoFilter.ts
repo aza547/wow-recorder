@@ -9,15 +9,18 @@ import {
 } from 'main/constants';
 import { Flavour, RendererVideo } from 'main/types';
 import { VideoCategory } from 'types/VideoCategory';
-import { Language, Phrase } from 'localisation/types';
-import { getLocalePhrase } from 'localisation/translations';
 import {
   isArenaUtil,
   isBattlegroundUtil,
   isMythicPlusUtil,
   isRaidUtil,
   getVideoDate,
+  getPlayerClass,
+  getWoWClassColor,
+  getPlayerSpecID,
 } from './rendererutils';
+import { Tag } from 'react-tag-autocomplete';
+import { specImages } from './images';
 
 /**
  * VideoFilter class. This is one of the only places where we don't
@@ -55,8 +58,15 @@ export default class VideoFilter {
    * @param query the string the user typed into the search
    * @param video the video we're checking the query against
    */
-  constructor(query: string, video: RendererVideo) {
-    this.query = query.toLowerCase();
+  constructor(tags: Tag[], video: RendererVideo) {
+    this.query = tags
+      .map((t) => t.value)
+      .filter((v): v is string => !!v)
+      .map((v) => v.split('   ')[1])
+      .map((t) => t.toString())
+      .map((v) => v.toLowerCase())
+      .join(' ');
+
     this.video = video;
     this.povs = [video, ...video.multiPov];
 
@@ -414,23 +424,49 @@ export default class VideoFilter {
   /**
    * Get some suggestions to show in the GUI.
    */
-  static getSuggestions(language: Language, category: VideoCategory) {
-    if (category === VideoCategory.MythicPlus) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionMythicPlus);
-    }
+  static getSuggestions(categoryState: RendererVideo[]) {
+    const category = categoryState[0].category;
+    const suggestions: Tag[] = [];
 
-    if (category === VideoCategory.Raids) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionRaid);
-    }
+    categoryState.forEach((video) => {
+      const playerClass = getPlayerClass(video);
+      const playerSpec = getPlayerSpecID(video);
+      const playerClassColor = getWoWClassColor(playerClass);
+      const specIcon = specImages[playerSpec as keyof typeof specImages];
 
-    if (category === VideoCategory.Battlegrounds) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionBattlegrounds);
-    }
+      if (video.player && video.player._name) {
+        const suggestion: Tag = {
+          // A limitation of the react-tag-autocomplete library is that it doesn't allow
+          // for custom class types, so to avoid upsetting typescript we pass some info
+          // as part of the value; speically that is the icon and color of the tag.
+          value: `character   ${video.player._name}   ${specIcon}   ${playerClassColor}`,
+          label: video.player._name,
+        };
+        suggestions.push(suggestion);
+      }
 
-    if (category === VideoCategory.SoloShuffle) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionSoloShuffle);
-    }
+      if (video.encounterName) {
+        const suggestion: Tag = {
+          value: `encounter   ${video.encounterName}   ${specImages[0]}   #bb4420`,
+          label: video.encounterName,
+        };
+        suggestions.push(suggestion);
+      }
+    });
 
-    return getLocalePhrase(language, Phrase.SearchSuggestionDefault);
+    const uniqueSuggestions = Array.from(
+      new Map(suggestions.map((item) => [item.label, item])).values(),
+    );
+
+    //TODO:
+    // - Results
+    // - Dates
+    // - Encounters
+    // - Protected
+    // - Tagged
+    // - Flavour
+    // - Cloud / Disk
+
+    return uniqueSuggestions;
   }
 }

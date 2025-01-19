@@ -78,7 +78,7 @@ export default class StateManager {
     this.setVideoState(correlated);
     // console.timeEnd('setstate');
 
-    const { category, videoFilterQuery, playingVideo } = this.appState;
+    const { category, videoFilterTags, playingVideo } = this.appState;
 
     if (!playingVideo) {
       // If we haven't yet selected a video, then select the first
@@ -87,7 +87,7 @@ export default class StateManager {
       const categoryState = correlated.filter(categoryFilter);
 
       const filteredState = categoryState.filter((video) =>
-        new VideoFilter(videoFilterQuery, video).filter(),
+        new VideoFilter(videoFilterTags, video).filter(),
       );
 
       const first = filteredState[0];

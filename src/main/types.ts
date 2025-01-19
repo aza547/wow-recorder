@@ -3,6 +3,7 @@ import { Language } from '../localisation/translations';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from '../config/ConfigService';
+import { Tag } from 'react-tag-autocomplete';
 
 /**
  * Application recording status.
@@ -312,7 +313,7 @@ type AppState = {
   page: Pages;
   category: VideoCategory;
   playingVideo: RendererVideo | undefined; // the video being played by the player
-  videoFilterQuery: string;
+  videoFilterTags: Tag[];
   videoFullScreen: boolean;
   playing: boolean;
   language: Language;

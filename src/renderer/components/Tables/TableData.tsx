@@ -399,17 +399,17 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       throw new Error('Unrecognized category');
   }
 
-  const { videoFilterQuery } = appState;
+  const { videoFilterTags } = appState;
 
   const filteredState = useMemo<RendererVideo[]>(() => {
     const categoryFilter = getVideoCategoryFilter(category);
     const categoryState = videoState.filter(categoryFilter);
 
     const queryFilter = (v: RendererVideo) =>
-      new VideoFilter(videoFilterQuery, v).filter();
+      new VideoFilter(videoFilterTags, v).filter();
 
     return categoryState.filter(queryFilter);
-  }, [category, videoState, videoFilterQuery]);
+  }, [category, videoState, videoFilterTags]);
 
   /**
    * Prepare the headless table, with sorting and row expansion. This is where

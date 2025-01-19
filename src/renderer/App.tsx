@@ -58,7 +58,7 @@ const WarcraftRecorder = () => {
     playingVideo: undefined,
 
     // Any text applied in the filter bar gets translated into a filter here.
-    videoFilterQuery: '',
+    videoFilterTags: [],
 
     // We use this to conditionally hide the recording preview.
     videoFullScreen: false,

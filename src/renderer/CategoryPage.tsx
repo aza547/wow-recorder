@@ -124,7 +124,11 @@ const CategoryPage = (props: IProps) => {
             />
           )}
           <div className="flex-grow">
-            <SearchBar appState={appState} setAppState={setAppState} />
+            <SearchBar
+              appState={appState}
+              setAppState={setAppState}
+              categoryState={categoryState}
+            />
           </div>
           <div className="pt-6">
             <DeleteDialog
