@@ -1,3 +1,5 @@
+import { WoWCharacterClassType } from 'main/constants';
+
 import TankIcon from '../../assets/roles/tank.png';
 import HealerIcon from '../../assets/roles/healer.png';
 import DamageIcon from '../../assets/roles/damage.png';
@@ -81,6 +83,20 @@ import affix3 from '../../assets/affixes/3.jpg';
 import affix5 from '../../assets/affixes/5.jpg';
 import affix7 from '../../assets/affixes/7.jpg';
 import affix9 from '../../assets/affixes/9.jpg';
+
+import deathknight from '../../assets/class/deathknight.png';
+import druid from '../../assets/class/druid.png';
+import hunter from '../../assets/class/hunter.png';
+import mage from '../../assets/class/mage.png';
+import monk from '../../assets/class/monk.png';
+import paladin from '../../assets/class/paladin.png';
+import priest from '../../assets/class/priest.png';
+import rogue from '../../assets/class/rogue.png';
+import shaman from '../../assets/class/shaman.png';
+import warlock from '../../assets/class/warlock.png';
+import warrior from '../../assets/class/warrior.png';
+import evoker from '../../assets/class/evoker.png';
+import demonhunter from '../../assets/class/demonhunter.png';
 
 const specImages = {
   0: spec0,
@@ -172,4 +188,21 @@ const affixImages = {
   9: affix9,
 };
 
-export { roleImages, specImages, affixImages };
+const classImages: Record<WoWCharacterClassType, string> = {
+  DEATHKNIGHT: deathknight,
+  DRUID: druid,
+  HUNTER: hunter,
+  MAGE: mage,
+  MONK: monk,
+  PALADIN: paladin,
+  PRIEST: priest,
+  ROGUE: rogue,
+  SHAMAN: shaman,
+  WARLOCK: warlock,
+  WARRIOR: warrior,
+  EVOKER: evoker,
+  DEMONHUNTER: demonhunter,
+  UNKNOWN: spec0,
+};
+
+export { roleImages, specImages, affixImages, classImages };

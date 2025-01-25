@@ -16,7 +16,7 @@ import {
   getPlayerName,
 } from './rendererutils';
 import { Tag } from 'react-tag-autocomplete';
-import { specImages, affixImages } from './images';
+import { specImages, affixImages, classImages } from './images';
 import VideoTag from './VideoTag';
 import { Language, Phrase } from 'localisation/types';
 import { getLocalePhrase } from 'localisation/translations';
@@ -69,7 +69,12 @@ export default class VideoFilter {
   ) {
     const suggestions: VideoTag[] = [];
 
-    state.forEach((video) => {
+    // We pass in the videos as correlated by the StateManager. We need
+    // to flatten them again before we iterate.
+    const flattened = state.flatMap((v) => v.multiPov);
+    flattened.push(...state);
+
+    flattened.forEach((video) => {
       const videoTagSuggestions = this.getVideoSuggestions(video, language);
       suggestions.push(...videoTagSuggestions);
     });
@@ -113,6 +118,7 @@ export default class VideoFilter {
     const playerClass = getPlayerClass(video);
     const playerSpecID = getPlayerSpecID(video);
     const playerClassColor = getWoWClassColor(playerClass);
+    const classIcon = classImages[playerClass];
     const specIcon = specImages[playerSpecID as keyof typeof specImages];
 
     if (video.cloud) {
@@ -176,7 +182,7 @@ export default class VideoFilter {
     }
 
     if (playerName) {
-      const tag = new VideoTag(200, playerName, specIcon, playerClassColor);
+      const tag = new VideoTag(200, playerName, classIcon, playerClassColor);
       suggestions.push(tag);
     }
 

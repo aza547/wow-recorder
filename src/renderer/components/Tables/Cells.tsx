@@ -19,6 +19,9 @@ import { Box, Checkbox } from '@mui/material';
 import { specImages } from 'renderer/images';
 import { Language } from 'localisation/types';
 import { Button } from '../Button/Button';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMessage } from '@fortawesome/free-solid-svg-icons';
+import { Tooltip } from '../Tooltip/Tooltip';
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -71,23 +74,47 @@ export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
 ) => {
   const { row } = ctx;
+  const video = ctx.getValue() as RendererVideo;
+
+  // Search for the tag in the video but also in any linked videos, we're
+  // going to display either at the top of the table.
+  const tag = [video, ...video.multiPov].map((v) => v.tag).find((t) => t);
+
+  const renderExpandButton = () => {
+    return (
+      <Button
+        onClick={(e) => {
+          row.getToggleExpandedHandler()();
+          stopPropagation(e);
+        }}
+        className="cursor-pointer"
+        size="sm"
+        variant="ghost"
+      >
+        {row.getIsExpanded() ? (
+          <KeyboardDoubleArrowUpIcon />
+        ) : (
+          <KeyboardDoubleArrowDownIcon />
+        )}
+      </Button>
+    );
+  };
+
+  const renderTagIcon = () => {
+    return (
+      <Tooltip content={tag}>
+        <Button className="cursor-pointer" size="sm" variant="ghost">
+          <FontAwesomeIcon icon={faMessage} />
+        </Button>
+      </Tooltip>
+    );
+  };
 
   return (
-    <Button
-      onClick={(e) => {
-        row.getToggleExpandedHandler()();
-        stopPropagation(e);
-      }}
-      className="cursor-pointer"
-      size="sm"
-      variant="ghost"
-    >
-      {row.getIsExpanded() ? (
-        <KeyboardDoubleArrowUpIcon />
-      ) : (
-        <KeyboardDoubleArrowDownIcon />
-      )}
-    </Button>
+    <Box className="inline-flex justify-end w-full">
+      {tag && renderTagIcon()}
+      {renderExpandButton()}
+    </Box>
   );
 };
 

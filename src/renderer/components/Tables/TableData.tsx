@@ -138,6 +138,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Details',
         size: 50,
+        accessorFn: (v) => v,
         cell: populateDetailsCell,
       },
     ],
@@ -193,6 +194,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Details',
         size: 50,
+        accessorFn: (v) => v,
         cell: populateDetailsCell,
       },
     ],
@@ -255,6 +257,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Details',
         size: 50,
+        accessorFn: (v) => v,
         cell: populateDetailsCell,
       },
     ],
@@ -310,6 +313,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Details',
         size: 50,
+        accessorFn: (v) => v,
         cell: populateDetailsCell,
       },
     ],
@@ -367,6 +371,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       {
         id: 'Details',
         size: 50,
+        accessorFn: (v) => v,
         cell: populateDetailsCell,
       },
     ],

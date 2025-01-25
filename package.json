@@ -223,7 +223,7 @@
     "detect-port": "^1.5.1",
     "electron": "^33.2.0",
     "electron-builder": "^25.1.0",
-    "electron-devtools-installer": "^3.2.0",
+    "electron-devtools-installer": "^3.2.1",
     "electron-notarize": "^1.2.1",
     "electron-rebuild": "^3.2.7",
     "electronmon": "^2.0.3",
