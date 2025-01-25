@@ -328,6 +328,14 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ClickToClearSort]: '单击以清除排序',
   [Phrase.Start]: '开始',
   [Phrase.End]: '结尾',
+  [Phrase.Cloud]: "云",
+  [Phrase.Disk]: "磁盘",
+  [Phrase.Starred]: "星星",
+  [Phrase.Tagged]: "标签",
+  [Phrase.Today]: "今天",
+  [Phrase.Yesterday]: "昨天",
+  [Phrase.Chests]: "宝箱",
+  [Phrase.Timed]: "定时",
 };
 
 export default CHINESE_SIMPLIFIED;

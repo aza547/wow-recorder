@@ -87,7 +87,11 @@ export default class StateManager {
       const categoryState = correlated.filter(categoryFilter);
 
       const filteredState = categoryState.filter((video) =>
-        new VideoFilter(videoFilterTags, video).filter(),
+        new VideoFilter(
+          videoFilterTags,
+          video,
+          this.appState.language,
+        ).filter(),
       );
 
       const first = filteredState[0];

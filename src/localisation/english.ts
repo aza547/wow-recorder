@@ -328,6 +328,14 @@ const ENGLISH: Translations = {
   [Phrase.ClickToClearSort]: 'Click to clear sort',
   [Phrase.Start]: 'Start',
   [Phrase.End]: 'End',
+  [Phrase.Cloud]: "Cloud",
+  [Phrase.Disk]: "Disk",
+  [Phrase.Starred]: "Starred",
+  [Phrase.Tagged]: "Tagged",
+  [Phrase.Today]: "Today",
+  [Phrase.Yesterday]: "Yesterday",
+  [Phrase.Chests]: "Chests",
+  [Phrase.Timed]: "Timed",
 };
 
 export default ENGLISH;

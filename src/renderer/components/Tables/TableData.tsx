@@ -406,7 +406,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
     const categoryState = videoState.filter(categoryFilter);
 
     const queryFilter = (v: RendererVideo) =>
-      new VideoFilter(videoFilterTags, v).filter();
+      new VideoFilter(videoFilterTags, v, appState.language).filter();
 
     return categoryState.filter(queryFilter);
   }, [category, videoState, videoFilterTags]);

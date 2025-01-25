@@ -1,5 +1,5 @@
 import { AppState, RendererVideo } from 'main/types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/types';
 import VideoFilter from './VideoFilter';
@@ -12,26 +12,24 @@ import {
   TagRendererProps,
 } from 'react-tag-autocomplete';
 import { Box } from '@mui/material';
-import { X } from 'lucide-react';
+import { ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import React from 'react';
-
+import ShieldIcon from '@mui/icons-material/Shield';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
+import { CalendarDays, MapPinned } from 'lucide-react';
 
 import {
-  CalendarDays,
-  Eye,
-  Gamepad2,
-  Hash,
-  Hourglass,
-  MapPinned,
-  MessageSquare,
-  Swords,
-  Trophy,
-} from 'lucide-react';
-
-import { faDragon, faMessage, faStar } from '@fortawesome/free-solid-svg-icons';
+  faDragon,
+  faDungeon,
+  faMessage,
+  faStar,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import VideoTag from './VideoTag';
+import { LocalPolice } from '@mui/icons-material';
+import HomeRepairServiceIcon from '@mui/icons-material/HomeRepairService';
+import HourglassDisabledIcon from '@mui/icons-material/HourglassDisabled';
 
 interface IProps {
   appState: AppState;
@@ -42,9 +40,25 @@ interface IProps {
 const SearchBar = (props: IProps) => {
   const { appState, setAppState, categoryState } = props;
 
+  const alphabeticalValueSort = (a: Tag, b: Tag) => {
+    return String(a.value).localeCompare(String(b.value));
+  };
+
   const [suggestions, setSuggestions] = useState<Tag[]>(
-    VideoFilter.getCategorySuggestions(categoryState),
+    VideoFilter.getCategorySuggestions(categoryState, appState.language).map(
+      (t) => t.getAsTag(),
+    ),
   );
+
+  useEffect(() => {
+    // We need this so we reset the search on changing category.
+    // Not really sure why the whole component isn't re-created.
+    setSuggestions(
+      VideoFilter.getCategorySuggestions(categoryState, appState.language).map(
+        (t) => t.getAsTag(),
+      ),
+    );
+  }, [appState.category]);
 
   const onAdd = (newTag: Tag) => {
     setAppState((prevState) => {
@@ -78,12 +92,11 @@ const SearchBar = (props: IProps) => {
     });
   };
 
-  const renderIcon = (icon: string, color: string) => {
+  const renderIcon = (icon: string) => {
     const muiIconPropsSx = {
-      height: '25px',
-      width: '25px',
       mr: '4px',
-      color,
+      height: '15px',
+      width: '25px',
     };
 
     if (icon === '<SaveIcon>') {
@@ -94,15 +107,20 @@ const SearchBar = (props: IProps) => {
       return <CloudIcon sx={muiIconPropsSx} />;
     }
 
-    if (icon === '<CalendarDays>') {
-      return (
-        <CalendarDays
-          className="mr-1"
-          color={color}
-          height="25px"
-          width="25px"
-        />
-      );
+    if (icon === '<Shield>') {
+      return <ShieldIcon sx={muiIconPropsSx} />;
+    }
+
+    if (icon === '<Swords>') {
+      return <LocalPolice sx={muiIconPropsSx} />;
+    }
+
+    if (icon === '<ChestIcon>') {
+      return <HomeRepairServiceIcon sx={muiIconPropsSx} />;
+    }
+
+    if (icon === '<DepleteIcon>') {
+      return <HourglassDisabledIcon sx={muiIconPropsSx} />;
     }
 
     if (icon === '<StarIcon>') {
@@ -110,9 +128,8 @@ const SearchBar = (props: IProps) => {
         <FontAwesomeIcon
           icon={faStar}
           className="mr-1"
-          height="25px"
+          height="15px"
           width="25px"
-          color={color}
         />
       );
     }
@@ -122,9 +139,8 @@ const SearchBar = (props: IProps) => {
         <FontAwesomeIcon
           icon={faMessage}
           className="mr-1"
-          height="25px"
+          height="15px"
           width="25px"
-          color={color}
         />
       );
     }
@@ -133,12 +149,38 @@ const SearchBar = (props: IProps) => {
       return (
         <FontAwesomeIcon
           icon={faDragon}
-          height="25px"
-          width="25px"
           className="mr-1"
-          color={color}
+          height="15px"
+          width="25px"
         />
       );
+    }
+
+    if (icon === '<DungeonIcon>') {
+      return (
+        <FontAwesomeIcon
+          icon={faDungeon}
+          className="mr-1"
+          height="15px"
+          width="25px"
+        />
+      );
+    }
+
+    if (icon === '<ThumbsUp>') {
+      return <ThumbsUp className="mr-1" height="15px" width="25px" />;
+    }
+
+    if (icon === '<ThumbsDown>') {
+      return <ThumbsDown className="mr-1" height="15px" width="25px" />;
+    }
+
+    if (icon === '<CalendarDays>') {
+      return <CalendarDays className="mr-1" height="15px" width="25px" />;
+    }
+
+    if (icon === '<MapPinned>') {
+      return <MapPinned className="mr-1" height="15px" width="25px" />;
     }
 
     return (
@@ -177,13 +219,13 @@ const SearchBar = (props: IProps) => {
       option.selected ? 'is-selected' : '',
     ];
 
-    const [, , icon] = option.value.split('   ');
+    const tag = VideoTag.decode(option.value);
 
     return (
       <div className={classes.join(' ')} {...optionProps}>
         <div className="flex items-center font-sans font-bold text-[12px] truncate">
-          {renderIcon(icon, '#bb4420')}
-          {option.label}
+          {renderIcon(tag.icon)}
+          {tag.label}
         </div>
       </div>
     );
@@ -195,48 +237,30 @@ const SearchBar = (props: IProps) => {
    * and appropriate styling.
    */
   const renderTag = ({ classNames, tag, ...tagProps }: TagRendererProps) => {
-    console.log('dd');
     if (typeof tag.value !== 'string') {
       // Technically tags can have value of a few types but we only ever use strings.
       return <></>;
     }
 
     // A limitation of the react-tag-autocomplete library is that it doesn't allow
-    // for custom tag types, so to avoid upsetting typescript we pass some info
-    // as part of the value; speically that is the icon and color of the tag.
-    const [, , icon, color] = tag.value.split('   ');
-    console.log('icon', icon);
+    // for custom tag types. The workaround used here is to use the VideoTag class to
+    // encapsulate all the required information into a string.
+    const decoded = VideoTag.decode(tag.value);
 
     return (
       <button
         type="button"
-        className={`${classNames.tag}`}
-        style={{ backgroundColor: color }}
+        className={`flex items-center ${classNames.tag}`}
+        style={{ backgroundColor: decoded.color }}
         {...tagProps}
       >
         <div className="flex items-center font-sans text-black font-bold text-[12px] truncate">
-          {renderIcon(icon, 'white')}
+          {renderIcon(decoded.icon)}
           {tag.label}
-          <X size={20} className="ml-1" />
         </div>
+        <X size={20} className="ml-1" color="black" />
       </button>
     );
-  };
-
-  const alphabeticalLabelSort = (a: Tag, b: Tag) => {
-    if (typeof a.value !== 'string' || typeof b.value !== 'string') {
-      return 0;
-    }
-
-    if (a.value < b.value) {
-      return -1;
-    }
-
-    if (a.value < b.value) {
-      return 1;
-    }
-
-    return 0;
   };
 
   function renderInput({
@@ -267,8 +291,8 @@ const SearchBar = (props: IProps) => {
           rootIsDisabled: 'is-disabled',
           rootIsInvalid: 'is-invalid',
           label: 'react-tags__label',
-          tagList: 'react-tags__list',
-          tagListItem: 'react-tags__list-item',
+          tagList: 'flex items-center',
+          tagListItem: 'react-tags__list-item inline-flex items-center',
           tag: 'h-8 p-1 px-2 mx-1 rounded-md text-white text-sm',
           tagName: 'react-tags__tag-name',
           comboBox: 'react-tags__combobox',
@@ -284,7 +308,7 @@ const SearchBar = (props: IProps) => {
         renderOption={renderOption}
         renderInput={renderInput}
         selected={appState.videoFilterTags}
-        suggestions={suggestions.sort(alphabeticalLabelSort)}
+        suggestions={suggestions.sort(alphabeticalValueSort)}
         onAdd={onAdd}
         onDelete={onDelete}
         placeholderText="Start typing..."

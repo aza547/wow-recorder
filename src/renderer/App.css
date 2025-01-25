@@ -1134,10 +1134,10 @@ input[type='submit'].btn-block {
   padding: 0;
 }
 
-.react-tags__list-item {
+/* .react-tags__list-item {
   display: inline;
   list-style: none;
-}
+} */
 
 .react-tags__tag {
   /* match the font styles */
@@ -1203,7 +1203,7 @@ input[type='submit'].btn-block {
 
 .react-tags__listbox-option:hover {
   cursor: pointer;
-  background: #eaeef2;
+  background: #bb4420;
 }
 
 .react-tags__listbox-option:not([aria-disabled='true']).is-active {

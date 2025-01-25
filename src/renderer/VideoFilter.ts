@@ -1,4 +1,5 @@
 import {
+  dungeonAffixesById,
   dungeonsByZoneId,
   instanceNamesByZoneId,
   specializationById,
@@ -14,8 +15,11 @@ import {
   getPlayerSpecID,
   getPlayerName,
 } from './rendererutils';
-import { Tag, TagSuggestion } from 'react-tag-autocomplete';
-import { specImages } from './images';
+import { Tag } from 'react-tag-autocomplete';
+import { specImages, affixImages } from './images';
+import VideoTag from './VideoTag';
+import { Language, Phrase } from 'localisation/types';
+import { getLocalePhrase } from 'localisation/translations';
 
 /**
  * The VideoFilter class provides a mechanism to populate the search
@@ -38,14 +42,14 @@ export default class VideoFilter {
    * is to call filter after this to decide if the video should be filtered
    * or not.
    */
-  constructor(tags: Tag[], video: RendererVideo) {
+  constructor(tags: Tag[], video: RendererVideo, language: Language) {
     this.query = tags
       .map((tag) => tag.value)
       .filter((tag) => typeof tag === 'string');
 
-    this.matches = VideoFilter.getVideoSuggestions(video)
-      .map((tag) => tag.value)
-      .filter((tag) => typeof tag === 'string');
+    this.matches = VideoFilter.getVideoSuggestions(video, language).map((tag) =>
+      tag.encode(),
+    );
   }
 
   /**
@@ -59,11 +63,14 @@ export default class VideoFilter {
   /**
    * Get all the possible matches for an entire category.
    */
-  public static getCategorySuggestions(state: RendererVideo[]) {
-    const suggestions: Tag[] = [];
+  public static getCategorySuggestions(
+    state: RendererVideo[],
+    language: Language,
+  ) {
+    const suggestions: VideoTag[] = [];
 
     state.forEach((video) => {
-      const videoTagSuggestions = this.getVideoSuggestions(video);
+      const videoTagSuggestions = this.getVideoSuggestions(video, language);
       suggestions.push(...videoTagSuggestions);
     });
 
@@ -77,16 +84,16 @@ export default class VideoFilter {
   /**
    * Get all the possible matches for a video.
    */
-  private static getVideoSuggestions(video: RendererVideo) {
-    const suggestions: TagSuggestion[] = [];
-    suggestions.push(...this.getGenericSuggestions(video));
+  private static getVideoSuggestions(video: RendererVideo, language: Language) {
+    const suggestions: VideoTag[] = [];
+    suggestions.push(...this.getGenericSuggestions(video, language));
 
     if (isArenaUtil(video) || isBattlegroundUtil(video)) {
-      suggestions.push(...this.getPvpSuggestions(video));
+      suggestions.push(...this.getPvpSuggestions(video, language));
     } else if (isRaidUtil(video)) {
-      suggestions.push(...this.getRaidSuggestions(video));
+      suggestions.push(...this.getRaidSuggestions(video, language));
     } else if (isMythicPlusUtil(video)) {
-      suggestions.push(...this.getDungeonSuggestions(video));
+      suggestions.push(...this.getDungeonSuggestions(video, language));
     }
 
     return suggestions;
@@ -96,8 +103,11 @@ export default class VideoFilter {
    * Get the generic matches for a video; that is the ones that do not
    * depend on category.
    */
-  private static getGenericSuggestions(video: RendererVideo) {
-    const suggestions: TagSuggestion[] = [];
+  private static getGenericSuggestions(
+    video: RendererVideo,
+    language: Language,
+  ) {
+    const suggestions: VideoTag[] = [];
 
     const playerName = getPlayerName(video);
     const playerClass = getPlayerClass(video);
@@ -105,73 +115,36 @@ export default class VideoFilter {
     const playerClassColor = getWoWClassColor(playerClass);
     const specIcon = specImages[playerSpecID as keyof typeof specImages];
 
-    if (playerName) {
-      suggestions.push({
-        value: `character   ${playerName}   ${specIcon}   ${playerClassColor}`,
-        label: playerName,
-      });
-    }
-
-    if (playerSpecID) {
-      const specName = specializationById[playerSpecID].name;
-
-      suggestions.push({
-        value: `spec   ${specName}   ${specIcon}   ${playerClassColor}`,
-        label: specName,
-      });
-    }
-
     if (video.cloud) {
-      suggestions.push({
-        value: `storage   cloud   <CloudIcon>   #bb4420`,
-        label: 'Cloud',
-      });
+      const localised = getLocalePhrase(language, Phrase.Cloud);
+      const tag = new VideoTag(100, localised, '<CloudIcon>', '#bb4420');
+      suggestions.push(tag);
     } else {
-      suggestions.push({
-        value: `storage   disk   <SaveIcon>   #bb4420`,
-        label: 'Disk',
-      });
-    }
-
-    if (video.flavour === Flavour.Retail) {
-      suggestions.push({
-        value: `flavour   Retail   ${specImages[0]}   #bb4420`,
-        label: 'Retail',
-      });
-    } else if (video.flavour === Flavour.Classic) {
-      suggestions.push({
-        value: `flavour   Classic   ${specImages[0]}   #bb4420`,
-        label: 'Classic',
-      });
+      const localised = getLocalePhrase(language, Phrase.Disk);
+      const tag = new VideoTag(100, localised, '<SaveIcon>', '#bb4420');
+      suggestions.push(tag);
     }
 
     if (video.protected) {
-      suggestions.push({
-        value: `metadata   Starred   <StarIcon>   #bb4420`,
-        label: 'Starred',
-      });
+      const localised = getLocalePhrase(language, Phrase.Starred);
+      const tag = new VideoTag(101, localised, '<StarIcon>', '#bb4420');
+      suggestions.push(tag);
     }
 
     if (video.tag) {
-      suggestions.push({
-        value: `metadata   Tagged   <TagIcon>   #bb4420`,
-        label: 'Tagged',
-      });
+      const localised = getLocalePhrase(language, Phrase.Tagged);
+      const tag = new VideoTag(101, localised, '<TagIcon>', '#bb4420');
+      suggestions.push(tag);
     }
 
-    if (video.zoneID) {
-      const isKnownZone = Object.prototype.hasOwnProperty.call(
-        instanceNamesByZoneId,
-        video.zoneID,
-      );
-
-      if (isKnownZone) {
-        const zone = instanceNamesByZoneId[video.zoneID];
-        suggestions.push({
-          value: `zone   ${zone}   ${specImages[0]}   #bb4420`,
-          label: zone,
-        });
-      }
+    if (video.flavour === Flavour.Retail) {
+      const localised = getLocalePhrase(language, Phrase.Retail);
+      const tag = new VideoTag(102, localised, '<Swords>', '#bb4420');
+      suggestions.push(tag);
+    } else if (video.flavour === Flavour.Classic) {
+      const localised = getLocalePhrase(language, Phrase.Classic);
+      const tag = new VideoTag(102, localised, '<Shield>', '#bb4420');
+      suggestions.push(tag);
     }
 
     const currentDate = new Date();
@@ -191,17 +164,39 @@ export default class VideoFilter {
       videoDate.getFullYear() === currentDate.getFullYear();
 
     if (isToday) {
-      suggestions.push({
-        value: `date   Today   <CalendarDays>   #bb4420`,
-        label: 'Today',
-      });
+      const localised = getLocalePhrase(language, Phrase.Today);
+      const tag = new VideoTag(103, localised, '<CalendarDays>', '#bb4420');
+      suggestions.push(tag);
     }
 
     if (isYesterday) {
-      suggestions.push({
-        value: `date   Yesterday   <CalendarDays>   #bb4420`,
-        label: 'Yesterday',
-      });
+      const localised = getLocalePhrase(language, Phrase.Yesterday);
+      const tag = new VideoTag(103, localised, '<CalendarDays>', '#bb4420');
+      suggestions.push(tag);
+    }
+
+    if (playerName) {
+      const tag = new VideoTag(200, playerName, specIcon, playerClassColor);
+      suggestions.push(tag);
+    }
+
+    if (playerSpecID) {
+      const specName = specializationById[playerSpecID].name;
+      const tag = new VideoTag(201, specName, specIcon, playerClassColor);
+      suggestions.push(tag);
+    }
+
+    if (video.zoneID) {
+      const isKnownZone = Object.prototype.hasOwnProperty.call(
+        instanceNamesByZoneId,
+        video.zoneID,
+      );
+
+      if (isKnownZone) {
+        const zone = instanceNamesByZoneId[video.zoneID];
+        const tag = new VideoTag(202, zone, '<MapPinned>', '#bb4420');
+        suggestions.push(tag);
+      }
     }
 
     return suggestions;
@@ -210,10 +205,11 @@ export default class VideoFilter {
   /**
    * Get the matches for a dungeon video.
    */
-  private static getDungeonSuggestions(video: RendererVideo) {
-    // TODO keystone level
-    // TODO affixes
-    const suggestions: TagSuggestion[] = [];
+  private static getDungeonSuggestions(
+    video: RendererVideo,
+    language: Language,
+  ) {
+    const suggestions: VideoTag[] = [];
 
     if (video.zoneID) {
       const isKnownDungeon = Object.prototype.hasOwnProperty.call(
@@ -223,33 +219,43 @@ export default class VideoFilter {
 
       if (isKnownDungeon) {
         const dungeon = dungeonsByZoneId[video.zoneID];
-        suggestions.push({
-          value: `dungeon   ${dungeon}   ${specImages[0]}   #bb4420`,
-          label: dungeon,
-        });
+        const tag = new VideoTag(203, dungeon, '<DungeonIcon>', '#bb4420');
+        suggestions.push(tag);
       }
     }
 
-    if (!video.result) {
-      suggestions.push({
-        value: `result   Abandoned   ${specImages[0]}   red`,
-        label: 'Abandoned',
-      });
-    } else if (video.upgradeLevel && video.upgradeLevel > 0) {
-      suggestions.push({
-        value: `result   ${video.upgradeLevel} Chest   ${specImages[0]}   green`,
-        label: `${video.upgradeLevel} Chest`,
-      });
+    if (video.affixes) {
+      video.affixes.forEach((affix) => {
+        const isKnownAffix = Object.prototype.hasOwnProperty.call(
+          dungeonAffixesById,
+          affix,
+        );
 
-      suggestions.push({
-        value: `result   Timed   ${specImages[0]}   green`,
-        label: `Timed`,
+        if (isKnownAffix) {
+          const affixName = dungeonAffixesById[affix];
+          const affixImage = affixImages[affix as keyof typeof affixImages];
+          const tag = new VideoTag(204, affixName, affixImage, '#bb4420');
+          suggestions.push(tag);
+        }
       });
+    }
+
+    if (!video.result) {
+      const localised = getLocalePhrase(language, Phrase.Abandoned);
+      const tag = new VideoTag(50, localised, '<ThumbsDown>', '#bb4420');
+      suggestions.push(tag);
+    } else if (video.upgradeLevel && video.upgradeLevel > 0) {
+      const chests = `${video.upgradeLevel} ${getLocalePhrase(language, Phrase.Chests)}`;
+      const chestsTag = new VideoTag(50, chests, '<ChestIcon>', '#bb4420');
+      suggestions.push(chestsTag);
+
+      const timed = getLocalePhrase(language, Phrase.Timed);
+      const timedTag = new VideoTag(50, timed, '<ThumbsUp>', '#bb4420');
+      suggestions.push(timedTag);
     } else {
-      suggestions.push({
-        value: `result   Depleted   ${specImages[0]}   yellow`,
-        label: 'Depleted',
-      });
+      const localised = getLocalePhrase(language, Phrase.Depleted);
+      const tag = new VideoTag(50, localised, '<DepleteIcon>', '#bb4420');
+      suggestions.push(tag);
     }
 
     return suggestions;
@@ -258,48 +264,46 @@ export default class VideoFilter {
   /**
    * Get the matches for a raid video.
    */
-  private static getRaidSuggestions(video: RendererVideo) {
-    const suggestions: TagSuggestion[] = [];
-
-    if (video.encounterName) {
-      suggestions.push({
-        value: `encounter   ${video.encounterName}   <DragonIcon>   #bb4420`,
-        label: video.encounterName,
-      });
-    }
+  private static getRaidSuggestions(video: RendererVideo, language: Language) {
+    const suggestions: VideoTag[] = [];
 
     if (video.result) {
-      suggestions.push({
-        value: `result   Kill   ${specImages[0]}   #bb4420`,
-        label: 'Kill',
-      });
+      const localised = getLocalePhrase(language, Phrase.Kill);
+      const tag = new VideoTag(50, localised, '<ThumbsUp>', '#bb4420');
+      suggestions.push(tag);
     } else {
-      suggestions.push({
-        value: `result   Wipe   ${specImages[0]}   #bb4420`,
-        label: 'Wipe',
-      });
+      const localised = getLocalePhrase(language, Phrase.Wipe);
+      const tag = new VideoTag(50, localised, '<ThumbsDown>', '#bb4420');
+      suggestions.push(tag);
     }
 
     if (video.difficultyID === 17) {
-      suggestions.push({
-        value: `difficulty   Raid Finder   ${specImages[0]}   #bb4420`,
-        label: 'Raid Finder',
-      });
+      const localised = getLocalePhrase(language, Phrase.LFR);
+      const tag = new VideoTag(51, localised, '<DragonIcon>', '#bb4420');
+      suggestions.push(tag);
     } else if (video.difficultyID === 14) {
-      suggestions.push({
-        value: `difficulty   Normal   ${specImages[0]}   #bb4420`,
-        label: 'Normal',
-      });
+      const localised = getLocalePhrase(language, Phrase.Normal);
+      const tag = new VideoTag(52, localised, '<DragonIcon>', '#bb4420');
+      suggestions.push(tag);
     } else if (video.difficultyID === 15) {
-      suggestions.push({
-        value: `difficulty   Heroic   ${specImages[0]}   #bb4420`,
-        label: 'Heroic',
-      });
+      const localised = getLocalePhrase(language, Phrase.Heroic);
+      const tag = new VideoTag(53, localised, '<DragonIcon>', '#bb4420');
+      suggestions.push(tag);
     } else if (video.difficultyID === 16) {
-      suggestions.push({
-        value: `difficulty   Mythic   ${specImages[0]}   #bb4420`,
-        label: 'Mythic',
-      });
+      const localised = getLocalePhrase(language, Phrase.Mythic);
+      const tag = new VideoTag(54, localised, '<DragonIcon>', '#bb4420');
+      suggestions.push(tag);
+    }
+
+    if (video.encounterName) {
+      const tag = new VideoTag(
+        205,
+        video.encounterName,
+        '<DragonIcon>',
+        '#bb4420',
+      );
+
+      suggestions.push(tag);
     }
 
     return suggestions;
@@ -309,19 +313,17 @@ export default class VideoFilter {
    * Get the matches for a PvP video; that is arenas and battlegrounds,
    * which are basically the same in the context of search filters.
    */
-  private static getPvpSuggestions(video: RendererVideo) {
-    const suggestions: TagSuggestion[] = [];
+  private static getPvpSuggestions(video: RendererVideo, language: Language) {
+    const suggestions: VideoTag[] = [];
 
     if (video.result) {
-      suggestions.push({
-        value: `result   Win   ${specImages[0]}   #bb4420`,
-        label: 'Win',
-      });
+      const localised = getLocalePhrase(language, Phrase.Win);
+      const tag = new VideoTag(50, localised, '<ThumbsUp>', '#bb4420');
+      suggestions.push(tag);
     } else {
-      suggestions.push({
-        value: `result   Loss   ${specImages[0]}   #bb4420`,
-        label: 'Loss',
-      });
+      const localised = getLocalePhrase(language, Phrase.Loss);
+      const tag = new VideoTag(50, localised, '<ThumbsDown>', '#bb4420');
+      suggestions.push(tag);
     }
 
     return suggestions;
