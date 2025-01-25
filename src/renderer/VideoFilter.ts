@@ -1,166 +1,157 @@
 import {
   dungeonAffixesById,
   dungeonsByZoneId,
-  raidEncountersById,
-  raidInstances,
-  retailArenas,
-  retailBattlegrounds,
+  instanceNamesByZoneId,
   specializationById,
 } from 'main/constants';
 import { Flavour, RendererVideo } from 'main/types';
-import { VideoCategory } from 'types/VideoCategory';
-import { Language, Phrase } from 'localisation/types';
-import { getLocalePhrase } from 'localisation/translations';
 import {
   isArenaUtil,
   isBattlegroundUtil,
   isMythicPlusUtil,
   isRaidUtil,
-  getVideoDate,
+  getPlayerClass,
+  getWoWClassColor,
+  getPlayerSpecID,
+  getPlayerName,
 } from './rendererutils';
+import { Tag } from 'react-tag-autocomplete';
+import { specImages, affixImages } from './images';
+import VideoTag from './VideoTag';
+import { Language, Phrase } from 'localisation/types';
+import { getLocalePhrase } from 'localisation/translations';
 
 /**
- * VideoFilter class. This is one of the only places where we don't
- * handle localisation through the localisation infrastructure. It's
- * easier to just add all the languages into this class.
- *
- * TO DO:
- * - Improve suggestions / autogenerate them
- * - Write UTs (lol)
+ * The VideoFilter class provides a mechanism to populate the search
+ * suggestions, as well as filter the list of videos based on the
+ * user's search query.
  */
 export default class VideoFilter {
   /**
-   * Valid filters.
+   * A list of strings in the filter query.
    */
-  private filters: string[] = [];
+  private query: string[];
 
   /**
-   * The query the user has entered.
+   * A list of query matches for this video.
    */
-  private query: string;
+  private matches: string[];
 
   /**
-   * The lead video, used to determine the high level details.
+   * Constructor. This sets up the query for a given video. Typical usage
+   * is to call filter after this to decide if the video should be filtered
+   * or not.
    */
-  private video: RendererVideo;
+  constructor(tags: Tag[], video: RendererVideo, language: Language) {
+    this.query = tags
+      .map((tag) => tag.value)
+      .filter((tag) => typeof tag === 'string');
 
-  /**
-   * The POVs included in this video.
-   */
-  private povs: RendererVideo[];
-
-  /**
-   * Constructor. This sets up the filters for a given video.
-   *
-   * @param query the string the user typed into the search
-   * @param video the video we're checking the query against
-   */
-  constructor(query: string, video: RendererVideo) {
-    this.query = query.toLowerCase();
-    this.video = video;
-    this.povs = [video, ...video.multiPov];
-
-    this.setGenericFilters();
-
-    if (isArenaUtil(this.video)) {
-      this.setArenaFilters();
-    } else if (isRaidUtil(this.video)) {
-      this.setRaidFilters();
-    } else if (isMythicPlusUtil(this.video)) {
-      this.setDungeonFilters();
-    } else if (isBattlegroundUtil(this.video)) {
-      this.setBattlegroundFilters();
-    }
+    this.matches = VideoFilter.getVideoSuggestions(video, language).map((tag) =>
+      tag.encode(),
+    );
   }
 
   /**
-   * Convienence function to add to the valid filters for this video, also handles
-   * undefined inputs and splits on spaces.
+   * Perform the filter; check that every entry in the query matches a search
+   * suggestion for this video.
    */
-  private addStringFilter(string: string | undefined) {
-    if (string === undefined) {
-      return;
-    }
-
-    string
-      .toLowerCase()
-      .split(' ')
-      .forEach((word) => this.filters.push(word));
+  public filter() {
+    return this.query.every((s) => this.matches.includes(s));
   }
 
   /**
-   * If the player is named in the video metadata, add a search filter for
-   * the name and spec.
+   * Get all the possible matches for an entire category.
    */
-  private setNameFilter(video: RendererVideo) {
-    if (!video.player) {
-      return;
-    }
+  public static getCategorySuggestions(
+    state: RendererVideo[],
+    language: Language,
+  ) {
+    const suggestions: VideoTag[] = [];
 
-    const { player } = video;
+    state.forEach((video) => {
+      const videoTagSuggestions = this.getVideoSuggestions(video, language);
+      suggestions.push(...videoTagSuggestions);
+    });
 
-    if (player._specID) {
-      const isKnownSpec = Object.prototype.hasOwnProperty.call(
-        specializationById,
-        player._specID,
-      );
+    const unique = Array.from(
+      new Map(suggestions.map((item) => [item.label, item])).values(),
+    );
 
-      if (isKnownSpec) {
-        this.addStringFilter(specializationById[player._specID].name);
-        this.addStringFilter(specializationById[player._specID].label);
-      }
-    }
-
-    this.addStringFilter(player._name);
+    return unique;
   }
 
   /**
-   * If the video is protected, add some key words to the filter.
+   * Get all the possible matches for a video.
    */
-  private setProtectedFilter(video: RendererVideo) {
-    if (video.isProtected) {
-      this.addStringFilter('starred');
-      this.addStringFilter('bookmarked');
-      this.addStringFilter('saved');
-      this.addStringFilter('protected');
-      this.addStringFilter('favorited');
-      this.addStringFilter('favourited');
-      this.addStringFilter('북마크');
-      this.addStringFilter('lezezeichen');
+  private static getVideoSuggestions(video: RendererVideo, language: Language) {
+    const suggestions: VideoTag[] = [];
+    suggestions.push(...this.getGenericSuggestions(video, language));
+
+    if (isArenaUtil(video) || isBattlegroundUtil(video)) {
+      suggestions.push(...this.getPvpSuggestions(video, language));
+    } else if (isRaidUtil(video)) {
+      suggestions.push(...this.getRaidSuggestions(video, language));
+    } else if (isMythicPlusUtil(video)) {
+      suggestions.push(...this.getDungeonSuggestions(video, language));
     }
+
+    return suggestions;
   }
 
   /**
-   * If the video is tagged, add the tag to the filter.
+   * Get the generic matches for a video; that is the ones that do not
+   * depend on category.
    */
-  private setTagFilter(video: RendererVideo) {
+  private static getGenericSuggestions(
+    video: RendererVideo,
+    language: Language,
+  ) {
+    const suggestions: VideoTag[] = [];
+
+    const playerName = getPlayerName(video);
+    const playerClass = getPlayerClass(video);
+    const playerSpecID = getPlayerSpecID(video);
+    const playerClassColor = getWoWClassColor(playerClass);
+    const specIcon = specImages[playerSpecID as keyof typeof specImages];
+
+    if (video.cloud) {
+      const localised = getLocalePhrase(language, Phrase.Cloud);
+      const tag = new VideoTag(100, localised, '<CloudIcon>', '#bb4420');
+      suggestions.push(tag);
+    } else {
+      const localised = getLocalePhrase(language, Phrase.Disk);
+      const tag = new VideoTag(100, localised, '<SaveIcon>', '#bb4420');
+      suggestions.push(tag);
+    }
+
+    if (video.protected) {
+      const localised = getLocalePhrase(language, Phrase.Starred);
+      const tag = new VideoTag(101, localised, '<StarIcon>', '#bb4420');
+      suggestions.push(tag);
+    }
+
     if (video.tag) {
-      // Split all the words in the tag on whitespace, remove non-letter
-      // characters from all the words to exclude punctuation and add
-      // as filters.
-      video.tag
-        .split(/[\s+]/)
-        .map((word) => word.replace(/[^가-힣a-zA-Z]/g, ''))
-        .filter((word) => word)
-        .forEach((word) => this.addStringFilter(word));
+      const localised = getLocalePhrase(language, Phrase.Tagged);
+      const tag = new VideoTag(101, localised, '<TagIcon>', '#bb4420');
+      suggestions.push(tag);
     }
-  }
 
-  /**
-   * Set generic filters we want for every video regardless of category.
-   */
-  private setGenericFilters() {
-    this.povs.forEach((pov) => this.setNameFilter(pov));
-    this.povs.forEach((pov) => this.setProtectedFilter(pov));
-    this.povs.forEach((pov) => this.setTagFilter(pov));
-
-    const dateStr = getVideoDate(this.video);
-    this.addStringFilter(dateStr);
+    if (video.flavour === Flavour.Retail) {
+      const localised = getLocalePhrase(language, Phrase.Retail);
+      const tag = new VideoTag(102, localised, '<Swords>', '#bb4420');
+      suggestions.push(tag);
+    } else if (video.flavour === Flavour.Classic) {
+      const localised = getLocalePhrase(language, Phrase.Classic);
+      const tag = new VideoTag(102, localised, '<Shield>', '#bb4420');
+      suggestions.push(tag);
+    }
 
     const currentDate = new Date();
-    const videoDate = this.video.start
-      ? new Date(this.video.start)
-      : new Date(this.video.mtime);
+
+    const videoDate = video.start
+      ? new Date(video.start)
+      : new Date(video.mtime);
 
     const isToday =
       videoDate.getDate() === currentDate.getDate() &&
@@ -173,264 +164,168 @@ export default class VideoFilter {
       videoDate.getFullYear() === currentDate.getFullYear();
 
     if (isToday) {
-      this.addStringFilter('today');
-      this.addStringFilter('오늘');
-      this.addStringFilter('heute');
-    } else if (isYesterday) {
-      this.addStringFilter('yesterday');
-      this.addStringFilter('어제');
-      this.addStringFilter('gestern');
+      const localised = getLocalePhrase(language, Phrase.Today);
+      const tag = new VideoTag(103, localised, '<CalendarDays>', '#bb4420');
+      suggestions.push(tag);
     }
 
-    if (this.video.flavour === Flavour.Retail) {
-      this.addStringFilter('retail');
-    } else if (this.video.flavour === Flavour.Classic) {
-      this.addStringFilter('classic');
+    if (isYesterday) {
+      const localised = getLocalePhrase(language, Phrase.Yesterday);
+      const tag = new VideoTag(103, localised, '<CalendarDays>', '#bb4420');
+      suggestions.push(tag);
     }
 
-    if (this.video.combatants) {
-      this.video.combatants.forEach((combatant) => {
-        this.addStringFilter(combatant._name);
-        this.addStringFilter(combatant._realm);
-
-        if (combatant._specID === undefined) {
-          return;
-        }
-
-        const isKnownSpec = Object.prototype.hasOwnProperty.call(
-          specializationById,
-          combatant._specID,
-        );
-
-        if (isKnownSpec) {
-          this.addStringFilter(specializationById[combatant._specID].name);
-          this.addStringFilter(specializationById[combatant._specID].label);
-        }
-      });
+    if (playerName) {
+      const tag = new VideoTag(200, playerName, specIcon, playerClassColor);
+      suggestions.push(tag);
     }
 
-    if (this.video.cloud) {
-      this.addStringFilter('cloud');
-      this.addStringFilter('pro');
-    } else {
-      this.addStringFilter('disk');
-      this.addStringFilter('local');
-    }
-  }
-
-  /**
-   * Set arena filters.
-   */
-  private setArenaFilters() {
-    if (this.video.category === VideoCategory.SoloShuffle) {
-      const wins = this.video.soloShuffleRoundsWon;
-      const played = this.video.soloShuffleRoundsPlayed;
-
-      if (wins !== undefined && played !== undefined) {
-        const losses = played - wins;
-        this.addStringFilter(`${wins}-${losses}`);
-        this.addStringFilter(`${wins}/${losses}`);
-        this.addStringFilter(`${wins}:${losses}`);
-        this.addStringFilter(`${wins}대${losses}`);
-        this.addStringFilter(`${wins}승${losses}패`);
-        this.addStringFilter(`${wins}승`);
-        this.addStringFilter(`${losses}패`);
-      }
-    } else if (this.video.result) {
-      this.addStringFilter('win');
-      this.addStringFilter('승리');
-      this.addStringFilter('sieg');
-    } else {
-      this.addStringFilter('loss');
-      this.addStringFilter('패배');
-      this.addStringFilter('niederlage');
+    if (playerSpecID) {
+      const specName = specializationById[playerSpecID].name;
+      const tag = new VideoTag(201, specName, specIcon, playerClassColor);
+      suggestions.push(tag);
     }
 
-    if (this.video.zoneID !== undefined) {
-      const isKnownArena = Object.prototype.hasOwnProperty.call(
-        retailArenas,
-        this.video.zoneID,
+    if (video.zoneID) {
+      const isKnownZone = Object.prototype.hasOwnProperty.call(
+        instanceNamesByZoneId,
+        video.zoneID,
       );
 
-      if (isKnownArena) {
-        this.addStringFilter(retailArenas[this.video.zoneID]);
-      }
-    }
-  }
-
-  /**
-   * Set raid filters.
-   */
-  private setRaidFilters() {
-    if (this.video.result) {
-      this.addStringFilter('kill');
-      this.addStringFilter('킬');
-      this.addStringFilter('sieg');
-    } else {
-      this.addStringFilter('wipe');
-      this.addStringFilter('전멸');
-      this.addStringFilter('niederlage');
-    }
-
-    if (this.video.zoneID !== undefined) {
-      raidInstances.forEach((raid) => {
-        if (raid.zoneId === this.video.zoneID) {
-          this.addStringFilter(raid.name);
-        }
-      });
-    }
-
-    if (this.video.encounterID !== undefined) {
-      const knownEncounter = Object.prototype.hasOwnProperty.call(
-        raidEncountersById,
-        this.video.encounterID,
-      );
-
-      if (knownEncounter) {
-        this.addStringFilter(raidEncountersById[this.video.encounterID]);
+      if (isKnownZone) {
+        const zone = instanceNamesByZoneId[video.zoneID];
+        const tag = new VideoTag(202, zone, '<MapPinned>', '#bb4420');
+        suggestions.push(tag);
       }
     }
 
-    if (this.video.encounterName !== undefined) {
-      this.addStringFilter(this.video.encounterName);
-    }
-
-    if (this.video.difficultyID === 17) {
-      this.addStringFilter('lfr looking for raid');
-      this.addStringFilter('공찾');
-      this.addStringFilter('Raid Finder');
-    } else if (this.video.difficultyID === 14) {
-      this.addStringFilter('normal');
-      this.addStringFilter('일반');
-    } else if (this.video.difficultyID === 15) {
-      this.addStringFilter('heroic hc');
-      this.addStringFilter('영웅');
-      this.addStringFilter('heroisch');
-    } else if (this.video.difficultyID === 16) {
-      this.addStringFilter('mythic');
-      this.addStringFilter('신화');
-      this.addStringFilter('mythisch');
-    }
+    return suggestions;
   }
 
   /**
-   * Set dungeon filters.
+   * Get the matches for a dungeon video.
    */
-  private setDungeonFilters() {
-    if (!this.video.result) {
-      this.addStringFilter('abandoned');
-      this.addStringFilter('탈주');
-      this.addStringFilter('abgebrochen');
-    } else if (
-      this.video.upgradeLevel !== undefined &&
-      this.video.upgradeLevel < 1
-    ) {
-      this.addStringFilter('depleted');
-      this.addStringFilter('소진');
-    } else if (
-      this.video.upgradeLevel !== undefined &&
-      this.video.upgradeLevel > 0
-    ) {
-      this.addStringFilter('timed');
-      this.addStringFilter('완료');
-    }
+  private static getDungeonSuggestions(
+    video: RendererVideo,
+    language: Language,
+  ) {
+    const suggestions: VideoTag[] = [];
 
-    if (this.video.zoneID !== undefined) {
+    if (video.zoneID) {
       const isKnownDungeon = Object.prototype.hasOwnProperty.call(
         dungeonsByZoneId,
-        this.video.zoneID,
+        video.zoneID,
       );
 
       if (isKnownDungeon) {
-        this.addStringFilter(dungeonsByZoneId[this.video.zoneID]);
+        const dungeon = dungeonsByZoneId[video.zoneID];
+        const tag = new VideoTag(203, dungeon, '<DungeonIcon>', '#bb4420');
+        suggestions.push(tag);
       }
     }
 
-    if (this.video.keystoneLevel !== undefined) {
-      this.addStringFilter(`+${this.video.keystoneLevel}`);
-    }
+    if (video.affixes) {
+      video.affixes.forEach((affix) => {
+        const isKnownAffix = Object.prototype.hasOwnProperty.call(
+          dungeonAffixesById,
+          affix,
+        );
 
-    if (this.video.affixes) {
-      this.video.affixes.forEach((affixID) => {
-        const affixName = dungeonAffixesById[affixID];
-
-        if (affixName) {
-          this.addStringFilter(affixName);
+        if (isKnownAffix) {
+          const affixName = dungeonAffixesById[affix];
+          const affixImage = affixImages[affix as keyof typeof affixImages];
+          const tag = new VideoTag(204, affixName, affixImage, '#bb4420');
+          suggestions.push(tag);
         }
       });
     }
+
+    if (!video.result) {
+      const localised = getLocalePhrase(language, Phrase.Abandoned);
+      const tag = new VideoTag(50, localised, '<ThumbsDown>', '#bb4420');
+      suggestions.push(tag);
+    } else if (video.upgradeLevel && video.upgradeLevel > 0) {
+      const chests = `${video.upgradeLevel} ${getLocalePhrase(language, Phrase.Chests)}`;
+      const chestsTag = new VideoTag(50, chests, '<ChestIcon>', '#bb4420');
+      suggestions.push(chestsTag);
+
+      const timed = getLocalePhrase(language, Phrase.Timed);
+      const timedTag = new VideoTag(50, timed, '<ThumbsUp>', '#bb4420');
+      suggestions.push(timedTag);
+    } else {
+      const localised = getLocalePhrase(language, Phrase.Depleted);
+      const tag = new VideoTag(50, localised, '<DepleteIcon>', '#bb4420');
+      suggestions.push(tag);
+    }
+
+    return suggestions;
   }
 
   /**
-   * Set battleground filters.
+   * Get the matches for a raid video.
    */
-  private setBattlegroundFilters() {
-    if (this.video.result) {
-      this.addStringFilter('win');
-      this.addStringFilter('승리');
-      this.addStringFilter('sieg');
+  private static getRaidSuggestions(video: RendererVideo, language: Language) {
+    const suggestions: VideoTag[] = [];
+
+    if (video.result) {
+      const localised = getLocalePhrase(language, Phrase.Kill);
+      const tag = new VideoTag(50, localised, '<ThumbsUp>', '#bb4420');
+      suggestions.push(tag);
     } else {
-      this.addStringFilter('loss');
-      this.addStringFilter('패배');
-      this.addStringFilter('niederlage');
+      const localised = getLocalePhrase(language, Phrase.Wipe);
+      const tag = new VideoTag(50, localised, '<ThumbsDown>', '#bb4420');
+      suggestions.push(tag);
     }
 
-    if (this.video.zoneID !== undefined) {
-      const isKnownBattleground = Object.prototype.hasOwnProperty.call(
-        retailBattlegrounds,
-        this.video.zoneID,
+    if (video.difficultyID === 17) {
+      const localised = getLocalePhrase(language, Phrase.LFR);
+      const tag = new VideoTag(51, localised, '<DragonIcon>', '#bb4420');
+      suggestions.push(tag);
+    } else if (video.difficultyID === 14) {
+      const localised = getLocalePhrase(language, Phrase.Normal);
+      const tag = new VideoTag(52, localised, '<DragonIcon>', '#bb4420');
+      suggestions.push(tag);
+    } else if (video.difficultyID === 15) {
+      const localised = getLocalePhrase(language, Phrase.Heroic);
+      const tag = new VideoTag(53, localised, '<DragonIcon>', '#bb4420');
+      suggestions.push(tag);
+    } else if (video.difficultyID === 16) {
+      const localised = getLocalePhrase(language, Phrase.Mythic);
+      const tag = new VideoTag(54, localised, '<DragonIcon>', '#bb4420');
+      suggestions.push(tag);
+    }
+
+    if (video.encounterName) {
+      const tag = new VideoTag(
+        205,
+        video.encounterName,
+        '<DragonIcon>',
+        '#bb4420',
       );
 
-      if (isKnownBattleground) {
-        this.addStringFilter(retailBattlegrounds[this.video.zoneID]);
-      }
+      suggestions.push(tag);
     }
+
+    return suggestions;
   }
 
   /**
-   * Decide if the video passes the query or not.
+   * Get the matches for a PvP video; that is arenas and battlegrounds,
+   * which are basically the same in the context of search filters.
    */
-  public filter() {
-    if (this.query === '') {
-      return true;
+  private static getPvpSuggestions(video: RendererVideo, language: Language) {
+    const suggestions: VideoTag[] = [];
+
+    if (video.result) {
+      const localised = getLocalePhrase(language, Phrase.Win);
+      const tag = new VideoTag(50, localised, '<ThumbsUp>', '#bb4420');
+      suggestions.push(tag);
+    } else {
+      const localised = getLocalePhrase(language, Phrase.Loss);
+      const tag = new VideoTag(50, localised, '<ThumbsDown>', '#bb4420');
+      suggestions.push(tag);
     }
 
-    let show = true;
-
-    this.query
-      .toLowerCase()
-      .split(' ')
-      .forEach((query) => {
-        const matches = this.filters.filter((s) => s.includes(query));
-
-        if (matches.length === 0) {
-          show = false;
-        }
-      });
-
-    return show;
-  }
-
-  /**
-   * Get some suggestions to show in the GUI.
-   */
-  static getSuggestions(language: Language, category: VideoCategory) {
-    if (category === VideoCategory.MythicPlus) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionMythicPlus);
-    }
-
-    if (category === VideoCategory.Raids) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionRaid);
-    }
-
-    if (category === VideoCategory.Battlegrounds) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionBattlegrounds);
-    }
-
-    if (category === VideoCategory.SoloShuffle) {
-      return getLocalePhrase(language, Phrase.SearchSuggestionSoloShuffle);
-    }
-
-    return getLocalePhrase(language, Phrase.SearchSuggestionDefault);
+    return suggestions;
   }
 }

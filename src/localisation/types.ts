@@ -325,6 +325,14 @@ enum Phrase {
   ClickToClearSort,
   Start,
   End,
+  Cloud,
+  Disk,
+  Starred,
+  Tagged,
+  Today,
+  Yesterday,
+  Chests,
+  Timed,
 }
 
 enum Language {

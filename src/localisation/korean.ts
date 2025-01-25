@@ -328,6 +328,14 @@ const KOREAN: Translations = {
   [Phrase.ClickToClearSort]: '정렬을 취소하려면 클릭하세요',
   [Phrase.Start]: '시작',
   [Phrase.End]: '끝',
+  [Phrase.Cloud]: "구름",
+  [Phrase.Disk]: "디스크",
+  [Phrase.Starred]: "별",
+  [Phrase.Tagged]: "태그됨",
+  [Phrase.Today]: "오늘",
+  [Phrase.Yesterday]: "어제",
+  [Phrase.Chests]: "상자",
+  [Phrase.Timed]: "시간 제한",
 };
 
 export default KOREAN;

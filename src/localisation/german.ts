@@ -328,6 +328,14 @@ const GERMAN: Translations = {
   [Phrase.ClickToClearSort]: 'Klicken Sie, um die Sortierung zu löschen',
   [Phrase.Start]: 'Start',
   [Phrase.End]: 'Ende',
+  [Phrase.Cloud]: "Wolke",
+  [Phrase.Disk]: "Scheibe",
+  [Phrase.Starred]: "Stern",
+  [Phrase.Tagged]: "Markiert",
+  [Phrase.Today]: "Heute",
+  [Phrase.Yesterday]: "Gestern",
+  [Phrase.Chests]: "Truhen",
+  [Phrase.Timed]: "Zeitgesteuert",
 };
 
 export default GERMAN;

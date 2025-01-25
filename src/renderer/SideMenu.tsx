@@ -156,7 +156,7 @@ const SideMenu = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        videoFilterQuery: '',
+        videoFilterTags: [],
         page: Pages.None,
         category: newCategory,
         playingVideo: first,

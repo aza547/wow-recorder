@@ -188,6 +188,7 @@
     "react-dom": "^18.2.0",
     "react-player": "^2.14.1",
     "react-router-dom": "^6.16.0",
+    "react-tag-autocomplete": "^7.5.0",
     "screenfull": "^6.0.2",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
