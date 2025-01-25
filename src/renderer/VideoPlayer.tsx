@@ -815,13 +815,13 @@ export const VideoPlayer = (props: IProps) => {
       player.current.seekTo(current + 5, 'seconds');
     }
 
-    if (e.key === ',') {
+    if (e.key === '.') {
       const current = player.current.getCurrentTime();
       const frame = 1 / 30; // Assume 30fps, not the end of the world if we skip 2 frames.
       player.current.seekTo(current + frame, 'seconds');
     }
 
-    if (e.key === '.') {
+    if (e.key === ',') {
       const current = player.current.getCurrentTime();
       const frame = 1 / 30; // Assume 30fps, not the end of the world if we skip 2 frames.
       player.current.seekTo(current - frame, 'seconds');
