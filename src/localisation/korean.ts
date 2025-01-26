@@ -336,6 +336,14 @@ const KOREAN: Translations = {
   [Phrase.Yesterday]: "어제",
   [Phrase.Chests]: "상자",
   [Phrase.Timed]: "시간 제한",
+  [Phrase.Activity]: "활동",
+  [Phrase.Unknown]: "알려지지 않은",
+  [Phrase.ClickToCollapse]: "접으려면 클릭하세요.",
+  [Phrase.ClickToExpand]: "확장하려면 클릭하세요.",
+  [Phrase.NoneTagged]: "이 행에는 태그가 지정된 녹음이 없습니다.",
+  [Phrase.MultipleTagged]: "이 행에는 태그가 지정된 녹음이 여러 개 포함되어 있습니다.",
+  [Phrase.NoneStarred]: "이 행에는 별표 표시된 녹음이 없습니다.",
+  [Phrase.SomeStarred]: '이 행에는 별표 표시된 녹음이 하나 이상 포함되어 있습니다.',
 };
 
 export default KOREAN;

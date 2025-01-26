@@ -336,7 +336,6 @@ const ENGLISH: Translations = {
   [Phrase.Yesterday]: "Yesterday",
   [Phrase.Chests]: "Chests",
   [Phrase.Timed]: "Timed",
-
   [Phrase.Activity]: "Activity",
   [Phrase.Unknown]: "Unknown",
   [Phrase.ClickToCollapse]: "Click to collapse.",
