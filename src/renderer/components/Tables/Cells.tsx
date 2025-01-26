@@ -141,7 +141,12 @@ export const populateDetailsCell = (
 
     return (
       <Tooltip content={tooltip}>
-        <Box className="flex items-center text-card-foreground px-3">
+        <Box
+          className="flex items-center text-card-foreground px-3"
+          onClick={(e) => {
+            stopPropagation(e);
+          }}
+        >
           <FontAwesomeIcon icon={icon} size="sm" />
         </Box>
       </Tooltip>
@@ -160,7 +165,12 @@ export const populateDetailsCell = (
 
     return (
       <Tooltip content={tooltip}>
-        <Box className="flex items-center text-card-foreground pr-3">
+        <Box
+          className="flex items-center text-card-foreground pr-3"
+          onClick={(e) => {
+            stopPropagation(e);
+          }}
+        >
           <FontAwesomeIcon icon={icon} size="sm" />
         </Box>
       </Tooltip>
