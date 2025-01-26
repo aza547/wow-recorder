@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Add the ability to skip individual frames with the "." or the "," hot keys.
+- Add some extra details to the video selection table showing if rows contain videos that are starred or tagged.
 
 ### Fixed
 - [Issue 587](https://github.com/aza547/wow-recorder/issues/587) - Fixes issues with the video player covering title bar.
