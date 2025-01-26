@@ -5,11 +5,11 @@ import { Language, Phrase } from 'localisation/types';
 import {
   CalendarDays,
   Eye,
+  Joystick,
   Gamepad2,
   Hash,
   Hourglass,
   MapPinned,
-  MessageSquare,
   Swords,
   Trophy,
 } from 'lucide-react';
@@ -80,15 +80,15 @@ export const LevelHeader = (language: Language) => (
 
 export const TypeHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
-    <Gamepad2 />
+    <Joystick />
     {getLocalePhrase(language, Phrase.TableHeaderType)}
   </span>
 );
 
-export const TagHeader = (language: Language) => (
+export const ActivityHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
-    <MessageSquare />
-    {getLocalePhrase(language, Phrase.TableHeaderTag)}
+    <Gamepad2 />
+    {getLocalePhrase(language, Phrase.Activity)}
   </span>
 );
 

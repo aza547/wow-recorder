@@ -94,9 +94,9 @@ const SearchBar = (props: IProps) => {
 
   const renderIcon = (icon: string) => {
     const muiIconPropsSx = {
-      mr: '4px',
       height: '15px',
       width: '25px',
+      color: 'white',
     };
 
     if (icon === '<SaveIcon>') {
@@ -127,9 +127,9 @@ const SearchBar = (props: IProps) => {
       return (
         <FontAwesomeIcon
           icon={faStar}
-          className="mr-1"
           height="15px"
           width="25px"
+          color="white"
         />
       );
     }
@@ -138,9 +138,9 @@ const SearchBar = (props: IProps) => {
       return (
         <FontAwesomeIcon
           icon={faMessage}
-          className="mr-1"
           height="15px"
           width="25px"
+          color="white"
         />
       );
     }
@@ -149,9 +149,9 @@ const SearchBar = (props: IProps) => {
       return (
         <FontAwesomeIcon
           icon={faDragon}
-          className="mr-1"
           height="15px"
           width="25px"
+          color="white"
         />
       );
     }
@@ -160,27 +160,29 @@ const SearchBar = (props: IProps) => {
       return (
         <FontAwesomeIcon
           icon={faDungeon}
-          className="mr-1"
           height="15px"
           width="25px"
+          color="white"
         />
       );
     }
 
     if (icon === '<ThumbsUp>') {
-      return <ThumbsUp className="mr-1" height="15px" width="25px" />;
+      return <ThumbsUp height="15px" width="25px" color="white" fill="white" />;
     }
 
     if (icon === '<ThumbsDown>') {
-      return <ThumbsDown className="mr-1" height="15px" width="25px" />;
+      return (
+        <ThumbsDown height="15px" width="25px" color="white" fill="white" />
+      );
     }
 
     if (icon === '<CalendarDays>') {
-      return <CalendarDays className="mr-1" height="15px" width="25px" />;
+      return <CalendarDays height="15px" width="25px" color="white" />;
     }
 
     if (icon === '<MapPinned>') {
-      return <MapPinned className="mr-1" height="15px" width="25px" />;
+      return <MapPinned height="15px" width="25px" color="white" />;
     }
 
     return (
@@ -196,7 +198,6 @@ const SearchBar = (props: IProps) => {
           borderRadius: '15%',
           boxSizing: 'border-box',
           objectFit: 'cover',
-          mr: '4px',
           bgcolor: 'black',
         }}
       />
@@ -223,7 +224,7 @@ const SearchBar = (props: IProps) => {
 
     return (
       <div className={classes.join(' ')} {...optionProps}>
-        <div className="flex items-center font-sans font-bold text-[12px] truncate">
+        <div className="flex items-center font-sans font-bold text-[12px] truncate gap-1">
           {renderIcon(tag.icon)}
           {tag.label}
         </div>
@@ -254,11 +255,11 @@ const SearchBar = (props: IProps) => {
         style={{ backgroundColor: decoded.color }}
         {...tagProps}
       >
-        <div className="flex items-center font-sans text-black font-bold text-[12px] truncate">
+        <div className="flex items-center font-sans text-white font-bold text-[12px] truncate gap-1">
           {renderIcon(decoded.icon)}
           {tag.label}
         </div>
-        <X size={20} className="ml-1" color="black" />
+        <X size={20} className="ml-1" color="white" />
       </button>
     );
   };

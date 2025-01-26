@@ -12,16 +12,27 @@ import {
   getPlayerSpecID,
   getWoWClassColor,
   povDiskFirstNameSort,
+  isRaidUtil,
+  isMythicPlusUtil,
+  getDungeonName,
 } from 'renderer/rendererutils';
-import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
-import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
 import { Box, Checkbox } from '@mui/material';
 import { specImages } from 'renderer/images';
-import { Language } from 'localisation/types';
+import { Language, Phrase } from 'localisation/types';
 import { Button } from '../Button/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMessage } from '@fortawesome/free-solid-svg-icons';
+import {
+  faAngleDoubleDown,
+  faAngleDoubleUp,
+  faMessage,
+  faStar,
+} from '@fortawesome/free-solid-svg-icons';
+import {
+  faStar as faStarOutline,
+  faMessage as faMessageOutline,
+} from '@fortawesome/free-regular-svg-icons';
 import { Tooltip } from '../Tooltip/Tooltip';
+import { getLocalePhrase } from 'localisation/translations';
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -65,54 +76,101 @@ export const populateDateCell = (info: CellContext<RendererVideo, unknown>) => {
   return dateToHumanReadable(date);
 };
 
-export const populateTagCell = (info: CellContext<RendererVideo, unknown>) => {
-  const tag = info.getValue() as string;
-  return <div className="truncate">{tag}</div>;
+export const populateActivityCell = (
+  info: CellContext<RendererVideo, unknown>,
+  language: Language,
+) => {
+  const video = info.getValue() as RendererVideo;
+  let activity = getLocalePhrase(language, Phrase.Unknown);
+
+  if (isRaidUtil(video) && video.encounterName) {
+    activity = video.encounterName;
+  } else if (isMythicPlusUtil(video) && video.mapID) {
+    activity = getDungeonName(video);
+  } else if (video.zoneName) {
+    activity = video.zoneName;
+  }
+
+  return <div className="truncate">{activity}</div>;
 };
 
 export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
+  language: Language,
 ) => {
   const { row } = ctx;
   const video = ctx.getValue() as RendererVideo;
 
-  // Search for the tag in the video but also in any linked videos, we're
-  // going to display either at the top of the table.
-  const tag = [video, ...video.multiPov].map((v) => v.tag).find((t) => t);
-
   const renderExpandButton = () => {
-    return (
-      <Button
-        onClick={(e) => {
-          row.getToggleExpandedHandler()();
-          stopPropagation(e);
-        }}
-        className="cursor-pointer"
-        size="sm"
-        variant="ghost"
-      >
-        {row.getIsExpanded() ? (
-          <KeyboardDoubleArrowUpIcon />
-        ) : (
-          <KeyboardDoubleArrowDownIcon />
-        )}
-      </Button>
-    );
-  };
+    const tooltip = row.getIsExpanded()
+      ? getLocalePhrase(language, Phrase.ClickToCollapse)
+      : getLocalePhrase(language, Phrase.ClickToExpand);
 
-  const renderTagIcon = () => {
+    const icon = row.getIsExpanded() ? faAngleDoubleUp : faAngleDoubleDown;
+
     return (
-      <Tooltip content={tag}>
-        <Button className="cursor-pointer" size="sm" variant="ghost">
-          <FontAwesomeIcon icon={faMessage} />
+      <Tooltip content={tooltip}>
+        <Button
+          className="cursor-pointer"
+          size="sm"
+          variant="ghost"
+          onClick={(e) => {
+            row.getToggleExpandedHandler()();
+            stopPropagation(e);
+          }}
+        >
+          <FontAwesomeIcon icon={icon} />
         </Button>
       </Tooltip>
     );
   };
 
+  const renderTagIcon = () => {
+    // Search for the tag in the video but also in any linked videos, we're
+    // going to display either at the top of the table.
+    const tags = [video, ...video.multiPov].map((v) => v.tag).filter((t) => t);
+
+    const icon = tags.length > 0 ? faMessage : faMessageOutline;
+    let tooltip = getLocalePhrase(language, Phrase.NoneTagged);
+
+    if (tags.length > 1) {
+      tooltip = getLocalePhrase(language, Phrase.MultipleTagged);
+    } else if (tags.length > 0 && typeof tags[0] === 'string') {
+      tooltip = tags[0];
+    }
+
+    return (
+      <Tooltip content={tooltip}>
+        <Box className="flex items-center text-card-foreground px-3">
+          <FontAwesomeIcon icon={icon} size="sm" />
+        </Box>
+      </Tooltip>
+    );
+  };
+
+  const renderStarIcon = () => {
+    const starred = [video, ...video.multiPov]
+      .map((v) => v.protected)
+      .find((p) => p);
+
+    const icon = starred ? faStar : faStarOutline;
+    const tooltip = starred
+      ? getLocalePhrase(language, Phrase.SomeStarred)
+      : getLocalePhrase(language, Phrase.NoneStarred);
+
+    return (
+      <Tooltip content={tooltip}>
+        <Box className="flex items-center text-card-foreground pr-3">
+          <FontAwesomeIcon icon={icon} size="sm" />
+        </Box>
+      </Tooltip>
+    );
+  };
+
   return (
-    <Box className="inline-flex justify-end w-full">
-      {tag && renderTagIcon()}
+    <Box className="inline-flex">
+      {renderStarIcon()}
+      {renderTagIcon()}
       {renderExpandButton()}
     </Box>
   );

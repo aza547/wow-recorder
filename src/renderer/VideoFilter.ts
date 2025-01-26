@@ -47,8 +47,8 @@ export default class VideoFilter {
       .map((tag) => tag.value)
       .filter((tag) => typeof tag === 'string');
 
-    this.matches = VideoFilter.getVideoSuggestions(video, language).map((tag) =>
-      tag.encode(),
+    this.matches = [video, ...video.multiPov].flatMap((v) =>
+      VideoFilter.getVideoSuggestions(v, language).map((tag) => tag.encode()),
     );
   }
 

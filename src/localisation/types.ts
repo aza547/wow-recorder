@@ -333,6 +333,15 @@ enum Phrase {
   Yesterday,
   Chests,
   Timed,
+
+  Activity,
+  Unknown,
+  ClickToCollapse,
+  ClickToExpand,
+  NoneTagged,
+  MultipleTagged,
+  NoneStarred,
+  SomeStarred,
 }
 
 enum Language {

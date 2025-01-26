@@ -336,6 +336,15 @@ const ENGLISH: Translations = {
   [Phrase.Yesterday]: "Yesterday",
   [Phrase.Chests]: "Chests",
   [Phrase.Timed]: "Timed",
+
+  [Phrase.Activity]: "Activity",
+  [Phrase.Unknown]: "Unknown",
+  [Phrase.ClickToCollapse]: "Click to collapse.",
+  [Phrase.ClickToExpand]: "Click to expand.",
+  [Phrase.NoneTagged]: "This row contains no tagged recordings.",
+  [Phrase.MultipleTagged]: "This row contains multiple tagged recordings.",
+  [Phrase.NoneStarred]: "This row contains no starred recordings.",
+  [Phrase.SomeStarred]: 'This row contains atleast one starred recording.',
 };
 
 export default ENGLISH;
