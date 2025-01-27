@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix a longstanding issue where the status tooltip could overlap the recording preview.
 
 ## [6.6.0] - 2025-01-27
 ### Changed

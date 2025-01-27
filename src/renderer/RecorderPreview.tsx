@@ -44,15 +44,24 @@ const RecorderPreview: React.FC = () => {
 
   return (
     <Box
-      id="preview-box"
       sx={{
         width: '100%',
         height: '100%',
-        border: '2px solid black',
         boxSizing: 'border-box',
+        backgroundColor: 'black',
       }}
     >
-      Preview...
+      <Box
+        id="preview-box"
+        sx={{
+          height: '100%',
+          border: '2px solid black',
+          boxSizing: 'border-box',
+          mx: 12,
+        }}
+      >
+        Preview...
+      </Box>
     </Box>
   );
 };
