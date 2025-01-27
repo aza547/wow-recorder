@@ -134,12 +134,12 @@ export const configSchema = {
   audioInputDevices: {
     description: Phrase.AudioInputDevicesDescription,
     type: 'string',
-    default: '',
+    default: 'default',
   },
   audioOutputDevices: {
     description: Phrase.AudioOutputDevicesDescription,
     type: 'string',
-    default: '',
+    default: 'default',
   },
   minEncounterDuration: {
     description: Phrase.MinEncounterDurationDescription,

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Fix a longstanding issue where the status tooltip could overlap the recording preview.
+- Allow the default audio device to be selected, and default to it.
 
 ## [6.6.0] - 2025-01-27
 ### Changed

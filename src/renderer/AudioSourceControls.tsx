@@ -21,7 +21,7 @@ import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
 
 const ipc = window.electron.ipcRenderer;
-let debounceTimer: NodeJS.Timer | undefined;
+let debounceTimer: NodeJS.Timeout | undefined;
 
 interface IProps {
   appState: AppState;

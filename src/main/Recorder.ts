@@ -917,7 +917,7 @@ export default class Recorder extends EventEmitter {
     const inputDevices =
       osn.NodeObs.OBS_settings_getInputAudioDevices() as IOBSDevice[];
 
-    return inputDevices.filter((v) => v.id !== 'default');
+    return inputDevices;
   }
 
   /**
@@ -932,7 +932,7 @@ export default class Recorder extends EventEmitter {
     const outputDevices =
       osn.NodeObs.OBS_settings_getOutputAudioDevices() as IOBSDevice[];
 
-    return outputDevices.filter((v) => v.id !== 'default');
+    return outputDevices;
   }
 
   /**
