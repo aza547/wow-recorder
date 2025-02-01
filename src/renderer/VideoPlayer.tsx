@@ -505,6 +505,8 @@ export const VideoPlayer = (props: IProps) => {
         ref={progressSlider}
         sx={{
           m: 2,
+          // Without this hovering on the slider changes colors elsewhere. Super weird.
+          willChange: 'transform, opacity',
           width: '100%',
           ...sliderSx,
           '& .MuiSlider-markLabel': {
