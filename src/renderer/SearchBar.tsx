@@ -39,26 +39,27 @@ interface IProps {
 
 const SearchBar = (props: IProps) => {
   const { appState, setAppState, categoryState } = props;
+  const { language, videoFilterTags } = appState;
 
   const alphabeticalValueSort = (a: Tag, b: Tag) => {
     return String(a.value).localeCompare(String(b.value));
   };
 
   const [suggestions, setSuggestions] = useState<Tag[]>(
-    VideoFilter.getCategorySuggestions(categoryState, appState.language).map(
-      (t) => t.getAsTag(),
+    VideoFilter.getCategorySuggestions(categoryState, language).map((t) =>
+      t.getAsTag(),
     ),
   );
 
   useEffect(() => {
     // We need this so we reset the search on changing category.
     // Not really sure why the whole component isn't re-created.
-    setSuggestions(
-      VideoFilter.getCategorySuggestions(categoryState, appState.language).map(
-        (t) => t.getAsTag(),
-      ),
-    );
-  }, [appState.category]);
+    const s = VideoFilter.getCategorySuggestions(categoryState, language)
+      .map((t) => t.getAsTag())
+      .filter((t) => !videoFilterTags.map((i) => i.value).includes(t.value));
+
+    setSuggestions(s);
+  }, [appState, categoryState, videoFilterTags]);
 
   const onAdd = (newTag: Tag) => {
     setAppState((prevState) => {
@@ -264,11 +265,11 @@ const SearchBar = (props: IProps) => {
     );
   };
 
-  function renderInput({
+  const renderInput = ({
     classNames,
     inputWidth,
     ...inputProps
-  }: InputRendererProps) {
+  }: InputRendererProps) => {
     return (
       <input
         className={classNames.input}
@@ -277,12 +278,12 @@ const SearchBar = (props: IProps) => {
         onKeyDown={(event) => event.stopPropagation()}
       />
     );
-  }
+  };
 
   return (
     <div>
       <Label htmlFor="search-bar">
-        {getLocalePhrase(appState.language, Phrase.SearchLabel)}
+        {getLocalePhrase(language, Phrase.SearchLabel)}
       </Label>
       <ReactTags
         allowResize={false}
