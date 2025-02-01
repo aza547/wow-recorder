@@ -249,6 +249,21 @@ const SearchBar = (props: IProps) => {
     // encapsulate all the required information into a string.
     const decoded = VideoTag.decode(tag.value);
 
+    // If they are a priest we don't want to have white text on a white bakground.
+    const closeIconColor = decoded.color === '#FFFFFF' ? 'black' : 'white';
+    const textClass = decoded.color === '#FFFFFF' ? 'text-black' : 'text-white';
+
+    const twTagClass = [
+      'flex',
+      'items-center',
+      'font-sans',
+      'font-bold',
+      'text-[12px]',
+      'truncate',
+      'gap-1',
+      textClass,
+    ].join(' ');
+
     return (
       <button
         type="button"
@@ -256,11 +271,11 @@ const SearchBar = (props: IProps) => {
         style={{ backgroundColor: decoded.color }}
         {...tagProps}
       >
-        <div className="flex items-center font-sans text-white font-bold text-[12px] truncate gap-1">
+        <div className={twTagClass}>
           {renderIcon(decoded.icon)}
           {tag.label}
         </div>
-        <X size={20} className="ml-1" color="white" />
+        <X size={20} className="ml-1" color={closeIconColor} />
       </button>
     );
   };
