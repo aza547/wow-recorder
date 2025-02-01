@@ -472,6 +472,15 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   2660: 'Ara-Kara, City of Echoes',
   2662: 'The Dawnbreaker',
   2669: 'City of Threads',
+
+  // TWW S2.
+  // Taken from https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L487.
+  2649: 'Priory of the Sacred Flame',
+  2651: 'Darkflame Cleft',
+  2648: 'The Rookery',
+  2661: 'Cinderbrew Meadery',
+  2773: 'Operation: Floodgate',
+  1594: 'THE MOTHERLODE!!',
 };
 
 /**
@@ -528,13 +537,21 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   168: 'The Everbloom',
   456: 'Throne of the Tides',
 
-  // TWW S1 - taken from WoWhead, searcing for "set keystone map X".
+  // TWW S1 - taken from WoWhead, searching for "set keystone map X".
   353: 'Siege of Boralus',
   501: 'The Stonevault',
   502: 'City of Threads',
   503: 'Ara-Kara, City of Echoes',
   505: 'The Dawnbreaker',
   507: 'Grim Batol',
+
+  // TWW S2 - taken from WoWhead, searching for "set keystone map X".
+  499: 'Priory of the Sacred Flame',
+  504: 'Darkflame Cleft',
+  500: 'The Rookery',
+  506: 'Cinderbrew Meadery',
+  247: 'THE MOTHERLODE!!',
+  525: 'Operation: Floodgate',
 };
 
 /**
@@ -556,11 +573,11 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   380: [41 * 60, 32 * 60 + 48, 24 * 60 + 36],
   381: [39 * 60, 31 * 60 + 12, 23 * 60 + 24],
   376: [32 * 60, 25 * 60 + 36, 19 * 60 + 12], // The Necrotic Wake
-  382: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
+  382: [38 * 60, 30 * 60 + 24, 22 * 60 + 38], // Theater of Pain
   227: [42 * 60, 33 * 60 + 36, 25 * 60 + 12],
   234: [35 * 60, 28 * 60, 21 * 60],
   369: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
-  370: [32 * 60, 25 * 60 + 36, 19 * 60 + 12],
+  370: [32 * 60, 25 * 60 + 36, 19 * 60 + 12], // Operation: Mechagon - Workshop
   391: [39 * 60, 31 * 60 + 12, 23 * 60 + 24],
   392: [30 * 60, 24 * 60, 18 * 60],
   169: [30 * 60, 24 * 60, 18 * 60],
@@ -605,6 +622,16 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   502: [35 * 60, 35 * 60 * 0.8, 35 * 60 * 0.6], // City of Threads
   505: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // The Dawnbreaker
   507: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Grim Batol
+
+  // TWW S2
+  // Don't have exact timers yet so for now have assumed 0.8 and 0.6 multipliers.
+  // https://www.wowhead.com/guide/mythic-plus-dungeons/the-war-within-season-2/overview.
+  506: [30 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'Cinderbrew Meadery'
+  504: [30 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'Darkflame Cleft'
+  500: [30 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'The Rookery'
+  499: [30 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'Priory of the Sacred Flame'
+  525: [32 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'Operation: Floodgate'
+  247: [39 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'THE MOTHERLODE!!'
 };
 
 // Useful database for grabbing this stuff:
@@ -883,6 +910,40 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   1050: 'Forgemaster Throngus',
   1048: 'Drahga Shadowburner',
   1049: 'Erudax, the Duke of Below',
+
+  // Priory of the Sacred Flame
+  2847: 'Captain Dailcry',
+  2835: 'Baron Braunpyke',
+  2848: 'Prioress Murrpray',
+
+  // Darkflame Cleft
+  2829: "Ol' Waxbeard",
+  2826: 'Blazikon',
+  2787: 'The Candle King',
+  2788: 'The Darkness',
+
+  // The Rookery
+  2816: 'Kyrioss',
+  2861: 'Stormguard Gorren',
+  2836: 'Voidstone Monstrosity',
+
+  // Cinderbrew Meadery
+  2900: 'Brew Master Aldryr',
+  2929: "I'pa",
+  2931: 'Benk Buzzbee',
+  2930: 'Goldie Baronbottom',
+
+  // Operation: Floodgate
+  3020: 'Big M.O.M.M.A.',
+  3054: 'Geezle Gigazap',
+  3053: 'Swampface',
+  3019: 'Demolition Duo',
+
+  // THE MOTHERLODE!!
+  2105: 'Coin-Operated Crowd Pummeler',
+  2106: 'Azerokk',
+  2107: 'Rixxa Fluxflame',
+  2108: 'Mogul Razdunk',
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
@@ -935,6 +996,7 @@ const dungeonAffixesById: NumberKeyToStringValueMapType = {
   158: 'Voidbound',
   159: 'Oblivion',
   160: 'Devour',
+  162: 'Pulsar',
 };
 
 /**
