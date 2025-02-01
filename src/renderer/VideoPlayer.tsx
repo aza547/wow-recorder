@@ -510,6 +510,8 @@ export const VideoPlayer = (props: IProps) => {
     if (typeof value === 'number') {
       player.current.seekTo(value, 'seconds');
     }
+
+    setIsDragging(false);
   };
 
   /**
@@ -581,7 +583,6 @@ export const VideoPlayer = (props: IProps) => {
         onChange={handleProgressSliderChange}
         onChangeCommitted={handleChangeCommitted}
         onMouseDown={() => setIsDragging(true)}
-        onMouseUp={() => setIsDragging(false)}
         max={duration}
         marks={marks}
         step={0.01}
@@ -714,7 +715,12 @@ export const VideoPlayer = (props: IProps) => {
           Phrase.PlaybackSpeedTooltip,
         )}
       >
-        <Button variant="ghost" size="xs" onClick={handleRateChange}>
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={handleRateChange}
+          className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold font-mono"
+        >
           {playbackRateText}
         </Button>
       </Tooltip>
