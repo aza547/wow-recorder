@@ -15,7 +15,7 @@ import {
   useState,
 } from 'react';
 import { Backdrop, Box, CircularProgress, Slider } from '@mui/material';
-import { Resizable } from 're-resizable';
+import { Resizable, ResizeCallback } from 're-resizable';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -45,6 +45,7 @@ import {
 } from './rendererutils';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { Direction } from 're-resizable/lib/resizer';
 
 interface IProps {
   video: RendererVideo;
@@ -60,11 +61,11 @@ const playbackRates = [0.25, 0.5, 1, 2];
 const style = { backgroundColor: 'black' };
 const progressInterval = 100;
 
-const sliderSx = {
+const sliderBaseSx = {
   '& .MuiSlider-thumb': {
     color: 'white',
-    width: '16px',
-    height: '16px',
+    width: '10px',
+    height: '10px',
     '&:hover': {
       color: '#bb4220',
       boxShadow: 'none',
@@ -72,9 +73,11 @@ const sliderSx = {
   },
   '& .MuiSlider-track': {
     color: '#bb4220',
+    height: '4px',
   },
   '& .MuiSlider-rail': {
     color: '#bb4220',
+    height: '4px',
   },
   '& .MuiSlider-active': {
     color: '#bb4220',
@@ -95,9 +98,22 @@ export const VideoPlayer = (props: IProps) => {
   const player = useRef<ReactPlayer>(null);
   const progressSlider = useRef<HTMLSpanElement>(null);
 
+  // Progress is in seconds. Strictly it is the position of the
+  // slider, which is usally the same as the video except for
+  // when the user is dragging.
   const [progress, setProgress] = useState<number>(0);
+
+  // While the user is dragging the thumb of the slider, we don't
+  // want to update the video position. This is used to conditionally
+  // avoid this.
+  const [isDragging, setIsDragging] = useState(false);
+
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [duration, setDuration] = useState<number>(0);
+
+  // In clipping mode, the user controls three thumbs. The regular thumb
+  // that controls the video position, and a start and stop thumb to
+  // indicate where the clip should be made from.
   const [clipMode, setClipMode] = useState<boolean>(false);
   const [clipStartValue, setClipStartValue] = useState<number>(0);
   const [clipStopValue, setClipStopValue] = useState<number>(100);
@@ -127,6 +143,9 @@ export const VideoPlayer = (props: IProps) => {
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
+  /**
+   * Set if the video is playing or not.
+   */
   const setPlaying = useCallback(
     (v: boolean) => {
       setAppState((prevState) => {
@@ -291,6 +310,93 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
+   * Conveince method to get an appropriate sx prop for the regular
+   * progress slider.
+   */
+  const getProgressSliderSx = () => {
+    return {
+      ...sliderBaseSx,
+      m: 2,
+      width: '100%',
+      '& .MuiSlider-markLabel': {
+        top: '20px',
+      },
+      '& .MuiSlider-mark': {
+        backgroundColor: 'white',
+        width: '2px',
+        height: '4px',
+      },
+      '& .MuiSlider-rail': {
+        background: getRailGradient(),
+        height: '4px',
+      },
+      '& .MuiSlider-track': {
+        background: getTrackGradient(),
+        border: 'none',
+        height: '4px',
+      },
+    };
+  };
+
+  /**
+   * Conveince method to get an appropriate sx prop for the clip mode
+   * progress slider.
+   */
+  const getProgressClipSliderSx = () => {
+    return {
+      ...sliderBaseSx,
+      m: 2,
+      width: '100%',
+      '& .MuiSlider-thumb': {
+        "&[data-index='0']": {
+          backgroundColor: 'white',
+          width: '5px',
+          height: '20px',
+          borderRadius: 0,
+          '& .MuiSlider-valueLabel': {
+            fontSize: '0.75rem',
+          },
+          '&:hover': {
+            backgroundColor: '#bb4220',
+            boxShadow: 'none',
+          },
+        },
+        "&[data-index='1']": {
+          width: '10px',
+          height: '10px',
+          zIndex: 1,
+          backgroundColor: 'white',
+          '& .MuiSlider-valueLabel': {
+            fontSize: '0.75rem',
+            rotate: '180deg',
+            transform: 'translateY(-15%) scale(1)',
+            '& .MuiSlider-valueLabelCircle': {
+              rotate: '180deg',
+            },
+          },
+          '&:hover': {
+            backgroundColor: '#bb4220',
+            boxShadow: 'none',
+          },
+        },
+        "&[data-index='2']": {
+          backgroundColor: 'white',
+          width: '5px',
+          height: '20px',
+          borderRadius: 0,
+          '& .MuiSlider-valueLabel': {
+            fontSize: '0.75rem',
+          },
+          '&:hover': {
+            backgroundColor: '#bb4220',
+            boxShadow: 'none',
+          },
+        },
+      },
+    };
+  };
+
+  /**
    * Toggle if the video is currently playing or not. You would think this
    * would be straight forward and you could just do setPlaying(!playing). You
    * would be wrong. Seems a limitation on the react-player library we are using.
@@ -356,7 +462,10 @@ export const VideoPlayer = (props: IProps) => {
    */
   const onProgress = (event: OnProgressProps) => {
     persistentProgress.current = event.playedSeconds;
-    setProgress(event.played);
+
+    if (!isDragging) {
+      setProgress(event.playedSeconds);
+    }
   };
 
   /**
@@ -377,8 +486,25 @@ export const VideoPlayer = (props: IProps) => {
       setClipStopValue(value[2]);
 
       if (index === 1) {
-        player.current.seekTo(value[1], 'seconds');
+        setProgress(value[1]);
       }
+    }
+
+    if (typeof value === 'number') {
+      setProgress(value);
+    }
+  };
+
+  const handleChangeCommitted = (
+    _event: React.SyntheticEvent | Event,
+    value: number | number[],
+  ) => {
+    if (!player.current) {
+      return;
+    }
+
+    if (Array.isArray(value) && typeof value[1] == 'number') {
+      player.current.seekTo(value[1], 'seconds');
     }
 
     if (typeof value === 'number') {
@@ -417,120 +543,48 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
+   * Format the clip mode labels.
+   */
+  const getClipLabelFormat = (value: number, index: number) => {
+    if (clipMode) {
+      if (index === 0)
+        return `${getLocalePhrase(appState.language, Phrase.Start)} (${secToMmSs(value)})`;
+      if (index === 1) return secToMmSs(value);
+      if (index === 2)
+        return `${getLocalePhrase(appState.language, Phrase.End)} (${secToMmSs(value)})`;
+    }
+
+    return secToMmSs(value);
+  };
+
+  /**
    * Returns the progress slider for the video controls.
    */
   const renderProgressSlider = () => {
-    const current = progress * duration;
-    const thumbValues = [clipStartValue, current, clipStopValue];
+    const sx = clipMode ? getProgressClipSliderSx() : getProgressSliderSx();
 
-    if (clipMode) {
-      const getLabel = (value: number, index: number) => {
-        if (clipMode) {
-          if (index === 0)
-            return `${getLocalePhrase(appState.language, Phrase.Start)} (${secToMmSs(value)})`;
-          if (index === 1) return secToMmSs(value);
-          if (index === 2)
-            return `${getLocalePhrase(appState.language, Phrase.End)} (${secToMmSs(value)})`;
-        }
+    const value = clipMode
+      ? [clipStartValue, progress, clipStopValue]
+      : progress;
 
-        return secToMmSs(value);
-      };
-
-      return (
-        <Slider
-          ref={progressSlider}
-          sx={{
-            m: 2,
-            width: '100%',
-            ...sliderSx,
-            '& .MuiSlider-thumb': {
-              "&[data-index='0']": {
-                backgroundColor: 'white',
-                width: '5px',
-                height: '20px',
-                borderRadius: 0,
-                '& .MuiSlider-valueLabel': {
-                  fontSize: '0.75rem',
-                },
-                '&:hover': {
-                  backgroundColor: '#bb4220',
-                  boxShadow: 'none',
-                },
-              },
-              "&[data-index='1']": {
-                width: '10px',
-                height: '10px',
-                zIndex: 1,
-                backgroundColor: 'white',
-                '& .MuiSlider-valueLabel': {
-                  fontSize: '0.75rem',
-                  rotate: '180deg',
-                  transform: 'translateY(-15%) scale(1)',
-                  '& .MuiSlider-valueLabelCircle': {
-                    rotate: '180deg',
-                  },
-                },
-                '&:hover': {
-                  backgroundColor: '#bb4220',
-                  boxShadow: 'none',
-                },
-              },
-              "&[data-index='2']": {
-                backgroundColor: 'white',
-                width: '5px',
-                height: '20px',
-                borderRadius: 0,
-                '& .MuiSlider-valueLabel': {
-                  fontSize: '0.75rem',
-                },
-                '&:hover': {
-                  backgroundColor: '#bb4220',
-                  boxShadow: 'none',
-                },
-              },
-            },
-          }}
-          valueLabelDisplay="on"
-          valueLabelFormat={getLabel}
-          value={thumbValues}
-          onChange={handleProgressSliderChange}
-          max={duration}
-          disableSwap
-        />
-      );
-    }
+    const valueLabelFormat = clipMode ? getClipLabelFormat : secToMmSs;
+    const valueLabelDisplay = clipMode ? 'on' : 'off';
+    const marks = clipMode ? undefined : getMarks();
 
     return (
       <Slider
         ref={progressSlider}
-        sx={{
-          m: 2,
-          // Without this hovering on the slider changes colors elsewhere. Super weird.
-          willChange: 'transform, opacity',
-          width: '100%',
-          ...sliderSx,
-          '& .MuiSlider-markLabel': {
-            top: '20px',
-          },
-          '& .MuiSlider-mark': {
-            backgroundColor: 'white',
-            width: '2px',
-            height: '4px',
-          },
-          '& .MuiSlider-rail': {
-            background: getRailGradient(),
-          },
-          '& .MuiSlider-track': {
-            background: getTrackGradient(),
-            border: 'none',
-          },
-        }}
-        valueLabelDisplay="auto"
-        valueLabelFormat={secToMmSs}
-        value={current}
+        sx={sx}
+        value={value}
+        valueLabelFormat={valueLabelFormat}
+        valueLabelDisplay={valueLabelDisplay}
         onChange={handleProgressSliderChange}
+        onChangeCommitted={handleChangeCommitted}
+        onMouseDown={() => setIsDragging(true)}
+        onMouseUp={() => setIsDragging(false)}
         max={duration}
-        marks={getMarks()}
+        marks={marks}
+        step={0.01}
       />
     );
   };
@@ -636,13 +690,12 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the progress text indicator for the video controls.
    */
   const renderProgressText = () => {
-    const current = progress * duration;
     const max = duration;
 
     return (
       <div className="mx-1 flex">
         <span className="whitespace-nowrap text-foreground-lighter text-[11px] font-semibold font-mono">
-          {secToMmSs(current)} / {secToMmSs(max)}
+          {secToMmSs(progress)} / {secToMmSs(max)}
         </span>
       </div>
     );
@@ -763,8 +816,7 @@ export const VideoPlayer = (props: IProps) => {
   const renderVolumeSlider = () => {
     return (
       <Slider
-        sx={{ m: 1, width: '75px', ...sliderSx }}
-        valueLabelDisplay="auto"
+        sx={{ m: 1, width: '75px', ...sliderBaseSx }}
         value={muted ? 0 : volume * 100}
         onChange={handleVolumeChange}
         valueLabelFormat={Math.round}
@@ -860,14 +912,15 @@ export const VideoPlayer = (props: IProps) => {
     ipc.on('pausePlayer', () => setPlaying(false));
   }, [setPlaying]);
 
-  const onResize = (_unused1: unknown, __unused2: unknown, element: any) => {
+  /**
+   * Handle a resize event.
+   */
+  const onResize: ResizeCallback = (
+    event: MouseEvent | TouchEvent,
+    direction: Direction,
+    element: HTMLElement,
+  ) => {
     const height = element.clientHeight;
-
-    if (typeof height !== 'number') {
-      // Just being cautious as we have no types for this callback.
-      return;
-    }
-
     playerHeight.current = height;
   };
 
