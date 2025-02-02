@@ -335,7 +335,6 @@ enum Phrase {
   Yesterday,
   Chests,
   Timed,
-
   Activity,
   Unknown,
   ClickToCollapse,
@@ -344,6 +343,12 @@ enum Phrase {
   MultipleTagged,
   NoneStarred,
   SomeStarred,
+  RetailPtrLogPathDescription,
+  RecordRetailPtrDescription,
+  RetailPtr,
+  RecordRetailPtrLabel,
+  RetailPtrLogPathLabel,
+  InvalidRetailPtrLogPathText,
 }
 
 enum Language {

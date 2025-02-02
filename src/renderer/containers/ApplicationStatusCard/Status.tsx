@@ -59,6 +59,11 @@ const Status = ({
       flavours.push(s);
     }
 
+    if (config.recordRetailPtr) {
+      const s = getLocalePhrase(appState.language, Phrase.RetailPtr);
+      flavours.push(s);
+    }
+
     if (flavours.length > 0) {
       return `${flavours.join(', ')}.`;
     }
@@ -209,6 +214,15 @@ const Status = ({
                 {': '}
               </span>
               <code>{config.eraLogPath}</code>
+            </li>
+          )}
+          {config.recordRetailPtr && (
+            <li>
+              <span className="font-bold">
+                {getLocalePhrase(appState.language, Phrase.RetailPtr)}
+                {': '}
+              </span>
+              <code>{config.retailPtrLogPath}</code>
             </li>
           )}
         </ul>

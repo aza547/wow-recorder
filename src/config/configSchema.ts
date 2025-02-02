@@ -7,6 +7,7 @@ export type ConfigurationSchema = {
   retailLogPath: string;
   classicLogPath: string;
   eraLogPath: string;
+  retailPtrLogPath: string;
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
@@ -24,6 +25,7 @@ export type ConfigurationSchema = {
   recordRetail: boolean;
   recordClassic: boolean;
   recordEra: boolean;
+  recordRetailPtr: boolean;
   recordRaids: boolean;
   recordDungeons: boolean;
   recordTwoVTwo: boolean;
@@ -111,6 +113,11 @@ export const configSchema = {
   },
   eraLogPath: {
     description: Phrase.EraLogPathDescription,
+    type: 'string',
+    default: '',
+  },
+  retailPtrLogPath: {
+    description: Phrase.RetailPtrLogPathDescription,
     type: 'string',
     default: '',
   },
@@ -202,6 +209,11 @@ export const configSchema = {
   },
   recordEra: {
     description: Phrase.RecordEraDescription,
+    type: 'boolean',
+    default: false,
+  },
+  recordRetailPtr: {
+    description: Phrase.RecordRetailPtrDescription,
     type: 'boolean',
     default: false,
   },

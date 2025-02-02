@@ -346,6 +346,12 @@ const KOREAN: Translations = {
   [Phrase.SomeStarred]: '이 행에는 별표 표시된 녹음이 하나 이상 포함되어 있습니다.',
   [Phrase.UploadClipsLabel]: '클립 업로드',
   [Phrase.CloudUploadClipsDescription]: '잘린 녹음을 클라우드에 업로드해야 하는 경우.',
+  [Phrase.RetailPtrLogPathDescription]: '본섭 PTR 로그 폴더 위치 (ex: "World of Warcraft\\_xptr_\\Logs").',
+  [Phrase.RecordRetailPtrDescription]: '본섭을 PTR 기록해야 하는지 여부.',
+  [Phrase.RetailPtr]: '본섭 PTR',
+  [Phrase.RecordRetailPtrLabel]: 'Record 본섭 PTR',
+  [Phrase.RetailPtrLogPathLabel]: '본섭 PTR 로그 경로',
+  [Phrase.InvalidRetailPtrLogPathText]: '잘못된 본섭 PTR 로그 경로',
 };
 
 export default KOREAN;

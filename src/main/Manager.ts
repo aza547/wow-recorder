@@ -109,6 +109,8 @@ export default class Manager {
 
   private eraLogHandler: EraLogHandler | undefined;
 
+  private retailPtrLogHandler: RetailLogHandler | undefined;
+
   private cloudClient: CloudClient | undefined;
 
   private videoProcessQueue: VideoProcessQueue;
@@ -241,6 +243,10 @@ export default class Manager {
     if (this.eraLogHandler && this.eraLogHandler.activity) {
       await this.eraLogHandler.forceEndActivity();
     }
+
+    if (this.retailPtrLogHandler && this.retailPtrLogHandler.activity) {
+      await this.retailPtrLogHandler.forceEndActivity();
+    }
   }
 
   /**
@@ -250,9 +256,11 @@ export default class Manager {
    * that.
    */
   public test(category: VideoCategory, endTest: boolean) {
-    if (this.retailLogHandler) {
+    const retail = this.retailLogHandler || this.retailPtrLogHandler;
+
+    if (retail) {
       console.info('[Manager] Running retail test');
-      const parser = this.retailLogHandler.combatLogWatcher;
+      const parser = retail.combatLogWatcher;
       runRetailRecordingTest(category, parser, endTest);
       return;
     }
@@ -380,12 +388,14 @@ export default class Manager {
     const inOverrun =
       this.retailLogHandler?.overrunning ||
       this.classicLogHandler?.overrunning ||
-      this.eraLogHandler?.overrunning;
+      this.eraLogHandler?.overrunning ||
+      this.retailPtrLogHandler?.overrunning;
 
     const inActivity =
       this.retailLogHandler?.activity ||
       this.classicLogHandler?.activity ||
-      this.eraLogHandler?.activity;
+      this.eraLogHandler?.activity ||
+      this.retailPtrLogHandler?.activity;
 
     if (inOverrun) {
       this.refreshRecStatus(RecStatus.Overrunning);
@@ -496,6 +506,8 @@ export default class Manager {
       await this.classicLogHandler.forceEndActivity();
     } else if (this.eraLogHandler && this.eraLogHandler.activity) {
       await this.eraLogHandler.forceEndActivity();
+    } else if (this.retailPtrLogHandler && this.retailPtrLogHandler.activity) {
+      await this.retailPtrLogHandler.forceEndActivity();
     } else {
       await this.recorder.stop();
     }
@@ -566,7 +578,7 @@ export default class Manager {
   }
 
   /**
-   * Configure the RetailLogHandler.
+   * Configure the appropriate LogHandlers.
    */
   private async configureFlavour(config: FlavourConfig) {
     if (this.recorder.obsState === ERecordingState.Recording) {
@@ -589,6 +601,11 @@ export default class Manager {
     if (this.eraLogHandler) {
       this.eraLogHandler.removeAllListeners();
       this.eraLogHandler.destroy();
+    }
+
+    if (this.retailPtrLogHandler) {
+      this.retailPtrLogHandler.removeAllListeners();
+      this.retailPtrLogHandler.destroy();
     }
 
     if (config.recordRetail) {
@@ -622,6 +639,17 @@ export default class Manager {
       );
 
       this.eraLogHandler.on('state-change', () => this.refreshStatus());
+    }
+
+    if (config.recordRetailPtr) {
+      this.retailPtrLogHandler = new RetailLogHandler(
+        this.mainWindow,
+        this.recorder,
+        this.videoProcessQueue,
+        config.retailPtrLogPath,
+      );
+
+      this.retailPtrLogHandler.on('state-change', () => this.refreshStatus());
     }
 
     this.poller.reconfigureFlavour(config);
@@ -1142,6 +1170,11 @@ export default class Manager {
       this.eraLogHandler.destroy();
     }
 
+    if (this.retailPtrLogHandler) {
+      this.retailPtrLogHandler.removeAllListeners();
+      this.retailPtrLogHandler.destroy();
+    }
+
     this.recorder = new Recorder(this.mainWindow);
     this.recorder.on('crash', (cd) => this.recoverRecorderFromCrash(cd));
     this.recorder.on('state-change', () => this.refreshStatus());
@@ -1170,8 +1203,9 @@ export default class Manager {
     const retailNotSafe = this.retailLogHandler?.activity;
     const classicNotSafe = this.classicLogHandler?.activity;
     const eraNotSafe = this.eraLogHandler?.activity;
+    const retailPtrNotSafe = this.eraLogHandler?.activity;
 
-    if (retailNotSafe || classicNotSafe || eraNotSafe) {
+    if (retailNotSafe || classicNotSafe || eraNotSafe || retailPtrNotSafe) {
       console.info('[Manager] Not restarting recorder as in an activity');
       return;
     }
@@ -1179,8 +1213,14 @@ export default class Manager {
     const retailOverrunning = this.retailLogHandler?.overrunning;
     const classicOverrunning = this.classicLogHandler?.overrunning;
     const eraOverrunning = this.eraLogHandler?.overrunning;
+    const retailPtrOverrunning = this.retailPtrLogHandler?.overrunning;
 
-    if (retailOverrunning || classicOverrunning || eraOverrunning) {
+    if (
+      retailOverrunning ||
+      classicOverrunning ||
+      eraOverrunning ||
+      retailPtrOverrunning
+    ) {
       console.info(
         '[Manager] Not restarting recorder as an activity is overrunning',
       );

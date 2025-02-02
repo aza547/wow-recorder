@@ -346,6 +346,12 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.SomeStarred]: '该行至少包含一个加星标的录音',
   [Phrase.UploadClipsLabel]: '上传剪辑',
   [Phrase.CloudUploadClipsDescription]: '是否应将剪辑的录音上传到云端',
+  [Phrase.RetailPtrLogPathDescription]: '你魔兽世界正式服安装目录的 Logs 文件夹路径，例如 "D:\\World of Warcraft\\_xptr\\Logs"。',
+  [Phrase.RecordRetailPtrDescription]: '是否记录官方测试服务器。',
+  [Phrase.RetailPtr]: '正式测试服务',
+  [Phrase.RecordRetailPtrLabel]: '录制官方测试服务器',
+  [Phrase.RetailPtrLogPathLabel]: '官方测试服务器日志路径',
+  [Phrase.InvalidRetailPtrLogPathText]: '官方测试服务器日志路径无效',
 };
 
 export default CHINESE_SIMPLIFIED;

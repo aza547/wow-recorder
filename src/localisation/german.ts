@@ -346,6 +346,12 @@ const GERMAN: Translations = {
   [Phrase.SomeStarred]: 'Diese Zeile enthält mindestens eine markierte Aufnahme.',
   [Phrase.UploadClipsLabel]: 'Clips hochladen',
   [Phrase.CloudUploadClipsDescription]: 'Wenn abgeschnittene Aufnahmen in die Cloud hochgeladen werden sollen.',
+  [Phrase.RetailPtrLogPathDescription]: 'Speicherort deines Logs Ordners von deiner Retail PTR World of Warcraft Installation, e.g. "D:\\World of Warcraft\\_xptr_\\Logs".',
+  [Phrase.RecordRetailPtrDescription]: 'Ob die Anwendung Retail aufnehmen soll.',
+  [Phrase.RetailPtr]: 'Retail PTR',
+  [Phrase.RecordRetailPtrLabel]: 'Retail PTR aufnehmen',
+  [Phrase.RetailPtrLogPathLabel]: 'Retail PTR Log Pfad',
+  [Phrase.InvalidRetailPtrLogPathText]: 'Ungültiger Retail PTR Log Pfad',
 };
 
 export default GERMAN;

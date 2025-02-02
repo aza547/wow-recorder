@@ -346,6 +346,12 @@ const ENGLISH: Translations = {
   [Phrase.SomeStarred]: 'This row contains atleast one starred recording.',
   [Phrase.UploadClipsLabel]: 'Upload Clips',
   [Phrase.CloudUploadClipsDescription]: 'If clipped recordings should be uploaded to the cloud.',
+  [Phrase.RetailPtrLogPathDescription]: 'Location of the World of Warcraft logs folder for your retail PTR installation, e.g. "C:\\Program Files\\World of Warcraft\\_xptr_\\Logs". ',
+  [Phrase.RecordRetailPtrDescription]: 'Whether the application should record retail PTR. This feature is provided on a best-effort basis and depends on Blizzard maintaining compatibility with the PTR combat log. As a result, functionality may be unpredictable.',
+  [Phrase.RetailPtr]: 'Retail PTR',
+  [Phrase.RecordRetailPtrLabel]: 'Record Retail PTR',
+  [Phrase.RetailPtrLogPathLabel]: 'Retail PTR Log Path',
+  [Phrase.InvalidRetailPtrLogPathText]: 'Invalid retail PTR log path',
 };
 
 export default ENGLISH;
