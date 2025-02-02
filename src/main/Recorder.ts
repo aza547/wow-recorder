@@ -1432,10 +1432,10 @@ export default class Recorder extends EventEmitter {
     };
 
     const closeEnough =
-      Math.round((item.scale.x * 100) / 100) ===
-        Math.round((newScaleFactor.x * 100) / 100) &&
-      Math.round((item.scale.y * 100) / 100) ===
-        Math.round((newScaleFactor.y * 100) / 100);
+      Math.round(item.scale.x * 100) / 100 ===
+        Math.round(newScaleFactor.x * 100) / 100 &&
+      Math.round(item.scale.y * 100) / 100 ===
+        Math.round(newScaleFactor.y * 100) / 100;
 
     if (closeEnough) {
       // Don't rescale if things are within a rounding error. I think the
