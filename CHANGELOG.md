@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 591](https://github.com/aza547/wow-recorder/issues/591) - Add a "clips upload" toggle in the settings.
 
 ### Fixed
+- [Issue 586](https://github.com/aza547/wow-recorder/issues/586) - Fix a bug where we would spam logs with rescaling information.
 - Fix a longstanding issue where the status tooltip could overlap the recording preview.
 - Allow the default audio device to be selected, and default to it.
 

@@ -2,7 +2,6 @@ import { BrowserWindow, screen } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { isEqual } from 'lodash';
 import { IFader, IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
@@ -1432,7 +1431,16 @@ export default class Recorder extends EventEmitter {
       y: height / src.height,
     };
 
-    if (isEqual(item.scale, newScaleFactor)) {
+    const closeEnough =
+      Math.round((item.scale.x * 100) / 100) ===
+        Math.round((newScaleFactor.x * 100) / 100) &&
+      Math.round((item.scale.y * 100) / 100) ===
+        Math.round((newScaleFactor.y * 100) / 100);
+
+    if (closeEnough) {
+      // Don't rescale if things are within a rounding error. I think the
+      // OSN library does some internal rounding and we don't want to spam
+      // trigger rescaling when it isn't required. See Issue 586.
       return;
     }
 
