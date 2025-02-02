@@ -92,6 +92,7 @@ export const getSettings = (): ConfigurationSchema => {
     cloudUploadBattlegrounds: getConfigValue<boolean>('cloudUploadBattlegrounds'),
     cloudUploadRaidMinDifficulty: getConfigValue<string>('cloudUploadRaidMinDifficulty'),
     cloudUploadDungeonMinLevel: getConfigValue<number>('cloudUploadDungeonMinLevel'),
+    cloudUploadClips: getConfigValue<boolean>('cloudUploadClips'),
     language: getConfigValue<string>('language'),
     /* eslint-enable prettier/prettier */
   };

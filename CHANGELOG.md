@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [Issue 590](https://github.com/aza547/wow-recorder/issues/590) - Add support for TWW S2 Mythic+ dungeons.
+- [Issue 591](https://github.com/aza547/wow-recorder/issues/591) - Add a "clips upload" toggle in the settings.
 
 ### Fixed
 - Fix a longstanding issue where the status tooltip could overlap the recording preview.

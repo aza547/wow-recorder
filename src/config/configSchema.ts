@@ -74,6 +74,7 @@ export type ConfigurationSchema = {
   cloudUploadBattlegrounds: boolean;
   cloudUploadRaidMinDifficulty: string;
   cloudUploadDungeonMinLevel: number;
+  cloudUploadClips: boolean;
   language: string;
 };
 
@@ -457,6 +458,11 @@ export const configSchema = {
     description: Phrase.CloudUploadDungeonMinLevelDescription,
     type: 'integer',
     default: 2,
+  },
+  cloudUploadClips: {
+    description: Phrase.CloudUploadClipsDescription,
+    type: 'boolean',
+    default: true,
   },
   language: {
     description: Phrase.LanguageDescription,

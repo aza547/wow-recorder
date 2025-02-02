@@ -28,7 +28,7 @@ const raidDifficultyOptions = [
   { name: 'Mythic', phrase: Phrase.Mythic },
 ];
 
-let debounceTimer: NodeJS.Timer | undefined;
+let debounceTimer: NodeJS.Timeout | undefined;
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -71,6 +71,7 @@ const CloudSettings = (props: IProps) => {
         cloudUploadBattlegrounds: config.cloudUploadBattlegrounds,
         cloudUploadRaidMinDifficulty: config.cloudUploadRaidMinDifficulty,
         cloudUploadDungeonMinLevel: config.cloudUploadDungeonMinLevel,
+        cloudUploadClips: config.cloudUploadClips,
         chatOverlayOwnImage: config.chatOverlayOwnImage,
       });
 
@@ -96,6 +97,7 @@ const CloudSettings = (props: IProps) => {
     config.cloudUploadBattlegrounds,
     config.cloudUploadRaidMinDifficulty,
     config.cloudUploadDungeonMinLevel,
+    config.cloudUploadClips,
     config.chatOverlayOwnImage,
   ]);
 
@@ -568,6 +570,10 @@ const CloudSettings = (props: IProps) => {
             'cloudUploadBattlegrounds',
             Phrase.UploadBattlgroundsLabel,
           )}
+        </div>
+
+        <div className="flex flex-row gap-x-6">
+          {getSwitchForm('cloudUploadClips', Phrase.UploadClipsLabel)}
         </div>
       </>
     );

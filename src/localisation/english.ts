@@ -344,6 +344,8 @@ const ENGLISH: Translations = {
   [Phrase.MultipleTagged]: "This row contains multiple tagged recordings.",
   [Phrase.NoneStarred]: "This row contains no starred recordings.",
   [Phrase.SomeStarred]: 'This row contains atleast one starred recording.',
+  [Phrase.UploadClipsLabel]: 'Upload Clips',
+  [Phrase.CloudUploadClipsDescription]: 'If clipped recordings should be uploaded to the cloud.',
 };
 
 export default ENGLISH;

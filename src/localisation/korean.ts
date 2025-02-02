@@ -344,6 +344,8 @@ const KOREAN: Translations = {
   [Phrase.MultipleTagged]: "이 행에는 태그가 지정된 녹음이 여러 개 포함되어 있습니다.",
   [Phrase.NoneStarred]: "이 행에는 별표 표시된 녹음이 없습니다.",
   [Phrase.SomeStarred]: '이 행에는 별표 표시된 녹음이 하나 이상 포함되어 있습니다.',
+  [Phrase.UploadClipsLabel]: '클립 업로드',
+  [Phrase.CloudUploadClipsDescription]: '잘린 녹음을 클라우드에 업로드해야 하는 경우.',
 };
 
 export default KOREAN;

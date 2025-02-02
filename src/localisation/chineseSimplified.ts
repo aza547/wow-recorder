@@ -344,6 +344,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.MultipleTagged]: "该行包含多个标记的录音",
   [Phrase.NoneStarred]: "该行不包含加星标的录音",
   [Phrase.SomeStarred]: '该行至少包含一个加星标的录音',
+  [Phrase.UploadClipsLabel]: '上传剪辑',
+  [Phrase.CloudUploadClipsDescription]: '是否应将剪辑的录音上传到云端',
 };
 
 export default CHINESE_SIMPLIFIED;

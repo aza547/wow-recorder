@@ -47,8 +47,9 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
   }
 
   if (category === VideoCategory.Clips) {
-    console.info('[configUtils] Clips are always uploaded');
-    return true;
+    const uploadClips = cfg.get<boolean>('cloudUploadClips');
+    console.info('[configUtils] Upload clip?', uploadClips);
+    return uploadClips;
   }
 
   const categoryConfig = categoryRecordingSettings[category];

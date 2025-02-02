@@ -344,6 +344,8 @@ const GERMAN: Translations = {
   [Phrase.MultipleTagged]: "Diese Zeile enthält mehrere getaggte Aufnahmen.",
   [Phrase.NoneStarred]: "Diese Zeile enthält keine markierten Aufnahmen.",
   [Phrase.SomeStarred]: 'Diese Zeile enthält mindestens eine markierte Aufnahme.',
+  [Phrase.UploadClipsLabel]: 'Clips hochladen',
+  [Phrase.CloudUploadClipsDescription]: 'Wenn abgeschnittene Aufnahmen in die Cloud hochgeladen werden sollen.',
 };
 
 export default GERMAN;
