@@ -184,11 +184,14 @@ export default class Manager {
     this.mainWindow = mainWindow;
     this.recorder = new Recorder(this.mainWindow);
 
-    this.recorder.on('crash', (crashData) =>
-      this.recoverRecorderFromCrash(crashData),
-    );
+    this.recorder.on('crash', (crashData) => {
+      setTimeout(() => this.recoverRecorderFromCrash(crashData), 0);
+    });
 
-    this.recorder.on('state-change', () => this.refreshStatus());
+    this.recorder.on('state-change', () => {
+      setTimeout(() => this.refreshStatus(), 0);
+    });
+
     this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
 
     this.poller
@@ -314,6 +317,7 @@ export default class Manager {
         try {
           console.info('[Manager] Now validating stage', stage.name);
           await stage.validate(newConfig);
+          console.info('[Manager] Validated stage', stage.name);
         } catch (error) {
           // If this stage isn't valid we won't go further, set the frontend
           // stage to reflect what's wrong and drop out.
@@ -333,6 +337,7 @@ export default class Manager {
 
         console.info('[Manager] Now configuring stage', stage.name);
         await stage.configure(newConfig);
+        console.info('[Manager] Configured stage', stage.name);
 
         // We've validated and configured the new config, mark the stage as
         // valid so we won't reconfigure it unless it changes.
@@ -370,10 +375,7 @@ export default class Manager {
    */
   public refreshStatus() {
     if (this.reconfiguring) {
-      this.mainWindow.webContents.send(
-        'updateRecStatus',
-        RecStatus.Reconfiguring,
-      );
+      this.refreshRecStatus(RecStatus.Reconfiguring);
       return;
     }
 
@@ -1176,8 +1178,14 @@ export default class Manager {
     }
 
     this.recorder = new Recorder(this.mainWindow);
-    this.recorder.on('crash', (cd) => this.recoverRecorderFromCrash(cd));
-    this.recorder.on('state-change', () => this.refreshStatus());
+
+    this.recorder.on('crash', (crashData) => {
+      setTimeout(() => this.recoverRecorderFromCrash(crashData), 0);
+    });
+
+    this.recorder.on('state-change', () => {
+      setTimeout(() => this.refreshStatus(), 0);
+    });
 
     for (let i = 0; i < this.stages.length; i++) {
       this.stages[i].valid = false;
