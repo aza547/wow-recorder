@@ -1592,6 +1592,8 @@ export default class Recorder extends EventEmitter {
   private static windowMatch(item: { name: string; value: string | number }) {
     return (
       item.name.startsWith('[Wow.exe]: ') ||
+      item.name.startsWith('[WowT.exe]: ') ||
+      item.name.startsWith('[WowB.exe]: ') ||
       item.name.startsWith('[WowClassic.exe]: ')
     );
   }
