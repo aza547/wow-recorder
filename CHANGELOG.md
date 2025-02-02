@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [Issue 590](https://github.com/aza547/wow-recorder/issues/590) - Add support for TWW S2 Mythic+ dungeons.
 - [Issue 591](https://github.com/aza547/wow-recorder/issues/591) - Add a "clips upload" toggle in the settings.
+- [Issue 583](https://github.com/aza547/wow-recorder/issues/583) - Add a PTR recording settings, supported on a best-effort basis.
 
 ### Fixed
 - [Issue 586](https://github.com/aza547/wow-recorder/issues/586) - Fix a bug where we would spam logs with rescaling information.
