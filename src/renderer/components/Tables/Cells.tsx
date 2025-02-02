@@ -155,7 +155,7 @@ export const populateDetailsCell = (
 
   const renderStarIcon = () => {
     const starred = [video, ...video.multiPov]
-      .map((v) => v.protected)
+      .map((v) => v.isProtected)
       .find((p) => p);
 
     const icon = starred ? faStar : faStarOutline;
