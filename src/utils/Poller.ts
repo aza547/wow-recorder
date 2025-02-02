@@ -94,9 +94,10 @@ export default class Poller extends EventEmitter {
       const json = JSON.parse(data);
 
       const { Retail, Classic } = json;
-      const { recordRetail, recordClassic, recordEra } = this.flavourConfig;
+      const { recordRetail, recordClassic, recordEra, recordRetailPtr } =
+        this.flavourConfig;
 
-      const retailCheck = Retail && recordRetail;
+      const retailCheck = Retail && (recordRetail || recordRetailPtr);
       const classicCheck = Classic && recordClassic;
       const eraCheck = Classic && recordEra;
 

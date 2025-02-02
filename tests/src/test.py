@@ -40,6 +40,7 @@ import era.raid
 RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
 CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
 ERA_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_era_/Logs"
+PTR_LOG_PATH = "C:/Program Files/World of Warcraft/_xptr_/Logs"
 STORAGE_PATH = "D:/wr-test"
 
 CWD = os.path.dirname(__file__)
@@ -78,13 +79,21 @@ ERA_TESTS = [
     era.raid,
 ]
 
+PTR_TESTS = [
+    # Log data is the same on PTR, unless it changes, but we can't predict that. 
+    # This just exercises the PTR log path and PTR log handler with the same data as retail.
+    retail.rated_2v2, 
+]
+
 RETAIL_TEST_NAMES = list(map(lambda t: t.NAME, RETAIL_TESTS))
 CLASSIC_TEST_NAMES = list(map(lambda t: t.NAME, CLASSIC_TESTS))
+ERA_TEST_NAMES = list(map(lambda t: t.NAME, ERA_TESTS))
+PTR_TEST_NAMES = list(map(lambda t: t.NAME, PTR_TESTS))
 
 # Define the CLI arguments.
 parser = argparse.ArgumentParser(prog="Warcraft Recorder Tests")
-parser.add_argument("-f", help="flavour", choices=["classic", "retail", "era"])
-parser.add_argument("-t", help="test", choices=RETAIL_TEST_NAMES + CLASSIC_TEST_NAMES)
+parser.add_argument("-f", help="flavour", choices=["classic", "retail", "era", "ptr"])
+parser.add_argument("-t", help="test", choices=RETAIL_TEST_NAMES + CLASSIC_TEST_NAMES + ERA_TEST_NAMES + PTR_TEST_NAMES)
 args = parser.parse_args()
 
 
@@ -163,6 +172,9 @@ def get_test_log(flavour):
     
     if flavour == "era":
         return f"{ERA_LOG_PATH}/{logName}"
+    
+    if flavour == "ptr":
+        return f"{PTR_LOG_PATH}/{logName}"
 
 
 def get_sample_log_lines(file):
@@ -251,12 +263,17 @@ def run_era():
     for test in ERA_TESTS:
         run_test("era", test)
 
+def run_ptr():
+    """Run all the retail ptr tests."""
+    for test in PTR_TESTS:
+        run_test("ptr", test)
 
 def run_all():
     """Run all the tests."""
     run_retail()
     run_classic()
     run_era()
+    run_ptr()
 
 
 def run_single(flavour, test_name):
@@ -276,5 +293,7 @@ elif not args.t and args.f == "classic":
     run_classic()
 elif not args.t and args.f == "era":
     run_era()
+elif not args.t and args.f == "ptr":
+    run_ptr()
 else:
     run_all()
