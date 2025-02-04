@@ -290,13 +290,12 @@ const SearchBar = (props: IProps) => {
         className={classNames.input}
         style={{ width: inputWidth }}
         {...inputProps}
-        onKeyDown={(event) => event.stopPropagation()}
       />
     );
   };
 
   return (
-    <div>
+    <div onKeyDown={(event) => event.stopPropagation()}>
       <Label htmlFor="search-bar">
         {getLocalePhrase(language, Phrase.SearchLabel)}
       </Label>

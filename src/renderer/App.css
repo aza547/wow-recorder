@@ -1207,7 +1207,7 @@ input[type='submit'].btn-block {
 }
 
 .react-tags__listbox-option:not([aria-disabled='true']).is-active {
-  background: #4f46e5;
+  background: #bb4420;
   color: #ffffff;
 }
 

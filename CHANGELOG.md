@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 593](https://github.com/aza547/wow-recorder/issues/593) - Allow use of arrow keys, enter, backspace to control search tags.
+
 ### Fixed
 
 ## [6.7.0] - 2025-02-02
