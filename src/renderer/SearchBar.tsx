@@ -1,5 +1,5 @@
 import { AppState, RendererVideo } from 'main/types';
-import { useEffect, useState } from 'react';
+import { KeyboardEventHandler, useEffect, useRef, useState } from 'react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/types';
 import VideoFilter from './VideoFilter';
@@ -10,6 +10,7 @@ import {
   ReactTags,
   Tag,
   TagRendererProps,
+  ReactTagsAPI,
 } from 'react-tag-autocomplete';
 import { Box } from '@mui/material';
 import { ThumbsDown, ThumbsUp, X } from 'lucide-react';
@@ -30,6 +31,7 @@ import VideoTag from './VideoTag';
 import { LocalPolice } from '@mui/icons-material';
 import HomeRepairServiceIcon from '@mui/icons-material/HomeRepairService';
 import HourglassDisabledIcon from '@mui/icons-material/HourglassDisabled';
+import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 
 interface IProps {
   appState: AppState;
@@ -44,6 +46,8 @@ const SearchBar = (props: IProps) => {
   const alphabeticalValueSort = (a: Tag, b: Tag) => {
     return String(a.value).localeCompare(String(b.value));
   };
+
+  const api = useRef<ReactTagsAPI>(null);
 
   const [suggestions, setSuggestions] = useState<Tag[]>(
     VideoFilter.getCategorySuggestions(categoryState, language).map((t) =>
@@ -228,6 +232,9 @@ const SearchBar = (props: IProps) => {
         <div className="flex items-center font-sans font-bold text-[12px] truncate gap-1">
           {renderIcon(tag.icon)}
           {tag.label}
+          {option.active && (
+            <KeyboardReturnIcon sx={{ mx: 1, height: '20px' }} />
+          )}
         </div>
       </div>
     );
@@ -285,13 +292,41 @@ const SearchBar = (props: IProps) => {
     inputWidth,
     ...inputProps
   }: InputRendererProps) => {
+    const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        if (api.current) api.current.select();
+      }
+
+      inputProps?.onKeyDown?.(event);
+    };
+
     return (
       <input
         className={classNames.input}
         style={{ width: inputWidth }}
         {...inputProps}
+        onKeyDown={onKeyDown}
       />
     );
+  };
+
+  const classNames = {
+    root: 'relative flex items-center cursor-text w-full h-10 rounded-md border border-background bg-card text-sm text-foreground-lighter',
+    rootIsActive: 'is-active',
+    rootIsDisabled: 'is-disabled',
+    rootIsInvalid: 'is-invalid',
+    label: 'react-tags__label',
+    tagList: 'flex items-center',
+    tagListItem: 'react-tags__list-item inline-flex items-center',
+    tag: 'h-8 p-1 px-2 mx-1 rounded-md text-white text-sm',
+    tagName: 'react-tags__tag-name',
+    comboBox: 'react-tags__combobox',
+    input: 'react-tags__combobox-input mx-2',
+    listBox: 'react-tags__listbox  bg-card rounded-md border border-background',
+    option: 'react-tags__listbox-option',
+    optionIsActive: 'is-active',
+    highlight: 'react-tags__listbox-option-highlight',
   };
 
   return (
@@ -300,25 +335,9 @@ const SearchBar = (props: IProps) => {
         {getLocalePhrase(language, Phrase.SearchLabel)}
       </Label>
       <ReactTags
+        ref={api}
         allowResize={false}
-        classNames={{
-          root: 'relative flex items-center cursor-text w-full h-10 rounded-md border border-background bg-card text-sm text-foreground-lighter',
-          rootIsActive: 'is-active',
-          rootIsDisabled: 'is-disabled',
-          rootIsInvalid: 'is-invalid',
-          label: 'react-tags__label',
-          tagList: 'flex items-center',
-          tagListItem: 'react-tags__list-item inline-flex items-center',
-          tag: 'h-8 p-1 px-2 mx-1 rounded-md text-white text-sm',
-          tagName: 'react-tags__tag-name',
-          comboBox: 'react-tags__combobox',
-          input: 'react-tags__combobox-input mx-2',
-          listBox:
-            'react-tags__listbox  bg-card rounded-md border border-background',
-          option: 'react-tags__listbox-option',
-          optionIsActive: 'is-active',
-          highlight: 'react-tags__listbox-option-highlight',
-        }}
+        classNames={classNames}
         renderLabel={() => <></>}
         renderTag={renderTag}
         renderOption={renderOption}
@@ -328,6 +347,8 @@ const SearchBar = (props: IProps) => {
         onAdd={onAdd}
         onDelete={onDelete}
         placeholderText="Start typing..."
+        collapseOnSelect
+        activateFirstOption
       />
     </div>
   );
