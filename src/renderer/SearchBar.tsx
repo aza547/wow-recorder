@@ -347,7 +347,6 @@ const SearchBar = (props: IProps) => {
         onAdd={onAdd}
         onDelete={onDelete}
         placeholderText="Start typing..."
-        collapseOnSelect
         activateFirstOption
       />
     </div>
