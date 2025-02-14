@@ -37,16 +37,19 @@ import VideoTag from './VideoTag';
 import { LocalPolice } from '@mui/icons-material';
 import HomeRepairServiceIcon from '@mui/icons-material/HomeRepairService';
 import HourglassDisabledIcon from '@mui/icons-material/HourglassDisabled';
+import { ConfigurationSchema } from 'config/configSchema';
 
 interface IProps {
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   categoryState: RendererVideo[];
+  config: ConfigurationSchema;
 }
 
 const SearchBar = (props: IProps) => {
-  const { appState, setAppState, categoryState } = props;
+  const { appState, setAppState, categoryState, config } = props;
   const { language, videoFilterTags } = appState;
+  const { searchGrouping } = config;
 
   const api = useRef<ReactTagsAPI>(null);
 
@@ -56,8 +59,8 @@ const SearchBar = (props: IProps) => {
 
   const queryFilter = useCallback(
     (v: RendererVideo) =>
-      new VideoFilter(videoFilterTags, v, language).filter(),
-    [videoFilterTags],
+      new VideoFilter(videoFilterTags, v, language, searchGrouping).filter(),
+    [videoFilterTags, searchGrouping, language],
   );
 
   // We filter this by current query so that we don't suggest things that are

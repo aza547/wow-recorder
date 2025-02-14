@@ -78,6 +78,7 @@ export type ConfigurationSchema = {
   cloudUploadDungeonMinLevel: number;
   cloudUploadClips: boolean;
   language: string;
+  searchGrouping: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -480,5 +481,11 @@ export const configSchema = {
     description: Phrase.LanguageDescription,
     type: 'string',
     default: 'English',
+  },
+  searchGrouping: {
+    description:
+      'When filtering videos, show individual video results, or all grouped',
+    type: 'boolean',
+    default: true, // true for show grouped results, false for don't
   },
 };

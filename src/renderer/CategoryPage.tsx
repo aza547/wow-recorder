@@ -16,6 +16,7 @@ import { Button } from './components/Button/Button';
 import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 import useTable from './components/Tables/TableData';
 import DeleteDialog from './DeleteDialog';
+import SearchToggles from './SearchToggles';
 
 interface IProps {
   category: VideoCategory;
@@ -41,7 +42,7 @@ const CategoryPage = (props: IProps) => {
     playerHeight,
   } = props;
   const [config, setConfig] = useSettings();
-  const table = useTable(videoState, appState);
+  const table = useTable(videoState, appState, config);
 
   const categoryFilter = getVideoCategoryFilter(category);
   const categoryState = videoState.filter(categoryFilter);
@@ -125,11 +126,13 @@ const CategoryPage = (props: IProps) => {
           )}
           <div className="flex-grow">
             <SearchBar
+              config={config}
               appState={appState}
               setAppState={setAppState}
               categoryState={categoryState}
             />
           </div>
+          <SearchToggles config={config} setConfig={setConfig} />
           <div className="pt-6">
             <DeleteDialog
               onDelete={() => bulkDelete(unprot)}

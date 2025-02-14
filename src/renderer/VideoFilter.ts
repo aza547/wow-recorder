@@ -41,13 +41,25 @@ export default class VideoFilter {
    * Constructor. This sets up the query for a given video. Typical usage
    * is to call filter after this to decide if the video should be filtered
    * or not.
+   *
+   * @param tags the tags to filter on
+   * @param video the video to filter in or out
+   * @param language the language of the client
+   * @param grouping allow grouped (multipov) results
    */
-  constructor(tags: Tag[], video: RendererVideo, language: Language) {
+  constructor(
+    tags: Tag[],
+    video: RendererVideo,
+    language: Language,
+    grouping: boolean,
+  ) {
     this.query = tags
       .map((tag) => tag.value)
       .filter((tag) => typeof tag === 'string');
 
-    this.matches = [video, ...video.multiPov].flatMap((v) =>
+    const consider = grouping ? [video] : [video, ...video.multiPov];
+
+    this.matches = consider.flatMap((v) =>
       VideoFilter.getVideoSuggestions(v, language).map((tag) => tag.encode()),
     );
   }
@@ -57,7 +69,8 @@ export default class VideoFilter {
    * suggestion for this video.
    */
   public filter() {
-    return this.query.every((s) => this.matches.includes(s));
+    const m=  this.query.every((s) => this.matches.includes(s));
+    return m;
   }
 
   /**

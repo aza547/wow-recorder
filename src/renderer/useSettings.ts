@@ -96,6 +96,7 @@ export const getSettings = (): ConfigurationSchema => {
     cloudUploadDungeonMinLevel: getConfigValue<number>('cloudUploadDungeonMinLevel'),
     cloudUploadClips: getConfigValue<boolean>('cloudUploadClips'),
     language: getConfigValue<string>('language'),
+    searchGrouping: getConfigValue<boolean>('searchGrouping'),
     /* eslint-enable prettier/prettier */
   };
 

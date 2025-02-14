@@ -52,8 +52,13 @@ import {
   levelSort,
 } from './Sorting';
 import { getLocaleCategoryLabel } from 'localisation/translations';
+import { ConfigurationSchema } from 'config/configSchema';
 
-const useTable = (videoState: RendererVideo[], appState: AppState) => {
+const useTable = (
+  videoState: RendererVideo[],
+  appState: AppState,
+  config: ConfigurationSchema,
+) => {
   const { category, language } = appState;
 
   /**
@@ -434,10 +439,17 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
     const categoryState = videoState.filter(categoryFilter);
 
     const queryFilter = (v: RendererVideo) =>
-      new VideoFilter(videoFilterTags, v, appState.language).filter();
+      new VideoFilter(
+        videoFilterTags,
+        v,
+        appState.language,
+        config.searchGrouping,
+      ).filter();
 
     return categoryState.filter(queryFilter);
-  }, [category, videoState, videoFilterTags]);
+  }, [category, videoState, videoFilterTags, config.searchGrouping]);
+
+  console.log(filteredState);
 
   /**
    * Prepare the headless table, with sorting and row expansion. This is where
