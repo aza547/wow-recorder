@@ -31,7 +31,6 @@ import VideoTag from './VideoTag';
 import { LocalPolice } from '@mui/icons-material';
 import HomeRepairServiceIcon from '@mui/icons-material/HomeRepairService';
 import HourglassDisabledIcon from '@mui/icons-material/HourglassDisabled';
-import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 
 interface IProps {
   appState: AppState;
@@ -232,9 +231,6 @@ const SearchBar = (props: IProps) => {
         <div className="flex items-center font-sans font-bold text-[12px] truncate gap-1">
           {renderIcon(tag.icon)}
           {tag.label}
-          {option.active && (
-            <KeyboardReturnIcon sx={{ mx: 1, height: '20px' }} />
-          )}
         </div>
       </div>
     );
