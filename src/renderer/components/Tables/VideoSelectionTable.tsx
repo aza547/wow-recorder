@@ -61,6 +61,7 @@ const VideoSelectionTable = (props: IProps) => {
     // Prevent shift mouse down selecting all the text in the table.
     document.addEventListener('mousedown', (event) => {
       if (event.shiftKey) event.preventDefault();
+      if (event.ctrlKey) event.preventDefault();
     });
   });
 
