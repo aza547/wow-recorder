@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [Issue 593](https://github.com/aza547/wow-recorder/issues/593) - Allow use of arrow keys, enter, backspace to control search tags.
 - Add the Wintergrasp zone ID.
+- Add the ability to use ctrl / shift modifiers to select videos in the video table.
 
 ### Fixed
 
