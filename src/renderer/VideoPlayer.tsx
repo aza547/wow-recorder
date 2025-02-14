@@ -159,20 +159,20 @@ export const VideoPlayer = (props: IProps) => {
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
-  // /**
-  //  * Set if the video is playing or not.
-  //  */
-  // const setPlaying = useCallback(
-  //   (v: boolean) => {
-  //     setAppState((prevState) => {
-  //       return {
-  //         ...prevState,
-  //         playing: v,
-  //       };
-  //     });
-  //   },
-  //   [setAppState],
-  // );
+  /**
+   * Set if the video is playing or not.
+   */
+  const setPlaying = useCallback(
+    (v: boolean) => {
+      setAppState((prevState) => {
+        return {
+          ...prevState,
+          playing: v,
+        };
+      });
+    },
+    [setAppState],
+  );
 
   /**
    * Return a death marker appropriate for the MUI slider component.
@@ -432,21 +432,9 @@ export const VideoPlayer = (props: IProps) => {
     const { paused, currentTime, ended } = internalPlayer;
 
     if (currentTime > 0 && !paused && !ended) {
-      console.log('f');
-      setAppState((prevState) => {
-        return {
-          ...prevState,
-          playing: false,
-        };
-      });
+      setPlaying(false);
     } else {
-      console.log('t');
-      setAppState((prevState) => {
-        return {
-          ...prevState,
-          playing: true,
-        };
-      });
+      setPlaying(true);
     }
   };
 
@@ -651,8 +639,8 @@ export const VideoPlayer = (props: IProps) => {
         onProgress={primary ? onProgress : undefined}
         onClick={togglePlaying}
         onDoubleClick={toggleFullscreen}
-        // onPlay={primary ? () => setPlaying(true) : undefined}
-        // onPause={primary ? () => setPlaying(false) : undefined}
+        onPlay={primary ? () => setPlaying(true) : undefined}
+        onPause={primary ? () => setPlaying(false) : undefined}
         onReady={onReady}
       />
     );
@@ -952,10 +940,10 @@ export const VideoPlayer = (props: IProps) => {
   }, [volume, muted]);
 
   // Used to pause when the app is minimized to the system tray.
-  // useEffect(() => {
-  //   ipc.removeAllListeners('pausePlayer');
-  //   ipc.on('pausePlayer', () => setPlaying(false));
-  // }, [setPlaying]);
+  useEffect(() => {
+    ipc.removeAllListeners('pausePlayer');
+    ipc.on('pausePlayer', () => setPlaying(false));
+  }, [setPlaying]);
 
   /**
    * Handle a resize event.
