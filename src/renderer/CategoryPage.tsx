@@ -16,6 +16,7 @@ import { Button } from './components/Button/Button';
 import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 import useTable from './components/Tables/TableData';
 import DeleteDialog from './DeleteDialog';
+import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
 
 interface IProps {
   category: VideoCategory;
@@ -50,16 +51,21 @@ const CategoryPage = (props: IProps) => {
   const isClips = category === VideoCategory.Clips;
 
   const getVideoPlayer = () => {
-    const { playingVideo } = appState;
+    const { playingVideo, numVideoPlayers } = appState;
 
     if (playingVideo === undefined) {
       return <></>;
     }
 
+    const videosToPlay =
+      numVideoPlayers > 1
+        ? [playingVideo, ...playingVideo.multiPov.slice(0, numVideoPlayers - 1)]
+        : [playingVideo];
+
     return (
       <VideoPlayer
-        key={playingVideo.videoSource}
-        video={playingVideo}
+        key={playingVideo.videoSource + numVideoPlayers}
+        videos={videosToPlay}
         persistentProgress={persistentProgress}
         config={config}
         playerHeight={playerHeight}
@@ -115,6 +121,10 @@ const CategoryPage = (props: IProps) => {
     return (
       <>
         <div className="w-full flex justify-evenly items-center gap-x-5 px-4 pt-2">
+          <MultiPovPlaybackToggles
+            appState={appState}
+            setAppState={setAppState}
+          />
           {!isClips && (
             <VideoMarkerToggles
               category={category}
