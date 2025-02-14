@@ -313,6 +313,7 @@ type AppState = {
   page: Pages;
   category: VideoCategory;
   playingVideo: RendererVideo | undefined; // the video being played by the player
+  numVideoPlayers: 1 | 2 | 3 | 4; // multipov playback mode
   videoFilterTags: Tag[];
   videoFullScreen: boolean;
   playing: boolean;

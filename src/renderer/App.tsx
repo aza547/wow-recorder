@@ -56,6 +56,7 @@ const WarcraftRecorder = () => {
     page: Pages.None,
     category: getCategoryFromConfig(config),
     playingVideo: undefined,
+    numVideoPlayers: 1,
 
     // Any text applied in the filter bar gets translated into a filter here.
     videoFilterTags: [],
