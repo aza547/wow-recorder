@@ -1,5 +1,11 @@
 import { AppState, RendererVideo } from 'main/types';
-import { KeyboardEventHandler, useEffect, useRef, useState } from 'react';
+import {
+  KeyboardEventHandler,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/types';
 import VideoFilter from './VideoFilter';
@@ -42,27 +48,39 @@ const SearchBar = (props: IProps) => {
   const { appState, setAppState, categoryState } = props;
   const { language, videoFilterTags } = appState;
 
+  const api = useRef<ReactTagsAPI>(null);
+
   const alphabeticalValueSort = (a: Tag, b: Tag) => {
     return String(a.value).localeCompare(String(b.value));
   };
 
-  const api = useRef<ReactTagsAPI>(null);
+  const queryFilter = useCallback(
+    (v: RendererVideo) =>
+      new VideoFilter(videoFilterTags, v, language).filter(),
+    [videoFilterTags],
+  );
 
+  // We filter this by current query so that we don't suggest things that are
+  // no longer valid based on the already applied filter.
   const [suggestions, setSuggestions] = useState<Tag[]>(
-    VideoFilter.getCategorySuggestions(categoryState, language).map((t) =>
-      t.getAsTag(),
-    ),
+    VideoFilter.getCategorySuggestions(
+      categoryState.filter(queryFilter),
+      language,
+    ).map((t) => t.getAsTag()),
   );
 
   useEffect(() => {
-    // We need this so we reset the search on changing category.
-    // Not really sure why the whole component isn't re-created.
-    const s = VideoFilter.getCategorySuggestions(categoryState, language)
+    // We need this so we reset the search on changing category. Not really sure
+    // why the whole component isn't re-created. As above, also filter based on
+    // current query first.
+    const filtered = categoryState.filter(queryFilter);
+
+    const s = VideoFilter.getCategorySuggestions(filtered, language)
       .map((t) => t.getAsTag())
       .filter((t) => !videoFilterTags.map((i) => i.value).includes(t.value));
 
     setSuggestions(s);
-  }, [appState, categoryState, videoFilterTags]);
+  }, [categoryState, videoFilterTags, language, queryFilter]);
 
   const onAdd = (newTag: Tag) => {
     setAppState((prevState) => {
