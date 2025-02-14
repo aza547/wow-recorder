@@ -48,22 +48,30 @@ const VideoSelectionTable = (props: IProps) => {
    * selections, respectively.
    */
   useEffect(() => {
-    document.addEventListener('keyup', (event: KeyboardEvent) => {
+    const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === 'Control') setCtrlDown(false);
       if (event.key === 'Shift') setShiftDown(false);
-    });
+    };
 
-    document.addEventListener('keydown', (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Control') setCtrlDown(true);
       if (event.key === 'Shift') setShiftDown(true);
-    });
+    };
 
-    // Prevent shift / ctrl mouse down selecting all the text in the table.
-    document.addEventListener('mousedown', (event) => {
-      if (event.shiftKey) event.preventDefault();
-      if (event.ctrlKey) event.preventDefault();
-    });
-  });
+    const handleMouseDown = (event: MouseEvent) => {
+      if (event.shiftKey || event.ctrlKey) event.preventDefault();
+    };
+
+    document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleMouseDown);
+
+    return () => {
+      document.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, []);
 
   /**
    * Mark the row as selected and update the video player to play the first

@@ -37,18 +37,22 @@ export default function ViewpointButtons(props: IProps) {
    * to delete this video?" prompt by holding CTRL.
    */
   useEffect(() => {
-    document.addEventListener('keyup', (event: KeyboardEvent) => {
-      if (event.key === 'Control') {
-        setCtrlDown(false);
-      }
-    });
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Control') setCtrlDown(false);
+    };
 
-    document.addEventListener('keydown', (event: KeyboardEvent) => {
-      if (event.key === 'Control') {
-        setCtrlDown(true);
-      }
-    });
-  });
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Control') setCtrlDown(true);
+    };
+
+    document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const { playingVideo } = appState;
 
