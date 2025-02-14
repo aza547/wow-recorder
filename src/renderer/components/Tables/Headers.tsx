@@ -12,6 +12,7 @@ import {
   MapPinned,
   Swords,
   Trophy,
+  Ellipsis,
 } from 'lucide-react';
 import { RendererVideo } from 'main/types';
 
@@ -111,3 +112,10 @@ export const SelectHeader = (ctx: HeaderContext<RendererVideo, unknown>) => {
     />
   );
 };
+
+export const DetailsHeader = (language: Language) => (
+  <span className="inline-flex gap-x-1">
+    <Ellipsis />
+    {getLocalePhrase(language, Phrase.Details)}
+  </span>
+);

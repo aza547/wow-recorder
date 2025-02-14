@@ -349,6 +349,7 @@ enum Phrase {
   RecordRetailPtrLabel,
   RetailPtrLogPathLabel,
   InvalidRetailPtrLogPathText,
+  Details,
 }
 
 enum Language {

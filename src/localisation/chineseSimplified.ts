@@ -352,6 +352,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.RecordRetailPtrLabel]: '录制官方测试服务器',
   [Phrase.RetailPtrLogPathLabel]: '官方测试服务器日志路径',
   [Phrase.InvalidRetailPtrLogPathText]: '官方测试服务器日志路径无效',
+  [Phrase.Details]: '细节',
 };
 
 export default CHINESE_SIMPLIFIED;

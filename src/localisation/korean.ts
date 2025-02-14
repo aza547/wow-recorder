@@ -352,6 +352,7 @@ const KOREAN: Translations = {
   [Phrase.RecordRetailPtrLabel]: '본섭 PTR 기록',
   [Phrase.RetailPtrLogPathLabel]: '본섭 PTR 로그 경로',
   [Phrase.InvalidRetailPtrLogPathText]: '잘못된 본섭 PTR 로그 경로',
+  [Phrase.Details]: '세부',
 };
 
 export default KOREAN;

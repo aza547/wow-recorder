@@ -1,7 +1,7 @@
 import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
-import { Fragment, MutableRefObject } from 'react';
+import { Fragment, MutableRefObject, useEffect, useState } from 'react';
 import ViewpointSelection from 'renderer/components/Viewpoints/ViewpointSelection';
 import ViewpointInfo from 'renderer/components/Viewpoints/ViewpointInfo';
 import ViewpointButtons from 'renderer/components/Viewpoints/ViewpointButtons';
@@ -40,11 +40,67 @@ const VideoSelectionTable = (props: IProps) => {
 
   const { category, playingVideo } = appState;
 
+  const [shiftDown, setShiftDown] = useState<boolean>(false);
+  const [ctrlDown, setCtrlDown] = useState<boolean>(false);
+
+  /**
+   * Allow control and shift to select multi or ranges of
+   * selections, respectively.
+   */
+  useEffect(() => {
+    document.addEventListener('keyup', (event: KeyboardEvent) => {
+      if (event.key === 'Control') setCtrlDown(false);
+      if (event.key === 'Shift') setShiftDown(false);
+    });
+
+    document.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Control') setCtrlDown(true);
+      if (event.key === 'Shift') setShiftDown(true);
+    });
+
+    // Prevent shift mouse down selecting all the text in the table.
+    document.addEventListener('mousedown', (event) => {
+      if (event.shiftKey) event.preventDefault();
+    });
+  });
+
   /**
    * Mark the row as selected and update the video player to play the first
    * viewpoint.
    */
-  const onRowClick = (row: Row<RendererVideo>) => {
+  const onRowClick = (
+    event: React.MouseEvent<HTMLTableRowElement>,
+    row: Row<RendererVideo>,
+  ) => {
+    if (shiftDown) {
+      const { rows } = table.getRowModel();
+
+      const base =
+        rows.find((row) => {
+          const povs = [row.original, ...row.original.multiPov];
+          return Boolean(
+            povs.find((p) => p.videoName === playingVideo?.videoName),
+          );
+        })?.index || 0;
+
+      const target = row.index;
+      const start = Math.min(base, target);
+      const end = Math.max(base, target) + 1;
+
+      rows.slice(start, end).forEach((row) => {
+        if (!row.getIsSelected()) {
+          row.getToggleSelectedHandler()(event);
+        }
+      });
+
+      return;
+    }
+
+    if (ctrlDown) {
+      row.getToggleSelectedHandler()(event);
+      return;
+    }
+
     const video = row.original;
     const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
 
@@ -62,8 +118,17 @@ const VideoSelectionTable = (props: IProps) => {
   /**
    * Select the row and expand it.
    */
-  const onRowDoubleClick = (row: Row<RendererVideo>) => {
-    onRowClick(row);
+  const onRowDoubleClick = (
+    event: React.MouseEvent<HTMLTableRowElement>,
+    row: Row<RendererVideo>,
+  ) => {
+    if (ctrlDown || shiftDown) {
+      // Just do a single click. Probably an accident.
+      onRowClick(event, row);
+      return;
+    }
+
+    onRowClick(event, row);
     row.getToggleExpandedHandler()();
   };
 
@@ -151,8 +216,8 @@ const VideoSelectionTable = (props: IProps) => {
       <tr
         key={row.id}
         className={className}
-        onClick={() => onRowClick(row)}
-        onDoubleClick={() => onRowDoubleClick(row)}
+        onClick={(event) => onRowClick(event, row)}
+        onDoubleClick={(event) => onRowDoubleClick(event, row)}
       >
         {cells.map(renderBaseCell)}
       </tr>

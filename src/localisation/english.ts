@@ -352,6 +352,7 @@ const ENGLISH: Translations = {
   [Phrase.RecordRetailPtrLabel]: 'Record Retail PTR',
   [Phrase.RetailPtrLogPathLabel]: 'Retail PTR Log Path',
   [Phrase.InvalidRetailPtrLogPathText]: 'Invalid retail PTR log path',
+  [Phrase.Details]: 'Details',
 };
 
 export default ENGLISH;
