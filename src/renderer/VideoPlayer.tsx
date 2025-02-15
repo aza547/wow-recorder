@@ -11,7 +11,6 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -95,7 +94,14 @@ export const VideoPlayer = (props: IProps) => {
     appState,
     setAppState,
   } = props;
+  const { playing, multiPlayerMode, language } = appState;
   console.log('Videos passed to player', videos.length);
+
+  if (videos.length < 1 || videos.length > 4) {
+    // Protect against stupid programmer errors.
+    throw new Error('VideoPlayer should only be passed up to 4 videos');
+  }
+
   // Reference to each player. Required to control the ReactPlayer component.
   const players: MutableRefObject<ReactPlayer | null>[] = videos.map(() =>
     useRef(null),
@@ -136,19 +142,12 @@ export const VideoPlayer = (props: IProps) => {
   // different POVs of the same activity we want to play from the same
   // point.
   const timestamp = `#t=${persistentProgress.current}`;
-  const clippable = videos.length === 1 && !videos[0].cloud; // TODO fix? No clipping in multi player.
+  const clippable = !multiPlayerMode && !videos[0].cloud;
 
   // Deliberatly don't update the source when the timestamp changes. That's
   // just the initial playhead position We only care to change sources when
   // the videos we are meant to be playing changes.
   const srcs = videos.map((rv) => useRef<string>(rv.videoSource + timestamp));
-
-  if (srcs.length > 4) {
-    // Protect against stupid programmer errors.
-    throw new Error('VideoPlayer should only be passed up to 4 videos');
-  }
-
-  console.log("Sources", srcs);
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -213,11 +212,11 @@ export const VideoPlayer = (props: IProps) => {
     const deathMarkerConfig = convertNumToDeathMarkers(config.deathMarkers);
 
     if (deathMarkerConfig === DeathMarkers.ALL) {
-      getAllDeathMarkers(videos[0], appState.language)
+      getAllDeathMarkers(videos[0], language)
         .map(getDeathMark)
         .forEach((m) => marks.push(m));
     } else if (deathMarkerConfig === DeathMarkers.OWN) {
-      getOwnDeathMarkers(videos[0], appState.language)
+      getOwnDeathMarkers(videos[0], language)
         .map(getDeathMark)
         .forEach((m) => marks.push(m));
     }
@@ -515,6 +514,8 @@ export const VideoPlayer = (props: IProps) => {
     _event: React.SyntheticEvent | Event,
     value: number | number[],
   ) => {
+    setIsDragging(false);
+
     if (Array.isArray(value) && typeof value[1] == 'number') {
       players.forEach((player) => player.current?.seekTo(value[1], 'seconds'));
     }
@@ -522,8 +523,21 @@ export const VideoPlayer = (props: IProps) => {
     if (typeof value === 'number') {
       players.forEach((player) => player.current?.seekTo(value, 'seconds'));
     }
+  };
 
-    setIsDragging(false);
+  /**
+   * Handle a mouse down event for the slider.
+   */
+  const onSliderMouseDown = () => {
+    setIsDragging(true);
+
+    if (multiPlayerMode) {
+      // Force a pause in multi player mode to avoid any risk of video
+      // desync or weird slider behaviour.
+      numReady.current = 0;
+      setSpinner(true);
+      setPlaying(false);
+    }
   };
 
   /**
@@ -538,7 +552,8 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
-   * Handle the onReady event.
+   * Handle the onReady event. This is fired by each player when it is ready
+   * to play, shortly after initial mount and also on completion of a seek.
    */
   const onReady = () => {
     numReady.current++;
@@ -550,19 +565,17 @@ export const VideoPlayer = (props: IProps) => {
 
     setSpinner(false);
 
-    if (duration > 0) {
-      return;
+    if (duration === 0) {
+      // We don't have a duration on the slider yet but the players
+      // are ready so each must know. Apply it to the component state.
+      const [primary] = players;
+
+      if (primary.current) {
+        const durationSec = primary.current.getDuration();
+        setDuration(durationSec);
+        setClipStopValue(durationSec);
+      }
     }
-
-    const [primary] = players;
-
-    if (!primary.current) {
-      return;
-    }
-
-    const durationSec = primary.current.getDuration();
-    setDuration(durationSec);
-    setClipStopValue(durationSec);
   };
 
   /**
@@ -571,10 +584,10 @@ export const VideoPlayer = (props: IProps) => {
   const getClipLabelFormat = (value: number, index: number) => {
     if (clipMode) {
       if (index === 0)
-        return `${getLocalePhrase(appState.language, Phrase.Start)} (${secToMmSs(value)})`;
+        return `${getLocalePhrase(language, Phrase.Start)} (${secToMmSs(value)})`;
       if (index === 1) return secToMmSs(value);
       if (index === 2)
-        return `${getLocalePhrase(appState.language, Phrase.End)} (${secToMmSs(value)})`;
+        return `${getLocalePhrase(language, Phrase.End)} (${secToMmSs(value)})`;
     }
 
     return secToMmSs(value);
@@ -603,7 +616,7 @@ export const VideoPlayer = (props: IProps) => {
         valueLabelDisplay={valueLabelDisplay}
         onChange={handleProgressSliderChange}
         onChangeCommitted={handleChangeCommitted}
-        onMouseDown={() => setIsDragging(true)}
+        onMouseDown={onSliderMouseDown}
         max={duration}
         marks={marks}
         step={0.01}
@@ -633,9 +646,9 @@ export const VideoPlayer = (props: IProps) => {
         key={src.current}
         url={src.current}
         style={style}
-        playing={appState.playing}
+        playing={playing}
         volume={volume}
-        muted={muted}
+        muted={primary ? muted : true}
         playbackRate={playbackRate}
         progressInterval={progressInterval}
         onProgress={primary ? onProgress : undefined}
@@ -654,10 +667,8 @@ export const VideoPlayer = (props: IProps) => {
   const renderPlayPause = () => {
     return (
       <Button variant="ghost" size="xs" onClick={togglePlaying}>
-        {appState.playing && (
-          <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />
-        )}
-        {!appState.playing && (
+        {playing && <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />}
+        {!playing && (
           <PlayArrowIcon sx={{ color: 'white', fontSize: '22px' }} />
         )}
       </Button>
@@ -723,12 +734,7 @@ export const VideoPlayer = (props: IProps) => {
     const playbackRateText = `${playbackRate}x`;
 
     return (
-      <Tooltip
-        content={getLocalePhrase(
-          appState.language,
-          Phrase.PlaybackSpeedTooltip,
-        )}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.PlaybackSpeedTooltip)}>
         <Button
           variant="ghost"
           size="xs"
@@ -745,10 +751,10 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the playback rate button for the video controls.
    */
   const renderClipButton = () => {
-    const color = clippable ? 'rgba(239, 239, 240, 0.25)' : 'white';
+    const color = clippable ? 'white' : 'rgba(239, 239, 240, 0.25)';
     const tooltip = clippable
-      ? getLocalePhrase(appState.language, Phrase.ClipUnavailableTooltip)
-      : getLocalePhrase(appState.language, Phrase.ClipTooltip);
+      ? getLocalePhrase(language, Phrase.ClipTooltip)
+      : getLocalePhrase(language, Phrase.ClipUnavailableTooltip);
 
     return (
       <Tooltip content={tooltip}>
@@ -757,7 +763,7 @@ export const VideoPlayer = (props: IProps) => {
             variant="ghost"
             size="xs"
             onClick={() => setClipMode(true)}
-            disabled={clippable}
+            disabled={!clippable}
           >
             <MovieIcon sx={{ color, fontSize: '22px' }} />
           </Button>
@@ -783,9 +789,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderClipFinishedButton = () => {
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.ConfirmTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.ConfirmTooltip)}>
         <Button variant="ghost" size="xs" onClick={doClip}>
           <DoneIcon sx={{ color: 'white' }} />
         </Button>
@@ -795,9 +799,7 @@ export const VideoPlayer = (props: IProps) => {
 
   const renderClipCancelButton = () => {
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.CancelTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.CancelTooltip)}>
         <Button variant="ghost" size="xs" onClick={() => setClipMode(false)}>
           <ClearIcon sx={{ color: 'white' }} />
         </Button>
@@ -810,9 +812,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderFullscreenButton = () => {
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.FullScreenTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.FullScreenTooltip)}>
         <Button variant="ghost" size="xs" onClick={toggleFullscreen}>
           <FullscreenIcon sx={{ color: 'white' }} />
         </Button>

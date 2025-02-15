@@ -69,47 +69,8 @@ export default class StateManager {
    */
   public async refresh() {
     this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
-
-    // console.time('correlate');
     const correlated = this.correlate();
-    // console.timeEnd('correlate');
-
-    // console.time('setstate');
     this.setVideoState(correlated);
-    // console.timeEnd('setstate');
-
-    const { category, videoFilterTags, selectedVideos } = this.appState;
-
-    if (selectedVideos.length === 0) {
-      // If we haven't yet selected a video, then select the first
-      // in the currently selected category.
-      const categoryFilter = getVideoCategoryFilter(category);
-      const categoryState = correlated.filter(categoryFilter);
-
-      const filteredState = categoryState.filter((video) =>
-        new VideoFilter(
-          videoFilterTags,
-          video,
-          this.appState.language,
-        ).filter(),
-      );
-
-      const first = filteredState[0];
-
-      if (!first) {
-        return;
-      }
-
-      const viewpoints = [first, ...first.multiPov].sort(povDiskFirstNameSort);
-
-      this.setAppState((prevState) => {
-        return {
-          ...prevState,
-          selectedVideos: [viewpoints[0]],
-          multiPlayerMode: false,
-        };
-      });
-    }
   }
 
   private correlate() {

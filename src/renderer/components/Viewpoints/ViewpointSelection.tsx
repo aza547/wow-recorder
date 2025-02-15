@@ -48,6 +48,7 @@ export default function ViewpointSelection(props: IProps) {
       unitClass = getPlayerClass(v);
     }
 
+    // TODO make this work when selectedVideos is empty.
     matches.forEach((rv: RendererVideo) => {
       if (rv.cloud) {
         cloudVideo = rv;
@@ -137,7 +138,7 @@ export default function ViewpointSelection(props: IProps) {
         return {
           ...prevState,
           selectedVideos: s,
-          multiPlayerMode: mode,
+          multiPlayerMode: s.length > 1 ? mode : false,
           playing,
         };
       });

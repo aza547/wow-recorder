@@ -43,6 +43,7 @@ const CategoryPage = (props: IProps) => {
   } = props;
   const [config, setConfig] = useSettings();
   const table = useTable(videoState, appState);
+  const { selectedVideos, selectedRow } = appState;
 
   const categoryFilter = getVideoCategoryFilter(category);
   const categoryState = videoState.filter(categoryFilter);
@@ -51,8 +52,6 @@ const CategoryPage = (props: IProps) => {
   const isClips = category === VideoCategory.Clips;
 
   const getVideoPlayer = () => {
-    const { selectedVideos } = appState;
-
     // Safe to assume we have videos at this point as we don't call this if
     // haveVideos isn't true.
     const povs = [categoryState[0], ...categoryState[0].multiPov].sort(
@@ -120,12 +119,41 @@ const CategoryPage = (props: IProps) => {
       );
     }
 
+    // We don't want multi player mode to be accessible if there isn't
+    // multiple viewpoints, so check for that. Important to filter by
+    // unique name here so we don't allow multi player mode for two
+    // identical videos with different storage (i.e. disk/cloud).
+    //
+    // No row is selected yet but we do have atleast an entry in the video
+    // selection table so default to the first to decide if we can do multi
+    // player mode or not.
+    //
+    // The dedup function here removes videos with matching names, but
+    // possibly alternative storage. We don't want to load a disk and cloud
+    // pov of the same video.
+    const dedup = (rv: RendererVideo, idx: number, arr: RendererVideo[]) =>
+      arr.findIndex((i) => i.videoName === rv.videoName) === idx;
+
+    const multiPlayerOpts = (
+      selectedRow
+        ? [selectedRow.original, ...selectedRow.original.multiPov]
+        : [categoryState[0], ...categoryState[0].multiPov]
+    )
+      .sort(povDiskFirstNameSort)
+      .filter(dedup);
+
+    const names = multiPlayerOpts.map((rv) => rv.videoName);
+    const unique = [...new Set(names)];
+    const allowMultiPlayer = unique.length > 1;
+
     return (
       <>
         <div className="w-full flex justify-evenly items-center gap-x-5 px-4 pt-2">
           <MultiPovPlaybackToggles
             appState={appState}
             setAppState={setAppState}
+            allowMultiPlayer={allowMultiPlayer}
+            opts={multiPlayerOpts}
           />
           {!isClips && (
             <VideoMarkerToggles
