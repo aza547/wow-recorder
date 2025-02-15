@@ -78,9 +78,9 @@ export default class StateManager {
     this.setVideoState(correlated);
     // console.timeEnd('setstate');
 
-    const { category, videoFilterTags, playingVideo } = this.appState;
+    const { category, videoFilterTags, selectedVideos } = this.appState;
 
-    if (!playingVideo) {
+    if (selectedVideos.length === 0) {
       // If we haven't yet selected a video, then select the first
       // in the currently selected category.
       const categoryFilter = getVideoCategoryFilter(category);
@@ -105,7 +105,8 @@ export default class StateManager {
       this.setAppState((prevState) => {
         return {
           ...prevState,
-          playingVideo: viewpoints[0],
+          selectedVideos: [viewpoints[0]],
+          multiPlayerMode: false,
         };
       });
     }

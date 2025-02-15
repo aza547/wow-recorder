@@ -47,6 +47,7 @@ import {
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Direction } from 're-resizable/lib/resizer';
+import { GripHorizontal } from 'lucide-react';
 
 interface IProps {
   videos: RendererVideo[];
@@ -94,6 +95,8 @@ export const VideoPlayer = (props: IProps) => {
     appState,
     setAppState,
   } = props;
+  console.log('Videos passed to player', videos.length);
+  // Reference to each player. Required to control the ReactPlayer component.
   const players: MutableRefObject<ReactPlayer | null>[] = videos.map(() =>
     useRef(null),
   );
@@ -133,20 +136,19 @@ export const VideoPlayer = (props: IProps) => {
   // different POVs of the same activity we want to play from the same
   // point.
   const timestamp = `#t=${persistentProgress.current}`;
-  const clippable = videos.length === 1 && !videos[0].cloud;
+  const clippable = videos.length === 1 && !videos[0].cloud; // TODO fix? No clipping in multi player.
 
   // Deliberatly don't update the source when the timestamp changes. That's
   // just the initial playhead position We only care to change sources when
   // the videos we are meant to be playing changes.
-  const srcs = useMemo<string[]>(
-    () => videos.map((rv) => rv.videoSource + timestamp),
-    [videos],
-  );
+  const srcs = videos.map((rv) => useRef<string>(rv.videoSource + timestamp));
 
   if (srcs.length > 4) {
     // Protect against stupid programmer errors.
     throw new Error('VideoPlayer should only be passed up to 4 videos');
   }
+
+  console.log("Sources", srcs);
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -613,7 +615,7 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the video player itself, passing through all necessary callbacks
    * and props for it to function and be controlled.
    */
-  const renderPlayer = (src: string, index: number) => {
+  const renderPlayer = (src: MutableRefObject<string>, index: number) => {
     const primary = index === 0;
     const player = players[index];
 
@@ -628,8 +630,8 @@ export const VideoPlayer = (props: IProps) => {
         ref={player}
         height="100%"
         width="100%"
-        key={src}
-        url={src}
+        key={src.current}
+        url={src.current}
         style={style}
         playing={appState.playing}
         volume={volume}
@@ -977,6 +979,13 @@ export const VideoPlayer = (props: IProps) => {
         enable={{ bottom: true }}
         bounds="parent"
         onResize={onResize}
+        handleComponent={{
+          bottom: (
+            <div className="flex items-center justify-center mt-1">
+              <GripHorizontal />
+            </div>
+          ),
+        }}
       >
         <Box
           id="player-and-controls"

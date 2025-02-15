@@ -31,11 +31,14 @@ interface IProps {
 export default function ViewpointInfo(props: IProps) {
   const { video, appState, setAppState, persistentProgress } = props;
   const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
-  const { playingVideo } = appState;
+  const { selectedVideos, multiPlayerMode } = appState;
   const [config] = useSettings();
   const { cloudUpload } = config;
 
-  let videoToShow = povs.find((p) => p.uniqueId === playingVideo?.uniqueId);
+  // TODO handle multi
+  let videoToShow = povs.find(
+    (p) => p.uniqueId === selectedVideos[0]?.uniqueId,
+  );
 
   if (!videoToShow) {
     [videoToShow] = povs;
@@ -70,12 +73,12 @@ export default function ViewpointInfo(props: IProps) {
   const diskVideo = playerViewpoints.find((vid) => !vid.cloud);
   const cloudVideo = playerViewpoints.find((vid) => vid.cloud);
 
-  const setPlayingVideo = (v: RendererVideo | undefined) => {
+  const setSelectedVideos = (v: RendererVideo | undefined) => {
     if (!v) {
       return;
     }
 
-    const sameActivity = appState.playingVideo?.uniqueHash === v.uniqueHash;
+    const sameActivity = selectedVideos[0]?.uniqueHash === v.uniqueHash;
 
     if (!sameActivity) {
       persistentProgress.current = 0;
@@ -86,7 +89,8 @@ export default function ViewpointInfo(props: IProps) {
 
       return {
         ...prevState,
-        playingVideo: v,
+        selectedVideos: [v],
+        multiPlayerMode: false,
         playing,
       };
     });
@@ -154,7 +158,7 @@ export default function ViewpointInfo(props: IProps) {
         <ToggleGroupItem
           value="cloud"
           disabled={!cloudVideo}
-          onClick={() => setPlayingVideo(cloudVideo)}
+          onClick={() => setSelectedVideos(cloudVideo)}
           className="h-[40px] w-[40px]"
         >
           <CloudIcon
@@ -189,7 +193,7 @@ export default function ViewpointInfo(props: IProps) {
         <ToggleGroupItem
           value="disk"
           disabled={!diskVideo}
-          onClick={() => setPlayingVideo(diskVideo)}
+          onClick={() => setSelectedVideos(diskVideo)}
           className="h-[40px] w-[40px]"
         >
           <SaveIcon sx={{ height: '30px', width: '30px', color, opacity }} />

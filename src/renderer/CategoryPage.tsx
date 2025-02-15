@@ -9,7 +9,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import { getVideoCategoryFilter } from './rendererutils';
+import { getVideoCategoryFilter, povDiskFirstNameSort } from './rendererutils';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
@@ -51,20 +51,22 @@ const CategoryPage = (props: IProps) => {
   const isClips = category === VideoCategory.Clips;
 
   const getVideoPlayer = () => {
-    const { playingVideo, numVideoPlayers } = appState;
+    const { selectedVideos } = appState;
 
-    if (playingVideo === undefined) {
-      return <></>;
-    }
+    // Safe to assume we have videos at this point as we don't call this if
+    // haveVideos isn't true.
+    const povs = [categoryState[0], ...categoryState[0].multiPov].sort(
+      povDiskFirstNameSort,
+    );
 
+    // If there is no selectedVideos (because we've just launched, or just
+    // changed category) then just play the first video in the table.
     const videosToPlay =
-      numVideoPlayers > 1
-        ? [playingVideo, ...playingVideo.multiPov.slice(0, numVideoPlayers - 1)]
-        : [playingVideo];
+      selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
 
     return (
       <VideoPlayer
-        key={playingVideo.videoSource + numVideoPlayers}
+        key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
         videos={videosToPlay}
         persistentProgress={persistentProgress}
         config={config}

@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import { AppState, RawCombatant, RendererVideo } from 'main/types';
 import { X } from 'lucide-react';
 import { specializationById, WoWCharacterClassType } from 'main/constants';
-import { MutableRefObject } from 'react';
+import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import {
   getWoWClassColor,
   stopPropagation,
@@ -17,12 +17,14 @@ import { specImages } from '../../images';
 interface IProps {
   video: RendererVideo;
   appState: AppState;
-  setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+  setAppState: Dispatch<SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
 }
 
 export default function ViewpointSelection(props: IProps) {
   const { video, appState, setAppState, persistentProgress } = props;
+  const { selectedVideos, multiPlayerMode } = appState;
+
   const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
   const { player, combatants } = povs[0];
 
@@ -38,8 +40,6 @@ export default function ViewpointSelection(props: IProps) {
     let unitClass: WoWCharacterClassType = 'UNKNOWN';
     let currentlySelected = false;
 
-    const { playingVideo } = appState;
-
     if (matches.length > 0) {
       // We only bother to get a class if we have a match. That way the
       // combatants we have a viewpoint for will be colored, else they will
@@ -52,11 +52,13 @@ export default function ViewpointSelection(props: IProps) {
       if (rv.cloud) {
         cloudVideo = rv;
         currentlySelected =
-          currentlySelected || playingVideo?.videoName === cloudVideo.videoName;
+          currentlySelected ||
+          selectedVideos.some((sv) => sv.videoName === rv.videoName);
       } else {
         diskVideo = rv;
         currentlySelected =
-          currentlySelected || playingVideo?.videoName === diskVideo.videoName;
+          currentlySelected ||
+          selectedVideos.some((sv) => sv.videoName === rv.videoName);
       }
     });
 
@@ -96,18 +98,46 @@ export default function ViewpointSelection(props: IProps) {
       }
 
       const sameActivity =
-        appState.playingVideo?.uniqueHash === selection.uniqueHash;
+        selectedVideos[0]?.uniqueHash === selection.uniqueHash;
 
       if (!sameActivity) {
         persistentProgress.current = 0;
       }
 
+      // Clone the selected videos for manipulation.
+      let s = [...selectedVideos];
+
+      if (multiPlayerMode) {
+        // We're in multiplayer mode. This click should either select a new video or
+        // deselect a currently selected video, with the caveats we don't allow the
+        // final video to be deselected, and we don't allow more than 4 videos selected
+        // at once.
+        if (currentlySelected) {
+          // The video is already selected. So deselect it if it's not the only
+          // selected video. If it is the only selected video, do nothing.
+          if (selectedVideos.length < 2) return;
+          s = s.filter((rv) => rv.videoName !== selection.videoName);
+        } else {
+          // The video is not already selected. So select it if we've not already got
+          // the max of four selected videos. If we do, then do nothing.
+          if (selectedVideos.length > 3) return;
+          s.push(selection);
+        }
+      } else {
+        // We're in single player mode. This click should just change to
+        // selection to the target of the click.
+        s = [selection];
+      }
+
       setAppState((prevState) => {
+        // If we are changing video, reset the playing and multi-player.
         const playing = sameActivity ? prevState.playing : false;
+        const mode = sameActivity ? prevState.multiPlayerMode : false;
 
         return {
           ...prevState,
-          playingVideo: selection,
+          selectedVideos: s,
+          multiPlayerMode: mode,
           playing,
         };
       });
@@ -120,6 +150,12 @@ export default function ViewpointSelection(props: IProps) {
     const selected = currentlySelected
       ? 'border-2 border-[#bb4420] rounded-sm'
       : '';
+
+    const selectedPlayers = selectedVideos
+      .map((rv) => rv.player?._name)
+      .filter((item): item is string => item !== undefined);
+    const idx =
+      currentlySelected && name ? selectedPlayers.indexOf(name) + 1 : -1;
 
     return (
       <div
@@ -160,6 +196,11 @@ export default function ViewpointSelection(props: IProps) {
                 objectFit: 'cover',
               }}
             />
+          )}
+          {multiPlayerMode && idx > 0 && (
+            <div className="absolute flex items-center justify-center top-[2px] right-[2px] text-black font-bold text-[10px] h-[15px] w-[15px]">
+              {idx}
+            </div>
           )}
           <span className="font-sans text-black font-bold text-[10px] truncate">
             {name}
