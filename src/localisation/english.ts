@@ -353,6 +353,11 @@ const ENGLISH: Translations = {
   [Phrase.RetailPtrLogPathLabel]: 'Retail PTR Log Path',
   [Phrase.InvalidRetailPtrLogPathText]: 'Invalid retail PTR log path',
   [Phrase.Details]: 'Details',
+  [Phrase.PlayerModeLabel]: 'Player Mode',
+  [Phrase.MultiPlayerModeHeading]: 'Multiplayer Mode',
+  [Phrase.MultiPlayerModeAdvice1]: 'Select or deselect players using the grid to the left.',
+  [Phrase.MultiPlayerModeAdvice2]: 'Select up to 4 players at once and review side-by-side footage.',
+  [Phrase.MultiPlayerModeAdvice3]: 'To restore buttons normally displayed here, return to single player mode.',
 };
 
 export default ENGLISH;

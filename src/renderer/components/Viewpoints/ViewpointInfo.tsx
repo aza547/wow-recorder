@@ -31,7 +31,7 @@ interface IProps {
 export default function ViewpointInfo(props: IProps) {
   const { video, appState, setAppState, persistentProgress } = props;
   const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
-  const { selectedVideos, multiPlayerMode } = appState;
+  const { selectedVideos, multiPlayerMode, language } = appState;
   const [config] = useSettings();
   const { cloudUpload } = config;
 
@@ -49,19 +49,14 @@ export default function ViewpointInfo(props: IProps) {
 
   if (selected && multiPlayerMode) {
     return (
-      <div>
+      <div className="max-w-[400px]">
         <h1 className="text-primary-foreground font-semibold text-sm">
-          Multiplayer Mode
+          {getLocalePhrase(language, Phrase.MultiPlayerModeHeading)}
         </h1>
         <ul className="list-disc pl-5 text-secondary-foreground text-sm">
-          <li>Select or deselect players using the grid to the left.</li>
-          <li>
-            Select up to 4 players at once and review side-by-side footage.
-          </li>
-          <li>
-            To restore buttons normally displayed here, return to single player
-            mode.
-          </li>
+          <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice1)}</li>
+          <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice2)}</li>
+          <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice3)}</li>
         </ul>
       </div>
     );
@@ -126,10 +121,7 @@ export default function ViewpointInfo(props: IProps) {
   const getDownloadButton = () => {
     return (
       <Tooltip
-        content={getLocalePhrase(
-          appState.language,
-          Phrase.DownloadButtonTooltip,
-        )}
+        content={getLocalePhrase(language, Phrase.DownloadButtonTooltip)}
       >
         <ToggleGroupItem
           value="cloud"
@@ -148,9 +140,7 @@ export default function ViewpointInfo(props: IProps) {
 
   const getUploadButton = () => {
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.UploadButtonTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.UploadButtonTooltip)}>
         <ToggleGroupItem
           value="cloud"
           onClick={uploadVideo}
@@ -175,9 +165,7 @@ export default function ViewpointInfo(props: IProps) {
     }
 
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.CloudButtonTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.CloudButtonTooltip)}>
         <ToggleGroupItem
           value="cloud"
           disabled={!cloudVideo}
@@ -210,9 +198,7 @@ export default function ViewpointInfo(props: IProps) {
     }
 
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.DiskButtonTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.DiskButtonTooltip)}>
         <ToggleGroupItem
           value="disk"
           disabled={!diskVideo}

@@ -350,6 +350,11 @@ enum Phrase {
   RetailPtrLogPathLabel,
   InvalidRetailPtrLogPathText,
   Details,
+  PlayerModeLabel,
+  MultiPlayerModeHeading,
+  MultiPlayerModeAdvice1,
+  MultiPlayerModeAdvice2,
+  MultiPlayerModeAdvice3,
 }
 
 enum Language {

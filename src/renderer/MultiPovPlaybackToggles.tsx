@@ -5,6 +5,9 @@ import {
 } from './components/ToggleGroup/ToggleGroup';
 import Label from './components/Label/Label';
 import { LayoutGrid, TvMinimal } from 'lucide-react';
+import { language } from 'eslint-plugin-prettier/recommended';
+import { getLocalePhrase } from 'localisation/translations';
+import { Phrase } from 'localisation/types';
 
 interface IProps {
   appState: AppState;
@@ -15,7 +18,7 @@ interface IProps {
 
 const MultiPovPlaybackToggles = (props: IProps) => {
   const { appState, setAppState, allowMultiPlayer, opts } = props;
-  const { selectedVideos, multiPlayerMode } = appState;
+  const { selectedVideos, multiPlayerMode, language } = appState;
 
   const onValueChange = (value: string) => {
     const multiPlayerMode = value === 'true';
@@ -42,7 +45,7 @@ const MultiPovPlaybackToggles = (props: IProps) => {
   return (
     <div className="flex items-center gap-x-5">
       <div>
-        <Label>Player Mode</Label>
+        <Label>{getLocalePhrase(language, Phrase.PlayerModeLabel)}</Label>
         <ToggleGroup
           type="single"
           value={multiPlayerMode.toString()}
