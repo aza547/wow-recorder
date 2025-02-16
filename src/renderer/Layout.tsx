@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { Pages, RecStatus, AppState, RendererVideo } from 'main/types';
-import { MutableRefObject } from 'react';
+import { MutableRefObject, useMemo } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
 import StateManager from './StateManager';
+import { getVideoCategoryFilter } from './rendererutils';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -36,11 +37,16 @@ const Layout = (props: IProps) => {
   } = props;
   const { page, category } = appState;
 
+  const categoryState = useMemo<RendererVideo[]>(() => {
+    const categoryFilter = getVideoCategoryFilter(category);
+    return videoState.filter(categoryFilter);
+  }, [videoState, category]);
+
   const renderCategoryPage = () => {
     return (
       <CategoryPage
         category={category}
-        videoState={videoState}
+        categoryState={categoryState}
         stateManager={stateManager}
         appState={appState}
         setAppState={setAppState}

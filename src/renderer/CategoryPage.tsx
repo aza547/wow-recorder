@@ -9,7 +9,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import { getVideoCategoryFilter, povDiskFirstNameSort } from './rendererutils';
+import { povDiskFirstNameSort } from './rendererutils';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
@@ -22,7 +22,7 @@ import VideoFilter from './VideoFilter';
 interface IProps {
   category: VideoCategory;
   stateManager: MutableRefObject<StateManager>;
-  videoState: RendererVideo[];
+  categoryState: RendererVideo[];
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
@@ -36,7 +36,7 @@ const CategoryPage = (props: IProps) => {
   const {
     category,
     stateManager,
-    videoState,
+    categoryState,
     appState,
     setAppState,
     persistentProgress,
@@ -45,11 +45,6 @@ const CategoryPage = (props: IProps) => {
   const { selectedVideos, selectedRow, videoFilterTags, language } = appState;
 
   const [config, setConfig] = useSettings();
-
-  const categoryState = useMemo<RendererVideo[]>(() => {
-    const categoryFilter = getVideoCategoryFilter(category);
-    return videoState.filter(categoryFilter);
-  }, [videoState, category]);
 
   const filteredState = useMemo<RendererVideo[]>(() => {
     const queryFilter = (rv: RendererVideo) =>
