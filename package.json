@@ -140,6 +140,7 @@
   "dependencies": {
     "@electron/notarize": "^2.3.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-brands-svg-icons": "^6.6.0",
     "@fortawesome/free-regular-svg-icons": "^6.6.0",
@@ -177,6 +178,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "fs": "^0.0.1-security",
     "history": "^5.3.0",
+    "i": "^0.3.7",
     "lodash": "^4.17.21",
     "lucide-react": "^0.428.0",
     "node-abi": "^3.71.0",

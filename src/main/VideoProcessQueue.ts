@@ -4,6 +4,7 @@ import assert from 'assert';
 import { shouldUpload } from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from '../config/ConfigService';
+import { promises as fs } from 'fs';
 import {
   CloudMetadata,
   CloudStatus,
@@ -20,15 +21,26 @@ import {
   getMetadataForVideo,
   rendererVideoToMetadata,
   getFileInfo,
+  keyframeRoundUp,
 } from './util';
 import CloudClient from '../storage/CloudClient';
+import { exec } from 'child_process';
+import util from 'util';
+
+const execPromise = util.promisify(exec);
 
 const atomicQueue = require('atomic-queue');
 const ffmpeg = require('fluent-ffmpeg');
+
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
 
 const ffmpegInstallerPath = fixPathWhenPackaged(ffmpegInstaller.path);
+const ffprobeInstallerPath = fixPathWhenPackaged(ffprobeInstaller.path);
+
 ffmpeg.setFfmpegPath(ffmpegInstallerPath);
+ffmpeg.setFfprobePath(ffprobeInstallerPath);
+console.log('INSTALLER PATH\n\n\n', ffmpegInstallerPath);
 
 /**
  * A queue for cutting videos to size.
@@ -568,18 +580,47 @@ export default class VideoProcessQueue {
       suffix,
     );
 
+    const srcDir = path.dirname(sourceFile);
+
     console.info('[VideoProcessQueue] Start time:', startTime);
     console.info('[VideoProcessQueue] Duration:', duration);
 
-    return new Promise<string>((resolve) => {
+    const cmd = [
+      `"${ffprobeInstallerPath}"`, // Directly call the ffprobe executable, ffmpeg-fluent doesn't let us pass arguments.
+      '-show_frames', // What it says on the tin.
+      '-select_streams v:0', // Select the video stream.
+      '-skip_frame nokey', // Skip frames without a key.
+      '-show_entries frame=pts_time', // Show the pts_time field only.
+      '-of json', // Output JSON for ease of parsing results.
+      `"${sourceFile}"`, // The file we're probing.
+    ];
+
+    const { stdout } = await execPromise(cmd.join(' '));
+    const parsed = JSON.parse(stdout);
+    const frames: number[] = parsed.frames.map(
+      (f: { pts_time: number }) => f.pts_time,
+    );
+
+    const idx = keyframeRoundUp(offset, frames);
+    const below = frames[idx - 1];
+    const above = frames[idx];
+    const gap = above - below;
+
+    console.info('[VideoProcessQueue] Got keyframes', frames);
+    console.info('[VideoProcessQueue] Got below keyframe', below);
+    console.info('[VideoProcessQueue] Got above keyframe', above);
+
+    const remainingKeyFramesPath = await new Promise<string>((resolve) => {
+      const out = path.join(srcDir, 'remaining.mp4');
+
       const handleEnd = async (err: unknown) => {
         if (err) {
           console.error('[VideoProcessQueue] Cutting error (1): ', String(err));
           throw new Error('Error when cutting video');
         }
 
-        console.info('[VideoProcessQueue] FFmpeg cut video succeeded');
-        resolve(outputPath);
+        console.timeEnd('[VideoProcessQueue] Cut remaining footage');
+        resolve(out);
       };
 
       const handleErr = (err: unknown) => {
@@ -587,25 +628,80 @@ export default class VideoProcessQueue {
         throw new Error('Error when cutting video');
       };
 
-      // It's crucial that we don't re-encode the video here as that
-      // would spin the CPU and delay the replay being available. Read
-      // about it here: https://stackoverflow.com/questions/63997589/.
-      //
-      // We need to deal with audio desync due to the cutting. We could
-      // just re-encode it which is fairly cheap but for long runs
-      // this can incur noticable cutting time. I saw a 20min Mythic+ take
-      // approx 10s to cut which is probably not acceptable. Read about the
-      // re-encoding approach here: https://superuser.com/questions/1001299/.
-      //
-      // This thread has a brilliant summary why we need "-avoid_negative_ts
-      // make_zero": https://superuser.com/questions/1167958/.
+      console.time('[VideoProcessQueue] Cut remaining footage');
+
       ffmpeg(sourceFile)
-        .output(outputPath)
-        .setStartTime(startTime)
-        .setDuration(duration)
+        .output(out)
+        .setStartTime(above)
+        .setDuration(duration - gap)
         .withVideoCodec('copy')
         .withAudioCodec('copy')
-        .outputOptions('-avoid_negative_ts make_zero')
+        .on('end', handleEnd)
+        .on('error', handleErr)
+        .run();
+    });
+
+    const firstKeyframePath = await new Promise<string>((resolve) => {
+      const out = path.join(srcDir, 'first.mp4');
+
+      const handleEnd = async (err: unknown) => {
+        if (err) {
+          console.error('[VideoProcessQueue] Cutting error (3): ', String(err));
+          throw new Error('Error when cutting video');
+        }
+
+        console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe');
+        resolve(out);
+      };
+
+      const handleErr = (err: unknown) => {
+        console.error('[VideoProcessQueue] Cutting error (4): ', String(err));
+        throw new Error('Error when cutting video');
+      };
+
+      console.time('[VideoProcessQueue] Re-encode initial keyframe');
+
+      ffmpeg(sourceFile)
+        .output(out)
+        .setStartTime(below)
+        .setDuration(gap)
+        .on('end', handleEnd)
+        .on('error', handleErr)
+        .run();
+    });
+
+    const concatDescriptor = [
+      `file '${firstKeyframePath}'`,
+      `file '${remainingKeyFramesPath}'`,
+    ].join('\n');
+
+    const concatDescriptorPath = path.join(srcDir, 'concat.txt');
+    await fs.writeFile(concatDescriptorPath, concatDescriptor);
+
+    return new Promise<string>((resolve) => {
+      const handleEnd = async (err: unknown) => {
+        if (err) {
+          console.error('[VideoProcessQueue] Cutting error (5): ', String(err));
+          throw new Error('Error when cutting video');
+        }
+
+        console.timeEnd('[VideoProcessQueue] Concat final video');
+        resolve(outputPath);
+      };
+
+      const handleErr = (err: unknown) => {
+        console.error('[VideoProcessQueue] Cutting error (6): ', String(err));
+        throw new Error('Error when cutting video');
+      };
+
+      console.time('[VideoProcessQueue] Concat final video');
+
+      ffmpeg()
+        .input(concatDescriptorPath)
+        .inputOptions(['-f concat', '-safe 0'])
+        .withVideoCodec('copy')
+        .withAudioCodec('copy')
+        .output(outputPath)
         .on('end', handleEnd)
         .on('error', handleErr)
         .run();

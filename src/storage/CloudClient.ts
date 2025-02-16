@@ -773,7 +773,7 @@ export default class CloudClient extends EventEmitter {
     console.info(
       '[CloudClient] Single part upload of',
       file,
-      `(${stats.size} bytes) took `,
+      `(${stats.size} bytes) took`,
       duration,
       'seconds',
     );

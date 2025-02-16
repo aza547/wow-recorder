@@ -95,7 +95,6 @@ export const VideoPlayer = (props: IProps) => {
     setAppState,
   } = props;
   const { playing, multiPlayerMode, language } = appState;
-  console.log('Videos passed to player', videos.length);
 
   if (videos.length < 1 || videos.length > 4) {
     // Protect against stupid programmer errors.
