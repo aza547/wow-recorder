@@ -565,6 +565,10 @@ export default class VideoProcessQueue {
   /**
    * Takes an input MP4 file, trims the footage offset from the start of the
    * video so that the output is duration seconds.
+   *
+   * The strategy here I should write up soon, but is basically this:
+   * - https://stackoverflow.com/questions/63548027/cut-a-video-in-between-key-frames-without-re-encoding-the-full-video-using-ffpme/63604858#63604858
+   * - https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/496#issuecomment-203005754
    */
   private static async cutVideo(
     sourceFile: string,
@@ -601,6 +605,7 @@ export default class VideoProcessQueue {
       (f: { pts_time: number }) => f.pts_time,
     );
 
+    // TODO what if we land exactly on a keyframe? We can skip a bunch of processing.
     const idx = keyframeRoundUp(offset, frames);
     const below = frames[idx - 1];
     const above = frames[idx];
