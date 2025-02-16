@@ -114,7 +114,7 @@ export default function ViewpointSelection(props: IProps) {
 
       if (multiPlayerMode) {
         // We're in multiplayer mode. This click should either select a new video or
-        // deselect a currently selected video, with the caveats we don't allow more 
+        // deselect a currently selected video, with the caveats we don't allow more
         // than 4 videos selected at once.
         if (currentlySelected) {
           // The video is already selected. So deselect it if it's not the only
@@ -146,7 +146,8 @@ export default function ViewpointSelection(props: IProps) {
           ...prevState,
           selectedVideos: s,
           multiPlayerMode,
-          playing,
+          // Always pause if changing selections in multiplayer mode.
+          playing: multiPlayerMode ? false : playing,
         };
       });
     };

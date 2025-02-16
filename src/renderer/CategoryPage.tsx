@@ -57,15 +57,18 @@ const CategoryPage = (props: IProps) => {
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
 
+  /**
+   * Render the video player. Safe to assume we have videos at this point
+   * as we don't call this if haveVideos isn't true.
+   *
+   * If there is no selected videos (because we've just launched, or just
+   * changed category) then just play the first video in the table.
+   */
   const getVideoPlayer = () => {
-    // Safe to assume we have videos at this point as we don't call this if
-    // haveVideos isn't true.
     const povs = [filteredState[0], ...filteredState[0].multiPov].sort(
       povDiskFirstNameSort,
     );
 
-    // If there is no selectedVideos (because we've just launched, or just
-    // changed category) then just play the first video in the table.
     const videosToPlay =
       selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
 

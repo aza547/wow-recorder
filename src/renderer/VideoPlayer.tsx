@@ -579,9 +579,9 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
-   * A video player error. Maybe should pass this through to the actual 
+   * A video player error. Maybe should pass this through to the actual
    * log file for debug sake? Occasionally see R2 give a 503 when loading
-   * videos. Don't know why, and goes away on retry. Maybe can make that 
+   * videos. Don't know why, and goes away on retry. Maybe can make that
    * retry happen automatically?
    */
   const onError = (e: unknown) => {

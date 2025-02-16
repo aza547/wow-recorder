@@ -35,9 +35,17 @@ export default function ViewpointInfo(props: IProps) {
   const [config] = useSettings();
   const { cloudUpload } = config;
 
+  let videoToShow = povs.find(
+    (p) => p.uniqueId === selectedVideos[0]?.uniqueId,
+  );
+
+  if (!videoToShow) {
+    [videoToShow] = povs;
+  }
+
   const selected = selectedVideos
     .map((rv) => rv.videoName)
-    .includes(video.videoName);
+    .includes(videoToShow.videoName);
 
   if (selected && multiPlayerMode) {
     return (
@@ -46,20 +54,17 @@ export default function ViewpointInfo(props: IProps) {
           Multiplayer Mode
         </h1>
         <ul className="list-disc pl-5 text-secondary-foreground text-sm">
-          <li>Select up to 4 players to view at once.</li>
-          <li>Review side-by-side footage.</li>
-          <li>To restore buttons, return to single player mode.</li>
+          <li>Select or deselect players using the grid to the left.</li>
+          <li>
+            Select up to 4 players at once and review side-by-side footage.
+          </li>
+          <li>
+            To restore buttons normally displayed here, return to single player
+            mode.
+          </li>
         </ul>
       </div>
     );
-  }
-
-  let videoToShow = povs.find(
-    (p) => p.uniqueId === selectedVideos[0]?.uniqueId,
-  );
-
-  if (!videoToShow) {
-    [videoToShow] = povs;
   }
 
   const { cloud, videoName, videoSource } = videoToShow;
