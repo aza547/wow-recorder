@@ -323,7 +323,7 @@ const VideoSelectionTable = (props: IProps) => {
   const renderPagnationButtons = () => {
     const current = table.getState().pagination.pageIndex + 1;
     const total = table.getPageCount().toLocaleString();
-    const indicator = `${current} / ${total}`;
+    const indicator = `${current} of ${total}`;
 
     return (
       <div className="flex w-full justify-center items-center gap-2 border-t border-video-border pt-2">

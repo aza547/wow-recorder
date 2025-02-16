@@ -15,10 +15,8 @@ import {
   getInstanceDifficultyText,
   videoToDate,
   getDungeonName,
-  getVideoCategoryFilter,
 } from 'renderer/rendererutils';
 import { VideoCategory } from 'types/VideoCategory';
-import VideoFilter from 'renderer/VideoFilter';
 import {
   populateSelectCell,
   populateEncounterNameCell,
@@ -433,25 +431,13 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
       throw new Error('Unrecognized category');
   }
 
-  const { videoFilterTags } = appState;
-
-  const filteredState = useMemo<RendererVideo[]>(() => {
-    const categoryFilter = getVideoCategoryFilter(category);
-    const categoryState = videoState.filter(categoryFilter);
-
-    const queryFilter = (v: RendererVideo) =>
-      new VideoFilter(videoFilterTags, v, appState.language).filter();
-
-    return categoryState.filter(queryFilter);
-  }, [category, videoState, videoFilterTags]);
-
   /**
    * Prepare the headless table, with sorting and row expansion. This is where
    * the data is passed in to be rendered.
    */
   const table = useReactTable({
     columns,
-    data: filteredState,
+    data: videoState,
     state: { expanded, pagination, rowSelection },
     getRowId: (row) => row.uniqueId,
     onExpandedChange: setExpanded,

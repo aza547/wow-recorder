@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject } from 'react';
+import { MutableRefObject, useMemo } from 'react';
 import { Trash } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
@@ -17,6 +17,7 @@ import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 import useTable from './components/Tables/TableData';
 import DeleteDialog from './DeleteDialog';
 import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
+import VideoFilter from './VideoFilter';
 
 interface IProps {
   category: VideoCategory;
@@ -41,20 +42,30 @@ const CategoryPage = (props: IProps) => {
     persistentProgress,
     playerHeight,
   } = props;
+  const { selectedVideos, selectedRow, videoFilterTags, language } = appState;
+
   const [config, setConfig] = useSettings();
-  const table = useTable(videoState, appState);
-  const { selectedVideos, selectedRow } = appState;
 
-  const categoryFilter = getVideoCategoryFilter(category);
-  const categoryState = videoState.filter(categoryFilter);
+  const categoryState = useMemo<RendererVideo[]>(() => {
+    const categoryFilter = getVideoCategoryFilter(category);
+    return videoState.filter(categoryFilter);
+  }, [videoState, category]);
+
+  const filteredState = useMemo<RendererVideo[]>(() => {
+    const queryFilter = (rv: RendererVideo) =>
+      new VideoFilter(videoFilterTags, rv, language).filter();
+
+    return categoryState.filter(queryFilter);
+  }, [categoryState, videoFilterTags, language]);
+
+  const table = useTable(filteredState, appState);
   const haveVideos = categoryState.length > 0;
-
   const isClips = category === VideoCategory.Clips;
 
   const getVideoPlayer = () => {
     // Safe to assume we have videos at this point as we don't call this if
     // haveVideos isn't true.
-    const povs = [categoryState[0], ...categoryState[0].multiPov].sort(
+    const povs = [filteredState[0], ...filteredState[0].multiPov].sort(
       povDiskFirstNameSort,
     );
 
@@ -124,9 +135,9 @@ const CategoryPage = (props: IProps) => {
     // unique name here so we don't allow multi player mode for two
     // identical videos with different storage (i.e. disk/cloud).
     //
-    // No row is selected yet but we do have atleast an entry in the video
-    // selection table so default to the first to decide if we can do multi
-    // player mode or not.
+    // Handle the case where no row is selected yet but we do have atleast
+    // an entry in the video selection table so default to the first to
+    // decide if we can do multi player mode or not.
     //
     // The dedup function here removes videos with matching names, but
     // possibly alternative storage. We don't want to load a disk and cloud
@@ -137,7 +148,7 @@ const CategoryPage = (props: IProps) => {
     const multiPlayerOpts = (
       selectedRow
         ? [selectedRow.original, ...selectedRow.original.multiPov]
-        : [categoryState[0], ...categoryState[0].multiPov]
+        : [filteredState[0], ...filteredState[0].multiPov]
     )
       .sort(povDiskFirstNameSort)
       .filter(dedup);
@@ -165,9 +176,10 @@ const CategoryPage = (props: IProps) => {
           )}
           <div className="flex-grow">
             <SearchBar
+              key={category}
               appState={appState}
               setAppState={setAppState}
-              categoryState={categoryState}
+              filteredState={filteredState}
             />
           </div>
           <div className="pt-6">
