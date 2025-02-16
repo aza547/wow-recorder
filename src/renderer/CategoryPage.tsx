@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject } from 'react';
+import { MutableRefObject, useMemo } from 'react';
 import { Trash } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
@@ -9,18 +9,20 @@ import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import { getVideoCategoryFilter } from './rendererutils';
+import { povDiskFirstNameSort } from './rendererutils';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
 import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 import useTable from './components/Tables/TableData';
 import DeleteDialog from './DeleteDialog';
+import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
+import VideoFilter from './VideoFilter';
 
 interface IProps {
   category: VideoCategory;
   stateManager: MutableRefObject<StateManager>;
-  videoState: RendererVideo[];
+  categoryState: RendererVideo[];
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
@@ -34,32 +36,46 @@ const CategoryPage = (props: IProps) => {
   const {
     category,
     stateManager,
-    videoState,
+    categoryState,
     appState,
     setAppState,
     persistentProgress,
     playerHeight,
   } = props;
+  const { selectedVideos, selectedRow, videoFilterTags, language } = appState;
+
   const [config, setConfig] = useSettings();
-  const table = useTable(videoState, appState);
 
-  const categoryFilter = getVideoCategoryFilter(category);
-  const categoryState = videoState.filter(categoryFilter);
+  const filteredState = useMemo<RendererVideo[]>(() => {
+    const queryFilter = (rv: RendererVideo) =>
+      new VideoFilter(videoFilterTags, rv, language).filter();
+
+    return categoryState.filter(queryFilter);
+  }, [categoryState, videoFilterTags, language]);
+
+  const table = useTable(filteredState, appState);
   const haveVideos = categoryState.length > 0;
-
   const isClips = category === VideoCategory.Clips;
 
+  /**
+   * Render the video player. Safe to assume we have videos at this point
+   * as we don't call this if haveVideos isn't true.
+   *
+   * If there is no selected videos (because we've just launched, or just
+   * changed category) then just play the first video in the table.
+   */
   const getVideoPlayer = () => {
-    const { playingVideo } = appState;
+    const povs = [filteredState[0], ...filteredState[0].multiPov].sort(
+      povDiskFirstNameSort,
+    );
 
-    if (playingVideo === undefined) {
-      return <></>;
-    }
+    const videosToPlay =
+      selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
 
     return (
       <VideoPlayer
-        key={playingVideo.videoSource}
-        video={playingVideo}
+        key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
+        videos={videosToPlay}
         persistentProgress={persistentProgress}
         config={config}
         playerHeight={playerHeight}
@@ -112,9 +128,42 @@ const CategoryPage = (props: IProps) => {
       );
     }
 
+    // We don't want multi player mode to be accessible if there isn't
+    // multiple viewpoints, so check for that. Important to filter by
+    // unique name here so we don't allow multi player mode for two
+    // identical videos with different storage (i.e. disk/cloud).
+    //
+    // Handle the case where no row is selected yet but we do have atleast
+    // an entry in the video selection table so default to the first to
+    // decide if we can do multi player mode or not.
+    //
+    // The dedup function here removes videos with matching names, but
+    // possibly alternative storage. We don't want to load a disk and cloud
+    // pov of the same video.
+    const dedup = (rv: RendererVideo, idx: number, arr: RendererVideo[]) =>
+      arr.findIndex((i) => i.videoName === rv.videoName) === idx;
+
+    const multiPlayerOpts = (
+      selectedRow
+        ? [selectedRow.original, ...selectedRow.original.multiPov]
+        : [filteredState[0], ...filteredState[0].multiPov]
+    )
+      .sort(povDiskFirstNameSort)
+      .filter(dedup);
+
+    const names = multiPlayerOpts.map((rv) => rv.videoName);
+    const unique = [...new Set(names)];
+    const allowMultiPlayer = unique.length > 1;
+
     return (
       <>
         <div className="w-full flex justify-evenly items-center gap-x-5 px-4 pt-2">
+          <MultiPovPlaybackToggles
+            appState={appState}
+            setAppState={setAppState}
+            allowMultiPlayer={allowMultiPlayer}
+            opts={multiPlayerOpts}
+          />
           {!isClips && (
             <VideoMarkerToggles
               category={category}
@@ -125,9 +174,10 @@ const CategoryPage = (props: IProps) => {
           )}
           <div className="flex-grow">
             <SearchBar
+              key={category}
               appState={appState}
               setAppState={setAppState}
-              categoryState={categoryState}
+              filteredState={filteredState}
             />
           </div>
           <div className="pt-6">

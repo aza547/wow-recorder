@@ -212,7 +212,7 @@ const ENGLISH: Translations = {
   [Phrase.FullScreenTooltip]: 'Fullscreen',
   [Phrase.PlaybackSpeedTooltip]: 'Playback Speed',
   [Phrase.ClipTooltip]: 'Clip',
-  [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos',
+  [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos, while in single player mode',
   [Phrase.ConfirmTooltip]: 'Confirm',
   [Phrase.CancelTooltip]: 'Cancel',
   [Phrase.TagButtonTooltip]: 'Add a tag',
@@ -353,6 +353,11 @@ const ENGLISH: Translations = {
   [Phrase.RetailPtrLogPathLabel]: 'Retail PTR Log Path',
   [Phrase.InvalidRetailPtrLogPathText]: 'Invalid retail PTR log path',
   [Phrase.Details]: 'Details',
+  [Phrase.PlayerModeLabel]: 'Player Mode',
+  [Phrase.MultiPlayerModeHeading]: 'Multiplayer Mode',
+  [Phrase.MultiPlayerModeAdvice1]: 'Select or deselect players using the grid to the left.',
+  [Phrase.MultiPlayerModeAdvice2]: 'Select up to 4 players at once and review side-by-side footage.',
+  [Phrase.MultiPlayerModeAdvice3]: 'To restore buttons normally displayed here, return to single player mode.',
 };
 
 export default ENGLISH;

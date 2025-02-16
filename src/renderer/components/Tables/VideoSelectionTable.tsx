@@ -38,7 +38,7 @@ const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, stateManager, persistentProgress, table } =
     props;
 
-  const { category, playingVideo } = appState;
+  const { category, selectedRow } = appState;
 
   const [shiftDown, setShiftDown] = useState<boolean>(false);
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
@@ -83,15 +83,7 @@ const VideoSelectionTable = (props: IProps) => {
   ) => {
     if (shiftDown) {
       const { rows } = table.getRowModel();
-
-      const base =
-        rows.find((row) => {
-          const povs = [row.original, ...row.original.multiPov];
-          return Boolean(
-            povs.find((p) => p.videoName === playingVideo?.videoName),
-          );
-        })?.index || 0;
-
+      const base = selectedRow ? selectedRow.index : 0;
       const target = row.index;
       const start = Math.min(base, target);
       const end = Math.max(base, target) + 1;
@@ -118,7 +110,9 @@ const VideoSelectionTable = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        playingVideo: povs[0],
+        selectedRow: row,
+        selectedVideos: povs[0] ? [povs[0]] : [],
+        multiPlayerMode: false,
         playing: false,
       };
     });
@@ -261,11 +255,7 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const renderExpandedRow = (row: Row<RendererVideo>) => {
     const cells = row.getVisibleCells();
-    const povs = [row.original, ...row.original.multiPov];
-    const selected = Boolean(
-      povs.find((p) => p.videoName === playingVideo?.videoName),
-    );
-
+    const selected = selectedRow ? selectedRow === row : row.index === 0;
     const borderClass = selected ? 'border border-t-0' : 'border';
 
     return (
@@ -308,10 +298,7 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>) => {
-    const povs = [row.original, ...row.original.multiPov];
-    const selected = Boolean(
-      povs.find((p) => p.videoName === playingVideo?.videoName),
-    );
+    const selected = selectedRow ? selectedRow === row : row.index === 0;
 
     return (
       <Fragment key={row.id}>
@@ -336,7 +323,7 @@ const VideoSelectionTable = (props: IProps) => {
   const renderPagnationButtons = () => {
     const current = table.getState().pagination.pageIndex + 1;
     const total = table.getPageCount().toLocaleString();
-    const indicator = `${current} / ${total}`;
+    const indicator = `${current} of ${total}`;
 
     return (
       <div className="flex w-full justify-center items-center gap-2 border-t border-video-border pt-2">

@@ -69,46 +69,8 @@ export default class StateManager {
    */
   public async refresh() {
     this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
-
-    // console.time('correlate');
     const correlated = this.correlate();
-    // console.timeEnd('correlate');
-
-    // console.time('setstate');
     this.setVideoState(correlated);
-    // console.timeEnd('setstate');
-
-    const { category, videoFilterTags, playingVideo } = this.appState;
-
-    if (!playingVideo) {
-      // If we haven't yet selected a video, then select the first
-      // in the currently selected category.
-      const categoryFilter = getVideoCategoryFilter(category);
-      const categoryState = correlated.filter(categoryFilter);
-
-      const filteredState = categoryState.filter((video) =>
-        new VideoFilter(
-          videoFilterTags,
-          video,
-          this.appState.language,
-        ).filter(),
-      );
-
-      const first = filteredState[0];
-
-      if (!first) {
-        return;
-      }
-
-      const viewpoints = [first, ...first.multiPov].sort(povDiskFirstNameSort);
-
-      this.setAppState((prevState) => {
-        return {
-          ...prevState,
-          playingVideo: viewpoints[0],
-        };
-      });
-    }
   }
 
   private correlate() {
@@ -161,7 +123,6 @@ export default class StateManager {
       if (!sameHash || videoToCompare.start === undefined) {
         // Mismatching hash or no start time so either these videos or
         // not correlated or we can't prove they are these are correlated.
-
         continue;
       }
 

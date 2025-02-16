@@ -4,6 +4,7 @@ import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from '../config/ConfigService';
 import { Tag } from 'react-tag-autocomplete';
+import { Row } from '@tanstack/react-table';
 
 /**
  * Application recording status.
@@ -312,7 +313,9 @@ enum Pages {
 type AppState = {
   page: Pages;
   category: VideoCategory;
-  playingVideo: RendererVideo | undefined; // the video being played by the player
+  selectedVideos: RendererVideo[];
+  selectedRow: Row<RendererVideo> | null;
+  multiPlayerMode: boolean;
   videoFilterTags: Tag[];
   videoFullScreen: boolean;
   playing: boolean;

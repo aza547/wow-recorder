@@ -31,14 +31,35 @@ interface IProps {
 export default function ViewpointInfo(props: IProps) {
   const { video, appState, setAppState, persistentProgress } = props;
   const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
-  const { playingVideo } = appState;
+  const { selectedVideos, multiPlayerMode, language } = appState;
   const [config] = useSettings();
   const { cloudUpload } = config;
 
-  let videoToShow = povs.find((p) => p.uniqueId === playingVideo?.uniqueId);
+  let videoToShow = povs.find(
+    (p) => p.uniqueId === selectedVideos[0]?.uniqueId,
+  );
 
   if (!videoToShow) {
     [videoToShow] = povs;
+  }
+
+  const selected = selectedVideos
+    .map((rv) => rv.videoName)
+    .includes(videoToShow.videoName);
+
+  if (selected && multiPlayerMode) {
+    return (
+      <div className="max-w-[400px]">
+        <h1 className="text-primary-foreground font-semibold text-sm">
+          {getLocalePhrase(language, Phrase.MultiPlayerModeHeading)}
+        </h1>
+        <ul className="list-disc pl-5 text-secondary-foreground text-sm">
+          <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice1)}</li>
+          <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice2)}</li>
+          <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice3)}</li>
+        </ul>
+      </div>
+    );
   }
 
   const { cloud, videoName, videoSource } = videoToShow;
@@ -70,12 +91,12 @@ export default function ViewpointInfo(props: IProps) {
   const diskVideo = playerViewpoints.find((vid) => !vid.cloud);
   const cloudVideo = playerViewpoints.find((vid) => vid.cloud);
 
-  const setPlayingVideo = (v: RendererVideo | undefined) => {
+  const setSelectedVideos = (v: RendererVideo | undefined) => {
     if (!v) {
       return;
     }
 
-    const sameActivity = appState.playingVideo?.uniqueHash === v.uniqueHash;
+    const sameActivity = selectedVideos[0]?.uniqueHash === v.uniqueHash;
 
     if (!sameActivity) {
       persistentProgress.current = 0;
@@ -86,7 +107,8 @@ export default function ViewpointInfo(props: IProps) {
 
       return {
         ...prevState,
-        playingVideo: v,
+        selectedVideos: [v],
+        multiPlayerMode: false,
         playing,
       };
     });
@@ -99,10 +121,7 @@ export default function ViewpointInfo(props: IProps) {
   const getDownloadButton = () => {
     return (
       <Tooltip
-        content={getLocalePhrase(
-          appState.language,
-          Phrase.DownloadButtonTooltip,
-        )}
+        content={getLocalePhrase(language, Phrase.DownloadButtonTooltip)}
       >
         <ToggleGroupItem
           value="cloud"
@@ -121,9 +140,7 @@ export default function ViewpointInfo(props: IProps) {
 
   const getUploadButton = () => {
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.UploadButtonTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.UploadButtonTooltip)}>
         <ToggleGroupItem
           value="cloud"
           onClick={uploadVideo}
@@ -148,13 +165,11 @@ export default function ViewpointInfo(props: IProps) {
     }
 
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.CloudButtonTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.CloudButtonTooltip)}>
         <ToggleGroupItem
           value="cloud"
           disabled={!cloudVideo}
-          onClick={() => setPlayingVideo(cloudVideo)}
+          onClick={() => setSelectedVideos(cloudVideo)}
           className="h-[40px] w-[40px]"
         >
           <CloudIcon
@@ -183,13 +198,11 @@ export default function ViewpointInfo(props: IProps) {
     }
 
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.DiskButtonTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.DiskButtonTooltip)}>
         <ToggleGroupItem
           value="disk"
           disabled={!diskVideo}
-          onClick={() => setPlayingVideo(diskVideo)}
+          onClick={() => setSelectedVideos(diskVideo)}
           className="h-[40px] w-[40px]"
         >
           <SaveIcon sx={{ height: '30px', width: '30px', color, opacity }} />

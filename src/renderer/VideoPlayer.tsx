@@ -46,9 +46,10 @@ import {
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Direction } from 're-resizable/lib/resizer';
+import { GripHorizontal } from 'lucide-react';
 
 interface IProps {
-  video: RendererVideo;
+  videos: RendererVideo[];
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
   config: ConfigurationSchema;
@@ -86,16 +87,27 @@ const sliderBaseSx = {
 
 export const VideoPlayer = (props: IProps) => {
   const {
-    video,
+    videos,
     persistentProgress,
     config,
     playerHeight,
     appState,
     setAppState,
   } = props;
-  const { videoSource, cloud } = video;
+  const { playing, multiPlayerMode, language } = appState;
+  console.log('Videos passed to player', videos.length);
 
-  const player = useRef<ReactPlayer>(null);
+  if (videos.length < 1 || videos.length > 4) {
+    // Protect against stupid programmer errors.
+    throw new Error('VideoPlayer should only be passed up to 4 videos');
+  }
+
+  // Reference to each player. Required to control the ReactPlayer component.
+  const players: MutableRefObject<ReactPlayer | null>[] = videos.map(() =>
+    useRef(null),
+  );
+
+  const numReady = useRef<number>(0);
   const progressSlider = useRef<HTMLSpanElement>(null);
 
   // Progress is in seconds. Strictly it is the position of the
@@ -130,7 +142,12 @@ export const VideoPlayer = (props: IProps) => {
   // different POVs of the same activity we want to play from the same
   // point.
   const timestamp = `#t=${persistentProgress.current}`;
-  const src = useRef<string>(videoSource + timestamp);
+  const clippable = !multiPlayerMode && !videos[0].cloud;
+
+  // Deliberatly don't update the source when the timestamp changes. That's
+  // just the initial playhead position. We only care to change sources when
+  // the videos we are meant to be playing changes.
+  const srcs = videos.map((rv) => useRef<string>(rv.videoSource + timestamp));
 
   // Read and store the video player state of 'volume' and 'muted' so that we may
   // restore it when selecting a different video. This config gets stored as a
@@ -188,18 +205,18 @@ export const VideoPlayer = (props: IProps) => {
   const getMarks = () => {
     const marks: SliderMark[] = [];
 
-    if (!player.current || duration === 0 || isClip(video)) {
+    if (duration === 0 || isClip(videos[0])) {
       return marks;
     }
 
     const deathMarkerConfig = convertNumToDeathMarkers(config.deathMarkers);
 
     if (deathMarkerConfig === DeathMarkers.ALL) {
-      getAllDeathMarkers(video, appState.language)
+      getAllDeathMarkers(videos[0], language)
         .map(getDeathMark)
         .forEach((m) => marks.push(m));
     } else if (deathMarkerConfig === DeathMarkers.OWN) {
-      getOwnDeathMarkers(video, appState.language)
+      getOwnDeathMarkers(videos[0], language)
         .map(getDeathMark)
         .forEach((m) => marks.push(m));
     }
@@ -213,12 +230,12 @@ export const VideoPlayer = (props: IProps) => {
   const getActiveMarkers = () => {
     const activeMarkers: VideoMarker[] = [];
 
-    if (isMythicPlusUtil(video) && config.encounterMarkers) {
-      getEncounterMarkers(video).forEach((m) => activeMarkers.push(m));
+    if (isMythicPlusUtil(videos[0]) && config.encounterMarkers) {
+      getEncounterMarkers(videos[0]).forEach((m) => activeMarkers.push(m));
     }
 
-    if (isSoloShuffleUtil(video) && config.roundMarkers) {
-      getRoundMarkers(video).forEach((m) => activeMarkers.push(m));
+    if (isSoloShuffleUtil(videos[0]) && config.roundMarkers) {
+      getRoundMarkers(videos[0]).forEach((m) => activeMarkers.push(m));
     }
 
     return activeMarkers;
@@ -233,7 +250,7 @@ export const VideoPlayer = (props: IProps) => {
     markers: VideoMarker[],
     fillerColor: string,
   ) => {
-    if (!progressSlider.current || duration === 0 || isClip(video)) {
+    if (!progressSlider.current || duration === 0 || isClip(videos[0])) {
       // Initial render shows a flash of the default color without this,
       // and this branch also protects us loading anything on the clips
       // category where the markers are bogus as they are just lifted
@@ -406,11 +423,13 @@ export const VideoPlayer = (props: IProps) => {
    * https://stackoverflow.com/questions/6877403/how-to-tell-if-a-video-element-is-currently-playing.
    */
   const togglePlaying = () => {
-    if (!player.current) {
+    const [primary] = players;
+
+    if (!primary.current) {
       return;
     }
 
-    const internalPlayer = player.current.getInternalPlayer();
+    const internalPlayer = primary.current.getInternalPlayer();
     const { paused, currentTime, ended } = internalPlayer;
 
     if (currentTime > 0 && !paused && !ended) {
@@ -477,10 +496,6 @@ export const VideoPlayer = (props: IProps) => {
     value: number | number[],
     index: number,
   ) => {
-    if (!player.current) {
-      return;
-    }
-
     if (Array.isArray(value)) {
       setClipStartValue(value[0]);
       setClipStopValue(value[2]);
@@ -499,19 +514,30 @@ export const VideoPlayer = (props: IProps) => {
     _event: React.SyntheticEvent | Event,
     value: number | number[],
   ) => {
-    if (!player.current) {
-      return;
-    }
+    setIsDragging(false);
 
     if (Array.isArray(value) && typeof value[1] == 'number') {
-      player.current.seekTo(value[1], 'seconds');
+      players.forEach((player) => player.current?.seekTo(value[1], 'seconds'));
     }
 
     if (typeof value === 'number') {
-      player.current.seekTo(value, 'seconds');
+      players.forEach((player) => player.current?.seekTo(value, 'seconds'));
     }
+  };
 
-    setIsDragging(false);
+  /**
+   * Handle a mouse down event for the slider.
+   */
+  const onSliderMouseDown = () => {
+    setIsDragging(true);
+
+    if (multiPlayerMode) {
+      // Force a pause in multi player mode to avoid any risk of video
+      // desync or weird slider behaviour.
+      numReady.current = 0;
+      setSpinner(true);
+      setPlaying(false);
+    }
   };
 
   /**
@@ -526,22 +552,40 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
-   * Handle the onReady event.
+   * Handle the onReady event. This is fired by each player when it is ready
+   * to play, shortly after initial mount and also on completion of a seek.
    */
   const onReady = () => {
-    if (!player.current) {
+    numReady.current++;
+
+    if (numReady.current < videos.length) {
+      // Don't react until all the players have emitted a ready event.
       return;
     }
 
     setSpinner(false);
 
-    if (duration > 0) {
-      return;
-    }
+    if (duration === 0) {
+      // We don't have a duration on the slider yet but the players
+      // are ready so each must know. Apply it to the component state.
+      const [primary] = players;
 
-    const durationSec = player.current.getDuration();
-    setDuration(durationSec);
-    setClipStopValue(durationSec);
+      if (primary.current) {
+        const durationSec = primary.current.getDuration();
+        setDuration(durationSec);
+        setClipStopValue(durationSec);
+      }
+    }
+  };
+
+  /**
+   * A video player error. Maybe should pass this through to the actual
+   * log file for debug sake? Occasionally see R2 give a 503 when loading
+   * videos. Don't know why, and goes away on retry. Maybe can make that
+   * retry happen automatically?
+   */
+  const onError = (e: unknown) => {
+    console.log(e);
   };
 
   /**
@@ -550,10 +594,10 @@ export const VideoPlayer = (props: IProps) => {
   const getClipLabelFormat = (value: number, index: number) => {
     if (clipMode) {
       if (index === 0)
-        return `${getLocalePhrase(appState.language, Phrase.Start)} (${secToMmSs(value)})`;
+        return `${getLocalePhrase(language, Phrase.Start)} (${secToMmSs(value)})`;
       if (index === 1) return secToMmSs(value);
       if (index === 2)
-        return `${getLocalePhrase(appState.language, Phrase.End)} (${secToMmSs(value)})`;
+        return `${getLocalePhrase(language, Phrase.End)} (${secToMmSs(value)})`;
     }
 
     return secToMmSs(value);
@@ -582,7 +626,7 @@ export const VideoPlayer = (props: IProps) => {
         valueLabelDisplay={valueLabelDisplay}
         onChange={handleProgressSliderChange}
         onChangeCommitted={handleChangeCommitted}
-        onMouseDown={() => setIsDragging(true)}
+        onMouseDown={onSliderMouseDown}
         max={duration}
         marks={marks}
         step={0.01}
@@ -594,43 +638,37 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the video player itself, passing through all necessary callbacks
    * and props for it to function and be controlled.
    */
-  const renderPlayer = () => {
+  const renderPlayer = (src: MutableRefObject<string>, index: number) => {
+    const primary = index === 0;
+    const player = players[index];
+
+    if (!player) {
+      // Protect against stupid programmer errors.
+      throw new Error('No player reference');
+    }
+
     return (
-      <>
-        <ReactPlayer
-          id="react-player"
-          ref={player}
-          height="calc(100% - 40px)"
-          width="100%"
-          url={src.current}
-          style={style}
-          playing={appState.playing}
-          volume={volume}
-          muted={muted}
-          playbackRate={playbackRate}
-          progressInterval={progressInterval}
-          onProgress={onProgress}
-          onClick={togglePlaying}
-          onDoubleClick={toggleFullscreen}
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onReady={onReady}
-        />
-        <Backdrop
-          sx={{
-            position: 'absolute', // Absolute within the parent container
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 1, // Make sure it's above the content
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          }}
-          open={spinner}
-        >
-          <CircularProgress color="inherit" />
-        </Backdrop>
-      </>
+      <ReactPlayer
+        id="react-player"
+        ref={player}
+        height="100%"
+        width="100%"
+        key={src.current}
+        url={src.current}
+        style={style}
+        playing={playing}
+        volume={volume}
+        muted={primary ? muted : true}
+        playbackRate={playbackRate}
+        progressInterval={progressInterval}
+        onProgress={primary ? onProgress : undefined}
+        onClick={togglePlaying}
+        onDoubleClick={toggleFullscreen}
+        onPlay={primary ? () => setPlaying(true) : undefined}
+        onPause={primary ? () => setPlaying(false) : undefined}
+        onReady={onReady}
+        onError={onError}
+      />
     );
   };
 
@@ -640,10 +678,8 @@ export const VideoPlayer = (props: IProps) => {
   const renderPlayPause = () => {
     return (
       <Button variant="ghost" size="xs" onClick={togglePlaying}>
-        {appState.playing && (
-          <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />
-        )}
-        {!appState.playing && (
+        {playing && <PauseIcon sx={{ color: 'white', fontSize: '22px' }} />}
+        {!playing && (
           <PlayArrowIcon sx={{ color: 'white', fontSize: '22px' }} />
         )}
       </Button>
@@ -709,12 +745,7 @@ export const VideoPlayer = (props: IProps) => {
     const playbackRateText = `${playbackRate}x`;
 
     return (
-      <Tooltip
-        content={getLocalePhrase(
-          appState.language,
-          Phrase.PlaybackSpeedTooltip,
-        )}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.PlaybackSpeedTooltip)}>
         <Button
           variant="ghost"
           size="xs"
@@ -731,10 +762,10 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the playback rate button for the video controls.
    */
   const renderClipButton = () => {
-    const color = cloud ? 'rgba(239, 239, 240, 0.25)' : 'white';
-    const tooltip = cloud
-      ? getLocalePhrase(appState.language, Phrase.ClipUnavailableTooltip)
-      : getLocalePhrase(appState.language, Phrase.ClipTooltip);
+    const color = clippable ? 'white' : 'rgba(239, 239, 240, 0.25)';
+    const tooltip = clippable
+      ? getLocalePhrase(language, Phrase.ClipTooltip)
+      : getLocalePhrase(language, Phrase.ClipUnavailableTooltip);
 
     return (
       <Tooltip content={tooltip}>
@@ -743,7 +774,7 @@ export const VideoPlayer = (props: IProps) => {
             variant="ghost"
             size="xs"
             onClick={() => setClipMode(true)}
-            disabled={cloud}
+            disabled={!clippable}
           >
             <MovieIcon sx={{ color, fontSize: '22px' }} />
           </Button>
@@ -758,7 +789,7 @@ export const VideoPlayer = (props: IProps) => {
   const doClip = () => {
     const clipDuration = clipStopValue - clipStartValue;
     const clipOffset = clipStartValue;
-    const clipSource = video.videoSource;
+    const clipSource = videos[0].videoSource;
 
     ipc.sendMessage('clip', [clipSource, clipOffset, clipDuration]);
     setClipMode(false);
@@ -769,9 +800,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderClipFinishedButton = () => {
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.ConfirmTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.ConfirmTooltip)}>
         <Button variant="ghost" size="xs" onClick={doClip}>
           <DoneIcon sx={{ color: 'white' }} />
         </Button>
@@ -781,9 +810,7 @@ export const VideoPlayer = (props: IProps) => {
 
   const renderClipCancelButton = () => {
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.CancelTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.CancelTooltip)}>
         <Button variant="ghost" size="xs" onClick={() => setClipMode(false)}>
           <ClearIcon sx={{ color: 'white' }} />
         </Button>
@@ -796,9 +823,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderFullscreenButton = () => {
     return (
-      <Tooltip
-        content={getLocalePhrase(appState.language, Phrase.FullScreenTooltip)}
-      >
+      <Tooltip content={getLocalePhrase(language, Phrase.FullScreenTooltip)}>
         <Button variant="ghost" size="xs" onClick={toggleFullscreen}>
           <FullscreenIcon sx={{ color: 'white' }} />
         </Button>
@@ -841,7 +866,7 @@ export const VideoPlayer = (props: IProps) => {
         {renderVolumeSlider()}
         {renderProgressSlider()}
         {renderProgressText()}
-        {!clipMode && !isClip(video) && renderClipButton()}
+        {!clipMode && !isClip(videos[0]) && renderClipButton()}
         {!clipMode && renderPlaybackRateButton()}
         {!clipMode && renderFullscreenButton()}
         {clipMode && renderClipFinishedButton()}
@@ -856,7 +881,9 @@ export const VideoPlayer = (props: IProps) => {
    * such events, so instead we do this.
    */
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (!player.current) {
+    const [primary] = players;
+
+    if (!primary.current) {
       return;
     }
 
@@ -866,25 +893,37 @@ export const VideoPlayer = (props: IProps) => {
     }
 
     if (e.key === 'j' || e.key === 'ArrowLeft') {
-      const current = player.current.getCurrentTime();
-      player.current.seekTo(current - 5, 'seconds');
+      const current = primary.current.getCurrentTime();
+
+      players.forEach((player) =>
+        player.current?.seekTo(current - 5, 'seconds'),
+      );
     }
 
     if (e.key === 'l' || e.key === 'ArrowRight') {
-      const current = player.current.getCurrentTime();
-      player.current.seekTo(current + 5, 'seconds');
+      const current = primary.current.getCurrentTime();
+
+      players.forEach((player) =>
+        player.current?.seekTo(current + 5, 'seconds'),
+      );
     }
 
     if (e.key === '.') {
-      const current = player.current.getCurrentTime();
+      const current = primary.current.getCurrentTime();
       const frame = 1 / 30; // Assume 30fps, not the end of the world if we skip 2 frames.
-      player.current.seekTo(current + frame, 'seconds');
+
+      players.forEach((player) =>
+        player.current?.seekTo(current + frame, 'seconds'),
+      );
     }
 
     if (e.key === ',') {
-      const current = player.current.getCurrentTime();
+      const current = primary.current.getCurrentTime();
       const frame = 1 / 30; // Assume 30fps, not the end of the world if we skip 2 frames.
-      player.current.seekTo(current - frame, 'seconds');
+
+      players.forEach((player) =>
+        player.current?.seekTo(current - frame, 'seconds'),
+      );
     }
   };
 
@@ -930,6 +969,16 @@ export const VideoPlayer = (props: IProps) => {
     playerHeight.current = height;
   };
 
+  let playerDivClass = 'w-full ';
+
+  if (srcs.length == 2) {
+    playerDivClass += 'grid grid-cols-2 grid-rows-1';
+  } else if (srcs.length == 3) {
+    playerDivClass += 'grid grid-cols-2 grid-rows-2';
+  } else if (srcs.length == 4) {
+    playerDivClass += 'grid grid-cols-2 grid-rows-2';
+  }
+
   return (
     <>
       <Resizable
@@ -940,6 +989,13 @@ export const VideoPlayer = (props: IProps) => {
         enable={{ bottom: true }}
         bounds="parent"
         onResize={onResize}
+        handleComponent={{
+          bottom: (
+            <div className="flex items-center justify-center mt-1">
+              <GripHorizontal />
+            </div>
+          ),
+        }}
       >
         <Box
           id="player-and-controls"
@@ -948,7 +1004,27 @@ export const VideoPlayer = (props: IProps) => {
             height: '100%',
           }}
         >
-          {renderPlayer()}
+          <div
+            className={playerDivClass}
+            style={{ height: 'calc(100% - 40px)' }}
+          >
+            {srcs.map(renderPlayer)}
+            <Backdrop
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: '40px',
+                zIndex: 1,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              }}
+              open={spinner}
+            >
+              <CircularProgress color="inherit" />
+            </Backdrop>
+          </div>
+
           {renderControls()}
         </Box>
       </Resizable>

@@ -54,9 +54,15 @@ export default function ViewpointButtons(props: IProps) {
     };
   }, []);
 
-  const { playingVideo } = appState;
+  const { selectedVideos, multiPlayerMode } = appState;
 
-  let videoToShow = povs.find((p) => p.uniqueId === playingVideo?.uniqueId);
+  if (multiPlayerMode) {
+    return <></>;
+  }
+
+  let videoToShow = povs.find(
+    (p) => p.uniqueId === selectedVideos[0]?.uniqueId,
+  );
 
   if (!videoToShow) {
     [videoToShow] = povs;
@@ -222,7 +228,7 @@ export default function ViewpointButtons(props: IProps) {
     setAppState((prevState) => {
       return {
         ...prevState,
-        playingVideo: undefined,
+        selectedVideos: [],
         playing: false,
       };
     });

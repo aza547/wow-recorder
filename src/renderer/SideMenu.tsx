@@ -139,18 +139,6 @@ const SideMenu = (props: IProps) => {
   const handleChangeCategory = (newCategory: VideoCategory) => {
     const index = getCategoryIndex(newCategory);
     setConfigValue('selectedCategory', index);
-
-    let first: RendererVideo | undefined;
-    const firstInCategory = getFirstInCategory(videoState, newCategory);
-
-    if (firstInCategory) {
-      const povs = [firstInCategory, ...firstInCategory.multiPov].sort(
-        povDiskFirstNameSort,
-      );
-
-      [first] = povs;
-    }
-
     persistentProgress.current = 0;
 
     setAppState((prevState) => {
@@ -159,7 +147,9 @@ const SideMenu = (props: IProps) => {
         videoFilterTags: [],
         page: Pages.None,
         category: newCategory,
-        playingVideo: first,
+        selectedVideos: [],
+        selectedRow: null,
+        multiPlayerMode: false,
         playing: false,
       };
     });
