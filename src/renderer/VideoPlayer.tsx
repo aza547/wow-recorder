@@ -868,7 +868,6 @@ export const VideoPlayer = (props: IProps) => {
    * Handle a key down event. It would be nice to pass a "onKeyDown" react
    * callback to the player / controls box, but the player seems to swallow
    * such events, so instead we do this.
-   * // TODO SEEK ALL VIDEOS AT ONCE
    */
   const handleKeyDown = (e: KeyboardEvent) => {
     const [primary] = players;

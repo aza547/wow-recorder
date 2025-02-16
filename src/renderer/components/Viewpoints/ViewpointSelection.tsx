@@ -48,18 +48,22 @@ export default function ViewpointSelection(props: IProps) {
       unitClass = getPlayerClass(v);
     }
 
-    // TODO make this work when selectedVideos is empty.
     matches.forEach((rv: RendererVideo) => {
       if (rv.cloud) {
         cloudVideo = rv;
-        currentlySelected =
-          currentlySelected ||
-          selectedVideos.some((sv) => sv.videoName === rv.videoName);
       } else {
         diskVideo = rv;
+      }
+
+      if (!currentlySelected) {
+        // We haven't identified if this players point of view is selected
+        // yet. Either look in the selected videos list for this info, or
+        // look at the first selection in the event that there are none selected
+        // yet (i.e. we've just started the app, or just changed category).
         currentlySelected =
-          currentlySelected ||
-          selectedVideos.some((sv) => sv.videoName === rv.videoName);
+          selectedVideos.length > 0
+            ? selectedVideos.some((sv) => sv.videoName === rv.videoName)
+            : povs[0].player?._name === rv.player?._name;
       }
     });
 
@@ -110,9 +114,8 @@ export default function ViewpointSelection(props: IProps) {
 
       if (multiPlayerMode) {
         // We're in multiplayer mode. This click should either select a new video or
-        // deselect a currently selected video, with the caveats we don't allow the
-        // final video to be deselected, and we don't allow more than 4 videos selected
-        // at once.
+        // deselect a currently selected video, with the caveats we don't allow more 
+        // than 4 videos selected at once.
         if (currentlySelected) {
           // The video is already selected. So deselect it if it's not the only
           // selected video. If it is the only selected video, do nothing.
@@ -135,10 +138,14 @@ export default function ViewpointSelection(props: IProps) {
         const playing = sameActivity ? prevState.playing : false;
         const mode = sameActivity ? prevState.multiPlayerMode : false;
 
+        // If we are deselecting a video to leave one remaining, revert the
+        // video player to single player mode.
+        const multiPlayerMode = s.length > 1 ? mode : false;
+
         return {
           ...prevState,
           selectedVideos: s,
-          multiPlayerMode: s.length > 1 ? mode : false,
+          multiPlayerMode,
           playing,
         };
       });
@@ -152,11 +159,19 @@ export default function ViewpointSelection(props: IProps) {
       ? 'border-2 border-[#bb4420] rounded-sm'
       : '';
 
-    const selectedPlayers = selectedVideos
+    // const selectedPlayerNames =
+    //   selectedVideos.length > 0
+    //     ? selectedVideos
+    //         .map((rv) => rv.player?._name)
+    //         .filter((item): item is string => item !== undefined)
+    //     : [povs[0].player?._name];
+
+    const selectedPlayerNames = selectedVideos
       .map((rv) => rv.player?._name)
       .filter((item): item is string => item !== undefined);
+
     const idx =
-      currentlySelected && name ? selectedPlayers.indexOf(name) + 1 : -1;
+      currentlySelected && name ? selectedPlayerNames.indexOf(name) + 1 : -1;
 
     return (
       <div

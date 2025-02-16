@@ -56,7 +56,10 @@ export default function ViewpointButtons(props: IProps) {
 
   const { selectedVideos, multiPlayerMode } = appState;
 
-  // TODO handle multi
+  if (multiPlayerMode) {
+    return <></>;
+  }
+
   let videoToShow = povs.find(
     (p) => p.uniqueId === selectedVideos[0]?.uniqueId,
   );

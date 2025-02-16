@@ -23,7 +23,7 @@ const MultiPovPlaybackToggles = (props: IProps) => {
 
     if (multiPlayerMode) {
       // User has selected multi player mode. Fill up the 4 slots
-      s.push(...opts.slice(0, 4 - s.length));
+      s = opts.slice(0, 4);
     } else {
       // Remove all but the first selected video now that we're switching out
       // of multiPlayerMode.
