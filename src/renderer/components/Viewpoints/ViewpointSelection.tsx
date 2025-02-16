@@ -160,13 +160,6 @@ export default function ViewpointSelection(props: IProps) {
       ? 'border-2 border-[#bb4420] rounded-sm'
       : '';
 
-    // const selectedPlayerNames =
-    //   selectedVideos.length > 0
-    //     ? selectedVideos
-    //         .map((rv) => rv.player?._name)
-    //         .filter((item): item is string => item !== undefined)
-    //     : [povs[0].player?._name];
-
     const selectedPlayerNames = selectedVideos
       .map((rv) => rv.player?._name)
       .filter((item): item is string => item !== undefined);

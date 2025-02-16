@@ -145,7 +145,7 @@ export const VideoPlayer = (props: IProps) => {
   const clippable = !multiPlayerMode && !videos[0].cloud;
 
   // Deliberatly don't update the source when the timestamp changes. That's
-  // just the initial playhead position We only care to change sources when
+  // just the initial playhead position. We only care to change sources when
   // the videos we are meant to be playing changes.
   const srcs = videos.map((rv) => useRef<string>(rv.videoSource + timestamp));
 
@@ -1015,7 +1015,7 @@ export const VideoPlayer = (props: IProps) => {
                 top: 0,
                 left: 0,
                 right: 0,
-                bottom: 0,
+                bottom: '40px',
                 zIndex: 1,
                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
               }}
