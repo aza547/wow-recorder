@@ -40,7 +40,6 @@ const ffprobeInstallerPath = fixPathWhenPackaged(ffprobeInstaller.path);
 
 ffmpeg.setFfmpegPath(ffmpegInstallerPath);
 ffmpeg.setFfprobePath(ffprobeInstallerPath);
-console.log('INSTALLER PATH\n\n\n', ffmpegInstallerPath);
 
 /**
  * A queue for cutting videos to size.
