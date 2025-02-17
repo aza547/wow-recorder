@@ -26,11 +26,10 @@ import {
 import CloudClient from '../storage/CloudClient';
 import { exec } from 'child_process';
 import util from 'util';
+import ffmpeg from 'fluent-ffmpeg';
 
 const execPromise = util.promisify(exec);
-
 const atomicQueue = require('atomic-queue');
-const ffmpeg = require('fluent-ffmpeg');
 
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
@@ -90,6 +89,13 @@ export default class VideoProcessQueue {
    * operation.
    */
   private inProgressDownloads: string[] = [];
+
+  /**
+   * Files used by the cutting algorithm.
+   */
+  private static firstKeyframeFile = 'first-keyframe.mp4';
+  private static remainingKeyframesFile = 'remaining-keyframes.mp4';
+  private static concatDescriptorFile = 'concat-descriptor.txt';
 
   /**
    * Constructor.
@@ -570,24 +576,69 @@ export default class VideoProcessQueue {
    * - https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/496#issuecomment-203005754
    */
   private static async cutVideo(
-    sourceFile: string,
+    srcFile: string,
     outputDir: string,
     suffix: string | undefined,
     offset: number,
     duration: number,
   ): Promise<string> {
-    const startTime = VideoProcessQueue.getStartTime(offset);
+    let start = VideoProcessQueue.getStartTime(offset);
+
+    console.info('[VideoProcessQueue] Start time:', start);
+    console.info('[VideoProcessQueue] Duration:', duration);
+
     const outputPath = VideoProcessQueue.getOutputVideoPath(
-      sourceFile,
+      srcFile,
       outputDir,
       suffix,
     );
 
-    const srcDir = path.dirname(sourceFile);
+    const frames = await VideoProcessQueue.getKeyframeTimes(srcFile);
 
-    console.info('[VideoProcessQueue] Start time:', startTime);
-    console.info('[VideoProcessQueue] Duration:', duration);
+    if (frames.includes(start)) {
+      // Hack to avoid us having to deviate logic if we land on an
+      // exact keyframe. Shift the start time by an unnoticable
+      // amount so it is no longer an exact match.
+      console.warn('[VideoProcessQueue] Exact keyframe match');
+      start += 0.01;
+    }
 
+    const idx = keyframeRoundUp(start, frames);
+    console.info('[VideoProcessQueue] Got keyframes', frames);
+
+    const below = frames[idx - 1]; // Frame below start point.
+    const above = frames[idx]; // Frame above start point.
+
+    const first = above - start; // Duration from start point to end of first keyframe.
+    const remain = duration - first; // Duration from end of first keyframe to end of video.
+
+    console.info('[VideoProcessQueue] Below keyframe', below);
+    console.info('[VideoProcessQueue] Above keyframe', above);
+    console.info('[VideoProcessQueue] First', first);
+    console.info('[VideoProcessQueue] Remain', remain);
+
+    console.time('[VideoProcessQueue] Re-encode initial keyframe');
+    await VideoProcessQueue.processInitialKeyframe(srcFile, start, first);
+    console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe');
+
+    console.time('[VideoProcessQueue] Copy remaining keyframes');
+    await VideoProcessQueue.processRemainingKeyframes(srcFile, above, remain);
+    console.timeEnd('[VideoProcessQueue] Copy remaining keyframes');
+
+    console.time('[VideoProcessQueue] Concat final video');
+    await VideoProcessQueue.concatenateFinalVideo(srcFile, outputPath);
+    console.timeEnd('[VideoProcessQueue] Concat final video');
+
+    return outputPath;
+  }
+
+  /**
+   * Return an array of timestamps corresponding to the position of the
+   * keyframes in the provided video file.
+   *
+   * @param videoPath the MP4 file to consider
+   */
+  private static async getKeyframeTimes(videoPath: string): Promise<number[]> {
     const cmd = [
       `"${ffprobeInstallerPath}"`, // Directly call the ffprobe executable, ffmpeg-fluent doesn't let us pass arguments.
       '-show_frames', // What it says on the tin.
@@ -595,120 +646,157 @@ export default class VideoProcessQueue {
       '-skip_frame nokey', // Skip frames without a key.
       '-show_entries frame=pts_time', // Show the pts_time field only.
       '-of json', // Output JSON for ease of parsing results.
-      `"${sourceFile}"`, // The file we're probing.
+      `"${videoPath}"`, // The file we're probing.
     ];
 
     const { stdout } = await execPromise(cmd.join(' '));
-    const parsed = JSON.parse(stdout);
-    const frames: number[] = parsed.frames.map(
+
+    return JSON.parse(stdout).frames.map(
       (f: { pts_time: number }) => f.pts_time,
     );
+  }
 
-    // TODO what if we land exactly on a keyframe? We can skip a bunch of processing.
-    const idx = keyframeRoundUp(offset, frames);
-    const below = frames[idx - 1];
-    const above = frames[idx];
-    const gap = above - below;
+  /**
+   * Return an array of timestamps corresponding to the position of the
+   * keyframes in the provided video file.
+   *
+   * @param videoPath the MP4 file to consider
+   */
+  private static async writeConcatDescriptor(dir: string) {
+    const first = path.join(dir, VideoProcessQueue.firstKeyframeFile);
+    const remaining = path.join(dir, VideoProcessQueue.remainingKeyframesFile);
 
-    console.info('[VideoProcessQueue] Got keyframes', frames);
-    console.info('[VideoProcessQueue] Got below keyframe', below);
-    console.info('[VideoProcessQueue] Got above keyframe', above);
-
-    const remainingKeyFramesPath = await new Promise<string>((resolve) => {
-      const out = path.join(srcDir, 'remaining.mp4');
-
-      const handleEnd = async (err: unknown) => {
-        if (err) {
-          console.error('[VideoProcessQueue] Cutting error (1): ', String(err));
-          throw new Error('Error when cutting video');
-        }
-
-        console.timeEnd('[VideoProcessQueue] Cut remaining footage');
-        resolve(out);
-      };
-
-      const handleErr = (err: unknown) => {
-        console.error('[VideoProcessQueue] Cutting error (2): ', String(err));
-        throw new Error('Error when cutting video');
-      };
-
-      console.time('[VideoProcessQueue] Cut remaining footage');
-
-      ffmpeg(sourceFile)
-        .output(out)
-        .setStartTime(above)
-        .setDuration(duration - gap)
-        .withVideoCodec('copy')
-        .withAudioCodec('copy')
-        .on('end', handleEnd)
-        .on('error', handleErr)
-        .run();
-    });
-
-    const firstKeyframePath = await new Promise<string>((resolve) => {
-      const out = path.join(srcDir, 'first.mp4');
-
-      const handleEnd = async (err: unknown) => {
-        if (err) {
-          console.error('[VideoProcessQueue] Cutting error (3): ', String(err));
-          throw new Error('Error when cutting video');
-        }
-
-        console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe');
-        resolve(out);
-      };
-
-      const handleErr = (err: unknown) => {
-        console.error('[VideoProcessQueue] Cutting error (4): ', String(err));
-        throw new Error('Error when cutting video');
-      };
-
-      console.time('[VideoProcessQueue] Re-encode initial keyframe');
-
-      ffmpeg(sourceFile)
-        .output(out)
-        .setStartTime(below)
-        .setDuration(gap)
-        .on('end', handleEnd)
-        .on('error', handleErr)
-        .run();
-    });
-
-    const concatDescriptor = [
-      `file '${firstKeyframePath}'`,
-      `file '${remainingKeyFramesPath}'`,
+    const concatDescriptorContent = [
+      `file '${first}'`,
+      `file '${remaining}'`,
     ].join('\n');
 
-    const concatDescriptorPath = path.join(srcDir, 'concat.txt');
-    await fs.writeFile(concatDescriptorPath, concatDescriptor);
+    const concatDescriptorPath = path.join(
+      dir,
+      VideoProcessQueue.concatDescriptorFile,
+    );
 
-    return new Promise<string>((resolve) => {
-      const handleEnd = async (err: unknown) => {
-        if (err) {
-          console.error('[VideoProcessQueue] Cutting error (5): ', String(err));
-          throw new Error('Error when cutting video');
-        }
+    await fs.writeFile(concatDescriptorPath, concatDescriptorContent);
+    return concatDescriptorPath;
+  }
 
-        console.timeEnd('[VideoProcessQueue] Concat final video');
-        resolve(outputPath);
-      };
-
+  /**
+   * An async wrapper around ffmpeg-fluent to avoid a bunch of horrible promise
+   * wrapping indented code being repeated.
+   *
+   * @param fn the ffmpeg function to wrap
+   * @param descr a description of the command for logging
+   */
+  private static async ffmpegWrapper(fn: ffmpeg.FfmpegCommand, descr: string) {
+    return new Promise<void>((resolve, reject) => {
       const handleErr = (err: unknown) => {
-        console.error('[VideoProcessQueue] Cutting error (6): ', String(err));
-        throw new Error('Error when cutting video');
+        const msg = `[VideoProcessQueue] ${descr} failed! ${String(err)}`;
+        console.error(msg);
+        reject(msg);
       };
 
-      console.time('[VideoProcessQueue] Concat final video');
+      const handleEnd = async (err: unknown) => {
+        if (err) handleErr(err);
+        resolve();
+      };
 
-      ffmpeg()
-        .input(concatDescriptorPath)
-        .inputOptions(['-f concat', '-safe 0'])
-        .withVideoCodec('copy')
-        .withAudioCodec('copy')
-        .output(outputPath)
-        .on('end', handleEnd)
-        .on('error', handleErr)
-        .run();
+      fn.on('end', handleEnd).on('error', handleErr).run();
     });
+  }
+
+  /**
+   * Re-encode the initial keyframe of the video to be the correct
+   * duration. This is a re-encode operation, so is technically
+   * slow and CPU intensive. It's only called on very short video
+   * segments.
+   *
+   * @param srcFile the source video file path
+   * @param startTime the time to cut from, should align with a keyframe
+   * @param duration the duration to cut, should be a few seconds max
+   */
+  private static async processInitialKeyframe(
+    srcFile: string,
+    startTime: number,
+    duration: number,
+  ): Promise<void> {
+    console.info(
+      '[VideoProcessQueue] Process initial keyframe',
+      srcFile,
+      startTime,
+      duration,
+    );
+
+    const srcDir = path.dirname(srcFile);
+    const out = path.join(srcDir, VideoProcessQueue.firstKeyframeFile);
+
+    const fn = ffmpeg(srcFile)
+      .output(out)
+      .setStartTime(startTime)
+      .setDuration(duration);
+
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Re-encoding initial keyframe');
+  }
+
+  /**
+   * Cut the remaining keyframes from a video file. This is fast and does not
+   * re-encode.
+   *
+   * @param srcFile the source video file path
+   * @param startTime the time to cut from, should align with a keyframe
+   * @param duration the duration to cut
+   */
+  private static async processRemainingKeyframes(
+    srcFile: string,
+    startTime: number,
+    duration: number,
+  ): Promise<void> {
+    console.info(
+      '[VideoProcessQueue] Process remaining keyframes',
+      srcFile,
+      startTime,
+      duration,
+    );
+
+    const srcDir = path.dirname(srcFile);
+    const out = path.join(srcDir, VideoProcessQueue.remainingKeyframesFile);
+
+    const fn = ffmpeg(srcFile)
+      .output(out)
+      .setStartTime(startTime)
+      .setDuration(duration)
+      .withVideoCodec('copy')
+      .withAudioCodec('copy');
+
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Copy remaining keyframes');
+  }
+
+  /**
+   * Concatenate the two segments of the video file into the final output
+   * file. This is fast and does not re-encode.
+   *
+   * @param srcFile the source video file path
+   * @param outputPath the full path to the output video file
+   */
+  private static async concatenateFinalVideo(
+    srcFile: string,
+    outputPath: string,
+  ): Promise<void> {
+    console.info(
+      '[VideoProcessQueue] Concatenate final video',
+      srcFile,
+      outputPath,
+    );
+
+    const srcDir = path.dirname(srcFile);
+    const descriptor = await VideoProcessQueue.writeConcatDescriptor(srcDir);
+
+    const fn = ffmpeg()
+      .input(descriptor)
+      .inputOptions(['-f concat', '-safe 0'])
+      .withVideoCodec('copy')
+      .withAudioCodec('copy')
+      .output(outputPath);
+
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Concatenate final video');
   }
 }
