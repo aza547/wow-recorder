@@ -93,9 +93,9 @@ export default class VideoProcessQueue {
   /**
    * Files used by the cutting algorithm.
    */
-  private static firstKeyframeFile = 'first-keyframe.mp4';
-  private static remainingKeyframesFile = 'remaining-keyframes.mp4';
-  private static concatDescriptorFile = 'concat-descriptor.txt';
+  private static firstKeyframeFile = 'fkf.mp4';
+  private static concatedVideoFile = 'concat.mp4';
+  private static concatDescriptorFile = 'dscr.txt';
 
   /**
    * Constructor.
@@ -568,12 +568,25 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Takes an input MP4 file, trims the footage offset from the start of the
-   * video so that the output is duration seconds.
+   * Takes an input MP4 file and cuts it to size.
    *
-   * The strategy here I should write up soon, but is basically this:
-   * - https://stackoverflow.com/questions/63548027/cut-a-video-in-between-key-frames-without-re-encoding-the-full-video-using-ffpme/63604858#63604858
-   * - https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/496#issuecomment-203005754
+   * FFmpeg likes to snap to video keyframes in MP4 files. Typically those are
+   * 4s apart, so this can have a noticable desync effect on videos, especially
+   * when in cloud multi-player mode.
+   *
+   * To avoid this, there is a cutting algorithm in play here:
+   *  - Find the video keyframes neighbouring the start point with ffprobe [getKeyframeTimes].
+   *  - Re-encode from the start point to the end of the first keyframe [processInitialKeyframe].
+   *  - Concat the re-encoded segment onto the remainder of the video [concatPostReenc].
+   *  - Final cut the video to size to remove any undesired trailing footage [finalVideoCut].
+   *
+   * Some references on this:
+   *  - https://stackoverflow.com/questions/63548027/cut-a-video-in-between-key-frames-without-re-encoding-the-full-video-using-ffpme/63604858#63604858
+   *  - https://github.com/fluent-ffmpeg/node-fluent-ffmpeg/issues/496#issuecomment-203005754
+   *
+   * Trade-offs / issues:
+   *  - We have to spin the CPU to re-encode the first segment.
+   *  - There is a subtle but audio glitch on the concat join. Surely solvable.
    */
   private static async cutVideo(
     srcFile: string,
@@ -584,7 +597,7 @@ export default class VideoProcessQueue {
   ): Promise<string> {
     let start = VideoProcessQueue.getStartTime(offset);
 
-    console.info('[VideoProcessQueue] Start time:', start);
+    console.info('[VideoProcessQueue] Offset:', offset);
     console.info('[VideoProcessQueue] Duration:', duration);
 
     const outputPath = VideoProcessQueue.getOutputVideoPath(
@@ -596,38 +609,36 @@ export default class VideoProcessQueue {
     const frames = await VideoProcessQueue.getKeyframeTimes(srcFile);
 
     if (frames.includes(start)) {
-      // Hack to avoid us having to deviate logic if we land on an
-      // exact keyframe. Shift the start time by an unnoticable
-      // amount so it is no longer an exact match.
+      // Hack to avoid us having to deviate logic if we land on an exact
+      // keyframe. Shift the start time by an unnoticable amount so it
+      // is no longer an exact match. Realistically expect to never hit this.
       console.warn('[VideoProcessQueue] Exact keyframe match');
       start += 0.01;
     }
 
     const idx = keyframeRoundUp(start, frames);
-    console.info('[VideoProcessQueue] Got keyframes', frames);
 
-    const below = frames[idx - 1]; // Frame below start point.
-    const above = frames[idx]; // Frame above start point.
+    const below = frames[idx - 1]; // Frame timestamp below start point.
+    const above = frames[idx]; // Frame timestamp above start point.
 
     const first = above - start; // Duration from start point to end of first keyframe.
     const remain = duration - first; // Duration from end of first keyframe to end of video.
 
-    console.info('[VideoProcessQueue] Below keyframe', below);
-    console.info('[VideoProcessQueue] Above keyframe', above);
-    console.info('[VideoProcessQueue] First', first);
-    console.info('[VideoProcessQueue] Remain', remain);
+    // Verbose logs for debug sake.
+    const diags = { below, above, start, first, remain };
+    console.info('[VideoProcessQueue] Cut algorithm data', diags);
 
     console.time('[VideoProcessQueue] Re-encode initial keyframe');
     await VideoProcessQueue.processInitialKeyframe(srcFile, start, first);
     console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe');
 
-    console.time('[VideoProcessQueue] Copy remaining keyframes');
-    await VideoProcessQueue.processRemainingKeyframes(srcFile, above, remain);
-    console.timeEnd('[VideoProcessQueue] Copy remaining keyframes');
+    console.time('[VideoProcessQueue] Concat post rencode of initial frame');
+    const ss = await VideoProcessQueue.concatPostReenc(above, srcFile);
+    console.timeEnd('[VideoProcessQueue] Concat post rencode of initial frame');
 
-    console.time('[VideoProcessQueue] Concat final video');
-    await VideoProcessQueue.concatenateFinalVideo(srcFile, outputPath);
-    console.timeEnd('[VideoProcessQueue] Concat final video');
+    console.time('[VideoProcessQueue] Final cut');
+    await VideoProcessQueue.finalVideoCut(duration, ss, outputPath);
+    console.timeEnd('[VideoProcessQueue] Final cut');
 
     return outputPath;
   }
@@ -651,9 +662,9 @@ export default class VideoProcessQueue {
 
     const { stdout } = await execPromise(cmd.join(' '));
 
-    return JSON.parse(stdout).frames.map(
-      (f: { pts_time: number }) => f.pts_time,
-    );
+    return JSON.parse(stdout)
+      .frames.map((f: { pts_time: string }) => f.pts_time)
+      .map(parseFloat);
   }
 
   /**
@@ -662,17 +673,18 @@ export default class VideoProcessQueue {
    *
    * @param videoPath the MP4 file to consider
    */
-  private static async writeConcatDescriptor(dir: string) {
-    const first = path.join(dir, VideoProcessQueue.firstKeyframeFile);
-    const remaining = path.join(dir, VideoProcessQueue.remainingKeyframesFile);
+  private static async writeConcatDescriptor(srcFile: string, inPoint: number) {
+    const srcDir = path.dirname(srcFile);
+    const first = path.join(srcDir, VideoProcessQueue.firstKeyframeFile);
 
     const concatDescriptorContent = [
       `file '${first}'`,
-      `file '${remaining}'`,
+      `file '${srcFile}'`,
+      `inpoint ${inPoint}`,
     ].join('\n');
 
     const concatDescriptorPath = path.join(
-      dir,
+      srcDir,
       VideoProcessQueue.concatDescriptorFile,
     );
 
@@ -700,7 +712,13 @@ export default class VideoProcessQueue {
         resolve();
       };
 
-      fn.on('end', handleEnd).on('error', handleErr).run();
+      const handleStart = (cmd: string) =>
+        console.info('[VideoProcessQueue] FFmpeg command:', cmd);
+
+      fn.on('start', handleStart)
+        .on('end', handleEnd)
+        .on('error', handleErr)
+        .run();
     });
   }
 
@@ -730,73 +748,72 @@ export default class VideoProcessQueue {
     const out = path.join(srcDir, VideoProcessQueue.firstKeyframeFile);
 
     const fn = ffmpeg(srcFile)
-      .output(out)
       .setStartTime(startTime)
-      .setDuration(duration);
+      .setDuration(duration)
+      .output(out);
 
     await VideoProcessQueue.ffmpegWrapper(fn, 'Re-encoding initial keyframe');
   }
 
   /**
-   * Cut the remaining keyframes from a video file. This is fast and does not
-   * re-encode.
+   * Concatenate the first key frame with the remainder of the video after
+   * the first key frame has been re-encoded to start at precisely the
+   * correct time.
    *
-   * @param srcFile the source video file path
-   * @param startTime the time to cut from, should align with a keyframe
-   * @param duration the duration to cut
+   * @param inPoint keyframe aligned timestamp
+   * @param srcFile the source file
    */
-  private static async processRemainingKeyframes(
+  private static async concatPostReenc(
+    inPoint: number,
     srcFile: string,
-    startTime: number,
-    duration: number,
-  ): Promise<void> {
+  ): Promise<string> {
     console.info(
-      '[VideoProcessQueue] Process remaining keyframes',
+      '[VideoProcessQueue] Concatenate post reencoding',
+      inPoint,
       srcFile,
-      startTime,
-      duration,
     );
 
     const srcDir = path.dirname(srcFile);
-    const out = path.join(srcDir, VideoProcessQueue.remainingKeyframesFile);
+    const outFile = path.join(srcDir, VideoProcessQueue.concatedVideoFile);
 
-    const fn = ffmpeg(srcFile)
-      .output(out)
-      .setStartTime(startTime)
-      .setDuration(duration)
+    const descriptor = await VideoProcessQueue.writeConcatDescriptor(
+      srcFile,
+      inPoint,
+    );
+
+    const fn = ffmpeg(descriptor)
+      .inputOption('-f concat')
+      .inputOption('-safe 0')
       .withVideoCodec('copy')
-      .withAudioCodec('copy');
+      .withAudioCodec('copy')
+      .output(outFile);
 
-    await VideoProcessQueue.ffmpegWrapper(fn, 'Copy remaining keyframes');
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Concatenate post reencoding');
+    return outFile;
   }
 
   /**
-   * Concatenate the two segments of the video file into the final output
-   * file. This is fast and does not re-encode.
+   * Do the final cut of the video file to cut it to the right length. This
+   * just trims from the end; we've already ensured that the start time is
+   * correct in earlier stages of the cutting algorithm.
    *
+   * @param duration the duration to cut
    * @param srcFile the source video file path
-   * @param outputPath the full path to the output video file
+   * @param outFile the output file path
    */
-  private static async concatenateFinalVideo(
+  private static async finalVideoCut(
+    duration: number,
     srcFile: string,
-    outputPath: string,
+    outFile: string,
   ): Promise<void> {
-    console.info(
-      '[VideoProcessQueue] Concatenate final video',
-      srcFile,
-      outputPath,
-    );
+    console.info('[VideoProcessQueue] Final video cut', srcFile, duration);
 
-    const srcDir = path.dirname(srcFile);
-    const descriptor = await VideoProcessQueue.writeConcatDescriptor(srcDir);
-
-    const fn = ffmpeg()
-      .input(descriptor)
-      .inputOptions(['-f concat', '-safe 0'])
+    const fn = ffmpeg(srcFile)
+      .setDuration(duration)
       .withVideoCodec('copy')
       .withAudioCodec('copy')
-      .output(outputPath);
+      .output(outFile);
 
-    await VideoProcessQueue.ffmpegWrapper(fn, 'Concatenate final video');
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Final video cut');
   }
 }
