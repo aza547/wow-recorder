@@ -94,7 +94,7 @@ export default class VideoProcessQueue {
    * Files used by the cutting algorithm.
    */
   private static firstKeyframeFile = 'fkf.mp4';
-  private static concatedVideoFile = 'concat.mp4';
+  private static concatedVideoFile = 'cct.mp4';
   private static concatDescriptorFile = 'dscr.txt';
 
   /**
