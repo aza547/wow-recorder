@@ -1067,6 +1067,11 @@ export default class Recorder extends EventEmitter {
     ]);
 
     this.startQueue.empty();
+
+    // I think this causes a very slight offset in the video - i.e. we set the
+    // start to just after we receive the signal from OBS that recording has
+    // started, and not when it has actually started. Very minor though so probably
+    // fine to live with this forever.
     this.startDate = new Date();
   }
 

@@ -32,7 +32,7 @@ const getAdjustedDate = (seconds = 0): string => {
   const now = new Date(new Date().getTime() + seconds * 1000);
   return `${now.getMonth() + 1}/${now.getDate()} ${now.toLocaleTimeString(
     'en-GB',
-  )}.000`;
+  )}.${now.getMilliseconds().toString().padStart(3, '0')}`;
 };
 
 /**

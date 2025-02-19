@@ -232,8 +232,8 @@ def run_test(flavour, test):
         print(f"  Waiting {test.OVERRUN}s for overrun")
         sleep(test.OVERRUN)
 
-    print(f"  Waiting 2s for cutting")
-    sleep(2)
+    print(f"  Waiting 5s for cutting")
+    sleep(5)
 
     if hasattr(test, "OUTPUT"):
         print(f"  Checking most recent MP4 contains {test.OUTPUT}")
