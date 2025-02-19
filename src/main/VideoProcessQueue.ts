@@ -633,7 +633,7 @@ export default class VideoProcessQueue {
     const remain = duration - first; // Duration from end of first keyframe to end of video.
 
     // Verbose logs for debug sake.
-    const ini = frames.slice(idx - 3, idx + 3); // Log the frames around the start point.
+    const ini = frames.slice(Math.max(idx - 3, 0), idx); // Log the frames around the start point.
     const fin = frames.slice(-1); // Log the final frame also for good measure.
     const diags = { ini, fin, below, above, start, first, remain };
     console.info('[VideoProcessQueue] Cut algorithm data', diags);
