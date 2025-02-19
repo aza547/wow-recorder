@@ -705,11 +705,16 @@ export default class VideoProcessQueue {
       `file '${srcFile}'`,
       `inpoint ${inPoint}`,
       `outpoint ${remDuration + inPoint}`,
-    ].join('\n');
+    ];
+
+    console.info(
+      '[VideoProcessQueue] Write concat descriptor with content:',
+      concatDescriptorContent,
+    );
 
     await fs.writeFile(
       VideoProcessQueue.concatDescriptorFile,
-      concatDescriptorContent,
+      concatDescriptorContent.join('\n'),
     );
   }
 
