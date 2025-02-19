@@ -91,11 +91,19 @@ export default class VideoProcessQueue {
   private inProgressDownloads: string[] = [];
 
   /**
-   * Files used by the cutting algorithm.
+   * The file we re-encode the first keyframe into, used by the
+   * cutting algorithm. Relative to the buffer recording folder.
    */
   private static firstKeyframeFile = 'fkf.mp4';
-  private static concatedVideoFile = 'cct.mp4';
-  private static concatDescriptorFile = 'dscr.txt';
+
+  /**
+   * The concat descriptor file, used by the cutting algorith. Just use a
+   * fixed path in the installation folder as it's a tiny text file and saves
+   * a bunch of plumbing.
+   */
+  private static concatDescriptorFile = fixPathWhenPackaged(
+    path.join(path.normalize(__dirname), 'dscr.txt'),
+  );
 
   /**
    * Constructor.
@@ -577,8 +585,8 @@ export default class VideoProcessQueue {
    * To avoid this, there is a cutting algorithm in play here:
    *  - Find the video keyframes neighbouring the start point with ffprobe [getKeyframeTimes].
    *  - Re-encode from the start point to the end of the first keyframe [processInitialKeyframe].
-   *  - Concat the re-encoded segment onto the remainder of the video [concatPostReenc].
-   *  - Final cut the video to size to remove any undesired trailing footage [finalVideoCut].
+   *  - Write a concat descriptor file for the final cut [writeConcatDescriptor].
+   *  - Concat the re-encoded segment onto the remainder of the video [finalVideoCut].
    *
    * Some references on this:
    *  - https://stackoverflow.com/questions/63548027/cut-a-video-in-between-key-frames-without-re-encoding-the-full-video-using-ffpme/63604858#63604858
@@ -613,7 +621,7 @@ export default class VideoProcessQueue {
       // keyframe. Shift the start time by an unnoticable amount so it
       // is no longer an exact match. Realistically expect to never hit this.
       console.warn('[VideoProcessQueue] Exact keyframe match');
-      start += 0.01;
+      start += 0.1; // Seems reasonable as 10fps is the lowest we support.
     }
 
     const idx = keyframeRoundUp(start, frames);
@@ -621,24 +629,29 @@ export default class VideoProcessQueue {
     const below = frames[idx - 1]; // Frame timestamp below start point.
     const above = frames[idx]; // Frame timestamp above start point.
 
-    const first = above - start; // Duration from start point to end of first keyframe.
+    const first = above - start; // Duration from start point to end of 1st keyframe.
     const remain = duration - first; // Duration from end of first keyframe to end of video.
 
     // Verbose logs for debug sake.
-    const diags = { below, above, start, first, remain };
+    const ini = frames.slice(idx - 3, idx + 3); // Log the frames around the start point.
+    const fin = frames.slice(-1); // Log the final frame also for good measure.
+    const diags = { ini, fin, below, above, start, first, remain };
     console.info('[VideoProcessQueue] Cut algorithm data', diags);
 
-    console.time('[VideoProcessQueue] Re-encode initial keyframe');
+    console.time('[VideoProcessQueue] Re-encode initial keyframe took:');
     await VideoProcessQueue.processInitialKeyframe(srcFile, start, first);
-    console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe');
+    console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe took:');
 
-    console.time('[VideoProcessQueue] Concat post rencode of initial frame');
-    const ss = await VideoProcessQueue.concatPostReenc(above, srcFile);
-    console.timeEnd('[VideoProcessQueue] Concat post rencode of initial frame');
+    await VideoProcessQueue.writeConcatDescriptor(
+      srcFile,
+      first,
+      above,
+      remain,
+    );
 
-    console.time('[VideoProcessQueue] Final cut');
-    await VideoProcessQueue.finalVideoCut(duration, ss, outputPath);
-    console.timeEnd('[VideoProcessQueue] Final cut');
+    console.time('[VideoProcessQueue] Final video cut took:');
+    await VideoProcessQueue.finalVideoCut(srcFile, outputPath);
+    console.timeEnd('[VideoProcessQueue] Final video cut took:');
 
     return outputPath;
   }
@@ -668,28 +681,36 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Return an array of timestamps corresponding to the position of the
-   * keyframes in the provided video file.
+   * Write the concat descriptor file, used by the video cutting algorithm.
+   * https://ffmpeg.org/ffmpeg-formats.html#concat
    *
-   * @param videoPath the MP4 file to consider
+   * @param srcFile the source MP4 file
+   * @param fkfDuration the duration of the first keyframe segment
+   * @param inPoint the inpoint in the source file
+   * @param remDuration the remaining duration
    */
-  private static async writeConcatDescriptor(srcFile: string, inPoint: number) {
+  private static async writeConcatDescriptor(
+    srcFile: string,
+    fkfDuration: number,
+    inPoint: number,
+    remDuration: number,
+  ) {
     const srcDir = path.dirname(srcFile);
-    const first = path.join(srcDir, VideoProcessQueue.firstKeyframeFile);
+    const fkfFile = path.join(srcDir, VideoProcessQueue.firstKeyframeFile);
 
     const concatDescriptorContent = [
-      `file '${first}'`,
+      `file '${fkfFile}'`,
+      `inpoint 0`, // Redundant but being explicit.
+      `outpoint ${fkfDuration}`, // Being explicit may provide better accuracy.
       `file '${srcFile}'`,
       `inpoint ${inPoint}`,
+      `outpoint ${remDuration + inPoint}`,
     ].join('\n');
 
-    const concatDescriptorPath = path.join(
-      srcDir,
+    await fs.writeFile(
       VideoProcessQueue.concatDescriptorFile,
+      concatDescriptorContent,
     );
-
-    await fs.writeFile(concatDescriptorPath, concatDescriptorContent);
-    return concatDescriptorPath;
   }
 
   /**
@@ -756,32 +777,19 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Concatenate the first key frame with the remainder of the video after
-   * the first key frame has been re-encoded to start at precisely the
-   * correct time.
+   * Perform the final concatenate and cut. Relies on the concat descriptor
+   * file created by writeConcatDescriptor.
    *
-   * @param inPoint keyframe aligned timestamp
-   * @param srcFile the source file
+   * @param srcFile the source file, really only used to find the descr
+   * @param outFile the output file path
    */
-  private static async concatPostReenc(
-    inPoint: number,
+  private static async finalVideoCut(
     srcFile: string,
+    outFile: string,
   ): Promise<string> {
-    console.info(
-      '[VideoProcessQueue] Concatenate post reencoding',
-      inPoint,
-      srcFile,
-    );
+    console.info('[VideoProcessQueue] Final video cut', srcFile);
 
-    const srcDir = path.dirname(srcFile);
-    const outFile = path.join(srcDir, VideoProcessQueue.concatedVideoFile);
-
-    const descriptor = await VideoProcessQueue.writeConcatDescriptor(
-      srcFile,
-      inPoint,
-    );
-
-    const fn = ffmpeg(descriptor)
+    const fn = ffmpeg(VideoProcessQueue.concatDescriptorFile)
       .inputOption('-f concat')
       .inputOption('-safe 0')
       .withVideoCodec('copy')
@@ -790,30 +798,5 @@ export default class VideoProcessQueue {
 
     await VideoProcessQueue.ffmpegWrapper(fn, 'Concatenate post reencoding');
     return outFile;
-  }
-
-  /**
-   * Do the final cut of the video file to cut it to the right length. This
-   * just trims from the end; we've already ensured that the start time is
-   * correct in earlier stages of the cutting algorithm.
-   *
-   * @param duration the duration to cut
-   * @param srcFile the source video file path
-   * @param outFile the output file path
-   */
-  private static async finalVideoCut(
-    duration: number,
-    srcFile: string,
-    outFile: string,
-  ): Promise<void> {
-    console.info('[VideoProcessQueue] Final video cut', srcFile, duration);
-
-    const fn = ffmpeg(srcFile)
-      .setDuration(duration)
-      .withVideoCodec('copy')
-      .withAudioCodec('copy')
-      .output(outFile);
-
-    await VideoProcessQueue.ffmpegWrapper(fn, 'Final video cut');
   }
 }

@@ -567,13 +567,17 @@ export const VideoPlayer = (props: IProps) => {
     if (duration === 0) {
       // We don't have a duration on the slider yet but the players
       // are ready so each must know. Apply it to the component state.
-      const [primary] = players;
+      const durations = players
+        .map((p) => p.current)
+        .filter((r): r is ReactPlayer => r !== null)
+        .map((r) => r.getDuration());
 
-      if (primary.current) {
-        const durationSec = primary.current.getDuration();
-        setDuration(durationSec);
-        setClipStopValue(durationSec);
-      }
+      // Take the max duration of all videos, if we're in multiplayer
+      // mode some might have an overrun longer than others so we want
+      // the slider to represent the longest.
+      const max = Math.max(...durations);
+      setDuration(max);
+      setClipStopValue(max);
     }
   };
 
