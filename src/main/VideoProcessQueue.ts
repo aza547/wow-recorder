@@ -641,7 +641,7 @@ export default class VideoProcessQueue {
     console.info('[VideoProcessQueue] Cut algorithm data', diags);
 
     console.time('[VideoProcessQueue] Re-encode initial keyframe took:');
-    await VideoProcessQueue.processInitialKeyframe(srcFile, start, first);
+    await this.processInitialKeyframe(srcFile, start, first);
     console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe took:');
 
     const bufferDir = this.cfg.get<string>('bufferStoragePath');
@@ -756,7 +756,7 @@ export default class VideoProcessQueue {
    * @param startTime the time to cut from, should align with a keyframe
    * @param duration the duration to cut, should be a few seconds max
    */
-  private static async processInitialKeyframe(
+  private async processInitialKeyframe(
     srcFile: string,
     startTime: number,
     duration: number,
@@ -768,8 +768,8 @@ export default class VideoProcessQueue {
       duration,
     );
 
-    const srcDir = path.dirname(srcFile);
-    const out = path.join(srcDir, VideoProcessQueue.firstKeyframeFile);
+    const bufferDir = this.cfg.get<string>('bufferStoragePath');
+    const out = path.join(bufferDir, VideoProcessQueue.firstKeyframeFile);
 
     const fn = ffmpeg(srcFile)
       .setStartTime(startTime)
