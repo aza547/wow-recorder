@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject, useMemo } from 'react';
+import { MutableRefObject } from 'react';
 import { Trash } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
@@ -14,15 +14,15 @@ import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
 import VideoSelectionTable from './components/Tables/VideoSelectionTable';
-import useTable from './components/Tables/TableData';
 import DeleteDialog from './DeleteDialog';
 import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
-import VideoFilter from './VideoFilter';
+import { Table } from '@tanstack/react-table';
 
 interface IProps {
   category: VideoCategory;
+  table: Table<RendererVideo>;
   stateManager: MutableRefObject<StateManager>;
-  categoryState: RendererVideo[];
+  filteredState: RendererVideo[];
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
@@ -35,26 +35,19 @@ interface IProps {
 const CategoryPage = (props: IProps) => {
   const {
     category,
+    table,
     stateManager,
-    categoryState,
+    filteredState,
     appState,
     setAppState,
     persistentProgress,
     playerHeight,
   } = props;
-  const { selectedVideos, selectedRow, videoFilterTags, language } = appState;
+  const { selectedVideos, selectedRowIndex } = appState;
 
   const [config, setConfig] = useSettings();
 
-  const filteredState = useMemo<RendererVideo[]>(() => {
-    const queryFilter = (rv: RendererVideo) =>
-      new VideoFilter(videoFilterTags, rv, language).filter();
-
-    return categoryState.filter(queryFilter);
-  }, [categoryState, videoFilterTags, language]);
-
-  const table = useTable(filteredState, appState);
-  const haveVideos = categoryState.length > 0;
+  const haveVideos = filteredState.length > 0;
   const isClips = category === VideoCategory.Clips;
 
   /**
@@ -143,11 +136,9 @@ const CategoryPage = (props: IProps) => {
     const dedup = (rv: RendererVideo, idx: number, arr: RendererVideo[]) =>
       arr.findIndex((i) => i.videoName === rv.videoName) === idx;
 
-    const multiPlayerOpts = (
-      selectedRow
-        ? [selectedRow.original, ...selectedRow.original.multiPov]
-        : [filteredState[0], ...filteredState[0].multiPov]
-    )
+    const selectedRow = table.getRowModel().rows[selectedRowIndex].original;
+
+    const multiPlayerOpts = [selectedRow, ...selectedRow.multiPov]
       .sort(povDiskFirstNameSort)
       .filter(dedup);
 

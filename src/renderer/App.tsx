@@ -1,5 +1,5 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CrashData,
   Crashes,
@@ -20,13 +20,16 @@ import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import './App.css';
 import { useSettings } from './useSettings';
-import { getCategoryFromConfig } from './rendererutils';
+import { getCategoryFromConfig, getVideoCategoryFilter } from './rendererutils';
 import StateManager from './StateManager';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
 import { useToast } from './components/Toast/useToast';
 import { ToastAction } from './components/Toast/Toast';
 import SideMenu from './SideMenu';
+import { language } from 'eslint-plugin-prettier/recommended';
+import useTable from './components/Tables/TableData';
+import VideoFilter from './VideoFilter';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -55,7 +58,7 @@ const WarcraftRecorder = () => {
     // Navigation.
     page: Pages.None,
     category: getCategoryFromConfig(config),
-    selectedRow: null,
+    selectedRowIndex: 0,
     selectedVideos: [],
     multiPlayerMode: false,
 
@@ -127,11 +130,27 @@ const WarcraftRecorder = () => {
   // Used to remember the player height when switching categories.
   const playerHeight = useRef(500);
 
+  //
+  const categoryState = useMemo<RendererVideo[]>(() => {
+    const categoryFilter = getVideoCategoryFilter(appState.category);
+    return videoState.filter(categoryFilter);
+  }, [videoState, appState.category]);
+
+  const filteredState = useMemo<RendererVideo[]>(() => {
+    const queryFilter = (rv: RendererVideo) =>
+      new VideoFilter(appState.videoFilterTags, rv, appState.language).filter();
+
+    return categoryState.filter(queryFilter);
+  }, [categoryState, appState.videoFilterTags, language]);
+
+  const table = useTable(filteredState, appState);
+
   const doRefresh = async () => {
     ipc.sendMessage('refreshFrontend', []);
     stateManager.current.refresh();
 
     setAppState((prevState) => {
+      console.log(prevState);
       return {
         ...prevState,
         // Fixes issue 410 which caused the preview not to re-appear if
@@ -237,13 +256,14 @@ const WarcraftRecorder = () => {
           <Layout
             recorderStatus={recorderStatus}
             stateManager={stateManager}
-            videoState={videoState}
+            filteredState={videoState}
             appState={appState}
             setAppState={setAppState}
             persistentProgress={persistentProgress}
             playerHeight={playerHeight}
             config={config}
             setConfig={setConfig}
+            table={table}
           />
         </div>
       </TooltipProvider>
