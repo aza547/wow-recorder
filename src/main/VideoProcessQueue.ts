@@ -616,7 +616,7 @@ export default class VideoProcessQueue {
 
     console.time('[VideoProcessQueue] Get keyframe times took:');
     const frames = await VideoProcessQueue.getKeyframeTimes(srcFile);
-    console.time('[VideoProcessQueue] Get keyframe times took:');
+    console.timeEnd('[VideoProcessQueue] Get keyframe times took:');
 
     if (frames.includes(start)) {
       // Hack to avoid us having to deviate logic if we land on an exact
@@ -641,11 +641,9 @@ export default class VideoProcessQueue {
     console.info('[VideoProcessQueue] Cut algorithm data', diags);
 
     console.time('[VideoProcessQueue] Re-encode initial keyframe took:');
-    await this.processInitialKeyframe(srcFile, start, first);
+    const fkfFile = await this.processInitialKeyframe(srcFile, start, first);
     console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe took:');
 
-    const bufferDir = this.cfg.get<string>('bufferStoragePath');
-    const fkfFile = path.join(bufferDir, VideoProcessQueue.firstKeyframeFile);
     await this.writeConcatDescriptor(fkfFile, srcFile, first, above, remain);
 
     console.time('[VideoProcessQueue] Final video cut took:');
@@ -760,7 +758,7 @@ export default class VideoProcessQueue {
     srcFile: string,
     startTime: number,
     duration: number,
-  ): Promise<void> {
+  ): Promise<string> {
     console.info(
       '[VideoProcessQueue] Process initial keyframe',
       srcFile,
@@ -768,15 +766,19 @@ export default class VideoProcessQueue {
       duration,
     );
 
-    const bufferDir = this.cfg.get<string>('bufferStoragePath');
-    const out = path.join(bufferDir, VideoProcessQueue.firstKeyframeFile);
+    const bufferPath = this.cfg.get<boolean>('separateBufferPath')
+      ? this.cfg.get<string>('bufferStoragePath')
+      : path.join(this.cfg.get<string>('bufferStoragePath'), '.temp');
+
+    const fkfFile = path.join(bufferPath, VideoProcessQueue.firstKeyframeFile);
 
     const fn = ffmpeg(srcFile)
       .setStartTime(startTime)
       .setDuration(duration)
-      .output(out);
+      .output(fkfFile);
 
     await VideoProcessQueue.ffmpegWrapper(fn, 'Re-encoding initial keyframe');
+    return fkfFile;
   }
 
   /**

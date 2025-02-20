@@ -287,7 +287,7 @@ const ChatOverlayControls = (props: IProps) => {
   const getOwnImagePathField = () => {
     return (
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
-        <Label htmlFor="bufferStoragePath" className="flex items-center">
+        <Label htmlFor="overlayImagePath" className="flex items-center">
           {getLocalePhrase(appState.language, Phrase.ImagePathLabel)}
           <Tooltip
             content={getLocalePhrase(
