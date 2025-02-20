@@ -234,7 +234,7 @@ export default class VideoProcessQueue {
     try {
       const outputDir = this.cfg.get<string>('storagePath');
 
-      const videoPath = await VideoProcessQueue.cutVideo(
+      const videoPath = await this.cutVideo(
         data.source,
         outputDir,
         data.suffix,
@@ -596,7 +596,7 @@ export default class VideoProcessQueue {
    *  - We have to spin the CPU to re-encode the first segment.
    *  - There is a subtle but audio glitch on the concat join. Surely solvable.
    */
-  private static async cutVideo(
+  private async cutVideo(
     srcFile: string,
     outputDir: string,
     suffix: string | undefined,
@@ -614,7 +614,9 @@ export default class VideoProcessQueue {
       suffix,
     );
 
+    console.time('[VideoProcessQueue] Get keyframe times took:');
     const frames = await VideoProcessQueue.getKeyframeTimes(srcFile);
+    console.time('[VideoProcessQueue] Get keyframe times took:');
 
     if (frames.includes(start)) {
       // Hack to avoid us having to deviate logic if we land on an exact
@@ -642,12 +644,9 @@ export default class VideoProcessQueue {
     await VideoProcessQueue.processInitialKeyframe(srcFile, start, first);
     console.timeEnd('[VideoProcessQueue] Re-encode initial keyframe took:');
 
-    await VideoProcessQueue.writeConcatDescriptor(
-      srcFile,
-      first,
-      above,
-      remain,
-    );
+    const bufferDir = this.cfg.get<string>('bufferStoragePath');
+    const fkfFile = path.join(bufferDir, VideoProcessQueue.firstKeyframeFile);
+    await this.writeConcatDescriptor(fkfFile, srcFile, first, above, remain);
 
     console.time('[VideoProcessQueue] Final video cut took:');
     await VideoProcessQueue.finalVideoCut(srcFile, outputPath);
@@ -684,20 +683,19 @@ export default class VideoProcessQueue {
    * Write the concat descriptor file, used by the video cutting algorithm.
    * https://ffmpeg.org/ffmpeg-formats.html#concat
    *
+   * @param fkfFile the MP4 file containing the re-encode first keyframe
    * @param srcFile the source MP4 file
    * @param fkfDuration the duration of the first keyframe segment
    * @param inPoint the inpoint in the source file
    * @param remDuration the remaining duration
    */
-  private static async writeConcatDescriptor(
+  private async writeConcatDescriptor(
+    fkfFile: string,
     srcFile: string,
     fkfDuration: number,
     inPoint: number,
     remDuration: number,
   ) {
-    const srcDir = path.dirname(srcFile);
-    const fkfFile = path.join(srcDir, VideoProcessQueue.firstKeyframeFile);
-
     const concatDescriptorContent = [
       `file '${fkfFile}'`,
       `inpoint 0`, // Redundant but being explicit.
