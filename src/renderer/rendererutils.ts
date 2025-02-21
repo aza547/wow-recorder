@@ -39,6 +39,7 @@ import { ESupportedEncoders } from 'main/obsEnums';
 import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { Table } from '@tanstack/react-table';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -1000,6 +1001,36 @@ const countUniqueViewpoints = (video: RendererVideo) => {
   return unique.length;
 };
 
+const getSelectedRow = (
+  selectedVideos: RendererVideo[],
+  table: Table<RendererVideo>,
+) => {
+  const video = selectedVideos[0];
+
+  if (!video) {
+    return;
+  }
+
+  const videoName = video.videoName;
+  const { rows } = table.getRowModel();
+
+  const row = rows.find((r) => {
+    return [r.original, ...r.original.multiPov]
+      .map((rv) => rv.videoName)
+      .includes(videoName);
+  });
+  return row;
+};
+
+const getSelectedRowIndex = (
+  selectedVideos: RendererVideo[],
+  table: Table<RendererVideo>,
+) => {
+  const row = getSelectedRow(selectedVideos, table);
+  if (row) return row.index;
+  return 0;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1057,4 +1088,6 @@ export {
   countUniqueViewpoints,
   videoToDate,
   dateToHumanReadable,
+  getSelectedRow,
+  getSelectedRowIndex,
 };

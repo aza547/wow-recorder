@@ -148,7 +148,6 @@ const SideMenu = (props: IProps) => {
         page: Pages.None,
         category: newCategory,
         selectedVideos: [],
-        selectedRow: null,
         multiPlayerMode: false,
         playing: false,
       };

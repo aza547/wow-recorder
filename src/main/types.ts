@@ -314,7 +314,6 @@ type AppState = {
   page: Pages;
   category: VideoCategory;
   selectedVideos: RendererVideo[];
-  selectedRow: Row<RendererVideo> | null;
   multiPlayerMode: boolean;
   videoFilterTags: Tag[];
   videoFullScreen: boolean;

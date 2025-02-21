@@ -7,6 +7,7 @@ import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
 import StateManager from './StateManager';
 import { getVideoCategoryFilter } from './rendererutils';
+import { Table } from '@tanstack/react-table';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -18,6 +19,7 @@ interface IProps {
   playerHeight: MutableRefObject<number>;
   config: ConfigurationSchema;
   setConfig: React.Dispatch<React.SetStateAction<ConfigurationSchema>>;
+  table: Table<RendererVideo>;
 }
 
 /**
@@ -34,6 +36,7 @@ const Layout = (props: IProps) => {
     playerHeight,
     config,
     setConfig,
+    table,
   } = props;
   const { page, category } = appState;
 
@@ -52,6 +55,7 @@ const Layout = (props: IProps) => {
         setAppState={setAppState}
         persistentProgress={persistentProgress}
         playerHeight={playerHeight}
+        table={table}
       />
     );
   };

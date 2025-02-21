@@ -17,7 +17,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
-import { povDiskFirstNameSort } from '../../rendererutils';
+import { getSelectedRowIndex, povDiskFirstNameSort } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 
@@ -38,7 +38,7 @@ const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, stateManager, persistentProgress, table } =
     props;
 
-  const { category, selectedRow } = appState;
+  const { category, selectedVideos } = appState;
 
   const [shiftDown, setShiftDown] = useState<boolean>(false);
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
@@ -83,7 +83,7 @@ const VideoSelectionTable = (props: IProps) => {
   ) => {
     if (shiftDown) {
       const { rows } = table.getRowModel();
-      const base = selectedRow ? selectedRow.index : 0;
+      const base = getSelectedRowIndex(selectedVideos, table);
       const target = row.index;
       const start = Math.min(base, target);
       const end = Math.max(base, target) + 1;
@@ -110,7 +110,6 @@ const VideoSelectionTable = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        selectedRow: row,
         selectedVideos: povs[0] ? [povs[0]] : [],
         multiPlayerMode: false,
         playing: false,
@@ -255,7 +254,15 @@ const VideoSelectionTable = (props: IProps) => {
    */
   const renderExpandedRow = (row: Row<RendererVideo>) => {
     const cells = row.getVisibleCells();
-    const selected = selectedRow ? selectedRow === row : row.index === 0;
+    const povs = [row.original, ...row.original.multiPov];
+    const povNames = povs.map((rv) => rv.videoName);
+    const selectedNames = selectedVideos.map((rv) => rv.videoName);
+
+    const selected =
+      selectedVideos.length < 1
+        ? row.index === 0
+        : Boolean(povNames.find((n) => selectedNames.includes(n)));
+
     const borderClass = selected ? 'border border-t-0' : 'border';
 
     return (
@@ -298,7 +305,14 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>) => {
-    const selected = selectedRow ? selectedRow === row : row.index === 0;
+    const povs = [row.original, ...row.original.multiPov];
+    const povNames = povs.map((rv) => rv.videoName);
+    const selectedNames = selectedVideos.map((rv) => rv.videoName);
+
+    const selected =
+      selectedVideos.length < 1
+        ? row.index === 0
+        : Boolean(povNames.find((n) => selectedNames.includes(n)));
 
     return (
       <Fragment key={row.id}>

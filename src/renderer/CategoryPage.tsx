@@ -9,15 +9,15 @@ import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import { povDiskFirstNameSort } from './rendererutils';
+import { getSelectedRow, povDiskFirstNameSort } from './rendererutils';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
 import VideoSelectionTable from './components/Tables/VideoSelectionTable';
-import useTable from './components/Tables/TableData';
 import DeleteDialog from './DeleteDialog';
 import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
 import VideoFilter from './VideoFilter';
+import { Table } from '@tanstack/react-table';
 
 interface IProps {
   category: VideoCategory;
@@ -27,6 +27,7 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
+  table: Table<RendererVideo>;
 }
 
 /**
@@ -41,8 +42,9 @@ const CategoryPage = (props: IProps) => {
     setAppState,
     persistentProgress,
     playerHeight,
+    table,
   } = props;
-  const { selectedVideos, selectedRow, videoFilterTags, language } = appState;
+  const { selectedVideos, videoFilterTags, language } = appState;
 
   const [config, setConfig] = useSettings();
 
@@ -53,7 +55,6 @@ const CategoryPage = (props: IProps) => {
     return categoryState.filter(queryFilter);
   }, [categoryState, videoFilterTags, language]);
 
-  const table = useTable(filteredState, appState);
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
 
@@ -142,6 +143,8 @@ const CategoryPage = (props: IProps) => {
     // pov of the same video.
     const dedup = (rv: RendererVideo, idx: number, arr: RendererVideo[]) =>
       arr.findIndex((i) => i.videoName === rv.videoName) === idx;
+
+    const selectedRow = getSelectedRow(selectedVideos, table);
 
     const multiPlayerOpts = (
       selectedRow

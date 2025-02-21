@@ -1,5 +1,5 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CrashData,
   Crashes,
@@ -20,13 +20,15 @@ import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import './App.css';
 import { useSettings } from './useSettings';
-import { getCategoryFromConfig } from './rendererutils';
+import { getCategoryFromConfig, getVideoCategoryFilter } from './rendererutils';
 import StateManager from './StateManager';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
 import { useToast } from './components/Toast/useToast';
 import { ToastAction } from './components/Toast/Toast';
 import SideMenu from './SideMenu';
+import useTable from './components/Tables/TableData';
+import VideoFilter from './VideoFilter';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -55,7 +57,6 @@ const WarcraftRecorder = () => {
     // Navigation.
     page: Pages.None,
     category: getCategoryFromConfig(config),
-    selectedRow: null,
     selectedVideos: [],
     multiPlayerMode: false,
 
@@ -126,6 +127,23 @@ const WarcraftRecorder = () => {
 
   // Used to remember the player height when switching categories.
   const playerHeight = useRef(500);
+
+  // The category state, recalculated only when required.
+  const categoryState = useMemo<RendererVideo[]>(() => {
+    const categoryFilter = getVideoCategoryFilter(appState.category);
+    return videoState.filter(categoryFilter);
+  }, [videoState, appState.category]);
+
+  // The filtered state, recalculated only when required.
+  const filteredState = useMemo<RendererVideo[]>(() => {
+    const queryFilter = (rv: RendererVideo) =>
+      new VideoFilter(appState.videoFilterTags, rv, appState.language).filter();
+
+    return categoryState.filter(queryFilter);
+  }, [categoryState, appState.videoFilterTags, appState.language]);
+
+  // The data backing the video selection table.
+  const table = useTable(filteredState, appState);
 
   const doRefresh = async () => {
     ipc.sendMessage('refreshFrontend', []);
@@ -244,6 +262,7 @@ const WarcraftRecorder = () => {
             playerHeight={playerHeight}
             config={config}
             setConfig={setConfig}
+            table={table}
           />
         </div>
       </TooltipProvider>

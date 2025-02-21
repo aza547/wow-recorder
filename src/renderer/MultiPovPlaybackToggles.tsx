@@ -5,7 +5,6 @@ import {
 } from './components/ToggleGroup/ToggleGroup';
 import Label from './components/Label/Label';
 import { LayoutGrid, TvMinimal } from 'lucide-react';
-import { language } from 'eslint-plugin-prettier/recommended';
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/types';
 
