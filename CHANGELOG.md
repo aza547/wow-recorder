@@ -7,13 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [6.8.0] - 2025-02-21
+### Added
 - [Issue 593](https://github.com/aza547/wow-recorder/issues/593) - Allow use of arrow keys, enter, backspace to control search tags.
 - Add the Wintergrasp zone ID.
 - Add the ability to use ctrl / shift modifiers to select videos in the video table.
 - [PR 597](https://github.com/aza547/wow-recorder/pull/597) - Add the ability to do multipov playback.
 - [PR 598](https://github.com/aza547/wow-recorder/pull/598) - Resolve an issue where the start time of videos could vary by a few seconds due to keyframe snapping.
 
-### Fixed
 
 ## [6.7.0] - 2025-02-02
 ### Changed

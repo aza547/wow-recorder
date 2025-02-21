@@ -355,9 +355,8 @@ const KOREAN: Translations = {
   [Phrase.Details]: '세부',
   [Phrase.PlayerModeLabel]: '플레이어 모드',
   [Phrase.MultiPlayerModeHeading]: '멀티플레이어 모드',
-  [Phrase.MultiPlayerModeAdvice1]: '왼쪽의 그리드를 사용하여 플레이어를 선택하거나 선택 해제하세요.',
-  [Phrase.MultiPlayerModeAdvice2]: '동시에 최대 4명의 플레이어를 선택하고 녹화물을 나란히 볼 수 있습니다.',
-  [Phrase.MultiPlayerModeAdvice3]: '여기에 일반적으로 표시된 버튼을 복원하려면 싱글 플레이어 모드로 돌아가십시오.',
+  [Phrase.MultiPlayerModeAdvice1]: '왼쪽의 그리드를 사용하여 최대 4명의 플레이어를 한 번에 선택/선택 해제할 수 있습니다.',
+  [Phrase.MultiPlayerModeAdvice2]: '여기에 일반적으로 표시되는 버튼을 복원하려면 싱글 플레이어 모드로 돌아가세요.',
 };
 
 export default KOREAN;

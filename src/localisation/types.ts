@@ -354,7 +354,6 @@ enum Phrase {
   MultiPlayerModeHeading,
   MultiPlayerModeAdvice1,
   MultiPlayerModeAdvice2,
-  MultiPlayerModeAdvice3,
 }
 
 enum Language {

@@ -355,9 +355,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Details]: '细节',
   [Phrase.PlayerModeLabel]: '玩家模式',
   [Phrase.MultiPlayerModeHeading]: '多人模式',
-  [Phrase.MultiPlayerModeAdvice1]: '使用左侧的网格选择或取消选择玩家。',
-  [Phrase.MultiPlayerModeAdvice2]: '一次选择最多 4 名玩家并并排查看镜头。',
-  [Phrase.MultiPlayerModeAdvice3]: '要恢复此处通常显示的按钮，请返回单人游戏模式。',
+  [Phrase.MultiPlayerModeAdvice1]: '使用左侧的网格一次选择/取消选择最多 4 名玩家',
+  [Phrase.MultiPlayerModeAdvice2]: '要恢复此处通常显示的按钮，请返回单人游戏模式',
 };
 
 export default CHINESE_SIMPLIFIED;

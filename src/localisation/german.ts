@@ -355,9 +355,8 @@ const GERMAN: Translations = {
   [Phrase.Details]: 'Details',
   [Phrase.PlayerModeLabel]: 'Spielermodus',
   [Phrase.MultiPlayerModeHeading]: 'Mehrspielermodus',
-  [Phrase.MultiPlayerModeAdvice1]: 'Wählen Sie Spieler mithilfe des Rasters auf der linken Seite aus oder heben Sie die Auswahl auf.',
-  [Phrase.MultiPlayerModeAdvice2]: 'Wählen Sie bis zu 4 Spieler gleichzeitig aus und sehen Sie sich die Aufnahmen nebeneinander an.',
-  [Phrase.MultiPlayerModeAdvice3]: 'Um die hier normalerweise angezeigten Schaltflächen wiederherzustellen, kehren Sie zum Einzelspielermodus zurück.',
+  [Phrase.MultiPlayerModeAdvice1]: 'Mithilfe des Rasters auf der linken Seite können Sie bis zu 4 Spieler gleichzeitig auswählen bzw. die Auswahl aufheben.',
+  [Phrase.MultiPlayerModeAdvice2]: 'Um die hier normalerweise angezeigten Schaltflächen wiederherzustellen, kehren Sie zum Einzelspielermodus zurück.',
 };
 
 export default GERMAN;

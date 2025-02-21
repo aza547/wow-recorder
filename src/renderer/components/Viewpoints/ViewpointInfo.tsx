@@ -56,7 +56,6 @@ export default function ViewpointInfo(props: IProps) {
         <ul className="list-disc pl-5 text-secondary-foreground text-sm">
           <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice1)}</li>
           <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice2)}</li>
-          <li>{getLocalePhrase(language, Phrase.MultiPlayerModeAdvice3)}</li>
         </ul>
       </div>
     );
