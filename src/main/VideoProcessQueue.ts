@@ -89,21 +89,6 @@ export default class VideoProcessQueue {
   private inProgressDownloads: string[] = [];
 
   /**
-   * The file we re-encode the first keyframe into, used by the
-   * cutting algorithm. Relative to the buffer recording folder.
-   */
-  private static firstKeyframeFile = 'fkf.mp4';
-
-  /**
-   * The concat descriptor file, used by the cutting algorith. Just use a
-   * fixed path in the installation folder as it's a tiny text file and saves
-   * a bunch of plumbing.
-   */
-  private static concatDescriptorFile = fixPathWhenPackaged(
-    path.join(path.normalize(__dirname), 'dscr.txt'),
-  );
-
-  /**
    * Constructor.
    */
   constructor(mainWindow: BrowserWindow) {
@@ -574,7 +559,7 @@ export default class VideoProcessQueue {
   }
 
   /**
-   *
+   * Cut the video to size using ffmpeg.
    */
   private async cutVideo(
     srcFile: string,
@@ -595,17 +580,7 @@ export default class VideoProcessQueue {
     );
 
     // It's crucial that we don't re-encode the video here as that
-    // would spin the CPU and delay the replay being available. Read
-    // about it here: https://stackoverflow.com/questions/63997589/.
-    //
-    // We need to deal with audio desync due to the cutting. We could
-    // just re-encode it which is fairly cheap but for long runs
-    // this can incur noticable cutting time. I saw a 20min Mythic+ take
-    // approx 10s to cut which is probably not acceptable. Read about the
-    // re-encoding approach here: https://superuser.com/questions/1001299/.
-    //
-    // This thread has a brilliant summary why we need "-avoid_negative_ts
-    // make_zero": https://superuser.com/questions/1167958/.
+    // would spin the CPU and delay the replay being available.
     const fn = ffmpeg(srcFile)
       .setStartTime(start)
       .setDuration(duration)
@@ -641,6 +616,7 @@ export default class VideoProcessQueue {
         console.info('[VideoProcessQueue] FFmpeg command:', cmd);
 
       const handleStderr = (cmd: string) => {
+        // This is very verbose, so just do it if we're in debug mode.
         if (isDebug) console.info('[VideoProcessQueue] FFmpeg stderr:', cmd);
       };
 
