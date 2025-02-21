@@ -574,7 +574,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   380: [41 * 60, 32 * 60 + 48, 24 * 60 + 36],
   381: [39 * 60, 31 * 60 + 12, 23 * 60 + 24],
   376: [32 * 60 + 30, 26 * 60 + 18, 20 * 60 + 6], // The Necrotic Wake
-  382: [35 * 60, 35 * 60 * 0.8, 35 * 60 * 0.6], // Theater of Pain
+  382: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Theater of Pain
   227: [42 * 60, 33 * 60 + 36, 25 * 60 + 12],
   234: [35 * 60, 28 * 60, 21 * 60],
   369: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
@@ -628,7 +628,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   // Don't have exact timers yet so for now have assumed 0.8 and 0.6 multipliers.
   // https://www.wowhead.com/guide/mythic-plus-dungeons/the-war-within-season-2/overview.
   506: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // 'Cinderbrew Meadery'
-  504: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // 'Darkflame Cleft'
+  504: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'Darkflame Cleft'
   500: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // 'The Rookery'
   499: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // 'Priory of the Sacred Flame'
   525: [32 * 60, 32 * 60 * 0.8, 32 * 60 * 0.6], // 'Operation: Floodgate'
