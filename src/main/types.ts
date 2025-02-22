@@ -4,7 +4,6 @@ import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from '../config/ConfigService';
 import { Tag } from 'react-tag-autocomplete';
-import { Row } from '@tanstack/react-table';
 
 /**
  * Application recording status.
@@ -40,14 +39,6 @@ enum SaveStatus {
   Saving,
   NotSaving,
 }
-
-/**
- * Application saving status.
- */
-type UpgradeStatus = {
-  available: boolean;
-  link: string | undefined;
-};
 
 /**
  * We display any OBS crashes on the frontend so we don't silently recover
@@ -550,7 +541,6 @@ export declare type TObsFormData = (
 export {
   RecStatus,
   SaveStatus,
-  UpgradeStatus,
   UnitFlags,
   PlayerDeathType,
   VideoPlayerSettings,

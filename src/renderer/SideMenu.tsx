@@ -19,7 +19,6 @@ import {
   RecStatus,
   RendererVideo,
   SaveStatus,
-  UpgradeStatus,
 } from 'main/types';
 import { MutableRefObject, useEffect, useState } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -30,20 +29,15 @@ import {
 } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import { setConfigValue } from './useSettings';
-import {
-  getCategoryIndex,
-  getFirstInCategory,
-  getVideoCategoryFilter,
-  povDiskFirstNameSort,
-} from './rendererutils';
+import { getCategoryIndex, getVideoCategoryFilter } from './rendererutils';
 import Menu from './components/Menu';
 import Separator from './components/Separator/Separator';
 import LogsButton from './LogButton';
 import TestButton from './TestButton';
 import DiscordButton from './DiscordButton';
 import ApplicationStatusCard from './containers/ApplicationStatusCard/ApplicationStatusCard';
-import UpgradeNotifier from './containers/UpgradeNotifier/UpgradeNotifier';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
+import UpdateNotifier from './containers/UpdateNotifier/UpdateNotifier';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -54,9 +48,9 @@ interface IProps {
   error: string;
   micStatus: MicStatus;
   crashes: Crashes;
-  upgradeStatus: UpgradeStatus;
   savingStatus: SaveStatus;
   config: ConfigurationSchema;
+  updateAvailable: boolean;
 }
 
 const SideMenu = (props: IProps) => {
@@ -69,9 +63,9 @@ const SideMenu = (props: IProps) => {
     error,
     micStatus,
     crashes,
-    upgradeStatus,
     savingStatus,
     config,
+    updateAvailable,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
@@ -216,7 +210,10 @@ const SideMenu = (props: IProps) => {
       <div className="mt-auto w-full">
         <Separator className="mb-4" />
         <div className="flex items-center justify-center gap-x-4">
-          <UpgradeNotifier upgradeStatus={upgradeStatus} appState={appState} />
+          <UpdateNotifier
+            updateAvailable={updateAvailable}
+            appState={appState}
+          />
           <LogsButton appState={appState} />
           <TestButton recorderStatus={recorderStatus} appState={appState} />
           <DiscordButton appState={appState} />

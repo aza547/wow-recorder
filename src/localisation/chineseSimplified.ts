@@ -95,7 +95,6 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.VideoCategoryRaidsLabel]: '团队副本',
   [Phrase.VideoCategoryBattlegroundsLabel]: '战场',
   [Phrase.VideoCategoryClipsLabel]: '剪辑',
-  [Phrase.UpdateAvailableTooltip]: '有可用更新',
   [Phrase.LogsButtonLabel]: '日志',
   [Phrase.DiscordButtonLabel]: 'Discord',
   [Phrase.TestButtonUnable]: '目前无法进行测试。要运行测试，魔兽世界必须在运行，设置必须正确，并且你不能处于任何活动中。',
@@ -259,9 +258,6 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.SettingsPageApplicationHeader]: '应用程序',
   [Phrase.SettingsPageGameHeader]: '游戏',
   [Phrase.SettingsPageProHeader]: '专业版',
-  [Phrase.UpdateAvailableTitle]: '有可用更新！',
-  [Phrase.UpdateAvailableText]: 'Warcraft Recorder 有可用更新。请点击下面的按钮下载。',
-  [Phrase.UpdateAvailableDownloadButtonText]: '下载',
   [Phrase.TestButtonHeading]: '选择一个要测试的分类',
   [Phrase.SystemTrayOpen]: '打开',
   [Phrase.SystemTrayQuit]: '退出',
@@ -357,6 +353,11 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.MultiPlayerModeHeading]: '多人模式',
   [Phrase.MultiPlayerModeAdvice1]: '使用左侧的网格一次选择/取消选择最多 4 名玩家',
   [Phrase.MultiPlayerModeAdvice2]: '要恢复此处通常显示的按钮，请返回单人游戏模式',
+  [Phrase.UpdateAvailableTooltip]: '有可用更新。单击即可安装。',
+  [Phrase.UpdateAvailableTitle]: '可用更新',
+  [Phrase.UpdateAvailableText]: '有一个可用更新并可供安装。',
+  [Phrase.UpdateAvailableInstallButtonText]: '立即安装',
+  [Phrase.UpdateAvailableRemindButtonText]: '稍后提醒我',
 };
 
 export default CHINESE_SIMPLIFIED;

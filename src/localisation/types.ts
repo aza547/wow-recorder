@@ -93,7 +93,6 @@ enum Phrase {
   VideoCategoryRaidsLabel,
   VideoCategoryBattlegroundsLabel,
   VideoCategoryClipsLabel,
-  UpdateAvailableTooltip,
   LogsButtonLabel,
   DiscordButtonLabel,
   TestButtonUnable,
@@ -258,9 +257,6 @@ enum Phrase {
   SettingsPageApplicationHeader,
   SettingsPageGameHeader,
   SettingsPageProHeader,
-  UpdateAvailableTitle,
-  UpdateAvailableText,
-  UpdateAvailableDownloadButtonText,
   TestButtonHeading,
   SystemTrayQuit,
   SystemTrayOpen,
@@ -354,6 +350,11 @@ enum Phrase {
   MultiPlayerModeHeading,
   MultiPlayerModeAdvice1,
   MultiPlayerModeAdvice2,
+  UpdateAvailableTooltip,
+  UpdateAvailableTitle,
+  UpdateAvailableText,
+  UpdateAvailableInstallButtonText,
+  UpdateAvailableRemindButtonText,
 }
 
 enum Language {

@@ -95,7 +95,6 @@ const KOREAN: Translations = {
   [Phrase.VideoCategoryRaidsLabel]: '레이드',
   [Phrase.VideoCategoryBattlegroundsLabel]: '전장',
   [Phrase.VideoCategoryClipsLabel]: '클립',
-  [Phrase.UpdateAvailableTooltip]: '업데이트 사용 가능',
   [Phrase.LogsButtonLabel]: 'Folder',
   [Phrase.DiscordButtonLabel]: 'Setup',
   [Phrase.TestButtonUnable]: '지금은 테스트를 실행할 수 없습니다. 테스트를 실행하려면 게임이 실행 중이어야 하고, 설정이 유효해야 하며 현재 활동 중이 아니어야 합니다.',
@@ -259,9 +258,6 @@ const KOREAN: Translations = {
   [Phrase.SettingsPageApplicationHeader]: 'Application',
   [Phrase.SettingsPageGameHeader]: 'Game',
   [Phrase.SettingsPageProHeader]: 'Pro',
-  [Phrase.UpdateAvailableTitle]: '업데이트 가능',
-  [Phrase.UpdateAvailableText]: '아래 버튼을 클릭하여 다운로드하세요.',
-  [Phrase.UpdateAvailableDownloadButtonText]: '다운로드',
   [Phrase.TestButtonHeading]: '테스트할 카테고리를 선택하세요',
   [Phrase.SystemTrayOpen]: '열기',
   [Phrase.SystemTrayQuit]: '종료',
@@ -357,6 +353,11 @@ const KOREAN: Translations = {
   [Phrase.MultiPlayerModeHeading]: '멀티플레이어 모드',
   [Phrase.MultiPlayerModeAdvice1]: '왼쪽의 그리드를 사용하여 최대 4명의 플레이어를 한 번에 선택/선택 해제할 수 있습니다.',
   [Phrase.MultiPlayerModeAdvice2]: '여기에 일반적으로 표시되는 버튼을 복원하려면 싱글 플레이어 모드로 돌아가세요.',
+  [Phrase.UpdateAvailableTooltip]: '업데이트가 있습니다. 클릭하여 설치하세요.',
+  [Phrase.UpdateAvailableTitle]: '업데이트 가능',
+  [Phrase.UpdateAvailableText]: '사용할 수 있는 업데이트가 있으며 설치할 준비가 되었습니다.',
+  [Phrase.UpdateAvailableInstallButtonText]: '지금 설치',
+  [Phrase.UpdateAvailableRemindButtonText]: '나중에 상기시켜주세요',
 };
 
 export default KOREAN;

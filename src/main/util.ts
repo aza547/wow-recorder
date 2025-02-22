@@ -1,14 +1,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
-import {
-  app,
-  BrowserWindow,
-  ClientRequestConstructorOptions,
-  Display,
-  net,
-  screen,
-} from 'electron';
+import { app, BrowserWindow, Display, screen } from 'electron';
 import {
   EventType,
   uIOhook,
@@ -461,57 +454,6 @@ const getAvailableDisplays = (): OurDisplayType[] => {
     });
 
   return ourDisplays;
-};
-
-/**
- * Checks for updates from the releases page on github, and, if there is a
- * new version, sends a message to the main window to display a notification.
- */
-const checkAppUpdate = (mainWindow: BrowserWindow | null = null) => {
-  const options: ClientRequestConstructorOptions = {
-    hostname: 'api.github.com',
-    protocol: 'https:',
-    path: '/repos/aza547/wow-recorder/releases/latest',
-    method: 'GET',
-    headers: {
-      'User-Agent': 'wow-recorder',
-    },
-  };
-
-  const request = net.request(options);
-
-  request.on('response', (response) => {
-    let data = '';
-
-    response.on('data', (chunk) => {
-      data += chunk;
-    });
-
-    response.on('end', () => {
-      if (response.statusCode !== 200) {
-        console.error(
-          `[Main] Failed to check for updates, status code: ${response.statusCode}`,
-        );
-        return;
-      }
-
-      const release = JSON.parse(data);
-      const latestVersion = release.tag_name;
-      const link = release.assets[0].browser_download_url;
-
-      if (latestVersion !== app.getVersion() && latestVersion && link) {
-        console.info('[Util] New version available:', latestVersion);
-        if (mainWindow === null) return;
-        mainWindow.webContents.send('updateUpgradeStatus', true, link);
-      }
-    });
-  });
-
-  request.on('error', (error) => {
-    console.error(`[Main] Failed to check for updates: ${error}`);
-  });
-
-  request.end();
 };
 
 const deferredPromiseHelper = <T>() => {
@@ -1005,7 +947,6 @@ export {
   getAvailableDisplays,
   getSortedFiles,
   tryUnlink,
-  checkAppUpdate,
   getMetadataForVideo,
   deferredPromiseHelper,
   getAssetPath,

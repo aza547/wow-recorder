@@ -95,7 +95,6 @@ const ENGLISH: Translations = {
   [Phrase.VideoCategoryRaidsLabel]: 'Raids',
   [Phrase.VideoCategoryBattlegroundsLabel]: 'Battlegrounds',
   [Phrase.VideoCategoryClipsLabel]: 'Clips',
-  [Phrase.UpdateAvailableTooltip]: 'An update is available',
   [Phrase.LogsButtonLabel]: 'Logs',
   [Phrase.DiscordButtonLabel]: 'Discord',
   [Phrase.TestButtonUnable]: 'Unable to run a test right now. To run a test, World of Warcraft must be running, your settings must be valid, and you must not currently be in an activity.',
@@ -259,9 +258,6 @@ const ENGLISH: Translations = {
   [Phrase.SettingsPageApplicationHeader]: 'Application',
   [Phrase.SettingsPageGameHeader]: 'Game',
   [Phrase.SettingsPageProHeader]: 'Pro',
-  [Phrase.UpdateAvailableTitle]: 'Update available!',
-  [Phrase.UpdateAvailableText]: 'There is an update available for Warcraft Recorder. Please click the button below to download it.',
-  [Phrase.UpdateAvailableDownloadButtonText]: 'Download',
   [Phrase.TestButtonHeading]: 'Select a category to test',
   [Phrase.SystemTrayOpen]: 'Open',
   [Phrase.SystemTrayQuit]: 'Quit',
@@ -357,6 +353,11 @@ const ENGLISH: Translations = {
   [Phrase.MultiPlayerModeHeading]: 'Multiplayer Mode',
   [Phrase.MultiPlayerModeAdvice1]: 'Select/deselect up to 4 players at once using the grid to the left.',
   [Phrase.MultiPlayerModeAdvice2]: 'To restore buttons normally displayed here, return to single player mode.',
+  [Phrase.UpdateAvailableTooltip]: 'An update is available. Click to install.',
+  [Phrase.UpdateAvailableTitle]: 'Update Available',
+  [Phrase.UpdateAvailableText]: 'There is an update available and ready to install.',
+  [Phrase.UpdateAvailableInstallButtonText]: 'Install Now',
+  [Phrase.UpdateAvailableRemindButtonText]: 'Remind Me Later',
 };
 
 export default ENGLISH;

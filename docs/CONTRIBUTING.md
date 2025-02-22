@@ -31,8 +31,9 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
     1. Update the CHANGELOG.md with the new version number and change details. 
     1. Commit and push all changes.
     1. Tag a release on GitHub and attach the built files:
-      - `./release/build/WarcraftRecorder Setup X.Y.Z.exe` to enable installation.
+      - `./release/build/WarcraftRecorder-Setup-X.Y.Z.exe` to enable installation.
       - `./release/build/latest.yml` to allow the auto updater to function. 
+      - `./release/build/WarcraftRecorder-Setup-6.8.0.exe.blockmap` to allow the auto updater to function. 
 
 ## Tests
 1. Run `npm test` to run the UTs. 

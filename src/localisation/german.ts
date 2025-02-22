@@ -95,7 +95,6 @@ const GERMAN: Translations = {
   [Phrase.VideoCategoryRaidsLabel]: 'Schlachtzug',
   [Phrase.VideoCategoryBattlegroundsLabel]: 'Schlachtfelder',
   [Phrase.VideoCategoryClipsLabel]: 'Clips',
-  [Phrase.UpdateAvailableTooltip]: 'Eine neue Version ist verfügbar.',
   [Phrase.LogsButtonLabel]: 'Logs',
   [Phrase.DiscordButtonLabel]: 'Discord',
   [Phrase.TestButtonUnable]: 'Es ist nicht möglich einen Test-Durchlauf gerade durchzuführen. Um einen Testdurchlauf durchzuführen, musst dein World of Warcraft gestartet sein, deine Einstellungen müssen gültig sein und du darfst aktuell noch in keiner Aktivität sein.',
@@ -259,9 +258,6 @@ const GERMAN: Translations = {
   [Phrase.SettingsPageApplicationHeader]: 'Anwendung',
   [Phrase.SettingsPageGameHeader]: 'Spiel',
   [Phrase.SettingsPageProHeader]: 'Pro',
-  [Phrase.UpdateAvailableTitle]: 'Neue Version verfügbar!',
-  [Phrase.UpdateAvailableText]: 'Es gibt eine neue Version für Warcraft Recorder. Drück auf den Knopf unten, um sie herunterzuladen.',
-  [Phrase.UpdateAvailableDownloadButtonText]: 'Herunterladen',
   [Phrase.TestButtonHeading]: 'Wähle eine Kategorie zum testen.',
   [Phrase.SystemTrayOpen]: 'Öffnen',
   [Phrase.SystemTrayQuit]: 'Schließen',
@@ -357,6 +353,11 @@ const GERMAN: Translations = {
   [Phrase.MultiPlayerModeHeading]: 'Mehrspielermodus',
   [Phrase.MultiPlayerModeAdvice1]: 'Mithilfe des Rasters auf der linken Seite können Sie bis zu 4 Spieler gleichzeitig auswählen bzw. die Auswahl aufheben.',
   [Phrase.MultiPlayerModeAdvice2]: 'Um die hier normalerweise angezeigten Schaltflächen wiederherzustellen, kehren Sie zum Einzelspielermodus zurück.',
+  [Phrase.UpdateAvailableTooltip]: 'Ein Update ist verfügbar. Klicken Sie hier, um es zu installieren.',
+  [Phrase.UpdateAvailableTitle]: 'Update verfügbar',
+  [Phrase.UpdateAvailableText]: 'Es ist ein Update verfügbar und kann installiert werden.',
+  [Phrase.UpdateAvailableInstallButtonText]: 'Jetzt installieren',
+  [Phrase.UpdateAvailableRemindButtonText]: 'Erinnere mich später',
 };
 
 export default GERMAN;
