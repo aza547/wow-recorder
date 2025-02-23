@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useMemo } from 'react';
-import { Trash } from 'lucide-react';
+import { GripHorizontal, Trash } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
-import { VideoPlayer } from './VideoPlayer';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
@@ -18,6 +17,9 @@ import DeleteDialog from './DeleteDialog';
 import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
 import VideoFilter from './VideoFilter';
 import { Table } from '@tanstack/react-table';
+import { Resizable, ResizeCallback } from 're-resizable';
+import { Direction } from 're-resizable/lib/resizer';
+import VideoPlayer from './VideoPlayer';
 
 interface IProps {
   category: VideoCategory;
@@ -59,6 +61,18 @@ const CategoryPage = (props: IProps) => {
   const isClips = category === VideoCategory.Clips;
 
   /**
+   * Handle a resize event.
+   */
+  const onResize: ResizeCallback = (
+    event: MouseEvent | TouchEvent,
+    direction: Direction,
+    element: HTMLElement,
+  ) => {
+    const height = element.clientHeight;
+    playerHeight.current = height;
+  };
+
+  /**
    * Render the video player. Safe to assume we have videos at this point
    * as we don't call this if haveVideos isn't true.
    *
@@ -74,15 +88,31 @@ const CategoryPage = (props: IProps) => {
       selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
 
     return (
-      <VideoPlayer
-        key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
-        videos={videosToPlay}
-        persistentProgress={persistentProgress}
-        config={config}
-        playerHeight={playerHeight}
-        appState={appState}
-        setAppState={setAppState}
-      />
+      <Resizable
+        defaultSize={{
+          height: `${playerHeight.current}px`,
+          width: '100%',
+        }}
+        enable={{ bottom: true }}
+        bounds="parent"
+        onResize={onResize}
+        handleComponent={{
+          bottom: (
+            <div className="flex items-center justify-center mt-1">
+              <GripHorizontal />
+            </div>
+          ),
+        }}
+      >
+        <VideoPlayer
+          key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
+          videos={videosToPlay}
+          persistentProgress={persistentProgress}
+          config={config}
+          appState={appState}
+          setAppState={setAppState}
+        />
+      </Resizable>
     );
   };
 

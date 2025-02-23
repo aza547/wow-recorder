@@ -15,7 +15,6 @@ import {
   useState,
 } from 'react';
 import { Backdrop, Box, CircularProgress, Slider } from '@mui/material';
-import { Resizable, ResizeCallback } from 're-resizable';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -45,13 +44,10 @@ import {
 } from './rendererutils';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
-import { Direction } from 're-resizable/lib/resizer';
-import { GripHorizontal } from 'lucide-react';
 
 interface IProps {
   videos: RendererVideo[];
   persistentProgress: MutableRefObject<number>;
-  playerHeight: MutableRefObject<number>;
   config: ConfigurationSchema;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
@@ -86,14 +82,7 @@ const sliderBaseSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const {
-    videos,
-    persistentProgress,
-    config,
-    playerHeight,
-    appState,
-    setAppState,
-  } = props;
+  const { videos, persistentProgress, config, appState, setAppState } = props;
   const { playing, multiPlayerMode, language } = appState;
 
   if (videos.length < 1 || videos.length > 4) {
@@ -960,18 +949,6 @@ export const VideoPlayer = (props: IProps) => {
     ipc.on('pausePlayer', () => setPlaying(false));
   }, [setPlaying]);
 
-  /**
-   * Handle a resize event.
-   */
-  const onResize: ResizeCallback = (
-    event: MouseEvent | TouchEvent,
-    direction: Direction,
-    element: HTMLElement,
-  ) => {
-    const height = element.clientHeight;
-    playerHeight.current = height;
-  };
-
   let playerDivClass = 'w-full ';
 
   if (srcs.length == 2) {
@@ -984,53 +961,33 @@ export const VideoPlayer = (props: IProps) => {
 
   return (
     <>
-      <Resizable
-        defaultSize={{
-          height: `${playerHeight.current}px`,
+      <Box
+        id="player-and-controls"
+        sx={{
           width: '100%',
-        }}
-        enable={{ bottom: true }}
-        bounds="parent"
-        onResize={onResize}
-        handleComponent={{
-          bottom: (
-            <div className="flex items-center justify-center mt-1">
-              <GripHorizontal />
-            </div>
-          ),
+          height: '100%',
         }}
       >
-        <Box
-          id="player-and-controls"
-          sx={{
-            width: '100%',
-            height: '100%',
-          }}
-        >
-          <div
-            className={playerDivClass}
-            style={{ height: 'calc(100% - 40px)' }}
+        <div className={playerDivClass} style={{ height: 'calc(100% - 40px)' }}>
+          {srcs.map(renderPlayer)}
+          <Backdrop
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: '40px',
+              zIndex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            }}
+            open={spinner}
           >
-            {srcs.map(renderPlayer)}
-            <Backdrop
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: '40px',
-                zIndex: 1,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              }}
-              open={spinner}
-            >
-              <CircularProgress color="inherit" />
-            </Backdrop>
-          </div>
+            <CircularProgress color="inherit" />
+          </Backdrop>
+        </div>
 
-          {renderControls()}
-        </Box>
-      </Resizable>
+        {renderControls()}
+      </Box>
     </>
   );
 };
