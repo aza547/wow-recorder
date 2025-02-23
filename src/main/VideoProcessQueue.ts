@@ -592,7 +592,7 @@ export default class VideoProcessQueue {
       // Some testing on my PC with a relatively good CPU is that it took
       // me 22s to re-encode a 40min M+ run which is about the longest realistically
       // possible supported activity type.
-      .withAudioCodec('copy')
+      .withAudioCodec('aac')
       .output(outputPath);
 
     console.time('[VideoProcessQueue] Video cut took:');
