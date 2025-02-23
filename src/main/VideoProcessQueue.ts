@@ -585,10 +585,19 @@ export default class VideoProcessQueue {
       .setStartTime(start)
       .setDuration(duration)
       .withVideoCodec('copy')
+      // Without re-encoding the audio the HTML player gets desynced
+      // on seeking, which is a bit sad. Re-encoding the audio isn't free
+      // but it's cheap enough that we can stomach it here.
+      //
+      // Some testing on my PC with a relatively good CPU is that it took
+      // me 22s to re-encode a 40min M+ run which is about the longest realistically
+      // possible supported activity type.
       .withAudioCodec('copy')
       .output(outputPath);
 
-    await VideoProcessQueue.ffmpegWrapper(fn, 'Concatenate post reencoding');
+    console.time('[VideoProcessQueue] Video cut took:');
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Video cut');
+    console.timeEnd('[VideoProcessQueue] Video cut took:');
     return outputPath;
   }
 

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - App updates are now automatic, but will still prompt the user before installing.
 
 ### Fixed
+- Fix an issue introduced in 6.8.0 where audio could be desynced on video seeking.
 
 ## [6.8.0] - 2025-02-21
 ### Added
