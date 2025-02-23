@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix an issue introduced in 6.8.0 where audio could be desynced on video seeking.
 - Do better validation of the retail PTR log path.
+- Fix a bug where PTR recordings were cut short.
 
 ## [6.8.0] - 2025-02-21
 ### Added

@@ -1225,7 +1225,7 @@ export default class Manager {
     const retailNotSafe = this.retailLogHandler?.activity;
     const classicNotSafe = this.classicLogHandler?.activity;
     const eraNotSafe = this.eraLogHandler?.activity;
-    const retailPtrNotSafe = this.eraLogHandler?.activity;
+    const retailPtrNotSafe = this.retailPtrLogHandler?.activity;
 
     if (retailNotSafe || classicNotSafe || eraNotSafe || retailPtrNotSafe) {
       console.info('[Manager] Not restarting recorder as in an activity');
