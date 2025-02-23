@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [6.8.1] - 2025-02-23
+### Added
 - App updates are now automatic, but will still prompt the user before installing.
 
 ### Fixed
