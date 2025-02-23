@@ -837,6 +837,8 @@ export default class Manager {
     const {
       recordRetail,
       retailLogPath,
+      recordRetailPtr,
+      retailPtrLogPath,
       recordClassic,
       classicLogPath,
       recordEra,
@@ -844,12 +846,24 @@ export default class Manager {
     } = config;
 
     if (recordRetail) {
-      const validFlavours = ['wow', 'wowxptr', 'wow_beta'];
+      const validFlavours = ['wow'];
       const validPath = validFlavours.includes(getWowFlavour(retailLogPath));
 
       if (!validPath) {
         console.error('[Util] Invalid retail log path', retailLogPath);
         throw new Error(this.getLocaleError(Phrase.InvalidRetailLogPath));
+      }
+    }
+
+    if (recordRetailPtr) {
+      const validFlavours = ['wowxptr', 'wow_beta'];
+      const validPath = validFlavours.includes(getWowFlavour(retailPtrLogPath));
+
+      if (!validPath) {
+        console.error('[Util] Invalid retail PTR log path', retailPtrLogPath);
+        throw new Error(
+          this.getLocaleError(Phrase.InvalidRetailPtrLogPathText),
+        );
       }
     }
 
