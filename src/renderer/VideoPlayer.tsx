@@ -360,7 +360,7 @@ export const VideoPlayer = (props: IProps) => {
           borderRadius: 0,
           '& .MuiSlider-valueLabel': {
             fontSize: '0.75rem',
-            transform: 'translate(-45%, -100%)', // This moves the whole label.
+            transform: 'translate(-43%, -100%)', // This moves the whole label.
             '&::before': {
               transform: 'translate(460%, 40%) rotate(45deg)', // This moves the notch.
             },
@@ -395,7 +395,7 @@ export const VideoPlayer = (props: IProps) => {
           borderRadius: 0,
           '& .MuiSlider-valueLabel': {
             fontSize: '0.75rem',
-            transform: 'translate(40%, -100%)', // This moves the whole label.
+            transform: 'translate(43%, -100%)', // This moves the whole label.
             '&::before': {
               transform: 'translate(-525%, 40%) rotate(45deg)', // This moves the notch.
             },
@@ -774,8 +774,8 @@ export const VideoPlayer = (props: IProps) => {
             variant="ghost"
             size="xs"
             onClick={() => {
-              setClipStartValue(progress - 15);
-              setClipStopValue(progress + 15);
+              setClipStartValue(Math.max(0, progress - 15));
+              setClipStopValue(Math.min(duration, progress + 15));
               setClipMode(true);
             }}
             disabled={!clippable}
