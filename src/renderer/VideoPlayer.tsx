@@ -360,6 +360,10 @@ export const VideoPlayer = (props: IProps) => {
           borderRadius: 0,
           '& .MuiSlider-valueLabel': {
             fontSize: '0.75rem',
+            transform: 'translate(-45%, -100%)', // This moves the whole label.
+            '&::before': {
+              transform: 'translate(460%, 40%) rotate(45deg)', // This moves the notch.
+            },
           },
           '&:hover': {
             backgroundColor: '#bb4220',
@@ -391,6 +395,10 @@ export const VideoPlayer = (props: IProps) => {
           borderRadius: 0,
           '& .MuiSlider-valueLabel': {
             fontSize: '0.75rem',
+            transform: 'translate(40%, -100%)', // This moves the whole label.
+            '&::before': {
+              transform: 'translate(-525%, 40%) rotate(45deg)', // This moves the notch.
+            },
           },
           '&:hover': {
             backgroundColor: '#bb4220',
@@ -765,7 +773,11 @@ export const VideoPlayer = (props: IProps) => {
           <Button
             variant="ghost"
             size="xs"
-            onClick={() => setClipMode(true)}
+            onClick={() => {
+              setClipStartValue(progress - 15);
+              setClipStopValue(progress + 15);
+              setClipMode(true);
+            }}
             disabled={!clippable}
           >
             <MovieIcon sx={{ color, fontSize: '22px' }} />
