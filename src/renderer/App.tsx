@@ -260,7 +260,7 @@ const WarcraftRecorder = () => {
           <Layout
             recorderStatus={recorderStatus}
             stateManager={stateManager}
-            videoState={videoState}
+            categoryState={categoryState}
             appState={appState}
             setAppState={setAppState}
             persistentProgress={persistentProgress}
