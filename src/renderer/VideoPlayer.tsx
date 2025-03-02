@@ -574,7 +574,6 @@ export const VideoPlayer = (props: IProps) => {
       // the slider to represent the longest.
       const max = Math.max(...durations);
       setDuration(max);
-      setClipStopValue(max);
     }
   };
 
@@ -963,11 +962,11 @@ export const VideoPlayer = (props: IProps) => {
 
   let playerDivClass = 'w-full ';
 
-  if (srcs.length == 2) {
+  if (srcs.length === 2) {
     playerDivClass += 'grid grid-cols-2 grid-rows-1';
-  } else if (srcs.length == 3) {
+  } else if (srcs.length === 3) {
     playerDivClass += 'grid grid-cols-2 grid-rows-2';
-  } else if (srcs.length == 4) {
+  } else if (srcs.length === 4) {
     playerDivClass += 'grid grid-cols-2 grid-rows-2';
   }
 

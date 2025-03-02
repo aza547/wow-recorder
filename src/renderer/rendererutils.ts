@@ -1008,10 +1008,10 @@ const getSelectedRow = (
   const video = selectedVideos[0];
 
   if (!video) {
-    return;
+    return undefined;
   }
 
-  const videoName = video.videoName;
+  const { videoName } = video;
   const { rows } = table.getRowModel();
 
   const row = rows.find((r) => {
@@ -1019,6 +1019,7 @@ const getSelectedRow = (
       .map((rv) => rv.videoName)
       .includes(videoName);
   });
+
   return row;
 };
 

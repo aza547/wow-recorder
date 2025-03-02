@@ -88,9 +88,9 @@ const VideoSelectionTable = (props: IProps) => {
       const start = Math.min(base, target);
       const end = Math.max(base, target) + 1;
 
-      rows.slice(start, end).forEach((row) => {
-        if (!row.getIsSelected()) {
-          row.getToggleSelectedHandler()(event);
+      rows.slice(start, end).forEach((r) => {
+        if (!r.getIsSelected()) {
+          r.getToggleSelectedHandler()(event);
         }
       });
 

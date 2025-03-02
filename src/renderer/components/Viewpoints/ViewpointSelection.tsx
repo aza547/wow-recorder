@@ -138,14 +138,12 @@ export default function ViewpointSelection(props: IProps) {
         const playing = sameActivity ? prevState.playing : false;
         const mode = sameActivity ? prevState.multiPlayerMode : false;
 
-        // If we are deselecting a video to leave one remaining, revert the
-        // video player to single player mode.
-        const multiPlayerMode = s.length > 1 ? mode : false;
-
         return {
           ...prevState,
           selectedVideos: s,
-          multiPlayerMode,
+          // If we are deselecting a video to leave one remaining, revert the
+          // video player to single player mode.
+          multiPlayerMode: s.length > 1 ? mode : false,
           // Always pause if changing selections in multiplayer mode.
           playing: multiPlayerMode ? false : playing,
         };

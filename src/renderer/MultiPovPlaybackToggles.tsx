@@ -20,10 +20,9 @@ const MultiPovPlaybackToggles = (props: IProps) => {
   const { selectedVideos, multiPlayerMode, language } = appState;
 
   const onValueChange = (value: string) => {
-    const multiPlayerMode = value === 'true';
     let s = [...selectedVideos];
 
-    if (multiPlayerMode) {
+    if (value === 'true') {
       // User has selected multi player mode. Fill up the 4 slots
       s = opts.slice(0, 4);
     } else {
@@ -52,10 +51,10 @@ const MultiPovPlaybackToggles = (props: IProps) => {
           onValueChange={onValueChange}
           variant="outline"
         >
-          <ToggleGroupItem value={'false'}>
+          <ToggleGroupItem value="false">
             <TvMinimal />
           </ToggleGroupItem>
-          <ToggleGroupItem value={'true'} disabled={!allowMultiPlayer}>
+          <ToggleGroupItem value="true" disabled={!allowMultiPlayer}>
             <LayoutGrid />
           </ToggleGroupItem>
         </ToggleGroup>
