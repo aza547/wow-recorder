@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clipping mode labels now don't overlap so poorly.
 
 ### Added
+- Add the 5760x1080 resolution.
+
 ### Fixed
 
 ## [6.8.1] - 2025-02-23
