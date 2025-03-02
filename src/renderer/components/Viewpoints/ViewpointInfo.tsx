@@ -18,6 +18,7 @@ import {
 } from '../../rendererutils';
 import { specImages } from '../../images';
 import { Tooltip } from '../Tooltip/Tooltip';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -152,12 +153,27 @@ export default function ViewpointInfo(props: IProps) {
   };
 
   /**
+   * Return the no cloud icon.
+   */
+  const getNoCloudIcon = () => {
+    return (
+      <ToggleGroupItem value="cloud-off" className="h-[40px] w-[40px]" disabled>
+        <CloudOffIcon />
+      </ToggleGroupItem>
+    );
+  };
+
+  /**
    * Return the cloud icon.
    */
   const getCloudIcon = () => {
     const isSelected = videoToShow.uniqueId === cloudVideo?.uniqueId;
     const color = cloudVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
+
+    if (!haveInCloud && !cloudUpload) {
+      return getNoCloudIcon();
+    }
 
     if (!haveInCloud && cloudUpload) {
       return getUploadButton();
