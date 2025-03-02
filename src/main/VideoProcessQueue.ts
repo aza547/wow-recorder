@@ -629,10 +629,28 @@ export default class VideoProcessQueue {
         if (isDebug) console.info('[VideoProcessQueue] FFmpeg stderr:', cmd);
       };
 
+      const onProgress = (progress: {
+        frames: number;
+        currentFps: number;
+        currentKbps: number;
+        targetSize: number;
+        timemark: string;
+        percent?: number | undefined;
+      }) => {
+        console.info(
+          '[VideoProcessQueue] Ffmpeg task:',
+          descr,
+          'progress:',
+          progress.percent?.toFixed(0),
+          '%',
+        );
+      };
+
       fn.on('start', handleStart)
         .on('end', handleEnd)
         .on('error', handleErr)
         .on('stderr', handleStderr)
+        .on('progress', onProgress)
         .run();
     });
   }

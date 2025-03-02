@@ -358,6 +358,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.UpdateAvailableText]: '有一个可用更新并可供安装。',
   [Phrase.UpdateAvailableInstallButtonText]: '立即安装',
   [Phrase.UpdateAvailableRemindButtonText]: '稍后提醒我',
+  [Phrase.Saving]: '保存',
 };
 
 export default CHINESE_SIMPLIFIED;

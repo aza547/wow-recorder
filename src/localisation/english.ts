@@ -358,6 +358,7 @@ const ENGLISH: Translations = {
   [Phrase.UpdateAvailableText]: 'There is an update available and ready to install.',
   [Phrase.UpdateAvailableInstallButtonText]: 'Install Now',
   [Phrase.UpdateAvailableRemindButtonText]: 'Remind Me Later',
+  [Phrase.Saving]: 'Saving...',
 };
 
 export default ENGLISH;

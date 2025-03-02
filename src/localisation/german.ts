@@ -358,6 +358,7 @@ const GERMAN: Translations = {
   [Phrase.UpdateAvailableText]: 'Es ist ein Update verfügbar und kann installiert werden.',
   [Phrase.UpdateAvailableInstallButtonText]: 'Jetzt installieren',
   [Phrase.UpdateAvailableRemindButtonText]: 'Erinnere mich später',
+  [Phrase.Saving]: 'Sparen...',
 };
 
 export default GERMAN;

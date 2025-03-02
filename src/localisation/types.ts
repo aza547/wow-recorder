@@ -355,6 +355,7 @@ enum Phrase {
   UpdateAvailableText,
   UpdateAvailableInstallButtonText,
   UpdateAvailableRemindButtonText,
+  Saving,
 }
 
 enum Language {

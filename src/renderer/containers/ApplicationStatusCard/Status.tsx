@@ -367,6 +367,7 @@ const Status = ({
                 {isSaving && (
                   <>
                     <HardDriveDownload size={14} />
+                    {getLocalePhrase(appState.language, Phrase.Saving)}
                     {isUpDowning && <Separator orientation="vertical" />}
                   </>
                 )}

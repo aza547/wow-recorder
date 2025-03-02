@@ -358,6 +358,7 @@ const KOREAN: Translations = {
   [Phrase.UpdateAvailableText]: '사용할 수 있는 업데이트가 있으며 설치할 준비가 되었습니다.',
   [Phrase.UpdateAvailableInstallButtonText]: '지금 설치',
   [Phrase.UpdateAvailableRemindButtonText]: '나중에 상기시켜주세요',
+  [Phrase.Saving]: '절약',
 };
 
 export default KOREAN;
