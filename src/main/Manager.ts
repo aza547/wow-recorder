@@ -581,7 +581,7 @@ export default class Manager {
         // event to trigger a reconfigure which kills any repeated polling.
         console.warn('[Manager] Got logout event from CloudClient');
         this.stages[5].valid = false; // Stage 5 is the cloud stage.
-        this.internalManage();
+        this.manage(); // Queue a call to manage to mimic first time setup.
       });
 
       await this.cloudClient.pollInit();
