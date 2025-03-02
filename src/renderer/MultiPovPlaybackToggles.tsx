@@ -34,7 +34,7 @@ const MultiPovPlaybackToggles = (props: IProps) => {
     setAppState((prevState) => {
       return {
         ...prevState,
-        multiPlayerMode,
+        multiPlayerMode: value === 'true',
         selectedVideos: s,
       };
     });
