@@ -50,7 +50,7 @@ import {
   CloudStatus,
   DiskStatus,
   UploadQueueItem,
-  CheckAuthResponse,
+  CloudConfig,
 } from './types';
 import {
   getObsBaseConfig,
@@ -58,6 +58,7 @@ import {
   getObsAudioConfig,
   getFlavourConfig,
   getOverlayConfig,
+  getCloudConfig,
 } from '../utils/configUtils';
 import { ERecordingState } from './obsEnums';
 import {
@@ -68,6 +69,7 @@ import VideoProcessQueue from './VideoProcessQueue';
 import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import RetryableConfigError from '../utils/RetryableConfigError';
+import { TAffiliation } from 'types/api';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -103,6 +105,8 @@ export default class Manager {
 
   private overlayCfg: ObsOverlayConfig = getOverlayConfig(this.cfg);
 
+  private cloudCfg: CloudConfig = getCloudConfig(this.cfg);
+
   private retailLogHandler: RetailLogHandler | undefined;
 
   private classicLogHandler: ClassicLogHandler | undefined;
@@ -135,7 +139,7 @@ export default class Manager {
       valid: false,
       current: this.obsBaseCfg,
       get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: async (config: ObsBaseConfig) => this.validateBaseCfg(config),
+      validate: async (config: ObsBaseConfig) => this.validateBaseConfig(config),
       configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
     },
     {
@@ -169,6 +173,14 @@ export default class Manager {
       get: (cfg: ConfigService) => getOverlayConfig(cfg),
       validate: async (config: ObsOverlayConfig) => this.validateOverlayConfig(config),
       configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
+    },
+    {
+      name: 'cloud',
+      valid: false,
+      current: this.cloudCfg,
+      get: (cfg: ConfigService) => getCloudConfig(cfg),
+      validate: async (config: CloudConfig) => this.validateCloudConfig(config),
+      configure: async (config: CloudConfig) => this.configureCloudClient(config),
     },
     /* eslint-enable prettier/prettier */
   ];
@@ -442,11 +454,12 @@ export default class Manager {
     try {
       const usagePromise = this.cloudClient.getUsage();
       const limitPromise = this.cloudClient.getStorageLimit();
-      const guildsPromise = this.cloudClient.getUserAffiliations();
+      const affiliationsPromise = this.cloudClient.getUserAffiliations();
 
       const usage = await usagePromise;
       const limit = await limitPromise;
-      const guilds = await guildsPromise;
+      const affiliations = await affiliationsPromise;
+      const guilds = affiliations.map((aff) => aff.guildName);
 
       const status: CloudStatus = {
         usage,
@@ -524,6 +537,18 @@ export default class Manager {
   private async configureObsBase(config: ObsBaseConfig) {
     await this.recorder.stop();
 
+    await this.refreshCloudStatus();
+    await this.refreshDiskStatus();
+
+    await this.recorder.configureBase(config);
+    this.poller.start();
+    this.mainWindow.webContents.send('refreshState');
+  }
+
+  /**
+   * Configure the base OBS config. We need to stop the recording to do this.
+   */
+  private async configureCloudClient(config: CloudConfig) {
     const {
       cloudStorage,
       cloudAccountName,
@@ -550,16 +575,21 @@ export default class Manager {
         this.refreshCloudStatus();
       });
 
-      this.cloudClient.pollInit();
+      this.cloudClient.on('logout', () => {
+        // Likely the user has changed their password on the website. We don't
+        // want the CloudClient to lock their account so we have it emit a logout
+        // event to trigger a reconfigure which kills any repeated polling.
+        console.warn('[Manager] Got logout event from CloudClient');
+        this.stages[5].valid = false; // Stage 5 is the cloud stage.
+        this.internalManage();
+      });
+
+      await this.cloudClient.pollInit();
       this.cloudClient.pollForUpdates(10);
       this.videoProcessQueue.setCloudClient(this.cloudClient);
     }
 
-    this.refreshCloudStatus();
-    this.refreshDiskStatus();
-
-    await this.recorder.configureBase(config);
-    this.poller.start();
+    await this.refreshCloudStatus();
     this.mainWindow.webContents.send('refreshState');
   }
 
@@ -665,17 +695,10 @@ export default class Manager {
     this.recorder.configureOverlayImageSource(config);
   }
 
-  private async validateBaseCfg(config: ObsBaseConfig) {
-    const { cloudStorage } = config;
-
-    await this.validateBaseConfig(config);
-
-    if (cloudStorage) {
-      await this.validateCloudBaseConfig(config);
-    }
-  }
-
-  private async validateCloudBaseConfig(config: ObsBaseConfig) {
+  /**
+   * Validate the cloud config.
+   */
+  private async validateCloudConfig(config: CloudConfig) {
     const {
       cloudAccountName,
       cloudAccountPassword,
@@ -693,35 +716,11 @@ export default class Manager {
       throw new Error(this.getLocaleError(Phrase.ErrorPasswordEmpty));
     }
 
-    const guilds = await CloudClient.getUserAffiliations(
-      cloudAccountName,
-      cloudAccountPassword,
-    );
-
-    const status: CloudStatus = {
-      usage: 0,
-      limit: 0,
-      guilds,
-    };
-
-    this.mainWindow.webContents.send('updateCloudStatus', status);
-
-    if (!cloudGuildName) {
-      console.warn('[Manager] Empty guild name');
-      throw new Error(this.getLocaleError(Phrase.ErrorGuildEmpty));
-    }
-
-    let raceWinner;
+    let winner;
 
     try {
-      const client = new CloudClient(
-        cloudAccountName,
-        cloudAccountPassword,
-        cloudGuildName,
-      );
-
-      raceWinner = await Promise.race([
-        client.checkAuth(),
+      winner = await Promise.race([
+        CloudClient.getUserAffiliations(cloudAccountName, cloudAccountPassword),
         getPromiseBomb(10000, 'Authentication timed out'),
       ]);
     } catch (error) {
@@ -743,21 +742,39 @@ export default class Manager {
       );
     }
 
-    // OK to cast here as we know the promise is resolved or
-    // we threw an error so won't get here.
-    const { read, write } = raceWinner as CheckAuthResponse;
+    // Safe to cast here, either we got this data or we have thrown.
+    const affiliations = winner as TAffiliation[];
+    const guilds = affiliations.map((aff) => aff.guildName);
 
-    if (!read) {
+    // We need to push this to the frontend to allow the user select a guild.
+    const status: CloudStatus = { usage: 0, limit: 0, guilds };
+    this.mainWindow.webContents.send('updateCloudStatus', status);
+
+    // Look for a match against the selected guild name. If this isn't selected
+    // yet, cloudGuildName is an empty string, which will never match.
+    const affiliation = affiliations.find(
+      (aff) => aff.guildName === cloudGuildName,
+    );
+
+    if (!affiliation) {
+      console.warn('[Manager] Empty guild name');
+      throw new Error(this.getLocaleError(Phrase.ErrorGuildEmpty));
+    }
+
+    if (!affiliation.read) {
       throw new Error(
         this.getLocaleError(Phrase.ErrorUserNotAuthorizedPlayback),
       );
     }
 
-    if (!write && cloudUpload) {
+    if (!affiliation.write && cloudUpload) {
       throw new Error(this.getLocaleError(Phrase.ErrorUserNotAuthorizedUpload));
     }
   }
 
+  /**
+   * Validate the base config.
+   */
   private async validateBaseConfig(config: ObsBaseConfig) {
     const { storagePath, maxStorage, obsPath } = config;
 

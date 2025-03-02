@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add the 5760x1080 resolution.
 
 ### Fixed
+- [Issue 588](https://github.com/aza547/wow-recorder/issues/588) - Fixes an issue where the client was prone to locking accounts on password change.
 
 ## [6.8.1] - 2025-02-23
 ### Added

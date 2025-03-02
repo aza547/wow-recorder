@@ -2,7 +2,6 @@ import fs from 'fs';
 import { EventEmitter } from 'stream';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import {
-  CheckAuthResponse,
   CloudMetadata,
   CloudSignedMetadata,
   CompleteMultiPartUploadRequestBody,
@@ -10,6 +9,8 @@ import {
 } from 'main/types';
 import path from 'path';
 import AuthError from '../utils/AuthError';
+import { z } from 'zod';
+import { Affiliation, TAffiliation } from 'types/api';
 
 /**
  * A client for retrieving resources from the cloud.
@@ -547,7 +548,7 @@ export default class CloudClient extends EventEmitter {
   /**
    * Get the guilds the user is affiliated with.
    */
-  public async getUserAffiliations(): Promise<string[]> {
+  public async getUserAffiliations(): Promise<TAffiliation[]> {
     return CloudClient.getUserAffiliations(this.user, this.pass);
   }
 
@@ -557,7 +558,7 @@ export default class CloudClient extends EventEmitter {
   public static async getUserAffiliations(
     user: string,
     pass: string,
-  ): Promise<string[]> {
+  ): Promise<TAffiliation[]> {
     console.info('[CloudClient] Get user affiliations');
 
     const Authorization = CloudClient.createAuthHeader(user, pass);
@@ -571,18 +572,17 @@ export default class CloudClient extends EventEmitter {
 
     const { status, data } = response;
 
-    if (status === 401) {
-      console.error('[CloudClient] 401 response from worker', data);
-      throw new Error('Login to cloud store failed, check your credentials');
+    if (status === 401 || status === 403) {
+      console.error('[CloudClient] Auth failed:', status, data);
+
+      throw new AuthError(
+        'Login to cloud store failed, check your credentials',
+      );
     }
 
-    if (status !== 200) {
-      console.error('[CloudClient] Failure response from worker', status, data);
-      throw new Error('Error logging into cloud store');
-    }
-    const guilds = data.map((aff: any) => aff.guildName);
-    console.info('[CloudClient] Got guild affiliations', guilds);
-    return guilds;
+    const affiliations = z.array(Affiliation).parse(data);
+    console.info('[CloudClient] Got user affiliations', affiliations);
+    return affiliations;
   }
 
   /**
@@ -617,43 +617,6 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Checks we're authenticated and authorized to access the cloud resources,
-   * and returns the read and write access for the user.
-   */
-  public async checkAuth(): Promise<CheckAuthResponse> {
-    const headers = { Authorization: this.authHeader };
-    const guild = encodeURIComponent(this.guild);
-    const url = `${CloudClient.api}/guild/${guild}/auth`;
-
-    const response = await axios.get(url, {
-      headers,
-      validateStatus: () => true,
-    });
-
-    const { status, data } = response;
-
-    if (status === 401 || status === 403) {
-      console.error('[CloudClient] Auth failed:', status, data);
-
-      throw new AuthError(
-        'Login to cloud store failed, check your credentials',
-      );
-    }
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failure response from worker', status, data);
-      throw new Error('Error logging into cloud store');
-    }
-
-    const { read, write } = data;
-
-    console.info('[CloudClient] Read access: ', read);
-    console.info('[CloudClient] Write access: ', write);
-
-    return { read, write };
-  }
-
-  /**
    * Get the mtime object from R2, this keeps track of the most recent
    * modification time to any R2 data.
    */
@@ -672,17 +635,30 @@ export default class CloudClient extends EventEmitter {
    * we need to trigger a UI refresh.
    */
   private async checkForUpdate() {
-    const mtime = await this.getMtime();
+    try {
+      const mtime = await this.getMtime();
 
-    if (mtime !== this.bucketLastMod) {
-      console.info(
-        '[CloudClient] Cloud data changed:',
-        mtime,
-        this.bucketLastMod,
-      );
+      if (mtime !== this.bucketLastMod) {
+        console.info(
+          '[CloudClient] Cloud data changed:',
+          mtime,
+          this.bucketLastMod,
+        );
 
-      this.emit('change');
-      this.bucketLastMod = mtime;
+        this.emit('change');
+        this.bucketLastMod = mtime;
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        // If the user changes their password on the website, we don't want
+        // the client to keep failing to login and eventually trip the lock.
+        console.warn('[CloudClient] Auth failed, will logout', String(error));
+        this.stopPollForUpdates();
+        this.emit('logout');
+      }
+
+      // Hopefully just an intermittent failure. Will retry on the next poll timer.
+      console.error('[CloudClient] Poll failed but not 401', String(error));
     }
   }
 

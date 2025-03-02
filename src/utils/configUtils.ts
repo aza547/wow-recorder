@@ -5,6 +5,7 @@ import {
   FlavourConfig,
   ObsOverlayConfig,
   Metadata,
+  CloudConfig,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../config/ConfigService';
@@ -142,11 +143,6 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
     obsFPS: cfg.get<number>('obsFPS'),
     obsQuality: cfg.get<string>('obsQuality'),
     obsRecEncoder,
-    cloudStorage: cfg.get<boolean>('cloudStorage'),
-    cloudUpload: cfg.get<boolean>('cloudUpload'),
-    cloudAccountName: cfg.get<string>('cloudAccountName'),
-    cloudAccountPassword: cfg.get<string>('cloudAccountPassword'),
-    cloudGuildName: cfg.get<string>('cloudGuildName'),
   };
 };
 
@@ -203,6 +199,16 @@ const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
   };
 };
 
+const getCloudConfig = (cfg: ConfigService): CloudConfig => {
+  return {
+    cloudStorage: cfg.get<boolean>('cloudStorage'),
+    cloudUpload: cfg.get<boolean>('cloudUpload'),
+    cloudAccountName: cfg.get<string>('cloudAccountName'),
+    cloudAccountPassword: cfg.get<string>('cloudAccountPassword'),
+    cloudGuildName: cfg.get<string>('cloudGuildName'),
+  };
+};
+
 export {
   allowRecordCategory,
   shouldUpload,
@@ -211,4 +217,5 @@ export {
   getObsAudioConfig,
   getFlavourConfig,
   getOverlayConfig,
+  getCloudConfig,
 };

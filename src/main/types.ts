@@ -344,11 +344,6 @@ type ObsBaseConfig = {
   obsFPS: number;
   obsQuality: string;
   obsRecEncoder: string;
-  cloudStorage: boolean;
-  cloudUpload: boolean;
-  cloudAccountName: string;
-  cloudAccountPassword: string;
-  cloudGuildName: string;
 };
 
 type ObsVideoConfig = {
@@ -394,6 +389,14 @@ type FlavourConfig = {
   eraLogPath: string;
   recordRetailPtr: boolean;
   retailPtrLogPath: string;
+};
+
+type CloudConfig = {
+  cloudStorage: boolean;
+  cloudUpload: boolean;
+  cloudAccountName: string;
+  cloudAccountPassword: string;
+  cloudGuildName: string;
 };
 
 type ConfigStage = {
@@ -463,11 +466,6 @@ type CreateMultiPartUploadResponseBody = {
 type CompleteMultiPartUploadRequestBody = {
   etags: string[];
   key: string;
-};
-
-type CheckAuthResponse = {
-  read: boolean;
-  write: boolean;
 };
 
 export interface ISettingsSubCategory {
@@ -572,6 +570,7 @@ export {
   ObsOverlayConfig,
   ObsAudioConfig,
   FlavourConfig,
+  CloudConfig,
   ConfigStage,
   DeathMarkers,
   VideoMarker,
@@ -589,5 +588,4 @@ export {
   CloudSignedMetadata,
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
-  CheckAuthResponse,
 };
