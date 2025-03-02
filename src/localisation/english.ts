@@ -359,6 +359,7 @@ const ENGLISH: Translations = {
   [Phrase.UpdateAvailableInstallButtonText]: 'Install Now',
   [Phrase.UpdateAvailableRemindButtonText]: 'Remind Me Later',
   [Phrase.Saving]: 'Saving...',
+  [Phrase.StartTyping]: 'Start typing...',
 };
 
 export default ENGLISH;

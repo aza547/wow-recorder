@@ -342,7 +342,7 @@ const SearchBar = (props: IProps) => {
         suggestions={suggestions.sort(alphabeticalValueSort)}
         onAdd={onAdd}
         onDelete={onDelete}
-        placeholderText="Start typing..."
+        placeholderText={getLocalePhrase(language, Phrase.StartTyping)}
         activateFirstOption
       />
     </div>

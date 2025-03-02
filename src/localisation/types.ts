@@ -356,6 +356,7 @@ enum Phrase {
   UpdateAvailableInstallButtonText,
   UpdateAvailableRemindButtonText,
   Saving,
+  StartTyping,
 }
 
 enum Language {

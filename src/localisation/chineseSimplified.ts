@@ -359,6 +359,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.UpdateAvailableInstallButtonText]: '立即安装',
   [Phrase.UpdateAvailableRemindButtonText]: '稍后提醒我',
   [Phrase.Saving]: '保存',
+  [Phrase.StartTyping]: '开始打字',
 };
 
 export default CHINESE_SIMPLIFIED;

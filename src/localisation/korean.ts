@@ -359,6 +359,7 @@ const KOREAN: Translations = {
   [Phrase.UpdateAvailableInstallButtonText]: '지금 설치',
   [Phrase.UpdateAvailableRemindButtonText]: '나중에 상기시켜주세요',
   [Phrase.Saving]: '절약',
+  [Phrase.StartTyping]: '타이핑을 시작하다',
 };
 
 export default KOREAN;

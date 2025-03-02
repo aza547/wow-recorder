@@ -359,6 +359,7 @@ const GERMAN: Translations = {
   [Phrase.UpdateAvailableInstallButtonText]: 'Jetzt installieren',
   [Phrase.UpdateAvailableRemindButtonText]: 'Erinnere mich später',
   [Phrase.Saving]: 'Sparen...',
+  [Phrase.StartTyping]: 'Beginnen Sie mit der Eingabe...',
 };
 
 export default GERMAN;
