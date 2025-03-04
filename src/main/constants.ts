@@ -631,7 +631,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   506: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // 'Cinderbrew Meadery'
   504: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'Darkflame Cleft'
   500: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // 'The Rookery'
-  499: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // 'Priory of the Sacred Flame'
+  499: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // 'Priory of the Sacred Flame'
   525: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'Operation: Floodgate'
   247: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'THE MOTHERLODE!!'
 };
