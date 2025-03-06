@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useMemo } from 'react';
-import { GripHorizontal, Trash } from 'lucide-react';
+import { CalendarDays, Eye, GripHorizontal, Trash } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { VideoCategory } from '../types/VideoCategory';
@@ -20,6 +20,8 @@ import { Table } from '@tanstack/react-table';
 import { Resizable, ResizeCallback } from 're-resizable';
 import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer from './VideoPlayer';
+import Label from './components/Label/Label';
+import ViewpointInfo from './components/Viewpoints/ViewpointInfo';
 
 interface IProps {
   category: VideoCategory;
@@ -213,26 +215,66 @@ const CategoryPage = (props: IProps) => {
               filteredState={filteredState}
             />
           </div>
-          <div className="pt-6">
-            <DeleteDialog
-              onDelete={() => bulkDelete(unprot)}
-              tooltipContent={getLocalePhrase(
-                appState.language,
-                Phrase.BulkDeleteButtonTooltip,
-              )}
-              warning={deleteWarning}
-              skipPossible={false}
-              appState={appState}
-            >
-              <Button
-                variant="ghost"
-                size="xs"
-                disabled={viewpoints.length < 1}
-              >
-                <Trash size={20} />
-              </Button>
-            </DeleteDialog>
+
+          <div className="flex flex-col items-center justify-center">
+            <Label>Start</Label>
+            <Button variant="ghost" size="xs" disabled={viewpoints.length < 1}>
+              <CalendarDays size={20} />
+            </Button>
           </div>
+
+          <div className="flex flex-col items-center justify-center">
+            <Label>End</Label>
+            <Button variant="ghost" size="xs" disabled={viewpoints.length < 1}>
+              <CalendarDays size={20} />
+            </Button>
+          </div>
+
+          <div className="flex flex-col items-center justify-center">
+            <ViewpointInfo
+              video={multiPlayerOpts[0]}
+              appState={appState}
+              setAppState={setAppState}
+              persistentProgress={persistentProgress}
+            />
+          </div>
+          {/* <Label>Buttons</Label> */}
+
+          <Button variant="ghost" size="xs" disabled={viewpoints.length < 1}>
+            <Eye size={20} />
+          </Button>
+          <Button variant="ghost" size="xs" disabled={viewpoints.length < 1}>
+            <Trash size={20} />
+          </Button>
+          <Button variant="ghost" size="xs" disabled={viewpoints.length < 1}>
+            <Trash size={20} />
+          </Button>
+          <Button variant="ghost" size="xs" disabled={viewpoints.length < 1}>
+            <Trash size={20} />
+          </Button>
+          <Button variant="ghost" size="xs" disabled={viewpoints.length < 1}>
+            <Trash size={20} />
+          </Button>
+
+          <DeleteDialog
+            onDelete={() => bulkDelete(unprot)}
+            tooltipContent={getLocalePhrase(
+              appState.language,
+              Phrase.BulkDeleteButtonTooltip,
+            )}
+            warning={deleteWarning}
+            skipPossible={false}
+            appState={appState}
+          >
+            <Button
+              variant="ghost"
+              size="xs"
+              disabled={viewpoints.length < 1}
+              className="mr-4"
+            >
+              <Trash size={20} />
+            </Button>
+          </DeleteDialog>
         </div>
         <div className="w-full h-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-1 py-1 overflow-hidden">
           <ScrollArea withScrollIndicators={false} className="h-full w-full">
