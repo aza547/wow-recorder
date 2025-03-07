@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.8.2] - 2025-03-07
+### Changed
 - Clipping mode now assumes a more sensible clip size. 
 - Clipping mode labels now don't overlap so poorly.
 - Show a more appropriate cloud icon if there isn't a cloud video to view.
@@ -13,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add the 5760x1080 resolution.
 - Fix a bunch of S2 Mythic+ dungeon timers.
+- EV code signing!
 
 ### Fixed
 - [Issue 588](https://github.com/aza547/wow-recorder/issues/588) - Fixes an issue where the client was prone to locking accounts on password change.
