@@ -344,6 +344,7 @@ const SearchBar = (props: IProps) => {
         onDelete={onDelete}
         placeholderText={getLocalePhrase(language, Phrase.StartTyping)}
         activateFirstOption
+        collapseOnSelect
       />
     </div>
   );
