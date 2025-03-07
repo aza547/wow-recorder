@@ -27,9 +27,3 @@ jobs:
 
     - name: Run unit tests 
       run: npm test
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: WarcraftRecorder
-        path: release/build/WarcraftRecorder*.exe
