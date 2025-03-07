@@ -18,6 +18,7 @@ Development mode benefits from the infrastructure offered by [electron-react-boi
 
 ## Building, Packaging and Releasing
 > As of 3.3.1, we have CI builds for all commits to main.
+> As of 6.8.2, only the tests run in the CI. Can't build in the CI now that we're signing the exe.
 1. Build the electron application.
     1. Update the version number in `./release/app/package.json` if appropriate.  
     1. Run `npm run package` to build the electron application. 

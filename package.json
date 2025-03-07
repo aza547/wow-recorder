@@ -78,7 +78,9 @@
       "deleteAppDataOnUninstall": true
     },
     "win": {
-      "certificateSubjectName": "Warcraft Recorder Limited",
+      "signtoolOptions": {
+        "certificateSubjectName": "Warcraft Recorder Limited"
+      },
       "artifactName": "WarcraftRecorder-Setup-${version}.exe",
       "target": [
         "nsis"

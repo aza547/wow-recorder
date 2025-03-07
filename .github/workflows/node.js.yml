@@ -25,9 +25,6 @@ jobs:
     - name: Install deps
       run: npm install
 
-    - name: Build the exe
-      run: npm run package
-
     - name: Run unit tests 
       run: npm test
 

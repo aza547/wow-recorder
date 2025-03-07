@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clipping mode now assumes a more sensible clip size. 
 - Clipping mode labels now don't overlap so poorly.
 - Show a more appropriate cloud icon if there isn't a cloud video to view.
+- Stop CI builds (but still run the tests), code signing means the build needs to be local to the token.
 
 ### Added
 - Add the 5760x1080 resolution.

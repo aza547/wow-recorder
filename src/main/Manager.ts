@@ -564,6 +564,8 @@ export default class Manager {
     }
 
     if (cloudStorage) {
+      console.info('[Manager] Cloud storage is enabled');
+
       this.cloudClient = new CloudClient(
         cloudAccountName,
         cloudAccountPassword,
@@ -700,11 +702,17 @@ export default class Manager {
    */
   private async validateCloudConfig(config: CloudConfig) {
     const {
+      cloudStorage,
       cloudAccountName,
       cloudAccountPassword,
       cloudGuildName,
       cloudUpload,
     } = config;
+
+    if (!cloudStorage) {
+      console.info('[Manager] Cloud Storage is not enabled');
+      return;
+    }
 
     if (!cloudAccountName) {
       console.warn('[Manager] Empty account name');
