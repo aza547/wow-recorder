@@ -504,7 +504,7 @@ export default class Recorder extends EventEmitter {
     // vice versa. The limits on what this can actually be set to I took
     // from what OBS studio allows and is annotated below, but we don't
     // go to the extremes of the allowed range anyway.
-    const cqp = Recorder.getCqpFromQuality(obsQuality);
+    const cqp = Recorder.getCqpFromQuality(obsQuality, obsRecEncoder);
 
     switch (obsRecEncoder) {
       case ESupportedEncoders.OBS_X264:
@@ -516,6 +516,7 @@ export default class Recorder extends EventEmitter {
 
       case ESupportedEncoders.AMD_AMF_H264:
       case ESupportedEncoders.JIM_NVENC:
+      case ESupportedEncoders.JIM_AV1_NVENC:
         // These settings are identical for AMD and NVENC encoders.
         Recorder.applySetting('Output', 'Recrate_control', 'CQP');
         Recorder.applySetting('Output', 'Reccqp', cqp);
@@ -1488,22 +1489,36 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Convert the quality setting to an appropriate CQP value.
+   * Convert the quality setting to an appropriate CQP/CRF value based on encoder type.
    */
-  private static getCqpFromQuality(obsQuality: string) {
+  private static getCqpFromQuality(obsQuality: string, encoder: string) {
+    if (encoder === ESupportedEncoders.JIM_AV1_NVENC) {
+      // AV1 NVENC typically needs lower CQP values for similar quality
+      switch (obsQuality) {
+        case QualityPresets.ULTRA:
+          return 20;
+        case QualityPresets.HIGH:
+          return 24;
+        case QualityPresets.MODERATE:
+          return 28;
+        case QualityPresets.LOW:
+          return 32;
+        default:
+          console.error('[Recorder] Unrecognised quality', obsQuality);
+          throw new Error('Unrecognised quality');
+      }
+    }
+
+    // Original values for x264 CRF and other encoders' CQP
     switch (obsQuality) {
       case QualityPresets.ULTRA:
         return 22;
-
       case QualityPresets.HIGH:
         return 26;
-
       case QualityPresets.MODERATE:
         return 30;
-
       case QualityPresets.LOW:
         return 34;
-
       default:
         console.error('[Recorder] Unrecognised quality', obsQuality);
         throw new Error('Unrecognised quality');
