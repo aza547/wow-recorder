@@ -62,14 +62,21 @@ const VideoSelectionTable = (props: IProps) => {
       if (event.shiftKey || event.ctrlKey) event.preventDefault();
     };
 
+    const handleBlur = () => {
+      setCtrlDown(false);
+      setShiftDown(false);
+    };
+
     document.addEventListener('keyup', handleKeyUp);
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('blur', handleBlur);
 
     return () => {
       document.removeEventListener('keyup', handleKeyUp);
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('blur', handleBlur);
     };
   }, []);
 

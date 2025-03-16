@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [issue 605](https://github.com/aza547/wow-recorder/issues/605) - Fix an issue where CTRL + Shift modifiers weren't being releases properly sometimes.
 
 ## [6.9.0] - 2025-03-16
 ### Changed
