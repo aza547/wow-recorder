@@ -628,8 +628,8 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   // TWW S2
   // Don't have exact timers yet so for now have assumed 0.8 and 0.6 multipliers.
   // https://www.wowhead.com/guide/mythic-plus-dungeons/the-war-within-season-2/overview.
-  506: [33 * 60, 26 * 60 + 24, 19 * 60 * 48], // 'Cinderbrew Meadery'
-  504: [33 * 60, 26 * 60 + 24, 19 * 60 * 48], // 'Darkflame Cleft'
+  506: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], // 'Cinderbrew Meadery'
+  504: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], // 'Darkflame Cleft'
   500: [29 * 60, 23 * 60 + 24, 17 * 60 + 48], // 'The Rookery'
   499: [31 * 60, 24 * 60 + 28, 18 * 60 + 48], // 'Priory of the Sacred Flame'
   525: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], // 'Operation: Floodgate'
