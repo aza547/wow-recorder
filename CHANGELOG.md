@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Collapse the search bar dropdown on picking something.
 
 ### Added
-- [Issue 380](https://github.com/aza547/wow-recorder/issues/380) - Add support for the Nvidia AV1 encoder.
+- [Issue 380](https://github.com/aza547/wow-recorder/issues/380) - Add support for the Nvidia and AMD AV1 encoders.
  
 ### Fixed
 - [Issue 608](https://github.com/aza547/wow-recorder/issues/608) - Fix some M+ timers.

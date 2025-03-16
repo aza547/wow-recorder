@@ -517,6 +517,7 @@ export default class Recorder extends EventEmitter {
       case ESupportedEncoders.AMD_AMF_H264:
       case ESupportedEncoders.JIM_NVENC:
       case ESupportedEncoders.JIM_AV1_NVENC:
+      case ESupportedEncoders.AMD_AMF_AV1:
         // These settings are identical for AMD and NVENC encoders.
         Recorder.applySetting('Output', 'Recrate_control', 'CQP');
         Recorder.applySetting('Output', 'Reccqp', cqp);
@@ -1492,8 +1493,11 @@ export default class Recorder extends EventEmitter {
    * Convert the quality setting to an appropriate CQP/CRF value based on encoder type.
    */
   private static getCqpFromQuality(obsQuality: string, encoder: string) {
-    if (encoder === ESupportedEncoders.JIM_AV1_NVENC) {
-      // AV1 NVENC typically needs lower CQP values for similar quality
+    if (
+      encoder === ESupportedEncoders.JIM_AV1_NVENC ||
+      encoder === ESupportedEncoders.AMD_AMF_AV1
+    ) {
+      // AV1 typically needs lower CQP values for similar quality
       switch (obsQuality) {
         case QualityPresets.ULTRA:
           return 20;
