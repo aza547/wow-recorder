@@ -551,23 +551,26 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Return the start time of a video, avoiding the case where the offset is
-   * negative as that's obviously not a valid thing to do.
+   * Compute the best start time to cut from. This avoids any attempt to cut from a
+   * negative number (which is obviously nonsense) and also rounds to the nearest
+   * keyframe, which should be at one second intervals (see "Reckeyint_sec").
+   *
+   * @param src source MP4 file
+   * @param target start time (sec)
+   * @returns keyframe aligned start time
    */
-  private static async getStartTime(src: string, offset: number) {
-    if (offset < 0) {
-      console.warn('[VideoProcessQueue] Rejecting negative start time', offset);
-      offset = 0;
+  private static async getStartTime(src: string, target: number) {
+    console.info('[VideoProcessQueue] Target start time:', target);
+
+    if (target < 0) {
+      console.warn('[VideoProcessQueue] Rejecting negative start time', target);
+      target = 0;
     }
 
     const frames = await VideoProcessQueue.getKeyframeTimes(src);
-    const aligned = keyframeRound(offset, frames);
+    const aligned = keyframeRound(target, frames);
 
-    console.info(
-      '[VideoProcessQueue] Got keyframe aligned start time',
-      aligned,
-    );
-
+    console.info('[VideoProcessQueue] Aligned start time', aligned);
     return aligned;
   }
 
@@ -583,14 +586,16 @@ export default class VideoProcessQueue {
   ): Promise<string> {
     const start = await VideoProcessQueue.getStartTime(srcFile, offset);
 
-    console.info('[VideoProcessQueue] Offset:', offset);
-    console.info('[VideoProcessQueue] Duration:', duration);
+
+    
 
     const outputPath = VideoProcessQueue.getOutputVideoPath(
       srcFile,
       outputDir,
       suffix,
     );
+
+    console.info('[VideoProcessQueue] Duration:', duration);
 
     // It's crucial that we don't re-encode the video here as that
     // would spin the CPU and delay the replay being available.
