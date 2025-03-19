@@ -586,9 +586,6 @@ export default class VideoProcessQueue {
   ): Promise<string> {
     const start = await VideoProcessQueue.getStartTime(srcFile, offset);
 
-
-    
-
     const outputPath = VideoProcessQueue.getOutputVideoPath(
       srcFile,
       outputDir,
