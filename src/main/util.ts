@@ -920,19 +920,15 @@ const takeOwnershipBufferDir = async (dir: string) => {
 };
 
 /**
- * Find the keyframe following an offset into a video.
- * @param video offset in seconds
- * @param frames array of keyframe timestamps
+ * Find the closest keyframe keyframe given a target start time.
+ * @param target target start time
+ * @param arr array of keyframe timestamps
+ * @returns closest keyframe timestamp
  */
-const keyframeRoundUp = (offset: number, frames: number[]) => {
-  for (let i = 1; i < frames.length; i++) {
-    if (frames[i - 1] <= offset && frames[i] >= offset) {
-      return i;
-    }
-  }
-
-  console.error('No keyframe found for combination', offset, frames);
-  throw new Error('No keyframe found');
+const keyframeRound = (target: number, arr: number[]) => {
+  return arr.reduce((prev, curr) =>
+    Math.abs(curr - target) < Math.abs(prev - target) ? curr : prev,
+  );
 };
 
 export {
@@ -973,5 +969,5 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
-  keyframeRoundUp,
+  keyframeRound,
 };

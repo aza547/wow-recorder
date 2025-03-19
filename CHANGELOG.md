@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix an issue where clipping videos could fail when clipping from the start of a video.
+- Fix an issue where videos would not be embedded in Discord.
+- Reduce the time to cut videos by reverting to copying the audio stream, and adding more frequent keyframes.
 
 ## [6.9.1] - 2025-03-16
 ### Fixed

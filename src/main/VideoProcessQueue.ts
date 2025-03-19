@@ -20,10 +20,14 @@ import {
   getMetadataForVideo,
   rendererVideoToMetadata,
   getFileInfo,
+  keyframeRound,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import ffmpeg from 'fluent-ffmpeg';
+import { exec } from 'child_process';
+import util from 'util';
 
+const execPromise = util.promisify(exec);
 const atomicQueue = require('atomic-queue');
 
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
@@ -481,11 +485,12 @@ export default class VideoProcessQueue {
 
     const usagePromise = this.cloudClient.getUsage();
     const limitPromise = this.cloudClient.getStorageLimit();
-    const guildsPromise = this.cloudClient.getUserAffiliations();
+    const affiliationsPromise = this.cloudClient.getUserAffiliations();
 
     const usage = await usagePromise;
     const limit = await limitPromise;
-    const guilds = await guildsPromise;
+    const affiliations = await affiliationsPromise;
+    const guilds = affiliations.map((aff) => aff.guildName);
 
     const status: CloudStatus = {
       usage,
@@ -549,13 +554,21 @@ export default class VideoProcessQueue {
    * Return the start time of a video, avoiding the case where the offset is
    * negative as that's obviously not a valid thing to do.
    */
-  private static getStartTime(offset: number) {
-    if (offset > 0) {
-      return offset;
+  private static async getStartTime(src: string, offset: number) {
+    if (offset < 0) {
+      console.warn('[VideoProcessQueue] Rejecting negative start time', offset);
+      offset = 0;
     }
 
-    console.warn('[VideoProcessQueue] Rejectiving negative start time', offset);
-    return 0;
+    const frames = await VideoProcessQueue.getKeyframeTimes(src);
+    const aligned = keyframeRound(offset, frames);
+
+    console.info(
+      '[VideoProcessQueue] Got keyframe aligned start time',
+      aligned,
+    );
+
+    return aligned;
   }
 
   /**
@@ -568,7 +581,7 @@ export default class VideoProcessQueue {
     offset: number,
     duration: number,
   ): Promise<string> {
-    const start = VideoProcessQueue.getStartTime(offset);
+    const start = await VideoProcessQueue.getStartTime(srcFile, offset);
 
     console.info('[VideoProcessQueue] Offset:', offset);
     console.info('[VideoProcessQueue] Duration:', duration);
@@ -585,14 +598,7 @@ export default class VideoProcessQueue {
       .setStartTime(start)
       .setDuration(duration)
       .withVideoCodec('copy')
-      // Without re-encoding the audio the HTML player gets desynced
-      // on seeking, which is a bit sad. Re-encoding the audio isn't free
-      // but it's cheap enough that we can stomach it here.
-      //
-      // Some testing on my PC with a relatively good CPU is that it took
-      // me 22s to re-encode a 40min M+ run which is about the longest realistically
-      // possible supported activity type.
-      .withAudioCodec('aac')
+      .withAudioCodec('copy')
       .output(outputPath);
 
     console.time('[VideoProcessQueue] Video cut took:');
@@ -653,5 +659,29 @@ export default class VideoProcessQueue {
         .on('progress', onProgress)
         .run();
     });
+  }
+
+  /**
+   * Return an array of timestamps corresponding to the position of the
+   * keyframes in the provided video file.
+   *
+   * @param videoPath the MP4 file to consider
+   */
+  private static async getKeyframeTimes(videoPath: string): Promise<number[]> {
+    const cmd = [
+      `"${ffprobeInstallerPath}"`, // Directly call the ffprobe executable, ffmpeg-fluent doesn't let us pass arguments.
+      '-show_frames', // What it says on the tin.
+      '-select_streams v:0', // Select the video stream.
+      '-skip_frame nokey', // Skip frames without a key.
+      '-show_entries frame=pts_time', // Show the pts_time field only.
+      '-of json', // Output JSON for ease of parsing results.
+      `"${videoPath}"`, // The file we're probing.
+    ];
+
+    const { stdout } = await execPromise(cmd.join(' '));
+
+    return JSON.parse(stdout)
+      .frames.map((f: { pts_time: string }) => f.pts_time)
+      .map(parseFloat);
   }
 }
