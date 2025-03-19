@@ -571,6 +571,14 @@ export default class VideoProcessQueue {
     const aligned = keyframeRound(target, frames);
 
     console.info('[VideoProcessQueue] Aligned start time', aligned);
+
+    if (Math.abs(target - aligned) > 0.5) {
+      // This shouldn't ever happen but it's not bad enough to throw
+      // away the video if it does. We've already logged the interesting
+      // numbers.
+      console.warn('[VideoProcessQueue] Unexpected keyframe adjustment');
+    }
+
     return aligned;
   }
 
