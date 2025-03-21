@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [6.9.2] - 2025-03-21
+### Fixed
 - Fix an issue where clipping videos could fail when clipping from the start of a video.
-- Fix an issue where videos would not be embedded in Discord.
+- Fix an issue where MP4 files were technically not valid (despite still playing), preventing raw video embeds in Discord and flikering playback in VLC.
 - Reduce the time to cut videos by reverting to copying the audio stream, and adding more frequent keyframes.
 - [Issue 661](https://github.com/aza547/wow-recorder/issues/611) - Updates for some M+ timers that changed. 
 
