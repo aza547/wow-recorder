@@ -199,6 +199,15 @@ const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
   };
 };
 
+const getTimestampMarkerConfig = (cfg: ConfigService): TimestampMarkerConfig => {
+  return {
+    timestampMarkerEnabled: cfg.get<boolean>('timestampMarkerEnabled'),
+    timestampMarkerKey: cfg.get<number>('timestampMarkerKey'),
+    timestampMarkerMouseButton: cfg.get<number>('timestampMarkerMouseButton'),
+    timestampMarkerModifiers: cfg.get<string>('timestampMarkerModifiers'),
+  };
+};
+
 const getCloudConfig = (cfg: ConfigService): CloudConfig => {
   return {
     cloudStorage: cfg.get<boolean>('cloudStorage'),
@@ -218,4 +227,5 @@ export {
   getFlavourConfig,
   getOverlayConfig,
   getCloudConfig,
+  getTimestampMarkerConfig,
 };
