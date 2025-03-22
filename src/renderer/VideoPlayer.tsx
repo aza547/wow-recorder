@@ -3,6 +3,7 @@ import {
   DeathMarkers,
   RendererVideo,
   SliderMark,
+  TimestampMarker,
   VideoMarker,
   VideoPlayerSettings,
 } from 'main/types';
@@ -25,6 +26,9 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import MovieIcon from '@mui/icons-material/Movie';
 import ClearIcon from '@mui/icons-material/Clear';
 import DoneIcon from '@mui/icons-material/Done';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { OnProgressProps } from 'react-player/base';
 import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
@@ -118,6 +122,9 @@ export const VideoPlayer = (props: IProps) => {
   const [clipStartValue, setClipStartValue] = useState<number>(0);
   const [clipStopValue, setClipStopValue] = useState<number>(100);
 
+  // For timestamp markers navigation
+  const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(-1);
+
   // This exists to force a re-render on resizing of the window, so that
   // the coloring of the progress slider remains correct across a resize.
   const [, setWidth] = useState<number>(0);
@@ -187,6 +194,27 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
+   * Return a timestamp marker appropriate for the MUI slider component.
+   */
+  const getTimestampMark = (marker: TimestampMarker): SliderMark => {
+    return {
+      value: marker.time,
+      label: (
+        <Tooltip content={`${marker.playerName} - ${new Date(marker.date).toLocaleTimeString()}`}>
+          <BookmarkIcon
+            sx={{
+              p: '1px',
+              height: '13px',
+              width: '13px',
+              color: '#4CAF50',
+            }}
+          />
+        </Tooltip>
+      ),
+    };
+  };
+
+  /**
    * Get the video timeline markers appropriate for the current video and
    * configuration.
    */
@@ -206,6 +234,13 @@ export const VideoPlayer = (props: IProps) => {
     } else if (deathMarkerConfig === DeathMarkers.OWN) {
       getOwnDeathMarkers(videos[0], language)
         .map(getDeathMark)
+        .forEach((m) => marks.push(m));
+    }
+
+    // Add timestamp markers if they exist
+    if (videos[0].timestampMarkers && videos[0].timestampMarkers.length > 0) {
+      videos[0].timestampMarkers
+        .map(getTimestampMark)
         .forEach((m) => marks.push(m));
     }
 
@@ -835,6 +870,46 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
+   * Returns the timestamp marker navigation buttons
+   */
+  const renderTimestampMarkerButtons = () => {
+    const hasMarkers = videos[0].timestampMarkers && videos[0].timestampMarkers.length > 0;
+    const color = hasMarkers ? 'white' : 'rgba(239, 239, 240, 0.25)';
+    const tooltip = hasMarkers
+      ? getLocalePhrase(language, Phrase.TimestampMarkerNavigateTooltip)
+      : getLocalePhrase(language, Phrase.NoTimestampMarkers);
+
+    return (
+      <div className="flex">
+        <Tooltip content={tooltip}>
+          <div>
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={navigateToPrevMarker}
+              disabled={!hasMarkers}
+            >
+              <NavigateBeforeIcon sx={{ color, fontSize: '22px' }} />
+            </Button>
+          </div>
+        </Tooltip>
+        <Tooltip content={tooltip}>
+          <div>
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={navigateToNextMarker}
+              disabled={!hasMarkers}
+            >
+              <NavigateNextIcon sx={{ color, fontSize: '22px' }} />
+            </Button>
+          </div>
+        </Tooltip>
+      </div>
+    );
+  };
+
+  /**
    * Handle a change event from the volume slider.
    */
   const handleVolumeChange = (_event: Event, value: number | number[]) => {
@@ -871,10 +946,59 @@ export const VideoPlayer = (props: IProps) => {
         {renderProgressText()}
         {!clipMode && !isClip(videos[0]) && renderClipButton()}
         {!clipMode && renderPlaybackRateButton()}
+        {!clipMode && renderTimestampMarkerButtons()}
         {!clipMode && renderFullscreenButton()}
         {clipMode && renderClipFinishedButton()}
         {clipMode && renderClipCancelButton()}
       </div>
+    );
+  };
+
+  /**
+   * Navigate to the next timestamp marker
+   */
+  const navigateToNextMarker = () => {
+    if (!videos[0].timestampMarkers || videos[0].timestampMarkers.length === 0) {
+      return;
+    }
+
+    const markers = [...videos[0].timestampMarkers].sort((a, b) => a.time - b.time);
+    let nextIndex = currentMarkerIndex + 1;
+
+    // If we're at the end, loop back to the beginning
+    if (nextIndex >= markers.length) {
+      nextIndex = 0;
+    }
+
+    setCurrentMarkerIndex(nextIndex);
+    const nextMarker = markers[nextIndex];
+
+    players.forEach((player) =>
+      player.current?.seekTo(nextMarker.time, 'seconds'),
+    );
+  };
+
+  /**
+   * Navigate to the previous timestamp marker
+   */
+  const navigateToPrevMarker = () => {
+    if (!videos[0].timestampMarkers || videos[0].timestampMarkers.length === 0) {
+      return;
+    }
+
+    const markers = [...videos[0].timestampMarkers].sort((a, b) => a.time - b.time);
+    let prevIndex = currentMarkerIndex - 1;
+
+    // If we're at the beginning, loop to the end
+    if (prevIndex < 0) {
+      prevIndex = markers.length - 1;
+    }
+
+    setCurrentMarkerIndex(prevIndex);
+    const prevMarker = markers[prevIndex];
+
+    players.forEach((player) =>
+      player.current?.seekTo(prevMarker.time, 'seconds'),
     );
   };
 
@@ -927,6 +1051,15 @@ export const VideoPlayer = (props: IProps) => {
       players.forEach((player) =>
         player.current?.seekTo(current - frame, 'seconds'),
       );
+    }
+
+    // Navigate between timestamp markers with [ and ]
+    if (e.key === '[') {
+      navigateToPrevMarker();
+    }
+
+    if (e.key === ']') {
+      navigateToNextMarker();
     }
   };
 

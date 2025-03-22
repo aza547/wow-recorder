@@ -59,6 +59,7 @@ import {
   getFlavourConfig,
   getOverlayConfig,
   getCloudConfig,
+  getTimestampMarkerConfig,
 } from '../utils/configUtils';
 import { ERecordingState } from './obsEnums';
 import {
@@ -106,6 +107,10 @@ export default class Manager {
   private overlayCfg: ObsOverlayConfig = getOverlayConfig(this.cfg);
 
   private cloudCfg: CloudConfig = getCloudConfig(this.cfg);
+
+  private timestampMarkerCfg: TimestampMarkerConfig = getTimestampMarkerConfig(this.cfg);
+
+  private currentTimestampMarkers: TimestampMarker[] = [];
 
   private retailLogHandler: RetailLogHandler | undefined;
 
@@ -181,6 +186,14 @@ export default class Manager {
       get: (cfg: ConfigService) => getCloudConfig(cfg),
       validate: async (config: CloudConfig) => this.validateCloudConfig(config),
       configure: async (config: CloudConfig) => this.configureCloudClient(config),
+    },
+    {
+      name: 'timestampMarker',
+      valid: false,
+      current: this.timestampMarkerCfg,
+      get: (cfg: ConfigService) => getTimestampMarkerConfig(cfg),
+      validate: async () => {},
+      configure: async (config: TimestampMarkerConfig) => this.configureTimestampMarker(config),
     },
     /* eslint-enable prettier/prettier */
   ];
@@ -516,16 +529,35 @@ export default class Manager {
     );
 
     if (this.retailLogHandler && this.retailLogHandler.activity) {
+      // Save timestamp markers to the activity before ending it
+      if (this.currentTimestampMarkers.length > 0) {
+        this.retailLogHandler.activity.timestampMarkers = [...this.currentTimestampMarkers];
+      }
       await this.retailLogHandler.forceEndActivity();
     } else if (this.classicLogHandler && this.classicLogHandler.activity) {
+      // Save timestamp markers to the activity before ending it
+      if (this.currentTimestampMarkers.length > 0) {
+        this.classicLogHandler.activity.timestampMarkers = [...this.currentTimestampMarkers];
+      }
       await this.classicLogHandler.forceEndActivity();
     } else if (this.eraLogHandler && this.eraLogHandler.activity) {
+      // Save timestamp markers to the activity before ending it
+      if (this.currentTimestampMarkers.length > 0) {
+        this.eraLogHandler.activity.timestampMarkers = [...this.currentTimestampMarkers];
+      }
       await this.eraLogHandler.forceEndActivity();
     } else if (this.retailPtrLogHandler && this.retailPtrLogHandler.activity) {
+      // Save timestamp markers to the activity before ending it
+      if (this.currentTimestampMarkers.length > 0) {
+        this.retailPtrLogHandler.activity.timestampMarkers = [...this.currentTimestampMarkers];
+      }
       await this.retailPtrLogHandler.forceEndActivity();
     } else {
       await this.recorder.stop();
     }
+
+    // Reset the timestamp markers for the next recording
+    this.currentTimestampMarkers = [];
 
     this.recorder.clearFindWindowInterval();
     await this.recorder.removeAudioSources();
@@ -945,6 +977,96 @@ export default class Manager {
       errorMsg += `: ${chatOverlayOwnImagePath}`;
       throw new Error(errorMsg);
     }
+  }
+
+  /**
+   * Configure the timestamp marker hotkey.
+   */
+  private configureTimestampMarker(config: TimestampMarkerConfig) {
+    this.timestampMarkerCfg = config;
+
+    // Set up the timestamp marker hotkey listener
+    if (config.timestampMarkerEnabled) {
+      this.setupTimestampMarkerHotkey();
+    }
+  }
+
+  /**
+   * Set up the timestamp marker hotkey listener.
+   */
+  private setupTimestampMarkerHotkey() {
+    // We'll use keydown for timestamp markers to avoid duplicate markers
+    uIOhook.on('keydown', (e: UiohookKeyboardEvent) => {
+      const convertedEvent = convertUioHookEvent(e);
+
+      if (isTimestampMarkerHotkey(this.timestampMarkerCfg, convertedEvent)) {
+        this.addTimestampMarker();
+      }
+    });
+
+    uIOhook.on('mousedown', (e: UiohookMouseEvent) => {
+      const convertedEvent = convertUioHookEvent(e);
+
+      if (isTimestampMarkerHotkey(this.timestampMarkerCfg, convertedEvent)) {
+        this.addTimestampMarker();
+      }
+    });
+  }
+
+  /**
+   * Add a timestamp marker to the current recording.
+   */
+  private addTimestampMarker() {
+    // Only add markers if we're currently recording
+    if (this.recorder.obsState !== ERecordingState.Recording) {
+      console.info('[Manager] Not adding timestamp marker as not recording');
+      return;
+    }
+
+    // Check if we're in an activity
+    const inActivity =
+      this.retailLogHandler?.activity ||
+      this.classicLogHandler?.activity ||
+      this.eraLogHandler?.activity ||
+      this.retailPtrLogHandler?.activity;
+
+    if (!inActivity) {
+      console.info('[Manager] Not adding timestamp marker as not in an activity');
+      return;
+    }
+
+    // Get the current recording time
+    const recordingStartTime = this.recorder.startDate.getTime();
+    const currentTime = new Date().getTime();
+    const elapsedSeconds = (currentTime - recordingStartTime) / 1000;
+
+    // Get the player name from the active log handler
+    let playerName = 'Unknown';
+
+    if (this.retailLogHandler?.activity) {
+      playerName = this.retailLogHandler.activity.playerName || 'Unknown';
+    } else if (this.classicLogHandler?.activity) {
+      playerName = this.classicLogHandler.activity.playerName || 'Unknown';
+    } else if (this.eraLogHandler?.activity) {
+      playerName = this.eraLogHandler.activity.playerName || 'Unknown';
+    } else if (this.retailPtrLogHandler?.activity) {
+      playerName = this.retailPtrLogHandler.activity.playerName || 'Unknown';
+    }
+
+    // Create the timestamp marker
+    const marker: TimestampMarker = {
+      time: elapsedSeconds,
+      playerName,
+      date: new Date().toISOString(),
+    };
+
+    // Add the marker to the current list
+    this.currentTimestampMarkers.push(marker);
+
+    console.info('[Manager] Added timestamp marker at', elapsedSeconds, 'seconds for', playerName);
+
+    // Notify the user that a marker has been added
+    this.mainWindow.webContents.send('timestampMarkerAdded', marker);
   }
 
   /**
