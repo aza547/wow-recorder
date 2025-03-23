@@ -602,13 +602,18 @@ export default class VideoProcessQueue {
 
     console.info('[VideoProcessQueue] Duration:', duration);
 
-    // It's crucial that we don't re-encode the video here as that
-    // would spin the CPU and delay the replay being available.
     const fn = ffmpeg(srcFile)
       .setStartTime(start)
       .setDuration(duration)
+      // It's crucial that we don't re-encode the video here as that
+      // would spin the CPU and delay the replay being available.
       .withVideoCodec('copy')
-      .withAudioCodec('copy')
+      // We do re-encode the audio despite the above comment, it's
+      // cheap enough we can get away with it and if we don't we get
+      // negative time stamps in the stream which cause audio sync issues
+      // on seeking. Previously there was an "-avoid_negative_ts make_zero"
+      // option here but that caused the video to be extended slightly.
+      .withAudioCodec('aac')
       .output(outputPath);
 
     console.time('[VideoProcessQueue] Video cut took:');

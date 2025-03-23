@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix an issue introduced in 6.8.0 and then again in 6.9.2 where audio could be desynced on video seeking.
 
 ## [6.9.2] - 2025-03-21
 ### Fixed
