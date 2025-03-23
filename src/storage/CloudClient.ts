@@ -187,11 +187,21 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Delete a set of cloud videos, updating the mtime after we're done.
+   * Delete a set of cloud videos. Just make one request at a time, we don't want to overload
+   * the database which I've seen happen in the past when it got gets slammed with several
+   * thousand simultaenous requests. This does mean the deletes won't complete if the user
+   * quits their client before done, but whatever. Could easily be improved in the future with
+   * as a concurrent queue.
    */
   public async bulkDeleteVideos(videos: string[]) {
-    const promises = videos.map((v) => this.deleteVideo(v));
-    await Promise.all(promises);
+    console.info('[CloudClient] Bulk deleting', videos.length, 'videos');
+
+    for (let i = 0; i < videos.length; i++) {
+      console.info('[CloudClient] Bulk deleting', i);
+      await this.deleteVideo(videos[i]);
+    }
+
+    console.info('[CloudClient] Bulk deleting done');
   }
 
   /**
