@@ -919,22 +919,6 @@ const takeOwnershipBufferDir = async (dir: string) => {
   await fs.promises.writeFile(file, content);
 };
 
-/**
- * Find the keyframe following an offset into a video.
- * @param video offset in seconds
- * @param frames array of keyframe timestamps
- */
-const keyframeRoundUp = (offset: number, frames: number[]) => {
-  for (let i = 1; i < frames.length; i++) {
-    if (frames[i - 1] <= offset && frames[i] >= offset) {
-      return i;
-    }
-  }
-
-  console.error('No keyframe found for combination', offset, frames);
-  throw new Error('No keyframe found');
-};
-
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -973,5 +957,4 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
-  keyframeRoundUp,
 };

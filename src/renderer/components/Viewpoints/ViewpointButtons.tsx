@@ -45,12 +45,18 @@ export default function ViewpointButtons(props: IProps) {
       if (event.key === 'Control') setCtrlDown(true);
     };
 
+    const handleBlur = () => {
+      setCtrlDown(false);
+    };
+
     document.addEventListener('keyup', handleKeyUp);
     document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('blur', handleBlur);
 
     return () => {
       document.removeEventListener('keyup', handleKeyUp);
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('blur', handleBlur);
     };
   }, []);
 

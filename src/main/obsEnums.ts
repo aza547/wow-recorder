@@ -114,6 +114,7 @@ export enum ESupportedEncoders {
   JIM_NVENC = 'jim_nvenc',
   OBS_X264 = 'obs_x264',
   JIM_AV1_NVENC = 'jim_av1_nvenc',
+  AMD_AMF_AV1 = 'av1_texture_amf',
 }
 
 export enum QualityPresets {

@@ -500,6 +500,16 @@ export default class Recorder extends EventEmitter {
     Recorder.applySetting('Output', 'RecEncoder', obsRecEncoder);
     Recorder.applySetting('Output', 'RecFormat', 'mp4');
 
+    // Specify a 1 sec interval for the I-frames. This allows us to round to
+    // the nearest second later when cutting and always land on a keyframe.
+    //   - This is part of the strategy to avoid re-encoding the videos while
+    //     enabling a reasonable cutting accuracy.
+    //   - We won't ever be off by more than 0.5 sec with this approach, which
+    //     I think is an acceptable error .
+    //   - Obviously this is a trade off in file size, where the default keyframe
+    //     interval appears to be around 4s.
+    Recorder.applySetting('Output', 'Reckeyint_sec', 1);
+
     // We set the CPQ or CRF value here. Low value is higher quality, and
     // vice versa. The limits on what this can actually be set to I took
     // from what OBS studio allows and is annotated below, but we don't
@@ -517,6 +527,7 @@ export default class Recorder extends EventEmitter {
       case ESupportedEncoders.AMD_AMF_H264:
       case ESupportedEncoders.JIM_NVENC:
       case ESupportedEncoders.JIM_AV1_NVENC:
+      case ESupportedEncoders.AMD_AMF_AV1:
         // These settings are identical for AMD and NVENC encoders.
         Recorder.applySetting('Output', 'Recrate_control', 'CQP');
         Recorder.applySetting('Output', 'Reccqp', cqp);
@@ -1492,8 +1503,11 @@ export default class Recorder extends EventEmitter {
    * Convert the quality setting to an appropriate CQP/CRF value based on encoder type.
    */
   private static getCqpFromQuality(obsQuality: string, encoder: string) {
-    if (encoder === ESupportedEncoders.JIM_AV1_NVENC) {
-      // AV1 NVENC typically needs lower CQP values for similar quality
+    if (
+      encoder === ESupportedEncoders.JIM_AV1_NVENC ||
+      encoder === ESupportedEncoders.AMD_AMF_AV1
+    ) {
+      // AV1 typically needs lower CQP values for similar quality
       switch (obsQuality) {
         case QualityPresets.ULTRA:
           return 20;

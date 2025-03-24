@@ -1,11 +1,6 @@
 import { VideoCategory } from 'types/VideoCategory';
-import { AppState, RendererVideo } from '../main/types';
-import {
-  areDatesWithinSeconds,
-  getVideoCategoryFilter,
-  povDiskFirstNameSort,
-} from './rendererutils';
-import VideoFilter from './VideoFilter';
+import { RendererVideo } from '../main/types';
+import { areDatesWithinSeconds } from './rendererutils';
 
 /**
  * The video state, and utility mutation methods.
@@ -19,10 +14,6 @@ export default class StateManager {
 
   private setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
 
-  private appState: AppState;
-
-  private setAppState: React.Dispatch<React.SetStateAction<AppState>>;
-
   /**
    * This is a singleton which allows us to avoid complications of the useRef hook recreating
    * the class on each render but discarding it if it's already set; that doesn't work nicely
@@ -30,18 +21,12 @@ export default class StateManager {
    */
   public static getInstance(
     setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>,
-    appState: AppState,
-    setAppState: React.Dispatch<React.SetStateAction<AppState>>,
   ) {
     if (StateManager.instance) {
       return StateManager.instance;
     }
 
-    StateManager.instance = new StateManager(
-      setVideoState,
-      appState,
-      setAppState,
-    );
+    StateManager.instance = new StateManager(setVideoState);
 
     return StateManager.instance;
   }
@@ -51,16 +36,8 @@ export default class StateManager {
    */
   constructor(
     setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>,
-    appState: AppState,
-    setAppState: React.Dispatch<React.SetStateAction<AppState>>,
   ) {
     this.setVideoState = setVideoState;
-    this.appState = appState;
-    this.setAppState = setAppState;
-  }
-
-  public updateAppState(appState: AppState) {
-    this.appState = appState;
   }
 
   /**

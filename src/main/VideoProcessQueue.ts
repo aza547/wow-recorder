@@ -25,15 +25,9 @@ import CloudClient from '../storage/CloudClient';
 import ffmpeg from 'fluent-ffmpeg';
 
 const atomicQueue = require('atomic-queue');
-
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
-const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
-
 const ffmpegInstallerPath = fixPathWhenPackaged(ffmpegInstaller.path);
-const ffprobeInstallerPath = fixPathWhenPackaged(ffprobeInstaller.path);
-
 ffmpeg.setFfmpegPath(ffmpegInstallerPath);
-ffmpeg.setFfprobePath(ffprobeInstallerPath);
 
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
@@ -481,11 +475,12 @@ export default class VideoProcessQueue {
 
     const usagePromise = this.cloudClient.getUsage();
     const limitPromise = this.cloudClient.getStorageLimit();
-    const guildsPromise = this.cloudClient.getUserAffiliations();
+    const affiliationsPromise = this.cloudClient.getUserAffiliations();
 
     const usage = await usagePromise;
     const limit = await limitPromise;
-    const guilds = await guildsPromise;
+    const affiliations = await affiliationsPromise;
+    const guilds = affiliations.map((aff) => aff.guildName);
 
     const status: CloudStatus = {
       usage,
@@ -546,20 +541,48 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Return the start time of a video, avoiding the case where the offset is
-   * negative as that's obviously not a valid thing to do.
+   * Compute the best start time to cut from. This avoids any attempt to cut from a
+   * negative number (which is obviously nonsense) and also rounds to the nearest
+   * keyframe, which should be at one second intervals (see "Reckeyint_sec").
+   *
+   * I did experiment with using ffprobe to find the nearest keyframe, but that
+   * had a few downsides:
+   * - It took a while to ffprobe big files, seemed about 1s per minute on my PC.
+   * - AV1 which has loads more keyframes may overflow the stdout limits (1MB).
+   *
+   * So now we just assume there is a keyframe at 1s intervals, which is what
+   * we configured OBS to do. If it does something else, then we might get a
+   * bit of an offset but whatever.
+   *
+   * @param target start time (sec)
+   * @returns keyframe aligned start time
    */
-  private static getStartTime(offset: number) {
-    if (offset > 0) {
-      return offset;
+  private static async getStartTime(target: number) {
+    console.info('[VideoProcessQueue] Target start time:', target);
+
+    if (target < 0) {
+      console.warn('[VideoProcessQueue] Rejecting negative start time', target);
+      target = 0;
     }
 
-    console.warn('[VideoProcessQueue] Rejectiving negative start time', offset);
-    return 0;
+    const rounded = await Math.round(target);
+    console.info('[VideoProcessQueue] Rounded start time', rounded);
+    return rounded;
   }
 
   /**
    * Cut the video to size using ffmpeg.
+   *
+   * It's crucial that we don't re-encode the video here as that
+   * would spin the CPU and delay the replay being available.
+   *
+   * Despite the above, we do re-encode the audio, it's cheap enough
+   * we can get away with it and if we don't we get negative time stamps
+   * in the stream which cause audio sync issues on seeking.
+   *
+   * Previously there was an "-avoid_negative_ts make_zero" option here
+   * which alowed us to avoid the audio re-encoding but that caused the video
+   * to be extended slightly.
    */
   private async cutVideo(
     srcFile: string,
@@ -568,10 +591,7 @@ export default class VideoProcessQueue {
     offset: number,
     duration: number,
   ): Promise<string> {
-    const start = VideoProcessQueue.getStartTime(offset);
-
-    console.info('[VideoProcessQueue] Offset:', offset);
-    console.info('[VideoProcessQueue] Duration:', duration);
+    const start = await VideoProcessQueue.getStartTime(offset);
 
     const outputPath = VideoProcessQueue.getOutputVideoPath(
       srcFile,
@@ -579,19 +599,12 @@ export default class VideoProcessQueue {
       suffix,
     );
 
-    // It's crucial that we don't re-encode the video here as that
-    // would spin the CPU and delay the replay being available.
+    console.info('[VideoProcessQueue] Duration:', duration);
+
     const fn = ffmpeg(srcFile)
       .setStartTime(start)
       .setDuration(duration)
       .withVideoCodec('copy')
-      // Without re-encoding the audio the HTML player gets desynced
-      // on seeking, which is a bit sad. Re-encoding the audio isn't free
-      // but it's cheap enough that we can stomach it here.
-      //
-      // Some testing on my PC with a relatively good CPU is that it took
-      // me 22s to re-encode a 40min M+ run which is about the longest realistically
-      // possible supported activity type.
       .withAudioCodec('aac')
       .output(outputPath);
 
