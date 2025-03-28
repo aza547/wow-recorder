@@ -919,18 +919,6 @@ const takeOwnershipBufferDir = async (dir: string) => {
   await fs.promises.writeFile(file, content);
 };
 
-/**
- * Find the closest keyframe keyframe given a target start time.
- * @param target target start time
- * @param arr array of keyframe timestamps
- * @returns closest keyframe timestamp
- */
-const keyframeRound = (target: number, arr: number[]) => {
-  return arr.reduce((prev, curr) =>
-    Math.abs(curr - target) < Math.abs(prev - target) ? curr : prev,
-  );
-};
-
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -969,5 +957,4 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
-  keyframeRound,
 };

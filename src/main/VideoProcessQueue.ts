@@ -20,24 +20,14 @@ import {
   getMetadataForVideo,
   rendererVideoToMetadata,
   getFileInfo,
-  keyframeRound,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import ffmpeg from 'fluent-ffmpeg';
-import { exec } from 'child_process';
-import util from 'util';
 
-const execPromise = util.promisify(exec);
 const atomicQueue = require('atomic-queue');
-
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
-const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
-
 const ffmpegInstallerPath = fixPathWhenPackaged(ffmpegInstaller.path);
-const ffprobeInstallerPath = fixPathWhenPackaged(ffprobeInstaller.path);
-
 ffmpeg.setFfmpegPath(ffmpegInstallerPath);
-ffmpeg.setFfprobePath(ffprobeInstallerPath);
 
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
@@ -555,11 +545,19 @@ export default class VideoProcessQueue {
    * negative number (which is obviously nonsense) and also rounds to the nearest
    * keyframe, which should be at one second intervals (see "Reckeyint_sec").
    *
-   * @param src source MP4 file
+   * I did experiment with using ffprobe to find the nearest keyframe, but that
+   * had a few downsides:
+   * - It took a while to ffprobe big files, seemed about 1s per minute on my PC.
+   * - AV1 which has loads more keyframes may overflow the stdout limits (1MB).
+   *
+   * So now we just assume there is a keyframe at 1s intervals, which is what
+   * we configured OBS to do. If it does something else, then we might get a
+   * bit of an offset but whatever.
+   *
    * @param target start time (sec)
    * @returns keyframe aligned start time
    */
-  private static async getStartTime(src: string, target: number) {
+  private static async getStartTime(target: number) {
     console.info('[VideoProcessQueue] Target start time:', target);
 
     if (target < 0) {
@@ -567,23 +565,24 @@ export default class VideoProcessQueue {
       target = 0;
     }
 
-    const frames = await VideoProcessQueue.getKeyframeTimes(src);
-    const aligned = keyframeRound(target, frames);
-
-    console.info('[VideoProcessQueue] Aligned start time', aligned);
-
-    if (Math.abs(target - aligned) > 0.5) {
-      // This shouldn't ever happen but it's not bad enough to throw
-      // away the video if it does. We've already logged the interesting
-      // numbers.
-      console.warn('[VideoProcessQueue] Unexpected keyframe adjustment');
-    }
-
-    return aligned;
+    const rounded = await Math.round(target);
+    console.info('[VideoProcessQueue] Rounded start time', rounded);
+    return rounded;
   }
 
   /**
    * Cut the video to size using ffmpeg.
+   *
+   * It's crucial that we don't re-encode the video here as that
+   * would spin the CPU and delay the replay being available.
+   *
+   * Despite the above, we do re-encode the audio, it's cheap enough
+   * we can get away with it and if we don't we get negative time stamps
+   * in the stream which cause audio sync issues on seeking.
+   *
+   * Previously there was an "-avoid_negative_ts make_zero" option here
+   * which alowed us to avoid the audio re-encoding but that caused the video
+   * to be extended slightly.
    */
   private async cutVideo(
     srcFile: string,
@@ -592,7 +591,7 @@ export default class VideoProcessQueue {
     offset: number,
     duration: number,
   ): Promise<string> {
-    const start = await VideoProcessQueue.getStartTime(srcFile, offset);
+    const start = await VideoProcessQueue.getStartTime(offset);
 
     const outputPath = VideoProcessQueue.getOutputVideoPath(
       srcFile,
@@ -602,13 +601,11 @@ export default class VideoProcessQueue {
 
     console.info('[VideoProcessQueue] Duration:', duration);
 
-    // It's crucial that we don't re-encode the video here as that
-    // would spin the CPU and delay the replay being available.
     const fn = ffmpeg(srcFile)
       .setStartTime(start)
       .setDuration(duration)
       .withVideoCodec('copy')
-      .withAudioCodec('copy')
+      .withAudioCodec('aac')
       .output(outputPath);
 
     console.time('[VideoProcessQueue] Video cut took:');
@@ -669,29 +666,5 @@ export default class VideoProcessQueue {
         .on('progress', onProgress)
         .run();
     });
-  }
-
-  /**
-   * Return an array of timestamps corresponding to the position of the
-   * keyframes in the provided video file.
-   *
-   * @param videoPath the MP4 file to consider
-   */
-  private static async getKeyframeTimes(videoPath: string): Promise<number[]> {
-    const cmd = [
-      `"${ffprobeInstallerPath}"`, // Directly call the ffprobe executable, ffmpeg-fluent doesn't let us pass arguments.
-      '-show_frames', // What it says on the tin.
-      '-select_streams v:0', // Select the video stream.
-      '-skip_frame nokey', // Skip frames without a key.
-      '-show_entries frame=pts_time', // Show the pts_time field only.
-      '-of json', // Output JSON for ease of parsing results.
-      `"${videoPath}"`, // The file we're probing.
-    ];
-
-    const { stdout } = await execPromise(cmd.join(' '));
-
-    return JSON.parse(stdout)
-      .frames.map((f: { pts_time: string }) => f.pts_time)
-      .map(parseFloat);
   }
 }
