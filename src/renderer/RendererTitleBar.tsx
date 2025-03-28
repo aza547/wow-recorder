@@ -43,9 +43,9 @@ export default function RendererTitleBar() {
     >
       <img
         src={icon}
-        style={{ width: '20px', height: '20px', marginRight: 2 }}
+        style={{ width: '20px', height: '20px', marginRight: 8 }}
       />
-      <div className="text-popover-foreground font-semibold text-sm">
+      <div className="text-popover-foreground font-semibold text-sm font-sans">
         Warcraft Recorder
       </div>
       <div id="title-bar-btns" className="ml-auto absolute right-0 top-0">
