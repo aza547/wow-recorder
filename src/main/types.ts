@@ -207,6 +207,7 @@ type Metadata = {
   tag?: string;
   delete?: boolean; // signals video should be deleted when possible
   uniqueHash?: string; // used for cloud video grouping
+  timestampMarkers?: TimestampMarker[]; // markers added by users during recording
 };
 
 /**
@@ -264,6 +265,12 @@ type SoloShuffleTimelineSegment = {
   timestamp: number;
   result: boolean;
   duration?: number;
+};
+
+type TimestampMarker = {
+  time: number;
+  playerName: string;
+  date: string;
 };
 
 enum EDeviceType {
@@ -554,6 +561,7 @@ export {
   RendererVideo,
   Flavour,
   SoloShuffleTimelineSegment,
+  TimestampMarker,
   EDeviceType,
   IOBSDevice,
   IDevice,

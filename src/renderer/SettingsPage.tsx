@@ -8,6 +8,7 @@ import FlavourSettings from './FlavourSettings';
 import PVESettings from './PVESettings';
 import PVPSettings from './PVPSettings';
 import CloudSettings from './CloudSettings';
+import TimestampMarkerSettings from './TimestampMarkerSettings';
 import {
   Tabs,
   TabsList,
@@ -141,6 +142,18 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                   recorderStatus={recorderStatus}
                   appState={appState}
                   setAppState={setAppState}
+                />
+              </div>
+              <div>
+                <CategoryHeading>
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.TimestampMarkerLabel,
+                  )}
+                </CategoryHeading>
+                <Separator className="mt-2 mb-4" />
+                <TimestampMarkerSettings
+                  appState={appState}
                 />
               </div>
             </div>

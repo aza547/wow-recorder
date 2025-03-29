@@ -367,6 +367,26 @@ export const configSchema = {
     type: 'string',
     default: '',
   },
+  timestampMarkerEnabled: {
+    description: Phrase.TimestampMarkerEnabledDescription,
+    type: 'boolean',
+    default: true,
+  },
+  timestampMarkerKey: {
+    description: Phrase.TimestampMarkerKeyDescription,
+    type: 'integer',
+    default: -1,
+  },
+  timestampMarkerMouseButton: {
+    description: Phrase.TimestampMarkerMouseButtonDescription,
+    type: 'integer',
+    default: -1,
+  },
+  timestampMarkerModifiers: {
+    description: Phrase.TimestampMarkerModifiersDescription,
+    type: 'string',
+    default: '',
+  },
   obsAudioSuppression: {
     description: Phrase.ObsAudioSuppressionDescription,
     type: 'boolean',
