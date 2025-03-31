@@ -407,11 +407,9 @@ export default abstract class LogHandler extends EventEmitter {
   }
 
   protected handleSpellDamage(line: LogLine) {
-    if (!this.activity) {
-      return;
-    }
-
-    if (this.activity.category !== VideoCategory.Raids) {
+    if (!this.activity || this.activity.category !== VideoCategory.Raids) {
+      // We only care about this event for working out boss HP, which we
+      // only do in raids.
       return;
     }
 

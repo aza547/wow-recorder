@@ -845,8 +845,9 @@ const getVideoResultText = (
 
   if (isRaidUtil(video)) {
     if (result) {
-      return getLocalePhrase(language, Phrase.Kill)
+      return getLocalePhrase(language, Phrase.Kill);
     }
+
     if (bossPercent !== undefined) {
       return `${bossPercent}%`;
     }
