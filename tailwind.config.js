@@ -1,10 +1,12 @@
-/* eslint-disable global-require */
 /** @type {import('tailwindcss').Config} */
 const plugin = require('tailwindcss/plugin');
 const { fontFamily } = require('tailwindcss/defaultTheme');
 
 module.exports = {
-  content: ['./src/renderer/**/*.tsx'],
+  content: [
+    './src/renderer/**/*.tsx',
+    './node_modules/react-tailwindcss-datepicker/dist/index.esm.{js,ts}',
+  ],
   theme: {
     container: {
       center: true,
@@ -117,7 +119,7 @@ module.exports = {
             textShadow: value,
           }),
         },
-        { values: theme('textShadow') }
+        { values: theme('textShadow') },
       );
     }),
   ],

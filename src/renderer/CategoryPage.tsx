@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject, useMemo } from 'react';
+import { MutableRefObject, useMemo, useState } from 'react';
 import { GripHorizontal, Trash } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
-import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
@@ -16,11 +15,21 @@ import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 import DeleteDialog from './DeleteDialog';
 import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
 import VideoFilter from './VideoFilter';
-import { Table } from '@tanstack/react-table';
 import { Resizable, ResizeCallback } from 're-resizable';
 import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer from './VideoPlayer';
-
+import Label from './components/Label/Label';
+import {
+  faStar as faStarOutline,
+  faMessage as faMessageOutline,
+} from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import ViewpointDisplayToggles from './ViewpointDisplayToggles';
+import { Popover, PopoverContent } from './components/Popover/Popover';
+import { PopoverTrigger } from '@radix-ui/react-popover';
+import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
+import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
+import useTable from './components/Tables/TableData';
 interface IProps {
   category: VideoCategory;
   stateManager: MutableRefObject<StateManager>;
@@ -29,7 +38,6 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
-  table: Table<RendererVideo>;
 }
 
 /**
@@ -44,18 +52,22 @@ const CategoryPage = (props: IProps) => {
     setAppState,
     persistentProgress,
     playerHeight,
-    table,
   } = props;
-  const { selectedVideos, videoFilterTags, language } = appState;
+  const { selectedVideos, videoFilterTags, language, dateRangeFilter } =
+    appState;
 
   const [config, setConfig] = useSettings();
+  const [viewpointSelectionOpen, setViewpointSelectionOpen] = useState(true);
 
   const filteredState = useMemo<RendererVideo[]>(() => {
     const queryFilter = (rv: RendererVideo) =>
-      new VideoFilter(videoFilterTags, rv, language).filter();
+      new VideoFilter(videoFilterTags, dateRangeFilter, rv, language).filter();
 
     return categoryState.filter(queryFilter);
-  }, [categoryState, videoFilterTags, language]);
+  }, [categoryState, dateRangeFilter, videoFilterTags, language]);
+
+  // The data backing the video selection table.
+  const table = useTable(filteredState, appState);
 
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
@@ -80,9 +92,8 @@ const CategoryPage = (props: IProps) => {
    * changed category) then just play the first video in the table.
    */
   const getVideoPlayer = () => {
-    const povs = [filteredState[0], ...filteredState[0].multiPov].sort(
-      povDiskFirstNameSort,
-    );
+    const toShow = filteredState[0] ? filteredState[0] : categoryState[0];
+    const povs = [toShow, ...toShow.multiPov].sort(povDiskFirstNameSort);
 
     const videosToPlay =
       selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
@@ -107,6 +118,7 @@ const CategoryPage = (props: IProps) => {
         <VideoPlayer
           key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
           videos={videosToPlay}
+          categoryState={categoryState}
           persistentProgress={persistentProgress}
           config={config}
           appState={appState}
@@ -179,7 +191,9 @@ const CategoryPage = (props: IProps) => {
     const multiPlayerOpts = (
       selectedRow
         ? [selectedRow.original, ...selectedRow.original.multiPov]
-        : [filteredState[0], ...filteredState[0].multiPov]
+        : filteredState[0]
+          ? [filteredState[0], ...filteredState[0].multiPov]
+          : [categoryState[0], ...categoryState[0].multiPov]
     )
       .sort(povDiskFirstNameSort)
       .filter(dedup);
@@ -198,6 +212,14 @@ const CategoryPage = (props: IProps) => {
             opts={multiPlayerOpts}
           />
           {!isClips && (
+            <ViewpointDisplayToggles
+              appState={appState}
+              setAppState={setAppState}
+              allowMultiPlayer={allowMultiPlayer}
+              opts={multiPlayerOpts}
+            />
+          )}
+          {!isClips && (
             <VideoMarkerToggles
               category={category}
               config={config}
@@ -205,46 +227,116 @@ const CategoryPage = (props: IProps) => {
               appState={appState}
             />
           )}
-          <div className="flex-grow">
-            <SearchBar
-              key={category}
-              appState={appState}
-              setAppState={setAppState}
-              filteredState={filteredState}
-            />
+          <div className="flex flex-grow">
+            <div className="flex-grow">
+              <SearchBar
+                key={category}
+                appState={appState}
+                setAppState={setAppState}
+                filteredState={filteredState}
+              />
+            </div>
+            <div className="ml-2">
+              <Label>Date Filter</Label>
+              <Datepicker
+                value={dateRangeFilter}
+                onChange={(v) => {
+                  // This looks a bit verbose, but it seems the react library
+                  // used here will provide the same date object if the range
+                  // is a single day, as well as setting the time to the current
+                  // time. So make sure that we have separate date objects, set
+                  // to midnight and a minute to midnight to cover the full day.
+                  const dateRangeFilter: DateValueType = {
+                    startDate: null,
+                    endDate: null,
+                  };
+
+                  if (v && v.startDate) {
+                    dateRangeFilter.startDate = new Date(v.startDate);
+                    dateRangeFilter.startDate.setHours(0, 0, 0, 0);
+                  }
+                  if (v && v.endDate) {
+                    dateRangeFilter.endDate = new Date(v.endDate);
+                    v.endDate.setHours(23, 59, 59, 999);
+                  }
+
+                  setAppState((prev) => ({
+                    ...prev,
+                    dateRangeFilter,
+                  }));
+                }}
+                separator="to"
+                displayFormat="DD/MM/YY"
+                showShortcuts
+                primaryColor="red"
+                containerClassName="relative tailwind-datepicker" // See App.css for tailwind overrides. This library doesn't expose much.
+                inputClassName="relative transition-all duration-300 h-10 pl-4 pr-14 w-full border border-background bg-card text-foreground placeholder:text-foreground rounded-lg text-sm placeholder:text-sm"
+              />
+            </div>
           </div>
-          <div className="pt-6">
-            <DeleteDialog
-              onDelete={() => bulkDelete(unprot)}
-              tooltipContent={getLocalePhrase(
-                appState.language,
-                Phrase.BulkDeleteButtonTooltip,
-              )}
-              warning={deleteWarning}
-              skipPossible={false}
-              appState={appState}
-            >
-              <Button
-                variant="ghost"
-                size="xs"
-                disabled={viewpoints.length < 1}
-              >
-                <Trash size={20} />
+
+          <div>
+            <Label>Selection</Label>
+            <div className="flex gap-x-2 mr-2">
+              <Button variant="secondary" size="sm" className="h-10">
+                <FontAwesomeIcon icon={faMessageOutline} size="xl" />
               </Button>
-            </DeleteDialog>
+
+              <Button variant="secondary" size="sm" className="h-10">
+                <FontAwesomeIcon icon={faStarOutline} size="xl" />
+              </Button>
+
+              <DeleteDialog
+                onDelete={() => bulkDelete(unprot)}
+                tooltipContent={getLocalePhrase(
+                  appState.language,
+                  Phrase.BulkDeleteButtonTooltip,
+                )}
+                warning={deleteWarning}
+                skipPossible={false}
+                appState={appState}
+              >
+                <Button variant="secondary" size="sm" className="h-10">
+                  <Trash size={20} />
+                </Button>
+              </DeleteDialog>
+            </div>
           </div>
         </div>
-        <div className="w-full h-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-1 py-1 overflow-hidden">
-          <ScrollArea withScrollIndicators={false} className="h-full w-full">
-            <VideoSelectionTable
-              table={table}
+        <div className="w-full h-full overflow-hidden">
+          <VideoSelectionTable
+            table={table}
+            appState={appState}
+            setAppState={setAppState}
+            stateManager={stateManager}
+            persistentProgress={persistentProgress}
+          />
+        </div>
+        <Popover
+          open={viewpointSelectionOpen}
+          onOpenChange={setViewpointSelectionOpen}
+        >
+          <PopoverTrigger
+            asChild
+            className="h-[50px] w-[20px] fixed bottom-[10px] left-[275px]"
+          >
+            <Button variant="secondary" size="sm">
+              {'>'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            onEscapeKeyDown={() => setViewpointSelectionOpen(false)}
+            side="left"
+            className="fixed bottom-[-50px] left-[25px] w-[550px]"
+          >
+            <ViewpointSelection
+              video={selectedRow ? selectedRow.original : filteredState[0]}
               appState={appState}
               setAppState={setAppState}
-              stateManager={stateManager}
               persistentProgress={persistentProgress}
             />
-          </ScrollArea>
-        </div>
+          </PopoverContent>
+        </Popover>
       </>
     );
   };

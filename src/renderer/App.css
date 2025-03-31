@@ -1256,3 +1256,9 @@ input[type='submit'].btn-block {
   color: #00000080;
 }
 
+.tailwind-datepicker > div > div {
+  @apply bg-card;
+}
+.tailwind-datepicker > div * {
+  @apply border-background text-foreground-lighter hover:text-white;
+}

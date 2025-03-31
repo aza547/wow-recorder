@@ -2,13 +2,7 @@ import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
 import { Fragment, MutableRefObject, useEffect, useState } from 'react';
-import ViewpointSelection from 'renderer/components/Viewpoints/ViewpointSelection';
-import ViewpointInfo from 'renderer/components/Viewpoints/ViewpointInfo';
-import ViewpointButtons from 'renderer/components/Viewpoints/ViewpointButtons';
 import StateManager from 'renderer/StateManager';
-import RaidCompAndResult from 'renderer/RaidComp';
-import { VideoCategory } from 'types/VideoCategory';
-import DungeonInfo from 'renderer/DungeonInfo';
 import {
   ArrowDown,
   ArrowUp,
@@ -20,6 +14,7 @@ import {
 import { getSelectedRowIndex, povDiskFirstNameSort } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { ScrollArea } from '../ScrollArea/ScrollArea';
 
 interface IProps {
   table: Table<RendererVideo>;
@@ -31,14 +26,12 @@ interface IProps {
 
 /**
  * Table component for displaying available videos. Includes category appropriate
- * columns for a quick overview, the ability to sort by column, and the option to
- * expand a specific activity for more details and controls.
+ * columns for a quick overview, the ability to sort by column.
  */
 const VideoSelectionTable = (props: IProps) => {
-  const { appState, setAppState, stateManager, persistentProgress, table } =
-    props;
+  const { appState, setAppState, persistentProgress, table } = props;
 
-  const { category, selectedVideos } = appState;
+  const { selectedVideos } = appState;
 
   const [shiftDown, setShiftDown] = useState<boolean>(false);
   const [ctrlDown, setCtrlDown] = useState<boolean>(false);
@@ -111,7 +104,6 @@ const VideoSelectionTable = (props: IProps) => {
 
     const video = row.original;
     const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
-
     persistentProgress.current = 0;
 
     setAppState((prevState) => {
@@ -122,23 +114,6 @@ const VideoSelectionTable = (props: IProps) => {
         playing: false,
       };
     });
-  };
-
-  /**
-   * Select the row and expand it.
-   */
-  const onRowDoubleClick = (
-    event: React.MouseEvent<HTMLTableRowElement>,
-    row: Row<RendererVideo>,
-  ) => {
-    if (ctrlDown || shiftDown) {
-      // Just do a single click. Probably an accident.
-      onRowClick(event, row);
-      return;
-    }
-
-    onRowClick(event, row);
-    row.getToggleExpandedHandler()();
   };
 
   /**
@@ -166,7 +141,7 @@ const VideoSelectionTable = (props: IProps) => {
         key={header.id}
         colSpan={header.colSpan}
         style={{ width: header.column.getSize() }}
-        className="text-left border-t border-b border-video-border"
+        className="text-left"
       >
         <div
           className="flex flex-row p-2 items-center cursor-pointer select-none"
@@ -191,7 +166,7 @@ const VideoSelectionTable = (props: IProps) => {
     const { headers } = groups[0];
 
     return (
-      <thead>
+      <thead className="border-video-border border-b border-t mx-2">
         <tr>{headers.map(renderIndividualHeader)}</tr>
       </thead>
     );
@@ -226,84 +201,8 @@ const VideoSelectionTable = (props: IProps) => {
         key={row.id}
         className={className}
         onClick={(event) => onRowClick(event, row)}
-        onDoubleClick={(event) => onRowDoubleClick(event, row)}
       >
         {cells.map(renderBaseCell)}
-      </tr>
-    );
-  };
-
-  /**
-   * Renders content specific content. Not all content types are equal here.
-   */
-  const renderContentSpecificInfo = (row: Row<RendererVideo>) => {
-    if (category === VideoCategory.Raids) {
-      return (
-        <div className="flex flex-col p-2 items-center justify-center">
-          <RaidCompAndResult video={row.original} />
-        </div>
-      );
-    }
-
-    if (category === VideoCategory.MythicPlus) {
-      return (
-        <div className="flex flex-col p-2 items-center justify-center">
-          <DungeonInfo video={row.original} />
-        </div>
-      );
-    }
-
-    return <></>;
-  };
-
-  /**
-   * Render the expanded row.
-   */
-  const renderExpandedRow = (row: Row<RendererVideo>) => {
-    const cells = row.getVisibleCells();
-    const povs = [row.original, ...row.original.multiPov];
-    const povNames = povs.map((rv) => rv.videoName);
-    const selectedNames = selectedVideos.map((rv) => rv.videoName);
-
-    const selected =
-      selectedVideos.length < 1
-        ? row.index === 0
-        : Boolean(povNames.find((n) => selectedNames.includes(n)));
-
-    const borderClass = selected ? 'border border-t-0' : 'border';
-
-    return (
-      <tr>
-        <td colSpan={cells.length}>
-          <div className={`flex border-secondary ${borderClass}`}>
-            <div className="p-2 flex-shrink-0">
-              <ViewpointSelection
-                video={row.original}
-                appState={appState}
-                setAppState={setAppState}
-                persistentProgress={persistentProgress}
-              />
-            </div>
-            <div className="flex justify-evenly w-full">
-              {renderContentSpecificInfo(row)}
-              <div className="flex flex-col p-2 items-center justify-center">
-                <ViewpointInfo
-                  video={row.original}
-                  appState={appState}
-                  setAppState={setAppState}
-                  persistentProgress={persistentProgress}
-                />
-                <ViewpointButtons
-                  video={row.original}
-                  appState={appState}
-                  setAppState={setAppState}
-                  persistentProgress={persistentProgress}
-                  stateManager={stateManager}
-                />
-              </div>
-            </div>
-          </div>
-        </td>
       </tr>
     );
   };
@@ -321,12 +220,7 @@ const VideoSelectionTable = (props: IProps) => {
         ? row.index === 0
         : Boolean(povNames.find((n) => selectedNames.includes(n)));
 
-    return (
-      <Fragment key={row.id}>
-        {renderBaseRow(row, selected)}
-        {row.getIsExpanded() && renderExpandedRow(row)}
-      </Fragment>
-    );
+    return <Fragment key={row.id}>{renderBaseRow(row, selected)}</Fragment>;
   };
 
   /**
@@ -391,22 +285,17 @@ const VideoSelectionTable = (props: IProps) => {
     );
   };
 
-  /**
-   * Render the whole component.
-   */
-  const renderTable = () => {
-    return (
-      <div className="w-full flex-col justify-evenly border-video-border items-center gap-x-5 p-2">
+  return (
+    <div className="w-full h-full py-2 px-4 overflow-hidden">
+      <ScrollArea withScrollIndicators={false} className="h-full w-full">
         <table className="table-fixed w-full">
           {renderTableHeader()}
           {renderTableBody()}
         </table>
         {renderPagnationButtons()}
-      </div>
-    );
-  };
-
-  return renderTable();
+      </ScrollArea>
+    </div>
+  );
 };
 
 export default VideoSelectionTable;

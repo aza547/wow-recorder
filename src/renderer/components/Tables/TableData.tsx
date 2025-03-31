@@ -85,13 +85,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const raidColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 50,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
-      },
-      {
         id: 'Encounter',
         accessorKey: 'encounterName',
         header: () => EncounterHeader(language),
@@ -140,13 +133,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language, videoState],
   );
@@ -159,7 +145,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
     () => [
       {
         id: 'Select',
-        size: 50,
+        size: 30,
         header: SelectHeader,
         cell: populateSelectCell,
         enableSorting: false,
@@ -220,7 +206,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
     () => [
       {
         id: 'Select',
-        size: 50,
+        size: 30,
         header: SelectHeader,
         cell: populateSelectCell,
         enableSorting: false,
@@ -289,7 +275,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
     () => [
       {
         id: 'Select',
-        size: 50,
+        size: 30,
         header: SelectHeader,
         cell: populateSelectCell,
         enableSorting: false,
@@ -350,7 +336,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
     () => [
       {
         id: 'Select',
-        size: 50,
+        size: 30,
         header: SelectHeader,
         cell: populateSelectCell,
         enableSorting: false,

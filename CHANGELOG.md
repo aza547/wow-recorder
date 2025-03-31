@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 - Add the name "Warcraft Recorder" and app icon to the title bar.
+- Upgrade obs-studio-node to 0.25.17 (and OBS to 30.2.4). 
 
 ### Added
 ### Fixed

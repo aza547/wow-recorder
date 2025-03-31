@@ -199,7 +199,7 @@ const ENGLISH: Translations = {
   [Phrase.TableHeaderMap]: 'Map',
   [Phrase.TableHeaderType]: 'Type',
   [Phrase.TableHeaderTag]: 'Tag',
-  [Phrase.SearchLabel]: 'Search',
+  [Phrase.SearchLabel]: 'Search Filter',
   [Phrase.SearchSuggestionMythicPlus]: 'Try: timed temple yesterday +18 priest bookmarked fortified',
   [Phrase.SearchSuggestionRaid]: 'Try: kill today retail mythic destruction bookmarked',
   [Phrase.SearchSuggestionBattlegrounds]: 'Try: warsong gulch bookmarked',

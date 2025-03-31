@@ -12,22 +12,20 @@ const ToggleGroupContext = React.createContext<
   variant: 'default',
 });
 
-const toggleGroupVariants = cva(
-  'flex items-center justify-center rounded-md bg-card',
-  {
-    variants: {
-      variant: {
-        default: '',
-        outline: 'border border-popover-border',
-      },
-      size: {
-        sm: 'h-9',
-        lg: 'h-11',
-        xs: 'h-6',
-      },
+const toggleGroupVariants = cva('flex items-center justify-center rounded-md', {
+  variants: {
+    variant: {
+      default: 'bg-card',
+      ghost: '',
+      outline: 'border border-popover-border bg-card',
+    },
+    size: {
+      sm: 'h-9',
+      lg: 'h-11',
+      xs: 'h-6',
     },
   },
-);
+});
 
 const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,

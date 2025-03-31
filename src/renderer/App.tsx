@@ -23,8 +23,6 @@ import StateManager from './StateManager';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
 import SideMenu from './SideMenu';
-import useTable from './components/Tables/TableData';
-import VideoFilter from './VideoFilter';
 import { useToast } from './components/Toast/useToast';
 import { Button } from './components/Button/Button';
 
@@ -57,6 +55,12 @@ const WarcraftRecorder = () => {
 
     // Any text applied in the filter bar gets translated into a filter here.
     videoFilterTags: [],
+
+    // Date range filter.
+    dateRangeFilter: {
+      startDate: null,
+      endDate: null,
+    },
 
     // We use this to conditionally hide the recording preview.
     videoFullScreen: false,
@@ -92,17 +96,6 @@ const WarcraftRecorder = () => {
     const categoryFilter = getVideoCategoryFilter(appState.category);
     return videoState.filter(categoryFilter);
   }, [videoState, appState.category]);
-
-  // The filtered state, recalculated only when required.
-  const filteredState = useMemo<RendererVideo[]>(() => {
-    const queryFilter = (rv: RendererVideo) =>
-      new VideoFilter(appState.videoFilterTags, rv, appState.language).filter();
-
-    return categoryState.filter(queryFilter);
-  }, [categoryState, appState.videoFilterTags, appState.language]);
-
-  // The data backing the video selection table.
-  const table = useTable(filteredState, appState);
 
   const doRefresh = async () => {
     ipc.sendMessage('refreshFrontend', []);
@@ -258,7 +251,6 @@ const WarcraftRecorder = () => {
             playerHeight={playerHeight}
             config={config}
             setConfig={setConfig}
-            table={table}
           />
         </div>
       </TooltipProvider>

@@ -44,9 +44,20 @@ import {
 } from './rendererutils';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { CloudDownload, CloudUpload, FolderOpen, Link } from 'lucide-react';
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from './components/ToggleGroup/ToggleGroup';
+import CloudIcon from '@mui/icons-material/Cloud';
+import SaveIcon from '@mui/icons-material/Save';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import Separator from './components/Separator/Separator';
+import { toast } from './components/Toast/useToast';
 
 interface IProps {
   videos: RendererVideo[];
+  categoryState: RendererVideo[];
   persistentProgress: MutableRefObject<number>;
   config: ConfigurationSchema;
   appState: AppState;
@@ -82,8 +93,16 @@ const sliderBaseSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const { videos, persistentProgress, config, appState, setAppState } = props;
-  const { playing, multiPlayerMode, language } = appState;
+  const {
+    videos,
+    persistentProgress,
+    config,
+    appState,
+    setAppState,
+    categoryState,
+  } = props;
+
+  const { playing, multiPlayerMode, language, selectedVideos } = appState;
 
   if (videos.length < 1 || videos.length > 4) {
     // Protect against stupid programmer errors.
@@ -130,7 +149,8 @@ export const VideoPlayer = (props: IProps) => {
   // different POVs of the same activity we want to play from the same
   // point.
   const timestamp = `#t=${persistentProgress.current}`;
-  const clippable = !multiPlayerMode && !videos[0].cloud;
+  const local = !videos[0].cloud;
+  const clippable = !multiPlayerMode && local;
 
   // Deliberatly don't update the source when the timestamp changes. That's
   // just the initial playhead position. We only care to change sources when
@@ -758,6 +778,255 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
+   * Message the backend to download a video.
+   */
+  const downloadVideo = async () => {
+    if (!cloudVideo) return;
+    ipc.sendMessage('videoButton', ['download', cloudVideo]);
+  };
+
+  /**
+   * Message the backend to upload a video.
+   */
+  const uploadVideo = async () => {
+    if (!diskVideo) return;
+    ipc.sendMessage('videoButton', ['upload', diskVideo.videoSource]);
+  };
+
+  /**
+   * Render the download button.
+   */
+  const renderDownloadButton = () => {
+    return (
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.DownloadButtonTooltip)}
+      >
+        <ToggleGroupItem value="cloud" onClick={downloadVideo}>
+          <CloudDownload size={20} />
+        </ToggleGroupItem>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Render the upload button.
+   */
+  const renderUploadButton = () => {
+    return (
+      <Tooltip content={getLocalePhrase(language, Phrase.UploadButtonTooltip)}>
+        <ToggleGroupItem value="cloud" onClick={uploadVideo}>
+          <CloudUpload size={20} />
+        </ToggleGroupItem>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Return the no cloud icon.
+   */
+  const getNoCloudIcon = () => {
+    return (
+      <ToggleGroupItem value="cloud-off" className="h-[20px] w-[20px]" disabled>
+        <CloudOffIcon />
+      </ToggleGroupItem>
+    );
+  };
+
+  const n = videos[0].videoName;
+  const nameMatches = categoryState
+    .filter((v) => v.videoName === n)
+    .flatMap((v) => [v, ...v.multiPov]);
+
+  const cloudVideo = nameMatches.find((v) => v.cloud);
+  const diskVideo = nameMatches.find((v) => !v.cloud);
+
+  console.log('Cloud', cloudVideo);
+  console.log('Distk', diskVideo);
+
+  const cloudUpload = true;
+
+  /**
+   * Set the selected videos.
+   */
+  const setSelectedVideos = (v: RendererVideo | undefined) => {
+    if (!v) {
+      return;
+    }
+
+    const sameActivity = selectedVideos[0]?.uniqueHash === v.uniqueHash;
+
+    if (!sameActivity) {
+      persistentProgress.current = 0;
+    }
+
+    setAppState((prevState) => {
+      const playing = sameActivity ? prevState.playing : false;
+
+      return {
+        ...prevState,
+        selectedVideos: [v],
+        multiPlayerMode: false,
+        playing,
+      };
+    });
+  };
+
+  /**
+   * Return the cloud icon.
+   */
+  const getCloudIcon = () => {
+    const isSelected = cloudVideo?.uniqueId === videos[0].uniqueId;
+    const color = cloudVideo ? 'white' : 'gray';
+    const opacity = isSelected ? 1 : 0.3;
+
+    if (!cloudVideo && !cloudUpload) {
+      return getNoCloudIcon();
+    }
+
+    if (!cloudVideo && cloudUpload) {
+      return renderUploadButton();
+    }
+
+    return (
+      <Tooltip content={getLocalePhrase(language, Phrase.CloudButtonTooltip)}>
+        <ToggleGroupItem
+          value="cloud"
+          disabled={!cloudVideo}
+          onClick={() => setSelectedVideos(cloudVideo)}
+          className="h-[20px] w-[20px]"
+        >
+          <CloudIcon
+            sx={{
+              height: '20px',
+              width: '20px',
+              color,
+              opacity,
+            }}
+          />
+        </ToggleGroupItem>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Return the disk icon.
+   */
+  const getDiskIcon = () => {
+    const isSelected = diskVideo?.uniqueId === videos[0].uniqueId;
+    const color = diskVideo ? 'white' : 'gray';
+    const opacity = isSelected ? 1 : 0.3;
+
+    if (!diskVideo && cloudVideo && cloudUpload) {
+      return renderDownloadButton();
+    }
+
+    return (
+      <Tooltip content={getLocalePhrase(language, Phrase.DiskButtonTooltip)}>
+        <ToggleGroupItem
+          value="disk"
+          disabled={!diskVideo}
+          onClick={() => setSelectedVideos(diskVideo)}
+          className="h-[20px] w-[20px]"
+        >
+          <SaveIcon sx={{ height: '20px', width: '20px', color, opacity }} />
+        </ToggleGroupItem>
+      </Tooltip>
+    );
+  };
+
+  const renderVideoSourceToggle = () => {
+    return (
+      <ToggleGroup
+        type="single"
+        className="flex flex-row items-center gap-x-3 px-2"
+        size="xs"
+        variant="ghost"
+      >
+        {getCloudIcon()}
+        {diskVideo && getDiskIcon()}
+        {!diskVideo && renderDownloadButton()}
+      </ToggleGroup>
+    );
+  };
+
+  /**
+   *
+   */
+  const openLocation = (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+    if (!diskVideo) return;
+
+    window.electron.ipcRenderer.sendMessage('videoButton', [
+      'open',
+      diskVideo.videoSource,
+      false,
+    ]);
+  };
+
+  /**
+   *
+   */
+  const renderOpenFolderButton = () => {
+    return (
+      <Tooltip content="Open Folder">
+        <div>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={openLocation}
+            disabled={!clippable}
+          >
+            <FolderOpen size={20} color="white" />
+          </Button>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const getShareableLink = async (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+    if (!cloudVideo) return;
+
+    try {
+      await ipc.invoke('getShareableLink', [cloudVideo.videoName]);
+      toast({
+        title: getLocalePhrase(appState.language, Phrase.ShareableLinkTitle),
+        description: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkText,
+        ),
+        duration: 5000,
+      });
+    } catch {
+      toast({
+        title: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkFailedTitle,
+        ),
+        description: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkFailedText,
+        ),
+        variant: 'destructive',
+        duration: 5000,
+      });
+    }
+  };
+
+  const renderGetLinkButton = () => {
+    return (
+      <Tooltip content="Generate link">
+        <div>
+          <Button variant="ghost" size="xs" onClick={getShareableLink}>
+            <Link size={20} color="white" />
+          </Button>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  /**
    * Returns the playback rate button for the video controls.
    */
   const renderClipButton = () => {
@@ -869,7 +1138,19 @@ export const VideoPlayer = (props: IProps) => {
         {renderVolumeSlider()}
         {renderProgressSlider()}
         {renderProgressText()}
+        {!multiPlayerMode && !clipMode && (
+          <Separator className="mx-2" orientation="vertical" />
+        )}
+        {!multiPlayerMode && !clipMode && renderVideoSourceToggle()}
+        {!multiPlayerMode && !clipMode && (
+          <Separator className="mx-2" orientation="vertical" />
+        )}
+        {!multiPlayerMode && !clipMode && local && renderOpenFolderButton()}
+        {!multiPlayerMode && !clipMode && !local && renderGetLinkButton()}
         {!clipMode && !isClip(videos[0]) && renderClipButton()}
+        {!multiPlayerMode && !clipMode && (
+          <Separator className="mx-2" orientation="vertical" />
+        )}
         {!clipMode && renderPlaybackRateButton()}
         {!clipMode && renderFullscreenButton()}
         {clipMode && renderClipFinishedButton()}
