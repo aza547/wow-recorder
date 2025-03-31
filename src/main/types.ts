@@ -207,6 +207,7 @@ type Metadata = {
   tag?: string;
   delete?: boolean; // signals video should be deleted when possible
   uniqueHash?: string; // used for cloud video grouping
+  bossPercent?: number;
 };
 
 /**

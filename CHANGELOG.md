@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add the name "Warcraft Recorder" and app icon to the title bar.
 
 ### Added
+- Show boss percentages on wipes.
+
 ### Fixed
 - Bump packages, including electron, it pick up latest tzadata.
 

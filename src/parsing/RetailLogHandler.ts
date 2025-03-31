@@ -26,6 +26,7 @@ import { Flavour } from '../main/types';
 import SoloShuffle from '../activitys/SoloShuffle';
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
+import RaidEncounter from 'activitys/RaidEncounter';
 
 /**
  * RetailLogHandler class.
@@ -72,6 +73,9 @@ export default class RetailLogHandler extends LogHandler {
       })
       .on('SPELL_CAST_SUCCESS', async (line: LogLine) => {
         this.handleSpellCastSuccess(line);
+      })
+      .on('SPELL_DAMAGE', async (line: LogLine) => {
+        this.handleSpellDamage(line);
       });
   }
 
