@@ -253,9 +253,6 @@ const loadVideoDetailsDisk = async (
 ): Promise<RendererVideo> => {
   try {
     const metadata = await getMetadataForVideo(video.name);
-
-    console.log(metadata);
-
     const videoName = path.basename(video.name, '.mp4');
     const uniqueId = `${videoName}-disk`;
 
