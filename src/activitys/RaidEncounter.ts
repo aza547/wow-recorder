@@ -130,7 +130,6 @@ export default class RaidEncounter extends Activity {
     );
 
     const bossPercent = Math.round((100 * this.currentHp) / this.maxHp);
-    console.log('calculated with', this.currentHp, this.maxHp, bossPercent);
 
     return {
       category: VideoCategory.Raids,
