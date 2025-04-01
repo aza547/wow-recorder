@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useMemo, useState } from 'react';
-import { GripHorizontal, Trash } from 'lucide-react';
+import { Eye, GripHorizontal, Trash } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
@@ -24,12 +24,12 @@ import {
   faMessage as faMessageOutline,
 } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import ViewpointDisplayToggles from './ViewpointDisplayToggles';
 import { Popover, PopoverContent } from './components/Popover/Popover';
 import { PopoverTrigger } from '@radix-ui/react-popover';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
 import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
 import useTable from './components/Tables/TableData';
+import { Tooltip } from './components/Tooltip/Tooltip';
 interface IProps {
   category: VideoCategory;
   stateManager: MutableRefObject<StateManager>;
@@ -212,14 +212,6 @@ const CategoryPage = (props: IProps) => {
             opts={multiPlayerOpts}
           />
           {!isClips && (
-            <ViewpointDisplayToggles
-              appState={appState}
-              setAppState={setAppState}
-              allowMultiPlayer={allowMultiPlayer}
-              opts={multiPlayerOpts}
-            />
-          )}
-          {!isClips && (
             <VideoMarkerToggles
               category={category}
               config={config}
@@ -312,31 +304,34 @@ const CategoryPage = (props: IProps) => {
             persistentProgress={persistentProgress}
           />
         </div>
-        <Popover
-          open={viewpointSelectionOpen}
-          onOpenChange={setViewpointSelectionOpen}
-        >
-          <PopoverTrigger
-            asChild
-            className="h-[50px] w-[20px] fixed bottom-[10px] left-[275px]"
+        <div className="relative">
+          <Popover
+            open={viewpointSelectionOpen}
+            onOpenChange={setViewpointSelectionOpen}
           >
-            <Button variant="secondary" size="sm">
-              {'>'}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            onEscapeKeyDown={() => setViewpointSelectionOpen(false)}
-            side="left"
-            className="fixed bottom-[-50px] left-[25px] w-[550px]"
-          >
-            <ViewpointSelection
-              video={selectedRow ? selectedRow.original : filteredState[0]}
-              appState={appState}
-              setAppState={setAppState}
-              persistentProgress={persistentProgress}
-            />
-          </PopoverContent>
-        </Popover>
+            <PopoverTrigger asChild className="absolute bottom-[25px] left-0">
+              <Button
+                variant="secondary"
+                size="xs"
+                className="h-20 rounded-l-none flex justify-start"
+              >
+                <Eye size={15} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              onEscapeKeyDown={() => setViewpointSelectionOpen(false)}
+              side="left"
+              className="absolute bottom-[-50px] left-[25px] w-[550px]"
+            >
+              <ViewpointSelection
+                video={selectedRow ? selectedRow.original : filteredState[0]}
+                appState={appState}
+                setAppState={setAppState}
+                persistentProgress={persistentProgress}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </>
     );
   };

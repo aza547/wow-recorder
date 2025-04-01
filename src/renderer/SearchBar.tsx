@@ -13,7 +13,7 @@ import {
   ReactTagsAPI,
 } from 'react-tag-autocomplete';
 import { Box } from '@mui/material';
-import { ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import { Search, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import React from 'react';
 import ShieldIcon from '@mui/icons-material/Shield';
 import CloudIcon from '@mui/icons-material/Cloud';
@@ -298,12 +298,15 @@ const SearchBar = (props: IProps) => {
     };
 
     return (
-      <input
-        className={classNames.input}
-        style={{ width: inputWidth }}
-        {...inputProps}
-        onKeyDown={onKeyDown}
-      />
+      <div className="flex items-center mx-3">
+        <Search size={15} />
+        <input
+          className={classNames.input}
+          style={{ width: inputWidth }}
+          {...inputProps}
+          onKeyDown={onKeyDown}
+        />
+      </div>
     );
   };
 
@@ -318,7 +321,7 @@ const SearchBar = (props: IProps) => {
     tag: 'h-8 p-1 px-2 mx-1 rounded-md text-white text-sm',
     tagName: 'react-tags__tag-name',
     comboBox: 'react-tags__combobox',
-    input: 'react-tags__combobox-input mx-2',
+    input: 'react-tags__combobox-input mx-2 placeholder:text-foreground',
     listBox: 'react-tags__listbox  bg-card rounded-md border border-background',
     option: 'react-tags__listbox-option',
     optionIsActive: 'is-active',

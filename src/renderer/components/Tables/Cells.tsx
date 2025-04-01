@@ -20,19 +20,9 @@ import { Box, Checkbox } from '@mui/material';
 import { specImages } from 'renderer/images';
 import { Language, Phrase } from 'localisation/types';
 import { Button } from '../Button/Button';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faAngleDoubleDown,
-  faAngleDoubleUp,
-  faMessage,
-  faStar,
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  faStar as faStarOutline,
-  faMessage as faMessageOutline,
-} from '@fortawesome/free-regular-svg-icons';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
+import { LockKeyhole, LockOpen } from 'lucide-react';
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -98,92 +88,33 @@ export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
   language: Language,
 ) => {
-  const { row } = ctx;
   const video = ctx.getValue() as RendererVideo;
-
-  const renderExpandButton = () => {
-    const tooltip = row.getIsExpanded()
-      ? getLocalePhrase(language, Phrase.ClickToCollapse)
-      : getLocalePhrase(language, Phrase.ClickToExpand);
-
-    const icon = row.getIsExpanded() ? faAngleDoubleUp : faAngleDoubleDown;
-
-    return (
-      <Tooltip content={tooltip}>
-        <Button
-          className="cursor-pointer"
-          size="sm"
-          variant="ghost"
-          onClick={(e) => {
-            row.getToggleExpandedHandler()();
-            stopPropagation(e);
-          }}
-        >
-          <FontAwesomeIcon icon={icon} />
-        </Button>
-      </Tooltip>
-    );
-  };
-
-  const renderTagIcon = () => {
-    // Search for the tag in the video but also in any linked videos, we're
-    // going to display either at the top of the table.
-    const tags = [video, ...video.multiPov].map((v) => v.tag).filter((t) => t);
-
-    const icon = tags.length > 0 ? faMessage : faMessageOutline;
-    let tooltip = getLocalePhrase(language, Phrase.NoneTagged);
-
-    if (tags.length > 1) {
-      tooltip = getLocalePhrase(language, Phrase.MultipleTagged);
-    } else if (tags.length > 0 && typeof tags[0] === 'string') {
-      tooltip = tags[0];
-    }
-
-    return (
-      <Tooltip content={tooltip}>
-        <Box
-          className="flex items-center text-card-foreground px-3"
-          onClick={(e) => {
-            stopPropagation(e);
-          }}
-        >
-          <FontAwesomeIcon icon={icon} size="sm" />
-        </Box>
-      </Tooltip>
-    );
-  };
 
   const renderStarIcon = () => {
     const starred = [video, ...video.multiPov]
       .map((v) => v.isProtected)
       .find((p) => p);
 
-    const icon = starred ? faStar : faStarOutline;
+    const icon = starred ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
     const tooltip = starred
       ? getLocalePhrase(language, Phrase.SomeStarred)
       : getLocalePhrase(language, Phrase.NoneStarred);
 
+    const toggleProtected = () => {
+      // TODO
+      console.log('Toggle protected', starred);
+    };
+
     return (
       <Tooltip content={tooltip}>
-        <Box
-          className="flex items-center text-card-foreground pr-3"
-          onClick={(e) => {
-            stopPropagation(e);
-          }}
-        >
-          <FontAwesomeIcon icon={icon} size="sm" />
-        </Box>
+        <Button variant="ghost" size="xs" onClick={toggleProtected}>
+          {icon}
+        </Button>
       </Tooltip>
     );
   };
 
-  return (
-    <Box className="inline-flex">
-      {renderStarIcon()}
-      {renderTagIcon()}
-      {renderExpandButton()}
-    </Box>
-  );
+  return <Box className="inline-flex">{renderStarIcon()}</Box>;
 };
 
 export const populateLevelCell = (

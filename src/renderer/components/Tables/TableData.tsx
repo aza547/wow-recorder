@@ -85,6 +85,13 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const raidColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language),
+      },
+      {
         id: 'Encounter',
         accessorKey: 'encounterName',
         header: () => EncounterHeader(language),
@@ -144,11 +151,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const arenaColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 30,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language),
       },
       {
         id: 'Map',
@@ -187,13 +194,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language],
   );
@@ -205,11 +205,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const dungeonColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 30,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language),
       },
       {
         id: 'Map',
@@ -256,13 +256,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language],
   );
@@ -274,11 +267,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const battlegroundColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 30,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language),
       },
       {
         id: 'Map',
@@ -317,13 +310,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language],
   );
@@ -335,11 +321,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const clipsColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 30,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language),
       },
       {
         id: 'Type',
@@ -379,13 +365,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         header: () => ViewpointsHeader(language),
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
-      },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
       },
     ],
     [language],

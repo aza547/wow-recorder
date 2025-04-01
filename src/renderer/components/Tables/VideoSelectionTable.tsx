@@ -81,14 +81,17 @@ const VideoSelectionTable = (props: IProps) => {
     event: React.MouseEvent<HTMLTableRowElement>,
     row: Row<RendererVideo>,
   ) => {
+    const allRows = table.getRowModel().rows;
+    const selectedRows = table.getSelectedRowModel().rows;
+    const isSelected = selectedRows.map((r) => r.index).includes(row.index);
+
     if (shiftDown) {
-      const { rows } = table.getRowModel();
       const base = getSelectedRowIndex(selectedVideos, table);
       const target = row.index;
       const start = Math.min(base, target);
       const end = Math.max(base, target) + 1;
 
-      rows.slice(start, end).forEach((r) => {
+      allRows.slice(start, end).forEach((r) => {
         if (!r.getIsSelected()) {
           r.getToggleSelectedHandler()(event);
         }
@@ -105,6 +108,18 @@ const VideoSelectionTable = (props: IProps) => {
     const video = row.original;
     const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
     persistentProgress.current = 0;
+
+    // It's a regular click, so unselect any other selected rows.
+    selectedRows.forEach((r) => {
+      if (r.index !== row.index) {
+        r.getToggleSelectedHandler()(event);
+      }
+    });
+
+    // Make sure the clicked row is selected after we're done.
+    if (!isSelected) {
+      row.getToggleSelectedHandler()(event);
+    }
 
     setAppState((prevState) => {
       return {
@@ -211,15 +226,7 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>) => {
-    const povs = [row.original, ...row.original.multiPov];
-    const povNames = povs.map((rv) => rv.videoName);
-    const selectedNames = selectedVideos.map((rv) => rv.videoName);
-
-    const selected =
-      selectedVideos.length < 1
-        ? row.index === 0
-        : Boolean(povNames.find((n) => selectedNames.includes(n)));
-
+    const selected = row.getIsSelected();
     return <Fragment key={row.id}>{renderBaseRow(row, selected)}</Fragment>;
   };
 
@@ -286,13 +293,15 @@ const VideoSelectionTable = (props: IProps) => {
   };
 
   return (
-    <div className="w-full h-full py-2 px-4 overflow-hidden">
+    <div className="w-full h-full overflow-hidden px-2">
       <ScrollArea withScrollIndicators={false} className="h-full w-full">
-        <table className="table-fixed w-full">
-          {renderTableHeader()}
-          {renderTableBody()}
-        </table>
-        {renderPagnationButtons()}
+        <div className="py-2 px-4">
+          <table className="table-fixed w-full">
+            {renderTableHeader()}
+            {renderTableBody()}
+          </table>
+          {renderPagnationButtons()}
+        </div>
       </ScrollArea>
     </div>
   );
