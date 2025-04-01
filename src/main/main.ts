@@ -30,13 +30,14 @@ import AppUpdater from './AppUpdater';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
+const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+const tzOffset = new Date().getTimezoneOffset();
+const tzOffsetStr = `UTC${tzOffset >= 0 ? '+' : ''}${tzOffset / 60}`;
 
 console.info('[Main] App starting, version:', appVersion);
+console.info('[Main] Node version', process.versions.node);
 console.info('[Main] On OS:', os.platform(), os.release());
-console.info(
-  '[Main] In timezone:',
-  Intl.DateTimeFormat().resolvedOptions().timeZone,
-);
+console.info('[Main] In timezone:', tz, tzOffsetStr);
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;

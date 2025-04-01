@@ -1,5 +1,6 @@
 import { ComponentProps } from 'react';
 import { cn } from './components/utils';
+import icon from '../../assets/icon.png';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -38,8 +39,15 @@ export default function RendererTitleBar() {
   return (
     <div
       id="title-bar"
-      className="w-full h-[32px] bg-transparent flex items-center px-2 pr-0 absolute top-0 left-0"
+      className="w-full h-[32px] bg-transparent flex items-center justify-center px-2 pr-0 absolute top-0 left-0"
     >
+      <img
+        src={icon}
+        style={{ width: '20px', height: '20px', marginRight: 8 }}
+      />
+      <div className="text-popover-foreground font-semibold text-sm font-sans">
+        Warcraft Recorder
+      </div>
       <div id="title-bar-btns" className="ml-auto absolute right-0 top-0">
         <TitleBarButton id="min-btn" onClick={clickedHide}>
           🗕

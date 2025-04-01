@@ -6,7 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Add the name "Warcraft Recorder" and app icon to the title bar.
+
 ### Added
+### Fixed
+- Bump packages, including electron, it pick up latest tzadata.
+
+## [6.9.3] - 2025-03-24
 ### Fixed
 - Fix an issue introduced in 6.8.0 and then again in 6.9.2 where audio could be desynced on video seeking.
 - Fix an issue where bulk deletes could fail due to exceeding the database rate limit.
