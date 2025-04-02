@@ -295,25 +295,16 @@ const CategoryPage = (props: IProps) => {
             </div>
           </div>
         </div>
-        <div className="w-full h-full overflow-hidden">
-          <VideoSelectionTable
-            table={table}
-            appState={appState}
-            setAppState={setAppState}
-            stateManager={stateManager}
-            persistentProgress={persistentProgress}
-          />
-        </div>
         <div className="relative">
           <Popover
             open={viewpointSelectionOpen}
             onOpenChange={setViewpointSelectionOpen}
           >
-            <PopoverTrigger asChild className="absolute bottom-[25px] left-0">
+            <PopoverTrigger asChild className="absolute top-[60px] left-0">
               <Button
                 variant="secondary"
                 size="xs"
-                className="h-20 rounded-l-none flex justify-start"
+                className="z-50 h-20 rounded-l-none flex justify-start p-[3px]"
               >
                 <Eye size={15} />
               </Button>
@@ -321,7 +312,16 @@ const CategoryPage = (props: IProps) => {
             <PopoverContent
               onEscapeKeyDown={() => setViewpointSelectionOpen(false)}
               side="left"
-              className="absolute bottom-[-50px] left-[25px] w-[550px]"
+              className="p-0 absolute top-[-40px] left-[30px] w-auto min-w-max"
+              onInteractOutside={(e) => {
+                e.preventDefault();
+              }}
+              onPointerDownOutside={(e) => {
+                e.preventDefault();
+              }}
+              onFocusOutside={(e) => {
+                e.preventDefault();
+              }}
             >
               <ViewpointSelection
                 video={selectedRow ? selectedRow.original : filteredState[0]}
@@ -331,6 +331,15 @@ const CategoryPage = (props: IProps) => {
               />
             </PopoverContent>
           </Popover>
+        </div>
+        <div className="w-full h-full overflow-hidden">
+          <VideoSelectionTable
+            table={table}
+            appState={appState}
+            setAppState={setAppState}
+            stateManager={stateManager}
+            persistentProgress={persistentProgress}
+          />
         </div>
       </>
     );
