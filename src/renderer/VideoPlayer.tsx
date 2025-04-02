@@ -14,7 +14,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Backdrop, Box, CircularProgress, Slider } from '@mui/material';
+import { Backdrop, Box, CircularProgress, Slider, IconButton } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -25,12 +25,14 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import MovieIcon from '@mui/icons-material/Movie';
 import ClearIcon from '@mui/icons-material/Clear';
 import DoneIcon from '@mui/icons-material/Done';
+import DrawIcon from '@mui/icons-material/Draw';
 import { OnProgressProps } from 'react-player/base';
 import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import DeathIcon from '../../assets/icon/death.png';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
 import {
   convertNumToDeathMarkers,
   getAllDeathMarkers,
@@ -44,6 +46,7 @@ import {
 } from './rendererutils';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { DrawingOverlay } from './components/DrawingOverlay/DrawingOverlay';
 
 interface IProps {
   videos: RendererVideo[];
@@ -147,6 +150,11 @@ export const VideoPlayer = (props: IProps) => {
 
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
+
+  const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
+  const [drawingElements, setDrawingElements] = useState<readonly ExcalidrawElement[]>([]);
+  const [playerDimensions, setPlayerDimensions] = useState({ width: 0, height: 0 });
+  const playerRef = useRef<HTMLDivElement>(null);
 
   /**
    * Set if the video is playing or not.
@@ -647,27 +655,54 @@ export const VideoPlayer = (props: IProps) => {
     }
 
     return (
-      <ReactPlayer
-        id="react-player"
-        ref={player}
-        height="100%"
-        width="100%"
-        key={src.current}
-        url={src.current}
-        style={style}
-        playing={playing}
-        volume={volume}
-        muted={primary ? muted : true}
-        playbackRate={playbackRate}
-        progressInterval={progressInterval}
-        onProgress={primary ? onProgress : undefined}
-        onClick={togglePlaying}
-        onDoubleClick={toggleFullscreen}
-        onPlay={primary ? () => setPlaying(true) : undefined}
-        onPause={primary ? () => setPlaying(false) : undefined}
-        onReady={onReady}
-        onError={onError}
-      />
+      <div key={`player-${index}`} ref={playerRef} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+        <ReactPlayer
+          id="react-player"
+          ref={player}
+          height="100%"
+          width="100%"
+          key={src.current}
+          url={src.current}
+          style={{
+            ...style,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+          }}
+          playing={playing}
+          volume={volume}
+          muted={primary ? muted : true}
+          playbackRate={playbackRate}
+          progressInterval={progressInterval}
+          onProgress={primary ? onProgress : undefined}
+          onClick={togglePlaying}
+          onDoubleClick={toggleFullscreen}
+          onPlay={primary ? () => setPlaying(true) : undefined}
+          onPause={primary ? () => setPlaying(false) : undefined}
+          onReady={onReady}
+          onError={onError}
+          config={{
+            file: {
+              attributes: {
+                style: {
+                  width: '100%',
+                  height: '100%',
+                },
+              },
+            },
+          }}
+        />
+        {isDrawingEnabled && (
+          <DrawingOverlay
+            isDrawingEnabled={isDrawingEnabled}
+            onDrawingChange={setDrawingElements}
+            width={playerDimensions.width}
+            height={playerDimensions.height}
+          />
+        )}
+      </div>
     );
   };
 
@@ -859,22 +894,58 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
+   * Returns the drawing button for the video controls.
+   */
+  const renderDrawingButton = () => (
+    <Tooltip content={getLocalePhrase(language, Phrase.TOGGLE_DRAWING)}>
+      <IconButton
+        onClick={() => setIsDrawingEnabled(!isDrawingEnabled)}
+        sx={{
+          color: isDrawingEnabled ? 'primary.main' : 'inherit',
+        }}
+      >
+        <DrawIcon />
+      </IconButton>
+    </Tooltip>
+  );
+
+  /**
    * Returns the entire video control component.
    */
   const renderControls = () => {
     return (
-      <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2">
-        {renderPlayPause()}
-        {renderVolumeButton()}
-        {renderVolumeSlider()}
-        {renderProgressSlider()}
-        {renderProgressText()}
-        {!clipMode && !isClip(videos[0]) && renderClipButton()}
-        {!clipMode && renderPlaybackRateButton()}
-        {!clipMode && renderFullscreenButton()}
-        {clipMode && renderClipFinishedButton()}
-        {clipMode && renderClipCancelButton()}
-      </div>
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 1001,
+          height: '40px',
+          pointerEvents: 'auto',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, pointerEvents: 'auto' }}>
+          {renderPlayPause()}
+          {renderVolumeButton()}
+          {renderVolumeSlider()}
+          {renderProgressSlider()}
+          {renderProgressText()}
+          {!clipMode && !isClip(videos[0]) && renderClipButton()}
+          {!clipMode && renderPlaybackRateButton()}
+          {!clipMode && renderDrawingButton()}
+          {clipMode && renderClipFinishedButton()}
+          {clipMode && renderClipCancelButton()}
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto' }}>
+          {renderFullscreenButton()}
+        </Box>
+      </Box>
     );
   };
 
@@ -959,6 +1030,24 @@ export const VideoPlayer = (props: IProps) => {
     ipc.removeAllListeners('pausePlayer');
     ipc.on('pausePlayer', () => setPlaying(false));
   }, [setPlaying]);
+
+  // Add this effect to update player dimensions
+  useEffect(() => {
+    if (!playerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setPlayerDimensions({ width, height });
+      }
+    });
+
+    resizeObserver.observe(playerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   let playerDivClass = 'w-full ';
 
