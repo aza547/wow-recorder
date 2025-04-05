@@ -52,6 +52,7 @@ const WarcraftRecorder = () => {
     category: getCategoryFromConfig(config),
     selectedVideos: [],
     multiPlayerMode: false,
+    viewpointSelectionOpen: false,
 
     // Any text applied in the filter bar gets translated into a filter here.
     videoFilterTags: [],

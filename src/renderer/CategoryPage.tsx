@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useMemo, useState } from 'react';
-import { Eye, GripHorizontal, Trash } from 'lucide-react';
+import { Eye, GripHorizontal, LockKeyhole, Trash } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
@@ -29,7 +29,7 @@ import { PopoverTrigger } from '@radix-ui/react-popover';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
 import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
 import useTable from './components/Tables/TableData';
-import { Tooltip } from './components/Tooltip/Tooltip';
+
 interface IProps {
   category: VideoCategory;
   stateManager: MutableRefObject<StateManager>;
@@ -53,11 +53,15 @@ const CategoryPage = (props: IProps) => {
     persistentProgress,
     playerHeight,
   } = props;
-  const { selectedVideos, videoFilterTags, language, dateRangeFilter } =
-    appState;
+  const {
+    selectedVideos,
+    videoFilterTags,
+    language,
+    dateRangeFilter,
+    viewpointSelectionOpen,
+  } = appState;
 
   const [config, setConfig] = useSettings();
-  const [viewpointSelectionOpen, setViewpointSelectionOpen] = useState(true);
 
   const filteredState = useMemo<RendererVideo[]>(() => {
     const queryFilter = (rv: RendererVideo) =>
@@ -202,6 +206,10 @@ const CategoryPage = (props: IProps) => {
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
 
+    // TODO: If any of selection rows are unlocked, then show lock.
+    // Else show locked.
+    const lockIcon = <LockKeyhole size={20} />;
+
     return (
       <>
         <div className="w-full flex justify-evenly items-center gap-x-5 px-4 pt-2">
@@ -275,7 +283,7 @@ const CategoryPage = (props: IProps) => {
               </Button>
 
               <Button variant="secondary" size="sm" className="h-10">
-                <FontAwesomeIcon icon={faStarOutline} size="xl" />
+                {lockIcon}
               </Button>
 
               <DeleteDialog
@@ -298,19 +306,30 @@ const CategoryPage = (props: IProps) => {
         <div className="relative">
           <Popover
             open={viewpointSelectionOpen}
-            onOpenChange={setViewpointSelectionOpen}
+            onOpenChange={() => {
+              setAppState((a) => {
+                return {
+                  ...a,
+                  viewpointSelectionOpen: !a.viewpointSelectionOpen,
+                };
+              });
+            }}
           >
             <PopoverTrigger asChild className="absolute top-[60px] left-0">
               <Button
-                variant="secondary"
+                variant={viewpointSelectionOpen ? 'default' : 'secondary'}
                 size="xs"
-                className="z-50 h-20 rounded-l-none flex justify-start p-[3px]"
+                className="h-20 rounded-l-none flex justify-start p-[3px]"
               >
                 <Eye size={15} />
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              onEscapeKeyDown={() => setViewpointSelectionOpen(false)}
+              onEscapeKeyDown={() =>
+                setAppState((a) => {
+                  return { ...a, viewpointSelectionOpen: false };
+                })
+              }
               side="left"
               className="p-0 absolute top-[-40px] left-[30px] w-auto min-w-max"
               onInteractOutside={(e) => {

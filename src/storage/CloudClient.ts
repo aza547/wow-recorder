@@ -53,7 +53,7 @@ export default class CloudClient extends EventEmitter {
    * manipulation of video state from the video database, and various
    * bits of R2 interaction.
    */
-  private static api = 'https://api.warcraftrecorder.com/api';
+  private static api = 'https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api';
 
   /**
    * The WR website, used by the client to build shareable links.

@@ -307,6 +307,7 @@ type AppState = {
   category: VideoCategory;
   selectedVideos: RendererVideo[];
   multiPlayerMode: boolean;
+  viewpointSelectionOpen: boolean;
   videoFilterTags: Tag[];
   dateRangeFilter: DateValueType;
   videoFullScreen: boolean;

@@ -100,7 +100,9 @@ export const populateDetailsCell = (
       ? getLocalePhrase(language, Phrase.SomeStarred)
       : getLocalePhrase(language, Phrase.NoneStarred);
 
-    const toggleProtected = () => {
+    const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
+      stopPropagation(e);
+
       // TODO
       console.log('Toggle protected', starred);
     };

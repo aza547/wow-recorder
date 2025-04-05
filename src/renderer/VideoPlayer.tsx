@@ -840,11 +840,6 @@ export const VideoPlayer = (props: IProps) => {
   const cloudVideo = nameMatches.find((v) => v.cloud);
   const diskVideo = nameMatches.find((v) => !v.cloud);
 
-  console.log('Cloud', cloudVideo);
-  console.log('Distk', diskVideo);
-
-  const cloudUpload = true;
-
   /**
    * Set the selected videos.
    */
@@ -879,11 +874,11 @@ export const VideoPlayer = (props: IProps) => {
     const color = cloudVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
 
-    if (!cloudVideo && !cloudUpload) {
+    if (!cloudVideo && !config.cloudUpload) {
       return getNoCloudIcon();
     }
 
-    if (!cloudVideo && cloudUpload) {
+    if (!cloudVideo && config.cloudUpload) {
       return renderUploadButton();
     }
 
@@ -916,7 +911,7 @@ export const VideoPlayer = (props: IProps) => {
     const color = diskVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
 
-    if (!diskVideo && cloudVideo && cloudUpload) {
+    if (!diskVideo && cloudVideo && config.cloudUpload) {
       return renderDownloadButton();
     }
 
