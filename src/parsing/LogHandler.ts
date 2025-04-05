@@ -405,4 +405,22 @@ export default abstract class LogHandler extends EventEmitter {
     this.activity.addCombatant(combatant);
     return combatant;
   }
+
+  protected handleSpellDamage(line: LogLine) {
+    if (!this.activity || this.activity.category !== VideoCategory.Raids) {
+      // We only care about this event for working out boss HP, which we
+      // only do in raids.
+      return;
+    }
+
+    const raid = this.activity as RaidEncounter;
+    const current = parseInt(line.arg(14), 10);
+    const max = parseInt(line.arg(15), 10);
+
+    // We don't check the unit here, the RaidEncounter class has logic
+    // to discard an update that lowers the max HP. That's a strategy to
+    // avoid having to maintain a list of boss unit names. It's a reasonable
+    // assumption usually that the boss has the most HP of all the units.
+    raid.updateHp(current, max);
+  }
 }
