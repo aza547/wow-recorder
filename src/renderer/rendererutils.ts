@@ -376,7 +376,7 @@ const isClip = (video: RendererVideo) => {
 };
 
 const getResultColor = (video: RendererVideo) => {
-  const { result, soloShuffleRoundsWon, upgradeLevel } = video;
+  const { result, soloShuffleRoundsWon, upgradeLevel, bossPercent } = video;
 
   if (isSoloShuffleUtil(video)) {
     if (
@@ -413,6 +413,23 @@ const getResultColor = (video: RendererVideo) => {
 
   if (result) {
     return 'hsl(var(--success))';
+  }
+
+  if (isRaidUtil(video) && bossPercent) {
+    const raidResultColors = [
+      'rgb(46,  171, 27)',
+      'rgb(112, 170, 30)',
+      'rgb(171, 150, 30)',
+      'rgb(171, 86,  26)',
+      'rgb(175, 50,  23)',
+      'rgb(156, 21,  21)',
+    ];
+
+    // Being a bit lazy here and re-using the solo shuffle colors.
+    // Pick a sensible index. Making sure they're within bounds.
+    let index = Math.min(Math.round(bossPercent / 20), 5);
+    index = Math.max(index, 0);
+    return raidResultColors[index];
   }
 
   return 'hsl(var(--error))';
@@ -812,6 +829,7 @@ const getVideoResultText = (
     upgradeLevel,
     soloShuffleRoundsWon,
     soloShuffleRoundsPlayed,
+    bossPercent,
   } = video;
 
   if (isMythicPlusUtil(video)) {
@@ -831,9 +849,15 @@ const getVideoResultText = (
   }
 
   if (isRaidUtil(video)) {
-    return result
-      ? getLocalePhrase(language, Phrase.Kill)
-      : getLocalePhrase(language, Phrase.Wipe);
+    if (result) {
+      return getLocalePhrase(language, Phrase.Kill);
+    }
+
+    if (bossPercent !== undefined) {
+      return `${bossPercent}%`;
+    }
+
+    return getLocalePhrase(language, Phrase.Wipe);
   }
 
   if (isSoloShuffleUtil(video)) {

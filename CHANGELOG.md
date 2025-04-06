@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added all combatants back to search filter.
+- Show boss percentages on wipes.
 
 ### Fixed
 - Bump packages, including electron, to pick up latest tzdata.
