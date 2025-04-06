@@ -31,7 +31,7 @@ import AppUpdater from './AppUpdater';
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-const tzOffset = new Date().getTimezoneOffset();
+const tzOffset = new Date().getTimezoneOffset() * -1; // Offset is wrong direction so flip it.
 const tzOffsetStr = `UTC${tzOffset >= 0 ? '+' : ''}${tzOffset / 60}`;
 
 console.info('[Main] App starting, version:', appVersion);
@@ -67,9 +67,9 @@ if (process.env.NODE_ENV === 'production') {
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-if (isDebug) {
-  require('electron-debug')();
-}
+  if (isDebug) {
+    require('electron-debug').default();
+  }
 
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
