@@ -4,7 +4,7 @@ import {
   instanceNamesByZoneId,
   specializationById,
 } from 'main/constants';
-import { Flavour, RendererVideo } from 'main/types';
+import { Flavour, RawCombatant, RendererVideo } from 'main/types';
 import {
   isArenaUtil,
   isBattlegroundUtil,
@@ -14,6 +14,7 @@ import {
   getWoWClassColor,
   getPlayerSpecID,
   getPlayerName,
+  getSpecClass,
 } from './rendererutils';
 import { Tag } from 'react-tag-autocomplete';
 import { specImages, affixImages, classImages } from './images';
@@ -245,7 +246,36 @@ export default class VideoFilter {
       }
     }
 
+    video.combatants.forEach((combatant) => {
+      this.pushCombatantTag(combatant, suggestions);
+    });
+
     return suggestions;
+  }
+
+  private static pushCombatantTag(
+    combatant: RawCombatant,
+    suggestions: VideoTag[],
+  ) {
+    const combatantName = combatant._name;
+    const combatantSpec = combatant._specID;
+
+    if (!combatantName || !combatantSpec) {
+      return;
+    }
+
+    const combatantClass = getSpecClass(combatantSpec);
+    const combatantClassIcon = classImages[combatantClass];
+    const combatantClassColor = getWoWClassColor(combatantClass);
+
+    const tag = new VideoTag(
+      200,
+      combatantName,
+      combatantClassIcon,
+      combatantClassColor,
+    );
+
+    suggestions.push(tag);
   }
 
   /**

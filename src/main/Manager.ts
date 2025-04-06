@@ -14,7 +14,6 @@ import {
   getMetadataForVideo,
   getOBSFormattedDate,
   tagVideoDisk,
-  toggleVideoProtectedDisk,
   openSystemExplorer,
   markForVideoForDelete,
   getPromiseBomb,
@@ -27,6 +26,8 @@ import {
   deleteVideoDisk,
   getWowFlavour,
   convertKoreanVideoCategory,
+  toggleVideoProtectedDisk,
+  protectVideoDisk,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -1061,27 +1062,38 @@ export default class Manager {
         openSystemExplorer(src);
       }
 
-      if (action === 'save') {
-        const src = args[1] as string;
-        const cloud = args[2] as boolean;
-        const bool = args[3] as boolean;
+      if (action === 'protect') {
+        const protect = args[1] as boolean;
+        const videos = args[2] as RendererVideo[];
 
-        if (cloud) {
-          await this.protectVideoCloud(src, bool);
-        } else {
-          await toggleVideoProtectedDisk(src);
+        const cloud = videos.filter((v) => v.cloud);
+        const disk = videos.filter((v) => !v.cloud);
+
+        console.log("disk p", protect, disk.length);
+        console.log("cloud p", protect, cloud.length);
+
+        disk
+          .map((v) => v.videoSource)
+          .forEach((src) => protectVideoDisk(protect, src));
+
+        if (cloud.length > 0) {
+          const cloudNames = cloud.map((v) => v.videoName);
+          this.protectVideoCloud(protect, cloudNames);
         }
       }
 
       if (action === 'tag') {
-        const src = args[1] as string;
-        const cloud = args[2] as boolean;
-        const tag = args[3] as string;
+        const tag = args[1] as string;
+        const videos = args[2] as RendererVideo[];
 
-        if (cloud) {
-          await this.tagVideoCloud(src, tag);
-        } else {
-          await tagVideoDisk(src, tag);
+        const cloud = videos.filter((v) => v.cloud);
+        const disk = videos.filter((v) => !v.cloud);
+
+        disk.map((v) => v.videoSource).forEach((src) => tagVideoDisk(src, tag));
+
+        if (cloud.length > 0) {
+          const cloudNames = cloud.map((v) => v.videoName);
+          this.tagVideosCloud(cloudNames, tag);
         }
       }
 
@@ -1111,18 +1123,7 @@ export default class Manager {
       }
     });
 
-    ipcMain.on('deleteVideo', async (_event, args) => {
-      const src = args[0] as string;
-      const cloud = args[1] as string;
-
-      if (cloud) {
-        this.deleteVideoCloud(src);
-      } else {
-        this.deleteVideoDisk(src);
-      }
-    });
-
-    ipcMain.on('deleteVideosBulk', async (_event, args) => {
+    ipcMain.on('deleteVideos', async (_event, args) => {
       const videos = args as RendererVideo[];
 
       const cloud = videos.filter((v) => v.cloud);
@@ -1131,7 +1132,7 @@ export default class Manager {
       disk.map((v) => v.videoSource).forEach(this.deleteVideoDisk);
 
       if (cloud.length > 0) {
-        this.deleteVideoCloudBulk(cloud);
+        this.deleteCloudVideos(cloud);
       }
     });
 
@@ -1310,19 +1311,6 @@ export default class Manager {
   }
 
   /**
-   * Delete a video from the cloud, and it's accompanying metadata.
-   */
-  private deleteVideoCloud = async (videoName: string) => {
-    try {
-      assert(this.cloudClient);
-      await this.cloudClient.deleteVideo(videoName);
-    } catch (error) {
-      // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to delete', videoName, String(error));
-    }
-  };
-
-  /**
    * Delete a video from the disk, and it's accompanying metadata.
    */
   private deleteVideoDisk = async (videoName: string) => {
@@ -1351,11 +1339,11 @@ export default class Manager {
   /**
    * Delete a video from the cloud, and it's accompanying metadata.
    */
-  private deleteVideoCloudBulk = async (videos: RendererVideo[]) => {
+  private deleteCloudVideos = async (videos: RendererVideo[]) => {
     try {
       assert(this.cloudClient);
       const names = videos.map((v) => v.videoName);
-      await this.cloudClient.bulkDeleteVideos(names);
+      await this.cloudClient.deleteVideos(names);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
       console.warn('[Manager] Failed to bulk delete', String(error));
@@ -1365,35 +1353,45 @@ export default class Manager {
   /**
    * Toggle protection on a video in the cloud.
    */
-  private protectVideoCloud = async (videoName: string, protect: boolean) => {
-    console.info('[Manager] User protected', videoName, protect);
+  private protectVideoCloud = async (
+    protect: boolean,
+    videoNames: string[],
+  ) => {
+    console.info(
+      `[Manager] User ${protect ? 'protected' : 'unprotected'}`,
+      videoNames,
+    );
 
     try {
       assert(this.cloudClient);
 
       if (protect) {
-        await this.cloudClient.protectVideo(videoName);
+        await this.cloudClient.protectVideos(true, videoNames);
       } else {
-        await this.cloudClient.unprotectVideo(videoName);
+        await this.cloudClient.protectVideos(false, videoNames);
       }
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to protect', videoName, String(error));
+      console.warn(
+        `[Manager] Failed to ${protect ? 'protect' : 'unprotect'}`,
+        videoNames,
+        String(error),
+      );
     }
   };
 
   /**
    * Tag a video in the cloud.
    */
-  private tagVideoCloud = async (videoName: string, tag: string) => {
-    console.info('[Manager] User tagged', videoName, 'with', tag);
+  private tagVideosCloud = async (videoNames: string[], tag: string) => {
+    console.info('[Manager] User tagged', videoNames, 'with', tag);
 
     try {
       assert(this.cloudClient);
-      await this.cloudClient.tagVideo(videoName, tag);
+      await this.cloudClient.tagVideos(tag, videoNames);
     } catch (error) {
       // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to tag', videoName, String(error));
+      console.warn('[Manager] Failed to tag', videoNames, String(error));
     }
   };
 

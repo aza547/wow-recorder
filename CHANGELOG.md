@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade obs-studio-node to 0.25.17 (and OBS to 30.2.4). 
 
 ### Added
+- Added all combatants back to search filter.
+
 ### Fixed
 - Bump packages, including electron, it pick up latest tzadata.
 

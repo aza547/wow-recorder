@@ -40,6 +40,7 @@ import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 import { Table } from '@tanstack/react-table';
+import { get } from 'lodash';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -489,15 +490,19 @@ const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
     return 'UNKNOWN';
   }
 
-  if (player._specID === undefined) {
+  return getSpecClass(player._specID);
+};
+
+const getSpecClass = (specId: number | undefined): WoWCharacterClassType => {
+  if (specId === undefined) {
     return 'UNKNOWN';
   }
 
-  if (specializationById[player._specID] === undefined) {
+  if (specializationById[specId] === undefined) {
     return 'UNKNOWN';
   }
 
-  return specializationById[player._specID].class;
+  return specializationById[specId].class;
 };
 
 const getVideoTime = (video: RendererVideo) => {
@@ -1095,4 +1100,5 @@ export {
   dateToHumanReadable,
   getSelectedRow,
   getSelectedRowIndex,
+  getSpecClass,
 };

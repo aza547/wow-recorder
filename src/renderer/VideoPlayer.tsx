@@ -801,9 +801,9 @@ export const VideoPlayer = (props: IProps) => {
       <Tooltip
         content={getLocalePhrase(language, Phrase.DownloadButtonTooltip)}
       >
-        <ToggleGroupItem value="cloud" onClick={downloadVideo}>
+        <Button onClick={downloadVideo} variant="ghost" size="xs">
           <CloudDownload size={20} />
-        </ToggleGroupItem>
+        </Button>
       </Tooltip>
     );
   };
@@ -814,9 +814,9 @@ export const VideoPlayer = (props: IProps) => {
   const renderUploadButton = () => {
     return (
       <Tooltip content={getLocalePhrase(language, Phrase.UploadButtonTooltip)}>
-        <ToggleGroupItem value="cloud" onClick={uploadVideo}>
+        <Button onClick={uploadVideo} variant="ghost" size="xs">
           <CloudUpload size={20} />
-        </ToggleGroupItem>
+        </Button>
       </Tooltip>
     );
   };
@@ -826,9 +826,9 @@ export const VideoPlayer = (props: IProps) => {
    */
   const getNoCloudIcon = () => {
     return (
-      <ToggleGroupItem value="cloud-off" className="h-[20px] w-[20px]" disabled>
-        <CloudOffIcon />
-      </ToggleGroupItem>
+      <Button disabled variant="ghost" size="xs">
+        <CloudOffIcon sx={{ height: '20px', width: '20px' }} />
+      </Button>
     );
   };
 
@@ -884,21 +884,14 @@ export const VideoPlayer = (props: IProps) => {
 
     return (
       <Tooltip content={getLocalePhrase(language, Phrase.CloudButtonTooltip)}>
-        <ToggleGroupItem
-          value="cloud"
+        <Button
           disabled={!cloudVideo}
           onClick={() => setSelectedVideos(cloudVideo)}
-          className="h-[20px] w-[20px]"
+          variant="ghost"
+          size="xs"
         >
-          <CloudIcon
-            sx={{
-              height: '20px',
-              width: '20px',
-              color,
-              opacity,
-            }}
-          />
-        </ToggleGroupItem>
+          <CloudIcon sx={{ height: '20px', width: '20px', color, opacity }} />
+        </Button>
       </Tooltip>
     );
   };
@@ -917,30 +910,26 @@ export const VideoPlayer = (props: IProps) => {
 
     return (
       <Tooltip content={getLocalePhrase(language, Phrase.DiskButtonTooltip)}>
-        <ToggleGroupItem
+        <Button
           value="disk"
           disabled={!diskVideo}
           onClick={() => setSelectedVideos(diskVideo)}
-          className="h-[20px] w-[20px]"
+          variant="ghost"
+          size="xs"
         >
           <SaveIcon sx={{ height: '20px', width: '20px', color, opacity }} />
-        </ToggleGroupItem>
+        </Button>
       </Tooltip>
     );
   };
 
   const renderVideoSourceToggle = () => {
     return (
-      <ToggleGroup
-        type="single"
-        className="flex flex-row items-center gap-x-3 px-2"
-        size="xs"
-        variant="ghost"
-      >
+      <div className="flex flex-row items-center">
         {getCloudIcon()}
         {diskVideo && getDiskIcon()}
         {!diskVideo && renderDownloadButton()}
-      </ToggleGroup>
+      </div>
     );
   };
 

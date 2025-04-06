@@ -49,6 +49,19 @@ const VideoSelectionTable = (props: IProps) => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Control') setCtrlDown(true);
       if (event.key === 'Shift') setShiftDown(true);
+
+      if (event.key === 'a' && event.ctrlKey) {
+        const { rows } = table.getRowModel();
+
+        rows.forEach((r) => {
+          if (!r.getIsSelected()) {
+            r.getToggleSelectedHandler()(event);
+          }
+        });
+
+        event.preventDefault();
+        event.stopPropagation();
+      }
     };
 
     const handleMouseDown = (event: MouseEvent) => {

@@ -23,6 +23,8 @@ import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
 import { LockKeyhole, LockOpen } from 'lucide-react';
+import StateManager from 'renderer/StateManager';
+import { MutableRefObject } from 'react';
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -87,13 +89,14 @@ export const populateActivityCell = (
 export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
   language: Language,
+  stateManager: MutableRefObject<StateManager>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
 
-  const renderStarIcon = () => {
+  const renderProtectedIcon = () => {
     const starred = [video, ...video.multiPov]
       .map((v) => v.isProtected)
-      .find((p) => p);
+      .some((p) => p);
 
     const icon = starred ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
     const tooltip = starred
@@ -103,8 +106,14 @@ export const populateDetailsCell = (
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
 
-      // TODO
-      console.log('Toggle protected', starred);
+      // TODO fix this to update UI immediately.
+      stateManager.current.setProtected(!starred, [video, ...video.multiPov]);
+
+      window.electron.ipcRenderer.sendMessage('videoButton', [
+        'protect',
+        !starred,
+        [video, ...video.multiPov],
+      ]);
     };
 
     return (
@@ -116,7 +125,7 @@ export const populateDetailsCell = (
     );
   };
 
-  return <Box className="inline-flex">{renderStarIcon()}</Box>;
+  return <Box className="inline-flex">{renderProtectedIcon()}</Box>;
 };
 
 export const populateLevelCell = (

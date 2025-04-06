@@ -53,7 +53,8 @@ export default class CloudClient extends EventEmitter {
    * manipulation of video state from the video database, and various
    * bits of R2 interaction.
    */
-  private static api = 'https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api';
+  private static api =
+    'https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api';
 
   /**
    * The WR website, used by the client to build shareable links.
@@ -155,18 +156,17 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Delete a video.
+   * Delete a set of cloud videos. This is a bulk delete operation, but
+   * totally valid to call this on one video at a time.
    */
-  public async deleteVideo(videoName: string) {
-    console.info('[CloudClient] Deleting video', videoName);
+  public async deleteVideos(videoNames: string[]) {
+    console.info('[CloudClient] Attempt to delete', videoNames);
 
     const guild = encodeURIComponent(this.guild);
-    const video = encodeURIComponent(videoName);
-
-    const url = `${CloudClient.api}/guild/${guild}/video/${video}`;
+    const url = `${CloudClient.api}/guild/${guild}/bulk/delete`;
     const headers = { Authorization: this.authHeader };
 
-    const response = await axios.delete(url, {
+    const response = await axios.post(url, videoNames, {
       headers,
       validateStatus: () => true,
     });
@@ -174,48 +174,28 @@ export default class CloudClient extends EventEmitter {
     const { status, data } = response;
 
     if (status !== 200) {
-      console.error(
-        '[CloudClient] Failed to delete a video from database',
-        status,
-        data,
-      );
-
-      throw new Error('Failed to delete a video from database');
+      console.error('[CloudClient] Failed to delete videos', status, data);
+      throw new Error('Failed to delete videos');
     }
 
-    console.info('[CloudClient] Deleted', videoName);
+    console.info('[CloudClient] Successfully deleted videos', videoNames);
   }
 
   /**
-   * Delete a set of cloud videos. Just make one request at a time, we don't want to overload
-   * the database which I've seen happen in the past when it got gets slammed with several
-   * thousand simultaenous requests. This does mean the deletes won't complete if the user
-   * quits their client before done, but whatever. Could easily be improved in the future with
-   * as a concurrent queue.
+   * Protect or unprotect a set of videos.
    */
-  public async bulkDeleteVideos(videos: string[]) {
-    console.info('[CloudClient] Bulk deleting', videos.length, 'videos');
-
-    for (let i = 0; i < videos.length; i++) {
-      console.info('[CloudClient] Bulk deleting', i);
-      await this.deleteVideo(videos[i]);
-    }
-
-    console.info('[CloudClient] Bulk deleting done');
-  }
-
-  /**
-   * Protect a video.
-   */
-  public async protectVideo(videoName: string) {
-    console.info('[CloudClient] Attempt to set protected', videoName);
+  public async protectVideos(protect: boolean, videoNames: string[]) {
+    console.info(
+      `[CloudClient] Attempt to ${protect ? 'protect' : 'unprotect'}`,
+      videoNames,
+    );
 
     const guild = encodeURIComponent(this.guild);
-    const video = encodeURIComponent(videoName);
-    const url = `${CloudClient.api}/guild/${guild}/video/${video}/protected`;
+    const url = `${CloudClient.api}/guild/${guild}/bulk/protect`;
     const headers = { Authorization: this.authHeader };
+    const body = { videos: videoNames, protect: protect };
 
-    const response = await axios.put(url, undefined, {
+    const response = await axios.post(url, body, {
       headers,
       validateStatus: () => true,
     });
@@ -223,52 +203,29 @@ export default class CloudClient extends EventEmitter {
     const { status, data } = response;
 
     if (status !== 200) {
-      console.error('[CloudClient] Failed to protect a video', status, data);
-      throw new Error('Failed to protect a video');
+      const msg = `Failed to ${protect ? 'protect' : 'unprotect'} a video`;
+      console.error('[CloudClient]', msg, status, data);
+      throw new Error(msg);
     }
 
-    console.info('[CloudClient] Successfully set protected', videoName);
-  }
-
-  /**
-   * Unprotect a video.
-   */
-  public async unprotectVideo(videoName: string) {
-    console.info('[CloudClient] Attempt to set unprotected', videoName);
-
-    const guild = encodeURIComponent(this.guild);
-    const video = encodeURIComponent(videoName);
-    const url = `${CloudClient.api}/guild/${guild}/video/${video}/protected`;
-    const headers = { Authorization: this.authHeader };
-
-    const response = await axios.delete(url, {
-      headers,
-      validateStatus: () => true,
-    });
-
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failed to unprotect a video', status, data);
-      throw new Error('Failed to unprotect a video');
-    }
-
-    console.info('[CloudClient] Successfully set unprotected', videoName);
+    console.info(
+      `[CloudClient] Successfully ${protect ? 'protected' : 'unprotected'}`,
+      videoNames,
+    );
   }
 
   /**
    * Tag a video.
    */
-  public async tagVideo(videoName: string, tag: string) {
-    console.info('[CloudClient] Set tag', tag, videoName);
+  public async tagVideos(tag: string, videoNames: string[]) {
+    console.info('[CloudClient] Set tag', tag, 'on', videoNames);
 
     const guild = encodeURIComponent(this.guild);
-    const video = encodeURIComponent(videoName);
-    const url = `${CloudClient.api}/guild/${guild}/video/${video}/tag`;
+    const url = `${CloudClient.api}/guild/${guild}/bulk/tag`;
     const headers = { Authorization: this.authHeader };
-    const body = { tag };
+    const body = { videos: videoNames, tag };
 
-    const response = await axios.put(url, body, {
+    const response = await axios.post(url, body, {
       headers,
       validateStatus: () => true,
     });
@@ -280,7 +237,7 @@ export default class CloudClient extends EventEmitter {
       throw new Error('Failed to tag a video');
     }
 
-    console.info('[CloudClient] Successfully set tag', tag, videoName);
+    console.info('[CloudClient] Successfully set tag', tag, 'on', videoNames);
   }
 
   /**

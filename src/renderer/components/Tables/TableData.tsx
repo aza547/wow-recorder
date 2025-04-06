@@ -9,7 +9,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { RendererVideo, AppState } from 'main/types';
-import { useEffect, useMemo, useState } from 'react';
+import { MutableRefObject, useEffect, useMemo, useState } from 'react';
 import {
   getPullNumber,
   getInstanceDifficultyText,
@@ -18,7 +18,6 @@ import {
 } from 'renderer/rendererutils';
 import { VideoCategory } from 'types/VideoCategory';
 import {
-  populateSelectCell,
   populateEncounterNameCell,
   populateResultCell,
   populateDurationCell,
@@ -30,7 +29,6 @@ import {
   populateActivityCell,
 } from './Cells';
 import {
-  SelectHeader,
   EncounterHeader,
   ResultHeader,
   PullHeader,
@@ -51,8 +49,13 @@ import {
   levelSort,
 } from './Sorting';
 import { getLocaleCategoryLabel } from 'localisation/translations';
+import StateManager from 'renderer/StateManager';
 
-const useTable = (videoState: RendererVideo[], appState: AppState) => {
+const useTable = (
+  videoState: RendererVideo[],
+  appState: AppState,
+  stateManager: MutableRefObject<StateManager>,
+) => {
   const { category, language } = appState;
 
   /**
@@ -89,7 +92,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         size: 25,
         accessorFn: (v) => v,
         header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Encounter',
@@ -155,7 +158,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         size: 25,
         accessorFn: (v) => v,
         header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Map',
@@ -209,7 +212,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         size: 25,
         accessorFn: (v) => v,
         header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Map',
@@ -271,7 +274,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         size: 25,
         accessorFn: (v) => v,
         header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Map',
@@ -325,7 +328,7 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         size: 25,
         accessorFn: (v) => v,
         header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Type',

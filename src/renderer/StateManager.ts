@@ -128,17 +128,7 @@ export default class StateManager {
     return videos.length;
   }
 
-  public async deleteVideo(video: RendererVideo) {
-    const index = this.raw.indexOf(video);
-
-    if (index > -1) {
-      this.raw.splice(index, 1);
-      const correlated = this.correlate();
-      this.setVideoState(correlated);
-    }
-  }
-
-  public async bulkDeleteVideo(videos: RendererVideo[]) {
+  public async deleteVideos(videos: RendererVideo[]) {
     videos.forEach((v) => {
       const index = this.raw.indexOf(v);
 
@@ -151,24 +141,30 @@ export default class StateManager {
     this.setVideoState(correlated);
   }
 
-  public async toggleProtect(video: RendererVideo) {
-    const index = this.raw.indexOf(video);
+  public async setProtected(protect: boolean, videos: RendererVideo[]) {
+    videos.forEach((video) => {
+      const index = this.raw.indexOf(video);
 
-    if (index > -1) {
-      this.raw[index].isProtected = !this.raw[index].isProtected;
-      const correlated = this.correlate();
-      this.setVideoState(correlated);
-    }
+      if (index > -1) {
+        this.raw[index].isProtected = protect;
+      }
+    });
+
+    const correlated = this.correlate();
+    this.setVideoState(correlated);
   }
 
-  public tag(video: RendererVideo, tag: string) {
-    const index = this.raw.indexOf(video);
+  public setTag(tag: string, videos: RendererVideo[]) {
+    videos.forEach((video) => {
+      const index = this.raw.indexOf(video);
 
-    if (index > -1) {
-      this.raw[index].tag = tag;
-      const correlated = this.correlate();
-      this.setVideoState(correlated);
-    }
+      if (index > -1) {
+        this.raw[index].tag = tag;
+      }
+    });
+
+    const correlated = this.correlate();
+    this.setVideoState(correlated);
   }
 
   private static reverseChronologicalVideoSort(

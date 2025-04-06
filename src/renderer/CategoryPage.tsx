@@ -1,7 +1,15 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject, useMemo, useState } from 'react';
-import { Eye, GripHorizontal, LockKeyhole, Trash } from 'lucide-react';
+import { MutableRefObject, useMemo } from 'react';
+import {
+  Eye,
+  GripHorizontal,
+  LockKeyhole,
+  Trash,
+  MessageSquare,
+  MessageSquareMore,
+  LockOpen,
+} from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
@@ -19,16 +27,13 @@ import { Resizable, ResizeCallback } from 're-resizable';
 import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer from './VideoPlayer';
 import Label from './components/Label/Label';
-import {
-  faStar as faStarOutline,
-  faMessage as faMessageOutline,
-} from '@fortawesome/free-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Popover, PopoverContent } from './components/Popover/Popover';
 import { PopoverTrigger } from '@radix-ui/react-popover';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
 import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
 import useTable from './components/Tables/TableData';
+import TagDialog from './TagDialog';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 interface IProps {
   category: VideoCategory;
@@ -71,7 +76,7 @@ const CategoryPage = (props: IProps) => {
   }, [categoryState, dateRangeFilter, videoFilterTags, language]);
 
   // The data backing the video selection table.
-  const table = useTable(filteredState, appState);
+  const table = useTable(filteredState, appState, stateManager);
 
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
@@ -140,8 +145,8 @@ const CategoryPage = (props: IProps) => {
   };
 
   const bulkDelete = (videos: RendererVideo[]) => {
-    window.electron.ipcRenderer.sendMessage('deleteVideosBulk', videos);
-    stateManager.current.bulkDeleteVideo(videos);
+    window.electron.ipcRenderer.sendMessage('deleteVideos', videos);
+    stateManager.current.deleteVideos(videos);
   };
 
   const getVideoSelection = () => {
@@ -205,10 +210,135 @@ const CategoryPage = (props: IProps) => {
     const names = multiPlayerOpts.map((rv) => rv.videoName);
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
+    const selectedRows = table.getSelectedRowModel().rows;
 
-    // TODO: If any of selection rows are unlocked, then show lock.
-    // Else show locked.
-    const lockIcon = <LockKeyhole size={20} />;
+    const renderTagButton = () => {
+      let icon = <MessageSquare size={20} />;
+      let tooltip = getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
+      const videosInRow = [];
+      let tag = '';
+
+      if (selectedRows.length === 1) {
+        videosInRow.push(selectedRows[0].original);
+        videosInRow.push(...selectedRows[0].original.multiPov);
+
+        const foundTag = videosInRow.map((v) => v.tag).find((t) => t);
+
+        if (foundTag) {
+          tag = foundTag;
+          icon = <MessageSquareMore size={20} />;
+
+          if (tag.length > 50) {
+            tooltip = `${tag.slice(0, 50)}...`;
+          } else {
+            tooltip = tag;
+          }
+        }
+      } else if (selectedRows.length > 1) {
+        tooltip = "Can't tag multiple rows at once";
+      } else {
+        tooltip = 'Select a row to tag';
+      }
+
+      return (
+        <TagDialog
+          initialTag={tag}
+          videos={videosInRow}
+          stateManager={stateManager}
+          tooltipContent={tooltip}
+          appState={appState}
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-10"
+            disabled={selectedRows.length !== 1}
+          >
+            {icon}
+          </Button>
+        </TagDialog>
+      );
+    };
+
+    const protectVideo = (
+      _event: React.SyntheticEvent,
+      protect: boolean,
+      videos: RendererVideo[],
+    ) => {
+      stateManager.current.setProtected(protect, videos);
+
+      window.electron.ipcRenderer.sendMessage('videoButton', [
+        'protect',
+        protect,
+        videos,
+      ]);
+    };
+
+    const renderProtectButton = () => {
+      const videosInSelection = selectedRows
+        .map((r) => r.original)
+        .flatMap((v) => {
+          return [v, ...v.multiPov];
+        });
+
+      const allProtected = videosInSelection.every((v) => v.isProtected);
+
+      const icon = allProtected ? (
+        <LockOpen size={20} />
+      ) : (
+        <LockKeyhole size={20} />
+      );
+
+      // TODO trranslate
+      const tooltip = allProtected
+        ? 'Unlock selected rows.'
+        : 'Lock selected rows.';
+
+      return (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="h-10"
+          disabled={selectedRows.length < 1}
+          onClick={(e) => protectVideo(e, !allProtected, videosInSelection)}
+        >
+          <Tooltip content={tooltip}>{icon}</Tooltip>
+        </Button>
+      );
+    };
+
+    const renderDeleteButton = () => {
+      return (
+        <DeleteDialog
+          onDelete={() => bulkDelete(unprot)}
+          tooltipContent={getLocalePhrase(
+            appState.language,
+            Phrase.BulkDeleteButtonTooltip,
+          )}
+          warning={deleteWarning}
+          skipPossible={false}
+          appState={appState}
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-10"
+            disabled={selectedRows.length < 1}
+          >
+            <Trash size={20} />
+          </Button>
+        </DeleteDialog>
+      );
+    };
+
+    const renderSelectionLabel = () => {
+      const text =
+        selectedRows.length > 1
+          ? `Selection (${selectedRows.length})` // TODO translate
+          : 'Selection';
+
+      return <Label>{text}</Label>;
+    };
 
     return (
       <>
@@ -276,30 +406,11 @@ const CategoryPage = (props: IProps) => {
           </div>
 
           <div>
-            <Label>Selection</Label>
+            <Label>{renderSelectionLabel()}</Label>
             <div className="flex gap-x-2 mr-2">
-              <Button variant="secondary" size="sm" className="h-10">
-                <FontAwesomeIcon icon={faMessageOutline} size="xl" />
-              </Button>
-
-              <Button variant="secondary" size="sm" className="h-10">
-                {lockIcon}
-              </Button>
-
-              <DeleteDialog
-                onDelete={() => bulkDelete(unprot)}
-                tooltipContent={getLocalePhrase(
-                  appState.language,
-                  Phrase.BulkDeleteButtonTooltip,
-                )}
-                warning={deleteWarning}
-                skipPossible={false}
-                appState={appState}
-              >
-                <Button variant="secondary" size="sm" className="h-10">
-                  <Trash size={20} />
-                </Button>
-              </DeleteDialog>
+              {renderTagButton()}
+              {renderProtectButton()}
+              {renderDeleteButton()}
             </div>
           </div>
         </div>
@@ -315,21 +426,29 @@ const CategoryPage = (props: IProps) => {
               });
             }}
           >
-            <PopoverTrigger asChild className="absolute top-[60px] left-0">
+            <PopoverTrigger asChild className="absolute top-[90px] left-0">
               <Button
                 variant={viewpointSelectionOpen ? 'default' : 'secondary'}
                 size="xs"
-                className="h-20 rounded-l-none flex justify-start p-[3px]"
+                className="z-10 h-20 rounded-l-none flex justify-start p-[3px]"
               >
                 <Eye size={15} />
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              onEscapeKeyDown={() =>
+              onEscapeKeyDown={(e) => {
+                // Close the popover when escape is pressed.
                 setAppState((a) => {
-                  return { ...a, viewpointSelectionOpen: false };
-                })
-              }
+                  return {
+                    ...a,
+                    viewpointSelectionOpen: false,
+                  };
+                });
+
+                // Need this for some reason else the popover doesn't close.
+                e.preventDefault();
+                e.stopPropagation();
+              }}
               side="left"
               className="p-0 absolute top-[-40px] left-[30px] w-auto min-w-max"
               onInteractOutside={(e) => {
