@@ -1,8 +1,6 @@
 import {
   ColumnDef,
-  ExpandedState,
   getCoreRowModel,
-  getExpandedRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   PaginationState,
@@ -59,9 +57,8 @@ const useTable = (
   const { category, language } = appState;
 
   /**
-   * Tracks if the individual rows are expanded or not.
+   * Tracks if rows are selected or not.
    */
-  const [expanded, setExpanded] = useState<ExpandedState>({});
   const [rowSelection, setRowSelection] = useState({});
 
   /**
@@ -73,11 +70,9 @@ const useTable = (
   });
 
   /**
-   * Reset expanded on changing category. Probably this could be
-   * higher in the stack rather than running post-render of a new category.
+   * Deselect all rows on category change.
    */
   useEffect(() => {
-    setExpanded({});
     setRowSelection({});
   }, [category]);
 
@@ -406,13 +401,10 @@ const useTable = (
   const table = useReactTable({
     columns,
     data: videoState,
-    state: { expanded, pagination, rowSelection },
+    state: { pagination, rowSelection },
     getRowId: (row) => row.uniqueId,
-    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getRowCanExpand: () => true,
-    getExpandedRowModel: getExpandedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     getPaginationRowModel: getPaginationRowModel(),

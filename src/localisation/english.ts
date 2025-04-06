@@ -334,8 +334,6 @@ const ENGLISH: Translations = {
   [Phrase.Timed]: "Timed",
   [Phrase.Activity]: "Activity",
   [Phrase.Unknown]: "Unknown",
-  [Phrase.ClickToCollapse]: "Click to collapse.",
-  [Phrase.ClickToExpand]: "Click to expand.",
   [Phrase.NoneTagged]: "This row contains no tagged recordings.",
   [Phrase.MultipleTagged]: "This row contains multiple tagged recordings.",
   [Phrase.NoneStarred]: "This row is not locked in. It may be automatically aged out to make space for new recordings.",
@@ -360,8 +358,8 @@ const ENGLISH: Translations = {
   [Phrase.UpdateAvailableRemindButtonText]: 'Remind Me Later',
   [Phrase.Saving]: 'Saving...',
   [Phrase.StartTyping]: 'Start typing...',
-  [Phrase.StarSelected]: 'Lock selected rows.',
-  [Phrase.UnstarSelected]: 'Unlock selected rows.',
+  [Phrase.StarSelected]: 'Lock selected rows. Locked rows will not be automatically aged out.',
+  [Phrase.UnstarSelected]: 'Unlock selected rows. Unlocked rows may be automatically aged out to make space for new recordings.',
   [Phrase.Selection]: 'Selection',
 
 };

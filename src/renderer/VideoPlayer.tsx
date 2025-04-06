@@ -934,7 +934,7 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
-   *
+   * Open the folder containing the video.
    */
   const openLocation = (event: React.SyntheticEvent) => {
     event.stopPropagation();
@@ -948,7 +948,7 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
-   *
+   * Render the open folder button.
    */
   const renderOpenFolderButton = () => {
     return (
@@ -969,6 +969,9 @@ export const VideoPlayer = (props: IProps) => {
     );
   };
 
+  /**
+   * Get a shareable URL for the video.
+   */
   const getShareableLink = async (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     event.preventDefault();
@@ -1000,6 +1003,9 @@ export const VideoPlayer = (props: IProps) => {
     }
   };
 
+  /**
+   * Render the get link button.
+   */
   const renderGetLinkButton = () => {
     return (
       <Tooltip
@@ -1068,6 +1074,9 @@ export const VideoPlayer = (props: IProps) => {
     );
   };
 
+  /**
+   * Render the cancel clipping mode button.
+   */
   const renderClipCancelButton = () => {
     return (
       <Tooltip content={getLocalePhrase(language, Phrase.CancelTooltip)}>

@@ -1069,9 +1069,6 @@ export default class Manager {
         const cloud = videos.filter((v) => v.cloud);
         const disk = videos.filter((v) => !v.cloud);
 
-        console.log("disk p", protect, disk.length);
-        console.log("cloud p", protect, cloud.length);
-
         disk
           .map((v) => v.videoSource)
           .forEach((src) => protectVideoDisk(protect, src));

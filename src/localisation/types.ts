@@ -333,8 +333,6 @@ enum Phrase {
   Timed,
   Activity,
   Unknown,
-  ClickToCollapse,
-  ClickToExpand,
   NoneTagged,
   MultipleTagged,
   NoneStarred,
@@ -357,7 +355,6 @@ enum Phrase {
   UpdateAvailableRemindButtonText,
   Saving,
   StartTyping,
-
   UnstarSelected,
   StarSelected,
   Selection,

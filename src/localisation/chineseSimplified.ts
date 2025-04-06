@@ -334,8 +334,6 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Timed]: "定时",
   [Phrase.Activity]: "活动",
   [Phrase.Unknown]: "未知",
-  [Phrase.ClickToCollapse]: "点击折叠",
-  [Phrase.ClickToExpand]: "点击展开",
   [Phrase.NoneTagged]: "该行不包含标记的录音",
   [Phrase.MultipleTagged]: "该行包含多个标记的录音",
   [Phrase.NoneStarred]: "该行不包含加星标的录音",

@@ -334,8 +334,6 @@ const GERMAN: Translations = {
   [Phrase.Timed]: "Zeitgesteuert",
   [Phrase.Activity]: "Aktivität",
   [Phrase.Unknown]: "Unbekannt",
-  [Phrase.ClickToCollapse]: "Zum Ausblenden klicken.",
-  [Phrase.ClickToExpand]: "Klicken Sie zum Erweitern.",
   [Phrase.NoneTagged]: "Diese Zeile enthält keine getaggten Aufnahmen.",
   [Phrase.MultipleTagged]: "Diese Zeile enthält mehrere getaggte Aufnahmen.",
   [Phrase.NoneStarred]: "Diese Zeile enthält keine markierten Aufnahmen.",

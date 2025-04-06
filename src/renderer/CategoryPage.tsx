@@ -330,7 +330,7 @@ const CategoryPage = (props: IProps) => {
       let text = getLocalePhrase(appState.language, Phrase.Selection);
 
       if (selectedRows.length > 1) {
-        text += `(${selectedRows.length})`;
+        text += ` (${selectedRows.length})`;
       }
 
       return <Label>{text}</Label>;

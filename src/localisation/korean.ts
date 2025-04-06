@@ -334,8 +334,6 @@ const KOREAN: Translations = {
   [Phrase.Timed]: "소진",
   [Phrase.Activity]: "활동",
   [Phrase.Unknown]: "알 수 없음",
-  [Phrase.ClickToCollapse]: "축소하려면 클릭하세요.",
-  [Phrase.ClickToExpand]: "확장하려면 클릭하세요.",
   [Phrase.NoneTagged]: "이 행에는 태그가 지정된 기록이 없습니다.",
   [Phrase.MultipleTagged]: "이 행에는 태그가 지정된 기록이 여러 개 포함되어 있습니다.",
   [Phrase.NoneStarred]: "이 행에는 북마크 표시된 기록이 없습니다.",

@@ -89,10 +89,6 @@ export default class VideoFilter {
         ? new Date(this.video.start)
         : new Date(this.video.mtime);
 
-      console.log('startDate', startDate);
-      console.log('endDate', endDate);
-      console.log('video', videoDate);
-
       if (videoDate < startDate || videoDate > endDate) {
         return false;
       }
