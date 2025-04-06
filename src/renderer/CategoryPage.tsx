@@ -234,10 +234,6 @@ const CategoryPage = (props: IProps) => {
             tooltip = tag;
           }
         }
-      } else if (selectedRows.length > 1) {
-        tooltip = "Can't tag multiple rows at once";
-      } else {
-        tooltip = 'Select a row to tag';
       }
 
       return (
@@ -289,10 +285,9 @@ const CategoryPage = (props: IProps) => {
         <LockKeyhole size={20} />
       );
 
-      // TODO trranslate
       const tooltip = allProtected
-        ? 'Unlock selected rows.'
-        : 'Lock selected rows.';
+        ? getLocalePhrase(appState.language, Phrase.UnstarSelected)
+        : getLocalePhrase(appState.language, Phrase.StarSelected);
 
       return (
         <Button
@@ -332,12 +327,72 @@ const CategoryPage = (props: IProps) => {
     };
 
     const renderSelectionLabel = () => {
-      const text =
-        selectedRows.length > 1
-          ? `Selection (${selectedRows.length})` // TODO translate
-          : 'Selection';
+      let text = getLocalePhrase(appState.language, Phrase.Selection);
+
+      if (selectedRows.length > 1) {
+        text += `(${selectedRows.length})`;
+      }
 
       return <Label>{text}</Label>;
+    };
+
+    const renderViewpointSelectionPopover = () => {
+      return (
+        <Popover
+          open={viewpointSelectionOpen}
+          onOpenChange={() => {
+            setAppState((a) => {
+              return {
+                ...a,
+                viewpointSelectionOpen: !a.viewpointSelectionOpen,
+              };
+            });
+          }}
+        >
+          <PopoverTrigger asChild className="absolute top-[90px] left-0">
+            <Button
+              variant={viewpointSelectionOpen ? 'default' : 'secondary'}
+              size="xs"
+              className="z-10 h-20 rounded-l-none flex justify-start p-[3px]"
+            >
+              <Eye size={15} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            onEscapeKeyDown={(e) => {
+              // Close the popover when escape is pressed.
+              setAppState((a) => {
+                return {
+                  ...a,
+                  viewpointSelectionOpen: false,
+                };
+              });
+
+              // Need this for some reason else the popover doesn't close.
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            side="left"
+            className="p-0 absolute top-[-40px] left-[30px] w-auto min-w-max"
+            onInteractOutside={(e) => {
+              e.preventDefault();
+            }}
+            onPointerDownOutside={(e) => {
+              e.preventDefault();
+            }}
+            onFocusOutside={(e) => {
+              e.preventDefault();
+            }}
+          >
+            <ViewpointSelection
+              video={selectedRow ? selectedRow.original : filteredState[0]}
+              appState={appState}
+              setAppState={setAppState}
+              persistentProgress={persistentProgress}
+            />
+          </PopoverContent>
+        </Popover>
+      );
     };
 
     return (
@@ -414,62 +469,7 @@ const CategoryPage = (props: IProps) => {
             </div>
           </div>
         </div>
-        <div className="relative">
-          <Popover
-            open={viewpointSelectionOpen}
-            onOpenChange={() => {
-              setAppState((a) => {
-                return {
-                  ...a,
-                  viewpointSelectionOpen: !a.viewpointSelectionOpen,
-                };
-              });
-            }}
-          >
-            <PopoverTrigger asChild className="absolute top-[90px] left-0">
-              <Button
-                variant={viewpointSelectionOpen ? 'default' : 'secondary'}
-                size="xs"
-                className="z-10 h-20 rounded-l-none flex justify-start p-[3px]"
-              >
-                <Eye size={15} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              onEscapeKeyDown={(e) => {
-                // Close the popover when escape is pressed.
-                setAppState((a) => {
-                  return {
-                    ...a,
-                    viewpointSelectionOpen: false,
-                  };
-                });
-
-                // Need this for some reason else the popover doesn't close.
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              side="left"
-              className="p-0 absolute top-[-40px] left-[30px] w-auto min-w-max"
-              onInteractOutside={(e) => {
-                e.preventDefault();
-              }}
-              onPointerDownOutside={(e) => {
-                e.preventDefault();
-              }}
-              onFocusOutside={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <ViewpointSelection
-                video={selectedRow ? selectedRow.original : filteredState[0]}
-                appState={appState}
-                setAppState={setAppState}
-                persistentProgress={persistentProgress}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <div className="relative">{renderViewpointSelectionPopover()}</div>
         <div className="w-full h-full overflow-hidden">
           <VideoSelectionTable
             table={table}

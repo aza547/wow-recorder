@@ -357,6 +357,10 @@ enum Phrase {
   UpdateAvailableRemindButtonText,
   Saving,
   StartTyping,
+
+  UnstarSelected,
+  StarSelected,
+  Selection,
 }
 
 enum Language {

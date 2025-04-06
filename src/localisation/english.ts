@@ -360,6 +360,10 @@ const ENGLISH: Translations = {
   [Phrase.UpdateAvailableRemindButtonText]: 'Remind Me Later',
   [Phrase.Saving]: 'Saving...',
   [Phrase.StartTyping]: 'Start typing...',
+  [Phrase.StarSelected]: 'Lock selected rows.',
+  [Phrase.UnstarSelected]: 'Unlock selected rows.',
+  [Phrase.Selection]: 'Selection',
+
 };
 
 export default ENGLISH;

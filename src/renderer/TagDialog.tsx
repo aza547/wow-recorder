@@ -43,7 +43,7 @@ export default function TagDialog(props: IProps) {
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'tag',
       newTag,
-      videos, // TODO VIDEOS
+      videos,
     ]);
   };
 

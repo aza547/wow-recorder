@@ -105,8 +105,6 @@ export const populateDetailsCell = (
 
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
-
-      // TODO fix this to update UI immediately.
       stateManager.current.setProtected(!starred, [video, ...video.multiPov]);
 
       window.electron.ipcRenderer.sendMessage('videoButton', [

@@ -952,7 +952,9 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderOpenFolderButton = () => {
     return (
-      <Tooltip content="Open Folder">
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.OpenFolderButtonTooltip)}
+      >
         <div>
           <Button
             variant="ghost"
@@ -1000,7 +1002,9 @@ export const VideoPlayer = (props: IProps) => {
 
   const renderGetLinkButton = () => {
     return (
-      <Tooltip content="Generate link">
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.ShareLinkButtonTooltip)}
+      >
         <div>
           <Button variant="ghost" size="xs" onClick={getShareableLink}>
             <Link size={20} color="white" />

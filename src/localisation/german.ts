@@ -360,6 +360,9 @@ const GERMAN: Translations = {
   [Phrase.UpdateAvailableRemindButtonText]: 'Erinnere mich später',
   [Phrase.Saving]: 'Sparen...',
   [Phrase.StartTyping]: 'Beginnen Sie mit der Eingabe...',
+  [Phrase.StarSelected]: 'Ausgewählte Zeilen sperren.',
+  [Phrase.UnstarSelected]: 'Ausgewählte Zeilen entsperren.',
+  [Phrase.Selection]: 'Auswahl',
 };
 
 export default GERMAN;

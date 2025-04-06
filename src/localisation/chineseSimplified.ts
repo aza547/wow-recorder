@@ -360,6 +360,9 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.UpdateAvailableRemindButtonText]: '稍后提醒我',
   [Phrase.Saving]: '保存',
   [Phrase.StartTyping]: '开始打字',
+  [Phrase.StarSelected]: '锁定选定的行',
+  [Phrase.UnstarSelected]: '解锁选定的行',
+  [Phrase.Selection]: '选择',
 };
 
 export default CHINESE_SIMPLIFIED;
