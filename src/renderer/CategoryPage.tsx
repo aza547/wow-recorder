@@ -453,6 +453,7 @@ const CategoryPage = (props: IProps) => {
                 separator="to"
                 displayFormat="DD/MM/YY"
                 showShortcuts
+                showFooter
                 primaryColor="red"
                 containerClassName="relative tailwind-datepicker" // See App.css for tailwind overrides. This library doesn't expose much.
                 inputClassName="relative transition-all duration-300 h-10 pl-4 pr-14 w-full border border-background bg-card text-foreground placeholder:text-foreground rounded-lg text-sm placeholder:text-sm"
