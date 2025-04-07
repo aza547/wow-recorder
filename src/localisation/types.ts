@@ -357,6 +357,7 @@ enum Phrase {
   UpdateAvailableRemindButtonText,
   Saving,
   StartTyping,
+  TOGGLE_DRAWING,
 }
 
 enum Language {
