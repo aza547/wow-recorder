@@ -1278,7 +1278,7 @@ input[type='submit'].btn-block {
 
 /* Hacky way of overriding the color theme. */
 .tailwind-datepicker .bg-red-500 {
-  @apply text-white bg-[#bb4420];
+  @apply text-white bg-primary;
 }
 
 /* Hacky way of targetting the cancel button. */
@@ -1288,5 +1288,5 @@ input[type='submit'].btn-block {
 
 /* Hacky way of targetting the apply button. */
 .tailwind-datepicker .w-full.transition-all.duration-300.bg-red-500.border-red-500.font-medium.border.px-4.py-2.text-sm.rounded-md.focus\:ring-2.focus\:ring-offset-2.hover\:bg-red-600.focus\:ring-red-500 {
-  @apply text-white disabled:pointer-events-none disabled:opacity-50 bg-[#bb4420] h-[40px] mx-2;
+  @apply border-none disabled:pointer-events-none disabled:opacity-50 bg-primary h-[40px] mx-2 hover:bg-primary/90;
 }
