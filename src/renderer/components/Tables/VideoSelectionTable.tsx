@@ -1,7 +1,7 @@
 import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
-import { Fragment, MutableRefObject, useEffect, useState } from 'react';
+import React, { Fragment, MutableRefObject, useEffect } from 'react';
 import StateManager from 'renderer/StateManager';
 import {
   ArrowDown,
@@ -30,26 +30,14 @@ interface IProps {
  */
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
-
   const { selectedVideos } = appState;
-
-  const [shiftDown, setShiftDown] = useState<boolean>(false);
-  const [ctrlDown, setCtrlDown] = useState<boolean>(false);
 
   /**
    * Allow control and shift to select multi or ranges of
    * selections, respectively.
    */
   useEffect(() => {
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Control') setCtrlDown(false);
-      if (event.key === 'Shift') setShiftDown(false);
-    };
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Control') setCtrlDown(true);
-      if (event.key === 'Shift') setShiftDown(true);
-
       if (event.key === 'a' && event.ctrlKey) {
         const { rows } = table.getRowModel();
 
@@ -62,43 +50,83 @@ const VideoSelectionTable = (props: IProps) => {
         event.preventDefault();
         event.stopPropagation();
       }
+
+      if (event.key === 'ArrowDown' && !event.repeat) {
+        const selection = table.getSelectedRowModel().rows;
+        const end = selection[selection.length - 1];
+
+        if (end) {
+          const indexNextDown = end.index + 1;
+          const rowNextDown = table.getRowModel().rows[indexNextDown];
+
+          if (rowNextDown) {
+            onRowClick(event, rowNextDown);
+          }
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      if (event.key === 'ArrowUp' && !event.repeat) {
+        const selection = table.getSelectedRowModel().rows;
+        const start = selection[0];
+
+        if (start) {
+          const indexNextUp = start.index - 1;
+          const rowNextUp = table.getRowModel().rows[indexNextUp];
+
+          if (rowNextUp) {
+            onRowClick(event, rowNextUp);
+          }
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      if (
+        event.key === 'ArrowUp' ||
+        event.key === 'ArrowDown' ||
+        event.repeat
+      ) {
+        // Prevent the default behaviour of the arrow keys.
+        event.preventDefault();
+        event.stopPropagation();
+      }
     };
 
     const handleMouseDown = (event: MouseEvent) => {
       if (event.shiftKey || event.ctrlKey) event.preventDefault();
     };
 
-    const handleBlur = () => {
-      setCtrlDown(false);
-      setShiftDown(false);
-    };
-
-    document.addEventListener('keyup', handleKeyUp);
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('blur', handleBlur);
 
     return () => {
-      document.removeEventListener('keyup', handleKeyUp);
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('blur', handleBlur);
     };
-  }, []);
+  }, [table]);
 
   /**
    * Mark the row as selected and update the video player to play the first
    * viewpoint.
    */
   const onRowClick = (
-    event: React.MouseEvent<HTMLTableRowElement>,
+    event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
     row: Row<RendererVideo>,
   ) => {
     const allRows = table.getRowModel().rows;
     const selectedRows = table.getSelectedRowModel().rows;
     const isSelected = selectedRows.map((r) => r.index).includes(row.index);
 
-    if (shiftDown) {
+    if (event.shiftKey && event instanceof KeyboardEvent) {
+      // Just add the next row down to the selection.
+      row.getToggleSelectedHandler()(event);
+      return;
+    } else if (event.shiftKey) {
+      // Select a range of rows.
       const base = getSelectedRowIndex(selectedVideos, table);
       const target = row.index;
       const start = Math.min(base, target);
@@ -113,7 +141,8 @@ const VideoSelectionTable = (props: IProps) => {
       return;
     }
 
-    if (ctrlDown) {
+    if (event.ctrlKey && event instanceof MouseEvent) {
+      // Add a single row to the Selection.
       row.getToggleSelectedHandler()(event);
       return;
     }

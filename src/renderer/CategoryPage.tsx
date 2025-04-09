@@ -150,35 +150,19 @@ const CategoryPage = (props: IProps) => {
   };
 
   const getVideoSelection = () => {
-    const viewpoints = getAllSelectedViewpoints();
-    const prot = viewpoints.filter((v) => v.isProtected);
-    const unprot = viewpoints.filter((v) => !v.isProtected);
+    const { rows } = table.getSelectedRowModel();
+    const selected = getAllSelectedViewpoints();
 
-    let deleteWarning = `${getLocalePhrase(
+    const deleteWarning = `${getLocalePhrase(
       appState.language,
       Phrase.ThisWillPermanentlyDelete,
-    )} ${unprot.length} ${getLocalePhrase(
+    )} ${selected.length} ${getLocalePhrase(
       appState.language,
-      Phrase.RecordingsFullStop,
-    )}`;
-
-    if (prot.length > 0) {
-      deleteWarning += ' ';
-
-      deleteWarning += getLocalePhrase(
-        appState.language,
-        Phrase.ThisSelectionIncludes,
-      );
-
-      deleteWarning += ' ';
-      deleteWarning += prot.length;
-      deleteWarning += ' ';
-
-      deleteWarning += getLocalePhrase(
-        appState.language,
-        Phrase.StarredRecordingNotDeleted,
-      );
-    }
+      Phrase.Recordings,
+    )} ${getLocalePhrase(
+      appState.language,
+      Phrase.From,
+    )} ${rows.length} ${getLocalePhrase(appState.language, Phrase.Rows)}.`;
 
     // We don't want multi player mode to be accessible if there isn't
     // multiple viewpoints, so check for that. Important to filter by
@@ -305,13 +289,12 @@ const CategoryPage = (props: IProps) => {
     const renderDeleteButton = () => {
       return (
         <DeleteDialog
-          onDelete={() => bulkDelete(unprot)}
+          onDelete={() => bulkDelete(selected)}
           tooltipContent={getLocalePhrase(
             appState.language,
             Phrase.BulkDeleteButtonTooltip,
           )}
           warning={deleteWarning}
-          skipPossible={false}
           appState={appState}
         >
           <Button

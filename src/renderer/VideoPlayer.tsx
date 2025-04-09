@@ -45,10 +45,6 @@ import {
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { CloudDownload, CloudUpload, FolderOpen, Link } from 'lucide-react';
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from './components/ToggleGroup/ToggleGroup';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
@@ -834,8 +830,8 @@ export const VideoPlayer = (props: IProps) => {
 
   const n = videos[0].videoName;
   const nameMatches = categoryState
-    .filter((v) => v.videoName === n)
-    .flatMap((v) => [v, ...v.multiPov]);
+    .flatMap((v) => [v, ...v.multiPov])
+    .filter((v) => v.videoName === n);
 
   const cloudVideo = nameMatches.find((v) => v.cloud);
   const diskVideo = nameMatches.find((v) => !v.cloud);
@@ -927,8 +923,7 @@ export const VideoPlayer = (props: IProps) => {
     return (
       <div className="flex flex-row items-center">
         {getCloudIcon()}
-        {diskVideo && getDiskIcon()}
-        {!diskVideo && renderDownloadButton()}
+        {getDiskIcon()}
       </div>
     );
   };
