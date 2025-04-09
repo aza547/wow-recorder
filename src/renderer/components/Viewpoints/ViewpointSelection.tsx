@@ -231,11 +231,11 @@ export default function ViewpointSelection(props: IProps) {
     // pretty sure it's scanning these files to decide what to bundle so needs these
     // hardcoded.
     if (friendly.length === 2) {
-      gridClass += 'grid-cols-2';
+      gridClass += 'grid-rows-2';
     } else if (friendly.length === 3) {
-      gridClass += 'grid-cols-3';
+      gridClass += 'grid-rows-3';
     } else {
-      gridClass += 'grid-cols-5';
+      gridClass += 'grid-rows-5';
     }
 
     const renderVsIcon = () => {
@@ -247,7 +247,7 @@ export default function ViewpointSelection(props: IProps) {
     };
 
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-row items-center">
         <div className={gridClass}>{friendly.map(mapCombatants)}</div>
         {!isSoloShuffleUtil(povs[0]) && renderVsIcon()}
         <div className={gridClass}>{enemy.map(mapCombatants)}</div>

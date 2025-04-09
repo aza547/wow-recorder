@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added all combatants back to search filter.
 - Show boss percentages on wipes.
 - Catch render errors and display a refresh button for the user to recover.
+- Add a date filter, and range picker.
 
 ### Fixed
 - Bump packages, including electron, to pick up latest tzdata.
