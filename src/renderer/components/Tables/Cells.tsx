@@ -17,7 +17,7 @@ import {
   getDungeonName,
 } from 'renderer/rendererutils';
 import { Box, Checkbox } from '@mui/material';
-import { specImages } from 'renderer/images';
+import { affixImages, specImages } from 'renderer/images';
 import { Language, Phrase } from 'localisation/types';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
@@ -25,6 +25,7 @@ import { getLocalePhrase } from 'localisation/translations';
 import { LockKeyhole, LockOpen } from 'lucide-react';
 import StateManager from 'renderer/StateManager';
 import { MutableRefObject } from 'react';
+import { dungeonAffixesById } from 'main/constants';
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -131,6 +132,42 @@ export const populateLevelCell = (
 ) => {
   const video = info.getValue() as RendererVideo;
   return `+${video.keystoneLevel || video.level}`;
+};
+
+export const populateAffixesCell = (
+  info: CellContext<RendererVideo, unknown>,
+) => {
+  const video = info.getValue() as RendererVideo;
+
+  const renderAffix = (id: number) => {
+    const affixName = dungeonAffixesById[id];
+    const affixImage = affixImages[id as keyof typeof affixImages];
+
+    return (
+      <Tooltip content={affixName}>
+        <Box
+          component="img"
+          src={affixImage}
+          sx={{
+            height: '25px',
+            width: '25px',
+            border: '1px solid black',
+            borderRadius: '15%',
+            boxSizing: 'border-box',
+            objectFit: 'cover',
+          }}
+        />
+      </Tooltip>
+    );
+  };
+
+  if (!video.affixes) {
+    return <></>;
+  }
+
+  return (
+    <div className="flex flex-row">{video.affixes.sort().map(renderAffix)}</div>
+  );
 };
 
 export const populateViewpointCell = (

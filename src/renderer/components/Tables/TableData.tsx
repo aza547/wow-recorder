@@ -25,6 +25,7 @@ import {
   populateMapCell,
   populateLevelCell,
   populateActivityCell,
+  populateAffixesCell,
 } from './Cells';
 import {
   EncounterHeader,
@@ -39,6 +40,7 @@ import {
   TypeHeader,
   ActivityHeader,
   DetailsHeader,
+  AffixesHeader,
 } from './Headers';
 import {
   resultSort,
@@ -230,6 +232,14 @@ const useTable = (
         sortingFn: levelSort,
         header: () => LevelHeader(language),
         cell: populateLevelCell,
+      },
+      {
+        id: 'Affixes',
+        size: 100,
+        accessorFn: (v) => v,
+        sortingFn: levelSort,
+        header: () => AffixesHeader(),
+        cell: populateAffixesCell,
       },
       {
         id: 'Duration',
