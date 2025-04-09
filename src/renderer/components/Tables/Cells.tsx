@@ -146,6 +146,7 @@ export const populateAffixesCell = (
     return (
       <Tooltip content={affixName}>
         <Box
+          key={affixName}
           component="img"
           src={affixImage}
           sx={{
