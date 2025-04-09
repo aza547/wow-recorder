@@ -12,7 +12,6 @@ import {
   MapPinned,
   Swords,
   Trophy,
-  Ellipsis,
 } from 'lucide-react';
 import { RendererVideo } from 'main/types';
 

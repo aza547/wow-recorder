@@ -26,7 +26,6 @@ import { Flavour } from '../main/types';
 import SoloShuffle from '../activitys/SoloShuffle';
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
-import RaidEncounter from 'activitys/RaidEncounter';
 
 /**
  * RetailLogHandler class.

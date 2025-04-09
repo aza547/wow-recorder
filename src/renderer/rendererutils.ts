@@ -40,7 +40,6 @@ import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 import { Table } from '@tanstack/react-table';
-import { get } from 'lodash';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
