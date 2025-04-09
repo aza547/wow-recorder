@@ -159,6 +159,7 @@
     "re-resizable": "^6.9.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-error-boundary": "^5.0.0",
     "react-player": "^2.14.1",
     "react-router-dom": "^6.16.0",
     "react-tag-autocomplete": "^7.5.0",

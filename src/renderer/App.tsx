@@ -25,6 +25,8 @@ import Toaster from './components/Toast/Toaster';
 import SideMenu from './SideMenu';
 import { useToast } from './components/Toast/useToast';
 import { Button } from './components/Button/Button';
+import { ErrorBoundary } from 'react-error-boundary';
+import { RefreshCcw } from 'lucide-react';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -216,46 +218,64 @@ const WarcraftRecorder = () => {
   }, []);
 
   return (
-    <Box
-      id="main-box"
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        width: '100%',
-      }}
-    >
-      <Toaster />
-      <TooltipProvider>
-        <RendererTitleBar />
-        <div className="flex flex-row items-center h-full w-full font-sans">
-          <SideMenu
-            recorderStatus={recorderStatus}
-            videoState={videoState}
-            appState={appState}
-            setAppState={setAppState}
-            persistentProgress={persistentProgress}
-            error={error}
-            micStatus={micStatus}
-            crashes={crashes}
-            savingStatus={savingStatus}
-            config={config}
-            updateAvailable={updateAvailable}
-          />
-          <Layout
-            recorderStatus={recorderStatus}
-            stateManager={stateManager}
-            categoryState={categoryState}
-            appState={appState}
-            setAppState={setAppState}
-            persistentProgress={persistentProgress}
-            playerHeight={playerHeight}
-            config={config}
-            setConfig={setConfig}
-          />
-        </div>
-      </TooltipProvider>
-    </Box>
+    <ErrorBoundary fallbackRender={renderErrorPage}>
+      <Box
+        id="main-box"
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          width: '100%',
+        }}
+      >
+        <Toaster />
+        <TooltipProvider>
+          <RendererTitleBar />
+          <div className="flex flex-row items-center h-full w-full font-sans">
+            <SideMenu
+              recorderStatus={recorderStatus}
+              videoState={videoState}
+              appState={appState}
+              setAppState={setAppState}
+              persistentProgress={persistentProgress}
+              error={error}
+              micStatus={micStatus}
+              crashes={crashes}
+              savingStatus={savingStatus}
+              config={config}
+              updateAvailable={updateAvailable}
+            />
+            <Layout
+              recorderStatus={recorderStatus}
+              stateManager={stateManager}
+              categoryState={categoryState}
+              appState={appState}
+              setAppState={setAppState}
+              persistentProgress={persistentProgress}
+              playerHeight={playerHeight}
+              config={config}
+              setConfig={setConfig}
+            />
+          </div>
+        </TooltipProvider>
+      </Box>
+    </ErrorBoundary>
+  );
+};
+
+const renderErrorPage = () => {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen bg-background">
+      <h1 className="text-2xl font-bold text-secondary-foreground">
+        It&apos;s a wipe, blame the <s>healer</s> programmer.
+      </h1>
+      <h2 className="text-md font-semibold text-foreground">
+        You hit a bug in the code. Please try refreshing.
+      </h2>
+      <Button className="m-2" onClick={() => window.location.reload()}>
+        <RefreshCcw />
+      </Button>
+    </div>
   );
 };
 
