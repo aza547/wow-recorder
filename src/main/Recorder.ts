@@ -145,6 +145,11 @@ export default class Recorder extends EventEmitter {
   private dummyGameCaptureSource: IInput;
 
   /**
+   * The dummy window capture source.
+   */
+  private dummyProcessAudioSource: IInput;
+
+  /**
    * Timer for latching onto a window for either game capture or
    * window capture. Often this does not appear immediately on
    * the WoW process starting.
@@ -373,6 +378,14 @@ export default class Recorder extends EventEmitter {
       'WCR Chat Overlay',
       { file: getAssetPath('poster', 'chat-cover.png') },
     );
+
+    // Provides us with a mechanism to get a list of available processes to
+    // expose in the UI. We won't ever use this source.
+    this.dummyProcessAudioSource = osn.InputFactory.create(
+      TAudioSourceType.process,
+      'WCR Dummy Process Audio Source',
+    );
+    this.dummyProcessAudioSource.enabled = false;
 
     // Connects the signal handler, we get feedback from OBS by way of
     // signals, so this is how we know it's doing the right thing after
@@ -967,6 +980,35 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
+   * Return an array of all the windows for audio process capture available to OBS.
+   */
+  public getAvailableWindowsAudioCapture(): {
+    name: string; // Display name.
+    value: string | number; // Value to configure OBS with.
+  }[] {
+    console.info('[Recorder] Getting available windows for audio capture');
+
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    let prop = this.dummyProcessAudioSource.properties.first();
+
+    while (prop && prop.name !== 'window') {
+      prop = prop.next();
+    }
+
+    const windows = [];
+
+    if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
+      windows.push(...prop.details.items);
+    }
+
+    console.info('[Recorder] Windows available for audio capture', windows);
+    return [];
+  }
+
+  /**
    * Show the scene preview on the UI, taking the location and dimensions as
    * input. We scale to match the monitor scaling here too else the preview
    * will be misplaced (see issue 397).
@@ -1294,7 +1336,7 @@ export default class Recorder extends EventEmitter {
 
     const { settings } = this.monitorCaptureSource;
     settings.compatibility = false;
-    settings.orce_sdr = false;
+    settings.force_sdr = false;
 
     if (prop.name === 'monitor_id' && Recorder.isObsListProperty(prop)) {
       // An "Auto" option appears as the first thing here so make sure we

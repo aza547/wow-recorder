@@ -981,6 +981,7 @@ export default class Manager {
         .getAvailableEncoders()
         .filter((encoder) => encoder !== 'none');
 
+      this.recorder.getAvailableWindowsAudioCapture(); // TODO
       return obsEncoders;
     });
 
