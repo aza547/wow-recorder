@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from './components/Dialog/Dialog';
 import { Button } from './components/Button/Button';
-import ControlIcon from '../../assets/icon/ctrl-icon.png';
 import { Tooltip } from './components/Tooltip/Tooltip';
 
 type DeleteDialogProps = {
@@ -18,7 +17,6 @@ type DeleteDialogProps = {
   onDelete: (event: React.MouseEvent<HTMLElement>) => void;
   tooltipContent: string;
   warning?: string;
-  skipPossible: boolean;
   appState: AppState;
 };
 
@@ -27,26 +25,12 @@ const DeleteDialog = ({
   onDelete,
   tooltipContent,
   warning = '',
-  skipPossible,
   appState,
 }: DeleteDialogProps) => {
   const getWarningMessage = () => {
     return <div className="text-sm">{warning}</div>;
   };
 
-  const getSkipMessage = () => {
-    return (
-      <div className="text-sm">
-        {getLocalePhrase(appState.language, Phrase.Hold)}
-        <img
-          src={ControlIcon}
-          className="h-[32px] inline-flex mx-1"
-          alt="ctrlIcon"
-        />
-        {getLocalePhrase(appState.language, Phrase.ToSkip)}
-      </div>
-    );
-  };
   return (
     <Dialog>
       <Tooltip content={tooltipContent}>
@@ -59,7 +43,6 @@ const DeleteDialog = ({
           </DialogTitle>
         </DialogHeader>
         {warning && getWarningMessage()}
-        {skipPossible && getSkipMessage()}
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="ghost">

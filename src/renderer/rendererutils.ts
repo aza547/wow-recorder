@@ -506,15 +506,19 @@ const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
     return 'UNKNOWN';
   }
 
-  if (player._specID === undefined) {
+  return getSpecClass(player._specID);
+};
+
+const getSpecClass = (specId: number | undefined): WoWCharacterClassType => {
+  if (specId === undefined) {
     return 'UNKNOWN';
   }
 
-  if (specializationById[player._specID] === undefined) {
+  if (specializationById[specId] === undefined) {
     return 'UNKNOWN';
   }
 
-  return specializationById[player._specID].class;
+  return specializationById[specId].class;
 };
 
 const getVideoTime = (video: RendererVideo) => {
@@ -1119,4 +1123,5 @@ export {
   dateToHumanReadable,
   getSelectedRow,
   getSelectedRowIndex,
+  getSpecClass,
 };

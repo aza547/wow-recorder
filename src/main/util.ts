@@ -333,7 +333,7 @@ const openSystemExplorer = (filePath: string) => {
 /**
  * Put a save marker on a video, protecting it from the file monitor.
  */
-const toggleVideoProtectedDisk = async (videoPath: string) => {
+const protectVideoDisk = async (protect: boolean, videoPath: string) => {
   let metadata;
 
   try {
@@ -347,17 +347,13 @@ const toggleVideoProtectedDisk = async (videoPath: string) => {
     return;
   }
 
-  if (metadata.protected === undefined) {
-    console.info(`[Util] User protected ${videoPath}`);
-    metadata.protected = true;
+  if (protect) {
+    console.info(`[Util] User set protected ${videoPath}`);
   } else {
-    metadata.protected = !metadata.protected;
-
-    console.info(
-      `[Util] User toggled protection on ${videoPath}, now ${metadata.protected}`,
-    );
+    console.info(`[Util] User unprotected ${videoPath}`);
   }
 
+  metadata.protected = protect;
   await writeMetadataFile(videoPath, metadata);
 };
 
@@ -924,7 +920,7 @@ export {
   writeMetadataFile,
   deleteVideoDisk,
   openSystemExplorer,
-  toggleVideoProtectedDisk,
+  protectVideoDisk,
   fixPathWhenPackaged,
   getSortedVideos,
   getAvailableDisplays,

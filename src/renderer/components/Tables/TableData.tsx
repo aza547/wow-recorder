@@ -1,15 +1,13 @@
 import {
   ColumnDef,
-  ExpandedState,
   getCoreRowModel,
-  getExpandedRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   PaginationState,
   useReactTable,
 } from '@tanstack/react-table';
 import { RendererVideo, AppState } from 'main/types';
-import { useEffect, useMemo, useState } from 'react';
+import { MutableRefObject, useEffect, useMemo, useState } from 'react';
 import {
   getPullNumber,
   getInstanceDifficultyText,
@@ -18,7 +16,6 @@ import {
 } from 'renderer/rendererutils';
 import { VideoCategory } from 'types/VideoCategory';
 import {
-  populateSelectCell,
   populateEncounterNameCell,
   populateResultCell,
   populateDurationCell,
@@ -28,9 +25,9 @@ import {
   populateMapCell,
   populateLevelCell,
   populateActivityCell,
+  populateAffixesCell,
 } from './Cells';
 import {
-  SelectHeader,
   EncounterHeader,
   ResultHeader,
   PullHeader,
@@ -43,6 +40,7 @@ import {
   TypeHeader,
   ActivityHeader,
   DetailsHeader,
+  AffixesHeader,
 } from './Headers';
 import {
   resultSort,
@@ -51,14 +49,18 @@ import {
   levelSort,
 } from './Sorting';
 import { getLocaleCategoryLabel } from 'localisation/translations';
+import StateManager from 'renderer/StateManager';
 
-const useTable = (videoState: RendererVideo[], appState: AppState) => {
+const useTable = (
+  videoState: RendererVideo[],
+  appState: AppState,
+  stateManager: MutableRefObject<StateManager>,
+) => {
   const { category, language } = appState;
 
   /**
-   * Tracks if the individual rows are expanded or not.
+   * Tracks if rows are selected or not.
    */
-  const [expanded, setExpanded] = useState<ExpandedState>({});
   const [rowSelection, setRowSelection] = useState({});
 
   /**
@@ -70,11 +72,9 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   });
 
   /**
-   * Reset expanded on changing category. Probably this could be
-   * higher in the stack rather than running post-render of a new category.
+   * Deselect all rows on category change.
    */
   useEffect(() => {
-    setExpanded({});
     setRowSelection({});
   }, [category]);
 
@@ -85,11 +85,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const raidColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 50,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Encounter',
@@ -140,13 +140,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language, videoState],
   );
@@ -158,11 +151,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const arenaColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 50,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Map',
@@ -201,13 +194,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language],
   );
@@ -219,11 +205,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const dungeonColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 50,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Map',
@@ -248,6 +234,14 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateLevelCell,
       },
       {
+        id: 'Affixes',
+        size: 100,
+        accessorFn: (v) => v,
+        sortingFn: levelSort,
+        header: () => AffixesHeader(),
+        cell: populateAffixesCell,
+      },
+      {
         id: 'Duration',
         size: 100,
         accessorFn: (v) => v,
@@ -270,13 +264,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language],
   );
@@ -288,11 +275,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const battlegroundColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 50,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Map',
@@ -331,13 +318,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language],
   );
@@ -349,11 +329,11 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const clipsColumns = useMemo<ColumnDef<RendererVideo>[]>(
     () => [
       {
-        id: 'Select',
-        size: 50,
-        header: SelectHeader,
-        cell: populateSelectCell,
-        enableSorting: false,
+        id: 'Details',
+        size: 25,
+        accessorFn: (v) => v,
+        header: () => DetailsHeader(language),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
         id: 'Type',
@@ -394,13 +374,6 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
         cell: populateViewpointCell,
         sortingFn: viewPointCountSort,
       },
-      {
-        id: 'Details',
-        size: 75,
-        accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language),
-      },
     ],
     [language],
   );
@@ -438,13 +411,10 @@ const useTable = (videoState: RendererVideo[], appState: AppState) => {
   const table = useReactTable({
     columns,
     data: videoState,
-    state: { expanded, pagination, rowSelection },
+    state: { pagination, rowSelection },
     getRowId: (row) => row.uniqueId,
-    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getRowCanExpand: () => true,
-    getExpandedRowModel: getExpandedRowModel(),
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     getPaginationRowModel: getPaginationRowModel(),

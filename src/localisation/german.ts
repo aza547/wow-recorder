@@ -269,11 +269,9 @@ const GERMAN: Translations = {
   [Phrase.Depleted]: 'Depleted',
   [Phrase.AreYouSure]: 'Bist du dir sicher?',
   [Phrase.ThisWillPermanentlyDelete]: 'Die Löschung ist permanent.',
-  [Phrase.RecordingsFullStop]: 'Aufnahme(n).',
-  [Phrase.ThisSelectionIncludes]: 'Dieser Abschnitt enthält',
-  [Phrase.StarredRecordingNotDeleted]: 'starred recording(s) which will not be deleted.',
-  [Phrase.Hold]: 'Halten',
-  [Phrase.ToSkip]: 'to skip this prompt in future.',
+  [Phrase.Recordings]: 'Aufnahme(n)',
+  [Phrase.From]: 'aus',
+  [Phrase.Rows]: 'Reihe(n)',
   [Phrase.Death]: 'Tod',
   [Phrase.AddADescription]: 'Füge eine Beschreibung hinzu',
   [Phrase.TagDialogText]: 'This description is queryable in the search bar.',
@@ -334,8 +332,6 @@ const GERMAN: Translations = {
   [Phrase.Timed]: "Zeitgesteuert",
   [Phrase.Activity]: "Aktivität",
   [Phrase.Unknown]: "Unbekannt",
-  [Phrase.ClickToCollapse]: "Zum Ausblenden klicken.",
-  [Phrase.ClickToExpand]: "Klicken Sie zum Erweitern.",
   [Phrase.NoneTagged]: "Diese Zeile enthält keine getaggten Aufnahmen.",
   [Phrase.MultipleTagged]: "Diese Zeile enthält mehrere getaggte Aufnahmen.",
   [Phrase.NoneStarred]: "Diese Zeile enthält keine markierten Aufnahmen.",
@@ -360,6 +356,9 @@ const GERMAN: Translations = {
   [Phrase.UpdateAvailableRemindButtonText]: 'Erinnere mich später',
   [Phrase.Saving]: 'Sparen...',
   [Phrase.StartTyping]: 'Beginnen Sie mit der Eingabe...',
+  [Phrase.StarSelected]: 'Ausgewählte Zeilen sperren.',
+  [Phrase.UnstarSelected]: 'Ausgewählte Zeilen entsperren.',
+  [Phrase.Selection]: 'Auswahl',
 };
 
 export default GERMAN;

@@ -4,6 +4,7 @@ import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from '../config/ConfigService';
 import { Tag } from 'react-tag-autocomplete';
+import { DateValueType } from 'react-tailwindcss-datepicker';
 
 /**
  * Application recording status.
@@ -307,7 +308,9 @@ type AppState = {
   category: VideoCategory;
   selectedVideos: RendererVideo[];
   multiPlayerMode: boolean;
+  viewpointSelectionOpen: boolean;
   videoFilterTags: Tag[];
+  dateRangeFilter: DateValueType;
   videoFullScreen: boolean;
   playing: boolean;
   language: Language;

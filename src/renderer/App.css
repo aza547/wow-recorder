@@ -1256,3 +1256,37 @@ input[type='submit'].btn-block {
   color: #00000080;
 }
 
+/* 
+   The react-tailwindcss-datepicker we're using doesn't do a great job 
+   exposing ways to configure the theme, so this is a hack job to do that.
+*/
+.tailwind-datepicker > div {
+  @apply -translate-y-3;
+}
+
+.tailwind-datepicker > div * {
+  @apply border-card text-foreground-lighter hover:text-white;
+}
+
+.tailwind-datepicker > div > div {
+  @apply bg-background-higher;
+}
+
+.tailwind-datepicker > div > div > div > div > div > div {
+  @apply  bg-card rounded-lg;
+}
+
+/* Hacky way of overriding the color theme. */
+.tailwind-datepicker .bg-red-500 {
+  @apply text-white bg-primary;
+}
+
+/* Hacky way of targetting the cancel button. */
+.tailwind-datepicker .w-full.transition-all.duration-300.bg-white.dark\:text-gray-700.font-medium.border.border-gray-300.px-4.py-2.text-sm.rounded-md.focus\:ring-2.focus\:ring-offset-2.hover\:bg-gray-50.focus\:ring-red-500 {
+  @apply border-none bg-transparent text-secondary-foreground hover:bg-secondary/80 h-[40px] mx-2;
+}
+
+/* Hacky way of targetting the apply button. */
+.tailwind-datepicker .w-full.transition-all.duration-300.bg-red-500.border-red-500.font-medium.border.px-4.py-2.text-sm.rounded-md.focus\:ring-2.focus\:ring-offset-2.hover\:bg-red-600.focus\:ring-red-500 {
+  @apply border-none disabled:pointer-events-none disabled:opacity-50 bg-primary h-[40px] mx-2 hover:bg-primary/90;
+}

@@ -6,13 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Restyle the video table, removing the expandable rows in preference for a more minimal design.
+- Delete, tag, and protect/star/lock buttons now apply to the row and not the viewpoint.
 - Add the name "Warcraft Recorder" and app icon to the title bar.
+- Upgrade obs-studio-node to 0.25.17 (and OBS to 30.2.4). 
 
 ### Added
+- Added all combatants back to search filter.
 - Show boss percentages on wipes.
+- Catch render errors and display a refresh button for the user to recover.
+- Add a date filter, and range picker.
 
 ### Fixed
-- Bump packages, including electron, it pick up latest tzadata.
+- Bump packages, including electron, to pick up latest tzdata.
 
 ## [6.9.3] - 2025-03-24
 ### Fixed

@@ -225,17 +225,17 @@ export default function ViewpointSelection(props: IProps) {
 
     const friendly = combatants.filter((c) => c._teamID === player._teamID);
     const enemy = combatants.filter((c) => c._teamID !== player._teamID);
-    let gridClass = 'grid my-1 mx-1 max-w-[500px] ';
+    let gridClass = 'grid my-1 mx-1 ';
 
     // some tailwind shenanigans going on here when I try to do this more dynamically.
     // pretty sure it's scanning these files to decide what to bundle so needs these
     // hardcoded.
     if (friendly.length === 2) {
-      gridClass += 'grid-cols-2';
+      gridClass += 'grid-rows-2';
     } else if (friendly.length === 3) {
-      gridClass += 'grid-cols-3';
+      gridClass += 'grid-rows-3';
     } else {
-      gridClass += 'grid-cols-5';
+      gridClass += 'grid-rows-5';
     }
 
     const renderVsIcon = () => {
@@ -247,7 +247,7 @@ export default function ViewpointSelection(props: IProps) {
     };
 
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-row items-center">
         <div className={gridClass}>{friendly.map(mapCombatants)}</div>
         {!isSoloShuffleUtil(povs[0]) && renderVsIcon()}
         <div className={gridClass}>{enemy.map(mapCombatants)}</div>
@@ -261,7 +261,7 @@ export default function ViewpointSelection(props: IProps) {
   }
 
   return (
-    <div className="grid grid-cols-5 my-1 mx-1 max-w-[500px]">
+    <div className="grid grid-cols-5 my-1 mx-1">
       {combatants.sort(combatantNameSort).map(mapCombatants)}
     </div>
   );

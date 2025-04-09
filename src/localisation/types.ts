@@ -268,11 +268,9 @@ enum Phrase {
   Depleted,
   AreYouSure,
   ThisWillPermanentlyDelete,
-  RecordingsFullStop,
-  ThisSelectionIncludes,
-  StarredRecordingNotDeleted,
-  Hold,
-  ToSkip,
+  Recordings,
+  From,
+  Rows,
   Death,
   AddADescription,
   TagDialogText,
@@ -333,8 +331,6 @@ enum Phrase {
   Timed,
   Activity,
   Unknown,
-  ClickToCollapse,
-  ClickToExpand,
   NoneTagged,
   MultipleTagged,
   NoneStarred,
@@ -357,6 +353,9 @@ enum Phrase {
   UpdateAvailableRemindButtonText,
   Saving,
   StartTyping,
+  UnstarSelected,
+  StarSelected,
+  Selection,
 }
 
 enum Language {

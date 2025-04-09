@@ -269,11 +269,9 @@ const KOREAN: Translations = {
   [Phrase.Depleted]: '소진',
   [Phrase.AreYouSure]: '확실하신가요?',
   [Phrase.ThisWillPermanentlyDelete]: '선택한 항목은 영구적으로 삭제됩니다.',
-  [Phrase.RecordingsFullStop]: '기록물.',
-  [Phrase.ThisSelectionIncludes]: '선택 항목에서',
-  [Phrase.StarredRecordingNotDeleted]: '북마크 표시된 기록은 삭제되지 않습니다.',
-  [Phrase.Hold]: '',
-  [Phrase.ToSkip]: '키를 누르고 시도하면 이 알림을 무시할 수 있음.',
+  [Phrase.Recordings]: '기록물',
+  [Phrase.From]: '~에서',
+  [Phrase.Rows]: '행',
   [Phrase.Death]: '죽음',
   [Phrase.AddADescription]: '태그 추가',
   [Phrase.TagDialogText]: '이 기록은 검색창에서 조회할 수 있습니다.',
@@ -334,8 +332,6 @@ const KOREAN: Translations = {
   [Phrase.Timed]: "소진",
   [Phrase.Activity]: "활동",
   [Phrase.Unknown]: "알 수 없음",
-  [Phrase.ClickToCollapse]: "축소하려면 클릭하세요.",
-  [Phrase.ClickToExpand]: "확장하려면 클릭하세요.",
   [Phrase.NoneTagged]: "이 행에는 태그가 지정된 기록이 없습니다.",
   [Phrase.MultipleTagged]: "이 행에는 태그가 지정된 기록이 여러 개 포함되어 있습니다.",
   [Phrase.NoneStarred]: "이 행에는 북마크 표시된 기록이 없습니다.",
@@ -360,6 +356,9 @@ const KOREAN: Translations = {
   [Phrase.UpdateAvailableRemindButtonText]: '나중에 알림',
   [Phrase.Saving]: '저장...',
   [Phrase.StartTyping]: '검색...',
+  [Phrase.StarSelected]: '선택한 행 잠금',
+  [Phrase.UnstarSelected]: '선택한 행 잠금 해제',
+  [Phrase.Selection]: '선택',
 };
 
 export default KOREAN;

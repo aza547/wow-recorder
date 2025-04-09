@@ -269,11 +269,9 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Depleted]: '未限时',
   [Phrase.AreYouSure]: '确定吗？',
   [Phrase.ThisWillPermanentlyDelete]: '这将永久删除',
-  [Phrase.RecordingsFullStop]: '个录制文件。',
-  [Phrase.ThisSelectionIncludes]: '所选内容包含',
-  [Phrase.StarredRecordingNotDeleted]: '个标记为永久保留的录制文件，这些不会被删除。',
-  [Phrase.Hold]: '按住',
-  [Phrase.ToSkip]: '可跳过今后此提醒。',
+  [Phrase.Recordings]: '个录制文件',
+  [Phrase.From]: '从',
+  [Phrase.Rows]: '行',
   [Phrase.Death]: '死亡',
   [Phrase.AddADescription]: '添加说明',
   [Phrase.TagDialogText]: '此说明可在搜索框中使用。',
@@ -334,8 +332,6 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Timed]: "定时",
   [Phrase.Activity]: "活动",
   [Phrase.Unknown]: "未知",
-  [Phrase.ClickToCollapse]: "点击折叠",
-  [Phrase.ClickToExpand]: "点击展开",
   [Phrase.NoneTagged]: "该行不包含标记的录音",
   [Phrase.MultipleTagged]: "该行包含多个标记的录音",
   [Phrase.NoneStarred]: "该行不包含加星标的录音",
@@ -360,6 +356,9 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.UpdateAvailableRemindButtonText]: '稍后提醒我',
   [Phrase.Saving]: '保存',
   [Phrase.StartTyping]: '开始打字',
+  [Phrase.StarSelected]: '锁定选定的行',
+  [Phrase.UnstarSelected]: '解锁选定的行',
+  [Phrase.Selection]: '选择',
 };
 
 export default CHINESE_SIMPLIFIED;

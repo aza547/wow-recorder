@@ -1,9 +1,16 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useMemo } from 'react';
-import { GripHorizontal, Trash } from 'lucide-react';
+import {
+  Eye,
+  GripHorizontal,
+  LockKeyhole,
+  Trash,
+  MessageSquare,
+  MessageSquareMore,
+  LockOpen,
+} from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
-import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
@@ -16,10 +23,17 @@ import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 import DeleteDialog from './DeleteDialog';
 import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
 import VideoFilter from './VideoFilter';
-import { Table } from '@tanstack/react-table';
 import { Resizable, ResizeCallback } from 're-resizable';
 import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer from './VideoPlayer';
+import Label from './components/Label/Label';
+import { Popover, PopoverContent } from './components/Popover/Popover';
+import { PopoverTrigger } from '@radix-ui/react-popover';
+import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
+import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
+import useTable from './components/Tables/TableData';
+import TagDialog from './TagDialog';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 interface IProps {
   category: VideoCategory;
@@ -29,7 +43,6 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
-  table: Table<RendererVideo>;
 }
 
 /**
@@ -44,18 +57,26 @@ const CategoryPage = (props: IProps) => {
     setAppState,
     persistentProgress,
     playerHeight,
-    table,
   } = props;
-  const { selectedVideos, videoFilterTags, language } = appState;
+  const {
+    selectedVideos,
+    videoFilterTags,
+    language,
+    dateRangeFilter,
+    viewpointSelectionOpen,
+  } = appState;
 
   const [config, setConfig] = useSettings();
 
   const filteredState = useMemo<RendererVideo[]>(() => {
     const queryFilter = (rv: RendererVideo) =>
-      new VideoFilter(videoFilterTags, rv, language).filter();
+      new VideoFilter(videoFilterTags, dateRangeFilter, rv, language).filter();
 
     return categoryState.filter(queryFilter);
-  }, [categoryState, videoFilterTags, language]);
+  }, [categoryState, dateRangeFilter, videoFilterTags, language]);
+
+  // The data backing the video selection table.
+  const table = useTable(filteredState, appState, stateManager);
 
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
@@ -80,9 +101,8 @@ const CategoryPage = (props: IProps) => {
    * changed category) then just play the first video in the table.
    */
   const getVideoPlayer = () => {
-    const povs = [filteredState[0], ...filteredState[0].multiPov].sort(
-      povDiskFirstNameSort,
-    );
+    const toShow = filteredState[0] ? filteredState[0] : categoryState[0];
+    const povs = [toShow, ...toShow.multiPov].sort(povDiskFirstNameSort);
 
     const videosToPlay =
       selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
@@ -107,6 +127,7 @@ const CategoryPage = (props: IProps) => {
         <VideoPlayer
           key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
           videos={videosToPlay}
+          categoryState={categoryState}
           persistentProgress={persistentProgress}
           config={config}
           appState={appState}
@@ -124,40 +145,24 @@ const CategoryPage = (props: IProps) => {
   };
 
   const bulkDelete = (videos: RendererVideo[]) => {
-    window.electron.ipcRenderer.sendMessage('deleteVideosBulk', videos);
-    stateManager.current.bulkDeleteVideo(videos);
+    window.electron.ipcRenderer.sendMessage('deleteVideos', videos);
+    stateManager.current.deleteVideos(videos);
   };
 
   const getVideoSelection = () => {
-    const viewpoints = getAllSelectedViewpoints();
-    const prot = viewpoints.filter((v) => v.isProtected);
-    const unprot = viewpoints.filter((v) => !v.isProtected);
+    const { rows } = table.getSelectedRowModel();
+    const selected = getAllSelectedViewpoints();
 
-    let deleteWarning = `${getLocalePhrase(
+    const deleteWarning = `${getLocalePhrase(
       appState.language,
       Phrase.ThisWillPermanentlyDelete,
-    )} ${unprot.length} ${getLocalePhrase(
+    )} ${selected.length} ${getLocalePhrase(
       appState.language,
-      Phrase.RecordingsFullStop,
-    )}`;
-
-    if (prot.length > 0) {
-      deleteWarning += ' ';
-
-      deleteWarning += getLocalePhrase(
-        appState.language,
-        Phrase.ThisSelectionIncludes,
-      );
-
-      deleteWarning += ' ';
-      deleteWarning += prot.length;
-      deleteWarning += ' ';
-
-      deleteWarning += getLocalePhrase(
-        appState.language,
-        Phrase.StarredRecordingNotDeleted,
-      );
-    }
+      Phrase.Recordings,
+    )} ${getLocalePhrase(
+      appState.language,
+      Phrase.From,
+    )} ${rows.length} ${getLocalePhrase(appState.language, Phrase.Rows)}.`;
 
     // We don't want multi player mode to be accessible if there isn't
     // multiple viewpoints, so check for that. Important to filter by
@@ -179,7 +184,9 @@ const CategoryPage = (props: IProps) => {
     const multiPlayerOpts = (
       selectedRow
         ? [selectedRow.original, ...selectedRow.original.multiPov]
-        : [filteredState[0], ...filteredState[0].multiPov]
+        : filteredState[0]
+          ? [filteredState[0], ...filteredState[0].multiPov]
+          : [categoryState[0], ...categoryState[0].multiPov]
     )
       .sort(povDiskFirstNameSort)
       .filter(dedup);
@@ -187,6 +194,189 @@ const CategoryPage = (props: IProps) => {
     const names = multiPlayerOpts.map((rv) => rv.videoName);
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
+    const selectedRows = table.getSelectedRowModel().rows;
+
+    const renderTagButton = () => {
+      let icon = <MessageSquare size={20} />;
+      let tooltip = getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
+      const videosInRow = [];
+      let tag = '';
+
+      if (selectedRows.length === 1) {
+        videosInRow.push(selectedRows[0].original);
+        videosInRow.push(...selectedRows[0].original.multiPov);
+
+        const foundTag = videosInRow.map((v) => v.tag).find((t) => t);
+
+        if (foundTag) {
+          tag = foundTag;
+          icon = <MessageSquareMore size={20} />;
+
+          if (tag.length > 50) {
+            tooltip = `${tag.slice(0, 50)}...`;
+          } else {
+            tooltip = tag;
+          }
+        }
+      }
+
+      return (
+        <TagDialog
+          initialTag={tag}
+          videos={videosInRow}
+          stateManager={stateManager}
+          tooltipContent={tooltip}
+          appState={appState}
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-10"
+            disabled={selectedRows.length !== 1}
+          >
+            {icon}
+          </Button>
+        </TagDialog>
+      );
+    };
+
+    const protectVideo = (
+      _event: React.SyntheticEvent,
+      protect: boolean,
+      videos: RendererVideo[],
+    ) => {
+      stateManager.current.setProtected(protect, videos);
+
+      window.electron.ipcRenderer.sendMessage('videoButton', [
+        'protect',
+        protect,
+        videos,
+      ]);
+    };
+
+    const renderProtectButton = () => {
+      const videosInSelection = selectedRows
+        .map((r) => r.original)
+        .flatMap((v) => {
+          return [v, ...v.multiPov];
+        });
+
+      const allProtected = videosInSelection.every((v) => v.isProtected);
+
+      const icon = allProtected ? (
+        <LockOpen size={20} />
+      ) : (
+        <LockKeyhole size={20} />
+      );
+
+      const tooltip = allProtected
+        ? getLocalePhrase(appState.language, Phrase.UnstarSelected)
+        : getLocalePhrase(appState.language, Phrase.StarSelected);
+
+      return (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="h-10"
+          disabled={selectedRows.length < 1}
+          onClick={(e) => protectVideo(e, !allProtected, videosInSelection)}
+        >
+          <Tooltip content={tooltip}>{icon}</Tooltip>
+        </Button>
+      );
+    };
+
+    const renderDeleteButton = () => {
+      return (
+        <DeleteDialog
+          onDelete={() => bulkDelete(selected)}
+          tooltipContent={getLocalePhrase(
+            appState.language,
+            Phrase.BulkDeleteButtonTooltip,
+          )}
+          warning={deleteWarning}
+          appState={appState}
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-10"
+            disabled={selectedRows.length < 1}
+          >
+            <Trash size={20} />
+          </Button>
+        </DeleteDialog>
+      );
+    };
+
+    const renderSelectionLabel = () => {
+      let text = getLocalePhrase(appState.language, Phrase.Selection);
+
+      if (selectedRows.length > 1) {
+        text += ` (${selectedRows.length})`;
+      }
+
+      return <Label>{text}</Label>;
+    };
+
+    const renderViewpointSelectionPopover = () => {
+      return (
+        <Popover
+          open={viewpointSelectionOpen}
+          onOpenChange={() => {
+            setAppState((a) => {
+              return {
+                ...a,
+                viewpointSelectionOpen: !a.viewpointSelectionOpen,
+              };
+            });
+          }}
+        >
+          <PopoverTrigger asChild className="absolute top-[90px] left-0">
+            <Button
+              variant={viewpointSelectionOpen ? 'default' : 'secondary'}
+              size="xs"
+              className="z-10 h-20 rounded-l-none flex justify-start p-[3px]"
+            >
+              <Eye size={15} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            onEscapeKeyDown={(e) => {
+              // Close the popover when escape is pressed.
+              setAppState((a) => {
+                return {
+                  ...a,
+                  viewpointSelectionOpen: false,
+                };
+              });
+
+              // Need this for some reason else the popover doesn't close.
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            side="left"
+            className="p-0 absolute top-[-40px] left-[30px] w-auto min-w-max"
+            onInteractOutside={(e) => {
+              e.preventDefault();
+            }}
+            onPointerDownOutside={(e) => {
+              e.preventDefault();
+            }}
+            onFocusOutside={(e) => {
+              e.preventDefault();
+            }}
+          >
+            <ViewpointSelection
+              video={selectedRow ? selectedRow.original : filteredState[0]}
+              appState={appState}
+              setAppState={setAppState}
+              persistentProgress={persistentProgress}
+            />
+          </PopoverContent>
+        </Popover>
+      );
+    };
 
     return (
       <>
@@ -205,45 +395,73 @@ const CategoryPage = (props: IProps) => {
               appState={appState}
             />
           )}
-          <div className="flex-grow">
-            <SearchBar
-              key={category}
-              appState={appState}
-              setAppState={setAppState}
-              filteredState={filteredState}
-            />
+          <div className="flex flex-grow">
+            <div className="flex-grow">
+              <SearchBar
+                key={category}
+                appState={appState}
+                setAppState={setAppState}
+                filteredState={filteredState}
+              />
+            </div>
+            <div className="ml-2">
+              <Label>Date Filter</Label>
+              <Datepicker
+                value={dateRangeFilter}
+                onChange={(v) => {
+                  // This looks a bit verbose, but it seems the react library
+                  // used here will provide the same date object if the range
+                  // is a single day, as well as setting the time to the current
+                  // time. So make sure that we have separate date objects, set
+                  // to midnight and a minute to midnight to cover the full day.
+                  const dateRangeFilter: DateValueType = {
+                    startDate: null,
+                    endDate: null,
+                  };
+
+                  if (v && v.startDate) {
+                    dateRangeFilter.startDate = new Date(v.startDate);
+                    dateRangeFilter.startDate.setHours(0, 0, 0, 0);
+                  }
+                  if (v && v.endDate) {
+                    dateRangeFilter.endDate = new Date(v.endDate);
+                    v.endDate.setHours(23, 59, 59, 999);
+                  }
+
+                  setAppState((prev) => ({
+                    ...prev,
+                    dateRangeFilter,
+                  }));
+                }}
+                separator="to"
+                displayFormat="DD/MM/YY"
+                showShortcuts
+                showFooter
+                primaryColor="red"
+                containerClassName="relative tailwind-datepicker" // See App.css for tailwind overrides. This library doesn't expose much.
+                inputClassName="relative transition-all duration-300 h-10 pl-4 pr-14 w-full border border-background bg-card text-foreground placeholder:text-foreground rounded-lg text-sm placeholder:text-sm"
+              />
+            </div>
           </div>
-          <div className="pt-6">
-            <DeleteDialog
-              onDelete={() => bulkDelete(unprot)}
-              tooltipContent={getLocalePhrase(
-                appState.language,
-                Phrase.BulkDeleteButtonTooltip,
-              )}
-              warning={deleteWarning}
-              skipPossible={false}
-              appState={appState}
-            >
-              <Button
-                variant="ghost"
-                size="xs"
-                disabled={viewpoints.length < 1}
-              >
-                <Trash size={20} />
-              </Button>
-            </DeleteDialog>
+
+          <div>
+            <Label>{renderSelectionLabel()}</Label>
+            <div className="flex gap-x-2 mr-2">
+              {renderTagButton()}
+              {renderProtectButton()}
+              {renderDeleteButton()}
+            </div>
           </div>
         </div>
-        <div className="w-full h-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-1 py-1 overflow-hidden">
-          <ScrollArea withScrollIndicators={false} className="h-full w-full">
-            <VideoSelectionTable
-              table={table}
-              appState={appState}
-              setAppState={setAppState}
-              stateManager={stateManager}
-              persistentProgress={persistentProgress}
-            />
-          </ScrollArea>
+        <div className="relative">{renderViewpointSelectionPopover()}</div>
+        <div className="w-full h-full overflow-hidden">
+          <VideoSelectionTable
+            table={table}
+            appState={appState}
+            setAppState={setAppState}
+            stateManager={stateManager}
+            persistentProgress={persistentProgress}
+          />
         </div>
       </>
     );
