@@ -375,7 +375,7 @@ const isClip = (video: RendererVideo) => {
 };
 
 const getResultColor = (video: RendererVideo) => {
-  const { result, soloShuffleRoundsWon, upgradeLevel, bossPercent } = video;
+  const { result, soloShuffleRoundsWon, upgradeLevel } = video;
 
   if (isSoloShuffleUtil(video)) {
     if (
@@ -414,21 +414,30 @@ const getResultColor = (video: RendererVideo) => {
     return 'hsl(var(--success))';
   }
 
-  if (isRaidUtil(video) && bossPercent) {
-    const raidResultColors = [
-      'rgb(46,  171, 27)',
-      'rgb(112, 170, 30)',
-      'rgb(171, 150, 30)',
-      'rgb(171, 86,  26)',
-      'rgb(175, 50,  23)',
-      'rgb(156, 21,  21)',
-    ];
+  if (isRaidUtil(video)) {
+    // Look for the boss percent in any of the viewpoints. That is really
+    // just to make this nicer over upgrade of the app; this way we will
+    // show the percent if it exists on any video and not just the first one.
+    const bossPercent = [video, ...video.multiPov]
+      .map((rv) => rv.bossPercent)
+      .find((bp) => bp);
 
-    // Being a bit lazy here and re-using the solo shuffle colors.
-    // Pick a sensible index. Making sure they're within bounds.
-    let index = Math.min(Math.round(bossPercent / 20), 5);
-    index = Math.max(index, 0);
-    return raidResultColors[index];
+    if (bossPercent) {
+      const raidResultColors = [
+        'rgb(46,  171, 27)',
+        'rgb(112, 170, 30)',
+        'rgb(171, 150, 30)',
+        'rgb(171, 86,  26)',
+        'rgb(175, 50,  23)',
+        'rgb(156, 21,  21)',
+      ];
+
+      // Being a bit lazy here and re-using the solo shuffle colors.
+      // Pick a sensible index. Making sure they're within bounds.
+      let index = Math.min(Math.round(bossPercent / 20), 5);
+      index = Math.max(index, 0);
+      return raidResultColors[index];
+    }
   }
 
   return 'hsl(var(--error))';
@@ -828,7 +837,6 @@ const getVideoResultText = (
     upgradeLevel,
     soloShuffleRoundsWon,
     soloShuffleRoundsPlayed,
-    bossPercent,
   } = video;
 
   if (isMythicPlusUtil(video)) {
@@ -851,6 +859,13 @@ const getVideoResultText = (
     if (result) {
       return getLocalePhrase(language, Phrase.Kill);
     }
+
+    // Look for the boss percent in any of the viewpoints. That is really
+    // just to make this nicer over upgrade of the app; this way we will
+    // show the percent if it exists on any video and not just the first one.
+    const bossPercent = [video, ...video.multiPov]
+      .map((rv) => rv.bossPercent)
+      .find((bp) => bp);
 
     if (bossPercent !== undefined) {
       return `${bossPercent}%`;
