@@ -166,6 +166,7 @@ const retailArenas: NumberKeyToStringValueMapType = {
   2509: 'Maldraxxus',
   2547: 'Enigma Crucible',
   2563: 'Nokhudon',
+  2759: 'Cage of Carnage',
 };
 
 /**
