@@ -84,17 +84,24 @@ export default class CombatLogWatcher extends EventEmitter {
     this.watcher = watch(this.logDir);
 
     this.watcher.on('change', (type, file) => {
-      if (type !== 'change') {
-        // Despite this being a 'change' listener, we can still get
-        // rename events here which we don't care about.
-        return;
-      }
-
       if (typeof file !== 'string') {
         return;
       }
 
       if (!file.startsWith('WoWCombatLog')) {
+        return;
+      }
+
+      if (type === 'rename') {
+        // Despite this being a 'change' listener, we can still get
+        // rename events here, see the Node watch API. The rename event
+        // misleadingly fires for both file creation and deletion.
+        //
+        // We reset the position in a file on either, such that a file
+        // recreated with the same name will be read from the start. See
+        // Issue 624.
+        const fullPath = path.join(this.logDir, file);
+        delete this.state[fullPath];
         return;
       }
 
