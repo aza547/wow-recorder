@@ -100,6 +100,7 @@ export default class CombatLogWatcher extends EventEmitter {
         // We reset the position in a file on either, such that a file
         // recreated with the same name will be read from the start. See
         // Issue 624.
+        console.info('[CombatLogWatcher] Create or delete event', file);
         const fullPath = path.join(this.logDir, file);
         delete this.state[fullPath];
         return;
