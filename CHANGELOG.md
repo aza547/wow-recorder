@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Bump packages, including electron, to pick up latest tzdata.
 - [Issue 624](https://github.com/aza547/wow-recorder/issues/624) - Fixes an issue where manually deleting log files could cause recording to stop.
+- [Issue 606](https://github.com/aza547/wow-recorder/issues/606) - Fixes an issue where bulk delete could cause the app to go blank.
 
 ## [6.9.3] - 2025-03-24
 ### Fixed
