@@ -88,7 +88,7 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
+        header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
@@ -154,7 +154,7 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
+        header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
@@ -208,7 +208,7 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
+        header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
@@ -278,7 +278,7 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
+        header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {
@@ -332,7 +332,7 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
+        header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
       },
       {

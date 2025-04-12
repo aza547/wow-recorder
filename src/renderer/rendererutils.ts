@@ -1048,6 +1048,22 @@ const countUniqueViewpoints = (video: RendererVideo) => {
   return unique.length;
 };
 
+const raidResultToPercent = (video: RendererVideo) => {
+  const bossPercent = [video, ...video.multiPov]
+    .map((rv) => rv.bossPercent)
+    .find((bp) => bp);
+
+  if (bossPercent) {
+    return bossPercent;
+  }
+
+  if (video.result) {
+    return 0;
+  }
+
+  return 100;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1106,4 +1122,5 @@ export {
   videoToDate,
   dateToHumanReadable,
   getSpecClass,
+  raidResultToPercent,
 };
