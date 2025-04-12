@@ -156,19 +156,19 @@ const CategoryPage = (props: IProps) => {
   };
 
   const getVideoSelection = () => {
-    const { rows } = table.getSelectedRowModel();
-    const selected = getAllSelectedViewpoints();
+    const selectedRows = table.getSelectedRowModel().rows;
+    const selectedViewpoints = getAllSelectedViewpoints();
 
     const deleteWarning = `${getLocalePhrase(
       appState.language,
       Phrase.ThisWillPermanentlyDelete,
-    )} ${selected.length} ${getLocalePhrase(
+    )} ${selectedViewpoints.length} ${getLocalePhrase(
       appState.language,
       Phrase.Recordings,
     )} ${getLocalePhrase(
       appState.language,
       Phrase.From,
-    )} ${rows.length} ${getLocalePhrase(appState.language, Phrase.Rows)}.`;
+    )} ${selectedRows.length} ${getLocalePhrase(appState.language, Phrase.Rows)}.`;
 
     // We don't want multi player mode to be accessible if there isn't
     // multiple viewpoints, so check for that. Important to filter by
@@ -185,7 +185,7 @@ const CategoryPage = (props: IProps) => {
     const dedup = (rv: RendererVideo, idx: number, arr: RendererVideo[]) =>
       arr.findIndex((i) => i.videoName === rv.videoName) === idx;
 
-    const selectedRow = rows[0];
+    const selectedRow = selectedRows[0];
 
     const multiPlayerOpts = (
       selectedRow
@@ -200,13 +200,12 @@ const CategoryPage = (props: IProps) => {
     const names = multiPlayerOpts.map((rv) => rv.videoName);
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
-    const selectedRows = table.getSelectedRowModel().rows;
 
     const renderTagButton = () => {
       let tag = '';
       let icon = <MessageSquare size={20} />;
       let tooltip = getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
-      const foundTag = selected.map((v) => v.tag).find((t) => t);
+      const foundTag = selectedViewpoints.map((v) => v.tag).find((t) => t);
 
       if (foundTag) {
         tag = foundTag;
@@ -222,7 +221,7 @@ const CategoryPage = (props: IProps) => {
       return (
         <TagDialog
           initialTag={tag}
-          videos={selected}
+          videos={selectedViewpoints}
           stateManager={stateManager}
           tooltipContent={tooltip}
           appState={appState}
@@ -231,7 +230,7 @@ const CategoryPage = (props: IProps) => {
             variant="secondary"
             size="sm"
             className="h-10"
-            disabled={selected.length > 1}
+            disabled={selectedRows.length > 1}
           >
             {icon}
           </Button>
@@ -254,7 +253,7 @@ const CategoryPage = (props: IProps) => {
     };
 
     const renderProtectButton = () => {
-      const allProtected = selected.every((v) => v.isProtected);
+      const allProtected = selectedViewpoints.every((v) => v.isProtected);
 
       const icon = allProtected ? (
         <LockOpen size={20} />
@@ -271,8 +270,8 @@ const CategoryPage = (props: IProps) => {
           variant="secondary"
           size="sm"
           className="h-10"
-          disabled={selected.length < 1}
-          onClick={(e) => protectVideo(e, !allProtected, selected)}
+          disabled={selectedViewpoints.length < 1}
+          onClick={(e) => protectVideo(e, !allProtected, selectedViewpoints)}
         >
           <Tooltip content={tooltip}>{icon}</Tooltip>
         </Button>
@@ -282,7 +281,7 @@ const CategoryPage = (props: IProps) => {
     const renderDeleteButton = () => {
       return (
         <DeleteDialog
-          onDelete={() => bulkDelete(selected)}
+          onDelete={() => bulkDelete(selectedViewpoints)}
           tooltipContent={getLocalePhrase(
             appState.language,
             Phrase.BulkDeleteButtonTooltip,
@@ -294,7 +293,7 @@ const CategoryPage = (props: IProps) => {
             variant="secondary"
             size="sm"
             className="h-10"
-            disabled={selected.length < 1}
+            disabled={selectedViewpoints.length < 1}
           >
             <Trash size={20} />
           </Button>
@@ -373,7 +372,7 @@ const CategoryPage = (props: IProps) => {
 
     return (
       <>
-        <div className="w-full flex justify-evenly items-center gap-x-5 px-4 pt-2">
+        <div className="w-full flex justify-evenly items-center gap-x-5 px-4 py-2">
           <MultiPovPlaybackToggles
             appState={appState}
             setAppState={setAppState}

@@ -1286,8 +1286,12 @@ input[type='submit'].btn-block {
   @apply text-primary font-semibold;
 }
 
-/* Hacky way of overriding the style of dates outwith the month. */
-.tailwind-datepicker .text-gray-400 {
+/* 
+  Hacky way of overriding the style of dates outwith the 
+  month. Avoid changing the calendar icon which shares the
+  same class. 
+*/
+.tailwind-datepicker .text-gray-400:not(.absolute) {
   @apply text-secondary;
 }
 
