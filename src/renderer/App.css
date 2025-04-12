@@ -1281,6 +1281,16 @@ input[type='submit'].btn-block {
   @apply text-white bg-primary;
 }
 
+/* Hacky way of overriding the current date text style. */
+.tailwind-datepicker .text-red-500 {
+  @apply text-primary font-semibold;
+}
+
+/* Hacky way of overriding the style of dates outwith the month. */
+.tailwind-datepicker .text-gray-400 {
+  @apply text-secondary;
+}
+
 /* Hacky way of targetting the cancel button. */
 .tailwind-datepicker .w-full.transition-all.duration-300.bg-white.dark\:text-gray-700.font-medium.border.border-gray-300.px-4.py-2.text-sm.rounded-md.focus\:ring-2.focus\:ring-offset-2.hover\:bg-gray-50.focus\:ring-red-500 {
   @apply border-none bg-transparent text-secondary-foreground hover:bg-secondary/80 h-[40px] mx-2;

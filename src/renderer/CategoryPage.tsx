@@ -418,7 +418,7 @@ const CategoryPage = (props: IProps) => {
                   }
                   if (v && v.endDate) {
                     dateRangeFilter.endDate = new Date(v.endDate);
-                    v.endDate.setHours(23, 59, 59, 999);
+                    dateRangeFilter.endDate.setHours(23, 59, 59, 999);
                   }
 
                   setAppState((prev) => ({
