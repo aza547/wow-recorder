@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.10.0] - 2025-04-12
+### Changed
 - Restyle the video table, removing the expandable rows in preference for a more minimal design.
 - Delete, tag, and protect/star/lock buttons now apply to the row and not the viewpoint.
 - Add the name "Warcraft Recorder" and app icon to the title bar.
