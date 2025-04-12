@@ -356,6 +356,7 @@ enum Phrase {
   UnstarSelected,
   StarSelected,
   Selection,
+  NoCombatants,
 }
 
 enum Language {

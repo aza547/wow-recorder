@@ -359,6 +359,7 @@ const KOREAN: Translations = {
   [Phrase.StarSelected]: '선택한 행 잠금',
   [Phrase.UnstarSelected]: '선택한 행 잠금 해제',
   [Phrase.Selection]: '선택',
+  [Phrase.NoCombatants]: '전투원 데이터가 없습니다.',
 };
 
 export default KOREAN;

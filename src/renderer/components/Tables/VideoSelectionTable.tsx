@@ -11,7 +11,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
-import { getSelectedRowIndex, povDiskFirstNameSort } from '../../rendererutils';
+import { povDiskFirstNameSort } from '../../rendererutils';
 import { Button } from '../Button/Button';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { ScrollArea } from '../ScrollArea/ScrollArea';
@@ -30,11 +30,11 @@ interface IProps {
  */
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
-  const { selectedVideos } = appState;
 
   /**
    * Allow control and shift to select multi or ranges of
-   * selections, respectively.
+   * selections, respectively. Also allow arrow key up and down
+   * for navigation and selection.
    */
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -127,7 +127,7 @@ const VideoSelectionTable = (props: IProps) => {
       return;
     } else if (event.shiftKey) {
       // Select a range of rows.
-      const base = getSelectedRowIndex(selectedVideos, table);
+      const base = selectedRows[0].index;
       const target = row.index;
       const start = Math.min(base, target);
       const end = Math.max(base, target) + 1;
@@ -141,7 +141,7 @@ const VideoSelectionTable = (props: IProps) => {
       return;
     }
 
-    if (event.ctrlKey && event instanceof MouseEvent) {
+    if (event.ctrlKey && !(event instanceof KeyboardEvent)) {
       // Add a single row to the Selection.
       row.getToggleSelectedHandler()(event);
       return;
@@ -268,7 +268,9 @@ const VideoSelectionTable = (props: IProps) => {
    * Render an individual row of the table.
    */
   const renderRow = (row: Row<RendererVideo>) => {
-    const selected = row.getIsSelected();
+    const selected =
+      row.getIsSelected() ||
+      (!table.getIsSomeRowsSelected() && row.index === 0);
     return <Fragment key={row.id}>{renderBaseRow(row, selected)}</Fragment>;
   };
 

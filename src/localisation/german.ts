@@ -359,6 +359,7 @@ const GERMAN: Translations = {
   [Phrase.StarSelected]: 'Ausgewählte Zeilen sperren.',
   [Phrase.UnstarSelected]: 'Ausgewählte Zeilen entsperren.',
   [Phrase.Selection]: 'Auswahl',
+  [Phrase.NoCombatants]: 'Keine Daten zu den Kämpfern verfügbar.',
 };
 
 export default GERMAN;

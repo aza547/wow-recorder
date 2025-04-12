@@ -144,7 +144,7 @@ export const populateAffixesCell = (
     const affixImage = affixImages[id as keyof typeof affixImages];
 
     return (
-      <Tooltip content={affixName}>
+      <Tooltip content={affixName} key={affixName}>
         <Box
           key={affixName}
           component="img"

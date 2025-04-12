@@ -1048,37 +1048,6 @@ const countUniqueViewpoints = (video: RendererVideo) => {
   return unique.length;
 };
 
-const getSelectedRow = (
-  selectedVideos: RendererVideo[],
-  table: Table<RendererVideo>,
-) => {
-  const video = selectedVideos[0];
-
-  if (!video) {
-    return undefined;
-  }
-
-  const { videoName } = video;
-  const { rows } = table.getRowModel();
-
-  const row = rows.find((r) => {
-    return [r.original, ...r.original.multiPov]
-      .map((rv) => rv.videoName)
-      .includes(videoName);
-  });
-
-  return row;
-};
-
-const getSelectedRowIndex = (
-  selectedVideos: RendererVideo[],
-  table: Table<RendererVideo>,
-) => {
-  const row = getSelectedRow(selectedVideos, table);
-  if (row) return row.index;
-  return 0;
-};
-
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1136,7 +1105,5 @@ export {
   countUniqueViewpoints,
   videoToDate,
   dateToHumanReadable,
-  getSelectedRow,
-  getSelectedRowIndex,
   getSpecClass,
 };

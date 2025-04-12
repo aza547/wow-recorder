@@ -15,7 +15,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import { getSelectedRow, povDiskFirstNameSort } from './rendererutils';
+import { povDiskFirstNameSort } from './rendererutils';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
@@ -139,9 +139,15 @@ const CategoryPage = (props: IProps) => {
 
   const getAllSelectedViewpoints = () => {
     const { rows } = table.getSelectedRowModel();
-    const parents = rows.map((r) => r.original);
-    const children = parents.flatMap((v) => v.multiPov);
-    return parents.concat(children);
+
+    if (rows.length > 0) {
+      const parents = rows.map((r) => r.original);
+      const children = parents.flatMap((v) => v.multiPov);
+      return parents.concat(children);
+    }
+
+    const first = filteredState[0] ? filteredState[0] : categoryState[0];
+    return [first, ...first.multiPov];
   };
 
   const bulkDelete = (videos: RendererVideo[]) => {
@@ -179,7 +185,7 @@ const CategoryPage = (props: IProps) => {
     const dedup = (rv: RendererVideo, idx: number, arr: RendererVideo[]) =>
       arr.findIndex((i) => i.videoName === rv.videoName) === idx;
 
-    const selectedRow = getSelectedRow(selectedVideos, table);
+    const selectedRow = rows[0];
 
     const multiPlayerOpts = (
       selectedRow
@@ -197,33 +203,26 @@ const CategoryPage = (props: IProps) => {
     const selectedRows = table.getSelectedRowModel().rows;
 
     const renderTagButton = () => {
+      let tag = '';
       let icon = <MessageSquare size={20} />;
       let tooltip = getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
-      const videosInRow = [];
-      let tag = '';
+      const foundTag = selected.map((v) => v.tag).find((t) => t);
 
-      if (selectedRows.length === 1) {
-        videosInRow.push(selectedRows[0].original);
-        videosInRow.push(...selectedRows[0].original.multiPov);
+      if (foundTag) {
+        tag = foundTag;
+        icon = <MessageSquareMore size={20} />;
 
-        const foundTag = videosInRow.map((v) => v.tag).find((t) => t);
-
-        if (foundTag) {
-          tag = foundTag;
-          icon = <MessageSquareMore size={20} />;
-
-          if (tag.length > 50) {
-            tooltip = `${tag.slice(0, 50)}...`;
-          } else {
-            tooltip = tag;
-          }
+        if (tag.length > 50) {
+          tooltip = `${tag.slice(0, 50)}...`;
+        } else {
+          tooltip = tag;
         }
       }
 
       return (
         <TagDialog
           initialTag={tag}
-          videos={videosInRow}
+          videos={selected}
           stateManager={stateManager}
           tooltipContent={tooltip}
           appState={appState}
@@ -232,7 +231,7 @@ const CategoryPage = (props: IProps) => {
             variant="secondary"
             size="sm"
             className="h-10"
-            disabled={selectedRows.length !== 1}
+            disabled={selected.length > 1}
           >
             {icon}
           </Button>
@@ -255,13 +254,7 @@ const CategoryPage = (props: IProps) => {
     };
 
     const renderProtectButton = () => {
-      const videosInSelection = selectedRows
-        .map((r) => r.original)
-        .flatMap((v) => {
-          return [v, ...v.multiPov];
-        });
-
-      const allProtected = videosInSelection.every((v) => v.isProtected);
+      const allProtected = selected.every((v) => v.isProtected);
 
       const icon = allProtected ? (
         <LockOpen size={20} />
@@ -278,8 +271,8 @@ const CategoryPage = (props: IProps) => {
           variant="secondary"
           size="sm"
           className="h-10"
-          disabled={selectedRows.length < 1}
-          onClick={(e) => protectVideo(e, !allProtected, videosInSelection)}
+          disabled={selected.length < 1}
+          onClick={(e) => protectVideo(e, !allProtected, selected)}
         >
           <Tooltip content={tooltip}>{icon}</Tooltip>
         </Button>
@@ -301,7 +294,7 @@ const CategoryPage = (props: IProps) => {
             variant="secondary"
             size="sm"
             className="h-10"
-            disabled={selectedRows.length < 1}
+            disabled={selected.length < 1}
           >
             <Trash size={20} />
           </Button>

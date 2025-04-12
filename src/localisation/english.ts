@@ -359,7 +359,7 @@ const ENGLISH: Translations = {
   [Phrase.StarSelected]: 'Lock selected rows. Locked rows will not be automatically aged out.',
   [Phrase.UnstarSelected]: 'Unlock selected rows. Unlocked rows may be automatically aged out to make space for new recordings.',
   [Phrase.Selection]: 'Selection',
-
+  [Phrase.NoCombatants]: 'No combatant data available.',
 };
 
 export default ENGLISH;
