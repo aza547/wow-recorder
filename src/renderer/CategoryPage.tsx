@@ -10,7 +10,7 @@ import {
   MessageSquareMore,
   LockOpen,
 } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase, Phrase, Language } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
@@ -397,9 +397,13 @@ const CategoryPage = (props: IProps) => {
               />
             </div>
             <div className="ml-2">
-              <Label>Date Filter</Label>
+              <Label>{getLocalePhrase(appState.language, Phrase.DateFilter)}</Label>
               <Datepicker
-                value={dateRangeFilter}
+                key={appState.language}
+                value={{
+                  startDate: dateRangeFilter?.startDate ? new Date(dateRangeFilter.startDate) : null,
+                  endDate: dateRangeFilter?.endDate ? new Date(dateRangeFilter.endDate) : null,
+                }}
                 onChange={(v) => {
                   // This looks a bit verbose, but it seems the react library
                   // used here will provide the same date object if the range
@@ -425,13 +429,45 @@ const CategoryPage = (props: IProps) => {
                     dateRangeFilter,
                   }));
                 }}
-                separator="to"
-                displayFormat="DD/MM/YY"
+                separator={getLocalePhrase(appState.language, Phrase.DateFilterSeparator)}
+                displayFormat={
+                  appState.language === Language.KOREAN
+                    ? 'YY/MM/DD'
+                    : 'DD/MM/YY'
+                }
                 showShortcuts
                 showFooter
                 primaryColor="red"
                 containerClassName="relative tailwind-datepicker" // See App.css for tailwind overrides. This library doesn't expose much.
                 inputClassName="relative transition-all duration-300 h-10 pl-4 pr-14 w-full border border-background bg-card text-foreground placeholder:text-foreground rounded-lg text-sm placeholder:text-sm"
+                i18n={
+                  appState.language === Language.KOREAN
+                    ? 'ko'
+                    : appState.language === Language.GERMAN
+                      ? 'de'
+                      : appState.language === Language.CHINESE_SIMPLIFIED
+                        ? 'zh-CN'
+                        : 'en'
+                }
+                configs={{
+                  shortcuts: {
+                    today: getLocalePhrase(appState.language, Phrase.Today),
+                    yesterday: getLocalePhrase(appState.language, Phrase.Yesterday),
+                    past: (period) => {
+                      if (period === 7)
+                        return getLocalePhrase(appState.language, Phrase.Last7Days);
+                      if (period === 30)
+                        return getLocalePhrase(appState.language, Phrase.Last30Days);
+                      return `Last ${period} days`;
+                    },
+                    currentMonth: getLocalePhrase(appState.language, Phrase.ThisMonth),
+                    pastMonth: getLocalePhrase(appState.language, Phrase.LastMonth)
+                  },
+                  footer: {
+                    cancel: getLocalePhrase(appState.language, Phrase.Cancel),
+                    apply: getLocalePhrase(appState.language, Phrase.Apply)
+                  }
+                }}
               />
             </div>
           </div>
