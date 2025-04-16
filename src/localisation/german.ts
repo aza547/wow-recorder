@@ -278,7 +278,7 @@ const GERMAN: Translations = {
   [Phrase.Clear]: 'Löschen',
   [Phrase.Save]: 'Speichern',
   [Phrase.ShareableLinkTitle]: 'Teilbarer Link wurde generiert und befindet sich in deiner Ablage.',
-  [Phrase.ShareableLinkText]: 'Dieser Link ist bis zu 30 Tage gültig.',
+  [Phrase.ShareableLinkText]: 'Dieser Link ist gültig, solange das Video in der Cloud gespeichert bleibt.',
   [Phrase.ShareableLinkFailedTitle]: 'Link Erzeugung ist fehlgeschlagen',
   [Phrase.ShareableLinkFailedText]: 'Bitte siehe Logs für mehr Details',
   [Phrase.CloudUsage]: 'Cloud Nutzung',

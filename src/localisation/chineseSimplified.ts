@@ -278,7 +278,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Clear]: '清除',
   [Phrase.Save]: '保存',
   [Phrase.ShareableLinkTitle]: '可分享链接已生成并复制到剪贴板',
-  [Phrase.ShareableLinkText]: '此链接将在 30 天内有效',
+  [Phrase.ShareableLinkText]: '只要视频仍存储在云端，此链接就有效',
   [Phrase.ShareableLinkFailedTitle]: '生成链接失败',
   [Phrase.ShareableLinkFailedText]: '详情请查看日志',
   [Phrase.CloudUsage]: '云端使用情况',

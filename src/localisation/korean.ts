@@ -278,7 +278,7 @@ const KOREAN: Translations = {
   [Phrase.Clear]: '삭제',
   [Phrase.Save]: '저장',
   [Phrase.ShareableLinkTitle]: '공유할 수 있는 링크가 클립보드에 저장됐습니다.',
-  [Phrase.ShareableLinkText]: '원하는 곳에 붙여 넣으세요.',
+  [Phrase.ShareableLinkText]: '이 링크는 비디오가 클라우드에 저장되어 있는 동안 유효합니다.',
   [Phrase.ShareableLinkFailedTitle]: '링크 생성에 실패했습니다.',
   [Phrase.ShareableLinkFailedText]: '다시 시도해 보세요.',
   [Phrase.CloudUsage]: '클라우드 사용량',
