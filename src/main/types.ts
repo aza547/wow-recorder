@@ -288,6 +288,7 @@ interface IDevice {
 enum TAudioSourceType {
   input = 'wasapi_input_capture',
   output = 'wasapi_output_capture',
+  process = 'wasapi_process_output_capture',
 }
 
 /**
