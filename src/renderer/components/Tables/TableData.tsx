@@ -195,7 +195,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language],
+    [language, stateManager],
   );
 
   /**
@@ -265,7 +265,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language],
+    [language, stateManager],
   );
 
   /**
@@ -319,7 +319,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language],
+    [language, stateManager],
   );
 
   /**
@@ -375,7 +375,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language],
+    [language, stateManager],
   );
 
   let columns;

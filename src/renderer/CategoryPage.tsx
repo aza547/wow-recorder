@@ -406,23 +406,23 @@ const CategoryPage = (props: IProps) => {
                   // is a single day, as well as setting the time to the current
                   // time. So make sure that we have separate date objects, set
                   // to midnight and a minute to midnight to cover the full day.
-                  const dateRangeFilter: DateValueType = {
+                  const drf: DateValueType = {
                     startDate: null,
                     endDate: null,
                   };
 
                   if (v && v.startDate) {
-                    dateRangeFilter.startDate = new Date(v.startDate);
-                    dateRangeFilter.startDate.setHours(0, 0, 0, 0);
+                    drf.startDate = new Date(v.startDate);
+                    drf.startDate.setHours(0, 0, 0, 0);
                   }
                   if (v && v.endDate) {
-                    dateRangeFilter.endDate = new Date(v.endDate);
-                    dateRangeFilter.endDate.setHours(23, 59, 59, 999);
+                    drf.endDate = new Date(v.endDate);
+                    drf.endDate.setHours(23, 59, 59, 999);
                   }
 
                   setAppState((prev) => ({
                     ...prev,
-                    dateRangeFilter,
+                    dateRangeFilter: drf,
                   }));
                 }}
                 separator="to"

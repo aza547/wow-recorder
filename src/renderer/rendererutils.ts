@@ -508,16 +508,6 @@ const getPlayerTeamID = (video: RendererVideo) => {
   return player._teamID;
 };
 
-const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
-  const { player } = video;
-
-  if (player === undefined) {
-    return 'UNKNOWN';
-  }
-
-  return getSpecClass(player._specID);
-};
-
 const getSpecClass = (specId: number | undefined): WoWCharacterClassType => {
   if (specId === undefined) {
     return 'UNKNOWN';
@@ -528,6 +518,16 @@ const getSpecClass = (specId: number | undefined): WoWCharacterClassType => {
   }
 
   return specializationById[specId].class;
+};
+
+const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
+  const { player } = video;
+
+  if (player === undefined) {
+    return 'UNKNOWN';
+  }
+
+  return getSpecClass(player._specID);
 };
 
 const getVideoTime = (video: RendererVideo) => {

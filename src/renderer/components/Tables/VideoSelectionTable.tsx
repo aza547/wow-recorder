@@ -1,7 +1,12 @@
 import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
-import React, { Fragment, MutableRefObject, useEffect } from 'react';
+import React, {
+  Fragment,
+  MutableRefObject,
+  useCallback,
+  useEffect,
+} from 'react';
 import StateManager from 'renderer/StateManager';
 import {
   ArrowDown,
@@ -30,6 +35,74 @@ interface IProps {
  */
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
+
+  /**
+   * Mark the row as selected and update the video player to play the first
+   * viewpoint.
+   */
+  const onRowClick = useCallback(
+    (
+      event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
+      row: Row<RendererVideo>,
+    ) => {
+      const allRows = table.getRowModel().rows;
+      const selectedRows = table.getSelectedRowModel().rows;
+      const isSelected = selectedRows.map((r) => r.index).includes(row.index);
+
+      if (event.shiftKey && event instanceof KeyboardEvent) {
+        // Just add the next row down to the selection.
+        row.getToggleSelectedHandler()(event);
+        return;
+      }
+      if (event.shiftKey) {
+        // Select a range of rows.
+        const base = selectedRows[0].index;
+        const target = row.index;
+        const start = Math.min(base, target);
+        const end = Math.max(base, target) + 1;
+
+        allRows.slice(start, end).forEach((r) => {
+          if (!r.getIsSelected()) {
+            r.getToggleSelectedHandler()(event);
+          }
+        });
+
+        return;
+      }
+
+      if (event.ctrlKey && !(event instanceof KeyboardEvent)) {
+        // Add a single row to the Selection.
+        row.getToggleSelectedHandler()(event);
+        return;
+      }
+
+      const video = row.original;
+      const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
+      persistentProgress.current = 0;
+
+      // It's a regular click, so unselect any other selected rows.
+      selectedRows.forEach((r) => {
+        if (r.index !== row.index) {
+          r.getToggleSelectedHandler()(event);
+        }
+      });
+
+      // Make sure the clicked row is selected after we're done.
+      if (!isSelected) {
+        row.getToggleSelectedHandler()(event);
+      }
+
+      setAppState((prevState) => {
+        return {
+          ...prevState,
+          selectedVideos: povs[0] ? [povs[0]] : [],
+          multiPlayerMode: false,
+          playing: false,
+        };
+      });
+    },
+    [persistentProgress, setAppState, table],
+  );
 
   /**
    * Allow control and shift to select multi or ranges of
@@ -107,71 +180,7 @@ const VideoSelectionTable = (props: IProps) => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [table]);
-
-  /**
-   * Mark the row as selected and update the video player to play the first
-   * viewpoint.
-   */
-  const onRowClick = (
-    event: React.MouseEvent<HTMLTableRowElement> | KeyboardEvent,
-    row: Row<RendererVideo>,
-  ) => {
-    const allRows = table.getRowModel().rows;
-    const selectedRows = table.getSelectedRowModel().rows;
-    const isSelected = selectedRows.map((r) => r.index).includes(row.index);
-
-    if (event.shiftKey && event instanceof KeyboardEvent) {
-      // Just add the next row down to the selection.
-      row.getToggleSelectedHandler()(event);
-      return;
-    } else if (event.shiftKey) {
-      // Select a range of rows.
-      const base = selectedRows[0].index;
-      const target = row.index;
-      const start = Math.min(base, target);
-      const end = Math.max(base, target) + 1;
-
-      allRows.slice(start, end).forEach((r) => {
-        if (!r.getIsSelected()) {
-          r.getToggleSelectedHandler()(event);
-        }
-      });
-
-      return;
-    }
-
-    if (event.ctrlKey && !(event instanceof KeyboardEvent)) {
-      // Add a single row to the Selection.
-      row.getToggleSelectedHandler()(event);
-      return;
-    }
-
-    const video = row.original;
-    const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
-    persistentProgress.current = 0;
-
-    // It's a regular click, so unselect any other selected rows.
-    selectedRows.forEach((r) => {
-      if (r.index !== row.index) {
-        r.getToggleSelectedHandler()(event);
-      }
-    });
-
-    // Make sure the clicked row is selected after we're done.
-    if (!isSelected) {
-      row.getToggleSelectedHandler()(event);
-    }
-
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        selectedVideos: povs[0] ? [povs[0]] : [],
-        multiPlayerMode: false,
-        playing: false,
-      };
-    });
-  };
+  }, [table, onRowClick]);
 
   /**
    * Render an individual header.
