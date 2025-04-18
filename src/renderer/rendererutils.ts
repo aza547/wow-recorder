@@ -414,6 +414,32 @@ const getResultColor = (video: RendererVideo) => {
     return 'hsl(var(--success))';
   }
 
+  if (isRaidUtil(video)) {
+    // Look for the boss percent in any of the viewpoints. That is really
+    // just to make this nicer over upgrade of the app; this way we will
+    // show the percent if it exists on any video and not just the first one.
+    const bossPercent = [video, ...video.multiPov]
+      .map((rv) => rv.bossPercent)
+      .find((bp) => bp);
+
+    if (bossPercent) {
+      const raidResultColors = [
+        'rgb(46,  171, 27)',
+        'rgb(112, 170, 30)',
+        'rgb(171, 150, 30)',
+        'rgb(171, 86,  26)',
+        'rgb(175, 50,  23)',
+        'rgb(156, 21,  21)',
+      ];
+
+      // Being a bit lazy here and re-using the solo shuffle colors.
+      // Pick a sensible index. Making sure they're within bounds.
+      let index = Math.min(Math.round(bossPercent / 20), 5);
+      index = Math.max(index, 0);
+      return raidResultColors[index];
+    }
+  }
+
   return 'hsl(var(--error))';
 };
 
@@ -482,6 +508,18 @@ const getPlayerTeamID = (video: RendererVideo) => {
   return player._teamID;
 };
 
+const getSpecClass = (specId: number | undefined): WoWCharacterClassType => {
+  if (specId === undefined) {
+    return 'UNKNOWN';
+  }
+
+  if (specializationById[specId] === undefined) {
+    return 'UNKNOWN';
+  }
+
+  return specializationById[specId].class;
+};
+
 const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
   const { player } = video;
 
@@ -489,15 +527,7 @@ const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
     return 'UNKNOWN';
   }
 
-  if (player._specID === undefined) {
-    return 'UNKNOWN';
-  }
-
-  if (specializationById[player._specID] === undefined) {
-    return 'UNKNOWN';
-  }
-
-  return specializationById[player._specID].class;
+  return getSpecClass(player._specID);
 };
 
 const getVideoTime = (video: RendererVideo) => {
@@ -826,9 +856,22 @@ const getVideoResultText = (
   }
 
   if (isRaidUtil(video)) {
-    return result
-      ? getLocalePhrase(language, Phrase.Kill)
-      : getLocalePhrase(language, Phrase.Wipe);
+    if (result) {
+      return getLocalePhrase(language, Phrase.Kill);
+    }
+
+    // Look for the boss percent in any of the viewpoints. That is really
+    // just to make this nicer over upgrade of the app; this way we will
+    // show the percent if it exists on any video and not just the first one.
+    const bossPercent = [video, ...video.multiPov]
+      .map((rv) => rv.bossPercent)
+      .find((bp) => bp);
+
+    if (bossPercent !== undefined) {
+      return `${bossPercent}%`;
+    }
+
+    return getLocalePhrase(language, Phrase.Wipe);
   }
 
   if (isSoloShuffleUtil(video)) {
@@ -1005,35 +1048,20 @@ const countUniqueViewpoints = (video: RendererVideo) => {
   return unique.length;
 };
 
-const getSelectedRow = (
-  selectedVideos: RendererVideo[],
-  table: Table<RendererVideo>,
-) => {
-  const video = selectedVideos[0];
+const raidResultToPercent = (video: RendererVideo) => {
+  const bossPercent = [video, ...video.multiPov]
+    .map((rv) => rv.bossPercent)
+    .find((bp) => bp);
 
-  if (!video) {
-    return undefined;
+  if (bossPercent) {
+    return bossPercent;
   }
 
-  const { videoName } = video;
-  const { rows } = table.getRowModel();
+  if (video.result) {
+    return 0;
+  }
 
-  const row = rows.find((r) => {
-    return [r.original, ...r.original.multiPov]
-      .map((rv) => rv.videoName)
-      .includes(videoName);
-  });
-
-  return row;
-};
-
-const getSelectedRowIndex = (
-  selectedVideos: RendererVideo[],
-  table: Table<RendererVideo>,
-) => {
-  const row = getSelectedRow(selectedVideos, table);
-  if (row) return row.index;
-  return 0;
+  return 100;
 };
 
 export {
@@ -1093,6 +1121,6 @@ export {
   countUniqueViewpoints,
   videoToDate,
   dateToHumanReadable,
-  getSelectedRow,
-  getSelectedRowIndex,
+  getSpecClass,
+  raidResultToPercent,
 };

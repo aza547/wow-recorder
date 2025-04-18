@@ -12,7 +12,7 @@ import {
   MapPinned,
   Swords,
   Trophy,
-  Ellipsis,
+  Zap,
 } from 'lucide-react';
 import { RendererVideo } from 'main/types';
 
@@ -79,6 +79,13 @@ export const LevelHeader = (language: Language) => (
   </span>
 );
 
+export const AffixesHeader = () => (
+  <span className="inline-flex gap-x-1">
+    <Zap />
+    Affixes
+  </span>
+);
+
 export const TypeHeader = (language: Language) => (
   <span className="inline-flex gap-x-1">
     <Joystick />
@@ -113,9 +120,6 @@ export const SelectHeader = (ctx: HeaderContext<RendererVideo, unknown>) => {
   );
 };
 
-export const DetailsHeader = (language: Language) => (
-  <span className="inline-flex gap-x-1">
-    <Ellipsis />
-    {getLocalePhrase(language, Phrase.Details)}
-  </span>
+export const DetailsHeader = () => (
+  <span className="inline-flex gap-x-1"></span>
 );

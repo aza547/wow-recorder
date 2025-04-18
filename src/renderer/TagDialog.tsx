@@ -17,7 +17,8 @@ import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
 
 interface IProps {
-  video: RendererVideo;
+  initialTag: string;
+  videos: RendererVideo[];
   stateManager: MutableRefObject<StateManager>;
   children: React.ReactNode;
   tooltipContent: string;
@@ -25,18 +26,24 @@ interface IProps {
 }
 
 export default function TagDialog(props: IProps) {
-  const { video, stateManager, children, tooltipContent, appState } = props;
+  const {
+    videos,
+    stateManager,
+    children,
+    tooltipContent,
+    appState,
+    initialTag,
+  } = props;
 
-  const [tag, setTag] = useState(video.tag);
+  const [tag, setTag] = useState(initialTag);
 
   const saveTag = (newTag: string) => {
-    stateManager.current.tag(video, newTag);
+    stateManager.current.setTag(newTag, videos);
 
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'tag',
-      video.cloud ? video.videoName : video.videoSource,
-      video.cloud,
       newTag,
+      videos,
     ]);
   };
 
@@ -69,7 +76,7 @@ export default function TagDialog(props: IProps) {
           type="text"
           id="newTag"
           name="newTag"
-          defaultValue={video.tag}
+          defaultValue={initialTag}
           spellCheck={false}
           onKeyDown={(e) => {
             // Need this to prevent "k" triggering video play/pause while

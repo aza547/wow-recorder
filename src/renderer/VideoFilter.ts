@@ -4,7 +4,7 @@ import {
   instanceNamesByZoneId,
   specializationById,
 } from 'main/constants';
-import { Flavour, RendererVideo } from 'main/types';
+import { Flavour, RawCombatant, RendererVideo } from 'main/types';
 import {
   isArenaUtil,
   isBattlegroundUtil,
@@ -14,12 +14,14 @@ import {
   getWoWClassColor,
   getPlayerSpecID,
   getPlayerName,
+  getSpecClass,
 } from './rendererutils';
 import { Tag } from 'react-tag-autocomplete';
 import { specImages, affixImages, classImages } from './images';
 import VideoTag from './VideoTag';
 import { Language, Phrase } from 'localisation/types';
 import { getLocalePhrase } from 'localisation/translations';
+import { DateValueType } from 'react-tailwindcss-datepicker';
 
 /**
  * The VideoFilter class provides a mechanism to populate the search
@@ -27,6 +29,11 @@ import { getLocalePhrase } from 'localisation/translations';
  * user's search query.
  */
 export default class VideoFilter {
+  /**
+   * The video up for filtering.
+   */
+  private video: RendererVideo;
+
   /**
    * A list of strings in the filter query.
    */
@@ -38,11 +45,24 @@ export default class VideoFilter {
   private matches: string[];
 
   /**
+   * A list of query matches for this video.
+   */
+  private dateRangeFilter: DateValueType;
+
+  /**
    * Constructor. This sets up the query for a given video. Typical usage
    * is to call filter after this to decide if the video should be filtered
    * or not.
    */
-  constructor(tags: Tag[], video: RendererVideo, language: Language) {
+  constructor(
+    tags: Tag[],
+    date: DateValueType,
+    video: RendererVideo,
+    language: Language,
+  ) {
+    this.dateRangeFilter = date;
+    this.video = video;
+
     this.query = tags
       .map((tag) => tag.value)
       .filter((tag) => typeof tag === 'string');
@@ -57,6 +77,23 @@ export default class VideoFilter {
    * suggestion for this video.
    */
   public filter() {
+    if (
+      this.dateRangeFilter &&
+      this.dateRangeFilter.startDate &&
+      this.dateRangeFilter.endDate
+    ) {
+      const startDate = this.dateRangeFilter.startDate;
+      const endDate = this.dateRangeFilter.endDate;
+
+      const videoDate = this.video.start
+        ? new Date(this.video.start)
+        : new Date(this.video.mtime);
+
+      if (videoDate < startDate || videoDate > endDate) {
+        return false;
+      }
+    }
+
     return this.query.every((s) => this.matches.includes(s));
   }
 
@@ -205,7 +242,36 @@ export default class VideoFilter {
       }
     }
 
+    video.combatants.forEach((combatant) => {
+      this.pushCombatantTag(combatant, suggestions);
+    });
+
     return suggestions;
+  }
+
+  private static pushCombatantTag(
+    combatant: RawCombatant,
+    suggestions: VideoTag[],
+  ) {
+    const combatantName = combatant._name;
+    const combatantSpec = combatant._specID;
+
+    if (!combatantName || !combatantSpec) {
+      return;
+    }
+
+    const combatantClass = getSpecClass(combatantSpec);
+    const combatantClassIcon = classImages[combatantClass];
+    const combatantClassColor = getWoWClassColor(combatantClass);
+
+    const tag = new VideoTag(
+      200,
+      combatantName,
+      combatantClassIcon,
+      combatantClassColor,
+    );
+
+    suggestions.push(tag);
   }
 
   /**

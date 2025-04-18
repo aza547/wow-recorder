@@ -17,22 +17,15 @@ import {
   getDungeonName,
 } from 'renderer/rendererutils';
 import { Box, Checkbox } from '@mui/material';
-import { specImages } from 'renderer/images';
+import { affixImages, specImages } from 'renderer/images';
 import { Language, Phrase } from 'localisation/types';
 import { Button } from '../Button/Button';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faAngleDoubleDown,
-  faAngleDoubleUp,
-  faMessage,
-  faStar,
-} from '@fortawesome/free-solid-svg-icons';
-import {
-  faStar as faStarOutline,
-  faMessage as faMessageOutline,
-} from '@fortawesome/free-regular-svg-icons';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
+import { LockKeyhole, LockOpen } from 'lucide-react';
+import StateManager from 'renderer/StateManager';
+import { MutableRefObject } from 'react';
+import { dungeonAffixesById } from 'main/constants';
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -97,93 +90,41 @@ export const populateActivityCell = (
 export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
   language: Language,
+  stateManager: MutableRefObject<StateManager>,
 ) => {
-  const { row } = ctx;
   const video = ctx.getValue() as RendererVideo;
 
-  const renderExpandButton = () => {
-    const tooltip = row.getIsExpanded()
-      ? getLocalePhrase(language, Phrase.ClickToCollapse)
-      : getLocalePhrase(language, Phrase.ClickToExpand);
+  const renderProtectedIcon = () => {
+    const starred = [video, ...video.multiPov]
+      .map((v) => v.isProtected)
+      .some((p) => p);
 
-    const icon = row.getIsExpanded() ? faAngleDoubleUp : faAngleDoubleDown;
+    const icon = starred ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
+    const tooltip = starred
+      ? getLocalePhrase(language, Phrase.SomeStarred)
+      : getLocalePhrase(language, Phrase.NoneStarred);
+
+    const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
+      stopPropagation(e);
+      stateManager.current.setProtected(!starred, [video, ...video.multiPov]);
+
+      window.electron.ipcRenderer.sendMessage('videoButton', [
+        'protect',
+        !starred,
+        [video, ...video.multiPov],
+      ]);
+    };
 
     return (
       <Tooltip content={tooltip}>
-        <Button
-          className="cursor-pointer"
-          size="sm"
-          variant="ghost"
-          onClick={(e) => {
-            row.getToggleExpandedHandler()();
-            stopPropagation(e);
-          }}
-        >
-          <FontAwesomeIcon icon={icon} />
+        <Button variant="ghost" size="xs" onClick={toggleProtected}>
+          {icon}
         </Button>
       </Tooltip>
     );
   };
 
-  const renderTagIcon = () => {
-    // Search for the tag in the video but also in any linked videos, we're
-    // going to display either at the top of the table.
-    const tags = [video, ...video.multiPov].map((v) => v.tag).filter((t) => t);
-
-    const icon = tags.length > 0 ? faMessage : faMessageOutline;
-    let tooltip = getLocalePhrase(language, Phrase.NoneTagged);
-
-    if (tags.length > 1) {
-      tooltip = getLocalePhrase(language, Phrase.MultipleTagged);
-    } else if (tags.length > 0 && typeof tags[0] === 'string') {
-      tooltip = tags[0];
-    }
-
-    return (
-      <Tooltip content={tooltip}>
-        <Box
-          className="flex items-center text-card-foreground px-3"
-          onClick={(e) => {
-            stopPropagation(e);
-          }}
-        >
-          <FontAwesomeIcon icon={icon} size="sm" />
-        </Box>
-      </Tooltip>
-    );
-  };
-
-  const renderStarIcon = () => {
-    const starred = [video, ...video.multiPov]
-      .map((v) => v.isProtected)
-      .find((p) => p);
-
-    const icon = starred ? faStar : faStarOutline;
-    const tooltip = starred
-      ? getLocalePhrase(language, Phrase.SomeStarred)
-      : getLocalePhrase(language, Phrase.NoneStarred);
-
-    return (
-      <Tooltip content={tooltip}>
-        <Box
-          className="flex items-center text-card-foreground pr-3"
-          onClick={(e) => {
-            stopPropagation(e);
-          }}
-        >
-          <FontAwesomeIcon icon={icon} size="sm" />
-        </Box>
-      </Tooltip>
-    );
-  };
-
-  return (
-    <Box className="inline-flex">
-      {renderStarIcon()}
-      {renderTagIcon()}
-      {renderExpandButton()}
-    </Box>
-  );
+  return <Box className="inline-flex">{renderProtectedIcon()}</Box>;
 };
 
 export const populateLevelCell = (
@@ -191,6 +132,43 @@ export const populateLevelCell = (
 ) => {
   const video = info.getValue() as RendererVideo;
   return `+${video.keystoneLevel || video.level}`;
+};
+
+export const populateAffixesCell = (
+  info: CellContext<RendererVideo, unknown>,
+) => {
+  const video = info.getValue() as RendererVideo;
+
+  const renderAffix = (id: number) => {
+    const affixName = dungeonAffixesById[id];
+    const affixImage = affixImages[id as keyof typeof affixImages];
+
+    return (
+      <Tooltip content={affixName} key={affixName}>
+        <Box
+          key={affixName}
+          component="img"
+          src={affixImage}
+          sx={{
+            height: '25px',
+            width: '25px',
+            border: '1px solid black',
+            borderRadius: '15%',
+            boxSizing: 'border-box',
+            objectFit: 'cover',
+          }}
+        />
+      </Tooltip>
+    );
+  };
+
+  if (!video.affixes) {
+    return <></>;
+  }
+
+  return (
+    <div className="flex flex-row">{video.affixes.sort().map(renderAffix)}</div>
+  );
 };
 
 export const populateViewpointCell = (

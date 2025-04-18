@@ -1,5 +1,5 @@
 import React from 'react';
-import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
+import { Excalidraw } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
 import './DrawingOverlay.css';
 
@@ -10,9 +10,8 @@ interface DrawingOverlayProps {
   height: number;
 }
 
-
-export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({ 
-  isDrawingEnabled, 
+export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
+  isDrawingEnabled,
   onDrawingChange,
   width,
   height,
@@ -30,14 +29,14 @@ export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
           onChange={(elements) => onDrawingChange(elements)}
           initialData={{
             appState: {
-              viewBackgroundColor: "transparent",
-              activeTool: { 
-                type: "freedraw",
+              viewBackgroundColor: 'transparent',
+              activeTool: {
+                type: 'freedraw',
                 lastActiveTool: null,
                 locked: true,
-                customType: null
-              }
-            }
+                customType: null,
+              },
+            },
           }}
           UIOptions={{
             canvasActions: {
@@ -51,10 +50,9 @@ export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
             },
             tools: {
               image: false,
-            }
+            },
           }}
-        >
-        </Excalidraw>
+        ></Excalidraw>
       </div>
     </div>
   );

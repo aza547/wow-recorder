@@ -4,6 +4,7 @@ import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from '../config/ConfigService';
 import { Tag } from 'react-tag-autocomplete';
+import { DateValueType } from 'react-tailwindcss-datepicker';
 
 /**
  * Application recording status.
@@ -207,6 +208,7 @@ type Metadata = {
   tag?: string;
   delete?: boolean; // signals video should be deleted when possible
   uniqueHash?: string; // used for cloud video grouping
+  bossPercent?: number;
 };
 
 /**
@@ -306,7 +308,9 @@ type AppState = {
   category: VideoCategory;
   selectedVideos: RendererVideo[];
   multiPlayerMode: boolean;
+  viewpointSelectionOpen: boolean;
   videoFilterTags: Tag[];
+  dateRangeFilter: DateValueType;
   videoFullScreen: boolean;
   playing: boolean;
   language: Language;

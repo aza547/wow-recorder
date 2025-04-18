@@ -35,6 +35,7 @@ const MultiPovPlaybackToggles = (props: IProps) => {
       return {
         ...prevState,
         multiPlayerMode: value === 'true',
+        viewpointSelectionOpen: value === 'true',
         selectedVideos: s,
       };
     });

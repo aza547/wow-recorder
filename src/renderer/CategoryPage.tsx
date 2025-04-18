@@ -1,14 +1,21 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
 import { MutableRefObject, useMemo } from 'react';
-import { GripHorizontal, Trash } from 'lucide-react';
+import {
+  Eye,
+  GripHorizontal,
+  LockKeyhole,
+  Trash,
+  MessageSquare,
+  MessageSquareMore,
+  LockOpen,
+} from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
-import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
 import { useSettings } from './useSettings';
-import { getSelectedRow, povDiskFirstNameSort } from './rendererutils';
+import { povDiskFirstNameSort } from './rendererutils';
 import StateManager from './StateManager';
 import Separator from './components/Separator/Separator';
 import { Button } from './components/Button/Button';
@@ -16,10 +23,17 @@ import VideoSelectionTable from './components/Tables/VideoSelectionTable';
 import DeleteDialog from './DeleteDialog';
 import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
 import VideoFilter from './VideoFilter';
-import { Table } from '@tanstack/react-table';
 import { Resizable, ResizeCallback } from 're-resizable';
 import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer from './VideoPlayer';
+import Label from './components/Label/Label';
+import { Popover, PopoverContent } from './components/Popover/Popover';
+import { PopoverTrigger } from '@radix-ui/react-popover';
+import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
+import useTable from './components/Tables/TableData';
+import TagDialog from './TagDialog';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import DateRangePicker from './DateRangePicker';
 
 interface IProps {
   category: VideoCategory;
@@ -29,7 +43,6 @@ interface IProps {
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
-  table: Table<RendererVideo>;
 }
 
 /**
@@ -44,18 +57,26 @@ const CategoryPage = (props: IProps) => {
     setAppState,
     persistentProgress,
     playerHeight,
-    table,
   } = props;
-  const { selectedVideos, videoFilterTags, language } = appState;
+  const {
+    selectedVideos,
+    videoFilterTags,
+    language,
+    dateRangeFilter,
+    viewpointSelectionOpen,
+  } = appState;
 
   const [config, setConfig] = useSettings();
 
   const filteredState = useMemo<RendererVideo[]>(() => {
     const queryFilter = (rv: RendererVideo) =>
-      new VideoFilter(videoFilterTags, rv, language).filter();
+      new VideoFilter(videoFilterTags, dateRangeFilter, rv, language).filter();
 
     return categoryState.filter(queryFilter);
-  }, [categoryState, videoFilterTags, language]);
+  }, [categoryState, dateRangeFilter, videoFilterTags, language]);
+
+  // The data backing the video selection table.
+  const table = useTable(filteredState, appState, stateManager);
 
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
@@ -80,9 +101,8 @@ const CategoryPage = (props: IProps) => {
    * changed category) then just play the first video in the table.
    */
   const getVideoPlayer = () => {
-    const povs = [filteredState[0], ...filteredState[0].multiPov].sort(
-      povDiskFirstNameSort,
-    );
+    const toShow = filteredState[0] ? filteredState[0] : categoryState[0];
+    const povs = [toShow, ...toShow.multiPov].sort(povDiskFirstNameSort);
 
     const videosToPlay =
       selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
@@ -107,6 +127,7 @@ const CategoryPage = (props: IProps) => {
         <VideoPlayer
           key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
           videos={videosToPlay}
+          categoryState={categoryState}
           persistentProgress={persistentProgress}
           config={config}
           appState={appState}
@@ -118,46 +139,36 @@ const CategoryPage = (props: IProps) => {
 
   const getAllSelectedViewpoints = () => {
     const { rows } = table.getSelectedRowModel();
-    const parents = rows.map((r) => r.original);
-    const children = parents.flatMap((v) => v.multiPov);
-    return parents.concat(children);
+
+    if (rows.length > 0) {
+      const parents = rows.map((r) => r.original);
+      const children = parents.flatMap((v) => v.multiPov);
+      return parents.concat(children);
+    }
+
+    const first = filteredState[0] ? filteredState[0] : categoryState[0];
+    return [first, ...first.multiPov];
   };
 
   const bulkDelete = (videos: RendererVideo[]) => {
-    window.electron.ipcRenderer.sendMessage('deleteVideosBulk', videos);
-    stateManager.current.bulkDeleteVideo(videos);
+    window.electron.ipcRenderer.sendMessage('deleteVideos', videos);
+    stateManager.current.deleteVideos(videos);
   };
 
   const getVideoSelection = () => {
-    const viewpoints = getAllSelectedViewpoints();
-    const prot = viewpoints.filter((v) => v.isProtected);
-    const unprot = viewpoints.filter((v) => !v.isProtected);
+    const selectedRows = table.getSelectedRowModel().rows;
+    const selectedViewpoints = getAllSelectedViewpoints();
 
-    let deleteWarning = `${getLocalePhrase(
+    const deleteWarning = `${getLocalePhrase(
       appState.language,
       Phrase.ThisWillPermanentlyDelete,
-    )} ${unprot.length} ${getLocalePhrase(
+    )} ${selectedViewpoints.length} ${getLocalePhrase(
       appState.language,
-      Phrase.RecordingsFullStop,
-    )}`;
-
-    if (prot.length > 0) {
-      deleteWarning += ' ';
-
-      deleteWarning += getLocalePhrase(
-        appState.language,
-        Phrase.ThisSelectionIncludes,
-      );
-
-      deleteWarning += ' ';
-      deleteWarning += prot.length;
-      deleteWarning += ' ';
-
-      deleteWarning += getLocalePhrase(
-        appState.language,
-        Phrase.StarredRecordingNotDeleted,
-      );
-    }
+      Phrase.Recordings,
+    )} ${getLocalePhrase(
+      appState.language,
+      Phrase.From,
+    )} ${selectedRows.length} ${getLocalePhrase(appState.language, Phrase.Rows)}.`;
 
     // We don't want multi player mode to be accessible if there isn't
     // multiple viewpoints, so check for that. Important to filter by
@@ -174,12 +185,14 @@ const CategoryPage = (props: IProps) => {
     const dedup = (rv: RendererVideo, idx: number, arr: RendererVideo[]) =>
       arr.findIndex((i) => i.videoName === rv.videoName) === idx;
 
-    const selectedRow = getSelectedRow(selectedVideos, table);
+    const selectedRow = selectedRows[0];
 
     const multiPlayerOpts = (
       selectedRow
         ? [selectedRow.original, ...selectedRow.original.multiPov]
-        : [filteredState[0], ...filteredState[0].multiPov]
+        : filteredState[0]
+          ? [filteredState[0], ...filteredState[0].multiPov]
+          : [categoryState[0], ...categoryState[0].multiPov]
     )
       .sort(povDiskFirstNameSort)
       .filter(dedup);
@@ -188,9 +201,178 @@ const CategoryPage = (props: IProps) => {
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
 
+    const renderTagButton = () => {
+      let tag = '';
+      let icon = <MessageSquare size={20} />;
+      let tooltip = getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
+      const foundTag = selectedViewpoints.map((v) => v.tag).find((t) => t);
+
+      if (foundTag) {
+        tag = foundTag;
+        icon = <MessageSquareMore size={20} />;
+
+        if (tag.length > 50) {
+          tooltip = `${tag.slice(0, 50)}...`;
+        } else {
+          tooltip = tag;
+        }
+      }
+
+      return (
+        <TagDialog
+          initialTag={tag}
+          videos={selectedViewpoints}
+          stateManager={stateManager}
+          tooltipContent={tooltip}
+          appState={appState}
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-10"
+            disabled={selectedRows.length > 1}
+          >
+            {icon}
+          </Button>
+        </TagDialog>
+      );
+    };
+
+    const protectVideo = (
+      _event: React.SyntheticEvent,
+      protect: boolean,
+      videos: RendererVideo[],
+    ) => {
+      stateManager.current.setProtected(protect, videos);
+
+      window.electron.ipcRenderer.sendMessage('videoButton', [
+        'protect',
+        protect,
+        videos,
+      ]);
+    };
+
+    const renderProtectButton = () => {
+      const allProtected = selectedViewpoints.every((v) => v.isProtected);
+
+      const icon = allProtected ? (
+        <LockOpen size={20} />
+      ) : (
+        <LockKeyhole size={20} />
+      );
+
+      const tooltip = allProtected
+        ? getLocalePhrase(appState.language, Phrase.UnstarSelected)
+        : getLocalePhrase(appState.language, Phrase.StarSelected);
+
+      return (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="h-10"
+          disabled={selectedViewpoints.length < 1}
+          onClick={(e) => protectVideo(e, !allProtected, selectedViewpoints)}
+        >
+          <Tooltip content={tooltip}>{icon}</Tooltip>
+        </Button>
+      );
+    };
+
+    const renderDeleteButton = () => {
+      return (
+        <DeleteDialog
+          onDelete={() => bulkDelete(selectedViewpoints)}
+          tooltipContent={getLocalePhrase(
+            appState.language,
+            Phrase.BulkDeleteButtonTooltip,
+          )}
+          warning={deleteWarning}
+          appState={appState}
+        >
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-10"
+            disabled={selectedViewpoints.length < 1}
+          >
+            <Trash size={20} />
+          </Button>
+        </DeleteDialog>
+      );
+    };
+
+    const renderSelectionLabel = () => {
+      let text = getLocalePhrase(appState.language, Phrase.Selection);
+
+      if (selectedRows.length > 1) {
+        text += ` (${selectedRows.length})`;
+      }
+
+      return <Label>{text}</Label>;
+    };
+
+    const renderViewpointSelectionPopover = () => {
+      return (
+        <Popover
+          open={viewpointSelectionOpen}
+          onOpenChange={() => {
+            setAppState((a) => {
+              return {
+                ...a,
+                viewpointSelectionOpen: !a.viewpointSelectionOpen,
+              };
+            });
+          }}
+        >
+          <PopoverTrigger asChild className="absolute top-[90px] left-0">
+            <Button
+              variant={viewpointSelectionOpen ? 'default' : 'secondary'}
+              size="xs"
+              className="z-10 h-20 rounded-l-none flex justify-start p-[3px]"
+            >
+              <Eye size={15} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            onEscapeKeyDown={(e) => {
+              // Close the popover when escape is pressed.
+              setAppState((a) => {
+                return {
+                  ...a,
+                  viewpointSelectionOpen: false,
+                };
+              });
+
+              // Need this for some reason else the popover doesn't close.
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            side="left"
+            className="p-0 absolute top-[-40px] left-[30px] w-auto min-w-max"
+            onInteractOutside={(e) => {
+              e.preventDefault();
+            }}
+            onPointerDownOutside={(e) => {
+              e.preventDefault();
+            }}
+            onFocusOutside={(e) => {
+              e.preventDefault();
+            }}
+          >
+            <ViewpointSelection
+              video={selectedRow ? selectedRow.original : filteredState[0]}
+              appState={appState}
+              setAppState={setAppState}
+              persistentProgress={persistentProgress}
+            />
+          </PopoverContent>
+        </Popover>
+      );
+    };
+
     return (
       <>
-        <div className="w-full flex justify-evenly items-center gap-x-5 px-4 pt-2">
+        <div className="w-full flex justify-evenly items-center gap-x-5 px-4 py-2">
           <MultiPovPlaybackToggles
             appState={appState}
             setAppState={setAppState}
@@ -205,45 +387,41 @@ const CategoryPage = (props: IProps) => {
               appState={appState}
             />
           )}
-          <div className="flex-grow">
-            <SearchBar
-              key={category}
-              appState={appState}
-              setAppState={setAppState}
-              filteredState={filteredState}
-            />
+          <div className="flex flex-grow">
+            <div className="flex-grow">
+              <SearchBar
+                key={category}
+                appState={appState}
+                setAppState={setAppState}
+                filteredState={filteredState}
+              />
+            </div>
+            <div className="ml-2">
+              <Label>
+                {getLocalePhrase(appState.language, Phrase.DateFilter)}
+              </Label>
+              <DateRangePicker appState={appState} setAppState={setAppState} />
+            </div>
           </div>
-          <div className="pt-6">
-            <DeleteDialog
-              onDelete={() => bulkDelete(unprot)}
-              tooltipContent={getLocalePhrase(
-                appState.language,
-                Phrase.BulkDeleteButtonTooltip,
-              )}
-              warning={deleteWarning}
-              skipPossible={false}
-              appState={appState}
-            >
-              <Button
-                variant="ghost"
-                size="xs"
-                disabled={viewpoints.length < 1}
-              >
-                <Trash size={20} />
-              </Button>
-            </DeleteDialog>
+
+          <div>
+            <Label>{renderSelectionLabel()}</Label>
+            <div className="flex gap-x-2 mr-2">
+              {renderTagButton()}
+              {renderProtectButton()}
+              {renderDeleteButton()}
+            </div>
           </div>
         </div>
-        <div className="w-full h-full flex justify-evenly border-b border-video-border items-start gap-x-5 px-1 py-1 overflow-hidden">
-          <ScrollArea withScrollIndicators={false} className="h-full w-full">
-            <VideoSelectionTable
-              table={table}
-              appState={appState}
-              setAppState={setAppState}
-              stateManager={stateManager}
-              persistentProgress={persistentProgress}
-            />
-          </ScrollArea>
+        <div className="relative">{renderViewpointSelectionPopover()}</div>
+        <div className="w-full h-full overflow-hidden">
+          <VideoSelectionTable
+            table={table}
+            appState={appState}
+            setAppState={setAppState}
+            stateManager={stateManager}
+            persistentProgress={persistentProgress}
+          />
         </div>
       </>
     );

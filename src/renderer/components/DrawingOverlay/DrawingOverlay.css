@@ -19,3 +19,10 @@
 .excalidraw .sidebar-trigger__label-element {
     display: none !important;
 }
+
+.drawing-overlay .excalidraw {
+  --color-primary: red;
+}
+.drawing-overlay .excalidraw.theme--dark {
+  --color-primary: pink;
+}

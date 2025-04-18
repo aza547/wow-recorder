@@ -14,7 +14,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Backdrop, Box, CircularProgress, Slider, IconButton } from '@mui/material';
+import { Backdrop, Box, CircularProgress, Slider } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -25,7 +25,6 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import MovieIcon from '@mui/icons-material/Movie';
 import ClearIcon from '@mui/icons-material/Clear';
 import DoneIcon from '@mui/icons-material/Done';
-import DrawIcon from '@mui/icons-material/Draw';
 import { OnProgressProps } from 'react-player/base';
 import ReactPlayer from 'react-player';
 import screenfull from 'screenfull';
@@ -47,9 +46,22 @@ import {
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { DrawingOverlay } from './components/DrawingOverlay/DrawingOverlay';
+import {
+  CloudDownload,
+  CloudUpload,
+  FolderOpen,
+  Link,
+  Pencil,
+} from 'lucide-react';
+import CloudIcon from '@mui/icons-material/Cloud';
+import SaveIcon from '@mui/icons-material/Save';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import Separator from './components/Separator/Separator';
+import { toast } from './components/Toast/useToast';
 
 interface IProps {
   videos: RendererVideo[];
+  categoryState: RendererVideo[];
   persistentProgress: MutableRefObject<number>;
   config: ConfigurationSchema;
   appState: AppState;
@@ -85,8 +97,16 @@ const sliderBaseSx = {
 };
 
 export const VideoPlayer = (props: IProps) => {
-  const { videos, persistentProgress, config, appState, setAppState } = props;
-  const { playing, multiPlayerMode, language } = appState;
+  const {
+    videos,
+    persistentProgress,
+    config,
+    appState,
+    setAppState,
+    categoryState,
+  } = props;
+
+  const { playing, multiPlayerMode, language, selectedVideos } = appState;
 
   if (videos.length < 1 || videos.length > 4) {
     // Protect against stupid programmer errors.
@@ -133,7 +153,8 @@ export const VideoPlayer = (props: IProps) => {
   // different POVs of the same activity we want to play from the same
   // point.
   const timestamp = `#t=${persistentProgress.current}`;
-  const clippable = !multiPlayerMode && !videos[0].cloud;
+  const local = !videos[0].cloud;
+  const clippable = !multiPlayerMode && local;
 
   // Deliberatly don't update the source when the timestamp changes. That's
   // just the initial playhead position. We only care to change sources when
@@ -152,8 +173,13 @@ export const VideoPlayer = (props: IProps) => {
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
-  const [drawingElements, setDrawingElements] = useState<readonly ExcalidrawElement[]>([]);
-  const [playerDimensions, setPlayerDimensions] = useState({ width: 0, height: 0 });
+  const [drawingElements, setDrawingElements] = useState<
+    readonly ExcalidrawElement[]
+  >([]);
+  const [playerDimensions, setPlayerDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
   const playerRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -655,7 +681,16 @@ export const VideoPlayer = (props: IProps) => {
     }
 
     return (
-      <div key={`player-${index}`} ref={playerRef} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+      <div
+        key={`player-${index}`}
+        ref={playerRef}
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+        }}
+      >
         <ReactPlayer
           id="react-player"
           ref={player}
@@ -793,6 +828,248 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
+   * Message the backend to download a video.
+   */
+  const downloadVideo = async () => {
+    if (!cloudVideo) return;
+    ipc.sendMessage('videoButton', ['download', cloudVideo]);
+  };
+
+  /**
+   * Message the backend to upload a video.
+   */
+  const uploadVideo = async () => {
+    if (!diskVideo) return;
+    ipc.sendMessage('videoButton', ['upload', diskVideo.videoSource]);
+  };
+
+  /**
+   * Render the download button.
+   */
+  const renderDownloadButton = () => {
+    return (
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.DownloadButtonTooltip)}
+      >
+        <Button onClick={downloadVideo} variant="ghost" size="xs">
+          <CloudDownload size={20} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Render the upload button.
+   */
+  const renderUploadButton = () => {
+    return (
+      <Tooltip content={getLocalePhrase(language, Phrase.UploadButtonTooltip)}>
+        <Button onClick={uploadVideo} variant="ghost" size="xs">
+          <CloudUpload size={20} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Return the no cloud icon.
+   */
+  const getNoCloudIcon = () => {
+    return (
+      <Button disabled variant="ghost" size="xs">
+        <CloudOffIcon sx={{ height: '20px', width: '20px' }} />
+      </Button>
+    );
+  };
+
+  const n = videos[0].videoName;
+  const nameMatches = categoryState
+    .flatMap((v) => [v, ...v.multiPov])
+    .filter((v) => v.videoName === n);
+
+  const cloudVideo = nameMatches.find((v) => v.cloud);
+  const diskVideo = nameMatches.find((v) => !v.cloud);
+
+  /**
+   * Set the selected videos.
+   */
+  const setSelectedVideos = (v: RendererVideo | undefined) => {
+    if (!v) {
+      return;
+    }
+
+    const sameActivity = selectedVideos[0]?.uniqueHash === v.uniqueHash;
+
+    if (!sameActivity) {
+      persistentProgress.current = 0;
+    }
+
+    setAppState((prevState) => {
+      const playing = sameActivity ? prevState.playing : false;
+
+      return {
+        ...prevState,
+        selectedVideos: [v],
+        multiPlayerMode: false,
+        playing,
+      };
+    });
+  };
+
+  /**
+   * Return the cloud icon.
+   */
+  const getCloudIcon = () => {
+    const isSelected = cloudVideo?.uniqueId === videos[0].uniqueId;
+    const color = cloudVideo ? 'white' : 'gray';
+    const opacity = isSelected ? 1 : 0.3;
+
+    if (!cloudVideo && !config.cloudUpload) {
+      return getNoCloudIcon();
+    }
+
+    if (!cloudVideo && config.cloudUpload) {
+      return renderUploadButton();
+    }
+
+    return (
+      <Tooltip content={getLocalePhrase(language, Phrase.CloudButtonTooltip)}>
+        <Button
+          disabled={!cloudVideo}
+          onClick={() => setSelectedVideos(cloudVideo)}
+          variant="ghost"
+          size="xs"
+        >
+          <CloudIcon sx={{ height: '20px', width: '20px', color, opacity }} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Return the disk icon.
+   */
+  const getDiskIcon = () => {
+    const isSelected = diskVideo?.uniqueId === videos[0].uniqueId;
+    const color = diskVideo ? 'white' : 'gray';
+    const opacity = isSelected ? 1 : 0.3;
+
+    if (!diskVideo && cloudVideo && config.cloudUpload) {
+      return renderDownloadButton();
+    }
+
+    return (
+      <Tooltip content={getLocalePhrase(language, Phrase.DiskButtonTooltip)}>
+        <Button
+          value="disk"
+          disabled={!diskVideo}
+          onClick={() => setSelectedVideos(diskVideo)}
+          variant="ghost"
+          size="xs"
+        >
+          <SaveIcon sx={{ height: '20px', width: '20px', color, opacity }} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
+  const renderVideoSourceToggle = () => {
+    return (
+      <div className="flex flex-row items-center">
+        {getCloudIcon()}
+        {getDiskIcon()}
+      </div>
+    );
+  };
+
+  /**
+   * Open the folder containing the video.
+   */
+  const openLocation = (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+    if (!diskVideo) return;
+
+    window.electron.ipcRenderer.sendMessage('videoButton', [
+      'open',
+      diskVideo.videoSource,
+      false,
+    ]);
+  };
+
+  /**
+   * Render the open folder button.
+   */
+  const renderOpenFolderButton = () => {
+    return (
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.OpenFolderButtonTooltip)}
+      >
+        <div>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={openLocation}
+            disabled={!clippable}
+          >
+            <FolderOpen size={20} color="white" />
+          </Button>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  /**
+   * Get a shareable URL for the video.
+   */
+  const getShareableLink = async (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
+    if (!cloudVideo) return;
+
+    try {
+      await ipc.invoke('getShareableLink', [cloudVideo.videoName]);
+      toast({
+        title: getLocalePhrase(appState.language, Phrase.ShareableLinkTitle),
+        description: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkText,
+        ),
+        duration: 5000,
+      });
+    } catch {
+      toast({
+        title: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkFailedTitle,
+        ),
+        description: getLocalePhrase(
+          appState.language,
+          Phrase.ShareableLinkFailedText,
+        ),
+        variant: 'destructive',
+        duration: 5000,
+      });
+    }
+  };
+
+  /**
+   * Render the get link button.
+   */
+  const renderGetLinkButton = () => {
+    return (
+      <Tooltip
+        content={getLocalePhrase(language, Phrase.ShareLinkButtonTooltip)}
+      >
+        <div>
+          <Button variant="ghost" size="xs" onClick={getShareableLink}>
+            <Link size={20} color="white" />
+          </Button>
+        </div>
+      </Tooltip>
+    );
+  };
+
+  /**
    * Returns the playback rate button for the video controls.
    */
   const renderClipButton = () => {
@@ -846,6 +1123,9 @@ export const VideoPlayer = (props: IProps) => {
     );
   };
 
+  /**
+   * Render the cancel clipping mode button.
+   */
   const renderClipCancelButton = () => {
     return (
       <Tooltip content={getLocalePhrase(language, Phrase.CancelTooltip)}>
@@ -897,15 +1177,14 @@ export const VideoPlayer = (props: IProps) => {
    * Returns the drawing button for the video controls.
    */
   const renderDrawingButton = () => (
-    <Tooltip content={getLocalePhrase(language, Phrase.TOGGLE_DRAWING)}>
-      <IconButton
+    <Tooltip content={getLocalePhrase(language, Phrase.ToggleDrawingMode)}>
+      <Button
+        variant="ghost"
+        size="xs"
         onClick={() => setIsDrawingEnabled(!isDrawingEnabled)}
-        sx={{
-          color: isDrawingEnabled ? 'primary.main' : 'inherit',
-        }}
       >
-        <DrawIcon />
-      </IconButton>
+        <Pencil size={20} color="white" />
+      </Button>
     </Tooltip>
   );
 
@@ -914,38 +1193,31 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderControls = () => {
     return (
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '8px',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1001,
-          height: '40px',
-          pointerEvents: 'auto',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, pointerEvents: 'auto' }}>
-          {renderPlayPause()}
-          {renderVolumeButton()}
-          {renderVolumeSlider()}
-          {renderProgressSlider()}
-          {renderProgressText()}
-          {!clipMode && !isClip(videos[0]) && renderClipButton()}
-          {!clipMode && renderPlaybackRateButton()}
-          {!clipMode && renderDrawingButton()}
-          {clipMode && renderClipFinishedButton()}
-          {clipMode && renderClipCancelButton()}
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto' }}>
-          {renderFullscreenButton()}
-        </Box>
-      </Box>
+      <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2">
+        {renderPlayPause()}
+        {renderVolumeButton()}
+        {renderVolumeSlider()}
+        {renderProgressSlider()}
+        {renderProgressText()}
+        {!multiPlayerMode && !clipMode && (
+          <Separator className="mx-2" orientation="vertical" />
+        )}
+        {!multiPlayerMode && !clipMode && renderVideoSourceToggle()}
+        {!multiPlayerMode && !clipMode && (
+          <Separator className="mx-2" orientation="vertical" />
+        )}
+        {!multiPlayerMode && !clipMode && local && renderOpenFolderButton()}
+        {renderDrawingButton()}
+        {!multiPlayerMode && !clipMode && !local && renderGetLinkButton()}
+        {!clipMode && !isClip(videos[0]) && renderClipButton()}
+        {!multiPlayerMode && !clipMode && (
+          <Separator className="mx-2" orientation="vertical" />
+        )}
+        {!clipMode && renderPlaybackRateButton()}
+        {!clipMode && renderFullscreenButton()}
+        {clipMode && renderClipFinishedButton()}
+        {clipMode && renderClipCancelButton()}
+      </div>
     );
   };
 
@@ -1035,7 +1307,7 @@ export const VideoPlayer = (props: IProps) => {
   useEffect(() => {
     if (!playerRef.current) return;
 
-    const resizeObserver = new ResizeObserver(entries => {
+    const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         setPlayerDimensions({ width, height });
