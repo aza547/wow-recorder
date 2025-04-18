@@ -31,6 +31,7 @@ import screenfull from 'screenfull';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import DeathIcon from '../../assets/icon/death.png';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
 import {
   convertNumToDeathMarkers,
   getAllDeathMarkers,
@@ -44,7 +45,14 @@ import {
 } from './rendererutils';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
-import { CloudDownload, CloudUpload, FolderOpen, Link } from 'lucide-react';
+import { DrawingOverlay } from './components/DrawingOverlay/DrawingOverlay';
+import {
+  CloudDownload,
+  CloudUpload,
+  FolderOpen,
+  Link,
+  Pencil,
+} from 'lucide-react';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
@@ -163,6 +171,9 @@ export const VideoPlayer = (props: IProps) => {
 
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
+
+  const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
+  const [, setDrawingElements] = useState<readonly ExcalidrawElement[]>([]);
 
   /**
    * Set if the video is playing or not.
@@ -1120,6 +1131,21 @@ export const VideoPlayer = (props: IProps) => {
   };
 
   /**
+   * Returns the drawing button for the video controls.
+   */
+  const renderDrawingButton = () => (
+    <Tooltip content={getLocalePhrase(language, Phrase.ToggleDrawingMode)}>
+      <Button
+        variant="ghost"
+        size="xs"
+        onClick={() => setIsDrawingEnabled(!isDrawingEnabled)}
+      >
+        <Pencil size={20} color="white" opacity={isDrawingEnabled ? 1 : 0.2} />
+      </Button>
+    </Tooltip>
+  );
+
+  /**
    * Returns the entire video control component.
    */
   const renderControls = () => {
@@ -1138,6 +1164,7 @@ export const VideoPlayer = (props: IProps) => {
           <Separator className="mx-2" orientation="vertical" />
         )}
         {!multiPlayerMode && !clipMode && local && renderOpenFolderButton()}
+        {renderDrawingButton()}
         {!multiPlayerMode && !clipMode && !local && renderGetLinkButton()}
         {!clipMode && !isClip(videos[0]) && renderClipButton()}
         {!multiPlayerMode && !clipMode && (
@@ -1233,7 +1260,7 @@ export const VideoPlayer = (props: IProps) => {
     ipc.on('pausePlayer', () => setPlaying(false));
   }, [setPlaying]);
 
-  let playerDivClass = 'w-full ';
+  let playerDivClass = 'w-full h-full ';
 
   if (srcs.length === 2) {
     playerDivClass += 'grid grid-cols-2 grid-rows-1';
@@ -1243,36 +1270,43 @@ export const VideoPlayer = (props: IProps) => {
     playerDivClass += 'grid grid-cols-2 grid-rows-2';
   }
 
-  return (
-    <>
-      <Box
-        id="player-and-controls"
-        sx={{
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <div className={playerDivClass} style={{ height: 'calc(100% - 40px)' }}>
-          {srcs.map(renderPlayer)}
-          <Backdrop
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: '40px',
-              zIndex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            }}
-            open={spinner}
-          >
-            <CircularProgress color="inherit" />
-          </Backdrop>
-        </div>
+  const renderDrawingOverlay = () => {
+    return (
+      <div className="absolute top-0 left-0 w-full h-full">
+        <DrawingOverlay
+          isDrawingEnabled={isDrawingEnabled}
+          onDrawingChange={setDrawingElements}
+        />
+      </div>
+    );
+  };
 
-        {renderControls()}
-      </Box>
-    </>
+  return (
+    <div id="player-and-controls" className="w-full h-full">
+      <div style={{ height: 'calc(100% - 40px)' }}>
+        <div className="w-full h-full relative">
+          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
+          {isDrawingEnabled && renderDrawingOverlay()}
+        </div>
+      </div>
+
+      <Backdrop
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: '40px',
+          zIndex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}
+        open={spinner}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
+      {renderControls()}
+    </div>
   );
 };
 

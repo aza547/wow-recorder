@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shortlinks are now permanent, so reflect that in the UI.
 
 ### Added
+- Add a drawing mode to allow annotation of the video player with Excalidraw.
+
 ### Fixed
 - The date range filter now translates correctly.
 

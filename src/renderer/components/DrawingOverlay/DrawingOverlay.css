@@ -1,0 +1,21 @@
+.drawing-overlay-content {
+    flex: 1;
+    background-color: transparent;
+    position: relative;
+    pointer-events: auto;
+    width: 100%;
+    height: 100%;
+}
+
+/* Hide only the main menu button */
+.excalidraw .main-menu-trigger {
+    display: none !important;
+}
+
+.excalidraw .help-icon {
+    display: none !important;
+}
+
+.excalidraw .sidebar-trigger__label-element {
+    display: none !important;
+}

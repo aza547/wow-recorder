@@ -356,6 +356,7 @@ const KOREAN: Translations = {
   [Phrase.UpdateAvailableRemindButtonText]: '나중에 알림',
   [Phrase.Saving]: '저장...',
   [Phrase.StartTyping]: '검색...',
+  [Phrase.ToggleDrawingMode]: '그리기 모드 전환',
   [Phrase.StarSelected]: '선택한 행 잠금',
   [Phrase.UnstarSelected]: '선택한 행 잠금 해제',
   [Phrase.Selection]: '선택',

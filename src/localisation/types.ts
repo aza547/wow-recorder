@@ -353,6 +353,7 @@ enum Phrase {
   UpdateAvailableRemindButtonText,
   Saving,
   StartTyping,
+  ToggleDrawingMode,
   UnstarSelected,
   StarSelected,
   Selection,
