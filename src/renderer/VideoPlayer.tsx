@@ -653,6 +653,7 @@ export const VideoPlayer = (props: IProps) => {
         onChange={handleProgressSliderChange}
         onChangeCommitted={handleChangeCommitted}
         onMouseDown={onSliderMouseDown}
+        onKeyDown={() => {}} // Let the event bubble up.
         max={duration}
         marks={marks}
         step={0.01}
