@@ -30,10 +30,10 @@ import Label from './components/Label/Label';
 import { Popover, PopoverContent } from './components/Popover/Popover';
 import { PopoverTrigger } from '@radix-ui/react-popover';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
-import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';
 import useTable from './components/Tables/TableData';
 import TagDialog from './TagDialog';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import DateRangePicker from './DateRangePicker';
 
 interface IProps {
   category: VideoCategory;
@@ -397,42 +397,10 @@ const CategoryPage = (props: IProps) => {
               />
             </div>
             <div className="ml-2">
-              <Label>Date Filter</Label>
-              <Datepicker
-                value={dateRangeFilter}
-                onChange={(v) => {
-                  // This looks a bit verbose, but it seems the react library
-                  // used here will provide the same date object if the range
-                  // is a single day, as well as setting the time to the current
-                  // time. So make sure that we have separate date objects, set
-                  // to midnight and a minute to midnight to cover the full day.
-                  const drf: DateValueType = {
-                    startDate: null,
-                    endDate: null,
-                  };
-
-                  if (v && v.startDate) {
-                    drf.startDate = new Date(v.startDate);
-                    drf.startDate.setHours(0, 0, 0, 0);
-                  }
-                  if (v && v.endDate) {
-                    drf.endDate = new Date(v.endDate);
-                    drf.endDate.setHours(23, 59, 59, 999);
-                  }
-
-                  setAppState((prev) => ({
-                    ...prev,
-                    dateRangeFilter: drf,
-                  }));
-                }}
-                separator="to"
-                displayFormat="DD/MM/YY"
-                showShortcuts
-                showFooter
-                primaryColor="red"
-                containerClassName="relative tailwind-datepicker" // See App.css for tailwind overrides. This library doesn't expose much.
-                inputClassName="relative transition-all duration-300 h-10 pl-4 pr-14 w-full border border-background bg-card text-foreground placeholder:text-foreground rounded-lg text-sm placeholder:text-sm"
-              />
+              <Label>
+                {getLocalePhrase(appState.language, Phrase.DateFilter)}
+              </Label>
+              <DateRangePicker appState={appState} setAppState={setAppState} />
             </div>
           </div>
 
