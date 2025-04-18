@@ -173,14 +173,7 @@ export const VideoPlayer = (props: IProps) => {
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
 
   const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
-  const [drawingElements, setDrawingElements] = useState<
-    readonly ExcalidrawElement[]
-  >([]);
-  const [playerDimensions, setPlayerDimensions] = useState({
-    width: 0,
-    height: 0,
-  });
-  const playerRef = useRef<HTMLDivElement>(null);
+  const [, setDrawingElements] = useState<readonly ExcalidrawElement[]>([]);
 
   /**
    * Set if the video is playing or not.
@@ -681,63 +674,37 @@ export const VideoPlayer = (props: IProps) => {
     }
 
     return (
-      <div
-        key={`player-${index}`}
-        ref={playerRef}
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          overflow: 'hidden',
-        }}
-      >
-        <ReactPlayer
-          id="react-player"
-          ref={player}
-          height="100%"
-          width="100%"
-          key={src.current}
-          url={src.current}
-          style={{
-            ...style,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-          }}
-          playing={playing}
-          volume={volume}
-          muted={primary ? muted : true}
-          playbackRate={playbackRate}
-          progressInterval={progressInterval}
-          onProgress={primary ? onProgress : undefined}
-          onClick={togglePlaying}
-          onDoubleClick={toggleFullscreen}
-          onPlay={primary ? () => setPlaying(true) : undefined}
-          onPause={primary ? () => setPlaying(false) : undefined}
-          onReady={onReady}
-          onError={onError}
-          config={{
-            file: {
-              attributes: {
-                style: {
-                  width: '100%',
-                  height: '100%',
-                },
+      <ReactPlayer
+        id="react-player"
+        ref={player}
+        height="100%"
+        width="100%"
+        key={src.current}
+        url={src.current}
+        style={style}
+        playing={playing}
+        volume={volume}
+        muted={primary ? muted : true}
+        playbackRate={playbackRate}
+        progressInterval={progressInterval}
+        onProgress={primary ? onProgress : undefined}
+        onClick={togglePlaying}
+        onDoubleClick={toggleFullscreen}
+        onPlay={primary ? () => setPlaying(true) : undefined}
+        onPause={primary ? () => setPlaying(false) : undefined}
+        onReady={onReady}
+        onError={onError}
+        config={{
+          file: {
+            attributes: {
+              style: {
+                width: '100%',
+                height: '100%',
               },
             },
-          }}
-        />
-        {isDrawingEnabled && (
-          <DrawingOverlay
-            isDrawingEnabled={isDrawingEnabled}
-            onDrawingChange={setDrawingElements}
-            width={playerDimensions.width}
-            height={playerDimensions.height}
-          />
-        )}
-      </div>
+          },
+        }}
+      />
     );
   };
 
@@ -1303,25 +1270,7 @@ export const VideoPlayer = (props: IProps) => {
     ipc.on('pausePlayer', () => setPlaying(false));
   }, [setPlaying]);
 
-  // Add this effect to update player dimensions
-  useEffect(() => {
-    if (!playerRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setPlayerDimensions({ width, height });
-      }
-    });
-
-    resizeObserver.observe(playerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  let playerDivClass = 'w-full ';
+  let playerDivClass = 'w-full h-full ';
 
   if (srcs.length === 2) {
     playerDivClass += 'grid grid-cols-2 grid-rows-1';
@@ -1331,36 +1280,43 @@ export const VideoPlayer = (props: IProps) => {
     playerDivClass += 'grid grid-cols-2 grid-rows-2';
   }
 
-  return (
-    <>
-      <Box
-        id="player-and-controls"
-        sx={{
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <div className={playerDivClass} style={{ height: 'calc(100% - 40px)' }}>
-          {srcs.map(renderPlayer)}
-          <Backdrop
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: '40px',
-              zIndex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            }}
-            open={spinner}
-          >
-            <CircularProgress color="inherit" />
-          </Backdrop>
-        </div>
+  const renderDrawingOverlay = () => {
+    return (
+      <div className="absolute top-0 left-0 w-full h-full">
+        <DrawingOverlay
+          isDrawingEnabled={isDrawingEnabled}
+          onDrawingChange={setDrawingElements}
+        />
+      </div>
+    );
+  };
 
-        {renderControls()}
-      </Box>
-    </>
+  return (
+    <div id="player-and-controls" className="w-full h-full">
+      <div style={{ height: 'calc(100% - 40px)' }}>
+        <div className="w-full h-full relative">
+          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
+          {isDrawingEnabled && renderDrawingOverlay()}
+        </div>
+      </div>
+
+      <Backdrop
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: '40px',
+          zIndex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}
+        open={spinner}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
+      {renderControls()}
+    </div>
   );
 };
 

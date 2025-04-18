@@ -6,19 +6,15 @@ import './DrawingOverlay.css';
 interface DrawingOverlayProps {
   isDrawingEnabled: boolean;
   onDrawingChange: (elements: readonly any[]) => void;
-  width: number;
-  height: number;
 }
 
 export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   isDrawingEnabled,
   onDrawingChange,
-  width,
-  height,
 }) => {
   if (!isDrawingEnabled) return null;
   return (
-    <div className="drawing-overlay" style={{ width, height }}>
+    <div className="drawing-overlay h-full w-full">
       <div className="drawing-overlay-content">
         <Excalidraw
           theme="dark"
