@@ -694,16 +694,6 @@ export const VideoPlayer = (props: IProps) => {
         onPause={primary ? () => setPlaying(false) : undefined}
         onReady={onReady}
         onError={onError}
-        config={{
-          file: {
-            attributes: {
-              style: {
-                width: '100%',
-                height: '100%',
-              },
-            },
-          },
-        }}
       />
     );
   };
@@ -1150,7 +1140,7 @@ export const VideoPlayer = (props: IProps) => {
         size="xs"
         onClick={() => setIsDrawingEnabled(!isDrawingEnabled)}
       >
-        <Pencil size={20} color="white" />
+        <Pencil size={20} color="white" opacity={isDrawingEnabled ? 1 : 0.2} />
       </Button>
     </Tooltip>
   );
