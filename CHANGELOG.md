@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 ### Fixed
+- The date range filter now translates correctly.
 
 ## [6.10.0] - 2025-04-12
 ### Changed
