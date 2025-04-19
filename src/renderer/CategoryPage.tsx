@@ -9,6 +9,7 @@ import {
   MessageSquare,
   MessageSquareMore,
   LockOpen,
+  SaveIcon,
 } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
@@ -159,17 +160,6 @@ const CategoryPage = (props: IProps) => {
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedViewpoints = getAllSelectedViewpoints();
 
-    const deleteWarning = `${getLocalePhrase(
-      appState.language,
-      Phrase.ThisWillPermanentlyDelete,
-    )} ${selectedViewpoints.length} ${getLocalePhrase(
-      appState.language,
-      Phrase.Recordings,
-    )} ${getLocalePhrase(
-      appState.language,
-      Phrase.From,
-    )} ${selectedRows.length} ${getLocalePhrase(appState.language, Phrase.Rows)}.`;
-
     // We don't want multi player mode to be accessible if there isn't
     // multiple viewpoints, so check for that. Important to filter by
     // unique name here so we don't allow multi player mode for two
@@ -203,13 +193,13 @@ const CategoryPage = (props: IProps) => {
 
     const renderTagButton = () => {
       let tag = '';
-      let icon = <MessageSquare size={20} />;
+      let icon = <MessageSquare size={18} />;
       let tooltip = getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
       const foundTag = selectedViewpoints.map((v) => v.tag).find((t) => t);
 
       if (foundTag) {
         tag = foundTag;
-        icon = <MessageSquareMore size={20} />;
+        icon = <MessageSquareMore size={18} />;
 
         if (tag.length > 50) {
           tooltip = `${tag.slice(0, 50)}...`;
@@ -255,10 +245,16 @@ const CategoryPage = (props: IProps) => {
     const renderProtectButton = () => {
       const allProtected = selectedViewpoints.every((v) => v.isProtected);
 
+      // Disable the protect button if there are no selected viewpoints, or if
+      // the action is to unprotect and we don't have delete permissions.
+      const disabled =
+        selectedViewpoints.length < 1 ||
+        (!appState.cloudStatus.del && allProtected);
+
       const icon = allProtected ? (
-        <LockOpen size={20} />
+        <LockOpen size={18} />
       ) : (
-        <LockKeyhole size={20} />
+        <LockKeyhole size={18} />
       );
 
       const tooltip = allProtected
@@ -270,7 +266,7 @@ const CategoryPage = (props: IProps) => {
           variant="secondary"
           size="sm"
           className="h-10"
-          disabled={selectedViewpoints.length < 1}
+          disabled={disabled}
           onClick={(e) => protectVideo(e, !allProtected, selectedViewpoints)}
         >
           <Tooltip content={tooltip}>{icon}</Tooltip>
@@ -279,23 +275,55 @@ const CategoryPage = (props: IProps) => {
     };
 
     const renderDeleteButton = () => {
+      // Disable the button if:
+      // 1. No videos are selected
+      // 2. No disk videos exist and we don't have cloud delete permissions.
+      const cloudDeletePermissions = appState.cloudStatus.del;
+
+      const toDelete = cloudDeletePermissions
+        ? selectedViewpoints
+        : selectedViewpoints.filter((v) => v.cloud === false);
+
+      const disabled = toDelete.length < 1;
+
+      const tooltip = cloudDeletePermissions
+        ? getLocalePhrase(appState.language, Phrase.BulkDeleteButtonTooltip)
+        : getLocalePhrase(
+            appState.language,
+            Phrase.BulkDeleteButtonTooltipDiskOnly,
+          );
+
+      const deleteWarning = `${getLocalePhrase(
+        appState.language,
+        Phrase.ThisWillPermanentlyDelete,
+      )} ${toDelete.length} ${getLocalePhrase(
+        appState.language,
+        Phrase.Recordings,
+      )} ${getLocalePhrase(
+        appState.language,
+        Phrase.From,
+      )} ${selectedRows.length} ${getLocalePhrase(appState.language, Phrase.Rows)}.`;
+
       return (
         <DeleteDialog
-          onDelete={() => bulkDelete(selectedViewpoints)}
-          tooltipContent={getLocalePhrase(
-            appState.language,
-            Phrase.BulkDeleteButtonTooltip,
-          )}
+          onDelete={() => bulkDelete(toDelete)}
+          tooltipContent={tooltip}
           warning={deleteWarning}
           appState={appState}
         >
           <Button
             variant="secondary"
             size="sm"
-            className="h-10"
-            disabled={selectedViewpoints.length < 1}
+            className="h-10 relative"
+            disabled={disabled}
           >
-            <Trash size={20} />
+            <Trash size={18} />
+            {!cloudDeletePermissions && !disabled && (
+              <SaveIcon
+                size={12}
+                className="absolute bottom-[2px] right-[2px]"
+              />
+            )}
           </Button>
         </DeleteDialog>
       );

@@ -219,6 +219,7 @@ enum Phrase {
   OpenFolderButtonTooltip,
   DeleteButtonTooltip,
   BulkDeleteButtonTooltip,
+  BulkDeleteButtonTooltipDiskOnly,
   ShareLinkButtonTooltip,
   CloudButtonTooltip,
   DiskButtonTooltip,

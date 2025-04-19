@@ -56,7 +56,8 @@ const useTable = (
   appState: AppState,
   stateManager: MutableRefObject<StateManager>,
 ) => {
-  const { category, language } = appState;
+  const { category, language, cloudStatus } = appState;
+  const { del } = cloudStatus;
 
   /**
    * Tracks if rows are selected or not.
@@ -89,7 +90,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager, del),
       },
       {
         id: 'Encounter',
@@ -141,7 +142,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, videoState],
+    [language, videoState, stateManager, del],
   );
 
   /**
@@ -155,7 +156,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager, del),
       },
       {
         id: 'Map',
@@ -195,7 +196,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, stateManager],
+    [language, stateManager, del],
   );
 
   /**
@@ -209,7 +210,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager, del),
       },
       {
         id: 'Map',
@@ -265,7 +266,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, stateManager],
+    [language, stateManager, del],
   );
 
   /**
@@ -279,7 +280,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager, del),
       },
       {
         id: 'Map',
@@ -319,7 +320,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, stateManager],
+    [language, stateManager, del],
   );
 
   /**
@@ -333,7 +334,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, language, stateManager, del),
       },
       {
         id: 'Type',
@@ -375,7 +376,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, stateManager],
+    [language, stateManager, del],
   );
 
   let columns;

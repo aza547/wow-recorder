@@ -220,6 +220,7 @@ const ENGLISH: Translations = {
   [Phrase.OpenFolderButtonTooltip]: 'Open location',
   [Phrase.DeleteButtonTooltip]: 'Delete',
   [Phrase.BulkDeleteButtonTooltip]: 'Permanently delete selected rows, including local and cloud stored videos.',
+  [Phrase.BulkDeleteButtonTooltipDiskOnly]: 'Permanently delete disk videos in selected rows. Your user is not authorized to delete cloud stored videos.',
   [Phrase.ShareLinkButtonTooltip]: 'Get shareable link',
   [Phrase.CloudButtonTooltip]: 'Use cloud version',
   [Phrase.DiskButtonTooltip]: 'Use local disk version',

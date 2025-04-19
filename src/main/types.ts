@@ -437,9 +437,13 @@ type SliderMark = {
 };
 
 type CloudStatus = {
+  guild: string;
+  available: string[];
+  read: boolean; // Always true for now.
+  write: boolean;
+  del: boolean;
   usage: number;
   limit: number;
-  guilds: string[];
 };
 
 type DiskStatus = {

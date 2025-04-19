@@ -490,7 +490,7 @@ const CloudSettings = (props: IProps) => {
       return <></>;
     }
 
-    const { guilds } = appState.cloudStatus;
+    const { available } = appState.cloudStatus;
 
     return (
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
@@ -511,7 +511,7 @@ const CloudSettings = (props: IProps) => {
             <SelectValue placeholder="Select a guild" />
           </SelectTrigger>
           <SelectContent>
-            {guilds.map((guild) => (
+            {available.map((guild) => (
               <SelectItem key={guild} value={guild}>
                 {guild}
               </SelectItem>

@@ -456,16 +456,20 @@ export default class Manager {
       const usagePromise = this.cloudClient.getUsage();
       const limitPromise = this.cloudClient.getStorageLimit();
       const affiliationsPromise = this.cloudClient.getUserAffiliations();
+      const permissions = await this.cloudClient.getPermissions();
 
       const usage = await usagePromise;
       const limit = await limitPromise;
       const affiliations = await affiliationsPromise;
-      const guilds = affiliations.map((aff) => aff.guildName);
 
       const status: CloudStatus = {
+        guild: this.cloudCfg.cloudGuildName,
+        available: affiliations.map((aff) => aff.guildName),
+        read: permissions.read,
+        write: permissions.write,
+        del: permissions.del,
         usage,
         limit,
-        guilds,
       };
 
       this.mainWindow.webContents.send('updateCloudStatus', status);
@@ -753,10 +757,19 @@ export default class Manager {
 
     // Safe to cast here, either we got this data or we have thrown.
     const affiliations = winner as TAffiliation[];
-    const guilds = affiliations.map((aff) => aff.guildName);
+    const available = affiliations.map((aff) => aff.guildName);
 
     // We need to push this to the frontend to allow the user select a guild.
-    const status: CloudStatus = { usage: 0, limit: 0, guilds };
+    const status: CloudStatus = {
+      guild: cloudGuildName, // May be an empty string if not yet set.
+      available,
+      read: false,
+      write: false,
+      delete: false,
+      usage: 0,
+      limit: 0,
+    };
+
     this.mainWindow.webContents.send('updateCloudStatus', status);
 
     // Look for a match against the selected guild name. If this isn't selected

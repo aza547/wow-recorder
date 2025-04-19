@@ -1164,8 +1164,8 @@ export const VideoPlayer = (props: IProps) => {
         {!multiPlayerMode && !clipMode && (
           <Separator className="mx-2" orientation="vertical" />
         )}
-        {!multiPlayerMode && !clipMode && local && renderOpenFolderButton()}
         {renderDrawingButton()}
+        {!multiPlayerMode && !clipMode && local && renderOpenFolderButton()}
         {!multiPlayerMode && !clipMode && !local && renderGetLinkButton()}
         {!clipMode && !isClip(videos[0]) && renderClipButton()}
         {!multiPlayerMode && !clipMode && (

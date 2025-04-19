@@ -10,7 +10,7 @@ import {
 import path from 'path';
 import AuthError from '../utils/AuthError';
 import { z } from 'zod';
-import { Affiliation, TAffiliation } from 'types/api';
+import { Affiliation, TAffiliation, TPermissions } from 'types/api';
 
 /**
  * A client for retrieving resources from the cloud.
@@ -146,6 +146,14 @@ export default class CloudClient extends EventEmitter {
 
       throw new Error('Failed to add a video to database');
     }
+
+    // Always run the housekeeper after an upload so that there
+    // will be space for the next upload.
+    await this.runHousekeeping();
+
+    // Update the mtime to avoid multiple refreshes.
+    this.bucketLastMod = Date.now();
+    this.emit('change');
 
     console.info(
       '[CloudClient] Added',
@@ -604,7 +612,7 @@ export default class CloudClient extends EventEmitter {
     try {
       const mtime = await this.getMtime();
 
-      if (mtime !== this.bucketLastMod) {
+      if (mtime > this.bucketLastMod) {
         console.info(
           '[CloudClient] Cloud data changed:',
           mtime,
@@ -896,5 +904,31 @@ export default class CloudClient extends EventEmitter {
     const { id } = data;
     console.info('[CloudClient] Got shareable link', videoName, id);
     return `${this.website}/link/${id}`;
+  }
+
+  /**
+   * Get what access level the user has in the guild.
+   */
+  public async getPermissions(): Promise<TPermissions> {
+    console.info('[CloudClient] Checking auth for', this.user, this.guild);
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/auth`;
+    const headers = { Authorization: this.authHeader };
+
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: () => true,
+    });
+
+    const { status, data } = response;
+
+    if (status !== 200) {
+      console.error('[CloudClient] Failed to get permissions', status, data);
+      throw new Error('Failed to get shareable link');
+    }
+
+    console.info('[CloudClient] Auth permissions', data);
+    return data as TPermissions;
   }
 }

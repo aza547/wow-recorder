@@ -220,6 +220,7 @@ const KOREAN: Translations = {
   [Phrase.OpenFolderButtonTooltip]: '저장 폴더 열기',
   [Phrase.DeleteButtonTooltip]: '삭제',
   [Phrase.BulkDeleteButtonTooltip]: '선택한 항목 삭제',
+  [Phrase.BulkDeleteButtonTooltipDiskOnly]: '선택한 행의 디스크 비디오를 영구적으로 삭제합니다. 해당 사용자는 클라우드에 저장된 비디오를 삭제할 권한이 없습니다.',
   [Phrase.ShareLinkButtonTooltip]: '공유 가능한 링크 받기',
   [Phrase.CloudButtonTooltip]: '클라우드에 저장됨',
   [Phrase.DiskButtonTooltip]: '디스크에 저장됨',

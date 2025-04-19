@@ -91,6 +91,7 @@ export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
   language: Language,
   stateManager: MutableRefObject<StateManager>,
+  deletePermission: boolean,
 ) => {
   const video = ctx.getValue() as RendererVideo;
 
@@ -117,7 +118,12 @@ export const populateDetailsCell = (
 
     return (
       <Tooltip content={tooltip}>
-        <Button variant="ghost" size="xs" onClick={toggleProtected}>
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={toggleProtected}
+          disabled={starred && !deletePermission}
+        >
           {icon}
         </Button>
       </Tooltip>
