@@ -19,47 +19,53 @@ export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   if (!isDrawingEnabled) return null;
 
   // Convert current language to a language code supported by Excalidraw
-  let langCode = 'en';
-  if (appState.language === Language.KOREAN) {
-    langCode = 'ko-KR';
-  } else if (appState.language === Language.GERMAN) {
-    langCode = 'de-DE';
-  } else if (appState.language === Language.CHINESE_SIMPLIFIED) {
-    langCode = 'zh-CN';
-  }
+  const langCodeMap = {
+    [Language.KOREAN]: 'ko-KR',
+    [Language.GERMAN]: 'de-DE',
+    [Language.CHINESE_SIMPLIFIED]: 'zh-CN',
+  };
+
+  const langCode = langCodeMap[appState.language] || 'en';
 
   return (
-    <div className="drawing-overlay-content">
-      <Excalidraw
-        key={langCode} // Add key to re-render component when language changes
-        onChange={(elements) => onDrawingChange(elements)}
-        langCode={langCode}
-        initialData={{
-          appState: {
-            viewBackgroundColor: 'transparent',
-            activeTool: {
-              type: 'freedraw',
-              lastActiveTool: null,
-              locked: true,
-              customType: null,
+    <div className="drawing-overlay h-full w-full">
+      <div className="drawing-overlay-content">
+        <Excalidraw
+          theme="dark"
+          gridModeEnabled={false}
+          viewModeEnabled={false}
+          zenModeEnabled={false}
+          name="Drawing Overlay"
+          key={langCode} // Add key to re-render component when language changes
+          onChange={(elements) => onDrawingChange(elements)}
+          langCode={langCode}
+          initialData={{
+            appState: {
+              viewBackgroundColor: 'transparent',
+              activeTool: {
+                type: 'freedraw',
+                lastActiveTool: null,
+                locked: true,
+                customType: null,
+              },
             },
-          },
-        }}
-        UIOptions={{
-          canvasActions: {
-            changeViewBackgroundColor: false,
-            clearCanvas: false,
-            export: false,
-            loadScene: false,
-            saveToActiveFile: false,
-            toggleTheme: false,
-            saveAsImage: false,
-          },
-          tools: {
-            image: false,
-          },
-        }}
-      />
+          }}
+          UIOptions={{
+            canvasActions: {
+              changeViewBackgroundColor: false,
+              clearCanvas: false,
+              export: false,
+              loadScene: false,
+              saveToActiveFile: false,
+              toggleTheme: false,
+              saveAsImage: false,
+            },
+            tools: {
+              image: false,
+            },
+          }}
+        />
+      </div>
     </div>
   );
 };
