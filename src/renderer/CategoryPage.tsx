@@ -9,7 +9,7 @@ import {
   MessageSquare,
   MessageSquareMore,
   LockOpen,
-  SaveIcon,
+  Info,
 } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
@@ -35,6 +35,7 @@ import useTable from './components/Tables/TableData';
 import TagDialog from './TagDialog';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import DateRangePicker from './DateRangePicker';
+import SmallSwitch from './components/Switch/SmallSwitch';
 
 interface IProps {
   category: VideoCategory;
@@ -59,13 +60,18 @@ const CategoryPage = (props: IProps) => {
     persistentProgress,
     playerHeight,
   } = props;
+
   const {
     selectedVideos,
     videoFilterTags,
     language,
     dateRangeFilter,
     viewpointSelectionOpen,
+    cloudStatus,
+    buttonsDiskOnly,
   } = appState;
+
+  const { write, del } = cloudStatus;
 
   const [config, setConfig] = useSettings();
 
@@ -117,12 +123,19 @@ const CategoryPage = (props: IProps) => {
         enable={{ bottom: true }}
         bounds="parent"
         onResize={onResize}
+        handleStyles={{
+          bottom: {
+            width: '50%',
+            left: '25%',
+            height: '10px',
+            bottom: '-10px',
+            position: 'absolute',
+            display: 'flex',
+            justifyContent: 'center',
+          },
+        }}
         handleComponent={{
-          bottom: (
-            <div className="flex items-center justify-center mt-1">
-              <GripHorizontal />
-            </div>
-          ),
+          bottom: <GripHorizontal />,
         }}
       >
         <VideoPlayer
@@ -192,14 +205,21 @@ const CategoryPage = (props: IProps) => {
     const allowMultiPlayer = unique.length > 1;
 
     const renderTagButton = () => {
+      const toTag = buttonsDiskOnly
+        ? selectedViewpoints.filter((v) => v.cloud === false)
+        : selectedViewpoints;
+
+      const disabled =
+        selectedRows.length > 1 || (!write && toTag.some((v) => v.cloud));
+
       let tag = '';
-      let icon = <MessageSquare size={18} />;
-      let tooltip = getLocalePhrase(appState.language, Phrase.TagButtonTooltip);
-      const foundTag = selectedViewpoints.map((v) => v.tag).find((t) => t);
+      let icon = <MessageSquare size={20} />;
+      let tooltip = getLocalePhrase(language, Phrase.TagButtonTooltip);
+      const foundTag = toTag.map((v) => v.tag).find((t) => t);
 
       if (foundTag) {
         tag = foundTag;
-        icon = <MessageSquareMore size={18} />;
+        icon = <MessageSquareMore size={20} />;
 
         if (tag.length > 50) {
           tooltip = `${tag.slice(0, 50)}...`;
@@ -211,7 +231,7 @@ const CategoryPage = (props: IProps) => {
       return (
         <TagDialog
           initialTag={tag}
-          videos={selectedViewpoints}
+          videos={toTag}
           stateManager={stateManager}
           tooltipContent={tooltip}
           appState={appState}
@@ -220,7 +240,7 @@ const CategoryPage = (props: IProps) => {
             variant="secondary"
             size="sm"
             className="h-10"
-            disabled={selectedRows.length > 1}
+            disabled={disabled}
           >
             {icon}
           </Button>
@@ -243,66 +263,63 @@ const CategoryPage = (props: IProps) => {
     };
 
     const renderProtectButton = () => {
-      const allProtected = selectedViewpoints.every((v) => v.isProtected);
+      const toProtect = buttonsDiskOnly
+        ? selectedViewpoints.filter((v) => v.cloud === false)
+        : selectedViewpoints;
 
-      // Disable the protect button if there are no selected viewpoints, or if
-      // the action is to unprotect and we don't have delete permissions.
+      // If any videos in our selection are not protected, then the button's
+      // action is to protect.
+      const lock = !toProtect.every((v) => v.isProtected);
+
+      // Disable the protect button if there are no selected viewpoints, if we
+      // don't have write permissions, or if the action is to unprotect and we
+      // don't have delete permissions.
       const disabled =
-        selectedViewpoints.length < 1 ||
-        (!appState.cloudStatus.del && allProtected);
+        toProtect.length < 1 ||
+        (!write && toProtect.some((v) => v.cloud)) || // Some in the selection are cloud videos and no write permission.
+        (!del && !lock && toProtect.some((v) => v.cloud)); // Some in the selection are locked cloud videos no delete permission.
 
-      const icon = allProtected ? (
-        <LockOpen size={18} />
-      ) : (
-        <LockKeyhole size={18} />
-      );
+      const icon = lock ? <LockKeyhole size={20} /> : <LockOpen size={20} />;
 
-      const tooltip = allProtected
-        ? getLocalePhrase(appState.language, Phrase.UnstarSelected)
-        : getLocalePhrase(appState.language, Phrase.StarSelected);
+      const tooltip = lock
+        ? getLocalePhrase(language, Phrase.StarSelected)
+        : getLocalePhrase(language, Phrase.UnstarSelected);
 
       return (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="h-10"
-          disabled={disabled}
-          onClick={(e) => protectVideo(e, !allProtected, selectedViewpoints)}
-        >
-          <Tooltip content={tooltip}>{icon}</Tooltip>
-        </Button>
+        <Tooltip content={tooltip}>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-10"
+            disabled={disabled}
+            onClick={(e) => protectVideo(e, lock, toProtect)}
+          >
+            {icon}
+          </Button>
+        </Tooltip>
       );
     };
 
     const renderDeleteButton = () => {
-      // Disable the button if:
-      // 1. No videos are selected
-      // 2. No disk videos exist and we don't have cloud delete permissions.
-      const cloudDeletePermissions = appState.cloudStatus.del;
+      const toDelete = buttonsDiskOnly
+        ? selectedViewpoints.filter((v) => v.cloud === false)
+        : selectedViewpoints;
 
-      const toDelete = cloudDeletePermissions
-        ? selectedViewpoints
-        : selectedViewpoints.filter((v) => v.cloud === false);
+      const disabled =
+        toDelete.length < 1 || (!del && toDelete.some((v) => v.cloud));
 
-      const disabled = toDelete.length < 1;
-
-      const tooltip = cloudDeletePermissions
-        ? getLocalePhrase(appState.language, Phrase.BulkDeleteButtonTooltip)
-        : getLocalePhrase(
-            appState.language,
-            Phrase.BulkDeleteButtonTooltipDiskOnly,
-          );
+      const tooltip = getLocalePhrase(language, Phrase.BulkDeleteButtonTooltip);
 
       const deleteWarning = `${getLocalePhrase(
-        appState.language,
+        language,
         Phrase.ThisWillPermanentlyDelete,
       )} ${toDelete.length} ${getLocalePhrase(
-        appState.language,
+        language,
         Phrase.Recordings,
       )} ${getLocalePhrase(
-        appState.language,
+        language,
         Phrase.From,
-      )} ${selectedRows.length} ${getLocalePhrase(appState.language, Phrase.Rows)}.`;
+      )} ${Math.max(selectedRows.length, 1)} ${getLocalePhrase(language, Phrase.Rows)}.`;
 
       return (
         <DeleteDialog
@@ -314,29 +331,54 @@ const CategoryPage = (props: IProps) => {
           <Button
             variant="secondary"
             size="sm"
-            className="h-10 relative"
+            className="h-10"
             disabled={disabled}
           >
-            <Trash size={18} />
-            {!cloudDeletePermissions && !disabled && (
-              <SaveIcon
-                size={12}
-                className="absolute bottom-[2px] right-[2px]"
-              />
-            )}
+            <Trash size={20} />
           </Button>
         </DeleteDialog>
       );
     };
 
     const renderSelectionLabel = () => {
-      let text = getLocalePhrase(appState.language, Phrase.Selection);
+      const { buttonsDiskOnly, language } = appState;
+      let text = getLocalePhrase(language, Phrase.Selection);
+
+      if (buttonsDiskOnly) {
+        text += '*';
+      }
 
       if (selectedRows.length > 1) {
         text += ` (${selectedRows.length})`;
       }
 
-      return <Label>{text}</Label>;
+      return (
+        <Label>
+          {text}
+          <div className="inline-flex">
+            <SmallSwitch
+              className="mx-2"
+              checked={buttonsDiskOnly}
+              onCheckedChange={() => {
+                setAppState((prev) => {
+                  return {
+                    ...prev,
+                    buttonsDiskOnly: !prev.buttonsDiskOnly,
+                  };
+                });
+              }}
+            />
+            <Tooltip
+              content={getLocalePhrase(
+                language,
+                Phrase.ButtonDiskOnlyDescription,
+              )}
+            >
+              <Info size={12} />
+            </Tooltip>
+          </div>
+        </Label>
+      );
     };
 
     const renderViewpointSelectionPopover = () => {
@@ -425,15 +467,13 @@ const CategoryPage = (props: IProps) => {
               />
             </div>
             <div className="ml-2">
-              <Label>
-                {getLocalePhrase(appState.language, Phrase.DateFilter)}
-              </Label>
+              <Label>{getLocalePhrase(language, Phrase.DateFilter)}</Label>
               <DateRangePicker appState={appState} setAppState={setAppState} />
             </div>
           </div>
 
           <div>
-            <Label>{renderSelectionLabel()}</Label>
+            {renderSelectionLabel()}
             <div className="flex gap-x-2 mr-2">
               {renderTagButton()}
               {renderProtectButton()}
@@ -465,14 +505,14 @@ const CategoryPage = (props: IProps) => {
     return (
       <div className="flex items-center justify-center flex-col w-1/2 h-1/2 text-center font-sans text-foreground gap-y-6">
         <h1 className="text-xl font-bold">
-          {getLocalePhrase(appState.language, Phrase.NoVideosSaved)}
+          {getLocalePhrase(language, Phrase.NoVideosSaved)}
         </h1>
         <Separator className="my-2" />
         <h2 className="text-foreground font-sans text-lg">
-          {getLocalePhrase(appState.language, Phrase.FirstTimeHere)}
+          {getLocalePhrase(language, Phrase.FirstTimeHere)}
         </h2>
         <Button onClick={openSetupInstructions}>
-          {getLocalePhrase(appState.language, Phrase.SetupInstructions)}
+          {getLocalePhrase(language, Phrase.SetupInstructions)}
         </Button>
       </div>
     );
@@ -482,11 +522,11 @@ const CategoryPage = (props: IProps) => {
     return (
       <div className="flex items-center justify-center flex-col w-1/2 h-1/2 text-center font-sans text-foreground gap-y-6">
         <h1 className="text-xl font-bold">
-          {getLocalePhrase(appState.language, Phrase.NoClipsSaved)}
+          {getLocalePhrase(language, Phrase.NoClipsSaved)}
         </h1>
         <Separator className="my-2" />
         <h2 className="text-foreground font-sans text-lg">
-          {getLocalePhrase(appState.language, Phrase.ClipsDisplayedHere)}
+          {getLocalePhrase(language, Phrase.ClipsDisplayedHere)}
         </h2>
       </div>
     );

@@ -220,7 +220,6 @@ const ENGLISH: Translations = {
   [Phrase.OpenFolderButtonTooltip]: 'Open location',
   [Phrase.DeleteButtonTooltip]: 'Delete',
   [Phrase.BulkDeleteButtonTooltip]: 'Permanently delete selected rows, including local and cloud stored videos.',
-  [Phrase.BulkDeleteButtonTooltipDiskOnly]: 'Permanently delete disk videos in selected rows. Your user is not authorized to delete cloud stored videos.',
   [Phrase.ShareLinkButtonTooltip]: 'Get shareable link',
   [Phrase.CloudButtonTooltip]: 'Use cloud version',
   [Phrase.DiskButtonTooltip]: 'Use local disk version',
@@ -389,6 +388,15 @@ const ENGLISH: Translations = {
   [Phrase.Thursday]: "Thursday",
   [Phrase.Friday]: "Friday",
   [Phrase.Saturday]: "Saturday",
+  [Phrase.PermissionLabel]: "Permissions",
+  [Phrase.PermissionDescription]: "The access level you have within the currently selected guild as granted by the guild admin.",
+  [Phrase.PermissionReadLabel]: "Read",
+  [Phrase.PermissionReadDescription]: "Allows playback of videos.",
+  [Phrase.PermissionWriteLabel]: "Write",
+  [Phrase.PermissionWriteDescription]: "Allows uploading, tagging, and locking of videos.",
+  [Phrase.PermissionDeleteLabel]: "Delete",
+  [Phrase.PermissionDeleteDescription]: "Allows deletion and unlocking of videos.",
+  [Phrase.ButtonDiskOnlyDescription]: "Apply buttons to local videos only, ignoring any cloud videos and guild access permissions.",
 };
 
 export default ENGLISH;

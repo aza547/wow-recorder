@@ -1,5 +1,5 @@
 import { CellContext } from '@tanstack/react-table';
-import { RendererVideo } from 'main/types';
+import { AppState, RendererVideo } from 'main/types';
 import {
   getVideoResultText,
   getResultColor,
@@ -89,30 +89,44 @@ export const populateActivityCell = (
 
 export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
-  language: Language,
+  appState: AppState,
   stateManager: MutableRefObject<StateManager>,
-  deletePermission: boolean,
 ) => {
   const video = ctx.getValue() as RendererVideo;
+  const { language, cloudStatus, buttonsDiskOnly } = appState;
+  const cloudDeletePermission = cloudStatus.del;
 
   const renderProtectedIcon = () => {
-    const starred = [video, ...video.multiPov]
-      .map((v) => v.isProtected)
-      .some((p) => p);
+    const viewpoints = [video, ...video.multiPov];
 
-    const icon = starred ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
-    const tooltip = starred
-      ? getLocalePhrase(language, Phrase.SomeStarred)
-      : getLocalePhrase(language, Phrase.NoneStarred);
+    const toProtect = buttonsDiskOnly
+      ? viewpoints.filter((v) => v.cloud === false)
+      : viewpoints;
+
+    // If any videos in our selection are not protected, then the button's
+    // action is to protect.
+    const lock = !viewpoints.every((v) => v.isProtected);
+
+    // Disable the protect button if there are no selected viewpoints, or if
+    // the action is to unprotect and we don't have delete permissions.
+    const disabled =
+      toProtect.length < 1 ||
+      (!cloudDeletePermission && !lock && toProtect.some((v) => v.cloud));
+
+    const icon = lock ? <LockKeyhole size={20} /> : <LockOpen size={20} />;
+
+    const tooltip = lock
+      ? getLocalePhrase(language, Phrase.StarSelected)
+      : getLocalePhrase(language, Phrase.UnstarSelected);
 
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
-      stateManager.current.setProtected(!starred, [video, ...video.multiPov]);
+      stateManager.current.setProtected(lock, toProtect);
 
       window.electron.ipcRenderer.sendMessage('videoButton', [
         'protect',
-        !starred,
-        [video, ...video.multiPov],
+        lock,
+        toProtect,
       ]);
     };
 
@@ -122,7 +136,7 @@ export const populateDetailsCell = (
           variant="ghost"
           size="xs"
           onClick={toggleProtected}
-          disabled={starred && !deletePermission}
+          disabled={disabled}
         >
           {icon}
         </Button>
