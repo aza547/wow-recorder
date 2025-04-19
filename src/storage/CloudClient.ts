@@ -10,7 +10,7 @@ import {
 import path from 'path';
 import AuthError from '../utils/AuthError';
 import { z } from 'zod';
-import { Affiliation, TAffiliation, TPermissions } from 'types/api';
+import { Affiliation, TAffiliation } from 'types/api';
 
 /**
  * A client for retrieving resources from the cloud.
@@ -81,6 +81,13 @@ export default class CloudClient extends EventEmitter {
     this.pass = pass;
     this.guild = guild;
     this.authHeader = CloudClient.createAuthHeader(user, pass);
+  }
+
+  /**
+   * Return the guild name.
+   */
+  public getGuildName() {
+    return this.guild;
   }
 
   /**
@@ -904,31 +911,5 @@ export default class CloudClient extends EventEmitter {
     const { id } = data;
     console.info('[CloudClient] Got shareable link', videoName, id);
     return `${this.website}/link/${id}`;
-  }
-
-  /**
-   * Get what access level the user has in the guild.
-   */
-  public async getPermissions(): Promise<TPermissions> {
-    console.info('[CloudClient] Checking auth for', this.user, this.guild);
-
-    const guild = encodeURIComponent(this.guild);
-    const url = `${CloudClient.api}/guild/${guild}/auth`;
-    const headers = { Authorization: this.authHeader };
-
-    const response = await axios.get(url, {
-      headers,
-      validateStatus: () => true,
-    });
-
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failed to get permissions', status, data);
-      throw new Error('Failed to get shareable link');
-    }
-
-    console.info('[CloudClient] Auth permissions', data);
-    return data as TPermissions;
   }
 }

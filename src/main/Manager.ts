@@ -26,7 +26,6 @@ import {
   deleteVideoDisk,
   getWowFlavour,
   convertKoreanVideoCategory,
-  toggleVideoProtectedDisk,
   protectVideoDisk,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
@@ -456,21 +455,33 @@ export default class Manager {
       const usagePromise = this.cloudClient.getUsage();
       const limitPromise = this.cloudClient.getStorageLimit();
       const affiliationsPromise = this.cloudClient.getUserAffiliations();
-      const permissions = await this.cloudClient.getPermissions();
+
+      // This is a bit tricky, get the guild name from the active client which is
+      // guarenteed to be up to date, unlike other fields in this class.
+      const guild = this.cloudClient.getGuildName();
 
       const usage = await usagePromise;
       const limit = await limitPromise;
       const affiliations = await affiliationsPromise;
 
+      const available = affiliations.map((aff) => aff.guildName);
+      const affiliation = affiliations.find((aff) => aff.guildName === guild);
+
       const status: CloudStatus = {
-        guild: this.cloudCfg.cloudGuildName,
-        available: affiliations.map((aff) => aff.guildName),
-        read: permissions.read,
-        write: permissions.write,
-        del: permissions.del,
-        usage,
-        limit,
+        guild,
+        available,
+        usage: usage,
+        limit: limit,
+        read: false,
+        write: false,
+        del: false,
       };
+
+      if (affiliation) {
+        status.read = affiliation.read;
+        status.write = affiliation.write;
+        status.del = affiliation.del;
+      }
 
       this.mainWindow.webContents.send('updateCloudStatus', status);
     } catch (error) {
@@ -757,26 +768,35 @@ export default class Manager {
 
     // Safe to cast here, either we got this data or we have thrown.
     const affiliations = winner as TAffiliation[];
+    const guild = cloudGuildName;
     const available = affiliations.map((aff) => aff.guildName);
-
-    // We need to push this to the frontend to allow the user select a guild.
-    const status: CloudStatus = {
-      guild: cloudGuildName, // May be an empty string if not yet set.
-      available,
-      read: false,
-      write: false,
-      delete: false,
-      usage: 0,
-      limit: 0,
-    };
-
-    this.mainWindow.webContents.send('updateCloudStatus', status);
 
     // Look for a match against the selected guild name. If this isn't selected
     // yet, cloudGuildName is an empty string, which will never match.
-    const affiliation = affiliations.find(
-      (aff) => aff.guildName === cloudGuildName,
-    );
+    const affiliation = affiliations.find((aff) => aff.guildName === guild);
+
+    // We need to push the available guilds to the frontend to allow the user
+    // select a guild. Just push the permissions if we can for good measure so
+    // they are present on first attempt if the guild name is present. If the config
+    // is invalid we might get stuck before doing a full refresh so it's nice if this
+    // is accurate.
+    const status: CloudStatus = {
+      guild,
+      available,
+      usage: 0,
+      limit: 0,
+      read: false,
+      write: false,
+      del: false,
+    };
+
+    if (affiliation) {
+      status.read = affiliation.read;
+      status.write = affiliation.write;
+      status.del = affiliation.del;
+    }
+
+    this.mainWindow.webContents.send('updateCloudStatus', status);
 
     if (!affiliation) {
       console.warn('[Manager] Empty guild name');
