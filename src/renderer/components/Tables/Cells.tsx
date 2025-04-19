@@ -132,14 +132,16 @@ export const populateDetailsCell = (
 
     return (
       <Tooltip content={tooltip}>
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={toggleProtected}
-          disabled={disabled}
-        >
-          {icon}
-        </Button>
+        <div>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={toggleProtected}
+            disabled={disabled}
+          >
+            {icon}
+          </Button>
+        </div>
       </Tooltip>
     );
   };

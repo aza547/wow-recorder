@@ -229,22 +229,25 @@ const CategoryPage = (props: IProps) => {
       }
 
       return (
-        <TagDialog
-          initialTag={tag}
-          videos={toTag}
-          stateManager={stateManager}
-          tooltipContent={tooltip}
-          appState={appState}
-        >
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-10"
-            disabled={disabled}
-          >
-            {icon}
-          </Button>
-        </TagDialog>
+        <Tooltip content={tooltip}>
+          <div>
+            <TagDialog
+              initialTag={tag}
+              videos={toTag}
+              stateManager={stateManager}
+              appState={appState}
+            >
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-10"
+                disabled={disabled}
+              >
+                {icon}
+              </Button>
+            </TagDialog>
+          </div>
+        </Tooltip>
       );
     };
 
@@ -287,15 +290,17 @@ const CategoryPage = (props: IProps) => {
 
       return (
         <Tooltip content={tooltip}>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-10"
-            disabled={disabled}
-            onClick={(e) => protectVideo(e, lock, toProtect)}
-          >
-            {icon}
-          </Button>
+          <div>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-10"
+              disabled={disabled}
+              onClick={(e) => protectVideo(e, lock, toProtect)}
+            >
+              {icon}
+            </Button>
+          </div>
         </Tooltip>
       );
     };
@@ -322,21 +327,24 @@ const CategoryPage = (props: IProps) => {
       )} ${Math.max(selectedRows.length, 1)} ${getLocalePhrase(language, Phrase.Rows)}.`;
 
       return (
-        <DeleteDialog
-          onDelete={() => bulkDelete(toDelete)}
-          tooltipContent={tooltip}
-          warning={deleteWarning}
-          appState={appState}
-        >
-          <Button
-            variant="secondary"
-            size="sm"
-            className="h-10"
-            disabled={disabled}
-          >
-            <Trash size={20} />
-          </Button>
-        </DeleteDialog>
+        <Tooltip content={tooltip}>
+          <div>
+            <DeleteDialog
+              onDelete={() => bulkDelete(toDelete)}
+              warning={deleteWarning}
+              appState={appState}
+            >
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-10"
+                disabled={disabled}
+              >
+                <Trash size={20} />
+              </Button>
+            </DeleteDialog>
+          </div>
+        </Tooltip>
       );
     };
 

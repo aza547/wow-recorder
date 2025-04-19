@@ -10,12 +10,10 @@ import {
   DialogTrigger,
 } from './components/Dialog/Dialog';
 import { Button } from './components/Button/Button';
-import { Tooltip } from './components/Tooltip/Tooltip';
 
 type DeleteDialogProps = {
   children: React.ReactNode;
   onDelete: (event: React.MouseEvent<HTMLElement>) => void;
-  tooltipContent: string;
   warning?: string;
   appState: AppState;
 };
@@ -23,7 +21,6 @@ type DeleteDialogProps = {
 const DeleteDialog = ({
   children,
   onDelete,
-  tooltipContent,
   warning = '',
   appState,
 }: DeleteDialogProps) => {
@@ -33,9 +30,7 @@ const DeleteDialog = ({
 
   return (
     <Dialog>
-      <Tooltip content={tooltipContent}>
-        <DialogTrigger asChild>{children}</DialogTrigger>
-      </Tooltip>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
