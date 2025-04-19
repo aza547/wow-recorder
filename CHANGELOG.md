@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - The date range filter now translates correctly.
 - Allow key events to propogate while video progress slider is focused.
+- [Issue 628](https://github.com/aza547/wow-recorder/issues/628) - Fixes a bug where downloading a video wasn't possible if cloud upload was disabled in the config.
 
 ## [6.10.0] - 2025-04-12
 ### Changed

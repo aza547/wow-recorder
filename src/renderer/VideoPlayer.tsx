@@ -912,7 +912,7 @@ export const VideoPlayer = (props: IProps) => {
     const color = diskVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
 
-    if (!diskVideo && cloudVideo && config.cloudUpload) {
+    if (!diskVideo && cloudVideo) {
       return renderDownloadButton();
     }
 
