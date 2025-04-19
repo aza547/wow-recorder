@@ -103,10 +103,16 @@ const PVESettings = (props: IProps) => {
   const setMinEncounterDuration = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
+    const minEncounterDuration = parseInt(event.target.value, 10);
+
+    if (Number.isNaN(minEncounterDuration)) {
+      return;
+    }
+
     setConfig((prevState) => {
       return {
         ...prevState,
-        minEncounterDuration: parseInt(event.target.value, 10),
+        minEncounterDuration,
       };
     });
   };
@@ -196,9 +202,9 @@ const PVESettings = (props: IProps) => {
   };
 
   const setRaidOverrun = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseInt(event.target.value, 10);
+    const raidOverrun = parseInt(event.target.value, 10);
 
-    if (newValue < 0 || newValue > 60) {
+    if (Number.isNaN(raidOverrun) || raidOverrun < 0 || raidOverrun > 60) {
       // Don't allow invalid config to go further.
       return;
     }
@@ -206,7 +212,7 @@ const PVESettings = (props: IProps) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        raidOverrun: newValue,
+        raidOverrun,
       };
     });
   };
@@ -242,9 +248,13 @@ const PVESettings = (props: IProps) => {
   };
 
   const setDungeonOverrun = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseInt(event.target.value, 10);
+    const dungeonOverrun = parseInt(event.target.value, 10);
 
-    if (newValue < 0 || newValue > 60) {
+    if (
+      Number.isNaN(dungeonOverrun) ||
+      dungeonOverrun < 0 ||
+      dungeonOverrun > 60
+    ) {
       // Don't allow invalid config to go further.
       return;
     }
@@ -252,7 +262,7 @@ const PVESettings = (props: IProps) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        dungeonOverrun: newValue,
+        dungeonOverrun,
       };
     });
   };
@@ -319,10 +329,16 @@ const PVESettings = (props: IProps) => {
   };
 
   const setMinKeystoneLevel = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const minKeystoneLevel = parseInt(event.target.value, 10);
+
+    if (Number.isNaN(minKeystoneLevel)) {
+      return;
+    }
+
     setConfig((prevState) => {
       return {
         ...prevState,
-        minKeystoneLevel: parseInt(event.target.value, 10),
+        minKeystoneLevel,
       };
     });
   };

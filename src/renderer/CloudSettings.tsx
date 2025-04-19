@@ -219,14 +219,17 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setMinKeystoneLevel = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.value) {
+    const cloudUploadDungeonMinLevel = parseInt(event.target.value, 10);
+
+    if (Number.isNaN(cloudUploadDungeonMinLevel)) {
+      // Block invalid config.
       return;
     }
 
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudUploadDungeonMinLevel: parseInt(event.target.value, 10),
+        cloudUploadDungeonMinLevel,
       };
     });
   };
@@ -580,14 +583,17 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setUploadRateLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.value) {
+    const cloudUploadRateLimitMbps = parseInt(event.target.value, 10);
+
+    if (Number.isNaN(cloudUploadRateLimitMbps)) {
+      // Block invalid config.
       return;
     }
 
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudUploadRateLimitMbps: parseInt(event.target.value, 10),
+        cloudUploadRateLimitMbps,
       };
     });
   };

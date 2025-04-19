@@ -212,13 +212,17 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setMaxStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = event.target.value;
-    const parsedValue = parseInt(inputValue, 10);
+    const maxStorage = parseInt(event.target.value, 10);
+
+    if (Number.isNaN(maxStorage) || maxStorage < 0) {
+      // Block invalid config.
+      return;
+    }
 
     setConfig((prevState) => {
       return {
         ...prevState,
-        maxStorage: Number.isNaN(parsedValue) ? 0 : parsedValue,
+        maxStorage,
       };
     });
   };
