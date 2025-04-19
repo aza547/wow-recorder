@@ -1277,6 +1277,7 @@ export const VideoPlayer = (props: IProps) => {
         <DrawingOverlay
           isDrawingEnabled={isDrawingEnabled}
           onDrawingChange={setDrawingElements}
+          appState={appState}
         />
       </div>
     );
