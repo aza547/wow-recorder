@@ -74,8 +74,18 @@ const WarcraftRecorder = () => {
     // The language the client is in.
     language: config.language as Language,
 
-    // The cloud storage usage and limit.
-    cloudStatus: { usage: 0, limit: 0, guilds: [] },
+    // The cloud storage status.
+    cloudStatus: {
+      guild: '',
+      available: [],
+      read: false,
+      write: false,
+      del: false,
+      usage: 0,
+      limit: 0,
+    },
+
+    // The disk storage status.
     diskStatus: { usage: 0, limit: 0 },
   });
 

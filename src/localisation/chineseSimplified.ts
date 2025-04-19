@@ -220,6 +220,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.OpenFolderButtonTooltip]: '打开位置',
   [Phrase.DeleteButtonTooltip]: '删除',
   [Phrase.BulkDeleteButtonTooltip]: '删除选中项',
+  [Phrase.BulkDeleteButtonTooltipDiskOnly]: '永久删除选定行中的磁盘视频。您的用户无权删除云存储的视频。',
   [Phrase.ShareLinkButtonTooltip]: '获取可分享的链接',
   [Phrase.CloudButtonTooltip]: '使用云端版本',
   [Phrase.DiskButtonTooltip]: '使用本地磁盘版本',

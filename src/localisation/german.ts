@@ -220,6 +220,7 @@ const GERMAN: Translations = {
   [Phrase.OpenFolderButtonTooltip]: 'Speicherort öffnen',
   [Phrase.DeleteButtonTooltip]: 'Löschen',
   [Phrase.BulkDeleteButtonTooltip]: 'Ausgewählte löschen',
+  [Phrase.BulkDeleteButtonTooltipDiskOnly]: 'Löschen Sie Disk-Videos in ausgewählten Zeilen dauerhaft. Ihr Benutzer ist nicht berechtigt, in der Cloud gespeicherte Videos zu löschen.',
   [Phrase.ShareLinkButtonTooltip]: 'Teilbaren Link generieren',
   [Phrase.CloudButtonTooltip]: 'Cloud Version nutzen',
   [Phrase.DiskButtonTooltip]: 'Lokale version nutzen',

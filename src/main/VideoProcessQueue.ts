@@ -6,7 +6,6 @@ import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from '../config/ConfigService';
 import {
   CloudMetadata,
-  CloudStatus,
   DiskStatus,
   RendererVideo,
   SaveStatus,
@@ -466,30 +465,6 @@ export default class VideoProcessQueue {
    */
   private async uploadQueueEmpty() {
     console.info('[VideoProcessQueue] Upload processing queue empty');
-
-    if (!this.cloudClient) {
-      return;
-    }
-
-    await this.cloudClient.runHousekeeping();
-
-    const usagePromise = this.cloudClient.getUsage();
-    const limitPromise = this.cloudClient.getStorageLimit();
-    const affiliationsPromise = this.cloudClient.getUserAffiliations();
-
-    const usage = await usagePromise;
-    const limit = await limitPromise;
-    const affiliations = await affiliationsPromise;
-    const guilds = affiliations.map((aff) => aff.guildName);
-
-    const status: CloudStatus = {
-      usage,
-      limit,
-      guilds,
-    };
-
-    this.mainWindow.webContents.send('updateCloudStatus', status);
-    this.mainWindow.webContents.send('refreshState');
   }
 
   /**
