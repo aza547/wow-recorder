@@ -26,7 +26,6 @@ import {
   DeathMarkers,
   Encoder,
   EncoderType,
-  IOBSDevice,
   PlayerDeathType,
   RendererVideo,
   SoloShuffleTimelineSegment,
@@ -39,7 +38,6 @@ import { ESupportedEncoders } from 'main/obsEnums';
 import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
-import { Table } from '@tanstack/react-table';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
