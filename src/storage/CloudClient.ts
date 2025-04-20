@@ -84,6 +84,13 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
+   * Return the guild name.
+   */
+  public getGuildName() {
+    return this.guild;
+  }
+
+  /**
    * Build the Authorization header string.
    */
   private static createAuthHeader(user: string, pass: string) {
@@ -146,6 +153,14 @@ export default class CloudClient extends EventEmitter {
 
       throw new Error('Failed to add a video to database');
     }
+
+    // Always run the housekeeper after an upload so that there
+    // will be space for the next upload.
+    await this.runHousekeeping();
+
+    // Update the mtime to avoid multiple refreshes.
+    this.bucketLastMod = Date.now();
+    this.emit('change');
 
     console.info(
       '[CloudClient] Added',
@@ -604,7 +619,7 @@ export default class CloudClient extends EventEmitter {
     try {
       const mtime = await this.getMtime();
 
-      if (mtime !== this.bucketLastMod) {
+      if (mtime > this.bucketLastMod) {
         console.info(
           '[CloudClient] Cloud data changed:',
           mtime,

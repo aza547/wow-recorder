@@ -89,7 +89,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Encounter',
@@ -141,7 +141,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, videoState],
+    [appState, videoState, stateManager],
   );
 
   /**
@@ -155,7 +155,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Map',
@@ -195,7 +195,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, stateManager],
+    [appState, stateManager],
   );
 
   /**
@@ -209,7 +209,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Map',
@@ -265,7 +265,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, stateManager],
+    [appState, stateManager],
   );
 
   /**
@@ -279,7 +279,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Map',
@@ -319,7 +319,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, stateManager],
+    [appState, stateManager],
   );
 
   /**
@@ -333,7 +333,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Type',
@@ -375,7 +375,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, stateManager],
+    [appState, stateManager],
   );
 
   let columns;

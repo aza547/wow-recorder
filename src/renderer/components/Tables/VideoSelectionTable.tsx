@@ -56,7 +56,7 @@ const VideoSelectionTable = (props: IProps) => {
       }
       if (event.shiftKey) {
         // Select a range of rows.
-        const base = selectedRows[0].index;
+        const base = selectedRows[0] ? selectedRows[0].index : allRows[0].index;
         const target = row.index;
         const start = Math.min(base, target);
         const end = Math.max(base, target) + 1;

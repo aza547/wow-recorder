@@ -385,6 +385,15 @@ enum Phrase {
   Thursday,
   Friday,
   Saturday,
+  PermissionLabel,
+  PermissionDescription,
+  PermissionReadLabel,
+  PermissionReadDescription,
+  PermissionWriteLabel,
+  PermissionWriteDescription,
+  PermissionDeleteLabel,
+  PermissionDeleteDescription,
+  ButtonDiskOnlyDescription,
 }
 
 enum Language {

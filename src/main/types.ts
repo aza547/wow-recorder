@@ -309,6 +309,7 @@ type AppState = {
   selectedVideos: RendererVideo[];
   multiPlayerMode: boolean;
   viewpointSelectionOpen: boolean;
+  buttonsDiskOnly: boolean;
   videoFilterTags: Tag[];
   dateRangeFilter: DateValueType;
   videoFullScreen: boolean;
@@ -437,9 +438,13 @@ type SliderMark = {
 };
 
 type CloudStatus = {
+  guild: string;
+  available: string[];
+  read: boolean; // Always true for now.
+  write: boolean;
+  del: boolean;
   usage: number;
   limit: number;
-  guilds: string[];
 };
 
 type DiskStatus = {

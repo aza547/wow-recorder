@@ -388,6 +388,15 @@ const GERMAN: Translations = {
   [Phrase.Thursday]: "Donnerstag",
   [Phrase.Friday]: "Freitag",
   [Phrase.Saturday]: "Samstag",
+  [Phrase.PermissionLabel]: "Berechtigungen",
+  [Phrase.PermissionDescription]: "Die Zugriffsebene, die Ihnen innerhalb der aktuell ausgewählten Gilde vom Gildenadministrator gewährt wurde.",
+  [Phrase.PermissionReadLabel]: "Lesen",
+  [Phrase.PermissionReadDescription]: "Ermöglicht die Wiedergabe von Videos.",
+  [Phrase.PermissionWriteLabel]: "Schreiben",
+  [Phrase.PermissionWriteDescription]: "Ermöglicht das Hochladen, Markieren und Sperren von Videos.",
+  [Phrase.PermissionDeleteLabel]: "Löschen",
+  [Phrase.PermissionDeleteDescription]: "Ermöglicht das Löschen und Entsperren von Videos.",
+  [Phrase.ButtonDiskOnlyDescription]: "Aktivieren Sie diese Option, um Schaltflächen nur auf lokale Videos anzuwenden und alle Cloud-Videos und relevanten Gildenzugriffsberechtigungen zu ignorieren.",
 };
 
 export default GERMAN;

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Add a drawing mode to allow annotation of the video player with Excalidraw.
+- [Issue 621](https://github.com/aza547/wow-recorder/issues/621) - Add a delete permission tier and update client to respect it.
 
 ### Fixed
 - The date range filter now translates correctly.

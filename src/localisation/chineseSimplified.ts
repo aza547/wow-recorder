@@ -388,6 +388,15 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Thursday]: "星期四",
   [Phrase.Friday]: "星期五",
   [Phrase.Saturday]: "星期六",
+  [Phrase.PermissionLabel]: "权限",
+  [Phrase.PermissionDescription]: "公会管理员授予您在当前选定公会内的访问级别。",
+  [Phrase.PermissionReadLabel]: "读",
+  [Phrase.PermissionReadDescription]: "允许播放视频。",
+  [Phrase.PermissionWriteLabel]: "写",
+  [Phrase.PermissionWriteDescription]: "允许上传、标记和锁定视频。",
+  [Phrase.PermissionDeleteLabel]: "删除",
+  [Phrase.PermissionDeleteDescription]: "允许删除和解锁视频。",
+  [Phrase.ButtonDiskOnlyDescription]: "仅将按钮应用于本地视频，忽略任何云视频和公会访问权限",
 };
 
 export default CHINESE_SIMPLIFIED;

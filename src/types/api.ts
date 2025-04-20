@@ -6,6 +6,7 @@ export const Affiliation = z.object({
   guildName: z.string(),
   read: z.boolean(),
   write: z.boolean(),
+  del: z.boolean(),
   admin: z.boolean(),
 });
 

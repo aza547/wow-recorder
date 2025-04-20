@@ -388,6 +388,15 @@ const KOREAN: Translations = {
   [Phrase.Thursday]: "목",
   [Phrase.Friday]: "금",
   [Phrase.Saturday]: "토",
+  [Phrase.PermissionLabel]: "권한",
+  [Phrase.PermissionDescription]: "길드 관리자가 부여한 현재 선택된 길드 내에서의 접근 수준입니다.",
+  [Phrase.PermissionReadLabel]: "읽다",
+  [Phrase.PermissionReadDescription]: "비디오 재생을 허용합니다.",
+  [Phrase.PermissionWriteLabel]: "쓰다",
+  [Phrase.PermissionWriteDescription]: "비디오 업로드, 태그 지정, 잠금이 가능합니다.",
+  [Phrase.PermissionDeleteLabel]: "삭제",
+  [Phrase.PermissionDeleteDescription]: "비디오를 삭제하고 잠금 해제할 수 있습니다.",
+  [Phrase.ButtonDiskOnlyDescription]: "로컬 비디오에만 버튼을 적용하고, 클라우드 비디오와 관련 길드 접근 권한은 무시합니다.",
 };
 
 export default KOREAN;
