@@ -124,7 +124,7 @@ export const configSchema = {
   maxStorage: {
     description: Phrase.MaxStorageDescription,
     type: 'integer',
-    default: 0,
+    default: 50,
     minimum: 0,
   },
   monitorIndex: {
