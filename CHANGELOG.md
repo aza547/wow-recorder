@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.11.0] - 2025-04-20
+### Changed
 - Shortlinks are now permanent, so reflect that in the UI.
 
 ### Added
