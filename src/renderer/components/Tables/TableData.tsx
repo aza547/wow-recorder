@@ -195,7 +195,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, videoState, stateManager],
+    [appState, stateManager],
   );
 
   /**
@@ -265,7 +265,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, videoState, stateManager],
+    [appState, stateManager],
   );
 
   /**
