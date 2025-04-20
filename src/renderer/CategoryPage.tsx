@@ -360,6 +360,12 @@ const CategoryPage = (props: IProps) => {
         text += ` (${selectedRows.length})`;
       }
 
+      if (!config.cloudStorage || (write && del)) {
+        // Cloud storage if off, or we have full permission. No need
+        // to render the disk only switch.
+        return <Label>{text}</Label>;
+      }
+
       return (
         <Label>
           {text}

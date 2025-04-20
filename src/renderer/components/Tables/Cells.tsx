@@ -113,7 +113,7 @@ export const populateDetailsCell = (
       toProtect.length < 1 ||
       (!cloudDeletePermission && !lock && toProtect.some((v) => v.cloud));
 
-    const icon = lock ? <LockKeyhole size={20} /> : <LockOpen size={20} />;
+    const icon = lock ? <LockOpen size={20} /> : <LockKeyhole size={20} />;
 
     const tooltip = lock
       ? getLocalePhrase(language, Phrase.StarSelected)

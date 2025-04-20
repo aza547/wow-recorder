@@ -396,7 +396,7 @@ const ENGLISH: Translations = {
   [Phrase.PermissionWriteDescription]: "Allows uploading, tagging, and locking of videos.",
   [Phrase.PermissionDeleteLabel]: "Delete",
   [Phrase.PermissionDeleteDescription]: "Allows deletion and unlocking of videos.",
-  [Phrase.ButtonDiskOnlyDescription]: "Apply buttons to local videos only, ignoring any cloud videos and guild access permissions.",
+  [Phrase.ButtonDiskOnlyDescription]: "Your user has limited access to the configured guild. Enable to apply selection buttons to local videos only, bypassing guild access permissions.",
 };
 
 export default ENGLISH;
