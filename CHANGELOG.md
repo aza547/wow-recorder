@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 609](https://github.com/aza547/wow-recorder/issues/609) - Fixes a bug where numeric fields in settings would accept text and display NaN.
 - [Issue 622](https://github.com/aza547/wow-recorder/issues/622) - Fix a bug where it was not possible to deselect the default audio devices.
 - [Issue 625](https://github.com/aza547/wow-recorder/issues/625) - Fix a bug where audio devices would get deselected if they were unrecognized.
+- [Issue 638](https://github.com/aza547/wow-recorder/issues/638) - Fix a bug where zooming (CTRL SHIFT + / CTRL -) would mess with the scene preview.
 
 ## [6.10.0] - 2025-04-12
 ### Changed
