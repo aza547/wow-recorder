@@ -597,51 +597,6 @@ const getVideoDate = (video: RendererVideo) => {
 };
 
 /**
- * Get the human readable description of a device from its id. Returns
- * unknown if not an available device.
- *
- * @param id the device id
- * @param availableAudioDevices list of available sources from OBS
- */
-const getAudioDeviceDescription = (
-  id: string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
-) => {
-  let result = 'Unknown';
-
-  availableAudioDevices.input.forEach((device) => {
-    if (device.id === id) {
-      result = device.description;
-    }
-  });
-
-  availableAudioDevices.output.forEach((device) => {
-    if (device.id === id) {
-      result = device.description;
-    }
-  });
-
-  return result;
-};
-
-/**
- * Check if an id represents an available audio device.
- *
- * @param id the device id
- * @param availableAudioDevices list of available sources from OBS
- */
-const isKnownAudioDevice = (
-  id: string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
-) => {
-  if (getAudioDeviceDescription(id, availableAudioDevices) === 'Unknown') {
-    return false;
-  }
-
-  return true;
-};
-
-/**
  * Standardizes device names to an array of strings and filters by known devices.
  *
  * @param deviceNames the device names to standardize
@@ -650,7 +605,6 @@ const isKnownAudioDevice = (
  */
 const standardizeAudioDeviceNames = (
   deviceNames: string[] | string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
 ): string[] => {
   let normalizedDeviceNames: string[];
 
@@ -660,9 +614,7 @@ const standardizeAudioDeviceNames = (
     normalizedDeviceNames = deviceNames;
   }
 
-  return normalizedDeviceNames.filter((id) =>
-    isKnownAudioDevice(id, availableAudioDevices),
-  );
+  return normalizedDeviceNames;
 };
 
 const isHighRes = (res: string) => {
@@ -1086,8 +1038,6 @@ export {
   getPlayerClass,
   getVideoTime,
   getVideoDate,
-  getAudioDeviceDescription,
-  isKnownAudioDevice,
   standardizeAudioDeviceNames,
   encoderFilter,
   mapEncoderToString,

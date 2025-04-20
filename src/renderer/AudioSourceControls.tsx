@@ -10,7 +10,6 @@ import {
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
   getPTTKeyPressEventFromConfig,
-  standardizeAudioDeviceNames,
 } from './rendererutils';
 import { PTTKeyPressEvent, UiohookKeyMap } from '../types/KeyTypesUIOHook';
 import Label from './components/Label/Label';
@@ -117,36 +116,25 @@ const AudioSourceControls = (props: IProps) => {
     listenNextKeyPress();
   }, [pttHotKeyFieldFocused, setConfig]);
 
-  const input = standardizeAudioDeviceNames(
-    config.audioInputDevices,
-    audioDevices,
-  );
-
-  const output = standardizeAudioDeviceNames(
-    config.audioOutputDevices,
-    audioDevices,
-  );
-
   const onDeviceChange = (type: DeviceType, values: string[]) => {
-    const standardizedValues = standardizeAudioDeviceNames(
-      values,
-      audioDevices,
-    ).join();
-    if (type === DeviceType.INPUT) {
-      setConfig((prevState) => {
-        return {
-          ...prevState,
-          audioInputDevices: standardizedValues,
-        };
-      });
-    } else {
-      setConfig((prevState) => {
-        return {
-          ...prevState,
-          audioOutputDevices: standardizedValues,
-        };
-      });
-    }
+    const standardizedValues = values.filter((d) => d).join(',');
+
+    setConfig((previous) => {
+      const updated = { ...previous };
+
+      switch (type) {
+        case DeviceType.INPUT:
+          updated.audioInputDevices = standardizedValues;
+          break;
+        case DeviceType.OUTPUT:
+          updated.audioOutputDevices = standardizedValues;
+          break;
+        default:
+          throw new Error('Invalid device type');
+      }
+
+      return updated;
+    });
   };
 
   const getSpeakerSelect = () => {
@@ -170,7 +158,7 @@ const AudioSourceControls = (props: IProps) => {
             label: audioDevice.description,
           }))}
           onValueChange={(values) => onDeviceChange(DeviceType.OUTPUT, values)}
-          defaultValue={output}
+          defaultValue={config.audioOutputDevices.split(',').filter((d) => d)}
           placeholder={getLocalePhrase(
             appState.language,
             Phrase.SelectAnOutputDevice,
@@ -232,7 +220,7 @@ const AudioSourceControls = (props: IProps) => {
             label: audioDevice.description,
           }))}
           onValueChange={(values) => onDeviceChange(DeviceType.INPUT, values)}
-          defaultValue={input}
+          defaultValue={config.audioInputDevices.split(',').filter((d) => d)}
           placeholder={getLocalePhrase(
             appState.language,
             Phrase.SelectAnInputDevice,

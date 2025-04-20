@@ -15,7 +15,7 @@ import {
 } from '../Command/Command';
 
 const multiSelectVariants = cva(
-  'm-1 transition px-3 py-2 text-[11px] overflow-hidden text-ellipsis whitespace-nowrap inline-block',
+  'm-1 transition px-3 text-[11px] overflow-hidden text-ellipsis whitespace-nowrap inline-block',
   {
     variants: {
       variant: {
@@ -102,7 +102,7 @@ export const MultiSelect = React.forwardRef<
             {...props}
             onClick={handleTogglePopover}
             className={cn(
-              'flex h-full w-auto px-3 py-2 bg-card rounded-md border border-background min-h-10 items-center justify-between hover:bg-card',
+              'flex w-auto px-3 bg-card rounded-md border border-background min-h-10 items-center justify-between hover:bg-card',
               'text-sm ring-offset-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 hover:bg-card/80',
               className,
             )}
