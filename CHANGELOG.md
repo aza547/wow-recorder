@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix an issue where the scene preview would be misplaced when using Windows scaling.
 
 ## [6.11.0] - 2025-04-20
 ### Changed
