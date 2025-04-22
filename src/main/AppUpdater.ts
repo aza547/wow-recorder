@@ -30,7 +30,19 @@ export default class AppUpdater {
       autoUpdater.quitAndInstall();
     });
 
+    this.periodicallyCheckUpdate();
+  }
+
+  private periodicallyCheckUpdate() {
     // Check GitHub to see if any new versions are available.
     autoUpdater.checkForUpdates();
+
+    // Schedule the next check.
+    setTimeout(
+      () => {
+        this.periodicallyCheckUpdate();
+      },
+      1000 * 60 * 60 * 24, // Check every 24 hours.
+    );
   }
 }
