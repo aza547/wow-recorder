@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject, useMemo } from 'react';
+import { MutableRefObject, useMemo, useState } from 'react';
 import {
   Eye,
   GripHorizontal,
@@ -74,6 +74,9 @@ const CategoryPage = (props: IProps) => {
   const { write, del } = cloudStatus;
 
   const [config, setConfig] = useSettings();
+  const [resizableHeight, setResizableHeight] = useState(
+    `${playerHeight?.current || 300}px`, // Fallback to 300px if playerHeight.current is undefined
+  );
 
   const filteredState = useMemo<RendererVideo[]>(() => {
     const queryFilter = (rv: RendererVideo) =>
@@ -97,9 +100,12 @@ const CategoryPage = (props: IProps) => {
     element: HTMLElement,
   ) => {
     const height = element.clientHeight;
-    playerHeight.current = height;
+    setResizableHeight(`${height}px`);
   };
 
+  const onResetHeight = (newHeight: number) => {
+    setResizableHeight(`${newHeight}px`);
+  };
   /**
    * Render the video player. Safe to assume we have videos at this point
    * as we don't call this if haveVideos isn't true.
@@ -110,14 +116,16 @@ const CategoryPage = (props: IProps) => {
   const getVideoPlayer = () => {
     const toShow = filteredState[0] ? filteredState[0] : categoryState[0];
     const povs = [toShow, ...toShow.multiPov].sort(povDiskFirstNameSort);
-
     const videosToPlay =
       selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
-
     return (
       <Resizable
+        size={{
+          height: resizableHeight,
+          width: '100%',
+        }}
         defaultSize={{
-          height: `${playerHeight.current}px`,
+          height: resizableHeight,
           width: '100%',
         }}
         enable={{ bottom: true }}
@@ -146,6 +154,7 @@ const CategoryPage = (props: IProps) => {
           config={config}
           appState={appState}
           setAppState={setAppState}
+          onResetHeight={onResetHeight}
         />
       </Resizable>
     );

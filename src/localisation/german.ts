@@ -357,6 +357,7 @@ const GERMAN: Translations = {
   [Phrase.Saving]: 'Sparen...',
   [Phrase.StartTyping]: 'Beginnen Sie mit der Eingabe...',
   [Phrase.ToggleDrawingMode]: 'Zeichenmodus umschalten',
+  [Phrase.ResetVideoHeight]: 'Videohöhe zurücksetzen',
   [Phrase.StarSelected]: 'Ausgewählte Zeilen sperren.',
   [Phrase.UnstarSelected]: 'Ausgewählte Zeilen entsperren.',
   [Phrase.Selection]: 'Auswahl',

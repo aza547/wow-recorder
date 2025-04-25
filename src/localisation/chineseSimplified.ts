@@ -357,6 +357,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Saving]: '保存',
   [Phrase.StartTyping]: '开始打字',
   [Phrase.ToggleDrawingMode]: '切换绘图模式',
+  [Phrase.ResetVideoHeight]: '重置视频高度',
   [Phrase.StarSelected]: '锁定选定的行',
   [Phrase.UnstarSelected]: '解锁选定的行',
   [Phrase.Selection]: '选择',

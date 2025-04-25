@@ -58,6 +58,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import Separator from './components/Separator/Separator';
 import { toast } from './components/Toast/useToast';
+import AspectRatioIcon from '@mui/icons-material/AspectRatio';
 
 interface IProps {
   videos: RendererVideo[];
@@ -66,6 +67,7 @@ interface IProps {
   config: ConfigurationSchema;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+  onResetHeight?: (newHeight: number) => void;
 }
 
 const ipc = window.electron.ipcRenderer;
@@ -104,6 +106,7 @@ export const VideoPlayer = (props: IProps) => {
     appState,
     setAppState,
     categoryState,
+    onResetHeight,
   } = props;
 
   const { playing, multiPlayerMode, language, selectedVideos } = appState;
@@ -1146,6 +1149,33 @@ export const VideoPlayer = (props: IProps) => {
     </Tooltip>
   );
 
+  const resetHeightHandler = () => {
+    if (!onResetHeight) {
+      return;
+    }
+    const primaryPlayer = players[0].current;
+    if (!primaryPlayer) {
+      return;
+    }
+    const internalPlayer =
+      primaryPlayer.getInternalPlayer() as HTMLVideoElement;
+    const originalHeight = internalPlayer?.videoHeight;
+    if (originalHeight) {
+      //if the original height is greater than the window height, set it to window height - 60 (the bar height)
+      onResetHeight(Math.min(originalHeight, window.innerHeight - 60));
+    }
+  };
+
+  const renderResize = () => {
+    return (
+      <Tooltip content={getLocalePhrase(language, Phrase.ResetVideoHeight)}>
+        <Button variant="ghost" size="xs" onClick={resetHeightHandler}>
+          <AspectRatioIcon sx={{ color: 'white', fontSize: '22px' }} />
+        </Button>
+      </Tooltip>
+    );
+  };
+
   /**
    * Returns the entire video control component.
    */
@@ -1172,6 +1202,7 @@ export const VideoPlayer = (props: IProps) => {
           <Separator className="mx-2" orientation="vertical" />
         )}
         {!clipMode && renderPlaybackRateButton()}
+        {!clipMode && renderResize()}
         {!clipMode && renderFullscreenButton()}
         {clipMode && renderClipFinishedButton()}
         {clipMode && renderClipCancelButton()}

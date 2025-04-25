@@ -357,6 +357,7 @@ const ENGLISH: Translations = {
   [Phrase.Saving]: 'Saving...',
   [Phrase.StartTyping]: 'Start typing...',
   [Phrase.ToggleDrawingMode]: 'Toggle drawing mode',
+  [Phrase.ResetVideoHeight]: 'Reset video height',
   [Phrase.StarSelected]: 'Lock selected rows. Locked rows will not be automatically aged out.',
   [Phrase.UnstarSelected]: 'Unlock selected rows. Unlocked rows may be automatically aged out to make space for new recordings.',
   [Phrase.Selection]: 'Selection',
