@@ -906,7 +906,9 @@ export default class Manager {
 
     if (recordRetail) {
       const validFlavours = ['wow'];
-      const validPath = validFlavours.includes(getWowFlavour(retailLogPath));
+      const validPath =
+        validFlavours.includes(getWowFlavour(retailLogPath)) &&
+        path.basename(retailLogPath) === 'Logs';
 
       if (!validPath) {
         console.error('[Util] Invalid retail log path', retailLogPath);
@@ -916,7 +918,9 @@ export default class Manager {
 
     if (recordRetailPtr) {
       const validFlavours = ['wowxptr', 'wow_beta'];
-      const validPath = validFlavours.includes(getWowFlavour(retailPtrLogPath));
+      const validPath =
+        validFlavours.includes(getWowFlavour(retailPtrLogPath)) &&
+        path.basename(retailPtrLogPath) === 'Logs';
 
       if (!validPath) {
         console.error('[Util] Invalid retail PTR log path', retailPtrLogPath);
@@ -928,7 +932,9 @@ export default class Manager {
 
     if (recordClassic) {
       const validFlavours = ['wow_classic', 'wow_classic_beta'];
-      const validPath = validFlavours.includes(getWowFlavour(classicLogPath));
+      const validPath =
+        validFlavours.includes(getWowFlavour(classicLogPath)) &&
+        path.basename(classicLogPath) === 'Logs';
 
       if (!validPath) {
         console.error('[Util] Invalid classic log path', classicLogPath);
@@ -936,9 +942,16 @@ export default class Manager {
       }
     }
 
-    if (recordEra && getWowFlavour(eraLogPath) !== 'wow_classic_era') {
-      console.error('[Util] Invalid era log path', eraLogPath);
-      throw new Error(this.getLocaleError(Phrase.InvalidEraLogPath));
+    if (recordEra) {
+      const validFlavours = ['wow_classic_era'];
+      const validPath =
+        validFlavours.includes(getWowFlavour(eraLogPath)) &&
+        path.basename(eraLogPath) === 'Logs';
+
+      if (!validPath) {
+        console.error('[Util] Invalid era log path', eraLogPath);
+        throw new Error(this.getLocaleError(Phrase.InvalidEraLogPath));
+      }
     }
   };
 
