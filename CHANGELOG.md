@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - [Issue 642](https://github.com/aza547/wow-recorder/issues/642) - Check daily for updates not just on startup.
+- Fixed an issue where 0% wipes would not show the %.
 
 ## [6.11.1] - 2025-04-21
 ### Fixed

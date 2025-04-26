@@ -413,12 +413,7 @@ const getResultColor = (video: RendererVideo) => {
   }
 
   if (isRaidUtil(video)) {
-    // Look for the boss percent in any of the viewpoints. That is really
-    // just to make this nicer over upgrade of the app; this way we will
-    // show the percent if it exists on any video and not just the first one.
-    const bossPercent = [video, ...video.multiPov]
-      .map((rv) => rv.bossPercent)
-      .find((bp) => bp);
+    const bossPercent = raidResultToPercent(video);
 
     if (bossPercent) {
       const raidResultColors = [
@@ -810,12 +805,7 @@ const getVideoResultText = (
       return getLocalePhrase(language, Phrase.Kill);
     }
 
-    // Look for the boss percent in any of the viewpoints. That is really
-    // just to make this nicer over upgrade of the app; this way we will
-    // show the percent if it exists on any video and not just the first one.
-    const bossPercent = [video, ...video.multiPov]
-      .map((rv) => rv.bossPercent)
-      .find((bp) => bp);
+    const bossPercent = raidResultToPercent(video);
 
     if (bossPercent !== undefined) {
       return `${bossPercent}%`;
@@ -999,9 +989,12 @@ const countUniqueViewpoints = (video: RendererVideo) => {
 };
 
 const raidResultToPercent = (video: RendererVideo) => {
+  // Look for the boss percent in any of the viewpoints. That is really
+  // just to make this nicer over upgrade of the app; this way we will
+  // show the percent if it exists on any video and not just the first one.
   const bossPercent = [video, ...video.multiPov]
     .map((rv) => rv.bossPercent)
-    .find((bp) => bp);
+    .find((bp) => typeof bp === 'number');
 
   if (bossPercent) {
     return bossPercent;
