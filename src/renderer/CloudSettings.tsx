@@ -840,8 +840,8 @@ const CloudSettings = (props: IProps) => {
       )}
 
       <div className="flex flex-col gap-4">
-        <div>{getCloudUploadSwitch()}</div>
         <div className="flex flex-row gap-x-6">
+          {getCloudUploadSwitch()}
           {getCloudUploadRateLimitSwitch()}
           {getRateLimitField()}
         </div>
