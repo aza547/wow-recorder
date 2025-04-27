@@ -4,7 +4,7 @@ import {
   instanceNamesByZoneId,
   specializationById,
 } from 'main/constants';
-import { Flavour, RawCombatant, RendererVideo } from 'main/types';
+import { Flavour, RawCombatant, RendererVideo, StorageFilter } from 'main/types';
 import {
   isArenaUtil,
   isBattlegroundUtil,
@@ -50,17 +50,24 @@ export default class VideoFilter {
   private dateRangeFilter: DateValueType;
 
   /**
+   * The storage filter.
+   */
+  private storageFilter: StorageFilter;
+
+  /**
    * Constructor. This sets up the query for a given video. Typical usage
    * is to call filter after this to decide if the video should be filtered
    * or not.
    */
   constructor(
     tags: Tag[],
-    date: DateValueType,
+    dateFilter: DateValueType,
+    storageFilter: StorageFilter,
     video: RendererVideo,
     language: Language,
   ) {
-    this.dateRangeFilter = date;
+    this.dateRangeFilter = dateFilter;
+    this.storageFilter = storageFilter;
     this.video = video;
 
     this.query = tags
@@ -92,6 +99,14 @@ export default class VideoFilter {
       if (videoDate < startDate || videoDate > endDate) {
         return false;
       }
+    }
+
+    if (this.storageFilter === StorageFilter.CLOUD && !this.video.cloud) {
+      return false;
+    }
+
+    if (this.storageFilter === StorageFilter.DISK && this.video.cloud) {
+      return false;
     }
 
     return this.query.every((s) => this.matches.includes(s));
@@ -157,16 +172,6 @@ export default class VideoFilter {
     const playerClassColor = getWoWClassColor(playerClass);
     const classIcon = classImages[playerClass];
     const specIcon = specImages[playerSpecID as keyof typeof specImages];
-
-    if (video.cloud) {
-      const localised = getLocalePhrase(language, Phrase.Cloud);
-      const tag = new VideoTag(100, localised, '<CloudIcon>', '#bb4420');
-      suggestions.push(tag);
-    } else {
-      const localised = getLocalePhrase(language, Phrase.Disk);
-      const tag = new VideoTag(100, localised, '<SaveIcon>', '#bb4420');
-      suggestions.push(tag);
-    }
 
     if (video.isProtected) {
       const localised = getLocalePhrase(language, Phrase.Starred);

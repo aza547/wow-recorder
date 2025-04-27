@@ -301,6 +301,15 @@ enum Pages {
 }
 
 /**
+ * Storage filtering options.
+ */
+enum StorageFilter {
+  DISK = 'Disk',
+  CLOUD = 'Cloud',
+  BOTH = 'Both',
+}
+
+/**
  * The state of the frontend.
  */
 type AppState = {
@@ -309,9 +318,9 @@ type AppState = {
   selectedVideos: RendererVideo[];
   multiPlayerMode: boolean;
   viewpointSelectionOpen: boolean;
-  buttonsDiskOnly: boolean;
   videoFilterTags: Tag[];
   dateRangeFilter: DateValueType;
+  storageFilter: StorageFilter;
   videoFullScreen: boolean;
   playing: boolean;
   language: Language;
@@ -597,4 +606,5 @@ export {
   CloudSignedMetadata,
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
+  StorageFilter,
 };

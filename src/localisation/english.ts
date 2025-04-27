@@ -402,6 +402,11 @@ const ENGLISH: Translations = {
   [Phrase.PermissionDeleteLabel]: "Delete",
   [Phrase.PermissionDeleteDescription]: "Allows deletion and unlocking of videos.",
   [Phrase.ButtonDiskOnlyDescription]: "Your user has limited access to the configured guild. Enable to apply selection buttons to local videos only, bypassing guild access permissions.",
+  [Phrase.StorageFilterLabel]: "Storage Filter",
+  [Phrase.ShowDiskOnlyTooltip]: "Show disk videos only.",
+  [Phrase.ShowCloudOnlyTooltip]: "Show cloud videos only.",
+  [Phrase.ShowBothTooltip]: "Group disk and cloud videos and show everything.",
+  [Phrase.GuildNoPermission]: "Insufficient guild permissions to perform this action.",
 };
 
 export default ENGLISH;

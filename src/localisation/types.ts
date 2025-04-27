@@ -399,6 +399,11 @@ enum Phrase {
   PermissionDeleteLabel,
   PermissionDeleteDescription,
   ButtonDiskOnlyDescription,
+  StorageFilterLabel,
+  ShowDiskOnlyTooltip,
+  ShowCloudOnlyTooltip,
+  ShowBothTooltip,
+  GuildNoPermission,
 }
 
 enum Language {

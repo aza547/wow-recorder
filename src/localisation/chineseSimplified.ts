@@ -402,6 +402,11 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.PermissionDeleteLabel]: "删除",
   [Phrase.PermissionDeleteDescription]: "允许删除和解锁视频。",
   [Phrase.ButtonDiskOnlyDescription]: "仅将按钮应用于本地视频，忽略任何云视频和公会访问权限",
+  [Phrase.StorageFilterLabel]: "存储过滤器",
+  [Phrase.ShowDiskOnlyTooltip]: "仅显示磁盘视频",
+  [Phrase.ShowCloudOnlyTooltip]: "仅显示云视频",
+  [Phrase.ShowBothTooltip]: "将磁盘和云视频分组并显示所有内容",
+  [Phrase.GuildNoPermission]: "公会权限不足，无法执行此操作。",
 };
 
 export default CHINESE_SIMPLIFIED;

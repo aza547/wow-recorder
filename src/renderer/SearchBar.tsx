@@ -109,14 +109,6 @@ const SearchBar = (props: IProps) => {
       color: 'white',
     };
 
-    if (icon === '<SaveIcon>') {
-      return <SaveIcon sx={muiIconPropsSx} />;
-    }
-
-    if (icon === '<CloudIcon>') {
-      return <CloudIcon sx={muiIconPropsSx} />;
-    }
-
     if (icon === '<Shield>') {
       return <ShieldIcon sx={muiIconPropsSx} />;
     }
@@ -314,7 +306,7 @@ const SearchBar = (props: IProps) => {
   };
 
   const classNames = {
-    root: 'relative flex items-center cursor-text w-full h-10 rounded-md border border-background bg-card text-sm text-foreground-lighter',
+    root: 'relative flex items-center cursor-text w-full h-[38px] rounded-md border border-background bg-card text-sm text-foreground-lighter',
     rootIsActive: 'is-active',
     rootIsDisabled: 'is-disabled',
     rootIsInvalid: 'is-invalid',

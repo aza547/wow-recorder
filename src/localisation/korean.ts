@@ -402,6 +402,11 @@ const KOREAN: Translations = {
   [Phrase.PermissionDeleteLabel]: "삭제",
   [Phrase.PermissionDeleteDescription]: "비디오를 삭제하고 잠금 해제할 수 있습니다.",
   [Phrase.ButtonDiskOnlyDescription]: "로컬 비디오에만 버튼을 적용하고, 클라우드 비디오와 관련 길드 접근 권한은 무시합니다.",
+  [Phrase.StorageFilterLabel]: "저장 필터",
+  [Phrase.ShowDiskOnlyTooltip]: "디스크 비디오만 표시",
+  [Phrase.ShowCloudOnlyTooltip]: "클라우드 비디오만 표시",
+  [Phrase.ShowBothTooltip]: "그룹 디스크 및 클라우드 비디오를 보고 모든 것을 보여주세요",
+  [Phrase.GuildNoPermission]: "이 작업을 수행하기 위한 길드 권한이 없습니다.",
 };
 
 export default KOREAN;

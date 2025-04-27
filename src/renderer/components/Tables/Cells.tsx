@@ -93,31 +93,31 @@ export const populateDetailsCell = (
   stateManager: MutableRefObject<StateManager>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
-  const { language, cloudStatus, buttonsDiskOnly } = appState;
-  const cloudDeletePermission = cloudStatus.del;
+  const { language, cloudStatus } = appState;
+  const { del } = cloudStatus;
 
   const renderProtectedIcon = () => {
-    const viewpoints = [video, ...video.multiPov];
-
-    const toProtect = buttonsDiskOnly
-      ? viewpoints.filter((v) => v.cloud === false)
-      : viewpoints;
-
     // If any videos in our selection are not protected, then the button's
     // action is to protect.
-    const lock = !viewpoints.every((v) => v.isProtected);
+    const toProtect = [video, ...video.multiPov];
+    const lock = !toProtect.every((v) => v.isProtected);
 
     // Disable the protect button if there are no selected viewpoints, or if
     // the action is to unprotect and we don't have delete permissions.
-    const disabled =
-      toProtect.length < 1 ||
-      (!cloudDeletePermission && !lock && toProtect.some((v) => v.cloud));
+    const noPermission = !del && !lock && toProtect.some((v) => v.cloud);
+    const disabled = noPermission || toProtect.length < 1;
 
     const icon = lock ? <LockOpen size={20} /> : <LockKeyhole size={20} />;
 
-    const tooltip = lock
-      ? getLocalePhrase(language, Phrase.StarSelected)
-      : getLocalePhrase(language, Phrase.UnstarSelected);
+    let tooltip = '';
+
+    if (noPermission) {
+      tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
+    } else if (lock) {
+      tooltip = getLocalePhrase(language, Phrase.StarSelected);
+    } else {
+      tooltip = getLocalePhrase(language, Phrase.UnstarSelected);
+    }
 
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);

@@ -11,6 +11,7 @@ import {
   RendererVideo,
   CloudStatus,
   DiskStatus,
+  StorageFilter,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
@@ -55,7 +56,6 @@ const WarcraftRecorder = () => {
     selectedVideos: [],
     multiPlayerMode: false,
     viewpointSelectionOpen: false,
-    buttonsDiskOnly: false,
 
     // Any text applied in the filter bar gets translated into a filter here.
     videoFilterTags: [],
@@ -65,6 +65,9 @@ const WarcraftRecorder = () => {
       startDate: null,
       endDate: null,
     },
+
+    // The storage filter.
+    storageFilter: StorageFilter.BOTH,
 
     // We use this to conditionally hide the recording preview.
     videoFullScreen: false,

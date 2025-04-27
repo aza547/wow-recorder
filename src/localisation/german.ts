@@ -402,6 +402,11 @@ const GERMAN: Translations = {
   [Phrase.PermissionDeleteLabel]: "Löschen",
   [Phrase.PermissionDeleteDescription]: "Ermöglicht das Löschen und Entsperren von Videos.",
   [Phrase.ButtonDiskOnlyDescription]: "Aktivieren Sie diese Option, um Schaltflächen nur auf lokale Videos anzuwenden und alle Cloud-Videos und relevanten Gildenzugriffsberechtigungen zu ignorieren.",
+  [Phrase.StorageFilterLabel]: "Speicherfilter",
+  [Phrase.ShowDiskOnlyTooltip]: "Nur Disk-Videos anzeigen",
+  [Phrase.ShowCloudOnlyTooltip]: "Nur Cloud-Videos anzeigen",
+  [Phrase.ShowBothTooltip]: "Gruppieren Sie Disk- und Cloud-Videos und zeigen Sie alles",
+  [Phrase.GuildNoPermission]: "Nicht genügend Gildenberechtigungen, um diese Aktion auszuführen.",
 };
 
 export default GERMAN;
