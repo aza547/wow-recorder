@@ -168,7 +168,7 @@ export default class VideoFilter {
       suggestions.push(tag);
     }
 
-    if (video.protected) {
+    if (video.isProtected) {
       const localised = getLocalePhrase(language, Phrase.Starred);
       const tag = new VideoTag(101, localised, '<LockIcon>', '#bb4420');
       suggestions.push(tag);

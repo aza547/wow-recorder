@@ -113,7 +113,7 @@ const CategoryPage = (props: IProps) => {
     return () => {
       window.removeEventListener('resize', handleWindowResize);
     };
-  }, []);
+  }, [playerHeight]);
 
   /**
    * Handle a resize event.
