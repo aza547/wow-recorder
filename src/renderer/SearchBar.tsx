@@ -174,10 +174,6 @@ const SearchBar = (props: IProps) => {
       );
     }
 
-    if (icon === '<CalendarDays>') {
-      return <CalendarDays height="15px" width="25px" color="white" />;
-    }
-
     if (icon === '<MapPinned>') {
       return <MapPinned height="15px" width="25px" color="white" />;
     }

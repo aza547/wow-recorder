@@ -3,6 +3,7 @@ import {
   DeathMarkers,
   RendererVideo,
   SliderMark,
+  StorageFilter,
   VideoMarker,
   VideoPlayerSettings,
 } from 'main/types';
@@ -106,7 +107,8 @@ export const VideoPlayer = (props: IProps) => {
     categoryState,
   } = props;
 
-  const { playing, multiPlayerMode, language, selectedVideos } = appState;
+  const { playing, multiPlayerMode, language, selectedVideos, storageFilter } =
+    appState;
 
   if (videos.length < 1 || videos.length > 4) {
     // Protect against stupid programmer errors.
@@ -809,13 +811,23 @@ export const VideoPlayer = (props: IProps) => {
    * Render the download button.
    */
   const renderDownloadButton = () => {
+    const disabled = storageFilter !== StorageFilter.BOTH;
+    const tooltip = disabled
+      ? getLocalePhrase(language, Phrase.DownloadUploadDisabledDueToFilter)
+      : getLocalePhrase(language, Phrase.DownloadButtonTooltip);
+
     return (
-      <Tooltip
-        content={getLocalePhrase(language, Phrase.DownloadButtonTooltip)}
-      >
-        <Button onClick={downloadVideo} variant="ghost" size="xs">
-          <CloudDownload size={20} />
-        </Button>
+      <Tooltip content={tooltip}>
+        <div>
+          <Button
+            onClick={downloadVideo}
+            variant="ghost"
+            size="xs"
+            disabled={disabled}
+          >
+            <CloudDownload size={20} />
+          </Button>
+        </div>
       </Tooltip>
     );
   };
@@ -824,11 +836,23 @@ export const VideoPlayer = (props: IProps) => {
    * Render the upload button.
    */
   const renderUploadButton = () => {
+    const disabled = storageFilter !== StorageFilter.BOTH;
+    const tooltip = disabled
+      ? getLocalePhrase(language, Phrase.DownloadUploadDisabledDueToFilter)
+      : getLocalePhrase(language, Phrase.UploadButtonTooltip);
+
     return (
-      <Tooltip content={getLocalePhrase(language, Phrase.UploadButtonTooltip)}>
-        <Button onClick={uploadVideo} variant="ghost" size="xs">
-          <CloudUpload size={20} />
-        </Button>
+      <Tooltip content={tooltip}>
+        <div>
+          <Button
+            onClick={uploadVideo}
+            variant="ghost"
+            size="xs"
+            disabled={disabled}
+          >
+            <CloudUpload size={20} />
+          </Button>
+        </div>
       </Tooltip>
     );
   };

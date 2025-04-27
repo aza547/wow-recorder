@@ -1,5 +1,5 @@
 import { AppState, RendererVideo, StorageFilter } from 'main/types';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -10,19 +10,22 @@ import { Workflow } from 'lucide-react';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { Table } from '@tanstack/react-table';
+import StateManager from './StateManager';
 
 interface IProps {
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
   table: Table<RendererVideo>;
+  stateManager: MutableRefObject<StateManager>;
 }
 
 const StorageFilterToggle = (props: IProps) => {
-  const { appState, setAppState, table } = props;
+  const { appState, setAppState, table, stateManager } = props;
   const { storageFilter, language } = appState;
 
   const setStorageFilter = (storageFilter: StorageFilter) => {
     table.toggleAllRowsSelected(false);
+    stateManager.current.updateStorageFilter(storageFilter);
     setAppState((prevState) => ({
       ...prevState,
       selectedVideos: [],

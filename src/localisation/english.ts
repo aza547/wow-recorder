@@ -408,6 +408,7 @@ const ENGLISH: Translations = {
   [Phrase.ShowBothTooltip]: "Group disk and cloud videos and show everything.",
   [Phrase.GuildNoPermission]: "Insufficient guild permissions to perform this action.",
   [Phrase.RemoveTagFromList]: "Remove %value% from the list",
+  [Phrase.DownloadUploadDisabledDueToFilter]: "Disabled due to currently selected storage filter.",
 };
 
 export default ENGLISH;

@@ -55,11 +55,6 @@ export default class VideoFilter {
   private dateRangeFilter: DateValueType;
 
   /**
-   * The storage filter.
-   */
-  private storageFilter: StorageFilter;
-
-  /**
    * Constructor. This sets up the query for a given video. Typical usage
    * is to call filter after this to decide if the video should be filtered
    * or not.
@@ -72,7 +67,6 @@ export default class VideoFilter {
     language: Language,
   ) {
     this.dateRangeFilter = dateFilter;
-    this.storageFilter = storageFilter;
     this.video = video;
 
     this.query = tags
@@ -104,14 +98,6 @@ export default class VideoFilter {
       if (videoDate < startDate || videoDate > endDate) {
         return false;
       }
-    }
-
-    if (this.storageFilter === StorageFilter.CLOUD && !this.video.cloud) {
-      return false;
-    }
-
-    if (this.storageFilter === StorageFilter.DISK && this.video.cloud) {
-      return false;
     }
 
     return this.query.every((s) => this.matches.includes(s));
@@ -201,34 +187,6 @@ export default class VideoFilter {
     } else if (video.flavour === Flavour.Classic) {
       const localised = getLocalePhrase(language, Phrase.Classic);
       const tag = new VideoTag(103, localised, '<Shield>', '#bb4420');
-      suggestions.push(tag);
-    }
-
-    const currentDate = new Date();
-
-    const videoDate = video.start
-      ? new Date(video.start)
-      : new Date(video.mtime);
-
-    const isToday =
-      videoDate.getDate() === currentDate.getDate() &&
-      videoDate.getMonth() === currentDate.getMonth() &&
-      videoDate.getFullYear() === currentDate.getFullYear();
-
-    const isYesterday =
-      videoDate.getDate() === currentDate.getDate() - 1 &&
-      videoDate.getMonth() === currentDate.getMonth() &&
-      videoDate.getFullYear() === currentDate.getFullYear();
-
-    if (isToday) {
-      const localised = getLocalePhrase(language, Phrase.Today);
-      const tag = new VideoTag(104, localised, '<CalendarDays>', '#bb4420');
-      suggestions.push(tag);
-    }
-
-    if (isYesterday) {
-      const localised = getLocalePhrase(language, Phrase.Yesterday);
-      const tag = new VideoTag(104, localised, '<CalendarDays>', '#bb4420');
       suggestions.push(tag);
     }
 

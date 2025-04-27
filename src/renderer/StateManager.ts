@@ -1,5 +1,5 @@
 import { VideoCategory } from 'types/VideoCategory';
-import { RendererVideo } from '../main/types';
+import { RendererVideo, StorageFilter } from '../main/types';
 import { areDatesWithinSeconds } from './rendererutils';
 
 /**
@@ -11,6 +11,12 @@ export default class StateManager {
   private ipc = window.electron.ipcRenderer;
 
   private raw: RendererVideo[] = [];
+
+  private disk: RendererVideo[] = [];
+
+  private cloud: RendererVideo[] = [];
+
+  private storageFilter = StorageFilter.BOTH;
 
   private setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
 
@@ -46,24 +52,40 @@ export default class StateManager {
    */
   public async refresh() {
     this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
+    this.disk = this.raw.filter((video) => !video.cloud);
+    this.cloud = this.raw.filter((video) => video.cloud);
     const correlated = this.correlate();
     this.setVideoState(correlated);
   }
 
+  /**
+   * Update the Storage Filter and re-correlate the videos. This filter is
+   * unique in that it's done before grouping of videos, so it happens here
+   * instead of in the VideoFilter class.
+   * @param storageFilter The new storage filter to apply.
+   */
+  public async updateStorageFilter(storageFilter: StorageFilter) {
+    this.storageFilter = storageFilter;
+    const correlated = this.correlate();
+    this.setVideoState(correlated);
+  }
+
+  /**
+   * Walk the raw video list and correlate them into a single list. This is
+   * done by looking for videos with the same hash and start time, and
+   * linking them together.
+   */
   private correlate() {
     this.uncorrelate();
     const correlated: RendererVideo[] = [];
 
-    const cloudVideos = this.raw.filter((video) => video.cloud);
-    const diskVideos = this.raw.filter((video) => !video.cloud);
+    if (this.storageFilter !== StorageFilter.CLOUD) {
+      this.disk.forEach((rv) => StateManager.correlateVideo(rv, correlated));
+    }
 
-    cloudVideos.forEach((video) =>
-      StateManager.correlateVideo(video, correlated),
-    );
-
-    diskVideos.forEach((video) =>
-      StateManager.correlateVideo(video, correlated),
-    );
+    if (this.storageFilter !== StorageFilter.DISK) {
+      this.cloud.forEach((rv) => StateManager.correlateVideo(rv, correlated));
+    }
 
     correlated.sort(StateManager.reverseChronologicalVideoSort);
     return correlated;

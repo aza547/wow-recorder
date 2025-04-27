@@ -405,6 +405,7 @@ enum Phrase {
   ShowBothTooltip,
   GuildNoPermission,
   RemoveTagFromList,
+  DownloadUploadDisabledDueToFilter,
 }
 
 enum Language {

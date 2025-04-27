@@ -408,6 +408,7 @@ const KOREAN: Translations = {
   [Phrase.ShowBothTooltip]: "그룹 디스크 및 클라우드 비디오를 보고 모든 것을 보여주세요",
   [Phrase.GuildNoPermission]: "이 작업을 수행하기 위한 길드 권한이 없습니다.",
   [Phrase.RemoveTagFromList]: "목록에서 %value%를 제거합니다.",
+  [Phrase.DownloadUploadDisabledDueToFilter]: "현재 선택된 저장소 필터로 인해 비활성화되었습니다.",
 };
 
 export default KOREAN;
