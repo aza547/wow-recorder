@@ -109,7 +109,8 @@ const CategoryPage = (props: IProps) => {
         return;
       }
 
-      if (playerHeight.current > window.innerHeight) {
+      // 96px = 32 (top bar) + 40 (video controls) + 24 (grip)
+      if (playerHeight.current + 96 > window.innerHeight) {
         // The video is bigger than the window. Reset it
         // to the original size. Could probably check that
         // 500 is smaller than the window but who resizes

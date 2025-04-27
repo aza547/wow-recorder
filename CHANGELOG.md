@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [6.12.0] - 2025-04-27
+### Added
 - [Issue 616](https://github.com/aza547/wow-recorder/issues/616) - Add an upload toggle for Retail and Classic recordings.
 - Add a Storage filter toggle, remove the search tags for cloud/disk and the override switch for bypassing cloud videos.
 
