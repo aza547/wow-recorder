@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 616](https://github.com/aza547/wow-recorder/issues/616) - Add an upload toggle for Retail and Classic recordings.
+
 ### Fixed
 - [Issue 642](https://github.com/aza547/wow-recorder/issues/642) - Check daily for updates not just on startup.
 - Fixed an issue where 0% wipes would not show the %.

@@ -67,6 +67,8 @@ const CloudSettings = (props: IProps) => {
         cloudAccountPassword: config.cloudAccountPassword,
         cloudGuildName: config.cloudGuildName,
         cloudUpload: config.cloudUpload,
+        cloudUploadRetail: config.cloudUploadRetail,
+        cloudUploadClassic: config.cloudUploadClassic,
         cloudUploadRateLimit: config.cloudUploadRateLimit,
         cloudUploadRateLimitMbps: config.cloudUploadRateLimitMbps,
         cloudUpload2v2: config.cloudUpload2v2,
@@ -93,6 +95,8 @@ const CloudSettings = (props: IProps) => {
     config.cloudAccountPassword,
     config.cloudGuildName,
     config.cloudUpload,
+    config.cloudUploadRetail,
+    config.cloudUploadClassic,
     config.cloudUploadRateLimit,
     config.cloudUploadRateLimitMbps,
     config.cloudUpload2v2,
@@ -304,6 +308,24 @@ const CloudSettings = (props: IProps) => {
     });
   };
 
+  const setCloudUploadRetail = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        cloudUploadRetail: checked,
+      };
+    });
+  };
+
+  const setCloudUploadClassic = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        cloudUploadClassic: checked,
+      };
+    });
+  };
+
   const getCloudSwitch = () => {
     if (isComponentDisabled()) {
       return <></>;
@@ -351,6 +373,58 @@ const CloudSettings = (props: IProps) => {
         </Label>
         <div className="flex h-10 items-center">
           {getSwitch('cloudUpload', setCloudUpload)}
+        </div>
+      </div>
+    );
+  };
+
+  const getRetailUploadSwitch = () => {
+    if (isComponentDisabled() || !config.cloudUpload) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudUploadRetail" className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.CloudUploadRetailLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadRetail.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudUploadRetail', setCloudUploadRetail)}
+        </div>
+      </div>
+    );
+  };
+
+  const getClassicUploadSwitch = () => {
+    if (isComponentDisabled() || !config.cloudUpload) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudUploadClassic" className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.CloudUploadClassicLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadClassic.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudUploadClassic', setCloudUploadClassic)}
         </div>
       </div>
     );
@@ -658,6 +732,10 @@ const CloudSettings = (props: IProps) => {
   const getCloudUploadCategorySettings = () => {
     return (
       <>
+        <div className="flex flex-row gap-x-6">
+          {getRetailUploadSwitch()}
+          {getClassicUploadSwitch()}
+        </div>
         <div className="flex flex-row gap-x-6">
           {getSwitchForm('cloudUploadRaids', Phrase.UploadRaidsLabel)}
           {getMinRaidDifficultySelect()}
