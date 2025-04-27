@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 642](https://github.com/aza547/wow-recorder/issues/642) - Check daily for updates not just on startup.
 - Fixed an issue where 0% wipes would not show the %.
 - Fix an issue where the Log path validation would accept a folder of the same level (e.g Interface).
+- [Issue 646](https://github.com/aza547/wow-recorder/issues/646) - Fix an issue with the table page resetting on interacting with the videos.
 
 ## [6.11.1] - 2025-04-21
 ### Fixed

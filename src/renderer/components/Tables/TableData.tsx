@@ -419,6 +419,7 @@ const useTable = (
     onRowSelectionChange: setRowSelection,
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
+    autoResetPageIndex: false,
   });
 
   return table;
