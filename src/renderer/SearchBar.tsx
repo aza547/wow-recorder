@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import ShieldIcon from '@mui/icons-material/Shield';
-import { CalendarDays, MapPinned } from 'lucide-react';
+import { MapPinned } from 'lucide-react';
 
 import {
   faDragon,
