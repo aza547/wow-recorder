@@ -325,6 +325,7 @@ const ENGLISH: Translations = {
   [Phrase.Cloud]: "Cloud",
   [Phrase.Disk]: "Disk",
   [Phrase.Starred]: "Locked",
+  [Phrase.NotStarred]: "Unlocked",
   [Phrase.Tagged]: "Tagged",
   [Phrase.Today]: "Today",
   [Phrase.Yesterday]: "Yesterday",

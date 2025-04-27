@@ -325,6 +325,7 @@ const GERMAN: Translations = {
   [Phrase.Cloud]: "Wolke",
   [Phrase.Disk]: "Scheibe",
   [Phrase.Starred]: "Stern",
+  [Phrase.NotStarred]: "Entsperrt",
   [Phrase.Tagged]: "Markiert",
   [Phrase.Today]: "Heute",
   [Phrase.Yesterday]: "Gestern",

@@ -324,6 +324,7 @@ enum Phrase {
   Cloud,
   Disk,
   Starred,
+  NotStarred,
   Tagged,
   Today,
   Yesterday,

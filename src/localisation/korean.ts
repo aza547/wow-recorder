@@ -325,6 +325,7 @@ const KOREAN: Translations = {
   [Phrase.Cloud]: "클라우드",
   [Phrase.Disk]: "디스크",
   [Phrase.Starred]: "북마크",
+  [Phrase.NotStarred]: "잠금 해제됨",
   [Phrase.Tagged]: "태그",
   [Phrase.Today]: "오늘",
   [Phrase.Yesterday]: "어제",

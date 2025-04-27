@@ -13,7 +13,14 @@ import {
   ReactTagsAPI,
 } from 'react-tag-autocomplete';
 import { Box } from '@mui/material';
-import { Search, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import {
+  LockKeyhole,
+  LockOpen,
+  Search,
+  ThumbsDown,
+  ThumbsUp,
+  X,
+} from 'lucide-react';
 import React from 'react';
 import ShieldIcon from '@mui/icons-material/Shield';
 import CloudIcon from '@mui/icons-material/Cloud';
@@ -24,7 +31,6 @@ import {
   faDragon,
   faDungeon,
   faMessage,
-  faStar,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VideoTag from './VideoTag';
@@ -127,15 +133,12 @@ const SearchBar = (props: IProps) => {
       return <HourglassDisabledIcon sx={muiIconPropsSx} />;
     }
 
-    if (icon === '<StarIcon>') {
-      return (
-        <FontAwesomeIcon
-          icon={faStar}
-          height="15px"
-          width="25px"
-          color="white"
-        />
-      );
+    if (icon === '<LockIcon>') {
+      return <LockKeyhole height="15px" width="25px" color="white" />;
+    }
+
+    if (icon === '<LockOpenIcon>') {
+      return <LockOpen height="15px" width="25px" color="white" />;
     }
 
     if (icon === '<TagIcon>') {

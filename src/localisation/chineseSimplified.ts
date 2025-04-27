@@ -325,6 +325,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Cloud]: "云",
   [Phrase.Disk]: "磁盘",
   [Phrase.Starred]: "星星",
+  [Phrase.NotStarred]: "解锁",
   [Phrase.Tagged]: "标签",
   [Phrase.Today]: "今天",
   [Phrase.Yesterday]: "昨天",

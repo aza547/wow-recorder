@@ -170,23 +170,27 @@ export default class VideoFilter {
 
     if (video.protected) {
       const localised = getLocalePhrase(language, Phrase.Starred);
-      const tag = new VideoTag(101, localised, '<StarIcon>', '#bb4420');
+      const tag = new VideoTag(101, localised, '<LockIcon>', '#bb4420');
+      suggestions.push(tag);
+    } else {
+      const localised = getLocalePhrase(language, Phrase.NotStarred);
+      const tag = new VideoTag(101, localised, '<LockOpenIcon>', '#bb4420');
       suggestions.push(tag);
     }
 
     if (video.tag) {
       const localised = getLocalePhrase(language, Phrase.Tagged);
-      const tag = new VideoTag(101, localised, '<TagIcon>', '#bb4420');
+      const tag = new VideoTag(102, localised, '<TagIcon>', '#bb4420');
       suggestions.push(tag);
     }
 
     if (video.flavour === Flavour.Retail) {
       const localised = getLocalePhrase(language, Phrase.Retail);
-      const tag = new VideoTag(102, localised, '<Swords>', '#bb4420');
+      const tag = new VideoTag(103, localised, '<Swords>', '#bb4420');
       suggestions.push(tag);
     } else if (video.flavour === Flavour.Classic) {
       const localised = getLocalePhrase(language, Phrase.Classic);
-      const tag = new VideoTag(102, localised, '<Shield>', '#bb4420');
+      const tag = new VideoTag(103, localised, '<Shield>', '#bb4420');
       suggestions.push(tag);
     }
 
@@ -208,13 +212,13 @@ export default class VideoFilter {
 
     if (isToday) {
       const localised = getLocalePhrase(language, Phrase.Today);
-      const tag = new VideoTag(103, localised, '<CalendarDays>', '#bb4420');
+      const tag = new VideoTag(104, localised, '<CalendarDays>', '#bb4420');
       suggestions.push(tag);
     }
 
     if (isYesterday) {
       const localised = getLocalePhrase(language, Phrase.Yesterday);
-      const tag = new VideoTag(103, localised, '<CalendarDays>', '#bb4420');
+      const tag = new VideoTag(104, localised, '<CalendarDays>', '#bb4420');
       suggestions.push(tag);
     }
 
