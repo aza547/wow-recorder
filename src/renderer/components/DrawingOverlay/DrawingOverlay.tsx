@@ -20,12 +20,13 @@ export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
 
   // Convert current language to a language code supported by Excalidraw
   const langCodeMap = {
+    [Language.ENGLISH]: 'en',
     [Language.KOREAN]: 'ko-KR',
     [Language.GERMAN]: 'de-DE',
     [Language.CHINESE_SIMPLIFIED]: 'zh-CN',
   };
 
-  const langCode = langCodeMap[appState.language] || 'en';
+  const langCode = langCodeMap[appState.language];
 
   return (
     <div className="drawing-overlay h-full w-full">
