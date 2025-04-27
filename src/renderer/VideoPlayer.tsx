@@ -653,7 +653,11 @@ export const VideoPlayer = (props: IProps) => {
         onChange={handleProgressSliderChange}
         onChangeCommitted={handleChangeCommitted}
         onMouseDown={onSliderMouseDown}
-        onKeyDown={() => {}} // Let the event bubble up.
+        onKeyDown={(e) => {
+          // Don't have keys interact with the slider directly. This lets
+          // arrow keys seek as if the video player is in focus.
+          e.preventDefault();
+        }}
         max={duration}
         marks={marks}
         step={0.01}
@@ -1127,6 +1131,9 @@ export const VideoPlayer = (props: IProps) => {
         value={muted ? 0 : volume * 100}
         onChange={handleVolumeChange}
         valueLabelFormat={Math.round}
+        onKeyDown={(e) => {
+          e.preventDefault();
+        }}
       />
     );
   };
