@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 646](https://github.com/aza547/wow-recorder/issues/646) - Fix an issue with the table page resetting on interacting with the videos.
 - Fix an issue where arrow keys would not have consistent behaviour when video progress or volume slider was focused.
 - [Issue 643](https://github.com/aza547/wow-recorder/issues/643) - Add missing unlocked filter and fix some icons.
+- [Issue 602](https://github.com/aza547/wow-recorder/issues/602) - Reset the video player size on a resize if it's bigger than the window height.
 
 ## [6.11.1] - 2025-04-21
 ### Fixed

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject, useMemo } from 'react';
+import { MutableRefObject, useEffect, useMemo, useRef } from 'react';
 import {
   Eye,
   GripHorizontal,
@@ -88,6 +88,33 @@ const CategoryPage = (props: IProps) => {
   const haveVideos = categoryState.length > 0;
   const isClips = category === VideoCategory.Clips;
 
+  // Handle to reset the video player height.
+  const resizableRef = useRef<Resizable>(null);
+
+  useEffect(() => {
+    const handleWindowResize = () => {
+      if (!resizableRef.current) {
+        // Could on only happen if we're resizing in the
+        // middle of the initial mount.
+        return;
+      }
+
+      if (playerHeight.current > window.innerHeight) {
+        // The video is bigger than the window. Reset it
+        // to the original size. Could probably check that
+        // 500 is smaller than the window but who resizes
+        // their window to be smaller than 500px?
+        resizableRef.current.updateSize({ height: 500 });
+      }
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+
+    return () => {
+      window.removeEventListener('resize', handleWindowResize);
+    };
+  }, []);
+
   /**
    * Handle a resize event.
    */
@@ -116,6 +143,7 @@ const CategoryPage = (props: IProps) => {
 
     return (
       <Resizable
+        ref={resizableRef}
         defaultSize={{
           height: `${playerHeight.current}px`,
           width: '100%',
