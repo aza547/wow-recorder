@@ -407,6 +407,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ShowCloudOnlyTooltip]: "仅显示云视频",
   [Phrase.ShowBothTooltip]: "将磁盘和云视频分组并显示所有内容",
   [Phrase.GuildNoPermission]: "公会权限不足，无法执行此操作。",
+  [Phrase.RemoveTagFromList]: "从列表中删除 %value%",
 };
 
 export default CHINESE_SIMPLIFIED;

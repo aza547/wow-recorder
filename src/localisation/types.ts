@@ -404,6 +404,7 @@ enum Phrase {
   ShowCloudOnlyTooltip,
   ShowBothTooltip,
   GuildNoPermission,
+  RemoveTagFromList,
 }
 
 enum Language {

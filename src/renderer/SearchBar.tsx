@@ -23,8 +23,6 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import ShieldIcon from '@mui/icons-material/Shield';
-import CloudIcon from '@mui/icons-material/Cloud';
-import SaveIcon from '@mui/icons-material/Save';
 import { CalendarDays, MapPinned } from 'lucide-react';
 
 import {
@@ -343,6 +341,9 @@ const SearchBar = (props: IProps) => {
         placeholderText={getLocalePhrase(language, Phrase.StartTyping)}
         activateFirstOption
         collapseOnSelect
+        // Contains a placeholder that is replaced by the library.
+        // https://github.com/i-like-robots/react-tag-autocomplete?tab=readme-ov-file#deletebuttontext-optional
+        deleteButtonText={getLocalePhrase(language, Phrase.RemoveTagFromList)}
       />
     </div>
   );

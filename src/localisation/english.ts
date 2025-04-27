@@ -407,6 +407,7 @@ const ENGLISH: Translations = {
   [Phrase.ShowCloudOnlyTooltip]: "Show cloud videos only.",
   [Phrase.ShowBothTooltip]: "Group disk and cloud videos and show everything.",
   [Phrase.GuildNoPermission]: "Insufficient guild permissions to perform this action.",
+  [Phrase.RemoveTagFromList]: "Remove %value% from the list",
 };
 
 export default ENGLISH;
