@@ -24,6 +24,11 @@ const StorageFilterToggle = (props: IProps) => {
   const { storageFilter, language } = appState;
 
   const setStorageFilter = (storageFilter: StorageFilter) => {
+    if (!storageFilter) {
+      // Don't allow the user to toggle this off.
+      return;
+    }
+
     table.toggleAllRowsSelected(false);
     stateManager.current.updateStorageFilter(storageFilter);
     setAppState((prevState) => ({

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix an issue where double clicking the storage filter would set undefined.
 
 ## [6.12.0] - 2025-04-27
 ### Added
