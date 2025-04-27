@@ -4,7 +4,12 @@ import {
   instanceNamesByZoneId,
   specializationById,
 } from 'main/constants';
-import { Flavour, RawCombatant, RendererVideo, StorageFilter } from 'main/types';
+import {
+  Flavour,
+  RawCombatant,
+  RendererVideo,
+  StorageFilter,
+} from 'main/types';
 import {
   isArenaUtil,
   isBattlegroundUtil,
