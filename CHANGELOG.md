@@ -8,8 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [6.12.1] - 2025-04-28
+### Fixed
 - Fix an issue where double clicking the storage filter would set undefined.
 - [Issue 469](https://github.com/aza547/wow-recorder/issues/649) - Fix an issue where the storage filter could reset to the "no videos" page.
+- Fix an issue where video would randomly resize after changing tab.
 
 ## [6.12.0] - 2025-04-27
 ### Added
