@@ -11,21 +11,28 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { Table } from '@tanstack/react-table';
 import StateManager from './StateManager';
+import { getVideoCategoryFilter } from './rendererutils';
 
 interface IProps {
   appState: AppState;
   setAppState: Dispatch<SetStateAction<AppState>>;
   table: Table<RendererVideo>;
   stateManager: MutableRefObject<StateManager>;
-  filteredState: RendererVideo[];
 }
 
 const StorageFilterToggle = (props: IProps) => {
-  const { appState, setAppState, table, stateManager, filteredState } = props;
-  const { storageFilter, language } = appState;
+  const { appState, setAppState, table, stateManager } = props;
+  const { storageFilter, language, category } = appState;
 
-  const hasDisk = filteredState.some((rv) => !rv.cloud);
-  const hasCloud = filteredState.some((rv) => rv.cloud);
+  // We need to check the raw videos here as we can't rely
+  // on the state which may have been filtered already.
+  const categoryFilter = getVideoCategoryFilter(category);
+
+  const hasDisk =
+    stateManager.current.getRawDiskVideos().filter(categoryFilter).length > 0;
+
+  const hasCloud =
+    stateManager.current.getRawCloudVideos().filter(categoryFilter).length > 0;
 
   const setStorageFilter = (storageFilter: StorageFilter) => {
     if (!storageFilter) {

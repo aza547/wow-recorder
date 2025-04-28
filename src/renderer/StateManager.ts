@@ -70,6 +70,14 @@ export default class StateManager {
     this.setVideoState(correlated);
   }
 
+  public getRawDiskVideos() {
+    return this.disk;
+  }
+
+  public getRawCloudVideos() {
+    return this.cloud;
+  }
+
   /**
    * Walk the raw video list and correlate them into a single list. This is
    * done by looking for videos with the same hash and start time, and

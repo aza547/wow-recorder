@@ -510,7 +510,6 @@ const CategoryPage = (props: IProps) => {
                 setAppState={setAppState}
                 table={table}
                 stateManager={stateManager}
-                filteredState={filteredState}
               />
             </div>
           </div>
