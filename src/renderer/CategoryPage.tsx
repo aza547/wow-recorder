@@ -116,6 +116,7 @@ const CategoryPage = (props: IProps) => {
         // 500 is smaller than the window but who resizes
         // their window to be smaller than 500px?
         resizableRef.current.updateSize({ height: 500 });
+        playerHeight.current = 500;
       }
     };
 
