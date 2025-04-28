@@ -17,11 +17,15 @@ interface IProps {
   setAppState: Dispatch<SetStateAction<AppState>>;
   table: Table<RendererVideo>;
   stateManager: MutableRefObject<StateManager>;
+  filteredState: RendererVideo[];
 }
 
 const StorageFilterToggle = (props: IProps) => {
-  const { appState, setAppState, table, stateManager } = props;
+  const { appState, setAppState, table, stateManager, filteredState } = props;
   const { storageFilter, language } = appState;
+
+  const hasDisk = filteredState.some((rv) => !rv.cloud);
+  const hasCloud = filteredState.some((rv) => rv.cloud);
 
   const setStorageFilter = (storageFilter: StorageFilter) => {
     if (!storageFilter) {
@@ -47,7 +51,7 @@ const StorageFilterToggle = (props: IProps) => {
       variant="outline"
       className="border border-background"
     >
-      <ToggleGroupItem value={StorageFilter.DISK}>
+      <ToggleGroupItem value={StorageFilter.DISK} disabled={!hasDisk}>
         <Tooltip
           content={getLocalePhrase(language, Phrase.ShowDiskOnlyTooltip)}
         >
@@ -55,7 +59,7 @@ const StorageFilterToggle = (props: IProps) => {
         </Tooltip>
       </ToggleGroupItem>
 
-      <ToggleGroupItem value={StorageFilter.CLOUD}>
+      <ToggleGroupItem value={StorageFilter.CLOUD} disabled={!hasCloud}>
         <Tooltip
           content={getLocalePhrase(language, Phrase.ShowCloudOnlyTooltip)}
         >

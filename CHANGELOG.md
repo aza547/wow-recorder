@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Fix an issue where double clicking the storage filter would set undefined.
+- [Issue 469](https://github.com/aza547/wow-recorder/issues/649) - Fix an issue where the storage filter could reset to the "no videos" page.
 
 ## [6.12.0] - 2025-04-27
 ### Added
