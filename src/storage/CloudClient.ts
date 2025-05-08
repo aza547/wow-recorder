@@ -52,6 +52,9 @@ export default class CloudClient extends EventEmitter {
    * The WR API endpoint. This is used for authentication, retrieval and
    * manipulation of video state from the video database, and various
    * bits of R2 interaction.
+   *
+   * Production API: https://api.warcraftrecorder.com/api
+   * Development API: https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api
    */
   private static api = 'https://api.warcraftrecorder.com/api';
 
