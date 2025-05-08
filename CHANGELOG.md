@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- [Issue 654](https://github.com/aza547/wow-recorder/issues/654) - Make the colors for the boss %age HP more natural.
+
 ### Added
 ### Fixed
 - [Issue 651](https://github.com/aza547/wow-recorder/issues/651) - Fixed an issue where deleting wouldn't update the GUI.

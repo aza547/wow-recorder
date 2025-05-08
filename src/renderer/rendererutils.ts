@@ -416,20 +416,23 @@ const getResultColor = (video: RendererVideo) => {
     const bossPercent = raidResultToPercent(video);
 
     if (bossPercent) {
-      const raidResultColors = [
-        'rgb(46,  171, 27)',
-        'rgb(112, 170, 30)',
-        'rgb(171, 150, 30)',
-        'rgb(171, 86,  26)',
-        'rgb(175, 50,  23)',
-        'rgb(156, 21,  21)',
-      ];
+      let color = '';
 
-      // Being a bit lazy here and re-using the solo shuffle colors.
-      // Pick a sensible index. Making sure they're within bounds.
-      let index = Math.min(Math.round(bossPercent / 20), 5);
-      index = Math.max(index, 0);
-      return raidResultColors[index];
+      if (bossPercent > 99) {
+        color = '#ccc';
+      } else if (bossPercent > 75) {
+        color = '#0f8000';
+      } else if (bossPercent > 50) {
+        color = '#0070ff';
+      } else if (bossPercent > 25) {
+        color = '#a335ee';
+      } else if (bossPercent > 5) {
+        color = '#ff8000';
+      } else {
+        color = '#e268a8';
+      }
+
+      return color;
     }
   }
 
