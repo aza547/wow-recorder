@@ -167,6 +167,9 @@ export default class StateManager {
       }
     });
 
+    this.disk = this.raw.filter((video) => !video.cloud);
+    this.cloud = this.raw.filter((video) => video.cloud);
+
     const correlated = this.correlate();
     this.setVideoState(correlated);
   }
@@ -180,6 +183,9 @@ export default class StateManager {
       }
     });
 
+    this.disk = this.raw.filter((video) => !video.cloud);
+    this.cloud = this.raw.filter((video) => video.cloud);
+
     const correlated = this.correlate();
     this.setVideoState(correlated);
   }
@@ -192,6 +198,9 @@ export default class StateManager {
         this.raw[index].tag = tag;
       }
     });
+
+    this.disk = this.raw.filter((video) => !video.cloud);
+    this.cloud = this.raw.filter((video) => video.cloud);
 
     const correlated = this.correlate();
     this.setVideoState(correlated);

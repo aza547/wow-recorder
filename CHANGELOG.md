@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 651](https://github.com/aza547/wow-recorder/issues/651) - Fixed an issue where deleting wouldn't update the GUI.
 
 ## [6.12.1] - 2025-04-28
 ### Fixed
