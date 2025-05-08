@@ -15,10 +15,7 @@ import {
   isBattlegroundUtil,
   isMythicPlusUtil,
   isRaidUtil,
-  getPlayerClass,
   getWoWClassColor,
-  getPlayerSpecID,
-  getPlayerName,
   getSpecClass,
 } from './rendererutils';
 import { Tag } from 'react-tag-autocomplete';
@@ -157,13 +154,6 @@ export default class VideoFilter {
   ) {
     const suggestions: VideoTag[] = [];
 
-    const playerName = getPlayerName(video);
-    const playerClass = getPlayerClass(video);
-    const playerSpecID = getPlayerSpecID(video);
-    const playerClassColor = getWoWClassColor(playerClass);
-    const classIcon = classImages[playerClass];
-    const specIcon = specImages[playerSpecID as keyof typeof specImages];
-
     if (video.isProtected) {
       const localised = getLocalePhrase(language, Phrase.Starred);
       const tag = new VideoTag(101, localised, '<LockIcon>', '#bb4420');
@@ -187,17 +177,6 @@ export default class VideoFilter {
     } else if (video.flavour === Flavour.Classic) {
       const localised = getLocalePhrase(language, Phrase.Classic);
       const tag = new VideoTag(103, localised, '<Shield>', '#bb4420');
-      suggestions.push(tag);
-    }
-
-    if (playerName) {
-      const tag = new VideoTag(200, playerName, classIcon, playerClassColor);
-      suggestions.push(tag);
-    }
-
-    if (playerSpecID) {
-      const specName = specializationById[playerSpecID].name;
-      const tag = new VideoTag(201, specName, specIcon, playerClassColor);
       suggestions.push(tag);
     }
 
@@ -235,15 +214,30 @@ export default class VideoFilter {
     const combatantClass = getSpecClass(combatantSpec);
     const combatantClassIcon = classImages[combatantClass];
     const combatantClassColor = getWoWClassColor(combatantClass);
+    const specName = specializationById[combatantSpec].name;
+    const className = specializationById[combatantSpec].label;
+    const specIcon = specImages[combatantSpec as keyof typeof specImages];
+    const classIcon = classImages[combatantClass];
 
-    const tag = new VideoTag(
+    const nameTag = new VideoTag(
       200,
       combatantName,
       combatantClassIcon,
       combatantClassColor,
     );
 
-    suggestions.push(tag);
+    const specTag = new VideoTag(201, specName, specIcon, combatantClassColor);
+
+    const classTag = new VideoTag(
+      201,
+      className,
+      classIcon,
+      combatantClassColor,
+    );
+
+    suggestions.push(nameTag);
+    suggestions.push(specTag);
+    suggestions.push(classTag);
   }
 
   /**
