@@ -639,10 +639,10 @@ export default class CloudClient extends EventEmitter {
         console.warn('[CloudClient] Auth failed, will logout', String(error));
         this.stopPollForUpdates();
         this.emit('logout');
+      } else {
+        // Hopefully just an intermittent failure. Will retry on the next poll timer.
+        console.error('[CloudClient] Poll failed but not 401', String(error));
       }
-
-      // Hopefully just an intermittent failure. Will retry on the next poll timer.
-      console.error('[CloudClient] Poll failed but not 401', String(error));
     }
   }
 
