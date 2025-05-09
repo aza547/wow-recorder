@@ -13,18 +13,22 @@ import {
   ReactTagsAPI,
 } from 'react-tag-autocomplete';
 import { Box } from '@mui/material';
-import { Search, ThumbsDown, ThumbsUp, X } from 'lucide-react';
+import {
+  LockKeyhole,
+  LockOpen,
+  Search,
+  ThumbsDown,
+  ThumbsUp,
+  X,
+} from 'lucide-react';
 import React from 'react';
 import ShieldIcon from '@mui/icons-material/Shield';
-import CloudIcon from '@mui/icons-material/Cloud';
-import SaveIcon from '@mui/icons-material/Save';
-import { CalendarDays, MapPinned } from 'lucide-react';
+import { MapPinned } from 'lucide-react';
 
 import {
   faDragon,
   faDungeon,
   faMessage,
-  faStar,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VideoTag from './VideoTag';
@@ -103,14 +107,6 @@ const SearchBar = (props: IProps) => {
       color: 'white',
     };
 
-    if (icon === '<SaveIcon>') {
-      return <SaveIcon sx={muiIconPropsSx} />;
-    }
-
-    if (icon === '<CloudIcon>') {
-      return <CloudIcon sx={muiIconPropsSx} />;
-    }
-
     if (icon === '<Shield>') {
       return <ShieldIcon sx={muiIconPropsSx} />;
     }
@@ -127,15 +123,12 @@ const SearchBar = (props: IProps) => {
       return <HourglassDisabledIcon sx={muiIconPropsSx} />;
     }
 
-    if (icon === '<StarIcon>') {
-      return (
-        <FontAwesomeIcon
-          icon={faStar}
-          height="15px"
-          width="25px"
-          color="white"
-        />
-      );
+    if (icon === '<LockIcon>') {
+      return <LockKeyhole height="15px" width="25px" color="white" />;
+    }
+
+    if (icon === '<LockOpenIcon>') {
+      return <LockOpen height="15px" width="25px" color="white" />;
     }
 
     if (icon === '<TagIcon>') {
@@ -179,10 +172,6 @@ const SearchBar = (props: IProps) => {
       return (
         <ThumbsDown height="15px" width="25px" color="white" fill="white" />
       );
-    }
-
-    if (icon === '<CalendarDays>') {
-      return <CalendarDays height="15px" width="25px" color="white" />;
     }
 
     if (icon === '<MapPinned>') {
@@ -311,7 +300,7 @@ const SearchBar = (props: IProps) => {
   };
 
   const classNames = {
-    root: 'relative flex items-center cursor-text w-full h-10 rounded-md border border-background bg-card text-sm text-foreground-lighter',
+    root: 'relative flex items-center cursor-text w-full h-[38px] rounded-md border border-background bg-card text-sm text-foreground-lighter',
     rootIsActive: 'is-active',
     rootIsDisabled: 'is-disabled',
     rootIsInvalid: 'is-invalid',
@@ -348,6 +337,9 @@ const SearchBar = (props: IProps) => {
         placeholderText={getLocalePhrase(language, Phrase.StartTyping)}
         activateFirstOption
         collapseOnSelect
+        // Contains a placeholder that is replaced by the library.
+        // https://github.com/i-like-robots/react-tag-autocomplete?tab=readme-ov-file#deletebuttontext-optional
+        deleteButtonText={getLocalePhrase(language, Phrase.RemoveTagFromList)}
       />
     </div>
   );

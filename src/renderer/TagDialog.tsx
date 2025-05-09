@@ -14,26 +14,17 @@ import {
 } from './components/Dialog/Dialog';
 import { Input } from './components/Input/Input';
 import { Button } from './components/Button/Button';
-import { Tooltip } from './components/Tooltip/Tooltip';
 
 interface IProps {
   initialTag: string;
   videos: RendererVideo[];
   stateManager: MutableRefObject<StateManager>;
   children: React.ReactNode;
-  tooltipContent: string;
   appState: AppState;
 }
 
 export default function TagDialog(props: IProps) {
-  const {
-    videos,
-    stateManager,
-    children,
-    tooltipContent,
-    appState,
-    initialTag,
-  } = props;
+  const { videos, stateManager, children, appState, initialTag } = props;
 
   const [tag, setTag] = useState(initialTag);
 
@@ -59,9 +50,7 @@ export default function TagDialog(props: IProps) {
 
   return (
     <Dialog>
-      <Tooltip content={tooltipContent}>
-        <DialogTrigger asChild>{children}</DialogTrigger>
-      </Tooltip>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>

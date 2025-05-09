@@ -1,5 +1,5 @@
 import { CellContext } from '@tanstack/react-table';
-import { RendererVideo } from 'main/types';
+import { AppState, RendererVideo } from 'main/types';
 import {
   getVideoResultText,
   getResultColor,
@@ -89,37 +89,59 @@ export const populateActivityCell = (
 
 export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
-  language: Language,
+  appState: AppState,
   stateManager: MutableRefObject<StateManager>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
+  const { language, cloudStatus } = appState;
+  const { del } = cloudStatus;
 
   const renderProtectedIcon = () => {
-    const starred = [video, ...video.multiPov]
-      .map((v) => v.isProtected)
-      .some((p) => p);
+    // If any videos in our selection are not protected, then the button's
+    // action is to protect.
+    const toProtect = [video, ...video.multiPov];
+    const lock = !toProtect.every((v) => v.isProtected);
 
-    const icon = starred ? <LockKeyhole size={18} /> : <LockOpen size={18} />;
-    const tooltip = starred
-      ? getLocalePhrase(language, Phrase.SomeStarred)
-      : getLocalePhrase(language, Phrase.NoneStarred);
+    // Disable the protect button if there are no selected viewpoints, or if
+    // the action is to unprotect and we don't have delete permissions.
+    const noPermission = !del && !lock && toProtect.some((v) => v.cloud);
+    const disabled = noPermission || toProtect.length < 1;
+
+    const icon = lock ? <LockOpen size={20} /> : <LockKeyhole size={20} />;
+
+    let tooltip = '';
+
+    if (noPermission) {
+      tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
+    } else if (lock) {
+      tooltip = getLocalePhrase(language, Phrase.StarSelected);
+    } else {
+      tooltip = getLocalePhrase(language, Phrase.UnstarSelected);
+    }
 
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
-      stateManager.current.setProtected(!starred, [video, ...video.multiPov]);
+      stateManager.current.setProtected(lock, toProtect);
 
       window.electron.ipcRenderer.sendMessage('videoButton', [
         'protect',
-        !starred,
-        [video, ...video.multiPov],
+        lock,
+        toProtect,
       ]);
     };
 
     return (
       <Tooltip content={tooltip}>
-        <Button variant="ghost" size="xs" onClick={toggleProtected}>
-          {icon}
-        </Button>
+        <div>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={toggleProtected}
+            disabled={disabled}
+          >
+            {icon}
+          </Button>
+        </div>
       </Tooltip>
     );
   };
@@ -144,8 +166,9 @@ export const populateAffixesCell = (
     const affixImage = affixImages[id as keyof typeof affixImages];
 
     return (
-      <Tooltip content={affixName}>
+      <Tooltip content={affixName} key={affixName}>
         <Box
+          key={affixName}
           component="img"
           src={affixImage}
           sx={{

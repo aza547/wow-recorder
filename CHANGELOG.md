@@ -6,6 +6,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+- Fix an issue where 0% wipes were shown as 100% wipes.
+
+## [6.12.2] - 2025-05-08
+### Changed
+- [Issue 654](https://github.com/aza547/wow-recorder/issues/654) - Make the colors for the boss %age HP more natural.
+
+### Fixed
+- [Issue 651](https://github.com/aza547/wow-recorder/issues/651) - Fixed an issue where deleting wouldn't update the GUI.
+
+## [6.12.1] - 2025-04-28
+### Fixed
+- Fix an issue where double clicking the storage filter would set undefined.
+- [Issue 469](https://github.com/aza547/wow-recorder/issues/649) - Fix an issue where the storage filter could reset to the "no videos" page.
+- Fix an issue where video would randomly resize after changing tab.
+
+## [6.12.0] - 2025-04-27
+### Added
+- [Issue 616](https://github.com/aza547/wow-recorder/issues/616) - Add an upload toggle for Retail and Classic recordings.
+- Add a Storage filter toggle, remove the search tags for cloud/disk and the override switch for bypassing cloud videos.
+
+### Fixed
+- [Issue 642](https://github.com/aza547/wow-recorder/issues/642) - Check daily for updates not just on startup.
+- Fixed an issue where 0% wipes would not show the %.
+- Fix an issue where the Log path validation would accept a folder of the same level (e.g Interface).
+- [Issue 646](https://github.com/aza547/wow-recorder/issues/646) - Fix an issue with the table page resetting on interacting with the videos.
+- Fix an issue where arrow keys would not have consistent behaviour when video progress or volume slider was focused.
+- [Issue 643](https://github.com/aza547/wow-recorder/issues/643) - Add missing unlocked filter and fix some icons.
+- [Issue 602](https://github.com/aza547/wow-recorder/issues/602) - Reset the video player size on a resize if it's bigger than the window height.
+
+## [6.11.1] - 2025-04-21
+### Fixed
+- Fix an issue where the scene preview would be misplaced when using Windows scaling.
+
+## [6.11.0] - 2025-04-20
+### Changed
+- Shortlinks are now permanent, so reflect that in the UI.
+
+### Added
+- Add a drawing mode to allow annotation of the video player with Excalidraw.
+- [Issue 621](https://github.com/aza547/wow-recorder/issues/621) - Add a delete permission tier and update client to respect it.
+
+### Fixed
+- The date range filter now translates correctly.
+- Allow key events to propogate while video progress slider is focused.
+- [Issue 628](https://github.com/aza547/wow-recorder/issues/628) - Fixes a bug where downloading a video wasn't possible if cloud upload was disabled in the config.
+- [Issue 609](https://github.com/aza547/wow-recorder/issues/609) - Fixes a bug where numeric fields in settings would accept text and display NaN.
+- [Issue 622](https://github.com/aza547/wow-recorder/issues/622) - Fix a bug where it was not possible to deselect the default audio devices.
+- [Issue 625](https://github.com/aza547/wow-recorder/issues/625) - Fix a bug where audio devices would get deselected if they were unrecognized.
+- [Issue 638](https://github.com/aza547/wow-recorder/issues/638) - Fix a bug where zooming (CTRL SHIFT + / CTRL -) would mess with the scene preview.
+
+## [6.10.0] - 2025-04-12
+### Changed
 - Restyle the video table, removing the expandable rows in preference for a more minimal design.
 - Delete, tag, and protect/star/lock buttons now apply to the row and not the viewpoint.
 - Add the name "Warcraft Recorder" and app icon to the title bar.
@@ -19,6 +73,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Bump packages, including electron, to pick up latest tzdata.
+- [Issue 624](https://github.com/aza547/wow-recorder/issues/624) - Fixes an issue where manually deleting log files could cause recording to stop.
+- [Issue 606](https://github.com/aza547/wow-recorder/issues/606) - Fixes an issue where bulk delete could cause the app to go blank.
+- Add the cage of carnage arena.
 
 ## [6.9.3] - 2025-03-24
 ### Fixed

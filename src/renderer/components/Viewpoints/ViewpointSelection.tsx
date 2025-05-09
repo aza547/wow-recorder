@@ -13,6 +13,7 @@ import {
   povDiskFirstNameSort,
 } from '../../rendererutils';
 import { specImages } from '../../images';
+import { getLocalePhrase, Phrase } from 'localisation/translations';
 
 interface IProps {
   video: RendererVideo;
@@ -254,6 +255,14 @@ export default function ViewpointSelection(props: IProps) {
       </div>
     );
   };
+
+  if (combatants.length === 0) {
+    return (
+      <div className="p-2 text-secondary-foreground text-sm">
+        {getLocalePhrase(appState.language, Phrase.NoCombatants)}
+      </div>
+    );
+  }
 
   if (isArena) {
     // For arena modes we split the teams.

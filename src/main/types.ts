@@ -302,6 +302,15 @@ enum Pages {
 }
 
 /**
+ * Storage filtering options.
+ */
+enum StorageFilter {
+  DISK = 'Disk',
+  CLOUD = 'Cloud',
+  BOTH = 'Both',
+}
+
+/**
  * The state of the frontend.
  */
 type AppState = {
@@ -312,6 +321,7 @@ type AppState = {
   viewpointSelectionOpen: boolean;
   videoFilterTags: Tag[];
   dateRangeFilter: DateValueType;
+  storageFilter: StorageFilter;
   videoFullScreen: boolean;
   playing: boolean;
   language: Language;
@@ -438,9 +448,13 @@ type SliderMark = {
 };
 
 type CloudStatus = {
+  guild: string;
+  available: string[];
+  read: boolean; // Always true for now.
+  write: boolean;
+  del: boolean;
   usage: number;
   limit: number;
-  guilds: string[];
 };
 
 type DiskStatus = {
@@ -593,4 +607,5 @@ export {
   CloudSignedMetadata,
   CreateMultiPartUploadResponseBody,
   CompleteMultiPartUploadRequestBody,
+  StorageFilter,
 };

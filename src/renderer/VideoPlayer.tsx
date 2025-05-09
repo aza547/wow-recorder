@@ -3,6 +3,7 @@ import {
   DeathMarkers,
   RendererVideo,
   SliderMark,
+  StorageFilter,
   VideoMarker,
   VideoPlayerSettings,
 } from 'main/types';
@@ -31,6 +32,7 @@ import screenfull from 'screenfull';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import DeathIcon from '../../assets/icon/death.png';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/dist/types/excalidraw/element/types';
 import {
   convertNumToDeathMarkers,
   getAllDeathMarkers,
@@ -44,7 +46,14 @@ import {
 } from './rendererutils';
 import { Button } from './components/Button/Button';
 import { Tooltip } from './components/Tooltip/Tooltip';
-import { CloudDownload, CloudUpload, FolderOpen, Link } from 'lucide-react';
+import { DrawingOverlay } from './components/DrawingOverlay/DrawingOverlay';
+import {
+  CloudDownload,
+  CloudUpload,
+  FolderOpen,
+  Link,
+  Pencil,
+} from 'lucide-react';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
@@ -98,7 +107,8 @@ export const VideoPlayer = (props: IProps) => {
     categoryState,
   } = props;
 
-  const { playing, multiPlayerMode, language, selectedVideos } = appState;
+  const { playing, multiPlayerMode, language, selectedVideos, storageFilter } =
+    appState;
 
   if (videos.length < 1 || videos.length > 4) {
     // Protect against stupid programmer errors.
@@ -163,6 +173,9 @@ export const VideoPlayer = (props: IProps) => {
 
   const [volume, setVolume] = useState<number>(videoPlayerSettings.volume);
   const [muted, setMuted] = useState<boolean>(videoPlayerSettings.muted);
+
+  const [isDrawingEnabled, setIsDrawingEnabled] = useState(false);
+  const [, setDrawingElements] = useState<readonly ExcalidrawElement[]>([]);
 
   /**
    * Set if the video is playing or not.
@@ -642,6 +655,11 @@ export const VideoPlayer = (props: IProps) => {
         onChange={handleProgressSliderChange}
         onChangeCommitted={handleChangeCommitted}
         onMouseDown={onSliderMouseDown}
+        onKeyDown={(e) => {
+          // Don't have keys interact with the slider directly. This lets
+          // arrow keys seek as if the video player is in focus.
+          e.preventDefault();
+        }}
         max={duration}
         marks={marks}
         step={0.01}
@@ -793,13 +811,23 @@ export const VideoPlayer = (props: IProps) => {
    * Render the download button.
    */
   const renderDownloadButton = () => {
+    const disabled = storageFilter !== StorageFilter.BOTH;
+    const tooltip = disabled
+      ? getLocalePhrase(language, Phrase.DownloadUploadDisabledDueToFilter)
+      : getLocalePhrase(language, Phrase.DownloadButtonTooltip);
+
     return (
-      <Tooltip
-        content={getLocalePhrase(language, Phrase.DownloadButtonTooltip)}
-      >
-        <Button onClick={downloadVideo} variant="ghost" size="xs">
-          <CloudDownload size={20} />
-        </Button>
+      <Tooltip content={tooltip}>
+        <div>
+          <Button
+            onClick={downloadVideo}
+            variant="ghost"
+            size="xs"
+            disabled={disabled}
+          >
+            <CloudDownload size={20} />
+          </Button>
+        </div>
       </Tooltip>
     );
   };
@@ -808,11 +836,23 @@ export const VideoPlayer = (props: IProps) => {
    * Render the upload button.
    */
   const renderUploadButton = () => {
+    const disabled = storageFilter !== StorageFilter.BOTH;
+    const tooltip = disabled
+      ? getLocalePhrase(language, Phrase.DownloadUploadDisabledDueToFilter)
+      : getLocalePhrase(language, Phrase.UploadButtonTooltip);
+
     return (
-      <Tooltip content={getLocalePhrase(language, Phrase.UploadButtonTooltip)}>
-        <Button onClick={uploadVideo} variant="ghost" size="xs">
-          <CloudUpload size={20} />
-        </Button>
+      <Tooltip content={tooltip}>
+        <div>
+          <Button
+            onClick={uploadVideo}
+            variant="ghost"
+            size="xs"
+            disabled={disabled}
+          >
+            <CloudUpload size={20} />
+          </Button>
+        </div>
       </Tooltip>
     );
   };
@@ -900,7 +940,7 @@ export const VideoPlayer = (props: IProps) => {
     const color = diskVideo ? 'white' : 'gray';
     const opacity = isSelected ? 1 : 0.3;
 
-    if (!diskVideo && cloudVideo && config.cloudUpload) {
+    if (!diskVideo && cloudVideo) {
       return renderDownloadButton();
     }
 
@@ -1115,9 +1155,27 @@ export const VideoPlayer = (props: IProps) => {
         value={muted ? 0 : volume * 100}
         onChange={handleVolumeChange}
         valueLabelFormat={Math.round}
+        onKeyDown={(e) => {
+          e.preventDefault();
+        }}
       />
     );
   };
+
+  /**
+   * Returns the drawing button for the video controls.
+   */
+  const renderDrawingButton = () => (
+    <Tooltip content={getLocalePhrase(language, Phrase.ToggleDrawingMode)}>
+      <Button
+        variant="ghost"
+        size="xs"
+        onClick={() => setIsDrawingEnabled(!isDrawingEnabled)}
+      >
+        <Pencil size={20} color="white" opacity={isDrawingEnabled ? 1 : 0.2} />
+      </Button>
+    </Tooltip>
+  );
 
   /**
    * Returns the entire video control component.
@@ -1137,6 +1195,7 @@ export const VideoPlayer = (props: IProps) => {
         {!multiPlayerMode && !clipMode && (
           <Separator className="mx-2" orientation="vertical" />
         )}
+        {renderDrawingButton()}
         {!multiPlayerMode && !clipMode && local && renderOpenFolderButton()}
         {!multiPlayerMode && !clipMode && !local && renderGetLinkButton()}
         {!clipMode && !isClip(videos[0]) && renderClipButton()}
@@ -1233,7 +1292,7 @@ export const VideoPlayer = (props: IProps) => {
     ipc.on('pausePlayer', () => setPlaying(false));
   }, [setPlaying]);
 
-  let playerDivClass = 'w-full ';
+  let playerDivClass = 'w-full h-full ';
 
   if (srcs.length === 2) {
     playerDivClass += 'grid grid-cols-2 grid-rows-1';
@@ -1243,36 +1302,44 @@ export const VideoPlayer = (props: IProps) => {
     playerDivClass += 'grid grid-cols-2 grid-rows-2';
   }
 
-  return (
-    <>
-      <Box
-        id="player-and-controls"
-        sx={{
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <div className={playerDivClass} style={{ height: 'calc(100% - 40px)' }}>
-          {srcs.map(renderPlayer)}
-          <Backdrop
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: '40px',
-              zIndex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            }}
-            open={spinner}
-          >
-            <CircularProgress color="inherit" />
-          </Backdrop>
-        </div>
+  const renderDrawingOverlay = () => {
+    return (
+      <div className="absolute top-0 left-0 w-full h-full">
+        <DrawingOverlay
+          isDrawingEnabled={isDrawingEnabled}
+          onDrawingChange={setDrawingElements}
+          appState={appState}
+        />
+      </div>
+    );
+  };
 
-        {renderControls()}
-      </Box>
-    </>
+  return (
+    <div id="player-and-controls" className="w-full h-full">
+      <div style={{ height: 'calc(100% - 40px)' }}>
+        <div className="w-full h-full relative">
+          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
+          {isDrawingEnabled && renderDrawingOverlay()}
+        </div>
+      </div>
+
+      <Backdrop
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: '40px',
+          zIndex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}
+        open={spinner}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
+      {renderControls()}
+    </div>
   );
 };
 

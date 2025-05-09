@@ -26,7 +26,6 @@ import {
   DeathMarkers,
   Encoder,
   EncoderType,
-  IOBSDevice,
   PlayerDeathType,
   RendererVideo,
   SoloShuffleTimelineSegment,
@@ -39,7 +38,6 @@ import { ESupportedEncoders } from 'main/obsEnums';
 import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
-import { Table } from '@tanstack/react-table';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -375,7 +373,7 @@ const isClip = (video: RendererVideo) => {
 };
 
 const getResultColor = (video: RendererVideo) => {
-  const { result, soloShuffleRoundsWon, upgradeLevel, bossPercent } = video;
+  const { result, soloShuffleRoundsWon, upgradeLevel } = video;
 
   if (isSoloShuffleUtil(video)) {
     if (
@@ -414,21 +412,28 @@ const getResultColor = (video: RendererVideo) => {
     return 'hsl(var(--success))';
   }
 
-  if (isRaidUtil(video) && bossPercent) {
-    const raidResultColors = [
-      'rgb(46,  171, 27)',
-      'rgb(112, 170, 30)',
-      'rgb(171, 150, 30)',
-      'rgb(171, 86,  26)',
-      'rgb(175, 50,  23)',
-      'rgb(156, 21,  21)',
-    ];
+  if (isRaidUtil(video)) {
+    const bossPercent = raidResultToPercent(video);
 
-    // Being a bit lazy here and re-using the solo shuffle colors.
-    // Pick a sensible index. Making sure they're within bounds.
-    let index = Math.min(Math.round(bossPercent / 20), 5);
-    index = Math.max(index, 0);
-    return raidResultColors[index];
+    if (bossPercent !== undefined) {
+      let color = '';
+
+      if (bossPercent > 99) {
+        color = '#ccc';
+      } else if (bossPercent > 75) {
+        color = '#0f8000';
+      } else if (bossPercent > 50) {
+        color = '#0070ff';
+      } else if (bossPercent > 25) {
+        color = '#a335ee';
+      } else if (bossPercent > 5) {
+        color = '#ff8000';
+      } else {
+        color = '#e268a8';
+      }
+
+      return color;
+    }
   }
 
   return 'hsl(var(--error))';
@@ -499,16 +504,6 @@ const getPlayerTeamID = (video: RendererVideo) => {
   return player._teamID;
 };
 
-const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
-  const { player } = video;
-
-  if (player === undefined) {
-    return 'UNKNOWN';
-  }
-
-  return getSpecClass(player._specID);
-};
-
 const getSpecClass = (specId: number | undefined): WoWCharacterClassType => {
   if (specId === undefined) {
     return 'UNKNOWN';
@@ -519,6 +514,16 @@ const getSpecClass = (specId: number | undefined): WoWCharacterClassType => {
   }
 
   return specializationById[specId].class;
+};
+
+const getPlayerClass = (video: RendererVideo): WoWCharacterClassType => {
+  const { player } = video;
+
+  if (player === undefined) {
+    return 'UNKNOWN';
+  }
+
+  return getSpecClass(player._specID);
 };
 
 const getVideoTime = (video: RendererVideo) => {
@@ -588,51 +593,6 @@ const getVideoDate = (video: RendererVideo) => {
 };
 
 /**
- * Get the human readable description of a device from its id. Returns
- * unknown if not an available device.
- *
- * @param id the device id
- * @param availableAudioDevices list of available sources from OBS
- */
-const getAudioDeviceDescription = (
-  id: string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
-) => {
-  let result = 'Unknown';
-
-  availableAudioDevices.input.forEach((device) => {
-    if (device.id === id) {
-      result = device.description;
-    }
-  });
-
-  availableAudioDevices.output.forEach((device) => {
-    if (device.id === id) {
-      result = device.description;
-    }
-  });
-
-  return result;
-};
-
-/**
- * Check if an id represents an available audio device.
- *
- * @param id the device id
- * @param availableAudioDevices list of available sources from OBS
- */
-const isKnownAudioDevice = (
-  id: string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
-) => {
-  if (getAudioDeviceDescription(id, availableAudioDevices) === 'Unknown') {
-    return false;
-  }
-
-  return true;
-};
-
-/**
  * Standardizes device names to an array of strings and filters by known devices.
  *
  * @param deviceNames the device names to standardize
@@ -641,7 +601,6 @@ const isKnownAudioDevice = (
  */
 const standardizeAudioDeviceNames = (
   deviceNames: string[] | string,
-  availableAudioDevices: { input: IOBSDevice[]; output: IOBSDevice[] },
 ): string[] => {
   let normalizedDeviceNames: string[];
 
@@ -651,9 +610,7 @@ const standardizeAudioDeviceNames = (
     normalizedDeviceNames = deviceNames;
   }
 
-  return normalizedDeviceNames.filter((id) =>
-    isKnownAudioDevice(id, availableAudioDevices),
-  );
+  return normalizedDeviceNames;
 };
 
 const isHighRes = (res: string) => {
@@ -828,7 +785,6 @@ const getVideoResultText = (
     upgradeLevel,
     soloShuffleRoundsWon,
     soloShuffleRoundsPlayed,
-    bossPercent,
   } = video;
 
   if (isMythicPlusUtil(video)) {
@@ -851,6 +807,8 @@ const getVideoResultText = (
     if (result) {
       return getLocalePhrase(language, Phrase.Kill);
     }
+
+    const bossPercent = raidResultToPercent(video);
 
     if (bossPercent !== undefined) {
       return `${bossPercent}%`;
@@ -1033,35 +991,21 @@ const countUniqueViewpoints = (video: RendererVideo) => {
   return unique.length;
 };
 
-const getSelectedRow = (
-  selectedVideos: RendererVideo[],
-  table: Table<RendererVideo>,
-) => {
-  const video = selectedVideos[0];
-
-  if (!video) {
-    return undefined;
+const raidResultToPercent = (video: RendererVideo) => {
+  if (video.result) {
+    // For the sake of sorting. A kill should win over a 0% wipe.
+    // We should never display -1 on the UI though.
+    return -1;
   }
 
-  const { videoName } = video;
-  const { rows } = table.getRowModel();
+  // Look for the boss percent in any of the viewpoints. That is really
+  // just to make this nicer over upgrade of the app; this way we will
+  // show the percent if it exists on any video and not just the first one.
+  const bossPercent = [video, ...video.multiPov]
+    .map((rv) => rv.bossPercent)
+    .find((bp) => typeof bp === 'number');
 
-  const row = rows.find((r) => {
-    return [r.original, ...r.original.multiPov]
-      .map((rv) => rv.videoName)
-      .includes(videoName);
-  });
-
-  return row;
-};
-
-const getSelectedRowIndex = (
-  selectedVideos: RendererVideo[],
-  table: Table<RendererVideo>,
-) => {
-  const row = getSelectedRow(selectedVideos, table);
-  if (row) return row.index;
-  return 0;
+  return bossPercent;
 };
 
 export {
@@ -1086,8 +1030,6 @@ export {
   getPlayerClass,
   getVideoTime,
   getVideoDate,
-  getAudioDeviceDescription,
-  isKnownAudioDevice,
   standardizeAudioDeviceNames,
   encoderFilter,
   mapEncoderToString,
@@ -1121,7 +1063,6 @@ export {
   countUniqueViewpoints,
   videoToDate,
   dateToHumanReadable,
-  getSelectedRow,
-  getSelectedRowIndex,
   getSpecClass,
+  raidResultToPercent,
 };

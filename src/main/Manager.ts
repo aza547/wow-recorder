@@ -26,7 +26,6 @@ import {
   deleteVideoDisk,
   getWowFlavour,
   convertKoreanVideoCategory,
-  toggleVideoProtectedDisk,
   protectVideoDisk,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
@@ -457,16 +456,32 @@ export default class Manager {
       const limitPromise = this.cloudClient.getStorageLimit();
       const affiliationsPromise = this.cloudClient.getUserAffiliations();
 
+      // This is a bit tricky, get the guild name from the active client which is
+      // guarenteed to be up to date, unlike other fields in this class.
+      const guild = this.cloudClient.getGuildName();
+
       const usage = await usagePromise;
       const limit = await limitPromise;
       const affiliations = await affiliationsPromise;
-      const guilds = affiliations.map((aff) => aff.guildName);
+
+      const available = affiliations.map((aff) => aff.guildName);
+      const affiliation = affiliations.find((aff) => aff.guildName === guild);
 
       const status: CloudStatus = {
-        usage,
-        limit,
-        guilds,
+        guild,
+        available,
+        usage: usage,
+        limit: limit,
+        read: false,
+        write: false,
+        del: false,
       };
+
+      if (affiliation) {
+        status.read = affiliation.read;
+        status.write = affiliation.write;
+        status.del = affiliation.del;
+      }
 
       this.mainWindow.webContents.send('updateCloudStatus', status);
     } catch (error) {
@@ -753,17 +768,35 @@ export default class Manager {
 
     // Safe to cast here, either we got this data or we have thrown.
     const affiliations = winner as TAffiliation[];
-    const guilds = affiliations.map((aff) => aff.guildName);
-
-    // We need to push this to the frontend to allow the user select a guild.
-    const status: CloudStatus = { usage: 0, limit: 0, guilds };
-    this.mainWindow.webContents.send('updateCloudStatus', status);
+    const guild = cloudGuildName;
+    const available = affiliations.map((aff) => aff.guildName);
 
     // Look for a match against the selected guild name. If this isn't selected
     // yet, cloudGuildName is an empty string, which will never match.
-    const affiliation = affiliations.find(
-      (aff) => aff.guildName === cloudGuildName,
-    );
+    const affiliation = affiliations.find((aff) => aff.guildName === guild);
+
+    // We need to push the available guilds to the frontend to allow the user
+    // select a guild. Just push the permissions if we can for good measure so
+    // they are present on first attempt if the guild name is present. If the config
+    // is invalid we might get stuck before doing a full refresh so it's nice if this
+    // is accurate.
+    const status: CloudStatus = {
+      guild,
+      available,
+      usage: 0,
+      limit: 0,
+      read: false,
+      write: false,
+      del: false,
+    };
+
+    if (affiliation) {
+      status.read = affiliation.read;
+      status.write = affiliation.write;
+      status.del = affiliation.del;
+    }
+
+    this.mainWindow.webContents.send('updateCloudStatus', status);
 
     if (!affiliation) {
       console.warn('[Manager] Empty guild name');
@@ -873,7 +906,9 @@ export default class Manager {
 
     if (recordRetail) {
       const validFlavours = ['wow'];
-      const validPath = validFlavours.includes(getWowFlavour(retailLogPath));
+      const validPath =
+        validFlavours.includes(getWowFlavour(retailLogPath)) &&
+        path.basename(retailLogPath) === 'Logs';
 
       if (!validPath) {
         console.error('[Util] Invalid retail log path', retailLogPath);
@@ -883,7 +918,9 @@ export default class Manager {
 
     if (recordRetailPtr) {
       const validFlavours = ['wowxptr', 'wow_beta'];
-      const validPath = validFlavours.includes(getWowFlavour(retailPtrLogPath));
+      const validPath =
+        validFlavours.includes(getWowFlavour(retailPtrLogPath)) &&
+        path.basename(retailPtrLogPath) === 'Logs';
 
       if (!validPath) {
         console.error('[Util] Invalid retail PTR log path', retailPtrLogPath);
@@ -895,7 +932,9 @@ export default class Manager {
 
     if (recordClassic) {
       const validFlavours = ['wow_classic', 'wow_classic_beta'];
-      const validPath = validFlavours.includes(getWowFlavour(classicLogPath));
+      const validPath =
+        validFlavours.includes(getWowFlavour(classicLogPath)) &&
+        path.basename(classicLogPath) === 'Logs';
 
       if (!validPath) {
         console.error('[Util] Invalid classic log path', classicLogPath);
@@ -903,9 +942,16 @@ export default class Manager {
       }
     }
 
-    if (recordEra && getWowFlavour(eraLogPath) !== 'wow_classic_era') {
-      console.error('[Util] Invalid era log path', eraLogPath);
-      throw new Error(this.getLocaleError(Phrase.InvalidEraLogPath));
+    if (recordEra) {
+      const validFlavours = ['wow_classic_era'];
+      const validPath =
+        validFlavours.includes(getWowFlavour(eraLogPath)) &&
+        path.basename(eraLogPath) === 'Logs';
+
+      if (!validPath) {
+        console.error('[Util] Invalid era log path', eraLogPath);
+        throw new Error(this.getLocaleError(Phrase.InvalidEraLogPath));
+      }
     }
   };
 

@@ -82,6 +82,7 @@ const VideoMarkerToggles = (props: IProps) => {
           size="sm"
           onValueChange={setDeaths}
           variant="outline"
+          className="border border-background"
         >
           <ToggleGroupItem value={DeathMarkers.ALL}>
             {getLocalePhrase(appState.language, Phrase.All)}
@@ -109,6 +110,7 @@ const VideoMarkerToggles = (props: IProps) => {
           size="sm"
           variant="outline"
           onValueChange={setEncounterMarkers}
+          className="border border-background"
         >
           <ToggleGroupItem value="true">
             {getLocalePhrase(appState.language, Phrase.On)}
@@ -133,6 +135,7 @@ const VideoMarkerToggles = (props: IProps) => {
           size="sm"
           variant="outline"
           onValueChange={setRoundMarkers}
+          className="border border-background"
         >
           <ToggleGroupItem value="true">
             {getLocalePhrase(appState.language, Phrase.On)}
@@ -146,7 +149,7 @@ const VideoMarkerToggles = (props: IProps) => {
   };
 
   return (
-    <div className="flex items-center gap-x-5">
+    <div className="flex items-center gap-x-2">
       {renderDeathSelection()}
       {category === VideoCategory.MythicPlus && renderEncounterSelection()}
       {category === VideoCategory.SoloShuffle && renderRoundSelection()}

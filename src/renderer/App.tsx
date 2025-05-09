@@ -11,6 +11,7 @@ import {
   RendererVideo,
   CloudStatus,
   DiskStatus,
+  StorageFilter,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
@@ -65,6 +66,9 @@ const WarcraftRecorder = () => {
       endDate: null,
     },
 
+    // The storage filter.
+    storageFilter: StorageFilter.BOTH,
+
     // We use this to conditionally hide the recording preview.
     videoFullScreen: false,
 
@@ -74,8 +78,18 @@ const WarcraftRecorder = () => {
     // The language the client is in.
     language: config.language as Language,
 
-    // The cloud storage usage and limit.
-    cloudStatus: { usage: 0, limit: 0, guilds: [] },
+    // The cloud storage status.
+    cloudStatus: {
+      guild: '',
+      available: [],
+      read: false,
+      write: false,
+      del: false,
+      usage: 0,
+      limit: 0,
+    },
+
+    // The disk storage status.
     diskStatus: { usage: 0, limit: 0 },
   });
 

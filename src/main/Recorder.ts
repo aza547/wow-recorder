@@ -1010,8 +1010,7 @@ export default class Recorder extends EventEmitter {
 
   /**
    * Show the scene preview on the UI, taking the location and dimensions as
-   * input. We scale to match the monitor scaling here too else the preview
-   * will be misplaced (see issue 397).
+   * input.
    */
   public showPreview(
     width: number,
@@ -1035,27 +1034,9 @@ export default class Recorder extends EventEmitter {
       osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
     }
 
-    const winBounds = this.mainWindow.getBounds();
-
-    const currentScreen = screen.getDisplayNearestPoint({
-      x: winBounds.x,
-      y: winBounds.y,
-    });
-
-    const { scaleFactor } = currentScreen;
     this.previewLocation = { width, height, xPos, yPos };
-
-    osn.NodeObs.OBS_content_resizeDisplay(
-      this.previewName,
-      width * scaleFactor,
-      height * scaleFactor,
-    );
-
-    osn.NodeObs.OBS_content_moveDisplay(
-      this.previewName,
-      xPos * scaleFactor,
-      yPos * scaleFactor,
-    );
+    osn.NodeObs.OBS_content_resizeDisplay(this.previewName, width, height);
+    osn.NodeObs.OBS_content_moveDisplay(this.previewName, xPos, yPos);
   }
 
   /**

@@ -1,7 +1,15 @@
 import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { AppState, RecStatus } from 'main/types';
-import { Cloud, Info } from 'lucide-react';
+import {
+  Check,
+  Cloud,
+  Info,
+  MonitorPlay,
+  Pencil,
+  Trash,
+  X,
+} from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
@@ -59,6 +67,8 @@ const CloudSettings = (props: IProps) => {
         cloudAccountPassword: config.cloudAccountPassword,
         cloudGuildName: config.cloudGuildName,
         cloudUpload: config.cloudUpload,
+        cloudUploadRetail: config.cloudUploadRetail,
+        cloudUploadClassic: config.cloudUploadClassic,
         cloudUploadRateLimit: config.cloudUploadRateLimit,
         cloudUploadRateLimitMbps: config.cloudUploadRateLimitMbps,
         cloudUpload2v2: config.cloudUpload2v2,
@@ -85,6 +95,8 @@ const CloudSettings = (props: IProps) => {
     config.cloudAccountPassword,
     config.cloudGuildName,
     config.cloudUpload,
+    config.cloudUploadRetail,
+    config.cloudUploadClassic,
     config.cloudUploadRateLimit,
     config.cloudUploadRateLimitMbps,
     config.cloudUpload2v2,
@@ -219,14 +231,17 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setMinKeystoneLevel = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.value) {
+    const cloudUploadDungeonMinLevel = parseInt(event.target.value, 10);
+
+    if (Number.isNaN(cloudUploadDungeonMinLevel)) {
+      // Block invalid config.
       return;
     }
 
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudUploadDungeonMinLevel: parseInt(event.target.value, 10),
+        cloudUploadDungeonMinLevel,
       };
     });
   };
@@ -293,6 +308,24 @@ const CloudSettings = (props: IProps) => {
     });
   };
 
+  const setCloudUploadRetail = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        cloudUploadRetail: checked,
+      };
+    });
+  };
+
+  const setCloudUploadClassic = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        cloudUploadClassic: checked,
+      };
+    });
+  };
+
   const getCloudSwitch = () => {
     if (isComponentDisabled()) {
       return <></>;
@@ -340,6 +373,58 @@ const CloudSettings = (props: IProps) => {
         </Label>
         <div className="flex h-10 items-center">
           {getSwitch('cloudUpload', setCloudUpload)}
+        </div>
+      </div>
+    );
+  };
+
+  const getRetailUploadSwitch = () => {
+    if (isComponentDisabled() || !config.cloudUpload) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudUploadRetail" className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.CloudUploadRetailLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadRetail.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudUploadRetail', setCloudUploadRetail)}
+        </div>
+      </div>
+    );
+  };
+
+  const getClassicUploadSwitch = () => {
+    if (isComponentDisabled() || !config.cloudUpload) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col w-[140px]">
+        <Label htmlFor="cloudUploadClassic" className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.CloudUploadClassicLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadClassic.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('cloudUploadClassic', setCloudUploadClassic)}
         </div>
       </div>
     );
@@ -490,7 +575,7 @@ const CloudSettings = (props: IProps) => {
       return <></>;
     }
 
-    const { guilds } = appState.cloudStatus;
+    const { available } = appState.cloudStatus;
 
     return (
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
@@ -511,13 +596,99 @@ const CloudSettings = (props: IProps) => {
             <SelectValue placeholder="Select a guild" />
           </SelectTrigger>
           <SelectContent>
-            {guilds.map((guild) => (
+            {available.map((guild) => (
               <SelectItem key={guild} value={guild}>
                 {guild}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+      </div>
+    );
+  };
+
+  const renderPermissionIcon = (enabled: boolean) =>
+    enabled ? (
+      <Check size={20} className="inline-flex ml-2" color="green" />
+    ) : (
+      <X size={20} className="inline-flex ml-2" color="red" />
+    );
+
+  const getPermissionDetails = (phrase: Phrase, enabled: boolean) => {
+    let icon = (
+      <MonitorPlay
+        size={20}
+        className="inline-flex mr-2 text-foreground-lighter"
+      />
+    );
+
+    if (phrase === Phrase.PermissionWriteLabel) {
+      icon = (
+        <Pencil
+          size={20}
+          className="inline-flex mr-2 text-foreground-lighter"
+        />
+      );
+    } else if (phrase === Phrase.PermissionDeleteLabel) {
+      icon = (
+        <Trash size={20} className="inline-flex mr-2 text-foreground-lighter" />
+      );
+    }
+
+    return (
+      <div>
+        {icon}
+        <span className="text-xs text-foreground font-semibold whitespace-nowrap">
+          {getLocalePhrase(appState.language, phrase)}
+          {renderPermissionIcon(enabled)}
+        </span>
+      </div>
+    );
+  };
+
+  const getCloudPermissions = () => {
+    const { read, write, del } = appState.cloudStatus;
+
+    return (
+      <div className="flex-col">
+        <Label className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.PermissionLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              Phrase.PermissionDescription,
+            )}
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+
+        <div className="flex flex-row gap-x-4">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              Phrase.PermissionReadDescription,
+            )}
+          >
+            {getPermissionDetails(Phrase.PermissionReadLabel, read)}
+          </Tooltip>
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              Phrase.PermissionWriteDescription,
+            )}
+          >
+            {getPermissionDetails(Phrase.PermissionWriteLabel, write)}
+          </Tooltip>
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              Phrase.PermissionDeleteDescription,
+            )}
+          >
+            {getPermissionDetails(Phrase.PermissionDeleteLabel, del)}
+          </Tooltip>
+        </div>
       </div>
     );
   };
@@ -529,17 +700,31 @@ const CloudSettings = (props: IProps) => {
     const perc = Math.round((100 * usage) / limit);
 
     return (
-      <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
-        <Tooltip
-          content={getLocalePhrase(appState.language, Phrase.CloudUsage)}
-        >
-          <Cloud size={24} />
-        </Tooltip>
+      <div className="flex-col">
+        <Label className="flex items-center">
+          Storage Usage
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.cloudUploadRateLimitMbps.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
 
-        <Progress value={perc} className="h-3" />
-        <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
-          {Math.round(usageGB)}GB / {Math.round(limitGB)}GB
-        </span>
+        <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
+          <Tooltip
+            content={getLocalePhrase(appState.language, Phrase.CloudUsage)}
+          >
+            <Cloud size={24} className="text-foreground-lighter" />
+          </Tooltip>
+          <Progress value={perc} className="h-3" />
+          <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
+            {Math.round(usageGB)}GB / {Math.round(limitGB)}GB
+          </span>
+        </div>
       </div>
     );
   };
@@ -547,6 +732,10 @@ const CloudSettings = (props: IProps) => {
   const getCloudUploadCategorySettings = () => {
     return (
       <>
+        <div className="flex flex-row gap-x-6">
+          {getRetailUploadSwitch()}
+          {getClassicUploadSwitch()}
+        </div>
         <div className="flex flex-row gap-x-6">
           {getSwitchForm('cloudUploadRaids', Phrase.UploadRaidsLabel)}
           {getMinRaidDifficultySelect()}
@@ -580,14 +769,17 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setUploadRateLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.value) {
+    const cloudUploadRateLimitMbps = parseInt(event.target.value, 10);
+
+    if (Number.isNaN(cloudUploadRateLimitMbps)) {
+      // Block invalid config.
       return;
     }
 
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudUploadRateLimitMbps: parseInt(event.target.value, 10),
+        cloudUploadRateLimitMbps,
       };
     });
   };
@@ -642,13 +834,14 @@ const CloudSettings = (props: IProps) => {
       {config.cloudStorage && (
         <>
           {getCloudUsageBar()}
+          {getCloudPermissions()}
           <Separator className="my-4" />
         </>
       )}
 
       <div className="flex flex-col gap-4">
-        <div>{getCloudUploadSwitch()}</div>
         <div className="flex flex-row gap-x-6">
+          {getCloudUploadSwitch()}
           {getCloudUploadRateLimitSwitch()}
           {getRateLimitField()}
         </div>

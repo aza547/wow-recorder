@@ -61,6 +61,8 @@ export type ConfigurationSchema = {
   dungeonOverrun: number;
   cloudStorage: boolean;
   cloudUpload: boolean;
+  cloudUploadRetail: boolean;
+  cloudUploadClassic: boolean;
   cloudUploadRateLimit: boolean;
   cloudUploadRateLimitMbps: number;
   cloudAccountName: string;
@@ -124,7 +126,7 @@ export const configSchema = {
   maxStorage: {
     description: Phrase.MaxStorageDescription,
     type: 'integer',
-    default: 0,
+    default: 50,
     minimum: 0,
   },
   monitorIndex: {
@@ -395,6 +397,16 @@ export const configSchema = {
     description: Phrase.CloudUploadDescription,
     type: 'boolean',
     default: false,
+  },
+  cloudUploadRetail: {
+    description: Phrase.CloudUploadRetailDescription,
+    type: 'boolean',
+    default: true,
+  },
+  cloudUploadClassic: {
+    description: Phrase.CloudUploadClassicDescription,
+    type: 'boolean',
+    default: true,
   },
   cloudUploadRateLimit: {
     description: Phrase.CloudUploadRateLimitDescription,

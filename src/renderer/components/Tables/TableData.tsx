@@ -88,8 +88,8 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        header: DetailsHeader,
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Encounter',
@@ -141,7 +141,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, videoState],
+    [appState, videoState, stateManager],
   );
 
   /**
@@ -154,8 +154,8 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        header: DetailsHeader,
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Map',
@@ -195,7 +195,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language],
+    [appState, stateManager],
   );
 
   /**
@@ -208,8 +208,8 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        header: DetailsHeader,
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Map',
@@ -265,7 +265,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language],
+    [appState, stateManager],
   );
 
   /**
@@ -278,8 +278,8 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        header: DetailsHeader,
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Map',
@@ -319,7 +319,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language],
+    [appState, stateManager],
   );
 
   /**
@@ -332,8 +332,8 @@ const useTable = (
         id: 'Details',
         size: 25,
         accessorFn: (v) => v,
-        header: () => DetailsHeader(language),
-        cell: (ctx) => populateDetailsCell(ctx, language, stateManager),
+        header: DetailsHeader,
+        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
       },
       {
         id: 'Type',
@@ -375,7 +375,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [language],
+    [appState, stateManager],
   );
 
   let columns;
@@ -419,6 +419,7 @@ const useTable = (
     onRowSelectionChange: setRowSelection,
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
+    autoResetPageIndex: false,
   });
 
   return table;

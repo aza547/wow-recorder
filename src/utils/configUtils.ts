@@ -6,6 +6,7 @@ import {
   ObsOverlayConfig,
   Metadata,
   CloudConfig,
+  Flavour,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../config/ConfigService';
@@ -38,12 +39,22 @@ const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
 };
 
 const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
-  const { category } = metadata;
+  const { category, flavour } = metadata;
 
   const upload = cfg.get<boolean>('cloudUpload');
 
   if (!upload) {
     console.info('[configUtils] Cloud upload is disabled');
+    return false;
+  }
+
+  if (flavour === Flavour.Retail && !cfg.get<boolean>('cloudUploadRetail')) {
+    console.info('[configUtils] Retail upload is disabled');
+    return false;
+  }
+
+  if (flavour === Flavour.Classic && !cfg.get<boolean>('cloudUploadClassic')) {
+    console.info('[configUtils] Classic upload is disabled');
     return false;
   }
 

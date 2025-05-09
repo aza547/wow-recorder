@@ -51,12 +51,13 @@ const MultiPovPlaybackToggles = (props: IProps) => {
           size="sm"
           onValueChange={onValueChange}
           variant="outline"
+          className="border border-background"
         >
           <ToggleGroupItem value="false">
-            <TvMinimal />
+            <TvMinimal size={18} />
           </ToggleGroupItem>
           <ToggleGroupItem value="true" disabled={!allowMultiPlayer}>
-            <LayoutGrid />
+            <LayoutGrid size={18} />
           </ToggleGroupItem>
         </ToggleGroup>
       </div>

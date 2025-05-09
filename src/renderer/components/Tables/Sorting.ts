@@ -4,6 +4,8 @@ import { RendererVideo } from 'main/types';
 import {
   countUniqueViewpoints,
   getVideoResultText,
+  isRaidUtil,
+  raidResultToPercent,
 } from 'renderer/rendererutils';
 
 export const resultSort = (
@@ -11,6 +13,12 @@ export const resultSort = (
   b: Row<RendererVideo>,
   language: Language,
 ) => {
+  if (isRaidUtil(a.original) && isRaidUtil(b.original)) {
+    const rA = raidResultToPercent(a.original) ?? 100;
+    const rB = raidResultToPercent(b.original) ?? 100;
+    return rB - rA;
+  }
+
   const resultA = getVideoResultText(a.original, language);
   const resultB = getVideoResultText(b.original, language);
   return resultB.localeCompare(resultA);

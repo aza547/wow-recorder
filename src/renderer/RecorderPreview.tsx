@@ -11,8 +11,16 @@ const RecorderPreview: React.FC = () => {
 
     if (previewBox) {
       const { width, height, x, y } = previewBox.getBoundingClientRect();
+      const zoomFactor = window.devicePixelRatio;
+
       // Random numbers here idk why but looks slightly better with the border.
-      ipc.sendMessage('preview', ['show', width - 3, height - 3, x + 2, y + 2]);
+      ipc.sendMessage('preview', [
+        'show',
+        (width - 3) * zoomFactor,
+        (height - 3) * zoomFactor,
+        (x + 2) * zoomFactor,
+        (y + 2) * zoomFactor,
+      ]);
     }
   };
 

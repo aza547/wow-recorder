@@ -141,7 +141,7 @@ export const runClassicRecordingTest = (
   // and we forcibly stop it using `new Date()` instead of the date from a log line
   // that ends an activity.
   const startDate = getAdjustedDate();
-  const endDate = getAdjustedDate(10);
+  const endDate = getAdjustedDate(20);
 
   const testLines = [
     `${startDate}  ZONE_CHANGE,562,"Blade's Edge Arena",0`,

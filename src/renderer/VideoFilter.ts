@@ -4,7 +4,12 @@ import {
   instanceNamesByZoneId,
   specializationById,
 } from 'main/constants';
-import { Flavour, RawCombatant, RendererVideo } from 'main/types';
+import {
+  Flavour,
+  RawCombatant,
+  RendererVideo,
+  StorageFilter,
+} from 'main/types';
 import {
   isArenaUtil,
   isBattlegroundUtil,
@@ -56,11 +61,12 @@ export default class VideoFilter {
    */
   constructor(
     tags: Tag[],
-    date: DateValueType,
+    dateFilter: DateValueType,
+    storageFilter: StorageFilter,
     video: RendererVideo,
     language: Language,
   ) {
-    this.dateRangeFilter = date;
+    this.dateRangeFilter = dateFilter;
     this.video = video;
 
     this.query = tags
@@ -158,63 +164,29 @@ export default class VideoFilter {
     const classIcon = classImages[playerClass];
     const specIcon = specImages[playerSpecID as keyof typeof specImages];
 
-    if (video.cloud) {
-      const localised = getLocalePhrase(language, Phrase.Cloud);
-      const tag = new VideoTag(100, localised, '<CloudIcon>', '#bb4420');
+    if (video.isProtected) {
+      const localised = getLocalePhrase(language, Phrase.Starred);
+      const tag = new VideoTag(101, localised, '<LockIcon>', '#bb4420');
       suggestions.push(tag);
     } else {
-      const localised = getLocalePhrase(language, Phrase.Disk);
-      const tag = new VideoTag(100, localised, '<SaveIcon>', '#bb4420');
-      suggestions.push(tag);
-    }
-
-    if (video.protected) {
-      const localised = getLocalePhrase(language, Phrase.Starred);
-      const tag = new VideoTag(101, localised, '<StarIcon>', '#bb4420');
+      const localised = getLocalePhrase(language, Phrase.NotStarred);
+      const tag = new VideoTag(101, localised, '<LockOpenIcon>', '#bb4420');
       suggestions.push(tag);
     }
 
     if (video.tag) {
       const localised = getLocalePhrase(language, Phrase.Tagged);
-      const tag = new VideoTag(101, localised, '<TagIcon>', '#bb4420');
+      const tag = new VideoTag(102, localised, '<TagIcon>', '#bb4420');
       suggestions.push(tag);
     }
 
     if (video.flavour === Flavour.Retail) {
       const localised = getLocalePhrase(language, Phrase.Retail);
-      const tag = new VideoTag(102, localised, '<Swords>', '#bb4420');
+      const tag = new VideoTag(103, localised, '<Swords>', '#bb4420');
       suggestions.push(tag);
     } else if (video.flavour === Flavour.Classic) {
       const localised = getLocalePhrase(language, Phrase.Classic);
-      const tag = new VideoTag(102, localised, '<Shield>', '#bb4420');
-      suggestions.push(tag);
-    }
-
-    const currentDate = new Date();
-
-    const videoDate = video.start
-      ? new Date(video.start)
-      : new Date(video.mtime);
-
-    const isToday =
-      videoDate.getDate() === currentDate.getDate() &&
-      videoDate.getMonth() === currentDate.getMonth() &&
-      videoDate.getFullYear() === currentDate.getFullYear();
-
-    const isYesterday =
-      videoDate.getDate() === currentDate.getDate() - 1 &&
-      videoDate.getMonth() === currentDate.getMonth() &&
-      videoDate.getFullYear() === currentDate.getFullYear();
-
-    if (isToday) {
-      const localised = getLocalePhrase(language, Phrase.Today);
-      const tag = new VideoTag(103, localised, '<CalendarDays>', '#bb4420');
-      suggestions.push(tag);
-    }
-
-    if (isYesterday) {
-      const localised = getLocalePhrase(language, Phrase.Yesterday);
-      const tag = new VideoTag(103, localised, '<CalendarDays>', '#bb4420');
+      const tag = new VideoTag(103, localised, '<Shield>', '#bb4420');
       suggestions.push(tag);
     }
 

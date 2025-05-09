@@ -162,12 +162,7 @@ export default class ConfigService
 
     const value = this._store.get(key);
 
-    if (
-      !this._store.has(key) ||
-      value === '' ||
-      value === null ||
-      value === undefined
-    ) {
+    if (!this._store.has(key) || value === null || value === undefined) {
       if (configSchema[key] && configSchema[key].default !== undefined) {
         return configSchema[key].default as T;
       }
@@ -183,7 +178,7 @@ export default class ConfigService
       );
     }
 
-    if (value === null || value === undefined || value === '') {
+    if (value === null || value === undefined) {
       this._store.delete(key);
       return;
     }

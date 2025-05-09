@@ -52,6 +52,9 @@ export default class CloudClient extends EventEmitter {
    * The WR API endpoint. This is used for authentication, retrieval and
    * manipulation of video state from the video database, and various
    * bits of R2 interaction.
+   *
+   * Production API: https://api.warcraftrecorder.com/api
+   * Development API: https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api
    */
   private static api = 'https://api.warcraftrecorder.com/api';
 
@@ -81,6 +84,13 @@ export default class CloudClient extends EventEmitter {
     this.pass = pass;
     this.guild = guild;
     this.authHeader = CloudClient.createAuthHeader(user, pass);
+  }
+
+  /**
+   * Return the guild name.
+   */
+  public getGuildName() {
+    return this.guild;
   }
 
   /**
@@ -146,6 +156,14 @@ export default class CloudClient extends EventEmitter {
 
       throw new Error('Failed to add a video to database');
     }
+
+    // Always run the housekeeper after an upload so that there
+    // will be space for the next upload.
+    await this.runHousekeeping();
+
+    // Update the mtime to avoid multiple refreshes.
+    this.bucketLastMod = Date.now();
+    this.emit('change');
 
     console.info(
       '[CloudClient] Added',
@@ -604,7 +622,7 @@ export default class CloudClient extends EventEmitter {
     try {
       const mtime = await this.getMtime();
 
-      if (mtime !== this.bucketLastMod) {
+      if (mtime > this.bucketLastMod) {
         console.info(
           '[CloudClient] Cloud data changed:',
           mtime,
