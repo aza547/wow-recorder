@@ -415,7 +415,7 @@ const getResultColor = (video: RendererVideo) => {
   if (isRaidUtil(video)) {
     const bossPercent = raidResultToPercent(video);
 
-    if (bossPercent) {
+    if (bossPercent !== undefined) {
       let color = '';
 
       if (bossPercent > 99) {
@@ -992,6 +992,12 @@ const countUniqueViewpoints = (video: RendererVideo) => {
 };
 
 const raidResultToPercent = (video: RendererVideo) => {
+  if (video.result) {
+    // For the sake of sorting. A kill should win over a 0% wipe.
+    // We should never display -1 on the UI though.
+    return -1;
+  }
+
   // Look for the boss percent in any of the viewpoints. That is really
   // just to make this nicer over upgrade of the app; this way we will
   // show the percent if it exists on any video and not just the first one.
