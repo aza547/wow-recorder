@@ -1480,10 +1480,8 @@ export default class Recorder extends EventEmitter {
     }
 
     const settings = TAudioSourceType.process
-      ? // Implicitly the "priority" defaults to 0. This matches to window type
-        // if the name match fails, which is a common case as Window title frequently
-        // change.
-        { window: id }
+      ? // Priority 2: "Match title, otherwise find window of same executable".
+        { window: id, priority: 2 }
       : { device_id: id };
 
     return osn.InputFactory.create(type, name, settings);
