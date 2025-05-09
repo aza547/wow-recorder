@@ -999,15 +999,7 @@ const raidResultToPercent = (video: RendererVideo) => {
     .map((rv) => rv.bossPercent)
     .find((bp) => typeof bp === 'number');
 
-  if (bossPercent) {
-    return bossPercent;
-  }
-
-  if (video.result) {
-    return 0;
-  }
-
-  return 100;
+  return bossPercent;
 };
 
 export {

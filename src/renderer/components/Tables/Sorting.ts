@@ -14,8 +14,8 @@ export const resultSort = (
   language: Language,
 ) => {
   if (isRaidUtil(a.original) && isRaidUtil(b.original)) {
-    const rA = raidResultToPercent(a.original);
-    const rB = raidResultToPercent(b.original);
+    const rA = raidResultToPercent(a.original) || 100;
+    const rB = raidResultToPercent(b.original) || 100;
     return rB - rA;
   }
 
