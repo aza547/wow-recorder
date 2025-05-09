@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 610](https://github.com/aza547/wow-recorder/issues/610) - Adds audio source configuration on a per-app basis.
+
 ### Fixed
 - Fix an issue where 0% wipes were shown as 100% wipes.
 
