@@ -409,6 +409,10 @@ const KOREAN: Translations = {
   [Phrase.GuildNoPermission]: "이 작업을 수행하기 위한 권한이 없습니다.",
   [Phrase.RemoveTagFromList]: "목록에서 %value%를 제거합니다.",
   [Phrase.DownloadUploadDisabledDueToFilter]: "현재 선택한 저장소 필터로 인해 비활성화되었습니다.",
+  [Phrase.ProcessesLabel]: "응용",
+  [Phrase.SelectProcess]: "애플리케이션 선택",
+  [Phrase.AudioProcessDevicesDescription]: "선택한 스피커와 마이크 외에도 오디오를 캡처하는 애플리케이션입니다.",
+  [Phrase.ProcessVolumeDescription]: "녹음에서 응용 프로그램의 볼륨은 0에서 1까지입니다.",
 };
 
 export default KOREAN;

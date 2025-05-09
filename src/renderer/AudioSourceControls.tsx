@@ -1,5 +1,5 @@
 import { AppState, DeviceType, IOBSDevice } from 'main/types';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
 import { Info, Volume1, Volume2 } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
@@ -29,31 +29,34 @@ interface IProps {
 const AudioSourceControls = (props: IProps) => {
   const { appState } = props;
   const [config, setConfig] = useSettings();
-  const initialRender = React.useRef(true);
+  const initialRender = useRef(true);
 
-  const [audioDevices, setAudioDevices] = React.useState<{
+  const [availableAudioDevices, setAvailableAudioDevices] = useState<{
     input: IOBSDevice[];
     output: IOBSDevice[];
-  }>({ input: [], output: [] });
+    process: {
+      name: string;
+      value: string | number;
+    }[];
+  }>({ input: [], output: [], process: [] });
 
-  const [pttHotKeyFieldFocused, setPttHotKeyFieldFocused] =
-    React.useState(false);
+  const [pttHotKeyFieldFocused, setPttHotKeyFieldFocused] = useState(false);
 
-  const [pttHotKey, setPttHotKey] = React.useState<PTTKeyPressEvent>(
+  const [pttHotKey, setPttHotKey] = useState<PTTKeyPressEvent>(
     getPTTKeyPressEventFromConfig(config),
   );
 
-  React.useEffect(() => {
-    const getAvailableAudioDevices = async () => {
-      const devices = await ipc.invoke('getAudioDevices', []);
-      setAudioDevices(devices);
-    };
-
-    getAvailableAudioDevices();
-
-    // The reset of this effect handles config changes, so if it's the
-    // initial render then just return here.
+  useEffect(() => {
     if (initialRender.current) {
+      const getAvailableAudioDevices = async () => {
+        const devices = await ipc.invoke('getAudioDevices', []);
+        setAvailableAudioDevices(devices);
+      };
+
+      getAvailableAudioDevices();
+
+      // The rest of this effect handles config changes, so if it's the
+      // initial render then just return here.
       initialRender.current = false;
       return;
     }
@@ -68,6 +71,8 @@ const AudioSourceControls = (props: IProps) => {
         speakerVolume: config.speakerVolume,
         audioInputDevices: config.audioInputDevices,
         micVolume: config.micVolume,
+        audioProcessDevices: config.audioProcessDevices,
+        processVolume: config.processVolume,
         obsForceMono: config.obsForceMono,
         pushToTalk: config.pushToTalk,
         pushToTalkKey: config.pushToTalkKey,
@@ -83,6 +88,8 @@ const AudioSourceControls = (props: IProps) => {
     config.speakerVolume,
     config.audioInputDevices,
     config.micVolume,
+    config.audioProcessDevices,
+    config.processVolume,
     config.obsForceMono,
     config.pushToTalk,
     config.pushToTalkKey,
@@ -91,7 +98,7 @@ const AudioSourceControls = (props: IProps) => {
     config.obsAudioSuppression,
   ]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const setPushToTalkKey = (event: PTTKeyPressEvent) => {
       setConfig((prevState) => {
         return {
@@ -116,18 +123,19 @@ const AudioSourceControls = (props: IProps) => {
     listenNextKeyPress();
   }, [pttHotKeyFieldFocused, setConfig]);
 
-  const onDeviceChange = (type: DeviceType, values: string[]) => {
-    const standardizedValues = values.filter((d) => d).join(',');
-
+  const onDeviceChange = (
+    type: DeviceType,
+    values: string[] | { value: string; label: string }[],
+  ) => {
     setConfig((previous) => {
       const updated = { ...previous };
 
       switch (type) {
         case DeviceType.INPUT:
-          updated.audioInputDevices = standardizedValues;
+          updated.audioInputDevices = values.filter((d) => d).join(',');
           break;
         case DeviceType.OUTPUT:
-          updated.audioOutputDevices = standardizedValues;
+          updated.audioOutputDevices = values.filter((d) => d).join(',');
           break;
         default:
           throw new Error('Invalid device type');
@@ -135,6 +143,18 @@ const AudioSourceControls = (props: IProps) => {
 
       return updated;
     });
+  };
+
+  const onProcessChange = (
+    values: string[], // The newly selected settings.
+    options: { value: string; label: string }[], // The available options.
+  ) => {
+    const updated = options.filter((p) => values.includes(p.value));
+
+    setConfig((previous) => ({
+      ...previous,
+      audioProcessDevices: updated,
+    }));
   };
 
   const getSpeakerSelect = () => {
@@ -153,7 +173,7 @@ const AudioSourceControls = (props: IProps) => {
           </Tooltip>
         </Label>
         <MultiSelect
-          options={audioDevices.output.map((audioDevice) => ({
+          options={availableAudioDevices.output.map((audioDevice) => ({
             value: audioDevice.id,
             label: audioDevice.description,
           }))}
@@ -215,7 +235,7 @@ const AudioSourceControls = (props: IProps) => {
           </Tooltip>
         </Label>
         <MultiSelect
-          options={audioDevices.input.map((audioDevice) => ({
+          options={availableAudioDevices.input.map((audioDevice) => ({
             value: audioDevice.id,
             label: audioDevice.description,
           }))}
@@ -254,6 +274,78 @@ const AudioSourceControls = (props: IProps) => {
           max={100}
           step={1}
           onValueChange={setMicVolume}
+          withTooltip={false}
+        />
+        <Volume2 />
+      </div>
+    );
+  };
+
+  const getProcessSelect = () => {
+    // Add any options that are stored in config. They may still be valid, in
+    // the event of a window name change. Reminder: OBS will match by name and
+    // then Window type. They may also be invalid, in which case we want to
+    // allow a user to deselect them.
+    const options = [...config.audioProcessDevices];
+
+    // Now add any devices we know about. We don't want to add duplicates, so
+    // check if the option already exists in the currently selected devices.
+    availableAudioDevices.process
+      .map((w) => ({ value: String(w.value), label: w.name }))
+      .filter((avail) => !options.map((o) => o.value).includes(avail.value))
+      .forEach((dedup) => options.push(dedup));
+
+    // Sort alphabetically by label.
+    options.sort((w1, w2) => w1.label.localeCompare(w2.label));
+
+    return (
+      <div className="flex flex-col w-full">
+        <Label className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.ProcessesLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.audioProcessDevices.description,
+            )}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <MultiSelect
+          options={options}
+          onValueChange={(values) => onProcessChange(values, options)}
+          defaultValue={config.audioProcessDevices.map((d) => d.value)}
+          placeholder={getLocalePhrase(appState.language, Phrase.SelectProcess)}
+          maxCount={1}
+        />
+      </div>
+    );
+  };
+
+  const setProcessVolume = (newValue: number[]) => {
+    if (typeof newValue[0] !== 'number') {
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        processVolume: newValue[0] / 100,
+      };
+    });
+  };
+
+  const getProcessVolume = () => {
+    return (
+      <div className="w-full flex gap-x-2 items-center">
+        <Volume1 />
+        <Slider
+          defaultValue={[config.processVolume * 100]}
+          value={[config.processVolume * 100]}
+          max={100}
+          step={1}
+          onValueChange={setProcessVolume}
           withTooltip={false}
         />
         <Volume2 />
@@ -428,13 +520,17 @@ const AudioSourceControls = (props: IProps) => {
   return (
     <div className="flex gap-y-10 flex-col">
       <div className="flex items-center content-start w-full gap-10 flex-wrap">
-        <div className="flex flex-col justify-center w-1/4 gap-y-4">
+        <div className="flex flex-col justify-center w-1/5 gap-y-4">
           {getSpeakerSelect()}
           {getSpeakerVolume()}
         </div>
-        <div className="flex flex-col justify-center w-1/4 gap-y-4">
+        <div className="flex flex-col justify-center w-1/5 gap-y-4">
           {getMicSelect()}
           {getMicVolume()}
+        </div>
+        <div className="flex flex-col justify-center w-1/5 gap-y-4">
+          {getProcessSelect()}
+          {getProcessVolume()}
         </div>
       </div>
       <div className="flex items-center content-start w-full gap-10 flex-wrap">

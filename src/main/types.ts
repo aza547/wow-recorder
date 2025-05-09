@@ -288,6 +288,7 @@ interface IDevice {
 enum TAudioSourceType {
   input = 'wasapi_input_capture',
   output = 'wasapi_output_capture',
+  process = 'wasapi_process_output_capture',
 }
 
 /**
@@ -338,6 +339,7 @@ type TPreviewPosition = {
 enum DeviceType {
   INPUT,
   OUTPUT,
+  PROCESS,
 }
 
 enum EncoderType {
@@ -384,6 +386,7 @@ type ObsOverlayConfig = {
 type ObsAudioConfig = {
   audioInputDevices: string;
   audioOutputDevices: string;
+  audioProcessDevices: { value: string; label: string }[];
   obsForceMono: boolean;
   speakerVolume: number;
   micVolume: number;

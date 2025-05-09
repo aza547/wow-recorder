@@ -409,6 +409,10 @@ const GERMAN: Translations = {
   [Phrase.GuildNoPermission]: "Nicht genügend Gildenberechtigungen, um diese Aktion auszuführen.",
   [Phrase.RemoveTagFromList]: "%value% aus der Liste entfernen",
   [Phrase.DownloadUploadDisabledDueToFilter]: "Aufgrund des aktuell ausgewählten Speicherfilters deaktiviert.",
+  [Phrase.ProcessesLabel]: "Anwendungen",
+  [Phrase.SelectProcess]: "Wählen Sie eine Anwendung aus",
+  [Phrase.AudioProcessDevicesDescription]: "Anwendungen zum Aufnehmen von Audiodaten, zusätzlich zu allen ausgewählten Lautsprechern und Mikrofonen.",
+  [Phrase.ProcessVolumeDescription]: "Die Lautstärke der Anwendung in der Aufnahme, von 0 bis 1.",
 };
 
 export default GERMAN;

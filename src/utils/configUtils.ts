@@ -167,8 +167,10 @@ const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
 
 const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
   return {
+    /* eslint-disable prettier/prettier */
     audioInputDevices: cfg.get<string>('audioInputDevices'),
     audioOutputDevices: cfg.get<string>('audioOutputDevices'),
+    audioProcessDevices: cfg.get<{ value: string; label: string }[]>('audioProcessDevices'),
     obsForceMono: cfg.get<boolean>('obsForceMono'),
     speakerVolume: cfg.get<number>('speakerVolume'),
     micVolume: cfg.get<number>('micVolume'),
@@ -177,6 +179,7 @@ const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
     pushToTalkMouseButton: cfg.get<number>('pushToTalkMouseButton'),
     pushToTalkModifiers: cfg.get<string>('pushToTalkModifiers'),
     obsAudioSuppression: cfg.get<boolean>('obsAudioSuppression'),
+    /* eslint-enable prettier/prettier */
   };
 };
 
