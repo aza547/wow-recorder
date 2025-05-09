@@ -31,6 +31,7 @@ export const getSettings = (): ConfigurationSchema => {
     monitorIndex: getConfigValue<number>('monitorIndex'),
     audioInputDevices: getConfigValue<string>('audioInputDevices'),
     audioOutputDevices: getConfigValue<string>('audioOutputDevices'),
+    audioProcessDevices: getConfigValue<{ value: string; label: string }[]>('audioProcessDevices'),
     startUp: getConfigValue<boolean>('startUp'),
     startMinimized: getConfigValue<boolean>('startMinimized'),
     recordRetail: getConfigValue<boolean>('recordRetail'),
@@ -66,6 +67,7 @@ export const getSettings = (): ConfigurationSchema => {
     captureCursor: getConfigValue<boolean>('captureCursor'),
     speakerVolume: getConfigValue<number>('speakerVolume'),
     micVolume: getConfigValue<number>('micVolume'),
+    processVolume: getConfigValue<number>('processVolume'),
     selectedCategory: getConfigValue<number>('selectedCategory'),
     deathMarkers: getConfigValue<number>('deathMarkers'),
     encounterMarkers: getConfigValue<boolean>('encounterMarkers'),
@@ -100,7 +102,7 @@ export const getSettings = (): ConfigurationSchema => {
     language: getConfigValue<string>('language'),
     /* eslint-enable prettier/prettier */
   };
-
+  
   return configValues;
 };
 

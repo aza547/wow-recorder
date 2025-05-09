@@ -1027,7 +1027,6 @@ export default class Manager {
         .getAvailableEncoders()
         .filter((encoder) => encoder !== 'none');
 
-      this.recorder.getAvailableWindowsAudioCapture(); // TODO
       return obsEncoders;
     });
 
@@ -1037,20 +1036,23 @@ export default class Manager {
       (): {
         input: IOBSDevice[];
         output: IOBSDevice[];
+        process: {
+          name: string;
+          value: string | number;
+        }[];
       } => {
         if (!this.recorder.obsInitialized) {
           return {
             input: [],
             output: [],
+            process: [],
           };
         }
 
-        const inputDevices = this.recorder.getInputAudioDevices();
-        const outputDevices = this.recorder.getOutputAudioDevices();
-
         return {
-          input: inputDevices,
-          output: outputDevices,
+          input: this.recorder.getInputAudioDevices(),
+          output: this.recorder.getOutputAudioDevices(),
+          process: this.recorder.getProcessAudioDevices(),
         };
       },
     );

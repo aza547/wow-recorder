@@ -409,6 +409,10 @@ const ENGLISH: Translations = {
   [Phrase.GuildNoPermission]: "Insufficient guild permissions to perform this action.",
   [Phrase.RemoveTagFromList]: "Remove %value% from the list",
   [Phrase.DownloadUploadDisabledDueToFilter]: "Disabled due to currently selected storage filter.",
+  [Phrase.ProcessesLabel]: "Applications",
+  [Phrase.SelectProcess]: "Select an application",
+  [Phrase.AudioProcessDevicesDescription]: "Applications to capture audio from, in addition to any selected speakers and microphones.",
+  [Phrase.ProcessVolumeDescription]: "The volume of the application in the recording, from 0 to 1.",
 };
 
 export default ENGLISH;

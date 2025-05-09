@@ -406,6 +406,10 @@ enum Phrase {
   GuildNoPermission,
   RemoveTagFromList,
   DownloadUploadDisabledDueToFilter,
+  ProcessesLabel,
+  SelectProcess,
+  AudioProcessDevicesDescription,
+  ProcessVolumeDescription,
 }
 
 enum Language {

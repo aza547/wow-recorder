@@ -409,6 +409,10 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.GuildNoPermission]: "公会权限不足，无法执行此操作。",
   [Phrase.RemoveTagFromList]: "从列表中删除 %value%",
   [Phrase.DownloadUploadDisabledDueToFilter]: "由于当前选择的存储过滤器而被禁用。",
+  [Phrase.ProcessesLabel]: "应用领域",
+  [Phrase.SelectProcess]: "选择一个应用程序",
+  [Phrase.AudioProcessDevicesDescription]: "除了任何选定的扬声器和麦克风之外，还可以从中捕获音频的应用程序。",
+  [Phrase.ProcessVolumeDescription]: "录音中应用程序的音量，从0到1。",
 };
 
 export default CHINESE_SIMPLIFIED;

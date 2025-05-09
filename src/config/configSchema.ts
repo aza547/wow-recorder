@@ -13,6 +13,7 @@ export type ConfigurationSchema = {
   selectedCategory: number;
   audioInputDevices: string;
   audioOutputDevices: string;
+  audioProcessDevices: { value: string; label: string }[];
   minEncounterDuration: number;
   startUp: boolean;
   startMinimized: boolean;
@@ -49,6 +50,7 @@ export type ConfigurationSchema = {
   chatOverlayYPosition: number;
   speakerVolume: number;
   micVolume: number;
+  processVolume: number;
   deathMarkers: number;
   encounterMarkers: boolean;
   roundMarkers: boolean;
@@ -150,6 +152,11 @@ export const configSchema = {
     description: Phrase.AudioOutputDevicesDescription,
     type: 'string',
     default: 'default',
+  },
+  audioProcessDevices: {
+    description: Phrase.AudioProcessDevicesDescription,
+    type: 'array',
+    default: [],
   },
   minEncounterDuration: {
     description: Phrase.MinEncounterDurationDescription,
@@ -331,6 +338,11 @@ export const configSchema = {
   },
   micVolume: {
     description: Phrase.MicVolumeDescription,
+    type: 'integer',
+    default: 1,
+  },
+  processVolume: {
+    description: Phrase.ProcessVolumeDescription,
     type: 'integer',
     default: 1,
   },

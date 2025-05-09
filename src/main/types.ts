@@ -339,6 +339,7 @@ type TPreviewPosition = {
 enum DeviceType {
   INPUT,
   OUTPUT,
+  PROCESS,
 }
 
 enum EncoderType {
@@ -385,6 +386,7 @@ type ObsOverlayConfig = {
 type ObsAudioConfig = {
   audioInputDevices: string;
   audioOutputDevices: string;
+  audioProcessDevices: { value: string; label: string }[];
   obsForceMono: boolean;
   speakerVolume: number;
   micVolume: number;

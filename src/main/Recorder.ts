@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from 'electron';
+import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
@@ -228,6 +228,19 @@ export default class Recorder extends EventEmitter {
    * array of all the devices we know about.
    */
   private audioOutputDevices: IInput[] = [];
+
+  /**
+   * Some arbritrarily chosen channel numbers we can use for adding process
+   * capture devices to the OBS scene. That is, adding application audio to the
+   * recordings.
+   */
+  private audioProcessChannels = [9, 10, 11, 12, 13];
+
+  /**
+   * Array of process capture devices we are including in the source. This is
+   * not an array of all the devices we know about.
+   */
+  private audioProcessDevices: IInput[] = [];
 
   /**
    * WaitQueue object for storing signalling from OBS. We only care about
@@ -704,6 +717,7 @@ export default class Recorder extends EventEmitter {
     const {
       audioInputDevices,
       audioOutputDevices,
+      audioProcessDevices,
       micVolume,
       speakerVolume,
       obsForceMono,
@@ -833,6 +847,42 @@ export default class Recorder extends EventEmitter {
       const channel = this.audioOutputChannels[index];
       this.addAudioSource(device, channel);
     });
+
+    audioProcessDevices
+      .map((source) => source.value)
+      .forEach((value, idx) => {
+        console.info('[Recorder] Adding app capture source', value);
+
+        const obsSource = this.createOBSAudioSource(
+          value,
+          idx,
+          TAudioSourceType.process,
+        );
+
+        const speakerFader = osn.FaderFactory.create(0);
+        speakerFader.attach(obsSource);
+        speakerFader.mul = speakerVolume;
+        this.faders.push(speakerFader);
+        this.audioProcessDevices.push(obsSource);
+      });
+
+    if (this.audioProcessDevices.length > this.audioProcessChannels.length) {
+      console.warn(
+        '[Recorder] Too many audio process devices, configuring first',
+        this.audioProcessChannels.length,
+      );
+
+      this.audioProcessDevices = this.audioProcessDevices.slice(
+        0,
+        this.audioProcessChannels.length,
+      );
+    }
+
+    this.audioProcessDevices.forEach((device) => {
+      const index = this.audioProcessDevices.indexOf(device);
+      const channel = this.audioProcessChannels[index];
+      this.addAudioSource(device, channel);
+    });
   }
 
   /**
@@ -863,8 +913,14 @@ export default class Recorder extends EventEmitter {
       this.removeAudioSource(device, channel);
     });
 
+    this.audioProcessDevices.forEach((device, idx) => {
+      const channel = this.audioProcessChannels[idx];
+      this.removeAudioSource(device, channel);
+    });
+
     this.audioInputDevices = [];
     this.audioOutputDevices = [];
+    this.audioProcessDevices = [];
 
     this.obsMicState = MicStatus.NONE;
     this.emit('state-change');
@@ -960,29 +1016,9 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Return an array of all the encoders available to OBS.
-   */
-  public getAvailableEncoders(): string[] {
-    console.info('[Recorder] Getting available encoders');
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    const encoders = Recorder.getAvailableValues(
-      'Output',
-      'Recording',
-      'RecEncoder',
-    );
-
-    console.info('[Recorder]', encoders);
-    return encoders;
-  }
-
-  /**
    * Return an array of all the windows for audio process capture available to OBS.
    */
-  public getAvailableWindowsAudioCapture(): {
+  public getProcessAudioDevices(): {
     name: string; // Display name.
     value: string | number; // Value to configure OBS with.
   }[] {
@@ -1004,8 +1040,27 @@ export default class Recorder extends EventEmitter {
       windows.push(...prop.details.items);
     }
 
-    console.info('[Recorder] Windows available for audio capture', windows);
-    return [];
+    return windows;
+  }
+
+  /**
+   * Return an array of all the encoders available to OBS.
+   */
+  public getAvailableEncoders(): string[] {
+    console.info('[Recorder] Getting available encoders');
+
+    if (!this.obsInitialized) {
+      throw new Error('[Recorder] OBS not initialized');
+    }
+
+    const encoders = Recorder.getAvailableValues(
+      'Output',
+      'Recording',
+      'RecEncoder',
+    );
+
+    console.info('[Recorder]', encoders);
+    return encoders;
   }
 
   /**
@@ -1411,12 +1466,27 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    const name =
-      type === TAudioSourceType.input
-        ? `WCR Mic Source ${idx}`
-        : `WCR Speaker Source ${idx}`;
+    let name = '';
 
-    return osn.InputFactory.create(type, name, { device_id: id });
+    if (type === TAudioSourceType.output) {
+      name = `WCR Speaker Source ${idx}`;
+    } else if (type === TAudioSourceType.input) {
+      name = `WCR Mic Source ${idx}`;
+    } else if (type === TAudioSourceType.process) {
+      name = `WCR App Capture Source ${idx}`;
+    } else {
+      // Programmer error, should never happen.
+      throw new Error('Invalid audio source type');
+    }
+
+    const settings = TAudioSourceType.process
+      ? // Implicitly the "priority" defaults to 0. This matches to window type
+        // if the name match fails, which is a common case as Window title frequently
+        // change.
+        { window: id }
+      : { device_id: id };
+
+    return osn.InputFactory.create(type, name, settings);
   }
 
   /**
