@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix an issue where 0% wipes were shown as 100% wipes.
+- Fix an issue where Gallywix would show as 0% wipe on Mythic if wiping before the shield is broken.
 
 ## [6.12.2] - 2025-05-08
 ### Changed

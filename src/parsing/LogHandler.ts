@@ -46,6 +46,8 @@ export default abstract class LogHandler extends EventEmitter {
 
   protected mainWindow: BrowserWindow;
 
+  private minBossHp = 100 * 10 ** 6;
+
   /**
    * Once we have completed a recording, we throw it onto the
    * VideoProcessQueue to handle cutting it to size, writing accompanying
@@ -413,9 +415,18 @@ export default abstract class LogHandler extends EventEmitter {
       return;
     }
 
+    const max = parseInt(line.arg(15), 10);
+
+    if (max < this.minBossHp) {
+      // Assume that if the HP is less than 100 million then it's not a boss.
+      // That avoids us marking bosses as 0% when they haven't been touched
+      // yet, i.e. short pulls on Gallywix before the shield is broken and we are
+      // yet to see SPELL_DAMAGE events (and instead get SPELL_ABSORBED).
+      return;
+    }
+
     const raid = this.activity as RaidEncounter;
     const current = parseInt(line.arg(14), 10);
-    const max = parseInt(line.arg(15), 10);
 
     // We don't check the unit here, the RaidEncounter class has logic
     // to discard an update that lowers the max HP. That's a strategy to
