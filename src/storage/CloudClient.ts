@@ -86,9 +86,11 @@ export default class CloudClient extends EventEmitter {
 
   /**
    * If we have an open websocket, we want to keep it alive. This timer will
-   * send a ping to do that. Anecdotally, the websocket will close after 5
-   * minutes so we must send keepalives more frequently than this. Not sure
-   * this is a defined timeout, couldn't find it in the Cloudflare Websocket docs.
+   * send a ping to do that. The server is configured to return a pong in response.
+   *
+   * It will close after 5 minutes of no activity so we must send messages more
+   * frequently than this. Not sure this is a defined timeout, couldn't find it in
+   * the Cloudflare Websocket docs, but surely every minute is fine.
    */
   private heartbeatTimer = setInterval(() => this.ws?.send('ping'), 60 * 1000);
 
