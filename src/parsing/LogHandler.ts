@@ -417,11 +417,13 @@ export default abstract class LogHandler extends EventEmitter {
 
     const max = parseInt(line.arg(15), 10);
 
-    if (max < this.minBossHp) {
+    if (this.activity.flavour === Flavour.Retail && max < this.minBossHp) {
       // Assume that if the HP is less than 100 million then it's not a boss.
       // That avoids us marking bosses as 0% when they haven't been touched
       // yet, i.e. short pulls on Gallywix before the shield is broken and we are
-      // yet to see SPELL_DAMAGE events (and instead get SPELL_ABSORBED).
+      // yet to see SPELL_DAMAGE events (and instead get SPELL_ABSORBED). Only do
+      // this for retail as classic will have lower HP bosses and I can't be
+      // bothered worrying about it there.
       return;
     }
 
