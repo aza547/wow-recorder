@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Change the polling mechanism to be websocket based, client refreshes are quicker and more efficient on the server side.
+
 ### Added
 - [Issue 610](https://github.com/aza547/wow-recorder/issues/610) - Adds audio source configuration on a per-app basis.
 
