@@ -1028,7 +1028,19 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    let prop = this.dummyProcessAudioSource.properties.first();
+    // The source properties are cached by OSN, so update an irrelevant
+    // setting to force a refresh. This refreshes the window list within
+    // the properties object.
+    //
+    // This relies on some internals of OSN which update the cache to
+    // refresh on calling the update function. See "osn::ISource::Update"
+    // in isource.cpp for more details.
+    const src = this.dummyProcessAudioSource;
+    const { settings } = src;
+    settings.refresh = uuidv4();
+    src.update(settings);
+
+    let prop = src.properties.first();
 
     while (prop && prop.name !== 'window') {
       prop = prop.next();
