@@ -11,6 +11,7 @@ import path from 'path';
 import AuthError from '../utils/AuthError';
 import { z } from 'zod';
 import { Affiliation, TAffiliation } from 'types/api';
+import WebSocket from 'ws';
 
 /**
  * A client for retrieving resources from the cloud.
@@ -44,12 +45,7 @@ export default class CloudClient extends EventEmitter {
   private authHeader: string;
 
   /**
-   * Timer for checking the cloud store for updates.
-   */
-  private pollTimer: NodeJS.Timeout | undefined;
-
-  /**
-   * The WR API endpoint. This is used for authentication, retrieval and
+   * The WCR API endpoint. This is used for authentication, retrieval and
    * manipulation of video state from the video database, and various
    * bits of R2 interaction.
    *
@@ -59,9 +55,18 @@ export default class CloudClient extends EventEmitter {
   private static api = 'https://api.warcraftrecorder.com/api';
 
   /**
+   * The polling websocket endpoint. This is used to get real-time updates
+   * from the WCR API in an efficient manner.
+   *
+   *  Production API: wss://api.warcraftrecorder.com/poll
+   *  Development API: wss://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/poll
+   */
+  private static poll = 'wss://api.warcraftrecorder.com/poll';
+
+  /**
    * The WR website, used by the client to build shareable links.
    */
-  private website = 'https://warcraftrecorder.com';
+  private static website = 'https://warcraftrecorder.com';
 
   /**
    * If a file is larger than 4.995GB, we MUST use a multipart approach,
@@ -73,6 +78,29 @@ export default class CloudClient extends EventEmitter {
    * to the start of the current part.
    */
   private multiPartSizeBytes = 100 * 1024 ** 2;
+
+  /**
+   * WebSocket connection for real-time updates.
+   */
+  private ws: WebSocket | null = null;
+
+  /**
+   * If we have an open websocket, we want to keep it alive. This timer will
+   * send a ping to do that. The server is configured to return a pong in response.
+   *
+   * It will close after 5 minutes of no activity so we must send messages more
+   * frequently than this. Not sure this is a defined timeout, couldn't find it in
+   * the Cloudflare Websocket docs, but surely every minute is fine.
+   */
+  private heartbeatTimer = setInterval(() => this.ws?.send('ping'), 60 * 1000);
+
+  /**
+   * Timer for reconnecting the WebSocket connection. We don't try to reconnect
+   * if the websocket is closed by the server. We just wait on this timer to fire.
+   */
+  private reconnectTimer = setInterval(() => {
+    if (!this.ws) this.startPolling();
+  }, 10000);
 
   /**
    * Constructor.
@@ -460,25 +488,89 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Set a timer to poll for updates.
+   * Start listening for updates using WebSocket.
    */
-  public pollForUpdates(sec: number) {
-    console.info('[CloudClient] Start polling for updates');
-    this.stopPollForUpdates();
+  public startPolling() {
+    console.info('[CloudClient] Starting WebSocket connection for updates');
 
-    this.pollTimer = setInterval(() => {
+    if (this.ws) {
+      this.ws.close();
+      this.ws.removeAllListeners();
+      this.ws = null;
+    }
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.poll}?guild=${guild}`;
+    this.ws = new WebSocket(url);
+
+    this.ws.on('open', () => {
+      console.info('[CloudClient] WebSocket connection established');
+
+      // Once the websocket is open we do a manual check for updates
+      // to make sure we are up to date. After this we can rely on
+      // the websocket to notify us of changes.
       this.checkForUpdate();
-    }, sec * 1000);
+    });
+
+    this.ws.on('message', (data) => {
+      const msg = data.toString();
+
+      if (!msg.includes(':')) {
+        // Any message we need to take action on has a colon in it.
+        // This is a ping/pong or something else we don't care about.
+        return;
+      }
+
+      // Messages beyond this point are of the form key:value. For now,
+      // we only have mtime messages, but this is a good pattern to follow
+      // for extensibility.
+      console.info('[CloudClient] Received WebSocket message:', msg);
+      const [key, value] = msg.split(':');
+
+      if (key === 'mtime') {
+        const mtime = parseInt(value, 10);
+
+        if (mtime > this.bucketLastMod) {
+          console.info(
+            '[CloudClient] Cloud data changed:',
+            mtime,
+            this.bucketLastMod,
+          );
+
+          this.emit('change');
+          this.bucketLastMod = mtime;
+        }
+      }
+    });
+
+    this.ws.on('error', (error) => {
+      console.error('[CloudClient] WebSocket error:', error);
+    });
+
+    this.ws.on('close', (code, reason) => {
+      console.warn('[CloudClient] WebSocket closed:', code, String(reason));
+      this.ws = null;
+    });
   }
 
   /**
-   * Clear the polling timer.
+   * Stop listening for updates using WebSocket. Should only be called before
+   * on destroying this class as there is no way to restart the timers.
    */
-  public stopPollForUpdates() {
-    console.info('[CloudClient] Stop polling for updates');
+  public stopPolling() {
+    console.info('[CloudClient] Stopping WebSocket connection for updates');
 
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+
+    if (this.reconnectTimer) {
+      clearInterval(this.reconnectTimer);
+    }
+
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
     }
   }
 
@@ -633,16 +725,7 @@ export default class CloudClient extends EventEmitter {
         this.bucketLastMod = mtime;
       }
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        // If the user changes their password on the website, we don't want
-        // the client to keep failing to login and eventually trip the lock.
-        console.warn('[CloudClient] Auth failed, will logout', String(error));
-        this.stopPollForUpdates();
-        this.emit('logout');
-      } else {
-        // Hopefully just an intermittent failure. Will retry on the next poll timer.
-        console.error('[CloudClient] Poll failed but not 401', String(error));
-      }
+      console.error('[CloudClient] Failed to check for update', String(error));
     }
   }
 
@@ -913,6 +996,6 @@ export default class CloudClient extends EventEmitter {
 
     const { id } = data;
     console.info('[CloudClient] Got shareable link', videoName, id);
-    return `${this.website}/link/${id}`;
+    return `${CloudClient.website}/link/${id}`;
   }
 }

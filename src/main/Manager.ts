@@ -574,7 +574,7 @@ export default class Manager {
 
     if (this.cloudClient) {
       this.cloudClient.removeAllListeners();
-      this.cloudClient.stopPollForUpdates();
+      this.cloudClient.stopPolling();
       this.cloudClient = undefined;
       this.videoProcessQueue.unsetCloudClient();
     }
@@ -593,17 +593,8 @@ export default class Manager {
         this.refreshCloudStatus();
       });
 
-      this.cloudClient.on('logout', () => {
-        // Likely the user has changed their password on the website. We don't
-        // want the CloudClient to lock their account so we have it emit a logout
-        // event to trigger a reconfigure which kills any repeated polling.
-        console.warn('[Manager] Got logout event from CloudClient');
-        this.stages[5].valid = false; // Stage 5 is the cloud stage.
-        this.manage(); // Queue a call to manage to mimic first time setup.
-      });
-
       await this.cloudClient.pollInit();
-      this.cloudClient.pollForUpdates(10);
+      this.cloudClient.startPolling();
       this.videoProcessQueue.setCloudClient(this.cloudClient);
     }
 
