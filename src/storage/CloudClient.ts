@@ -511,9 +511,9 @@ export default class CloudClient extends EventEmitter {
     });
 
     this.ws.on('message', (data) => {
-      const str = data.toString();
+      const msg = data.toString();
 
-      if (!str.includes(':')) {
+      if (!msg.includes(':')) {
         // Any message we need to take action on has a colon in it.
         // This is a ping/pong or something else we don't care about.
         return;
@@ -522,8 +522,8 @@ export default class CloudClient extends EventEmitter {
       // Messages beyond this point are of the form key:value. For now,
       // we only have mtime messages, but this is a good pattern to follow
       // for extensibility.
-      console.info('[CloudClient] Received WebSocket message:', str);
-      const [key, value] = str.split(':');
+      console.info('[CloudClient] Received WebSocket message:', msg);
+      const [key, value] = msg.split(':');
 
       if (key === 'mtime') {
         const mtime = parseInt(value, 10);
