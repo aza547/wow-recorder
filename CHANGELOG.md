@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [6.13.0] - 2025-05-11
+### Added
 - [Issue 610](https://github.com/aza547/wow-recorder/issues/610) - Adds audio source configuration on a per-app basis.
 
 ### Fixed
