@@ -92,7 +92,9 @@ export default class CloudClient extends EventEmitter {
    * frequently than this. Not sure this is a defined timeout, couldn't find it in
    * the Cloudflare Websocket docs, but surely every minute is fine.
    */
-  private heartbeatTimer = setInterval(() => this.ws?.send('ping'), 60 * 1000);
+  private heartbeatTimer = setInterval(() => {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send('ping');
+  }, 60 * 1000);
 
   /**
    * Timer for reconnecting the WebSocket connection. We don't try to reconnect
