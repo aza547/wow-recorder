@@ -164,8 +164,8 @@
     "react-player": "^2.14.1",
     "react-router-dom": "^6.16.0",
     "react-tag-autocomplete": "^7.5.0",
-    "roughjs": "^4.6.6",
     "react-tailwindcss-datepicker": "^1.7.3",
+    "roughjs": "^4.6.6",
     "screenfull": "^6.0.2",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
@@ -173,6 +173,7 @@
     "tss-react": "^4.1.1",
     "uuid": "^11.0.3",
     "wait-queue": "^1.1.4",
+    "ws": "^8.18.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -85,6 +85,12 @@ export default class CloudClient extends EventEmitter {
   private ws: WebSocket | null = null;
 
   /**
+   * We don't start polling immediately on creation of this class. This track if
+   * startPolling has been called or not.
+   */
+  private polling = false;
+
+  /**
    * If we have an open websocket, we want to keep it alive. This timer will
    * send a ping to do that. The server is configured to return a pong in response.
    *
@@ -93,7 +99,21 @@ export default class CloudClient extends EventEmitter {
    * the Cloudflare Websocket docs, but surely every minute is fine.
    */
   private heartbeatTimer = setInterval(() => {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send('ping');
+    if (!this.ws) {
+      // We're not connected.
+      return;
+    }
+
+    if (this.ws.readyState !== WebSocket.OPEN) {
+      // The socket isn't ready to send messages.
+      return;
+    }
+
+    try {
+      this.ws.ping();
+    } catch (error) {
+      console.warn('[CloudClient] Error sending websocket ping', String(error));
+    }
   }, 60 * 1000);
 
   /**
@@ -101,7 +121,23 @@ export default class CloudClient extends EventEmitter {
    * if the websocket is closed by the server. We just wait on this timer to fire.
    */
   private reconnectTimer = setInterval(() => {
-    if (!this.ws) this.startPolling();
+    if (this.ws) {
+      // We're already connected.
+      return;
+    }
+
+    if (!this.polling) {
+      // We've not been told to start polling yet.
+      return;
+    }
+
+    try {
+      this.connectPollingWebsocket();
+    } catch (error) {
+      // Not sure if this is really possible, but just being safe.
+      // I think errors instead come through the on('error') handler.
+      console.warn('[CloudClient] Error connecting websocket', String(error));
+    }
   }, 10000);
 
   /**
@@ -493,7 +529,38 @@ export default class CloudClient extends EventEmitter {
    * Start listening for updates using WebSocket.
    */
   public startPolling() {
-    console.info('[CloudClient] Starting WebSocket connection for updates');
+    console.info('[CloudClient] Start WebSocket polling');
+    this.connectPollingWebsocket();
+    this.polling = true;
+  }
+
+  /**
+   * Stop listening for updates using WebSocket. Should only be called before
+   * on destroying this class as there is no way to restart the timers.
+   */
+  public stopPolling() {
+    console.info('[CloudClient] Stop WebSocket polling');
+    this.polling = false;
+
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+
+    if (this.reconnectTimer) {
+      clearInterval(this.reconnectTimer);
+    }
+
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+    }
+  }
+
+  /**
+   * Start listening for updates using WebSocket.
+   */
+  private connectPollingWebsocket() {
+    console.info('[CloudClient] Connecting WebSocket for updates');
 
     if (this.ws) {
       this.ws.close();
@@ -508,9 +575,9 @@ export default class CloudClient extends EventEmitter {
     this.ws.on('open', () => {
       console.info('[CloudClient] WebSocket connection established');
 
-      // Once the websocket is open we do a manual check for updates
-      // to make sure we are up to date. After this we can rely on
-      // the websocket to notify us of changes.
+      // Once the websocket is open we do a single manual check for
+      // updates to make sure we are up to date. After this we can
+      // rely on the websocket to notify us of changes.
       this.checkForUpdate();
     });
 
@@ -546,34 +613,13 @@ export default class CloudClient extends EventEmitter {
     });
 
     this.ws.on('error', (error) => {
-      console.error('[CloudClient] WebSocket error:', error);
+      console.warn('[CloudClient] WebSocket error:', error);
     });
 
     this.ws.on('close', (code, reason) => {
-      console.warn('[CloudClient] WebSocket closed:', code, String(reason));
+      console.warn('[CloudClient] WebSocket closed:', code, reason);
       this.ws = null;
     });
-  }
-
-  /**
-   * Stop listening for updates using WebSocket. Should only be called before
-   * on destroying this class as there is no way to restart the timers.
-   */
-  public stopPolling() {
-    console.info('[CloudClient] Stopping WebSocket connection for updates');
-
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-
-    if (this.reconnectTimer) {
-      clearInterval(this.reconnectTimer);
-    }
-
-    if (this.heartbeatTimer) {
-      clearInterval(this.heartbeatTimer);
-    }
   }
 
   /**
