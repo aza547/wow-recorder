@@ -125,7 +125,7 @@ export default class CombatLogWatcher extends EventEmitter {
   }
 
   /**
-   * We need this in-case WR is launched mid activity where a partial log file
+   * We need this in-case WCR is launched mid activity where a partial log file
    * already exists.
    */
   private async getLogDirectoryState() {

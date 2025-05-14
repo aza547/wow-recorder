@@ -223,7 +223,7 @@ type CloudMetadata = Metadata & {
 };
 
 /**
- * When we retrieve state from the WR API, we have a few additional entries
+ * When we retrieve state from the WCR API, we have a few additional entries
  * in the data, these are signed by the API so that we can read them without
  * the client having credentials.
  */

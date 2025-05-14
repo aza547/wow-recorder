@@ -258,7 +258,7 @@ const ENGLISH: Translations = {
   [Phrase.Era]: 'Era',
   [Phrase.MicListeningTooltip]: 'Listening',
   [Phrase.MicMutedTooltip]: 'Muted',
-  [Phrase.CrashHappenedText]: 'An OBS crash has occured and has been recovered from. This should not happen in normal operation. You may wish to seek help by sharing your WR and OBS logs in discord.',
+  [Phrase.CrashHappenedText]: 'An OBS crash has occured and has been recovered from. This should not happen in normal operation. You may wish to seek help by sharing your WCR and OBS logs in discord.',
   [Phrase.SettingsPageApplicationHeader]: 'Application',
   [Phrase.SettingsPageGameHeader]: 'Game',
   [Phrase.SettingsPageProHeader]: 'Pro',
