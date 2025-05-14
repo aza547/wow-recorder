@@ -258,7 +258,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.Era]: '旧世服',
   [Phrase.MicListeningTooltip]: '监听中',
   [Phrase.MicMutedTooltip]: '已静音',
-  [Phrase.CrashHappenedText]: 'OBS 出现崩溃并已自动恢复。通常不应该发生。你可能需要在 Discord 中分享 WR 和 OBS 日志以寻求帮助。',
+  [Phrase.CrashHappenedText]: 'OBS 出现崩溃并已自动恢复。通常不应该发生。你可能需要在 Discord 中分享 WCR 和 OBS 日志以寻求帮助。',
   [Phrase.SettingsPageApplicationHeader]: '应用程序',
   [Phrase.SettingsPageGameHeader]: '游戏',
   [Phrase.SettingsPageProHeader]: '专业版',

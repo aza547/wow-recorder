@@ -524,7 +524,7 @@ export default class Manager {
   /**
    * Called when the WoW process is detected to have exited. Ends any
    * recording that is still ongoing. We detach audio sources here to
-   * allow Windows to go to sleep with WR running.
+   * allow Windows to go to sleep with WCR running.
    */
   private async onWowStopped() {
     console.info(
@@ -591,6 +591,15 @@ export default class Manager {
       this.cloudClient.on('change', () => {
         this.mainWindow.webContents.send('refreshState');
         this.refreshCloudStatus();
+      });
+
+      this.cloudClient.on('logout', () => {
+        // Likely the user has changed their password on the website. Trigger
+        // a reconfigure which will update the status card and move the app to
+        // error state.
+        console.warn('[Manager] Got logout event from CloudClient');
+        this.stages[5].valid = false; // Stage 5 is the cloud stage.
+        this.manage(); // Queue a call to manage to mimic first time setup.
       });
 
       await this.cloudClient.pollInit();

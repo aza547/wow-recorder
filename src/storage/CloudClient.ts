@@ -39,7 +39,7 @@ export default class CloudClient extends EventEmitter {
   private bucketLastMod = 0;
 
   /**
-   * The auth header for the WR API, which uses basic HTTP auth using the cloud
+   * The auth header for the WCR API, which uses basic HTTP auth using the cloud
    * user and password.
    */
   private authHeader: string;
@@ -52,7 +52,8 @@ export default class CloudClient extends EventEmitter {
    * Production API: https://api.warcraftrecorder.com/api
    * Development API: https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api
    */
-  private static api = 'https://api.warcraftrecorder.com/api';
+  private static api =
+    'https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api'; // TODO revert
 
   /**
    * The polling websocket endpoint. This is used to get real-time updates
@@ -64,7 +65,7 @@ export default class CloudClient extends EventEmitter {
   private static poll = 'wss://api.warcraftrecorder.com/poll';
 
   /**
-   * The WR website, used by the client to build shareable links.
+   * The WCR website, used by the client to build shareable links.
    */
   private static website = 'https://warcraftrecorder.com';
 
@@ -169,7 +170,7 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Get the video state from the WR database.
+   * Get the video state from the WCR database.
    */
   public async getState(): Promise<CloudSignedMetadata[]> {
     console.info('[CloudClient] Getting video state');
@@ -179,7 +180,11 @@ export default class CloudClient extends EventEmitter {
     const headers = { Authorization: this.authHeader };
 
     const mtimePromise = this.getMtime();
-    const statePromise = axios.get(url, { headers });
+
+    const statePromise = axios.get(url, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
 
     const response = await statePromise;
 
@@ -197,7 +202,7 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Add a video to the WR database.
+   * Add a video to the WCR database.
    */
   public async postVideo(metadata: CloudMetadata) {
     console.info('[CloudClient] Adding video to database', metadata.videoName);
@@ -206,22 +211,10 @@ export default class CloudClient extends EventEmitter {
     const url = `${CloudClient.api}/guild/${guild}/video`;
     const headers = { Authorization: this.authHeader };
 
-    const response = await axios.post(url, metadata, {
+    await axios.post(url, metadata, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
-
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error(
-        '[CloudClient] Failed to add a video to database',
-        status,
-        data,
-      );
-
-      throw new Error('Failed to add a video to database');
-    }
 
     // Always run the housekeeper after an upload so that there
     // will be space for the next upload.
@@ -249,17 +242,10 @@ export default class CloudClient extends EventEmitter {
     const url = `${CloudClient.api}/guild/${guild}/bulk/delete`;
     const headers = { Authorization: this.authHeader };
 
-    const response = await axios.post(url, videoNames, {
+    await axios.post(url, videoNames, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
-
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failed to delete videos', status, data);
-      throw new Error('Failed to delete videos');
-    }
 
     console.info('[CloudClient] Successfully deleted videos', videoNames);
   }
@@ -278,18 +264,10 @@ export default class CloudClient extends EventEmitter {
     const headers = { Authorization: this.authHeader };
     const body = { videos: videoNames, protect: protect };
 
-    const response = await axios.post(url, body, {
+    await axios.post(url, body, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
-
-    const { status, data } = response;
-
-    if (status !== 200) {
-      const msg = `Failed to ${protect ? 'protect' : 'unprotect'} a video`;
-      console.error('[CloudClient]', msg, status, data);
-      throw new Error(msg);
-    }
 
     console.info(
       `[CloudClient] Successfully ${protect ? 'protected' : 'unprotected'}`,
@@ -308,17 +286,10 @@ export default class CloudClient extends EventEmitter {
     const headers = { Authorization: this.authHeader };
     const body = { videos: videoNames, tag };
 
-    const response = await axios.post(url, body, {
+    await axios.post(url, body, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
-
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failed to tag a video', status, data);
-      throw new Error('Failed to tag a video');
-    }
 
     console.info('[CloudClient] Successfully set tag', tag, 'on', videoNames);
   }
@@ -340,7 +311,12 @@ export default class CloudClient extends EventEmitter {
     const encKey = encodeURIComponent(key);
 
     const sizeUrl = `${CloudClient.api}/guild/${encGuild}/video/${encKey}/size`;
-    const sizeRsp = await axios.get(sizeUrl, { headers });
+
+    const sizeRsp = await axios.get(sizeUrl, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
     const sizeData = sizeRsp.data;
     const { bytes } = sizeData;
 
@@ -352,6 +328,7 @@ export default class CloudClient extends EventEmitter {
         progressCallback(Math.round((100 * event.loaded) / bytes)),
     };
 
+    // Don't worry about 401s here, this is direct to R2.
     const response = await axios.get(url, config);
     const file = path.join(dir, key);
     const writer = fs.createWriteStream(file);
@@ -366,9 +343,9 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Sign a PUT URL by requesting the WR API signs it. This is our protection
+   * Sign a PUT URL by requesting the WCR API signs it. This is our protection
    * against malicious uploads; the content length is included in the header
-   * and the WR API checks the current bucket usage before approving.
+   * and the WCR API checks the current bucket usage before approving.
    */
   private async signPutUrl(key: string, bytes: number) {
     console.info('[CloudClient] Getting signed PUT URL', key, bytes);
@@ -377,34 +354,19 @@ export default class CloudClient extends EventEmitter {
     const guild = encodeURIComponent(this.guild);
 
     const url = `${CloudClient.api}/guild/${guild}/upload`;
-
-    const body = {
-      key,
-      bytes,
-    };
+    const body = { key, bytes };
 
     const response = await axios.post(url, body, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error(
-        '[CloudClient] Failed to get signed upload request',
-        response.status,
-        response.data,
-      );
-
-      throw new Error('Failed to get signed upload request');
-    }
-
+    const { data } = response;
     return data.signed;
   }
 
   /**
-   * Create a multi part upload by calling the WR API to get a list of signed
+   * Create a multi part upload by calling the WCR API to get a list of signed
    * URLs for each part. Once we've uploaded to each URL in turn, must call
    * completeMultiPartUpload.
    */
@@ -426,26 +388,15 @@ export default class CloudClient extends EventEmitter {
 
     const response = await axios.post(url, body, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error(
-        '[CloudClient] Failed to get signed multipart upload request',
-        status,
-        data,
-      );
-
-      throw new Error('Failed to get signed multipart upload request');
-    }
-
+    const { data } = response;
     return data;
   }
 
   /**
-   * Complete a multipart upload by calling the WR API.
+   * Complete a multipart upload by calling the WCR API.
    */
   private async completeMultiPartUpload(key: string, etags: string[]) {
     console.info('[CloudClient] Complete signed multipart upload', key);
@@ -459,22 +410,10 @@ export default class CloudClient extends EventEmitter {
       key,
     };
 
-    const rsp = await axios.post(url, body, {
+    await axios.post(url, body, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
-
-    const { status, data } = rsp;
-
-    if (status !== 200) {
-      console.error(
-        '[CloudClient] Failed to complete multipart upload',
-        status,
-        data,
-      );
-
-      throw new Error('Failed to complete multipart upload');
-    }
   }
 
   /**
@@ -627,10 +566,16 @@ export default class CloudClient extends EventEmitter {
    */
   public async getUsage() {
     console.info('[CloudClient] Get usage from API');
+
     const headers = { Authorization: this.authHeader };
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.api}/guild/${guild}/usage`;
-    const response = await axios.get(url, { headers });
+
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
     const { data } = response;
     const { bytes } = data;
     console.info('[CloudClient] Usage was', bytes);
@@ -648,21 +593,10 @@ export default class CloudClient extends EventEmitter {
 
     const response = await axios.get(url, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    const { status, data } = response;
-
-    if (status === 401) {
-      console.error('[CloudClient] 401 response from worker', data);
-      throw new Error('Login to cloud store failed, check your credentials');
-    }
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failure response from worker', status, data);
-      throw new Error('Error logging into cloud store');
-    }
-
+    const { data } = response;
     const { bytes } = data;
 
     console.info('[CloudClient] Storage limit was', bytes);
@@ -689,6 +623,7 @@ export default class CloudClient extends EventEmitter {
     const headers = { Authorization };
     const url = `${CloudClient.api}/user/affiliations`;
 
+    // This is static so we can't emit a logout event.
     const response = await axios.get(url, {
       headers,
       validateStatus: () => true,
@@ -697,11 +632,22 @@ export default class CloudClient extends EventEmitter {
     const { status, data } = response;
 
     if (status === 401 || status === 403) {
+      // Special static case, the caller handles any required logouts.
       console.error('[CloudClient] Auth failed:', status, data);
 
       throw new AuthError(
         'Login to cloud store failed, check your credentials',
       );
+    }
+
+    if (status !== 200) {
+      console.error(
+        '[CloudClient] Failed to get user affiliations',
+        status,
+        data,
+      );
+
+      throw new Error('Failed to get user affiliations');
     }
 
     const affiliations = z.array(Affiliation).parse(data);
@@ -722,21 +668,10 @@ export default class CloudClient extends EventEmitter {
 
     const response = await axios.post(url, undefined, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    const { status, data } = response;
-
-    if (status === 401) {
-      console.error('[CloudClient] 401 response from worker', data);
-      throw new Error('Login to cloud store failed, check your credentials');
-    }
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failure response from worker', status, data);
-      throw new Error('Error logging into cloud store');
-    }
-
+    const { data } = response;
     console.info('[CloudClient] Housekeeping results:', data);
   }
 
@@ -748,7 +683,12 @@ export default class CloudClient extends EventEmitter {
     const headers = { Authorization: this.authHeader };
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.api}/guild/${guild}/mtime`;
-    const response = await axios.get(url, { headers });
+
+    const response = await axios.get(url, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
     const { data } = response;
     const { mtime } = data;
     return mtime;
@@ -837,6 +777,7 @@ export default class CloudClient extends EventEmitter {
       const stream = fs.createReadStream(file);
 
       try {
+        // Don't worry about 401s here, this is direct to R2.
         await axios.put(signedUrl, stream, config);
         success = true;
       } catch (error) {
@@ -950,6 +891,7 @@ export default class CloudClient extends EventEmitter {
         });
 
         try {
+          // Don't worry about 401s here, this is direct to R2.
           rsp = await axios.put(url, stream, config);
           success = true;
         } catch (error) {
@@ -1026,24 +968,25 @@ export default class CloudClient extends EventEmitter {
 
     const guild = encodeURIComponent(this.guild);
     const video = encodeURIComponent(videoName);
-
     const url = `${CloudClient.api}/guild/${guild}/video/${video}/link`;
     const headers = { Authorization: this.authHeader };
 
     const response = await axios.post(url, undefined, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    const { status, data } = response;
-
-    if (status !== 200) {
-      console.error('[CloudClient] Failed to get shareable link', status, data);
-      throw new Error('Failed to get shareable link');
-    }
-
-    const { id } = data;
+    const { id } = response.data;
     console.info('[CloudClient] Got shareable link', videoName, id);
     return `${CloudClient.website}/link/${id}`;
+  }
+
+  /**
+   * Validate the response status. This is basically just default behaviour plus
+   * a check for 401 status codes. If we get a 401, we emit a logout event.
+   */
+  private validateResponseStatus(status: number) {
+    if (status === 401) this.emit('logout');
+    return status >= 200 && status < 300;
   }
 }
