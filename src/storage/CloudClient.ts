@@ -52,8 +52,7 @@ export default class CloudClient extends EventEmitter {
    * Production API: https://api.warcraftrecorder.com/api
    * Development API: https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api
    */
-  private static api =
-    'https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api'; // TODO revert
+  private static api = 'https://api.warcraftrecorder.com/api';
 
   /**
    * The polling websocket endpoint. This is used to get real-time updates
