@@ -6,11 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.13.1] - 2025-05-16
+### Changed
 - Change the polling mechanism to be websocket based, client refreshes are quicker and more efficient on the server side.
 - Add a small amount of overrun to raid wipes to alleviate any rounding of the duration cutting into the pull.
 
-### Added
-### Fixed
 
 ## [6.13.0] - 2025-05-11
 ### Added
