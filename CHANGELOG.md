@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Rescale video to fit scene on source callback from OBS rather than a timer.
+- Fix a bug where the process audio slider did not apply correctly.
 
 ## [6.13.1] - 2025-05-16
 ### Changed
