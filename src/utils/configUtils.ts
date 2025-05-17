@@ -174,6 +174,7 @@ const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
     obsForceMono: cfg.get<boolean>('obsForceMono'),
     speakerVolume: cfg.get<number>('speakerVolume'),
     micVolume: cfg.get<number>('micVolume'),
+    processVolume: cfg.get<number>('processVolume'),
     pushToTalk: cfg.get<boolean>('pushToTalk'),
     pushToTalkKey: cfg.get<number>('pushToTalkKey'),
     pushToTalkMouseButton: cfg.get<number>('pushToTalkMouseButton'),

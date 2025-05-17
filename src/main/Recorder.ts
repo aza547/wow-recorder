@@ -43,7 +43,9 @@ import {
   ObsAudioConfig,
   ObsBaseConfig,
   ObsOverlayConfig,
+  ObsSourceCallbackInfo,
   ObsVideoConfig,
+  ObsVolmeterCallbackInfo,
   TAudioSourceType,
   TObsValue,
   TPreviewPosition,
@@ -186,12 +188,6 @@ export default class Recorder extends EventEmitter {
   private resolution: keyof typeof obsResolutions = '1920x1080';
 
   /**
-   * Timer object for checking the size of the game window and rescaling if
-   * required.
-   */
-  private videoSourceSizeInterval?: NodeJS.Timeout;
-
-  /**
    * Arbritrarily chosen channel numbers for video input. We only ever
    * include one video source.
    */
@@ -273,6 +269,13 @@ export default class Recorder extends EventEmitter {
     xPos: 0,
     yPos: 0,
   };
+
+  /**
+   * Volmeters are used to monitor the audio levels of an input source. We
+   * keep a list of them here as we need a volmeter per audio source, and
+   * it's handy to have a list for cleaning them up.
+   */
+  private volmeters: osn.IVolmeter[] = [];
 
   /**
    * Faders are used to modify the volume of an input source. We keep a list
@@ -405,6 +408,18 @@ export default class Recorder extends EventEmitter {
     // we ask it to start/stop.
     osn.NodeObs.OBS_service_connectOutputSignals((s: osn.EOutputSignal) => {
       this.handleSignal(s);
+    });
+
+    // The source callback is OBS's way of informing us of changes to the
+    // sources. Used for dynamic resizing.
+    osn.NodeObs.RegisterSourceCallback((d: ObsSourceCallbackInfo[]) => {
+      this.handleSourceCallback(d);
+    });
+
+    // The volmeter callback is OBS's way of communicating the state of audio
+    // sources. Used for monitoring audio levels.
+    osn.NodeObs.RegisterVolmeterCallback((d: ObsVolmeterCallbackInfo[]) => {
+      this.handleVolmeterCallback(d);
     });
 
     // The scene is an OBS construct that holds the sources, think of it as a
@@ -602,7 +617,6 @@ export default class Recorder extends EventEmitter {
 
     const overlayCfg = getOverlayConfig(this.cfg);
     this.configureOverlayImageSource(overlayCfg);
-    this.watchVideoSourceSize();
   }
 
   /**
@@ -720,6 +734,7 @@ export default class Recorder extends EventEmitter {
       audioProcessDevices,
       micVolume,
       speakerVolume,
+      processVolume,
       obsForceMono,
       obsAudioSuppression,
     } = config;
@@ -736,10 +751,12 @@ export default class Recorder extends EventEmitter {
           TAudioSourceType.input,
         );
 
+        const obsVolmeter = osn.VolmeterFactory.create(0);
+        obsVolmeter.attach(obsSource);
+
         const micFader = osn.FaderFactory.create(0);
         micFader.attach(obsSource);
         micFader.mul = micVolume;
-        this.faders.push(micFader);
 
         if (obsAudioSuppression) {
           const filter = osn.FilterFactory.create(
@@ -751,6 +768,8 @@ export default class Recorder extends EventEmitter {
           obsSource.addFilter(filter);
         }
 
+        this.volmeters.push(obsVolmeter);
+        this.faders.push(micFader);
         this.audioInputDevices.push(obsSource);
       });
 
@@ -823,10 +842,15 @@ export default class Recorder extends EventEmitter {
           TAudioSourceType.output,
         );
 
+        const obsVolmeter = osn.VolmeterFactory.create(0);
+        obsVolmeter.attach(obsSource);
+
         const speakerFader = osn.FaderFactory.create(0);
         speakerFader.attach(obsSource);
         speakerFader.mul = speakerVolume;
+
         this.faders.push(speakerFader);
+        this.volmeters.push(obsVolmeter);
         this.audioOutputDevices.push(obsSource);
       });
 
@@ -859,10 +883,15 @@ export default class Recorder extends EventEmitter {
           TAudioSourceType.process,
         );
 
-        const speakerFader = osn.FaderFactory.create(0);
-        speakerFader.attach(obsSource);
-        speakerFader.mul = speakerVolume;
-        this.faders.push(speakerFader);
+        const obsVolmeter = osn.VolmeterFactory.create(0);
+        obsVolmeter.attach(obsSource);
+
+        const processFader = osn.FaderFactory.create(0);
+        processFader.attach(obsSource);
+        processFader.mul = processVolume;
+
+        this.volmeters.push(obsVolmeter);
+        this.faders.push(processFader);
         this.audioProcessDevices.push(obsSource);
       });
 
@@ -896,11 +925,17 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Removing OBS audio sources...');
 
+    this.volmeters.forEach((volmeter) => {
+      volmeter.detach();
+      volmeter.destroy();
+    });
+
     this.faders.forEach((fader) => {
       fader.detach();
       fader.destroy();
     });
 
+    this.volmeters = [];
     this.faders = [];
 
     this.audioInputDevices.forEach((device, idx) => {
@@ -947,10 +982,6 @@ export default class Recorder extends EventEmitter {
     if (!this.obsInitialized) {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
       return;
-    }
-
-    if (this.videoSourceSizeInterval) {
-      clearInterval(this.videoSourceSizeInterval);
     }
 
     this.clearFindWindowInterval();
@@ -1336,6 +1367,22 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
+   * Handle a source callback from OBS.
+   */
+  private handleSourceCallback(data: ObsSourceCallbackInfo[]) {
+    console.info('[Recorder] Got source callback:', data);
+    this.scaleVideoSourceSize();
+  }
+
+  /**
+   * Handle a volmeter callback from OBS. Deliberatly no logs in here
+   * as it's extremely frequently.
+   */
+  private handleVolmeterCallback(data: ObsVolmeterCallbackInfo[]) {
+    this.mainWindow.webContents.send('volmeter', data);
+  }
+
+  /**
    * Creates a window capture source. In TWW, the retail and classic Window names
    * diverged slightly, so while this was previously a hardcoded string, now we
    * search for it in the OSN sources API.
@@ -1485,7 +1532,7 @@ export default class Recorder extends EventEmitter {
     } else if (type === TAudioSourceType.input) {
       name = `WCR Mic Source ${idx}`;
     } else if (type === TAudioSourceType.process) {
-      name = `WCR App Capture Source ${idx}`;
+      name = `WCR App Source ${idx}`;
     } else {
       // Programmer error, should never happen.
       throw new Error('Invalid audio source type');
@@ -1497,23 +1544,6 @@ export default class Recorder extends EventEmitter {
       : { device_id: id };
 
     return osn.InputFactory.create(type, name, settings);
-  }
-
-  /**
-   * Set up an interval to run the scaleVideoSourceSize function.
-   */
-  private watchVideoSourceSize() {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    if (this.videoSourceSizeInterval) {
-      clearInterval(this.videoSourceSizeInterval);
-    }
-
-    this.videoSourceSizeInterval = setInterval(() => {
-      this.scaleVideoSourceSize();
-    }, 2000);
   }
 
   /**
