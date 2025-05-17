@@ -24,7 +24,8 @@ export type Channels =
   | 'writeClipboard'
   | 'getShareableLink'
   | 'refreshFrontend'
-  | 'doAppUpdate';
+  | 'doAppUpdate'
+  | 'volmeter';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {

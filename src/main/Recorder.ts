@@ -617,7 +617,6 @@ export default class Recorder extends EventEmitter {
 
     const overlayCfg = getOverlayConfig(this.cfg);
     this.configureOverlayImageSource(overlayCfg);
-    this.watchVideoSourceSize();
   }
 
   /**
@@ -926,11 +925,17 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Removing OBS audio sources...');
 
+    this.volmeters.forEach((volmeter) => {
+      volmeter.detach();
+      volmeter.destroy();
+    });
+
     this.faders.forEach((fader) => {
       fader.detach();
       fader.destroy();
     });
 
+    this.volmeters = [];
     this.faders = [];
 
     this.audioInputDevices.forEach((device, idx) => {
@@ -977,10 +982,6 @@ export default class Recorder extends EventEmitter {
     if (!this.obsInitialized) {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
       return;
-    }
-
-    if (this.videoSourceSizeInterval) {
-      clearInterval(this.videoSourceSizeInterval);
     }
 
     this.clearFindWindowInterval();
@@ -1369,16 +1370,16 @@ export default class Recorder extends EventEmitter {
    * Handle a source callback from OBS.
    */
   private handleSourceCallback(data: ObsSourceCallbackInfo[]) {
-    console.log('[Recorder] Got source callback', data);
+    console.info('[Recorder] Got source callback:', data);
     this.scaleVideoSourceSize();
   }
 
   /**
    * Handle a volmeter callback from OBS. Deliberatly no logs in here
-   * as it's called multiple times a second.
+   * as it's extremely frequently.
    */
   private handleVolmeterCallback(data: ObsVolmeterCallbackInfo[]) {
-    console.log('[Recorder] Got volmeter callback', data);
+    this.mainWindow.webContents.send('volmeter', data);
   }
 
   /**
@@ -1531,7 +1532,7 @@ export default class Recorder extends EventEmitter {
     } else if (type === TAudioSourceType.input) {
       name = `WCR Mic Source ${idx}`;
     } else if (type === TAudioSourceType.process) {
-      name = `WCR App Capture Source ${idx}`;
+      name = `WCR App Source ${idx}`;
     } else {
       // Programmer error, should never happen.
       throw new Error('Invalid audio source type');

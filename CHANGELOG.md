@@ -6,8 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+
 ### Added
+- Add audio source bars to the audio configuration panel.
+
 ### Fixed
+- Rescale video to fit scene on source callback from OBS rather than a timer.
 
 ## [6.13.1] - 2025-05-16
 ### Changed

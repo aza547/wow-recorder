@@ -1,5 +1,10 @@
-import { AppState, DeviceType, IOBSDevice } from 'main/types';
-import React, { useEffect, useRef, useState } from 'react';
+import {
+  AppState,
+  DeviceType,
+  IOBSDevice,
+  ObsVolmeterCallbackInfo,
+} from 'main/types';
+import { useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
 import { Info, Volume1, Volume2 } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
@@ -18,6 +23,7 @@ import { MultiSelect } from './components/MultiSelect/MultiSelect';
 import Slider from './components/Slider/Slider';
 import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
+import Progress from './components/Progress/Progress';
 
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timeout | undefined;
@@ -39,6 +45,12 @@ const AudioSourceControls = (props: IProps) => {
       value: string | number;
     }[];
   }>({ input: [], output: [], process: [] });
+
+  const [volmeter, setVolmeter] = useState({
+    input: 50,
+    output: 30,
+    process: 70,
+  });
 
   const [pttHotKeyFieldFocused, setPttHotKeyFieldFocused] = useState(false);
 
@@ -122,6 +134,50 @@ const AudioSourceControls = (props: IProps) => {
 
     listenNextKeyPress();
   }, [pttHotKeyFieldFocused, setConfig]);
+
+  const dbfsToPercent = (dbfs: number) => {
+    // OBS returns data in dBFS, which is a logarithmic scale.
+    // 0dBFS is the maximum level, and approximately -100dBFS is silence.
+    // Just clamp it between -100 and 0 and add 100 to get a percentage.
+    const clamped = Math.max(-100, Math.min(0, dbfs));
+    return clamped + 100;
+  };
+
+  const getSourceAverageMagnitude = (
+    data: ObsVolmeterCallbackInfo[],
+    prefix: string,
+  ) => {
+    const magnitudes = data
+      .filter((d) => d.sourceName.startsWith(prefix))
+      .flatMap((d) => d.magnitude);
+
+    const length = magnitudes.length;
+    if (length === 0) return -100;
+    const average = magnitudes.reduce((a, b) => a + b, 0) / length;
+    return average;
+  };
+
+  const volmeterRefresh = (data: ObsVolmeterCallbackInfo[]) => {
+    const speakers = getSourceAverageMagnitude(data, 'WCR Speaker Source');
+    const mics = getSourceAverageMagnitude(data, 'WCR Mic Source');
+    const processes = getSourceAverageMagnitude(data, 'WCR App Source');
+
+    setVolmeter({
+      output: dbfsToPercent(speakers),
+      input: dbfsToPercent(mics),
+      process: dbfsToPercent(processes),
+    });
+  };
+
+  useEffect(() => {
+    ipc.on('volmeter', (data: unknown) =>
+      volmeterRefresh(data as ObsVolmeterCallbackInfo[]),
+    );
+
+    return () => {
+      ipc.removeAllListeners('volmeter');
+    };
+  }, []);
 
   const onDeviceChange = (
     type: DeviceType,
@@ -517,21 +573,42 @@ const AudioSourceControls = (props: IProps) => {
     );
   };
 
+  const getSpeakerSection = () => (
+    <div className="flex flex-col justify-center w-1/4 gap-y-2">
+      {getSpeakerSelect()}
+      <div className="flex items-center">
+        <Progress className="h-1 mt-1 w-full" value={volmeter.output} />
+      </div>
+      {getSpeakerVolume()}
+    </div>
+  );
+
+  const getMicSection = () => (
+    <div className="flex flex-col justify-center w-1/4 gap-y-2">
+      {getMicSelect()}
+      <div className="flex items-center gap-2">
+        <Progress className="h-1 mt-1 w-full" value={volmeter.input} />
+      </div>
+      {getMicVolume()}
+    </div>
+  );
+
+  const getProcessSection = () => (
+    <div className="flex flex-col justify-center w-1/4 gap-y-2">
+      {getProcessSelect()}
+      <div className="flex items-center gap-2">
+        <Progress className="h-1 mt-1 w-full" value={volmeter.process} />
+      </div>
+      {getProcessVolume()}
+    </div>
+  );
+
   return (
     <div className="flex gap-y-10 flex-col">
       <div className="flex items-center content-start w-full gap-10 flex-wrap">
-        <div className="flex flex-col justify-center w-1/5 gap-y-4">
-          {getSpeakerSelect()}
-          {getSpeakerVolume()}
-        </div>
-        <div className="flex flex-col justify-center w-1/5 gap-y-4">
-          {getMicSelect()}
-          {getMicVolume()}
-        </div>
-        <div className="flex flex-col justify-center w-1/5 gap-y-4">
-          {getProcessSelect()}
-          {getProcessVolume()}
-        </div>
+        {getSpeakerSection()}
+        {getMicSection()}
+        {getProcessSection()}
       </div>
       <div className="flex items-center content-start w-full gap-10 flex-wrap">
         {getAudioSuppressionSwitch()}
