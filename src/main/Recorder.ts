@@ -1005,6 +1005,7 @@ export default class Recorder extends EventEmitter {
     try {
       osn.NodeObs.InitShutdownSequence();
       osn.NodeObs.RemoveSourceCallback();
+      osn.NodeObs.RemoveVolmeterCallback();
       osn.NodeObs.OBS_service_removeCallback();
       osn.NodeObs.IPC.disconnect();
     } catch (e) {
