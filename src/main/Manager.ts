@@ -1205,6 +1205,30 @@ export default class Manager {
       }
     });
 
+    /**
+     * Callback to attach the audio devices. This is called when the user
+     * opens the audio settings so that the volmeter bars can be populated.
+     */
+    ipcMain.on('attachAudioSources', (_event, args) => {
+      const attach = args[0];
+
+      if (!this.configValid) {
+        console.warn(
+          '[Manager] Refusing to attach audio devices with invalid config',
+        );
+        return;
+      }
+
+      if (attach) {
+        console.info('[Manager] Frontend requested audio sources be attached');
+        const audioConfig = getObsAudioConfig(this.cfg);
+        this.recorder.configureAudioSources(audioConfig);
+      } else {
+        console.info('[Manager] Frontend requested audio sources be detached');
+        this.recorder.removeAudioSources();
+      }
+    });
+
     // Important we shutdown OBS on the before-quit event as if we get closed by
     // the installer we want to ensure we shutdown OBS, this is common when
     // upgrading the app. See issue 325 and 338.

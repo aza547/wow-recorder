@@ -25,7 +25,8 @@ export type Channels =
   | 'getShareableLink'
   | 'refreshFrontend'
   | 'doAppUpdate'
-  | 'volmeter';
+  | 'volmeter'
+  | 'attachAudioSources';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
