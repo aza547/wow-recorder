@@ -1212,10 +1212,8 @@ export default class Manager {
     ipcMain.on('attachAudioSources', (_event, args) => {
       const attach = args[0];
 
-      if (!this.configValid) {
-        console.warn(
-          '[Manager] Refusing to attach audio devices with invalid config',
-        );
+      if (!this.stages[3].valid) {
+        console.warn('[Manager] Wont attach audio sources with invalid config');
         return;
       }
 
