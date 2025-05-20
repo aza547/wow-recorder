@@ -176,14 +176,14 @@ const AudioSourceControls = (props: IProps) => {
 
     // Attach the audio devices so volmeter bars show
     // even if WoW is closed.
-    ipc.sendMessage('attachAudioSources', [true]);
+    ipc.sendMessage('audioSettingsOpen', [true]);
 
     return () => {
       ipc.removeAllListeners('volmeter');
 
       // Remove the audio devices so Windows can still
       // sleep on unmounting.
-      ipc.sendMessage('attachAudioSources', [false]);
+      ipc.sendMessage('audioSettingsOpen', [false]);
     };
   }, []);
 

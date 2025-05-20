@@ -147,7 +147,7 @@ export default class Recorder extends EventEmitter {
   private dummyGameCaptureSource: IInput;
 
   /**
-   * The dummy window capture source.
+   * The dummy process audio capture source.
    */
   private dummyProcessAudioSource: IInput;
 

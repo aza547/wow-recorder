@@ -127,6 +127,8 @@ export default class Manager {
 
   private retryTimer: NodeJS.Timeout | undefined;
 
+  private audioSettingsOpen = false;
+
   /**
    * Defined stages of configuration. They are named only for logging
    * purposes. Each stage holds the current state of the stages config,
@@ -544,7 +546,12 @@ export default class Manager {
     }
 
     this.recorder.clearFindWindowInterval();
-    await this.recorder.removeAudioSources();
+
+    if (!this.audioSettingsOpen) {
+      // Only remove the audio sources if the audio settings window is not open.
+      // We want to keep them attached to show the volmeter bars if it is.
+      this.recorder.removeAudioSources();
+    }
   }
 
   /**
@@ -1209,20 +1216,28 @@ export default class Manager {
      * Callback to attach the audio devices. This is called when the user
      * opens the audio settings so that the volmeter bars can be populated.
      */
-    ipcMain.on('attachAudioSources', (_event, args) => {
-      const attach = args[0];
+    ipcMain.on('audioSettingsOpen', (_event, args) => {
+      this.audioSettingsOpen = args[0];
+
+      console.info(
+        '[Manager] Audio settings were',
+        this.audioSettingsOpen ? 'opened' : 'closed',
+      );
 
       if (!this.stages[3].valid) {
-        console.warn('[Manager] Wont attach audio sources with invalid config');
+        console.warn('[Manager] Wont touch audio sources with invalid config');
         return;
       }
 
-      if (attach) {
-        console.info('[Manager] Frontend requested audio sources be attached');
+      if (this.poller.isWowRunning) {
+        console.info('[Manager] Wont touch audio sources as WoW is running');
+        return;
+      }
+
+      if (this.audioSettingsOpen) {
         const audioConfig = getObsAudioConfig(this.cfg);
         this.recorder.configureAudioSources(audioConfig);
       } else {
-        console.info('[Manager] Frontend requested audio sources be detached');
         this.recorder.removeAudioSources();
       }
     });
