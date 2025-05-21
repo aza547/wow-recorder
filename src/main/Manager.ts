@@ -629,9 +629,14 @@ export default class Manager {
    * Configure audio settings in OBS. This can all be changed live.
    */
   private configureObsAudio(config: ObsAudioConfig) {
-    if (this.poller.isWowRunning) {
-      this.recorder.configureAudioSources(config);
+    const shouldConfigure = this.poller.isWowRunning || this.audioSettingsOpen;
+
+    if (!shouldConfigure) {
+      console.info("Won't configure audio sources, WoW not running");
+      return;
     }
+
+    this.recorder.configureAudioSources(config);
   }
 
   /**

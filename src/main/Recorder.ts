@@ -147,11 +147,6 @@ export default class Recorder extends EventEmitter {
   private dummyGameCaptureSource: IInput;
 
   /**
-   * The dummy process audio capture source.
-   */
-  private dummyProcessAudioSource: IInput;
-
-  /**
    * Timer for latching onto a window for either game capture or
    * window capture. Often this does not appear immediately on
    * the WoW process starting.
@@ -394,14 +389,6 @@ export default class Recorder extends EventEmitter {
       'WCR Chat Overlay',
       { file: getAssetPath('poster', 'chat-cover.png') },
     );
-
-    // Provides us with a mechanism to get a list of available processes to
-    // expose in the UI. We won't ever use this source.
-    this.dummyProcessAudioSource = osn.InputFactory.create(
-      TAudioSourceType.process,
-      'WCR Dummy Process Audio Source',
-    );
-    this.dummyProcessAudioSource.enabled = false;
 
     // Connects the signal handler, we get feedback from OBS by way of
     // signals, so this is how we know it's doing the right thing after
@@ -1060,17 +1047,10 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    // The source properties are cached by OSN, so update an irrelevant
-    // setting to force a refresh. This refreshes the window list within
-    // the properties object.
-    //
-    // This relies on some internals of OSN which update the cache to
-    // refresh on calling the update function. See "osn::ISource::Update"
-    // in isource.cpp for more details.
-    const src = this.dummyProcessAudioSource;
-    const { settings } = src;
-    settings.refresh = uuidv4();
-    src.update(settings);
+    const src = osn.InputFactory.create(
+      TAudioSourceType.process,
+      'WCR Dummy Process Audio Source',
+    );
 
     let prop = src.properties.first();
 
@@ -1081,9 +1061,14 @@ export default class Recorder extends EventEmitter {
     const windows = [];
 
     if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
-      windows.push(...prop.details.items);
+      const unique = Array.from(
+        new Map(prop.details.items.map((item) => [item.value, item])).values(),
+      );
+
+      windows.push(...unique);
     }
 
+    src.release();
     return windows;
   }
 

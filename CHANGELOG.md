@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add audio source bars to the audio configuration panel.
 
 ### Fixed
+- [Issue 663](https://github.com/aza547/wow-recorder/issues/663) - Fix a bug with ghost audio devices not being deselectable.
 - Rescale video to fit scene on source callback from OBS rather than a timer.
 - Fix a bug where the process audio slider did not apply correctly.
 

@@ -222,6 +222,22 @@ const AudioSourceControls = (props: IProps) => {
   };
 
   const getSpeakerSelect = () => {
+    const options = availableAudioDevices.output.map((audioDevice) => ({
+      value: audioDevice.id,
+      label: audioDevice.description,
+    }));
+
+    config.audioOutputDevices
+      .split(',')
+      .filter((id) => id)
+      .forEach((id) => {
+        const found = options.find((o) => o.value === id);
+
+        if (!found) {
+          options.push({ value: id, label: 'Unknown Device' });
+        }
+      });
+
     return (
       <div className="flex flex-col w-full">
         <Label className="flex items-center">
@@ -237,10 +253,7 @@ const AudioSourceControls = (props: IProps) => {
           </Tooltip>
         </Label>
         <MultiSelect
-          options={availableAudioDevices.output.map((audioDevice) => ({
-            value: audioDevice.id,
-            label: audioDevice.description,
-          }))}
+          options={options}
           onValueChange={(values) => onDeviceChange(DeviceType.OUTPUT, values)}
           defaultValue={config.audioOutputDevices.split(',').filter((d) => d)}
           placeholder={getLocalePhrase(
@@ -284,6 +297,22 @@ const AudioSourceControls = (props: IProps) => {
   };
 
   const getMicSelect = () => {
+    const options = availableAudioDevices.input.map((audioDevice) => ({
+      value: audioDevice.id,
+      label: audioDevice.description,
+    }));
+
+    config.audioInputDevices
+      .split(',')
+      .filter((id) => id)
+      .forEach((id) => {
+        const found = options.find((o) => o.value === id);
+
+        if (!found) {
+          options.push({ value: id, label: 'Unknown Device' });
+        }
+      });
+
     return (
       <div className="flex flex-col w-full">
         <Label className="flex items-center">
@@ -299,10 +328,7 @@ const AudioSourceControls = (props: IProps) => {
           </Tooltip>
         </Label>
         <MultiSelect
-          options={availableAudioDevices.input.map((audioDevice) => ({
-            value: audioDevice.id,
-            label: audioDevice.description,
-          }))}
+          options={options}
           onValueChange={(values) => onDeviceChange(DeviceType.INPUT, values)}
           defaultValue={config.audioInputDevices.split(',').filter((d) => d)}
           placeholder={getLocalePhrase(
