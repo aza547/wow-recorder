@@ -136,11 +136,10 @@ const AudioSourceControls = (props: IProps) => {
   }, [pttHotKeyFieldFocused, setConfig]);
 
   const dbfsToPercent = (dbfs: number) => {
-    // OBS returns data in dBFS, which is a logarithmic scale.
-    // 0dBFS is the maximum level, and approximately -100dBFS is silence.
-    // Just clamp it between -100 and 0 and add 100 to get a percentage.
-    const clamped = Math.max(-100, Math.min(0, dbfs));
-    return clamped + 100;
+    // OBS returns data in dBFS, which is a logarithmic scale. 0dBFS is the
+    // maximum level, and approximately -100dBFS is silence. Add 100 roughly
+    // convert it to a percentage.
+    return dbfs + 100;
   };
 
   const getSourceAverageMagnitude = (
@@ -153,7 +152,17 @@ const AudioSourceControls = (props: IProps) => {
 
     const length = magnitudes.length;
     if (length === 0) return -100;
-    const average = magnitudes.reduce((a, b) => a + b, 0) / length;
+
+    const average =
+      magnitudes
+        // Sometimes OBS returns magintudes of -65k. Not sure why but clamp it
+        // to avoid messing with the average. Both -65k and -100 are silence.
+        // Also clamp to 0 to avoid any unexpected positive values, just
+        // being cautious with that, no actual evidence of this happening.
+        .map((m) => Math.max(m, -100))
+        .map((m) => Math.min(m, 0))
+        .reduce((a, b) => a + b, 0) / length;
+
     return average;
   };
 
