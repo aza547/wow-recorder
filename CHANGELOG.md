@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.13.2] - 2025-05-22
 
 ### Added
 - Add audio source bars to the audio configuration panel.
