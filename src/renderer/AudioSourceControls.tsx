@@ -135,13 +135,6 @@ const AudioSourceControls = (props: IProps) => {
     listenNextKeyPress();
   }, [pttHotKeyFieldFocused, setConfig]);
 
-  const dbfsToPercent = (dbfs: number) => {
-    // OBS returns data in dBFS, which is a logarithmic scale. 0dBFS is the
-    // maximum level, and approximately -100dBFS is silence. Add 100 roughly
-    // convert it to a percentage.
-    return dbfs + 100;
-  };
-
   const getSourceAverageMagnitude = (
     data: ObsVolmeterCallbackInfo[],
     prefix: string,
@@ -150,6 +143,9 @@ const AudioSourceControls = (props: IProps) => {
       .filter((d) => d.sourceName.startsWith(prefix))
       .flatMap((d) => d.magnitude);
 
+    // OBS returns data in dBFS, which is a logarithmic scale. 0dBFS is the
+    // maximum level, and approximately -100dBFS is silence. Add 100 roughly
+    // convert it to a percentage.
     const length = magnitudes.length;
     if (length === 0) return -100;
 
@@ -171,10 +167,12 @@ const AudioSourceControls = (props: IProps) => {
     const mics = getSourceAverageMagnitude(data, 'WCR Mic Source');
     const processes = getSourceAverageMagnitude(data, 'WCR App Source');
 
+    // We've clamped between -100 and 0. Very lazy maths here to convert it
+    // to a value between 0 and 100, to use as a position on the progress bar.
     setVolmeter({
-      output: dbfsToPercent(speakers),
-      input: dbfsToPercent(mics),
-      process: dbfsToPercent(processes),
+      output: speakers + 100,
+      input: mics + 100,
+      process: processes + 100,
     });
   };
 
