@@ -91,54 +91,14 @@ export default class CloudClient extends EventEmitter {
   private polling = false;
 
   /**
-   * If we have an open websocket, we want to keep it alive. This timer will
-   * send a ping to do that. The server is configured to return a pong in response.
-   *
-   * It will close after 5 minutes of no activity so we must send messages more
-   * frequently than this. Not sure this is a defined timeout, couldn't find it in
-   * the Cloudflare Websocket docs, but surely every minute is fine.
+   * Timer for keeping websocket alive with pings
    */
-  private heartbeatTimer = setInterval(() => {
-    if (!this.ws) {
-      // We're not connected.
-      return;
-    }
-
-    if (this.ws.readyState !== WebSocket.OPEN) {
-      // The socket isn't ready to send messages.
-      return;
-    }
-
-    try {
-      this.ws.ping();
-    } catch (error) {
-      console.warn('[CloudClient] Error sending websocket ping', String(error));
-    }
-  }, 60 * 1000);
+  private heartbeatTimer: NodeJS.Timeout | null = null;
 
   /**
-   * Timer for reconnecting the WebSocket connection. We don't try to reconnect
-   * if the websocket is closed by the server. We just wait on this timer to fire.
+   * Timer for reconnecting the WebSocket connection
    */
-  private reconnectTimer = setInterval(() => {
-    if (this.ws) {
-      // We're already connected.
-      return;
-    }
-
-    if (!this.polling) {
-      // We've not been told to start polling yet.
-      return;
-    }
-
-    try {
-      this.connectPollingWebsocket();
-    } catch (error) {
-      // Not sure if this is really possible, but just being safe.
-      // I think errors instead come through the on('error') handler.
-      console.warn('[CloudClient] Error connecting websocket', String(error));
-    }
-  }, 10000);
+  private reconnectTimer: NodeJS.Timeout | null = null;
 
   /**
    * Constructor.
@@ -468,30 +428,78 @@ export default class CloudClient extends EventEmitter {
    */
   public startPolling() {
     console.info('[CloudClient] Start WebSocket polling');
-    this.connectPollingWebsocket();
+    
+    if (this.polling) {
+      return; // Already polling
+    }
+
     this.polling = true;
+    this.connectPollingWebsocket();
+
+    // Initialize heartbeat timer
+    this.heartbeatTimer = setInterval(() => {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      try {
+        this.ws.ping();
+      } catch (error) {
+        console.warn('[CloudClient] Error sending websocket ping', String(error));
+      }
+    }, 60 * 1000);
+
+    // Initialize reconnect timer
+    this.reconnectTimer = setInterval(() => {
+      if (this.ws || !this.polling) {
+        return;
+      }
+
+      try {
+        this.connectPollingWebsocket();
+      } catch (error) {
+        console.warn('[CloudClient] Error connecting websocket', String(error));
+      }
+    }, 10000);
   }
 
   /**
-   * Stop listening for updates using WebSocket. Should only be called before
-   * on destroying this class as there is no way to restart the timers.
+   * Stop listening for updates using WebSocket.
    */
   public stopPolling() {
     console.info('[CloudClient] Stop WebSocket polling');
     this.polling = false;
 
+    // Clean up WebSocket
     if (this.ws) {
+      this.ws.removeAllListeners(); // Prevent memory leaks
       this.ws.close();
       this.ws = null;
     }
 
-    if (this.reconnectTimer) {
-      clearInterval(this.reconnectTimer);
-    }
-
+    // Clean up timers
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
     }
+
+    if (this.reconnectTimer) {
+      clearInterval(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+
+  /**
+   * Clean up all resources. Call this before discarding the CloudClient instance.
+   */
+  public destroy() {
+    console.info('[CloudClient] Destroying CloudClient');
+    
+    // Stop polling (cleans up WebSocket and timers)
+    this.stopPolling();
+    
+    // Clean up EventEmitter listeners
+    this.removeAllListeners();
   }
 
   /**
@@ -500,9 +508,10 @@ export default class CloudClient extends EventEmitter {
   private connectPollingWebsocket() {
     console.info('[CloudClient] Connecting WebSocket for updates');
 
+    // Clean up existing connection completely
     if (this.ws) {
+      this.ws.removeAllListeners(); // Critical for preventing memory leaks
       this.ws.close();
-      this.ws.removeAllListeners();
       this.ws = null;
     }
 
@@ -927,7 +936,7 @@ export default class CloudClient extends EventEmitter {
       }
 
       // Weirdly axios returns this with quotes included, strip them off.
-      const etagNoQuotes = etag.replaceAll('"', '');
+      const etagNoQuotes = etag.replace(/"/g, '');
       etags.push(etagNoQuotes);
 
       console.debug(
