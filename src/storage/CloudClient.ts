@@ -556,6 +556,13 @@ export default class CloudClient extends EventEmitter {
 
     this.ws.on('close', (code, reason) => {
       console.warn('[CloudClient] WebSocket closed:', code, reason);
+
+      if (this.ws) {
+        // The websocket has been closed, clean up the listeners so it
+        // can be garbage collected to avoid a memory leak.
+        this.ws.removeAllListeners();
+      }
+
       this.ws = null;
     });
   }
