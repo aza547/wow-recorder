@@ -936,7 +936,7 @@ export default class CloudClient extends EventEmitter {
       }
 
       // Weirdly axios returns this with quotes included, strip them off.
-      const etagNoQuotes = etag.replace(/"/g, '');
+      const etagNoQuotes = etag.replaceAll('"', '');
       etags.push(etagNoQuotes);
 
       console.debug(
