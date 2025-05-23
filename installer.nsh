@@ -1,21 +1,68 @@
 !macro customInstall
-  NSISdl::download https://aka.ms/vs/17/release/vc_redist.x64.exe "$INSTDIR\vc_redist.x64.exe"  
+  # Check if Visual C++ Redistributable is already installed
+  # Check for the 64-bit version in the registry
   
-  ${If} ${FileExists} `$INSTDIR\vc_redist.x64.exe`
-    ExecWait '$INSTDIR\vc_redist.x64.exe /passive /norestart' $1
-
-    ${If} $1 != '0' 
-      ${If} $1 != '3010'
-        MessageBox MB_OK|MB_ICONEXCLAMATION 'WARNING: Warcraft Recorder was unable to install the latest Visual C++ Redistributable package from Microsoft.'
-      ${EndIf}
+  Var /GLOBAL VCRedistInstalled
+  StrCpy $VCRedistInstalled "0"
+  
+  # Check for Visual Studio 2015-2022 Redistributable (they use the same key)
+  # This checks for the minimum version required
+  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" "Version"
+  ${If} $0 != ""
+    # Version format is like "v14.29.30133.00"
+    # Extract major version number for comparison
+    StrCpy $1 $0 2 1  # Get 2 chars starting from position 1 (skips 'v')
+    
+    # Check if version is 14 or higher (VS 2015+)
+    IntCmp $1 14 0 0 version_ok
+    version_ok:
+      StrCpy $VCRedistInstalled "1"
+  ${EndIf}
+  
+  # Also check the registry location used by VS 2022
+  ${If} $VCRedistInstalled == "0"
+    ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" "Installed"
+    ${If} $0 == "1"
+      StrCpy $VCRedistInstalled "1"
     ${EndIf}
+  ${EndIf}
+  
+  # Alternative check using WOW6432Node for 32-bit NSIS on 64-bit systems
+  ${If} $VCRedistInstalled == "0"
+    ReadRegDWORD $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" "Installed"
+    ${If} $0 == "1"
+      StrCpy $VCRedistInstalled "1"
+    ${EndIf}
+  ${EndIf}
+  
+  # Only download and install if not already installed
+  ${If} $VCRedistInstalled == "0"
+    DetailPrint "Visual C++ Redistributable not found. Downloading and installing..."
+    
+    NSISdl::download https://aka.ms/vs/17/release/vc_redist.x64.exe "$INSTDIR\vc_redist.x64.exe"
+    
+    ${If} ${FileExists} `$INSTDIR\vc_redist.x64.exe`
+      ExecWait '$INSTDIR\vc_redist.x64.exe /passive /norestart' $1
 
-    # ${If} $1 == '3010'
-    #     MessageBox MB_OK|MB_ICONEXCLAMATION 'You must restart your computer to complete the installation.'
-    # ${EndIf}
+      ${If} $1 != '0' 
+        ${If} $1 != '3010'
+          MessageBox MB_OK|MB_ICONEXCLAMATION 'WARNING: Warcraft Recorder was unable to install the latest Visual C++ Redistributable package from Microsoft.'
+        ${EndIf}
+      ${EndIf}
 
-  ${Else}
+      # Clean up the downloaded file
+      Delete "$INSTDIR\vc_redist.x64.exe"
+      
+      # ${If} $1 == '3010'
+      #     MessageBox MB_OK|MB_ICONEXCLAMATION 'You must restart your computer to complete the installation.'
+      # ${EndIf}
+
+    ${Else}
       MessageBox MB_OK|MB_ICONEXCLAMATION 'WARNING: Warcraft Recorder was unable to download the latest Visual C++ Redistributable package from Microsoft.'
+    ${EndIf}
+    
+  ${Else}
+    DetailPrint "Visual C++ Redistributable is already installed. Skipping..."
   ${EndIf}
 
   FileOpen $0 "$INSTDIR\installername" w
