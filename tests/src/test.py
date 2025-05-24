@@ -11,6 +11,7 @@ from glob import glob
 import retail.mythic_plus
 import retail.mythic_plus_drop_go
 import retail.mythic_plus_repair
+import retail.mythic_plus_no_boss
 import retail.raid_wipe
 import retail.raid_reset
 import retail.raid_unknown_encounter
@@ -49,6 +50,7 @@ RETAIL_TESTS = [
     retail.mythic_plus,
     retail.mythic_plus_drop_go,
     retail.mythic_plus_repair,
+    retail.mythic_plus_no_boss,
     retail.raid_reset,
     retail.raid_unknown_encounter,
     retail.raid_wipe,
@@ -60,7 +62,6 @@ RETAIL_TESTS = [
     retail.skirmish,
     retail.wargame_3v3,
     retail.zone_changes,
-    
 ]
 
 CLASSIC_TESTS = [

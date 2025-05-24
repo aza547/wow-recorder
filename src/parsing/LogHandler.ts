@@ -74,6 +74,11 @@ export default abstract class LogHandler extends EventEmitter {
       this.dataTimeout(ms);
     });
 
+    // For ease of testing force stop.
+    this.combatLogWatcher.on('WARCRAFT_RECORDER_FORCE_STOP', () => {
+      this.forceEndActivity();
+    });
+
     this.videoProcessQueue = videoProcessQueue;
   }
 
@@ -352,6 +357,15 @@ export default abstract class LogHandler extends EventEmitter {
 
     const { category } = this.activity;
     return category === VideoCategory.Battlegrounds;
+  }
+
+  protected isMythicPlus() {
+    if (!this.activity) {
+      return false;
+    }
+
+    const { category } = this.activity;
+    return category === VideoCategory.MythicPlus;
   }
 
   protected processCombatant(

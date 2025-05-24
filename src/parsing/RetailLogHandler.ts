@@ -467,7 +467,7 @@ export default class RetailLogHandler extends LogHandler {
       srcGUID,
       srcNameRealm,
       srcFlags,
-      this.isBattleground(),
+      this.isBattleground() || this.isMythicPlus(),
     );
   }
 
@@ -484,7 +484,7 @@ export default class RetailLogHandler extends LogHandler {
       srcGUID,
       srcNameRealm,
       srcFlags,
-      this.isBattleground(),
+      this.isBattleground() || this.isMythicPlus(),
     );
 
     if (
