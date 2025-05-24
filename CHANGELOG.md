@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Stop re-encoding the audio on cutting video.
 
 ## [6.13.2] - 2025-05-22
 
