@@ -974,6 +974,4 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
-  getSleepPromise,
-  getWakePromise,
 };
