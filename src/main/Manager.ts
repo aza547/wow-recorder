@@ -755,10 +755,14 @@ export default class Manager {
     let winner;
 
     try {
-      winner = await Promise.race([
-        CloudClient.getUserAffiliations(cloudAccountName, cloudAccountPassword),
-        getPromiseBomb(10000, 'Authentication timed out'),
-      ]);
+      const { bomb } = getPromiseBomb(10000, 'Authentication timed out');
+
+      const affs = CloudClient.getUserAffiliations(
+        cloudAccountName,
+        cloudAccountPassword,
+      );
+
+      winner = await Promise.race([affs, bomb]);
     } catch (error) {
       console.warn('[Manager] Cloud validation failed', String(error));
 

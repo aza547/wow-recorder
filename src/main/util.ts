@@ -1,7 +1,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
-import { app, BrowserWindow, Display, screen } from 'electron';
+import { app, BrowserWindow, Display, powerMonitor, screen } from 'electron';
 import {
   EventType,
   uIOhook,
@@ -623,8 +623,30 @@ const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
   });
 };
 
+/**
+ * Returns a promise that will reject after a given fuse time. Also provides
+ * handlers to pause the timer, and also to reset the timer to the initial
+ * fuse.
+ */
 const getPromiseBomb = (fuse: number, reason: string) => {
-  return new Promise((_resolve, reject) => setTimeout(reject, fuse, reason));
+  let timeoutId: ReturnType<typeof setTimeout>;
+  let rejectFn: (reason: string) => void;
+
+  const bomb = new Promise((resolve, reject) => {
+    rejectFn = reject;
+    timeoutId = setTimeout(() => reject(reason), fuse);
+  });
+
+  const pause = () => {
+    clearTimeout(timeoutId);
+  };
+
+  const reset = () => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => rejectFn(reason), fuse);
+  };
+
+  return { bomb, pause, reset };
 };
 
 const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
@@ -952,4 +974,6 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
+  getSleepPromise,
+  getWakePromise,
 };

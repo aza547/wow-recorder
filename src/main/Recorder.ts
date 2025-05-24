@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, powerMonitor } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
@@ -54,6 +54,7 @@ import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
 import { getOverlayConfig } from '../utils/configUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { time } from 'console';
 
 /**
  * Class for handing the interface between Warcraft Recorder and OBS.
@@ -1180,10 +1181,21 @@ export default class Recorder extends EventEmitter {
 
     // Wait up to 30 seconds for OBS to signal it has started recording,
     // really this shouldn't take nearly as long.
-    await Promise.race([
-      this.startQueue.shift(),
-      getPromiseBomb(30000, 'OBS timeout waiting for start'),
-    ]);
+    const start = this.startQueue.shift();
+
+    const { bomb, pause, reset } = getPromiseBomb(
+      30000,
+      'OBS timeout waiting for start',
+    );
+
+    try {
+      powerMonitor.on('suspend', pause);
+      powerMonitor.on('resume', reset);
+      await Promise.race([start, bomb]);
+    } finally {
+      powerMonitor.removeListener('suspend', pause);
+      powerMonitor.removeListener('resume', reset);
+    }
 
     this.startQueue.empty();
 
@@ -1215,10 +1227,21 @@ export default class Recorder extends EventEmitter {
     // Wait up to 60 seconds for OBS to signal it has wrote the file, really
     // this shouldn't take nearly as long as this but we're generous to account
     // for slow HDDs etc.
-    await Promise.race([
-      this.wroteQueue.shift(),
-      getPromiseBomb(60000, '[Recorder] OBS timeout waiting for video file'),
-    ]);
+    const wrote = this.wroteQueue.shift();
+
+    const { bomb, pause, reset } = getPromiseBomb(
+      60000,
+      'OBS timeout waiting for video file',
+    );
+
+    try {
+      powerMonitor.on('suspend', pause);
+      powerMonitor.on('resume', reset);
+      await Promise.race([wrote, bomb]);
+    } finally {
+      powerMonitor.removeListener('suspend', pause);
+      powerMonitor.removeListener('resume', reset);
+    }
 
     this.wroteQueue.empty();
     this.lastFile = osn.NodeObs.OBS_service_getLastRecording();
