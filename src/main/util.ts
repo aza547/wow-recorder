@@ -629,21 +629,23 @@ const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
  * fuse.
  */
 const getPromiseBomb = (fuse: number, reason: string) => {
-  let timeoutId: ReturnType<typeof setTimeout>;
+  let timer: ReturnType<typeof setTimeout>;
   let rejectFn: (reason: string) => void;
 
   const bomb = new Promise((resolve, reject) => {
     rejectFn = reject;
-    timeoutId = setTimeout(() => reject(reason), fuse);
+    timer = setTimeout(() => reject(reason), fuse);
   });
 
   const pause = () => {
-    clearTimeout(timeoutId);
+    console.log('[Util] Pausing promise bomb', reason);
+    clearTimeout(timer);
   };
 
   const reset = () => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => rejectFn(reason), fuse);
+    console.log('[Util] Reset promise bomb', reason);
+    clearTimeout(timer);
+    timer = setTimeout(() => rejectFn(reason), fuse);
   };
 
   return { bomb, pause, reset };
