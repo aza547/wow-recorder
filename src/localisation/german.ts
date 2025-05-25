@@ -105,7 +105,7 @@ const GERMAN: Translations = {
   [Phrase.SeparateBufferFolderLabel]: 'Separater Buffer Ordner',
   [Phrase.BufferFolderLabel]: 'Buffer Ordner',
   [Phrase.MaxDiskStorageLabel]: 'Maximale Speichergröße(GB)',
-  [Phrase.WindowsSettingsLabel]: 'Windows Einstellungen',
+  [Phrase.AppSettingsLabel]: 'Anwendung Einstellungen',
   [Phrase.RunOnStartupLabel]: 'Autostart',
   [Phrase.StartMinimizedLabel]: 'Minimiert starten',
   [Phrase.MinimizeOnQuitLabel]: 'Minimieren beim schließen',
@@ -413,6 +413,8 @@ const GERMAN: Translations = {
   [Phrase.SelectProcess]: "Wählen Sie eine Anwendung aus",
   [Phrase.AudioProcessDevicesDescription]: "Anwendungen zum Aufnehmen von Audiodaten, zusätzlich zu allen ausgewählten Lautsprechern und Mikrofonen.",
   [Phrase.ProcessVolumeDescription]: "Die Lautstärke der Anwendung in der Aufnahme, von 0 bis 1.",
+  [Phrase.HideEmptyCategoriesLabel]: "Leere Kategorien ausblenden",
+  [Phrase.HideEmptyCategoriesDescription]: "Blendet Kategorien im Seitenmenü aus, die keine Videos enthalten.",
 };
 
 export default GERMAN;

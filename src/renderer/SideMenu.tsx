@@ -87,6 +87,10 @@ const SideMenu = (props: IProps) => {
     const categoryState = videoState.filter(categoryFilter);
     const numVideos = categoryState.length;
 
+    if (numVideos < 1 && config.hideEmptyCategories) {
+      return <></>;
+    }
+
     return (
       <Menu.Item value={tabCategory}>
         <Menu.Item.Icon>

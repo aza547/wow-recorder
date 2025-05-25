@@ -105,7 +105,7 @@ const KOREAN: Translations = {
   [Phrase.SeparateBufferFolderLabel]: '별도의 임시 폴더',
   [Phrase.BufferFolderLabel]: '임시 폴더',
   [Phrase.MaxDiskStorageLabel]: '디스크 저장 용량 제한 (GB)',
-  [Phrase.WindowsSettingsLabel]: '윈도우 설정',
+  [Phrase.AppSettingsLabel]: '윈도우 설정',
   [Phrase.RunOnStartupLabel]: '시작시 실행',
   [Phrase.StartMinimizedLabel]: '트레이 시작',
   [Phrase.MinimizeOnQuitLabel]: '종료시 트레이',
@@ -413,6 +413,8 @@ const KOREAN: Translations = {
   [Phrase.SelectProcess]: "응용 프로그램 선택",
   [Phrase.AudioProcessDevicesDescription]: "선택한 스피커와 마이크 외에 오디오를 포함할 응용 프로그램",
   [Phrase.ProcessVolumeDescription]: "기록에서 응용 프로그램의 볼륨은 0에서 1까지입니다.",
+  [Phrase.HideEmptyCategoriesLabel]: "빈 카테고리 숨기기",
+  [Phrase.HideEmptyCategoriesDescription]: "비디오가 없는 사이드 메뉴의 카테고리를 숨깁니다.",
 };
 
 export default KOREAN;

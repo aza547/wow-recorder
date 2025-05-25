@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- Add a "hide empty categories" option.
+
 ### Fixed
 - Stop re-encoding the audio on cutting video.
 - [Issue 659](https://github.com/aza547/wow-recorder/issues/650) - Fix a bug where M+ without a boss pull would not record.

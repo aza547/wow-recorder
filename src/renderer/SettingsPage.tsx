@@ -3,7 +3,7 @@ import { AppState, RecStatus } from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
-import WindowsSettings from './WindowsSettings';
+import WindowsSettings from './ApplicationSettings';
 import FlavourSettings from './FlavourSettings';
 import PVESettings from './PVESettings';
 import PVPSettings from './PVPSettings';
@@ -17,6 +17,7 @@ import {
 import Separator from './components/Separator/Separator';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import LocaleSettings from './LocaleSettings';
+import ApplicationSettings from './ApplicationSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -71,13 +72,14 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
               </div>
               <div>
                 <CategoryHeading>
-                  {getLocalePhrase(
-                    appState.language,
-                    Phrase.WindowsSettingsLabel,
-                  )}
+                  {getLocalePhrase(appState.language, Phrase.AppSettingsLabel)}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <WindowsSettings appState={appState} />
+                <ApplicationSettings
+                  appState={appState}
+                  config={config}
+                  setConfig={setConfig}
+                />
               </div>
               <div>
                 <CategoryHeading>

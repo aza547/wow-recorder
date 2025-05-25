@@ -103,7 +103,7 @@ enum Phrase {
   SeparateBufferFolderLabel,
   BufferFolderLabel,
   MaxDiskStorageLabel,
-  WindowsSettingsLabel,
+  AppSettingsLabel,
   RunOnStartupLabel,
   StartMinimizedLabel,
   MinimizeOnQuitLabel,
@@ -410,6 +410,8 @@ enum Phrase {
   SelectProcess,
   AudioProcessDevicesDescription,
   ProcessVolumeDescription,
+  HideEmptyCategoriesLabel,
+  HideEmptyCategoriesDescription,
 }
 
 enum Language {

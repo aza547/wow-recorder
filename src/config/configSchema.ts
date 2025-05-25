@@ -82,6 +82,7 @@ export type ConfigurationSchema = {
   cloudUploadDungeonMinLevel: number;
   cloudUploadClips: boolean;
   language: string;
+  hideEmptyCategories: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -504,5 +505,10 @@ export const configSchema = {
     description: Phrase.LanguageDescription,
     type: 'string',
     default: 'English',
+  },
+  hideEmptyCategories: {
+    description: Phrase.HideEmptyCategoriesDescription,
+    type: 'boolean',
+    default: false,
   },
 };
