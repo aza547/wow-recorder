@@ -1256,17 +1256,10 @@ export default class Manager {
     // Important we shutdown OBS on the before-quit event as if we get closed by
     // the installer we want to ensure we shutdown OBS, this is common when
     // upgrading the app. See issue 325 and 338.
-    app.on('before-quit', async () => {
+    app.on('before-quit', () => {
       console.info('[Manager] Running before-quit actions');
-
       this.poller.reset();
       uIOhook.stop();
-
-      // Important we stop the recorder before we shut it down else we might
-      // try to restart it if the timer lines up.
-      await this.recorder.stop();
-
-      // This is syncronous and slow.
       this.recorder.shutdownOBS();
     });
   }

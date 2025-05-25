@@ -54,7 +54,6 @@ import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
 import { getOverlayConfig } from '../utils/configUtils';
 import { v4 as uuidv4 } from 'uuid';
-import { time } from 'console';
 
 /**
  * Class for handing the interface between Warcraft Recorder and OBS.
@@ -971,6 +970,9 @@ export default class Recorder extends EventEmitter {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
       return;
     }
+
+    // Important to avoid us trying to restart OBS while shutting down / quitting.
+    this.obsState = ERecordingState.Offline;
 
     this.clearFindWindowInterval();
 
