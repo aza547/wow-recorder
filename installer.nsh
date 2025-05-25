@@ -5,8 +5,8 @@
     ExecWait '$INSTDIR\vc_redist.x64.exe /passive /norestart' $1
 
     ${If} $1 != '0' 
-      ${If} $1 != '3010'
-        ${If} $1 != '1638'
+      ${If} $1 != '3010' # The MSI "need to reboot" return code.
+        ${If} $1 != '1638' # The MSI "already installed" return code.
           MessageBox MB_OK|MB_ICONEXCLAMATION 'WARNING: Warcraft Recorder was unable to install the latest Visual C++ Redistributable package from Microsoft.'
         ${EndIf}
       ${EndIf}
