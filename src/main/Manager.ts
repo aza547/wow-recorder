@@ -1262,19 +1262,6 @@ export default class Manager {
       // This takes a few seconds and is synchronous so do it last.
       this.recorder.shutdownOBS();
     });
-
-    // If Windows is going to sleep, we don't want to confuse OBS. Stop the
-    // recording as if WoW has been closed, and resume it once Windows has
-    // resumed.
-    powerMonitor.on('suspend', () => {
-      console.info('[Manager] Detected Windows is going to sleep.');
-      this.onWowStopped();
-    });
-
-    powerMonitor.on('resume', () => {
-      console.info('[Manager] Detected Windows waking up from a sleep.');
-      this.poller.start();
-    });
   }
 
   /**

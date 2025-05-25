@@ -1193,8 +1193,7 @@ export default class Recorder extends EventEmitter {
       powerMonitor.on('resume', reset);
       await Promise.race([start, bomb]);
     } finally {
-      powerMonitor.removeListener('suspend', pause);
-      powerMonitor.removeListener('resume', reset);
+      powerMonitor.removeAllListeners();
     }
 
     this.startQueue.empty();
@@ -1239,8 +1238,7 @@ export default class Recorder extends EventEmitter {
       powerMonitor.on('resume', reset);
       await Promise.race([wrote, bomb]);
     } finally {
-      powerMonitor.removeListener('suspend', pause);
-      powerMonitor.removeListener('resume', reset);
+      powerMonitor.removeAllListeners();
     }
 
     this.wroteQueue.empty();
