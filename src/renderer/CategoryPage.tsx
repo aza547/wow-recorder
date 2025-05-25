@@ -204,11 +204,6 @@ const CategoryPage = (props: IProps) => {
     return [first, ...first.multiPov];
   };
 
-  const bulkDelete = (videos: RendererVideo[]) => {
-    window.electron.ipcRenderer.sendMessage('deleteVideos', videos);
-    stateManager.current.deleteVideos(videos);
-  };
-
   const getVideoSelection = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedViewpoints = getAllSelectedViewpoints();
@@ -361,24 +356,15 @@ const CategoryPage = (props: IProps) => {
         ? getLocalePhrase(language, Phrase.GuildNoPermission)
         : getLocalePhrase(language, Phrase.BulkDeleteButtonTooltip);
 
-      const deleteWarning = `${getLocalePhrase(
-        language,
-        Phrase.ThisWillPermanentlyDelete,
-      )} ${toDelete.length} ${getLocalePhrase(
-        language,
-        Phrase.Recordings,
-      )} ${getLocalePhrase(
-        language,
-        Phrase.From,
-      )} ${Math.max(selectedRows.length, 1)} ${getLocalePhrase(language, Phrase.Rows)}.`;
-
       return (
         <Tooltip content={tooltip}>
           <div>
             <DeleteDialog
-              onDelete={() => bulkDelete(toDelete)}
-              warning={deleteWarning}
+              key={toDelete.map((v) => v.videoName).join(',')} // Forces a remount on selection change.
+              inScope={toDelete}
               appState={appState}
+              stateManager={stateManager}
+              selectedRowCount={selectedRows.length}
             >
               <Button
                 variant="secondary"

@@ -85,9 +85,14 @@ const SideMenu = (props: IProps) => {
   ) => {
     const categoryFilter = getVideoCategoryFilter(tabCategory);
     const categoryState = videoState.filter(categoryFilter);
-    const numVideos = categoryState.length;
+    const numTotalVideos = videoState.length;
+    const numCategoryVideos = categoryState.length;
 
-    if (numVideos < 1 && config.hideEmptyCategories) {
+    if (
+      config.hideEmptyCategories && // Hide empty categories is enabled.
+      numTotalVideos > 0 && // Only hide categories if there are atleast some videos.
+      numCategoryVideos < 1 // If this category has no videos, so hide it.
+    ) {
       return <></>;
     }
 
@@ -107,7 +112,7 @@ const SideMenu = (props: IProps) => {
           )}
         </Menu.Item.Icon>
         {getLocaleCategoryLabel(appState.language, tabCategory)}
-        <Menu.Item.Badge value={numVideos} />
+        <Menu.Item.Badge value={numCategoryVideos} />
       </Menu.Item>
     );
   };
