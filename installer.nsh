@@ -6,7 +6,9 @@
 
     ${If} $1 != '0' 
       ${If} $1 != '3010'
-        MessageBox MB_OK|MB_ICONEXCLAMATION 'WARNING: Warcraft Recorder was unable to install the latest Visual C++ Redistributable package from Microsoft.'
+        ${If} $1 != '1638'
+          MessageBox MB_OK|MB_ICONEXCLAMATION 'WARNING: Warcraft Recorder was unable to install the latest Visual C++ Redistributable package from Microsoft.'
+        ${EndIf}
       ${EndIf}
     ${EndIf}
 
