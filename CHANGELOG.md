@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop re-encoding the audio on cutting video.
 - [Issue 659](https://github.com/aza547/wow-recorder/issues/650) - Fix a bug where M+ without a boss pull would not record.
 - [Issue 519](https://github.com/aza547/wow-recorder/issues/519) - Fix a bug where WCR could report an OBS crash on Windows sleeping.
+- [Issue 671](https://github.com/aza547/wow-recorder/issues/671) - Fix a benign error popping up on installing visual C++ libs.
 
 ## [6.13.2] - 2025-05-22
 
