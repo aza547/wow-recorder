@@ -131,7 +131,14 @@ export const populateDetailsCell = (
         const state = [...prev];
 
         state.forEach((rv) => {
-          if (toProtect.includes(rv)) rv.isProtected = lock;
+          // A video is uniquely identified by its name and storage type.
+          const match = toProtect.find(
+            (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
+          );
+
+          if (match) {
+            rv.isProtected = lock;
+          }
         });
 
         return state;

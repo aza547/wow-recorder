@@ -159,8 +159,12 @@ const DeleteDialog = ({
     window.electron.ipcRenderer.sendMessage('deleteVideos', toDelete);
 
     setVideoState((prev) => {
-      const state = [...prev].filter((rv) => !toDelete.includes(rv));
-      return state;
+      return [...prev].filter((rv) => {
+        return !toDelete.find(
+          // A video is uniquely identified by its name and storage type.
+          (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
+        );
+      });
     });
   };
 

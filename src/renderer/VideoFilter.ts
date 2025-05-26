@@ -106,7 +106,7 @@ export default class VideoFilter {
   ) {
     const suggestions: VideoTag[] = [];
 
-    // We pass in the videos as correlated by the StateManager. We need
+    // We pass in the videos as correlated by the VideoCorrelator. We need
     // to flatten them again before we iterate.
     const flattened = state.flatMap((v) => v.multiPov);
     flattened.push(...state);

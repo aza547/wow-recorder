@@ -38,7 +38,14 @@ export default function TagDialog(props: IProps) {
       const state = [...prev];
 
       state.forEach((rv) => {
-        if (videos.includes(rv)) rv.tag = newTag;
+        // A video is uniquely identified by its name and storage type.
+        const match = videos.find(
+          (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
+        );
+
+        if (match) {
+          rv.tag = newTag;
+        }
       });
 
       return state;

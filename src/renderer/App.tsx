@@ -93,9 +93,7 @@ const WarcraftRecorder = () => {
     diskStatus: { usage: 0, limit: 0 },
   });
 
-  // The video state contains most of the frontend state, it's complex so
-  // frontend triggered modifications go through the StateManager class, which
-  // calls the React set function appropriately.
+  // The video state contains most of the frontend state.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 
   // The counters for display on the side menu. It's convient to keep these

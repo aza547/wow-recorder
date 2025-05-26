@@ -45,7 +45,7 @@ import TagDialog from './TagDialog';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import DateRangePicker from './DateRangePicker';
 import StorageFilterToggle from './StorageFilterToggle';
-import StateManager from './StateManager';
+import VideoCorrelator from './VideoCorrelator';
 
 interface IProps {
   category: VideoCategory;
@@ -94,7 +94,7 @@ const CategoryPage = (props: IProps) => {
   const correlatedState = useMemo<RendererVideo[]>(() => {
     const storageFilterFn = getVideoStorageFilter(storageFilter);
     const storageFilteredState = categoryState.filter(storageFilterFn);
-    return StateManager.correlate(storageFilteredState);
+    return VideoCorrelator.correlate(storageFilteredState);
   }, [categoryState, storageFilter]);
 
   // Now apply filtering based on search tags and date range.
@@ -315,7 +315,14 @@ const CategoryPage = (props: IProps) => {
         const state = [...prev];
 
         state.forEach((rv) => {
-          if (videos.includes(rv)) rv.isProtected = protect;
+          // A video is uniquely identified by its name and storage type.
+          const match = videos.find(
+            (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
+          );
+
+          if (match) {
+            rv.isProtected = protect;
+          }
         });
 
         return state;
