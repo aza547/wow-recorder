@@ -285,7 +285,6 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ShareableLinkText]: '只要视频仍存储在云端，此链接就有效',
   [Phrase.ShareableLinkFailedTitle]: '生成链接失败',
   [Phrase.ShareableLinkFailedText]: '详情请查看日志',
-  [Phrase.StorageUsageLabel]: '存储使用情况',
   [Phrase.CloudUsageDescription]: '云端使用情况',
   [Phrase.DiskUsageDescription]: '磁盘使用情况',
   [Phrase.Hardware]: '硬件',

@@ -702,16 +702,7 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex-col">
         <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.StorageUsageLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              Phrase.CloudUsageDescription,
-            )}
-            side="top"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
+          {getLocalePhrase(appState.language, Phrase.CloudUsageDescription)}
         </Label>
 
         <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">

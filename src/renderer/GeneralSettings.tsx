@@ -266,19 +266,25 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     const text = max === 0 ? `${usage}GB / ∞` : `${usage}GB / ${max}GB`;
 
     return (
-      <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
-        <Tooltip
-          content={getLocalePhrase(
-            appState.language,
-            Phrase.DiskUsageDescription,
-          )}
-        >
-          <HardDrive />
-        </Tooltip>
-        <Progress value={perc} className="h-3" />
-        <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
-          {text}
-        </span>
+      <div className="flex-col">
+        <Label className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.DiskUsageDescription)}
+        </Label>
+
+        <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              Phrase.CloudUsageDescription,
+            )}
+          >
+            <HardDrive size={24} className="text-foreground-lighter" />
+          </Tooltip>
+          <Progress value={perc} className="h-3" />
+          <span className="text-[11px] text-foreground font-semibold whitespace-nowrap">
+            {text}
+          </span>
+        </div>
       </div>
     );
   };

@@ -284,7 +284,6 @@ enum Phrase {
   ShareableLinkText,
   ShareableLinkFailedTitle,
   ShareableLinkFailedText,
-  StorageUsageLabel,
   CloudUsageDescription,
   DiskUsageDescription,
   Hardware,

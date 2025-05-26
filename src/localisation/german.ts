@@ -285,7 +285,6 @@ const GERMAN: Translations = {
   [Phrase.ShareableLinkText]: 'Dieser Link ist gültig, solange das Video in der Cloud gespeichert bleibt.',
   [Phrase.ShareableLinkFailedTitle]: 'Link Erzeugung ist fehlgeschlagen',
   [Phrase.ShareableLinkFailedText]: 'Bitte siehe Logs für mehr Details',
-  [Phrase.StorageUsageLabel]: 'Speichernutzung',
   [Phrase.CloudUsageDescription]: 'Cloud Nutzung',
   [Phrase.DiskUsageDescription]: 'Speicher Nutzung',
   [Phrase.Hardware]: 'Hardware',
