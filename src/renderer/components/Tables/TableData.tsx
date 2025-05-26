@@ -140,7 +140,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, videoState],
+    [appState, videoState, setVideoState],
   );
 
   /**
@@ -194,7 +194,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState],
+    [appState, setVideoState],
   );
 
   /**
@@ -264,7 +264,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState],
+    [appState, setVideoState],
   );
 
   /**
@@ -318,7 +318,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState],
+    [appState, setVideoState],
   );
 
   /**
@@ -374,7 +374,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState],
+    [appState, setVideoState],
   );
 
   let columns;
