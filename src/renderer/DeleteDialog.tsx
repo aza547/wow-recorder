@@ -10,10 +10,10 @@ import {
   DialogTrigger,
 } from './components/Dialog/Dialog';
 import { Button } from './components/Button/Button';
-import StateManager from './StateManager';
 import {
+  Dispatch,
   HTMLProps,
-  MutableRefObject,
+  SetStateAction,
   useEffect,
   useMemo,
   useState,
@@ -31,7 +31,7 @@ type DeleteDialogProps = {
   children: React.ReactNode;
   inScope: RendererVideo[];
   appState: AppState;
-  stateManager: MutableRefObject<StateManager>;
+  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   selectedRowCount: number;
 };
 
@@ -49,7 +49,7 @@ const DeleteDialog = ({
   children,
   inScope,
   appState,
-  stateManager,
+  setVideoState,
   selectedRowCount,
 }: DeleteDialogProps) => {
   const { language } = appState;
@@ -157,7 +157,11 @@ const DeleteDialog = ({
       .rows.map((row) => row.original);
 
     window.electron.ipcRenderer.sendMessage('deleteVideos', toDelete);
-    stateManager.current.deleteVideos(toDelete);
+
+    setVideoState((prev) => {
+      const state = [...prev].filter((rv) => !toDelete.includes(rv));
+      return state;
+    });
   };
 
   return (

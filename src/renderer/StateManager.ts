@@ -1,99 +1,28 @@
 import { VideoCategory } from 'types/VideoCategory';
-import { RendererVideo, StorageFilter } from '../main/types';
+import { RendererVideo } from '../main/types';
 import { areDatesWithinSeconds } from './rendererutils';
 
 /**
  * The video state, and utility mutation methods.
  */
 export default class StateManager {
-  private static instance: StateManager | undefined;
-
-  private ipc = window.electron.ipcRenderer;
-
-  private raw: RendererVideo[] = [];
-
-  private disk: RendererVideo[] = [];
-
-  private cloud: RendererVideo[] = [];
-
-  private storageFilter = StorageFilter.BOTH;
-
-  private setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>;
-
-  /**
-   * This is a singleton which allows us to avoid complications of the useRef hook recreating
-   * the class on each render but discarding it if it's already set; that doesn't work nicely
-   * when we set listeners in the class.
-   */
-  public static getInstance(
-    setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>,
-  ) {
-    if (StateManager.instance) {
-      return StateManager.instance;
-    }
-
-    StateManager.instance = new StateManager(setVideoState);
-
-    return StateManager.instance;
-  }
-
-  /**
-   * Constructor.
-   */
-  constructor(
-    setVideoState: React.Dispatch<React.SetStateAction<RendererVideo[]>>,
-  ) {
-    this.setVideoState = setVideoState;
-  }
-
-  /**
-   * Sends an IPC request to the back end for the latest resources, and
-   * applies them to the frontend.
-   */
-  public async refresh() {
-    this.raw = (await this.ipc.invoke('getVideoState', [])) as RendererVideo[];
-    this.disk = this.raw.filter((video) => !video.cloud);
-    this.cloud = this.raw.filter((video) => video.cloud);
-    const correlated = this.correlate();
-    this.setVideoState(correlated);
-  }
-
-  /**
-   * Update the Storage Filter and re-correlate the videos. This filter is
-   * unique in that it's done before grouping of videos, so it happens here
-   * instead of in the VideoFilter class.
-   * @param storageFilter The new storage filter to apply.
-   */
-  public async updateStorageFilter(storageFilter: StorageFilter) {
-    this.storageFilter = storageFilter;
-    const correlated = this.correlate();
-    this.setVideoState(correlated);
-  }
-
-  public getRawDiskVideos() {
-    return this.disk;
-  }
-
-  public getRawCloudVideos() {
-    return this.cloud;
-  }
-
   /**
    * Walk the raw video list and correlate them into a single list. This is
    * done by looking for videos with the same hash and start time, and
    * linking them together.
    */
-  private correlate() {
-    this.uncorrelate();
+  public static correlate(raw: RendererVideo[]) {
+    raw.forEach((rv) => {
+      rv.multiPov = [];
+    });
+
     const correlated: RendererVideo[] = [];
 
-    if (this.storageFilter !== StorageFilter.CLOUD) {
-      this.disk.forEach((rv) => StateManager.correlateVideo(rv, correlated));
-    }
+    const disk = raw.filter((video) => !video.cloud);
+    disk.forEach((rv) => StateManager.correlateVideo(rv, correlated));
 
-    if (this.storageFilter !== StorageFilter.DISK) {
-      this.cloud.forEach((rv) => StateManager.correlateVideo(rv, correlated));
-    }
+    const cloud = raw.filter((video) => video.cloud);
+    cloud.forEach((rv) => StateManager.correlateVideo(rv, correlated));
 
     correlated.sort(StateManager.reverseChronologicalVideoSort);
     return correlated;
@@ -158,54 +87,6 @@ export default class StateManager {
     return videos.length;
   }
 
-  public async deleteVideos(videos: RendererVideo[]) {
-    videos.forEach((v) => {
-      const index = this.raw.indexOf(v);
-
-      if (index > -1) {
-        this.raw.splice(index, 1);
-      }
-    });
-
-    this.disk = this.raw.filter((video) => !video.cloud);
-    this.cloud = this.raw.filter((video) => video.cloud);
-
-    const correlated = this.correlate();
-    this.setVideoState(correlated);
-  }
-
-  public async setProtected(protect: boolean, videos: RendererVideo[]) {
-    videos.forEach((video) => {
-      const index = this.raw.indexOf(video);
-
-      if (index > -1) {
-        this.raw[index].isProtected = protect;
-      }
-    });
-
-    this.disk = this.raw.filter((video) => !video.cloud);
-    this.cloud = this.raw.filter((video) => video.cloud);
-
-    const correlated = this.correlate();
-    this.setVideoState(correlated);
-  }
-
-  public setTag(tag: string, videos: RendererVideo[]) {
-    videos.forEach((video) => {
-      const index = this.raw.indexOf(video);
-
-      if (index > -1) {
-        this.raw[index].tag = tag;
-      }
-    });
-
-    this.disk = this.raw.filter((video) => !video.cloud);
-    this.cloud = this.raw.filter((video) => video.cloud);
-
-    const correlated = this.correlate();
-    this.setVideoState(correlated);
-  }
-
   private static reverseChronologicalVideoSort(
     A: RendererVideo,
     B: RendererVideo,
@@ -230,17 +111,5 @@ export default class StateManager {
     }
 
     return metricB - metricA;
-  }
-
-  /**
-   * Detatches any videos attached to the multiPov property of other videos.
-   * We need this because we correlate them in this class, but we access by
-   * reference so without undoing it we can have phantom videos sticking
-   * around in the UI.
-   */
-  private uncorrelate() {
-    this.raw.forEach((video) => {
-      video.multiPov = [];
-    });
   }
 }

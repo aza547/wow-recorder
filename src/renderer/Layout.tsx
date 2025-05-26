@@ -1,22 +1,21 @@
 import * as React from 'react';
 import { Pages, RecStatus, AppState, RendererVideo } from 'main/types';
-import { MutableRefObject } from 'react';
+import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
-import StateManager from './StateManager';
 
 interface IProps {
   recorderStatus: RecStatus;
-  stateManager: MutableRefObject<StateManager>;
-  categoryState: RendererVideo[];
+  videoState: RendererVideo[];
+  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   appState: AppState;
-  setAppState: React.Dispatch<React.SetStateAction<AppState>>;
+  setAppState: Dispatch<SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
   playerHeight: MutableRefObject<number>;
   config: ConfigurationSchema;
-  setConfig: React.Dispatch<React.SetStateAction<ConfigurationSchema>>;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 /**
@@ -25,8 +24,8 @@ interface IProps {
 const Layout = (props: IProps) => {
   const {
     recorderStatus,
-    stateManager,
-    categoryState,
+    videoState,
+    setVideoState,
     appState,
     setAppState,
     persistentProgress,
@@ -40,8 +39,8 @@ const Layout = (props: IProps) => {
     return (
       <CategoryPage
         category={category}
-        categoryState={categoryState}
-        stateManager={stateManager}
+        videoState={videoState}
+        setVideoState={setVideoState}
         appState={appState}
         setAppState={setAppState}
         persistentProgress={persistentProgress}

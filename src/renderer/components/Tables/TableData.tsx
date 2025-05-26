@@ -7,7 +7,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { RendererVideo, AppState } from 'main/types';
-import { MutableRefObject, useEffect, useMemo, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import {
   getPullNumber,
   getInstanceDifficultyText,
@@ -49,12 +49,11 @@ import {
   levelSort,
 } from './Sorting';
 import { getLocaleCategoryLabel } from 'localisation/translations';
-import StateManager from 'renderer/StateManager';
 
 const useTable = (
   videoState: RendererVideo[],
   appState: AppState,
-  stateManager: MutableRefObject<StateManager>,
+  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
 ) => {
   const { category, language } = appState;
 
@@ -89,7 +88,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Encounter',
@@ -141,7 +140,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, videoState, stateManager],
+    [appState, videoState],
   );
 
   /**
@@ -155,7 +154,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Map',
@@ -195,7 +194,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, stateManager],
+    [appState],
   );
 
   /**
@@ -209,7 +208,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Map',
@@ -265,7 +264,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, stateManager],
+    [appState],
   );
 
   /**
@@ -279,7 +278,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Map',
@@ -319,7 +318,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, stateManager],
+    [appState],
   );
 
   /**
@@ -333,7 +332,7 @@ const useTable = (
         size: 25,
         accessorFn: (v) => v,
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, stateManager),
+        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Type',
@@ -375,7 +374,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, stateManager],
+    [appState],
   );
 
   let columns;

@@ -31,6 +31,7 @@ import {
   SoloShuffleTimelineSegment,
   VideoMarker,
   RawCombatant,
+  StorageFilter,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -849,6 +850,12 @@ const getVideoCategoryFilter = (category: VideoCategory) => {
   return (video: RendererVideo) => video.category === category;
 };
 
+const getVideoStorageFilter = (filter: StorageFilter) => {
+  if (filter === StorageFilter.DISK) return (rv: RendererVideo) => !rv.cloud;
+  if (filter === StorageFilter.CLOUD) return (rv: RendererVideo) => rv.cloud;
+  return () => true;
+};
+
 const getFirstInCategory = (
   videos: RendererVideo[],
   category: VideoCategory,
@@ -1065,4 +1072,5 @@ export {
   dateToHumanReadable,
   getSpecClass,
   raidResultToPercent,
+  getVideoStorageFilter,
 };

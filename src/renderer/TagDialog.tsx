@@ -1,7 +1,6 @@
 import { AppState, RendererVideo } from 'main/types';
-import { MutableRefObject, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
-import StateManager from './StateManager';
 import {
   Dialog,
   DialogClose,
@@ -18,24 +17,32 @@ import { Button } from './components/Button/Button';
 interface IProps {
   initialTag: string;
   videos: RendererVideo[];
-  stateManager: MutableRefObject<StateManager>;
+  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   children: React.ReactNode;
   appState: AppState;
 }
 
 export default function TagDialog(props: IProps) {
-  const { videos, stateManager, children, appState, initialTag } = props;
+  const { videos, setVideoState, children, appState, initialTag } = props;
 
   const [tag, setTag] = useState(initialTag);
 
   const saveTag = (newTag: string) => {
-    stateManager.current.setTag(newTag, videos);
-
     window.electron.ipcRenderer.sendMessage('videoButton', [
       'tag',
       newTag,
       videos,
     ]);
+
+    setVideoState((prev) => {
+      const state = [...prev];
+
+      state.forEach((rv) => {
+        if (videos.includes(rv)) rv.tag = newTag;
+      });
+
+      return state;
+    });
   };
 
   const clearTag = (event: React.MouseEvent<HTMLElement>) => {

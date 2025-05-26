@@ -19,8 +19,7 @@ import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import './App.css';
 import { useSettings } from './useSettings';
-import { getCategoryFromConfig, getVideoCategoryFilter } from './rendererutils';
-import StateManager from './StateManager';
+import { getCategoryFromConfig } from './rendererutils';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
 import SideMenu from './SideMenu';
@@ -28,6 +27,7 @@ import { useToast } from './components/Toast/useToast';
 import { Button } from './components/Button/Button';
 import { ErrorBoundary } from 'react-error-boundary';
 import { RefreshCcw } from 'lucide-react';
+import { VideoCategory } from 'types/VideoCategory';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -98,9 +98,34 @@ const WarcraftRecorder = () => {
   // calls the React set function appropriately.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
 
-  const stateManager = useRef<StateManager>(
-    StateManager.getInstance(setVideoState),
-  );
+  // The counters for display on the side menu. It's convient to keep these
+  // seperate to the video state so we can apply filtering without changing the
+  // counters.
+  const videoCounters = useMemo<Record<VideoCategory, number>>(() => {
+    const counts = {
+      [VideoCategory.TwoVTwo]: 0,
+      [VideoCategory.ThreeVThree]: 0,
+      [VideoCategory.FiveVFive]: 0,
+      [VideoCategory.Skirmish]: 0,
+      [VideoCategory.SoloShuffle]: 0,
+      [VideoCategory.MythicPlus]: 0,
+      [VideoCategory.Raids]: 0,
+      [VideoCategory.Battlegrounds]: 0,
+      [VideoCategory.Clips]: 0,
+    };
+
+    // Don't count the same video with different storage types twice. Still
+    // count different points of view of the same activity multiple times.
+    const seen: string[] = [];
+
+    videoState.forEach((rv) => {
+      if (seen.includes(rv.videoName)) return;
+      counts[rv.category]++;
+      seen.push(rv.videoName);
+    });
+
+    return counts;
+  }, [videoState]);
 
   // Used to allow for hot switching of video players when moving between POVs.
   const persistentProgress = useRef(0);
@@ -108,15 +133,10 @@ const WarcraftRecorder = () => {
   // Used to remember the player height when switching categories.
   const playerHeight = useRef(500);
 
-  // The category state, recalculated only when required.
-  const categoryState = useMemo<RendererVideo[]>(() => {
-    const categoryFilter = getVideoCategoryFilter(appState.category);
-    return videoState.filter(categoryFilter);
-  }, [videoState, appState.category]);
-
   const doRefresh = async () => {
     ipc.sendMessage('refreshFrontend', []);
-    stateManager.current.refresh();
+    const state = (await ipc.invoke('getVideoState', [])) as RendererVideo[];
+    setVideoState(state);
 
     setAppState((prevState) => {
       return {
@@ -248,7 +268,7 @@ const WarcraftRecorder = () => {
           <div className="flex flex-row items-center h-full w-full font-sans">
             <SideMenu
               recorderStatus={recorderStatus}
-              videoState={videoState}
+              videoCounters={videoCounters}
               appState={appState}
               setAppState={setAppState}
               persistentProgress={persistentProgress}
@@ -261,8 +281,8 @@ const WarcraftRecorder = () => {
             />
             <Layout
               recorderStatus={recorderStatus}
-              stateManager={stateManager}
-              categoryState={categoryState}
+              videoState={videoState}
+              setVideoState={setVideoState}
               appState={appState}
               setAppState={setAppState}
               persistentProgress={persistentProgress}
