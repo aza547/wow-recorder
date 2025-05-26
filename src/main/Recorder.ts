@@ -1832,7 +1832,13 @@ export default class Recorder extends EventEmitter {
       this.findWindowAttempts,
     );
 
-    const window = Recorder.findWowWindow(this.dummyGameCaptureSource);
+    let window = undefined;
+
+    try {
+      window = Recorder.findWowWindow(this.dummyGameCaptureSource);
+    } catch (ex) {
+      console.error('[Recorder] Exception when trying to find window:', ex);
+    }
 
     if (!window) {
       console.info('[Recorder] Game capture window not found, will retry');
