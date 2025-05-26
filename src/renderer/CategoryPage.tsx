@@ -90,7 +90,7 @@ const CategoryPage = (props: IProps) => {
     return videoState.filter(categoryFilter);
   }, [videoState, appState.category]);
 
-  // Filter by Storage type before we apply grouping.
+  // Filter by storage type before we apply grouping.
   const correlatedState = useMemo<RendererVideo[]>(() => {
     const storageFilterFn = getVideoStorageFilter(storageFilter);
     const storageFilteredState = categoryState.filter(storageFilterFn);
