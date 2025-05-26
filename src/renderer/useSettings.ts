@@ -103,7 +103,7 @@ export const getSettings = (): ConfigurationSchema => {
     hideEmptyCategories: getConfigValue<boolean>('hideEmptyCategories'),
     /* eslint-enable prettier/prettier */
   };
-  
+
   return configValues;
 };
 

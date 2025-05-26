@@ -3,7 +3,6 @@ import { AppState, RecStatus } from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import GeneralSettings from './GeneralSettings';
-import WindowsSettings from './ApplicationSettings';
 import FlavourSettings from './FlavourSettings';
 import PVESettings from './PVESettings';
 import PVPSettings from './PVPSettings';
@@ -142,7 +141,6 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                 <CloudSettings
                   recorderStatus={recorderStatus}
                   appState={appState}
-                  setAppState={setAppState}
                 />
               </div>
             </div>

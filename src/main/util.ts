@@ -1,7 +1,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
-import { app, BrowserWindow, Display, powerMonitor, screen } from 'electron';
+import { app, BrowserWindow, Display, screen } from 'electron';
 import {
   EventType,
   uIOhook,

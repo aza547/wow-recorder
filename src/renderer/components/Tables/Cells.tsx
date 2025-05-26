@@ -23,8 +23,7 @@ import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
 import { LockKeyhole, LockOpen } from 'lucide-react';
-import StateManager from 'renderer/StateManager';
-import { MutableRefObject } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
 
 export const populateResultCell = (
@@ -90,7 +89,7 @@ export const populateActivityCell = (
 export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
   appState: AppState,
-  stateManager: MutableRefObject<StateManager>,
+  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
   const { language, cloudStatus } = appState;
@@ -121,13 +120,29 @@ export const populateDetailsCell = (
 
     const toggleProtected = (e: React.MouseEvent<HTMLButtonElement>) => {
       stopPropagation(e);
-      stateManager.current.setProtected(lock, toProtect);
 
       window.electron.ipcRenderer.sendMessage('videoButton', [
         'protect',
         lock,
         toProtect,
       ]);
+
+      setVideoState((prev) => {
+        const state = [...prev];
+
+        state.forEach((rv) => {
+          // A video is uniquely identified by its name and storage type.
+          const match = toProtect.find(
+            (v) => v.videoName === rv.videoName && v.cloud === rv.cloud,
+          );
+
+          if (match) {
+            rv.isProtected = lock;
+          }
+        });
+
+        return state;
+      });
     };
 
     return (

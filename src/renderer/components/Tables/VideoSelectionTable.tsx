@@ -2,12 +2,13 @@ import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
 import React, {
+  Dispatch,
   Fragment,
   MutableRefObject,
+  SetStateAction,
   useCallback,
   useEffect,
 } from 'react';
-import StateManager from 'renderer/StateManager';
 import {
   ArrowDown,
   ArrowUp,
@@ -25,8 +26,8 @@ interface IProps {
   table: Table<RendererVideo>;
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
-  stateManager: MutableRefObject<StateManager>;
   persistentProgress: MutableRefObject<number>;
+  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
 }
 
 /**

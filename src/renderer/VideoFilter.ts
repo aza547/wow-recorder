@@ -4,12 +4,7 @@ import {
   instanceNamesByZoneId,
   specializationById,
 } from 'main/constants';
-import {
-  Flavour,
-  RawCombatant,
-  RendererVideo,
-  StorageFilter,
-} from 'main/types';
+import { Flavour, RawCombatant, RendererVideo } from 'main/types';
 import {
   isArenaUtil,
   isBattlegroundUtil,
@@ -60,10 +55,9 @@ export default class VideoFilter {
    * or not.
    */
   constructor(
+    video: RendererVideo,
     tags: Tag[],
     dateFilter: DateValueType,
-    storageFilter: StorageFilter,
-    video: RendererVideo,
     language: Language,
   ) {
     this.dateRangeFilter = dateFilter;
@@ -112,7 +106,7 @@ export default class VideoFilter {
   ) {
     const suggestions: VideoTag[] = [];
 
-    // We pass in the videos as correlated by the StateManager. We need
+    // We pass in the videos as correlated by the VideoCorrelator. We need
     // to flatten them again before we iterate.
     const flattened = state.flatMap((v) => v.multiPov);
     flattened.push(...state);
