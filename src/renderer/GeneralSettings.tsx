@@ -267,7 +267,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
-        <Tooltip content={getLocalePhrase(appState.language, Phrase.DiskUsage)}>
+        <Tooltip
+          content={getLocalePhrase(
+            appState.language,
+            Phrase.DiskUsageDescription,
+          )}
+        >
           <HardDrive />
         </Tooltip>
         <Progress value={perc} className="h-3" />
