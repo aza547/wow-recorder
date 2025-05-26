@@ -275,7 +275,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              Phrase.CloudUsageDescription,
+              Phrase.DiskUsageDescription,
             )}
           >
             <HardDrive size={24} className="text-foreground-lighter" />
