@@ -1290,6 +1290,10 @@ export const VideoPlayer = (props: IProps) => {
   useEffect(() => {
     ipc.removeAllListeners('pausePlayer');
     ipc.on('pausePlayer', () => setPlaying(false));
+
+    return () => {
+      ipc.removeAllListeners('pausePlayer');
+    };
   }, [setPlaying]);
 
   let playerDivClass = 'w-full h-full ';
