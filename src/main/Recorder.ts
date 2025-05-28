@@ -483,7 +483,8 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Force stop OBS.
+   * Force stop OBS. This drops the current recording and stops OBS. The
+   * resulting MP4 may be malformed should not be used.
    */
   public async forceStop() {
     console.info('[Recorder] Queued force stop');
@@ -1274,7 +1275,6 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    console.info('[Recorder] Empty wrote queue');
     this.wroteQueue.empty();
     osn.NodeObs.OBS_service_stopRecordingForce();
 
@@ -1283,7 +1283,6 @@ export default class Recorder extends EventEmitter {
     wrote = wrote || this.wroteQueue.shift();
     const bomb = getPromiseBomb(1, 'OBS timeout on force stop');
     await Promise.race([wrote, bomb]);
-
     this.lastFile = null;
   }
 

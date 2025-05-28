@@ -569,7 +569,8 @@ export default class Manager {
     } else if (this.retailPtrLogHandler && this.retailPtrLogHandler.activity) {
       await this.retailPtrLogHandler.forceEndActivity();
     } else {
-      await this.recorder.stop();
+      // No activity so we can just force stop.
+      await this.recorder.forceStop();
     }
 
     this.recorder.clearFindWindowInterval();
@@ -585,7 +586,8 @@ export default class Manager {
    * Configure the base OBS config. We need to stop the recording to do this.
    */
   private async configureObsBase(config: ObsBaseConfig) {
-    await this.recorder.stop();
+    // Force stop as we don't care about the output video.
+    await this.recorder.forceStop();
 
     await this.refreshCloudStatus();
     await this.refreshDiskStatus();
@@ -673,8 +675,9 @@ export default class Manager {
     if (this.recorder.obsState === ERecordingState.Recording) {
       // We can't change this config if OBS is recording. If OBS is recording
       // but isRecording is false, that means it's a buffer recording. Stop it
-      // briefly to change the config.
-      await this.recorder.stop();
+      // briefly to change the config. Force stop as we don't care about the
+      // output video.
+      await this.recorder.forceStop();
     }
 
     if (this.retailLogHandler) {
