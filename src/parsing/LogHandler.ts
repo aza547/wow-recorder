@@ -255,6 +255,11 @@ export default abstract class LogHandler extends EventEmitter {
       return;
     }
 
+    if (!videoFile) {
+      console.error('[LogHandler] OBS failed to produce a video file');
+      return;
+    }
+
     try {
       const activityStartTime = lastActivity.startDate.getTime();
       const bufferStartTime = startDate.getTime();
@@ -319,6 +324,11 @@ export default abstract class LogHandler extends EventEmitter {
 
     this.activity.end(endDate, false);
     await this.endActivity();
+    this.activity = undefined;
+  }
+
+  public dropActivity() {
+    this.overrunning = false;
     this.activity = undefined;
   }
 

@@ -269,6 +269,31 @@ export default class Manager {
   }
 
   /**
+   * Immediately drop any in-progress activity.
+   */
+  public dropActivity() {
+    if (this.retailLogHandler && this.retailLogHandler.activity) {
+      console.info('[Manager] Dropping retail activity');
+      this.retailLogHandler.dropActivity();
+    }
+
+    if (this.classicLogHandler && this.classicLogHandler.activity) {
+      console.info('[Manager] Dropping classic activity');
+      this.classicLogHandler.dropActivity();
+    }
+
+    if (this.eraLogHandler && this.eraLogHandler.activity) {
+      console.info('[Manager] Dropping era activity');
+      this.eraLogHandler.dropActivity();
+    }
+
+    if (this.retailPtrLogHandler && this.retailPtrLogHandler.activity) {
+      console.info('[Manager] Dropping ptr activity');
+      this.retailPtrLogHandler.dropActivity();
+    }
+  }
+
+  /**
    * Run a test. We prefer retail here, if the user doesn't have a retail path
    * configured, then fall back to classic. We only pass through the category
    * for retail, any classic tests will default to 2v2. Probably should fix
@@ -757,7 +782,7 @@ export default class Manager {
     let winner;
 
     try {
-      const { bomb } = getPromiseBomb(10000, 'Authentication timed out');
+      const bomb = getPromiseBomb(10, 'Authentication timed out');
 
       const affs = CloudClient.getUserAffiliations(
         cloudAccountName,
@@ -1262,6 +1287,21 @@ export default class Manager {
       uIOhook.stop();
       this.recorder.shutdownOBS();
     });
+
+    // If Windows is going to sleep, we don't want to confuse OBS. It would be
+    // unusual for someone to sleep windows while WoW is open AND while in an
+    // activity, all we can do is drop the activity and stop the recorder.
+    powerMonitor.on('suspend', async () => {
+      console.info('[Manager] Detected Windows is going to sleep.');
+      this.dropActivity();
+      await this.recorder.forceStop();
+    });
+
+    powerMonitor.on('resume', async () => {
+      console.info('[Manager] Detected Windows waking up from a sleep.');
+      await this.recorder.forceStop();
+      this.poller.start();
+    });
   }
 
   /**
@@ -1355,7 +1395,9 @@ export default class Manager {
     }
 
     console.info('[Manager] Restart recorder');
-    await this.recorder.stop();
+
+    // Use force stop here as we don't care about the output file.
+    await this.recorder.forceStop();
     await this.recorder.cleanup();
     await this.recorder.start();
   }

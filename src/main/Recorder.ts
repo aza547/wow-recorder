@@ -1,4 +1,4 @@
-import { BrowserWindow, powerMonitor } from 'electron';
+import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
@@ -313,7 +313,7 @@ export default class Recorder extends EventEmitter {
   /**
    * The last file output by OBS.
    */
-  public lastFile: string = '';
+  public lastFile: string | null = null;
 
   /**
    * The video context.
@@ -468,6 +468,33 @@ export default class Recorder extends EventEmitter {
         resolveHelper(null);
       } catch (error) {
         console.error('[Recorder] Crash on stop call', String(error));
+
+        const crashData: CrashData = {
+          date: new Date(),
+          reason: String(error),
+        };
+
+        this.emit('crash', crashData);
+        rejectHelper(error);
+      }
+    });
+
+    await promise;
+  }
+
+  /**
+   * Force stop OBS.
+   */
+  public async forceStop() {
+    console.info('[Recorder] Queued force stop');
+    const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
+
+    this.actionQueue.enqueue(async () => {
+      try {
+        await this.forceStopOBS();
+        resolveHelper(null);
+      } catch (error) {
+        console.error('[Recorder] Crash on force stop call', String(error));
 
         const crashData: CrashData = {
           date: new Date(),
@@ -1179,24 +1206,14 @@ export default class Recorder extends EventEmitter {
 
     // Sleep for a second, without this sometimes OBS does not respond at all.
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    this.startQueue.empty();
     osn.NodeObs.OBS_service_startRecording();
 
-    // Wait up to 30 seconds for OBS to signal it has started recording,
-    // really this shouldn't take nearly as long.
-    const start = this.startQueue.shift();
-
-    const { bomb, pause, reset } = getPromiseBomb(
-      30000,
-      'OBS timeout waiting for start',
-    );
-
-    try {
-      powerMonitor.on('suspend', pause);
-      powerMonitor.on('resume', reset);
-      await Promise.race([start, bomb]);
-    } finally {
-      powerMonitor.removeAllListeners();
-    }
+    await Promise.race([
+      this.startQueue.shift(),
+      getPromiseBomb(30, 'OBS timeout waiting for start'),
+    ]);
 
     this.startQueue.empty();
 
@@ -1223,29 +1240,51 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
+    this.wroteQueue.empty();
     osn.NodeObs.OBS_service_stopRecording();
-
-    // Wait up to 60 seconds for OBS to signal it has wrote the file, really
-    // this shouldn't take nearly as long as this but we're generous to account
-    // for slow HDDs etc.
     const wrote = this.wroteQueue.shift();
 
-    const { bomb, pause, reset } = getPromiseBomb(
-      60000,
-      'OBS timeout waiting for video file',
-    );
-
     try {
-      powerMonitor.on('suspend', pause);
-      powerMonitor.on('resume', reset);
-      await Promise.race([wrote, bomb]);
-    } finally {
-      powerMonitor.removeAllListeners();
+      await Promise.race([wrote, getPromiseBomb(60, 'OBS timeout on stop')]);
+      this.lastFile = osn.NodeObs.OBS_service_getLastRecording();
+      console.info('[Recorder] Set last file:', this.lastFile);
+    } catch (error) {
+      console.error('[Recorder] Error stopping OBS', error);
+      await this.forceStopOBS(wrote);
+    }
+  }
+
+  /**
+   * Force stop OBS, no-op if already stopped. Optionally pass in a wrote
+   * promise to await instead of shifting from the queue ourselves. That's
+   * useful in the case we've failed to stop and are now force stopping.
+   */
+  private async forceStopOBS(
+    wrote: Promise<osn.EOutputSignal> | undefined = undefined,
+  ) {
+    console.info('[Recorder] Force stop');
+
+    if (!this.obsInitialized) {
+      console.error('[Recorder] OBS not initialized');
+      throw new Error('OBS not initialized');
     }
 
+    if (this.obsState === ERecordingState.Offline) {
+      console.info('[Recorder] Already stopped');
+      return;
+    }
+
+    console.info('[Recorder] Empty wrote queue');
     this.wroteQueue.empty();
-    this.lastFile = osn.NodeObs.OBS_service_getLastRecording();
-    console.info('[Recorder] Got last file from OBS:', this.lastFile);
+    osn.NodeObs.OBS_service_stopRecordingForce();
+
+    // If we were passed a wrote promise, use that instead of shifting from
+    // the queue as a previously created promise will get the result first.
+    wrote = wrote || this.wroteQueue.shift();
+    const bomb = getPromiseBomb(1, 'OBS timeout on force stop');
+    await Promise.race([wrote, bomb]);
+
+    this.lastFile = null;
   }
 
   /**
@@ -1379,7 +1418,7 @@ export default class Recorder extends EventEmitter {
    * Handle a source callback from OBS.
    */
   private handleSourceCallback(data: ObsSourceCallbackInfo[]) {
-    console.info('[Recorder] Got source callback:', data);
+    //console.info('[Recorder] Got source callback:', data);
     this.scaleVideoSourceSize();
   }
 
