@@ -247,6 +247,17 @@ const WarcraftRecorder = () => {
     ipc.on('updateDiskStatus', updateDiskStatus);
     ipc.on('updateCloudStatus', updateCloudStatus);
     ipc.on('updateAvailable', onUpdateAvailable);
+
+    return () => {
+      ipc.removeAllListeners('refreshState');
+      ipc.removeAllListeners('updateRecStatus');
+      ipc.removeAllListeners('updateSaveStatus');
+      ipc.removeAllListeners('updateMicStatus');
+      ipc.removeAllListeners('updateCrashes');
+      ipc.removeAllListeners('updateDiskStatus');
+      ipc.removeAllListeners('updateCloudStatus');
+      ipc.removeAllListeners('updateAvailable');
+    };
   }, []);
 
   return (

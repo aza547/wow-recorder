@@ -629,26 +629,9 @@ const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
  * fuse.
  */
 const getPromiseBomb = (fuse: number, reason: string) => {
-  let timer: ReturnType<typeof setTimeout>;
-  let rejectFn: (reason: string) => void;
-
-  const bomb = new Promise((resolve, reject) => {
-    rejectFn = reject;
-    timer = setTimeout(() => reject(reason), fuse);
+  return new Promise((resolve, reject) => {
+    setTimeout(() => reject(reason), fuse * 1000);
   });
-
-  const pause = () => {
-    console.log('[Util] Pausing promise bomb', reason);
-    clearTimeout(timer);
-  };
-
-  const reset = () => {
-    console.log('[Util] Reset promise bomb', reason);
-    clearTimeout(timer);
-    timer = setTimeout(() => rejectFn(reason), fuse);
-  };
-
-  return { bomb, pause, reset };
 };
 
 const buildClipMetadata = (initial: Metadata, duration: number, date: Date) => {
