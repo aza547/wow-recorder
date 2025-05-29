@@ -83,6 +83,7 @@ export type ConfigurationSchema = {
   cloudUploadClips: boolean;
   language: string;
   hideEmptyCategories: boolean;
+  hardwareAcceleration: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -510,5 +511,10 @@ export const configSchema = {
     description: Phrase.HideEmptyCategoriesDescription,
     type: 'boolean',
     default: false,
+  },
+  hardwareAcceleration: {
+    description: Phrase.HardwareAccelerationDescription,
+    type: 'boolean',
+    default: true,
   },
 };

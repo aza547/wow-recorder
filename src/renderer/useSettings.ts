@@ -101,6 +101,7 @@ export const getSettings = (): ConfigurationSchema => {
     cloudUploadClips: getConfigValue<boolean>('cloudUploadClips'),
     language: getConfigValue<string>('language'),
     hideEmptyCategories: getConfigValue<boolean>('hideEmptyCategories'),
+    hardwareAcceleration: getConfigValue<boolean>('hardwareAcceleration'),
     /* eslint-enable prettier/prettier */
   };
 

@@ -105,7 +105,7 @@ const KOREAN: Translations = {
   [Phrase.SeparateBufferFolderLabel]: '별도의 임시 폴더',
   [Phrase.BufferFolderLabel]: '임시 폴더',
   [Phrase.MaxDiskStorageLabel]: '디스크 저장 용량 제한 (GB)',
-  [Phrase.AppSettingsLabel]: '윈도우 설정',
+  [Phrase.WindowsSettingsLabel]: '윈도우 설정',
   [Phrase.RunOnStartupLabel]: '시작시 실행',
   [Phrase.StartMinimizedLabel]: '트레이 시작',
   [Phrase.MinimizeOnQuitLabel]: '종료시 트레이',
@@ -415,6 +415,9 @@ const KOREAN: Translations = {
   [Phrase.ProcessVolumeDescription]: "기록에서 응용 프로그램의 볼륨은 0에서 1까지입니다.",
   [Phrase.HideEmptyCategoriesLabel]: "빈 카테고리 숨기기",
   [Phrase.HideEmptyCategoriesDescription]: "비디오가 없는 사이드 메뉴의 카테고리를 숨깁니다.",
+   [Phrase.HardwareAccelerationLabel]: "하드웨어 가속",
+  [Phrase.HardwareAccelerationDescription]: "애플리케이션의 하드웨어 가속 렌더링을 활성화하세요. 이 설정은 대부분의 사용자, 특히 AV1 인코딩을 사용하는 사용자에게 권장되지만, 일부 시스템에서는 문제가 발생할 수 있습니다.",
+
 };
 
 export default KOREAN;

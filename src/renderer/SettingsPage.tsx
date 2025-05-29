@@ -16,7 +16,7 @@ import {
 import Separator from './components/Separator/Separator';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import LocaleSettings from './LocaleSettings';
-import ApplicationSettings from './ApplicationSettings';
+import WindowsSettings from './WindowsSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -71,10 +71,10 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
               </div>
               <div>
                 <CategoryHeading>
-                  {getLocalePhrase(appState.language, Phrase.AppSettingsLabel)}
+                  {getLocalePhrase(appState.language, Phrase.WindowsSettingsLabel)}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <ApplicationSettings
+                <WindowsSettings
                   appState={appState}
                   config={config}
                   setConfig={setConfig}
