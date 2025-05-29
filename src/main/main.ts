@@ -52,6 +52,14 @@ let manager: Manager | undefined;
  */
 const cfg = ConfigService.getInstance();
 
+// It's a common problem that hardware acceleration causes rendering issues.
+// Unclear why this happens and surely not an application bug but we can
+// make it easy for users to disable it if they want to.
+if (!cfg.get<boolean>('hardwareAcceleration')) {
+  console.info('[Main] Disabling hardware acceleration');
+  app.disableHardwareAcceleration();
+}
+
 /**
  * Default the video player settings on app start.
  */

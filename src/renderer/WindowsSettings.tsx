@@ -6,6 +6,7 @@ import { setConfigValues } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 import { Dispatch, SetStateAction } from 'react';
+import { Tooltip } from './components/Tooltip/Tooltip';
 
 interface IProps {
   appState: AppState;
@@ -13,7 +14,7 @@ interface IProps {
   setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
-const ApplicationSettings = (props: IProps) => {
+const WindowsSettings = (props: IProps) => {
   const { appState, config, setConfig } = props;
   const initialRender = React.useRef(true);
 
@@ -30,6 +31,7 @@ const ApplicationSettings = (props: IProps) => {
       minimizeOnQuit: config.minimizeOnQuit,
       minimizeToTray: config.minimizeToTray,
       hideEmptyCategories: config.hideEmptyCategories,
+      hardwareAcceleration: config.hardwareAcceleration,
     });
   }, [
     config.minimizeOnQuit,
@@ -37,6 +39,7 @@ const ApplicationSettings = (props: IProps) => {
     config.startMinimized,
     config.startUp,
     config.hideEmptyCategories,
+    config.hardwareAcceleration,
   ]);
 
   const getSwitch = (
@@ -54,12 +57,26 @@ const ApplicationSettings = (props: IProps) => {
     preference: keyof ConfigurationSchema,
     label: Phrase,
     changeFn: (checked: boolean) => void,
+    info: Phrase | undefined = undefined,
   ) => {
     return (
       <div className="flex flex-col">
-        <Label htmlFor="separateBufferPath">
-          {getLocalePhrase(appState.language, label)}
-        </Label>
+        {info && (
+          <Tooltip
+            content={getLocalePhrase(appState.language, info)}
+            side="right"
+          >
+            <Label htmlFor="separateBufferPath">
+              {getLocalePhrase(appState.language, label)}
+            </Label>
+          </Tooltip>
+        )}
+        {!info && (
+          <Label htmlFor="separateBufferPath">
+            {getLocalePhrase(appState.language, label)}
+          </Label>
+        )}
+
         <div className="flex h-10 items-center">
           {getSwitch(preference, changeFn)}
         </div>
@@ -103,11 +120,11 @@ const ApplicationSettings = (props: IProps) => {
     });
   };
 
-  const setHideEmptyCategories = (checked: boolean) => {
+  const setHardwareAcceleration = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        hideEmptyCategories: checked,
+        hardwareAcceleration: checked,
       };
     });
   };
@@ -131,12 +148,13 @@ const ApplicationSettings = (props: IProps) => {
         setMinimizeToTray,
       )}
       {getSwitchForm(
-        'hideEmptyCategories',
-        Phrase.HideEmptyCategoriesLabel,
-        setHideEmptyCategories,
+        'hardwareAcceleration',
+        Phrase.HardwareAccelerationLabel,
+        setHardwareAcceleration,
+        Phrase.HardwareAccelerationDescription,
       )}
     </div>
   );
 };
 
-export default ApplicationSettings;
+export default WindowsSettings;

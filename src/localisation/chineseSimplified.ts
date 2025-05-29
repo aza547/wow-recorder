@@ -105,7 +105,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.SeparateBufferFolderLabel]: '独立的缓冲文件夹',
   [Phrase.BufferFolderLabel]: '缓冲文件夹',
   [Phrase.MaxDiskStorageLabel]: '磁盘存储上限 (GB)',
-  [Phrase.AppSettingsLabel]: '应用 设置',
+  [Phrase.WindowsSettingsLabel]: '应用 设置',
   [Phrase.RunOnStartupLabel]: '开机自动启动',
   [Phrase.StartMinimizedLabel]: '启动时最小化',
   [Phrase.MinimizeOnQuitLabel]: '关闭时最小化',
@@ -415,6 +415,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ProcessVolumeDescription]: "录音中应用程序的音量，从0到1。",
   [Phrase.HideEmptyCategoriesLabel]: "隐藏空类别",
   [Phrase.HideEmptyCategoriesDescription]: "隐藏侧面菜单中没有视频的类别。",
+  [Phrase.HardwareAccelerationLabel]: "硬件加速",
+  [Phrase.HardwareAccelerationDescription]: "启用应用程序的硬件加速渲染。建议大多数用户（尤其是使用 AV1 编码的用户）启用此功能，但在某些系统上可能会导致问题。",
 };
 
 export default CHINESE_SIMPLIFIED;
