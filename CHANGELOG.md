@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [6.13.3] - 2025-06-01
+### Added
 - Add a "hide empty categories" option.
 - [Issue 673](https://github.com/aza547/wow-recorder/issues/673) - Improve the delete dialog to allow individual videos to be deleted.
 - Add the ability to disable hardware acceleration in the app.
