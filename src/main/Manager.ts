@@ -210,10 +210,6 @@ export default class Manager {
 
     this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
 
-    this.poller
-      .on('wowProcessStart', () => this.onWowStarted())
-      .on('wowProcessStop', () => this.onWowStopped());
-
     setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
   }
 
@@ -226,23 +222,45 @@ export default class Manager {
    * invalid configuration requests to the Recorder class.
    */
   public async manage() {
-    if (this.active) {
-      if (!this.queued) {
-        console.info('[Manager] Queued a manage call');
-        this.queued = true;
-      }
+    if (this.active && !this.queued) {
+      console.info('[Manager] Queued an additional manage');
+      this.queued = true;
+    }
 
+    if (this.active) {
+      console.info('[Manager] Manage already in progress');
       return;
     }
 
+    // Mark ourselves as active, indicating we are in the middle
+    // of a reconfiguration.
     this.active = true;
+
+    // Stop the poller. We don't want to be polling WoW while we are
+    // reconfiguring as we might get a signal that triggers a recorder
+    // action at a time where we can't handle it.
+    this.poller.removeAllListeners();
+    this.poller.reset();
+
+    // Now actually call the internal manage function which will loop through
+    // the stages, validate and configure them.
     await this.internalManage();
 
     if (this.queued) {
+      // Another call to manage was queued while we were reconfiguring. Re-run
+      // it to ensure we have the latest config.
       console.info('[Manager] Execute a queued manage call');
       this.queued = false;
       await this.internalManage();
     }
+
+    // If we got here then the config is valid. Start the poller so we
+    // will react to the state of WoW. This will start the recorder if
+    // WoW is already running.
+    this.poller
+      .on('wowProcessStart', () => this.onWowStarted())
+      .on('wowProcessStop', () => this.onWowStopped())
+      .start();
 
     this.active = false;
   }
@@ -593,7 +611,6 @@ export default class Manager {
     await this.refreshDiskStatus();
 
     await this.recorder.configureBase(config);
-    this.poller.start();
     this.mainWindow.webContents.send('refreshState');
   }
 
@@ -745,7 +762,6 @@ export default class Manager {
     }
 
     this.poller.reconfigureFlavour(config);
-    this.poller.start();
   }
 
   /**
@@ -899,7 +915,6 @@ export default class Manager {
         '[Manager] Validation failed, obsPath does not exist',
         obsPath,
       );
-
       throw new Error(this.getLocaleError(Phrase.ErrorBufferPathInvalid));
     }
 
@@ -1297,13 +1312,18 @@ export default class Manager {
     powerMonitor.on('suspend', async () => {
       console.info('[Manager] Detected Windows is going to sleep.');
       this.dropActivity();
+      this.poller.reset();
       await this.recorder.forceStop();
     });
 
     powerMonitor.on('resume', async () => {
       console.info('[Manager] Detected Windows waking up from a sleep.');
       await this.recorder.forceStop();
-      this.poller.start();
+
+      this.poller
+        .on('wowProcessStart', () => this.onWowStarted())
+        .on('wowProcessStop', () => this.onWowStopped())
+        .start();
     });
   }
 

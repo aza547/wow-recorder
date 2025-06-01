@@ -146,6 +146,13 @@ export default class Recorder extends EventEmitter {
    */
   private dummyGameCaptureSource: IInput;
 
+
+  /**
+   * The image source to be used for the overlay, we create this
+   * ahead of time regardless of if the user has the overlay enabled.
+   */
+  private overlayImageSource: IInput;
+
   /**
    * Timer for latching onto a window for either game capture or
    * window capture. Often this does not appear immediately on
@@ -168,12 +175,6 @@ export default class Recorder extends EventEmitter {
    * The maximum number of attempts to find a window to capture.
    */
   private findWindowAttemptLimit = 10;
-
-  /**
-   * The image source to be used for the overlay, we create this
-   * ahead of time regardless of if the user has the overlay enabled.
-   */
-  private overlayImageSource: IInput;
 
   /**
    * Resolution selected by the user in settings. Defaults to 1920x1080 for
@@ -337,6 +338,9 @@ export default class Recorder extends EventEmitter {
     colorspace: EColorSpace.CS709 as unknown as osn.EColorSpace,
     scaleType: EScaleType.Bicubic as unknown as osn.EScaleType,
     fpsType: EFPSType.Fractional as unknown as osn.EFPSType,
+
+    // The AMD encoder causes recordings to get much darker if using the full
+    // color range setting. So swap that to partial here. See Issue 446.
     range: ERangeType.Partial as unknown as osn.ERangeType,
   };
 
@@ -561,7 +565,7 @@ export default class Recorder extends EventEmitter {
     //   - This is part of the strategy to avoid re-encoding the videos while
     //     enabling a reasonable cutting accuracy.
     //   - We won't ever be off by more than 0.5 sec with this approach, which
-    //     I think is an acceptable error .
+    //     I think is an acceptable error.
     //   - Obviously this is a trade off in file size, where the default keyframe
     //     interval appears to be around 4s.
     Recorder.applySetting('Output', 'Reckeyint_sec', 1);
@@ -1019,6 +1023,8 @@ export default class Recorder extends EventEmitter {
       queue.empty();
       queue.clearListeners();
     });
+
+    this.context.destroy();
 
     try {
       osn.NodeObs.InitShutdownSequence();
