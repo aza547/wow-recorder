@@ -556,14 +556,14 @@ export default class Recorder extends EventEmitter {
       videoInfo.baseWidth !== this.context.video.baseWidth ||
       videoInfo.baseHeight !== this.context.video.baseHeight ||
       videoInfo.outputWidth !== this.context.video.outputWidth ||
-      videoInfo.outputHeight !== this.context.video.outputHeight ||
-      videoInfo.outputFormat !== this.context.video.outputFormat
+      videoInfo.outputHeight !== this.context.video.outputHeight
     ) {
       // There are dragons here. This looks simple but it's not and I think
       // assigning this context is the source of a bug where we can timeout
       // on reconfiguring. I spent ages trying to solve it in June 2025 but
       // gave up in. Cowardly only assign it if something has changed to avoid
       // any risk in the case where nothing has changed.
+      console.info('[Recorder] Reconfigure OBS video context');
       this.context.video = videoInfo;
     }
 
@@ -1301,7 +1301,7 @@ export default class Recorder extends EventEmitter {
     // If we were passed a wrote promise, use that instead of shifting from
     // the queue as a previously created promise will get the result first.
     wrote = wrote || this.wroteQueue.shift();
-    const bomb = getPromiseBomb(1, 'OBS timeout on force stop');
+    const bomb = getPromiseBomb(3, 'OBS timeout on force stop');
     await Promise.race([wrote, bomb]);
     this.lastFile = null;
   }
