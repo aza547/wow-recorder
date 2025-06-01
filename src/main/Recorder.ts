@@ -146,7 +146,6 @@ export default class Recorder extends EventEmitter {
    */
   private dummyGameCaptureSource: IInput;
 
-
   /**
    * The image source to be used for the overlay, we create this
    * ahead of time regardless of if the user has the overlay enabled.
