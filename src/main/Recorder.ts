@@ -551,7 +551,22 @@ export default class Recorder extends EventEmitter {
       range: ERangeType.Partial as unknown as osn.ERangeType,
     };
 
-    this.context.video = videoInfo;
+    if (
+      videoInfo.fpsNum !== this.context.video.fpsNum ||
+      videoInfo.baseWidth !== this.context.video.baseWidth ||
+      videoInfo.baseHeight !== this.context.video.baseHeight ||
+      videoInfo.outputWidth !== this.context.video.outputWidth ||
+      videoInfo.outputHeight !== this.context.video.outputHeight ||
+      videoInfo.outputFormat !== this.context.video.outputFormat
+    ) {
+      // There are dragons here. This looks simple but it's not and I think
+      // assigning this context is the source of a bug where we can timeout
+      // on reconfiguring. I spent ages trying to solve it in June 2025 but
+      // gave up in. Cowardly only assign it if something has changed to avoid
+      // any risk in the case where nothing has changed.
+      this.context.video = videoInfo;
+    }
+
     const outputPath = path.normalize(this.obsPath);
 
     Recorder.applySetting('Output', 'Mode', 'Advanced');
