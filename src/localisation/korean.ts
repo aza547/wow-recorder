@@ -414,9 +414,9 @@ const KOREAN: Translations = {
   [Phrase.AudioProcessDevicesDescription]: "선택한 스피커와 마이크 외에 오디오를 포함할 응용 프로그램",
   [Phrase.ProcessVolumeDescription]: "기록에서 응용 프로그램의 볼륨은 0에서 1까지입니다.",
   [Phrase.HideEmptyCategoriesLabel]: "빈 카테고리 숨기기",
-  [Phrase.HideEmptyCategoriesDescription]: "비디오가 없는 사이드 메뉴의 카테고리를 숨깁니다.",
-   [Phrase.HardwareAccelerationLabel]: "하드웨어 가속",
-  [Phrase.HardwareAccelerationDescription]: "애플리케이션의 하드웨어 가속 렌더링을 활성화하세요. 이 설정은 대부분의 사용자, 특히 AV1 인코딩을 사용하는 사용자에게 권장되지만, 일부 시스템에서는 문제가 발생할 수 있습니다.",
+  [Phrase.HideEmptyCategoriesDescription]: "비디오가 없는 카테고리를 숨깁니다.",
+  [Phrase.HardwareAccelerationLabel]: "하드웨어 가속",
+  [Phrase.HardwareAccelerationDescription]: "프로그램의 하드웨어 가속 렌더링을 활성화합니다. 이 기능은 대부분의 사용자에게 권장되며, 특히 AV1 인코딩을 사용하는 경우에 유용하지만 일부 시스템에서는 문제가 발생할 수 있습니다. 이 변경 사항은 프로그램을 재시작해야 적용됩니다.",
 
 };
 
