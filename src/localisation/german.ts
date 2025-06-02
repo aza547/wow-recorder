@@ -417,7 +417,10 @@ const GERMAN: Translations = {
   [Phrase.HideEmptyCategoriesDescription]: "Blendet Kategorien im Seitenmenü aus, die keine Videos enthalten.",
   [Phrase.HardwareAccelerationLabel]: "Hardwarebeschleunigung",
   [Phrase.HardwareAccelerationDescription]: "Aktivieren Sie die hardwarebeschleunigte Darstellung der Anwendung. Dies wird den meisten Benutzern empfohlen, insbesondere denen mit AV1-Kodierung, kann aber auf manchen Systemen zu Problemen führen.",
-
+  [Phrase.RecordCurrentRaidsOnlyLabel]: "Nur aktuelle Raids aufzeichnen",
+  [Phrase.RecordCurrentRaidsOnlyDescription]: "Zeichne nur Raid-Begegnungen der aktuellen Stufe auf, dies gilt nur für Retail-Raid-Begegnungen.",
+  [Phrase.UploadCurrentRaidsOnlyLabel]: "Nur aktuelle Raids hochladen",
+  [Phrase.UploadCurrentRaidsOnlyDescription]: "Laden Sie nur Raid-Begegnungen der aktuellen Stufe hoch. Dies gilt nur für Einzelhandels-Raid-Begegnungen.",
 };
 
 export default GERMAN;

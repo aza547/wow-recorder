@@ -417,6 +417,10 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.HideEmptyCategoriesDescription]: "隐藏侧面菜单中没有视频的类别。",
   [Phrase.HardwareAccelerationLabel]: "硬件加速",
   [Phrase.HardwareAccelerationDescription]: "启用应用程序的硬件加速渲染。建议大多数用户（尤其是使用 AV1 编码的用户）启用此功能，但在某些系统上可能会导致问题。",
+  [Phrase.RecordCurrentRaidsOnlyLabel]: "仅记录当前突袭",
+  [Phrase.RecordCurrentRaidsOnlyDescription]: "仅记录当前等级的突袭遭遇，这仅适用于零售突袭遭遇。",
+  [Phrase.UploadCurrentRaidsOnlyLabel]: "仅上传当前突袭",
+  [Phrase.UploadCurrentRaidsOnlyDescription]: "仅上传当前等级的突袭遭遇战，这仅适用于零售突袭遭遇战。",
 };
 
 export default CHINESE_SIMPLIFIED;
