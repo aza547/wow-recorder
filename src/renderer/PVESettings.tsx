@@ -118,11 +118,14 @@ const PVESettings = (props: IProps) => {
           htmlFor="recordCurrentRaidEncountersOnly"
           className="flex items-center"
         >
-          {getLocalePhrase(appState.language, Phrase.RecordRaidsLabel)}
+          {getLocalePhrase(
+            appState.language,
+            Phrase.RecordCurrentRaidsOnlyLabel,
+          )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.recordRaids.description,
+              configSchema.recordCurrentRaidEncountersOnly.description,
             )}
             side="top"
           >
