@@ -414,6 +414,10 @@ enum Phrase {
   HideEmptyCategoriesDescription,
   HardwareAccelerationLabel,
   HardwareAccelerationDescription,
+  RecordCurrentRaidsOnlyLabel,
+  RecordCurrentRaidsOnlyDescription,
+  UploadCurrentRaidsOnlyLabel,
+  UploadCurrentRaidsOnlyDescription,
 }
 
 enum Language {

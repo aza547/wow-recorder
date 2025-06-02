@@ -3,6 +3,7 @@ import { BrowserWindow } from 'electron';
 import Combatant from '../main/Combatant';
 
 import {
+  currentRetailEncounters,
   dungeonEncounters,
   dungeonsByMapId,
   dungeonTimersByMapId,
@@ -273,6 +274,15 @@ export default class RetailLogHandler extends LogHandler {
           '[RetailLogHandler] Known dungeon encounter and not in M+, not recording',
         );
 
+        return;
+      }
+
+      const currentRaidOnly = this.cfg.get<boolean>(
+        'recordCurrentRaidEncountersOnly',
+      );
+
+      if (currentRaidOnly && !currentRetailEncounters.includes(encounterID)) {
+        console.warn('[RetailLogHandler] Not a current encounter');
         return;
       }
 

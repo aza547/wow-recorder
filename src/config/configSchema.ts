@@ -84,6 +84,8 @@ export type ConfigurationSchema = {
   language: string;
   hideEmptyCategories: boolean;
   hardwareAcceleration: boolean;
+  recordCurrentRaidEncountersOnly: boolean;
+  uploadCurrentRaidEncountersOnly: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -516,5 +518,14 @@ export const configSchema = {
     description: Phrase.HardwareAccelerationDescription,
     type: 'boolean',
     default: true,
+  recordCurrentRaidEncountersOnly: {
+    description: Phrase.RecordCurrentRaidsOnlyDescription,
+    type: 'boolean',
+    default: false,
+  },
+  uploadCurrentRaidEncountersOnly: {
+    description: Phrase.UploadCurrentRaidsOnlyDescription,
+    type: 'boolean',
+    default: false,
   },
 };

@@ -732,6 +732,10 @@ const CloudSettings = (props: IProps) => {
         </div>
         <div className="flex flex-row gap-x-6">
           {getSwitchForm('cloudUploadRaids', Phrase.UploadRaidsLabel)}
+          {getSwitchForm(
+            'uploadCurrentRaidEncountersOnly',
+            Phrase.UploadCurrentRaidsOnlyLabel,
+          )}
           {getMinRaidDifficultySelect()}
         </div>
 

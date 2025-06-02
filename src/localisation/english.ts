@@ -417,6 +417,11 @@ const ENGLISH: Translations = {
   [Phrase.HideEmptyCategoriesDescription]: "Hides categories in the side menu that have no videos in them.",
   [Phrase.HardwareAccelerationLabel]: "Hardware Rendering",
   [Phrase.HardwareAccelerationDescription]: "Enable hardware accelerated rendering of the application. This is recommended for most users, particularly those using AV1 encoding, but may cause issues on some systems. Requires a restart of the application to take effect.",
+
+  [Phrase.RecordCurrentRaidsOnlyLabel]: "Record Current Raids Only",
+  [Phrase.RecordCurrentRaidsOnlyDescription]: "Only record raid encounters from the current tier, this only applies to retail raid encounters.",
+  [Phrase.UploadCurrentRaidsOnlyLabel]: "Upload Current Raids Only",
+  [Phrase.UploadCurrentRaidsOnlyDescription]: "Only upload raid encounters from the current tier, this only applies to retail raid encounters.",
 };
 
 export default ENGLISH;
