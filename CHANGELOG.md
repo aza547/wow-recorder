@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - [Issue 678](https://github.com/aza547/wow-recorder/issues/678) - Add the ability to record/upload current the current raid tier encounters only.
+- Added an indicator to show how many videos are queued for upload download in addition to those currently in progress.
 
 ### Fixed
 

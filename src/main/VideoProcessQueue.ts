@@ -261,7 +261,14 @@ export default class VideoProcessQueue {
         return;
       }
 
-      this.mainWindow.webContents.send('updateUploadProgress', progress);
+      const queued = Math.max(0, this.inProgressUploads.length - 1);
+
+      this.mainWindow.webContents.send(
+        'updateUploadProgress',
+        progress,
+        queued,
+      );
+
       lastProgress = progress;
     };
 
@@ -331,7 +338,14 @@ export default class VideoProcessQueue {
         return;
       }
 
-      this.mainWindow.webContents.send('updateDownloadProgress', progress);
+      const queued = Math.max(0, this.inProgressUploads.length - 1);
+
+      this.mainWindow.webContents.send(
+        'updateDownloadProgress',
+        progress,
+        queued,
+      );
+
       lastProgress = progress;
     };
 
@@ -406,7 +420,8 @@ export default class VideoProcessQueue {
    */
   private startedUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Now uploading video', item.path);
-    this.mainWindow.webContents.send('updateUploadProgress', 0);
+    const queued = Math.max(0, this.inProgressUploads.length - 1);
+    this.mainWindow.webContents.send('updateUploadProgress', 0, queued);
   }
 
   /**
@@ -427,7 +442,8 @@ export default class VideoProcessQueue {
   private startedDownloadingVideo(video: RendererVideo) {
     const { videoName } = video;
     console.info('[VideoProcessQueue] Now downloading video', videoName);
-    this.mainWindow.webContents.send('updateDownloadProgress', 0);
+    const queued = Math.max(0, this.inProgressDownloads.length - 1);
+    this.mainWindow.webContents.send('updateDownloadProgress', 0, queued);
   }
 
   /**

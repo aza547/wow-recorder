@@ -290,9 +290,13 @@ const Status = ({
   const [uploadProgress, setUploadProgress] = React.useState<number | false>(
     false,
   );
+
   const [downloadProgress, setDownloadProgress] = React.useState<
     number | false
   >(false);
+
+  const [queuedUploads, setQueuedUploads] = React.useState(0);
+  const [queuedDownloads, setQueuedDownloads] = React.useState(0);
 
   const clearUploadProgressTimer = useRef<NodeJS.Timeout | null>(null);
   const clearDownloadProgressTimer = useRef<NodeJS.Timeout | null>(null);
@@ -300,7 +304,7 @@ const Status = ({
   React.useEffect(() => {
     const ipc = window.electron.ipcRenderer;
 
-    ipc.on('updateUploadProgress', (progress) => {
+    ipc.on('updateUploadProgress', (progress, queued) => {
       if (clearUploadProgressTimer.current) {
         clearTimeout(clearUploadProgressTimer.current);
       }
@@ -313,9 +317,10 @@ const Status = ({
       }
 
       setUploadProgress(progress as number);
+      setQueuedUploads(queued as number);
     });
 
-    ipc.on('updateDownloadProgress', (progress) => {
+    ipc.on('updateDownloadProgress', (progress, queued) => {
       if (clearDownloadProgressTimer.current) {
         clearTimeout(clearDownloadProgressTimer.current);
       }
@@ -328,6 +333,7 @@ const Status = ({
       }
 
       setDownloadProgress(progress as number);
+      setQueuedDownloads(queued as number);
     });
 
     return () => {
@@ -378,6 +384,7 @@ const Status = ({
                         <>
                           <CloudDownload size={14} />{' '}
                           {downloadProgress.toFixed(0)}%
+                          {queuedDownloads > 0 && ` (+${queuedDownloads}) `}
                         </>
                       )}
                     </>
@@ -387,7 +394,9 @@ const Status = ({
                     <>
                       {uploadProgress !== false && (
                         <>
-                          <CloudUpload size={14} /> {uploadProgress.toFixed(0)}%
+                          <CloudUpload size={14} />
+                          {uploadProgress.toFixed(0)}%
+                          {queuedUploads > 0 && ` (+${queuedUploads}) `}
                         </>
                       )}
                     </>
