@@ -651,7 +651,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   500: [29 * 60, 23 * 60 + 24, 17 * 60 + 48], // 'The Rookery'
   499: [32 * 60 + 30, 26 * 60, 19 * 60 + 30], // 'Priory of the Sacred Flame'
   525: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], // 'Operation: Floodgate'
-  247: [39 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'THE MOTHERLODE!!'
+  247: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'THE MOTHERLODE!!'
 };
 
 // Useful database for grabbing this stuff:
