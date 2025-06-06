@@ -7,13 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 678](https://github.com/aza547/wow-recorder/issues/678) - Add the ability to record/upload current the current raid tier encounters only.
+- Added an indicator to show how many videos are queued for upload download in addition to those currently in progress.
+
+### Fixed
+
+## [6.13.3] - 2025-06-01
+### Added
 - Add a "hide empty categories" option.
 - [Issue 673](https://github.com/aza547/wow-recorder/issues/673) - Improve the delete dialog to allow individual videos to be deleted.
+- Add the ability to disable hardware acceleration in the app.
 
 ### Fixed
 - Stop re-encoding the audio on cutting video.
 - [Issue 659](https://github.com/aza547/wow-recorder/issues/650) - Fix a bug where M+ without a boss pull would not record.
-- [Issue 519](https://github.com/aza547/wow-recorder/issues/519) - Fix a bug where WCR could report an OBS crash on Windows sleeping.
 - [Issue 671](https://github.com/aza547/wow-recorder/issues/671) - Fix a benign error popping up on installing visual C++ libs.
 - [Issue 672](https://github.com/aza547/wow-recorder/issues/672) - Fix a JavaScript error that could appear on quitting.
 

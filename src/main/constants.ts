@@ -345,6 +345,22 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
 };
 
 /**
+ * List of the raid encounters for the current tier of raid bosses. This
+ * enables the "record current tier only" option, and needs updated with each
+ * new tier.
+ */
+const currentRetailEncounters = [
+  3009, // Vexie
+  3010, // Cauldron
+  3011, // Rik
+  3012, // Stix
+  3013, // Sprocket
+  3014, // Bandit
+  3015, // Mug'Zee
+  3016, // Gally
+];
+
+/**
  * List of raids and their encounters
  * This is used to figure out the raid name of a given encounter as that
  * information is not available in `ENCOUNTER_START` and we shouldn't and
@@ -635,7 +651,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   500: [29 * 60, 23 * 60 + 24, 17 * 60 + 48], // 'The Rookery'
   499: [32 * 60 + 30, 26 * 60, 19 * 60 + 30], // 'Priory of the Sacred Flame'
   525: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], // 'Operation: Floodgate'
-  247: [39 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'THE MOTHERLODE!!'
+  247: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'THE MOTHERLODE!!'
 };
 
 // Useful database for grabbing this stuff:
@@ -1707,4 +1723,5 @@ export {
   WoWCharacterClassType,
   WoWClassColor,
   scrollBarSx,
+  currentRetailEncounters,
 };

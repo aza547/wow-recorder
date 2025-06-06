@@ -10,7 +10,10 @@ import {
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../config/ConfigService';
-import { categoryRecordingSettings } from '../main/constants';
+import {
+  categoryRecordingSettings,
+  currentRetailEncounters,
+} from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import { ESupportedEncoders } from '../main/obsEnums';
 
@@ -79,7 +82,20 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
   }
 
   if (category === VideoCategory.Raids) {
-    const { difficulty } = metadata;
+    const { difficulty, encounterID } = metadata;
+
+    const uploadCurrentRaidOnly =
+      flavour === Flavour.Retail &&
+      cfg.get<boolean>('uploadCurrentRaidEncountersOnly');
+
+    if (
+      encounterID !== undefined &&
+      uploadCurrentRaidOnly &&
+      !currentRetailEncounters.includes(encounterID)
+    ) {
+      console.warn('[configUtils] Wont upload, not a current encounter');
+      return;
+    }
 
     const orderedDifficulty = ['lfr', 'normal', 'heroic', 'mythic'];
     const orderedDifficultyIDs = ['LFR', 'N', 'HC', 'M'];

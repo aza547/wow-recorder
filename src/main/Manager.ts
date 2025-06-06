@@ -574,9 +574,7 @@ export default class Manager {
    * allow Windows to go to sleep with WCR running.
    */
   private async onWowStopped() {
-    console.info(
-      '[Manager] Detected WoW not running, or Windows going inactive',
-    );
+    console.info('[Manager] Detected WoW not running');
 
     if (this.retailLogHandler && this.retailLogHandler.activity) {
       await this.retailLogHandler.forceEndActivity();

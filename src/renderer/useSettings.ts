@@ -101,6 +101,9 @@ export const getSettings = (): ConfigurationSchema => {
     cloudUploadClips: getConfigValue<boolean>('cloudUploadClips'),
     language: getConfigValue<string>('language'),
     hideEmptyCategories: getConfigValue<boolean>('hideEmptyCategories'),
+    hardwareAcceleration: getConfigValue<boolean>('hardwareAcceleration'),
+    recordCurrentRaidEncountersOnly: getConfigValue<boolean>('recordCurrentRaidEncountersOnly'),
+    uploadCurrentRaidEncountersOnly: getConfigValue<boolean>('uploadCurrentRaidEncountersOnly'),
     /* eslint-enable prettier/prettier */
   };
 

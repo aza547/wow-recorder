@@ -83,6 +83,7 @@ const CloudSettings = (props: IProps) => {
         cloudUploadDungeonMinLevel: config.cloudUploadDungeonMinLevel,
         cloudUploadClips: config.cloudUploadClips,
         chatOverlayOwnImage: config.chatOverlayOwnImage,
+        uploadCurrentRaidEncountersOnly: config.uploadCurrentRaidEncountersOnly,
       });
 
       // Inform the backend of a settings change so we can update config
@@ -111,6 +112,7 @@ const CloudSettings = (props: IProps) => {
     config.cloudUploadDungeonMinLevel,
     config.cloudUploadClips,
     config.chatOverlayOwnImage,
+    config.uploadCurrentRaidEncountersOnly,
   ]);
 
   const isComponentDisabled = () => {
@@ -732,6 +734,10 @@ const CloudSettings = (props: IProps) => {
         </div>
         <div className="flex flex-row gap-x-6">
           {getSwitchForm('cloudUploadRaids', Phrase.UploadRaidsLabel)}
+          {getSwitchForm(
+            'uploadCurrentRaidEncountersOnly',
+            Phrase.UploadCurrentRaidsOnlyLabel,
+          )}
           {getMinRaidDifficultySelect()}
         </div>
 

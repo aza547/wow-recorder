@@ -105,7 +105,7 @@ const ENGLISH: Translations = {
   [Phrase.SeparateBufferFolderLabel]: 'Separate Buffer Folder',
   [Phrase.BufferFolderLabel]: 'Buffer Folder',
   [Phrase.MaxDiskStorageLabel]: 'Max Disk Storage (GB)',
-  [Phrase.AppSettingsLabel]: 'Application Settings',
+  [Phrase.WindowsSettingsLabel]: 'Windows Settings',
   [Phrase.RunOnStartupLabel]: 'Run on Startup',
   [Phrase.StartMinimizedLabel]: 'Start Minimized',
   [Phrase.MinimizeOnQuitLabel]: 'Minimize on Quit',
@@ -415,6 +415,12 @@ const ENGLISH: Translations = {
   [Phrase.ProcessVolumeDescription]: "The volume of the application in the recording, from 0 to 1.",
   [Phrase.HideEmptyCategoriesLabel]: "Hide Empty Categories",
   [Phrase.HideEmptyCategoriesDescription]: "Hides categories in the side menu that have no videos in them.",
+  [Phrase.HardwareAccelerationLabel]: "Hardware Rendering",
+  [Phrase.HardwareAccelerationDescription]: "Enable hardware accelerated rendering of the application. This is recommended for most users, particularly those using AV1 encoding, but may cause issues on some systems. Requires a restart of the application to take effect.",
+  [Phrase.RecordCurrentRaidsOnlyLabel]: "Current Tier Only",
+  [Phrase.RecordCurrentRaidsOnlyDescription]: "Only record raid encounters from the current tier, this only applies to retail raid encounters.",
+  [Phrase.UploadCurrentRaidsOnlyLabel]: "Current Tier Only",
+  [Phrase.UploadCurrentRaidsOnlyDescription]: "Only upload raid encounters from the current tier, this only applies to retail raid encounters.",
 };
 
 export default ENGLISH;

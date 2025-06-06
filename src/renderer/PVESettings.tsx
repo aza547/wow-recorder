@@ -47,6 +47,7 @@ const PVESettings = (props: IProps) => {
       minKeystoneLevel: config.minKeystoneLevel,
       raidOverrun: config.raidOverrun,
       dungeonOverrun: config.dungeonOverrun,
+      recordCurrentRaidEncountersOnly: config.recordCurrentRaidEncountersOnly,
     });
   }, [
     config.dungeonOverrun,
@@ -56,6 +57,7 @@ const PVESettings = (props: IProps) => {
     config.raidOverrun,
     config.recordDungeons,
     config.recordRaids,
+    config.recordCurrentRaidEncountersOnly,
   ]);
 
   const getSwitch = (
@@ -95,6 +97,46 @@ const PVESettings = (props: IProps) => {
         </Label>
         <div className="flex h-10 items-center">
           {getSwitch('recordRaids', setRecordRaids)}
+        </div>
+      </div>
+    );
+  };
+
+  const setRecordCurrentRaidEncountersOnly = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        recordCurrentRaidEncountersOnly: checked,
+      };
+    });
+  };
+
+  const getRecordCurrentEncountersOnlySwitch = () => {
+    return (
+      <div className="flex flex-col w-[140px]">
+        <Label
+          htmlFor="recordCurrentRaidEncountersOnly"
+          className="flex items-center"
+        >
+          {getLocalePhrase(
+            appState.language,
+            Phrase.RecordCurrentRaidsOnlyLabel,
+          )}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.recordCurrentRaidEncountersOnly.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch(
+            'recordCurrentRaidEncountersOnly',
+            setRecordCurrentRaidEncountersOnly,
+          )}
         </div>
       </div>
     );
@@ -378,6 +420,7 @@ const PVESettings = (props: IProps) => {
     <div className="flex flex-col gap-y-4">
       <div className="flex flex-row gap-x-6">
         {getRecordRaidSwitch()}
+        {getRecordCurrentEncountersOnlySwitch()}
         {getMinEncounterDurationField()}
         {getRaidOverrunField()}
         {getMinRaidDifficultySelect()}

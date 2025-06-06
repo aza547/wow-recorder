@@ -14,6 +14,7 @@ import {
 import { setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import Switch from './components/Switch/Switch';
 
 interface IProps {
   config: ConfigurationSchema;
@@ -37,6 +38,34 @@ const WindowsSettings = (props: IProps) => {
       language: config.language,
     });
   }, [config.language]);
+
+  const getSwitch = (
+    preference: keyof ConfigurationSchema,
+    changeFn: (checked: boolean) => void,
+  ) => (
+    <Switch
+      checked={Boolean(config[preference])}
+      name={preference}
+      onCheckedChange={changeFn}
+    />
+  );
+
+  const getSwitchForm = (
+    preference: keyof ConfigurationSchema,
+    label: Phrase,
+    changeFn: (checked: boolean) => void,
+  ) => {
+    return (
+      <div className="flex flex-col">
+        <Label htmlFor="separateBufferPath">
+          {getLocalePhrase(appState.language, label)}
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch(preference, changeFn)}
+        </div>
+      </div>
+    );
+  };
 
   const mapLanguageToSelectItem = (lang: string) => {
     return (
@@ -62,29 +91,45 @@ const WindowsSettings = (props: IProps) => {
     });
   };
 
+  const setHideEmptyCategories = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        hideEmptyCategories: checked,
+      };
+    });
+  };
+
   const getLangaugeSelect = () => {
     return (
-      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
-        <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.LanguageLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              configSchema.language.description,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <Select value={String(config.language)} onValueChange={setLanguage}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select encoder" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.values(Language).map(mapLanguageToSelectItem)}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col y-2 gap-y-4">
+        <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+          <Label className="flex items-center">
+            {getLocalePhrase(appState.language, Phrase.LanguageLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.language.description,
+              )}
+              side="right"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <Select value={String(config.language)} onValueChange={setLanguage}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select encoder" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.values(Language).map(mapLanguageToSelectItem)}
+            </SelectContent>
+          </Select>
+        </div>
+        {getSwitchForm(
+          'hideEmptyCategories',
+          Phrase.HideEmptyCategoriesLabel,
+          setHideEmptyCategories,
+        )}
       </div>
     );
   };
