@@ -366,7 +366,7 @@ const Status = ({
                         </>
                       )}
                     </>
-                    {queuedDownloads > 0 && queuedDownloads > 0 && (
+                    {queuedDownloads > 0 && queuedUploads > 0 && (
                       <Separator orientation="vertical" />
                     )}
                     <>
