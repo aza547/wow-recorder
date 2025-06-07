@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.14.0] - 2025-06-07
+### Changed
 - [Issue 519](https://github.com/aza547/wow-recorder/issues/519), [PR 676](https://github.com/aza547/wow-recorder/pull/676) - Use OBS's force stop functionality where we don't need a video file. 
 - Some style improvements to the video selection table.
 
