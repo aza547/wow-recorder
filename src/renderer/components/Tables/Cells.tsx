@@ -193,19 +193,14 @@ export const populateDetailsCell = (
 
     return (
       <Tooltip content={tooltip}>
-        <div>
+        <div onClick={(e) => e.stopPropagation()}>
           <TagDialog
             initialTag={tag}
             videos={toTag}
             setVideoState={setVideoState}
             appState={appState}
           >
-            <Button
-              variant="ghost"
-              size="xs"
-              disabled={false}
-              onClick={(e) => stopPropagation(e)}
-            >
+            <Button variant="ghost" size="xs" disabled={noPermission}>
               {icon}
             </Button>
           </TagDialog>
