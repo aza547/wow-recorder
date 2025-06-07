@@ -179,6 +179,7 @@ export default class VideoProcessQueue {
       return;
     }
 
+    console.log('[VideoProcessQueue] Queuing video for upload', item.path);
     this.inProgressUploads.push(item.path);
     this.uploadQueue.write(item);
   };
@@ -195,6 +196,7 @@ export default class VideoProcessQueue {
       return;
     }
 
+    console.log('[VideoProcessQueue] Queuing video for download', videoName);
     this.inProgressDownloads.push(videoName);
     this.downloadQueue.write(video);
   };
