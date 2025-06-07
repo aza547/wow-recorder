@@ -304,7 +304,7 @@ const Status = ({
   React.useEffect(() => {
     const ipc = window.electron.ipcRenderer;
 
-    ipc.on('updateUploadProgress', (progress, queued) => {
+    ipc.on('updateUploadProgress', (progress) => {
       if (clearUploadProgressTimer.current) {
         clearTimeout(clearUploadProgressTimer.current);
       }
@@ -317,10 +317,9 @@ const Status = ({
       }
 
       setUploadProgress(progress as number);
-      setQueuedUploads(queued as number);
     });
 
-    ipc.on('updateDownloadProgress', (progress, queued) => {
+    ipc.on('updateDownloadProgress', (progress) => {
       if (clearDownloadProgressTimer.current) {
         clearTimeout(clearDownloadProgressTimer.current);
       }
@@ -333,12 +332,21 @@ const Status = ({
       }
 
       setDownloadProgress(progress as number);
+    });
+
+    ipc.on('updateDownloadQueueLength', (queued) => {
       setQueuedDownloads(queued as number);
+    });
+
+    ipc.on('updateUploadQueueLength', (queued) => {
+      setQueuedUploads(queued as number);
     });
 
     return () => {
       ipc.removeAllListeners('updateUploadProgress');
       ipc.removeAllListeners('updateDownloadProgress');
+      ipc.removeAllListeners('updateDownloadQueueLength');
+      ipc.removeAllListeners('updateUploadQueueLength');
     };
   }, []);
 
