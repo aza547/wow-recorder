@@ -432,7 +432,7 @@ export default class VideoProcessQueue {
     );
 
     const queued = Math.max(0, this.inProgressUploads.length);
-    this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
+    this.mainWindow.webContents.send('updateUploadQueueLength', queued);
     this.mainWindow.webContents.send('refreshState');
   }
 
@@ -486,6 +486,7 @@ export default class VideoProcessQueue {
    */
   private async uploadQueueEmpty() {
     console.info('[VideoProcessQueue] Upload processing queue empty');
+    this.mainWindow.webContents.send('updateUploadQueueLength', 0);
   }
 
   /**
@@ -503,6 +504,7 @@ export default class VideoProcessQueue {
     };
 
     this.mainWindow.webContents.send('updateDiskStatus', status);
+    this.mainWindow.webContents.send('updateDownloadQueueLength', 0);
   }
 
   /**
