@@ -85,20 +85,20 @@ const useTable = (
     () => [
       {
         id: 'Details',
-        size: 25,
+        size: 80,
         accessorFn: (v) => v,
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Encounter',
+        size: 300,
         accessorKey: 'encounterName',
         header: () => EncounterHeader(language),
         cell: populateEncounterNameCell,
       },
       {
         id: 'Result',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
@@ -106,19 +106,16 @@ const useTable = (
       },
       {
         id: 'Pull',
-        size: 100,
         accessorFn: (v) => getPullNumber(v, videoState),
         header: () => PullHeader(language),
       },
       {
         id: 'Difficulty',
-        size: 100,
         accessorFn: (v) => getInstanceDifficultyText(v, language),
         header: () => DifficultyHeader(language),
       },
       {
         id: 'Duration',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: durationSort,
         header: () => DurationHeader(language),
@@ -126,14 +123,12 @@ const useTable = (
       },
       {
         id: 'Date',
-        size: 100,
         accessorFn: (v) => videoToDate(v),
         header: () => DateHeader(language),
         cell: populateDateCell,
       },
       {
         id: 'Viewpoints',
-        size: 125,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: populateViewpointCell,
@@ -151,20 +146,20 @@ const useTable = (
     () => [
       {
         id: 'Details',
-        size: 25,
+        size: 80,
         accessorFn: (v) => v,
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Map',
+        size: 300,
         accessorKey: 'zoneName',
         header: () => MapHeader(language),
         cell: populateMapCell,
       },
       {
         id: 'Result',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
@@ -172,7 +167,6 @@ const useTable = (
       },
       {
         id: 'Duration',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: durationSort,
         header: () => DurationHeader(language),
@@ -180,14 +174,12 @@ const useTable = (
       },
       {
         id: 'Date',
-        size: 100,
         accessorFn: (v) => videoToDate(v),
         header: () => DateHeader(language),
         cell: populateDateCell,
       },
       {
         id: 'Viewpoints',
-        size: 125,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: populateViewpointCell,
@@ -205,20 +197,20 @@ const useTable = (
     () => [
       {
         id: 'Details',
-        size: 25,
+        size: 80,
         accessorFn: (v) => v,
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Map',
+        size: 300,
         accessorFn: getDungeonName,
         header: () => MapHeader(language),
         cell: populateMapCell,
       },
       {
         id: 'Result',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
@@ -226,7 +218,6 @@ const useTable = (
       },
       {
         id: 'Level',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: levelSort,
         header: () => LevelHeader(language),
@@ -234,7 +225,6 @@ const useTable = (
       },
       {
         id: 'Affixes',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: levelSort,
         header: () => AffixesHeader(),
@@ -242,7 +232,6 @@ const useTable = (
       },
       {
         id: 'Duration',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: durationSort,
         header: () => DurationHeader(language),
@@ -250,14 +239,12 @@ const useTable = (
       },
       {
         id: 'Date',
-        size: 100,
         accessorFn: (v) => videoToDate(v),
         header: () => DateHeader(language),
         cell: populateDateCell,
       },
       {
         id: 'Viewpoints',
-        size: 125,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: populateViewpointCell,
@@ -275,20 +262,20 @@ const useTable = (
     () => [
       {
         id: 'Details',
-        size: 25,
+        size: 80,
         accessorFn: (v) => v,
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Map',
+        size: 300,
         accessorKey: 'zoneName',
         header: () => MapHeader(language),
         cell: populateMapCell,
       },
       {
         id: 'Result',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: (a, b) => resultSort(a, b, language),
         header: () => ResultHeader(language),
@@ -296,7 +283,6 @@ const useTable = (
       },
       {
         id: 'Duration',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: durationSort,
         header: () => DurationHeader(language),
@@ -304,14 +290,12 @@ const useTable = (
       },
       {
         id: 'Date',
-        size: 100,
         accessorFn: (v) => videoToDate(v),
         header: () => DateHeader(language),
         cell: populateDateCell,
       },
       {
         id: 'Viewpoints',
-        size: 125,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: populateViewpointCell,
@@ -329,14 +313,13 @@ const useTable = (
     () => [
       {
         id: 'Details',
-        size: 25,
+        size: 80,
         accessorFn: (v) => v,
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
         id: 'Type',
-        size: 100,
         accessorKey: 'parentCategory',
         header: () => TypeHeader(language),
         cell: (info) => {
@@ -352,7 +335,6 @@ const useTable = (
       },
       {
         id: 'Duration',
-        size: 100,
         accessorFn: (v) => v,
         sortingFn: durationSort,
         header: () => DurationHeader(language),
@@ -360,14 +342,12 @@ const useTable = (
       },
       {
         id: 'Date',
-        size: 100,
         accessorFn: (v) => videoToDate(v),
         header: () => DateHeader(language),
         cell: populateDateCell,
       },
       {
         id: 'Viewpoints',
-        size: 125,
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
         cell: populateViewpointCell,
@@ -419,6 +399,9 @@ const useTable = (
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
     autoResetPageIndex: false,
+    // This is a workaround for tanstack defaulting to 150px.
+    // Also see the VideoSelectionTable component where we react to this.
+    defaultColumn: { size: Number.MAX_SAFE_INTEGER },
   });
 
   return table;

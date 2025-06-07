@@ -22,9 +22,15 @@ import { Language, Phrase } from 'localisation/types';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';
-import { LockKeyhole, LockOpen } from 'lucide-react';
+import {
+  LockKeyhole,
+  LockOpen,
+  MessageSquare,
+  MessageSquareMore,
+} from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
 import { dungeonAffixesById } from 'main/constants';
+import TagDialog from 'renderer/TagDialog';
 
 export const populateResultCell = (
   info: CellContext<RendererVideo, unknown>,
@@ -65,7 +71,7 @@ export const populateMapCell = (info: CellContext<RendererVideo, unknown>) => {
 
 export const populateDateCell = (info: CellContext<RendererVideo, unknown>) => {
   const date = info.getValue() as Date;
-  return dateToHumanReadable(date);
+  return <div className="truncate">{dateToHumanReadable(date)}</div>;
 };
 
 export const populateActivityCell = (
@@ -93,7 +99,7 @@ export const populateDetailsCell = (
 ) => {
   const video = ctx.getValue() as RendererVideo;
   const { language, cloudStatus } = appState;
-  const { del } = cloudStatus;
+  const { write, del } = cloudStatus;
 
   const renderProtectedIcon = () => {
     // If any videos in our selection are not protected, then the button's
@@ -146,8 +152,8 @@ export const populateDetailsCell = (
     };
 
     return (
-      <Tooltip content={tooltip}>
-        <div>
+      <div className="flex flex-row justify-center">
+        <Tooltip content={tooltip}>
           <Button
             variant="ghost"
             size="xs"
@@ -156,12 +162,64 @@ export const populateDetailsCell = (
           >
             {icon}
           </Button>
+        </Tooltip>
+      </div>
+    );
+  };
+
+  const renderTagIcon = () => {
+    const toTag = [video, ...video.multiPov];
+    const noPermission = !write && toTag.some((v) => v.cloud);
+
+    let tag = '';
+    let icon = <MessageSquare size={18} />;
+
+    let tooltip = noPermission
+      ? getLocalePhrase(language, Phrase.GuildNoPermission)
+      : getLocalePhrase(language, Phrase.TagButtonTooltip);
+
+    const foundTag = toTag.map((v) => v.tag).find((t) => t);
+
+    if (foundTag) {
+      tag = foundTag;
+      icon = <MessageSquareMore size={18} />;
+
+      if (tag.length > 50) {
+        tooltip = `${tag.slice(0, 50)}...`;
+      } else {
+        tooltip = tag;
+      }
+    }
+
+    return (
+      <Tooltip content={tooltip}>
+        <div>
+          <TagDialog
+            initialTag={tag}
+            videos={toTag}
+            setVideoState={setVideoState}
+            appState={appState}
+          >
+            <Button
+              variant="ghost"
+              size="xs"
+              disabled={false}
+              onClick={(e) => stopPropagation(e)}
+            >
+              {icon}
+            </Button>
+          </TagDialog>
         </div>
       </Tooltip>
     );
   };
 
-  return <Box className="inline-flex">{renderProtectedIcon()}</Box>;
+  return (
+    <Box className="inline-flex">
+      {renderProtectedIcon()}
+      {renderTagIcon()}
+    </Box>
+  );
 };
 
 export const populateLevelCell = (

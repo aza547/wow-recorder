@@ -2,10 +2,8 @@ import { AppState, RendererVideo } from 'main/types';
 
 import { Cell, flexRender, Header, Row, Table } from '@tanstack/react-table';
 import React, {
-  Dispatch,
   Fragment,
   MutableRefObject,
-  SetStateAction,
   useCallback,
   useEffect,
 } from 'react';
@@ -27,7 +25,6 @@ interface IProps {
   appState: AppState;
   setAppState: React.Dispatch<React.SetStateAction<AppState>>;
   persistentProgress: MutableRefObject<number>;
-  setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
 }
 
 /**
@@ -203,13 +200,13 @@ const VideoSelectionTable = (props: IProps) => {
       tooltip = getLocalePhrase(appState.language, Phrase.ClickToSelectAll);
     }
 
+    const width =
+      header.column.getSize() === Number.MAX_SAFE_INTEGER
+        ? 'auto'
+        : header.column.getSize();
+
     return (
-      <th
-        key={header.id}
-        colSpan={header.colSpan}
-        style={{ width: header.column.getSize() }}
-        className="text-left"
-      >
+      <th key={header.id} colSpan={header.colSpan} style={{ width }}>
         <div
           className="flex flex-row p-2 items-center cursor-pointer select-none"
           onClick={header.column.getToggleSortingHandler()}
@@ -243,7 +240,10 @@ const VideoSelectionTable = (props: IProps) => {
    * Render a cell in the base row.
    */
   const renderBaseCell = (cell: Cell<RendererVideo, unknown>) => {
-    const width = cell.column.getSize();
+    const width =
+      cell.column.getSize() === Number.MAX_SAFE_INTEGER
+        ? 'auto'
+        : cell.column.getSize();
 
     return (
       <td className="px-2" key={cell.id} style={{ width }}>
@@ -260,7 +260,9 @@ const VideoSelectionTable = (props: IProps) => {
     let className = 'cursor-pointer hover:bg-secondary/80 ';
 
     if (selected) {
-      className += 'bg-secondary/80';
+      className += 'bg-secondary/100 ';
+    } else if (row.index % 2 == 0) {
+      className += 'bg-secondary/15 ';
     }
 
     return (
@@ -281,6 +283,7 @@ const VideoSelectionTable = (props: IProps) => {
     const selected =
       row.getIsSelected() ||
       (!table.getIsSomeRowsSelected() && row.index === 0);
+    
     return <Fragment key={row.id}>{renderBaseRow(row, selected)}</Fragment>;
   };
 
@@ -349,7 +352,7 @@ const VideoSelectionTable = (props: IProps) => {
   return (
     <div className="w-full h-full overflow-hidden px-2">
       <ScrollArea withScrollIndicators={false} className="h-full w-full">
-        <div className="pb-2 px-4">
+        <div className="pb-2 px-6">
           <table className="table-fixed w-full">
             {renderTableHeader()}
             {renderTableBody()}

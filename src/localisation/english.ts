@@ -218,7 +218,7 @@ const ENGLISH: Translations = {
   [Phrase.ClipUnavailableTooltip]: 'You can only clip locally saved videos, while in single player mode',
   [Phrase.ConfirmTooltip]: 'Confirm',
   [Phrase.CancelTooltip]: 'Cancel',
-  [Phrase.TagButtonTooltip]: 'Add a custom tag to the selected row.',
+  [Phrase.TagButtonTooltip]: 'Add a custom tag.',
   [Phrase.StarButtonTooltip]: 'Never age out',
   [Phrase.UnstarButtonTooltip]: 'Age out',
   [Phrase.OpenFolderButtonTooltip]: 'Open location',
