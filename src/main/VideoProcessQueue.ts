@@ -486,7 +486,6 @@ export default class VideoProcessQueue {
    */
   private async uploadQueueEmpty() {
     console.info('[VideoProcessQueue] Upload processing queue empty');
-    this.mainWindow.webContents.send('updateUploadQueueLength', 0);
   }
 
   /**
@@ -504,7 +503,6 @@ export default class VideoProcessQueue {
     };
 
     this.mainWindow.webContents.send('updateDiskStatus', status);
-    this.mainWindow.webContents.send('updateDownloadQueueLength', 0);
   }
 
   /**
