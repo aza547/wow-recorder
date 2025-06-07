@@ -321,7 +321,7 @@ const Status = ({
   }, []);
 
   const isSaving = savingStatus === SaveStatus.Saving;
-  const isUpDowning = queuedUploads > 0 || queuedDownloads || 0;
+  const isUpDowning = queuedUploads > 0 || queuedDownloads > 0;
 
   return (
     <HoverCard openDelay={300}>
