@@ -183,7 +183,7 @@ export default class VideoProcessQueue {
     this.inProgressUploads.push(item.path);
     this.uploadQueue.write(item);
 
-    const queued = Math.max(0, this.inProgressUploads.length - 1);
+    const queued = Math.max(0, this.inProgressUploads.length);
     this.mainWindow.webContents.send('updateUploadQueueLength', queued);
   };
 
@@ -203,7 +203,7 @@ export default class VideoProcessQueue {
     this.inProgressDownloads.push(videoName);
     this.downloadQueue.write(video);
 
-    const queued = Math.max(0, this.inProgressDownloads.length - 1);
+    const queued = Math.max(0, this.inProgressDownloads.length);
     this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
   };
 
@@ -414,7 +414,7 @@ export default class VideoProcessQueue {
    */
   private startedUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Now uploading video', item.path);
-    const queued = Math.max(0, this.inProgressUploads.length - 1);
+    const queued = Math.max(0, this.inProgressUploads.length);
     this.mainWindow.webContents.send('updateUploadProgress', 0);
     this.mainWindow.webContents.send('updateUploadQueueLength', queued);
     this.mainWindow.webContents.send('refreshState');
@@ -431,7 +431,7 @@ export default class VideoProcessQueue {
       (p) => p !== item.path,
     );
 
-    const queued = Math.max(0, this.inProgressUploads.length - 1);
+    const queued = Math.max(0, this.inProgressUploads.length);
     this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
     this.mainWindow.webContents.send('refreshState');
   }
@@ -442,7 +442,7 @@ export default class VideoProcessQueue {
   private startedDownloadingVideo(video: RendererVideo) {
     const { videoName } = video;
     console.info('[VideoProcessQueue] Now downloading video', videoName);
-    const queued = Math.max(0, this.inProgressDownloads.length - 1);
+    const queued = Math.max(0, this.inProgressDownloads.length);
     this.mainWindow.webContents.send('updateDownloadProgress', 0);
     this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
     this.mainWindow.webContents.send('refreshState');
@@ -459,7 +459,7 @@ export default class VideoProcessQueue {
       (p) => p !== videoName,
     );
 
-    const queued = Math.max(0, this.inProgressDownloads.length - 1);
+    const queued = Math.max(0, this.inProgressDownloads.length);
     this.mainWindow.webContents.send('refreshState');
     this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
   }
