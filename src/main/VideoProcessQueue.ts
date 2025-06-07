@@ -338,7 +338,7 @@ export default class VideoProcessQueue {
         return;
       }
 
-      const queued = Math.max(0, this.inProgressUploads.length - 1);
+      const queued = Math.max(0, this.inProgressDownloads.length - 1);
 
       this.mainWindow.webContents.send(
         'updateDownloadProgress',
