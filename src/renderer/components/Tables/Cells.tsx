@@ -318,7 +318,7 @@ export const populateViewpointCell = (
   };
 
   return (
-    <div className="flex ">
+    <div className="flex truncate">
       {renderSpecAndName()}
       {renderRemainingCount()}
     </div>
