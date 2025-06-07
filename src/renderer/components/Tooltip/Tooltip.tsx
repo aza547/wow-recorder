@@ -61,7 +61,7 @@ type TooltipProviderProps = TooltipPrimitive.TooltipProviderProps;
 
 const TooltipProvider = ({
   children,
-  delayDuration = 100,
+  delayDuration = 750,
   skipDelayDuration = 300,
   ...props
 }: TooltipProviderProps) => {

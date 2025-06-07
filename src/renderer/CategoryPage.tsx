@@ -41,7 +41,6 @@ import { Popover, PopoverContent } from './components/Popover/Popover';
 import { PopoverTrigger } from '@radix-ui/react-popover';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
 import useTable from './components/Tables/TableData';
-import TagDialog from './TagDialog';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import DateRangePicker from './DateRangePicker';
 import StorageFilterToggle from './StorageFilterToggle';
@@ -88,7 +87,7 @@ const CategoryPage = (props: IProps) => {
   const categoryState = useMemo<RendererVideo[]>(() => {
     const categoryFilter = getVideoCategoryFilter(category);
     return videoState.filter(categoryFilter);
-  }, [videoState, appState.category]);
+  }, [videoState, category]);
 
   // Filter by storage type before we apply grouping.
   const correlatedState = useMemo<RendererVideo[]>(() => {
@@ -250,55 +249,6 @@ const CategoryPage = (props: IProps) => {
     const names = multiPlayerOpts.map((rv) => rv.videoName);
     const unique = [...new Set(names)];
     const allowMultiPlayer = unique.length > 1;
-
-    const renderTagButton = () => {
-      const toTag = selectedViewpoints;
-
-      const noPermission = !write && toTag.some((v) => v.cloud);
-      const disabled = selectedRows.length > 1 || noPermission;
-
-      let tag = '';
-      let icon = <MessageSquare size={18} />;
-
-      let tooltip = noPermission
-        ? getLocalePhrase(language, Phrase.GuildNoPermission)
-        : getLocalePhrase(language, Phrase.TagButtonTooltip);
-
-      const foundTag = toTag.map((v) => v.tag).find((t) => t);
-
-      if (foundTag) {
-        tag = foundTag;
-        icon = <MessageSquareMore size={18} />;
-
-        if (tag.length > 50) {
-          tooltip = `${tag.slice(0, 50)}...`;
-        } else {
-          tooltip = tag;
-        }
-      }
-
-      return (
-        <Tooltip content={tooltip}>
-          <div>
-            <TagDialog
-              initialTag={tag}
-              videos={toTag}
-              setVideoState={setVideoState}
-              appState={appState}
-            >
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={disabled}
-                className="border border-background"
-              >
-                {icon}
-              </Button>
-            </TagDialog>
-          </div>
-        </Tooltip>
-      );
-    };
 
     const protectVideo = (
       _event: React.SyntheticEvent,
@@ -530,7 +480,6 @@ const CategoryPage = (props: IProps) => {
           <div>
             {renderSelectionLabel()}
             <div className="flex gap-x-1 mr-2 py-[1px]">
-              {renderTagButton()}
               {renderProtectButton()}
               {renderDeleteButton()}
             </div>
@@ -542,7 +491,6 @@ const CategoryPage = (props: IProps) => {
             table={table}
             appState={appState}
             setAppState={setAppState}
-            setVideoState={setVideoState}
             persistentProgress={persistentProgress}
           />
         </div>
