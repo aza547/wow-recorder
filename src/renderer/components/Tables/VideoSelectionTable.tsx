@@ -261,7 +261,7 @@ const VideoSelectionTable = (props: IProps) => {
 
     if (selected) {
       className += 'bg-secondary/100 ';
-    } else if (row.index % 2 == 0) {
+    } else if (row.index % 2 === 0) {
       className += 'bg-secondary/15 ';
     }
 

@@ -152,8 +152,8 @@ export const populateDetailsCell = (
     };
 
     return (
-      <div className="flex flex-row justify-center">
-        <Tooltip content={tooltip}>
+      <Tooltip content={tooltip}>
+        <div>
           <Button
             variant="ghost"
             size="xs"
@@ -162,8 +162,8 @@ export const populateDetailsCell = (
           >
             {icon}
           </Button>
-        </Tooltip>
-      </div>
+        </div>
+      </Tooltip>
     );
   };
 
