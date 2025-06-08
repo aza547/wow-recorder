@@ -112,6 +112,10 @@ const PVESettings = (props: IProps) => {
   };
 
   const getRecordCurrentEncountersOnlySwitch = () => {
+    if (!config.recordRaids) {
+      return <></>;
+    }
+
     return (
       <div className="flex flex-col w-[140px]">
         <Label
