@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 650](https://github.com/aza547/wow-recorder/issues/650) - Fix an issue where outside players could appear in the Mythic+ roster. 
 
 ## [6.14.0] - 2025-06-07
 ### Changed
