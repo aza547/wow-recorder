@@ -148,7 +148,6 @@ const VideoSelectionTable = (props: IProps) => {
 
         event.preventDefault();
         event.stopPropagation();
-        return;
       }
     };
 
