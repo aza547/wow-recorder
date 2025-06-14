@@ -47,6 +47,8 @@ import {
   durationSort,
   viewPointCountSort,
   levelSort,
+  detailSort,
+  clipActivitySort,
 } from './Sorting';
 import { getLocaleCategoryLabel } from 'localisation/translations';
 
@@ -87,6 +89,7 @@ const useTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
+        sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
@@ -148,6 +151,7 @@ const useTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
+        sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
@@ -199,6 +203,7 @@ const useTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
+        sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
@@ -264,6 +269,7 @@ const useTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
+        sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
@@ -315,6 +321,7 @@ const useTable = (
         id: 'Details',
         size: 80,
         accessorFn: (v) => v,
+        sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
@@ -330,6 +337,7 @@ const useTable = (
       {
         id: 'Activity',
         accessorFn: (v) => v,
+        sortingFn: (a, b) => clipActivitySort(a, b, language),
         header: () => ActivityHeader(language),
         cell: (ctx) => populateActivityCell(ctx, language),
       },
