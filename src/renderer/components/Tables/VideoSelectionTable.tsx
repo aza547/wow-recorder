@@ -33,6 +33,7 @@ interface IProps {
  */
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
+  const { videoFilterTags, dateRangeFilter, storageFilter } = appState;
 
   /**
    * Mark the row as selected and update the video player to play the first
@@ -94,7 +95,14 @@ const VideoSelectionTable = (props: IProps) => {
         playing: false,
       }));
     },
-    [persistentProgress, setAppState, table],
+    [
+      persistentProgress,
+      setAppState,
+      table,
+      videoFilterTags,
+      dateRangeFilter,
+      storageFilter,
+    ],
   );
 
   /**
@@ -157,7 +165,7 @@ const VideoSelectionTable = (props: IProps) => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [table, onRowClick]);
+  }, [table, onRowClick, videoFilterTags, dateRangeFilter, storageFilter]);
 
   /**
    * Render an individual header.

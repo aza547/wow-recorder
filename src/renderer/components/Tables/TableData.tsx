@@ -57,7 +57,13 @@ const useTable = (
   appState: AppState,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
 ) => {
-  const { category, language } = appState;
+  const {
+    category,
+    language,
+    videoFilterTags,
+    dateRangeFilter,
+    storageFilter,
+  } = appState;
 
   /**
    * Tracks if rows are selected or not.
@@ -73,11 +79,11 @@ const useTable = (
   });
 
   /**
-   * Deselect all rows on category change.
+   * Deselect all rows on category change or filter change.
    */
   useEffect(() => {
     setRowSelection({});
-  }, [category]);
+  }, [category, videoFilterTags, dateRangeFilter, storageFilter]);
 
   /**
    * The raid table columns, the data access, sorting functions
