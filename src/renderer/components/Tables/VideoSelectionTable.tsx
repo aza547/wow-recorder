@@ -95,14 +95,7 @@ const VideoSelectionTable = (props: IProps) => {
         playing: false,
       }));
     },
-    [
-      persistentProgress,
-      setAppState,
-      table,
-      videoFilterTags,
-      dateRangeFilter,
-      storageFilter,
-    ],
+    [persistentProgress, setAppState, table],
   );
 
   /**
