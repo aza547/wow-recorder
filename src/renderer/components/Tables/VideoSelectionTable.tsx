@@ -48,11 +48,6 @@ const VideoSelectionTable = (props: IProps) => {
       const isSelected = selectedRows.some((r) => r.id === row.id);
       const targetIndex = allRows.findIndex((r) => r.id === row.id);
 
-      if (event.shiftKey && event instanceof KeyboardEvent) {
-        row.getToggleSelectedHandler()(event);
-        return;
-      }
-
       if (event.shiftKey) {
         const baseIndex = selectedRows[0]
           ? allRows.findIndex((r) => r.id === selectedRows[0].id)
@@ -70,7 +65,7 @@ const VideoSelectionTable = (props: IProps) => {
         return;
       }
 
-      if (event.ctrlKey && !(event instanceof KeyboardEvent)) {
+      if (event.ctrlKey) {
         // Add a single row to the Selection.
         row.getToggleSelectedHandler()(event);
         return;
