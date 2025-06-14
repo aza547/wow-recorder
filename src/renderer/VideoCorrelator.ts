@@ -42,14 +42,16 @@ export default class VideoCorrelator {
       const videoToCompare = videos[i];
       const sameHash = videoToCompare.uniqueHash === video.uniqueHash;
 
-      const isVideoClip = video.category === VideoCategory.Clips;
-      const isCompareClip = videoToCompare.category === VideoCategory.Clips;
-      const isVideoShuffle = video.category === VideoCategory.SoloShuffle;
-      const isCompareShuffle =
+      const isEitherClip =
+        video.category === VideoCategory.Clips ||
+        videoToCompare.category === VideoCategory.Clips;
+
+      const isEitherShuffle =
+        video.category === VideoCategory.SoloShuffle ||
         videoToCompare.category === VideoCategory.SoloShuffle;
 
       if (
-        (isVideoClip || isCompareClip || isVideoShuffle || isCompareShuffle) &&
+        (isEitherClip || isEitherShuffle) &&
         video.videoName !== videoToCompare.videoName
       ) {
         // Only correlate clips if they are the literally the same video
