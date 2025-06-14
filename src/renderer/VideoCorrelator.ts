@@ -44,15 +44,22 @@ export default class VideoCorrelator {
 
       const isVideoClip = video.category === VideoCategory.Clips;
       const isCompareClip = videoToCompare.category === VideoCategory.Clips;
+      const isVideoShuffle = video.category === VideoCategory.SoloShuffle;
+      const isCompareShuffle =
+        videoToCompare.category === VideoCategory.SoloShuffle;
 
       if (
-        (isVideoClip || isCompareClip) &&
+        (isVideoClip || isCompareClip || isVideoShuffle || isCompareShuffle) &&
         video.videoName !== videoToCompare.videoName
       ) {
         // Only correlate clips if they are the literally the same video
         // with different storage. Otherwise we end up grouping from the
         // parent hash which is confusing.
-
+        //
+        // Same deal for solo shuffle. For solo shuffle correlation to
+        // be relevant, we would need to have two users of the same guild
+        // playing the same solo shuffle game, and uploading. Which is
+        // entirely unlikely.
         continue;
       }
 
