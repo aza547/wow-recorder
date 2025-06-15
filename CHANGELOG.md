@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.14.1] - 2025-06-15
+### Changed
 - [Issue 660](https://github.com/aza547/wow-recorder/issues/660) - Re-enable labels on video progress / volume sliders.
 
-### Added
 ### Fixed
 - [Issue 650](https://github.com/aza547/wow-recorder/issues/650) - Fix an issue where outside players could appear in the Mythic+ roster. 
 - [Issue 687](https://github.com/aza547/wow-recorder/issues/687) - Fix an issue where the sorting of some columns was broken.
