@@ -517,7 +517,7 @@ export const configSchema = {
   hardwareAcceleration: {
     description: Phrase.HardwareAccelerationDescription,
     type: 'boolean',
-    default: true,
+    default: false,
   },
   recordCurrentRaidEncountersOnly: {
     description: Phrase.RecordCurrentRaidsOnlyDescription,
