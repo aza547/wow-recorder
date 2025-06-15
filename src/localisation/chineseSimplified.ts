@@ -421,6 +421,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.RecordCurrentRaidsOnlyDescription]: "仅记录当前等级的突袭遭遇，这仅适用于零售突袭遭遇。",
   [Phrase.UploadCurrentRaidsOnlyLabel]: "仅上传当前突袭",
   [Phrase.UploadCurrentRaidsOnlyDescription]: "仅上传当前等级的突袭遭遇战，这仅适用于零售突袭遭遇战。",
+  [Phrase.MustNotBeEmpty]: "不能为空",
 };
 
 export default CHINESE_SIMPLIFIED;

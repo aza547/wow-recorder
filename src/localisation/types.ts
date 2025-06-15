@@ -418,6 +418,7 @@ enum Phrase {
   RecordCurrentRaidsOnlyDescription,
   UploadCurrentRaidsOnlyLabel,
   UploadCurrentRaidsOnlyDescription,
+  MustNotBeEmpty,
 }
 
 enum Language {

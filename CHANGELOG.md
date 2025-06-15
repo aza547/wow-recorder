@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 687](https://github.com/aza547/wow-recorder/issues/687) - Fix an issue where the sorting of some columns was broken.
 - [Issue 686](https://github.com/aza547/wow-recorder/issues/686) - Fix an issue where some keyboard interactions with the video selection table were broken when sorted.
 - [Issue 684](https://github.com/aza547/wow-recorder/issues/684) - Fix an issue where Solo Shuffle videos could be grouped in the UI in error.
+- [Issue 585](https://github.com/aza547/wow-recorder/issues/585) - Fix some missing translations.
 
 ## [6.14.0] - 2025-06-07
 ### Changed

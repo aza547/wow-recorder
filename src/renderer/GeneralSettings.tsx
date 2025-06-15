@@ -22,6 +22,7 @@ const ipc = window.electron.ipcRenderer;
 
 const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState } = props;
+  const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRenderVideoConfig = useRef(true);
 
@@ -73,7 +74,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <TextBanner>
-        {getLocalePhrase(appState.language, Phrase.SettingsDisabledText)}
+        {getLocalePhrase(language, Phrase.SettingsDisabledText)}
       </TextBanner>
     );
   };
@@ -101,10 +102,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label htmlFor="storagePath" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.DiskStorageFolderLabel)}
+          {getLocalePhrase(language, Phrase.DiskStorageFolderLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.storagePath.description,
             )}
             side="top"
@@ -121,7 +122,9 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
           readOnly
         />
         {config.storagePath === '' && (
-          <span className="text-error text-sm">Must not be empty</span>
+          <span className="text-error text-sm">
+            {getLocalePhrase(language, Phrase.MustNotBeEmpty)}
+          </span>
         )}
       </div>
     );
@@ -154,10 +157,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label htmlFor="separateBufferPath" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.SeparateBufferFolderLabel)}
+          {getLocalePhrase(language, Phrase.SeparateBufferFolderLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.separateBufferPath.description,
             )}
             side="top"
@@ -188,10 +191,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
         <Label htmlFor="bufferStoragePath" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.BufferFolderLabel)}
+          {getLocalePhrase(language, Phrase.BufferFolderLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.bufferStoragePath.description,
             )}
             side="top"
@@ -235,10 +238,10 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/3 min-w-60 max-w-80">
         <Label htmlFor="maxDiskStorage" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.MaxDiskStorageLabel)}
+          {getLocalePhrase(language, Phrase.MaxDiskStorageLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.maxStorage.description,
             )}
             side="top"
@@ -268,15 +271,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
     return (
       <div className="flex-col">
         <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.DiskUsageDescription)}
+          {getLocalePhrase(language, Phrase.DiskUsageDescription)}
         </Label>
 
         <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
           <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              Phrase.DiskUsageDescription,
-            )}
+            content={getLocalePhrase(language, Phrase.DiskUsageDescription)}
           >
             <HardDrive size={24} className="text-foreground-lighter" />
           </Tooltip>
