@@ -642,7 +642,7 @@ export const VideoPlayer = (props: IProps) => {
       : progress;
 
     const valueLabelFormat = clipMode ? getClipLabelFormat : secToMmSs;
-    const valueLabelDisplay = clipMode ? 'on' : 'off';
+    const valueLabelDisplay = clipMode ? 'on' : 'auto';
     const marks = clipMode ? undefined : getMarks();
 
     return (
@@ -1155,6 +1155,7 @@ export const VideoPlayer = (props: IProps) => {
         value={muted ? 0 : volume * 100}
         onChange={handleVolumeChange}
         valueLabelFormat={Math.round}
+        valueLabelDisplay="auto"
         onKeyDown={(e) => {
           e.preventDefault();
         }}

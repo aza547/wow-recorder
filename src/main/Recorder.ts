@@ -1437,7 +1437,7 @@ export default class Recorder extends EventEmitter {
    * Handle a source callback from OBS.
    */
   private handleSourceCallback(data: ObsSourceCallbackInfo[]) {
-    //console.info('[Recorder] Got source callback:', data);
+    console.info('[Recorder] Got source callback:', data);
     this.scaleVideoSourceSize();
   }
 
