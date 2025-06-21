@@ -1521,6 +1521,11 @@ export default class Recorder extends EventEmitter {
     this.monitorCaptureSource.update(settings);
     this.monitorCaptureSource.save();
     this.monitorCaptureSource.enabled = true;
+
+    // Rescale now we're hooked in-case the resolutions don't match. Usually
+    // I'd expect us to get a source callback but sometimes it doesn't seem
+    // to happen.
+    this.scaleVideoSourceSize();
   }
 
   /**
@@ -1918,6 +1923,11 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Game capture source configured');
     this.clearFindWindowInterval();
+
+    // Rescale now we're hooked in-case the resolutions don't match. Usually
+    // I'd expect us to get a source callback but sometimes it doesn't seem
+    // to happen.
+    this.scaleVideoSourceSize();
   }
 
   /**
@@ -1961,5 +1971,10 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Window capture source configured');
     this.clearFindWindowInterval();
+
+    // Rescale now we're hooked in-case the resolutions don't match. Usually
+    // I'd expect us to get a source callback but sometimes it doesn't seem
+    // to happen.
+    this.scaleVideoSourceSize();
   }
 }

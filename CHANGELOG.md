@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix a bug where the video source wouldn't rescale correctly after a reconfigure sometimes.
 
 ## [6.14.1] - 2025-06-15
 ### Changed
