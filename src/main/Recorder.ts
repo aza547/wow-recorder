@@ -958,13 +958,19 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Removing OBS audio sources...');
 
-    this.volmeters.forEach((volmeter) => {
+    this.volmeters.forEach((volmeter, index) => {
+      console.info('Release fader', index);
       volmeter.detach();
+
+      console.info('Destroy fader', index);
       volmeter.destroy();
     });
 
-    this.faders.forEach((fader) => {
+    this.faders.forEach((fader, index) => {
+      console.info('Detach fader', index);
       fader.detach();
+
+      console.info('Destroy fader', index);
       fader.destroy();
     });
 
