@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 689](https://github.com/aza547/wow-recorder/issues/689) - Add TWW Season 3 new dungeon.
 
 ### Fixed
+- Fix a bug where the video source wouldn't rescale correctly after a reconfigure sometimes.
 
 ## [6.14.1] - 2025-06-15
 ### Changed
