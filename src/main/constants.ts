@@ -348,8 +348,12 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * List of the raid encounters for the current tier of raid bosses. This
  * enables the "record current tier only" option, and needs updated with each
  * new tier.
+ *
+ * Typically will do a bit of overlap on a new tier so that we can cover PTR,
+ * and retail at the same time. Eventually the older tiers should be removed.
  */
 const currentRetailEncounters = [
+  // TWW Season 2
   3009, // Vexie
   3010, // Cauldron
   3011, // Rik
@@ -358,6 +362,16 @@ const currentRetailEncounters = [
   3014, // Bandit
   3015, // Mug'Zee
   3016, // Gally
+
+  // TWW Season 3
+  3129, // Plexus Sentinel
+  3131, // Loom'ithar
+  3130, // Soulbinder Naazindhri
+  3132, // Forgeweaver Araz
+  3122, // The Soul Hunters
+  3133, // Fractillus
+  3134, // Nexus-King Salhadaar
+  3135, // Dimensius, the All-Devouring
 ];
 
 /**
@@ -501,6 +515,10 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   2661: 'Cinderbrew Meadery',
   2773: 'Operation: Floodgate',
   1594: 'THE MOTHERLODE!!',
+
+  // TWW S3.
+  // Taken from https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L487.
+  2830: "Echo-Dome Al'Dani",
 };
 
 /**
@@ -572,6 +590,9 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
   506: 'Cinderbrew Meadery',
   247: 'THE MOTHERLODE!!',
   525: 'Operation: Floodgate',
+
+  // TWW S3 - taken from WoWhead, searching for "set keystone map X".
+  542: "Eco-Dome Al'Dani",
 };
 
 /**
@@ -652,6 +673,10 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   499: [32 * 60 + 30, 26 * 60, 19 * 60 + 30], // 'Priory of the Sacred Flame'
   525: [33 * 60, 26 * 60 + 24, 19 * 60 + 48], // 'Operation: Floodgate'
   247: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'THE MOTHERLODE!!'
+
+  // TWW S3
+  // Below is a total guess/placeholder. Should update when timer is published.
+  542: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // "Eco-Dome Al'Dani"
 };
 
 // Useful database for grabbing this stuff:
@@ -964,6 +989,11 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   2106: 'Azerokk',
   2107: 'Rixxa Fluxflame',
   2108: 'Mogul Razdunk',
+
+  // Eco-Dome Al'Dani
+  3107: 'Azhiccar',
+  3108: "Taah'bat and A'wazj",
+  3109: 'Soul-Scribe',
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
