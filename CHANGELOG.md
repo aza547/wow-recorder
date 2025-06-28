@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.14.2] - 2025-06-28
+### Changed
 - Don't apply current retail encounter filtering to PTR.
 
 ### Added
