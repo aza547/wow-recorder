@@ -33,6 +33,8 @@ import { isUnitSelf } from './logutils';
  * RetailLogHandler class.
  */
 export default class RetailLogHandler extends LogHandler {
+  private isPtr = false;
+
   constructor(
     mainWindow: BrowserWindow,
     recorder: Recorder,
@@ -78,6 +80,10 @@ export default class RetailLogHandler extends LogHandler {
       .on('SPELL_DAMAGE', async (line: LogLine) => {
         this.handleSpellDamage(line);
       });
+  }
+
+  public setIsPtr() {
+    this.isPtr = true;
   }
 
   private async handleArenaStartLine(line: LogLine) {
@@ -282,7 +288,11 @@ export default class RetailLogHandler extends LogHandler {
         'recordCurrentRaidEncountersOnly',
       );
 
-      if (currentRaidOnly && !currentRetailEncounters.includes(encounterID)) {
+      if (
+        !this.isPtr &&
+        currentRaidOnly &&
+        !currentRetailEncounters.includes(encounterID)
+      ) {
         console.warn('[RetailLogHandler] Not a current encounter');
         return;
       }

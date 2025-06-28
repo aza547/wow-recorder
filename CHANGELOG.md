@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Don't apply current retail encounter filtering to PTR.
+
 ### Added
 - [Issue 689](https://github.com/aza547/wow-recorder/issues/689) - Add TWW Season 3 new dungeon.
 

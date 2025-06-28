@@ -487,7 +487,7 @@ export default class Recorder extends EventEmitter {
 
   /**
    * Force stop OBS. This drops the current recording and stops OBS. The
-   * resulting MP4 may be malformed should not be used.
+   * resulting MP4 may be malformed and should not be used.
    */
   public async forceStop() {
     console.info('[Recorder] Queued force stop');
@@ -959,18 +959,18 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Removing OBS audio sources...');
 
     this.volmeters.forEach((volmeter, index) => {
-      console.info('Release fader', index);
+      console.info('[Recorder] Release fader', index);
       volmeter.detach();
 
-      console.info('Destroy fader', index);
+      console.info('[Recorder] Destroy fader', index);
       volmeter.destroy();
     });
 
     this.faders.forEach((fader, index) => {
-      console.info('Detach fader', index);
+      console.info('[Recorder] Detach fader', index);
       fader.detach();
 
-      console.info('Destroy fader', index);
+      console.info('[Recorder] Destroy fader', index);
       fader.destroy();
     });
 

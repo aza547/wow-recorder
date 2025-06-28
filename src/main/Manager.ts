@@ -756,6 +756,7 @@ export default class Manager {
         config.retailPtrLogPath,
       );
 
+      this.retailPtrLogHandler.setIsPtr();
       this.retailPtrLogHandler.on('state-change', () => this.refreshStatus());
     }
 
