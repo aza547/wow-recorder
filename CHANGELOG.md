@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
-## [6.14.2] - 2025-06-28
+## [6.14.2] - 2025-06-29
 ### Changed
 - Don't apply current retail encounter filtering to PTR.
+- Update OSN to 0.25.34.
 
 ### Added
 - [Issue 689](https://github.com/aza547/wow-recorder/issues/689) - Add TWW Season 3 new dungeon.

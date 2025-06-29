@@ -154,7 +154,7 @@
     "lodash": "^4.17.21",
     "lucide-react": "^0.428.0",
     "node-abi": "^4.9.0",
-    "obs-studio-node": "https://pub-4cf93aaf84c649c88aadb13a092952f2.r2.dev/osn-0.25.30.2-release-win64.tar.gz",
+    "obs-studio-node": "https://pub-4cf93aaf84c649c88aadb13a092952f2.r2.dev/osn-0.25.34wcr-release-win64.tar.gz",
     "path": "^0.12.7",
     "queue-promise": "^2.2.1",
     "re-resizable": "^6.9.11",

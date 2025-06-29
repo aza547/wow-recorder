@@ -66,6 +66,9 @@ From [here](https://electron-react-boilerplate.js.org/docs/packaging).
 > This is hosted by streamlabs here (note version number): 
 > - https://s3-us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/osn-0.23.59-release-win64.tar.gz
 
+The above is no longer true, I'm now rebuilding OSN to add force stop functionality. Follow the OSN build instructions and then do:
+`tar -czvf osn-0.25.34wcr-release-win64.tar.gz -C build/distribute/ obs-studio-node` to get an archive ready for use.
+
 Below are various additional OSN resources:
 - [Example](https://github.com/Envek/obs-studio-node-example)
 - [Community Docs](https://github.com/hrueger/obs-studio-node-docs)
