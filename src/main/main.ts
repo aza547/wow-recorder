@@ -27,6 +27,7 @@ import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
 import Manager from './Manager';
 import AppUpdater from './AppUpdater';
+import MenuBuilder from './menu';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -417,6 +418,7 @@ app
       }
     });
 
+    new MenuBuilder().buildMenu();
     createWindow();
   })
   .catch(console.error);
