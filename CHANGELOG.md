@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Make wipes overrun a few seconds longerto avoid missing anything.
+
 - [Issue 668](https://github.com/aza547/wow-recorder/issues/668) - Fixes the zoom in hotkey.
 
 ## [6.14.2] - 2025-06-29
