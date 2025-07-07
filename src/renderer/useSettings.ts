@@ -76,6 +76,7 @@ export const getSettings = (): ConfigurationSchema => {
     pushToTalkKey: getConfigValue<number>('pushToTalkKey'),
     pushToTalkMouseButton: getConfigValue<number>('pushToTalkMouseButton'),
     pushToTalkModifiers: getConfigValue<string>('pushToTalkModifiers'),
+    pushToTalkReleaseDelay: getConfigValue<number>('pushToTalkReleaseDelay'),
     obsAudioSuppression: getConfigValue<boolean>('obsAudioSuppression'),
     raidOverrun: getConfigValue<number>('raidOverrun'),
     dungeonOverrun: getConfigValue<number>('dungeonOverrun'),

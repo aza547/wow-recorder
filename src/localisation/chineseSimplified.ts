@@ -60,6 +60,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.PushToTalkKeyDescription]: '按键说话热键的键值代码。',
   [Phrase.PushToTalkMouseButtonDescription]: '按键说话的鼠标按键。',
   [Phrase.PushToTalkModifiersDescription]: '设置需要与按键说话热键一起按下的修饰键（用逗号分隔）。',
+  [Phrase.PushToTalkReleaseDelayDescription]: '在您松开按下通话键（Push To Talk）后，麦克风保持激活的时长。',
   [Phrase.ObsAudioSuppressionDescription]: '抑制麦克风拾取的背景噪音，这有助于减少键盘敲击、呼吸声等。',
   [Phrase.RaidOverrunDescription]: '击杀首领后额外录制的秒数。',
   [Phrase.DungeonOverrunDescription]: '完成大秘境后额外录制的秒数。',

@@ -58,6 +58,7 @@ export type ConfigurationSchema = {
   pushToTalkKey: number;
   pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
+  pushToTalkReleaseDelay: number;
   obsAudioSuppression: boolean;
   raidOverrun: number;
   dungeonOverrun: number;
@@ -384,6 +385,13 @@ export const configSchema = {
     description: Phrase.PushToTalkModifiersDescription,
     type: 'string',
     default: '',
+  },
+  pushToTalkReleaseDelay: {
+    description: Phrase.PushToTalkReleaseDelayDescription,
+    type: 'integer',
+    default: 200,
+    minimum: 0,
+    maximum: 2000,
   },
   obsAudioSuppression: {
     description: Phrase.ObsAudioSuppressionDescription,

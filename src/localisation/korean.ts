@@ -60,6 +60,7 @@ const KOREAN: Translations = {
   [Phrase.PushToTalkKeyDescription]: 'PTT 단축키 설정',
   [Phrase.PushToTalkMouseButtonDescription]: 'PTT 마우스 버튼',
   [Phrase.PushToTalkModifiersDescription]: 'PTT 단축키와 함께 필요한 수식어의 쉼표로 구분된 목록',
+  [Phrase.PushToTalkReleaseDelayDescription]: 'PTT 키에서 손을 뗀 후 마이크가 활성 상태로 유지되는 시간입니다.',
   [Phrase.ObsAudioSuppressionDescription]: '마이크에 잡히는 배경 소음을 억제하는데 도움이 될 수 있습니다.',
   [Phrase.RaidOverrunDescription]: '보스가 죽은 후 기록할 초과 시간',
   [Phrase.DungeonOverrunDescription]: '던전 완료 후 기록할 초과 시간',

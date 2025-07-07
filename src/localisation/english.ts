@@ -60,6 +60,7 @@ const ENGLISH: Translations = {
   [Phrase.PushToTalkKeyDescription]: 'The push to talk hotkey, represented by the key code.',
   [Phrase.PushToTalkMouseButtonDescription]: 'The push to talk mouse button.',
   [Phrase.PushToTalkModifiersDescription]: 'A comma seperated list of modifiers required in conjunction with the push to talk hotkey.',
+  [Phrase.PushToTalkReleaseDelayDescription]: 'How long your microphone stays active after you release the Push To Talk key.',
   [Phrase.ObsAudioSuppressionDescription]: 'Suppress background noise picked up by your microphone, this can help reduce keyboard clacking, breathing, etc.',
   [Phrase.RaidOverrunDescription]: 'Number of seconds to record after a boss has been killed.',
   [Phrase.DungeonOverrunDescription]: 'Number of seconds to record after a dungeon has been completed.',

@@ -57,6 +57,7 @@ enum Phrase {
   PushToTalkKeyDescription,
   PushToTalkMouseButtonDescription,
   PushToTalkModifiersDescription,
+  PushToTalkReleaseDelayDescription,
   ObsAudioSuppressionDescription,
   RaidOverrunDescription,
   DungeonOverrunDescription,
