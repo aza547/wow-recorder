@@ -127,12 +127,11 @@ export default class Combatant {
     const hasGUID = this.teamID !== undefined;
     const hasName = this.name !== undefined;
     const hasRealm = this.realm !== undefined;
-    const hasRegion = this.region !== undefined;
     const hasSpecID = this.specID !== undefined;
     const hasTeamID = this.teamID !== undefined;
-    return (
-      hasGUID && hasName && hasRealm && hasRegion && hasSpecID && hasTeamID
-    );
+
+    // We do not check region here, because it may not exists in Classic / Era clients.
+    return hasGUID && hasName && hasRealm && hasSpecID && hasTeamID;
   }
 
   getRaw(): RawCombatant {
