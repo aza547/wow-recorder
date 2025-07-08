@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Make wipes overrun a few seconds longerto avoid missing anything.
-
 - [Issue 668](https://github.com/aza547/wow-recorder/issues/668) - Fixes the zoom in hotkey.
+- Make the test raid button work even when "record current raid only" is selected.
 
 ## [6.14.2] - 2025-06-29
 ### Changed

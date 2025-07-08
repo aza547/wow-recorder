@@ -372,6 +372,9 @@ const currentRetailEncounters = [
   3133, // Fractillus
   3134, // Nexus-King Salhadaar
   3135, // Dimensius, the All-Devouring
+
+  // Test Encounter
+  9999, // Saves having to update the test button data.
 ];
 
 /**
