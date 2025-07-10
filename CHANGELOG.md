@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Track the region as part of the combatant now the combat log includes it.
+
 ### Added
 ### Fixed
 - Make wipes overrun a few seconds longerto avoid missing anything.
