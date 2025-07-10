@@ -427,7 +427,8 @@ export default abstract class LogHandler extends EventEmitter {
       return combatant;
     }
 
-    [combatant.name, combatant.realm] = ambiguate(srcNameRealm);
+    [combatant.name, combatant.realm, combatant.region] =
+      ambiguate(srcNameRealm);
     this.activity.addCombatant(combatant);
     return combatant;
   }

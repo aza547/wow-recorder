@@ -242,6 +242,7 @@ type RawCombatant = {
   _specID?: number;
   _name?: string;
   _realm?: string;
+  _region?: string;
 };
 
 /**
