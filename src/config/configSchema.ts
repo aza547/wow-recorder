@@ -389,7 +389,7 @@ export const configSchema = {
   pushToTalkReleaseDelay: {
     description: Phrase.PushToTalkReleaseDelayDescription,
     type: 'integer',
-    default: 200,
+    default: 0,
     minimum: 0,
     maximum: 2000,
   },

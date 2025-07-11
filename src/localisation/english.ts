@@ -423,6 +423,7 @@ const ENGLISH: Translations = {
   [Phrase.UploadCurrentRaidsOnlyLabel]: "Current Tier Only",
   [Phrase.UploadCurrentRaidsOnlyDescription]: "Only upload raid encounters from the current tier, this only applies to retail raid encounters.",
   [Phrase.MustNotBeEmpty]: "Must not be empty",
+  [Phrase.PushToTalkReleaseDelayLabel]: "Release Delay",
 };
 
 export default ENGLISH;

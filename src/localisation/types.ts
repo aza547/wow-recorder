@@ -420,6 +420,7 @@ enum Phrase {
   UploadCurrentRaidsOnlyLabel,
   UploadCurrentRaidsOnlyDescription,
   MustNotBeEmpty,
+  PushToTalkReleaseDelayLabel,
 }
 
 enum Language {

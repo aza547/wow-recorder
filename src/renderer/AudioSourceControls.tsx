@@ -663,7 +663,7 @@ const AudioSourceControls = (props: IProps) => {
   const getPushToTalkReleaseDelaySlider = () => (
     <div className="flex flex-col w-[300px]">
       <Label className="flex items-center">
-        Release Delay
+        {getLocalePhrase(appState.language, Phrase.PushToTalkReleaseDelayLabel)}
         <Tooltip
           content={getLocalePhrase(
             appState.language,
@@ -674,17 +674,19 @@ const AudioSourceControls = (props: IProps) => {
           <Info size={20} className="inline-flex ml-2" />
         </Tooltip>
       </Label>
-      <div className="w-full flex items-center gap-x-2">
+      <div className="flex h-10 items-center gap-x-2 text-foreground-lighter">
         <Slider
-          defaultValue={[localReleaseDelay]}
+          id="release-delay-slider"
+          value={[localReleaseDelay]}
           onValueChange={(vals) => setLocalReleaseDelay(vals[0])}
           onValueCommit={commitReleaseDelay}
           min={0}
           max={2000}
           step={1}
           withTooltip={false}
+          className="flex-1"
         />
-        <span className="whitespace-nowrap">
+        <span className="text-sm text-foreground-lighter tabular-nums min-w-[60px] text-right whitespace-nowrap">
           {localReleaseDelay > 1000
             ? `${(localReleaseDelay / 1000).toFixed(2)}s`
             : `${localReleaseDelay} ms`}

@@ -423,6 +423,7 @@ const KOREAN: Translations = {
   [Phrase.UploadCurrentRaidsOnlyLabel]: "현재 시즌 레이드만 업로드",
   [Phrase.UploadCurrentRaidsOnlyDescription]: "현재 시즌의 레이드 전투만 업로드합니다. 이는 본섭 레이드 전투에만 적용됩니다.",
   [Phrase.MustNotBeEmpty]: "비워둘 수 없습니다",
+  [Phrase.PushToTalkReleaseDelayLabel]: "출시 지연",
 };
 
 export default KOREAN;
