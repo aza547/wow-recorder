@@ -24,5 +24,6 @@ export const ambiguate = (nameRealm: string): string[] => {
   const split = nameRealm.split('-');
   const name = split[0];
   const realm = split[1];
-  return [name, realm];
+  const region = split[3];
+  return [name, realm, region];
 };

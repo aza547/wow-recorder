@@ -14,6 +14,8 @@ export default class Combatant {
 
   private _realm?: string;
 
+  private _region?: string;
+
   /**
    * Constructs a new Combatant.
    *
@@ -107,12 +109,28 @@ export default class Combatant {
     this._realm = value;
   }
 
+  /**
+   * Gets the region.
+   */
+  get region() {
+    return this._region;
+  }
+
+  /**
+   * Sets the region.
+   */
+  set region(value) {
+    this._region = value;
+  }
+
   isFullyDefined() {
     const hasGUID = this.teamID !== undefined;
     const hasName = this.name !== undefined;
     const hasRealm = this.realm !== undefined;
     const hasSpecID = this.specID !== undefined;
     const hasTeamID = this.teamID !== undefined;
+
+    // We do not check region here, because it may not exists in Classic / Era clients.
     return hasGUID && hasName && hasRealm && hasSpecID && hasTeamID;
   }
 
@@ -123,6 +141,7 @@ export default class Combatant {
     if (this.specID !== undefined) rawCombatant._specID = this.specID;
     if (this.name !== undefined) rawCombatant._name = this.name;
     if (this.realm !== undefined) rawCombatant._realm = this.realm;
+    if (this.region !== undefined) rawCombatant._region = this.region;
 
     return rawCombatant;
   }
