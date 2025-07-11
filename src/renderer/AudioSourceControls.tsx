@@ -58,6 +58,10 @@ const AudioSourceControls = (props: IProps) => {
     getPTTKeyPressEventFromConfig(config),
   );
 
+  const [localReleaseDelay, setLocalReleaseDelay] = useState(
+    config.pushToTalkReleaseDelay,
+  );
+
   useEffect(() => {
     if (initialRender.current) {
       const getAvailableAudioDevices = async () => {
@@ -90,6 +94,7 @@ const AudioSourceControls = (props: IProps) => {
         pushToTalkKey: config.pushToTalkKey,
         pushToTalkMouseButton: config.pushToTalkMouseButton,
         pushToTalkModifiers: config.pushToTalkModifiers,
+        pushToTalkReleaseDelay: config.pushToTalkReleaseDelay,
         obsAudioSuppression: config.obsAudioSuppression,
       });
 
@@ -107,6 +112,7 @@ const AudioSourceControls = (props: IProps) => {
     config.pushToTalkKey,
     config.pushToTalkMouseButton,
     config.pushToTalkModifiers,
+    config.pushToTalkReleaseDelay,
     config.obsAudioSuppression,
   ]);
 
@@ -644,6 +650,51 @@ const AudioSourceControls = (props: IProps) => {
     </div>
   );
 
+  useEffect(() => {
+    setLocalReleaseDelay(config.pushToTalkReleaseDelay);
+  }, [config.pushToTalkReleaseDelay]);
+
+  const commitReleaseDelay = (newValue: number[]) => {
+    const ms = newValue[0];
+    if (typeof ms !== 'number') return;
+    setConfig((prev) => ({ ...prev, pushToTalkReleaseDelay: ms }));
+  };
+
+  const getPushToTalkReleaseDelaySlider = () => (
+    <div className="flex flex-col w-[300px]">
+      <Label className="flex items-center">
+        {getLocalePhrase(appState.language, Phrase.PushToTalkReleaseDelayLabel)}
+        <Tooltip
+          content={getLocalePhrase(
+            appState.language,
+            configSchema.pushToTalkReleaseDelay.description,
+          )}
+          side="right"
+        >
+          <Info size={20} className="inline-flex ml-2" />
+        </Tooltip>
+      </Label>
+      <div className="flex h-10 items-center gap-x-2 text-foreground-lighter">
+        <Slider
+          id="release-delay-slider"
+          value={[localReleaseDelay]}
+          onValueChange={(vals) => setLocalReleaseDelay(vals[0])}
+          onValueCommit={commitReleaseDelay}
+          min={0}
+          max={2000}
+          step={1}
+          withTooltip={false}
+          className="flex-1"
+        />
+        <span className="text-sm text-foreground-lighter tabular-nums min-w-[60px] text-right whitespace-nowrap">
+          {localReleaseDelay > 1000
+            ? `${(localReleaseDelay / 1000).toFixed(2)}s`
+            : `${localReleaseDelay} ms`}
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex gap-y-10 flex-col">
       <div className="flex items-center content-start w-full gap-10 flex-wrap">
@@ -655,7 +706,12 @@ const AudioSourceControls = (props: IProps) => {
         {getAudioSuppressionSwitch()}
         {getMonoSwitch()}
         {getPushToTalkSwitch()}
-        {config.pushToTalk && getPushToTalkSelect()}
+        {config.pushToTalk && (
+          <>
+            {getPushToTalkSelect()}
+            {getPushToTalkReleaseDelaySlider()}
+          </>
+        )}
       </div>
     </div>
   );

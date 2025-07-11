@@ -321,6 +321,11 @@ export default class Recorder extends EventEmitter {
   private context: osn.IVideo;
 
   /**
+   * Timer that keeps the mic on briefly after you release the Push To Talk key.
+   */
+  private releaseDelayTimer?: NodeJS.Timeout;
+
+  /**
    * Sensible defaults for the video context.
    */
   private defaultVideoContext: osn.IVideoInfo = {
@@ -856,10 +861,51 @@ export default class Recorder extends EventEmitter {
       };
 
       /* eslint-disable prettier/prettier */
-      uIOhook.on('keydown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
-      uIOhook.on('keyup', (e) => pttHandler(() => this.muteInputDevices(), e));
-      uIOhook.on('mousedown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
-      uIOhook.on('mouseup', (e) => pttHandler(() => this.muteInputDevices(), e));
+      const getPttDelay = () => this.cfg.get<number>('pushToTalkReleaseDelay') ?? 0;
+
+      uIOhook.on('keydown', (e) =>
+        pttHandler(() => {
+          if (this.releaseDelayTimer) {
+            clearTimeout(this.releaseDelayTimer);
+            this.releaseDelayTimer = undefined;
+          }
+          this.unmuteInputDevices();
+        }, e)
+      );
+      
+      uIOhook.on('keyup', (e) =>
+        pttHandler(() => {
+          if (this.releaseDelayTimer) {
+            clearTimeout(this.releaseDelayTimer);
+          }
+          this.releaseDelayTimer = setTimeout(() => {
+            this.muteInputDevices();
+            this.releaseDelayTimer = undefined;
+          }, getPttDelay());
+        }, e)
+      );
+      
+      uIOhook.on('mousedown', (e) =>
+        pttHandler(() => {
+          if (this.releaseDelayTimer) {
+            clearTimeout(this.releaseDelayTimer);
+            this.releaseDelayTimer = undefined;
+          }
+          this.unmuteInputDevices();
+        }, e)
+      );
+      
+      uIOhook.on('mouseup', (e) =>
+        pttHandler(() => {
+          if (this.releaseDelayTimer) {
+            clearTimeout(this.releaseDelayTimer);
+          }
+          this.releaseDelayTimer = setTimeout(() => {
+            this.muteInputDevices();
+            this.releaseDelayTimer = undefined;
+          }, getPttDelay());
+        }, e)
+      );
       /* eslint-enable prettier/prettier */
     }
 

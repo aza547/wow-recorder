@@ -60,6 +60,7 @@ const GERMAN: Translations = {
   [Phrase.PushToTalkKeyDescription]: 'Der  Hotkey, dargestellt durch die Tastenbezeichnung/Tastenkombination',
   [Phrase.PushToTalkMouseButtonDescription]: 'Die Drücken zum sprechen Maustaste.',
   [Phrase.PushToTalkModifiersDescription]: 'Eine Kommata getrennte Liste von Modifizierungstasten in Verbindung mit deinem Drücken zum sprechen Hotkey.',
+  [Phrase.PushToTalkReleaseDelayDescription]: 'Wie lange Ihr Mikrofon aktiv bleibt, nachdem Sie die Push-to-Talk-Taste losgelassen haben.',
   [Phrase.ObsAudioSuppressionDescription]: 'Unterdrückung von Hintergrundgeräuschen, die dein Mirkofon aufnimmt. Dies kann dafür sorgen, dass man z.B. den Tastenschlag,Atmung, etc. weniger hört.',
   [Phrase.RaidOverrunDescription]: 'Anzahl der Sekunden die nach einem Bosskill noch aufgenommen werden soll.',
   [Phrase.DungeonOverrunDescription]: 'Anzahl der Sekunden die nach einem Instanzabschluss noch aufgenommen werden soll.',
@@ -422,6 +423,7 @@ const GERMAN: Translations = {
   [Phrase.UploadCurrentRaidsOnlyLabel]: "Nur aktuelle Raids hochladen",
   [Phrase.UploadCurrentRaidsOnlyDescription]: "Laden Sie nur Raid-Begegnungen der aktuellen Stufe hoch. Dies gilt nur für Einzelhandels-Raid-Begegnungen.",
   [Phrase.MustNotBeEmpty]: "Darf nicht leer sein",
+  [Phrase.PushToTalkReleaseDelayLabel]: "Verzögerung bei der Veröffentlichung",
 };
 
 export default GERMAN;

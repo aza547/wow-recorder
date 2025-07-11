@@ -60,6 +60,7 @@ const KOREAN: Translations = {
   [Phrase.PushToTalkKeyDescription]: 'PTT 단축키 설정',
   [Phrase.PushToTalkMouseButtonDescription]: 'PTT 마우스 버튼',
   [Phrase.PushToTalkModifiersDescription]: 'PTT 단축키와 함께 필요한 수식어의 쉼표로 구분된 목록',
+  [Phrase.PushToTalkReleaseDelayDescription]: 'PTT 키에서 손을 뗀 후 마이크가 활성 상태로 유지되는 시간입니다.',
   [Phrase.ObsAudioSuppressionDescription]: '마이크에 잡히는 배경 소음을 억제하는데 도움이 될 수 있습니다.',
   [Phrase.RaidOverrunDescription]: '보스가 죽은 후 기록할 초과 시간',
   [Phrase.DungeonOverrunDescription]: '던전 완료 후 기록할 초과 시간',
@@ -422,6 +423,7 @@ const KOREAN: Translations = {
   [Phrase.UploadCurrentRaidsOnlyLabel]: "현재 시즌 레이드만 업로드",
   [Phrase.UploadCurrentRaidsOnlyDescription]: "현재 시즌의 레이드 전투만 업로드합니다. 이는 본섭 레이드 전투에만 적용됩니다.",
   [Phrase.MustNotBeEmpty]: "비워둘 수 없습니다",
+  [Phrase.PushToTalkReleaseDelayLabel]: "출시 지연",
 };
 
 export default KOREAN;
