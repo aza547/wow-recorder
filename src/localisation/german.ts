@@ -423,6 +423,7 @@ const GERMAN: Translations = {
   [Phrase.UploadCurrentRaidsOnlyLabel]: "Nur aktuelle Raids hochladen",
   [Phrase.UploadCurrentRaidsOnlyDescription]: "Laden Sie nur Raid-Begegnungen der aktuellen Stufe hoch. Dies gilt nur für Einzelhandels-Raid-Begegnungen.",
   [Phrase.MustNotBeEmpty]: "Darf nicht leer sein",
+  [Phrase.PushToTalkReleaseDelayLabel]: "Verzögerung bei der Veröffentlichung",
 };
 
 export default GERMAN;

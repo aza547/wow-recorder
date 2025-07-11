@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Track the region as part of the combatant now the combat log includes it.
 
+- Added a new setting that lets users keep the mic unmuted for a user-defined interval after releasing the Push-To-Talk key.
+
+- [Issue 661](https://github.com/aza547/wow-recorder/issues/661) - Adds Configurable Push-To-Talk Release Delay.
 ### Added
 ### Fixed
 - Make wipes overrun a few seconds longerto avoid missing anything.
