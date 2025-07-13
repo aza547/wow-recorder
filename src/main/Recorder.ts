@@ -611,6 +611,8 @@ export default class Recorder extends EventEmitter {
         console.error('[Recorder] Unrecognised encoder type', obsRecEncoder);
         throw new Error('Unrecognised encoder type');
     }
+
+    this.scaleVideoSourceSize();
   }
 
   /**
@@ -650,6 +652,7 @@ export default class Recorder extends EventEmitter {
 
     const overlayCfg = getOverlayConfig(this.cfg);
     this.configureOverlayImageSource(overlayCfg);
+    this.scaleVideoSourceSize();
   }
 
   /**
@@ -1527,11 +1530,6 @@ export default class Recorder extends EventEmitter {
     this.monitorCaptureSource.update(settings);
     this.monitorCaptureSource.save();
     this.monitorCaptureSource.enabled = true;
-
-    // Rescale now we're hooked in-case the resolutions don't match. Usually
-    // I'd expect us to get a source callback but sometimes it doesn't seem
-    // to happen.
-    this.scaleVideoSourceSize();
   }
 
   /**
@@ -1929,11 +1927,6 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Game capture source configured');
     this.clearFindWindowInterval();
-
-    // Rescale now we're hooked in-case the resolutions don't match. Usually
-    // I'd expect us to get a source callback but sometimes it doesn't seem
-    // to happen.
-    this.scaleVideoSourceSize();
   }
 
   /**
@@ -1977,10 +1970,5 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Window capture source configured');
     this.clearFindWindowInterval();
-
-    // Rescale now we're hooked in-case the resolutions don't match. Usually
-    // I'd expect us to get a source callback but sometimes it doesn't seem
-    // to happen.
-    this.scaleVideoSourceSize();
   }
 }

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make wipes overrun a few seconds longerto avoid missing anything.
 - [Issue 668](https://github.com/aza547/wow-recorder/issues/668) - Fixes the zoom in hotkey.
 - Make the test raid button work even when "record current raid only" is selected.
+- Fix an issue where rescaling would not trigger on changing the canvas size.
 
 ## [6.14.2] - 2025-06-29
 ### Changed
