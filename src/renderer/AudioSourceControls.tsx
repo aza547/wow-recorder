@@ -573,7 +573,7 @@ const AudioSourceControls = (props: IProps) => {
     return (
       <div className="flex flex-col">
         <Label htmlFor="pttKey" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.PushToTalkLabel)}
+          {getLocalePhrase(appState.language, Phrase.PushToTalkKeyLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
@@ -687,7 +687,7 @@ const AudioSourceControls = (props: IProps) => {
           className="flex-1"
         />
         <span className="text-sm text-foreground-lighter tabular-nums min-w-[60px] text-right whitespace-nowrap">
-          {localReleaseDelay > 1000
+          {localReleaseDelay > 999
             ? `${(localReleaseDelay / 1000).toFixed(2)}s`
             : `${localReleaseDelay} ms`}
         </span>

@@ -849,64 +849,33 @@ export default class Recorder extends EventEmitter {
 
       this.inputDevicesMuted = true;
 
-      const pttHandler = (
-        fn: () => void,
-        event: UiohookKeyboardEvent | UiohookMouseEvent,
-      ) => {
-        const convertedEvent = convertUioHookEvent(event);
+      const events = ['keydown', 'keyup', 'mousedown', 'mouseup'];
 
-        if (isPushToTalkHotkey(config, convertedEvent)) {
-          fn();
-        }
-      };
+      events.forEach((event) => {
+        uIOhook.removeAllListeners(event);
+      });
 
-      /* eslint-disable prettier/prettier */
-      const getPttDelay = () => this.cfg.get<number>('pushToTalkReleaseDelay') ?? 0;
+      uIOhook.on('keydown', (e: UiohookKeyboardEvent) =>
+        this.pushToTalkHandler(true, e, config),
+      );
 
-      uIOhook.on('keydown', (e) =>
-        pttHandler(() => {
-          if (this.releaseDelayTimer) {
-            clearTimeout(this.releaseDelayTimer);
-            this.releaseDelayTimer = undefined;
-          }
-          this.unmuteInputDevices();
-        }, e)
+      uIOhook.on('mousedown', (e: UiohookMouseEvent) =>
+        this.pushToTalkHandler(true, e, config),
       );
-      
-      uIOhook.on('keyup', (e) =>
-        pttHandler(() => {
-          if (this.releaseDelayTimer) {
-            clearTimeout(this.releaseDelayTimer);
-          }
-          this.releaseDelayTimer = setTimeout(() => {
-            this.muteInputDevices();
-            this.releaseDelayTimer = undefined;
-          }, getPttDelay());
-        }, e)
+
+      uIOhook.on('keyup', (e: UiohookKeyboardEvent) =>
+        this.pushToTalkHandler(false, e, config),
       );
-      
-      uIOhook.on('mousedown', (e) =>
-        pttHandler(() => {
-          if (this.releaseDelayTimer) {
-            clearTimeout(this.releaseDelayTimer);
-            this.releaseDelayTimer = undefined;
-          }
-          this.unmuteInputDevices();
-        }, e)
+
+      uIOhook.on('mouseup', (e: UiohookMouseEvent) =>
+        this.pushToTalkHandler(false, e, config),
       );
-      
-      uIOhook.on('mouseup', (e) =>
-        pttHandler(() => {
-          if (this.releaseDelayTimer) {
-            clearTimeout(this.releaseDelayTimer);
-          }
-          this.releaseDelayTimer = setTimeout(() => {
-            this.muteInputDevices();
-            this.releaseDelayTimer = undefined;
-          }, getPttDelay());
-        }, e)
-      );
-      /* eslint-enable prettier/prettier */
+
+      try {
+        uIOhook.start();
+      } catch (e) {
+        console.log(e);
+      }
     }
 
     audioOutputDevices
@@ -1754,6 +1723,42 @@ export default class Recorder extends EventEmitter {
     this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.LISTENING;
     this.emit('state-change');
+  }
+
+  private pushToTalkHandler(
+    isPress: boolean,
+    event: UiohookKeyboardEvent | UiohookMouseEvent,
+    audioConfig: ObsAudioConfig,
+  ) {
+    const converted = convertUioHookEvent(event);
+    if (!isPushToTalkHotkey(audioConfig, converted)) return;
+
+    if (isPress) {
+      if (this.releaseDelayTimer) {
+        clearTimeout(this.releaseDelayTimer);
+        this.releaseDelayTimer = undefined;
+      }
+
+      if (this.inputDevicesMuted) {
+        this.unmuteInputDevices();
+      }
+    } else {
+      if (!this.inputDevicesMuted) {
+        const delay = Math.max(
+          0,
+          this.cfg.get<number>('pushToTalkReleaseDelay') ?? 0,
+        );
+
+        if (delay === 0) {
+          this.muteInputDevices();
+        } else {
+          this.releaseDelayTimer = setTimeout(() => {
+            this.muteInputDevices();
+            this.releaseDelayTimer = undefined;
+          }, delay);
+        }
+      }
+    }
   }
 
   /**
