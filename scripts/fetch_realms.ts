@@ -115,7 +115,7 @@ async function fetchRealmsForGameVersion(
         // Page Number starts with 1, but array indices start with 0
         realmData.regions[region][pageNumber - 1] = response;
 
-        // Check if there are more pages (actually we are fetching 1000, and page size is less them 300. I believe it will never reach the limit.)
+        // Check if there are more pages (actually we are fetching 1000, and page size is less than 300. I believe it will never reach the limit.)
         hasMorePages = response.pageCount
           ? pageNumber < response.pageCount
           : false;
