@@ -8,6 +8,6 @@ describe('Blizzard API credentials (integration)', () => {
     expect(process.env.BLIZZARD_CLIENT_ID).not.toBe('');
     expect(process.env.BLIZZARD_CLIENT_SECRET).not.toBe('');
 
-    console.dir(`Both Blizzard Client ID and Secret are set.`);
+    console.log(`Both Blizzard Client ID and Secret are set.`);
   });
 });
