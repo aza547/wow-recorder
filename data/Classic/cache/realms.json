@@ -1,0 +1,4919 @@
+{
+  "fetchedAt": "2025-07-19T17:19:36.027Z",
+  "regions": {
+    "us": [
+      {
+        "page": 1,
+        "pageSize": 27,
+        "maxPageSize": 1000,
+        "pageCount": 1,
+        "results": [
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4795?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Angerforge",
+                "ru_RU": "Angerforge",
+                "en_GB": "Angerforge",
+                "zh_TW": "安格弗",
+                "ko_KR": "Angerforge",
+                "en_US": "Angerforge",
+                "es_MX": "Angerforge",
+                "pt_BR": "Angerforge",
+                "es_ES": "Angerforge",
+                "zh_CN": "怒炉",
+                "fr_FR": "Angerforge",
+                "de_DE": "Angerforge"
+              },
+              "id": 4795,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Ovest)",
+                "ru_RU": "США (запад)",
+                "en_GB": "US West",
+                "zh_TW": "美西",
+                "ko_KR": "미국 서부",
+                "en_US": "US West",
+                "es_MX": "EE. UU. oeste",
+                "pt_BR": "EUA - Oeste",
+                "es_ES": "EE. UU. (Oeste)",
+                "zh_CN": "美国西部",
+                "fr_FR": "USA (Ouest)",
+                "de_DE": "USA West"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "angerforge"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4669?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Arugal",
+                "ru_RU": "Arugal",
+                "en_GB": "Arugal",
+                "zh_TW": "阿魯高",
+                "ko_KR": "Arugal",
+                "en_US": "Arugal",
+                "es_MX": "Arugal",
+                "pt_BR": "Arugal",
+                "es_ES": "Arugal",
+                "zh_CN": "阿鲁高",
+                "fr_FR": "Arugal",
+                "de_DE": "Arugal"
+              },
+              "id": 4669,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "Oceania",
+                "ru_RU": "Океания",
+                "en_GB": "Oceanic",
+                "zh_TW": "大洋洲",
+                "ko_KR": "오세아니아",
+                "en_US": "Oceanic",
+                "es_MX": "Oceánico",
+                "pt_BR": "Oceania",
+                "es_ES": "Oceánico",
+                "zh_CN": "大洋洲",
+                "fr_FR": "Océanique",
+                "de_DE": "Ozeanisch"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "arugal"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4387?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Ashkandi",
+                "ru_RU": "Ashkandi",
+                "en_GB": "Ashkandi",
+                "zh_TW": "阿什坎迪",
+                "ko_KR": "Ashkandi",
+                "en_US": "Ashkandi",
+                "es_MX": "Ashkandi",
+                "pt_BR": "Ashkandi",
+                "es_ES": "Ashkandi",
+                "zh_CN": "阿什坎迪",
+                "fr_FR": "Ashkandi",
+                "de_DE": "Ashkandi"
+              },
+              "id": 4387,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "ashkandi"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4372?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Atiesh",
+                "ru_RU": "Atiesh",
+                "en_GB": "Atiesh",
+                "zh_TW": "阿泰絲",
+                "ko_KR": "Atiesh",
+                "en_US": "Atiesh",
+                "es_MX": "Atiesh",
+                "pt_BR": "Atiesh",
+                "es_ES": "Atiesh",
+                "zh_CN": "埃提耶什",
+                "fr_FR": "Atiesh",
+                "de_DE": "Atiesh"
+              },
+              "id": 4372,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Ovest)",
+                "ru_RU": "США (запад)",
+                "en_GB": "US West",
+                "zh_TW": "美西",
+                "ko_KR": "미국 서부",
+                "en_US": "US West",
+                "es_MX": "EE. UU. oeste",
+                "pt_BR": "EUA - Oeste",
+                "es_ES": "EE. UU. (Oeste)",
+                "zh_CN": "美国西部",
+                "fr_FR": "USA (Ouest)",
+                "de_DE": "USA West"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "atiesh"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4376?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Azuresong",
+                "ru_RU": "Azuresong",
+                "en_GB": "Azuresong",
+                "zh_TW": "碧空之歌",
+                "ko_KR": "Azuresong",
+                "en_US": "Azuresong",
+                "es_MX": "Azuresong",
+                "pt_BR": "Azuresong",
+                "es_ES": "Azuresong",
+                "zh_CN": "碧空之歌",
+                "fr_FR": "Azuresong",
+                "de_DE": "Azuresong"
+              },
+              "id": 4376,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Ovest)",
+                "ru_RU": "США (запад)",
+                "en_GB": "US West",
+                "zh_TW": "美西",
+                "ko_KR": "미국 서부",
+                "en_US": "US West",
+                "es_MX": "EE. UU. oeste",
+                "pt_BR": "EUA - Oeste",
+                "es_ES": "EE. UU. (Oeste)",
+                "zh_CN": "美国西部",
+                "fr_FR": "USA (Ouest)",
+                "de_DE": "USA West"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "azuresong"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4728?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Benediction",
+                "ru_RU": "Benediction",
+                "en_GB": "Benediction",
+                "zh_TW": "祈福",
+                "ko_KR": "Benediction",
+                "en_US": "Benediction",
+                "es_MX": "Benediction",
+                "pt_BR": "Benediction",
+                "es_ES": "Benediction",
+                "zh_CN": "祈福",
+                "fr_FR": "Benediction",
+                "de_DE": "Benediction"
+              },
+              "id": 4728,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "benediction"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4648?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Bloodsail Buccaneers",
+                "ru_RU": "Bloodsail Buccaneers",
+                "en_GB": "Bloodsail Buccaneers",
+                "zh_TW": "血帆海盜",
+                "ko_KR": "Bloodsail Buccaneers",
+                "en_US": "Bloodsail Buccaneers",
+                "es_MX": "Bloodsail Buccaneers",
+                "pt_BR": "Bloodsail Buccaneers",
+                "es_ES": "Bloodsail Buccaneers",
+                "zh_CN": "血帆海盗",
+                "fr_FR": "Bloodsail Buccaneers",
+                "de_DE": "Bloodsail Buccaneers"
+              },
+              "id": 4648,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "GdR",
+                  "ru_RU": "Ролевой",
+                  "en_GB": "RP",
+                  "zh_TW": "角色扮演",
+                  "ko_KR": "롤플레이",
+                  "en_US": "RP",
+                  "es_MX": "JR",
+                  "pt_BR": "RP",
+                  "es_ES": "JR",
+                  "zh_CN": "RP",
+                  "fr_FR": "JdR",
+                  "de_DE": "RP"
+                },
+                "type": "RP"
+              },
+              "slug": "bloodsail-buccaneers"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4731?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Earthfury",
+                "ru_RU": "Earthfury",
+                "en_GB": "Earthfury",
+                "zh_TW": "大地之怒",
+                "ko_KR": "Earthfury",
+                "en_US": "Earthfury",
+                "es_MX": "Earthfury",
+                "pt_BR": "Earthfury",
+                "es_ES": "Earthfury",
+                "zh_CN": "大地之怒",
+                "fr_FR": "Earthfury",
+                "de_DE": "Earthfury"
+              },
+              "id": 4731,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "earthfury"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4800?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Eranikus",
+                "ru_RU": "Eranikus",
+                "en_GB": "Eranikus",
+                "zh_TW": "伊蘭尼庫斯",
+                "ko_KR": "Eranikus",
+                "en_US": "Eranikus",
+                "es_MX": "Eranikus",
+                "pt_BR": "Eranikus",
+                "es_ES": "Eranikus",
+                "zh_CN": "伊兰尼库斯",
+                "fr_FR": "Eranikus",
+                "de_DE": "Eranikus"
+              },
+              "id": 4800,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "eranikus"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4408?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Faerlina",
+                "ru_RU": "Faerlina",
+                "en_GB": "Faerlina",
+                "zh_TW": "費琳娜",
+                "ko_KR": "Faerlina",
+                "en_US": "Faerlina",
+                "es_MX": "Faerlina",
+                "pt_BR": "Faerlina",
+                "es_ES": "Faerlina",
+                "zh_CN": "法琳娜",
+                "fr_FR": "Faerlina",
+                "de_DE": "Faerlina"
+              },
+              "id": 4408,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "faerlina"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4647?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Grobbulus",
+                "ru_RU": "Grobbulus",
+                "en_GB": "Grobbulus",
+                "zh_TW": "葛羅巴斯",
+                "ko_KR": "Grobbulus",
+                "en_US": "Grobbulus",
+                "es_MX": "Grobbulus",
+                "pt_BR": "Grobbulus",
+                "es_ES": "Grobbulus",
+                "zh_CN": "格罗布鲁斯",
+                "fr_FR": "Grobbulus",
+                "de_DE": "Grobbulus"
+              },
+              "id": 4647,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Ovest)",
+                "ru_RU": "США (запад)",
+                "en_GB": "US West",
+                "zh_TW": "美西",
+                "ko_KR": "미국 서부",
+                "en_US": "US West",
+                "es_MX": "EE. UU. oeste",
+                "pt_BR": "EUA - Oeste",
+                "es_ES": "EE. UU. (Oeste)",
+                "zh_CN": "美国西部",
+                "fr_FR": "USA (Ouest)",
+                "de_DE": "USA West"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP GdR",
+                  "ru_RU": "Ролевой PvP",
+                  "en_GB": "PvP RP",
+                  "zh_TW": "PvP角色扮演",
+                  "ko_KR": "전쟁 롤플레이",
+                  "en_US": "PvP RP",
+                  "es_MX": "JR JcJ",
+                  "pt_BR": "JxJ RP",
+                  "es_ES": "JR JcJ",
+                  "zh_CN": "PvP RP",
+                  "fr_FR": "JdR JcJ",
+                  "de_DE": "(RP-PvP)"
+                },
+                "type": "PVP_RP"
+              },
+              "slug": "grobbulus"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4738?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Maladath",
+                "ru_RU": "Nightslayer",
+                "en_GB": "Maladath",
+                "zh_TW": "瑪拉達斯",
+                "ko_KR": "Maladath",
+                "en_US": "Maladath",
+                "es_MX": "Maladath",
+                "pt_BR": "Maladath",
+                "es_ES": "Maladath",
+                "zh_CN": "玛拉达斯",
+                "fr_FR": "Maladath",
+                "de_DE": "Maladath"
+              },
+              "id": 4738,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "maladath"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4384?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Mankrik",
+                "ru_RU": "Mankrik",
+                "en_GB": "Mankrik",
+                "zh_TW": "曼寇里克",
+                "ko_KR": "Mankrik",
+                "en_US": "Mankrik",
+                "es_MX": "Mankrik",
+                "pt_BR": "Mankrik",
+                "es_ES": "Mankrik",
+                "zh_CN": "曼科里克",
+                "fr_FR": "Mankrik",
+                "de_DE": "Mankrik"
+              },
+              "id": 4384,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "mankrik"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4373?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Myzrael",
+                "ru_RU": "Myzrael",
+                "en_GB": "Myzrael",
+                "zh_TW": "密斯賴爾",
+                "ko_KR": "Myzrael",
+                "en_US": "Myzrael",
+                "es_MX": "Myzrael",
+                "pt_BR": "Myzrael",
+                "es_ES": "Myzrael",
+                "zh_CN": "密斯莱尔",
+                "fr_FR": "Myzrael",
+                "de_DE": "Myzrael"
+              },
+              "id": 4373,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Ovest)",
+                "ru_RU": "США (запад)",
+                "en_GB": "US West",
+                "zh_TW": "美西",
+                "ko_KR": "미국 서부",
+                "en_US": "US West",
+                "es_MX": "EE. UU. oeste",
+                "pt_BR": "EUA - Oeste",
+                "es_ES": "EE. UU. (Oeste)",
+                "zh_CN": "美国西部",
+                "fr_FR": "USA (Ouest)",
+                "de_DE": "USA West"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "myzrael"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4374?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Old Blanchy",
+                "ru_RU": "Old Blanchy",
+                "en_GB": "Old Blanchy",
+                "zh_TW": "老馬布蘭契",
+                "ko_KR": "Old Blanchy",
+                "en_US": "Old Blanchy",
+                "es_MX": "Old Blanchy",
+                "pt_BR": "Old Blanchy",
+                "es_ES": "Old Blanchy",
+                "zh_CN": "老马布兰契",
+                "fr_FR": "Old Blanchy",
+                "de_DE": "Old Blanchy"
+              },
+              "id": 4374,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Ovest)",
+                "ru_RU": "США (запад)",
+                "en_GB": "US West",
+                "zh_TW": "美西",
+                "ko_KR": "미국 서부",
+                "en_US": "US West",
+                "es_MX": "EE. UU. oeste",
+                "pt_BR": "EUA - Oeste",
+                "es_ES": "EE. UU. (Oeste)",
+                "zh_CN": "美国西部",
+                "fr_FR": "USA (Ouest)",
+                "de_DE": "USA West"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "old-blanchy"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4385?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Pagle",
+                "ru_RU": "Pagle",
+                "en_GB": "Pagle",
+                "zh_TW": "帕格",
+                "ko_KR": "Pagle",
+                "en_US": "Pagle",
+                "es_MX": "Pagle",
+                "pt_BR": "Pagle",
+                "es_ES": "Pagle",
+                "zh_CN": "帕格",
+                "fr_FR": "Pagle",
+                "de_DE": "Pagle"
+              },
+              "id": 4385,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "pagle"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4667?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Remulos",
+                "ru_RU": "Remulos",
+                "en_GB": "Remulos",
+                "zh_TW": "雷姆洛斯",
+                "ko_KR": "Remulos",
+                "en_US": "Remulos",
+                "es_MX": "Remulos",
+                "pt_BR": "Remulos",
+                "es_ES": "Remulos",
+                "zh_CN": "雷姆洛斯",
+                "fr_FR": "Remulos",
+                "de_DE": "Remulos"
+              },
+              "id": 4667,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "Oceania",
+                "ru_RU": "Океания",
+                "en_GB": "Oceanic",
+                "zh_TW": "大洋洲",
+                "ko_KR": "오세아니아",
+                "en_US": "Oceanic",
+                "es_MX": "Oceánico",
+                "pt_BR": "Oceania",
+                "es_ES": "Oceánico",
+                "zh_CN": "大洋洲",
+                "fr_FR": "Océanique",
+                "de_DE": "Ozeanisch"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "remulos"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4725?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Skyfury",
+                "ru_RU": "Anathema",
+                "en_GB": "Skyfury",
+                "zh_TW": "天怒",
+                "ko_KR": "Skyfury",
+                "en_US": "Skyfury",
+                "es_MX": "Skyfury",
+                "pt_BR": "Skyfury",
+                "es_ES": "Skyfury",
+                "zh_CN": "天怒",
+                "fr_FR": "Skyfury",
+                "de_DE": "Skyfury"
+              },
+              "id": 4725,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Ovest)",
+                "ru_RU": "США (запад)",
+                "en_GB": "US West",
+                "zh_TW": "美西",
+                "ko_KR": "미국 서부",
+                "en_US": "US West",
+                "es_MX": "EE. UU. oeste",
+                "pt_BR": "EUA - Oeste",
+                "es_ES": "EE. UU. (Oeste)",
+                "zh_CN": "美国西部",
+                "fr_FR": "USA (Ouest)",
+                "de_DE": "USA West"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "skyfury"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4726?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Sulfuras",
+                "ru_RU": "Heartseeker",
+                "en_GB": "Sulfuras",
+                "zh_TW": "薩弗拉斯",
+                "ko_KR": "Sulfuras",
+                "en_US": "Sulfuras",
+                "es_MX": "Sulfuras",
+                "pt_BR": "Sulfuras",
+                "es_ES": "Sulfuras",
+                "zh_CN": "萨弗拉斯",
+                "fr_FR": "Sulfuras",
+                "de_DE": "Sulfuras"
+              },
+              "id": 4726,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "sulfuras"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4653?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "US1 CWOW GMSS 1",
+                "ru_RU": "US1 CWOW GMSS 1",
+                "en_GB": "US1 CWOW GMSS 1",
+                "zh_TW": "US1 CWOW GMSS 1",
+                "ko_KR": "US1 CWOW GMSS 1",
+                "en_US": "US1 CWOW GMSS 1",
+                "es_MX": "US1 CWOW GMSS 1",
+                "pt_BR": "US1 CWOW GMSS 1",
+                "es_ES": "US1 CWOW GMSS 1",
+                "zh_CN": "US1 CWOW GMSS 1",
+                "fr_FR": "US1 CWOW GMSS 1",
+                "de_DE": "US1 CWOW GMSS 1"
+              },
+              "id": 4653,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "us1-cwow-gmss-1"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4654?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "US1 CWOW GMSS 2",
+                "ru_RU": "US1 CWOW GMSS 2",
+                "en_GB": "US1 CWOW GMSS 2",
+                "zh_TW": "US1 CWOW GMSS 2",
+                "ko_KR": "US1 CWOW GMSS 2",
+                "en_US": "US1 CWOW GMSS 2",
+                "es_MX": "US1 CWOW GMSS 2",
+                "pt_BR": "US1 CWOW GMSS 2",
+                "es_ES": "US1 CWOW GMSS 2",
+                "zh_CN": "US1 CWOW GMSS 2",
+                "fr_FR": "US1 CWOW GMSS 2",
+                "de_DE": "US1 CWOW GMSS 2"
+              },
+              "id": 4654,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "us1-cwow-gmss-2"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4649?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "US1 CWOW Web",
+                "ru_RU": "US1 CWOW Web",
+                "en_GB": "US1 CWOW Web",
+                "zh_TW": "US1 CWOW Web",
+                "ko_KR": "US1 CWOW Web",
+                "en_US": "US1 CWOW Web",
+                "es_MX": "US1 CWOW Web",
+                "pt_BR": "US1 CWOW Web",
+                "es_ES": "US1 CWOW Web",
+                "zh_CN": "US1 CWOW Web",
+                "fr_FR": "US1 CWOW Web",
+                "de_DE": "US1 CWOW Web"
+              },
+              "id": 4649,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "us1-cwow-web"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4651?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "US2 CWOW Web",
+                "ru_RU": "US2 CWOW Web",
+                "en_GB": "US2 CWOW Web",
+                "zh_TW": "US2 CWOW Web",
+                "ko_KR": "US2 CWOW Web",
+                "en_US": "US2 CWOW Web",
+                "es_MX": "US2 CWOW Web",
+                "pt_BR": "US2 CWOW Web",
+                "es_ES": "US2 CWOW Web",
+                "zh_CN": "US2 CWOW Web",
+                "fr_FR": "US2 CWOW Web",
+                "de_DE": "US2 CWOW Web"
+              },
+              "id": 4651,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "us2-cwow-web"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4388?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Westfall",
+                "ru_RU": "Westfall",
+                "en_GB": "Westfall",
+                "zh_TW": "西部荒野",
+                "ko_KR": "Westfall",
+                "en_US": "Westfall",
+                "es_MX": "Westfall",
+                "pt_BR": "Westfall",
+                "es_ES": "Westfall",
+                "zh_CN": "西部荒野",
+                "fr_FR": "Westfall",
+                "de_DE": "Westfall"
+              },
+              "id": 4388,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "westfall"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4395?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Whitemane",
+                "ru_RU": "Whitemane",
+                "en_GB": "Whitemane",
+                "zh_TW": "懷特邁恩",
+                "ko_KR": "Whitemane",
+                "en_US": "Whitemane",
+                "es_MX": "Whitemane",
+                "pt_BR": "Whitemane",
+                "es_ES": "Whitemane",
+                "zh_CN": "怀特迈恩",
+                "fr_FR": "Whitemane",
+                "de_DE": "Whitemane"
+              },
+              "id": 4395,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Ovest)",
+                "ru_RU": "США (запад)",
+                "en_GB": "US West",
+                "zh_TW": "美西",
+                "ko_KR": "미국 서부",
+                "en_US": "US West",
+                "es_MX": "EE. UU. oeste",
+                "pt_BR": "EUA - Oeste",
+                "es_ES": "EE. UU. (Oeste)",
+                "zh_CN": "美国西部",
+                "fr_FR": "USA (Ouest)",
+                "de_DE": "USA West"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "whitemane"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4727?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Windseeker",
+                "ru_RU": "Windseeker",
+                "en_GB": "Windseeker",
+                "zh_TW": "逐風者",
+                "ko_KR": "Windseeker",
+                "en_US": "Windseeker",
+                "es_MX": "Windseeker",
+                "pt_BR": "Windseeker",
+                "es_ES": "Windseeker",
+                "zh_CN": "逐风者",
+                "fr_FR": "Windseeker",
+                "de_DE": "Windseeker"
+              },
+              "id": 4727,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "US (Est)",
+                "ru_RU": "США (восток)",
+                "en_GB": "US East",
+                "zh_TW": "美東",
+                "ko_KR": "미국 동부",
+                "en_US": "US East",
+                "es_MX": "EE. UU. este",
+                "pt_BR": "EUA - Leste",
+                "es_ES": "EE. UU. (Este)",
+                "zh_CN": "美国东部",
+                "fr_FR": "USA (Est)",
+                "de_DE": "USA Ost"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "windseeker"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/4670?namespace=dynamic-classic-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Yojamba",
+                "ru_RU": "Yojamba",
+                "en_GB": "Yojamba",
+                "zh_TW": "尤亞姆巴",
+                "ko_KR": "Yojamba",
+                "en_US": "Yojamba",
+                "es_MX": "Yojamba",
+                "pt_BR": "Yojamba",
+                "es_ES": "Yojamba",
+                "zh_CN": "尤亚姆巴",
+                "fr_FR": "Yojamba",
+                "de_DE": "Yojamba"
+              },
+              "id": 4670,
+              "region": {
+                "name": {
+                  "it_IT": "Classic North America",
+                  "ru_RU": "Classic (Северная Америка)",
+                  "en_GB": "Classic North America",
+                  "zh_TW": "經典北美",
+                  "ko_KR": "클래식 미국",
+                  "en_US": "Classic North America",
+                  "es_MX": "Classic Norteamérica",
+                  "pt_BR": "Classic - América do Norte",
+                  "es_ES": "Classic Norteamérica",
+                  "zh_CN": "经典怀旧（北美）",
+                  "fr_FR": "Classic Amérique du Nord",
+                  "de_DE": "Classic - Nordamerika"
+                },
+                "id": 41
+              },
+              "category": {
+                "it_IT": "Oceania",
+                "ru_RU": "Океания",
+                "en_GB": "Oceanic",
+                "zh_TW": "大洋洲",
+                "ko_KR": "오세아니아",
+                "en_US": "Oceanic",
+                "es_MX": "Oceánico",
+                "pt_BR": "Oceania",
+                "es_ES": "Oceánico",
+                "zh_CN": "大洋洲",
+                "fr_FR": "Océanique",
+                "de_DE": "Ozeanisch"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "yojamba"
+            }
+          }
+        ]
+      }
+    ],
+    "eu": [
+      {
+        "page": 1,
+        "pageSize": 29,
+        "maxPageSize": 1000,
+        "pageCount": 1,
+        "results": [
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4703?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Amnennar",
+                "ru_RU": "Amnennar",
+                "en_GB": "Amnennar",
+                "zh_TW": "亞門納爾",
+                "ko_KR": "Amnennar",
+                "en_US": "Amnennar",
+                "es_MX": "Amnennar",
+                "pt_BR": "Amnennar",
+                "es_ES": "Amnennar",
+                "zh_CN": "亚门纳尔",
+                "fr_FR": "Amnennar",
+                "de_DE": "Amnennar"
+              },
+              "id": 4703,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Francese",
+                "ru_RU": "Франц.",
+                "en_GB": "French",
+                "zh_TW": "法國",
+                "ko_KR": "프랑스어",
+                "en_US": "French",
+                "es_MX": "Francés",
+                "pt_BR": "Francês",
+                "es_ES": "Francés",
+                "zh_CN": "法语",
+                "fr_FR": "Français",
+                "de_DE": "Französisch"
+              },
+              "locale": "frFR",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "amnennar"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4742?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Ashbringer",
+                "ru_RU": "Испепелитель",
+                "en_GB": "Ashbringer",
+                "zh_TW": "灰燼使者",
+                "ko_KR": "Ashbringer",
+                "en_US": "Ashbringer",
+                "es_MX": "Ashbringer",
+                "pt_BR": "Ashbringer",
+                "es_ES": "Ashbringer",
+                "zh_CN": "灰烬使者",
+                "fr_FR": "Ashbringer",
+                "de_DE": "Ashbringer"
+              },
+              "id": 4742,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "ashbringer"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4441?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Auberdine",
+                "ru_RU": "Auberdine",
+                "en_GB": "Auberdine",
+                "zh_TW": "奧伯丁",
+                "ko_KR": "Auberdine",
+                "en_US": "Auberdine",
+                "es_MX": "Auberdine",
+                "pt_BR": "Auberdine",
+                "es_ES": "Auberdine",
+                "zh_CN": "奥伯丁",
+                "fr_FR": "Auberdine",
+                "de_DE": "Auberdine"
+              },
+              "id": 4441,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Francese",
+                "ru_RU": "Франц.",
+                "en_GB": "French",
+                "zh_TW": "法國",
+                "ko_KR": "프랑스어",
+                "en_US": "French",
+                "es_MX": "Francés",
+                "pt_BR": "Francês",
+                "es_ES": "Francés",
+                "zh_CN": "法语",
+                "fr_FR": "Français",
+                "de_DE": "Französisch"
+              },
+              "locale": "frFR",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "auberdine"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4452?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Chromie",
+                "ru_RU": "Хроми",
+                "en_GB": "Chromie",
+                "zh_TW": "克羅米",
+                "ko_KR": "Chromie",
+                "en_US": "Chromie",
+                "es_MX": "Chromie",
+                "pt_BR": "Chromie",
+                "es_ES": "Chromie",
+                "zh_CN": "克罗米",
+                "fr_FR": "Chromie",
+                "de_DE": "Хроми"
+              },
+              "id": 4452,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Russo",
+                "ru_RU": "Русский",
+                "en_GB": "Russian",
+                "zh_TW": "俄羅斯",
+                "ko_KR": "러시아어",
+                "en_US": "Russian",
+                "es_MX": "Ruso",
+                "pt_BR": "Russo",
+                "es_ES": "Ruso",
+                "zh_CN": "俄语",
+                "fr_FR": "Russe",
+                "de_DE": "Russisch"
+              },
+              "locale": "ruRU",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "chromie"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4749?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Earthshaker",
+                "ru_RU": "Землекрушитель",
+                "en_GB": "Earthshaker",
+                "zh_TW": "震地者",
+                "ko_KR": "Earthshaker",
+                "en_US": "Earthshaker",
+                "es_MX": "Earthshaker",
+                "pt_BR": "Earthshaker",
+                "es_ES": "Earthshaker",
+                "zh_CN": "震地者",
+                "fr_FR": "Earthshaker",
+                "de_DE": "Earthshaker"
+              },
+              "id": 4749,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "earthshaker"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4687?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "EU4 CWOW GMSS 1",
+                "ru_RU": "EU4 CWOW GMSS 1",
+                "en_GB": "EU4 CWOW GMSS 1",
+                "zh_TW": "EU4 CWOW GMSS 1",
+                "ko_KR": "EU4 CWOW GMSS 1",
+                "en_US": "EU4 CWOW GMSS 1",
+                "es_MX": "EU4 CWOW GMSS 1",
+                "pt_BR": "EU4 CWOW GMSS 1",
+                "es_ES": "EU4 CWOW GMSS 1",
+                "zh_CN": "EU4 CWOW GMSS 1",
+                "fr_FR": "EU4 CWOW GMSS 1",
+                "de_DE": "EU4 CWOW GMSS 1"
+              },
+              "id": 4687,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "eu4-cwow-gmss-1"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4688?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "EU4 CWOW GMSS 2",
+                "ru_RU": "EU4 CWOW GMSS 2",
+                "en_GB": "EU4 CWOW GMSS 2",
+                "zh_TW": "EU4 CWOW GMSS 2",
+                "ko_KR": "EU4 CWOW GMSS 2",
+                "en_US": "EU4 CWOW GMSS 2",
+                "es_MX": "EU4 CWOW GMSS 2",
+                "pt_BR": "EU4 CWOW GMSS 2",
+                "es_ES": "EU4 CWOW GMSS 2",
+                "zh_CN": "EU4 CWOW GMSS 2",
+                "fr_FR": "EU4 CWOW GMSS 2",
+                "de_DE": "EU4 CWOW GMSS 2"
+              },
+              "id": 4688,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "eu4-cwow-gmss-2"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4682?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "EU4 CWOW Web",
+                "ru_RU": "EU4 CWOW Web",
+                "en_GB": "EU4 CWOW Web",
+                "zh_TW": "EU4 CWOW Web",
+                "ko_KR": "EU4 CWOW Web",
+                "en_US": "EU4 CWOW Web",
+                "es_MX": "EU4 CWOW Web",
+                "pt_BR": "EU4 CWOW Web",
+                "es_ES": "EU4 CWOW Web",
+                "zh_CN": "EU4 CWOW Web",
+                "fr_FR": "EU4 CWOW Web",
+                "de_DE": "EU4 CWOW Web"
+              },
+              "id": 4682,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "eu4-cwow-web"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4683?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "EU5 CWOW Web",
+                "ru_RU": "EU5 CWOW Web",
+                "en_GB": "EU5 CWOW Web",
+                "zh_TW": "EU5 CWOW Web",
+                "ko_KR": "EU5 CWOW Web",
+                "en_US": "EU5 CWOW Web",
+                "es_MX": "EU5 CWOW Web",
+                "pt_BR": "EU5 CWOW Web",
+                "es_ES": "EU5 CWOW Web",
+                "zh_CN": "EU5 CWOW Web",
+                "fr_FR": "EU5 CWOW Web",
+                "de_DE": "EU5 CWOW Web"
+              },
+              "id": 4683,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "eu5-cwow-web"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4440?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Everlook",
+                "ru_RU": "Everlook",
+                "en_GB": "Everlook",
+                "zh_TW": "永望鎮",
+                "ko_KR": "Everlook",
+                "en_US": "Everlook",
+                "es_MX": "Everlook",
+                "pt_BR": "Everlook",
+                "es_ES": "Everlook",
+                "zh_CN": "永望镇",
+                "fr_FR": "Everlook",
+                "de_DE": "Everlook"
+              },
+              "id": 4440,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Tedesco",
+                "ru_RU": "Нем.",
+                "en_GB": "German",
+                "zh_TW": "德國",
+                "ko_KR": "독일어",
+                "en_US": "German",
+                "es_MX": "Alemán",
+                "pt_BR": "Alemão",
+                "es_ES": "Alemán",
+                "zh_CN": "德语",
+                "fr_FR": "Allemand",
+                "de_DE": "Deutsch"
+              },
+              "locale": "deDE",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "everlook"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4467?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Firemaw",
+                "ru_RU": "Firemaw",
+                "en_GB": "Firemaw",
+                "zh_TW": "費爾默",
+                "ko_KR": "Firemaw",
+                "en_US": "Firemaw",
+                "es_MX": "Firemaw",
+                "pt_BR": "Firemaw",
+                "es_ES": "Firemaw",
+                "zh_CN": "费尔默",
+                "fr_FR": "Firemaw",
+                "de_DE": "Firemaw"
+              },
+              "id": 4467,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "firemaw"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4474?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Flamegor",
+                "ru_RU": "Пламегор",
+                "en_GB": "Flamegor",
+                "zh_TW": "弗萊格爾",
+                "ko_KR": "Flamegor",
+                "en_US": "Flamegor",
+                "es_MX": "Flamegor",
+                "pt_BR": "Flamegor",
+                "es_ES": "Flamegor",
+                "zh_CN": "弗莱格尔",
+                "fr_FR": "Flamegor",
+                "de_DE": "Пламегор"
+              },
+              "id": 4474,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Russo",
+                "ru_RU": "Русский",
+                "en_GB": "Russian",
+                "zh_TW": "俄羅斯",
+                "ko_KR": "러시아어",
+                "en_US": "Russian",
+                "es_MX": "Ruso",
+                "pt_BR": "Russo",
+                "es_ES": "Ruso",
+                "zh_CN": "俄语",
+                "fr_FR": "Russe",
+                "de_DE": "Russisch"
+              },
+              "locale": "ruRU",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "flamegor"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4476?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Gehennas",
+                "ru_RU": "Gehennas",
+                "en_GB": "Gehennas",
+                "zh_TW": "基赫納斯",
+                "ko_KR": "Gehennas",
+                "en_US": "Gehennas",
+                "es_MX": "Gehennas",
+                "pt_BR": "Geena",
+                "es_ES": "Gehennas",
+                "zh_CN": "基赫纳斯",
+                "fr_FR": "Gehennas",
+                "de_DE": "Gehennas"
+              },
+              "id": 4476,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "gehennas"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4811?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Giantstalker",
+                "ru_RU": "Giantstalker",
+                "en_GB": "Giantstalker",
+                "zh_TW": "巨人巡者",
+                "ko_KR": "Giantstalker",
+                "en_US": "Giantstalker",
+                "es_MX": "Giantstalker",
+                "pt_BR": "Giantstalker",
+                "es_ES": "Giantstalker",
+                "zh_CN": "巨人追猎者",
+                "fr_FR": "Giantstalker",
+                "de_DE": "Giantstalker"
+              },
+              "id": 4811,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "giantstalker"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4465?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Golemagg",
+                "ru_RU": "Golemagg",
+                "en_GB": "Golemagg",
+                "zh_TW": "古雷曼格",
+                "ko_KR": "Golemagg",
+                "en_US": "Golemagg",
+                "es_MX": "Golemagg",
+                "pt_BR": "Golemagg",
+                "es_ES": "Golemagg",
+                "zh_CN": "古雷曼格",
+                "fr_FR": "Golemagg",
+                "de_DE": "Golemagg"
+              },
+              "id": 4465,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "golemagg"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4678?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Hydraxian Waterlords",
+                "ru_RU": "Hydraxian Waterlords",
+                "en_GB": "Hydraxian Waterlords",
+                "zh_TW": "海達希亞水元素",
+                "ko_KR": "Hydraxian Waterlords",
+                "en_US": "Hydraxian Waterlords",
+                "es_MX": "Hydraxian Waterlords",
+                "pt_BR": "Hydraxian Waterlords",
+                "es_ES": "Hydraxian Waterlords",
+                "zh_CN": "海达希亚水元素",
+                "fr_FR": "Hydraxian Waterlords",
+                "de_DE": "Hydraxian Waterlords"
+              },
+              "id": 4678,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "GdR",
+                  "ru_RU": "Ролевой",
+                  "en_GB": "RP",
+                  "zh_TW": "角色扮演",
+                  "ko_KR": "롤플레이",
+                  "en_US": "RP",
+                  "es_MX": "JR",
+                  "pt_BR": "RP",
+                  "es_ES": "JR",
+                  "zh_CN": "RP",
+                  "fr_FR": "JdR",
+                  "de_DE": "RP"
+                },
+                "type": "RP"
+              },
+              "slug": "hydraxian-waterlords"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4816?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Jin'do",
+                "ru_RU": "Jin'do",
+                "en_GB": "Jin'do",
+                "zh_TW": "金度",
+                "ko_KR": "Jin'do",
+                "en_US": "Jin'do",
+                "es_MX": "Jin'do",
+                "pt_BR": "Jin'do",
+                "es_ES": "Jin'do",
+                "zh_CN": "金度",
+                "fr_FR": "Jin'do",
+                "de_DE": "Jin'do"
+              },
+              "id": 4816,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "jindo"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4442?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Lakeshire",
+                "ru_RU": "Приозерье",
+                "en_GB": "Lakeshire",
+                "zh_TW": "湖畔鎮",
+                "ko_KR": "Lakeshire",
+                "en_US": "Lakeshire",
+                "es_MX": "Lakeshire",
+                "pt_BR": "Lakeshire",
+                "es_ES": "Lakeshire",
+                "zh_CN": "湖畔镇",
+                "fr_FR": "Lakeshire",
+                "de_DE": "Lakeshire"
+              },
+              "id": 4442,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Tedesco",
+                "ru_RU": "Нем.",
+                "en_GB": "German",
+                "zh_TW": "德國",
+                "ko_KR": "독일어",
+                "en_US": "German",
+                "es_MX": "Alemán",
+                "pt_BR": "Alemão",
+                "es_ES": "Alemán",
+                "zh_CN": "德语",
+                "fr_FR": "Allemand",
+                "de_DE": "Deutsch"
+              },
+              "locale": "deDE",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "lakeshire"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4813?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Mandokir",
+                "ru_RU": "Mandokir",
+                "en_GB": "Mandokir",
+                "zh_TW": "曼多基爾",
+                "ko_KR": "Mandokir",
+                "en_US": "Mandokir",
+                "es_MX": "Mandokir",
+                "pt_BR": "Mandokir",
+                "es_ES": "Mandokir",
+                "zh_CN": "曼多基尔",
+                "fr_FR": "Mandokir",
+                "de_DE": "Mandokir"
+              },
+              "id": 4813,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Spagnolo",
+                "ru_RU": "Исп.",
+                "en_GB": "Spanish",
+                "zh_TW": "西班牙",
+                "ko_KR": "스페인어",
+                "en_US": "Spanish",
+                "es_MX": "Español",
+                "pt_BR": "Espanhol",
+                "es_ES": "Español",
+                "zh_CN": "西班牙语",
+                "fr_FR": "Espagnol",
+                "de_DE": "Spanisch"
+              },
+              "locale": "esES",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "mandokir"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4454?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Mirage Raceway",
+                "ru_RU": "Mirage Raceway",
+                "en_GB": "Mirage Raceway",
+                "zh_TW": "沙漠賽道",
+                "ko_KR": "Mirage Raceway",
+                "en_US": "Mirage Raceway",
+                "es_MX": "Mirage Raceway",
+                "pt_BR": "Mirage Raceway",
+                "es_ES": "Mirage Raceway",
+                "zh_CN": "沙漠赛道",
+                "fr_FR": "Mirage Raceway",
+                "de_DE": "Mirage Raceway"
+              },
+              "id": 4454,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "mirage-raceway"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4701?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Mograine",
+                "ru_RU": "Mograine",
+                "en_GB": "Mograine",
+                "zh_TW": "莫格萊尼",
+                "ko_KR": "Mograine",
+                "en_US": "Mograine",
+                "es_MX": "Mograine",
+                "pt_BR": "Mograine",
+                "es_ES": "Mograine",
+                "zh_CN": "莫格莱尼",
+                "fr_FR": "Mograine",
+                "de_DE": "Mograine"
+              },
+              "id": 4701,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "mograine"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4456?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Nethergarde Keep",
+                "ru_RU": "Nethergarde Keep",
+                "en_GB": "Nethergarde Keep",
+                "zh_TW": "守望堡",
+                "ko_KR": "Nethergarde Keep",
+                "en_US": "Nethergarde Keep",
+                "es_MX": "Nethergarde Keep",
+                "pt_BR": "Nethergarde Keep",
+                "es_ES": "Nethergarde Keep",
+                "zh_CN": "守望堡",
+                "fr_FR": "Nethergarde Keep",
+                "de_DE": "Nethergarde Keep"
+              },
+              "id": 4456,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "nethergarde-keep"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4466?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Patchwerk",
+                "ru_RU": "Patchwerk",
+                "en_GB": "Patchwerk",
+                "zh_TW": "縫補者",
+                "ko_KR": "Patchwerk",
+                "en_US": "Patchwerk",
+                "es_MX": "Patchwerk",
+                "pt_BR": "Patchwerk",
+                "es_ES": "Patchwerk",
+                "zh_CN": "帕奇维克",
+                "fr_FR": "Patchwerk",
+                "de_DE": "Patchwerk"
+              },
+              "id": 4466,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Tedesco",
+                "ru_RU": "Нем.",
+                "en_GB": "German",
+                "zh_TW": "德國",
+                "ko_KR": "독일어",
+                "en_US": "German",
+                "es_MX": "Alemán",
+                "pt_BR": "Alemão",
+                "es_ES": "Alemán",
+                "zh_CN": "德语",
+                "fr_FR": "Allemand",
+                "de_DE": "Deutsch"
+              },
+              "locale": "deDE",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "patchwerk"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4453?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Pyrewood Village",
+                "ru_RU": "Pyrewood Village",
+                "en_GB": "Pyrewood Village",
+                "zh_TW": "焚木村",
+                "ko_KR": "Pyrewood Village",
+                "en_US": "Pyrewood Village",
+                "es_MX": "Pyrewood Village",
+                "pt_BR": "Pyrewood Village",
+                "es_ES": "Pyrewood Village",
+                "zh_CN": "焚木村",
+                "fr_FR": "Pyrewood Village",
+                "de_DE": "Pyrewood Village"
+              },
+              "id": 4453,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "pyrewood-village"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4455?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Razorfen",
+                "ru_RU": "Razorfen",
+                "en_GB": "Razorfen",
+                "zh_TW": "剃刀高地",
+                "ko_KR": "Razorfen",
+                "en_US": "Razorfen",
+                "es_MX": "Razorfen",
+                "pt_BR": "Razorfen",
+                "es_ES": "Razorfen",
+                "zh_CN": "剃刀",
+                "fr_FR": "Razorfen",
+                "de_DE": "Razorfen"
+              },
+              "id": 4455,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Tedesco",
+                "ru_RU": "Нем.",
+                "en_GB": "German",
+                "zh_TW": "德國",
+                "ko_KR": "독일어",
+                "en_US": "German",
+                "es_MX": "Alemán",
+                "pt_BR": "Alemão",
+                "es_ES": "Alemán",
+                "zh_CN": "德语",
+                "fr_FR": "Allemand",
+                "de_DE": "Deutsch"
+              },
+              "locale": "deDE",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "razorfen"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4464?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Sulfuron",
+                "ru_RU": "Sulfuron",
+                "en_GB": "Sulfuron",
+                "zh_TW": "薩弗隆",
+                "ko_KR": "Sulfuron",
+                "en_US": "Sulfuron",
+                "es_MX": "Sulfuron",
+                "pt_BR": "Sulfuron",
+                "es_ES": "Sulfuron",
+                "zh_CN": "萨弗隆",
+                "fr_FR": "Sulfuron",
+                "de_DE": "Sulfuron"
+              },
+              "id": 4464,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Francese",
+                "ru_RU": "Франц.",
+                "en_GB": "French",
+                "zh_TW": "法國",
+                "ko_KR": "프랑스어",
+                "en_US": "French",
+                "es_MX": "Francés",
+                "pt_BR": "Francês",
+                "es_ES": "Francés",
+                "zh_CN": "法语",
+                "fr_FR": "Français",
+                "de_DE": "Französisch"
+              },
+              "locale": "frFR",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "sulfuron"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4815?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Thekal",
+                "ru_RU": "Thekal",
+                "en_GB": "Thekal",
+                "zh_TW": "塞卡爾",
+                "ko_KR": "Thekal",
+                "en_US": "Thekal",
+                "es_MX": "Thekal",
+                "pt_BR": "Thekal",
+                "es_ES": "Thekal",
+                "zh_CN": "塞卡尔",
+                "fr_FR": "Thekal",
+                "de_DE": "Thekal"
+              },
+              "id": 4815,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Inglese",
+                "ru_RU": "Англ.",
+                "en_GB": "English",
+                "zh_TW": "英國",
+                "ko_KR": "영어",
+                "en_US": "English",
+                "es_MX": "Inglés",
+                "pt_BR": "Inglês",
+                "es_ES": "Inglés",
+                "zh_CN": "英语",
+                "fr_FR": "Anglais",
+                "de_DE": "Englisch"
+              },
+              "locale": "enGB",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "thekal"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4745?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Transcendence",
+                "ru_RU": "Превосходство",
+                "en_GB": "Transcendence",
+                "zh_TW": "超凡入聖",
+                "ko_KR": "Transcendence",
+                "en_US": "Transcendence",
+                "es_MX": "Transcendence",
+                "pt_BR": "Transcendence",
+                "es_ES": "Transcendence",
+                "zh_CN": "卓越",
+                "fr_FR": "Transcendence",
+                "de_DE": "Transcendence"
+              },
+              "id": 4745,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Tedesco",
+                "ru_RU": "Нем.",
+                "en_GB": "German",
+                "zh_TW": "德國",
+                "ko_KR": "독일어",
+                "en_US": "German",
+                "es_MX": "Alemán",
+                "pt_BR": "Alemão",
+                "es_ES": "Alemán",
+                "zh_CN": "德语",
+                "fr_FR": "Allemand",
+                "de_DE": "Deutsch"
+              },
+              "locale": "deDE",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "transcendence"
+            }
+          },
+          {
+            "key": {
+              "href": "https://eu.api.blizzard.com/data/wow/realm/4477?namespace=dynamic-classic-eu"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Europe/Paris",
+              "name": {
+                "it_IT": "Venoxis",
+                "ru_RU": "Venoxis",
+                "en_GB": "Venoxis",
+                "zh_TW": "溫諾希斯",
+                "ko_KR": "Venoxis",
+                "en_US": "Venoxis",
+                "es_MX": "Venoxis",
+                "pt_BR": "Venoxis",
+                "es_ES": "Venoxis",
+                "zh_CN": "温诺希斯",
+                "fr_FR": "Venoxis",
+                "de_DE": "Venoxis"
+              },
+              "id": 4477,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Europe",
+                  "ru_RU": "Classic (Европа)",
+                  "en_GB": "Classic Europe",
+                  "zh_TW": "經典歐洲",
+                  "ko_KR": "클래식 유럽",
+                  "en_US": "Classic Europe",
+                  "es_MX": "Classic Europa",
+                  "pt_BR": "Classic - Europa",
+                  "es_ES": "Classic Europa",
+                  "zh_CN": "经典怀旧（欧洲）",
+                  "fr_FR": "Classic Europe",
+                  "de_DE": "Classic - Europa"
+                },
+                "id": 43
+              },
+              "category": {
+                "it_IT": "Tedesco",
+                "ru_RU": "Нем.",
+                "en_GB": "German",
+                "zh_TW": "德國",
+                "ko_KR": "독일어",
+                "en_US": "German",
+                "es_MX": "Alemán",
+                "pt_BR": "Alemão",
+                "es_ES": "Alemán",
+                "zh_CN": "德语",
+                "fr_FR": "Allemand",
+                "de_DE": "Deutsch"
+              },
+              "locale": "deDE",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "venoxis"
+            }
+          }
+        ]
+      }
+    ],
+    "tw": [
+      {
+        "page": 1,
+        "pageSize": 10,
+        "maxPageSize": 1000,
+        "pageCount": 1,
+        "results": [
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/5740?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "Arathi Basin",
+                "ru_RU": "Arathi Basin",
+                "en_GB": "Arathi Basin",
+                "zh_TW": "阿拉希盆地",
+                "ko_KR": "Arathi Basin",
+                "en_US": "Arathi Basin",
+                "es_MX": "Arathi Basin",
+                "pt_BR": "Arathi Basin",
+                "es_ES": "Arathi Basin",
+                "zh_CN": "阿拉希盆地",
+                "fr_FR": "Arathi Basin",
+                "de_DE": "Arathi Basin"
+              },
+              "id": 5740,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Globale",
+                "ru_RU": "Глобальный",
+                "en_GB": "Global",
+                "zh_TW": "全球",
+                "ko_KR": "글로벌",
+                "en_US": "Global",
+                "es_MX": "Global",
+                "pt_BR": "Global",
+                "es_ES": "Global",
+                "zh_CN": "全球",
+                "fr_FR": "Mondial",
+                "de_DE": "Global"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "arathi-basin"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/5742?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "Golemagg",
+                "ru_RU": "Golemagg",
+                "en_GB": "Golemagg",
+                "zh_TW": "古雷曼格",
+                "ko_KR": "Golemagg",
+                "en_US": "Golemagg",
+                "es_MX": "Golemagg",
+                "pt_BR": "Golemagg",
+                "es_ES": "Golemagg",
+                "zh_CN": "古雷曼格",
+                "fr_FR": "Golemagg",
+                "de_DE": "Golemagg"
+              },
+              "id": 5742,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Globale",
+                "ru_RU": "Глобальный",
+                "en_GB": "Global",
+                "zh_TW": "全球",
+                "ko_KR": "글로벌",
+                "en_US": "Global",
+                "es_MX": "Global",
+                "pt_BR": "Global",
+                "es_ES": "Global",
+                "zh_CN": "全球",
+                "fr_FR": "Mondial",
+                "de_DE": "Global"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "golemagg"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/4487?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "Ivus",
+                "ru_RU": "Ivus",
+                "en_GB": "Ivus",
+                "zh_TW": "伊弗斯",
+                "ko_KR": "Ivus",
+                "en_US": "Ivus",
+                "es_MX": "Ivus",
+                "pt_BR": "Ivus",
+                "es_ES": "Ivus",
+                "zh_CN": "伊弗斯",
+                "fr_FR": "Ivus",
+                "de_DE": "伊弗斯"
+              },
+              "id": 4487,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Taiwan",
+                "ru_RU": "Тайвань",
+                "en_GB": "Taiwan",
+                "zh_TW": "台灣",
+                "ko_KR": "대만",
+                "en_US": "Taiwan",
+                "es_MX": "Taiwán",
+                "pt_BR": "Taiwan",
+                "es_ES": "Taiwán",
+                "zh_CN": "中国台湾",
+                "fr_FR": "Taïwan",
+                "de_DE": "Taiwan"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "ivus"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/4485?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "Maraudon",
+                "ru_RU": "Maraudon",
+                "en_GB": "Maraudon",
+                "zh_TW": "瑪拉頓",
+                "ko_KR": "Maraudon",
+                "en_US": "Maraudon",
+                "es_MX": "Maraudon",
+                "pt_BR": "Maraudon",
+                "es_ES": "Maraudon",
+                "zh_CN": "玛拉顿",
+                "fr_FR": "Maraudon",
+                "de_DE": "瑪拉頓"
+              },
+              "id": 4485,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Taiwan",
+                "ru_RU": "Тайвань",
+                "en_GB": "Taiwan",
+                "zh_TW": "台灣",
+                "ko_KR": "대만",
+                "en_US": "Taiwan",
+                "es_MX": "Taiwán",
+                "pt_BR": "Taiwan",
+                "es_ES": "Taiwán",
+                "zh_CN": "中国台湾",
+                "fr_FR": "Taïwan",
+                "de_DE": "Taiwan"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "maraudon"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/5741?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "Murloc",
+                "ru_RU": "Murloc",
+                "en_GB": "Murloc",
+                "zh_TW": "魚人",
+                "ko_KR": "Murloc",
+                "en_US": "Murloc",
+                "es_MX": "Murloc",
+                "pt_BR": "Murloc",
+                "es_ES": "Murloc",
+                "zh_CN": "鱼人",
+                "fr_FR": "Murloc",
+                "de_DE": "Murloc"
+              },
+              "id": 5741,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Globale",
+                "ru_RU": "Глобальный",
+                "en_GB": "Global",
+                "zh_TW": "全球",
+                "ko_KR": "글로벌",
+                "en_US": "Global",
+                "es_MX": "Global",
+                "pt_BR": "Global",
+                "es_ES": "Global",
+                "zh_CN": "全球",
+                "fr_FR": "Mondial",
+                "de_DE": "Global"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "murloc"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/4689?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "TW4 CWOW GMSS 1",
+                "ru_RU": "TW4 CWOW GMSS 1",
+                "en_GB": "TW4 CWOW GMSS 1",
+                "zh_TW": "TW4 CWOW GMSS 1",
+                "ko_KR": "TW4 CWOW GMSS 1",
+                "en_US": "TW4 CWOW GMSS 1",
+                "es_MX": "TW4 CWOW GMSS 1",
+                "pt_BR": "TW4 CWOW GMSS 1",
+                "es_ES": "TW4 CWOW GMSS 1",
+                "zh_CN": "TW4 CWOW GMSS 1",
+                "fr_FR": "TW4 CWOW GMSS 1",
+                "de_DE": "TW4 CWOW GMSS 1"
+              },
+              "id": 4689,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "tw4-cwow-gmss-1"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/4690?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "TW4 CWOW GMSS 2",
+                "ru_RU": "TW4 CWOW GMSS 2",
+                "en_GB": "TW4 CWOW GMSS 2",
+                "zh_TW": "TW4 CWOW GMSS 2",
+                "ko_KR": "TW4 CWOW GMSS 2",
+                "en_US": "TW4 CWOW GMSS 2",
+                "es_MX": "TW4 CWOW GMSS 2",
+                "pt_BR": "TW4 CWOW GMSS 2",
+                "es_ES": "TW4 CWOW GMSS 2",
+                "zh_CN": "TW4 CWOW GMSS 2",
+                "fr_FR": "TW4 CWOW GMSS 2",
+                "de_DE": "TW4 CWOW GMSS 2"
+              },
+              "id": 4690,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Classic",
+                "ru_RU": "Classic",
+                "en_GB": "Classic",
+                "zh_TW": "經典版",
+                "ko_KR": "클래식",
+                "en_US": "Classic",
+                "es_MX": "Clásico",
+                "pt_BR": "Clássico",
+                "es_ES": "Clásico",
+                "zh_CN": "怀旧服务器",
+                "fr_FR": "Classic",
+                "de_DE": "Classic"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "tw4-cwow-gmss-2"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/5743?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "Windseeker",
+                "ru_RU": "Windseeker",
+                "en_GB": "Windseeker",
+                "zh_TW": "逐風者",
+                "ko_KR": "Windseeker",
+                "en_US": "Windseeker",
+                "es_MX": "Windseeker",
+                "pt_BR": "Windseeker",
+                "es_ES": "Windseeker",
+                "zh_CN": "逐风者",
+                "fr_FR": "Windseeker",
+                "de_DE": "Windseeker"
+              },
+              "id": 5743,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Globale",
+                "ru_RU": "Глобальный",
+                "en_GB": "Global",
+                "zh_TW": "全球",
+                "ko_KR": "글로벌",
+                "en_US": "Global",
+                "es_MX": "Global",
+                "pt_BR": "Global",
+                "es_ES": "Global",
+                "zh_CN": "全球",
+                "fr_FR": "Mondial",
+                "de_DE": "Global"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "windseeker"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/4488?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "Wushoolay",
+                "ru_RU": "Wushoolay",
+                "en_GB": "Wushoolay",
+                "zh_TW": "烏蘇雷",
+                "ko_KR": "Wushoolay",
+                "en_US": "Wushoolay",
+                "es_MX": "Wushoolay",
+                "pt_BR": "Wushoolay",
+                "es_ES": "Wushoolay",
+                "zh_CN": "乌苏雷",
+                "fr_FR": "Wushoolay",
+                "de_DE": "烏蘇雷"
+              },
+              "id": 4488,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Taiwan",
+                "ru_RU": "Тайвань",
+                "en_GB": "Taiwan",
+                "zh_TW": "台灣",
+                "ko_KR": "대만",
+                "en_US": "Taiwan",
+                "es_MX": "Taiwán",
+                "pt_BR": "Taiwan",
+                "es_ES": "Taiwán",
+                "zh_CN": "中国台湾",
+                "fr_FR": "Taïwan",
+                "de_DE": "Taiwan"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "wushoolay"
+            }
+          },
+          {
+            "key": {
+              "href": "https://tw.api.blizzard.com/data/wow/realm/4489?namespace=dynamic-classic-tw"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Asia/Taipei",
+              "name": {
+                "it_IT": "Zeliek",
+                "ru_RU": "Zeliek",
+                "en_GB": "Zeliek",
+                "zh_TW": "札里克",
+                "ko_KR": "Zeliek",
+                "en_US": "Zeliek",
+                "es_MX": "Zeliek",
+                "pt_BR": "Zeliek",
+                "es_ES": "Zeliek",
+                "zh_CN": "瑟里耶克",
+                "fr_FR": "Zeliek",
+                "de_DE": "札里克"
+              },
+              "id": 4489,
+              "region": {
+                "name": {
+                  "it_IT": "Classic Taiwan",
+                  "ru_RU": "Classic (Тайвань)",
+                  "en_GB": "Classic Taiwan",
+                  "zh_TW": "經典台灣",
+                  "ko_KR": "클래식 대만",
+                  "en_US": "Classic Taiwan",
+                  "es_MX": "Classic Taiwán",
+                  "pt_BR": "Classic - Taiwan",
+                  "es_ES": "Classic Taiwán",
+                  "zh_CN": "经典怀旧（中国台湾）",
+                  "fr_FR": "Classic Taïwan",
+                  "de_DE": "Classic - Taiwan"
+                },
+                "id": 44
+              },
+              "category": {
+                "it_IT": "Globale",
+                "ru_RU": "Глобальный",
+                "en_GB": "Global",
+                "zh_TW": "全球",
+                "ko_KR": "글로벌",
+                "en_US": "Global",
+                "es_MX": "Global",
+                "pt_BR": "Global",
+                "es_ES": "Global",
+                "zh_CN": "全球",
+                "fr_FR": "Mondial",
+                "de_DE": "Global"
+              },
+              "locale": "zhTW",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "zeliek"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
