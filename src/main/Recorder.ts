@@ -5,7 +5,12 @@ import * as osn from 'obs-studio-node';
 import { IFader, IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
-import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
+import {
+  UiohookKeyboardEvent,
+  UiohookMouseEvent,
+  uIOhook,
+  EventType,
+} from 'uiohook-napi';
 import { EventEmitter } from 'stream';
 import Queue from 'queue-promise';
 import {
@@ -849,33 +854,21 @@ export default class Recorder extends EventEmitter {
 
       this.inputDevicesMuted = true;
 
-      const events = ['keydown', 'keyup', 'mousedown', 'mouseup'];
-
-      events.forEach((event) => {
-        uIOhook.removeAllListeners(event);
-      });
-
       uIOhook.on('keydown', (e: UiohookKeyboardEvent) =>
-        this.pushToTalkHandler(true, e, config),
+        this.pushToTalkHandler(e, config),
       );
 
       uIOhook.on('mousedown', (e: UiohookMouseEvent) =>
-        this.pushToTalkHandler(true, e, config),
+        this.pushToTalkHandler(e, config),
       );
 
       uIOhook.on('keyup', (e: UiohookKeyboardEvent) =>
-        this.pushToTalkHandler(false, e, config),
+        this.pushToTalkHandler(e, config),
       );
 
       uIOhook.on('mouseup', (e: UiohookMouseEvent) =>
-        this.pushToTalkHandler(false, e, config),
+        this.pushToTalkHandler(e, config),
       );
-
-      try {
-        uIOhook.start();
-      } catch (e) {
-        console.log(e);
-      }
     }
 
     audioOutputDevices
@@ -1726,39 +1719,30 @@ export default class Recorder extends EventEmitter {
   }
 
   private pushToTalkHandler(
-    isPress: boolean,
     event: UiohookKeyboardEvent | UiohookMouseEvent,
     audioConfig: ObsAudioConfig,
   ) {
     const converted = convertUioHookEvent(event);
     if (!isPushToTalkHotkey(audioConfig, converted)) return;
 
+    const isPress =
+      event.type === EventType.EVENT_KEY_PRESSED ||
+      event.type === EventType.EVENT_MOUSE_PRESSED;
+
     if (isPress) {
       if (this.releaseDelayTimer) {
         clearTimeout(this.releaseDelayTimer);
         this.releaseDelayTimer = undefined;
       }
-
-      if (this.inputDevicesMuted) {
-        this.unmuteInputDevices();
-      }
-    } else {
-      if (!this.inputDevicesMuted) {
-        const delay = Math.max(
-          0,
-          this.cfg.get<number>('pushToTalkReleaseDelay') ?? 0,
-        );
-
-        if (delay === 0) {
-          this.muteInputDevices();
-        } else {
-          this.releaseDelayTimer = setTimeout(() => {
-            this.muteInputDevices();
-            this.releaseDelayTimer = undefined;
-          }, delay);
-        }
-      }
+      this.unmuteInputDevices();
+      return;
     }
+
+    const delay = this.cfg.get<number>('pushToTalkReleaseDelay') ?? 0;
+    this.releaseDelayTimer = setTimeout(() => {
+      this.muteInputDevices();
+      this.releaseDelayTimer = undefined;
+    }, delay);
   }
 
   /**
