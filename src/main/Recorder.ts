@@ -5,7 +5,12 @@ import * as osn from 'obs-studio-node';
 import { IFader, IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
-import { UiohookKeyboardEvent, UiohookMouseEvent, uIOhook } from 'uiohook-napi';
+import {
+  UiohookKeyboardEvent,
+  UiohookMouseEvent,
+  uIOhook,
+  EventType,
+} from 'uiohook-napi';
 import { EventEmitter } from 'stream';
 import Queue from 'queue-promise';
 import {
@@ -319,6 +324,11 @@ export default class Recorder extends EventEmitter {
    * The video context.
    */
   private context: osn.IVideo;
+
+  /**
+   * Timer that keeps the mic on briefly after you release the Push To Talk key.
+   */
+  private releaseDelayTimer?: NodeJS.Timeout;
 
   /**
    * Sensible defaults for the video context.
@@ -847,23 +857,21 @@ export default class Recorder extends EventEmitter {
 
       this.inputDevicesMuted = true;
 
-      const pttHandler = (
-        fn: () => void,
-        event: UiohookKeyboardEvent | UiohookMouseEvent,
-      ) => {
-        const convertedEvent = convertUioHookEvent(event);
+      uIOhook.on('keydown', (e: UiohookKeyboardEvent) =>
+        this.pushToTalkHandler(e, config),
+      );
 
-        if (isPushToTalkHotkey(config, convertedEvent)) {
-          fn();
-        }
-      };
+      uIOhook.on('mousedown', (e: UiohookMouseEvent) =>
+        this.pushToTalkHandler(e, config),
+      );
 
-      /* eslint-disable prettier/prettier */
-      uIOhook.on('keydown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
-      uIOhook.on('keyup', (e) => pttHandler(() => this.muteInputDevices(), e));
-      uIOhook.on('mousedown', (e) => pttHandler(() => this.unmuteInputDevices(), e));
-      uIOhook.on('mouseup', (e) => pttHandler(() => this.muteInputDevices(), e));
-      /* eslint-enable prettier/prettier */
+      uIOhook.on('keyup', (e: UiohookKeyboardEvent) =>
+        this.pushToTalkHandler(e, config),
+      );
+
+      uIOhook.on('mouseup', (e: UiohookMouseEvent) =>
+        this.pushToTalkHandler(e, config),
+      );
     }
 
     audioOutputDevices
@@ -1706,6 +1714,33 @@ export default class Recorder extends EventEmitter {
     this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.LISTENING;
     this.emit('state-change');
+  }
+
+  private pushToTalkHandler(
+    event: UiohookKeyboardEvent | UiohookMouseEvent,
+    audioConfig: ObsAudioConfig,
+  ) {
+    const converted = convertUioHookEvent(event);
+    if (!isPushToTalkHotkey(audioConfig, converted)) return;
+
+    const isPress =
+      event.type === EventType.EVENT_KEY_PRESSED ||
+      event.type === EventType.EVENT_MOUSE_PRESSED;
+
+    if (isPress) {
+      if (this.releaseDelayTimer) {
+        clearTimeout(this.releaseDelayTimer);
+        this.releaseDelayTimer = undefined;
+      }
+      this.unmuteInputDevices();
+      return;
+    }
+
+    const delay = this.cfg.get<number>('pushToTalkReleaseDelay') ?? 0;
+    this.releaseDelayTimer = setTimeout(() => {
+      this.muteInputDevices();
+      this.releaseDelayTimer = undefined;
+    }, delay);
   }
 
   /**

@@ -57,6 +57,7 @@ enum Phrase {
   PushToTalkKeyDescription,
   PushToTalkMouseButtonDescription,
   PushToTalkModifiersDescription,
+  PushToTalkReleaseDelayDescription,
   ObsAudioSuppressionDescription,
   RaidOverrunDescription,
   DungeonOverrunDescription,
@@ -419,6 +420,7 @@ enum Phrase {
   UploadCurrentRaidsOnlyLabel,
   UploadCurrentRaidsOnlyDescription,
   MustNotBeEmpty,
+  PushToTalkReleaseDelayLabel,
 }
 
 enum Language {
