@@ -328,7 +328,7 @@ export default class Recorder extends EventEmitter {
   /**
    * Timer that keeps the mic on briefly after you release the Push To Talk key.
    */
-  private releaseDelayTimer?: NodeJS.Timeout;
+  private pttReleaseDelayTimer?: NodeJS.Timeout;
 
   /**
    * Sensible defaults for the video context.
@@ -1721,25 +1721,31 @@ export default class Recorder extends EventEmitter {
     audioConfig: ObsAudioConfig,
   ) {
     const converted = convertUioHookEvent(event);
-    if (!isPushToTalkHotkey(audioConfig, converted)) return;
+    const isKeybindMatch = isPushToTalkHotkey(audioConfig, converted);
+
+    if (!isKeybindMatch) {
+      return;
+    }
 
     const isPress =
       event.type === EventType.EVENT_KEY_PRESSED ||
       event.type === EventType.EVENT_MOUSE_PRESSED;
 
     if (isPress) {
-      if (this.releaseDelayTimer) {
-        clearTimeout(this.releaseDelayTimer);
-        this.releaseDelayTimer = undefined;
+      if (this.pttReleaseDelayTimer) {
+        clearTimeout(this.pttReleaseDelayTimer);
+        this.pttReleaseDelayTimer = undefined;
       }
+
       this.unmuteInputDevices();
       return;
     }
 
-    const delay = this.cfg.get<number>('pushToTalkReleaseDelay') ?? 0;
-    this.releaseDelayTimer = setTimeout(() => {
+    const delay = this.cfg.get<number>('pushToTalkReleaseDelay');
+
+    this.pttReleaseDelayTimer = setTimeout(() => {
       this.muteInputDevices();
-      this.releaseDelayTimer = undefined;
+      this.pttReleaseDelayTimer = undefined;
     }, delay);
   }
 
