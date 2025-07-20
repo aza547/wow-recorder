@@ -1,0 +1,4549 @@
+{
+  "fetchedAt": "2025-07-19T17:19:38.436Z",
+  "regions": {
+    "us": [
+      {
+        "page": 1,
+        "pageSize": 61,
+        "maxPageSize": 1000,
+        "pageCount": 1,
+        "results": [
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5101?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Anathema",
+                "ru_RU": "Anathema",
+                "en_GB": "Anathema",
+                "zh_TW": "咒逐",
+                "ko_KR": "Anathema",
+                "en_US": "Anathema",
+                "es_MX": "Anathema",
+                "pt_BR": "Anathema",
+                "es_ES": "Anathema",
+                "zh_CN": "咒逐",
+                "fr_FR": "Anathema",
+                "de_DE": "Anathema"
+              },
+              "id": 5101,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "anathema"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5100?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Arcanite Reaper",
+                "ru_RU": "Arcanite Reaper",
+                "en_GB": "Arcanite Reaper",
+                "zh_TW": "奧金收割斧",
+                "ko_KR": "Arcanite Reaper",
+                "en_US": "Arcanite Reaper",
+                "es_MX": "Arcanite Reaper",
+                "pt_BR": "Arcanite Reaper",
+                "es_ES": "Arcanite Reaper",
+                "zh_CN": "奥金斧",
+                "fr_FR": "Arcanite Reaper",
+                "de_DE": "Arcanite Reaper"
+              },
+              "id": 5100,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "arcanite-reaper"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5073?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Arugal",
+                "ru_RU": "Arugal",
+                "en_GB": "Arugal",
+                "zh_TW": "阿魯高",
+                "ko_KR": "Arugal",
+                "en_US": "Arugal",
+                "es_MX": "Arugal",
+                "pt_BR": "Arugal",
+                "es_ES": "Arugal",
+                "zh_CN": "阿鲁高",
+                "fr_FR": "Arugal",
+                "de_DE": "Arugal"
+              },
+              "id": 5073,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "arugal"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5071?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Ashkandi",
+                "ru_RU": "Ashkandi",
+                "en_GB": "Ashkandi",
+                "zh_TW": "阿什坎迪",
+                "ko_KR": "Ashkandi",
+                "en_US": "Ashkandi",
+                "es_MX": "Ashkandi",
+                "pt_BR": "Ashkandi",
+                "es_ES": "Ashkandi",
+                "zh_CN": "阿什坎迪",
+                "fr_FR": "Ashkandi",
+                "de_DE": "Ashkandi"
+              },
+              "id": 5071,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "ashkandi"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5117?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Atiesh",
+                "ru_RU": "Atiesh",
+                "en_GB": "Atiesh",
+                "zh_TW": "阿泰絲",
+                "ko_KR": "Atiesh",
+                "en_US": "Atiesh",
+                "es_MX": "Atiesh",
+                "pt_BR": "Atiesh",
+                "es_ES": "Atiesh",
+                "zh_CN": "埃提耶什",
+                "fr_FR": "Atiesh",
+                "de_DE": "Atiesh"
+              },
+              "id": 5117,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "atiesh"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5069?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Azuresong",
+                "ru_RU": "Azuresong",
+                "en_GB": "Azuresong",
+                "zh_TW": "碧空之歌",
+                "ko_KR": "Azuresong",
+                "en_US": "Azuresong",
+                "es_MX": "Azuresong",
+                "pt_BR": "Azuresong",
+                "es_ES": "Azuresong",
+                "zh_CN": "碧空之歌",
+                "fr_FR": "Azuresong",
+                "de_DE": "Azuresong"
+              },
+              "id": 5069,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "azuresong"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5133?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Benediction",
+                "ru_RU": "Benediction",
+                "en_GB": "Benediction",
+                "zh_TW": "祈福",
+                "ko_KR": "Benediction",
+                "en_US": "Benediction",
+                "es_MX": "Benediction",
+                "pt_BR": "Benediction",
+                "es_ES": "Benediction",
+                "zh_CN": "祈福",
+                "fr_FR": "Benediction",
+                "de_DE": "Benediction"
+              },
+              "id": 5133,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "benediction"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5109?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Bigglesworth",
+                "ru_RU": "Bigglesworth",
+                "en_GB": "Bigglesworth",
+                "zh_TW": "畢勾沃斯",
+                "ko_KR": "Bigglesworth",
+                "en_US": "Bigglesworth",
+                "es_MX": "Bigglesworth",
+                "pt_BR": "Bigglesworth",
+                "es_ES": "Bigglesworth",
+                "zh_CN": "比格沃斯",
+                "fr_FR": "Bigglesworth",
+                "de_DE": "Bigglesworth"
+              },
+              "id": 5109,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "bigglesworth"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5110?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Blaumeux",
+                "ru_RU": "Blaumeux",
+                "en_GB": "Blaumeux",
+                "zh_TW": "布洛莫斯",
+                "ko_KR": "Blaumeux",
+                "en_US": "Blaumeux",
+                "es_MX": "Blaumeux",
+                "pt_BR": "Blaumeux",
+                "es_ES": "Blaumeux",
+                "zh_CN": "布劳缪克丝",
+                "fr_FR": "Blaumeux",
+                "de_DE": "Blaumeux"
+              },
+              "id": 5110,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "blaumeux"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5139?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Bloodsail Buccaneers",
+                "ru_RU": "Bloodsail Buccaneers",
+                "en_GB": "Bloodsail Buccaneers",
+                "zh_TW": "血帆海盜",
+                "ko_KR": "Bloodsail Buccaneers",
+                "en_US": "Bloodsail Buccaneers",
+                "es_MX": "Bloodsail Buccaneers",
+                "pt_BR": "Bloodsail Buccaneers",
+                "es_ES": "Bloodsail Buccaneers",
+                "zh_CN": "血帆海盗",
+                "fr_FR": "Bloodsail Buccaneers",
+                "de_DE": "Bloodsail Buccaneers"
+              },
+              "id": 5139,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "GdR",
+                  "ru_RU": "Ролевой",
+                  "en_GB": "RP",
+                  "zh_TW": "角色扮演",
+                  "ko_KR": "롤플레이",
+                  "en_US": "RP",
+                  "es_MX": "JR",
+                  "pt_BR": "RP",
+                  "es_ES": "JR",
+                  "zh_CN": "RP",
+                  "fr_FR": "JdR",
+                  "de_DE": "RP"
+                },
+                "type": "RP"
+              },
+              "slug": "bloodsail-buccaneers"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5820?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Chaos Bolt",
+                "ru_RU": "Стрела Хаоса",
+                "en_GB": "Chaos Bolt",
+                "zh_TW": "混沌箭",
+                "ko_KR": "혼돈의 화살",
+                "en_US": "Chaos Bolt",
+                "pt_BR": "Chaos Bolt",
+                "es_ES": "Chaos Bolt",
+                "zh_CN": "混乱之箭",
+                "fr_FR": "Chaos Bolt",
+                "de_DE": "Chaos Bolt"
+              },
+              "id": 5820,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP GdR",
+                  "ru_RU": "Ролевой PvP",
+                  "en_GB": "PvP RP",
+                  "zh_TW": "PvP角色扮演",
+                  "ko_KR": "전쟁 롤플레이",
+                  "en_US": "PvP RP",
+                  "es_MX": "JR JcJ",
+                  "pt_BR": "JxJ RP",
+                  "es_ES": "JR JcJ",
+                  "zh_CN": "PvP RP",
+                  "fr_FR": "JdR JcJ",
+                  "de_DE": "(RP-PvP)"
+                },
+                "type": "PVP_RP"
+              },
+              "slug": "chaos-bolt"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5816?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Crusader Strike",
+                "ru_RU": "Удар воина Света",
+                "en_GB": "Crusader Strike",
+                "zh_TW": "十字軍聖擊",
+                "ko_KR": "성전사의 일격",
+                "en_US": "Crusader Strike",
+                "pt_BR": "Crusader Strike",
+                "es_ES": "Crusader Strike",
+                "zh_CN": "十字军打击",
+                "fr_FR": "Crusader Strike",
+                "de_DE": "Crusader Strike"
+              },
+              "id": 5816,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "crusader-strike"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5126?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Defias Pillager",
+                "ru_RU": "Defias Pillager",
+                "en_GB": "Defias Pillager",
+                "zh_TW": "迪菲亞掠取者",
+                "ko_KR": "데피아즈단 강탈자",
+                "en_US": "Defias Pillager",
+                "es_MX": "Defias Pillager",
+                "pt_BR": "Defias Pillager",
+                "es_ES": "Defias Pillager",
+                "zh_CN": "迪菲亚抢劫者",
+                "fr_FR": "Pilleur défias",
+                "de_DE": "Plünderer der Defias"
+              },
+              "id": 5126,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "defias-pillager"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5821?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Devastate",
+                "ru_RU": "Сокрушение",
+                "en_GB": "Devastate",
+                "zh_TW": "挫敗",
+                "ko_KR": "압도",
+                "en_US": "Devastate",
+                "pt_BR": "Devastate",
+                "es_ES": "Devastate",
+                "zh_CN": "毁灭打击",
+                "fr_FR": "Devastate",
+                "de_DE": "Devastate"
+              },
+              "id": 5821,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "devastate"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5147?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Deviate Delight",
+                "ru_RU": "Deviate Delight",
+                "en_GB": "Deviate Delight",
+                "zh_TW": "變異點心",
+                "ko_KR": "Deviate Delight",
+                "en_US": "Deviate Delight",
+                "es_MX": "Deviate Delight",
+                "pt_BR": "Deviate Delight",
+                "es_ES": "Deviate Delight",
+                "zh_CN": "美味风蛇",
+                "fr_FR": "Deviate Delight",
+                "de_DE": "Deviate Delight"
+              },
+              "id": 5147,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP GdR",
+                  "ru_RU": "Ролевой PvP",
+                  "en_GB": "PvP RP",
+                  "zh_TW": "PvP角色扮演",
+                  "ko_KR": "전쟁 롤플레이",
+                  "en_US": "PvP RP",
+                  "es_MX": "JR JcJ",
+                  "pt_BR": "JxJ RP",
+                  "es_ES": "JR JcJ",
+                  "zh_CN": "PvP RP",
+                  "fr_FR": "JdR JcJ",
+                  "de_DE": "(RP-PvP)"
+                },
+                "type": "PVP_RP"
+              },
+              "slug": "deviate-delight"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/6105?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Doomhowl",
+                "ru_RU": "Doomhowl",
+                "en_GB": "Doomhowl",
+                "zh_TW": "末日哀嚎",
+                "ko_KR": "파멸의 포효",
+                "en_US": "Doomhowl",
+                "es_MX": "Doomhowl",
+                "pt_BR": "Doomhowl",
+                "es_ES": "Doomhowl",
+                "zh_CN": "末日之吼",
+                "fr_FR": "Doomhowl",
+                "de_DE": "Doomhowl"
+              },
+              "id": 6105,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Anniversary",
+                "ru_RU": "Годовщина",
+                "en_GB": "Anniversary",
+                "zh_TW": "週年慶",
+                "ko_KR": "기념일",
+                "en_US": "Anniversary",
+                "es_MX": "Aniversario",
+                "pt_BR": "Aniversário",
+                "es_ES": "Aniversario",
+                "zh_CN": "周年纪念版",
+                "fr_FR": "Anniversaire",
+                "de_DE": "Jubiläum"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "doomhowl"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/6103?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Dreamscythe",
+                "ru_RU": "Dreamscythe",
+                "en_GB": "Dreamscythe",
+                "zh_TW": "德姆塞卡爾",
+                "ko_KR": "드림사이드",
+                "en_US": "Dreamscythe",
+                "es_MX": "Dreamscythe",
+                "pt_BR": "Dreamscythe",
+                "es_ES": "Dreamscythe",
+                "zh_CN": "德姆塞卡尔",
+                "fr_FR": "Dreamscythe",
+                "de_DE": "Dreamscythe"
+              },
+              "id": 6103,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Anniversary",
+                "ru_RU": "Годовщина",
+                "en_GB": "Anniversary",
+                "zh_TW": "週年慶",
+                "ko_KR": "기념일",
+                "en_US": "Anniversary",
+                "es_MX": "Aniversario",
+                "pt_BR": "Aniversário",
+                "es_ES": "Aniversario",
+                "zh_CN": "周年纪念版",
+                "fr_FR": "Anniversaire",
+                "de_DE": "Jubiläum"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "dreamscythe"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5130?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Earthfury",
+                "ru_RU": "Earthfury",
+                "en_GB": "Earthfury",
+                "zh_TW": "大地震怒",
+                "ko_KR": "Earthfury",
+                "en_US": "Earthfury",
+                "es_MX": "Earthfury",
+                "pt_BR": "Earthfury",
+                "es_ES": "Earthfury",
+                "zh_CN": "大地之怒",
+                "fr_FR": "Earthfury",
+                "de_DE": "Earthfury"
+              },
+              "id": 5130,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "earthfury"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5142?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Faerlina",
+                "ru_RU": "Faerlina",
+                "en_GB": "Faerlina",
+                "zh_TW": "費琳娜",
+                "ko_KR": "Faerlina",
+                "en_US": "Faerlina",
+                "es_MX": "Faerlina",
+                "pt_BR": "Faerlina",
+                "es_ES": "Faerlina",
+                "zh_CN": "法琳娜",
+                "fr_FR": "Faerlina",
+                "de_DE": "Faerlina"
+              },
+              "id": 5142,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "faerlina"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5111?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Fairbanks",
+                "ru_RU": "Fairbanks",
+                "en_GB": "Fairbanks",
+                "zh_TW": "法爾班克斯",
+                "ko_KR": "Fairbanks",
+                "en_US": "Fairbanks",
+                "es_MX": "Fairbanks",
+                "pt_BR": "Fairbanks",
+                "es_ES": "Fairbanks",
+                "zh_CN": "法尔班克斯",
+                "fr_FR": "Fairbanks",
+                "de_DE": "Fairbanks"
+              },
+              "id": 5111,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "fairbanks"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5067?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Felstriker",
+                "ru_RU": "Felstriker",
+                "en_GB": "Felstriker",
+                "zh_TW": "惡魔之擊",
+                "ko_KR": "Felstriker",
+                "en_US": "Felstriker",
+                "es_MX": "Felstriker",
+                "pt_BR": "Felstriker",
+                "es_ES": "Felstriker",
+                "zh_CN": "恶魔之击",
+                "fr_FR": "Felstriker",
+                "de_DE": "Felstriker"
+              },
+              "id": 5067,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "felstriker"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5107?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Grobbulus",
+                "ru_RU": "Grobbulus",
+                "en_GB": "Grobbulus",
+                "zh_TW": "葛羅巴斯",
+                "ko_KR": "Grobbulus",
+                "en_US": "Grobbulus",
+                "es_MX": "Grobbulus",
+                "pt_BR": "Grobbulus",
+                "es_ES": "Grobbulus",
+                "zh_CN": "格罗布鲁斯",
+                "fr_FR": "Grobbulus",
+                "de_DE": "Grobbulus"
+              },
+              "id": 5107,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP GdR",
+                  "ru_RU": "Ролевой PvP",
+                  "en_GB": "PvP RP",
+                  "zh_TW": "PvP角色扮演",
+                  "ko_KR": "전쟁 롤플레이",
+                  "en_US": "PvP RP",
+                  "es_MX": "JR JcJ",
+                  "pt_BR": "JxJ RP",
+                  "es_ES": "JR JcJ",
+                  "zh_CN": "PvP RP",
+                  "fr_FR": "JdR JcJ",
+                  "de_DE": "(RP-PvP)"
+                },
+                "type": "PVP_RP"
+              },
+              "slug": "grobbulus"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5129?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Heartseeker",
+                "ru_RU": "Heartseeker",
+                "en_GB": "Heartseeker",
+                "zh_TW": "尋心者",
+                "ko_KR": "Heartseeker",
+                "en_US": "Heartseeker",
+                "es_MX": "Heartseeker",
+                "pt_BR": "Heartseeker",
+                "es_ES": "Heartseeker",
+                "zh_CN": "觅心者",
+                "fr_FR": "Heartseeker",
+                "de_DE": "Heartseeker"
+              },
+              "id": 5129,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "heartseeker"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5065?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Herod",
+                "ru_RU": "Herod",
+                "en_GB": "Herod",
+                "zh_TW": "赫洛德",
+                "ko_KR": "Herod",
+                "en_US": "Herod",
+                "es_MX": "Herod",
+                "pt_BR": "Herod",
+                "es_ES": "Herod",
+                "zh_CN": "赫洛德",
+                "fr_FR": "Herod",
+                "de_DE": "Herod"
+              },
+              "id": 5065,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "herod"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5138?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Incendius",
+                "ru_RU": "Incendius",
+                "en_GB": "Incendius",
+                "zh_TW": "伊森迪奧斯",
+                "ko_KR": "Incendius",
+                "en_US": "Incendius",
+                "es_MX": "Incendius",
+                "pt_BR": "Incendius",
+                "es_ES": "Incendius",
+                "zh_CN": "伊森迪奥斯",
+                "fr_FR": "Incendius",
+                "de_DE": "Incendius"
+              },
+              "id": 5138,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "incendius"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5136?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Kirtonos",
+                "ru_RU": "Kirtonos",
+                "en_GB": "Kirtonos",
+                "zh_TW": "基爾圖諾斯",
+                "ko_KR": "Kirtonos",
+                "en_US": "Kirtonos",
+                "es_MX": "Kirtonos",
+                "pt_BR": "Kirtonos",
+                "es_ES": "Kirtonos",
+                "zh_CN": "基尔图诺斯",
+                "fr_FR": "Kirtonos",
+                "de_DE": "Kirtonos"
+              },
+              "id": 5136,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "kirtonos"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5137?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Kromcrush",
+                "ru_RU": "Kromcrush",
+                "en_GB": "Kromcrush",
+                "zh_TW": "克羅卡斯",
+                "ko_KR": "Kromcrush",
+                "en_US": "Kromcrush",
+                "es_MX": "Kromcrush",
+                "pt_BR": "Kromcrush",
+                "es_ES": "Kromcrush",
+                "zh_CN": "克罗卡斯",
+                "fr_FR": "Kromcrush",
+                "de_DE": "Kromcrush"
+              },
+              "id": 5137,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "kromcrush"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5108?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Kurinnaxx",
+                "ru_RU": "Kurinnaxx",
+                "en_GB": "Kurinnaxx",
+                "zh_TW": "庫林納克斯",
+                "ko_KR": "Kurinnaxx",
+                "en_US": "Kurinnaxx",
+                "es_MX": "Kurinnaxx",
+                "pt_BR": "Kurinnaxx",
+                "es_ES": "Kurinnaxx",
+                "zh_CN": "库林纳克斯",
+                "fr_FR": "Kurinnaxx",
+                "de_DE": "Kurinnaxx"
+              },
+              "id": 5108,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "kurinnaxx"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5819?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Lava Lash",
+                "ru_RU": "Вскипание лавы",
+                "en_GB": "Lava Lash",
+                "zh_TW": "熔岩暴擊",
+                "ko_KR": "용암 채찍",
+                "en_US": "Lava Lash",
+                "pt_BR": "Lava Lash",
+                "es_ES": "Lava Lash",
+                "zh_CN": "熔岩猛击",
+                "fr_FR": "Lava Lash",
+                "de_DE": "Lava Lash"
+              },
+              "id": 5819,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "GdR",
+                  "ru_RU": "Ролевой",
+                  "en_GB": "RP",
+                  "zh_TW": "角色扮演",
+                  "ko_KR": "롤플레이",
+                  "en_US": "RP",
+                  "es_MX": "JR",
+                  "pt_BR": "RP",
+                  "es_ES": "JR",
+                  "zh_CN": "RP",
+                  "fr_FR": "JdR",
+                  "de_DE": "RP"
+                },
+                "type": "RP"
+              },
+              "slug": "lava-lash"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5815?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Living Flame",
+                "ru_RU": "Живой жар",
+                "en_GB": "Living Flame",
+                "zh_TW": "生命烈焰",
+                "ko_KR": "살아있는 불꽃",
+                "en_US": "Living Flame",
+                "pt_BR": "Living Flame",
+                "es_ES": "Living Flame",
+                "zh_CN": "活化烈焰",
+                "fr_FR": "Living Flame",
+                "de_DE": "Living Flame"
+              },
+              "id": 5815,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "living-flame"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5121?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Loatheb",
+                "ru_RU": "Loatheb",
+                "en_GB": "Loatheb",
+                "zh_TW": "憎恨者",
+                "ko_KR": "Loatheb",
+                "en_US": "Loatheb",
+                "es_MX": "Loatheb",
+                "pt_BR": "Loatheb",
+                "es_ES": "Loatheb",
+                "zh_CN": "洛欧塞布",
+                "fr_FR": "Loatheb",
+                "de_DE": "Loatheb"
+              },
+              "id": 5121,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "esMX",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "loatheb"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5814?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Lone Wolf",
+                "ru_RU": "Одинокий волк",
+                "en_GB": "Lone Wolf",
+                "zh_TW": "孤狼",
+                "ko_KR": "고독한 늑대",
+                "en_US": "Lone Wolf",
+                "pt_BR": "Lone Wolf",
+                "es_ES": "Lone Wolf",
+                "zh_CN": "独来独往",
+                "fr_FR": "Lone Wolf",
+                "de_DE": "Lone Wolf"
+              },
+              "id": 5814,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "lone-wolf"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/6131?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Maladath (AU)",
+                "ru_RU": "Maladath (AU)",
+                "en_GB": "Maladath (AU)",
+                "zh_TW": "瑪拉達斯(AU)",
+                "ko_KR": "말라다스 (AU)",
+                "en_US": "Maladath (AU)",
+                "es_MX": "Maladath (AU)",
+                "pt_BR": "Maladath (AU)",
+                "es_ES": "Maladath (AU)",
+                "zh_CN": "玛拉达斯（AU）",
+                "fr_FR": "Maladath (AU)",
+                "de_DE": "Maladath (AU)"
+              },
+              "id": 6131,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Anniversary",
+                "ru_RU": "Годовщина",
+                "en_GB": "Anniversary",
+                "zh_TW": "週年慶",
+                "ko_KR": "기념일",
+                "en_US": "Anniversary",
+                "es_MX": "Aniversario",
+                "pt_BR": "Aniversário",
+                "es_ES": "Aniversario",
+                "zh_CN": "周年纪念版",
+                "fr_FR": "Anniversaire",
+                "de_DE": "Jubiläum"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "maladath-au"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5149?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Mankrik",
+                "ru_RU": "Mankrik",
+                "en_GB": "Mankrik",
+                "zh_TW": "曼寇里克",
+                "ko_KR": "Mankrik",
+                "en_US": "Mankrik",
+                "es_MX": "Mankrik",
+                "pt_BR": "Mankrik",
+                "es_ES": "Mankrik",
+                "zh_CN": "曼科里克",
+                "fr_FR": "Mankrik",
+                "de_DE": "Mankrik"
+              },
+              "id": 5149,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "mankrik"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5116?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Myzrael",
+                "ru_RU": "Myzrael",
+                "en_GB": "Myzrael",
+                "zh_TW": "密斯賴爾",
+                "ko_KR": "Myzrael",
+                "en_US": "Myzrael",
+                "es_MX": "Myzrael",
+                "pt_BR": "Myzrael",
+                "es_ES": "Myzrael",
+                "zh_CN": "密斯莱尔",
+                "fr_FR": "Myzrael",
+                "de_DE": "Myzrael"
+              },
+              "id": 5116,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "myzrael"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5132?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Netherwind",
+                "ru_RU": "Netherwind",
+                "en_GB": "Netherwind",
+                "zh_TW": "靈風",
+                "ko_KR": "Netherwind",
+                "en_US": "Netherwind",
+                "es_MX": "Netherwind",
+                "pt_BR": "Netherwind",
+                "es_ES": "Netherwind",
+                "zh_CN": "灵风",
+                "fr_FR": "Netherwind",
+                "de_DE": "Netherwind"
+              },
+              "id": 5132,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "netherwind"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/6104?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Nightslayer",
+                "ru_RU": "Nightslayer",
+                "en_GB": "Nightslayer",
+                "zh_TW": "黑夜殺手",
+                "ko_KR": "밤그림자",
+                "en_US": "Nightslayer",
+                "es_MX": "Nightslayer",
+                "pt_BR": "Nightslayer",
+                "es_ES": "Nightslayer",
+                "zh_CN": "夜幕杀手",
+                "fr_FR": "Nightslayer",
+                "de_DE": "Nightslayer"
+              },
+              "id": 6104,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Anniversary",
+                "ru_RU": "Годовщина",
+                "en_GB": "Anniversary",
+                "zh_TW": "週年慶",
+                "ko_KR": "기념일",
+                "en_US": "Anniversary",
+                "es_MX": "Aniversario",
+                "pt_BR": "Aniversário",
+                "es_ES": "Aniversario",
+                "zh_CN": "周年纪念版",
+                "fr_FR": "Anniversaire",
+                "de_DE": "Jubiläum"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "nightslayer"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5115?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Old Blanchy",
+                "ru_RU": "Old Blanchy",
+                "en_GB": "Old Blanchy",
+                "zh_TW": "老馬布蘭契",
+                "ko_KR": "Old Blanchy",
+                "en_US": "Old Blanchy",
+                "es_MX": "Old Blanchy",
+                "pt_BR": "Old Blanchy",
+                "es_ES": "Old Blanchy",
+                "zh_CN": "老马布兰契",
+                "fr_FR": "Old Blanchy",
+                "de_DE": "Old Blanchy"
+              },
+              "id": 5115,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "old-blanchy"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5148?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Pagle",
+                "ru_RU": "Pagle",
+                "en_GB": "Pagle",
+                "zh_TW": "帕格",
+                "ko_KR": "Pagle",
+                "en_US": "Pagle",
+                "es_MX": "Pagle",
+                "pt_BR": "Pagle",
+                "es_ES": "Pagle",
+                "zh_CN": "帕格",
+                "fr_FR": "Pagle",
+                "de_DE": "Pagle"
+              },
+              "id": 5148,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "pagle"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5817?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Penance (AU)",
+                "ru_RU": "Penance (AU)",
+                "en_GB": "Penance (AU)",
+                "zh_TW": "懺悟(AU)",
+                "ko_KR": "회개 (AU)",
+                "en_US": "Penance (AU)",
+                "es_MX": "Penance (AU)",
+                "pt_BR": "Penance (AU)",
+                "es_ES": "Penance (AU)",
+                "zh_CN": "苦修（澳洲）",
+                "fr_FR": "Penance (AU)",
+                "de_DE": "Penance (AU)"
+              },
+              "id": 5817,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "penance-au"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5106?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Rattlegore",
+                "ru_RU": "Rattlegore",
+                "en_GB": "Rattlegore",
+                "zh_TW": "血骨傀儡",
+                "ko_KR": "Rattlegore",
+                "en_US": "Rattlegore",
+                "es_MX": "Rattlegore",
+                "pt_BR": "Rattlegore",
+                "es_ES": "Rattlegore",
+                "zh_CN": "血骨傀儡",
+                "fr_FR": "Rattlegore",
+                "de_DE": "Rattlegore"
+              },
+              "id": 5106,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "rattlegore"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5085?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Remulos",
+                "ru_RU": "Remulos",
+                "en_GB": "Remulos",
+                "zh_TW": "雷姆洛斯",
+                "ko_KR": "Remulos",
+                "en_US": "Remulos",
+                "es_MX": "Remulos",
+                "pt_BR": "Remulos",
+                "es_ES": "Remulos",
+                "zh_CN": "雷姆洛斯",
+                "fr_FR": "Remulos",
+                "de_DE": "Remulos"
+              },
+              "id": 5085,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "remulos"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5818?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Shadowstrike (AU)",
+                "ru_RU": "Shadowstrike (AU)",
+                "en_GB": "Shadowstrike (AU)",
+                "zh_TW": "暗影打擊(AU)",
+                "ko_KR": "그림자 일격 (AU)",
+                "en_US": "Shadowstrike (AU)",
+                "es_MX": "Shadowstrike (AU)",
+                "pt_BR": "Shadowstrike (AU)",
+                "es_ES": "Shadowstrike (AU)",
+                "zh_CN": "暗影打击（澳洲）",
+                "fr_FR": "Shadowstrike (AU)",
+                "de_DE": "Shadowstrike (AU)"
+              },
+              "id": 5818,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "shadowstrike-au"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5140?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Skeram",
+                "ru_RU": "Skeram",
+                "en_GB": "Skeram",
+                "zh_TW": "斯克拉姆",
+                "ko_KR": "Skeram",
+                "en_US": "Skeram",
+                "es_MX": "Skeram",
+                "pt_BR": "Skeram",
+                "es_ES": "Skeram",
+                "zh_CN": "斯克拉姆",
+                "fr_FR": "Skeram",
+                "de_DE": "Skeram"
+              },
+              "id": 5140,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "skeram"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5099?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Skull Rock",
+                "ru_RU": "Skull Rock",
+                "en_GB": "Skull Rock",
+                "zh_TW": "骷髏石",
+                "ko_KR": "해골 바위굴",
+                "en_US": "Skull Rock",
+                "es_MX": "Skull Rock",
+                "pt_BR": "Skull Rock",
+                "es_ES": "Skull Rock",
+                "zh_CN": "骷髅石",
+                "fr_FR": "Skull Rock",
+                "de_DE": "Skull Rock"
+              },
+              "id": 5099,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "skull-rock"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5105?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Smolderweb",
+                "ru_RU": "Smolderweb",
+                "en_GB": "Smolderweb",
+                "zh_TW": "煙網蛛后",
+                "ko_KR": "Smolderweb",
+                "en_US": "Smolderweb",
+                "es_MX": "Smolderweb",
+                "pt_BR": "Smolderweb",
+                "es_ES": "Smolderweb",
+                "zh_CN": "烟网",
+                "fr_FR": "Smolderweb",
+                "de_DE": "Smolderweb"
+              },
+              "id": 5105,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "smolderweb"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5141?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Stalagg",
+                "ru_RU": "Stalagg",
+                "en_GB": "Stalagg",
+                "zh_TW": "斯塔拉格",
+                "ko_KR": "Stalagg",
+                "en_US": "Stalagg",
+                "es_MX": "Stalagg",
+                "pt_BR": "Stalagg",
+                "es_ES": "Stalagg",
+                "zh_CN": "斯塔拉格",
+                "fr_FR": "Stalagg",
+                "de_DE": "Stalagg"
+              },
+              "id": 5141,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "stalagg"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5135?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Sulfuras",
+                "ru_RU": "Sulfuras",
+                "en_GB": "Sulfuras",
+                "zh_TW": "薩弗拉斯",
+                "ko_KR": "Sulfuras",
+                "en_US": "Sulfuras",
+                "es_MX": "Sulfuras",
+                "pt_BR": "Sulfuras",
+                "es_ES": "Sulfuras",
+                "zh_CN": "萨弗拉斯",
+                "fr_FR": "Sulfuras",
+                "de_DE": "Sulfuras"
+              },
+              "id": 5135,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "sulfuras"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5124?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Sul'thraze",
+                "ru_RU": "Sul'thraze",
+                "en_GB": "Sul'thraze",
+                "zh_TW": "蘇薩斯",
+                "ko_KR": "Sul'thraze",
+                "en_US": "Sul'thraze",
+                "es_MX": "Sul'thraze",
+                "pt_BR": "Sul'thraze",
+                "es_ES": "Sul'thraze",
+                "zh_CN": "苏萨斯",
+                "fr_FR": "Sul'thraze",
+                "de_DE": "Sul'thraze"
+              },
+              "id": 5124,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "ptBR",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "sulthraze"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5143?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Thalnos",
+                "ru_RU": "Thalnos",
+                "en_GB": "Thalnos",
+                "zh_TW": "薩爾諾斯",
+                "ko_KR": "Thalnos",
+                "en_US": "Thalnos",
+                "es_MX": "Thalnos",
+                "pt_BR": "Thalnos",
+                "es_ES": "Thalnos",
+                "zh_CN": "萨尔诺斯",
+                "fr_FR": "Thalnos",
+                "de_DE": "Thalnos"
+              },
+              "id": 5143,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "thalnos"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5102?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Thunderfury",
+                "ru_RU": "Thunderfury",
+                "en_GB": "Thunderfury",
+                "zh_TW": "雷霆之怒",
+                "ko_KR": "Thunderfury",
+                "en_US": "Thunderfury",
+                "es_MX": "Thunderfury",
+                "pt_BR": "Thunderfury",
+                "es_ES": "Thunderfury",
+                "zh_CN": "雷霆之怒",
+                "fr_FR": "Thunderfury",
+                "de_DE": "Thunderfury"
+              },
+              "id": 5102,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "thunderfury"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5166?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "US1 VANWOW GMSS 1",
+                "ru_RU": "US1 VANWOW GMSS 1",
+                "en_GB": "US1 VANWOW GMSS 1",
+                "zh_TW": "US1 VANWOW GMSS 1",
+                "ko_KR": "US1 VANWOW GMSS 1",
+                "en_US": "US1 VANWOW GMSS 1",
+                "es_MX": "US1 VANWOW GMSS 1",
+                "pt_BR": "US1 VANWOW GMSS 1",
+                "es_ES": "US1 VANWOW GMSS 1",
+                "zh_CN": "US1 VANWOW GMSS 1",
+                "fr_FR": "US1 VANWOW GMSS 1",
+                "de_DE": "US1 VANWOW GMSS 1"
+              },
+              "id": 5166,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "us1-vanwow-gmss-1"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5180?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "US1 VANWOW GMSS 2",
+                "ru_RU": "US1 VANWOW GMSS 2",
+                "en_GB": "US1 VANWOW GMSS 2",
+                "zh_TW": "US1 VANWOW GMSS 2",
+                "ko_KR": "US1 VANWOW GMSS 2",
+                "en_US": "US1 VANWOW GMSS 2",
+                "es_MX": "US1 VANWOW GMSS 2",
+                "pt_BR": "US1 VANWOW GMSS 2",
+                "es_ES": "US1 VANWOW GMSS 2",
+                "zh_CN": "US1 VANWOW GMSS 2",
+                "fr_FR": "US1 VANWOW GMSS 2",
+                "de_DE": "US1 VANWOW GMSS 2"
+              },
+              "id": 5180,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "us1-vanwow-gmss-2"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5168?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "US1 VANWOW Web",
+                "ru_RU": "US1 VANWOW Web",
+                "en_GB": "US1 VANWOW Web",
+                "zh_TW": "US1 VANWOW Web",
+                "ko_KR": "US1 VANWOW 웹",
+                "en_US": "US1 VANWOW Web",
+                "es_MX": "US1 VANWOW Web",
+                "pt_BR": "US1 VANWOW Web",
+                "es_ES": "US1 VANWOW Web",
+                "zh_CN": "US1 VANWOW Web",
+                "fr_FR": "US1 VANWOW Web",
+                "de_DE": "US1 VANWOW Web"
+              },
+              "id": 5168,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "us1-vanwow-web"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5156?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "US2 VANWOW Web",
+                "ru_RU": "US2 VANWOW Web",
+                "en_GB": "US2 VANWOW Web",
+                "zh_TW": "US2 VANWOW Web",
+                "ko_KR": "US2 VANWOW 웹",
+                "en_US": "US2 VANWOW Web",
+                "es_MX": "US2 VANWOW Web",
+                "pt_BR": "US2 VANWOW Web",
+                "es_ES": "US2 VANWOW Web",
+                "zh_CN": "US2 VANWOW Web",
+                "fr_FR": "US2 VANWOW Web",
+                "de_DE": "US2 VANWOW Web"
+              },
+              "id": 5156,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "us2-vanwow-web"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5098?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Vagash",
+                "ru_RU": "Vagash",
+                "en_GB": "Vagash",
+                "zh_TW": "瓦加什",
+                "ko_KR": "바가쉬",
+                "en_US": "Vagash",
+                "es_MX": "Vagash",
+                "pt_BR": "Vagash",
+                "es_ES": "Vagash",
+                "zh_CN": "瓦加什",
+                "fr_FR": "Vagash",
+                "de_DE": "Vagash"
+              },
+              "id": 5098,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "vagash"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5068?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Westfall",
+                "ru_RU": "Westfall",
+                "en_GB": "Westfall",
+                "zh_TW": "西部荒野",
+                "ko_KR": "Westfall",
+                "en_US": "Westfall",
+                "es_MX": "Westfall",
+                "pt_BR": "Westfall",
+                "es_ES": "Westfall",
+                "zh_CN": "西部荒野",
+                "fr_FR": "Westfall",
+                "de_DE": "Westfall"
+              },
+              "id": 5068,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "westfall"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5066?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Los_Angeles",
+              "name": {
+                "it_IT": "Whitemane",
+                "ru_RU": "Whitemane",
+                "en_GB": "Whitemane",
+                "zh_TW": "懷特邁恩",
+                "ko_KR": "Whitemane",
+                "en_US": "Whitemane",
+                "es_MX": "Whitemane",
+                "pt_BR": "Whitemane",
+                "es_ES": "Whitemane",
+                "zh_CN": "怀特迈恩",
+                "fr_FR": "Whitemane",
+                "de_DE": "Whitemane"
+              },
+              "id": 5066,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "whitemane"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5813?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/Denver",
+              "name": {
+                "it_IT": "Wild Growth",
+                "ru_RU": "Буйный рост",
+                "en_GB": "Wild Growth",
+                "zh_TW": "野性痊癒",
+                "ko_KR": "급속 성장",
+                "en_US": "Wild Growth",
+                "pt_BR": "Wild Growth",
+                "es_ES": "Wild Growth",
+                "zh_CN": "野性成长",
+                "fr_FR": "Wild Growth",
+                "de_DE": "Wild Growth"
+              },
+              "id": 5813,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Stagionale",
+                "ru_RU": "Сезонные",
+                "en_GB": "Seasonal",
+                "zh_TW": "季節性",
+                "ko_KR": "시즌",
+                "en_US": "Seasonal",
+                "es_MX": "Temporada",
+                "pt_BR": "Sazonal",
+                "es_ES": "De temporada",
+                "zh_CN": "赛季",
+                "fr_FR": "Saisonnier",
+                "de_DE": "Saisonbedingt"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "wild-growth"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5134?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "America/New_York",
+              "name": {
+                "it_IT": "Windseeker",
+                "ru_RU": "Windseeker",
+                "en_GB": "Windseeker",
+                "zh_TW": "逐風者",
+                "ko_KR": "Windseeker",
+                "en_US": "Windseeker",
+                "es_MX": "Windseeker",
+                "pt_BR": "Windseeker",
+                "es_ES": "Windseeker",
+                "zh_CN": "逐风者",
+                "fr_FR": "Windseeker",
+                "de_DE": "Windseeker"
+              },
+              "id": 5134,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvA",
+                  "ru_RU": "PvE",
+                  "en_GB": "PvE",
+                  "zh_TW": "PvE",
+                  "ko_KR": "일반",
+                  "en_US": "PvE",
+                  "es_MX": "JcE",
+                  "pt_BR": "JxA",
+                  "es_ES": "JcE",
+                  "zh_CN": "PvE",
+                  "fr_FR": "JcE",
+                  "de_DE": "PvE"
+                },
+                "type": "NORMAL"
+              },
+              "slug": "windseeker"
+            }
+          },
+          {
+            "key": {
+              "href": "https://us.api.blizzard.com/data/wow/realm/5070?namespace=dynamic-classic1x-us"
+            },
+            "data": {
+              "is_tournament": false,
+              "timezone": "Australia/Melbourne",
+              "name": {
+                "it_IT": "Yojamba",
+                "ru_RU": "Yojamba",
+                "en_GB": "Yojamba",
+                "zh_TW": "尤亞姆巴",
+                "ko_KR": "Yojamba",
+                "en_US": "Yojamba",
+                "es_MX": "Yojamba",
+                "pt_BR": "Yojamba",
+                "es_ES": "Yojamba",
+                "zh_CN": "尤亚姆巴",
+                "fr_FR": "Yojamba",
+                "de_DE": "Yojamba"
+              },
+              "id": 5070,
+              "region": {
+                "name": {
+                  "it_IT": "VANWOW Era North America",
+                  "ru_RU": "VANWOW Era Северная Америка",
+                  "en_GB": "VANWOW Era North America",
+                  "zh_TW": "VANWOW時期北美",
+                  "ko_KR": "VANWOW 시대 북미",
+                  "en_US": "VANWOW Era North America",
+                  "es_MX": "VANWOW Era North America",
+                  "pt_BR": "Era VANWOW América do Norte",
+                  "es_ES": "Era VANWOW Norteamérica",
+                  "zh_CN": "VANWOW Era North America",
+                  "fr_FR": "VANWOW Era North America",
+                  "de_DE": "VANWOW Era Nordamerika"
+                },
+                "id": 81
+              },
+              "category": {
+                "it_IT": "Classic Era",
+                "ru_RU": "Classic Era",
+                "en_GB": "Classic Era",
+                "zh_TW": "經典時期",
+                "ko_KR": "클래식 시대",
+                "en_US": "Classic Era",
+                "es_MX": "Classic Era",
+                "pt_BR": "Era Classic",
+                "es_ES": "Classic Era",
+                "zh_CN": "旧世经典服务器（60级）",
+                "fr_FR": "Ère classique",
+                "de_DE": "Classic-Ära"
+              },
+              "locale": "enUS",
+              "type": {
+                "name": {
+                  "it_IT": "PvP",
+                  "ru_RU": "PvP",
+                  "en_GB": "PvP",
+                  "zh_TW": "PvP",
+                  "ko_KR": "전쟁",
+                  "en_US": "PvP",
+                  "es_MX": "JcJ",
+                  "pt_BR": "JxJ",
+                  "es_ES": "JcJ",
+                  "zh_CN": "PvP",
+                  "fr_FR": "JcJ",
+                  "de_DE": "PvP"
+                },
+                "type": "PVP"
+              },
+              "slug": "yojamba"
+            }
+          }
+        ]
+      }
+    ],
+    "eu": [
+      {
+        "page": 1,
+        "pageSize": 0,
+        "maxPageSize": 1000,
+        "pageCount": 0,
+        "results": []
+      }
+    ],
+    "kr": [
+      {
+        "page": 1,
+        "pageSize": 0,
+        "maxPageSize": 1000,
+        "pageCount": 0,
+        "results": []
+      }
+    ],
+    "tw": [
+      {
+        "page": 1,
+        "pageSize": 0,
+        "maxPageSize": 1000,
+        "pageCount": 0,
+        "results": []
+      }
+    ]
+  }
+}
