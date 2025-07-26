@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "atomic-queue": "^5.0.4",
-    "noobs": "D:\\checkouts\\warcraft-recorder-obs-engine\\noobs-0.0.38.tgz",
+    "noobs": "^0.0.63",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"
