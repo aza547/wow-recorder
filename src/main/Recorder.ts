@@ -60,6 +60,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import noobs from 'noobs';
 
+const devMode = process.env.NODE_ENV === 'development';
+
 /**
  * Class for handing the interface between Warcraft Recorder and OBS.
  *
@@ -563,6 +565,7 @@ export default class Recorder extends EventEmitter {
 
     this.obsPath = obsPath;
     await Recorder.createRecordingDirs(this.obsPath);
+    noobs.SetRecordingDir(this.obsPath);
     this.cleanup();
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
@@ -1333,15 +1336,30 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Initializing OBS', this.uuid);
     const cb = this.handleSignal.bind(this);
 
-    const pluginPath =
-      'D:/checkouts/warcraft-recorder/release/app/node_modules/noobs/dist/plugins';
-    const logPath = 'D:/checkouts/warcraft-recorder/logs';
-    const dataPath =
-      'D:/checkouts/warcraft-recorder/release/app/node_modules/noobs/dist/effects';
+    let logPath = devMode
+      ? path.resolve(__dirname, './logs')
+      : path.resolve(__dirname, '../../dist/main/logs');
+
+    logPath = fixPathWhenPackaged(logPath);
+
+    let noobsPath = devMode
+      ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
+      : path.resolve(__dirname, '../../node_modules/noobs/dist');
+
+    noobsPath = fixPathWhenPackaged(noobsPath);
+
+    const pluginPath = path.resolve(noobsPath, 'plugins');
+    const dataPath = path.resolve(noobsPath, 'effects');
+
     const recordingPath =
       'D:/checkouts/warcraft-recorder-obs-engine/recordings';
 
-    noobs.Init(pluginPath, logPath, dataPath, recordingPath, cb);
+    console.log('[Recorder] Plugin path:', pluginPath);
+    console.log('[Recorder] Log path:', logPath);
+    console.log('[Recorder] Data path:', dataPath);
+    console.log('[Recorder] Recording path:', recordingPath);
+
+    noobs.Init(pluginPath, logPath, dataPath, recordingPath, cb, true);
     const hwnd = this.mainWindow.getNativeWindowHandle();
     noobs.InitPreview(hwnd);
     noobs.CreateSource('WCR Monitor Capture', 'monitor_capture');
@@ -1358,10 +1376,10 @@ export default class Recorder extends EventEmitter {
     noobs.AddSourceToScene('WCR Overlay');
 
     noobs.SetSourcePos('WCR Overlay', {
-      x: 100,
-      y: 100,
-      scaleX: 0.2,
-      scaleY: 0.2,
+      x: 0,
+      y: 800,
+      scaleX: 0.15,
+      scaleY: 0.15,
     });
 
     this.obsInitialized = true;
