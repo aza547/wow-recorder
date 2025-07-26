@@ -26,7 +26,8 @@ export type Channels =
   | 'refreshFrontend'
   | 'doAppUpdate'
   | 'volmeter'
-  | 'audioSettingsOpen';
+  | 'audioSettingsOpen'
+  | 'updateSourcePos';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
