@@ -35,6 +35,13 @@ const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const tzOffset = new Date().getTimezoneOffset() * -1; // Offset is wrong direction so flip it.
 const tzOffsetStr = `UTC${tzOffset >= 0 ? '+' : ''}${tzOffset / 60}`;
 
+// const logProc = async () => {
+//   const n = await wcr.listProcesses();
+//   console.log('AHK Uptime:', n.length, 'processes found');
+// };
+
+// logProc();
+
 console.info('[Main] App starting, version:', appVersion);
 console.info('[Main] Node version', process.versions.node);
 console.info('[Main] ICU version', process.versions.icu);
@@ -182,6 +189,22 @@ const createWindow = async () => {
     if (!startMinimized) {
       mainWindow.show();
     }
+
+    // setTimeout(() => {
+    //   if (!mainWindow) return;
+    //   console.warn('[Main] PREVIEW SHOW START');
+    //   const hwnd = mainWindow.getNativeWindowHandle();
+    //   console.info('[Main] hwnd:', hwnd);
+    //   wcr.ObsShowPreview(hwnd);
+    //   console.warn('[Main] PREVIEW SHOW STOP');
+    // }, 5000);
+
+    // setTimeout(() => {
+    //   if (!mainWindow) return;
+    //   console.warn('[Main] PREVIEW HIDE START');
+    //   wcr.ObsHidePreview();
+    //   console.warn('[Main] PREVIEW HIDE STOP');
+    // }, 10000);
   });
 
   mainWindow.on('moved', () => {
