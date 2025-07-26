@@ -25,8 +25,8 @@ import { VideoCategory } from '../types/VideoCategory';
 /**
  * When packaged, we need to fix some paths
  */
-const fixPathWhenPackaged = (pathSpec: string) => {
-  return pathSpec.replace('app.asar', 'app.asar.unpacked');
+const fixPathWhenPackaged = (p: string) => {
+  return p.replace('app.asar', 'app.asar.unpacked');
 };
 
 /**
