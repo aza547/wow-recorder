@@ -70,6 +70,7 @@ import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import RetryableConfigError from '../utils/RetryableConfigError';
 import { TAffiliation } from 'types/api';
+import noobs from 'noobs';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -210,7 +211,7 @@ export default class Manager {
 
     this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
 
-    setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
+    // setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
   }
 
   /**
@@ -562,7 +563,7 @@ export default class Manager {
     this.recorder.configureAudioSources(audioConfig);
 
     try {
-      await this.recorder.start();
+      await this.recorder.startBuffer();
     } catch (error) {
       console.error('[Manager] OBS failed to record when WoW started', error);
     }
@@ -586,7 +587,7 @@ export default class Manager {
       await this.retailPtrLogHandler.forceEndActivity();
     } else {
       // No activity so we can just force stop.
-      await this.recorder.forceStop();
+      await this.recorder.stop();
     }
 
     this.recorder.clearFindWindowInterval();
@@ -1301,6 +1302,11 @@ export default class Manager {
       }
     });
 
+    ipcMain.on('updateSourcePos', (_event, args) => {
+      console.log("setting")
+      noobs.SetRecordingDir('D:\\random');
+    });
+
     // Important we shutdown OBS on the before-quit event as if we get closed by
     // the installer we want to ensure we shutdown OBS, this is common when
     // upgrading the app. See issue 325 and 338.
@@ -1427,7 +1433,7 @@ export default class Manager {
     // Use force stop here as we don't care about the output file.
     await this.recorder.forceStop();
     await this.recorder.cleanup();
-    await this.recorder.start();
+    await this.recorder.startBuffer();
   }
 
   /**

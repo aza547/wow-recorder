@@ -11,6 +11,7 @@ import {
 } from './components/ToggleGroup/ToggleGroup';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { Button } from './components/Button/Button';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -188,6 +189,9 @@ const VideoSourceControls = (props: IProps) => {
       {getCaptureModeToggle()}
       {getMonitorToggle()}
       {getCursorToggle()}
+      <Button onClick={() => ipc.sendMessage('updateSourcePos', [])}>
+        Resize
+      </Button>
     </div>
   );
 };
