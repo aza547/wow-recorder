@@ -1340,12 +1340,11 @@ export default class Recorder extends EventEmitter {
       ? path.resolve(__dirname, './logs')
       : path.resolve(__dirname, '../../dist/main/logs');
 
-    logPath = fixPathWhenPackaged(logPath);
-
     let noobsPath = devMode
       ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
       : path.resolve(__dirname, '../../node_modules/noobs/dist');
 
+    logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
 
     const pluginPath = path.resolve(noobsPath, 'plugins');
@@ -1359,7 +1358,8 @@ export default class Recorder extends EventEmitter {
     console.log('[Recorder] Data path:', dataPath);
     console.log('[Recorder] Recording path:', recordingPath);
 
-    noobs.Init(pluginPath, logPath, dataPath, recordingPath, cb, true);
+    noobs.Init(pluginPath, logPath, dataPath, recordingPath, cb);
+    noobs.SetBuffering(true);
     const hwnd = this.mainWindow.getNativeWindowHandle();
     noobs.InitPreview(hwnd);
     noobs.CreateSource('WCR Monitor Capture', 'monitor_capture');

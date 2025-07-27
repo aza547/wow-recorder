@@ -1,9 +1,31 @@
 import { Box } from '@mui/material';
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 
 const ipc = window.electron.ipcRenderer;
 
 const RecorderPreview: React.FC = () => {
+  const [dragging, setDragging] = React.useState(false);
+  const lastPos = useRef({ x: 0, y: 0 });
+
+  const onMouseMove: React.MouseEventHandler = useCallback(
+    (event) => {
+      if (!dragging) return;
+      const deltaX = event.clientX - lastPos.current.x;
+      const deltaY = event.clientY - lastPos.current.y;
+
+      if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
+        ipc.sendMessage('updateSourcePos', [deltaX, deltaY]);
+        lastPos.current = { x: event.clientX, y: event.clientY };
+      }
+    },
+    [dragging],
+  );
+
+  const onMouseDown: React.MouseEventHandler = useCallback((event) => {
+    setDragging(true);
+    lastPos.current = { x: event.clientX, y: event.clientY };
+  }, []);
+
   let resizeObserver: ResizeObserver | undefined;
 
   const show = () => {
@@ -11,16 +33,9 @@ const RecorderPreview: React.FC = () => {
 
     if (previewBox) {
       const { width, height, x, y } = previewBox.getBoundingClientRect();
-      const zoomFactor = window.devicePixelRatio;
 
       // Random numbers here idk why but looks slightly better with the border.
-      ipc.sendMessage('preview', [
-        'show',
-        (width - 3) * zoomFactor,
-        (height - 3) * zoomFactor,
-        (x + 2) * zoomFactor,
-        (y + 2) * zoomFactor,
-      ]);
+      ipc.sendMessage('preview', ['show', width, height, x, y]);
     }
   };
 
@@ -61,15 +76,18 @@ const RecorderPreview: React.FC = () => {
     >
       <Box
         id="preview-box"
+        onMouseDown={onMouseDown}
+        onMouseUp={() => setDragging(false)}
+        onMouseMove={onMouseMove}
+        // onMouseEnter={console.log}
+        // onMouseLeave={console.log}
         sx={{
           height: '100%',
           border: '2px solid black',
           boxSizing: 'border-box',
           mx: 12,
         }}
-      >
-        Preview...
-      </Box>
+      />
     </Box>
   );
 };
