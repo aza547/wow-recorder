@@ -1302,9 +1302,17 @@ export default class Manager {
       }
     });
 
+    let sf = null;
+
     ipcMain.on('updateSourcePos', (_event, args) => {
-      console.log("setting")
-      noobs.SetRecordingDir('D:\\random');
+      const x = args[0] as number;
+      const y = args[1] as number;
+
+      if (!sf) {
+        sf = noobs.GetPreviewScaleFactor(); // TODO refresh this on resize / handle it properly.
+      }
+
+      noobs.MoveSourcePos('WCR Overlay', x / sf, y / sf);
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
