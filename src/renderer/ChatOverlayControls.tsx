@@ -3,13 +3,12 @@ import { configSchema } from 'config/configSchema';
 import { Info, Lock } from 'lucide-react';
 import { AppState } from 'main/types';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
-import { useSettings, setConfigValues, getConfigValue } from './useSettings';
+import { useSettings, setConfigValues } from './useSettings';
 import { fileSelect } from './rendererutils';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
-import Slider from './components/Slider/Slider';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -21,8 +20,6 @@ const ChatOverlayControls = (props: IProps) => {
   const { appState } = props;
   const [config, setConfig] = useSettings();
   const initialRender = React.useRef(true);
-  const resolution = getConfigValue<string>('obsOutputResolution');
-  const [xRes, yRes] = resolution.split('x').map((s) => parseInt(s, 10));
 
   React.useEffect(() => {
     // Don't fire on the initial render.
@@ -68,42 +65,6 @@ const ChatOverlayControls = (props: IProps) => {
       return {
         ...prevState,
         chatOverlayOwnImage: checked,
-      };
-    });
-  };
-
-  const setWidth = (width: number[]) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        chatOverlayWidth: width[0],
-      };
-    });
-  };
-
-  const setHeight = (height: number[]) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        chatOverlayHeight: height[0],
-      };
-    });
-  };
-
-  const setXPosition = (xPos: number[]) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        chatOverlayXPosition: xPos[0],
-      };
-    });
-  };
-
-  const setYPosition = (yPos: number[]) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        chatOverlayYPosition: yPos[0],
       };
     });
   };
@@ -163,112 +124,6 @@ const ChatOverlayControls = (props: IProps) => {
     );
   };
 
-  const getChatOverlaySizeSliders = () => {
-    if (config.chatOverlayOwnImage) return null;
-    const disabled = !config.chatOverlayEnabled;
-
-    return (
-      <div className="flex flex-col gap-y-4">
-        <div className="flex gap-x-3 items-center">
-          <Label className="flex items-center h-[20px] w-[40px] mb-0">
-            {getLocalePhrase(appState.language, Phrase.WidthLabel)}
-          </Label>
-          <div className="flex w-48 h-[20px] items-center">
-            <Slider
-              defaultValue={[config.chatOverlayWidth]}
-              value={[config.chatOverlayWidth]}
-              max={2000}
-              step={1}
-              onValueChange={setWidth}
-              disabled={disabled}
-            />
-          </div>
-        </div>
-        <div className="flex gap-x-3 items-center">
-          <Label className="flex items-center h-[20px] w-[40px] mb-0">
-            {getLocalePhrase(appState.language, Phrase.HeightLabel)}
-          </Label>
-          <div className="flex w-48 h-[20px] items-center">
-            <Slider
-              defaultValue={[config.chatOverlayHeight]}
-              value={[config.chatOverlayHeight]}
-              max={2000}
-              step={1}
-              onValueChange={setHeight}
-              disabled={disabled}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const getChatOverlayPositionSliders = () => {
-    return (
-      <div className="flex flex-col gap-y-4">
-        <div className="flex gap-x-3 items-center">
-          <Label className="flex items-center h-[20px] w-[60px] mb-0">
-            {getLocalePhrase(appState.language, Phrase.HorizontalLabel)}
-          </Label>
-          <div className="flex w-48 h-[20px] items-center">
-            <Slider
-              defaultValue={[config.chatOverlayXPosition]}
-              value={[config.chatOverlayXPosition]}
-              disabled={!config.chatOverlayEnabled}
-              max={xRes}
-              step={1}
-              onValueChange={setXPosition}
-            />
-          </div>
-        </div>
-        <div className="flex gap-x-3 items-center">
-          <Label className="flex items-center h-[20px] w-[60px] mb-0">
-            {getLocalePhrase(appState.language, Phrase.VerticalLabel)}
-          </Label>
-          <div className="flex w-48 h-[20px] items-center">
-            <Slider
-              defaultValue={[config.chatOverlayYPosition]}
-              value={[config.chatOverlayYPosition]}
-              max={yRes}
-              step={1}
-              onValueChange={setYPosition}
-              disabled={!config.chatOverlayEnabled}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const setScale = (scale: number[]) => {
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        chatOverlayScale: scale[0],
-      };
-    });
-  };
-
-  const getScaleSlider = () => {
-    return (
-      <div className="flex gap-x-3 items-center">
-        <Label className="flex items-center h-[20px] w-[40px] mb-0">
-          {getLocalePhrase(appState.language, Phrase.ScaleLabel)}
-        </Label>
-        <div className="flex w-48 h-[20px] items-center">
-          <Slider
-            defaultValue={[config.chatOverlayScale]}
-            value={[config.chatOverlayScale]}
-            max={5}
-            step={0.05}
-            onValueChange={setScale}
-            disabled={!config.chatOverlayEnabled}
-          />
-        </div>
-      </div>
-    );
-  };
-
   const setOverlayPath = async () => {
     const newPath = await fileSelect();
 
@@ -310,7 +165,7 @@ const ChatOverlayControls = (props: IProps) => {
   };
 
   return (
-    <div className="flex flex-col items-center content-center w-full flex-wrap gap-8">
+    <div className="flex flex-col items-center content-center w-full flex-wrap gap-4">
       <div className="flex items-center content-center w-full gap-8">
         {getChatOverlayEnabledSwitch()}
         {getChatOverlayOwnImageSwitch()}
@@ -318,13 +173,10 @@ const ChatOverlayControls = (props: IProps) => {
           config.chatOverlayOwnImage &&
           getOwnImagePathField()}
       </div>
-      {config.chatOverlayEnabled && (
-        <div className="flex items-center content-center w-full gap-8">
-          {getChatOverlaySizeSliders()}
-          {getChatOverlayPositionSliders()}
-          {getScaleSlider()}
-        </div>
-      )}
+      <div className="text-sm font-semibold text-foreground text-left w-full">
+        {getLocalePhrase(appState.language, Phrase.ChatOverlayTip) ||
+          'Tip: Click and drag to move the chat overlay.'}
+      </div>
     </div>
   );
 };

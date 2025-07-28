@@ -18,7 +18,6 @@ import {
   ERangeType,
   ERecordingState,
   EScaleType,
-  ESourceFlags,
   ESupportedEncoders,
   EVideoFormat,
   QualityPresets,
@@ -39,9 +38,6 @@ import {
 
 import {
   CrashData,
-  IOBSDevice,
-  IObsInput,
-  ISettingsSubCategory,
   MicStatus,
   ObsAudioConfig,
   ObsBaseConfig,
@@ -50,7 +46,6 @@ import {
   ObsVideoConfig,
   ObsVolmeterCallbackInfo,
   TAudioSourceType,
-  TObsValue,
   TPreviewPosition,
 } from './types';
 import ConfigService from '../config/ConfigService';
@@ -58,7 +53,8 @@ import { obsResolutions } from './constants';
 import { getOverlayConfig } from '../utils/configUtils';
 import { v4 as uuidv4 } from 'uuid';
 
-import noobs from 'noobs';
+import noobs, { Signal } from 'noobs';
+import { settings } from 'eslint-plugin-prettier/recommended';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -102,62 +98,6 @@ export default class Recorder extends EventEmitter {
    * create a new one, with a different UUID.
    */
   private uuid: string = uuidv4();
-
-  /**
-   * OBS IScene object.
-   */
-  private scene: any;
-
-  /**
-   * Window capture item within the scene.
-   */
-  private windowCaptureSceneItem: any;
-
-  /**
-   * Game capture item within the scene.
-   */
-  private gameCaptureSceneItem: any;
-
-  /**
-   * Monitor capture item within the scene.
-   */
-  private monitorCaptureSceneItem: any;
-
-  /**
-   * Overlay image item within the scene.
-   */
-  private overlayImageSceneItem: any;
-
-  /**
-   * The window capture source.
-   */
-  private windowCaptureSource: any;
-
-  /**
-   * The game capture source.
-   */
-  private gameCaptureSource: any;
-
-  /**
-   * The monitor capture source.
-   */
-  private monitorCaptureSource: any;
-
-  /**
-   * The dummy window capture source.
-   */
-  private dummyWindowCaptureSource: any;
-
-  /**
-   * The dummy game capture source.
-   */
-  private dummyGameCaptureSource: any;
-
-  /**
-   * The image source to be used for the overlay, we create this
-   * ahead of time regardless of if the user has the overlay enabled.
-   */
-  private overlayImageSource: any;
 
   /**
    * Timer for latching onto a window for either game capture or
@@ -323,11 +263,6 @@ export default class Recorder extends EventEmitter {
   public lastFile: string | null = null;
 
   /**
-   * The video context.
-   */
-  private context: any;
-
-  /**
    * Timer that keeps the mic on briefly after you release the Push To Talk key.
    */
   private pttReleaseDelayTimer?: NodeJS.Timeout;
@@ -335,25 +270,25 @@ export default class Recorder extends EventEmitter {
   /**
    * Sensible defaults for the video context.
    */
-  private defaultVideoContext: any = {
-    fpsNum: 60,
-    fpsDen: 1,
-    baseWidth: 1920,
-    baseHeight: 1080,
-    outputWidth: 1920,
-    outputHeight: 1080,
+  // private defaultVideoContext: any = {
+  //   fpsNum: 60,
+  //   fpsDen: 1,
+  //   baseWidth: 1920,
+  //   baseHeight: 1080,
+  //   outputWidth: 1920,
+  //   outputHeight: 1080,
 
-    // Bit of a mess here to keep typescript happy and make this readable.
-    // See https://github.com/stream-labs/obs-studio-node/issues/1260.
-    outputFormat: EVideoFormat.NV12 as unknown,
-    colorspace: EColorSpace.CS709 as unknown,
-    scaleType: EScaleType.Bicubic as unknown,
-    fpsType: EFPSType.Fractional as unknown,
+  //   // Bit of a mess here to keep typescript happy and make this readable.
+  //   // See https://github.com/stream-labs/obs-studio-node/issues/1260.
+  //   outputFormat: EVideoFormat.NV12 as unknown,
+  //   colorspace: EColorSpace.CS709 as unknown,
+  //   scaleType: EScaleType.Bicubic as unknown,
+  //   fpsType: EFPSType.Fractional as unknown,
 
-    // The AMD encoder causes recordings to get much darker if using the full
-    // color range setting. So swap that to partial here. See Issue 446.
-    range: ERangeType.Partial as unknown,
-  };
+  //   // The AMD encoder causes recordings to get much darker if using the full
+  //   // color range setting. So swap that to partial here. See Issue 446.
+  //   range: ERangeType.Partial as unknown,
+  // };
 
   /**
    * Contructor.
@@ -367,7 +302,7 @@ export default class Recorder extends EventEmitter {
     // The video context is an OBS construct used to control many features of
     // recording, including the dimensions and FPS.
     // this.context = osn.VideoFactory.create();
-    this.context = {};
+    // this.context = {};
     // this.context.video = this.defaultVideoContext;
 
     // We create all the sources we might need to use here, as the source API
@@ -604,7 +539,7 @@ export default class Recorder extends EventEmitter {
       // gave up in. Cowardly only assign it if something has changed to avoid
       // any risk in the case where nothing has changed.
       console.info('[Recorder] Reconfigure OBS video context');
-      this.context.video = videoInfo;
+      // this.context.video = videoInfo;
     }
 
     const outputPath = path.normalize(this.obsPath);
@@ -660,38 +595,37 @@ export default class Recorder extends EventEmitter {
    */
   public configureVideoSources(config: ObsVideoConfig, isWowRunning: boolean) {
     const { obsCaptureMode, monitorIndex, captureCursor } = config;
-    this.clearFindWindowInterval();
+    console.log('Called configureVideoSources');
 
-    // [
-    //   this.windowCaptureSource,
-    //   this.gameCaptureSource,
-    //   this.monitorCaptureSource,
-    //   this.overlayImageSource,
-    // ].forEach((src) => {
-    //   src.enabled = false;
-    // });
+    // Clear any existing video capture sources.
+    ['WCR Monitor Capture', 'WCR Window Capture', 'WCR Game Capture'].forEach(
+      (s) => {
+        noobs.RemoveSourceFromScene(s);
+        noobs.DeleteSource(s);
+      },
+    );
 
-    // if (obsCaptureMode === 'monitor_capture') {
-    //   // We don't care if WoW is running or not for monitor capture.
-    //   this.configureMonitorCaptureSource(monitorIndex);
-    // }
+    if (obsCaptureMode === 'monitor_capture') {
+      // We don't care if WoW is running or not for monitor capture.
+      this.configureMonitorCaptureSource(monitorIndex);
+    }
 
-    // if (!isWowRunning) {
-    //   // Don't try to configure game or window capture sources if WoW isn't
-    //   // running. We won't be able to find them.
-    //   console.info("[Recorder] WoW isn't running");
-    // } else {
-    //   console.info('[Recorder] WoW is running');
+    if (!isWowRunning) {
+      // Don't try to configure game or window capture sources if WoW isn't
+      // running. We won't be able to find them.
+      console.info("[Recorder] WoW isn't running");
+    } else {
+      console.info('[Recorder] WoW is running');
 
-    //   if (obsCaptureMode === 'game_capture') {
-    //     this.configureGameCaptureSource(captureCursor);
-    //   } else if (obsCaptureMode === 'window_capture') {
-    //     this.configureWindowCaptureSource(captureCursor);
-    //   }
-    // }
+      if (obsCaptureMode === 'game_capture') {
+        this.configureGameCaptureSource(captureCursor);
+      } else if (obsCaptureMode === 'window_capture') {
+        this.configureWindowCaptureSource(captureCursor);
+      }
+    }
 
-    // const overlayCfg = getOverlayConfig(this.cfg);
-    // this.configureOverlayImageSource(overlayCfg);
+    const overlayCfg = getOverlayConfig(this.cfg);
+    this.configureOverlayImageSource(overlayCfg);
     // this.scaleVideoSourceSize();
   }
 
@@ -715,29 +649,23 @@ export default class Recorder extends EventEmitter {
       chatOverlayOwnImagePath,
     } = config;
 
-    this.overlayImageSceneItem.position = {
+    noobs.CreateSource('WCR Overlay', 'image_source');
+
+    const settings = noobs.GetSourceSettings('WCR Overlay');
+
+    noobs.SetSourceSettings('WCR Overlay', {
+      ...settings,
+      file: chatOverlayOwnImagePath,
+    });
+
+    noobs.AddSourceToScene('WCR Overlay');
+
+    noobs.SetSourcePos('WCR Overlay', {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
-    };
-
-    this.overlayImageSceneItem.scale = {
-      x: chatOverlayScale,
-      y: chatOverlayScale,
-    };
-
-    this.overlayImageSceneItem.crop = {
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0,
-    };
-
-    const { settings } = this.overlayImageSource;
-    settings.file = chatOverlayOwnImagePath;
-
-    this.overlayImageSource.update(settings);
-    this.overlayImageSource.save();
-    this.overlayImageSource.enabled = true;
+      scaleX: chatOverlayScale,
+      scaleY: chatOverlayScale,
+    });
   }
 
   /**
@@ -754,37 +682,23 @@ export default class Recorder extends EventEmitter {
       chatOverlayScale,
     } = config;
 
-    // This is the height of the default chat overlay image, a bit ugly
-    // to have it hardcoded here, but whatever.
-    const baseWidth = 5000;
-    const baseHeight = 2000;
+    noobs.CreateSource('WCR Overlay', 'image_source');
 
-    const toCropX = (baseWidth - chatOverlayWidth) / 2;
-    const toCropY = (baseHeight - chatOverlayHeight) / 2;
+    const settings = noobs.GetSourceSettings('WCR Overlay');
 
-    const { settings } = this.overlayImageSource;
-    settings.file = getAssetPath('poster', 'chat-cover.png');
+    noobs.SetSourceSettings('WCR Overlay', {
+      ...settings,
+      file: getAssetPath('poster', 'chat-cover.png'),
+    });
 
-    this.overlayImageSceneItem.position = {
+    noobs.AddSourceToScene('WCR Overlay');
+
+    noobs.SetSourcePos('WCR Overlay', {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
-    };
-
-    this.overlayImageSceneItem.scale = {
-      x: chatOverlayScale,
-      y: chatOverlayScale,
-    };
-
-    this.overlayImageSceneItem.crop = {
-      left: toCropX,
-      right: toCropX,
-      top: toCropY,
-      bottom: toCropY,
-    };
-
-    this.overlayImageSource.update(settings);
-    this.overlayImageSource.save();
-    this.overlayImageSource.enabled = true;
+      scaleX: chatOverlayScale,
+      scaleY: chatOverlayScale,
+    });
   }
 
   /**
@@ -1360,36 +1274,19 @@ export default class Recorder extends EventEmitter {
 
     noobs.Init(pluginPath, logPath, dataPath, recordingPath, cb);
     noobs.SetBuffering(true);
+
     const hwnd = this.mainWindow.getNativeWindowHandle();
     noobs.InitPreview(hwnd);
-    noobs.CreateSource('WCR Monitor Capture', 'monitor_capture');
-    noobs.AddSourceToScene('WCR Monitor Capture');
-
-    noobs.CreateSource('WCR Overlay', 'image_source');
-
-    const s = noobs.GetSourceSettings('WCR Overlay');
-    noobs.SetSourceSettings('WCR Overlay', {
-      ...s,
-      file: 'D:\\checkouts\\warcraft-recorder\\assets\\poster\\chat-cover.png',
-    });
-
-    noobs.AddSourceToScene('WCR Overlay');
-
-    noobs.SetSourcePos('WCR Overlay', {
-      x: 0,
-      y: 800,
-      scaleX: 0.15,
-      scaleY: 0.15,
-    });
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
   }
+  d;
 
   /**
    * Handle a signal from OBS.
    */
-  private handleSignal(signal: noobs.Signal) {
+  private handleSignal(signal: Signal) {
     console.info('[Recorder] Got signal:', signal);
 
     // if (obsSignal.type !== 'recording') {
@@ -1504,37 +1401,25 @@ export default class Recorder extends EventEmitter {
    */
   private configureMonitorCaptureSource(monitorIndex: number) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
-    let prop = this.monitorCaptureSource.properties.first();
 
-    while (prop && prop.name !== 'monitor_id') {
-      prop = prop.next();
-    }
+    noobs.CreateSource('WCR Monitor Capture', 'monitor_capture');
+    const settings = noobs.GetSourceSettings('WCR Monitor Capture');
+    const p = noobs.GetSourceProperties('WCR Monitor Capture');
+    console.log(p);
+    console.log("method", p[0].items);
+    console.log("ids", p[1].items);
+    console.log(settings);
 
-    const { settings } = this.monitorCaptureSource;
-    settings.compatibility = false;
-    settings.force_sdr = false;
+    noobs.SetSourceSettings('WCR Monitor Capture', {
+      ...settings,
+      method: 0,
+      monitor_id: p[1].items[monitorIndex].value,
+    });
 
-    if (prop.name === 'monitor_id' && Recorder.isObsListProperty(prop)) {
-      // An "Auto" option appears as the first thing here so make sure we
-      // don't select that; the frontend doesn't expect it and we end up
-      // having multiple indexes corresponding to a single monitor.
-      const filtered = prop.details.items.filter(
-        (item) => item.value !== 'Auto',
-      );
+    const settings2 = noobs.GetSourceSettings('WCR Monitor Capture');
+    console.log(settings2);
 
-      if (filtered[monitorIndex]) {
-        // The monitor selected is present so use it.
-        settings.monitor_id = filtered[monitorIndex].value as string;
-      } else {
-        // Default to use the first monitor if index is undefined.
-        console.warn('[Recorder] Monitor', monitorIndex, 'not found');
-        settings.monitor_id = filtered[0].value as string;
-      }
-    }
-
-    this.monitorCaptureSource.update(settings);
-    this.monitorCaptureSource.save();
-    this.monitorCaptureSource.enabled = true;
+    noobs.AddSourceToScene('WCR Monitor Capture');
   }
 
   /**
@@ -1544,13 +1429,20 @@ export default class Recorder extends EventEmitter {
     const { chatOverlayEnabled, chatOverlayOwnImage } = config;
     console.info('[Recorder] Configure image source for chat overlay');
 
-    // if (!chatOverlayEnabled) {
-    //   this.overlayImageSource.enabled = false;
-    // } else if (chatOverlayOwnImage && this.cfg.get('cloudStorage')) {
-    //   this.configureOwnOverlay(config);
-    // } else {
-    //   this.configureDefaultOverlay(config);
-    // }
+    // Safe to call both of these even if the source doesn't exist.
+    noobs.RemoveSourceFromScene('WCR Overlay');
+    noobs.DeleteSource('WCR Overlay');
+
+    if (!chatOverlayEnabled) {
+      console.info('[Recorder] Chat overlay is disabled, not configuring');
+      return;
+    }
+
+    if (chatOverlayOwnImage && this.cfg.get('cloudStorage')) {
+      this.configureOwnOverlay(config);
+    } else {
+      this.configureDefaultOverlay(config);
+    }
   }
 
   /**
@@ -1879,47 +1771,6 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Find a window appropriate for capture by the provided source. This
-   * is logically the same and can be used for both Window and Game capture
-   * modes.
-   */
-  private static findWowWindow(src: any) {
-    // The source properties are cached by OSN, so update an irrelevant
-    // setting to force a refresh. This refreshes the window list within
-    // the properties object.
-    //
-    // This relies on some internals of OSN which update the cache to
-    // refresh on calling the update function. See "osn::ISource::Update"
-    // in isource.cpp for more details.
-    // const { settings } = src;
-    // settings.refresh = uuidv4();
-    // src.update(settings);
-
-    // let prop = src.properties.first();
-
-    // while (prop && prop.name !== 'window') {
-    //   prop = prop.next();
-    // }
-
-    // if (prop.name !== 'window' || !Recorder.isObsListProperty(prop)) {
-    //   console.warn('[Recorder] Did not find window property');
-    //   return undefined;
-    // }
-
-    // const items = prop.details.items;
-    // const match = items.find(Recorder.windowMatch);
-
-    // if (!match) {
-    //   return undefined;
-    // }
-
-    // const window = String(match.value);
-    // console.info('[Recorder] Found a match:', window);
-    // return window;
-    return undefined;
-  }
-
-  /**
    * Try to attach to a game capture source for WoW. If the window is not
    * found, do nothing.
    */
@@ -1937,10 +1788,28 @@ export default class Recorder extends EventEmitter {
       this.findWindowAttempts,
     );
 
-    let window = undefined;
+    let window = false;
 
     try {
-      window = Recorder.findWowWindow(this.dummyGameCaptureSource);
+      noobs.CreateSource('WCR Game Capture', 'game_capture');
+      const p = noobs.GetSourceProperties('WCR Game Capture');
+      console.log('AHKKKK');
+      console.log(p);
+      console.log(p[1].items);
+
+      const s = noobs.GetSourceSettings('WCR Game Capture');
+
+      noobs.SetSourceSettings('WCR Game Capture', {
+        ...s,
+        capture_mode: 'window',
+        window: 'World of Warcraft:waApplication Window:WowClassic.exe',
+      });
+
+      const s1 = noobs.GetSourceSettings('WCR Game Capture');
+      console.log('s1', s1);
+
+      noobs.AddSourceToScene('WCR Game Capture');
+      window = true;
     } catch (ex) {
       console.error('[Recorder] Exception when trying to find window:', ex);
     }
@@ -1951,17 +1820,6 @@ export default class Recorder extends EventEmitter {
     }
 
     console.info('[Recorder] Game capture window found', window);
-
-    const { settings } = this.gameCaptureSource;
-    settings.capture_mode = 'window';
-    settings.allow_transparency = false;
-    settings.priority = 1;
-    settings.capture_cursor = captureCursor;
-    settings.window = window;
-
-    this.gameCaptureSource.update(settings);
-    this.gameCaptureSource.save();
-    this.gameCaptureSource.enabled = true;
 
     console.info('[Recorder] Game capture source configured');
     this.clearFindWindowInterval();
@@ -1985,26 +1843,40 @@ export default class Recorder extends EventEmitter {
       this.findWindowAttempts,
     );
 
-    const window = Recorder.findWowWindow(this.dummyWindowCaptureSource);
+    let window = false;
 
-    if (!window) {
-      console.info('[Recorder] Window capture window not found, will retry');
-      return;
+    noobs.DeleteSource('WCR Window Capture');
+    noobs.RemoveSourceFromScene('WCR Window Capture');
+
+    try {
+      noobs.CreateSource('WCR Window Capture', 'window_capture');
+      const p = noobs.GetSourceProperties('WCR Window Capture');
+      console.log('Window capture src ---');
+      console.log(p);
+      console.log(p[0].items);
+      console.log(p[1].items);
+      const s = noobs.GetSourceSettings('WCR Window Capture');
+
+      noobs.SetSourceSettings('WCR Window Capture', {
+        ...s,
+        method: 2, // WGC: Windows Graphics Capture
+        window: 'World of Warcraft:waApplication Window:WowClassic.exe',
+        compatibility: true,
+      });
+
+      const s1 = noobs.GetSourceSettings('WCR Window Capture');
+      console.log('s1', s1);
+
+      noobs.AddSourceToScene('WCR Window Capture');
+      window = true;
+    } catch (ex) {
+      console.error('[Recorder] Exception when trying to find window:', ex);
     }
 
-    console.info('[Recorder] Window capture window found', window);
-
-    // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
-    // captures behind the WoW window. Not sure why, some googling suggested Windows theme issues.
-    // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
-    const { settings } = this.windowCaptureSource;
-    settings.method = 2;
-    settings.cursor = captureCursor;
-    settings.window = window;
-
-    this.windowCaptureSource.update(settings);
-    this.windowCaptureSource.save();
-    this.windowCaptureSource.enabled = true;
+    if (!window) {
+      console.info('[Recorder] Game capture window not found, will retry');
+      return;
+    }
 
     console.info('[Recorder] Window capture source configured');
     this.clearFindWindowInterval();
