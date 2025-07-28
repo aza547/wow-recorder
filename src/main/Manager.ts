@@ -70,7 +70,7 @@ import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import RetryableConfigError from '../utils/RetryableConfigError';
 import { TAffiliation } from 'types/api';
-import noobs from 'noobs';
+import noobs, { SceneItemPosition } from 'noobs';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -1302,17 +1302,21 @@ export default class Manager {
       }
     });
 
-    let sf = null;
-
     ipcMain.on('updateSourcePos', (_event, args) => {
       const x = args[0] as number;
       const y = args[1] as number;
 
-      if (!sf) {
-        sf = noobs.GetPreviewScaleFactor(); // TODO refresh this on resize / handle it properly.
-      }
+      const sf = noobs.GetPreviewScaleFactor(); // Could be cached
+      const current = noobs.GetSourcePos('WCR Overlay');
 
-      noobs.MoveSourcePos('WCR Overlay', x / sf, y / sf);
+      const updated: SceneItemPosition = {
+        x: current.x + x / sf,
+        y: current.y + y / sf,
+        scaleX: current.scaleX,
+        scaleY: current.scaleY,
+      };
+
+      noobs.SetSourcePos('WCR Overlay', updated);
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
