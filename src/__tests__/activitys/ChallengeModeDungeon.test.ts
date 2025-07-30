@@ -1,4 +1,4 @@
-import { PlayerDeathType } from 'main/types';
+import { Flavour, PlayerDeathType } from 'main/types';
 import ChallengeModeDungeon from '../../activitys/ChallengeModeDungeon';
 import Combatant from '../../main/Combatant';
 import TestConfigService from '../../utils/TestConfigService';
@@ -40,6 +40,7 @@ test('Basic Challenge Mode', () => {
     10,
     [159, 10, 152, 9], // Peril included
     cfg,
+    Flavour.Retail,
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -91,6 +92,7 @@ test('Hard Depleted Challenge Mode', () => {
     10,
     [159, 10, 152, 9], // Peril included
     cfg,
+    Flavour.Retail,
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -142,6 +144,7 @@ test('Peril Timed Challenge Mode', () => {
     10,
     [159, 10, 152, 9], // Peril included so we get +90 on the timer
     cfg,
+    Flavour.Retail,
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
@@ -181,6 +184,7 @@ test('Peril Depleted Challenge Mode', () => {
     10,
     [159, 10, 152, 9], // Peril included so we get +90 on the timer
     cfg,
+    Flavour.Retail,
   );
 
   for (let i = 0; i < testCombatants.length; i++) {
