@@ -1726,6 +1726,7 @@ const classicUniqueSpecAuras: StringKeyToNumberValueMapType = {
   'The Art of War': 70, // in classic rets are 67 but use 70 for consistency with retail
 };
 
+// Taken from https://wago.tools/db2/MapChallengeMode?build=11.0.2.55789.
 const mopChallengeModes = {
   2: 'Temple of the Jade Serpent',
   56: 'Stormstout Brewery',
