@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - [PR 692](https://github.com/aza547/wow-recorder/pull/692/files) - Adds Configurable Push-To-Talk Release Delay.
+- Add MOP challenge modes.
 
 ### Fixed
 - Make wipes overrun a few seconds longerto avoid missing anything.

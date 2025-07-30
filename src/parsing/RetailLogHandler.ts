@@ -222,6 +222,7 @@ export default class RetailLogHandler extends LogHandler {
       level,
       affixes,
       this.cfg,
+      Flavour.Retail,
     );
 
     const initialSegment = new ChallengeModeTimelineSegment(

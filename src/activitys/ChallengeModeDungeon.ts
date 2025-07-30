@@ -31,8 +31,9 @@ export default class ChallengeModeDungeon extends Activity {
     level: number,
     affixes: number[],
     cfg: IConfigService,
+    flavor: Flavour,
   ) {
-    super(startDate, VideoCategory.MythicPlus, Flavour.Retail, cfg);
+    super(startDate, VideoCategory.MythicPlus, flavor, cfg);
     this._zoneID = zoneID;
     this._mapID = mapID;
     this._level = level;

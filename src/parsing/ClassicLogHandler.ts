@@ -5,6 +5,7 @@ import {
   classicBattlegrounds,
   classicUniqueSpecAuras,
   classicUniqueSpecSpells,
+  mopChallengeModes,
 } from '../main/constants';
 
 import Recorder from '../main/Recorder';
@@ -15,6 +16,8 @@ import { isUnitFriendly, isUnitPlayer, isUnitSelf } from './logutils';
 import Battleground from '../activitys/Battleground';
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
+import Combatant from 'main/Combatant';
+import ChallengeModeDungeon from 'activitys/ChallengeModeDungeon';
 
 /**
  * Classic log handler class.
@@ -46,6 +49,15 @@ export default class ClassicLogHandler extends LogHandler {
       })
       .on('SPELL_CAST_SUCCESS', (line: LogLine) => {
         this.handleSpellCastSuccess(line);
+      })
+      .on('COMBATANT_INFO', async (line: LogLine) => {
+        await this.handleCombatantInfoLine(line);
+      })
+      .on('CHALLENGE_MODE_START', async (line: LogLine) => {
+        await this.handleChallengeModeStartLine(line);
+      })
+      .on('CHALLENGE_MODE_END', async (line: LogLine) => {
+        await this.handleChallengeModeEndLine(line);
       });
   }
 
@@ -432,6 +444,98 @@ export default class ClassicLogHandler extends LogHandler {
 
     const endTime = line.date();
     this.activity.end(endTime, false);
+    await this.endActivity();
+  }
+
+  private handleCombatantInfoLine(line: LogLine) {
+    console.debug('[ClassicLogHandler] Handling COMBATANT_INFO line:', line);
+
+    if (!this.activity) {
+      console.error(
+        '[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO',
+      );
+      return;
+    }
+
+    const GUID = line.arg(1);
+
+    // In CMs we see COMBANTANT_INFO events for each encounter.
+    // Don't bother overwriting them if we have them already.
+    const combatant = this.activity.getCombatant(GUID);
+
+    if (combatant) {
+      return;
+    }
+
+    console.info(
+      '[RetailLogHandler] Adding combatant from COMBATANT_INFO',
+      GUID,
+    );
+
+    // We weirdly MOP classic doesn't include class or spec in
+    // the COMBATANT_INFO.
+    const newCombatant = new Combatant(GUID);
+    this.activity.addCombatant(newCombatant);
+  }
+
+  private async handleChallengeModeStartLine(line: LogLine) {
+    console.debug(
+      '[ClassicLogHandler] Handling CHALLENGE_MODE_START line:',
+      line,
+    );
+
+    if (this.activity && this.activity.category === VideoCategory.MythicPlus) {
+      // This can happen if you zone in and out of a key mid pull.
+      // If it's a new key, we see a CHALLENGE_MODE_END event first.
+      console.info('[ClassicLogHandler] Subsequent start event for dungeon');
+      return;
+    }
+
+    const dungeonID = parseInt(line.arg(3), 10);
+    const mapID = parseInt(line.arg(2), 10);
+
+    const unknownMap = !Object.prototype.hasOwnProperty.call(
+      mopChallengeModes,
+      dungeonID,
+    );
+
+    if (unknownMap) {
+      console.error('[ClassicLogHandler] Unknown map', dungeonID);
+      return;
+    }
+
+    const startTime = line.date();
+
+    const activity = new ChallengeModeDungeon(
+      startTime,
+      dungeonID,
+      mapID,
+      0,
+      [],
+      this.cfg,
+      Flavour.Classic,
+    );
+
+    await this.startActivity(activity);
+  }
+
+  private async handleChallengeModeEndLine(line: LogLine) {
+    console.debug(
+      '[ClassicLogHandler] Handling CHALLENGE_MODE_END line:',
+      line,
+    );
+
+    if (!this.activity) {
+      console.error(
+        '[ClassicLogHandler] Challenge mode stop with no active ChallengeModeDungeon',
+      );
+      return;
+    }
+
+    const challengeModeActivity = this.activity as ChallengeModeDungeon;
+    const endDate = line.date();
+
+    challengeModeActivity.endChallengeMode(endDate, 0, true);
     await this.endActivity();
   }
 }

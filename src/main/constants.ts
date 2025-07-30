@@ -1726,6 +1726,32 @@ const classicUniqueSpecAuras: StringKeyToNumberValueMapType = {
   'The Art of War': 70, // in classic rets are 67 but use 70 for consistency with retail
 };
 
+const mopChallengeModes = {
+  2: 'Temple of the Jade Serpent',
+  56: 'Stormstout Brewery',
+  57: 'Gate of the Setting Sun',
+  58: 'Shado-Pan Monastery',
+  59: 'Siege of Niuzao Temple',
+  60: "Mogu'shan Palace",
+  76: 'Scholomance',
+  77: 'Scarlet Halls',
+  78: 'Scarlet Monastery',
+};
+
+// Gold, silver, bronze timers for Mists of Pandaria challenge
+// modes. Taken from in-game Challenges panel.
+const mopChallengeModesTimers = {
+  2: [45, 25, 15], // Temple of the Jade Serpent
+  56: [45, 21, 12], // Stormstout Brewery
+  57: [45, 22, 13], // Gate of the Setting Sun
+  58: [60, 35, 21], // Shado-Pan Monastery
+  59: [50, 30, 17.5], // Siege of Niuzao Temple
+  60: [45, 21, 12], // Mogu'shan Palace
+  76: [55, 33, 19], // Scholomance
+  77: [45, 25, 13], // Scarlet Halls
+  78: [45, 22, 13], // Scarlet Monastery
+};
+
 export {
   months,
   categoryTabSx,
@@ -1757,4 +1783,6 @@ export {
   WoWClassColor,
   scrollBarSx,
   currentRetailEncounters,
+  mopChallengeModes,
+  mopChallengeModesTimers,
 };
