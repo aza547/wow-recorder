@@ -104,10 +104,8 @@ export default class ChallengeModeDungeon extends Activity {
     }
 
     const durationForResult = Flavour.Classic ? this.CMDuration : this.duration;
-    console.log("AAAAAAHK", this.timings);
 
     for (let i = this.timings.length - 1; i >= 0; i--) {
-      console.log("AAHK", i, this.timings[i], durationForResult);
       if (durationForResult <= this.timings[i]) {
         return i + 1;
       }
