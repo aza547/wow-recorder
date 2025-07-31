@@ -1,4 +1,4 @@
-import { Flavour, PlayerDeathType } from 'main/types';
+import { Flavour, PlayerDeathType } from '../../main/types';
 import ChallengeModeDungeon from '../../activitys/ChallengeModeDungeon';
 import Combatant from '../../main/Combatant';
 import TestConfigService from '../../utils/TestConfigService';
