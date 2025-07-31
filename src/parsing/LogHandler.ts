@@ -108,7 +108,7 @@ export default abstract class LogHandler extends EventEmitter {
       instanceDifficulty[difficultyID].partyType === 'raid';
 
     if (!isRaidEncounter) {
-      console.debug('[LogHandler] Not a raid encounter, not recording');
+      console.debug('[LogHandler] Not a raid encounter, do nothing');
       return;
     }
 
@@ -129,6 +129,16 @@ export default abstract class LogHandler extends EventEmitter {
 
     if (!this.activity) {
       console.info('[LogHandler] Encounter stop with no active encounter');
+      return;
+    }
+
+    const difficultyID = parseInt(line.arg(3), 10);
+
+    const isRaidEncounter =
+      instanceDifficulty[difficultyID].partyType === 'raid';
+
+    if (!isRaidEncounter) {
+      console.debug('[LogHandler] Not a raid encounter, do nothing');
       return;
     }
 

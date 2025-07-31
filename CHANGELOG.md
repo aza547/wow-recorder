@@ -6,10 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [6.15.0] - 2025-07-31
+### Changed
 - Track the region as part of the combatant now the combat log includes it.
 
 ### Added
 - [PR 692](https://github.com/aza547/wow-recorder/pull/692/files) - Adds Configurable Push-To-Talk Release Delay.
+- Add MOP challenge modes.
 
 ### Fixed
 - Make wipes overrun a few seconds longerto avoid missing anything.

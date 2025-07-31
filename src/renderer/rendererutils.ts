@@ -13,6 +13,7 @@ import {
   instanceDifficulty,
   instanceEncountersById,
   months,
+  mopChallengeModes,
   specializationById,
   WoWCharacterClassType,
   WoWClassColor,
@@ -32,6 +33,7 @@ import {
   VideoMarker,
   RawCombatant,
   StorageFilter,
+  Flavour,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -320,11 +322,17 @@ const getEncounterNameById = (encounterId: number): string => {
 const getDungeonName = (video: RendererVideo) => {
   const { mapID } = video;
 
-  if (mapID !== undefined) {
+  if (mapID === undefined) {
+    return '';
+  }
+
+  if (video.flavour === Flavour.Retail) {
     return dungeonsByMapId[mapID];
   }
 
-  return '';
+  if (video.flavour === Flavour.Classic) {
+    return mopChallengeModes[mapID];
+  }
 };
 
 const isMythicPlusUtil = (video: RendererVideo) => {

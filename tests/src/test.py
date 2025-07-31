@@ -33,6 +33,7 @@ import classic.rated_3v3
 import classic.rated_5v5
 import classic.rated_2v2_extra_units
 import classic.rated_2v2_feign_death
+import classic.mop_challenge_mode
 
 # Import the era tests
 import era.raid
@@ -73,6 +74,7 @@ CLASSIC_TESTS = [
     classic.rated_5v5,
     classic.rated_2v2_extra_units,
     classic.rated_2v2_feign_death,
+    classic.mop_challenge_mode,
 ]
 
 

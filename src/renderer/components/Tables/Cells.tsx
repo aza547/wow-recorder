@@ -221,7 +221,7 @@ export const populateLevelCell = (
   info: CellContext<RendererVideo, unknown>,
 ) => {
   const video = info.getValue() as RendererVideo;
-  return `+${video.keystoneLevel || video.level}`;
+  return `+${video.keystoneLevel || video.level || 0}`;
 };
 
 export const populateAffixesCell = (
