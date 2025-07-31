@@ -3,7 +3,12 @@ import Combatant from '../main/Combatant';
 import { Language, Phrase } from '../localisation/types';
 import { getLocalePhrase } from '../localisation/translations';
 import { Flavour, Metadata } from '../main/types';
-import { dungeonTimersByMapId, instanceNamesByZoneId } from '../main/constants';
+import {
+  dungeonTimersByMapId,
+  instanceNamesByZoneId,
+  mopChallengeModes,
+  mopChallengeModesTimers,
+} from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import {
   ChallengeModeTimelineSegment,
@@ -40,6 +45,12 @@ export default class ChallengeModeDungeon extends Activity {
     this.affixes = affixes;
 
     this._timings = dungeonTimersByMapId[mapID];
+
+    if (flavor === Flavour.Classic) {
+      console.info('[ChallengeModeDungeon] Using Classic timers for', mapID);
+      this._timings = mopChallengeModesTimers[mapID];
+    }
+
     this.overrun = 0;
   }
 
@@ -80,7 +91,7 @@ export default class ChallengeModeDungeon extends Activity {
       throw new Error("Don't have timings data for this dungeon.");
     }
 
-    if (!this.CMDuration) {
+    if (!this.CMDuration && this.flavour === Flavour.Retail) {
       console.info(
         "[ChallengeModeDungeon] Run didn't complete (abandoned, not a deplete)",
       );
@@ -92,8 +103,12 @@ export default class ChallengeModeDungeon extends Activity {
       this.CMDuration -= 90;
     }
 
+    const durationForResult = Flavour.Classic ? this.CMDuration : this.duration;
+    console.log("AAAAAAHK", this.timings);
+
     for (let i = this.timings.length - 1; i >= 0; i--) {
-      if (this.CMDuration <= this.timings[i]) {
+      console.log("AAHK", i, this.timings[i], durationForResult);
+      if (durationForResult <= this.timings[i]) {
         return i + 1;
       }
     }
@@ -117,6 +132,10 @@ export default class ChallengeModeDungeon extends Activity {
 
     if (isRecognisedMythicPlus) {
       return instanceNamesByZoneId[this.zoneID];
+    }
+
+    if (this.flavour === Flavour.Classic && mopChallengeModes[this.mapID]) {
+      return mopChallengeModes[this.mapID];
     }
 
     return 'Unknown Dungeon';
@@ -172,6 +191,10 @@ export default class ChallengeModeDungeon extends Activity {
   }
 
   getLastBossEncounter(): ChallengeModeTimelineSegment | undefined {
+    if (this.flavour !== Flavour.Retail) {
+      return undefined;
+    }
+
     return this.timeline
       .slice()
       .reverse()

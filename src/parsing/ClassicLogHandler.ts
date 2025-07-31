@@ -452,7 +452,7 @@ export default class ClassicLogHandler extends LogHandler {
 
     if (!this.activity) {
       console.error(
-        '[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO',
+        '[ClassicLogHandler] No activity in progress, ignoring COMBATANT_INFO',
       );
       return;
     }
@@ -491,16 +491,16 @@ export default class ClassicLogHandler extends LogHandler {
       return;
     }
 
-    const dungeonID = parseInt(line.arg(3), 10);
-    const mapID = parseInt(line.arg(2), 10);
+    const zoneID = parseInt(line.arg(2), 10);
+    const mapID = parseInt(line.arg(3), 10);
 
     const unknownMap = !Object.prototype.hasOwnProperty.call(
       mopChallengeModes,
-      dungeonID,
+      mapID,
     );
 
     if (unknownMap) {
-      console.error('[ClassicLogHandler] Unknown map', dungeonID);
+      console.error('[ClassicLogHandler] Unknown map', mapID);
       return;
     }
 
@@ -508,7 +508,7 @@ export default class ClassicLogHandler extends LogHandler {
 
     const activity = new ChallengeModeDungeon(
       startTime,
-      dungeonID,
+      zoneID,
       mapID,
       0,
       [],

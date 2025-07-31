@@ -1727,7 +1727,7 @@ const classicUniqueSpecAuras: StringKeyToNumberValueMapType = {
 };
 
 // Taken from https://wago.tools/db2/MapChallengeMode?build=11.0.2.55789.
-const mopChallengeModes = {
+const mopChallengeModes: Record<number, string> = {
   2: 'Temple of the Jade Serpent',
   56: 'Stormstout Brewery',
   57: 'Gate of the Setting Sun',
@@ -1741,7 +1741,7 @@ const mopChallengeModes = {
 
 // Gold, silver, bronze timers for Mists of Pandaria challenge
 // modes. Taken from in-game Challenges panel.
-const mopChallengeModesTimers = {
+const mopChallengeModesTimers: Record<number, number[]> = {
   2: [45, 25, 15], // Temple of the Jade Serpent
   56: [45, 21, 12], // Stormstout Brewery
   57: [45, 22, 13], // Gate of the Setting Sun
