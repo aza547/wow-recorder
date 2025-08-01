@@ -177,6 +177,8 @@ const classicArenas: NumberKeyToStringValueMapType = {
   559: 'Nagrand',
   617: 'Dalaran',
   562: "Blade's Edge",
+  1134: "Tiger's Peak",
+  980: "Tol'viron",
 };
 
 /**

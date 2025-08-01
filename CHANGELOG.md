@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 
+## [6.15.1] - 2025-08-01
+### Fixed
+- Add some missing MOP classic arenas.
+
 ## [6.15.0] - 2025-07-31
 ### Changed
 - Track the region as part of the combatant now the combat log includes it.
