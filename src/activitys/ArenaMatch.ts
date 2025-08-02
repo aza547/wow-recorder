@@ -128,4 +128,25 @@ export default class ArenaMatch extends Activity {
 
     return fileName;
   }
+
+  addCombatant(combatant: Combatant) {
+    super.addCombatant(combatant);
+
+    if (this.flavour === Flavour.Classic) {
+      // For classic, we need to determine the arena category based on the
+      // number of combatants. So update it now.
+      const combatantMapSize = this.combatantMap.size;
+
+      if (combatantMapSize < 5) {
+        console.log('[ArenaMatch] Setting arena category to 2v2');
+        this.category = VideoCategory.TwoVTwo;
+      } else if (combatantMapSize < 7) {
+        console.log('[ArenaMatch] Setting arena category to 3v3');
+        this.category = VideoCategory.ThreeVThree;
+      } else {
+        console.log('[ArenaMatch] Setting arena category to 5v5');
+        this.category = VideoCategory.FiveVFive;
+      }
+    }
+  }
 }

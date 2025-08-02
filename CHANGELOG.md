@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 708](https://github.com/aza547/wow-recorder/issues/708) - Fix an issue where force stopping classic arena would give the wrong result and category.
 
 ## [6.15.1] - 2025-08-01
 ### Fixed

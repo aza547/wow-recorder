@@ -251,39 +251,7 @@ export default class ClassicLogHandler extends LogHandler {
     await this.startActivity(activity);
   }
 
-  private async endArena(endDate: Date) {
-    if (!this.activity) {
-      console.error(
-        '[ClassicLogHandler] Arena stop with no active arena match',
-      );
-      return;
-    }
-
-    console.debug('[ClassicLogHandler] Stopping arena at date:', endDate);
-    const arenaMatch = this.activity as ArenaMatch;
-
-    // We decide at the end of the game what bracket it was by counting
-    // the players as classic logs don't tell us upfront.
-    const combatantMapSize = arenaMatch.combatantMap.size;
-    console.info(
-      '[ClassicLogHandler] Number of combatants found: ',
-      combatantMapSize,
-    );
-
-    if (combatantMapSize < 5) {
-      arenaMatch.category = VideoCategory.TwoVTwo;
-    } else if (combatantMapSize < 7) {
-      arenaMatch.category = VideoCategory.ThreeVThree;
-    } else {
-      arenaMatch.category = VideoCategory.FiveVFive;
-    }
-
-    // Verbose logging to make it super obvious what's happened.
-    console.info('[ClassicLogHandler] Logging combatants');
-    arenaMatch.combatantMap.forEach((k, v) => {
-      console.info(k, v);
-    });
-
+  private static calculateArenaResult(arenaMatch: ArenaMatch) {
     // We decide who won by counting the deaths. The winner is the
     // team with the least deaths. Classic doesn't have team IDs
     // but we cheated a bit earlier always assigning the player as
@@ -294,10 +262,20 @@ export default class ClassicLogHandler extends LogHandler {
     console.info('[ClassicLogHandler] Enemy deaths: ', enemiesDead);
     const result = friendsDead < enemiesDead ? 1 : 0;
 
-    // TODO:
-    // AV win/loss if we see enemy boss die, i.e.:
-    // 11/12 13:36:53.746  UNIT_DIED,0000000000000000,nil,0x80000000,0x80000000,Creature-0-4468-30-7750-11946-00006F9FFC,"Drek'Thar",0xa48,0x0,0
+    return result;
+  }
 
+  private async endArena(endDate: Date) {
+    if (!this.activity) {
+      console.error(
+        '[ClassicLogHandler] Arena stop with no active arena match',
+      );
+      return;
+    }
+
+    console.debug('[ClassicLogHandler] Stopping arena at date:', endDate);
+    const arenaMatch = this.activity as ArenaMatch;
+    const result = await ClassicLogHandler.calculateArenaResult(arenaMatch);
     arenaMatch.endArena(endDate, result);
     await this.endActivity();
   }
@@ -537,5 +515,27 @@ export default class ClassicLogHandler extends LogHandler {
 
     challengeModeActivity.endChallengeMode(endDate, 0, true);
     await this.endActivity();
+  }
+
+  public async forceEndActivity(timedelta = 0) {
+    if (!this.activity) {
+      console.error(
+        '[ClassicLogHandler] forceEndActivity called but no activity',
+      );
+      return;
+    }
+
+    console.log(
+      '[ClassicLogHandler] Forcing end of activity, timedelta:',
+      timedelta,
+    );
+
+    if (this.isArena()) {
+      const endDate = new Date();
+      endDate.setTime(endDate.getTime() + timedelta * 1000);
+      this.endArena(endDate);
+    }
+
+    super.forceEndActivity(timedelta);
   }
 }
