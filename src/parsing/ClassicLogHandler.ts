@@ -516,26 +516,4 @@ export default class ClassicLogHandler extends LogHandler {
     challengeModeActivity.endChallengeMode(endDate, 0, true);
     await this.endActivity();
   }
-
-  public async forceEndActivity(timedelta = 0) {
-    if (!this.activity) {
-      console.error(
-        '[ClassicLogHandler] forceEndActivity called but no activity',
-      );
-      return;
-    }
-
-    console.log(
-      '[ClassicLogHandler] Forcing end of activity, timedelta:',
-      timedelta,
-    );
-
-    if (this.isArena()) {
-      const endDate = new Date();
-      endDate.setTime(endDate.getTime() + timedelta * 1000);
-      this.endArena(endDate);
-    }
-
-    super.forceEndActivity(timedelta);
-  }
 }

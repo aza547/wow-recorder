@@ -30,6 +30,7 @@ import classic.raid
 import classic.rated_2v2
 import classic.rated_2v2_double
 import classic.rated_3v3
+import classic.rated_3v3_force_stop
 import classic.rated_5v5
 import classic.rated_2v2_extra_units
 import classic.rated_2v2_feign_death
@@ -71,6 +72,7 @@ CLASSIC_TESTS = [
     classic.rated_2v2,
     classic.rated_2v2_double,
     classic.rated_3v3,
+    classic.rated_3v3_force_stop,
     classic.rated_5v5,
     classic.rated_2v2_extra_units,
     classic.rated_2v2_feign_death,
