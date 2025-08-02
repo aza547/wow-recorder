@@ -1261,27 +1261,23 @@ export default class Recorder extends EventEmitter {
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
 
-    const pluginPath = path.resolve(noobsPath, 'plugins');
-    const dataPath = path.resolve(noobsPath, 'effects');
-
     const recordingPath =
       'D:/checkouts/warcraft-recorder-obs-engine/recordings';
 
-    console.log('[Recorder] Plugin path:', pluginPath);
+    console.log('[Recorder] Noobs path:', noobsPath);
     console.log('[Recorder] Log path:', logPath);
-    console.log('[Recorder] Data path:', dataPath);
     console.log('[Recorder] Recording path:', recordingPath);
 
-    noobs.Init(pluginPath, logPath, dataPath, recordingPath, cb);
+    noobs.Init(noobsPath, logPath, recordingPath, cb);
     noobs.SetBuffering(true);
 
     const hwnd = this.mainWindow.getNativeWindowHandle();
     noobs.InitPreview(hwnd);
+    noobs.SetDrawSourceOutline(true);
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
   }
-  d;
 
   /**
    * Handle a signal from OBS.
