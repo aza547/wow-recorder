@@ -418,12 +418,12 @@ const KOREAN: Translations = {
   [Phrase.HideEmptyCategoriesDescription]: "비디오가 없는 카테고리를 숨깁니다.",
   [Phrase.HardwareAccelerationLabel]: "하드웨어 가속",
   [Phrase.HardwareAccelerationDescription]: "프로그램의 하드웨어 가속 렌더링을 활성화합니다. 이 기능은 대부분의 사용자에게 권장되며, 특히 AV1 인코딩을 사용하는 경우에 유용하지만 일부 시스템에서는 문제가 발생할 수 있습니다. 이 변경 사항은 프로그램을 재시작해야 적용됩니다.",
-  [Phrase.RecordCurrentRaidsOnlyLabel]: "현재 시즌 레이드만 기록",
+  [Phrase.RecordCurrentRaidsOnlyLabel]: "현재 시즌 레이드만",
   [Phrase.RecordCurrentRaidsOnlyDescription]: "현재 시즌의 레이드 전투만 기록합니다. 이는 본섭 레이드 전투에만 적용됩니다.",
-  [Phrase.UploadCurrentRaidsOnlyLabel]: "현재 시즌 레이드만 업로드",
+  [Phrase.UploadCurrentRaidsOnlyLabel]: "현재 시즌 레이드만",
   [Phrase.UploadCurrentRaidsOnlyDescription]: "현재 시즌의 레이드 전투만 업로드합니다. 이는 본섭 레이드 전투에만 적용됩니다.",
   [Phrase.MustNotBeEmpty]: "비워둘 수 없습니다",
-  [Phrase.PushToTalkReleaseDelayLabel]: "출시 지연",
+  [Phrase.PushToTalkReleaseDelayLabel]: "종료 지연",
 };
 
 export default KOREAN;
