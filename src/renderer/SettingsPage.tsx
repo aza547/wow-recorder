@@ -71,7 +71,10 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
               </div>
               <div>
                 <CategoryHeading>
-                  {getLocalePhrase(appState.language, Phrase.WindowsSettingsLabel)}
+                  {getLocalePhrase(
+                    appState.language,
+                    Phrase.WindowsSettingsLabel,
+                  )}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
                 <WindowsSettings
