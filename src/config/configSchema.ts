@@ -283,7 +283,7 @@ export const configSchema = {
     default: 2,
   },
   recordMopChallengeModes: {
-    description: Phrase.MinMopChallengeTierDescription,
+    description: Phrase.MopChallengeModeDescription,
     type: 'boolean',
     default: true,
   },

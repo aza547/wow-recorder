@@ -431,7 +431,7 @@ const PVESettings = (props: IProps) => {
     );
   };
 
-  const getMinMopChallengeTierField = () => {
+  const getMopChallengeModeField = () => {
     if (!config.recordClassic) {
       return <></>;
     }
@@ -441,7 +441,7 @@ const PVESettings = (props: IProps) => {
         <Label htmlFor="recordMopChallengeModes" className="flex items-center">
           {getLocalePhrase(
             appState.language,
-            Phrase.MinimumMopChallengeTierLabel,
+            Phrase.MopChallengeModeLabel,
           )}
           <Tooltip
             content={getLocalePhrase(
@@ -473,7 +473,7 @@ const PVESettings = (props: IProps) => {
       <div className="flex flex-col gap-y-2">
         <div className="flex flex-row gap-x-6">
           {getRecordDungeonSwitch()}
-          {getMinMopChallengeTierField()}
+          {getMopChallengeModeField()}
           {getMinKeystoneLevelField()}
           {getDungeonOverrunField()}
         </div>
