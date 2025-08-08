@@ -37,6 +37,7 @@ export type ConfigurationSchema = {
   recordBattlegrounds: boolean;
   captureCursor: boolean;
   minKeystoneLevel: number;
+  recordChallengeModes: boolean;
   minRaidDifficulty: string;
   minimizeOnQuit: boolean;
   minimizeToTray: boolean;
@@ -280,6 +281,11 @@ export const configSchema = {
     description: Phrase.MinKeystoneLevelDescription,
     type: 'integer',
     default: 2,
+  },
+  recordChallengeModes: {
+    description: Phrase.ChallengeModeDescription,
+    type: 'boolean',
+    default: true,
   },
   minRaidDifficulty: {
     description: Phrase.MinRaidDifficultyDescription,

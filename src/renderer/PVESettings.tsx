@@ -45,6 +45,7 @@ const PVESettings = (props: IProps) => {
       minRaidDifficulty: config.minRaidDifficulty,
       recordDungeons: config.recordDungeons,
       minKeystoneLevel: config.minKeystoneLevel,
+      recordChallengeModes: config.recordChallengeModes,
       raidOverrun: config.raidOverrun,
       dungeonOverrun: config.dungeonOverrun,
       recordCurrentRaidEncountersOnly: config.recordCurrentRaidEncountersOnly,
@@ -56,6 +57,7 @@ const PVESettings = (props: IProps) => {
     config.minRaidDifficulty,
     config.raidOverrun,
     config.recordDungeons,
+    config.recordChallengeModes,
     config.recordRaids,
     config.recordCurrentRaidEncountersOnly,
   ]);
@@ -352,6 +354,15 @@ const PVESettings = (props: IProps) => {
     });
   };
 
+  const setRecordChallengeModes = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        recordChallengeModes: checked,
+      };
+    });
+  };
+
   const getRecordDungeonSwitch = () => {
     return (
       <div className="flex flex-col w-[140px]">
@@ -420,6 +431,35 @@ const PVESettings = (props: IProps) => {
     );
   };
 
+  const getChallengeModeField = () => {
+    if (!config.recordClassic) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-col w-1/4 min-w-40 max-w-60">
+        <Label htmlFor="recordChallengeModes" className="flex items-center">
+          {getLocalePhrase(
+            appState.language,
+            Phrase.ChallengeModeLabel,
+          )}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.recordChallengeModes.description,
+            )}
+            side="top"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          {getSwitch('recordChallengeModes', setRecordChallengeModes)}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-y-4">
       <div className="flex flex-row gap-x-6">
@@ -430,10 +470,13 @@ const PVESettings = (props: IProps) => {
         {getMinRaidDifficultySelect()}
       </div>
 
-      <div className="flex flex-row gap-x-6">
-        {getRecordDungeonSwitch()}
-        {getMinKeystoneLevelField()}
-        {getDungeonOverrunField()}
+      <div className="flex flex-col gap-y-2">
+        <div className="flex flex-row gap-x-6">
+          {getRecordDungeonSwitch()}
+          {getChallengeModeField()}
+          {getMinKeystoneLevelField()}
+          {getDungeonOverrunField()}
+        </div>
       </div>
     </div>
   );
