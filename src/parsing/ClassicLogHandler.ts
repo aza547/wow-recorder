@@ -482,10 +482,10 @@ export default class ClassicLogHandler extends LogHandler {
       return;
     }
 
-    const recordMopChallengeModes = this.cfg.get<boolean>(
-      'recordMopChallengeModes',
+    const recordChallengeModes = this.cfg.get<boolean>(
+      'recordChallengeModes',
     );
-    if (!recordMopChallengeModes) {
+    if (!recordChallengeModes) {
       console.info(
         '[ClassicLogHandler] Ignoring MoP Challenge Mode (disabled in settings)',
       );

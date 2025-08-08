@@ -37,7 +37,7 @@ export type ConfigurationSchema = {
   recordBattlegrounds: boolean;
   captureCursor: boolean;
   minKeystoneLevel: number;
-  recordMopChallengeModes: boolean;
+  recordChallengeModes: boolean;
   minRaidDifficulty: string;
   minimizeOnQuit: boolean;
   minimizeToTray: boolean;
@@ -282,8 +282,8 @@ export const configSchema = {
     type: 'integer',
     default: 2,
   },
-  recordMopChallengeModes: {
-    description: Phrase.MopChallengeModeDescription,
+  recordChallengeModes: {
+    description: Phrase.ChallengeModeDescription,
     type: 'boolean',
     default: true,
   },

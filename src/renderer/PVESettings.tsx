@@ -45,7 +45,7 @@ const PVESettings = (props: IProps) => {
       minRaidDifficulty: config.minRaidDifficulty,
       recordDungeons: config.recordDungeons,
       minKeystoneLevel: config.minKeystoneLevel,
-      recordMopChallengeModes: config.recordMopChallengeModes,
+      recordChallengeModes: config.recordChallengeModes,
       raidOverrun: config.raidOverrun,
       dungeonOverrun: config.dungeonOverrun,
       recordCurrentRaidEncountersOnly: config.recordCurrentRaidEncountersOnly,
@@ -57,7 +57,7 @@ const PVESettings = (props: IProps) => {
     config.minRaidDifficulty,
     config.raidOverrun,
     config.recordDungeons,
-    config.recordMopChallengeModes,
+    config.recordChallengeModes,
     config.recordRaids,
     config.recordCurrentRaidEncountersOnly,
   ]);
@@ -354,11 +354,11 @@ const PVESettings = (props: IProps) => {
     });
   };
 
-  const setRecordMopChallengeModes = (checked: boolean) => {
+  const setRecordChallengeModes = (checked: boolean) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        recordMopChallengeModes: checked,
+        recordChallengeModes: checked,
       };
     });
   };
@@ -431,22 +431,22 @@ const PVESettings = (props: IProps) => {
     );
   };
 
-  const getMopChallengeModeField = () => {
+  const getChallengeModeField = () => {
     if (!config.recordClassic) {
       return <></>;
     }
 
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
-        <Label htmlFor="recordMopChallengeModes" className="flex items-center">
+        <Label htmlFor="recordChallengeModes" className="flex items-center">
           {getLocalePhrase(
             appState.language,
-            Phrase.MopChallengeModeLabel,
+            Phrase.ChallengeModeLabel,
           )}
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.recordMopChallengeModes.description,
+              configSchema.recordChallengeModes.description,
             )}
             side="top"
           >
@@ -454,7 +454,7 @@ const PVESettings = (props: IProps) => {
           </Tooltip>
         </Label>
         <div className="flex h-10 items-center">
-          {getSwitch('recordMopChallengeModes', setRecordMopChallengeModes)}
+          {getSwitch('recordChallengeModes', setRecordChallengeModes)}
         </div>
       </div>
     );
@@ -473,7 +473,7 @@ const PVESettings = (props: IProps) => {
       <div className="flex flex-col gap-y-2">
         <div className="flex flex-row gap-x-6">
           {getRecordDungeonSwitch()}
-          {getMopChallengeModeField()}
+          {getChallengeModeField()}
           {getMinKeystoneLevelField()}
           {getDungeonOverrunField()}
         </div>
