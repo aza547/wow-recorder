@@ -426,6 +426,8 @@ const ENGLISH: Translations = {
   [Phrase.UploadCurrentRaidsOnlyDescription]: "Only upload raid encounters from the current tier, this only applies to retail raid encounters.",
   [Phrase.MustNotBeEmpty]: "Must not be empty",
   [Phrase.PushToTalkReleaseDelayLabel]: "Release Delay",
+  [Phrase.ForceSdrLabel]: "Force SDR",
+  [Phrase.ForceSdrDescription]: "Forces the video to be rendered in SDR instead of HDR.",
 };
 
 export default ENGLISH;
