@@ -105,6 +105,7 @@ export const getSettings = (): ConfigurationSchema => {
     hardwareAcceleration: getConfigValue<boolean>('hardwareAcceleration'),
     recordCurrentRaidEncountersOnly: getConfigValue<boolean>('recordCurrentRaidEncountersOnly'),
     uploadCurrentRaidEncountersOnly: getConfigValue<boolean>('uploadCurrentRaidEncountersOnly'),
+    forceSdr: getConfigValue<boolean>('forceSdr'),
     /* eslint-enable prettier/prettier */
   };
 
