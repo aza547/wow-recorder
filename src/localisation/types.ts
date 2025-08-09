@@ -425,6 +425,9 @@ enum Phrase {
   PushToTalkReleaseDelayLabel,
   ForceSdrLabel,
   ForceSdrDescription,
+  VideoSourceScaleDescription,
+  VideoSourceXPositionDescription,
+  VideoSourceYPositionDescription,
 }
 
 enum Language {

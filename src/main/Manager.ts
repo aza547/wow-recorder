@@ -70,7 +70,7 @@ import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import RetryableConfigError from '../utils/RetryableConfigError';
 import { TAffiliation } from 'types/api';
-import noobs, { SceneItemPosition } from 'noobs';
+import noobs, { SceneItemPosition, SourceDimensions } from 'noobs';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -1304,22 +1304,71 @@ export default class Manager {
       }
     });
 
-    ipcMain.on('updateSourcePos', (_event, args) => {
-      const x = args[0] as number;
-      const y = args[1] as number;
+    ipcMain.handle('getPreviewInfo', () => {
+      return noobs.GetPreviewInfo();
+    });
 
-      const sf = noobs.GetPreviewScaleFactor(); // Could be cached
-      const current = noobs.GetSourcePos('WCR Overlay');
+    ipcMain.handle('getSourcePosition', (_event, src: string) => {
+      const current = noobs.GetSourcePos(src);
+      const previewInfo = noobs.GetPreviewInfo(); // Could be cached
 
-      const updated: SceneItemPosition = {
-        x: current.x + x / sf,
-        y: current.y + y / sf,
+      const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
+      const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
+      const sf = Math.min(sfx, sfy);
+
+      const pos: SceneItemPosition & SourceDimensions = {
+        x: current.x * sf,
+        y: current.y * sf,
         scaleX: current.scaleX,
         scaleY: current.scaleY,
+        width: current.width * sf,
+        height: current.height * sf,
       };
 
-      noobs.SetSourcePos('WCR Overlay', updated);
+      return pos;
     });
+
+    let sourceDebounceTimer: NodeJS.Timeout | null = null;
+
+    ipcMain.on(
+      'setSourcePosition',
+      (_event, src: string, position: SceneItemPosition) => {
+        const previewInfo = noobs.GetPreviewInfo(); // Could be cached
+        const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
+        const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
+        const sf = Math.min(sfx, sfy);
+        const current = noobs.GetSourcePos(src);
+
+        const updated: SceneItemPosition = {
+          x: current.x + position.x / sf,
+          y: current.y + position.y / sf,
+          scaleX: current.scaleX,
+          scaleY: current.scaleY,
+        };
+
+        noobs.SetSourcePos(src, updated);
+
+        if (sourceDebounceTimer) {
+          clearTimeout(sourceDebounceTimer);
+        }
+
+        sourceDebounceTimer = setTimeout(() => {
+          if (src === 'WCR Overlay') {
+            console.log('[Manager] Saving chat overlay position', updated);
+            this.cfg.set('chatOverlayXPosition', updated.x);
+            this.cfg.set('chatOverlayYPosition', updated.y);
+            //this.cfg.set('chatOverlayScale', 0.15); TODO
+          } else {
+            console.log('[Manager] Saving video source position', updated);
+            this.cfg.set('videoSourceXPosition', updated.x);
+            this.cfg.set('videoSourceYPosition', updated.y);
+            //this.cfg.set('videoSourceScale', 0.15); TODO
+          }
+
+          sourceDebounceTimer = null;
+        }, 1000);
+      },
+    );
 
     ipcMain.handle('createAudioSource', (_event, args) => {
       let type = '';
