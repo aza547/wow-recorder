@@ -9,6 +9,7 @@ import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
+import { Button } from './components/Button/Button';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -176,6 +177,29 @@ const ChatOverlayControls = (props: IProps) => {
       <div className="text-sm font-semibold text-foreground text-left w-full">
         {getLocalePhrase(appState.language, Phrase.ChatOverlayTip) ||
           'Tip: Click and drag to move the chat overlay.'}
+      </div>
+      <div>
+        <Button
+          onClick={() => {
+            ipc.sendMessage('preview', ['hide']);
+          }}
+        >
+          Hide Overlay
+        </Button>
+      </div>
+      <div>
+        <Button
+          onClick={() => {
+            ipc.setSourcePosition('WCR Overlay', {
+              x: 0,
+              y: 0,
+              scaleX: 0.15, // TODO: not fixed
+              scaleY: 0.15, // TODO: not fixed
+            });
+          }}
+        >
+          Reset
+        </Button>
       </div>
     </div>
   );
