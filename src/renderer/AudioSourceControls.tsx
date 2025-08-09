@@ -1,12 +1,7 @@
-import {
-  AppState,
-  DeviceType,
-  IOBSDevice,
-  ObsVolmeterCallbackInfo,
-} from 'main/types';
-import { useEffect, useRef, useState } from 'react';
+import { AppState } from 'main/types';
+import { useEffect, useState } from 'react';
 import { configSchema } from 'config/configSchema';
-import { Info } from 'lucide-react';
+import { Info, PlusIcon, Volume1, Volume2, X } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
@@ -19,11 +14,18 @@ import {
 import { PTTKeyPressEvent, UiohookKeyMap } from '../types/KeyTypesUIOHook';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
-import { MultiSelect } from './components/MultiSelect/MultiSelect';
 import Slider from './components/Slider/Slider';
 import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
 import Progress from './components/Progress/Progress';
+import { Button } from './components/Button/Button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './components/Select/Select';
 
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timeout | undefined;
@@ -32,19 +34,30 @@ interface IProps {
   appState: AppState;
 }
 
+enum AudioSourceType {
+  INPUT = 'Input',
+  OUTPUT = 'Output',
+  PROCESS = 'Process',
+}
+
+type AudioSource = {
+  type?: AudioSourceType;
+  device?: string;
+  choices?: string[];
+};
+
 const AudioSourceControls = (props: IProps) => {
   const { appState } = props;
   const [config, setConfig] = useSettings();
-  const initialRender = useRef(true);
 
-  const [availableAudioDevices, setAvailableAudioDevices] = useState<{
-    input: IOBSDevice[];
-    output: IOBSDevice[];
-    process: {
-      name: string;
-      value: string | number;
-    }[];
-  }>({ input: [], output: [], process: [] });
+  const [sources, setSources] = useState<AudioSource[]>([]);
+  let sourcesAreFullyDefined = true;
+
+  sources.forEach((src) => {
+    if (!src.type || !src.device) {
+      sourcesAreFullyDefined = false;
+    }
+  });
 
   const [volmeter, setVolmeter] = useState({
     input: 50,
@@ -63,20 +76,6 @@ const AudioSourceControls = (props: IProps) => {
   );
 
   useEffect(() => {
-    if (initialRender.current) {
-      const getAvailableAudioDevices = async () => {
-        const devices = await ipc.invoke('getAudioDevices', []);
-        setAvailableAudioDevices(devices);
-      };
-
-      getAvailableAudioDevices();
-
-      // The rest of this effect handles config changes, so if it's the
-      // initial render then just return here.
-      initialRender.current = false;
-      return;
-    }
-
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
@@ -141,50 +140,29 @@ const AudioSourceControls = (props: IProps) => {
     listenNextKeyPress();
   }, [pttHotKeyFieldFocused, setConfig]);
 
-  const getSourceAverageMagnitude = (
-    data: ObsVolmeterCallbackInfo[],
-    prefix: string,
-  ) => {
-    const magnitudes = data
-      .filter((d) => d.sourceName.startsWith(prefix))
-      .flatMap((d) => d.magnitude);
+  const getSourceMagnitude = (data: Record<string, number>, prefix: string) => {
+    const magnitudes = Object.entries(data)
+      .filter((d) => d[0].startsWith(prefix))
+      .map((d) => d[1]);
 
-    // OBS returns data in dBFS, which is a logarithmic scale. 0dBFS is the
-    // maximum level, and approximately -100dBFS is silence. Add 100 roughly
-    // convert it to a percentage.
-    const length = magnitudes.length;
-    if (length === 0) return -100;
-
-    const average =
-      magnitudes
-        // Sometimes OBS returns magintudes of -65k. Not sure why but clamp it
-        // to avoid messing with the average. Both -65k and -100 are silence.
-        // Also clamp to 0 to avoid any unexpected positive values, just
-        // being cautious with that, no actual evidence of this happening.
-        .map((m) => Math.max(m, -100))
-        .map((m) => Math.min(m, 0))
-        .reduce((a, b) => a + b, 0) / length;
-
-    return average;
+    return Math.max(...magnitudes, 0);
   };
 
-  const volmeterRefresh = (data: ObsVolmeterCallbackInfo[]) => {
-    const speakers = getSourceAverageMagnitude(data, 'WCR Speaker Source');
-    const mics = getSourceAverageMagnitude(data, 'WCR Mic Source');
-    const processes = getSourceAverageMagnitude(data, 'WCR App Source');
+  const volmeterRefresh = (data: Record<string, number>) => {
+    const speakers = getSourceMagnitude(data, 'WCR Speaker Source');
+    const mics = getSourceMagnitude(data, 'WCR Mic Source');
+    const processes = getSourceMagnitude(data, 'WCR Process Source');
 
-    // We've clamped between -100 and 0. Very lazy maths here to convert it
-    // to a value between 0 and 100, to use as a position on the progress bar.
     setVolmeter({
-      output: speakers + 100,
-      input: mics + 100,
-      process: processes + 100,
+      output: speakers * 100,
+      input: mics * 100,
+      process: processes * 100,
     });
   };
 
   useEffect(() => {
-    ipc.on('volmeter', (data: unknown) =>
-      volmeterRefresh(data as ObsVolmeterCallbackInfo[]),
+    ipc.on('volmeter', (value: unknown) =>
+      volmeterRefresh(value as Record<string, number>),
     );
 
     // Attach the audio devices so volmeter bars show
@@ -200,168 +178,92 @@ const AudioSourceControls = (props: IProps) => {
     };
   }, []);
 
-  const onDeviceChange = (
-    type: DeviceType,
-    values: string[] | { value: string; label: string }[],
-  ) => {
-    setConfig((previous) => {
-      const updated = { ...previous };
+  const setSpeakerVolume = (newValue: number[]) => {
+    if (typeof newValue[0] !== 'number') {
+      return;
+    }
 
-      switch (type) {
-        case DeviceType.INPUT:
-          updated.audioInputDevices = values.filter((d) => d).join(',');
-          break;
-        case DeviceType.OUTPUT:
-          updated.audioOutputDevices = values.filter((d) => d).join(',');
-          break;
-        default:
-          throw new Error('Invalid device type');
-      }
-
-      return updated;
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        speakerVolume: newValue[0] / 100,
+      };
     });
   };
 
-  const onProcessChange = (
-    values: string[], // The newly selected settings.
-    options: { value: string; label: string }[], // The available options.
-  ) => {
-    const updated = options.filter((p) => values.includes(p.value));
-
-    setConfig((previous) => ({
-      ...previous,
-      audioProcessDevices: updated,
-    }));
-  };
-
-  const getSpeakerSelect = () => {
-    const options = availableAudioDevices.output.map((audioDevice) => ({
-      value: audioDevice.id,
-      label: audioDevice.description,
-    }));
-
-    config.audioOutputDevices
-      .split(',')
-      .filter((id) => id)
-      .forEach((id) => {
-        const found = options.find((o) => o.value === id);
-
-        if (!found) {
-          options.push({ value: id, label: 'Unknown Device' });
-        }
-      });
-
+  const getSpeakerVolume = () => {
     return (
-      <div className="flex flex-col w-full">
-        <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.SpeakersLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              configSchema.audioOutputDevices.description,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <MultiSelect
-          options={options}
-          onValueChange={(values) => onDeviceChange(DeviceType.OUTPUT, values)}
-          defaultValue={config.audioOutputDevices.split(',').filter((d) => d)}
-          placeholder={getLocalePhrase(
-            appState.language,
-            Phrase.SelectAnOutputDevice,
-          )}
-          maxCount={1}
+      <div className="w-full flex gap-x-2 items-center">
+        <Volume1 />
+        <Slider
+          defaultValue={[config.speakerVolume * 100]}
+          value={[config.speakerVolume * 100]}
+          max={100}
+          step={1}
+          onValueChange={setSpeakerVolume}
+          withTooltip={false}
         />
+        <Volume2 />
       </div>
     );
   };
 
-  const getMicSelect = () => {
-    const options = availableAudioDevices.input.map((audioDevice) => ({
-      value: audioDevice.id,
-      label: audioDevice.description,
-    }));
+  const setMicVolume = (newValue: number[]) => {
+    if (typeof newValue[0] !== 'number') {
+      return;
+    }
 
-    config.audioInputDevices
-      .split(',')
-      .filter((id) => id)
-      .forEach((id) => {
-        const found = options.find((o) => o.value === id);
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        micVolume: newValue[0] / 100,
+      };
+    });
+  };
 
-        if (!found) {
-          options.push({ value: id, label: 'Unknown Device' });
-        }
-      });
-
+  const getMicVolume = () => {
     return (
-      <div className="flex flex-col w-full">
-        <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.MicrophonesLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              configSchema.audioInputDevices.description,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <MultiSelect
-          options={options}
-          onValueChange={(values) => onDeviceChange(DeviceType.INPUT, values)}
-          defaultValue={config.audioInputDevices.split(',').filter((d) => d)}
-          placeholder={getLocalePhrase(
-            appState.language,
-            Phrase.SelectAnInputDevice,
-          )}
-          maxCount={1}
+      <div className="w-full flex gap-x-2 items-center">
+        <Volume1 />
+        <Slider
+          defaultValue={[config.micVolume * 100]}
+          value={[config.micVolume * 100]}
+          max={100}
+          step={1}
+          onValueChange={setMicVolume}
+          withTooltip={false}
         />
+        <Volume2 />
       </div>
     );
   };
 
-  const getProcessSelect = () => {
-    // Add any options that are stored in config. They may still be valid, in
-    // the event of a window name change. Reminder: OBS will match by name and
-    // then Window type. They may also be invalid, in which case we want to
-    // allow a user to deselect them.
-    const options = [...config.audioProcessDevices];
+  const setProcessVolume = (newValue: number[]) => {
+    if (typeof newValue[0] !== 'number') {
+      return;
+    }
 
-    // Now add any devices we know about. We don't want to add duplicates, so
-    // check if the option already exists in the currently selected devices.
-    availableAudioDevices.process
-      .map((w) => ({ value: String(w.value), label: w.name }))
-      .filter((avail) => !options.map((o) => o.value).includes(avail.value))
-      .forEach((dedup) => options.push(dedup));
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        processVolume: newValue[0] / 100,
+      };
+    });
+  };
 
-    // Sort alphabetically by label.
-    options.sort((w1, w2) => w1.label.localeCompare(w2.label));
-
+  const getProcessVolume = () => {
     return (
-      <div className="flex flex-col w-full">
-        <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.ProcessesLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              configSchema.audioProcessDevices.description,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <MultiSelect
-          options={options}
-          onValueChange={(values) => onProcessChange(values, options)}
-          defaultValue={config.audioProcessDevices.map((d) => d.value)}
-          placeholder={getLocalePhrase(appState.language, Phrase.SelectProcess)}
-          maxCount={1}
+      <div className="w-full flex gap-x-2 items-center">
+        <Volume1 />
+        <Slider
+          defaultValue={[config.processVolume * 100]}
+          value={[config.processVolume * 100]}
+          max={100}
+          step={1}
+          onValueChange={setProcessVolume}
+          withTooltip={false}
         />
+        <Volume2 />
       </div>
     );
   };
@@ -420,7 +322,7 @@ const AudioSourceControls = (props: IProps) => {
 
   const getPushToTalkSwitch = () => {
     return (
-      <div className="flex flex-col w-[140px]">
+      <div className="flex flex-col">
         <Label className="flex items-center">
           {getLocalePhrase(appState.language, Phrase.PushToTalkLabel)}
           <Tooltip
@@ -531,28 +433,52 @@ const AudioSourceControls = (props: IProps) => {
   };
 
   const getSpeakerSection = () => (
-    <div className="flex flex-col justify-center w-1/4 gap-y-2">
-      {getSpeakerSelect()}
-      <div className="flex items-center">
-        <Progress className="h-1 mt-1 w-full" value={volmeter.output} />
+    <div className="flex flex-col justify-center w-1/4">
+      <Label className="flex items-center">
+        Speaker Volume
+        <Tooltip content={'Speaker Volume'} side="right">
+          <Info size={20} className="inline-flex ml-2" />
+        </Tooltip>
+      </Label>
+      <div className="flex items-center pb-2">
+        <Progress
+          className="h-3 mt-1 w-full rounded-sm"
+          value={volmeter.output}
+        />
       </div>
     </div>
   );
 
   const getMicSection = () => (
-    <div className="flex flex-col justify-center w-1/4 gap-y-2">
-      {getMicSelect()}
-      <div className="flex items-center gap-2">
-        <Progress className="h-1 mt-1 w-full" value={volmeter.input} />
+    <div className="flex flex-col justify-center w-1/4">
+      <Label className="flex items-center">
+        Mic Volume
+        <Tooltip content={'Mic Volume'} side="right">
+          <Info size={20} className="inline-flex ml-2" />
+        </Tooltip>
+      </Label>
+      <div className="flex items-center pb-2">
+        <Progress
+          className="h-3 mt-1 w-full rounded-sm"
+          value={volmeter.input}
+        />
       </div>
     </div>
   );
 
   const getProcessSection = () => (
-    <div className="flex flex-col justify-center w-1/4 gap-y-2">
-      {getProcessSelect()}
-      <div className="flex items-center gap-2">
-        <Progress className="h-1 mt-1 w-full" value={volmeter.process} />
+    <div className="flex flex-col justify-center w-1/4">
+      <Label className="flex items-center">
+        Application Volume
+        <Tooltip content={'App Volume'} side="right">
+          <Info size={20} className="inline-flex ml-2" />
+        </Tooltip>
+      </Label>
+      <div className="flex items-center gap-2 pb-2">
+        <Progress
+          className="h-3 mt-1 w-full rounded-sm"
+          value={volmeter.process}
+        />
       </div>
     </div>
   );
@@ -593,7 +519,7 @@ const AudioSourceControls = (props: IProps) => {
           max={2000}
           step={1}
           withTooltip={false}
-          className="flex-1"
+          className="w-[80px]"
         />
         <span className="text-sm text-foreground-lighter tabular-nums min-w-[60px] text-right whitespace-nowrap">
           {localReleaseDelay > 999
@@ -604,24 +530,209 @@ const AudioSourceControls = (props: IProps) => {
     </div>
   );
 
+  const setSourceType = async (src: AudioSource, type: AudioSourceType) => {
+    const idx = sources.indexOf(src);
+
+    const props = await ipc.invoke('createAudioSource', [type]);
+
+    const devices = props.find(
+      (prop) => prop.name === 'device_id' || prop.name === 'window',
+    );
+    const choices = devices.items.map((item) => item.name);
+
+    const clone = [...sources];
+
+    if (clone.length === 0) {
+      clone.push({ type, choices });
+    } else {
+      clone[idx] = { ...src, type, choices };
+    }
+    clone[idx] = { ...src, type, choices };
+    setSources(clone);
+  };
+
+  const setSourceDevice = (src: AudioSource, device: string) => {
+    const idx = sources.indexOf(src);
+    if (idx === -1) return;
+    const clone = [...sources];
+    clone[idx] = { ...src, device };
+    setSources(clone);
+  };
+
+  const renderSourceTypeSelect = (src: AudioSource) => {
+    return (
+      <div className="flex flex-col w-full">
+        <Select
+          onValueChange={(v) => setSourceType(src, v as AudioSourceType)}
+          value={src.type}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a type..." />
+          </SelectTrigger>
+          <SelectContent>
+            {[
+              AudioSourceType.INPUT,
+              AudioSourceType.OUTPUT,
+              AudioSourceType.PROCESS,
+            ].map((tt) => (
+              <SelectItem key={tt} value={tt}>
+                {tt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+
+  const renderSourceDeviceSelect = (src: AudioSource) => {
+    return (
+      <div className="flex flex-col w-full">
+        <Select
+          onValueChange={(value) => {
+            setSourceDevice(src, value);
+          }}
+          value={src.device}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a device...." />
+          </SelectTrigger>
+          <SelectContent className="max-h-[200px] overflow-y-auto">
+            {src.choices &&
+              src.choices.map((tt) => (
+                <SelectItem key={tt} value={tt}>
+                  {tt}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+
+  const removeSource = (src: AudioSource) => {
+    const idx = sources.indexOf(src);
+    if (idx === -1) return;
+    setSources((prev) => {
+      return prev.filter((_, i) => i !== idx);
+    });
+  };
+
+  const renderDeleteSourceButton = (src: AudioSource) => {
+    return (
+      <Button
+        onClick={() => removeSource(src)}
+        variant="ghost"
+        size="sm"
+        disabled={sources.length < 1}
+      >
+        <X size={18} />
+      </Button>
+    );
+  };
+
+  const renderSourceRow = (src: AudioSource) => {
+    const idx = sources.indexOf(src);
+
+    return (
+      <tr key={idx}>
+        <td className="px-1">{renderSourceTypeSelect(src)}</td>
+        <td className="px-1">{renderSourceDeviceSelect(src)}</td>
+        <td className="px-1">{renderDeleteSourceButton(src)}</td>
+      </tr>
+    );
+  };
+
+  const addSource = async () => {
+    const newSource: AudioSource = {};
+    setSources((prev) => [...prev, newSource]);
+  };
+
+  const renderSourceTable = () => {
+    return (
+      <table className="table-auto w-full">
+        <thead>
+          <tr>
+            <th className="w-1/3 text-foreground-lighter text-xs">Type</th>
+            <th className="w-2/3 text-foreground-lighter text-xs">Device</th>
+            <th className="w-[20px] p-1" />
+          </tr>
+        </thead>
+        <tbody>{sources.map(renderSourceRow)}</tbody>
+      </table>
+    );
+  };
+
+  const renderHelpText = () => {
+    return (
+      <div className="text-sm text-foreground">
+        Add a source to get started.
+      </div>
+    );
+  };
+
+  const getSourcesSection = () => {
+    return (
+      <div className="flex flex-col gap-y-2 w-full">
+        <Label>
+          <div className="flex items-center">
+            Audio Sources
+            <Tooltip
+              content={
+                'TODO: Placeholder for audio sources. You can add, remove, and configure them.'
+              }
+              side="right"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </div>
+        </Label>
+        {sources.length > 0 && renderSourceTable()}
+        {sources.length < 1 && renderHelpText()}
+        <div className="flex items-center justify-center w-full">
+          <Button
+            onClick={addSource}
+            className="mx-2"
+            variant="ghost"
+            disabled={!sourcesAreFullyDefined} // Don't allow adding a new source if any existing source is not fully defined.
+          >
+            <PlusIcon size={18} />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const getSettingsSection = () => {
+    return (
+      <div className="flex gap-y-8 flex-col">
+        <div className="flex items-center content-start w-full gap-10 flex-wrap">
+          {getSpeakerSection()}
+          {getMicSection()}
+          {getProcessSection()}
+        </div>
+        <div className="flex items-center content-start w-full gap-10 flex-wrap">
+          {getAudioSuppressionSwitch()}
+          {getMonoSwitch()}
+        </div>
+        <div className="flex items-center content-start w-full gap-10 flex-wrap">
+          {getPushToTalkSwitch()}
+          {config.pushToTalk && (
+            <>
+              {getPushToTalkSelect()}
+              {getPushToTalkReleaseDelaySlider()}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex gap-y-10 flex-col">
-      <div className="flex items-center content-start w-full gap-10 flex-wrap">
-        {getSpeakerSection()}
-        {getMicSection()}
-        {getProcessSection()}
-      </div>
-      <div className="flex items-center content-start w-full gap-10 flex-wrap">
-        {getAudioSuppressionSwitch()}
-        {getMonoSwitch()}
-        {getPushToTalkSwitch()}
-        {config.pushToTalk && (
-          <>
-            {getPushToTalkSelect()}
-            {getPushToTalkReleaseDelaySlider()}
-          </>
-        )}
-      </div>
+    <div className="flex flex-row w-full h-full gap-4">
+      <div className="w-[40%] flex flex-col">{getSourcesSection()}</div>
+      <div className="w-px bg-card mx-2" />
+      <div className="w-[60%] flex flex-col">{getSettingsSection()}</div>
     </div>
   );
 };

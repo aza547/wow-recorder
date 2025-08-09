@@ -423,6 +423,8 @@ enum Phrase {
   UploadCurrentRaidsOnlyDescription,
   MustNotBeEmpty,
   PushToTalkReleaseDelayLabel,
+  ForceSdrLabel,
+  ForceSdrDescription,
 }
 
 enum Language {

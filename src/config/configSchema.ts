@@ -88,6 +88,7 @@ export type ConfigurationSchema = {
   hardwareAcceleration: boolean;
   recordCurrentRaidEncountersOnly: boolean;
   uploadCurrentRaidEncountersOnly: boolean;
+  forceSdr: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -540,6 +541,11 @@ export const configSchema = {
   },
   uploadCurrentRaidEncountersOnly: {
     description: Phrase.UploadCurrentRaidsOnlyDescription,
+    type: 'boolean',
+    default: false,
+  },
+  forceSdr: {
+    description: Phrase.ForceSdrDescription,
     type: 'boolean',
     default: false,
   },

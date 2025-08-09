@@ -367,6 +367,7 @@ type ObsVideoConfig = {
   obsCaptureMode: string;
   monitorIndex: number;
   captureCursor: boolean;
+  forceSdr: boolean;
 };
 
 type ObsOverlayConfig = {

@@ -265,7 +265,7 @@ export default abstract class LogHandler extends EventEmitter {
     let videoFile;
 
     try {
-      await this.recorder.stop();
+      await this.recorder.stop(false);
       videoFile = this.recorder.lastFile;
       this.poller.start();
     } catch (error) {

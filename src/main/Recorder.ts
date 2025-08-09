@@ -12,14 +12,9 @@ import {
 import { EventEmitter } from 'stream';
 import Queue from 'queue-promise';
 import {
-  EColorSpace,
-  EFPSType,
   EOBSOutputSignal,
-  ERangeType,
   ERecordingState,
-  EScaleType,
   ESupportedEncoders,
-  EVideoFormat,
   QualityPresets,
 } from './obsEnums';
 
@@ -53,8 +48,7 @@ import { obsResolutions } from './constants';
 import { getOverlayConfig } from '../utils/configUtils';
 import { v4 as uuidv4 } from 'uuid';
 
-import noobs, { Signal } from 'noobs';
-import { settings } from 'eslint-plugin-prettier/recommended';
+import noobs, { ObsData, Signal } from 'noobs';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -85,12 +79,6 @@ export default class Recorder extends EventEmitter {
    * ConfigService instance.
    */
   private cfg: ConfigService = ConfigService.getInstance();
-
-  /**
-   * Location to write all recording to. This is not the final location of
-   * the finalized video files.
-   */
-  private obsPath: string | undefined;
 
   /**
    * On creation of the recorder we generate a UUID to identify the OBS
@@ -130,19 +118,6 @@ export default class Recorder extends EventEmitter {
   private resolution: keyof typeof obsResolutions = '1920x1080';
 
   /**
-   * Arbritrarily chosen channel numbers for video input. We only ever
-   * include one video source.
-   */
-  private videoChannel = 0;
-
-  /**
-   * Some arbritrarily chosen channel numbers we can use for adding input
-   * devices to the OBS scene. That is, adding microphone audio to the
-   * recordings.
-   */
-  private audioInputChannels = [1, 2, 3];
-
-  /**
    * Array of input devices we are including in the source. This is not an
    * array of all the devices we know about.
    */
@@ -153,32 +128,6 @@ export default class Recorder extends EventEmitter {
    * talk is held down.
    */
   private inputDevicesMuted = false;
-
-  /**
-   * Some arbritrarily chosen channel numbers we can use for adding output
-   * devices to the OBS scene. That is, adding speaker audio to the
-   * recordings.
-   */
-  private audioOutputChannels = [4, 5, 6, 7, 8];
-
-  /**
-   * Array of output devices we are including in the source. This is not an
-   * array of all the devices we know about.
-   */
-  private audioOutputDevices: any[] = [];
-
-  /**
-   * Some arbritrarily chosen channel numbers we can use for adding process
-   * capture devices to the OBS scene. That is, adding application audio to the
-   * recordings.
-   */
-  private audioProcessChannels = [9, 10, 11, 12, 13];
-
-  /**
-   * Array of process capture devices we are including in the source. This is
-   * not an array of all the devices we know about.
-   */
-  private audioProcessDevices: any[] = [];
 
   /**
    * WaitQueue object for storing signalling from OBS. We only care about
@@ -193,38 +142,11 @@ export default class Recorder extends EventEmitter {
   private wroteQueue = new WaitQueue<any>();
 
   /**
-   * Name we use to create and reference the preview display.
-   */
-  private previewName = 'preview';
-
-  /**
-   * Has the preview been created yet.
-   */
-  private previewCreated = false;
-
-  /**
-   * Exists across a reconfigure.
-   */
-  private previewLocation: TPreviewPosition = {
-    width: 0,
-    height: 0,
-    xPos: 0,
-    yPos: 0,
-  };
-
-  /**
    * Volmeters are used to monitor the audio levels of an input source. We
    * keep a list of them here as we need a volmeter per audio source, and
    * it's handy to have a list for cleaning them up.
    */
-  private volmeters: any[] = [];
-
-  /**
-   * Faders are used to modify the volume of an input source. We keep a list
-   * of them here as we need a fader per audio source so it's handy to have a
-   * list for cleaning them up.
-   */
-  private faders: any[] = [];
+  private volmeters: Record<string, number> = {};
 
   /**
    * The state of the recorder, typically used to tell if OBS is recording
@@ -438,13 +360,13 @@ export default class Recorder extends EventEmitter {
    * to make sure we only attempt one recorder action at once, and to handle if OBS
    * misbehaves.
    */
-  public async stop() {
-    console.info('[Recorder] Queued stop');
+  public async stop(force: boolean) {
+    console.info('[Recorder] Queued stop', force);
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
     this.actionQueue.enqueue(async () => {
       try {
-        await this.stopObsRecording();
+        await this.stopObsRecording(force);
         resolveHelper(null);
       } catch (error) {
         console.error('[Recorder] Crash on stop call', String(error));
@@ -463,30 +385,6 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Force stop OBS. This drops the current recording and stops OBS. The
-   * resulting MP4 may be malformed and should not be used.
-   */
-  public async forceStop() {
-    // console.info('[Recorder] Queued force stop');
-    // const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
-    // this.actionQueue.enqueue(async () => {
-    //   try {
-    //     await this.forceStopOBS();
-    //     resolveHelper(null);
-    //   } catch (error) {
-    //     console.error('[Recorder] Crash on force stop call', String(error));
-    //     const crashData: CrashData = {
-    //       date: new Date(),
-    //       reason: String(error),
-    //     };
-    //     this.emit('crash', crashData);
-    //     rejectHelper(error);
-    //   }
-    // });
-    // await promise;
-  }
-
-  /**
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
@@ -498,57 +396,22 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS must be offline to do this');
     }
 
-    this.obsPath = obsPath;
-    await Recorder.createRecordingDirs(this.obsPath);
-    noobs.SetRecordingDir(this.obsPath);
-    this.cleanup();
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
 
-    const videoInfo: any = {
-      fpsNum: obsFPS,
-      fpsDen: 1,
-      baseWidth: width,
-      baseHeight: height,
-      outputWidth: width,
-      outputHeight: height,
+    console.info('[Recorder] Reconfigure OBS video context');
+    noobs.ResetVideoContext(obsFPS, width, height);
 
-      // Bit of a mess here to keep typescript happy and make this readable.
-      // See https://github.com/stream-labs/obs-studio-node/issues/1260.
-      outputFormat: EVideoFormat.NV12 as unknown,
-      colorspace: EColorSpace.CS709 as unknown,
-      scaleType: EScaleType.Bicubic as unknown,
-      fpsType: EFPSType.Fractional as unknown,
+    const outputPath = path.normalize(obsPath);
+    await this.cleanup(outputPath);
+    await Recorder.createRecordingDirs(outputPath);
+    noobs.SetRecordingDir(outputPath);
 
-      // The AMD encoder causes recordings to get much darker if using the full
-      // color range setting. So swap that to partial here. See Issue 446.
-      range: ERangeType.Partial as unknown,
-    };
+    const settings = Recorder.getEncoderSettings(obsRecEncoder, obsQuality);
+    noobs.SetVideoEncoder(obsRecEncoder, settings);
+  }
 
-    if (
-      // videoInfo.fpsNum !== this.context.video.fpsNum ||
-      // videoInfo.baseWidth !== this.context.video.baseWidth ||
-      // videoInfo.baseHeight !== this.context.video.baseHeight ||
-      // videoInfo.outputWidth !== this.context.video.outputWidth ||
-      // videoInfo.outputHeight !== this.context.video.outputHeight
-      true
-    ) {
-      // There are dragons here. This looks simple but it's not and I think
-      // assigning this context is the source of a bug where we can timeout
-      // on reconfiguring. I spent ages trying to solve it in June 2025 but
-      // gave up in. Cowardly only assign it if something has changed to avoid
-      // any risk in the case where nothing has changed.
-      console.info('[Recorder] Reconfigure OBS video context');
-      // this.context.video = videoInfo;
-    }
-
-    const outputPath = path.normalize(this.obsPath);
-
-    Recorder.applySetting('Output', 'Mode', 'Advanced');
-    Recorder.applySetting('Output', 'RecFilePath', outputPath);
-    Recorder.applySetting('Output', 'RecEncoder', obsRecEncoder);
-    Recorder.applySetting('Output', 'RecFormat', 'mp4');
-
+  private static getEncoderSettings(encoder: string, quality: string) {
     // Specify a 1 sec interval for the I-frames. This allows us to round to
     // the nearest second later when cutting and always land on a keyframe.
     //   - This is part of the strategy to avoid re-encoding the videos while
@@ -557,20 +420,14 @@ export default class Recorder extends EventEmitter {
     //     I think is an acceptable error.
     //   - Obviously this is a trade off in file size, where the default keyframe
     //     interval appears to be around 4s.
-    Recorder.applySetting('Output', 'Reckeyint_sec', 1);
+    const settings: ObsData = { keyint_sec: 1 };
 
-    // We set the CPQ or CRF value here. Low value is higher quality, and
-    // vice versa. The limits on what this can actually be set to I took
-    // from what OBS studio allows and is annotated below, but we don't
-    // go to the extremes of the allowed range anyway.
-    const cqp = Recorder.getCqpFromQuality(obsQuality, obsRecEncoder);
-
-    switch (obsRecEncoder) {
+    switch (encoder) {
       case ESupportedEncoders.OBS_X264:
         // CRF and CPQ are so similar in configuration that we can just treat
         // the CRF configuration the same as CQP configuration.
-        Recorder.applySetting('Output', 'Recrate_control', 'CRF');
-        Recorder.applySetting('Output', 'Reccrf', cqp);
+        settings.rate_control = 'CRF';
+        settings.crf = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
       case ESupportedEncoders.AMD_AMF_H264:
@@ -578,23 +435,23 @@ export default class Recorder extends EventEmitter {
       case ESupportedEncoders.JIM_AV1_NVENC:
       case ESupportedEncoders.AMD_AMF_AV1:
         // These settings are identical for AMD and NVENC encoders.
-        Recorder.applySetting('Output', 'Recrate_control', 'CQP');
-        Recorder.applySetting('Output', 'Reccqp', cqp);
+        settings.rate_control = 'CQP';
+        settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
       default:
-        console.error('[Recorder] Unrecognised encoder type', obsRecEncoder);
+        console.error('[Recorder] Unrecognised encoder type', encoder);
         throw new Error('Unrecognised encoder type');
     }
 
-    this.scaleVideoSourceSize();
+    return settings;
   }
 
   /**
    * Configures the video source in OBS.
    */
   public configureVideoSources(config: ObsVideoConfig, isWowRunning: boolean) {
-    const { obsCaptureMode, monitorIndex, captureCursor } = config;
+    const { obsCaptureMode, monitorIndex, captureCursor, forceSdr } = config;
     console.log('Called configureVideoSources');
 
     // Clear any existing video capture sources.
@@ -607,7 +464,7 @@ export default class Recorder extends EventEmitter {
 
     if (obsCaptureMode === 'monitor_capture') {
       // We don't care if WoW is running or not for monitor capture.
-      this.configureMonitorCaptureSource(monitorIndex);
+      this.configureMonitorCaptureSource(monitorIndex, forceSdr);
     }
 
     if (!isWowRunning) {
@@ -618,9 +475,9 @@ export default class Recorder extends EventEmitter {
       console.info('[Recorder] WoW is running');
 
       if (obsCaptureMode === 'game_capture') {
-        this.configureGameCaptureSource(captureCursor);
+        this.configureGameCaptureSource(captureCursor, forceSdr);
       } else if (obsCaptureMode === 'window_capture') {
-        this.configureWindowCaptureSource(captureCursor);
+        this.configureWindowCaptureSource(captureCursor, forceSdr);
       }
     }
 
@@ -709,188 +566,42 @@ export default class Recorder extends EventEmitter {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
 
-    // const {
-    //   audioInputDevices,
-    //   audioOutputDevices,
-    //   audioProcessDevices,
-    //   micVolume,
-    //   speakerVolume,
-    //   processVolume,
-    //   obsForceMono,
-    //   obsAudioSuppression,
-    // } = config;
+    noobs.CreateSource('WCR Mic Source', 'wasapi_input_capture');
+    noobs.CreateSource('WCR Speaker Source', 'wasapi_output_capture');
 
-    // audioInputDevices
-    //   .split(',')
-    //   .filter((id) => id)
-    //   .forEach((id, idx) => {
-    //     console.info('[Recorder] Adding input source', id, idx);
+    noobs.AddSourceToScene('WCR Mic Source');
+    noobs.AddSourceToScene('WCR Speaker Source');
 
-    //     const obsSource = this.createOBSAudioSource(
-    //       id,
-    //       idx,
-    //       TAudioSourceType.input,
-    //     );
+    // Just for muted state for now. TODO: Remove this?
+    this.audioInputDevices = ['default'];
 
-    //     const obsVolmeter = osn.VolmeterFactory.create(0);
-    //     obsVolmeter.attach(obsSource);
+    if (this.audioInputDevices.length !== 0 && config.pushToTalk) {
+      this.obsMicState = MicStatus.MUTED;
+      this.emit('state-change');
+    } else if (this.audioInputDevices.length !== 0) {
+      this.obsMicState = MicStatus.LISTENING;
+      this.emit('state-change');
+    }
 
-    //     const micFader = osn.FaderFactory.create(0);
-    //     micFader.attach(obsSource);
-    //     micFader.mul = micVolume;
+    if (config.pushToTalk) {
+      this.inputDevicesMuted = true;
 
-    //     if (obsAudioSuppression) {
-    //       const filter = osn.FilterFactory.create(
-    //         'noise_suppress_filter_v2',
-    //         'filter',
-    //         { method: 'rnnoise', suppress_level: -30, intensity: 1 },
-    //       );
+      uIOhook.on('keydown', (e: UiohookKeyboardEvent) =>
+        this.pushToTalkHandler(e, config),
+      );
 
-    //       obsSource.addFilter(filter);
-    //     }
+      uIOhook.on('mousedown', (e: UiohookMouseEvent) =>
+        this.pushToTalkHandler(e, config),
+      );
 
-    //     this.volmeters.push(obsVolmeter);
-    //     this.faders.push(micFader);
-    //     this.audioInputDevices.push(obsSource);
-    //   });
+      uIOhook.on('keyup', (e: UiohookKeyboardEvent) =>
+        this.pushToTalkHandler(e, config),
+      );
 
-    // if (this.audioInputDevices.length > this.audioInputChannels.length) {
-    //   console.warn(
-    //     '[Recorder] Too many audio input devices, configuring first',
-    //     this.audioInputChannels.length,
-    //   );
-
-    //   this.audioInputDevices = this.audioInputDevices.slice(
-    //     0,
-    //     this.audioInputChannels.length,
-    //   );
-    // }
-
-    // if (this.audioInputDevices.length !== 0 && config.pushToTalk) {
-    //   this.obsMicState = MicStatus.MUTED;
-    //   this.emit('state-change');
-    // } else if (this.audioInputDevices.length !== 0) {
-    //   this.obsMicState = MicStatus.LISTENING;
-    //   this.emit('state-change');
-    // }
-
-    // this.audioInputDevices.forEach((device) => {
-    //   const index = this.audioInputDevices.indexOf(device);
-    //   const channel = this.audioInputChannels[index];
-
-    //   if (obsForceMono) {
-    //     device.flags = ESourceFlags.ForceMono;
-    //   }
-
-    //   this.addAudioSource(device, channel);
-    // });
-
-    // if (config.pushToTalk) {
-    //   this.audioInputDevices.forEach((device) => {
-    //     device.muted = true;
-    //   });
-
-    //   this.inputDevicesMuted = true;
-
-    //   uIOhook.on('keydown', (e: UiohookKeyboardEvent) =>
-    //     this.pushToTalkHandler(e, config),
-    //   );
-
-    //   uIOhook.on('mousedown', (e: UiohookMouseEvent) =>
-    //     this.pushToTalkHandler(e, config),
-    //   );
-
-    //   uIOhook.on('keyup', (e: UiohookKeyboardEvent) =>
-    //     this.pushToTalkHandler(e, config),
-    //   );
-
-    //   uIOhook.on('mouseup', (e: UiohookMouseEvent) =>
-    //     this.pushToTalkHandler(e, config),
-    //   );
-    // }
-
-    // audioOutputDevices
-    //   .split(',')
-    //   .filter((id) => id)
-    //   .forEach((id, idx) => {
-    //     console.info('[Recorder] Adding output source', id);
-
-    //     const obsSource = this.createOBSAudioSource(
-    //       id,
-    //       idx,
-    //       TAudioSourceType.output,
-    //     );
-
-    //     const obsVolmeter = osn.VolmeterFactory.create(0);
-    //     obsVolmeter.attach(obsSource);
-
-    //     const speakerFader = osn.FaderFactory.create(0);
-    //     speakerFader.attach(obsSource);
-    //     speakerFader.mul = speakerVolume;
-
-    //     this.faders.push(speakerFader);
-    //     this.volmeters.push(obsVolmeter);
-    //     this.audioOutputDevices.push(obsSource);
-    //   });
-
-    // if (this.audioOutputDevices.length > this.audioOutputChannels.length) {
-    //   console.warn(
-    //     '[Recorder] Too many audio output devices, configuring first',
-    //     this.audioOutputChannels.length,
-    //   );
-
-    //   this.audioOutputDevices = this.audioOutputDevices.slice(
-    //     0,
-    //     this.audioOutputChannels.length,
-    //   );
-    // }
-
-    // this.audioOutputDevices.forEach((device) => {
-    //   const index = this.audioOutputDevices.indexOf(device);
-    //   const channel = this.audioOutputChannels[index];
-    //   this.addAudioSource(device, channel);
-    // });
-
-    // audioProcessDevices
-    //   .map((source) => source.value)
-    //   .forEach((value, idx) => {
-    //     console.info('[Recorder] Adding app capture source', value);
-
-    //     const obsSource = this.createOBSAudioSource(
-    //       value,
-    //       idx,
-    //       TAudioSourceType.process,
-    //     );
-
-    //     const obsVolmeter = osn.VolmeterFactory.create(0);
-    //     obsVolmeter.attach(obsSource);
-
-    //     const processFader = osn.FaderFactory.create(0);
-    //     processFader.attach(obsSource);
-    //     processFader.mul = processVolume;
-
-    //     this.volmeters.push(obsVolmeter);
-    //     this.faders.push(processFader);
-    //     this.audioProcessDevices.push(obsSource);
-    //   });
-
-    // if (this.audioProcessDevices.length > this.audioProcessChannels.length) {
-    //   console.warn(
-    //     '[Recorder] Too many audio process devices, configuring first',
-    //     this.audioProcessChannels.length,
-    //   );
-
-    //   this.audioProcessDevices = this.audioProcessDevices.slice(
-    //     0,
-    //     this.audioProcessChannels.length,
-    //   );
-    // }
-
-    // this.audioProcessDevices.forEach((device) => {
-    //   const index = this.audioProcessDevices.indexOf(device);
-    //   const channel = this.audioProcessChannels[index];
-    //   this.addAudioSource(device, channel);
-    // });
+      uIOhook.on('mouseup', (e: UiohookMouseEvent) =>
+        this.pushToTalkHandler(e, config),
+      );
+    }
   }
 
   /**
@@ -898,43 +609,11 @@ export default class Recorder extends EventEmitter {
    * so it can be called externally when WoW is closed.
    */
   public removeAudioSources() {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
+    noobs.RemoveSourceFromScene('WCR Mic Source');
+    noobs.RemoveSourceFromScene('WCR Speaker Source');
 
-    console.info('[Recorder] Removing OBS audio sources...');
-
-    this.volmeters.forEach((volmeter, index) => {
-      console.info('[Recorder] Release volmeter', index);
-      volmeter.detach();
-
-      console.info('[Recorder] Destroy volmeter', index);
-      volmeter.destroy();
-    });
-
-    this.volmeters = [];
-
-    this.audioInputDevices.forEach((device, idx) => {
-      const channel = this.audioInputChannels[idx];
-      this.removeAudioSource(device, channel);
-    });
-
-    this.audioOutputDevices.forEach((device, idx) => {
-      const channel = this.audioOutputChannels[idx];
-      this.removeAudioSource(device, channel);
-    });
-
-    this.audioProcessDevices.forEach((device, idx) => {
-      const channel = this.audioProcessChannels[idx];
-      this.removeAudioSource(device, channel);
-    });
-
-    this.audioInputDevices = [];
-    this.audioOutputDevices = [];
-    this.audioProcessDevices = [];
-
-    this.obsMicState = MicStatus.NONE;
-    this.emit('state-change');
+    noobs.DeleteSource('WCR Mic Source');
+    noobs.DeleteSource('WCR Speaker Source');
   }
 
   /**
@@ -1044,14 +723,9 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    // const encoders = Recorder.getAvailableValues(
-    //   'Output',
-    //   'Recording',
-    //   'RecEncoder',
-    // );
-
-    // console.info('[Recorder]', encoders);
-    return [];
+    const encoders = noobs.ListVideoEncoders();
+    console.info('[Recorder] Encoders:', encoders);
+    return encoders;
   }
 
   /**
@@ -1077,24 +751,12 @@ export default class Recorder extends EventEmitter {
    * Clean-up the recording directory.
    * @params Number of files to leave.
    */
-  public async cleanup(filesToLeave = 3) {
-    console.info('[Recorder] Clean out buffer', filesToLeave);
-
-    if (!this.obsPath) {
-      console.info('[Recorder] Not attempting to clean-up');
-      return;
-    }
-
-    // Sort newest to oldest
-    const sortedBufferVideos = await getSortedVideos(this.obsPath);
-    if (!sortedBufferVideos || sortedBufferVideos.length === 0) return;
-    const videosToDelete = sortedBufferVideos.slice(filesToLeave);
-
-    const deletePromises = videosToDelete.map(async (video) => {
-      await tryUnlink(video.name);
-    });
-
-    await Promise.all(deletePromises);
+  public async cleanup(obsPath: string) {
+    console.info('[Recorder] Clean out buffer');
+    const videos = await getSortedVideos(obsPath); // TODO remove this sorting, its redundant
+    const files = videos.map((f) => f.name);
+    const promises = files.map(tryUnlink);
+    await Promise.all(promises);
   }
 
   /**
@@ -1177,7 +839,7 @@ export default class Recorder extends EventEmitter {
   /**
    * Stop OBS, no-op if already stopped.
    */
-  private async stopObsRecording() {
+  private async stopObsRecording(force: boolean) {
     console.info('[Recorder] Stop');
 
     if (!this.obsInitialized) {
@@ -1191,11 +853,24 @@ export default class Recorder extends EventEmitter {
     }
 
     this.wroteQueue.empty();
-    noobs.StopRecording();
-    const wrote = this.wroteQueue.shift();
 
+    if (force) {
+      console.info('[Recorder] Force stop recording');
+      noobs.ForceStopRecording();
+    } else {
+      console.info('[Recorder] Stop recording');
+      noobs.StopRecording();
+    }
+
+    const wrote = this.wroteQueue.shift();
     await Promise.race([wrote, getPromiseBomb(60, 'OBS timeout on stop')]);
-    this.lastFile = noobs.GetLastRecording();
+
+    if (force) {
+      this.lastFile = '';
+    } else {
+      this.lastFile = noobs.GetLastRecording();
+    }
+
     console.info('[Recorder] Set last file:', this.lastFile);
   }
 
@@ -1283,6 +958,12 @@ export default class Recorder extends EventEmitter {
    * Handle a signal from OBS.
    */
   private handleSignal(signal: Signal) {
+    if (signal.type === 'volmeter' && signal.value !== undefined) {
+      this.volmeters[signal.id] = signal.value;
+      this.mainWindow.webContents.send('volmeter', this.volmeters);
+      return;
+    }
+
     console.info('[Recorder] Got signal:', signal);
 
     // if (obsSignal.type !== 'recording') {
@@ -1361,55 +1042,65 @@ export default class Recorder extends EventEmitter {
    * diverged slightly, so while this was previously a hardcoded string, now we
    * search for it in the OSN sources API.
    */
-  private configureWindowCaptureSource(captureCursor: boolean) {
+  private configureWindowCaptureSource(
+    captureCursor: boolean,
+    forceSdr: boolean,
+  ) {
     console.info('[Recorder] Configuring OBS for Window Capture');
 
     this.findWindowInterval = setInterval(
-      () => this.tryAttachWindowCaptureSource(captureCursor),
+      () => this.tryAttachWindowCaptureSource(captureCursor, forceSdr),
       this.findWindowIntervalDuration,
     );
 
     // Call immediately to avoid the first interval delay. Will clear
     // the interval if it is successful. Common case is that WoW has
     // been open for a while and this immediately succeeds.
-    this.tryAttachWindowCaptureSource(captureCursor);
+    this.tryAttachWindowCaptureSource(captureCursor, forceSdr);
   }
 
   /**
    * Configures the game capture source.
    */
-  private configureGameCaptureSource(captureCursor: boolean) {
+  private configureGameCaptureSource(
+    captureCursor: boolean,
+    forceSdr: boolean,
+  ) {
     console.info('[Recorder] Configuring OBS for Game Capture');
 
     this.findWindowInterval = setInterval(
-      () => this.tryAttachGameCaptureSource(captureCursor),
+      () => this.tryAttachGameCaptureSource(captureCursor, forceSdr),
       this.findWindowIntervalDuration,
     );
 
     // Call immediately to avoid the first interval delay. Will clear
     // the interval if it is successful. Common case is that WoW has
     // been open for a while and this immediately succeeds.
-    this.tryAttachGameCaptureSource(captureCursor);
+    this.tryAttachGameCaptureSource(captureCursor, forceSdr);
   }
 
   /**
    * Creates a monitor capture source. Monitor capture always shows the cursor.
    */
-  private configureMonitorCaptureSource(monitorIndex: number) {
+  private configureMonitorCaptureSource(
+    monitorIndex: number,
+    forceSdr: boolean,
+  ) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
 
     noobs.CreateSource('WCR Monitor Capture', 'monitor_capture');
     const settings = noobs.GetSourceSettings('WCR Monitor Capture');
     const p = noobs.GetSourceProperties('WCR Monitor Capture');
     console.log(p);
-    console.log("method", p[0].items);
-    console.log("ids", p[1].items);
+    console.log('method', p[0].items);
+    console.log('ids', p[1].items);
     console.log(settings);
 
     noobs.SetSourceSettings('WCR Monitor Capture', {
       ...settings,
       method: 0,
       monitor_id: p[1].items[monitorIndex].value,
+      force_sdr: forceSdr,
     });
 
     const settings2 = noobs.GetSourceSettings('WCR Monitor Capture');
@@ -1501,7 +1192,7 @@ export default class Recorder extends EventEmitter {
     } else if (type === TAudioSourceType.input) {
       name = `WCR Mic Source ${idx}`;
     } else if (type === TAudioSourceType.process) {
-      name = `WCR App Source ${idx}`;
+      name = `WCR Process Source ${idx}`;
     } else {
       // Programmer error, should never happen.
       throw new Error('Invalid audio source type');
@@ -1575,9 +1266,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    this.audioInputDevices.forEach((device) => {
-      device.muted = true;
-    });
+    noobs.SetMuteAudioInputs(true);
 
     this.inputDevicesMuted = true;
     this.obsMicState = MicStatus.MUTED;
@@ -1592,9 +1281,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    this.audioInputDevices.forEach((device) => {
-      device.muted = false;
-    });
+    noobs.SetMuteAudioInputs(false);
 
     this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.LISTENING;
@@ -1637,13 +1324,13 @@ export default class Recorder extends EventEmitter {
   /**
    * Convert the quality setting to an appropriate CQP/CRF value based on encoder type.
    */
-  private static getCqpFromQuality(obsQuality: string, encoder: string) {
+  private static getCqpFromQuality(encoder: string, quality: string) {
     if (
       encoder === ESupportedEncoders.JIM_AV1_NVENC ||
       encoder === ESupportedEncoders.AMD_AMF_AV1
     ) {
       // AV1 typically needs lower CQP values for similar quality
-      switch (obsQuality) {
+      switch (quality) {
         case QualityPresets.ULTRA:
           return 20;
         case QualityPresets.HIGH:
@@ -1653,13 +1340,13 @@ export default class Recorder extends EventEmitter {
         case QualityPresets.LOW:
           return 32;
         default:
-          console.error('[Recorder] Unrecognised quality', obsQuality);
+          console.error('[Recorder] Unrecognised quality', quality);
           throw new Error('Unrecognised quality');
       }
     }
 
     // Original values for x264 CRF and other encoders' CQP
-    switch (obsQuality) {
+    switch (quality) {
       case QualityPresets.ULTRA:
         return 22;
       case QualityPresets.HIGH:
@@ -1669,7 +1356,7 @@ export default class Recorder extends EventEmitter {
       case QualityPresets.LOW:
         return 34;
       default:
-        console.error('[Recorder] Unrecognised quality', obsQuality);
+        console.error('[Recorder] Unrecognised quality', quality);
         throw new Error('Unrecognised quality');
     }
   }
@@ -1770,7 +1457,10 @@ export default class Recorder extends EventEmitter {
    * Try to attach to a game capture source for WoW. If the window is not
    * found, do nothing.
    */
-  private tryAttachGameCaptureSource(captureCursor: boolean) {
+  private tryAttachGameCaptureSource(
+    captureCursor: boolean,
+    forceSdr: boolean,
+  ) {
     this.findWindowAttempts++;
 
     if (this.findWindowAttempts > this.findWindowAttemptLimit) {
@@ -1798,7 +1488,9 @@ export default class Recorder extends EventEmitter {
       noobs.SetSourceSettings('WCR Game Capture', {
         ...s,
         capture_mode: 'window',
-        window: 'World of Warcraft:waApplication Window:WowClassic.exe',
+        window: 'World of Warcraft:waApplication Window:WowClassic.exe', // TODO handle all names classic, chinese, use windowMatch();
+        force_sdr: forceSdr,
+        cursor: captureCursor,
       });
 
       const s1 = noobs.GetSourceSettings('WCR Game Capture');
@@ -1808,6 +1500,7 @@ export default class Recorder extends EventEmitter {
       window = true;
     } catch (ex) {
       console.error('[Recorder] Exception when trying to find window:', ex);
+      // TODO release source'? 
     }
 
     if (!window) {
@@ -1825,7 +1518,10 @@ export default class Recorder extends EventEmitter {
    * Try to attach to a window capture source for WoW. If the window is not
    * found, do nothing.
    */
-  private tryAttachWindowCaptureSource(captureCursor: boolean) {
+  private tryAttachWindowCaptureSource(
+    captureCursor: boolean,
+    forceSdr: boolean,
+  ) {
     this.findWindowAttempts++;
 
     if (this.findWindowAttempts > this.findWindowAttemptLimit) {
@@ -1856,8 +1552,10 @@ export default class Recorder extends EventEmitter {
       noobs.SetSourceSettings('WCR Window Capture', {
         ...s,
         method: 2, // WGC: Windows Graphics Capture
-        window: 'World of Warcraft:waApplication Window:WowClassic.exe',
+        window: 'World of Warcraft:waApplication Window:WowClassic.exe', // TODO handle all names classic, chinese
         compatibility: true,
+        force_sdr: forceSdr,
+        cursor: captureCursor,
       });
 
       const s1 = noobs.GetSourceSettings('WCR Window Capture');
