@@ -587,7 +587,7 @@ export default class Manager {
       await this.retailPtrLogHandler.forceEndActivity();
     } else {
       // No activity so we can just force stop.
-      await this.recorder.stop();
+      await this.recorder.stop(true);
     }
 
     this.recorder.clearFindWindowInterval();
@@ -604,7 +604,7 @@ export default class Manager {
    */
   private async configureObsBase(config: ObsBaseConfig) {
     // Force stop as we don't care about the output video.
-    await this.recorder.forceStop();
+    await this.recorder.stop(true);
 
     await this.refreshCloudStatus();
     await this.refreshDiskStatus();
@@ -693,7 +693,7 @@ export default class Manager {
       // but isRecording is false, that means it's a buffer recording. Stop it
       // briefly to change the config. Force stop as we don't care about the
       // output video.
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
     }
 
     if (this.retailLogHandler) {
@@ -1284,6 +1284,8 @@ export default class Manager {
         this.audioSettingsOpen ? 'opened' : 'closed',
       );
 
+      noobs.SetVolmeterEnabled(this.audioSettingsOpen);
+
       if (!this.stages[3].valid) {
         console.warn('[Manager] Wont touch audio sources with invalid config');
         return;
@@ -1319,6 +1321,23 @@ export default class Manager {
       noobs.SetSourcePos('WCR Overlay', updated);
     });
 
+    ipcMain.handle('createAudioSource', (_event, args) => {
+      let type = '';
+
+      // TODO proper types
+      if (args[0] === 'Input') {
+        type = 'wasapi_input_capture';
+      } else if (args[0] === 'Output') {
+        type = 'wasapi_output_capture';
+      } else {
+        type = 'wasapi_process_output_capture';
+      }
+
+      noobs.CreateSource('WCR Audio Source', type);
+      const props = noobs.GetSourceProperties('WCR Audio Source');
+      return props;
+    });
+
     // Important we shutdown OBS on the before-quit event as if we get closed by
     // the installer we want to ensure we shutdown OBS, this is common when
     // upgrading the app. See issue 325 and 338.
@@ -1336,12 +1355,12 @@ export default class Manager {
       console.info('[Manager] Detected Windows is going to sleep.');
       this.dropActivity();
       this.poller.reset();
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
     });
 
     powerMonitor.on('resume', async () => {
       console.info('[Manager] Detected Windows waking up from a sleep.');
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
 
       this.poller
         .on('wowProcessStart', () => this.onWowStarted())
@@ -1399,53 +1418,6 @@ export default class Manager {
     this.active = false;
     this.queued = false;
     this.manage();
-  }
-
-  /**
-   * Every so often we'll try restart the recorder to avoid having an
-   * infinitely long video sitting in the .temp folder. First we check
-   * it's safe to do so, i.e. we're currently recording and not in an
-   * activity.
-   */
-  private async restartRecorder() {
-    if (this.recorder.obsState !== ERecordingState.Recording) {
-      console.info('[Manager] Not restarting recorder as not recording');
-      return;
-    }
-
-    const retailNotSafe = this.retailLogHandler?.activity;
-    const classicNotSafe = this.classicLogHandler?.activity;
-    const eraNotSafe = this.eraLogHandler?.activity;
-    const retailPtrNotSafe = this.retailPtrLogHandler?.activity;
-
-    if (retailNotSafe || classicNotSafe || eraNotSafe || retailPtrNotSafe) {
-      console.info('[Manager] Not restarting recorder as in an activity');
-      return;
-    }
-
-    const retailOverrunning = this.retailLogHandler?.overrunning;
-    const classicOverrunning = this.classicLogHandler?.overrunning;
-    const eraOverrunning = this.eraLogHandler?.overrunning;
-    const retailPtrOverrunning = this.retailPtrLogHandler?.overrunning;
-
-    if (
-      retailOverrunning ||
-      classicOverrunning ||
-      eraOverrunning ||
-      retailPtrOverrunning
-    ) {
-      console.info(
-        '[Manager] Not restarting recorder as an activity is overrunning',
-      );
-      return;
-    }
-
-    console.info('[Manager] Restart recorder');
-
-    // Use force stop here as we don't care about the output file.
-    await this.recorder.forceStop();
-    await this.recorder.cleanup();
-    await this.recorder.startBuffer();
   }
 
   /**
