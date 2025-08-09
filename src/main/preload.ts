@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { SceneItemPosition, SourceDimensions } from 'noobs';
 
 export type Channels =
   | 'mainWindow'
@@ -17,7 +18,6 @@ export type Channels =
   | 'selectPath'
   | 'selectFile'
   | 'settingsChange'
-  | 'overlay'
   | 'getNextKeyPress'
   | 'clip'
   | 'deleteVideos'
@@ -28,7 +28,10 @@ export type Channels =
   | 'volmeter'
   | 'audioSettingsOpen'
   | 'updateSourcePos'
-  | 'createAudioSource';
+  | 'createAudioSource'
+  | 'getPreviewDimensions'
+  | 'getSourcePosition'
+  | 'setSourcePosition';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -58,6 +61,25 @@ contextBridge.exposeInMainWorld('electron', {
 
     removeAllListeners(channel: Channels) {
       ipcRenderer.removeAllListeners(channel);
+    },
+
+    getPreviewInfo(): Promise<{
+      canvasWidth: number;
+      canvasHeight: number;
+      previewWidth: number;
+      previewHeight: number;
+    }> {
+      return ipcRenderer.invoke('getPreviewInfo');
+    },
+
+    getSourcePosition(
+      src: string,
+    ): Promise<SourceDimensions & SceneItemPosition> {
+      return ipcRenderer.invoke('getSourcePosition', src);
+    },
+
+    setSourcePosition(src: string, position: SceneItemPosition) {
+      ipcRenderer.send('setSourcePosition', src, position);
     },
   },
 });
