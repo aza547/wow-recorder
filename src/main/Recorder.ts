@@ -41,7 +41,6 @@ import {
   ObsVideoConfig,
   ObsVolmeterCallbackInfo,
   TAudioSourceType,
-  TPreviewPosition,
 } from './types';
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
@@ -451,7 +450,15 @@ export default class Recorder extends EventEmitter {
    * Configures the video source in OBS.
    */
   public configureVideoSources(config: ObsVideoConfig, isWowRunning: boolean) {
-    const { obsCaptureMode, monitorIndex, captureCursor, forceSdr } = config;
+    const {
+      obsCaptureMode,
+      monitorIndex,
+      captureCursor,
+      forceSdr,
+      videoSourceScale,
+      videoSourceXPosition,
+      videoSourceYPosition,
+    } = config;
     console.log('Called configureVideoSources');
 
     // Clear any existing video capture sources.
@@ -475,9 +482,21 @@ export default class Recorder extends EventEmitter {
       console.info('[Recorder] WoW is running');
 
       if (obsCaptureMode === 'game_capture') {
-        this.configureGameCaptureSource(captureCursor, forceSdr);
+        this.configureGameCaptureSource(
+          captureCursor,
+          forceSdr,
+          videoSourceScale,
+          videoSourceXPosition,
+          videoSourceYPosition,
+        );
       } else if (obsCaptureMode === 'window_capture') {
-        this.configureWindowCaptureSource(captureCursor, forceSdr);
+        this.configureWindowCaptureSource(
+          captureCursor,
+          forceSdr,
+          videoSourceScale,
+          videoSourceXPosition,
+          videoSourceYPosition,
+        );
       }
     }
 
@@ -1045,18 +1064,34 @@ export default class Recorder extends EventEmitter {
   private configureWindowCaptureSource(
     captureCursor: boolean,
     forceSdr: boolean,
+    videoSourceScale: number,
+    videoSourceXPosition: number,
+    videoSourceYPosition: number,
   ) {
     console.info('[Recorder] Configuring OBS for Window Capture');
 
     this.findWindowInterval = setInterval(
-      () => this.tryAttachWindowCaptureSource(captureCursor, forceSdr),
+      () =>
+        this.tryAttachWindowCaptureSource(
+          captureCursor,
+          forceSdr,
+          videoSourceScale,
+          videoSourceXPosition,
+          videoSourceYPosition,
+        ),
       this.findWindowIntervalDuration,
     );
 
     // Call immediately to avoid the first interval delay. Will clear
     // the interval if it is successful. Common case is that WoW has
     // been open for a while and this immediately succeeds.
-    this.tryAttachWindowCaptureSource(captureCursor, forceSdr);
+    this.tryAttachWindowCaptureSource(
+      captureCursor,
+      forceSdr,
+      videoSourceScale,
+      videoSourceXPosition,
+      videoSourceYPosition,
+    );
   }
 
   /**
@@ -1065,18 +1100,34 @@ export default class Recorder extends EventEmitter {
   private configureGameCaptureSource(
     captureCursor: boolean,
     forceSdr: boolean,
+    videoSourceScale: number,
+    videoSourceXPosition: number,
+    videoSourceYPosition: number,
   ) {
     console.info('[Recorder] Configuring OBS for Game Capture');
 
     this.findWindowInterval = setInterval(
-      () => this.tryAttachGameCaptureSource(captureCursor, forceSdr),
+      () =>
+        this.tryAttachGameCaptureSource(
+          captureCursor,
+          forceSdr,
+          videoSourceScale,
+          videoSourceXPosition,
+          videoSourceYPosition,
+        ),
       this.findWindowIntervalDuration,
     );
 
     // Call immediately to avoid the first interval delay. Will clear
     // the interval if it is successful. Common case is that WoW has
     // been open for a while and this immediately succeeds.
-    this.tryAttachGameCaptureSource(captureCursor, forceSdr);
+    this.tryAttachGameCaptureSource(
+      captureCursor,
+      forceSdr,
+      videoSourceScale,
+      videoSourceXPosition,
+      videoSourceYPosition,
+    );
   }
 
   /**
@@ -1460,6 +1511,9 @@ export default class Recorder extends EventEmitter {
   private tryAttachGameCaptureSource(
     captureCursor: boolean,
     forceSdr: boolean,
+    videoSourceScale: number,
+    videoSourceXPosition: number,
+    videoSourceYPosition: number,
   ) {
     this.findWindowAttempts++;
 
@@ -1497,10 +1551,17 @@ export default class Recorder extends EventEmitter {
       console.log('s1', s1);
 
       noobs.AddSourceToScene('WCR Game Capture');
+
+      noobs.SetSourcePos('WCR Game Capture', {
+        x: videoSourceXPosition,
+        y: videoSourceYPosition,
+        scaleX: videoSourceScale,
+        scaleY: videoSourceScale,
+      });
       window = true;
     } catch (ex) {
       console.error('[Recorder] Exception when trying to find window:', ex);
-      // TODO release source'? 
+      // TODO release source'?
     }
 
     if (!window) {
@@ -1521,6 +1582,9 @@ export default class Recorder extends EventEmitter {
   private tryAttachWindowCaptureSource(
     captureCursor: boolean,
     forceSdr: boolean,
+    videoSourceScale: number,
+    videoSourceXPosition: number,
+    videoSourceYPosition: number,
   ) {
     this.findWindowAttempts++;
 
@@ -1561,7 +1625,16 @@ export default class Recorder extends EventEmitter {
       const s1 = noobs.GetSourceSettings('WCR Window Capture');
       console.log('s1', s1);
 
+      console.log("SETTING POSITION TO", videoSourceXPosition, videoSourceYPosition, videoSourceScale);
+
       noobs.AddSourceToScene('WCR Window Capture');
+
+      noobs.SetSourcePos('WCR Window Capture', {
+        x: videoSourceXPosition,
+        y: videoSourceYPosition,
+        scaleX: videoSourceScale,
+        scaleY: videoSourceScale,
+      });
       window = true;
     } catch (ex) {
       console.error('[Recorder] Exception when trying to find window:', ex);

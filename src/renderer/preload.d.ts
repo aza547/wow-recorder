@@ -1,5 +1,6 @@
 import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
+import { SceneItemPosition, SourceDimensions } from 'noobs';
 
 declare global {
   interface Window {
@@ -15,6 +16,19 @@ declare global {
         ): (() => void) | undefined;
         once(channel: string, func: (...args: unknown[]) => void): void;
         removeAllListeners(channel: string): void;
+
+        getPreviewInfo(): Promise<{
+          canvasWidth: number;
+          canvasHeight: number;
+          previewWidth: number;
+          previewHeight: number;
+        }>;
+
+        getSourcePosition(
+          src: string,
+        ): Promise<SceneItemPosition & SourceDimensions>;
+
+        setSourcePosition(src: string, position: SceneItemPosition): void;
       };
     };
   }
