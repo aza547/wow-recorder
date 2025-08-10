@@ -182,6 +182,7 @@ const createWindow = async () => {
     );
 
     assert(manager);
+    console.log('[Main] Ready to show calling manage');
     await manager.manage();
 
     const startMinimized = cfg.get<boolean>('startMinimized');
@@ -346,6 +347,7 @@ ipcMain.on('settingsChange', () => {
   console.info('[Main] Settings change event');
 
   if (manager) {
+    console.log('[Main] Settings change calling manage');
     manager.manage();
   }
 });
