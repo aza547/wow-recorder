@@ -187,20 +187,6 @@ const ChatOverlayControls = (props: IProps) => {
           Hide Overlay
         </Button>
       </div>
-      <div>
-        <Button
-          onClick={() => {
-            ipc.setSourcePosition('WCR Overlay', {
-              x: 0,
-              y: 0,
-              scaleX: 0.15, // TODO: not fixed
-              scaleY: 0.15, // TODO: not fixed
-            });
-          }}
-        >
-          Reset
-        </Button>
-      </div>
     </div>
   );
 };
