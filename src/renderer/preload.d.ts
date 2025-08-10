@@ -28,7 +28,12 @@ declare global {
           src: string,
         ): Promise<SceneItemPosition & SourceDimensions>;
 
-        setSourcePosition(src: string, position: SceneItemPosition): void;
+        moveSource(src: string, delta: { x: number; y: number }): void;
+
+        scaleSource(
+          src: string,
+          target: { width: number; height: number },
+        ): void;
       };
     };
   }

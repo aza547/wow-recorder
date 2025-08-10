@@ -31,7 +31,8 @@ export type Channels =
   | 'createAudioSource'
   | 'getPreviewDimensions'
   | 'getSourcePosition'
-  | 'setSourcePosition';
+  | 'moveSource'
+  | 'scaleSource';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -78,8 +79,12 @@ contextBridge.exposeInMainWorld('electron', {
       return ipcRenderer.invoke('getSourcePosition', src);
     },
 
-    setSourcePosition(src: string, position: SceneItemPosition) {
-      ipcRenderer.send('setSourcePosition', src, position);
+    moveSource(src: string, delta: { x: number; y: number }) {
+      ipcRenderer.send('moveSource', src, delta);
+    },
+
+    scaleSource(src: string, target: { width: number; height: number }) {
+      ipcRenderer.send('scaleSource', src, target);
     },
   },
 });

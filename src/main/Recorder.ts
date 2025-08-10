@@ -524,7 +524,7 @@ export default class Recorder extends EventEmitter {
       chatOverlayYPosition,
       chatOverlayOwnImagePath,
     } = config;
-
+    console.log("CREATE2  WCR Overlay");
     noobs.CreateSource('WCR Overlay', 'image_source');
 
     const settings = noobs.GetSourceSettings('WCR Overlay');
@@ -558,6 +558,7 @@ export default class Recorder extends EventEmitter {
       chatOverlayScale,
     } = config;
 
+    console.log("CREATE1  WCR Overlay");
     noobs.CreateSource('WCR Overlay', 'image_source');
 
     const settings = noobs.GetSourceSettings('WCR Overlay');
@@ -1168,6 +1169,7 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Configure image source for chat overlay');
 
     // Safe to call both of these even if the source doesn't exist.
+    console.log("REMOVE  WCR Overlay");
     noobs.RemoveSourceFromScene('WCR Overlay');
     noobs.DeleteSource('WCR Overlay');
 

@@ -1331,8 +1331,8 @@ export default class Manager {
     let sourceDebounceTimer: NodeJS.Timeout | null = null;
 
     ipcMain.on(
-      'setSourcePosition',
-      (_event, src: string, position: SceneItemPosition) => {
+      'moveSource',
+      (_event, src: string, delta: { x: number; y: number }) => {
         const previewInfo = noobs.GetPreviewInfo(); // Could be cached
         const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
         const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
@@ -1340,8 +1340,8 @@ export default class Manager {
         const current = noobs.GetSourcePos(src);
 
         const updated: SceneItemPosition = {
-          x: current.x + position.x / sf,
-          y: current.y + position.y / sf,
+          x: current.x + delta.x / sf,
+          y: current.y + delta.y / sf,
           scaleX: current.scaleX,
           scaleY: current.scaleY,
         };
@@ -1363,6 +1363,68 @@ export default class Manager {
             this.cfg.set('videoSourceXPosition', updated.x);
             this.cfg.set('videoSourceYPosition', updated.y);
             //this.cfg.set('videoSourceScale', 0.15); TODO
+          }
+
+          sourceDebounceTimer = null;
+        }, 1000);
+      },
+    );
+
+    ipcMain.on(
+      'scaleSource',
+      (_event, src: string, target: { w: number; h: number }) => {
+        const previewInfo = noobs.GetPreviewInfo(); // Could be cached
+        const osfx = previewInfo.previewWidth / previewInfo.canvasWidth;
+        const osfy = previewInfo.previewHeight / previewInfo.canvasHeight;
+        const sf = Math.min(osfx, osfy);
+
+        const current = noobs.GetSourcePos(src);
+
+        // Current scaled dimensions
+        const scaledWidth = current.width * current.scaleX * sf;
+        const scaledHeight = current.height * current.scaleY * sf;
+
+        const ratioX = target.w / scaledWidth;
+        const ratioY = target.h / scaledHeight;
+
+        const nsfx = target.w / current.width;
+        const nsfy = target.h / current.height;
+        const xLimited = nsfx < nsfy;
+
+        // console.log(xLimited, target.w, target.h, ratioX, ratioY);
+        // console.log("  ", target.w, scaledWidth);
+        // console.log("  ", target.h, scaledHeight);
+
+        let scale = 0;
+
+        if (xLimited) {
+          scale = ratioY * current.scaleY;
+        } else {
+          scale = ratioX * current.scaleX;
+        }
+
+        // console.log("    ", newScale);
+
+        const updated: SceneItemPosition = {
+          x: current.x,
+          y: current.y,
+          scaleX: scale,
+          scaleY: scale,
+        };
+
+        noobs.SetSourcePos(src, updated);
+
+        if (sourceDebounceTimer) {
+          clearTimeout(sourceDebounceTimer);
+        }
+
+        sourceDebounceTimer = setTimeout(() => {
+          if (src === 'WCR Overlay') {
+            console.log('[Manager] Saving chat overlay scale', scale);
+            this.cfg.set('chatOverlayScale', scale);
+          } else {
+            console.log('[Manager] Saving video source scale', scale);
+            this.cfg.set('videoSourceScale', scale);
           }
 
           sourceDebounceTimer = null;
