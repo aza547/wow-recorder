@@ -613,7 +613,7 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
 const dungeonTimersByMapId: { [id: number]: number[] } = {
   // Shadowlands
   377: [43 * 60, 34 * 60 + 25, 25 * 60 + 49],
-  378: [32 * 60, 25 * 60 + 36, 19 * 60 + 12],
+  378: [31 * 60, 31 * 60 * 0.8, 31 * 60 + 0.6], // Halls of Atonement
   375: [30 * 60, 24 * 60, 18 * 60], // Mists of Tirna Scithe
   379: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
   380: [41 * 60, 32 * 60 + 48, 24 * 60 + 36],
@@ -624,8 +624,8 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   234: [35 * 60, 28 * 60, 21 * 60],
   369: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
   370: [32 * 60, 25 * 60 + 36, 19 * 60 + 12], // Operation: Mechagon - Workshop
-  391: [39 * 60, 31 * 60 + 12, 23 * 60 + 24],
-  392: [30 * 60, 24 * 60, 18 * 60],
+  391: [39 * 60, 31 * 60 + 12, 23 * 60 + 24], // Tazavesh: Streets of Wonder
+  392: [30 * 60, 24 * 60, 18 * 60], // Tazavesh: So'leah's Gambit
   169: [30 * 60, 24 * 60, 18 * 60],
   166: [30 * 60, 24 * 60, 18 * 60],
 
@@ -680,8 +680,8 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   247: [33 * 60, 33 * 60 * 0.8, 33 * 60 * 0.6], // 'THE MOTHERLODE!!'
 
   // TWW S3
-  // Below is a total guess/placeholder. Should update when timer is published.
-  542: [30 * 60, 30 * 60 * 0.8, 30 * 60 * 0.6], // "Eco-Dome Al'Dani"
+  // Timings from https://www.wowhead.com/guide/mythic-plus-dungeons/the-war-within-season-3/overview.
+  542: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // "Eco-Dome Al'Dani"
 };
 
 // Useful database for grabbing this stuff:
