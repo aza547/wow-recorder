@@ -178,15 +178,6 @@ const ChatOverlayControls = (props: IProps) => {
         {getLocalePhrase(appState.language, Phrase.ChatOverlayTip) ||
           'Tip: Click and drag to move the chat overlay.'}
       </div>
-      <div>
-        <Button
-          onClick={() => {
-            ipc.sendMessage('preview', ['hide']);
-          }}
-        >
-          Hide Overlay
-        </Button>
-      </div>
     </div>
   );
 };

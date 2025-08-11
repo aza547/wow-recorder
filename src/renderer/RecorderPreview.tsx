@@ -1,5 +1,12 @@
 import { Box } from '@mui/material';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { stopPropagation } from './rendererutils';
 
 const ipc = window.electron.ipcRenderer;
@@ -15,7 +22,28 @@ enum SceneInteraction {
   SCALE,
 }
 
-const RecorderPreview = () => {
+type BoxDimensions = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const RecorderPreview = (props: {
+  previewEnabled: boolean;
+  overlayBoxDimensions: BoxDimensions;
+  setOverlayDimensions: Dispatch<SetStateAction<BoxDimensions>>;
+  gameBoxDimensions: BoxDimensions;
+  setGameBoxDimensions: Dispatch<SetStateAction<BoxDimensions>>;
+}) => {
+  const {
+    previewEnabled,
+    overlayBoxDimensions,
+    setOverlayDimensions,
+    gameBoxDimensions,
+    setGameBoxDimensions,
+  } = props;
+
   const draggingOverlay = useRef<SceneInteraction>(SceneInteraction.NONE);
   const draggingGame = useRef<SceneInteraction>(SceneInteraction.NONE);
   let zIndex = 1;
@@ -33,33 +61,6 @@ const RecorderPreview = () => {
     previewHeight: 0,
   });
 
-  const [overlayBoxDimensions, setOverlayDimensions] = useState({
-    x: 0,
-    y: 0,
-    width: 200,
-    height: 100,
-  });
-
-  const [gameBoxDimensions, setGameBoxDimensions] = useState({
-    x: 0,
-    y: 0,
-    width: 1000,
-    height: 500,
-  });
-
-  const initDraggableBoxes = async () => {
-    const s = await ipc.getSourcePosition('WCR Overlay');
-    setOverlayDimensions(s);
-    const g = await ipc.getSourcePosition('WCR Window Capture');
-    setGameBoxDimensions(g);
-  };
-
-  useEffect(() => {
-    // On component mount, get the source dimensions from the backend
-    // to initialize the draggable boxes.
-    initDraggableBoxes();
-  }, []);
-
   useEffect(() => {
     // The overlay box has been moved or scaled, inform the backend.
     ipc.setSourcePosition('WCR Overlay', overlayBoxDimensions);
@@ -69,6 +70,14 @@ const RecorderPreview = () => {
     // The game box has been moved or scaled, inform the backend.
     ipc.setSourcePosition('WCR Window Capture', gameBoxDimensions);
   }, [gameBoxDimensions]);
+
+  useEffect(() => {
+    if (previewEnabled) {
+      show();
+    } else {
+      ipc.sendMessage('preview', ['hide']);
+    }
+  }, [previewEnabled]);
 
   const updatePreviewDimensions = async () => {
     const dims = await ipc.getPreviewInfo();
@@ -171,13 +180,11 @@ const RecorderPreview = () => {
   const show = async () => {
     const previewBox = document.getElementById('preview-box');
 
-    if (!previewBox) {
-      return;
+    if (previewBox && previewEnabled) {
+      // Show the preview box and set its dimensions.
+      const { width, height, x, y } = previewBox.getBoundingClientRect();
+      ipc.sendMessage('preview', ['show', width, height, x, y]);
     }
-
-    // Show the preview box and set its dimensions.
-    const { width, height, x, y } = previewBox.getBoundingClientRect();
-    ipc.sendMessage('preview', ['show', width, height, x, y]);
 
     // Update the overlay dimensions.
     updatePreviewDimensions();
@@ -193,7 +200,7 @@ const RecorderPreview = () => {
 
   const setupResizeObserver = () => {
     if (resizeObserver === undefined) {
-      resizeObserver = new ResizeObserver(show);
+      resizeObserver = new ResizeObserver(() => show());
     }
 
     const previewBox = document.getElementById('preview-box');
@@ -246,8 +253,8 @@ const RecorderPreview = () => {
           top,
           height,
           width,
-          border: '2px solid red',
-          boxSizing: 'border-box',
+          outline: '2px solid red',
+          outlineOffset: '-3px', // Slight offset to save it showing up on the edges.
           zIndex: ++zIndex,
         }}
       >
@@ -258,11 +265,10 @@ const RecorderPreview = () => {
           onMouseDown={(e) => onMouseDown(e, src, SceneInteraction.SCALE)}
           sx={{
             position: 'absolute',
-            right: 0,
-            bottom: 0,
+            right: 1, // Slight offset to save it showing up on the edges.
+            bottom: 1, // Slight offset to save it showing up on the edges.
             width: cornerSize,
             height: cornerSize,
-            border: '2px solid red',
             backgroundColor: 'red',
             zIndex,
           }}
@@ -285,10 +291,9 @@ const RecorderPreview = () => {
         sx={{
           position: 'relative',
           height: '100%',
-          border: '2px solid grey',
-          boxSizing: 'border-box',
           mx: 12,
           overflow: 'hidden',
+          border: '1px solid black ',
         }}
       >
         {renderDraggableSceneBox(WCRSceneItem.GAME)}
