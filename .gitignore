@@ -37,3 +37,4 @@ src/main/osn-data/*
 # Cloud storage dirs
 upload
 buffer
+win-capture/
