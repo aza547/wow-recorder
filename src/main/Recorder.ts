@@ -565,7 +565,7 @@ export default class Recorder extends EventEmitter {
 
     noobs.SetSourceSettings('WCR Overlay', {
       ...settings,
-      file: getAssetPath('poster', 'chat-cover.png'),
+      file: getAssetPath('poster', 'image.png'),
     });
 
     noobs.AddSourceToScene('WCR Overlay');

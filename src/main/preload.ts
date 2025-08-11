@@ -31,7 +31,8 @@ export type Channels =
   | 'createAudioSource'
   | 'getPreviewInfo'
   | 'getSourcePosition'
-  | 'setSourcePosition';
+  | 'setSourcePosition'
+  | 'resetSourcePosition';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -80,6 +81,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     setSourcePosition(src: string, delta: { x: number; y: number, width: number, height: number }) {
       ipcRenderer.send('setSourcePosition', src, delta);
+    },
+
+    resetSourcePosition(src: string) {
+      ipcRenderer.send('resetSourcePosition', src);
     },
   },
 });

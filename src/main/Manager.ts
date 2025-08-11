@@ -1383,6 +1383,32 @@ export default class Manager {
       },
     );
 
+    ipcMain.on(
+      'resetSourcePosition',
+      (_event, src: string) => {
+        const updated: SceneItemPosition = {
+          x: 0,
+          y: 0,
+          scaleX: 1,
+          scaleY: 1,
+        };
+
+        noobs.SetSourcePos(src, updated);
+
+        if (src === 'WCR Overlay') {
+            console.log('[Manager] Saving chat overlay position', updated);
+            this.cfg.set('chatOverlayXPosition', updated.x);
+            this.cfg.set('chatOverlayYPosition', updated.y);
+            this.cfg.set('chatOverlayScale', 1);
+          } else {
+            console.log('[Manager] Saving video source position', updated);
+            this.cfg.set('videoSourceXPosition', updated.x);
+            this.cfg.set('videoSourceYPosition', updated.y);
+            this.cfg.set('videoSourceScale', 1);
+          }
+      },
+    );
+
     ipcMain.handle('createAudioSource', (_event, args) => {
       let type = '';
 
