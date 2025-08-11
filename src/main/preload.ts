@@ -29,10 +29,9 @@ export type Channels =
   | 'audioSettingsOpen'
   | 'updateSourcePos'
   | 'createAudioSource'
-  | 'getPreviewDimensions'
+  | 'getPreviewInfo'
   | 'getSourcePosition'
-  | 'moveSource'
-  | 'scaleSource';
+  | 'setSourcePosition';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -79,12 +78,8 @@ contextBridge.exposeInMainWorld('electron', {
       return ipcRenderer.invoke('getSourcePosition', src);
     },
 
-    moveSource(src: string, delta: { x: number; y: number }) {
-      ipcRenderer.send('moveSource', src, delta);
-    },
-
-    scaleSource(src: string, target: { width: number; height: number }) {
-      ipcRenderer.send('scaleSource', src, target);
+    setSourcePosition(src: string, delta: { x: number; y: number, width: number, height: number }) {
+      ipcRenderer.send('setSourcePosition', src, delta);
     },
   },
 });

@@ -19,6 +19,7 @@ const RecorderPreview = () => {
   const draggingOverlay = useRef<SceneInteraction>(SceneInteraction.NONE);
   const draggingGame = useRef<SceneInteraction>(SceneInteraction.NONE);
   let zIndex = 1;
+  let resizeObserver: ResizeObserver | undefined;
 
   const [previewInfo, setPreviewInfo] = useState<{
     canvasWidth: number;
@@ -31,9 +32,6 @@ const RecorderPreview = () => {
     previewWidth: 0,
     previewHeight: 0,
   });
-
-  // const lastPosOverlay = useRef({ x: 0, y: 0 });
-  // const lastPosGame = useRef({ x: 0, y: 0 });
 
   const [overlayBoxDimensions, setOverlayDimensions] = useState({
     x: 0,
@@ -49,23 +47,32 @@ const RecorderPreview = () => {
     height: 500,
   });
 
+  const initDraggableBoxes = async () => {
+    const s = await ipc.getSourcePosition('WCR Overlay');
+    setOverlayDimensions(s);
+    const g = await ipc.getSourcePosition('WCR Window Capture');
+    setGameBoxDimensions(g);
+  };
+
   useEffect(() => {
-    ipc.moveSource('WCR Overlay', overlayBoxDimensions);
-    ipc.scaleSource('WCR Overlay', overlayBoxDimensions);
+    // On component mount, get the source dimensions from the backend
+    // to initialize the draggable boxes.
+    initDraggableBoxes();
+  }, []);
+
+  useEffect(() => {
+    // The overlay box has been moved or scaled, inform the backend.
+    ipc.setSourcePosition('WCR Overlay', overlayBoxDimensions);
   }, [overlayBoxDimensions]);
 
   useEffect(() => {
-    ipc.moveSource('WCR Window Capture', gameBoxDimensions);
-    ipc.scaleSource('WCR Window Capture', gameBoxDimensions);
+    // The game box has been moved or scaled, inform the backend.
+    ipc.setSourcePosition('WCR Window Capture', gameBoxDimensions);
   }, [gameBoxDimensions]);
 
-  const updateDims = async () => {
+  const updatePreviewDimensions = async () => {
     const dims = await ipc.getPreviewInfo();
-    // const overlayPosition = await ipc.getSourcePosition('WCR Overlay');
-    // const gamePosition = await ipc.getSourcePosition('WCR Window Capture');
     setPreviewInfo(dims);
-    // setOverlayDimensions(overlayPosition);
-    // setGameDimensions(gamePosition);
   };
 
   const onSourceMove = (event: MouseEvent, src: WCRSceneItem) => {
@@ -89,10 +96,9 @@ const RecorderPreview = () => {
       setOverlayDimensions((prev) => {
         const aspectRatio = prev.width / prev.height;
         let newWidth = prev.width + event.movementX;
-        let newHeight = newWidth / aspectRatio;
-        // Prevent negative or too small sizes
-        newWidth = Math.max(20, newWidth);
-        newHeight = Math.max(20, newHeight);
+        newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
+        const newHeight = newWidth / aspectRatio;
+
         return {
           ...prev,
           width: newWidth,
@@ -103,9 +109,9 @@ const RecorderPreview = () => {
       setGameBoxDimensions((prev) => {
         const aspectRatio = prev.width / prev.height;
         let newWidth = prev.width + event.movementX;
-        let newHeight = newWidth / aspectRatio;
-        newWidth = Math.max(20, newWidth);
-        newHeight = Math.max(20, newHeight);
+        newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
+        const newHeight = newWidth / aspectRatio;
+
         return {
           ...prev,
           width: newWidth,
@@ -162,8 +168,6 @@ const RecorderPreview = () => {
     };
   }, []);
 
-  let resizeObserver: ResizeObserver | undefined;
-
   const show = async () => {
     const previewBox = document.getElementById('preview-box');
 
@@ -176,7 +180,7 @@ const RecorderPreview = () => {
     ipc.sendMessage('preview', ['show', width, height, x, y]);
 
     // Update the overlay dimensions.
-    updateDims();
+    updatePreviewDimensions();
   };
 
   const cleanup = () => {
@@ -199,7 +203,7 @@ const RecorderPreview = () => {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     show();
     setupResizeObserver();
     return cleanup;
@@ -219,16 +223,18 @@ const RecorderPreview = () => {
     let yCorr = 0;
 
     if (xLimited) {
-      //console.log('xLimited');
       yCorr = (previewInfo.previewHeight - sfx * previewInfo.canvasHeight) / 2;
     } else {
-      //console.log('yLimited');
       xCorr = (previewInfo.previewWidth - sfy * previewInfo.canvasWidth) / 2;
     }
 
     const left = x + xCorr;
     const top = y + yCorr;
     const cornerSize = 25; // Size in pixels for the corner box
+
+    if (src !== WCRSceneItem.OVERLAY) {
+      console.log('Game window position:', left, top, width, height);
+    }
 
     return (
       <Box
@@ -245,7 +251,7 @@ const RecorderPreview = () => {
           zIndex: ++zIndex,
         }}
       >
-        <div className=" flex w-full h-full items-center justify-center bg-black text-lg text-foreground-lighter">
+        <div className="flex w-full h-full items-center justify-center bg-black text-lg text-foreground-lighter">
           {text}
         </div>
         <Box
