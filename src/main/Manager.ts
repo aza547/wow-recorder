@@ -51,6 +51,7 @@ import {
   DiskStatus,
   UploadQueueItem,
   CloudConfig,
+  VideoSourceName,
 } from './types';
 import {
   getObsBaseConfig,
@@ -70,7 +71,7 @@ import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import RetryableConfigError from '../utils/RetryableConfigError';
 import { TAffiliation } from 'types/api';
-import noobs, { SceneItemPosition, SourceDimensions } from 'noobs';
+import noobs from 'noobs';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -1304,108 +1305,25 @@ export default class Manager {
       }
     });
 
-    ipcMain.handle('getPreviewInfo', () => {
-      return noobs.GetPreviewInfo();
+    ipcMain.handle('getDisplayInfo', () => {
+      return this.recorder.getDisplayInfo();
     });
 
-    ipcMain.handle('getSourcePosition', (_event, src: string) => {
-      const current = noobs.GetSourcePos(src);
-      const previewInfo = noobs.GetPreviewInfo(); // Could be cached
-
-      const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
-      const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
-      const sf = Math.min(sfx, sfy);
-
-      const pos: SceneItemPosition & SourceDimensions = {
-        x: current.x * sf,
-        y: current.y * sf,
-        scaleX: current.scaleX,
-        scaleY: current.scaleY,
-        width: current.width * sf * current.scaleX,
-        height: current.height * sf * current.scaleY,
-      };
-
-      return pos;
+    ipcMain.handle('getSourcePosition', (_event, src: VideoSourceName) => {
+      return this.recorder.getSourcePosition(src);
     });
-
-    let sourceDebounceTimer: NodeJS.Timeout | null = null;
 
     ipcMain.on(
       'setSourcePosition',
-      (_event, src: string, target: { x: number; y: number, width: number, height: number }) => {
-        const previewInfo = noobs.GetPreviewInfo(); // Could be cached?
-        const current = noobs.GetSourcePos(src);
-
-        // This is confusing because there are two forms of scaling at play 
-        // that we need to account for. 
-        //   1. The source scaling. The current.width might be 1000px but 
-        //      if it's scaled by 0.5 the real width is 500px. 
-        //   2. The preview scaling. The preview is reduced to fit the div
-        //      based on the aspect ratio.
-        const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
-        const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
-        const sf = Math.min(sfx, sfy);
-
-        // We only allow one scale factor to retail the aspect ratio of
-        // the source so just use the X.
-        const scaledWidth = current.width * current.scaleX * sf;
-        const ratioX = target.width / scaledWidth;
-        let scale = ratioX * current.scaleX;
-
-        const updated: SceneItemPosition = {
-          x: target.x / sf,
-          y: target.y / sf,
-          scaleX: scale,
-          scaleY: scale,
-        };
-
-        noobs.SetSourcePos(src, updated);
-
-        if (sourceDebounceTimer) {
-          clearTimeout(sourceDebounceTimer);
-        }
-
-        sourceDebounceTimer = setTimeout(() => {
-          if (src === 'WCR Overlay') {
-            console.log('[Manager] Saving chat overlay position', updated);
-            this.cfg.set('chatOverlayXPosition', updated.x);
-            this.cfg.set('chatOverlayYPosition', updated.y);
-            this.cfg.set('chatOverlayScale', scale);
-          } else {
-            console.log('[Manager] Saving video source position', updated);
-            this.cfg.set('videoSourceXPosition', updated.x);
-            this.cfg.set('videoSourceYPosition', updated.y);
-            this.cfg.set('videoSourceScale', scale);
-          }
-
-          sourceDebounceTimer = null;
-        }, 1000);
+      (_event, src: VideoSourceName, target: { x: number; y: number; width: number; height: number }) => {
+        this.recorder.setSourcePosition(src, target);
       },
     );
 
     ipcMain.on(
       'resetSourcePosition',
-      (_event, src: string) => {
-        const updated: SceneItemPosition = {
-          x: 0,
-          y: 0,
-          scaleX: 1,
-          scaleY: 1,
-        };
-
-        noobs.SetSourcePos(src, updated);
-
-        if (src === 'WCR Overlay') {
-            console.log('[Manager] Saving chat overlay position', updated);
-            this.cfg.set('chatOverlayXPosition', updated.x);
-            this.cfg.set('chatOverlayYPosition', updated.y);
-            this.cfg.set('chatOverlayScale', 1);
-          } else {
-            console.log('[Manager] Saving video source position', updated);
-            this.cfg.set('videoSourceXPosition', updated.x);
-            this.cfg.set('videoSourceYPosition', updated.y);
-            this.cfg.set('videoSourceScale', 1);
-          }
+      (_event, src: VideoSourceName) => {
+        this.recorder.resetSourcePosition(src);
       },
     );
 

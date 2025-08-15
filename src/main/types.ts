@@ -577,6 +577,20 @@ type ObsVolmeterCallbackInfo = {
   inputPeak: number[];
 };
 
+enum VideoSourceName {
+  WINDOW = "WCR Window Capture",
+  GAME = "WCR Game Capture",
+  MONITOR = "WCR Monitor Capture",
+  OVERLAY = "WCR Chat Overlay",
+}
+
+enum AudioSourcePrefix {
+  SPEAKER = "WCR Speaker Capture",
+  MIC = "WCR Mic Capture",
+  PROCESS = "WCR Process Capture",
+}
+
+
 export {
   RecStatus,
   SaveStatus,
@@ -632,4 +646,6 @@ export {
   StorageFilter,
   ObsSourceCallbackInfo,
   ObsVolmeterCallbackInfo,
+  VideoSourceName,
+  AudioSourcePrefix
 };
