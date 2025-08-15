@@ -1,13 +1,13 @@
 import { Box } from '@mui/material';
 import React, {
-  Dispatch,
-  SetStateAction,
+  MutableRefObject,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from 'react';
 import { stopPropagation } from './rendererutils';
+import { VideoSourceName } from 'main/types';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -31,18 +31,9 @@ type BoxDimensions = {
 
 const RecorderPreview = (props: {
   previewEnabled: boolean;
-  overlayBoxDimensions: BoxDimensions;
-  setOverlayDimensions: Dispatch<SetStateAction<BoxDimensions>>;
-  gameBoxDimensions: BoxDimensions;
-  setGameBoxDimensions: Dispatch<SetStateAction<BoxDimensions>>;
+  redrawDraggableBoxes: MutableRefObject<() => void>;
 }) => {
-  const {
-    previewEnabled,
-    overlayBoxDimensions,
-    setOverlayDimensions,
-    gameBoxDimensions,
-    setGameBoxDimensions,
-  } = props;
+  const { previewEnabled, redrawDraggableBoxes } = props;
 
   const draggingOverlay = useRef<SceneInteraction>(SceneInteraction.NONE);
   const draggingGame = useRef<SceneInteraction>(SceneInteraction.NONE);
@@ -61,15 +52,64 @@ const RecorderPreview = (props: {
     previewHeight: 0,
   });
 
+  const overlaySetCount = useRef(0);
+  const gameSetCount = useRef(0);
+
+  const [overlayBoxDimensions, setOverlayBoxDimensions] =
+    useState<BoxDimensions>({
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 100,
+    });
+
+  const [gameBoxDimensions, setGameBoxDimensions] = useState<BoxDimensions>({
+    x: 0,
+    y: 0,
+    width: 1000,
+    height: 500,
+  });
+
+  const initDraggableBoxes = async () => {
+    console.log('initDraggableBoxes');
+
+    const overlay = await ipc.getSourcePosition(VideoSourceName.OVERLAY);
+    const game = await ipc.getSourcePosition(VideoSourceName.WINDOW);
+
+    setOverlayBoxDimensions(overlay);
+    setGameBoxDimensions(game);
+  };
+
   useEffect(() => {
-    // The overlay box has been moved or scaled, inform the backend.
-    ipc.setSourcePosition('WCR Overlay', overlayBoxDimensions);
+    if (overlaySetCount.current < 2) {
+      // This effect will fire on initial mount, and on first retrieval
+      // of the real values. So only apply real scene changes after the
+      // effect has fired at least twice.
+      overlaySetCount.current++;
+    } else {
+      ipc.setSourcePosition(VideoSourceName.OVERLAY, overlayBoxDimensions);
+    }
   }, [overlayBoxDimensions]);
 
   useEffect(() => {
-    // The game box has been moved or scaled, inform the backend.
-    ipc.setSourcePosition('WCR Window Capture', gameBoxDimensions);
+    if (gameSetCount.current < 2) {
+      // This effect will fire on initial mount, and on first retrieval
+      // of the real values. So only apply real scene changes after the
+      // effect has fired at least twice.
+      gameSetCount.current++;
+    } else {
+      ipc.setSourcePosition(VideoSourceName.WINDOW, gameBoxDimensions);
+    }
   }, [gameBoxDimensions]);
+
+  useEffect(() => {
+    // On component mount, get the source dimensions from the backend
+    // to initialize the draggable boxes.
+    initDraggableBoxes();
+
+    // Setup the callback for the SceneEditor function reset functions.
+    redrawDraggableBoxes.current = initDraggableBoxes;
+  }, []);
 
   useEffect(() => {
     if (previewEnabled) {
@@ -80,13 +120,13 @@ const RecorderPreview = (props: {
   }, [previewEnabled]);
 
   const updatePreviewDimensions = async () => {
-    const dims = await ipc.getPreviewInfo();
+    const dims = await ipc.getDisplayInfo();
     setPreviewInfo(dims);
   };
 
   const onSourceMove = (event: MouseEvent, src: WCRSceneItem) => {
     if (src === WCRSceneItem.OVERLAY) {
-      setOverlayDimensions((prev) => ({
+      setOverlayBoxDimensions((prev) => ({
         ...prev,
         x: prev.x + event.movementX,
         y: prev.y + event.movementY,
@@ -102,7 +142,7 @@ const RecorderPreview = (props: {
 
   const onSourceScale = (event: MouseEvent, src: WCRSceneItem) => {
     if (src === WCRSceneItem.OVERLAY) {
-      setOverlayDimensions((prev) => {
+      setOverlayBoxDimensions((prev) => {
         const aspectRatio = prev.width / prev.height;
         let newWidth = prev.width + event.movementX;
         newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
@@ -177,7 +217,7 @@ const RecorderPreview = (props: {
     };
   }, []);
 
-  const show = async () => {
+  const show = useCallback(async () => {
     const previewBox = document.getElementById('preview-box');
 
     if (previewBox && previewEnabled) {
@@ -188,7 +228,7 @@ const RecorderPreview = (props: {
 
     // Update the overlay dimensions.
     updatePreviewDimensions();
-  };
+  }, [previewEnabled]); // Add previewEnabled as a dependency
 
   const cleanup = () => {
     if (resizeObserver !== undefined) {
@@ -240,7 +280,7 @@ const RecorderPreview = (props: {
     const cornerSize = 25; // Size in pixels for the corner box
 
     if (src !== WCRSceneItem.OVERLAY) {
-      console.log('Game window position:', left, top, width, height);
+      //console.log('Game window position:', left, top, width, height);
     }
 
     return (
@@ -253,8 +293,8 @@ const RecorderPreview = (props: {
           top,
           height,
           width,
-          outline: '2px solid red',
-          outlineOffset: '-3px', // Slight offset to save it showing up on the edges.
+          outline: '2px solid #bb4420',
+          outlineOffset: '-4px', // Slight offset to save it showing up on the edges.
           zIndex: ++zIndex,
         }}
       >
@@ -265,11 +305,11 @@ const RecorderPreview = (props: {
           onMouseDown={(e) => onMouseDown(e, src, SceneInteraction.SCALE)}
           sx={{
             position: 'absolute',
-            right: 1, // Slight offset to save it showing up on the edges.
-            bottom: 1, // Slight offset to save it showing up on the edges.
+            right: 2, // Slight offset to save it showing up on the edges.
+            bottom: 2, // Slight offset to save it showing up on the edges.
             width: cornerSize,
             height: cornerSize,
-            backgroundColor: 'red',
+            backgroundColor: '#bb4420',
             zIndex,
           }}
         />
