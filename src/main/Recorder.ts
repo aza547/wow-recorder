@@ -1416,8 +1416,6 @@ export default class Recorder extends EventEmitter {
     src: VideoSourceName, 
     target: { x: number; y: number; width: number; height: number }
   ) {
-    console.info('[Recorder] Set source position', src, target);
-
     const previewInfo = noobs.GetPreviewInfo(); // Could be cached?
     const current = noobs.GetSourcePos(src);
 
@@ -1460,7 +1458,7 @@ export default class Recorder extends EventEmitter {
    * Reset the source position to 0, 0 and unscaled.
    */
   public resetSourcePosition(src: VideoSourceName) {
-    console.info('[Recorder] REset source position', src);
+    console.info('[Recorder] Reset source position', src);
     
     const updated: SceneItemPosition = {
       x: 0,
