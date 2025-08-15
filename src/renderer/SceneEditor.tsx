@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
-import React, { useEffect, useState } from 'react';
-import { AppState, RecStatus } from 'main/types';
+import React, { useRef } from 'react';
+import { AppState, RecStatus, VideoSourceName } from 'main/types';
 import { Phrase } from 'localisation/types';
 import { getLocalePhrase } from 'localisation/translations';
 import RecorderPreview from './RecorderPreview';
@@ -26,47 +26,10 @@ interface IProps {
   recorderStatus: RecStatus;
 }
 
-type BoxDimensions = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
 const SceneEditor: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState } = props;
   const [previewEnabled, setPreviewEnabled] = React.useState(true);
-
-  // Kindof hate all this stuff living here and not in RecorderPreview (also might have a perf hit?)
-  // But for now it's needed to enable the reset buttons. Must be a better way though. TODO.
-  const [overlayBoxDimensions, setOverlayDimensions] = useState<BoxDimensions>({
-    x: 0,
-    y: 0,
-    width: 200,
-    height: 100,
-  });
-
-  const [gameBoxDimensions, setGameBoxDimensions] = useState<BoxDimensions>({
-    x: 0,
-    y: 0,
-    width: 1000,
-    height: 500,
-  });
-
-  // TODO: Ditto: surely this can live in the RecorderPreview.
-  const initDraggableBoxes = async () => {
-    const s = await ipc.getSourcePosition('WCR Overlay');
-    setOverlayDimensions(s);
-    const g = await ipc.getSourcePosition('WCR Window Capture');
-    setGameBoxDimensions(g);
-  };
-
-  // TODO: Ditto again.
-  useEffect(() => {
-    // On component mount, get the source dimensions from the backend
-    // to initialize the draggable boxes.
-    initDraggableBoxes();
-  }, []);
+  const redrawDraggableBoxes = useRef(() => {});
 
   return (
     <Box
@@ -82,10 +45,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
       <Box sx={{ width: '100%', height: '60%' }}>
         <RecorderPreview
           previewEnabled={previewEnabled}
-          gameBoxDimensions={gameBoxDimensions}
-          setGameBoxDimensions={setGameBoxDimensions}
-          overlayBoxDimensions={overlayBoxDimensions}
-          setOverlayDimensions={setOverlayDimensions}
+          redrawDraggableBoxes={redrawDraggableBoxes}
         />
       </Box>
       <Tabs defaultValue="source" className="w-full h-[40%] px-4">
@@ -108,8 +68,8 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
               variant="ghost"
               size="xs"
               onClick={() => {
-                ipc.resetSourcePosition('WCR Window Capture');
-                initDraggableBoxes();
+                ipc.resetSourcePosition(VideoSourceName.WINDOW);
+                redrawDraggableBoxes.current();
               }}
             >
               <span className="text-xs text-foreground-lighter">
@@ -123,8 +83,8 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
               variant="ghost"
               size="xs"
               onClick={() => {
-                ipc.resetSourcePosition('WCR Overlay');
-                initDraggableBoxes();
+                ipc.resetSourcePosition(VideoSourceName.OVERLAY);
+                redrawDraggableBoxes.current();
               }}
             >
               <span className="text-xs text-foreground-lighter">
@@ -138,9 +98,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
                 <Switch
                   checked={previewEnabled}
                   onCheckedChange={setPreviewEnabled}
-                >
-                  Hide
-                </Switch>
+                />
               </Box>
             </Tooltip>
           </div>
