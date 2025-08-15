@@ -32,6 +32,7 @@ import {
 } from './util';
 
 import {
+  AudioSourcePrefix,
   CrashData,
   MicStatus,
   ObsAudioConfig,
@@ -41,13 +42,14 @@ import {
   ObsVideoConfig,
   ObsVolmeterCallbackInfo,
   TAudioSourceType,
+  VideoSourceName,
 } from './types';
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
 import { getOverlayConfig } from '../utils/configUtils';
 import { v4 as uuidv4 } from 'uuid';
 
-import noobs, { ObsData, Signal } from 'noobs';
+import noobs, { ObsData, SceneItemPosition, Signal, SourceDimensions } from 'noobs';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -188,28 +190,7 @@ export default class Recorder extends EventEmitter {
    */
   private pttReleaseDelayTimer?: NodeJS.Timeout;
 
-  /**
-   * Sensible defaults for the video context.
-   */
-  // private defaultVideoContext: any = {
-  //   fpsNum: 60,
-  //   fpsDen: 1,
-  //   baseWidth: 1920,
-  //   baseHeight: 1080,
-  //   outputWidth: 1920,
-  //   outputHeight: 1080,
-
-  //   // Bit of a mess here to keep typescript happy and make this readable.
-  //   // See https://github.com/stream-labs/obs-studio-node/issues/1260.
-  //   outputFormat: EVideoFormat.NV12 as unknown,
-  //   colorspace: EColorSpace.CS709 as unknown,
-  //   scaleType: EScaleType.Bicubic as unknown,
-  //   fpsType: EFPSType.Fractional as unknown,
-
-  //   // The AMD encoder causes recordings to get much darker if using the full
-  //   // color range setting. So swap that to partial here. See Issue 446.
-  //   range: ERangeType.Partial as unknown,
-  // };
+  private sourceDebounceTimer?: NodeJS.Timeout;
 
   /**
    * Contructor.
@@ -219,81 +200,6 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Constructing recorder:', this.uuid);
     this.mainWindow = mainWindow;
     this.initializeOBS();
-
-    // The video context is an OBS construct used to control many features of
-    // recording, including the dimensions and FPS.
-    // this.context = osn.VideoFactory.create();
-    // this.context = {};
-    // this.context.video = this.defaultVideoContext;
-
-    // We create all the sources we might need to use here, as the source API
-    // provided by OSN provides mechanisms for retrieving valid settings; it's
-    // useful to always be able to access them even if we never enable the sources.
-    // this.windowCaptureSource = osn.InputFactory.create(
-    //   'window_capture',
-    //   'WCR Window Capture',
-    // );
-
-    // this.gameCaptureSource = osn.InputFactory.create(
-    //   'game_capture',
-    //   'WCR Game Capture',
-    // );
-
-    // this.monitorCaptureSource = osn.InputFactory.create(
-    //   'monitor_capture',
-    //   'WCR Monitor Capture',
-    // );
-
-    // this.dummyWindowCaptureSource = osn.InputFactory.create(
-    //   'window_capture',
-    //   'WCR Dummy Window Capture',
-    // );
-
-    // this.dummyGameCaptureSource = osn.InputFactory.create(
-    //   'game_capture',
-    //   'WCR Dummy Game Capture',
-    // );
-
-    // // In theory having this created so early isn't required, but may as well
-    // // and avoid a bunch of undefined checks. We will reconfigure it as required.
-    // this.overlayImageSource = osn.InputFactory.create(
-    //   'image_source',
-    //   'WCR Chat Overlay',
-    //   { file: getAssetPath('poster', 'chat-cover.png') },
-    // );
-
-    // // Connects the signal handler, we get feedback from OBS by way of
-    // // signals, so this is how we know it's doing the right thing after
-    // // we ask it to start/stop.
-    // osn.NodeObs.OBS_service_connectOutputSignals((s: osn.EOutputSignal) => {
-    //   this.handleSignal(s);
-    // });
-
-    // // The source callback is OBS's way of informing us of changes to the
-    // // sources. Used for dynamic resizing.
-    // osn.NodeObs.RegisterSourceCallback((d: ObsSourceCallbackInfo[]) => {
-    //   this.handleSourceCallback(d);
-    // });
-
-    // // The volmeter callback is OBS's way of communicating the state of audio
-    // // sources. Used for monitoring audio levels.
-    // osn.NodeObs.RegisterVolmeterCallback((d: ObsVolmeterCallbackInfo[]) => {
-    //   this.handleVolmeterCallback(d);
-    // });
-
-    // The scene is an OBS construct that holds the sources, think of it as a
-    // blank canvas we can add sources to. We could create it later but we can
-    // once again avoid a bunch of undefined checks by doing it here.
-    // this.scene = osn.SceneFactory.create('WCR Scene');
-    // osn.Global.setOutputSource(this.videoChannel, this.scene);
-
-    // It might seem a bit weird that we add all the sources, but we disable
-    // them all by default. That way we can avoid undefined checks on all the
-    // variables set here, as we need the scene item references for scaling.
-    // this.windowCaptureSceneItem = this.scene.add(this.windowCaptureSource);
-    // this.gameCaptureSceneItem = this.scene.add(this.gameCaptureSource);
-    // this.monitorCaptureSceneItem = this.scene.add(this.monitorCaptureSource);
-    // this.overlayImageSceneItem = this.scene.add(this.overlayImageSource);
   }
 
   /**
@@ -462,7 +368,11 @@ export default class Recorder extends EventEmitter {
     console.log('Called configureVideoSources');
 
     // Clear any existing video capture sources.
-    ['WCR Monitor Capture', 'WCR Window Capture', 'WCR Game Capture'].forEach(
+    [
+      VideoSourceName.WINDOW, 
+      VideoSourceName.GAME, 
+      VideoSourceName.MONITOR
+    ].forEach(
       (s) => {
         noobs.RemoveSourceFromScene(s);
         noobs.DeleteSource(s);
@@ -502,7 +412,6 @@ export default class Recorder extends EventEmitter {
 
     const overlayCfg = getOverlayConfig(this.cfg);
     this.configureOverlayImageSource(overlayCfg);
-    // this.scaleVideoSourceSize();
   }
 
   /**
@@ -524,19 +433,18 @@ export default class Recorder extends EventEmitter {
       chatOverlayYPosition,
       chatOverlayOwnImagePath,
     } = config;
-    console.log("CREATE2  WCR Overlay");
-    noobs.CreateSource('WCR Overlay', 'image_source');
+    noobs.CreateSource(VideoSourceName.OVERLAY, 'image_source');
 
-    const settings = noobs.GetSourceSettings('WCR Overlay');
+    const settings = noobs.GetSourceSettings(VideoSourceName.OVERLAY);
 
-    noobs.SetSourceSettings('WCR Overlay', {
+    noobs.SetSourceSettings(VideoSourceName.OVERLAY, {
       ...settings,
       file: chatOverlayOwnImagePath,
     });
 
-    noobs.AddSourceToScene('WCR Overlay');
+    noobs.AddSourceToScene(VideoSourceName.OVERLAY);
 
-    noobs.SetSourcePos('WCR Overlay', {
+    noobs.SetSourcePos(VideoSourceName.OVERLAY, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
@@ -558,19 +466,18 @@ export default class Recorder extends EventEmitter {
       chatOverlayScale,
     } = config;
 
-    console.log("CREATE1  WCR Overlay");
-    noobs.CreateSource('WCR Overlay', 'image_source');
+    noobs.CreateSource(VideoSourceName.OVERLAY, 'image_source');
 
-    const settings = noobs.GetSourceSettings('WCR Overlay');
+    const settings = noobs.GetSourceSettings(VideoSourceName.OVERLAY);
 
-    noobs.SetSourceSettings('WCR Overlay', {
+    noobs.SetSourceSettings(VideoSourceName.OVERLAY, {
       ...settings,
       file: getAssetPath('poster', 'image.png'),
     });
 
-    noobs.AddSourceToScene('WCR Overlay');
+    noobs.AddSourceToScene(VideoSourceName.OVERLAY);
 
-    noobs.SetSourcePos('WCR Overlay', {
+    noobs.SetSourcePos(VideoSourceName.OVERLAY, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
@@ -586,11 +493,11 @@ export default class Recorder extends EventEmitter {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
 
-    noobs.CreateSource('WCR Mic Source', 'wasapi_input_capture');
-    noobs.CreateSource('WCR Speaker Source', 'wasapi_output_capture');
+    noobs.CreateSource(AudioSourcePrefix.MIC, 'wasapi_input_capture');
+    noobs.CreateSource(AudioSourcePrefix.SPEAKER, 'wasapi_output_capture');
 
-    noobs.AddSourceToScene('WCR Mic Source');
-    noobs.AddSourceToScene('WCR Speaker Source');
+    noobs.AddSourceToScene(AudioSourcePrefix.MIC);
+    noobs.AddSourceToScene(AudioSourcePrefix.SPEAKER);
 
     // Just for muted state for now. TODO: Remove this?
     this.audioInputDevices = ['default'];
@@ -629,11 +536,12 @@ export default class Recorder extends EventEmitter {
    * so it can be called externally when WoW is closed.
    */
   public removeAudioSources() {
-    noobs.RemoveSourceFromScene('WCR Mic Source');
-    noobs.RemoveSourceFromScene('WCR Speaker Source');
+    // TODO handle prefixing
+    noobs.RemoveSourceFromScene(AudioSourcePrefix.MIC);
+    noobs.RemoveSourceFromScene(AudioSourcePrefix.SPEAKER);
 
-    noobs.DeleteSource('WCR Mic Source');
-    noobs.DeleteSource('WCR Speaker Source');
+    noobs.DeleteSource(AudioSourcePrefix.MIC);
+    noobs.DeleteSource(AudioSourcePrefix.SPEAKER);
   }
 
   /**
@@ -685,13 +593,6 @@ export default class Recorder extends EventEmitter {
    * the list of devices for user selection.
    */
   public getOutputAudioDevices() {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    // const outputDevices =
-    //   osn.NodeObs.OBS_settings_getOutputAudioDevices() as IOBSDevice[];
-
     return [];
   }
 
@@ -702,34 +603,6 @@ export default class Recorder extends EventEmitter {
     name: string; // Display name.
     value: string | number; // Value to configure OBS with.
   }[] {
-    console.info('[Recorder] Getting available windows for audio capture');
-
-    // if (!this.obsInitialized) {
-    //   throw new Error('[Recorder] OBS not initialized');
-    // }
-
-    // const src = osn.InputFactory.create(
-    //   TAudioSourceType.process,
-    //   'WCR Dummy Process Audio Source',
-    // );
-
-    // let prop = src.properties.first();
-
-    // while (prop && prop.name !== 'window') {
-    //   prop = prop.next();
-    // }
-
-    // const windows = [];
-
-    // if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
-    //   const unique = Array.from(
-    //     new Map(prop.details.items.map((item) => [item.value, item])).values(),
-    //   );
-
-    //   windows.push(...unique);
-    // }
-
-    // src.release();
     return [];
   }
 
@@ -754,17 +627,6 @@ export default class Recorder extends EventEmitter {
    */
   public showPreview(width: number, height: number, x: number, y: number) {
     noobs.ShowPreview(x, y, width, height);
-  }
-
-  /**
-   * Show the preview on the UI, only if we already know the location and
-   * dimensions.
-   */
-  public showPreviewMemory() {
-    // if (this.previewLocation !== undefined) {
-    //   const { width, height, xPos, yPos } = this.previewLocation;
-    //   this.showPreview(width, height, xPos, yPos);
-    // }
   }
 
   /**
@@ -1042,22 +904,6 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Handle a source callback from OBS.
-   */
-  private handleSourceCallback(data: ObsSourceCallbackInfo[]) {
-    console.info('[Recorder] Got source callback:', data);
-    this.scaleVideoSourceSize();
-  }
-
-  /**
-   * Handle a volmeter callback from OBS. Deliberatly no logs in here
-   * as it's extremely frequently.
-   */
-  private handleVolmeterCallback(data: ObsVolmeterCallbackInfo[]) {
-    this.mainWindow.webContents.send('volmeter', data);
-  }
-
-  /**
    * Creates a window capture source. In TWW, the retail and classic Window names
    * diverged slightly, so while this was previously a hardcoded string, now we
    * search for it in the OSN sources API.
@@ -1140,25 +986,25 @@ export default class Recorder extends EventEmitter {
   ) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
 
-    noobs.CreateSource('WCR Monitor Capture', 'monitor_capture');
-    const settings = noobs.GetSourceSettings('WCR Monitor Capture');
-    const p = noobs.GetSourceProperties('WCR Monitor Capture');
+    noobs.CreateSource(VideoSourceName.MONITOR, 'monitor_capture');
+    const settings = noobs.GetSourceSettings(VideoSourceName.MONITOR);
+    const p = noobs.GetSourceProperties(VideoSourceName.MONITOR);
     console.log(p);
     console.log('method', p[0].items);
     console.log('ids', p[1].items);
     console.log(settings);
 
-    noobs.SetSourceSettings('WCR Monitor Capture', {
+    noobs.SetSourceSettings(VideoSourceName.MONITOR, {
       ...settings,
       method: 0,
       monitor_id: p[1].items[monitorIndex].value,
       force_sdr: forceSdr,
     });
 
-    const settings2 = noobs.GetSourceSettings('WCR Monitor Capture');
+    const settings2 = noobs.GetSourceSettings(VideoSourceName.MONITOR);
     console.log(settings2);
 
-    noobs.AddSourceToScene('WCR Monitor Capture');
+    noobs.AddSourceToScene(VideoSourceName.MONITOR);
   }
 
   /**
@@ -1169,9 +1015,8 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Configure image source for chat overlay');
 
     // Safe to call both of these even if the source doesn't exist.
-    console.log("REMOVE  WCR Overlay");
-    noobs.RemoveSourceFromScene('WCR Overlay');
-    noobs.DeleteSource('WCR Overlay');
+    noobs.RemoveSourceFromScene(VideoSourceName.OVERLAY);
+    noobs.DeleteSource(VideoSourceName.OVERLAY);
 
     if (!chatOverlayEnabled) {
       console.info('[Recorder] Chat overlay is disabled, not configuring');
@@ -1183,132 +1028,6 @@ export default class Recorder extends EventEmitter {
     } else {
       this.configureDefaultOverlay(config);
     }
-  }
-
-  /**
-   * Add a single audio source to the OBS scene.
-   */
-  private addAudioSource(obsInput: any, channel: number) {
-    console.info(
-      '[Recorder] Adding OBS audio source',
-      obsInput.name,
-      obsInput.id,
-    );
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    if (channel < 1 || channel >= 64) {
-      throw new Error(`[Recorder] Invalid channel number ${channel}`);
-    }
-
-    // osn.Global.setOutputSource(channel, obsInput);
-  }
-
-  /**
-   * Remove a single audio source from the OBS scene.
-   */
-  private removeAudioSource(source: any, channel: number) {
-    if (!this.obsInitialized) {
-      throw new Error('OBS not initialized');
-    }
-
-    console.info(
-      '[Recorder] Removing OBS audio source',
-      source.name,
-      source.id,
-    );
-
-    // osn.Global.setOutputSource(channel, null as unknown as ISource);
-    source.release();
-  }
-
-  /**
-   * Create an OBS audio source.
-   */
-  private createOBSAudioSource(
-    id: string,
-    idx: number,
-    type: TAudioSourceType,
-  ) {
-    console.info('[Recorder] Creating OBS audio source', id, idx, type);
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    let name = '';
-
-    if (type === TAudioSourceType.output) {
-      name = `WCR Speaker Source ${idx}`;
-    } else if (type === TAudioSourceType.input) {
-      name = `WCR Mic Source ${idx}`;
-    } else if (type === TAudioSourceType.process) {
-      name = `WCR Process Source ${idx}`;
-    } else {
-      // Programmer error, should never happen.
-      throw new Error('Invalid audio source type');
-    }
-
-    const settings = TAudioSourceType.process
-      ? // Priority 2: "Match title, otherwise find window of same executable".
-        { window: id, priority: 2 }
-      : { device_id: id };
-
-    // return osn.InputFactory.create(type, name, settings);
-  }
-
-  /**
-   * Watch the video input source for size changes, and rescale to fill the
-   * canvas.
-   */
-  private scaleVideoSourceSize() {
-    let src;
-    let item;
-
-    // if (this.windowCaptureSource.enabled) {
-    //   src = this.windowCaptureSource;
-    //   item = this.windowCaptureSceneItem;
-    // } else if (this.gameCaptureSource.enabled) {
-    //   src = this.gameCaptureSource;
-    //   item = this.gameCaptureSceneItem;
-    // } else if (this.monitorCaptureSource.enabled) {
-    //   src = this.monitorCaptureSource;
-    //   item = this.monitorCaptureSceneItem;
-    // } else {
-    //   // No log here as as may be frequent.
-    //   return;
-    // }
-
-    // if (src.width === 0 || src.height === 0) {
-    //   // This happens often, suspect it's before OBS gets a hook into a game
-    //   // capture process.
-    //   return;
-    // }
-
-    // const { width, height } = obsResolutions[this.resolution];
-
-    // const newScaleFactor = {
-    //   x: width / src.width,
-    //   y: height / src.height,
-    // };
-
-    // const closeEnough =
-    //   Math.round(item.scale.x * 100) / 100 ===
-    //     Math.round(newScaleFactor.x * 100) / 100 &&
-    //   Math.round(item.scale.y * 100) / 100 ===
-    //     Math.round(newScaleFactor.y * 100) / 100;
-
-    // if (closeEnough) {
-    //   // Don't rescale if things are within a rounding error. I think the
-    //   // OSN library does some internal rounding and we don't want to spam
-    //   // trigger rescaling when it isn't required. See Issue 586.
-    //   return;
-    // }
-
-    // console.info('[Recorder] Rescaling from', item.scale, 'to', newScaleFactor);
-    // item.scale = newScaleFactor;
   }
 
   /**
@@ -1533,15 +1252,15 @@ export default class Recorder extends EventEmitter {
     let window = false;
 
     try {
-      noobs.CreateSource('WCR Game Capture', 'game_capture');
-      const p = noobs.GetSourceProperties('WCR Game Capture');
+      noobs.CreateSource(VideoSourceName.GAME, 'game_capture');
+      const p = noobs.GetSourceProperties(VideoSourceName.GAME);
       console.log('AHKKKK');
       console.log(p);
       console.log(p[1].items);
 
-      const s = noobs.GetSourceSettings('WCR Game Capture');
+      const s = noobs.GetSourceSettings(VideoSourceName.GAME);
 
-      noobs.SetSourceSettings('WCR Game Capture', {
+      noobs.SetSourceSettings(VideoSourceName.GAME, {
         ...s,
         capture_mode: 'window',
         window: 'World of Warcraft:waApplication Window:WowClassic.exe', // TODO handle all names classic, chinese, use windowMatch();
@@ -1549,12 +1268,12 @@ export default class Recorder extends EventEmitter {
         cursor: captureCursor,
       });
 
-      const s1 = noobs.GetSourceSettings('WCR Game Capture');
+      const s1 = noobs.GetSourceSettings(VideoSourceName.GAME);
       console.log('s1', s1);
 
-      noobs.AddSourceToScene('WCR Game Capture');
+      noobs.AddSourceToScene(VideoSourceName.GAME);
 
-      noobs.SetSourcePos('WCR Game Capture', {
+      noobs.SetSourcePos(VideoSourceName.GAME, {
         x: videoSourceXPosition,
         y: videoSourceYPosition,
         scaleX: videoSourceScale,
@@ -1603,19 +1322,19 @@ export default class Recorder extends EventEmitter {
 
     let window = false;
 
-    noobs.DeleteSource('WCR Window Capture');
-    noobs.RemoveSourceFromScene('WCR Window Capture');
+    noobs.DeleteSource(VideoSourceName.WINDOW);
+    noobs.RemoveSourceFromScene(VideoSourceName.WINDOW);
 
     try {
-      noobs.CreateSource('WCR Window Capture', 'window_capture');
-      const p = noobs.GetSourceProperties('WCR Window Capture');
+      noobs.CreateSource(VideoSourceName.WINDOW, 'window_capture');
+      const p = noobs.GetSourceProperties(VideoSourceName.WINDOW);
       console.log('Window capture src ---');
       console.log(p);
       console.log(p[0].items);
       console.log(p[1].items);
-      const s = noobs.GetSourceSettings('WCR Window Capture');
+      const s = noobs.GetSourceSettings(VideoSourceName.WINDOW);
 
-      noobs.SetSourceSettings('WCR Window Capture', {
+      noobs.SetSourceSettings(VideoSourceName.WINDOW, {
         ...s,
         method: 2, // WGC: Windows Graphics Capture
         window: 'World of Warcraft:waApplication Window:WowClassic.exe', // TODO handle all names classic, chinese
@@ -1624,14 +1343,14 @@ export default class Recorder extends EventEmitter {
         cursor: captureCursor,
       });
 
-      const s1 = noobs.GetSourceSettings('WCR Window Capture');
+      const s1 = noobs.GetSourceSettings(VideoSourceName.WINDOW);
       console.log('s1', s1);
 
       console.log("SETTING POSITION TO", videoSourceXPosition, videoSourceYPosition, videoSourceScale);
 
-      noobs.AddSourceToScene('WCR Window Capture');
+      noobs.AddSourceToScene(VideoSourceName.WINDOW);
 
-      noobs.SetSourcePos('WCR Window Capture', {
+      noobs.SetSourcePos(VideoSourceName.WINDOW, {
         x: videoSourceXPosition,
         y: videoSourceYPosition,
         scaleX: videoSourceScale,
@@ -1650,4 +1369,124 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Window capture source configured');
     this.clearFindWindowInterval();
   }
-}
+
+  /**
+   * Get the current dimensions of the display preview. This includes the 
+   * base canvas size (unscaled) and the current display size (scaled).
+   */
+  public getDisplayInfo(): {
+    canvasWidth: number;
+    canvasHeight: number;
+    previewWidth: number;
+    previewHeight: number;
+  } {
+    return noobs.GetPreviewInfo();
+  }
+
+  /**
+   * Get the current position and dimensions of a source. Width and height are
+   * before scaling. This is the real size on the canvas, not the size in the 
+   * preview.
+   */
+  public getSourcePosition(src: VideoSourceName) {
+    const previewInfo = this.getDisplayInfo(); // Could be cached
+    const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
+    const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
+    const sf = Math.min(sfx, sfy);
+
+    const current = noobs.GetSourcePos(src);
+
+    const position: SceneItemPosition & SourceDimensions = {
+      x: current.x * sf,
+      y: current.y * sf,
+      scaleX: current.scaleX,
+      scaleY: current.scaleY,
+      width: current.width * sf * current.scaleX,
+      height: current.height * sf * current.scaleY,
+    };
+
+    return position;
+  }
+
+
+  /**
+   * Sets the position of a source in the OBS scene.
+   */
+  public setSourcePosition(
+    src: VideoSourceName, 
+    target: { x: number; y: number; width: number; height: number }
+  ) {
+    console.info('[Recorder] Set source position', src, target);
+
+    const previewInfo = noobs.GetPreviewInfo(); // Could be cached?
+    const current = noobs.GetSourcePos(src);
+
+    // This is confusing because there are two forms of scaling at play 
+    // that we need to account for. 
+    //   1. The source scaling. The current.width might be 1000px but 
+    //      if it's scaled by 0.5 the real width is 500px. 
+    //   2. The preview scaling. The preview is reduced to fit the div
+    //      based on the aspect ratio.
+    const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
+    const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
+    const sf = Math.min(sfx, sfy);
+
+    // We only allow one scale factor to retail the aspect ratio of
+    // the source so just use the X.
+    const scaledWidth = current.width * current.scaleX * sf;
+    const ratioX = target.width / scaledWidth;
+    let scale = ratioX * current.scaleX;
+
+    const updated: SceneItemPosition = {
+      x: target.x / sf,
+      y: target.y / sf,
+      scaleX: scale,
+      scaleY: scale,
+    };
+
+    noobs.SetSourcePos(src, updated);
+
+    if (this.sourceDebounceTimer) {
+      clearTimeout(this.sourceDebounceTimer);
+    }
+
+    this.sourceDebounceTimer = setTimeout(() => {
+      this.saveSourcePosition(src, updated.x, updated.y, scale);
+      this.sourceDebounceTimer = undefined;
+    }, 1000);
+  }
+
+  /**
+   * Reset the source position to 0, 0 and unscaled.
+   */
+  public resetSourcePosition(src: VideoSourceName) {
+    console.info('[Recorder] REset source position', src);
+    
+    const updated: SceneItemPosition = {
+      x: 0,
+      y: 0,
+      scaleX: 1,
+      scaleY: 1,
+    };
+
+    noobs.SetSourcePos(src, updated);
+    this.saveSourcePosition(src, 0, 0, 1);
+  }
+
+  /**
+   * Save a video source position in the config.
+   */
+  private saveSourcePosition(src: VideoSourceName, x: number, y: number, scale: number) {
+    console.info('[Recorder] Saving src position', src, { x, y, scale });
+
+    if (src === VideoSourceName.OVERLAY) {
+      this.cfg.set('chatOverlayXPosition', x);
+      this.cfg.set('chatOverlayYPosition', y);
+      this.cfg.set('chatOverlayScale', scale);
+    } else {
+      this.cfg.set('videoSourceXPosition', x);
+      this.cfg.set('videoSourceYPosition', y);
+      this.cfg.set('videoSourceScale', scale);
+    }
+  }
+}    

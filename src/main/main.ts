@@ -208,12 +208,6 @@ const createWindow = async () => {
     // }, 10000);
   });
 
-  mainWindow.on('moved', () => {
-    if (manager) {
-      manager.recorder.showPreviewMemory();
-    }
-  });
-
   mainWindow.on('focus', () => {
     mainWindow?.webContents.send('window-focus-status', true);
   });

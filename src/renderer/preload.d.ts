@@ -1,5 +1,6 @@
 import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
+import { VideoSourceName } from 'main/types';
 import { SceneItemPosition, SourceDimensions } from 'noobs';
 
 declare global {
@@ -17,7 +18,7 @@ declare global {
         once(channel: string, func: (...args: unknown[]) => void): void;
         removeAllListeners(channel: string): void;
 
-        getPreviewInfo(): Promise<{
+        getDisplayInfo(): Promise<{
           canvasWidth: number;
           canvasHeight: number;
           previewWidth: number;
@@ -25,11 +26,12 @@ declare global {
         }>;
 
         getSourcePosition(
-          src: string,
+          src: VideoSourceName,
         ): Promise<SceneItemPosition & SourceDimensions>;
 
-        resetSourcePosition(src: string): void;
-        setSourcePosition(src: string, target: { x: number; y: number, width: number, height: number }): void;
+        resetSourcePosition(src: VideoSourceName): void;
+        
+        setSourcePosition(src: VideoSourceName, target: { x: number; y: number, width: number, height: number }): void;
       };
     };
   }

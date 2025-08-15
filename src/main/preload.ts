@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { SceneItemPosition, SourceDimensions } from 'noobs';
+import { VideoSourceName } from './types';
 
 export type Channels =
   | 'mainWindow'
@@ -29,7 +30,7 @@ export type Channels =
   | 'audioSettingsOpen'
   | 'updateSourcePos'
   | 'createAudioSource'
-  | 'getPreviewInfo'
+  | 'getDisplayInfo'
   | 'getSourcePosition'
   | 'setSourcePosition'
   | 'resetSourcePosition';
@@ -64,13 +65,13 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.removeAllListeners(channel);
     },
 
-    getPreviewInfo(): Promise<{
+    getDisplayInfo(): Promise<{
       canvasWidth: number;
       canvasHeight: number;
       previewWidth: number;
       previewHeight: number;
     }> {
-      return ipcRenderer.invoke('getPreviewInfo');
+      return ipcRenderer.invoke('getDisplayInfo');
     },
 
     getSourcePosition(
@@ -79,11 +80,11 @@ contextBridge.exposeInMainWorld('electron', {
       return ipcRenderer.invoke('getSourcePosition', src);
     },
 
-    setSourcePosition(src: string, delta: { x: number; y: number, width: number, height: number }) {
-      ipcRenderer.send('setSourcePosition', src, delta);
+    setSourcePosition(src: VideoSourceName, target: { x: number; y: number; width: number; height: number }) {
+      ipcRenderer.send('setSourcePosition', src, target);
     },
 
-    resetSourcePosition(src: string) {
+    resetSourcePosition(src: VideoSourceName) {
       ipcRenderer.send('resetSourcePosition', src);
     },
   },
