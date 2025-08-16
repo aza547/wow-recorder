@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { SceneItemPosition, SourceDimensions } from 'noobs';
-import { VideoSourceName } from './types';
+import { VideoSourceName, WCRSceneItem } from './types';
 
 export type Channels =
   | 'mainWindow'
@@ -33,6 +33,7 @@ export type Channels =
   | 'configurePreview'
   | 'showPreview'
   | 'hidePreview'
+  | 'disablePreview'
   | 'getSourcePosition'
   | 'setSourcePosition'
   | 'resetSourcePosition';
@@ -90,17 +91,21 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('hidePreview');
     },
 
+    disablePreview() {
+      ipcRenderer.send('disablePreview');
+    },
+
     getSourcePosition(
-      src: string,
+      src: WCRSceneItem,
     ): Promise<SourceDimensions & SceneItemPosition> {
       return ipcRenderer.invoke('getSourcePosition', src);
     },
 
-    setSourcePosition(src: VideoSourceName, target: { x: number; y: number; width: number; height: number }) {
+    setSourcePosition(src: WCRSceneItem, target: { x: number; y: number; width: number; height: number }) {
       ipcRenderer.send('setSourcePosition', src, target);
     },
 
-    resetSourcePosition(src: VideoSourceName) {
+    resetSourcePosition(src: WCRSceneItem) {
       ipcRenderer.send('resetSourcePosition', src);
     },
   },
