@@ -577,6 +577,24 @@ type ObsVolmeterCallbackInfo = {
   inputPeak: number[];
 };
 
+enum WCRSceneItem {
+  OVERLAY,
+  GAME,
+}
+
+enum SceneInteraction {
+  NONE,
+  MOVE,
+  SCALE,
+}
+
+type BoxDimensions = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 enum VideoSourceName {
   WINDOW = "WCR Window Capture",
   GAME = "WCR Game Capture",
@@ -647,5 +665,8 @@ export {
   ObsSourceCallbackInfo,
   ObsVolmeterCallbackInfo,
   VideoSourceName,
-  AudioSourcePrefix
+  AudioSourcePrefix,
+  WCRSceneItem,
+  SceneInteraction,
+  BoxDimensions
 };

@@ -7,34 +7,23 @@ import React, {
   useState,
 } from 'react';
 import { stopPropagation } from './rendererutils';
-import { VideoSourceName } from 'main/types';
+import { BoxDimensions, SceneInteraction, WCRSceneItem } from 'main/types';
+import { ConfigurationSchema } from 'config/configSchema';
 
 const ipc = window.electron.ipcRenderer;
-
-enum WCRSceneItem {
-  OVERLAY,
-  GAME,
-}
-
-enum SceneInteraction {
-  NONE,
-  MOVE,
-  SCALE,
-}
-
-type BoxDimensions = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
+const showPreview = ipc.showPreview;
+const hidePreview = ipc.hidePreview;
+const disablePreview = ipc.disablePreview;
+const cornerSize = 25; // Size in pixels for the corner box
 
 const RecorderPreview = (props: {
   previewEnabled: boolean;
   redrawDraggableBoxes: MutableRefObject<() => void>;
+  config: ConfigurationSchema;
 }) => {
-  const { previewEnabled, redrawDraggableBoxes } = props;
+  const { previewEnabled, redrawDraggableBoxes, config } = props;
 
+  const initialRender = useRef(true);
   const draggingOverlay = useRef<SceneInteraction>(SceneInteraction.NONE);
   const draggingGame = useRef<SceneInteraction>(SceneInteraction.NONE);
   let zIndex = 1;
@@ -72,9 +61,6 @@ const RecorderPreview = (props: {
     // to initialize the draggable boxes.
     configureDraggableBoxes();
 
-    // Setup the callback for the SceneEditor function reset functions.
-    redrawDraggableBoxes.current = configureDraggableBoxes;
-
     // Listen on the document for mouse events other than mousedown,
     // so that if the cursor goes outwith the draggable area, we can
     // still capture the events.
@@ -93,12 +79,21 @@ const RecorderPreview = (props: {
       // Disconnect the resize observer.
       cleanupResizeObserver();
 
-      // Hide the preview itself, we're tabbing away.
-      hidePreview();
+      // Disable the preview, we're tabbing away. This means it's switched
+      // off rather than just hidden from view.
+      disablePreview();
     };
   }, []);
 
   useEffect(() => {
+    if (initialRender.current) {
+      // Just save calling the stuff below on initial render, we setup
+      // everything in the other use effect. This isn't really important
+      // but it helps to avoid unnecessary function calls.
+      initialRender.current = false;
+      return;
+    }
+
     if (previewEnabled) {
       showPreview();
     } else {
@@ -106,22 +101,46 @@ const RecorderPreview = (props: {
     }
   }, [previewEnabled]);
 
+  
+  // The display maintains the canvas ratio, so it is either X limited,
+  // Y limited, or a perfect fit. We need to calculate that to offset the
+  // draggable boxes on the preview box, and also to account for snapping.
+  const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
+  const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
+
+  const xLimited = sfx < sfy;
+  let xCorr = 0;
+  let yCorr = 0;
+
+  if (xLimited) {
+    yCorr = (previewInfo.previewHeight - sfx * previewInfo.canvasHeight) / 2;
+  } else {
+    xCorr = (previewInfo.previewWidth - sfy * previewInfo.canvasWidth) / 2;
+  }
+
   const configureDraggableBoxes = async () => {
     const display = await ipc.getDisplayInfo();
-    const chat = await ipc.getSourcePosition(VideoSourceName.OVERLAY);
-    const game = await ipc.getSourcePosition(VideoSourceName.WINDOW);
     setPreviewInfo(display);
-    setOverlayBoxDimensions(chat);
+
+    if (config.chatOverlayEnabled) {
+      const chat = await ipc.getSourcePosition(WCRSceneItem.OVERLAY);
+      setOverlayBoxDimensions(chat);
+    }
+
+    const game = await ipc.getSourcePosition(WCRSceneItem.GAME);
     setGameBoxDimensions(game);
   };
 
-  const showPreview = () => {
-    ipc.showPreview();
-  };
+  useEffect(() => {
+    // Setup the callback for the SceneEditor function reset functions, and
+    // update it if it changes due to the state.
+    redrawDraggableBoxes.current = configureDraggableBoxes;
+  }, [configureDraggableBoxes]);
 
-  const hidePreview = () => {
-    ipc.hidePreview();
-  };
+  // Better to send a message from the backend once the reconfigure has finished?
+  useEffect(() => {
+    setTimeout(configureDraggableBoxes, 100);
+  }, [config.chatOverlayOwnImage]);
 
   const configurePreview = async () => {
     const previewBox = document.getElementById('preview-box');
@@ -148,7 +167,8 @@ const RecorderPreview = (props: {
           x: prev.x + event.movementX,
           y: prev.y + event.movementY,
         };
-        ipc.setSourcePosition(VideoSourceName.OVERLAY, updated);
+
+        ipc.setSourcePosition(WCRSceneItem.OVERLAY, updated);
         return updated;
       });
     } else {
@@ -158,7 +178,7 @@ const RecorderPreview = (props: {
           x: prev.x + event.movementX,
           y: prev.y + event.movementY,
         };
-        ipc.setSourcePosition(VideoSourceName.WINDOW, updated);
+        ipc.setSourcePosition(WCRSceneItem.GAME, updated);
         return updated;
       });
     }
@@ -178,7 +198,7 @@ const RecorderPreview = (props: {
           height: newHeight,
         };
 
-        ipc.setSourcePosition(VideoSourceName.WINDOW, updated);
+        ipc.setSourcePosition(WCRSceneItem.OVERLAY, updated);
         return updated;
       });
     } else {
@@ -194,7 +214,7 @@ const RecorderPreview = (props: {
           height: newHeight,
         };
 
-        ipc.setSourcePosition(VideoSourceName.WINDOW, updated);
+        ipc.setSourcePosition(WCRSceneItem.GAME, updated);
         return updated;
       });
     }
@@ -213,7 +233,6 @@ const RecorderPreview = (props: {
   }, []);
 
   const onMouseUp = () => {
-    console.log('onMouseUp');
     draggingGame.current = SceneInteraction.NONE;
     draggingOverlay.current = SceneInteraction.NONE;
   };
@@ -224,8 +243,6 @@ const RecorderPreview = (props: {
       src: WCRSceneItem,
       action: SceneInteraction,
     ) => {
-      console.log('onMouseDown for', src, action);
-
       if (src === WCRSceneItem.OVERLAY) {
         draggingOverlay.current = action;
       } else {
@@ -262,26 +279,8 @@ const RecorderPreview = (props: {
 
     const text = src === WCRSceneItem.OVERLAY ? 'Chat Overlay' : 'Game Window';
 
-    const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
-    const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
-
-    const xLimited = sfx < sfy;
-    let xCorr = 0;
-    let yCorr = 0;
-
-    if (xLimited) {
-      yCorr = (previewInfo.previewHeight - sfx * previewInfo.canvasHeight) / 2;
-    } else {
-      xCorr = (previewInfo.previewWidth - sfy * previewInfo.canvasWidth) / 2;
-    }
-
     const left = x + xCorr;
     const top = y + yCorr;
-    const cornerSize = 25; // Size in pixels for the corner box
-
-    if (src !== WCRSceneItem.OVERLAY) {
-      //console.log('Game window position:', left, top, width, height);
-    }
 
     return (
       <Box
@@ -337,7 +336,8 @@ const RecorderPreview = (props: {
         }}
       >
         {renderDraggableSceneBox(WCRSceneItem.GAME)}
-        {renderDraggableSceneBox(WCRSceneItem.OVERLAY)}
+        {config.chatOverlayEnabled &&
+          renderDraggableSceneBox(WCRSceneItem.OVERLAY)}
       </Box>
     </Box>
   );
