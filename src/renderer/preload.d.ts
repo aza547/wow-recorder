@@ -1,6 +1,6 @@
 import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
-import { VideoSourceName } from 'main/types';
+import { VideoSourceName, WCRSceneItem } from 'main/types';
 import { SceneItemPosition, SourceDimensions } from 'noobs';
 
 declare global {
@@ -28,14 +28,15 @@ declare global {
         configurePreview(x: number, y: number, width: number, height: number): void;
         showPreview(): void;
         hidePreview(): void;
+        disablePreview(): void;
 
         getSourcePosition(
-          src: VideoSourceName,
+          src: WCRSceneItem,
         ): Promise<SceneItemPosition & SourceDimensions>;
 
-        resetSourcePosition(src: VideoSourceName): void;
+        resetSourcePosition(src: WCRSceneItem): void;
         
-        setSourcePosition(src: VideoSourceName, target: { x: number; y: number, width: number, height: number }): void;
+        setSourcePosition(src: WCRSceneItem, target: { x: number; y: number, width: number, height: number }): void;
       };
     };
   }

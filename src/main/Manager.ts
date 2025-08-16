@@ -51,7 +51,7 @@ import {
   DiskStatus,
   UploadQueueItem,
   CloudConfig,
-  VideoSourceName,
+  WCRSceneItem,
 } from './types';
 import {
   getObsBaseConfig,
@@ -556,9 +556,7 @@ export default class Manager {
    */
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
-
-    const videoConfig = getObsVideoConfig(this.cfg);
-    this.recorder.configureVideoSources(videoConfig, this.poller.isWowRunning);
+    this.recorder.attachCaptureSource();
 
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);
@@ -1091,6 +1089,10 @@ export default class Manager {
       this.recorder.hidePreview();
     });
 
+    ipcMain.on('disablePreview', () => {
+      this.recorder.disablePreview();
+    });
+
     // Encoder listener, to populate settings on the frontend.
     ipcMain.handle('getEncoders', (): string[] => {
       const obsEncoders = this.recorder
@@ -1311,21 +1313,21 @@ export default class Manager {
       return this.recorder.getDisplayInfo();
     });
 
-    ipcMain.handle('getSourcePosition', (_event, src: VideoSourceName) => {
-      return this.recorder.getSourcePosition(src);
+    ipcMain.handle('getSourcePosition', (_event, item: WCRSceneItem) => {
+      return this.recorder.getSourcePosition(item);
     });
 
     ipcMain.on(
       'setSourcePosition',
-      (_event, src: VideoSourceName, target: { x: number; y: number; width: number; height: number }) => {
-        this.recorder.setSourcePosition(src, target);
+      (_event, item: WCRSceneItem, target: { x: number; y: number; width: number; height: number }) => {
+        this.recorder.setSourcePosition(item, target);
       },
     );
 
     ipcMain.on(
       'resetSourcePosition',
-      (_event, src: VideoSourceName) => {
-        this.recorder.resetSourcePosition(src);
+      (_event, item: WCRSceneItem) => {
+        this.recorder.resetSourcePosition(item);
       },
     );
 
