@@ -1,11 +1,5 @@
 import { Box } from '@mui/material';
-import React, {
-  MutableRefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { stopPropagation } from './rendererutils';
 import { BoxDimensions, SceneInteraction, WCRSceneItem } from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
@@ -18,12 +12,12 @@ const cornerSize = 25; // Size in pixels for the corner box
 
 const RecorderPreview = (props: {
   previewEnabled: boolean;
-  redrawDraggableBoxes: MutableRefObject<() => void>;
   config: ConfigurationSchema;
 }) => {
-  const { previewEnabled, redrawDraggableBoxes, config } = props;
+  const { previewEnabled, config } = props;
 
   const initialRender = useRef(true);
+  const previewDivRef = useRef<HTMLDivElement>(null);
   const draggingOverlay = useRef<SceneInteraction>(SceneInteraction.NONE);
   const draggingGame = useRef<SceneInteraction>(SceneInteraction.NONE);
   let zIndex = 1;
@@ -80,7 +74,7 @@ const RecorderPreview = (props: {
       cleanupResizeObserver();
 
       // Disable the preview, we're tabbing away. This means it's switched
-      // off rather than just hidden from view.
+      // off and not consuming GPU resources rather than just hidden from view.
       disablePreview();
     };
   }, []);
@@ -101,7 +95,6 @@ const RecorderPreview = (props: {
     }
   }, [previewEnabled]);
 
-  
   // The display maintains the canvas ratio, so it is either X limited,
   // Y limited, or a perfect fit. We need to calculate that to offset the
   // draggable boxes on the preview box, and also to account for snapping.
@@ -121,6 +114,7 @@ const RecorderPreview = (props: {
   const configureDraggableBoxes = async () => {
     const display = await ipc.getDisplayInfo();
     setPreviewInfo(display);
+    console.log(display);
 
     if (config.chatOverlayEnabled) {
       const chat = await ipc.getSourcePosition(WCRSceneItem.OVERLAY);
@@ -131,33 +125,21 @@ const RecorderPreview = (props: {
     setGameBoxDimensions(game);
   };
 
-  useEffect(() => {
-    // Setup the callback for the SceneEditor function reset functions, and
-    // update it if it changes due to the state.
-    redrawDraggableBoxes.current = configureDraggableBoxes;
-  }, [configureDraggableBoxes]);
-
-  // Better to send a message from the backend once the reconfigure has finished?
-  useEffect(() => {
-    setTimeout(configureDraggableBoxes, 100);
-  }, [config.chatOverlayOwnImage]);
-
   const configurePreview = async () => {
-    const previewBox = document.getElementById('preview-box');
-
-    if (previewBox) {
-      const { width, height, x, y } = previewBox.getBoundingClientRect();
+    if (previewDivRef.current) {
+      const { width, height, x, y } =
+        previewDivRef.current.getBoundingClientRect();
       ipc.configurePreview(x, y, width, height);
     }
-
-    // Surely something with invoke/handle to await the configurePreview
-    // would be better here but I'm being lazy. We need to be sure the
-    // backend has had a change to apply the settings before we reconfigure
-    // the draggable boxes.
-    setTimeout(() => {
-      configureDraggableBoxes();
-    }, 100);
   };
+
+  useEffect(() => {
+    ipc.on('redrawPreview', configureDraggableBoxes);
+
+    return () => {
+      ipc.removeAllListeners('redrawPreview');
+    };
+  }, [configureDraggableBoxes]);
 
   const onSourceMove = (event: MouseEvent, src: WCRSceneItem) => {
     if (src === WCRSceneItem.OVERLAY) {
@@ -266,10 +248,8 @@ const RecorderPreview = (props: {
       resizeObserver = new ResizeObserver(() => configurePreview());
     }
 
-    const previewBox = document.getElementById('preview-box');
-
-    if (previewBox !== null) {
-      resizeObserver.observe(previewBox);
+    if (previewDivRef.current) {
+      resizeObserver.observe(previewDivRef.current);
     }
   };
 
@@ -317,29 +297,16 @@ const RecorderPreview = (props: {
   };
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        height: '100%',
-        boxSizing: 'border-box',
-        backgroundColor: 'black',
-      }}
-    >
-      <Box
-        id="preview-box"
-        sx={{
-          position: 'relative',
-          height: '100%',
-          mx: 12,
-          overflow: 'hidden',
-          border: '1px solid black ',
-        }}
+    <div className="w-full h-full box-border bg-black">
+      <div
+        ref={previewDivRef}
+        className="relative h-full mx-12 overflow-hidden border border-black"
       >
         {renderDraggableSceneBox(WCRSceneItem.GAME)}
         {config.chatOverlayEnabled &&
           renderDraggableSceneBox(WCRSceneItem.OVERLAY)}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

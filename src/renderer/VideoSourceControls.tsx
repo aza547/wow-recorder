@@ -11,7 +11,6 @@ import {
 } from './components/ToggleGroup/ToggleGroup';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
-import { Button } from './components/Button/Button';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -44,10 +43,16 @@ const VideoSourceControls = (props: IProps) => {
       obsCaptureMode: config.obsCaptureMode,
       monitorIndex: config.monitorIndex,
       captureCursor: config.captureCursor,
+      forceSdr: config.forceSdr,
     });
 
     ipc.sendMessage('settingsChange', []);
-  }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
+  }, [
+    config.monitorIndex,
+    config.obsCaptureMode,
+    config.captureCursor,
+    config.forceSdr,
+  ]);
 
   const setOBSCaptureMode = (mode: string) => {
     if (mode === null) {
