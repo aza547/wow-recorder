@@ -25,6 +25,10 @@ declare global {
           previewHeight: number;
         }>;
 
+        configurePreview(x: number, y: number, width: number, height: number): void;
+        showPreview(): void;
+        hidePreview(): void;
+
         getSourcePosition(
           src: VideoSourceName,
         ): Promise<SceneItemPosition & SourceDimensions>;
