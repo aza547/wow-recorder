@@ -195,7 +195,7 @@ export default class Recorder extends EventEmitter {
 
   private activeCaptureSource?: VideoSourceName;
 
-  private chatOverlayDefaultImage = getAssetPath('poster', 'chat-cover2.png');
+  private chatOverlayDefaultImage = getAssetPath('poster', 'chat-overlay.png');
 
   /**
    * Contructor.
@@ -308,9 +308,20 @@ export default class Recorder extends EventEmitter {
 
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
-
     console.info('[Recorder] Reconfigure OBS video context');
+
+    const canvas = noobs.GetPreviewInfo();
     noobs.ResetVideoContext(obsFPS, width, height);
+
+    const { canvasHeight, canvasWidth } = canvas;
+    const changedResolution = canvasHeight !== height || canvasWidth !== width;
+
+    if (changedResolution) {
+      // Reset the sources on changing resolution as OBS will otherwise try
+      // scale them for us which just ends up being confusing.
+      this.resetSourcePosition(WCRSceneItem.GAME);
+      this.resetSourcePosition(WCRSceneItem.OVERLAY);
+    }
 
     const outputPath = path.normalize(obsPath);
     await this.cleanup(outputPath);
@@ -1265,7 +1276,6 @@ export default class Recorder extends EventEmitter {
     }
 
     const current = noobs.GetSourcePos(src);
-    console.info("Current source position:", src, current);
 
     const position: SceneItemPosition & SourceDimensions = {
       x: current.x * sf,

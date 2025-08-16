@@ -475,6 +475,7 @@ export default class Manager {
     }
 
     this.refreshMicStatus(this.recorder.obsMicState);
+    this.redrawPreview();
   }
 
   /**
@@ -489,6 +490,16 @@ export default class Manager {
    */
   private refreshMicStatus(status: MicStatus) {
     this.mainWindow.webContents.send('updateMicStatus', status);
+  }
+
+  /**
+   * Trigger the frontend to redraw the preview if it's open.
+   */
+  private redrawPreview() {
+    // Really don't understand the need for the timeout here
+    // but it sometimes gets stale data otherwise. A caching 
+    // thing in libobs maybe?
+    setTimeout(() => this.mainWindow.webContents.send('redrawPreview'), 100);
   }
 
   /**
@@ -1079,6 +1090,7 @@ export default class Manager {
 
     ipcMain.on('configurePreview', (_event, x: number, y: number, width: number, height: number) => {
       this.recorder.configurePreview(x, y, width, height);
+      this.redrawPreview();
     });
 
     ipcMain.on('showPreview', () => {
@@ -1321,6 +1333,7 @@ export default class Manager {
       'setSourcePosition',
       (_event, item: WCRSceneItem, target: { x: number; y: number; width: number; height: number }) => {
         this.recorder.setSourcePosition(item, target);
+        // Don't need to redraw here, frontend handles this for us.
       },
     );
 
@@ -1328,6 +1341,7 @@ export default class Manager {
       'resetSourcePosition',
       (_event, item: WCRSceneItem) => {
         this.recorder.resetSourcePosition(item);
+        this.redrawPreview();
       },
     );
 
