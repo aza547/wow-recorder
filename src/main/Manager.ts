@@ -1079,14 +1079,16 @@ export default class Manager {
       }
     });
 
-    // The OBS preview window is tacked on-top of the UI so we call this often
-    // whenever we need to move, resize, show or hide it.
-    ipcMain.on('preview', (_event, args) => {
-      if (args[0] === 'show') {
-        this.recorder.showPreview(args[1], args[2], args[3], args[4]);
-      } else if (args[0] === 'hide') {
-        this.recorder.hidePreview();
-      }
+    ipcMain.on('configurePreview', (_event, x: number, y: number, width: number, height: number) => {
+      this.recorder.configurePreview(x, y, width, height);
+    });
+
+    ipcMain.on('showPreview', () => {
+      this.recorder.showPreview();
+    });
+
+    ipcMain.on('hidePreview', () => {
+      this.recorder.hidePreview();
     });
 
     // Encoder listener, to populate settings on the frontend.

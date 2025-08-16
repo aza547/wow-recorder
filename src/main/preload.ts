@@ -14,7 +14,6 @@ export type Channels =
   | 'videoPlayerSettings'
   | 'recorder'
   | 'config'
-  | 'preview'
   | 'getEncoders'
   | 'selectPath'
   | 'selectFile'
@@ -31,6 +30,9 @@ export type Channels =
   | 'updateSourcePos'
   | 'createAudioSource'
   | 'getDisplayInfo'
+  | 'configurePreview'
+  | 'showPreview'
+  | 'hidePreview'
   | 'getSourcePosition'
   | 'setSourcePosition'
   | 'resetSourcePosition';
@@ -72,6 +74,20 @@ contextBridge.exposeInMainWorld('electron', {
       previewHeight: number;
     }> {
       return ipcRenderer.invoke('getDisplayInfo');
+    },
+
+    // This is async as it's useful to wait for the configuration to complete
+    // before triggering frontend updates.
+    configurePreview(x: number, y: number, width: number, height: number) {
+      ipcRenderer.send('configurePreview', x, y, width, height);
+    },
+
+    showPreview() {
+      ipcRenderer.send('showPreview');
+    },
+
+    hidePreview() {
+      ipcRenderer.send('hidePreview');
     },
 
     getSourcePosition(

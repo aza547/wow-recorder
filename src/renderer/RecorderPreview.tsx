@@ -39,7 +39,6 @@ const RecorderPreview = (props: {
   const draggingGame = useRef<SceneInteraction>(SceneInteraction.NONE);
   let zIndex = 1;
   let resizeObserver: ResizeObserver | undefined;
-  const show = useRef(() => {});
 
   const [previewInfo, setPreviewInfo] = useState<{
     canvasWidth: number;
@@ -71,10 +70,10 @@ const RecorderPreview = (props: {
   useEffect(() => {
     // On component mount, get the source dimensions from the backend
     // to initialize the draggable boxes.
-    initDraggableBoxes();
+    configureDraggableBoxes();
 
     // Setup the callback for the SceneEditor function reset functions.
-    redrawDraggableBoxes.current = initDraggableBoxes;
+    redrawDraggableBoxes.current = configureDraggableBoxes;
 
     // Listen on the document for mouse events other than mousedown,
     // so that if the cursor goes outwith the draggable area, we can
@@ -82,6 +81,7 @@ const RecorderPreview = (props: {
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
 
+    configurePreview();
     showPreview();
     setupResizeObserver();
 
@@ -94,7 +94,7 @@ const RecorderPreview = (props: {
       cleanupResizeObserver();
 
       // Hide the preview itself, we're tabbing away.
-      ipc.sendMessage('preview', ['hide']);
+      hidePreview();
     };
   }, []);
 
@@ -102,35 +102,42 @@ const RecorderPreview = (props: {
     if (previewEnabled) {
       showPreview();
     } else {
-      ipc.sendMessage('preview', ['hide']);
+      hidePreview();
     }
   }, [previewEnabled]);
 
-  const initDraggableBoxes = async () => {
+  const configureDraggableBoxes = async () => {
+    const display = await ipc.getDisplayInfo();
     const chat = await ipc.getSourcePosition(VideoSourceName.OVERLAY);
     const game = await ipc.getSourcePosition(VideoSourceName.WINDOW);
+    setPreviewInfo(display);
     setOverlayBoxDimensions(chat);
     setGameBoxDimensions(game);
   };
 
   const showPreview = () => {
-    const previewBox = document.getElementById('preview-box');
-
-    if (previewBox && previewEnabled) {
-      // Show the preview box and set its dimensions.
-      const { width, height, x, y } = previewBox.getBoundingClientRect();
-      ipc.sendMessage('preview', ['show', width, height, x, y]);
-    }
-
-    updatePreviewDimensions();
-    initDraggableBoxes();
+    ipc.showPreview();
   };
 
-  show.current = showPreview;
+  const hidePreview = () => {
+    ipc.hidePreview();
+  };
 
-  const updatePreviewDimensions = async () => {
-    const dims = await ipc.getDisplayInfo();
-    setPreviewInfo(dims);
+  const configurePreview = async () => {
+    const previewBox = document.getElementById('preview-box');
+
+    if (previewBox) {
+      const { width, height, x, y } = previewBox.getBoundingClientRect();
+      ipc.configurePreview(x, y, width, height);
+    }
+
+    // Surely something with invoke/handle to await the configurePreview
+    // would be better here but I'm being lazy. We need to be sure the
+    // backend has had a change to apply the settings before we reconfigure
+    // the draggable boxes.
+    setTimeout(() => {
+      configureDraggableBoxes();
+    }, 100);
   };
 
   const onSourceMove = (event: MouseEvent, src: WCRSceneItem) => {
@@ -239,7 +246,7 @@ const RecorderPreview = (props: {
 
   const setupResizeObserver = () => {
     if (resizeObserver === undefined) {
-      resizeObserver = new ResizeObserver(show.current);
+      resizeObserver = new ResizeObserver(() => configurePreview());
     }
 
     const previewBox = document.getElementById('preview-box');

@@ -414,12 +414,7 @@ export default class Recorder extends EventEmitter {
     this.configureOverlayImageSource(overlayCfg);
   }
 
-  /**
-   * Hides the scene preview.
-   */
-  public hidePreview() {
-    noobs.HidePreview();
-  }
+
 
   /**
    * Configure and add the chat overlay to the scene.
@@ -622,11 +617,24 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Show the scene preview on the UI, taking the location and dimensions as
-   * input.
+   * Set the size and position of the scene preview.
    */
-  public showPreview(width: number, height: number, x: number, y: number) {
-    noobs.ShowPreview(x, y, width, height);
+  public configurePreview(x: number, y: number, width: number, height: number) {
+    noobs.ConfigurePreview(x, y, width, height);
+  }
+
+  /**
+   * Show the scene preview.
+   */
+  public showPreview() {
+    noobs.ShowPreview();
+  }
+
+  /**
+   * Hide the scene preview.
+   */
+  public hidePreview() {
+    noobs.HidePreview();
   }
 
   /**
