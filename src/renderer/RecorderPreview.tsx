@@ -39,6 +39,7 @@ const RecorderPreview = (props: {
   const draggingGame = useRef<SceneInteraction>(SceneInteraction.NONE);
   let zIndex = 1;
   let resizeObserver: ResizeObserver | undefined;
+  const show = useRef(() => {});
 
   const [previewInfo, setPreviewInfo] = useState<{
     canvasWidth: number;
@@ -51,9 +52,6 @@ const RecorderPreview = (props: {
     previewWidth: 0,
     previewHeight: 0,
   });
-
-  const overlaySetCount = useRef(0);
-  const gameSetCount = useRef(0);
 
   const [overlayBoxDimensions, setOverlayBoxDimensions] =
     useState<BoxDimensions>({
@@ -70,38 +68,6 @@ const RecorderPreview = (props: {
     height: 500,
   });
 
-  const initDraggableBoxes = async () => {
-    console.log('initDraggableBoxes');
-
-    const overlay = await ipc.getSourcePosition(VideoSourceName.OVERLAY);
-    const game = await ipc.getSourcePosition(VideoSourceName.WINDOW);
-
-    setOverlayBoxDimensions(overlay);
-    setGameBoxDimensions(game);
-  };
-
-  useEffect(() => {
-    if (overlaySetCount.current < 2) {
-      // This effect will fire on initial mount, and on first retrieval
-      // of the real values. So only apply real scene changes after the
-      // effect has fired at least twice.
-      overlaySetCount.current++;
-    } else {
-      ipc.setSourcePosition(VideoSourceName.OVERLAY, overlayBoxDimensions);
-    }
-  }, [overlayBoxDimensions]);
-
-  useEffect(() => {
-    if (gameSetCount.current < 2) {
-      // This effect will fire on initial mount, and on first retrieval
-      // of the real values. So only apply real scene changes after the
-      // effect has fired at least twice.
-      gameSetCount.current++;
-    } else {
-      ipc.setSourcePosition(VideoSourceName.WINDOW, gameBoxDimensions);
-    }
-  }, [gameBoxDimensions]);
-
   useEffect(() => {
     // On component mount, get the source dimensions from the backend
     // to initialize the draggable boxes.
@@ -109,15 +75,58 @@ const RecorderPreview = (props: {
 
     // Setup the callback for the SceneEditor function reset functions.
     redrawDraggableBoxes.current = initDraggableBoxes;
+
+    // Listen on the document for mouse events other than mousedown,
+    // so that if the cursor goes outwith the draggable area, we can
+    // still capture the events.
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    showPreview();
+    setupResizeObserver();
+
+    return () => {
+      // Remove the mouse event listeners.
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+
+      // Disconnect the resize observer.
+      cleanupResizeObserver();
+
+      // Hide the preview itself, we're tabbing away.
+      ipc.sendMessage('preview', ['hide']);
+    };
   }, []);
 
   useEffect(() => {
     if (previewEnabled) {
-      show();
+      showPreview();
     } else {
       ipc.sendMessage('preview', ['hide']);
     }
   }, [previewEnabled]);
+
+  const initDraggableBoxes = async () => {
+    const chat = await ipc.getSourcePosition(VideoSourceName.OVERLAY);
+    const game = await ipc.getSourcePosition(VideoSourceName.WINDOW);
+    setOverlayBoxDimensions(chat);
+    setGameBoxDimensions(game);
+  };
+
+  const showPreview = () => {
+    const previewBox = document.getElementById('preview-box');
+
+    if (previewBox && previewEnabled) {
+      // Show the preview box and set its dimensions.
+      const { width, height, x, y } = previewBox.getBoundingClientRect();
+      ipc.sendMessage('preview', ['show', width, height, x, y]);
+    }
+
+    updatePreviewDimensions();
+    initDraggableBoxes();
+  };
+
+  show.current = showPreview;
 
   const updatePreviewDimensions = async () => {
     const dims = await ipc.getDisplayInfo();
@@ -126,17 +135,25 @@ const RecorderPreview = (props: {
 
   const onSourceMove = (event: MouseEvent, src: WCRSceneItem) => {
     if (src === WCRSceneItem.OVERLAY) {
-      setOverlayBoxDimensions((prev) => ({
-        ...prev,
-        x: prev.x + event.movementX,
-        y: prev.y + event.movementY,
-      }));
+      setOverlayBoxDimensions((prev) => {
+        const updated = {
+          ...prev,
+          x: prev.x + event.movementX,
+          y: prev.y + event.movementY,
+        };
+        ipc.setSourcePosition(VideoSourceName.OVERLAY, updated);
+        return updated;
+      });
     } else {
-      setGameBoxDimensions((prev) => ({
-        ...prev,
-        x: prev.x + event.movementX,
-        y: prev.y + event.movementY,
-      }));
+      setGameBoxDimensions((prev) => {
+        const updated = {
+          ...prev,
+          x: prev.x + event.movementX,
+          y: prev.y + event.movementY,
+        };
+        ipc.setSourcePosition(VideoSourceName.WINDOW, updated);
+        return updated;
+      });
     }
   };
 
@@ -148,11 +165,14 @@ const RecorderPreview = (props: {
         newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
         const newHeight = newWidth / aspectRatio;
 
-        return {
+        const updated = {
           ...prev,
           width: newWidth,
           height: newHeight,
         };
+
+        ipc.setSourcePosition(VideoSourceName.WINDOW, updated);
+        return updated;
       });
     } else {
       setGameBoxDimensions((prev) => {
@@ -161,11 +181,14 @@ const RecorderPreview = (props: {
         newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
         const newHeight = newWidth / aspectRatio;
 
-        return {
+        const updated = {
           ...prev,
           width: newWidth,
           height: newHeight,
         };
+
+        ipc.setSourcePosition(VideoSourceName.WINDOW, updated);
+        return updated;
       });
     }
   };
@@ -207,40 +230,16 @@ const RecorderPreview = (props: {
     [],
   );
 
-  useEffect(() => {
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-
-    return () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
-  }, []);
-
-  const show = useCallback(async () => {
-    const previewBox = document.getElementById('preview-box');
-
-    if (previewBox && previewEnabled) {
-      // Show the preview box and set its dimensions.
-      const { width, height, x, y } = previewBox.getBoundingClientRect();
-      ipc.sendMessage('preview', ['show', width, height, x, y]);
-    }
-
-    // Update the overlay dimensions.
-    updatePreviewDimensions();
-  }, [previewEnabled]); // Add previewEnabled as a dependency
-
-  const cleanup = () => {
+  const cleanupResizeObserver = () => {
     if (resizeObserver !== undefined) {
       resizeObserver.disconnect();
+      resizeObserver = undefined;
     }
-
-    ipc.sendMessage('preview', ['hide']);
   };
 
   const setupResizeObserver = () => {
     if (resizeObserver === undefined) {
-      resizeObserver = new ResizeObserver(() => show());
+      resizeObserver = new ResizeObserver(show.current);
     }
 
     const previewBox = document.getElementById('preview-box');
@@ -249,12 +248,6 @@ const RecorderPreview = (props: {
       resizeObserver.observe(previewBox);
     }
   };
-
-  useEffect(() => {
-    show();
-    setupResizeObserver();
-    return cleanup;
-  }, []);
 
   const renderDraggableSceneBox = (src: WCRSceneItem) => {
     const { x, y, width, height } =
