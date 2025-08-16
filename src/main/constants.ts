@@ -624,7 +624,7 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   234: [35 * 60, 28 * 60, 21 * 60],
   369: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
   370: [32 * 60, 25 * 60 + 36, 19 * 60 + 12], // Operation: Mechagon - Workshop
-  391: [32 * 60, 32 * 60 * 0.8, 32 * 60 * 0.6], // Tazavesh: Streets of Wonder
+  391: [34 * 60, 34 * 60 * 0.8, 34 * 60 * 0.6], // Tazavesh: Streets of Wonder
   392: [30 * 60, 24 * 60, 18 * 60], // Tazavesh: So'leah's Gambit
   169: [30 * 60, 24 * 60, 18 * 60],
   166: [30 * 60, 24 * 60, 18 * 60],

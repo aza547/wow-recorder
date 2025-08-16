@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix Streets of Tazavesh timer again.
 
 ## [6.15.4] - 2025-08-16
 ### Fixed
