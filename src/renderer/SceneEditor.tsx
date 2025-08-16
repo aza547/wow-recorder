@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
-import React, { useRef } from 'react';
-import { AppState, RecStatus, VideoSourceName } from 'main/types';
+import React, { Dispatch, useRef } from 'react';
+import { AppState, RecStatus, WCRSceneItem } from 'main/types';
 import { Phrase } from 'localisation/types';
 import { getLocalePhrase } from 'localisation/translations';
 import RecorderPreview from './RecorderPreview';
@@ -18,18 +18,62 @@ import {
 import { Button } from './components/Button/Button';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { ConfigurationSchema } from 'config/configSchema';
+import { set } from 'lodash';
 
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   appState: AppState;
   recorderStatus: RecStatus;
+  config: ConfigurationSchema;
+  setConfig: Dispatch<React.SetStateAction<ConfigurationSchema>>;
 }
 
 const SceneEditor: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, appState } = props;
+  const { recorderStatus, appState, config, setConfig } = props;
   const [previewEnabled, setPreviewEnabled] = React.useState(true);
   const redrawDraggableBoxes = useRef(() => {});
+
+  const renderResetGameButton = () => {
+    return (
+      <Button
+        className="flex w-[60px]"
+        variant="ghost"
+        size="xs"
+        onClick={() => {
+          ipc.resetSourcePosition(WCRSceneItem.GAME);
+          redrawDraggableBoxes.current();
+        }}
+      >
+        <span className="text-xs text-foreground-lighter">
+          Reset
+          <br />
+          Game
+        </span>
+      </Button>
+    );
+  };
+
+  const renderResetOverlayButton = () => {
+    return (
+      <Button
+        className="flex w-[60px]"
+        variant="ghost"
+        size="xs"
+        onClick={() => {
+          ipc.resetSourcePosition(WCRSceneItem.OVERLAY);
+          redrawDraggableBoxes.current();
+        }}
+      >
+        <span className="text-xs text-foreground-lighter">
+          Reset
+          <br />
+          Overlay
+        </span>
+      </Button>
+    );
+  };
 
   return (
     <Box
@@ -46,6 +90,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         <RecorderPreview
           previewEnabled={previewEnabled}
           redrawDraggableBoxes={redrawDraggableBoxes}
+          config={config}
         />
       </Box>
       <Tabs defaultValue="source" className="w-full h-[40%] px-4">
@@ -63,36 +108,8 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
             {getLocalePhrase(appState.language, Phrase.OverlayHeading)}
           </TabsTrigger>
           <div className="flex ml-auto items-center justify-center gap-x-2">
-            <Button
-              className="flex w-[60px]"
-              variant="ghost"
-              size="xs"
-              onClick={() => {
-                ipc.resetSourcePosition(VideoSourceName.WINDOW);
-                redrawDraggableBoxes.current();
-              }}
-            >
-              <span className="text-xs text-foreground-lighter">
-                Reset
-                <br />
-                Game
-              </span>
-            </Button>
-            <Button
-              className="flex w-[60px]"
-              variant="ghost"
-              size="xs"
-              onClick={() => {
-                ipc.resetSourcePosition(VideoSourceName.OVERLAY);
-                redrawDraggableBoxes.current();
-              }}
-            >
-              <span className="text-xs text-foreground-lighter">
-                Reset
-                <br />
-                Overlay
-              </span>
-            </Button>
+            {renderResetGameButton()}
+            {config.chatOverlayEnabled && renderResetOverlayButton()}
             <Tooltip content="Preview On">
               <Box className="flex w-[60px] items-center justify-center">
                 <Switch
@@ -128,7 +145,11 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
           </TabsContent>
           <TabsContent value="overlay">
             <div className="p-4">
-              <ChatOverlayControls appState={appState} />
+              <ChatOverlayControls
+                appState={appState}
+                config={config}
+                setConfig={setConfig}
+              />
             </div>
           </TabsContent>
         </ScrollArea>

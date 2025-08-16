@@ -107,6 +107,9 @@ export const getSettings = (): ConfigurationSchema => {
     uploadCurrentRaidEncountersOnly: getConfigValue<boolean>('uploadCurrentRaidEncountersOnly'),
     recordChallengeModes: getConfigValue<boolean>('recordChallengeModes'),
     forceSdr: getConfigValue<boolean>('forceSdr'),
+    videoSourceScale: getConfigValue<number>('videoSourceScale'),
+    videoSourceXPosition: getConfigValue<number>('videoSourceXPosition'),
+    videoSourceYPosition: getConfigValue<number>('videoSourceYPosition'),
     /* eslint-enable prettier/prettier */
   };
 

@@ -1,25 +1,25 @@
-import React from 'react';
-import { configSchema } from 'config/configSchema';
+import React, { Dispatch } from 'react';
+import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { Info, Lock } from 'lucide-react';
 import { AppState } from 'main/types';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
-import { useSettings, setConfigValues } from './useSettings';
+import { setConfigValues } from './useSettings';
 import { fileSelect } from './rendererutils';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
-import { Button } from './components/Button/Button';
 
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   appState: AppState;
+  config: ConfigurationSchema;
+  setConfig: Dispatch<React.SetStateAction<ConfigurationSchema>>;
 }
 
 const ChatOverlayControls = (props: IProps) => {
-  const { appState } = props;
-  const [config, setConfig] = useSettings();
+  const { appState, config, setConfig } = props;
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
@@ -33,11 +33,6 @@ const ChatOverlayControls = (props: IProps) => {
       chatOverlayEnabled: config.chatOverlayEnabled,
       chatOverlayOwnImage: config.chatOverlayOwnImage,
       chatOverlayOwnImagePath: config.chatOverlayOwnImagePath,
-      chatOverlayScale: config.chatOverlayScale,
-      chatOverlayHeight: config.chatOverlayHeight,
-      chatOverlayWidth: config.chatOverlayWidth,
-      chatOverlayXPosition: config.chatOverlayXPosition,
-      chatOverlayYPosition: config.chatOverlayYPosition,
     });
 
     ipc.sendMessage('settingsChange', []);
@@ -45,11 +40,6 @@ const ChatOverlayControls = (props: IProps) => {
     config.chatOverlayEnabled,
     config.chatOverlayOwnImage,
     config.chatOverlayOwnImagePath,
-    config.chatOverlayScale,
-    config.chatOverlayHeight,
-    config.chatOverlayWidth,
-    config.chatOverlayXPosition,
-    config.chatOverlayYPosition,
   ]);
 
   const setOverlayEnabled = (checked: boolean) => {
@@ -169,14 +159,11 @@ const ChatOverlayControls = (props: IProps) => {
     <div className="flex flex-col items-center content-center w-full flex-wrap gap-4">
       <div className="flex items-center content-center w-full gap-8">
         {getChatOverlayEnabledSwitch()}
-        {getChatOverlayOwnImageSwitch()}
-        {config.cloudStorage &&
+        {config.chatOverlayEnabled && getChatOverlayOwnImageSwitch()}
+        {config.chatOverlayEnabled &&
+          config.cloudStorage &&
           config.chatOverlayOwnImage &&
           getOwnImagePathField()}
-      </div>
-      <div className="text-sm font-semibold text-foreground text-left w-full">
-        {getLocalePhrase(appState.language, Phrase.ChatOverlayTip) ||
-          'Tip: Click and drag to move the chat overlay.'}
       </div>
     </div>
   );

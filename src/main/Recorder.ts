@@ -2,7 +2,6 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import WaitQueue from 'wait-queue';
-
 import {
   UiohookKeyboardEvent,
   UiohookMouseEvent,
@@ -17,7 +16,6 @@ import {
   ESupportedEncoders,
   QualityPresets,
 } from './obsEnums';
-
 import {
   deferredPromiseHelper,
   fixPathWhenPackaged,
@@ -30,7 +28,6 @@ import {
   takeOwnershipBufferDir,
   exists,
 } from './util';
-
 import {
   AudioSourcePrefix,
   CrashData,
@@ -38,18 +35,22 @@ import {
   ObsAudioConfig,
   ObsBaseConfig,
   ObsOverlayConfig,
-  ObsSourceCallbackInfo,
   ObsVideoConfig,
-  ObsVolmeterCallbackInfo,
-  TAudioSourceType,
   VideoSourceName,
+  WCRSceneItem,
 } from './types';
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
 import { getOverlayConfig } from '../utils/configUtils';
 import { v4 as uuidv4 } from 'uuid';
 
-import noobs, { ObsData, SceneItemPosition, Signal, SourceDimensions } from 'noobs';
+import noobs, {
+  ObsData,
+  ObsListProperty,
+  SceneItemPosition,
+  Signal,
+  SourceDimensions,
+} from 'noobs';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -93,7 +94,7 @@ export default class Recorder extends EventEmitter {
    * window capture. Often this does not appear immediately on
    * the WoW process starting.
    */
-  private findWindowInterval?: NodeJS.Timeout;
+  private findWindowTimer?: NodeJS.Timeout;
 
   /**
    * We wait 5s between each attempt to latch on to game or window
@@ -191,6 +192,10 @@ export default class Recorder extends EventEmitter {
   private pttReleaseDelayTimer?: NodeJS.Timeout;
 
   private sourceDebounceTimer?: NodeJS.Timeout;
+
+  private activeCaptureSource?: VideoSourceName;
+
+  private chatOverlayDefaultImage = getAssetPath('poster', 'chat-cover2.png');
 
   /**
    * Contructor.
@@ -356,65 +361,38 @@ export default class Recorder extends EventEmitter {
    * Configures the video source in OBS.
    */
   public configureVideoSources(config: ObsVideoConfig, isWowRunning: boolean) {
-    const {
-      obsCaptureMode,
-      monitorIndex,
-      captureCursor,
-      forceSdr,
-      videoSourceScale,
-      videoSourceXPosition,
-      videoSourceYPosition,
-    } = config;
-    console.log('Called configureVideoSources');
+    const { obsCaptureMode } = config;
+    this.clearFindWindowInterval();
 
-    // Clear any existing video capture sources.
-    [
-      VideoSourceName.WINDOW, 
-      VideoSourceName.GAME, 
-      VideoSourceName.MONITOR
-    ].forEach(
-      (s) => {
-        noobs.RemoveSourceFromScene(s);
-        noobs.DeleteSource(s);
-      },
-    );
-
-    if (obsCaptureMode === 'monitor_capture') {
-      // We don't care if WoW is running or not for monitor capture.
-      this.configureMonitorCaptureSource(monitorIndex, forceSdr);
+    if (this.activeCaptureSource) {
+      console.info(
+        '[Recorder] Removing existing capture source',
+        this.activeCaptureSource,
+      );
+      
+      noobs.RemoveSourceFromScene(this.activeCaptureSource);
+      noobs.DeleteSource(this.activeCaptureSource);
+      this.activeCaptureSource = undefined;
     }
 
-    if (!isWowRunning) {
-      // Don't try to configure game or window capture sources if WoW isn't
-      // running. We won't be able to find them.
-      console.info("[Recorder] WoW isn't running");
+    if (obsCaptureMode === 'monitor_capture') {
+      this.configureMonitorCaptureSource(config);
+    } else if (obsCaptureMode === 'game_capture') {
+      this.configureGameCaptureSource(config);
+    } else if (obsCaptureMode === 'window_capture') {
+      this.configureWindowCaptureSource(config);
     } else {
-      console.info('[Recorder] WoW is running');
+      console.error('[Recorder] Unrecognised capture mode', obsCaptureMode);
+      throw new Error('Unrecognised capture mode');
+    }
 
-      if (obsCaptureMode === 'game_capture') {
-        this.configureGameCaptureSource(
-          captureCursor,
-          forceSdr,
-          videoSourceScale,
-          videoSourceXPosition,
-          videoSourceYPosition,
-        );
-      } else if (obsCaptureMode === 'window_capture') {
-        this.configureWindowCaptureSource(
-          captureCursor,
-          forceSdr,
-          videoSourceScale,
-          videoSourceXPosition,
-          videoSourceYPosition,
-        );
-      }
+    if (isWowRunning && obsCaptureMode !== 'monitor_capture') {
+      this.attachCaptureSource();
     }
 
     const overlayCfg = getOverlayConfig(this.cfg);
     this.configureOverlayImageSource(overlayCfg);
   }
-
-
 
   /**
    * Configure and add the chat overlay to the scene.
@@ -428,7 +406,6 @@ export default class Recorder extends EventEmitter {
       chatOverlayYPosition,
       chatOverlayOwnImagePath,
     } = config;
-    noobs.CreateSource(VideoSourceName.OVERLAY, 'image_source');
 
     const settings = noobs.GetSourceSettings(VideoSourceName.OVERLAY);
 
@@ -454,20 +431,16 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Configure default image as chat overlay');
 
     const {
-      chatOverlayWidth,
-      chatOverlayHeight,
       chatOverlayXPosition,
       chatOverlayYPosition,
       chatOverlayScale,
     } = config;
 
-    noobs.CreateSource(VideoSourceName.OVERLAY, 'image_source');
-
     const settings = noobs.GetSourceSettings(VideoSourceName.OVERLAY);
 
     noobs.SetSourceSettings(VideoSourceName.OVERLAY, {
       ...settings,
-      file: getAssetPath('poster', 'image.png'),
+      file: this.chatOverlayDefaultImage,
     });
 
     noobs.AddSourceToScene(VideoSourceName.OVERLAY);
@@ -478,6 +451,7 @@ export default class Recorder extends EventEmitter {
       scaleX: chatOverlayScale,
       scaleY: chatOverlayScale,
     });
+
   }
 
   /**
@@ -545,9 +519,9 @@ export default class Recorder extends EventEmitter {
   public clearFindWindowInterval() {
     this.findWindowAttempts = 0;
 
-    if (this.findWindowInterval) {
-      clearInterval(this.findWindowInterval);
-      this.findWindowInterval = undefined;
+    if (this.findWindowTimer) {
+      clearInterval(this.findWindowTimer);
+      this.findWindowTimer = undefined;
     }
   }
 
@@ -620,6 +594,7 @@ export default class Recorder extends EventEmitter {
    * Set the size and position of the scene preview.
    */
   public configurePreview(x: number, y: number, width: number, height: number) {
+    console.info('[Recorder] Configure preview with', x, y, width, height);
     noobs.ConfigurePreview(x, y, width, height);
   }
 
@@ -627,6 +602,7 @@ export default class Recorder extends EventEmitter {
    * Show the scene preview.
    */
   public showPreview() {
+    console.info('[Recorder] Show preview');
     noobs.ShowPreview();
   }
 
@@ -634,7 +610,16 @@ export default class Recorder extends EventEmitter {
    * Hide the scene preview.
    */
   public hidePreview() {
+    console.info('[Recorder] Hide preview');
     noobs.HidePreview();
+  }
+
+  /**
+   * Disable the scene preview.
+   */
+  public disablePreview() {
+    console.info('[Recorder] Disable preview');
+    noobs.DisablePreview();
   }
 
   /**
@@ -840,6 +825,8 @@ export default class Recorder extends EventEmitter {
     noobs.InitPreview(hwnd);
     noobs.SetDrawSourceOutline(true);
 
+    noobs.CreateSource(VideoSourceName.OVERLAY, 'image_source');
+
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
   }
@@ -916,103 +903,134 @@ export default class Recorder extends EventEmitter {
    * diverged slightly, so while this was previously a hardcoded string, now we
    * search for it in the OSN sources API.
    */
-  private configureWindowCaptureSource(
-    captureCursor: boolean,
-    forceSdr: boolean,
-    videoSourceScale: number,
-    videoSourceXPosition: number,
-    videoSourceYPosition: number,
-  ) {
+  private configureWindowCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Window Capture');
-
-    this.findWindowInterval = setInterval(
-      () =>
-        this.tryAttachWindowCaptureSource(
-          captureCursor,
-          forceSdr,
-          videoSourceScale,
-          videoSourceXPosition,
-          videoSourceYPosition,
-        ),
-      this.findWindowIntervalDuration,
-    );
-
-    // Call immediately to avoid the first interval delay. Will clear
-    // the interval if it is successful. Common case is that WoW has
-    // been open for a while and this immediately succeeds.
-    this.tryAttachWindowCaptureSource(
-      captureCursor,
+    const {
       forceSdr,
-      videoSourceScale,
+      captureCursor,
       videoSourceXPosition,
       videoSourceYPosition,
-    );
+      videoSourceScale,
+    } = config;
+
+    noobs.CreateSource(VideoSourceName.WINDOW, 'window_capture');
+    const settings = noobs.GetSourceSettings(VideoSourceName.WINDOW);
+
+    noobs.SetSourceSettings(VideoSourceName.WINDOW, {
+      ...settings,
+      capture_mode: 'window',
+      window: 'World of Warcraft:waApplication Window:Wow.exe',
+      force_sdr: forceSdr,
+      cursor: captureCursor,
+      method: 2,
+      compatibility: true,
+    });
+
+    noobs.SetSourcePos(VideoSourceName.WINDOW, {
+      x: videoSourceXPosition,
+      y: videoSourceYPosition,
+      scaleX: videoSourceScale,
+      scaleY: videoSourceScale,
+    });
+
+    noobs.AddSourceToScene(VideoSourceName.WINDOW);
+    this.activeCaptureSource = VideoSourceName.WINDOW;
   }
 
   /**
    * Configures the game capture source.
    */
-  private configureGameCaptureSource(
-    captureCursor: boolean,
-    forceSdr: boolean,
-    videoSourceScale: number,
-    videoSourceXPosition: number,
-    videoSourceYPosition: number,
-  ) {
+  private configureGameCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Game Capture');
 
-    this.findWindowInterval = setInterval(
-      () =>
-        this.tryAttachGameCaptureSource(
-          captureCursor,
-          forceSdr,
-          videoSourceScale,
-          videoSourceXPosition,
-          videoSourceYPosition,
-        ),
-      this.findWindowIntervalDuration,
-    );
-
-    // Call immediately to avoid the first interval delay. Will clear
-    // the interval if it is successful. Common case is that WoW has
-    // been open for a while and this immediately succeeds.
-    this.tryAttachGameCaptureSource(
-      captureCursor,
+    const {
       forceSdr,
-      videoSourceScale,
+      captureCursor,
       videoSourceXPosition,
       videoSourceYPosition,
-    );
+      videoSourceScale,
+    } = config;
+    noobs.CreateSource(VideoSourceName.GAME, 'game_capture');
+
+    const defaults = noobs.GetSourceSettings(VideoSourceName.GAME);
+
+    const settings = {
+      ...defaults,
+      capture_mode: 'window',
+      //window: 'World of Warcraft:waApplication Window:Wow.exe', // TODO handle all names classic, chinese, use windowMatch();
+      force_sdr: forceSdr,
+      cursor: captureCursor,
+      priority: 2,
+    };
+
+    const position = {
+      x: videoSourceXPosition,
+      y: videoSourceYPosition,
+      scaleX: videoSourceScale,
+      scaleY: videoSourceScale,
+    };
+
+    noobs.SetSourceSettings(VideoSourceName.GAME, settings);
+    noobs.SetSourcePos(VideoSourceName.GAME, position);
+    noobs.AddSourceToScene(VideoSourceName.GAME);
+
+    this.activeCaptureSource = VideoSourceName.GAME;
   }
 
   /**
    * Creates a monitor capture source. Monitor capture always shows the cursor.
    */
-  private configureMonitorCaptureSource(
-    monitorIndex: number,
-    forceSdr: boolean,
-  ) {
+  private configureMonitorCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
 
+    const {
+      forceSdr,
+      monitorIndex,
+      videoSourceXPosition,
+      videoSourceYPosition,
+      videoSourceScale,
+    } = config;
+
     noobs.CreateSource(VideoSourceName.MONITOR, 'monitor_capture');
-    const settings = noobs.GetSourceSettings(VideoSourceName.MONITOR);
-    const p = noobs.GetSourceProperties(VideoSourceName.MONITOR);
-    console.log(p);
-    console.log('method', p[0].items);
-    console.log('ids', p[1].items);
-    console.log(settings);
+    const defaults = noobs.GetSourceSettings(VideoSourceName.MONITOR);
+    const properties = noobs.GetSourceProperties(VideoSourceName.MONITOR);
 
-    noobs.SetSourceSettings(VideoSourceName.MONITOR, {
-      ...settings,
+    const monitors = properties.find((p) => p.name === 'monitor_id');
+
+    if (!monitors) {
+      console.error('[Recorder] No monitors found');
+      throw new Error('[Recorder] No monitors found');
+    }
+
+    const opts = (monitors as ObsListProperty).items.filter((item) => item.value !== "DUMMY");
+    const monitorId = opts[monitorIndex];
+
+    if (!monitorId) {
+      console.error('[Recorder] Monitor with index was not found for index', monitorIndex, opts);
+      throw new Error('[Recorder] Monitor index was not found');
+    }
+
+    console.log("[Recorder] Selected monitor:", monitorId);
+
+    const settings = {
+      ...defaults,
       method: 0,
-      monitor_id: p[1].items[monitorIndex].value,
+      monitor_id: monitorId.value,
       force_sdr: forceSdr,
-    });
+    };
 
-    const settings2 = noobs.GetSourceSettings(VideoSourceName.MONITOR);
-    console.log(settings2);
+    const position: SceneItemPosition = {
+      x: videoSourceXPosition,
+      y: videoSourceYPosition,
+      scaleX: videoSourceScale,
+      scaleY: videoSourceScale,
+    };
 
+    noobs.SetSourceSettings(VideoSourceName.MONITOR, settings);
+    noobs.SetSourcePos(VideoSourceName.MONITOR, position);
     noobs.AddSourceToScene(VideoSourceName.MONITOR);
+
+    this.activeCaptureSource = VideoSourceName.MONITOR;
   }
 
   /**
@@ -1021,10 +1039,7 @@ export default class Recorder extends EventEmitter {
   public configureOverlayImageSource(config: ObsOverlayConfig) {
     const { chatOverlayEnabled, chatOverlayOwnImage } = config;
     console.info('[Recorder] Configure image source for chat overlay');
-
-    // Safe to call both of these even if the source doesn't exist.
     noobs.RemoveSourceFromScene(VideoSourceName.OVERLAY);
-    noobs.DeleteSource(VideoSourceName.OVERLAY);
 
     if (!chatOverlayEnabled) {
       console.info('[Recorder] Chat overlay is disabled, not configuring');
@@ -1142,86 +1157,6 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Apply a setting to OBS.
-   */
-  private static applySetting(
-    category: string,
-    parameter: string,
-    value: string | number,
-  ) {
-    console.info('[Recorder] Apply setting', category, parameter, value);
-
-    // let old;
-    // const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
-
-    // settings.forEach((subcategory: ISettingsSubCategory) => {
-    //   subcategory.parameters.forEach((param: IObsInput<TObsValue>) => {
-    //     if (param.name === parameter) {
-    //       old = param.currentValue;
-    //       param.currentValue = value;
-    //     }
-    //   });
-    // });
-
-    // if (value !== old) {
-    //   osn.NodeObs.OBS_settings_saveSettings(category, settings);
-    // }
-  }
-
-  /**
-   * Get the allowed values for a specific setting.
-   */
-  private static getAvailableValues(
-    category: string,
-    subcategory: string,
-    parameter: string,
-  ) {
-    console.info(
-      '[Recorder] Get available values for',
-      category,
-      subcategory,
-      parameter,
-    );
-
-    // const categorySettings =
-    //   osn.NodeObs.OBS_settings_getSettings(category).data;
-
-    // if (!categorySettings) {
-    //   throw new Error(`No category found: ${category}`);
-    // }
-
-    // const subcategorySettings = categorySettings.find(
-    //   (sub: ISettingsSubCategory) => sub.nameSubCategory === subcategory,
-    // );
-
-    // if (!subcategorySettings) {
-    //   throw new Error(`No subcategory found: ${subcategory} in ${category}`);
-    // }
-
-    // const parameterSettings = subcategorySettings.parameters.find(
-    //   (param: IObsInput<TObsValue>) => param.name === parameter,
-    // );
-
-    // if (!parameterSettings) {
-    //   throw new Error(
-    //     `No parameter found: ${parameter} in ${category} -> ${subcategory}`,
-    //   );
-    // }
-
-    // return parameterSettings.values.map(
-    //   (value: TObsValue) => Object.values(value)[0],
-    // );
-    return [];
-  }
-
-  /**
-   * Type guard for an OBS list property.
-   */
-  private static isObsListProperty(property: any): property is any {
-    return property.type === 6;
-  }
-
-  /**
    * Check if the name of the window matches one of the known WoW window names.
    */
   private static windowMatch(item: { name: string; value: string | number }) {
@@ -1234,152 +1169,66 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Try to attach to a game capture source for WoW. If the window is not
-   * found, do nothing.
+   * Attach the current game_capture or window_capture source to the WoW client.
    */
-  private tryAttachGameCaptureSource(
-    captureCursor: boolean,
-    forceSdr: boolean,
-    videoSourceScale: number,
-    videoSourceXPosition: number,
-    videoSourceYPosition: number,
-  ) {
-    this.findWindowAttempts++;
-
-    if (this.findWindowAttempts > this.findWindowAttemptLimit) {
-      console.error('[Recorder] Exceeded find window attempts, giving up');
-      this.clearFindWindowInterval();
-      return;
-    }
-
+  public attachCaptureSource() {
     console.info(
-      '[Recorder] Looking for game capture source, attempt',
-      this.findWindowAttempts,
+      '[Recorder] Attaching capture source',
+      this.activeCaptureSource,
     );
 
-    let window = false;
+    if (
+      this.activeCaptureSource !== VideoSourceName.WINDOW &&
+      this.activeCaptureSource !== VideoSourceName.GAME
+    ) {
+      console.info(
+        '[Recorder] Not window_capture or game_capture so nothing to attach',
+        this.activeCaptureSource,
+      );
 
-    try {
-      noobs.CreateSource(VideoSourceName.GAME, 'game_capture');
-      const p = noobs.GetSourceProperties(VideoSourceName.GAME);
-      console.log('AHKKKK');
-      console.log(p);
-      console.log(p[1].items);
-
-      const s = noobs.GetSourceSettings(VideoSourceName.GAME);
-
-      noobs.SetSourceSettings(VideoSourceName.GAME, {
-        ...s,
-        capture_mode: 'window',
-        window: 'World of Warcraft:waApplication Window:WowClassic.exe', // TODO handle all names classic, chinese, use windowMatch();
-        force_sdr: forceSdr,
-        cursor: captureCursor,
-      });
-
-      const s1 = noobs.GetSourceSettings(VideoSourceName.GAME);
-      console.log('s1', s1);
-
-      noobs.AddSourceToScene(VideoSourceName.GAME);
-
-      noobs.SetSourcePos(VideoSourceName.GAME, {
-        x: videoSourceXPosition,
-        y: videoSourceYPosition,
-        scaleX: videoSourceScale,
-        scaleY: videoSourceScale,
-      });
-      window = true;
-    } catch (ex) {
-      console.error('[Recorder] Exception when trying to find window:', ex);
-      // TODO release source'?
-    }
-
-    if (!window) {
-      console.info('[Recorder] Game capture window not found, will retry');
       return;
     }
 
-    console.info('[Recorder] Game capture window found', window);
+    const properties = noobs.GetSourceProperties(this.activeCaptureSource);
+    const windows = properties.find((item) => item.name === 'window');
 
-    console.info('[Recorder] Game capture source configured');
-    this.clearFindWindowInterval();
+    if (!windows) {
+      console.error('[Recorder] Failed to find window setting');
+      throw new Error('Failed to find window setting');
+    }
+
+    const opts = (windows as ObsListProperty).items;
+    const match = opts.find(Recorder.windowMatch);
+
+    if (match) {
+      console.info('[Recorder] Found matching window for game capture:', match);
+      const settings = noobs.GetSourceSettings(this.activeCaptureSource);
+      const updated = { ...settings, window: match.value };
+      noobs.SetSourceSettings(this.activeCaptureSource, updated);
+      return;
+    } 
+    
+    if (this.findWindowAttempts < this.findWindowAttemptLimit) {
+      console.info('[Recorder] No matching window yet');
+      this.findWindowAttempts++;
+
+      this.findWindowTimer = setTimeout(
+        () => this.attachCaptureSource(),
+        this.findWindowIntervalDuration
+      );
+
+      return;
+    } 
+
+    console.warn(
+      '[Recorder] Failed to find WoW window after',
+      this.findWindowAttempts,
+      'attempts. Giving up.',
+    );
   }
 
   /**
-   * Try to attach to a window capture source for WoW. If the window is not
-   * found, do nothing.
-   */
-  private tryAttachWindowCaptureSource(
-    captureCursor: boolean,
-    forceSdr: boolean,
-    videoSourceScale: number,
-    videoSourceXPosition: number,
-    videoSourceYPosition: number,
-  ) {
-    this.findWindowAttempts++;
-
-    if (this.findWindowAttempts > this.findWindowAttemptLimit) {
-      console.error('[Recorder] Exceeded find window attempts, giving up');
-      this.clearFindWindowInterval();
-      return;
-    }
-
-    console.info(
-      '[Recorder] Looking for window capture source, attempt',
-      this.findWindowAttempts,
-    );
-
-    let window = false;
-
-    noobs.DeleteSource(VideoSourceName.WINDOW);
-    noobs.RemoveSourceFromScene(VideoSourceName.WINDOW);
-
-    try {
-      noobs.CreateSource(VideoSourceName.WINDOW, 'window_capture');
-      const p = noobs.GetSourceProperties(VideoSourceName.WINDOW);
-      console.log('Window capture src ---');
-      console.log(p);
-      console.log(p[0].items);
-      console.log(p[1].items);
-      const s = noobs.GetSourceSettings(VideoSourceName.WINDOW);
-
-      noobs.SetSourceSettings(VideoSourceName.WINDOW, {
-        ...s,
-        method: 2, // WGC: Windows Graphics Capture
-        window: 'World of Warcraft:waApplication Window:WowClassic.exe', // TODO handle all names classic, chinese
-        compatibility: true,
-        force_sdr: forceSdr,
-        cursor: captureCursor,
-      });
-
-      const s1 = noobs.GetSourceSettings(VideoSourceName.WINDOW);
-      console.log('s1', s1);
-
-      console.log("SETTING POSITION TO", videoSourceXPosition, videoSourceYPosition, videoSourceScale);
-
-      noobs.AddSourceToScene(VideoSourceName.WINDOW);
-
-      noobs.SetSourcePos(VideoSourceName.WINDOW, {
-        x: videoSourceXPosition,
-        y: videoSourceYPosition,
-        scaleX: videoSourceScale,
-        scaleY: videoSourceScale,
-      });
-      window = true;
-    } catch (ex) {
-      console.error('[Recorder] Exception when trying to find window:', ex);
-    }
-
-    if (!window) {
-      console.info('[Recorder] Game capture window not found, will retry');
-      return;
-    }
-
-    console.info('[Recorder] Window capture source configured');
-    this.clearFindWindowInterval();
-  }
-
-  /**
-   * Get the current dimensions of the display preview. This includes the 
+   * Get the current dimensions of the display preview. This includes the
    * base canvas size (unscaled) and the current display size (scaled).
    */
   public getDisplayInfo(): {
@@ -1393,16 +1242,30 @@ export default class Recorder extends EventEmitter {
 
   /**
    * Get the current position and dimensions of a source. Width and height are
-   * before scaling. This is the real size on the canvas, not the size in the 
+   * before scaling. This is the real size on the canvas, not the size in the
    * preview.
    */
-  public getSourcePosition(src: VideoSourceName) {
+  public getSourcePosition(item: WCRSceneItem) {
     const previewInfo = this.getDisplayInfo(); // Could be cached
     const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
     const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
     const sf = Math.min(sfx, sfy);
 
+    const src =
+      item === WCRSceneItem.OVERLAY
+        ? VideoSourceName.OVERLAY
+        : this.activeCaptureSource;
+
+    if (!src) {
+      console.warn(
+        '[Recorder] getSourcePosition: No source found for item:',
+        item,
+      );
+      return;
+    }
+
     const current = noobs.GetSourcePos(src);
+    console.info("Current source position:", src, current);
 
     const position: SceneItemPosition & SourceDimensions = {
       x: current.x * sf,
@@ -1416,21 +1279,34 @@ export default class Recorder extends EventEmitter {
     return position;
   }
 
-
   /**
    * Sets the position of a source in the OBS scene.
    */
   public setSourcePosition(
-    src: VideoSourceName, 
-    target: { x: number; y: number; width: number; height: number }
+    item: WCRSceneItem,
+    target: { x: number; y: number; width: number; height: number },
   ) {
     const previewInfo = noobs.GetPreviewInfo(); // Could be cached?
+
+    const src =
+      item === WCRSceneItem.OVERLAY
+        ? VideoSourceName.OVERLAY
+        : this.activeCaptureSource;
+
+    if (!src) {
+      console.warn(
+        '[Recorder] setSourcePosition: No source found for item:',
+        item,
+      );
+      return;
+    }
+
     const current = noobs.GetSourcePos(src);
 
-    // This is confusing because there are two forms of scaling at play 
-    // that we need to account for. 
-    //   1. The source scaling. The current.width might be 1000px but 
-    //      if it's scaled by 0.5 the real width is 500px. 
+    // This is confusing because there are two forms of scaling at play
+    // that we need to account for.
+    //   1. The source scaling. The current.width might be 1000px but
+    //      if it's scaled by 0.5 the real width is 500px.
     //   2. The preview scaling. The preview is reduced to fit the div
     //      based on the aspect ratio.
     const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
@@ -1441,7 +1317,7 @@ export default class Recorder extends EventEmitter {
     // the source so just use the X.
     const scaledWidth = current.width * current.scaleX * sf;
     const ratioX = target.width / scaledWidth;
-    let scale = ratioX * current.scaleX;
+    const scale = ratioX * current.scaleX;
 
     const updated: SceneItemPosition = {
       x: target.x / sf,
@@ -1457,17 +1333,17 @@ export default class Recorder extends EventEmitter {
     }
 
     this.sourceDebounceTimer = setTimeout(() => {
-      this.saveSourcePosition(src, updated.x, updated.y, scale);
+      this.saveSourcePosition(item, updated.x, updated.y, scale);
       this.sourceDebounceTimer = undefined;
-    }, 1000);
+    }, 100);
   }
 
   /**
    * Reset the source position to 0, 0 and unscaled.
    */
-  public resetSourcePosition(src: VideoSourceName) {
-    console.info('[Recorder] Reset source position', src);
-    
+  public resetSourcePosition(item: WCRSceneItem) {
+    console.info('[Recorder] Reset source position', item);
+
     const updated: SceneItemPosition = {
       x: 0,
       y: 0,
@@ -1475,17 +1351,35 @@ export default class Recorder extends EventEmitter {
       scaleY: 1,
     };
 
+    const src =
+      item === WCRSceneItem.OVERLAY
+        ? VideoSourceName.OVERLAY
+        : this.activeCaptureSource;
+
+    if (!src) {
+      console.warn(
+        '[Recorder] setSourcePosition: No source found for item:',
+        item,
+      );
+      return;
+    }
+
     noobs.SetSourcePos(src, updated);
-    this.saveSourcePosition(src, 0, 0, 1);
+    this.saveSourcePosition(item, 0, 0, 1);
   }
 
   /**
    * Save a video source position in the config.
    */
-  private saveSourcePosition(src: VideoSourceName, x: number, y: number, scale: number) {
-    console.info('[Recorder] Saving src position', src, { x, y, scale });
+  private saveSourcePosition(
+    item: WCRSceneItem,
+    x: number,
+    y: number,
+    scale: number,
+  ) {
+    console.info('[Recorder] Saving src position', item, { x, y, scale });
 
-    if (src === VideoSourceName.OVERLAY) {
+    if (item === WCRSceneItem.OVERLAY) {
       this.cfg.set('chatOverlayXPosition', x);
       this.cfg.set('chatOverlayYPosition', y);
       this.cfg.set('chatOverlayScale', scale);
@@ -1495,4 +1389,4 @@ export default class Recorder extends EventEmitter {
       this.cfg.set('videoSourceScale', scale);
     }
   }
-}    
+}
