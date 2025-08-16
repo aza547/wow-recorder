@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import React, { Dispatch, useRef } from 'react';
+import React, { Dispatch } from 'react';
 import { AppState, RecStatus, WCRSceneItem } from 'main/types';
 import { Phrase } from 'localisation/types';
 import { getLocalePhrase } from 'localisation/translations';
@@ -19,7 +19,6 @@ import { Button } from './components/Button/Button';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { ConfigurationSchema } from 'config/configSchema';
-import { set } from 'lodash';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -33,7 +32,6 @@ interface IProps {
 const SceneEditor: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState, config, setConfig } = props;
   const [previewEnabled, setPreviewEnabled] = React.useState(true);
-  const redrawDraggableBoxes = useRef(() => {});
 
   const renderResetGameButton = () => {
     return (
@@ -41,10 +39,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         className="flex w-[60px]"
         variant="ghost"
         size="xs"
-        onClick={() => {
-          ipc.resetSourcePosition(WCRSceneItem.GAME);
-          redrawDraggableBoxes.current();
-        }}
+        onClick={() => ipc.resetSourcePosition(WCRSceneItem.GAME)}
       >
         <span className="text-xs text-foreground-lighter">
           Reset
@@ -61,10 +56,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         className="flex w-[60px]"
         variant="ghost"
         size="xs"
-        onClick={() => {
-          ipc.resetSourcePosition(WCRSceneItem.OVERLAY);
-          redrawDraggableBoxes.current();
-        }}
+        onClick={() => ipc.resetSourcePosition(WCRSceneItem.OVERLAY)}
       >
         <span className="text-xs text-foreground-lighter">
           Reset
@@ -87,11 +79,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
       className="bg-background-higher pt-[32px]"
     >
       <Box sx={{ width: '100%', height: '60%' }}>
-        <RecorderPreview
-          previewEnabled={previewEnabled}
-          redrawDraggableBoxes={redrawDraggableBoxes}
-          config={config}
-        />
+        <RecorderPreview previewEnabled={previewEnabled} config={config} />
       </Box>
       <Tabs defaultValue="source" className="w-full h-[40%] px-4">
         <TabsList>
@@ -110,7 +98,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
           <div className="flex ml-auto items-center justify-center gap-x-2">
             {renderResetGameButton()}
             {config.chatOverlayEnabled && renderResetOverlayButton()}
-            <Tooltip content="Preview On">
+            <Tooltip content="Toggle Preview" side="bottom">
               <Box className="flex w-[60px] items-center justify-center">
                 <Switch
                   checked={previewEnabled}
