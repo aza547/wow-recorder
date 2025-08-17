@@ -482,6 +482,7 @@ export default class Manager {
    * Send a message to the frontend to update the recorder status icon.
    */
   private refreshRecStatus(status: RecStatus, msg = '') {
+    if (this.mainWindow.isDestroyed()) return; // Can happen on shutdown.
     this.mainWindow.webContents.send('updateRecStatus', status, msg);
   }
 
@@ -489,6 +490,7 @@ export default class Manager {
    * Send a message to the frontend to update the mic status icon.
    */
   private refreshMicStatus(status: MicStatus) {
+    if (this.mainWindow.isDestroyed()) return; // Can happen on shutdown.
     this.mainWindow.webContents.send('updateMicStatus', status);
   }
 
@@ -498,7 +500,9 @@ export default class Manager {
   private redrawPreview() {
     // Really don't understand the need for the timeout here
     // but it sometimes gets stale data otherwise. A caching 
-    // thing in libobs maybe?
+    // thing in libobs maybe? Noobs will send a source signal
+    // to the recorder if the size of sources change, but for
+    // other changes we need to manually trigger a redraw.
     setTimeout(() => this.mainWindow.webContents.send('redrawPreview'), 100);
   }
 

@@ -578,8 +578,8 @@ type ObsVolmeterCallbackInfo = {
 };
 
 enum WCRSceneItem {
-  OVERLAY,
-  GAME,
+  OVERLAY = "Overlay",
+  GAME = "Game",
 }
 
 enum SceneInteraction {
