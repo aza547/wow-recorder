@@ -80,7 +80,11 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
       className="bg-background-higher pt-[32px]"
     >
       <Box sx={{ width: '100%', height: '60%' }}>
-        <RecorderPreview previewEnabled={previewEnabled} config={config} snapEnabled={snapEnabled} />
+        <RecorderPreview
+          previewEnabled={previewEnabled}
+          config={config}
+          snapEnabled={snapEnabled}
+        />
       </Box>
       <Tabs defaultValue="source" className="w-full h-[40%] px-4">
         <TabsList>
@@ -96,11 +100,14 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
           <TabsTrigger value="overlay">
             {getLocalePhrase(appState.language, Phrase.OverlayHeading)}
           </TabsTrigger>
-          <div className="flex ml-auto items-center justify-center gap-x-2">
+          <div className="flex ml-auto items-center justify-center gap-x-4">
             {renderResetGameButton()}
             {config.chatOverlayEnabled && renderResetOverlayButton()}
             <Tooltip content="Toggle Snapping" side="bottom">
-              <Box className="flex w-[60px] items-center justify-center">
+              <Box className="flex items-center justify-center ">
+                <span className="text-xs text-card-foreground font-medium pr-2 text-center">
+                  Snapping
+                </span>
                 <Switch
                   checked={snapEnabled}
                   onCheckedChange={setSnapEnabled}
@@ -108,7 +115,10 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
               </Box>
             </Tooltip>
             <Tooltip content="Toggle Preview" side="bottom">
-              <Box className="flex w-[60px] items-center justify-center">
+              <Box className="flex items-center justify-center ">
+                <span className="text-xs text-card-foreground font-medium pr-2 text-center">
+                  Preview
+                </span>
                 <Switch
                   checked={previewEnabled}
                   onCheckedChange={setPreviewEnabled}
