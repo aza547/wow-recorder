@@ -854,6 +854,11 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Got signal:', signal);
 
+    if (signal.type === "source") {
+      this.mainWindow.webContents.send('redrawPreview', signal);
+      return;
+    }
+
     // if (obsSignal.type !== 'recording') {
     //   console.info('[Recorder] No action needed on this signal');
     //   return;
@@ -1013,7 +1018,12 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] No monitors found');
     }
 
-    const opts = (monitors as ObsListProperty).items.filter((item) => item.value !== "DUMMY");
+    if (monitors.type !== 'list') {
+      console.error('[Recorder] Window setting is not a list');
+      throw new Error('Window setting is not a list');
+    }
+
+    const opts = monitors.items.filter((item) => item.value !== "DUMMY");
     const monitorId = opts[monitorIndex];
 
     if (!monitorId) {
@@ -1208,7 +1218,12 @@ export default class Recorder extends EventEmitter {
       throw new Error('Failed to find window setting');
     }
 
-    const opts = (windows as ObsListProperty).items;
+    if (windows.type !== 'list') {
+      console.error('[Recorder] Window setting is not a list');
+      throw new Error('Window setting is not a list');
+    }
+
+    const opts = windows.items;
     const match = opts.find(Recorder.windowMatch);
 
     if (match) {
@@ -1216,6 +1231,7 @@ export default class Recorder extends EventEmitter {
       const settings = noobs.GetSourceSettings(this.activeCaptureSource);
       const updated = { ...settings, window: match.value };
       noobs.SetSourceSettings(this.activeCaptureSource, updated);
+      setTimeout(() => this.mainWindow.webContents.send('redrawPreview'), 10000);
       return;
     } 
     
@@ -1274,6 +1290,8 @@ export default class Recorder extends EventEmitter {
       );
       return;
     }
+
+    
 
     const current = noobs.GetSourcePos(src);
 
@@ -1345,7 +1363,7 @@ export default class Recorder extends EventEmitter {
     this.sourceDebounceTimer = setTimeout(() => {
       this.saveSourcePosition(item, updated.x, updated.y, scale);
       this.sourceDebounceTimer = undefined;
-    }, 100);
+    }, 1000);
   }
 
   /**
@@ -1387,7 +1405,7 @@ export default class Recorder extends EventEmitter {
     y: number,
     scale: number,
   ) {
-    console.info('[Recorder] Saving src position', item, { x, y, scale });
+    console.info('[Recorder] Saving', item, 'position', { x, y, scale });
 
     if (item === WCRSceneItem.OVERLAY) {
       this.cfg.set('chatOverlayXPosition', x);
