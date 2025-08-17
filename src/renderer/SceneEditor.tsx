@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import React, { Dispatch } from 'react';
+import React, { Dispatch, useState } from 'react';
 import { AppState, RecStatus, WCRSceneItem } from 'main/types';
 import { Phrase } from 'localisation/types';
 import { getLocalePhrase } from 'localisation/translations';
@@ -31,7 +31,8 @@ interface IProps {
 
 const SceneEditor: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState, config, setConfig } = props;
-  const [previewEnabled, setPreviewEnabled] = React.useState(true);
+  const [previewEnabled, setPreviewEnabled] = useState(true);
+  const [snapEnabled, setSnapEnabled] = useState(true);
 
   const renderResetGameButton = () => {
     return (
@@ -79,7 +80,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
       className="bg-background-higher pt-[32px]"
     >
       <Box sx={{ width: '100%', height: '60%' }}>
-        <RecorderPreview previewEnabled={previewEnabled} config={config} />
+        <RecorderPreview previewEnabled={previewEnabled} config={config} snapEnabled={snapEnabled} />
       </Box>
       <Tabs defaultValue="source" className="w-full h-[40%] px-4">
         <TabsList>
@@ -98,6 +99,14 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
           <div className="flex ml-auto items-center justify-center gap-x-2">
             {renderResetGameButton()}
             {config.chatOverlayEnabled && renderResetOverlayButton()}
+            <Tooltip content="Toggle Snapping" side="bottom">
+              <Box className="flex w-[60px] items-center justify-center">
+                <Switch
+                  checked={snapEnabled}
+                  onCheckedChange={setSnapEnabled}
+                />
+              </Box>
+            </Tooltip>
             <Tooltip content="Toggle Preview" side="bottom">
               <Box className="flex w-[60px] items-center justify-center">
                 <Switch

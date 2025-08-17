@@ -9,12 +9,22 @@ const showPreview = ipc.showPreview;
 const hidePreview = ipc.hidePreview;
 const disablePreview = ipc.disablePreview;
 const cornerSize = 25; // Size in pixels for the corner box
+const snapDistance = 30; // Number of pixels to snap to.
+
+enum Snap {
+  TOP = 'Top',
+  BOTTOM = 'Bottom',
+  LEFT = 'Left',
+  RIGHT = 'Right',
+  NONE = 'None',
+}
 
 const RecorderPreview = (props: {
   previewEnabled: boolean;
   config: ConfigurationSchema;
+  snapEnabled: boolean;
 }) => {
-  const { previewEnabled, config } = props;
+  const { previewEnabled, config, snapEnabled } = props;
 
   const initialRender = useRef(true);
   const previewDivRef = useRef<HTMLDivElement>(null);
@@ -34,6 +44,9 @@ const RecorderPreview = (props: {
     previewWidth: 0,
     previewHeight: 0,
   });
+
+  const snapOverlay = { x: Snap.NONE, y: Snap.NONE };
+  const snapGame = { x: Snap.NONE, y: Snap.NONE };
 
   const [overlayBoxDimensions, setOverlayBoxDimensions] =
     useState<BoxDimensions>({
@@ -55,21 +68,11 @@ const RecorderPreview = (props: {
     // to initialize the draggable boxes.
     configureDraggableBoxes();
 
-    // Listen on the document for mouse events other than mousedown,
-    // so that if the cursor goes outwith the draggable area, we can
-    // still capture the events.
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-
     configurePreview();
     showPreview();
     setupResizeObserver();
 
     return () => {
-      // Remove the mouse event listeners.
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-
       // Disconnect the resize observer.
       cleanupResizeObserver();
 
@@ -95,6 +98,10 @@ const RecorderPreview = (props: {
     }
   }, [previewEnabled]);
 
+  useEffect(() => {
+    configureDraggableBoxes();
+  }, [snapEnabled, config.chatOverlayEnabled]);
+
   // The display maintains the canvas ratio, so it is either X limited,
   // Y limited, or a perfect fit. We need to calculate that to offset the
   // draggable boxes on the preview box, and also to account for snapping.
@@ -111,10 +118,65 @@ const RecorderPreview = (props: {
     xCorr = (previewInfo.previewWidth - sfy * previewInfo.canvasWidth) / 2;
   }
 
+  if (snapEnabled) {
+    // Decide if we should snap the chat overlay.
+    if (Math.abs(overlayBoxDimensions.y) < snapDistance) {
+      snapOverlay.y = Snap.TOP;
+    } else if (
+      Math.abs(
+        overlayBoxDimensions.y +
+          overlayBoxDimensions.height -
+          previewInfo.previewHeight +
+          2 * yCorr,
+      ) < snapDistance
+    ) {
+      snapOverlay.y = Snap.BOTTOM;
+    }
+
+    if (Math.abs(overlayBoxDimensions.x) < snapDistance) {
+      snapOverlay.x = Snap.LEFT;
+    } else if (
+      Math.abs(
+        overlayBoxDimensions.x +
+          overlayBoxDimensions.width -
+          previewInfo.previewWidth +
+          2 * xCorr,
+      ) < snapDistance
+    ) {
+      snapOverlay.x = Snap.RIGHT;
+    }
+
+    // Decide if we should snap the game overlay.
+    if (Math.abs(gameBoxDimensions.y) < snapDistance) {
+      snapGame.y = Snap.TOP;
+    } else if (
+      Math.abs(
+        gameBoxDimensions.y +
+          gameBoxDimensions.height -
+          previewInfo.previewHeight +
+          2 * yCorr,
+      ) < snapDistance
+    ) {
+      snapGame.y = Snap.BOTTOM;
+    }
+
+    if (Math.abs(gameBoxDimensions.x) < snapDistance) {
+      snapGame.x = Snap.LEFT;
+    } else if (
+      Math.abs(
+        gameBoxDimensions.x +
+          gameBoxDimensions.width -
+          previewInfo.previewWidth +
+          2 * xCorr,
+      ) < snapDistance
+    ) {
+      snapGame.x = Snap.RIGHT;
+    }
+  }
+
   const configureDraggableBoxes = async () => {
     const display = await ipc.getDisplayInfo();
     setPreviewInfo(display);
-    console.log(display);
 
     if (config.chatOverlayEnabled) {
       const chat = await ipc.getSourcePosition(WCRSceneItem.OVERLAY);
@@ -150,7 +212,21 @@ const RecorderPreview = (props: {
           y: prev.y + event.movementY,
         };
 
-        ipc.setSourcePosition(WCRSceneItem.OVERLAY, updated);
+        const snapped = { ...updated };
+
+        if (snapOverlay.x === Snap.LEFT) {
+          snapped.x = 0;
+        } else if (snapOverlay.x === Snap.RIGHT) {
+          snapped.x = previewInfo.previewWidth - snapped.width - 2 * xCorr;
+        }
+
+        if (snapOverlay.y === Snap.TOP) {
+          snapped.y = 0;
+        } else if (snapOverlay.y === Snap.BOTTOM) {
+          snapped.y = previewInfo.previewHeight - snapped.height - 2 * yCorr;
+        }
+
+        ipc.setSourcePosition(WCRSceneItem.OVERLAY, snapped);
         return updated;
       });
     } else {
@@ -160,7 +236,22 @@ const RecorderPreview = (props: {
           x: prev.x + event.movementX,
           y: prev.y + event.movementY,
         };
-        ipc.setSourcePosition(WCRSceneItem.GAME, updated);
+
+        const snapped = { ...updated };
+
+        if (snapGame.x === Snap.LEFT) {
+          snapped.x = 0;
+        } else if (snapGame.x === Snap.RIGHT) {
+          snapped.x = previewInfo.previewWidth - snapped.width - 2 * xCorr;
+        }
+
+        if (snapGame.y === Snap.TOP) {
+          snapped.y = 0;
+        } else if (snapGame.y === Snap.BOTTOM) {
+          snapped.y = previewInfo.previewHeight - snapped.height - 2 * yCorr;
+        }
+
+        ipc.setSourcePosition(WCRSceneItem.GAME, snapped);
         return updated;
       });
     }
@@ -202,17 +293,20 @@ const RecorderPreview = (props: {
     }
   };
 
-  const onMouseMove = useCallback((event: MouseEvent) => {
-    if (draggingOverlay.current === SceneInteraction.MOVE) {
-      onSourceMove(event, WCRSceneItem.OVERLAY);
-    } else if (draggingGame.current === SceneInteraction.MOVE) {
-      onSourceMove(event, WCRSceneItem.GAME);
-    } else if (draggingGame.current === SceneInteraction.SCALE) {
-      onSourceScale(event, WCRSceneItem.GAME);
-    } else if (draggingOverlay.current === SceneInteraction.SCALE) {
-      onSourceScale(event, WCRSceneItem.OVERLAY);
-    }
-  }, []);
+  const onMouseMove = useCallback(
+    (event: MouseEvent) => {
+      if (draggingOverlay.current === SceneInteraction.MOVE) {
+        onSourceMove(event, WCRSceneItem.OVERLAY);
+      } else if (draggingGame.current === SceneInteraction.MOVE) {
+        onSourceMove(event, WCRSceneItem.GAME);
+      } else if (draggingGame.current === SceneInteraction.SCALE) {
+        onSourceScale(event, WCRSceneItem.GAME);
+      } else if (draggingOverlay.current === SceneInteraction.SCALE) {
+        onSourceScale(event, WCRSceneItem.OVERLAY);
+      }
+    },
+    [onSourceMove],
+  );
 
   const onMouseUp = () => {
     draggingGame.current = SceneInteraction.NONE;
@@ -235,6 +329,20 @@ const RecorderPreview = (props: {
     },
     [],
   );
+
+  useEffect(() => {
+    // Listen on the document for mouse events other than mousedown,
+    // so that if the cursor goes outwith the draggable area, we can
+    // still capture the events.
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    return () => {
+      // Remove the mouse event listeners.
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [onMouseMove, onMouseUp]);
 
   const cleanupResizeObserver = () => {
     if (resizeObserver !== undefined) {
@@ -261,14 +369,41 @@ const RecorderPreview = (props: {
     const { x, y, width, height } =
       src === WCRSceneItem.OVERLAY ? overlayBoxDimensions : gameBoxDimensions;
 
+    const snap = src === WCRSceneItem.OVERLAY ? snapOverlay : snapGame;
+
     if (width < 1 && height < 1) {
       return <></>;
     }
 
     const text = src === WCRSceneItem.OVERLAY ? 'Chat Overlay' : 'Game Window';
 
-    const left = x + xCorr;
-    const top = y + yCorr;
+    const position: {
+      left?: number;
+      right?: number;
+      top?: number;
+      bottom?: number;
+    } = {
+      left: undefined,
+      right: undefined,
+      top: undefined,
+      bottom: undefined,
+    };
+
+    if (snap.x === Snap.LEFT) {
+      position.left = xCorr;
+    } else if (snap.x === Snap.RIGHT) {
+      position.left = previewInfo.previewWidth - width - xCorr;
+    } else {
+      position.left = x + xCorr;
+    }
+
+    if (snap.y === Snap.TOP) {
+      position.top = yCorr;
+    } else if (snap.y === Snap.BOTTOM) {
+      position.top = previewInfo.previewHeight - height - yCorr;
+    } else {
+      position.top = y + yCorr;
+    }
 
     return (
       <Box
@@ -276,8 +411,7 @@ const RecorderPreview = (props: {
         onMouseDown={(e) => onMouseDown(e, src, SceneInteraction.MOVE)}
         sx={{
           position: 'absolute',
-          left,
-          top,
+          ...position,
           height,
           width,
           outline: '2px solid #bb4420',
@@ -303,8 +437,6 @@ const RecorderPreview = (props: {
       </Box>
     );
   };
-
-
 
   return (
     <div className="w-full h-full box-border bg-black">
