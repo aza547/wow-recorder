@@ -1,7 +1,7 @@
 {
   "name": "WarcraftRecorder",
   "version": "7.0.0",
-  "description": "A World of Warcraft screen recorder",
+  "description": "Warcraft Recorder",
   "main": "./dist/main/main.js",
   "author": {
     "name": "Alex K"
@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "atomic-queue": "^5.0.4",
-    "noobs": "D:\\checkouts\\warcraft-recorder-obs-engine\\noobs-0.0.115.tgz",
+    "noobs": "D:\\checkouts\\warcraft-recorder-obs-engine",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"

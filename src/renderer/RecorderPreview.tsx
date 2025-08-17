@@ -254,8 +254,16 @@ const RecorderPreview = (props: {
   };
 
   const renderDraggableSceneBox = (src: WCRSceneItem) => {
+    if (src === WCRSceneItem.OVERLAY && !config.chatOverlayEnabled) {
+      return <></>;
+    }
+
     const { x, y, width, height } =
       src === WCRSceneItem.OVERLAY ? overlayBoxDimensions : gameBoxDimensions;
+
+    if (width < 1 && height < 1) {
+      return <></>;
+    }
 
     const text = src === WCRSceneItem.OVERLAY ? 'Chat Overlay' : 'Game Window';
 
@@ -296,6 +304,8 @@ const RecorderPreview = (props: {
     );
   };
 
+
+
   return (
     <div className="w-full h-full box-border bg-black">
       <div
@@ -303,8 +313,7 @@ const RecorderPreview = (props: {
         className="relative h-full mx-12 overflow-hidden border border-black"
       >
         {renderDraggableSceneBox(WCRSceneItem.GAME)}
-        {config.chatOverlayEnabled &&
-          renderDraggableSceneBox(WCRSceneItem.OVERLAY)}
+        {renderDraggableSceneBox(WCRSceneItem.OVERLAY)}
       </div>
     </div>
   );
