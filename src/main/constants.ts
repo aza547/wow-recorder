@@ -613,7 +613,7 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
 const dungeonTimersByMapId: { [id: number]: number[] } = {
   // Shadowlands
   377: [43 * 60, 34 * 60 + 25, 25 * 60 + 49],
-  378: [31 * 60, 31 * 60 * 0.8, 31 * 60 + 0.6], // Halls of Atonement
+  378: [32 * 60, 32 * 60 * 0.8, 32 * 60 + 0.6], // Halls of Atonement
   375: [30 * 60, 24 * 60, 18 * 60], // Mists of Tirna Scithe
   379: [38 * 60, 30 * 60 + 24, 22 * 60 + 38],
   380: [41 * 60, 32 * 60 + 48, 24 * 60 + 36],
