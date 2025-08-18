@@ -523,7 +523,7 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
 
   // TWW S3.
   // Taken from https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L487.
-  2830: "Echo-Dome Al'Dani",
+  2830: "Eco-Dome Al'Dani",
 };
 
 /**
