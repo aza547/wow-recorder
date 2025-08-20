@@ -890,6 +890,12 @@ export default class Manager {
       throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
     }
 
+    if (storagePath.includes("#")) {
+      // A user hit this: the video player loads the file path as a URL where # is interpreted as a timestamp.
+      console.warn('[Manager] Validation failed: `storagePath` contains invalid character "#"');
+      throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
+    }
+
     if (!fs.existsSync(path.dirname(storagePath))) {
       console.warn(
         '[Manager] Validation failed, storagePath does not exist',
