@@ -538,6 +538,8 @@ const AudioSourceControls = (props: IProps) => {
     if (event.shiftKey) keys.push('Shift');
     if (event.metaKey) keys.push('Win');
 
+    console.log("event", event.keyCode)
+
     const { keyCode, mouseButton } = event;
 
     if (keyCode > 0) {
