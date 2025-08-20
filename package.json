@@ -239,7 +239,8 @@
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.0",
-    "webpack-merge": "^6.0.1"
+    "webpack-merge": "^6.0.1",
+    "obs-studio-node": "https://pub-4cf93aaf84c649c88aadb13a092952f2.r2.dev/osn-0.25.47wcr-release-win64.tar.gz"
   },
   "browserslist": [
     "extends browserslist-config-erb"

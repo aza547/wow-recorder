@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 ### Fixed
 - Fix Streets of Tazavesh timer again.
+- [Issue 720](https://github.com/aza547/wow-recorder/issues/720) - Fix record challenge mode toggle.
 
 ## [6.15.4] - 2025-08-16
 ### Fixed

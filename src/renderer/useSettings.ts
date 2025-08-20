@@ -105,6 +105,7 @@ export const getSettings = (): ConfigurationSchema => {
     hardwareAcceleration: getConfigValue<boolean>('hardwareAcceleration'),
     recordCurrentRaidEncountersOnly: getConfigValue<boolean>('recordCurrentRaidEncountersOnly'),
     uploadCurrentRaidEncountersOnly: getConfigValue<boolean>('uploadCurrentRaidEncountersOnly'),
+    recordChallengeModes: getConfigValue<boolean>('recordChallengeModes'),
     /* eslint-enable prettier/prettier */
   };
 
