@@ -29,7 +29,11 @@ export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   const langCode = langCodeMap[appState.language];
 
   return (
-    <div className="drawing-overlay h-full w-full">
+    <div
+      className="drawing-overlay h-full w-full"
+      onKeyDown={(e) => e.stopPropagation()}
+      onKeyUp={(e) => e.stopPropagation()}
+    >
       <div className="drawing-overlay-content">
         <Excalidraw
           theme="dark"

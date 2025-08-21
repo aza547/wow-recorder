@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 720](https://github.com/aza547/wow-recorder/issues/720) - Fix record challenge mode toggle.
 - [Issue 716](https://github.com/aza547/wow-recorder/issues/716) - Don't allow "#" in storage path.
 - [Issue 703](https://github.com/aza547/wow-recorder/issues/703) - Allow "`" as the PTT key.
+- [Issue 639](https://github.com/aza547/wow-recorder/issues/639) - Fix key handling when drawing mode is enabled.
 
 ## [6.15.4] - 2025-08-16
 ### Fixed
