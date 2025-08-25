@@ -1,7 +1,7 @@
 import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
-import { VideoSourceName, WCRSceneItem } from 'main/types';
-import { SceneItemPosition, SourceDimensions } from 'noobs';
+import { AudioSourceType, VideoSourceName, WCRSceneItem } from 'main/types';
+import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 
 declare global {
   interface Window {
@@ -37,6 +37,12 @@ declare global {
         resetSourcePosition(src: WCRSceneItem): void;
         
         setSourcePosition(src: WCRSceneItem, target: { x: number; y: number, width: number, height: number }): void;
+
+        createAudioSource(id: string, type: AudioSourceType): Promise<ObsProperty[]>;
+        deleteAudioSource(id: string): void;
+        setAudioSourceDevice(id: string, device: string): void;
+        setAudioSourceWindow(id: string, window: string): void;
+        setAudioSourceVolume(id: string, volume: number): void;
       };
     };
   }
