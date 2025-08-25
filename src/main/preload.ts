@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
-import { SceneItemPosition, SourceDimensions } from 'noobs';
-import { VideoSourceName, WCRSceneItem } from './types';
+import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
+import { AudioSourceType, VideoSourceName, WCRSceneItem } from './types';
 
 export type Channels =
   | 'mainWindow'
@@ -29,6 +29,9 @@ export type Channels =
   | 'audioSettingsOpen'
   | 'updateSourcePos'
   | 'createAudioSource'
+  | 'deleteAudioSource'
+  | 'setAudioSourceDevice'
+  | 'setAudioSourceWindow'
   | 'getDisplayInfo'
   | 'configurePreview'
   | 'showPreview'
@@ -107,6 +110,27 @@ contextBridge.exposeInMainWorld('electron', {
 
     resetSourcePosition(src: WCRSceneItem) {
       ipcRenderer.send('resetSourcePosition', src);
+    },
+
+    // Also returns the properties.
+    createAudioSource(id: string, type: AudioSourceType): Promise<ObsProperty[]> {
+      return ipcRenderer.invoke('createAudioSource', id, type);
+    },
+
+    deleteAudioSource(id: string): void {
+      ipcRenderer.send('deleteAudioSource', id);
+    },
+
+    setAudioSourceDevice(id: string, device: string): void {
+      ipcRenderer.send('setAudioSourceDevice', id, device);
+    },
+
+    setAudioSourceWindow(id: string, window: string): void {
+      ipcRenderer.send('setAudioSourceWindow', id, window);
+    },
+
+    setAudioSourceVolume(id: string, volume: number): void {
+      ipcRenderer.send('setAudioSourceVolume', id, volume);
     },
   },
 });

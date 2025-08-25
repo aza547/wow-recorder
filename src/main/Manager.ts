@@ -52,6 +52,7 @@ import {
   UploadQueueItem,
   CloudConfig,
   WCRSceneItem,
+  AudioSourceType,
 } from './types';
 import {
   getObsBaseConfig,
@@ -1349,21 +1350,36 @@ export default class Manager {
       },
     );
 
-    ipcMain.handle('createAudioSource', (_event, args) => {
-      let type = '';
-
-      // TODO proper types
-      if (args[0] === 'Input') {
-        type = 'wasapi_input_capture';
-      } else if (args[0] === 'Output') {
-        type = 'wasapi_output_capture';
-      } else {
-        type = 'wasapi_process_output_capture';
-      }
-
-      noobs.CreateSource('WCR Audio Source', type);
-      const props = noobs.GetSourceProperties('WCR Audio Source');
+    ipcMain.handle('createAudioSource', (_event, id: string, type: AudioSourceType) => {
+      console.info('[Manager] Creating audio source', id, 'of type', type);
+      noobs.CreateSource(id, type);
+      noobs.AddSourceToScene(id);
+      const props = noobs.GetSourceProperties(id);
       return props;
+    });
+
+    ipcMain.on('deleteAudioSource', (_event, id: string) => {
+      console.info('[Manager] Deleting audio source', id);
+      noobs.DeleteSource(id);
+    });
+
+    ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
+      console.info('[Manager] Setting audio device for source', id, 'to', value);
+      const settings = noobs.GetSourceSettings(id);
+      settings["device_id"] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
+      console.info('[Manager] Setting audio window for source', id, 'to', value);
+      const settings = noobs.GetSourceSettings(id);
+      settings["window"] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
+      console.info('[Manager] Setting audio volume for source', id, 'to', value);
+      noobs.SetSourceVolume(id, value);
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
