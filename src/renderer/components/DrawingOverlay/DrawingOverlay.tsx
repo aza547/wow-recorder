@@ -31,8 +31,9 @@ export const DrawingOverlay: React.FC<DrawingOverlayProps> = ({
   return (
     <div
       className="drawing-overlay h-full w-full"
-      onKeyDown={(e) => e.stopPropagation()}
-      onKeyUp={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
     >
       <div className="drawing-overlay-content">
         <Excalidraw
