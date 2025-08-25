@@ -51,6 +51,8 @@ import {
   DiskStatus,
   UploadQueueItem,
   CloudConfig,
+  WCRSceneItem,
+  AudioSourceType,
 } from './types';
 import {
   getObsBaseConfig,
@@ -70,6 +72,7 @@ import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import RetryableConfigError from '../utils/RetryableConfigError';
 import { TAffiliation } from 'types/api';
+import noobs from 'noobs';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -210,7 +213,7 @@ export default class Manager {
 
     this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
 
-    setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
+    // setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
   }
 
   /**
@@ -473,12 +476,14 @@ export default class Manager {
     }
 
     this.refreshMicStatus(this.recorder.obsMicState);
+    this.redrawPreview();
   }
 
   /**
    * Send a message to the frontend to update the recorder status icon.
    */
   private refreshRecStatus(status: RecStatus, msg = '') {
+    if (this.mainWindow.isDestroyed()) return; // Can happen on shutdown.
     this.mainWindow.webContents.send('updateRecStatus', status, msg);
   }
 
@@ -486,7 +491,20 @@ export default class Manager {
    * Send a message to the frontend to update the mic status icon.
    */
   private refreshMicStatus(status: MicStatus) {
+    if (this.mainWindow.isDestroyed()) return; // Can happen on shutdown.
     this.mainWindow.webContents.send('updateMicStatus', status);
+  }
+
+  /**
+   * Trigger the frontend to redraw the preview if it's open.
+   */
+  private redrawPreview() {
+    // Really don't understand the need for the timeout here
+    // but it sometimes gets stale data otherwise. A caching 
+    // thing in libobs maybe? Noobs will send a source signal
+    // to the recorder if the size of sources change, but for
+    // other changes we need to manually trigger a redraw.
+    setTimeout(() => this.mainWindow.webContents.send('redrawPreview'), 100);
   }
 
   /**
@@ -554,15 +572,13 @@ export default class Manager {
    */
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
-
-    const videoConfig = getObsVideoConfig(this.cfg);
-    this.recorder.configureVideoSources(videoConfig, this.poller.isWowRunning);
+    this.recorder.attachCaptureSource();
 
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);
 
     try {
-      await this.recorder.start();
+      await this.recorder.startBuffer();
     } catch (error) {
       console.error('[Manager] OBS failed to record when WoW started', error);
     }
@@ -586,7 +602,7 @@ export default class Manager {
       await this.retailPtrLogHandler.forceEndActivity();
     } else {
       // No activity so we can just force stop.
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
     }
 
     this.recorder.clearFindWindowInterval();
@@ -603,7 +619,7 @@ export default class Manager {
    */
   private async configureObsBase(config: ObsBaseConfig) {
     // Force stop as we don't care about the output video.
-    await this.recorder.forceStop();
+    await this.recorder.stop(true);
 
     await this.refreshCloudStatus();
     await this.refreshDiskStatus();
@@ -692,7 +708,7 @@ export default class Manager {
       // but isRecording is false, that means it's a buffer recording. Stop it
       // briefly to change the config. Force stop as we don't care about the
       // output video.
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
     }
 
     if (this.retailLogHandler) {
@@ -1077,14 +1093,21 @@ export default class Manager {
       }
     });
 
-    // The OBS preview window is tacked on-top of the UI so we call this often
-    // whenever we need to move, resize, show or hide it.
-    ipcMain.on('preview', (_event, args) => {
-      if (args[0] === 'show') {
-        this.recorder.showPreview(args[1], args[2], args[3], args[4]);
-      } else if (args[0] === 'hide') {
-        this.recorder.hidePreview();
-      }
+    ipcMain.on('configurePreview', (_event, x: number, y: number, width: number, height: number) => {
+      this.recorder.configurePreview(x, y, width, height);
+      this.redrawPreview();
+    });
+
+    ipcMain.on('showPreview', () => {
+      this.recorder.showPreview();
+    });
+
+    ipcMain.on('hidePreview', () => {
+      this.recorder.hidePreview();
+    });
+
+    ipcMain.on('disablePreview', () => {
+      this.recorder.disablePreview();
     });
 
     // Encoder listener, to populate settings on the frontend.
@@ -1283,6 +1306,8 @@ export default class Manager {
         this.audioSettingsOpen ? 'opened' : 'closed',
       );
 
+      noobs.SetVolmeterEnabled(this.audioSettingsOpen);
+
       if (!this.stages[3].valid) {
         console.warn('[Manager] Wont touch audio sources with invalid config');
         return;
@@ -1299,6 +1324,62 @@ export default class Manager {
       } else {
         this.recorder.removeAudioSources();
       }
+    });
+
+    ipcMain.handle('getDisplayInfo', () => {
+      return this.recorder.getDisplayInfo();
+    });
+
+    ipcMain.handle('getSourcePosition', (_event, item: WCRSceneItem) => {
+      return this.recorder.getSourcePosition(item);
+    });
+
+    ipcMain.on(
+      'setSourcePosition',
+      (_event, item: WCRSceneItem, target: { x: number; y: number; width: number; height: number }) => {
+        this.recorder.setSourcePosition(item, target);
+        // Don't need to redraw here, frontend handles this for us.
+      },
+    );
+
+    ipcMain.on(
+      'resetSourcePosition',
+      (_event, item: WCRSceneItem) => {
+        this.recorder.resetSourcePosition(item);
+        this.redrawPreview();
+      },
+    );
+
+    ipcMain.handle('createAudioSource', (_event, id: string, type: AudioSourceType) => {
+      console.info('[Manager] Creating audio source', id, 'of type', type);
+      noobs.CreateSource(id, type);
+      noobs.AddSourceToScene(id);
+      const props = noobs.GetSourceProperties(id);
+      return props;
+    });
+
+    ipcMain.on('deleteAudioSource', (_event, id: string) => {
+      console.info('[Manager] Deleting audio source', id);
+      noobs.DeleteSource(id);
+    });
+
+    ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
+      console.info('[Manager] Setting audio device for source', id, 'to', value);
+      const settings = noobs.GetSourceSettings(id);
+      settings["device_id"] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
+      console.info('[Manager] Setting audio window for source', id, 'to', value);
+      const settings = noobs.GetSourceSettings(id);
+      settings["window"] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
+      console.info('[Manager] Setting audio volume for source', id, 'to', value);
+      noobs.SetSourceVolume(id, value);
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
@@ -1318,12 +1399,12 @@ export default class Manager {
       console.info('[Manager] Detected Windows is going to sleep.');
       this.dropActivity();
       this.poller.reset();
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
     });
 
     powerMonitor.on('resume', async () => {
       console.info('[Manager] Detected Windows waking up from a sleep.');
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
 
       this.poller
         .on('wowProcessStart', () => this.onWowStarted())
@@ -1381,53 +1462,6 @@ export default class Manager {
     this.active = false;
     this.queued = false;
     this.manage();
-  }
-
-  /**
-   * Every so often we'll try restart the recorder to avoid having an
-   * infinitely long video sitting in the .temp folder. First we check
-   * it's safe to do so, i.e. we're currently recording and not in an
-   * activity.
-   */
-  private async restartRecorder() {
-    if (this.recorder.obsState !== ERecordingState.Recording) {
-      console.info('[Manager] Not restarting recorder as not recording');
-      return;
-    }
-
-    const retailNotSafe = this.retailLogHandler?.activity;
-    const classicNotSafe = this.classicLogHandler?.activity;
-    const eraNotSafe = this.eraLogHandler?.activity;
-    const retailPtrNotSafe = this.retailPtrLogHandler?.activity;
-
-    if (retailNotSafe || classicNotSafe || eraNotSafe || retailPtrNotSafe) {
-      console.info('[Manager] Not restarting recorder as in an activity');
-      return;
-    }
-
-    const retailOverrunning = this.retailLogHandler?.overrunning;
-    const classicOverrunning = this.classicLogHandler?.overrunning;
-    const eraOverrunning = this.eraLogHandler?.overrunning;
-    const retailPtrOverrunning = this.retailPtrLogHandler?.overrunning;
-
-    if (
-      retailOverrunning ||
-      classicOverrunning ||
-      eraOverrunning ||
-      retailPtrOverrunning
-    ) {
-      console.info(
-        '[Manager] Not restarting recorder as an activity is overrunning',
-      );
-      return;
-    }
-
-    console.info('[Manager] Restart recorder');
-
-    // Use force stop here as we don't care about the output file.
-    await this.recorder.forceStop();
-    await this.recorder.cleanup();
-    await this.recorder.start();
   }
 
   /**

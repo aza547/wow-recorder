@@ -37,4 +37,6 @@ src/main/osn-data/*
 # Cloud storage dirs
 upload
 buffer
+
+# Some stuff OBS window capture creates at runtime?
 win-capture/

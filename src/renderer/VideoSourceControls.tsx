@@ -43,10 +43,16 @@ const VideoSourceControls = (props: IProps) => {
       obsCaptureMode: config.obsCaptureMode,
       monitorIndex: config.monitorIndex,
       captureCursor: config.captureCursor,
+      forceSdr: config.forceSdr,
     });
 
     ipc.sendMessage('settingsChange', []);
-  }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
+  }, [
+    config.monitorIndex,
+    config.obsCaptureMode,
+    config.captureCursor,
+    config.forceSdr,
+  ]);
 
   const setOBSCaptureMode = (mode: string) => {
     if (mode === null) {
@@ -160,7 +166,7 @@ const VideoSourceControls = (props: IProps) => {
 
   const getCursorToggle = () => {
     return (
-      <div className="flex flex-col w-[140px]">
+      <div className="flex flex-col w-[120px]">
         <Label className="flex items-center">
           {getLocalePhrase(appState.language, Phrase.CaptureCursorLabel)}
           <Tooltip
@@ -183,11 +189,43 @@ const VideoSourceControls = (props: IProps) => {
     );
   };
 
+  const setForceSdr = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        forceSdr: checked,
+      };
+    });
+  };
+
+  const getForceSdrToggle = () => {
+    return (
+      <div className="flex flex-col w-[120px]">
+        <Label className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.ForceSdrLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.forceSdr.description,
+            )}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch checked={config.forceSdr} onCheckedChange={setForceSdr} />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex items-center w-full gap-x-8">
       {getCaptureModeToggle()}
       {getMonitorToggle()}
       {getCursorToggle()}
+      {getForceSdrToggle()}
     </div>
   );
 };

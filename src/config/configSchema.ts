@@ -88,6 +88,10 @@ export type ConfigurationSchema = {
   hardwareAcceleration: boolean;
   recordCurrentRaidEncountersOnly: boolean;
   uploadCurrentRaidEncountersOnly: boolean;
+  forceSdr: boolean;
+  videoSourceScale: number;
+  videoSourceXPosition: number;
+  videoSourceYPosition: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -542,5 +546,25 @@ export const configSchema = {
     description: Phrase.UploadCurrentRaidsOnlyDescription,
     type: 'boolean',
     default: false,
+  },
+  forceSdr: {
+    description: Phrase.ForceSdrDescription,
+    type: 'boolean',
+    default: false,
+  },
+  videoSourceScale: {
+    description: Phrase.VideoSourceScaleDescription,
+    type: 'number',
+    default: 1,
+  },
+  videoSourceXPosition: {
+    description: Phrase.VideoSourceXPositionDescription,
+    type: 'number',
+    default: 0,
+  },
+  videoSourceYPosition: {
+    description: Phrase.VideoSourceYPositionDescription,
+    type: 'number',
+    default: 0,
   },
 };

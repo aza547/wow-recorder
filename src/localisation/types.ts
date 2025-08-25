@@ -423,6 +423,11 @@ enum Phrase {
   UploadCurrentRaidsOnlyDescription,
   MustNotBeEmpty,
   PushToTalkReleaseDelayLabel,
+  ForceSdrLabel,
+  ForceSdrDescription,
+  VideoSourceScaleDescription,
+  VideoSourceXPositionDescription,
+  VideoSourceYPositionDescription,
 }
 
 enum Language {
