@@ -3,6 +3,7 @@ import { ipcMain } from 'electron';
 import path from 'path';
 import { EventEmitter } from 'stream';
 import { configSchema, ConfigurationSchema } from './configSchema';
+import _ from 'lodash';
 
 /**
  * Interface for the ConfigService class.
@@ -238,7 +239,11 @@ export default class ConfigService
     // We're checking for null here because we don't allow storing
     // null values and as such if we get one, it's because it's empty/shouldn't
     // be saved.
-    return value !== null && this._store.get(key) !== value;
+    if (value === null) return false;
+
+    // Lodash handles deep array equality checks here, which is nice for more
+    // complex config (i.e. audio sources).
+    return !_.isEqual(this._store.get(key), value);
   }
 
   private static logConfigChanged(newConfig: { [key: string]: any }): void {

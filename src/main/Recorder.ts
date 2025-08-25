@@ -29,7 +29,8 @@ import {
   exists,
 } from './util';
 import {
-  AudioSourcePrefix,
+  AudioSource,
+  AudioSourceType,
   CrashData,
   MicStatus,
   ObsAudioConfig,
@@ -120,10 +121,9 @@ export default class Recorder extends EventEmitter {
   private resolution: keyof typeof obsResolutions = '1920x1080';
 
   /**
-   * Array of input devices we are including in the source. This is not an
-   * array of all the devices we know about.
+   * Active audio sources.
    */
-  private audioInputDevices: any[] = [];
+  private audioSources: AudioSource[] = [];
 
   /**
    * Gets toggled if push to talk is enabled and when the hotkey for push to
@@ -465,20 +465,31 @@ export default class Recorder extends EventEmitter {
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
+    
+    noobs.SetForceMono(config.obsForceMono);
+    noobs.SetAudioSuppression(config.obsAudioSuppression);
 
-    // noobs.CreateSource(AudioSourcePrefix.MIC, 'wasapi_input_capture');
-    // noobs.CreateSource(AudioSourcePrefix.SPEAKER, 'wasapi_output_capture');
+    config.audioSources.forEach((src) => {
+      const name = noobs.CreateSource(src.id, src.type);
+      const settings = noobs.GetSourceSettings(name);
 
-    // noobs.AddSourceToScene(AudioSourcePrefix.MIC);
-    // noobs.AddSourceToScene(AudioSourcePrefix.SPEAKER);
+      if (src.type === AudioSourceType.PROCESS && src.device) {
+        settings["window"] = src.device;
+        noobs.SetSourceSettings(name, settings);
+      } else {
+        settings["device_id"] = src.device ? src.device : '';
+        noobs.SetSourceSettings(name, settings);
+      }
+    });
 
     // Just for muted state for now. TODO: Remove this?
-    this.audioInputDevices = ['default'];
+    this.audioSources = config.audioSources;
+    const mics = this.audioSources.filter((src) => src.type === AudioSourceType.INPUT);
 
-    if (this.audioInputDevices.length !== 0 && config.pushToTalk) {
+    if (mics.length !== 0 && config.pushToTalk) {
       this.obsMicState = MicStatus.MUTED;
       this.emit('state-change');
-    } else if (this.audioInputDevices.length !== 0) {
+    } else if (mics.length !== 0) {
       this.obsMicState = MicStatus.LISTENING;
       this.emit('state-change');
     }
@@ -509,12 +520,19 @@ export default class Recorder extends EventEmitter {
    * so it can be called externally when WoW is closed.
    */
   public removeAudioSources() {
-    // TODO handle prefixing
-    noobs.RemoveSourceFromScene(AudioSourcePrefix.MIC);
-    noobs.RemoveSourceFromScene(AudioSourcePrefix.SPEAKER);
+    console.info('[Recorder] Remove all audio sources');
+    
+    this.obsMicState = MicStatus.NONE;
+    this.emit('state-change');
 
-    noobs.DeleteSource(AudioSourcePrefix.MIC);
-    noobs.DeleteSource(AudioSourcePrefix.SPEAKER);
+    this.audioSources.forEach((src) => {
+      console.info('[Recorder] Remove audio source', src.id);
+      noobs.RemoveSourceFromScene(src.id);
+      noobs.DeleteSource(src.id);
+    });
+
+    this.audioSources = [];
+    this.inputDevicesMuted = true;
   }
 
   /**

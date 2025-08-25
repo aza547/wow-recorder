@@ -287,10 +287,18 @@ interface IDevice {
 }
 
 enum AudioSourceType {
-  output = 'wasapi_output_capture',
-  input = 'wasapi_input_capture',
-  process = 'wasapi_process_output_capture',
+  OUTPUT = 'wasapi_output_capture',
+  INPUT = 'wasapi_input_capture',
+  PROCESS = 'wasapi_process_output_capture',
 }
+
+type AudioSource = {
+  id: string; // The source name
+  type: AudioSourceType;
+  friendly?: string; // A user-friendly name for the source
+  device?: string; // Machine friendly identifier for the device or window
+  volume: number; // Current volume setting (0-1)
+};
 
 /**
  * If we should be showing a certain page. This always takes priority over anything
@@ -389,18 +397,13 @@ type ObsOverlayConfig = {
 };
 
 type ObsAudioConfig = {
-  audioInputDevices: string;
-  audioOutputDevices: string;
-  audioProcessDevices: { value: string; label: string }[];
+  audioSources: AudioSource[];
+  obsAudioSuppression: boolean;
   obsForceMono: boolean;
-  speakerVolume: number;
-  micVolume: number;
-  processVolume: number;
   pushToTalk: boolean;
   pushToTalkKey: number;
   pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
-  obsAudioSuppression: boolean;
 };
 
 type FlavourConfig = {
@@ -665,6 +668,7 @@ export {
   ObsSourceCallbackInfo,
   ObsVolmeterCallbackInfo,
   VideoSourceName,
+  AudioSource,
   AudioSourcePrefix,
   WCRSceneItem,
   SceneInteraction,
