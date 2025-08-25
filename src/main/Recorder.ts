@@ -144,13 +144,6 @@ export default class Recorder extends EventEmitter {
   private wroteQueue = new WaitQueue<any>();
 
   /**
-   * Volmeters are used to monitor the audio levels of an input source. We
-   * keep a list of them here as we need a volmeter per audio source, and
-   * it's handy to have a list for cleaning them up.
-   */
-  private volmeters: Record<string, number> = {};
-
-  /**
    * The state of the recorder, typically used to tell if OBS is recording
    * or not.
    */
@@ -473,11 +466,11 @@ export default class Recorder extends EventEmitter {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
 
-    noobs.CreateSource(AudioSourcePrefix.MIC, 'wasapi_input_capture');
-    noobs.CreateSource(AudioSourcePrefix.SPEAKER, 'wasapi_output_capture');
+    // noobs.CreateSource(AudioSourcePrefix.MIC, 'wasapi_input_capture');
+    // noobs.CreateSource(AudioSourcePrefix.SPEAKER, 'wasapi_output_capture');
 
-    noobs.AddSourceToScene(AudioSourcePrefix.MIC);
-    noobs.AddSourceToScene(AudioSourcePrefix.SPEAKER);
+    // noobs.AddSourceToScene(AudioSourcePrefix.MIC);
+    // noobs.AddSourceToScene(AudioSourcePrefix.SPEAKER);
 
     // Just for muted state for now. TODO: Remove this?
     this.audioInputDevices = ['default'];
@@ -847,8 +840,7 @@ export default class Recorder extends EventEmitter {
    */
   private handleSignal(signal: Signal) {
     if (signal.type === 'volmeter' && signal.value !== undefined) {
-      this.volmeters[signal.id] = signal.value;
-      this.mainWindow.webContents.send('volmeter', this.volmeters);
+      this.mainWindow.webContents.send('volmeter', signal.id, signal.value);
       return;
     }
 

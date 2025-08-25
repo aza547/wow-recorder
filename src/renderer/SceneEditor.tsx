@@ -106,7 +106,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
             <Tooltip content="Toggle Snapping" side="bottom">
               <Box className="flex items-center justify-center ">
                 <span className="text-xs text-card-foreground font-medium pr-2 text-center">
-                  Snapping
+                  Source <br /> Snapping
                 </span>
                 <Switch
                   checked={snapEnabled}
@@ -117,7 +117,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
             <Tooltip content="Toggle Preview" side="bottom">
               <Box className="flex items-center justify-center ">
                 <span className="text-xs text-card-foreground font-medium pr-2 text-center">
-                  Preview
+                  Show <br /> Preview
                 </span>
                 <Switch
                   checked={previewEnabled}

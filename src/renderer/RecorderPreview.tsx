@@ -9,7 +9,7 @@ const showPreview = ipc.showPreview;
 const hidePreview = ipc.hidePreview;
 const disablePreview = ipc.disablePreview;
 const cornerSize = 25; // Size in pixels for the corner box
-const snapDistance = 30; // Number of pixels to snap to.
+const snapDistance = 15; // Number of pixels to snap to.
 
 enum Snap {
   TOP = 'Top',
