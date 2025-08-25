@@ -1,11 +1,23 @@
-import { AppState, AudioSourceType } from 'main/types';
-import { useEffect, useState } from 'react';
+import { AppState, AudioSource, AudioSourceType } from 'main/types';
+import { useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
-import { Info, PlusIcon, Volume, Volume1, Volume2, VolumeX, X } from 'lucide-react';
+import {
+  AppWindow,
+  AudioWaveform,
+  Info,
+  MicVocal,
+  PlusIcon,
+  Speaker,
+  Volume1,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   blurAll,
+  fetchAudioSourceChoices,
   getKeyByValue,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
@@ -41,25 +53,31 @@ interface IProps {
   appState: AppState;
 }
 
-type AudioSource = {
-  id: string;
-  type?: AudioSourceType;
-  device: string;
-  choices?: ObsListItem[];
-  volume: number; // Current volume setting (0-1)
-  volumePopoverOpen: boolean;
-  magnitude: number; // Current volmeter activity (0-1)
-};
-
 const AudioSourceControls = (props: IProps) => {
   const { appState } = props;
   const [config, setConfig] = useSettings();
+  const initialRender = useRef(true);
 
-  const [sources, setSources] = useState<AudioSource[]>([]);
+  // Available choices per source.
+  const [sourceChoices, setSourceChoices] = useState<
+    Record<string, ObsListItem[]>
+  >({});
+
+  // Volmeter data.
+  const [sourceMagnitude, setSourceMagnitude] = useState<
+    Record<string, number>
+  >({});
+
+  // Volume popover state. We only allow one to be open at a time.
+  const [volumePopoverSourceId, setVolumePopoverSourceId] = useState('');
+
+  // We will block adding new sources if we have a partially
+  // configured process source (speakers and mics can both
+  // default to "default" so this only effects process sources).
   let sourcesAreFullyDefined = true;
 
-  sources.forEach((src) => {
-    if (!src.type || !src.device) {
+  config.audioSources.forEach((src) => {
+    if (!src.device) {
       sourcesAreFullyDefined = false;
     }
   });
@@ -75,36 +93,30 @@ const AudioSourceControls = (props: IProps) => {
   );
 
   useEffect(() => {
+    if (initialRender.current) {
+      // Don't rewrite the config for no reason on mount.
+      initialRender.current = false;
+      return;
+    }
+
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
 
     debounceTimer = setTimeout(() => {
       setConfigValues({
-        audioOutputDevices: config.audioOutputDevices,
-        speakerVolume: config.speakerVolume,
-        audioInputDevices: config.audioInputDevices,
-        micVolume: config.micVolume,
-        audioProcessDevices: config.audioProcessDevices,
-        processVolume: config.processVolume,
+        audioSources: config.audioSources,
+        obsAudioSuppression: config.obsAudioSuppression,
         obsForceMono: config.obsForceMono,
         pushToTalk: config.pushToTalk,
         pushToTalkKey: config.pushToTalkKey,
         pushToTalkMouseButton: config.pushToTalkMouseButton,
         pushToTalkModifiers: config.pushToTalkModifiers,
         pushToTalkReleaseDelay: config.pushToTalkReleaseDelay,
-        obsAudioSuppression: config.obsAudioSuppression,
       });
-
-      ipc.sendMessage('settingsChange', []);
     }, 500);
   }, [
-    config.audioOutputDevices,
-    config.speakerVolume,
-    config.audioInputDevices,
-    config.micVolume,
-    config.audioProcessDevices,
-    config.processVolume,
+    config.audioSources,
     config.obsForceMono,
     config.pushToTalk,
     config.pushToTalkKey,
@@ -140,10 +152,29 @@ const AudioSourceControls = (props: IProps) => {
   }, [pttHotKeyFieldFocused, setConfig]);
 
   const volmeterRefresh = (id: string, magnitude: number) => {
-    console.log('volmeter', id, magnitude);
-    setSources((prevSources) =>
-      prevSources.map((src) => (src.id === id ? { ...src, magnitude } : src)),
-    );
+    // console.log('volmeter', id, magnitude);
+    setSourceMagnitude((prev) => {
+      prev[id] = magnitude;
+      return { ...prev };
+    });
+  };
+
+  // On initial load we don't know the available choices for existing
+  // sources in the config, so retrieve it here.
+  const initAudioSourceChoices = async () => {
+    const promises = config.audioSources.map(async (s) => ({
+      id: s.id,
+      choices: await fetchAudioSourceChoices(s),
+    }));
+
+    const choices = await Promise.all(promises);
+    const updated: Record<string, ObsListItem[]> = {};
+
+    choices.forEach((choice) => {
+      updated[choice.id] = choice.choices;
+    });
+
+    setSourceChoices(updated);
   };
 
   useEffect(() => {
@@ -151,16 +182,20 @@ const AudioSourceControls = (props: IProps) => {
       volmeterRefresh(id as string, magnitude as number),
     );
 
+    const initAudioSettings = async () => {
+      await ipc.audioSettingsOpen();
+      await initAudioSourceChoices();
+    };
+
     // Attach the audio devices so volmeter bars show
     // even if WoW is closed.
-    ipc.sendMessage('audioSettingsOpen', [true]);
+    initAudioSettings();
 
     return () => {
       ipc.removeAllListeners('volmeter');
 
-      // Remove the audio devices so Windows can still
-      // sleep on unmounting.
-      ipc.sendMessage('audioSettingsOpen', [false]);
+      // Remove the audio devices so Windows can still sleep on unmounting.
+      ipc.audioSettingsClosed();
     };
   }, []);
 
@@ -171,6 +206,8 @@ const AudioSourceControls = (props: IProps) => {
         obsForceMono: checked,
       };
     });
+
+    ipc.setForceMono(checked);
   };
 
   const setPushToTalk = (checked: boolean) => {
@@ -189,6 +226,8 @@ const AudioSourceControls = (props: IProps) => {
         obsAudioSuppression: checked,
       };
     });
+
+    ipc.setAudioSuppression(checked);
   };
 
   const getMonoSwitch = () => {
@@ -375,66 +414,92 @@ const AudioSourceControls = (props: IProps) => {
     </div>
   );
 
-  const setSourceType = async (src: AudioSource, type: AudioSourceType) => {
-    const idx = sources.indexOf(src);
-    const properties = await ipc.createAudioSource(src.id, type);
-    console.log(properties);
-
-    const devices = properties.find(
-      (prop) => prop.name === 'device_id' || prop.name === 'window',
-    );
-
-    if (!devices || devices.type !== 'list') {
-      return;
-    }
-
-    const choices = devices.items;
-    const clone = [...sources];
-    clone[idx] = { ...src, type, choices };
-    setSources(clone);
-  };
-
   const setSourceDevice = (src: AudioSource, device: string) => {
-    const idx = sources.indexOf(src);
+    const idx = config.audioSources.indexOf(src);
     if (idx === -1) return;
-    const clone = [...sources];
-    clone[idx] = { ...src, device };
-    setSources(clone);
 
-    if (src.type === AudioSourceType.process) {
+    const choice = sourceChoices[src.id].find((item) => item.value === device);
+    if (!choice) return;
+
+    const clone = [...config.audioSources];
+    clone[idx] = { ...src, device, friendly: choice.name };
+
+    setConfig((prev) => ({ ...prev, audioSources: clone }));
+
+    if (src.type === AudioSourceType.PROCESS) {
       ipc.setAudioSourceWindow(src.id, device);
     } else {
       ipc.setAudioSourceDevice(src.id, device);
     }
   };
 
-  const renderSourceTypeSelect = (src: AudioSource) => {
-    return (
-      <div className="flex flex-col w-full w-[200px]">
-        <Select
-          onValueChange={(v) => setSourceType(src, v as AudioSourceType)}
-          value={src.type}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a type..." />
-          </SelectTrigger>
-          <SelectContent>
-            {[
-              AudioSourceType.input,
-              AudioSourceType.output,
-              AudioSourceType.process,
-            ].map((tt) => (
-              <SelectItem key={tt} value={tt}>
-                {tt}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
+  const renderSourceType = (src: AudioSource) => {
+    if (src.type === AudioSourceType.OUTPUT) {
+      return (
+        <div className="flex justify-center items-center  text-foreground-lighter gap-x-1">
+          <Speaker />
+        </div>
+      );
+    }
+
+    if (src.type === AudioSourceType.INPUT) {
+      return (
+        <div className="flex justify-center items-center text-foreground-lighter gap-x-1">
+          <MicVocal />
+        </div>
+      );
+    }
+
+    if (src.type === AudioSourceType.PROCESS) {
+      return (
+        <div className="flex justify-center items-center text-foreground-lighter gap-x-1">
+          <AppWindow />
+        </div>
+      );
+    }
   };
 
   const renderSourceDeviceSelect = (src: AudioSource) => {
+    const choices: ObsListItem[] = [];
+
+    if (sourceChoices[src.id]) {
+      // Deduplicate on the name field.
+      sourceChoices[src.id].forEach((choice) => {
+        if (!choices.find((item) => item.name === choice.name)) {
+          choices.push(choice);
+        }
+      });
+    }
+
+    const renderSelectItems = () => {
+      const found = choices.find((tt) => tt.value === src.device);
+
+      const items = choices.map((tt) => (
+        <SelectItem key={tt.name} value={String(tt.value)}>
+          {tt.name}
+        </SelectItem>
+      ));
+
+      // If we don't find the device currently selected add it so it
+      // renders with a warning. Don't do the warning this for process
+      // as it's common for the windows to change and we do exe
+      // matching anyway.
+      if (!found && src.device) {
+        const text =
+          src.type !== AudioSourceType.PROCESS
+            ? `⚠ Unknown device: ${src.friendly}`
+            : src.device;
+
+        items.push(
+          <SelectItem key="custom" value={src.device}>
+            {text}
+          </SelectItem>,
+        );
+      }
+
+      return items;
+    };
+
     return (
       <div className="flex flex-col w-[500px]">
         <Select
@@ -447,12 +512,7 @@ const AudioSourceControls = (props: IProps) => {
             <SelectValue placeholder="Select a device...." />
           </SelectTrigger>
           <SelectContent className="max-h-[200px] overflow-y-auto">
-            {src.choices &&
-              src.choices.map((tt) => (
-                <SelectItem key={tt.name} value={String(tt.value)}>
-                  {tt.name}
-                </SelectItem>
-              ))}
+            {renderSelectItems()}
           </SelectContent>
         </Select>
       </div>
@@ -460,39 +520,45 @@ const AudioSourceControls = (props: IProps) => {
   };
 
   const removeSource = (src: AudioSource) => {
-    const idx = sources.indexOf(src);
+    const idx = config.audioSources.indexOf(src);
     if (idx === -1) return;
-    setSources((prev) => {
-      return prev.filter((_, i) => i !== idx);
+
+    setConfig((prev) => {
+      const clone = [...prev.audioSources];
+      clone.splice(idx, 1);
+      return { ...prev, audioSources: clone };
     });
+
+    setSourceChoices((prev) => {
+      const clone = { ...prev };
+      delete clone[src.id];
+      return clone;
+    });
+
+    setSourceMagnitude((prev) => {
+      const clone = { ...prev };
+      delete clone[src.id];
+      return clone;
+    });
+
+    setVolumePopoverSourceId('');
     ipc.deleteAudioSource(src.id);
   };
 
   const renderDeleteSourceButton = (src: AudioSource) => {
     return (
-      <Button
-        onClick={() => removeSource(src)}
-        variant="ghost"
-        size="sm"
-        disabled={sources.length < 1}
-      >
-        <X />
+      <Button onClick={() => removeSource(src)} variant="ghost" size="sm">
+        <X color="red" opacity={0.5} />
       </Button>
     );
   };
 
-  const openVolumePopover = (src: AudioSource, open: boolean) => {
-    // Open the selected volume popover while closing the others.
-    setSources((prev) => {
-      return prev.map((s) => ({
-        ...s,
-        volumePopoverOpen: s.id === src.id && open,
-      }));
-    });
+  const toggleVolumePopover = (src: AudioSource, open: boolean) => {
+    setVolumePopoverSourceId(open ? src.id : '');
   };
 
   const renderSourceRow = (src: AudioSource) => {
-    const idx = sources.indexOf(src);
+    const idx = config.audioSources.indexOf(src);
     const val = Math.round(src.volume * 100);
     let icon;
 
@@ -504,37 +570,49 @@ const AudioSourceControls = (props: IProps) => {
       icon = <Volume2 />;
     }
 
+    const magnitude = sourceMagnitude[src.id] ?? 0;
+
     return (
       <tr key={idx}>
-        <td className="px-2">{renderSourceTypeSelect(src)}</td>
+        <td className="px-2">{renderSourceType(src)}</td>
         <td className="px-2">{renderSourceDeviceSelect(src)}</td>
         <td className="px-2">
-          <Progress
-            className="h-[38px] w-[150px] rounded-sm"
-            value={100 * src.magnitude}
-          />
+          <div className="relative h-[38px] w-[150px]">
+            <Progress
+              className="h-full w-full rounded-sm"
+              value={100 * magnitude}
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <AudioWaveform className="text-foreground-lighter" size={18} />
+            </div>
+          </div>
         </td>
         <td>
           <Popover
-            open={src.volumePopoverOpen}
-            onOpenChange={(open) => openVolumePopover(src, open)}
+            open={src.id === volumePopoverSourceId}
+            onOpenChange={(open) => toggleVolumePopover(src, open)}
           >
             <PopoverTrigger asChild>
               <Button variant="ghost">{icon}</Button>
             </PopoverTrigger>
-            <PopoverContent className="border-card">
+            <PopoverContent className="border border-card">
               <Slider
                 defaultValue={[val]}
                 value={[val]}
                 max={100}
                 step={1}
                 onValueChange={(newValue) => {
-                  setSources((prev) => {
-                    if (typeof newValue[0] !== 'number') return prev;
-                    const idx = prev.indexOf(src);
-                    if (idx === -1) return prev;
-                    prev[idx].volume = newValue[0] / 100;
-                    return prev;
+                  setConfig(() => {
+                    const idx = config.audioSources.indexOf(src);
+                    if (idx === -1) return config;
+                    const newSources = [...config.audioSources];
+
+                    newSources[idx] = {
+                      ...newSources[idx],
+                      volume: newValue[0] / 100,
+                    };
+
+                    return { ...config, audioSources: newSources };
                   });
 
                   // TODO debounce?
@@ -549,43 +627,48 @@ const AudioSourceControls = (props: IProps) => {
     );
   };
 
-  const addSource = async () => {
-    const id = `WCR Audio Source ${sources.length + 1}`;
+  const addSource = async (type: AudioSourceType) => {
+    const ids = config.audioSources.map((src) => src.id);
+    let idx = 1;
+
+    // Find the next available name.
+    while (ids.includes(`WCR Audio Source ${idx}`)) {
+      idx++;
+    }
+
+    const id = `WCR Audio Source ${idx}`;
+    const name = await ipc.createAudioSource(id, type);
+    const device = type === AudioSourceType.PROCESS ? undefined : 'default';
+    const friendly = device;
 
     const src: AudioSource = {
-      id,
-      device: 'default',
+      id: name, // Careful to not assume we got the name we asked for.
+      type,
+      friendly,
+      device,
       volume: 1,
-      volumePopoverOpen: false,
-      magnitude: 0,
     };
 
-    setSources((prev) => [...prev, src]);
+    const choices = await fetchAudioSourceChoices(src);
+
+    setConfig((prev) => ({
+      ...prev,
+      audioSources: [...prev.audioSources, src],
+    }));
+
+    setSourceChoices((prev) => ({
+      ...prev,
+      [src.id]: choices,
+    }));
   };
 
   const renderSourceTable = () => {
     return (
       <table className="table-auto w-max">
-        <thead>
-          <tr>
-            <th className="text-foreground-lighter text-xs">Type</th>
-            <th className="text-foreground-lighter text-xs">Device</th>
-            <th className="text-foreground-lighter text-xs">Activity</th>
-            <th className="p-1" />
-          </tr>
-        </thead>
         <tbody>
-          {sources.map(renderSourceRow)}
+          {config.audioSources.map(renderSourceRow)}
           <tr>
-            <td colSpan={5} className="text-center">
-              <Button
-                onClick={addSource}
-                variant="ghost"
-                disabled={!sourcesAreFullyDefined}
-              >
-                <PlusIcon />
-              </Button>
-            </td>
+            <td colSpan={5}></td>
           </tr>
         </tbody>
       </table>
@@ -594,16 +677,8 @@ const AudioSourceControls = (props: IProps) => {
 
   const renderHelpText = () => {
     return (
-      <div className="flex flex-col text-sm text-foreground">
+      <div className="flex flex-col text-sm text-foreground-lighter">
         Add a source to record audio.
-        <Button
-          onClick={addSource}
-          variant="ghost"
-          disabled={!sourcesAreFullyDefined}
-          className="max-w-[100px]"
-        >
-          <PlusIcon size={18} />
-        </Button>
       </div>
     );
   };
@@ -611,8 +686,34 @@ const AudioSourceControls = (props: IProps) => {
   const getSourcesSection = () => {
     return (
       <div className="flex flex-col gap-y-2">
-        {sources.length > 0 && renderSourceTable()}
-        {sources.length < 1 && renderHelpText()}
+        {config.audioSources.length > 0 && renderSourceTable()}
+        {config.audioSources.length < 1 && renderHelpText()}
+        <div className="flex gap-2 mx-2">
+          <Button
+            onClick={() => addSource(AudioSourceType.OUTPUT)}
+            disabled={!sourcesAreFullyDefined}
+            variant="outline"
+          >
+            <PlusIcon className="px-0" />
+            Speaker
+          </Button>
+          <Button
+            onClick={() => addSource(AudioSourceType.INPUT)}
+            disabled={!sourcesAreFullyDefined}
+            variant="outline"
+          >
+            <PlusIcon className="px-0" />
+            Microphone
+          </Button>
+          <Button
+            onClick={() => addSource(AudioSourceType.PROCESS)}
+            disabled={!sourcesAreFullyDefined}
+            variant="outline"
+          >
+            <PlusIcon className="px-0" />
+            Application
+          </Button>
+        </div>
       </div>
     );
   };

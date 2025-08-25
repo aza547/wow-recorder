@@ -212,8 +212,6 @@ export default class Manager {
     });
 
     this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
-
-    // setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
   }
 
   /**
@@ -1298,15 +1296,9 @@ export default class Manager {
      * Callback to attach the audio devices. This is called when the user
      * opens the audio settings so that the volmeter bars can be populated.
      */
-    ipcMain.on('audioSettingsOpen', (_event, args) => {
-      this.audioSettingsOpen = args[0];
-
-      console.info(
-        '[Manager] Audio settings were',
-        this.audioSettingsOpen ? 'opened' : 'closed',
-      );
-
-      noobs.SetVolmeterEnabled(this.audioSettingsOpen);
+    ipcMain.handle('audioSettingsOpen', () => {
+      console.info('[Manager] Audio settings were opened');
+      noobs.SetVolmeterEnabled(true);
 
       if (!this.stages[3].valid) {
         console.warn('[Manager] Wont touch audio sources with invalid config');
@@ -1318,12 +1310,25 @@ export default class Manager {
         return;
       }
 
-      if (this.audioSettingsOpen) {
-        const audioConfig = getObsAudioConfig(this.cfg);
-        this.recorder.configureAudioSources(audioConfig);
-      } else {
-        this.recorder.removeAudioSources();
+      const audioConfig = getObsAudioConfig(this.cfg);
+      this.recorder.configureAudioSources(audioConfig);
+    });
+
+    ipcMain.handle('audioSettingsClosed', () => {
+      console.info('[Manager] Audio settings were closed');
+      noobs.SetVolmeterEnabled(false);
+
+      if (!this.stages[3].valid) {
+        console.warn('[Manager] Wont touch audio sources with invalid config');
+        return;
       }
+
+      if (this.poller.isWowRunning) {
+        console.info('[Manager] Wont touch audio sources as WoW is running');
+        return;
+      }
+
+      this.recorder.removeAudioSources();
     });
 
     ipcMain.handle('getDisplayInfo', () => {
@@ -1352,10 +1357,15 @@ export default class Manager {
 
     ipcMain.handle('createAudioSource', (_event, id: string, type: AudioSourceType) => {
       console.info('[Manager] Creating audio source', id, 'of type', type);
-      noobs.CreateSource(id, type);
-      noobs.AddSourceToScene(id);
-      const props = noobs.GetSourceProperties(id);
-      return props;
+      const name = noobs.CreateSource(id, type);
+      console.info('[Manager] Created audio source', name);
+      noobs.AddSourceToScene(name);
+      return name;
+    });
+
+    ipcMain.handle('getAudioSourceProperties', (_event, id: string) => {
+      console.info('[Manager] Getting audio source properties for', id);
+      return noobs.GetSourceProperties(id);
     });
 
     ipcMain.on('deleteAudioSource', (_event, id: string) => {
@@ -1380,6 +1390,16 @@ export default class Manager {
     ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
       console.info('[Manager] Setting audio volume for source', id, 'to', value);
       noobs.SetSourceVolume(id, value);
+    });
+
+    ipcMain.on('setForceMono', (_event, enabled: boolean) => {
+      console.info('[Manager] Setting force mono to', enabled);
+      noobs.SetForceMono(enabled);
+    });
+
+    ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
+      console.info('[Manager] Setting audio suppression to', enabled);
+      noobs.SetAudioSuppression(enabled);
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by

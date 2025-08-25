@@ -1,4 +1,5 @@
 import { ConfigurationSchema } from 'config/configSchema';
+import { AudioSource } from 'main/types';
 import * as React from 'react';
 
 export const getConfigValue = <T>(configKey: string): T => {
@@ -29,9 +30,7 @@ export const getSettings = (): ConfigurationSchema => {
     maxStorage: getConfigValue<number>('maxStorage'),
     minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
     monitorIndex: getConfigValue<number>('monitorIndex'),
-    audioInputDevices: getConfigValue<string>('audioInputDevices'),
-    audioOutputDevices: getConfigValue<string>('audioOutputDevices'),
-    audioProcessDevices: getConfigValue<{ value: string; label: string }[]>('audioProcessDevices'),
+    audioSources: getConfigValue<AudioSource[]>('audioSources'),
     startUp: getConfigValue<boolean>('startUp'),
     startMinimized: getConfigValue<boolean>('startMinimized'),
     recordRetail: getConfigValue<boolean>('recordRetail'),
@@ -65,9 +64,6 @@ export const getSettings = (): ConfigurationSchema => {
     chatOverlayXPosition: getConfigValue<number>('chatOverlayXPosition'),
     chatOverlayYPosition: getConfigValue<number>('chatOverlayYPosition'),
     captureCursor: getConfigValue<boolean>('captureCursor'),
-    speakerVolume: getConfigValue<number>('speakerVolume'),
-    micVolume: getConfigValue<number>('micVolume'),
-    processVolume: getConfigValue<number>('processVolume'),
     selectedCategory: getConfigValue<number>('selectedCategory'),
     deathMarkers: getConfigValue<number>('deathMarkers'),
     encounterMarkers: getConfigValue<boolean>('encounterMarkers'),

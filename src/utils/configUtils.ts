@@ -7,6 +7,7 @@ import {
   Metadata,
   CloudConfig,
   Flavour,
+  AudioSource,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../config/ConfigService';
@@ -188,18 +189,13 @@ const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
 const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
   return {
     /* eslint-disable prettier/prettier */
-    audioInputDevices: cfg.get<string>('audioInputDevices'),
-    audioOutputDevices: cfg.get<string>('audioOutputDevices'),
-    audioProcessDevices: cfg.get<{ value: string; label: string }[]>('audioProcessDevices'),
+    audioSources: cfg.get<AudioSource[]>('audioSources'),
+    obsAudioSuppression: cfg.get<boolean>('obsAudioSuppression'),
     obsForceMono: cfg.get<boolean>('obsForceMono'),
-    speakerVolume: cfg.get<number>('speakerVolume'),
-    micVolume: cfg.get<number>('micVolume'),
-    processVolume: cfg.get<number>('processVolume'),
     pushToTalk: cfg.get<boolean>('pushToTalk'),
     pushToTalkKey: cfg.get<number>('pushToTalkKey'),
     pushToTalkMouseButton: cfg.get<number>('pushToTalkMouseButton'),
     pushToTalkModifiers: cfg.get<string>('pushToTalkModifiers'),
-    obsAudioSuppression: cfg.get<boolean>('obsAudioSuppression'),
     /* eslint-enable prettier/prettier */
   };
 };

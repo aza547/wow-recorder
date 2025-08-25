@@ -27,8 +27,10 @@ export type Channels =
   | 'doAppUpdate'
   | 'volmeter'
   | 'audioSettingsOpen'
+  | 'audioSettingsClosed'
   | 'updateSourcePos'
   | 'createAudioSource'
+  | 'getAudioSourceProperties'
   | 'deleteAudioSource'
   | 'setAudioSourceDevice'
   | 'setAudioSourceWindow'
@@ -39,7 +41,9 @@ export type Channels =
   | 'disablePreview'
   | 'getSourcePosition'
   | 'setSourcePosition'
-  | 'resetSourcePosition';
+  | 'resetSourcePosition'
+  | 'setForceMono'
+  | 'setAudioSuppression';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -112,9 +116,21 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('resetSourcePosition', src);
     },
 
+    audioSettingsOpen(): Promise<void> {
+      return ipcRenderer.invoke('audioSettingsOpen');
+    },
+
+    audioSettingsClosed(): Promise<void> {
+      return ipcRenderer.invoke('audioSettingsClosed');
+    },
+
     // Also returns the properties.
-    createAudioSource(id: string, type: AudioSourceType): Promise<ObsProperty[]> {
+    createAudioSource(id: string, type: AudioSourceType): Promise<string> {
       return ipcRenderer.invoke('createAudioSource', id, type);
+    },
+
+    getAudioSourceProperties(id: string): Promise<ObsProperty[]> {
+      return ipcRenderer.invoke('getAudioSourceProperties', id);
     },
 
     deleteAudioSource(id: string): void {
@@ -132,5 +148,13 @@ contextBridge.exposeInMainWorld('electron', {
     setAudioSourceVolume(id: string, volume: number): void {
       ipcRenderer.send('setAudioSourceVolume', id, volume);
     },
+
+    setForceMono(enabled: boolean) {
+      ipcRenderer.send('setForceMono', enabled);
+    },
+
+    setAudioSuppression(enabled: boolean) {
+      ipcRenderer.send('setAudioSuppression', enabled);
+    }
   },
 });

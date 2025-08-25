@@ -34,6 +34,7 @@ import {
   RawCombatant,
   StorageFilter,
   Flavour,
+  AudioSource,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -1023,6 +1024,22 @@ const raidResultToPercent = (video: RendererVideo) => {
   return bossPercent;
 };
 
+// Retrieve the available choices for this source from libobs.
+const fetchAudioSourceChoices = async (src: AudioSource) => {
+  const ipc = window.electron.ipcRenderer;
+  const properties = await ipc.getAudioSourceProperties(src.id);
+
+  const devices = properties.find(
+    (prop) => prop.name === 'device_id' || prop.name === 'window',
+  );
+
+  if (!devices || devices.type !== 'list') {
+    return [];
+  }
+
+  return devices.items;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1081,4 +1098,5 @@ export {
   getSpecClass,
   raidResultToPercent,
   getVideoStorageFilter,
+  fetchAudioSourceChoices,
 };
