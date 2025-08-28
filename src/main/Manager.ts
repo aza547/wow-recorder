@@ -1,5 +1,4 @@
 import { BrowserWindow, app, clipboard, ipcMain, powerMonitor } from 'electron';
-import { isEqual } from 'lodash';
 import path from 'path';
 import fs from 'fs';
 import { uIOhook } from 'uiohook-napi';
@@ -8,7 +7,6 @@ import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 import AuthError from '../utils/AuthError';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
-  addCrashToUI,
   buildClipMetadata,
   checkDisk,
   getMetadataForVideo,
@@ -39,11 +37,9 @@ import {
   ObsVideoConfig,
   ObsAudioConfig,
   RecStatus,
-  ConfigStage,
   FlavourConfig,
   ObsOverlayConfig,
   IOBSDevice,
-  CrashData,
   VideoQueueItem,
   MicStatus,
   RendererVideo,
@@ -53,6 +49,7 @@ import {
   CloudConfig,
   WCRSceneItem,
   AudioSourceType,
+  WowProcessEvent,
 } from './types';
 import {
   getObsBaseConfig,
@@ -92,23 +89,7 @@ export default class Manager {
 
   private cfg: ConfigService = ConfigService.getInstance();
 
-  private poller = Poller.getInstance(getFlavourConfig(this.cfg));
-
-  private active = false;
-
-  private queued = false;
-
-  private obsBaseCfg: ObsBaseConfig = getObsBaseConfig(this.cfg);
-
-  private obsVideoCfg: ObsVideoConfig = getObsVideoConfig(this.cfg);
-
-  private obsAudioCfg: ObsAudioConfig = getObsAudioConfig(this.cfg);
-
-  private flavourCfg: FlavourConfig = getFlavourConfig(this.cfg);
-
-  private overlayCfg: ObsOverlayConfig = getOverlayConfig(this.cfg);
-
-  private cloudCfg: CloudConfig = getCloudConfig(this.cfg);
+  private poller = Poller.getInstance();
 
   private retailLogHandler: RetailLogHandler | undefined;
 
@@ -128,69 +109,12 @@ export default class Manager {
 
   private reconfiguring = false;
 
-  private retryTimer: NodeJS.Timeout | undefined;
-
   private audioSettingsOpen = false;
 
-  private quitting = false;
-
   /**
-   * Defined stages of configuration. They are named only for logging
-   * purposes. Each stage holds the current state of the stages config,
-   * and provides functions to get, validate and configure the config.
+   * If we have been through startup configuration.
    */
-  private stages: ConfigStage[] = [
-    /* eslint-disable prettier/prettier */
-    {
-      name: 'obsBase',
-      valid: false,
-      current: this.obsBaseCfg,
-      get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: async (config: ObsBaseConfig) => this.validateBaseConfig(config),
-      configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
-    },
-    {
-      name: 'obsVideo',
-      valid: false,
-      current: this.obsVideoCfg,
-      get: (cfg: ConfigService) => getObsVideoConfig(cfg),
-      validate: async () => {},
-      configure: async (config: ObsVideoConfig) => this.configureObsVideo(config),
-    },
-    {
-      name: 'obsAudio',
-      valid: false,
-      current: this.obsAudioCfg,
-      get: (cfg: ConfigService) => getObsAudioConfig(cfg),
-      validate: async () => {},
-      configure: async (config: ObsAudioConfig) => this.configureObsAudio(config),
-    },
-    {
-      name: 'flavour',
-      valid: false,
-      current: this.flavourCfg,
-      get: (cfg: ConfigService) => getFlavourConfig(cfg),
-      validate: async (config: FlavourConfig) => this.validateFlavour(config),
-      configure: async (config: FlavourConfig) => this.configureFlavour(config),
-    },
-    {
-      name: 'overlay',
-      valid: false,
-      current: this.overlayCfg,
-      get: (cfg: ConfigService) => getOverlayConfig(cfg),
-      validate: async (config: ObsOverlayConfig) => this.validateOverlayConfig(config),
-      configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
-    },
-    {
-      name: 'cloud',
-      valid: false,
-      current: this.cloudCfg,
-      get: (cfg: ConfigService) => getCloudConfig(cfg),
-      validate: async (config: CloudConfig) => this.validateCloudConfig(config),
-      configure: async (config: CloudConfig) => this.configureCloudClient(config),
-    },
-    /* eslint-enable prettier/prettier */
-  ];
+  private started = false;
 
   /**
    * Constructor.
@@ -203,10 +127,6 @@ export default class Manager {
     this.mainWindow = mainWindow;
     this.recorder = new Recorder(this.mainWindow);
 
-    this.recorder.on('crash', (crashData) => {
-      setTimeout(() => this.recoverRecorderFromCrash(crashData), 0);
-    });
-
     this.recorder.on('state-change', () => {
       setTimeout(() => this.refreshStatus(), 0);
     });
@@ -215,55 +135,75 @@ export default class Manager {
   }
 
   /**
-   * The public interface to this class. This function carefully calls into
-   * internalManage() but catches duplicate calls and queues them, up to a
-   * a limit of one queued call.
-   *
-   * This prevents someone spamming buttons in the setings page from sending
-   * invalid configuration requests to the Recorder class.
+   * Run the startup configuration, which validates the config and applies it 
+   * from the config service.
    */
-  public async manage() {
-    if (this.active && !this.queued) {
-      console.info('[Manager] Queued an additional manage');
-      this.queued = true;
+  public async startup() {
+    console.info('[Manager] Starting up');
+
+    // This should never happen so just defend against it.
+    assert(!this.started);
+
+    this.reconfiguring = true;
+    this.refreshStatus();
+
+    const base = getObsBaseConfig(this.cfg);
+    const video = getObsVideoConfig(this.cfg);
+    const audio = getObsAudioConfig(this.cfg);
+    const flavour = getFlavourConfig(this.cfg);
+    const overlay = getOverlayConfig(this.cfg);
+
+    try {
+      await this.validateBaseConfig(base);
+      await this.configureObsBase(base);
+
+      await this.configureObsVideo(video);
+      await this.configureObsAudio(audio);
+      await this.configureFlavour(flavour);
+
+      await this.validateOverlayConfig(overlay);
+      await this.configureObsOverlay(overlay);
+
+      this.started = true;
+    } catch (error) {
+      console.error('[Manager] Error during startup', error);
+      this.reconfiguring = false;
+      this.setConfigInvalid(String(error));
     }
 
-    if (this.active) {
-      console.info('[Manager] Manage already in progress');
-      return;
-    }
+    this.reconfiguring = false;
+    this.setConfigValid();
 
-    // Mark ourselves as active, indicating we are in the middle
-    // of a reconfiguration.
-    this.active = true;
-
-    // Stop the poller. We don't want to be polling WoW while we are
-    // reconfiguring as we might get a signal that triggers a recorder
-    // action at a time where we can't handle it.
-    this.poller.removeAllListeners();
-    this.poller.reset();
-
-    // Now actually call the internal manage function which will loop through
-    // the stages, validate and configure them.
-    await this.internalManage();
-
-    if (this.queued) {
-      // Another call to manage was queued while we were reconfiguring. Re-run
-      // it to ensure we have the latest config.
-      console.info('[Manager] Execute a queued manage call');
-      this.queued = false;
-      await this.internalManage();
-    }
-
-    // If we got here then the config is valid. Start the poller so we
-    // will react to the state of WoW. This will start the recorder if
-    // WoW is already running.
     this.poller
-      .on('wowProcessStart', () => this.onWowStarted())
-      .on('wowProcessStop', () => this.onWowStopped())
+      .on(WowProcessEvent.STARTED, () => this.onWowStarted())
+      .on(WowProcessEvent.STOPPED, () => this.onWowStopped())
       .start();
+  }
 
-    this.active = false;
+  public async configureBase() {
+    const base = getObsBaseConfig(this.cfg);
+
+    try {
+      await this.validateBaseConfig(base);
+      await this.configureObsBase(base);
+    } catch (error) {
+      console.error('[Manager] Error during base configuration', error);
+      this.reconfiguring = false;
+      this.setConfigInvalid(String(error));
+    }
+  }
+
+  public async configureCloud() {
+    const cloud = getCloudConfig(this.cfg);
+
+    try {
+      await this.validateCloudConfig(cloud);
+      await this.configureCloudClient(cloud);
+    } catch (error) {
+      console.error('[Manager] Error during cloud configuration', error);
+      this.reconfiguring = false;
+      this.setConfigInvalid(String(error));
+    }
   }
 
   /**
@@ -333,82 +273,6 @@ export default class Manager {
       const parser = this.classicLogHandler.combatLogWatcher;
       runClassicRecordingTest(parser, endTest);
     }
-  }
-
-  /**
-   * This function iterates through the config stages, checks for any changes,
-   * validates the new config and then applies it.
-   */
-  private async internalManage() {
-    console.info('[Manager] Internal manage');
-    this.reconfiguring = true;
-    this.refreshStatus();
-
-    if (this.retryTimer) {
-      // We're here already configuring so we don't need to have a retry timer
-      // active. We will create one if appropriate.
-      clearTimeout(this.retryTimer);
-    }
-
-    for (let i = 0; i < this.stages.length; i++) {
-      const stage = this.stages[i];
-      const newConfig = stage.get(this.cfg);
-      const stageConfigChanged = !isEqual(newConfig, stage.current);
-
-      if (stageConfigChanged) {
-        // Assume the config isn't valid till we prove otherwise.
-        stage.valid = false;
-      }
-
-      if (!stage.valid) {
-        const loggable = { ...newConfig };
-
-        if (loggable.cloudAccountPassword) {
-          loggable.cloudAccountPassword = '**********';
-        }
-
-        console.info(
-          '[Manager] Validating and configuring stage',
-          stage.name,
-          'with',
-          loggable,
-        );
-
-        try {
-          console.info('[Manager] Now validating stage', stage.name);
-          await stage.validate(newConfig);
-          console.info('[Manager] Validated stage', stage.name);
-        } catch (error) {
-          // If this stage isn't valid we won't go further, set the frontend
-          // stage to reflect what's wrong and drop out.
-          console.warn('[Manager] Failed validating stage', stage.name, error);
-          this.reconfiguring = false;
-          this.setConfigInvalid(String(error));
-
-          if (error instanceof RetryableConfigError) {
-            // If we hit a RetryableConfigError, typically a network
-            // issue, then retry in a bit. This covers us if WCR starts
-            // while the network is offline etc.
-            this.retryTimer = setTimeout(() => this.manage(), error.time);
-          }
-
-          return;
-        }
-
-        console.info('[Manager] Now configuring stage', stage.name);
-        await stage.configure(newConfig);
-        console.info('[Manager] Configured stage', stage.name);
-
-        // We've validated and configured the new config, mark the stage as
-        // valid so we won't reconfigure it unless it changes.
-        stage.valid = true;
-        stage.current = newConfig;
-      }
-    }
-
-    // Update the frontend to reflect the valid config.
-    this.reconfiguring = false;
-    this.setConfigValid();
   }
 
   /**
@@ -497,11 +361,10 @@ export default class Manager {
    * Trigger the frontend to redraw the preview if it's open.
    */
   private redrawPreview() {
-    // Really don't understand the need for the timeout here
-    // but it sometimes gets stale data otherwise. A caching 
-    // thing in libobs maybe? Noobs will send a source signal
-    // to the recorder if the size of sources change, but for
-    // other changes we need to manually trigger a redraw.
+    // Really don't understand the need for the timeout here but it sometimes
+    // gets stale data otherwise. A caching thing in libobs maybe? Noobs will
+    // send a source signal to the recorder if the size of sources change, but
+    // for other changes we need to manually trigger a redraw.
     setTimeout(() => this.mainWindow.webContents.send('redrawPreview'), 100);
   }
 
@@ -664,7 +527,7 @@ export default class Manager {
         // error state.
         console.warn('[Manager] Got logout event from CloudClient');
         this.stages[5].valid = false; // Stage 5 is the cloud stage.
-        this.manage(); // Queue a call to manage to mimic first time setup.
+        //this.manage(); // Queue a call to manage to mimic first time setup.
       });
 
       await this.cloudClient.pollInit();
@@ -680,17 +543,17 @@ export default class Manager {
    * Configure video settings in OBS. This can all be changed live.
    */
   private configureObsVideo(config: ObsVideoConfig) {
-    this.recorder.configureVideoSources(config, this.poller.isWowRunning);
+    this.recorder.configureVideoSources(config, this.poller.isWowRunning());
   }
 
   /**
    * Configure audio settings in OBS. This can all be changed live.
    */
   private configureObsAudio(config: ObsAudioConfig) {
-    const shouldConfigure = this.poller.isWowRunning || this.audioSettingsOpen;
+    const shouldConfigure = this.poller.isWowRunning() || this.audioSettingsOpen;
 
     if (!shouldConfigure) {
-      console.info("Won't configure audio sources, WoW not running");
+      console.info("[Manager] Won't configure audio sources, WoW not running");
       return;
     }
 
@@ -701,14 +564,6 @@ export default class Manager {
    * Configure the appropriate LogHandlers.
    */
   private async configureFlavour(config: FlavourConfig) {
-    if (this.recorder.obsState === ERecordingState.Recording) {
-      // We can't change this config if OBS is recording. If OBS is recording
-      // but isRecording is false, that means it's a buffer recording. Stop it
-      // briefly to change the config. Force stop as we don't care about the
-      // output video.
-      await this.recorder.stop(true);
-    }
-
     if (this.retailLogHandler) {
       this.retailLogHandler.removeAllListeners();
       this.retailLogHandler.destroy();
@@ -773,8 +628,6 @@ export default class Manager {
       this.retailPtrLogHandler.setIsPtr();
       this.retailPtrLogHandler.on('state-change', () => this.refreshStatus());
     }
-
-    this.poller.reconfigureFlavour(config);
   }
 
   /**
@@ -1300,12 +1153,7 @@ export default class Manager {
       console.info('[Manager] Audio settings were opened');
       noobs.SetVolmeterEnabled(true);
 
-      if (!this.stages[3].valid) {
-        console.warn('[Manager] Wont touch audio sources with invalid config');
-        return;
-      }
-
-      if (this.poller.isWowRunning) {
+      if (this.poller.isWowRunning()) {
         console.info('[Manager] Wont touch audio sources as WoW is running');
         return;
       }
@@ -1318,12 +1166,7 @@ export default class Manager {
       console.info('[Manager] Audio settings were closed');
       noobs.SetVolmeterEnabled(false);
 
-      if (!this.stages[3].valid) {
-        console.warn('[Manager] Wont touch audio sources with invalid config');
-        return;
-      }
-
-      if (this.poller.isWowRunning) {
+      if (this.poller.isWowRunning()) {
         console.info('[Manager] Wont touch audio sources as WoW is running');
         return;
       }
@@ -1431,57 +1274,6 @@ export default class Manager {
         .on('wowProcessStop', () => this.onWowStopped())
         .start();
     });
-  }
-
-  /**
-   * If the recorder emits a crash event, we shut down OBS and create a new
-   * recorder. That may not help whatever caused the crash, but will help
-   * the app back into a good state.
-   */
-  private recoverRecorderFromCrash(crashData: CrashData) {
-    console.error('[Manager] OBS got into a bad state, restarting it');
-    addCrashToUI(this.mainWindow, crashData);
-
-    this.recorder.removeAllListeners();
-    this.recorder.shutdownOBS();
-
-    if (this.retailLogHandler) {
-      this.retailLogHandler.removeAllListeners();
-      this.retailLogHandler.destroy();
-    }
-
-    if (this.classicLogHandler) {
-      this.classicLogHandler.removeAllListeners();
-      this.classicLogHandler.destroy();
-    }
-
-    if (this.eraLogHandler) {
-      this.eraLogHandler.removeAllListeners();
-      this.eraLogHandler.destroy();
-    }
-
-    if (this.retailPtrLogHandler) {
-      this.retailPtrLogHandler.removeAllListeners();
-      this.retailPtrLogHandler.destroy();
-    }
-
-    this.recorder = new Recorder(this.mainWindow);
-
-    this.recorder.on('crash', (crashData) => {
-      setTimeout(() => this.recoverRecorderFromCrash(crashData), 0);
-    });
-
-    this.recorder.on('state-change', () => {
-      setTimeout(() => this.refreshStatus(), 0);
-    });
-
-    for (let i = 0; i < this.stages.length; i++) {
-      this.stages[i].valid = false;
-    }
-
-    this.active = false;
-    this.queued = false;
-    this.manage();
   }
 
   /**

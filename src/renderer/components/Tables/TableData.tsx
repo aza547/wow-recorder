@@ -371,6 +371,40 @@ const useTable = (
     [appState, setVideoState],
   );
 
+  const manualColumns = useMemo<ColumnDef<RendererVideo>[]>(
+    () => [
+      {
+        id: 'Details',
+        size: 80,
+        accessorFn: (v) => v,
+        sortingFn: (a, b) => detailSort(a, b),
+        header: DetailsHeader,
+        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
+      },
+      {
+        id: 'Duration',
+        accessorFn: (v) => v,
+        sortingFn: durationSort,
+        header: () => DurationHeader(language),
+        cell: populateDurationCell,
+      },
+      {
+        id: 'Date',
+        accessorFn: (v) => videoToDate(v),
+        header: () => DateHeader(language),
+        cell: populateDateCell,
+      },
+      {
+        id: 'Viewpoints',
+        accessorFn: (v) => v,
+        header: () => ViewpointsHeader(language),
+        cell: populateViewpointCell,
+        sortingFn: viewPointCountSort,
+      },
+    ],
+    [appState, setVideoState],
+  );
+
   let columns;
 
   switch (category) {
@@ -392,6 +426,9 @@ const useTable = (
     case VideoCategory.Skirmish:
     case VideoCategory.SoloShuffle:
       columns = arenaColumns;
+      break;
+    case VideoCategory.Manual:
+      columns = manualColumns;
       break;
     default:
       throw new Error('Unrecognized category');

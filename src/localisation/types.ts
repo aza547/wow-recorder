@@ -96,6 +96,7 @@ enum Phrase {
   VideoCategoryMythicPlusLabel,
   VideoCategoryRaidsLabel,
   VideoCategoryBattlegroundsLabel,
+  VideoCategoryManualLabel,
   VideoCategoryClipsLabel,
   LogsButtonLabel,
   DiscordButtonLabel,

@@ -182,8 +182,8 @@ const createWindow = async () => {
     );
 
     assert(manager);
-    console.log('[Main] Ready to show calling manage');
-    await manager.manage();
+    console.log('[Main] Ready to show calling startup');
+    await manager.startup();
 
     const startMinimized = cfg.get<boolean>('startMinimized');
 

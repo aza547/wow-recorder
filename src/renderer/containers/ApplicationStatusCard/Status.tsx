@@ -334,7 +334,7 @@ const Status = ({
           />
           <div className="ml-4 py-2 font-sans flex flex-col justify-around">
             <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
-              {getLocalePhrase(appState.language, Phrase.StatusHeading)}
+              Recorder
             </span>
 
             <span

@@ -39,7 +39,7 @@ export default function RendererTitleBar() {
   return (
     <div
       id="title-bar"
-      className="w-full h-[32px] bg-transparent flex items-center justify-center px-2 pr-0 absolute top-0 left-0"
+      className="w-full h-[32px] bg-background flex items-center justify-center px-2 pr-0 absolute top-0 left-0"
     >
       <img
         src={icon}

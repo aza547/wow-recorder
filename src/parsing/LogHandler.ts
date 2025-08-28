@@ -43,7 +43,7 @@ export default abstract class LogHandler extends EventEmitter {
 
   protected cfg: ConfigService = ConfigService.getInstance();
 
-  protected poller: Poller = Poller.getInstance(getFlavourConfig(this.cfg));
+  protected poller: Poller = Poller.getInstance();
 
   protected mainWindow: BrowserWindow;
 
