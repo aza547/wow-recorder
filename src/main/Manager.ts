@@ -1,5 +1,4 @@
 import { BrowserWindow, app, clipboard, ipcMain, powerMonitor } from 'electron';
-import { isEqual } from 'lodash';
 import path from 'path';
 import fs from 'fs';
 import { uIOhook } from 'uiohook-napi';
@@ -8,7 +7,6 @@ import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
 import AuthError from '../utils/AuthError';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
-  addCrashToUI,
   buildClipMetadata,
   checkDisk,
   getMetadataForVideo,
@@ -39,11 +37,9 @@ import {
   ObsVideoConfig,
   ObsAudioConfig,
   RecStatus,
-  ConfigStage,
   FlavourConfig,
   ObsOverlayConfig,
   IOBSDevice,
-  CrashData,
   VideoQueueItem,
   MicStatus,
   RendererVideo,
@@ -51,6 +47,9 @@ import {
   DiskStatus,
   UploadQueueItem,
   CloudConfig,
+  WCRSceneItem,
+  AudioSourceType,
+  WowProcessEvent,
 } from './types';
 import {
   getObsBaseConfig,
@@ -70,6 +69,7 @@ import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import RetryableConfigError from '../utils/RetryableConfigError';
 import { TAffiliation } from 'types/api';
+import noobs from 'noobs';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -89,23 +89,7 @@ export default class Manager {
 
   private cfg: ConfigService = ConfigService.getInstance();
 
-  private poller = Poller.getInstance(getFlavourConfig(this.cfg));
-
-  private active = false;
-
-  private queued = false;
-
-  private obsBaseCfg: ObsBaseConfig = getObsBaseConfig(this.cfg);
-
-  private obsVideoCfg: ObsVideoConfig = getObsVideoConfig(this.cfg);
-
-  private obsAudioCfg: ObsAudioConfig = getObsAudioConfig(this.cfg);
-
-  private flavourCfg: FlavourConfig = getFlavourConfig(this.cfg);
-
-  private overlayCfg: ObsOverlayConfig = getOverlayConfig(this.cfg);
-
-  private cloudCfg: CloudConfig = getCloudConfig(this.cfg);
+  private poller = Poller.getInstance();
 
   private retailLogHandler: RetailLogHandler | undefined;
 
@@ -125,69 +109,12 @@ export default class Manager {
 
   private reconfiguring = false;
 
-  private retryTimer: NodeJS.Timeout | undefined;
-
   private audioSettingsOpen = false;
 
-  private quitting = false;
-
   /**
-   * Defined stages of configuration. They are named only for logging
-   * purposes. Each stage holds the current state of the stages config,
-   * and provides functions to get, validate and configure the config.
+   * If we have been through startup configuration.
    */
-  private stages: ConfigStage[] = [
-    /* eslint-disable prettier/prettier */
-    {
-      name: 'obsBase',
-      valid: false,
-      current: this.obsBaseCfg,
-      get: (cfg: ConfigService) => getObsBaseConfig(cfg),
-      validate: async (config: ObsBaseConfig) => this.validateBaseConfig(config),
-      configure: async (config: ObsBaseConfig) => this.configureObsBase(config),
-    },
-    {
-      name: 'obsVideo',
-      valid: false,
-      current: this.obsVideoCfg,
-      get: (cfg: ConfigService) => getObsVideoConfig(cfg),
-      validate: async () => {},
-      configure: async (config: ObsVideoConfig) => this.configureObsVideo(config),
-    },
-    {
-      name: 'obsAudio',
-      valid: false,
-      current: this.obsAudioCfg,
-      get: (cfg: ConfigService) => getObsAudioConfig(cfg),
-      validate: async () => {},
-      configure: async (config: ObsAudioConfig) => this.configureObsAudio(config),
-    },
-    {
-      name: 'flavour',
-      valid: false,
-      current: this.flavourCfg,
-      get: (cfg: ConfigService) => getFlavourConfig(cfg),
-      validate: async (config: FlavourConfig) => this.validateFlavour(config),
-      configure: async (config: FlavourConfig) => this.configureFlavour(config),
-    },
-    {
-      name: 'overlay',
-      valid: false,
-      current: this.overlayCfg,
-      get: (cfg: ConfigService) => getOverlayConfig(cfg),
-      validate: async (config: ObsOverlayConfig) => this.validateOverlayConfig(config),
-      configure: async (config: ObsOverlayConfig) => this.configureObsOverlay(config),
-    },
-    {
-      name: 'cloud',
-      valid: false,
-      current: this.cloudCfg,
-      get: (cfg: ConfigService) => getCloudConfig(cfg),
-      validate: async (config: CloudConfig) => this.validateCloudConfig(config),
-      configure: async (config: CloudConfig) => this.configureCloudClient(config),
-    },
-    /* eslint-enable prettier/prettier */
-  ];
+  private started = false;
 
   /**
    * Constructor.
@@ -200,69 +127,83 @@ export default class Manager {
     this.mainWindow = mainWindow;
     this.recorder = new Recorder(this.mainWindow);
 
-    this.recorder.on('crash', (crashData) => {
-      setTimeout(() => this.recoverRecorderFromCrash(crashData), 0);
-    });
-
     this.recorder.on('state-change', () => {
       setTimeout(() => this.refreshStatus(), 0);
     });
 
     this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
-
-    setInterval(() => this.restartRecorder(), 5 * (1000 * 60));
   }
 
   /**
-   * The public interface to this class. This function carefully calls into
-   * internalManage() but catches duplicate calls and queues them, up to a
-   * a limit of one queued call.
-   *
-   * This prevents someone spamming buttons in the setings page from sending
-   * invalid configuration requests to the Recorder class.
+   * Run the startup configuration, which validates the config and applies it 
+   * from the config service.
    */
-  public async manage() {
-    if (this.active && !this.queued) {
-      console.info('[Manager] Queued an additional manage');
-      this.queued = true;
+  public async startup() {
+    console.info('[Manager] Starting up');
+
+    // This should never happen so just defend against it.
+    assert(!this.started);
+
+    this.reconfiguring = true;
+    this.refreshStatus();
+
+    const base = getObsBaseConfig(this.cfg);
+    const video = getObsVideoConfig(this.cfg);
+    const audio = getObsAudioConfig(this.cfg);
+    const flavour = getFlavourConfig(this.cfg);
+    const overlay = getOverlayConfig(this.cfg);
+
+    try {
+      await this.validateBaseConfig(base);
+      await this.configureObsBase(base);
+
+      await this.configureObsVideo(video);
+      await this.configureObsAudio(audio);
+      await this.configureFlavour(flavour);
+
+      await this.validateOverlayConfig(overlay);
+      await this.configureObsOverlay(overlay);
+
+      this.started = true;
+    } catch (error) {
+      console.error('[Manager] Error during startup', error);
+      this.reconfiguring = false;
+      this.setConfigInvalid(String(error));
     }
 
-    if (this.active) {
-      console.info('[Manager] Manage already in progress');
-      return;
-    }
+    this.reconfiguring = false;
+    this.setConfigValid();
 
-    // Mark ourselves as active, indicating we are in the middle
-    // of a reconfiguration.
-    this.active = true;
-
-    // Stop the poller. We don't want to be polling WoW while we are
-    // reconfiguring as we might get a signal that triggers a recorder
-    // action at a time where we can't handle it.
-    this.poller.removeAllListeners();
-    this.poller.reset();
-
-    // Now actually call the internal manage function which will loop through
-    // the stages, validate and configure them.
-    await this.internalManage();
-
-    if (this.queued) {
-      // Another call to manage was queued while we were reconfiguring. Re-run
-      // it to ensure we have the latest config.
-      console.info('[Manager] Execute a queued manage call');
-      this.queued = false;
-      await this.internalManage();
-    }
-
-    // If we got here then the config is valid. Start the poller so we
-    // will react to the state of WoW. This will start the recorder if
-    // WoW is already running.
     this.poller
-      .on('wowProcessStart', () => this.onWowStarted())
-      .on('wowProcessStop', () => this.onWowStopped())
+      .on(WowProcessEvent.STARTED, () => this.onWowStarted())
+      .on(WowProcessEvent.STOPPED, () => this.onWowStopped())
       .start();
+  }
 
-    this.active = false;
+  public async configureBase() {
+    const base = getObsBaseConfig(this.cfg);
+
+    try {
+      await this.validateBaseConfig(base);
+      await this.configureObsBase(base);
+    } catch (error) {
+      console.error('[Manager] Error during base configuration', error);
+      this.reconfiguring = false;
+      this.setConfigInvalid(String(error));
+    }
+  }
+
+  public async configureCloud() {
+    const cloud = getCloudConfig(this.cfg);
+
+    try {
+      await this.validateCloudConfig(cloud);
+      await this.configureCloudClient(cloud);
+    } catch (error) {
+      console.error('[Manager] Error during cloud configuration', error);
+      this.reconfiguring = false;
+      this.setConfigInvalid(String(error));
+    }
   }
 
   /**
@@ -335,82 +276,6 @@ export default class Manager {
   }
 
   /**
-   * This function iterates through the config stages, checks for any changes,
-   * validates the new config and then applies it.
-   */
-  private async internalManage() {
-    console.info('[Manager] Internal manage');
-    this.reconfiguring = true;
-    this.refreshStatus();
-
-    if (this.retryTimer) {
-      // We're here already configuring so we don't need to have a retry timer
-      // active. We will create one if appropriate.
-      clearTimeout(this.retryTimer);
-    }
-
-    for (let i = 0; i < this.stages.length; i++) {
-      const stage = this.stages[i];
-      const newConfig = stage.get(this.cfg);
-      const stageConfigChanged = !isEqual(newConfig, stage.current);
-
-      if (stageConfigChanged) {
-        // Assume the config isn't valid till we prove otherwise.
-        stage.valid = false;
-      }
-
-      if (!stage.valid) {
-        const loggable = { ...newConfig };
-
-        if (loggable.cloudAccountPassword) {
-          loggable.cloudAccountPassword = '**********';
-        }
-
-        console.info(
-          '[Manager] Validating and configuring stage',
-          stage.name,
-          'with',
-          loggable,
-        );
-
-        try {
-          console.info('[Manager] Now validating stage', stage.name);
-          await stage.validate(newConfig);
-          console.info('[Manager] Validated stage', stage.name);
-        } catch (error) {
-          // If this stage isn't valid we won't go further, set the frontend
-          // stage to reflect what's wrong and drop out.
-          console.warn('[Manager] Failed validating stage', stage.name, error);
-          this.reconfiguring = false;
-          this.setConfigInvalid(String(error));
-
-          if (error instanceof RetryableConfigError) {
-            // If we hit a RetryableConfigError, typically a network
-            // issue, then retry in a bit. This covers us if WCR starts
-            // while the network is offline etc.
-            this.retryTimer = setTimeout(() => this.manage(), error.time);
-          }
-
-          return;
-        }
-
-        console.info('[Manager] Now configuring stage', stage.name);
-        await stage.configure(newConfig);
-        console.info('[Manager] Configured stage', stage.name);
-
-        // We've validated and configured the new config, mark the stage as
-        // valid so we won't reconfigure it unless it changes.
-        stage.valid = true;
-        stage.current = newConfig;
-      }
-    }
-
-    // Update the frontend to reflect the valid config.
-    this.reconfiguring = false;
-    this.setConfigValid();
-  }
-
-  /**
    * Set member variables to reflect the config being valid.
    */
   private setConfigValid() {
@@ -473,12 +338,14 @@ export default class Manager {
     }
 
     this.refreshMicStatus(this.recorder.obsMicState);
+    this.redrawPreview();
   }
 
   /**
    * Send a message to the frontend to update the recorder status icon.
    */
   private refreshRecStatus(status: RecStatus, msg = '') {
+    if (this.mainWindow.isDestroyed()) return; // Can happen on shutdown.
     this.mainWindow.webContents.send('updateRecStatus', status, msg);
   }
 
@@ -486,7 +353,19 @@ export default class Manager {
    * Send a message to the frontend to update the mic status icon.
    */
   private refreshMicStatus(status: MicStatus) {
+    if (this.mainWindow.isDestroyed()) return; // Can happen on shutdown.
     this.mainWindow.webContents.send('updateMicStatus', status);
+  }
+
+  /**
+   * Trigger the frontend to redraw the preview if it's open.
+   */
+  private redrawPreview() {
+    // Really don't understand the need for the timeout here but it sometimes
+    // gets stale data otherwise. A caching thing in libobs maybe? Noobs will
+    // send a source signal to the recorder if the size of sources change, but
+    // for other changes we need to manually trigger a redraw.
+    setTimeout(() => this.mainWindow.webContents.send('redrawPreview'), 100);
   }
 
   /**
@@ -554,15 +433,13 @@ export default class Manager {
    */
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
-
-    const videoConfig = getObsVideoConfig(this.cfg);
-    this.recorder.configureVideoSources(videoConfig, this.poller.isWowRunning);
+    this.recorder.attachCaptureSource();
 
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);
 
     try {
-      await this.recorder.start();
+      await this.recorder.startBuffer();
     } catch (error) {
       console.error('[Manager] OBS failed to record when WoW started', error);
     }
@@ -586,7 +463,7 @@ export default class Manager {
       await this.retailPtrLogHandler.forceEndActivity();
     } else {
       // No activity so we can just force stop.
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
     }
 
     this.recorder.clearFindWindowInterval();
@@ -603,7 +480,7 @@ export default class Manager {
    */
   private async configureObsBase(config: ObsBaseConfig) {
     // Force stop as we don't care about the output video.
-    await this.recorder.forceStop();
+    await this.recorder.stop(true);
 
     await this.refreshCloudStatus();
     await this.refreshDiskStatus();
@@ -650,7 +527,7 @@ export default class Manager {
         // error state.
         console.warn('[Manager] Got logout event from CloudClient');
         this.stages[5].valid = false; // Stage 5 is the cloud stage.
-        this.manage(); // Queue a call to manage to mimic first time setup.
+        //this.manage(); // Queue a call to manage to mimic first time setup.
       });
 
       await this.cloudClient.pollInit();
@@ -666,17 +543,17 @@ export default class Manager {
    * Configure video settings in OBS. This can all be changed live.
    */
   private configureObsVideo(config: ObsVideoConfig) {
-    this.recorder.configureVideoSources(config, this.poller.isWowRunning);
+    this.recorder.configureVideoSources(config, this.poller.isWowRunning());
   }
 
   /**
    * Configure audio settings in OBS. This can all be changed live.
    */
   private configureObsAudio(config: ObsAudioConfig) {
-    const shouldConfigure = this.poller.isWowRunning || this.audioSettingsOpen;
+    const shouldConfigure = this.poller.isWowRunning() || this.audioSettingsOpen;
 
     if (!shouldConfigure) {
-      console.info("Won't configure audio sources, WoW not running");
+      console.info("[Manager] Won't configure audio sources, WoW not running");
       return;
     }
 
@@ -687,14 +564,6 @@ export default class Manager {
    * Configure the appropriate LogHandlers.
    */
   private async configureFlavour(config: FlavourConfig) {
-    if (this.recorder.obsState === ERecordingState.Recording) {
-      // We can't change this config if OBS is recording. If OBS is recording
-      // but isRecording is false, that means it's a buffer recording. Stop it
-      // briefly to change the config. Force stop as we don't care about the
-      // output video.
-      await this.recorder.forceStop();
-    }
-
     if (this.retailLogHandler) {
       this.retailLogHandler.removeAllListeners();
       this.retailLogHandler.destroy();
@@ -759,8 +628,6 @@ export default class Manager {
       this.retailPtrLogHandler.setIsPtr();
       this.retailPtrLogHandler.on('state-change', () => this.refreshStatus());
     }
-
-    this.poller.reconfigureFlavour(config);
   }
 
   /**
@@ -1077,14 +944,21 @@ export default class Manager {
       }
     });
 
-    // The OBS preview window is tacked on-top of the UI so we call this often
-    // whenever we need to move, resize, show or hide it.
-    ipcMain.on('preview', (_event, args) => {
-      if (args[0] === 'show') {
-        this.recorder.showPreview(args[1], args[2], args[3], args[4]);
-      } else if (args[0] === 'hide') {
-        this.recorder.hidePreview();
-      }
+    ipcMain.on('configurePreview', (_event, x: number, y: number, width: number, height: number) => {
+      this.recorder.configurePreview(x, y, width, height);
+      this.redrawPreview();
+    });
+
+    ipcMain.on('showPreview', () => {
+      this.recorder.showPreview();
+    });
+
+    ipcMain.on('hidePreview', () => {
+      this.recorder.hidePreview();
+    });
+
+    ipcMain.on('disablePreview', () => {
+      this.recorder.disablePreview();
     });
 
     // Encoder listener, to populate settings on the frontend.
@@ -1275,30 +1149,100 @@ export default class Manager {
      * Callback to attach the audio devices. This is called when the user
      * opens the audio settings so that the volmeter bars can be populated.
      */
-    ipcMain.on('audioSettingsOpen', (_event, args) => {
-      this.audioSettingsOpen = args[0];
+    ipcMain.handle('audioSettingsOpen', () => {
+      console.info('[Manager] Audio settings were opened');
+      noobs.SetVolmeterEnabled(true);
 
-      console.info(
-        '[Manager] Audio settings were',
-        this.audioSettingsOpen ? 'opened' : 'closed',
-      );
-
-      if (!this.stages[3].valid) {
-        console.warn('[Manager] Wont touch audio sources with invalid config');
-        return;
-      }
-
-      if (this.poller.isWowRunning) {
+      if (this.poller.isWowRunning()) {
         console.info('[Manager] Wont touch audio sources as WoW is running');
         return;
       }
 
-      if (this.audioSettingsOpen) {
-        const audioConfig = getObsAudioConfig(this.cfg);
-        this.recorder.configureAudioSources(audioConfig);
-      } else {
-        this.recorder.removeAudioSources();
+      const audioConfig = getObsAudioConfig(this.cfg);
+      this.recorder.configureAudioSources(audioConfig);
+    });
+
+    ipcMain.handle('audioSettingsClosed', () => {
+      console.info('[Manager] Audio settings were closed');
+      noobs.SetVolmeterEnabled(false);
+
+      if (this.poller.isWowRunning()) {
+        console.info('[Manager] Wont touch audio sources as WoW is running');
+        return;
       }
+
+      this.recorder.removeAudioSources();
+    });
+
+    ipcMain.handle('getDisplayInfo', () => {
+      return this.recorder.getDisplayInfo();
+    });
+
+    ipcMain.handle('getSourcePosition', (_event, item: WCRSceneItem) => {
+      return this.recorder.getSourcePosition(item);
+    });
+
+    ipcMain.on(
+      'setSourcePosition',
+      (_event, item: WCRSceneItem, target: { x: number; y: number; width: number; height: number }) => {
+        this.recorder.setSourcePosition(item, target);
+        // Don't need to redraw here, frontend handles this for us.
+      },
+    );
+
+    ipcMain.on(
+      'resetSourcePosition',
+      (_event, item: WCRSceneItem) => {
+        this.recorder.resetSourcePosition(item);
+        this.redrawPreview();
+      },
+    );
+
+    ipcMain.handle('createAudioSource', (_event, id: string, type: AudioSourceType) => {
+      console.info('[Manager] Creating audio source', id, 'of type', type);
+      const name = noobs.CreateSource(id, type);
+      console.info('[Manager] Created audio source', name);
+      noobs.AddSourceToScene(name);
+      return name;
+    });
+
+    ipcMain.handle('getAudioSourceProperties', (_event, id: string) => {
+      console.info('[Manager] Getting audio source properties for', id);
+      return noobs.GetSourceProperties(id);
+    });
+
+    ipcMain.on('deleteAudioSource', (_event, id: string) => {
+      console.info('[Manager] Deleting audio source', id);
+      noobs.DeleteSource(id);
+    });
+
+    ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
+      console.info('[Manager] Setting audio device for source', id, 'to', value);
+      const settings = noobs.GetSourceSettings(id);
+      settings["device_id"] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
+      console.info('[Manager] Setting audio window for source', id, 'to', value);
+      const settings = noobs.GetSourceSettings(id);
+      settings["window"] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
+      console.info('[Manager] Setting audio volume for source', id, 'to', value);
+      noobs.SetSourceVolume(id, value);
+    });
+
+    ipcMain.on('setForceMono', (_event, enabled: boolean) => {
+      console.info('[Manager] Setting force mono to', enabled);
+      noobs.SetForceMono(enabled);
+    });
+
+    ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
+      console.info('[Manager] Setting audio suppression to', enabled);
+      noobs.SetAudioSuppression(enabled);
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by
@@ -1318,116 +1262,18 @@ export default class Manager {
       console.info('[Manager] Detected Windows is going to sleep.');
       this.dropActivity();
       this.poller.reset();
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
     });
 
     powerMonitor.on('resume', async () => {
       console.info('[Manager] Detected Windows waking up from a sleep.');
-      await this.recorder.forceStop();
+      await this.recorder.stop(true);
 
       this.poller
         .on('wowProcessStart', () => this.onWowStarted())
         .on('wowProcessStop', () => this.onWowStopped())
         .start();
     });
-  }
-
-  /**
-   * If the recorder emits a crash event, we shut down OBS and create a new
-   * recorder. That may not help whatever caused the crash, but will help
-   * the app back into a good state.
-   */
-  private recoverRecorderFromCrash(crashData: CrashData) {
-    console.error('[Manager] OBS got into a bad state, restarting it');
-    addCrashToUI(this.mainWindow, crashData);
-
-    this.recorder.removeAllListeners();
-    this.recorder.shutdownOBS();
-
-    if (this.retailLogHandler) {
-      this.retailLogHandler.removeAllListeners();
-      this.retailLogHandler.destroy();
-    }
-
-    if (this.classicLogHandler) {
-      this.classicLogHandler.removeAllListeners();
-      this.classicLogHandler.destroy();
-    }
-
-    if (this.eraLogHandler) {
-      this.eraLogHandler.removeAllListeners();
-      this.eraLogHandler.destroy();
-    }
-
-    if (this.retailPtrLogHandler) {
-      this.retailPtrLogHandler.removeAllListeners();
-      this.retailPtrLogHandler.destroy();
-    }
-
-    this.recorder = new Recorder(this.mainWindow);
-
-    this.recorder.on('crash', (crashData) => {
-      setTimeout(() => this.recoverRecorderFromCrash(crashData), 0);
-    });
-
-    this.recorder.on('state-change', () => {
-      setTimeout(() => this.refreshStatus(), 0);
-    });
-
-    for (let i = 0; i < this.stages.length; i++) {
-      this.stages[i].valid = false;
-    }
-
-    this.active = false;
-    this.queued = false;
-    this.manage();
-  }
-
-  /**
-   * Every so often we'll try restart the recorder to avoid having an
-   * infinitely long video sitting in the .temp folder. First we check
-   * it's safe to do so, i.e. we're currently recording and not in an
-   * activity.
-   */
-  private async restartRecorder() {
-    if (this.recorder.obsState !== ERecordingState.Recording) {
-      console.info('[Manager] Not restarting recorder as not recording');
-      return;
-    }
-
-    const retailNotSafe = this.retailLogHandler?.activity;
-    const classicNotSafe = this.classicLogHandler?.activity;
-    const eraNotSafe = this.eraLogHandler?.activity;
-    const retailPtrNotSafe = this.retailPtrLogHandler?.activity;
-
-    if (retailNotSafe || classicNotSafe || eraNotSafe || retailPtrNotSafe) {
-      console.info('[Manager] Not restarting recorder as in an activity');
-      return;
-    }
-
-    const retailOverrunning = this.retailLogHandler?.overrunning;
-    const classicOverrunning = this.classicLogHandler?.overrunning;
-    const eraOverrunning = this.eraLogHandler?.overrunning;
-    const retailPtrOverrunning = this.retailPtrLogHandler?.overrunning;
-
-    if (
-      retailOverrunning ||
-      classicOverrunning ||
-      eraOverrunning ||
-      retailPtrOverrunning
-    ) {
-      console.info(
-        '[Manager] Not restarting recorder as an activity is overrunning',
-      );
-      return;
-    }
-
-    console.info('[Manager] Restart recorder');
-
-    // Use force stop here as we don't care about the output file.
-    await this.recorder.forceStop();
-    await this.recorder.cleanup();
-    await this.recorder.start();
   }
 
   /**

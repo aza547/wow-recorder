@@ -1,4 +1,5 @@
 import { Phrase } from 'localisation/translations';
+import { AudioSource, AudioSourceType } from 'main/types';
 
 export type ConfigurationSchema = {
   storagePath: string;
@@ -11,9 +12,7 @@ export type ConfigurationSchema = {
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
-  audioInputDevices: string;
-  audioOutputDevices: string;
-  audioProcessDevices: { value: string; label: string }[];
+  audioSources: AudioSource[];
   minEncounterDuration: number;
   startUp: boolean;
   startMinimized: boolean;
@@ -49,9 +48,6 @@ export type ConfigurationSchema = {
   chatOverlayScale: number;
   chatOverlayXPosition: number;
   chatOverlayYPosition: number;
-  speakerVolume: number;
-  micVolume: number;
-  processVolume: number;
   deathMarkers: number;
   encounterMarkers: boolean;
   roundMarkers: boolean;
@@ -88,6 +84,10 @@ export type ConfigurationSchema = {
   hardwareAcceleration: boolean;
   recordCurrentRaidEncountersOnly: boolean;
   uploadCurrentRaidEncountersOnly: boolean;
+  forceSdr: boolean;
+  videoSourceScale: number;
+  videoSourceXPosition: number;
+  videoSourceYPosition: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -149,20 +149,12 @@ export const configSchema = {
     type: 'integer',
     default: 1,
   },
-  audioInputDevices: {
-    description: Phrase.AudioInputDevicesDescription,
-    type: 'string',
-    default: 'default',
-  },
-  audioOutputDevices: {
-    description: Phrase.AudioOutputDevicesDescription,
-    type: 'string',
-    default: 'default',
-  },
-  audioProcessDevices: {
+  audioSources: {
     description: Phrase.AudioProcessDevicesDescription,
     type: 'array',
-    default: [],
+    default: [
+      { id: 'WCR Default Speaker', friendly: "default", device: 'default', volume: 1, type: AudioSourceType.OUTPUT }, 
+      { id: 'WCR Default Mic', friendly: "default", device: 'default', volume: 1, type: AudioSourceType.INPUT }],
   },
   minEncounterDuration: {
     description: Phrase.MinEncounterDurationDescription,
@@ -341,21 +333,6 @@ export const configSchema = {
     description: Phrase.ChatOverlayYPositionDescription,
     type: 'integer',
     default: 870,
-  },
-  speakerVolume: {
-    description: Phrase.SpeakerVolumeDescription,
-    type: 'integer',
-    default: 1,
-  },
-  micVolume: {
-    description: Phrase.MicVolumeDescription,
-    type: 'integer',
-    default: 1,
-  },
-  processVolume: {
-    description: Phrase.ProcessVolumeDescription,
-    type: 'integer',
-    default: 1,
   },
   deathMarkers: {
     description: Phrase.DeathMarkersDescription,
@@ -542,5 +519,25 @@ export const configSchema = {
     description: Phrase.UploadCurrentRaidsOnlyDescription,
     type: 'boolean',
     default: false,
+  },
+  forceSdr: {
+    description: Phrase.ForceSdrDescription,
+    type: 'boolean',
+    default: false,
+  },
+  videoSourceScale: {
+    description: Phrase.VideoSourceScaleDescription,
+    type: 'number',
+    default: 1,
+  },
+  videoSourceXPosition: {
+    description: Phrase.VideoSourceXPositionDescription,
+    type: 'number',
+    default: 0,
+  },
+  videoSourceYPosition: {
+    description: Phrase.VideoSourceYPositionDescription,
+    type: 'number',
+    default: 0,
   },
 };

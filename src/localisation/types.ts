@@ -96,6 +96,7 @@ enum Phrase {
   VideoCategoryMythicPlusLabel,
   VideoCategoryRaidsLabel,
   VideoCategoryBattlegroundsLabel,
+  VideoCategoryManualLabel,
   VideoCategoryClipsLabel,
   LogsButtonLabel,
   DiscordButtonLabel,
@@ -423,6 +424,11 @@ enum Phrase {
   UploadCurrentRaidsOnlyDescription,
   MustNotBeEmpty,
   PushToTalkReleaseDelayLabel,
+  ForceSdrLabel,
+  ForceSdrDescription,
+  VideoSourceScaleDescription,
+  VideoSourceXPositionDescription,
+  VideoSourceYPositionDescription,
 }
 
 enum Language {

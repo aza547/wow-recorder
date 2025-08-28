@@ -36,7 +36,7 @@ export default class DiskSizeMonitor {
 
     const maxStorageBytes = maxStorageGB * 1024 ** 3;
     const usage = await this.usage();
-    const bytesToFree = usage - maxStorageBytes;
+    const bytesToFree = usage - maxStorageBytes * 0.95; // Remain slightly under the threshold.
     let bytesFreed = 0;
 
     const files = await getSortedVideos(

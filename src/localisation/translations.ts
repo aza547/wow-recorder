@@ -35,6 +35,8 @@ const getLocaleCategoryLabel = (
       return getLocalePhrase(lang, Phrase.VideoCategoryMythicPlusLabel);
     case VideoCategory.Battlegrounds:
       return getLocalePhrase(lang, Phrase.VideoCategoryBattlegroundsLabel);
+    case VideoCategory.Manual:
+      return getLocalePhrase(lang, Phrase.VideoCategoryManualLabel);
     case VideoCategory.Clips:
       return getLocalePhrase(lang, Phrase.VideoCategoryClipsLabel);
     default:

@@ -21,6 +21,7 @@ import {
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
 import { allowRecordCategory, getFlavourConfig } from '../utils/configUtils';
+import { assert } from 'console';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -42,7 +43,7 @@ export default abstract class LogHandler extends EventEmitter {
 
   protected cfg: ConfigService = ConfigService.getInstance();
 
-  protected poller: Poller = Poller.getInstance(getFlavourConfig(this.cfg));
+  protected poller: Poller = Poller.getInstance();
 
   protected mainWindow: BrowserWindow;
 
@@ -212,9 +213,16 @@ export default abstract class LogHandler extends EventEmitter {
       `[LogHandler] Start recording a video for category: ${category}`,
     );
 
+    // Offset is the number of seconds to cut back into the buffer. That way
+    // the buffer length is irrelevant. It is physically impossible to have
+    // a negative offset. That would mean an activity started in the future.
+    const offset = (Date.now() - activity.startDate.getTime()) / 1000;
+    console.info(`[LogHandler] Calculated offset seconds`, offset);
+    assert(offset >= 0);
+
     try {
       this.activity = activity;
-      await this.recorder.start();
+      await this.recorder.startRecording(offset);
       this.emit('state-change');
     } catch (error) {
       console.error('[LogHandler] Error starting activity', String(error));
@@ -257,7 +265,7 @@ export default abstract class LogHandler extends EventEmitter {
     let videoFile;
 
     try {
-      await this.recorder.stop();
+      await this.recorder.stop(false);
       videoFile = this.recorder.lastFile;
       this.poller.start();
     } catch (error) {

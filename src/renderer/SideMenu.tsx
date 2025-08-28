@@ -5,6 +5,7 @@ import {
   Dice3,
   Dice5,
   Goal,
+  HardHat,
   MonitorCog,
   Sword,
   Swords,
@@ -37,6 +38,8 @@ import DiscordButton from './DiscordButton';
 import ApplicationStatusCard from './containers/ApplicationStatusCard/ApplicationStatusCard';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import UpdateNotifier from './containers/UpdateNotifier/UpdateNotifier';
+import CloudStatusCard from './containers/ApplicationStatusCard/CloudStatusCard';
+import ManualRecordButton from './ManualRecordButton';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -94,7 +97,7 @@ const SideMenu = (props: IProps) => {
     }
 
     return (
-      <Menu.Item value={tabCategory}>
+      <Menu.Item value={tabCategory} className="py-1.5">
         <Menu.Item.Icon>
           {typeof tabIcon === 'string' ? (
             <img
@@ -116,7 +119,7 @@ const SideMenu = (props: IProps) => {
 
   const renderSettingsTab = () => {
     return (
-      <Menu.Item value={Pages.Settings}>
+      <Menu.Item value={Pages.Settings} className="py-1.5">
         <Menu.Item.Icon>
           <Cog />
         </Menu.Item.Icon>
@@ -127,7 +130,7 @@ const SideMenu = (props: IProps) => {
 
   const renderSceneTab = () => {
     return (
-      <Menu.Item value={Pages.SceneEditor}>
+      <Menu.Item value={Pages.SceneEditor} className="py-1.5">
         <Menu.Item.Icon>
           <MonitorCog />
         </Menu.Item.Icon>
@@ -174,6 +177,16 @@ const SideMenu = (props: IProps) => {
         config={config}
         appState={appState}
       />
+      <CloudStatusCard
+        recorderStatus={recorderStatus}
+        error={error}
+        micStatus={micStatus}
+        crashes={crashes}
+        savingStatus={savingStatus}
+        config={config}
+        appState={appState}
+      />
+      <Separator className="mb-4" />
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
@@ -199,6 +212,7 @@ const SideMenu = (props: IProps) => {
             <FontAwesomeIcon icon={faDragon} size="lg" />,
           )}
           {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
+          {renderCategoryTab(VideoCategory.Manual, <HardHat />)}
           {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}
         </Menu>
         <Separator className="my-5" />
@@ -223,6 +237,10 @@ const SideMenu = (props: IProps) => {
           <LogsButton appState={appState} />
           <TestButton recorderStatus={recorderStatus} appState={appState} />
           <DiscordButton appState={appState} />
+          <ManualRecordButton
+            recorderStatus={recorderStatus}
+            appState={appState}
+          />
         </div>
         {!!appVersion && (
           <div className="w-full mt-1 text-foreground font-sans text-[11px] font-bold text-center opacity-75">

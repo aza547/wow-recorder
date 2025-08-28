@@ -286,11 +286,19 @@ interface IDevice {
   description: string;
 }
 
-enum TAudioSourceType {
-  input = 'wasapi_input_capture',
-  output = 'wasapi_output_capture',
-  process = 'wasapi_process_output_capture',
+enum AudioSourceType {
+  OUTPUT = 'wasapi_output_capture',
+  INPUT = 'wasapi_input_capture',
+  PROCESS = 'wasapi_process_output_capture',
 }
+
+type AudioSource = {
+  id: string; // The source name
+  type: AudioSourceType;
+  friendly?: string; // A user-friendly name for the source
+  device?: string; // Machine friendly identifier for the device or window
+  volume: number; // Current volume setting (0-1)
+};
 
 /**
  * If we should be showing a certain page. This always takes priority over anything
@@ -367,6 +375,10 @@ type ObsVideoConfig = {
   obsCaptureMode: string;
   monitorIndex: number;
   captureCursor: boolean;
+  forceSdr: boolean;
+  videoSourceScale: number;
+  videoSourceXPosition: number;
+  videoSourceYPosition: number;
 };
 
 type ObsOverlayConfig = {
@@ -385,18 +397,13 @@ type ObsOverlayConfig = {
 };
 
 type ObsAudioConfig = {
-  audioInputDevices: string;
-  audioOutputDevices: string;
-  audioProcessDevices: { value: string; label: string }[];
+  audioSources: AudioSource[];
+  obsAudioSuppression: boolean;
   obsForceMono: boolean;
-  speakerVolume: number;
-  micVolume: number;
-  processVolume: number;
   pushToTalk: boolean;
   pushToTalkKey: number;
   pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
-  obsAudioSuppression: boolean;
 };
 
 type FlavourConfig = {
@@ -573,6 +580,43 @@ type ObsVolmeterCallbackInfo = {
   inputPeak: number[];
 };
 
+enum WCRSceneItem {
+  OVERLAY = "Overlay",
+  GAME = "Game",
+}
+
+enum SceneInteraction {
+  NONE,
+  MOVE,
+  SCALE,
+}
+
+type BoxDimensions = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+enum VideoSourceName {
+  WINDOW = "WCR Window Capture",
+  GAME = "WCR Game Capture",
+  MONITOR = "WCR Monitor Capture",
+  OVERLAY = "WCR Chat Overlay",
+}
+
+enum AudioSourcePrefix {
+  SPEAKER = "WCR Speaker Capture",
+  MIC = "WCR Mic Capture",
+  PROCESS = "WCR Process Capture",
+}
+
+enum WowProcessEvent {
+  STARTED = 'wowProcessStart',
+  STOPPED = 'wowProcessStop',
+}
+
+
 export {
   RecStatus,
   SaveStatus,
@@ -594,7 +638,7 @@ export {
   EDeviceType,
   IOBSDevice,
   IDevice,
-  TAudioSourceType,
+  AudioSourceType,
   AppState,
   RawCombatant,
   TPreviewPosition,
@@ -628,4 +672,11 @@ export {
   StorageFilter,
   ObsSourceCallbackInfo,
   ObsVolmeterCallbackInfo,
+  VideoSourceName,
+  AudioSource,
+  AudioSourcePrefix,
+  WCRSceneItem,
+  SceneInteraction,
+  BoxDimensions,
+  WowProcessEvent,
 };

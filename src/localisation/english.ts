@@ -98,6 +98,7 @@ const ENGLISH: Translations = {
   [Phrase.VideoCategoryMythicPlusLabel]: 'Mythic+',
   [Phrase.VideoCategoryRaidsLabel]: 'Raids',
   [Phrase.VideoCategoryBattlegroundsLabel]: 'Battlegrounds',
+  [Phrase.VideoCategoryManualLabel]: 'Manual',
   [Phrase.VideoCategoryClipsLabel]: 'Clips',
   [Phrase.LogsButtonLabel]: 'Logs',
   [Phrase.DiscordButtonLabel]: 'Discord',
@@ -426,6 +427,11 @@ const ENGLISH: Translations = {
   [Phrase.UploadCurrentRaidsOnlyDescription]: "Only upload raid encounters from the current tier, this only applies to retail raid encounters.",
   [Phrase.MustNotBeEmpty]: "Must not be empty",
   [Phrase.PushToTalkReleaseDelayLabel]: "Release Delay",
+  [Phrase.ForceSdrLabel]: "Force SDR",
+  [Phrase.ForceSdrDescription]: "Forces the video to be rendered in SDR instead of HDR.",
+  [Phrase.VideoSourceScaleDescription]: "The scale of the video source.",
+  [Phrase.VideoSourceXPositionDescription]: "The X position of the video source.",
+  [Phrase.VideoSourceYPositionDescription]: "The Y position of the video source.",
 };
 
 export default ENGLISH;

@@ -32,7 +32,7 @@ const ApplicationStatusCard = ({
 }: ApplicationStatusCardProps) => {
   const hasExtraBar = !!(micStatus || crashes?.length);
   return (
-    <div className="w-full h-20 rounded-md mb-4 flex relative">
+    <div className="w-full h-14 rounded-md mb-2 flex relative">
       <div
         id="status-card-inner"
         className={cn(

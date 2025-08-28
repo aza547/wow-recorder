@@ -25,8 +25,8 @@ import { VideoCategory } from '../types/VideoCategory';
 /**
  * When packaged, we need to fix some paths
  */
-const fixPathWhenPackaged = (pathSpec: string) => {
-  return pathSpec.replace('app.asar', 'app.asar.unpacked');
+const fixPathWhenPackaged = (p: string) => {
+  return p.replace('app.asar', 'app.asar.unpacked');
 };
 
 /**
@@ -921,6 +921,17 @@ const takeOwnershipBufferDir = async (dir: string) => {
   await fs.promises.writeFile(file, content);
 };
 
+/**
+ * Asynchronously moves a file. Maybe moving a file across storage devices
+ * so time it for debug sake.
+ */
+const mv = async (src: string, dst: string) => {
+  console.info('[Util] Moving file from:', src, 'to:', dst);
+  console.time('[Util] Moving video file took');
+  await fs.promises.rename(src, dst);
+  console.timeEnd('[Util] Moving video file took');
+};
+
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -959,4 +970,5 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
+  mv,
 };

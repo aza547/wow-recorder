@@ -109,6 +109,7 @@ const WarcraftRecorder = () => {
       [VideoCategory.MythicPlus]: 0,
       [VideoCategory.Raids]: 0,
       [VideoCategory.Battlegrounds]: 0,
+      [VideoCategory.Manual]: 0,
       [VideoCategory.Clips]: 0,
     };
 
