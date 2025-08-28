@@ -611,6 +611,11 @@ enum AudioSourcePrefix {
   PROCESS = "WCR Process Capture",
 }
 
+enum WowProcessEvent {
+  STARTED = 'wowProcessStart',
+  STOPPED = 'wowProcessStop',
+}
+
 
 export {
   RecStatus,
@@ -672,5 +677,6 @@ export {
   AudioSourcePrefix,
   WCRSceneItem,
   SceneInteraction,
-  BoxDimensions
+  BoxDimensions,
+  WowProcessEvent,
 };

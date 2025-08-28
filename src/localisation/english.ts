@@ -98,6 +98,7 @@ const ENGLISH: Translations = {
   [Phrase.VideoCategoryMythicPlusLabel]: 'Mythic+',
   [Phrase.VideoCategoryRaidsLabel]: 'Raids',
   [Phrase.VideoCategoryBattlegroundsLabel]: 'Battlegrounds',
+  [Phrase.VideoCategoryManualLabel]: 'Manual',
   [Phrase.VideoCategoryClipsLabel]: 'Clips',
   [Phrase.LogsButtonLabel]: 'Logs',
   [Phrase.DiscordButtonLabel]: 'Discord',

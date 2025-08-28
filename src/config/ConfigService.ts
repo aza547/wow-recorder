@@ -54,7 +54,7 @@ export default class ConfigService
   /**
    * Singleton instance of class.
    */
-  private static _instance: ConfigService;
+  private static instance: ConfigService;
 
   private _store = new ElectronStore<ConfigurationSchema>({
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -68,11 +68,8 @@ export default class ConfigService
    * There should only ever be one instance created and this method facilitates that.
    */
   static getInstance(): ConfigService {
-    if (!ConfigService._instance) {
-      ConfigService._instance = new ConfigService();
-    }
-
-    return ConfigService._instance;
+    if (!ConfigService.instance) ConfigService.instance = new ConfigService();
+    return ConfigService.instance;
   }
 
   private constructor() {

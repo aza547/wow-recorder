@@ -833,6 +833,7 @@ export default class Recorder extends EventEmitter {
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
 
+    // TODO not hardcoded
     const recordingPath =
       'D:/checkouts/warcraft-recorder-obs-engine/recordings';
 
