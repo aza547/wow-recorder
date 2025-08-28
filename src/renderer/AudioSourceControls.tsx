@@ -6,7 +6,7 @@ import {
 } from 'main/types';
 import { useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
-import { Info, Volume1, Volume2 } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { getLocalePhrase, Phrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
@@ -279,36 +279,6 @@ const AudioSourceControls = (props: IProps) => {
     );
   };
 
-  const setSpeakerVolume = (newValue: number[]) => {
-    if (typeof newValue[0] !== 'number') {
-      return;
-    }
-
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        speakerVolume: newValue[0] / 100,
-      };
-    });
-  };
-
-  const getSpeakerVolume = () => {
-    return (
-      <div className="w-full flex gap-x-2 items-center">
-        <Volume1 />
-        <Slider
-          defaultValue={[config.speakerVolume * 100]}
-          value={[config.speakerVolume * 100]}
-          max={100}
-          step={1}
-          onValueChange={setSpeakerVolume}
-          withTooltip={false}
-        />
-        <Volume2 />
-      </div>
-    );
-  };
-
   const getMicSelect = () => {
     const options = availableAudioDevices.input.map((audioDevice) => ({
       value: audioDevice.id,
@@ -354,36 +324,6 @@ const AudioSourceControls = (props: IProps) => {
     );
   };
 
-  const setMicVolume = (newValue: number[]) => {
-    if (typeof newValue[0] !== 'number') {
-      return;
-    }
-
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        micVolume: newValue[0] / 100,
-      };
-    });
-  };
-
-  const getMicVolume = () => {
-    return (
-      <div className="w-full flex gap-x-2 items-center">
-        <Volume1 />
-        <Slider
-          defaultValue={[config.micVolume * 100]}
-          value={[config.micVolume * 100]}
-          max={100}
-          step={1}
-          onValueChange={setMicVolume}
-          withTooltip={false}
-        />
-        <Volume2 />
-      </div>
-    );
-  };
-
   const getProcessSelect = () => {
     // Add any options that are stored in config. They may still be valid, in
     // the event of a window name change. Reminder: OBS will match by name and
@@ -422,36 +362,6 @@ const AudioSourceControls = (props: IProps) => {
           placeholder={getLocalePhrase(appState.language, Phrase.SelectProcess)}
           maxCount={1}
         />
-      </div>
-    );
-  };
-
-  const setProcessVolume = (newValue: number[]) => {
-    if (typeof newValue[0] !== 'number') {
-      return;
-    }
-
-    setConfig((prevState) => {
-      return {
-        ...prevState,
-        processVolume: newValue[0] / 100,
-      };
-    });
-  };
-
-  const getProcessVolume = () => {
-    return (
-      <div className="w-full flex gap-x-2 items-center">
-        <Volume1 />
-        <Slider
-          defaultValue={[config.processVolume * 100]}
-          value={[config.processVolume * 100]}
-          max={100}
-          step={1}
-          onValueChange={setProcessVolume}
-          withTooltip={false}
-        />
-        <Volume2 />
       </div>
     );
   };
@@ -537,8 +447,6 @@ const AudioSourceControls = (props: IProps) => {
     if (event.ctrlKey) keys.push('Ctrl');
     if (event.shiftKey) keys.push('Shift');
     if (event.metaKey) keys.push('Win');
-
-    console.log("event", event.keyCode)
 
     const { keyCode, mouseButton } = event;
 
@@ -628,7 +536,6 @@ const AudioSourceControls = (props: IProps) => {
       <div className="flex items-center">
         <Progress className="h-1 mt-1 w-full" value={volmeter.output} />
       </div>
-      {getSpeakerVolume()}
     </div>
   );
 
@@ -638,7 +545,6 @@ const AudioSourceControls = (props: IProps) => {
       <div className="flex items-center gap-2">
         <Progress className="h-1 mt-1 w-full" value={volmeter.input} />
       </div>
-      {getMicVolume()}
     </div>
   );
 
@@ -648,7 +554,6 @@ const AudioSourceControls = (props: IProps) => {
       <div className="flex items-center gap-2">
         <Progress className="h-1 mt-1 w-full" value={volmeter.process} />
       </div>
-      {getProcessVolume()}
     </div>
   );
 

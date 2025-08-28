@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 725](https://github.com/aza547/wow-recorder/issues/725) - Remove the faders. Rely on source volume instead. This is to address crashes reported by several users.
 
 ## [6.15.5] - 2025-08-25
 ### Fixed

@@ -2,7 +2,7 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import * as osn from 'obs-studio-node';
-import { IFader, IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
+import { IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
 
 import {
@@ -276,13 +276,6 @@ export default class Recorder extends EventEmitter {
    * it's handy to have a list for cleaning them up.
    */
   private volmeters: osn.IVolmeter[] = [];
-
-  /**
-   * Faders are used to modify the volume of an input source. We keep a list
-   * of them here as we need a fader per audio source so it's handy to have a
-   * list for cleaning them up.
-   */
-  private faders: IFader[] = [];
 
   /**
    * The state of the recorder, typically used to tell if OBS is recording
@@ -800,10 +793,6 @@ export default class Recorder extends EventEmitter {
         const obsVolmeter = osn.VolmeterFactory.create(0);
         obsVolmeter.attach(obsSource);
 
-        const micFader = osn.FaderFactory.create(0);
-        micFader.attach(obsSource);
-        micFader.mul = micVolume;
-
         if (obsAudioSuppression) {
           const filter = osn.FilterFactory.create(
             'noise_suppress_filter_v2',
@@ -815,7 +804,6 @@ export default class Recorder extends EventEmitter {
         }
 
         this.volmeters.push(obsVolmeter);
-        this.faders.push(micFader);
         this.audioInputDevices.push(obsSource);
       });
 
@@ -888,12 +876,6 @@ export default class Recorder extends EventEmitter {
 
         const obsVolmeter = osn.VolmeterFactory.create(0);
         obsVolmeter.attach(obsSource);
-
-        const speakerFader = osn.FaderFactory.create(0);
-        speakerFader.attach(obsSource);
-        speakerFader.mul = speakerVolume;
-
-        this.faders.push(speakerFader);
         this.volmeters.push(obsVolmeter);
         this.audioOutputDevices.push(obsSource);
       });
@@ -930,12 +912,7 @@ export default class Recorder extends EventEmitter {
         const obsVolmeter = osn.VolmeterFactory.create(0);
         obsVolmeter.attach(obsSource);
 
-        const processFader = osn.FaderFactory.create(0);
-        processFader.attach(obsSource);
-        processFader.mul = processVolume;
-
         this.volmeters.push(obsVolmeter);
-        this.faders.push(processFader);
         this.audioProcessDevices.push(obsSource);
       });
 
@@ -977,16 +954,7 @@ export default class Recorder extends EventEmitter {
       volmeter.destroy();
     });
 
-    this.faders.forEach((fader, index) => {
-      console.info('[Recorder] Detach fader', index);
-      fader.detach();
-
-      console.info('[Recorder] Destroy fader', index);
-      fader.destroy();
-    });
-
     this.volmeters = [];
-    this.faders = [];
 
     this.audioInputDevices.forEach((device, idx) => {
       const channel = this.audioInputChannels[idx];
