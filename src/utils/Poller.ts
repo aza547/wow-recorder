@@ -21,7 +21,7 @@ export default class Poller extends EventEmitter {
   private cfg: ConfigService = ConfigService.getInstance();
 
   /**
-   * If a WoW process is running AND the corresponding record config is 
+   * If a WoW process is running AND the corresponding record config is
    * enabled. Includes various flavours of retail, classic and era.
    */
   private wowRunning = false;
@@ -72,7 +72,7 @@ export default class Poller extends EventEmitter {
       this.child = undefined;
     }
   }
-  
+
   /**
    * Start the poller.
    */
@@ -86,13 +86,13 @@ export default class Poller extends EventEmitter {
   }
 
   /**
-   * Handle stdout data from the child process, this is a tiny blob of JSON 
+   * Handle stdout data from the child process, this is a tiny blob of JSON
    * in the format {"Retail":true, "Classic":false}.
-   * 
+   *
    * We don't care to do anything better in the scenario of multiple processes
    * running. We don't support users multi-boxing.
    */
-  private handleStdout = (data: any) => {
+  private handleStdout = (data: string) => {
     let parsed;
 
     try {
@@ -111,10 +111,10 @@ export default class Poller extends EventEmitter {
     const recordClassic = this.cfg.get<boolean>('recordClassic');
     const recordEra = this.cfg.get<boolean>('recordEra');
 
-    const running = 
-      recordRetail && Retail || 
-      recordClassic && Classic || 
-      recordEra && Classic; // Era and Classic clients share a process name.
+    const running =
+      (recordRetail && Retail) ||
+      (recordClassic && Classic) ||
+      (recordEra && Classic); // Era and Classic clients share a process name.
 
     if (this.wowRunning === running) {
       // Nothing to emit.
@@ -131,10 +131,10 @@ export default class Poller extends EventEmitter {
   };
 
   /**
-   * Handle stderr, we don't expect to ever see this but log it incase 
+   * Handle stderr, we don't expect to ever see this but log it incase
    * anything weird happens.
    */
-  private handleStderr = (data: any) => {
+  private handleStderr = (data: string) => {
     console.warn('[Poller] stderr returned from child process');
     console.error(data);
   };

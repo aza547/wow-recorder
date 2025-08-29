@@ -1310,6 +1310,9 @@ export default class Manager {
      * Get the next key pressed by the user. This can be modifier keys, so if
      * you want to catch the next non-modifier key you may need to call this
      * a few times back to back. The event returned includes modifier details.
+     *
+     * Probably should rename the PTTKeyPressEvent, it's generic and not
+     * specific to Push to Talk, it's just like that for historical reasons.
      */
     ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
       this.manualHotKeyDisabled = true;
@@ -1323,7 +1326,10 @@ export default class Manager {
       return event;
     });
 
-    // Manually start/stop recording.
+    /**
+     * Manually start/stop recording. Being careful with the logs here as
+     * some of this is very spammy as it fires on every key press.
+     */
     uIOhook.on('keydown', (event: UiohookKeyboardEvent) => {
       if (this.manualHotKeyDisabled) {
         // This user is updating their settings. Don't do anything.
@@ -1336,11 +1342,18 @@ export default class Manager {
       }
 
       if (!isManualRecordHotKey(event)) {
-        // It's not the button.
+        // It's not the manual record hotkey.
+        return;
+      }
+
+      if (!this.poller.isWowRunning()) {
+        console.warn('[Manager] WoW not running when manual hotkey pressed');
         return;
       }
 
       if (!this.manualLogHandler) {
+        // I don't think it should be possible to hit this, but be safe.
+        // The poller check above compares WoW process state to config categories.
         console.warn('[Manager] No manual log handler available');
         playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.mainWindow);
         return;
