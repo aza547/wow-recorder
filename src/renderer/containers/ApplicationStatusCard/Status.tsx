@@ -1,5 +1,5 @@
 import { getLocalePhrase } from 'localisation/translations';
-import { Phrase } from 'localisation/types';
+import { Phrase } from 'localisation/phrases';
 import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
 import { ConfigurationSchema } from 'config/configSchema';
 import { AppState, RecStatus, SaveStatus } from 'main/types';

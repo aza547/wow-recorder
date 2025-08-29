@@ -17,8 +17,9 @@ import {
 } from 'lucide-react';
 import { povDiskFirstNameSort } from '../../rendererutils';
 import { Button } from '../Button/Button';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { ScrollArea } from '../ScrollArea/ScrollArea';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   table: Table<RendererVideo>;

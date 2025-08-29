@@ -14,7 +14,7 @@ import {
   StorageFilter,
 } from 'main/types';
 import Box from '@mui/material/Box';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { getLocalePhrase, Language } from 'localisation/translations';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import './App.css';
@@ -28,6 +28,7 @@ import { Button } from './components/Button/Button';
 import { ErrorBoundary } from 'react-error-boundary';
 import { RefreshCcw } from 'lucide-react';
 import { VideoCategory } from 'types/VideoCategory';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -238,6 +239,11 @@ const WarcraftRecorder = () => {
     updateNotified.current = true;
   };
 
+  const playAudio = (file: unknown) => {
+    console.log('Play audio', file);
+    new Audio(file as string).play();
+  };
+
   useEffect(() => {
     doRefresh();
     ipc.on('refreshState', doRefresh);
@@ -248,6 +254,7 @@ const WarcraftRecorder = () => {
     ipc.on('updateDiskStatus', updateDiskStatus);
     ipc.on('updateCloudStatus', updateCloudStatus);
     ipc.on('updateAvailable', onUpdateAvailable);
+    ipc.on('playAudio', playAudio);
 
     return () => {
       ipc.removeAllListeners('refreshState');
@@ -258,6 +265,7 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('updateDiskStatus');
       ipc.removeAllListeners('updateCloudStatus');
       ipc.removeAllListeners('updateAvailable');
+      ipc.removeAllListeners('playAudio');
     };
   }, []);
 

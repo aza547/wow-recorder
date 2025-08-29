@@ -18,7 +18,7 @@ import {
 } from 'renderer/rendererutils';
 import { Box, Checkbox } from '@mui/material';
 import { affixImages, specImages } from 'renderer/images';
-import { Language, Phrase } from 'localisation/types';
+import { Language, Phrase } from 'localisation/phrases';
 import { Button } from '../Button/Button';
 import { Tooltip } from '../Tooltip/Tooltip';
 import { getLocalePhrase } from 'localisation/translations';

@@ -4,7 +4,7 @@ import { obsResolutions } from 'main/constants';
 import { configSchema } from 'config/configSchema';
 import { ESupportedEncoders, QualityPresets } from 'main/obsEnums';
 import { Info } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
   encoderFilter,
@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from './components/Select/Select';
 import TextBanner from './components/TextBanner/TextBanner';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 

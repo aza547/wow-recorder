@@ -13,7 +13,8 @@ import {
   povDiskFirstNameSort,
 } from '../../rendererutils';
 import { specImages } from '../../images';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   video: RendererVideo;

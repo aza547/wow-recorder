@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
 import { AppState } from 'main/types';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 import { Dispatch, SetStateAction } from 'react';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   appState: AppState;

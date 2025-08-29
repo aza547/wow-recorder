@@ -5,7 +5,6 @@ import { FlaskConical } from 'lucide-react';
 import {
   getLocaleCategoryLabel,
   getLocalePhrase,
-  Phrase,
 } from 'localisation/translations';
 import { Button } from './components/Button/Button';
 import {
@@ -14,6 +13,7 @@ import {
   HoverCardTrigger,
 } from './components/HoverCard/HoverCard';
 import Separator from './components/Separator/Separator';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 

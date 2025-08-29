@@ -11,23 +11,21 @@ import {
 } from 'electron';
 import os from 'os';
 import { uIOhook } from 'uiohook-napi';
-import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import assert from 'assert';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { getLocalePhrase, Language } from 'localisation/translations';
 import {
   resolveHtmlPath,
   openSystemExplorer,
   setupApplicationLogging,
   getAvailableDisplays,
   getAssetPath,
-  nextMousePressPromise,
-  nextKeyPressPromise,
 } from './util';
 import { OurDisplayType, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
 import Manager from './Manager';
 import AppUpdater from './AppUpdater';
 import MenuBuilder from './menu';
+import { Phrase } from 'localisation/phrases';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -359,15 +357,6 @@ ipcMain.on('openURL', (event, args) => {
  */
 ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
   return getAvailableDisplays();
-});
-
-/**
- * Get the next key pressed by the user. This can be modifier keys, so if
- * you want to catch the next non-modifier key you may need to call this
- * a few times back to back. The event returned includes modifier details.
- */
-ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
-  return Promise.race([nextKeyPressPromise(), nextMousePressPromise()]);
 });
 
 /**

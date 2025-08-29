@@ -1,4 +1,5 @@
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
+import { getLocalePhrase } from 'localisation/translations';
 import { ArrowBigUpDash } from 'lucide-react';
 import { AppState } from 'main/types';
 import React from 'react';

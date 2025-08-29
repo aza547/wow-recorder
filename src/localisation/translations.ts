@@ -1,5 +1,5 @@
 import { VideoCategory } from '../types/VideoCategory';
-import { Language, LocalizationDataType, Phrase } from './types';
+import { Language, LocalizationDataType, Phrase } from './phrases';
 import EnglishTranslations from './english';
 import KoreanTranslations from './korean';
 import GermanTranslations from './german';
@@ -44,4 +44,4 @@ const getLocaleCategoryLabel = (
   }
 };
 
-export { getLocalePhrase, getLocaleCategoryLabel, Language, Phrase };
+export { getLocalePhrase, getLocaleCategoryLabel, Language };

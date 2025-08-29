@@ -1,5 +1,5 @@
 import { AppState, RendererVideo } from 'main/types';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
   DialogClose,
@@ -26,6 +26,7 @@ import {
 } from '@tanstack/react-table';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
+import { Phrase } from 'localisation/phrases';
 
 type DeleteDialogProps = {
   children: React.ReactNode;

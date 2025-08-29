@@ -1,7 +1,7 @@
 import { AppState, RendererVideo } from 'main/types';
 import { KeyboardEventHandler, useEffect, useRef, useState } from 'react';
 import { getLocalePhrase } from 'localisation/translations';
-import { Phrase } from 'localisation/types';
+import { Phrase } from 'localisation/phrases';
 import VideoFilter from './VideoFilter';
 import Label from './components/Label/Label';
 import {

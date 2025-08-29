@@ -1,4 +1,5 @@
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
+import { getLocalePhrase } from 'localisation/translations';
 import { ShieldAlert } from 'lucide-react';
 import { Crashes, CrashData, AppState } from 'main/types';
 import {

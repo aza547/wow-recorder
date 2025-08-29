@@ -19,8 +19,10 @@ import {
   ObsAudioConfig,
   CrashData,
   CloudSignedMetadata,
+  SoundAlerts,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
+import ConfigService from 'config/ConfigService';
 
 /**
  * When packaged, we need to fix some paths
@@ -533,6 +535,37 @@ const isPushToTalkHotkey = (
   return buttonMatch && modifierMatch;
 };
 
+const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
+  const { keycode, altKey, ctrlKey, shiftKey, metaKey, type } = event;
+  const cfg = ConfigService.getInstance();
+
+  if (type !== EventType.EVENT_KEY_PRESSED) {
+    // We should never hit this but just being safe.
+    return false;
+  }
+
+  const manualRecordHotKey = cfg.get<number>('manualRecordHotKey');
+  const manualRecordHotKeyModifiers = cfg.get<string>(
+    'manualRecordHotKeyModifiers',
+  );
+
+  const buttonMatch = keycode > 0 && keycode === manualRecordHotKey;
+  let modifierMatch = true;
+
+  // Deliberately permissive here, we check all the modifiers we have in
+  // config are met but we don't enforce the inverse, i.e. we'll accept
+  // an additional modifier present (so CTRL + SHIFT + E will trigger
+  // a CTRL + E hotkey).
+  manualRecordHotKeyModifiers.split(',').forEach((mod) => {
+    if (mod === 'alt') modifierMatch = altKey;
+    if (mod === 'ctrl') modifierMatch = ctrlKey;
+    if (mod === 'shift') modifierMatch = shiftKey;
+    if (mod === 'win') modifierMatch = metaKey;
+  });
+
+  return buttonMatch && modifierMatch;
+};
+
 const convertUioHookKeyPressEvent = (
   event: UiohookKeyboardEvent,
   type: PTTEventType,
@@ -932,6 +965,11 @@ const mv = async (src: string, dst: string) => {
   console.timeEnd('[Util] Moving video file took');
 };
 
+const playSoundAlert = (alert: SoundAlerts, mainWindow: BrowserWindow) => {
+  const path = getAssetPath(`sounds/${alert}.mp3`);
+  mainWindow.webContents.send('playAudio', path);
+};
+
 export {
   setupApplicationLogging,
   loadAllVideosDisk,
@@ -971,4 +1009,6 @@ export {
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
   mv,
+  playSoundAlert,
+  isManualRecordHotKey,
 };

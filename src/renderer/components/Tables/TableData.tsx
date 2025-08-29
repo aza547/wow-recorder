@@ -382,6 +382,12 @@ const useTable = (
         cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
       },
       {
+        id: 'Type',
+        accessorFn: (v) => v,
+        header: () => TypeHeader(language),
+        cell: 'Manual',
+      },
+      {
         id: 'Duration',
         accessorFn: (v) => v,
         sortingFn: durationSort,
@@ -393,13 +399,6 @@ const useTable = (
         accessorFn: (v) => videoToDate(v),
         header: () => DateHeader(language),
         cell: populateDateCell,
-      },
-      {
-        id: 'Viewpoints',
-        accessorFn: (v) => v,
-        header: () => ViewpointsHeader(language),
-        cell: populateViewpointCell,
-        sortingFn: viewPointCountSort,
       },
     ],
     [appState, setVideoState],

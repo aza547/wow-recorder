@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'config/configSchema';
 import { Info } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
 import {
@@ -11,6 +11,7 @@ import {
 } from './components/ToggleGroup/ToggleGroup';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 

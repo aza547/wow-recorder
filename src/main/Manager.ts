@@ -1,9 +1,9 @@
 import { BrowserWindow, app, clipboard, ipcMain, powerMonitor } from 'electron';
 import path from 'path';
 import fs from 'fs';
-import { uIOhook } from 'uiohook-napi';
+import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import assert from 'assert';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { getLocalePhrase, Language } from 'localisation/translations';
 import AuthError from '../utils/AuthError';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
@@ -25,6 +25,10 @@ import {
   getWowFlavour,
   convertKoreanVideoCategory,
   protectVideoDisk,
+  isManualRecordHotKey,
+  playSoundAlert,
+  nextKeyPressPromise,
+  nextMousePressPromise,
 } from './util';
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from '../utils/Poller';
@@ -50,6 +54,7 @@ import {
   WCRSceneItem,
   AudioSourceType,
   WowProcessEvent,
+  SoundAlerts,
 } from './types';
 import {
   getObsBaseConfig,
@@ -70,6 +75,9 @@ import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import RetryableConfigError from '../utils/RetryableConfigError';
 import { TAffiliation } from 'types/api';
 import noobs from 'noobs';
+import { Phrase } from 'localisation/phrases';
+import LogHandler from 'parsing/LogHandler';
+import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -115,6 +123,18 @@ export default class Manager {
    * If we have been through startup configuration.
    */
   private started = false;
+
+  /**
+   * It's confusing if you try to change the hotkey to something similar and
+   * it starts a recording mid changing it, so set this to true while doing so.
+   */
+  private manualHotKeyDisabled = false;
+
+  /**
+   * This log handler assigned for a manual recording. Need a reference to
+   * this to know which log handler to use to stop the manual recording on.
+   */
+  private manualLogHandler?: LogHandler;
 
   /**
    * Constructor.
@@ -565,6 +585,8 @@ export default class Manager {
    * Configure the appropriate LogHandlers.
    */
   private async configureFlavour(config: FlavourConfig) {
+    this.manualLogHandler = undefined;
+
     if (this.retailLogHandler) {
       this.retailLogHandler.removeAllListeners();
       this.retailLogHandler.destroy();
@@ -628,6 +650,20 @@ export default class Manager {
 
       this.retailPtrLogHandler.setIsPtr();
       this.retailPtrLogHandler.on('state-change', () => this.refreshStatus());
+    }
+
+    // Order of priority which log handler to use for manual recordings.
+    // It doesn't actually matter which takes it as the logic is all in
+    // the LogHandler class itself, but it's abstract and we need to make
+    // sure we start and stop aganst the same concrete implementation.
+    if (this.retailLogHandler) {
+      this.manualLogHandler = this.retailLogHandler;
+    } else if (this.retailPtrLogHandler) {
+      this.manualLogHandler = this.retailPtrLogHandler;
+    } else if (this.classicLogHandler) {
+      this.manualLogHandler = this.classicLogHandler;
+    } else if (this.eraLogHandler) {
+      this.manualLogHandler = this.eraLogHandler;
     }
   }
 
@@ -1268,6 +1304,49 @@ export default class Manager {
     ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
       console.info('[Manager] Setting audio suppression to', enabled);
       noobs.SetAudioSuppression(enabled);
+    });
+
+    /**
+     * Get the next key pressed by the user. This can be modifier keys, so if
+     * you want to catch the next non-modifier key you may need to call this
+     * a few times back to back. The event returned includes modifier details.
+     */
+    ipcMain.handle('getNextKeyPress', async (): Promise<PTTKeyPressEvent> => {
+      this.manualHotKeyDisabled = true;
+
+      const event = await Promise.race([
+        nextKeyPressPromise(),
+        nextMousePressPromise(),
+      ]);
+
+      this.manualHotKeyDisabled = false;
+      return event;
+    });
+
+    // Manually start/stop recording.
+    uIOhook.on('keydown', (event: UiohookKeyboardEvent) => {
+      if (this.manualHotKeyDisabled) {
+        // This user is updating their settings. Don't do anything.
+        return;
+      }
+
+      if (!this.cfg.get('manualRecord')) {
+        // Manual recording is not enabled.
+        return;
+      }
+
+      if (!isManualRecordHotKey(event)) {
+        // It's not the button.
+        return;
+      }
+
+      if (!this.manualLogHandler) {
+        console.warn('[Manager] No manual log handler available');
+        playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.mainWindow);
+        return;
+      }
+
+      this.manualLogHandler.handleManualRecordingHotKey();
     });
 
     // Important we shutdown OBS on the before-quit event as if we get closed by

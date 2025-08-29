@@ -1,4 +1,4 @@
-import { Translations, Phrase } from './types';
+import { Translations, Phrase } from './phrases';
 
 /* eslint-disable prettier/prettier */
 const GERMAN: Translations = {

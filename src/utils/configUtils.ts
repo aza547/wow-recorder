@@ -8,6 +8,7 @@ import {
   CloudConfig,
   Flavour,
   AudioSource,
+  ManualRecordingSoundAlerts,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../config/ConfigService';
@@ -17,6 +18,8 @@ import {
 } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import { ESupportedEncoders } from '../main/obsEnums';
+import { getAssetPath } from 'main/util';
+import { BrowserWindow } from 'electron';
 
 const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   if (category === VideoCategory.Clips) {
@@ -188,7 +191,6 @@ const getObsVideoConfig = (cfg: ConfigService): ObsVideoConfig => {
 
 const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
   return {
-    /* eslint-disable prettier/prettier */
     audioSources: cfg.get<AudioSource[]>('audioSources'),
     obsAudioSuppression: cfg.get<boolean>('obsAudioSuppression'),
     obsForceMono: cfg.get<boolean>('obsForceMono'),
@@ -196,7 +198,6 @@ const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
     pushToTalkKey: cfg.get<number>('pushToTalkKey'),
     pushToTalkMouseButton: cfg.get<number>('pushToTalkMouseButton'),
     pushToTalkModifiers: cfg.get<string>('pushToTalkModifiers'),
-    /* eslint-enable prettier/prettier */
   };
 };
 
