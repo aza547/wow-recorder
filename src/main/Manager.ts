@@ -135,7 +135,7 @@ export default class Manager {
   }
 
   /**
-   * Run the startup configuration, which validates the config and applies it 
+   * Run the startup configuration, which validates the config and applies it
    * from the config service.
    */
   public async startup() {
@@ -550,7 +550,8 @@ export default class Manager {
    * Configure audio settings in OBS. This can all be changed live.
    */
   private configureObsAudio(config: ObsAudioConfig) {
-    const shouldConfigure = this.poller.isWowRunning() || this.audioSettingsOpen;
+    const shouldConfigure =
+      this.poller.isWowRunning() || this.audioSettingsOpen;
 
     if (!shouldConfigure) {
       console.info("[Manager] Won't configure audio sources, WoW not running");
@@ -757,9 +758,11 @@ export default class Manager {
       throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
     }
 
-    if (storagePath.includes("#")) {
+    if (storagePath.includes('#')) {
       // A user hit this: the video player loads the file path as a URL where # is interpreted as a timestamp.
-      console.warn('[Manager] Validation failed: `storagePath` contains invalid character "#"');
+      console.warn(
+        '[Manager] Validation failed: `storagePath` contains invalid character "#"',
+      );
       throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
     }
 
@@ -944,10 +947,13 @@ export default class Manager {
       }
     });
 
-    ipcMain.on('configurePreview', (_event, x: number, y: number, width: number, height: number) => {
-      this.recorder.configurePreview(x, y, width, height);
-      this.redrawPreview();
-    });
+    ipcMain.on(
+      'configurePreview',
+      (_event, x: number, y: number, width: number, height: number) => {
+        this.recorder.configurePreview(x, y, width, height);
+        this.redrawPreview();
+      },
+    );
 
     ipcMain.on('showPreview', () => {
       this.recorder.showPreview();
@@ -1184,27 +1190,31 @@ export default class Manager {
 
     ipcMain.on(
       'setSourcePosition',
-      (_event, item: WCRSceneItem, target: { x: number; y: number; width: number; height: number }) => {
+      (
+        _event,
+        item: WCRSceneItem,
+        target: { x: number; y: number; width: number; height: number },
+      ) => {
         this.recorder.setSourcePosition(item, target);
         // Don't need to redraw here, frontend handles this for us.
       },
     );
 
-    ipcMain.on(
-      'resetSourcePosition',
-      (_event, item: WCRSceneItem) => {
-        this.recorder.resetSourcePosition(item);
-        this.redrawPreview();
+    ipcMain.on('resetSourcePosition', (_event, item: WCRSceneItem) => {
+      this.recorder.resetSourcePosition(item);
+      this.redrawPreview();
+    });
+
+    ipcMain.handle(
+      'createAudioSource',
+      (_event, id: string, type: AudioSourceType) => {
+        console.info('[Manager] Creating audio source', id, 'of type', type);
+        const name = noobs.CreateSource(id, type);
+        console.info('[Manager] Created audio source', name);
+        noobs.AddSourceToScene(name);
+        return name;
       },
     );
-
-    ipcMain.handle('createAudioSource', (_event, id: string, type: AudioSourceType) => {
-      console.info('[Manager] Creating audio source', id, 'of type', type);
-      const name = noobs.CreateSource(id, type);
-      console.info('[Manager] Created audio source', name);
-      noobs.AddSourceToScene(name);
-      return name;
-    });
 
     ipcMain.handle('getAudioSourceProperties', (_event, id: string) => {
       console.info('[Manager] Getting audio source properties for', id);
@@ -1217,21 +1227,36 @@ export default class Manager {
     });
 
     ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
-      console.info('[Manager] Setting audio device for source', id, 'to', value);
+      console.info(
+        '[Manager] Setting audio device for source',
+        id,
+        'to',
+        value,
+      );
       const settings = noobs.GetSourceSettings(id);
-      settings["device_id"] = value;
+      settings['device_id'] = value;
       noobs.SetSourceSettings(id, settings);
     });
 
     ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
-      console.info('[Manager] Setting audio window for source', id, 'to', value);
+      console.info(
+        '[Manager] Setting audio window for source',
+        id,
+        'to',
+        value,
+      );
       const settings = noobs.GetSourceSettings(id);
-      settings["window"] = value;
+      settings['window'] = value;
       noobs.SetSourceSettings(id, settings);
     });
 
     ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
-      console.info('[Manager] Setting audio volume for source', id, 'to', value);
+      console.info(
+        '[Manager] Setting audio volume for source',
+        id,
+        'to',
+        value,
+      );
       noobs.SetSourceVolume(id, value);
     });
 

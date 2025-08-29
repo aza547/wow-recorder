@@ -12,6 +12,8 @@
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
     "atomic-queue": "^5.0.4",
     "noobs": "D:\\checkouts\\warcraft-recorder-obs-engine\\noobs-0.0.128.tgz",
     "uiohook-napi": "^1.5.2"

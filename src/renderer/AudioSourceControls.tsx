@@ -57,6 +57,7 @@ const AudioSourceControls = (props: IProps) => {
   const { appState } = props;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
+  const audioChoicesLoaded = useRef(false);
 
   // Available choices per source.
   const [sourceChoices, setSourceChoices] = useState<
@@ -175,6 +176,7 @@ const AudioSourceControls = (props: IProps) => {
     });
 
     setSourceChoices(updated);
+    audioChoicesLoaded.current = true;
   };
 
   useEffect(() => {
@@ -472,6 +474,10 @@ const AudioSourceControls = (props: IProps) => {
     }
 
     const renderSelectItems = () => {
+      if (!audioChoicesLoaded.current) {
+        return <></>;
+      }
+
       const found = choices.find((tt) => tt.value === src.device);
 
       const items = choices.map((tt) => (

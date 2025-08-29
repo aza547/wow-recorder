@@ -47,7 +47,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import noobs, {
   ObsData,
-  ObsListProperty,
   SceneItemPosition,
   Signal,
   SourceDimensions,
@@ -373,7 +372,7 @@ export default class Recorder extends EventEmitter {
         '[Recorder] Removing existing capture source',
         this.activeCaptureSource,
       );
-      
+
       noobs.RemoveSourceFromScene(this.activeCaptureSource);
       noobs.DeleteSource(this.activeCaptureSource);
       this.activeCaptureSource = undefined;
@@ -434,11 +433,8 @@ export default class Recorder extends EventEmitter {
   private configureDefaultOverlay(config: ObsOverlayConfig) {
     console.info('[Recorder] Configure default image as chat overlay');
 
-    const {
-      chatOverlayXPosition,
-      chatOverlayYPosition,
-      chatOverlayScale,
-    } = config;
+    const { chatOverlayXPosition, chatOverlayYPosition, chatOverlayScale } =
+      config;
 
     const settings = noobs.GetSourceSettings(VideoSourceName.OVERLAY);
 
@@ -455,7 +451,6 @@ export default class Recorder extends EventEmitter {
       scaleX: chatOverlayScale,
       scaleY: chatOverlayScale,
     });
-
   }
 
   /**
@@ -465,7 +460,7 @@ export default class Recorder extends EventEmitter {
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
     uIOhook.removeAllListeners();
-    
+
     noobs.SetForceMono(config.obsForceMono);
     noobs.SetAudioSuppression(config.obsAudioSuppression);
 
@@ -474,17 +469,20 @@ export default class Recorder extends EventEmitter {
       const settings = noobs.GetSourceSettings(name);
 
       if (src.type === AudioSourceType.PROCESS && src.device) {
-        settings["window"] = src.device;
+        settings['window'] = src.device;
         noobs.SetSourceSettings(name, settings);
       } else {
-        settings["device_id"] = src.device ? src.device : '';
+        settings['device_id'] = src.device ? src.device : '';
         noobs.SetSourceSettings(name, settings);
       }
+
+      noobs.AddSourceToScene(name);
+      this.audioSources.push(src);
     });
 
-    // Just for muted state for now. TODO: Remove this?
-    this.audioSources = config.audioSources;
-    const mics = this.audioSources.filter((src) => src.type === AudioSourceType.INPUT);
+    const mics = this.audioSources.filter(
+      (src) => src.type === AudioSourceType.INPUT,
+    );
 
     if (mics.length !== 0 && config.pushToTalk) {
       this.obsMicState = MicStatus.MUTED;
@@ -521,7 +519,7 @@ export default class Recorder extends EventEmitter {
    */
   public removeAudioSources() {
     console.info('[Recorder] Remove all audio sources');
-    
+
     this.obsMicState = MicStatus.NONE;
     this.emit('state-change');
 
@@ -865,7 +863,7 @@ export default class Recorder extends EventEmitter {
 
     console.info('[Recorder] Got signal:', signal);
 
-    if (signal.type === "source") {
+    if (signal.type === 'source') {
       this.mainWindow.webContents.send('redrawPreview', signal);
       return;
     }
@@ -1034,15 +1032,19 @@ export default class Recorder extends EventEmitter {
       throw new Error('Window setting is not a list');
     }
 
-    const opts = monitors.items.filter((item) => item.value !== "DUMMY");
+    const opts = monitors.items.filter((item) => item.value !== 'DUMMY');
     const monitorId = opts[monitorIndex];
 
     if (!monitorId) {
-      console.error('[Recorder] Monitor with index was not found for index', monitorIndex, opts);
+      console.error(
+        '[Recorder] Monitor with index was not found for index',
+        monitorIndex,
+        opts,
+      );
       throw new Error('[Recorder] Monitor index was not found');
     }
 
-    console.log("[Recorder] Selected monitor:", monitorId);
+    console.log('[Recorder] Selected monitor:', monitorId);
 
     const settings = {
       ...defaults,
@@ -1242,21 +1244,24 @@ export default class Recorder extends EventEmitter {
       const settings = noobs.GetSourceSettings(this.activeCaptureSource);
       const updated = { ...settings, window: match.value };
       noobs.SetSourceSettings(this.activeCaptureSource, updated);
-      setTimeout(() => this.mainWindow.webContents.send('redrawPreview'), 10000);
+      setTimeout(
+        () => this.mainWindow.webContents.send('redrawPreview'),
+        10000,
+      );
       return;
-    } 
-    
+    }
+
     if (this.findWindowAttempts < this.findWindowAttemptLimit) {
       console.info('[Recorder] No matching window yet');
       this.findWindowAttempts++;
 
       this.findWindowTimer = setTimeout(
         () => this.attachCaptureSource(),
-        this.findWindowIntervalDuration
+        this.findWindowIntervalDuration,
       );
 
       return;
-    } 
+    }
 
     console.warn(
       '[Recorder] Failed to find WoW window after',
@@ -1301,8 +1306,6 @@ export default class Recorder extends EventEmitter {
       );
       return;
     }
-
-    
 
     const current = noobs.GetSourcePos(src);
 
