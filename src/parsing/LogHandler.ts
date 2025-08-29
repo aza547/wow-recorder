@@ -7,7 +7,12 @@ import CombatLogWatcher from './CombatLogWatcher';
 import ConfigService from '../config/ConfigService';
 import { instanceDifficulty } from '../main/constants';
 import Recorder from '../main/Recorder';
-import { Flavour, PlayerDeathType, VideoQueueItem } from '../main/types';
+import {
+  Flavour,
+  PlayerDeathType,
+  SoundAlerts,
+  VideoQueueItem,
+} from '../main/types';
 import Activity from '../activitys/Activity';
 import RaidEncounter from '../activitys/RaidEncounter';
 
@@ -20,8 +25,10 @@ import {
 
 import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
-import { allowRecordCategory, getFlavourConfig } from '../utils/configUtils';
+import { allowRecordCategory } from '../utils/configUtils';
 import { assert } from 'console';
+import Manual from 'activitys/Manual';
+import { playSoundAlert } from 'main/util';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -478,5 +485,42 @@ export default abstract class LogHandler extends EventEmitter {
     // avoid having to maintain a list of boss unit names. It's a reasonable
     // assumption usually that the boss has the most HP of all the units.
     raid.updateHp(current, max);
+  }
+
+  /**
+   * Handle the pressing of the manual recording hotkey.
+   */
+  public async handleManualRecordingHotKey() {
+    const sounds = ConfigService.getInstance().get('manualRecordSoundAlert');
+
+    if (this.activity && this.activity.category !== VideoCategory.Manual) {
+      console.info("[LogHandler] Activity in progress, can't start manual");
+
+      if (sounds) {
+        playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.mainWindow);
+      }
+
+      return;
+    }
+
+    if (this.activity) {
+      console.info('[LogHandler] Stopping manual recording');
+      const endDate = new Date();
+      this.activity.end(endDate, true); // Result is meaningless but requried.
+      await this.endActivity();
+
+      if (sounds) {
+        playSoundAlert(SoundAlerts.MANUAL_RECORDING_STOP, this.mainWindow);
+      }
+    } else {
+      console.info('[LogHandler] Starting manual recording');
+      const startDate = new Date();
+      const activity = new Manual(startDate, Flavour.Retail, this.cfg);
+      await this.startActivity(activity);
+
+      if (sounds) {
+        playSoundAlert(SoundAlerts.MANUAL_RECORDING_START, this.mainWindow);
+      }
+    }
   }
 }

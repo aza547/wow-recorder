@@ -134,13 +134,13 @@ export default class Recorder extends EventEmitter {
    * WaitQueue object for storing signalling from OBS. We only care about
    * start signals here which indicate the recording has started.
    */
-  private startQueue = new WaitQueue<any>();
+  private startQueue = new WaitQueue<Signal>();
 
   /**
    * WaitQueue object for storing signalling from OBS. We only care about
    * wrote signals here which indicate the video file has been written.
    */
-  private wroteQueue = new WaitQueue<any>();
+  private wroteQueue = new WaitQueue<Signal>();
 
   /**
    * The state of the recorder, typically used to tell if OBS is recording
@@ -188,6 +188,9 @@ export default class Recorder extends EventEmitter {
   private activeCaptureSource?: VideoSourceName;
 
   private chatOverlayDefaultImage = getAssetPath('poster', 'chat-overlay.png');
+
+  private pushToTalkKeyListener = (e: UiohookKeyboardEvent) => {};
+  private pushToTalkMouseListener = (e: UiohookMouseEvent) => {};
 
   /**
    * Contructor.
@@ -459,7 +462,13 @@ export default class Recorder extends EventEmitter {
    */
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
-    uIOhook.removeAllListeners();
+
+    // Can't release all the listeners here as we use uIOhook for
+    // triggering manual recording too.
+    uIOhook.off('keydown', this.pushToTalkKeyListener);
+    uIOhook.off('keyup', this.pushToTalkKeyListener);
+    uIOhook.off('mousedown', this.pushToTalkMouseListener);
+    uIOhook.off('mouseup', this.pushToTalkMouseListener);
 
     noobs.SetForceMono(config.obsForceMono);
     noobs.SetAudioSuppression(config.obsAudioSuppression);
@@ -495,21 +504,16 @@ export default class Recorder extends EventEmitter {
     if (config.pushToTalk) {
       this.inputDevicesMuted = true;
 
-      uIOhook.on('keydown', (e: UiohookKeyboardEvent) =>
-        this.pushToTalkHandler(e, config),
-      );
+      this.pushToTalkKeyListener = (e: UiohookKeyboardEvent) =>
+        this.pushToTalkHandler(e, config);
 
-      uIOhook.on('mousedown', (e: UiohookMouseEvent) =>
-        this.pushToTalkHandler(e, config),
-      );
+      this.pushToTalkMouseListener = (e: UiohookMouseEvent) =>
+        this.pushToTalkHandler(e, config);
 
-      uIOhook.on('keyup', (e: UiohookKeyboardEvent) =>
-        this.pushToTalkHandler(e, config),
-      );
-
-      uIOhook.on('mouseup', (e: UiohookMouseEvent) =>
-        this.pushToTalkHandler(e, config),
-      );
+      uIOhook.on('keydown', this.pushToTalkKeyListener);
+      uIOhook.on('keyup', this.pushToTalkKeyListener);
+      uIOhook.on('mousedown', this.pushToTalkMouseListener);
+      uIOhook.on('mouseup', this.pushToTalkMouseListener);
     }
   }
 
@@ -675,8 +679,6 @@ export default class Recorder extends EventEmitter {
 
     this.startQueue.empty();
     noobs.StartBuffer();
-
-    console.log('START WAITING FOR START QUEUE');
 
     await Promise.race([
       this.startQueue.shift(),
@@ -857,70 +859,42 @@ export default class Recorder extends EventEmitter {
    */
   private handleSignal(signal: Signal) {
     if (signal.type === 'volmeter' && signal.value !== undefined) {
+      // A volmeter callback was fired. This happens very often while there
+      // are audio sources attached and the audio settings are open.
       this.mainWindow.webContents.send('volmeter', signal.id, signal.value);
       return;
     }
 
-    console.info('[Recorder] Got signal:', signal);
+    // The rest of the signals here are not as frequent as volmeter signals
+    // so just log them all.
+    console.info('[Recorder] Got signal', signal);
 
     if (signal.type === 'source') {
+      // A source has sporadically changed dimensions. This typically happens
+      // when a game or window capture source is initialized or resized.
       this.mainWindow.webContents.send('redrawPreview', signal);
       return;
     }
 
-    // if (obsSignal.type !== 'recording') {
-    //   console.info('[Recorder] No action needed on this signal');
-    //   return;
-    // }
-
-    // This code was previously here catching any non-zero return signals,
-    // but it seems that is not a good criteria to consider it a crash as
-    // seen several instances of non-zero return codes that have been
-    // non-fatal.
-    //
-    // For example when I use my NVENC encoder on my non-default
-    // GPU we get a -4 RC despite everything being otherwise fine; suspect
-    // caused by the fact that it tries the AMD GPU first which doesn't work.
-    //
-    // I spent alot of time trying to work out what was wrong only to find that
-    // the difference in streamlabs desktop is that they don't crash on a non-zero
-    // RC.
-    //
-    // So we do what we can by checking wrote signals non-zero and ignoring
-    // other non-zero signals. If something goes wrong earlier, we will hit a
-    // timeout anyway which will cover our backs.
-    // if (signal.code !== 0 && signal.signal === 'wrote') {
-    //   console.error('[Recorder] Non-zero wrote signal');
-
-    //   const crashData: CrashData = {
-    //     date: new Date(),
-    //     reason: obsSignal.error,
-    //   };
-
-    //   this.emit('crash', crashData);
-    //   return;
-    // }
-
     switch (signal.id) {
       case EOBSOutputSignal.Start:
-        console.log('Push to start queue', signal);
         this.startQueue.push(signal);
         this.obsState = ERecordingState.Recording;
+        this.emit('state-change');
+        console.info('[Recorder] State is now: ', this.obsState);
         break;
 
       case EOBSOutputSignal.Stop:
-        console.log('Push to wrote queue', signal);
         this.wroteQueue.push(signal);
         this.obsState = ERecordingState.Offline;
+        this.emit('state-change');
+        console.info('[Recorder] State is now: ', this.obsState);
         break;
 
       default:
         console.info('[Recorder] No action needed on this signal');
         break;
     }
-
-    this.emit('state-change');
-    console.info('[Recorder] State is now: ', this.obsState);
   }
 
   /**
@@ -944,7 +918,6 @@ export default class Recorder extends EventEmitter {
     noobs.SetSourceSettings(VideoSourceName.WINDOW, {
       ...settings,
       capture_mode: 'window',
-      window: 'World of Warcraft:waApplication Window:Wow.exe',
       force_sdr: forceSdr,
       cursor: captureCursor,
       method: 2,
@@ -982,7 +955,6 @@ export default class Recorder extends EventEmitter {
     const settings = {
       ...defaults,
       capture_mode: 'window',
-      //window: 'World of Warcraft:waApplication Window:Wow.exe', // TODO handle all names classic, chinese, use windowMatch();
       force_sdr: forceSdr,
       cursor: captureCursor,
       priority: 2,

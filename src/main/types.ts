@@ -581,8 +581,8 @@ type ObsVolmeterCallbackInfo = {
 };
 
 enum WCRSceneItem {
-  OVERLAY = "Overlay",
-  GAME = "Game",
+  OVERLAY = 'Overlay',
+  GAME = 'Game',
 }
 
 enum SceneInteraction {
@@ -599,16 +599,16 @@ type BoxDimensions = {
 };
 
 enum VideoSourceName {
-  WINDOW = "WCR Window Capture",
-  GAME = "WCR Game Capture",
-  MONITOR = "WCR Monitor Capture",
-  OVERLAY = "WCR Chat Overlay",
+  WINDOW = 'WCR Window Capture',
+  GAME = 'WCR Game Capture',
+  MONITOR = 'WCR Monitor Capture',
+  OVERLAY = 'WCR Chat Overlay',
 }
 
 enum AudioSourcePrefix {
-  SPEAKER = "WCR Speaker Capture",
-  MIC = "WCR Mic Capture",
-  PROCESS = "WCR Process Capture",
+  SPEAKER = 'WCR Speaker Capture',
+  MIC = 'WCR Mic Capture',
+  PROCESS = 'WCR Process Capture',
 }
 
 enum WowProcessEvent {
@@ -616,6 +616,11 @@ enum WowProcessEvent {
   STOPPED = 'wowProcessStop',
 }
 
+enum SoundAlerts {
+  MANUAL_RECORDING_ERROR = 'manual-recording-error',
+  MANUAL_RECORDING_START = 'manual-recording-start',
+  MANUAL_RECORDING_STOP = 'manual-recording-stop',
+}
 
 export {
   RecStatus,
@@ -679,4 +684,5 @@ export {
   SceneInteraction,
   BoxDimensions,
   WowProcessEvent,
+  SoundAlerts,
 };

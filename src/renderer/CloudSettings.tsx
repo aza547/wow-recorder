@@ -10,7 +10,7 @@ import {
   Trash,
   X,
 } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
@@ -26,6 +26,7 @@ import {
 } from './components/Select/Select';
 import Separator from './components/Separator/Separator';
 import TextBanner from './components/TextBanner/TextBanner';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -763,6 +764,7 @@ const CloudSettings = (props: IProps) => {
         </div>
 
         <div className="flex flex-row gap-x-6">
+          {getSwitchForm('manualRecordUpload', Phrase.ManualRecordUploadLabel)}
           {getSwitchForm('cloudUploadClips', Phrase.UploadClipsLabel)}
         </div>
       </>

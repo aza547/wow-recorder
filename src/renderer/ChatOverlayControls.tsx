@@ -2,13 +2,14 @@ import React, { Dispatch } from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { Info, Lock } from 'lucide-react';
 import { AppState } from 'main/types';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
 import { fileSelect } from './rendererutils';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 

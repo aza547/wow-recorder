@@ -1,4 +1,5 @@
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
+import { getLocalePhrase } from 'localisation/translations';
 import { Mic, MicOff } from 'lucide-react';
 import { AppState, MicStatus } from 'main/types';
 import { Tooltip } from 'renderer/components/Tooltip/Tooltip';

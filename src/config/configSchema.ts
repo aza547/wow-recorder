@@ -1,4 +1,4 @@
-import { Phrase } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
 import { AudioSource, AudioSourceType } from 'main/types';
 
 export type ConfigurationSchema = {
@@ -88,6 +88,11 @@ export type ConfigurationSchema = {
   videoSourceScale: number;
   videoSourceXPosition: number;
   videoSourceYPosition: number;
+  manualRecord: boolean;
+  manualRecordHotKey: number;
+  manualRecordHotKeyModifiers: string;
+  manualRecordSoundAlert: boolean;
+  manualRecordUpload: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -153,8 +158,21 @@ export const configSchema = {
     description: Phrase.AudioProcessDevicesDescription,
     type: 'array',
     default: [
-      { id: 'WCR Default Speaker', friendly: "default", device: 'default', volume: 1, type: AudioSourceType.OUTPUT }, 
-      { id: 'WCR Default Mic', friendly: "default", device: 'default', volume: 1, type: AudioSourceType.INPUT }],
+      {
+        id: 'WCR Default Speaker',
+        friendly: 'default',
+        device: 'default',
+        volume: 1,
+        type: AudioSourceType.OUTPUT,
+      },
+      {
+        id: 'WCR Default Mic',
+        friendly: 'default',
+        device: 'default',
+        volume: 1,
+        type: AudioSourceType.INPUT,
+      },
+    ],
   },
   minEncounterDuration: {
     description: Phrase.MinEncounterDurationDescription,
@@ -539,5 +557,30 @@ export const configSchema = {
     description: Phrase.VideoSourceYPositionDescription,
     type: 'number',
     default: 0,
+  },
+  manualRecord: {
+    description: Phrase.ManualRecordDescription,
+    type: 'boolean',
+    default: false,
+  },
+  manualRecordHotKey: {
+    description: Phrase.ManualRecordHotKeyDescription,
+    type: 'integer',
+    default: -1,
+  },
+  manualRecordHotKeyModifiers: {
+    description: Phrase.ManualRecordHotKeyDescription,
+    type: 'string',
+    default: '',
+  },
+  manualRecordSoundAlert: {
+    description: Phrase.ManualRecordSoundAlertDescription,
+    type: 'boolean',
+    default: true,
+  },
+  manualRecordUpload: {
+    description: Phrase.ManualRecordUploadDescription,
+    type: 'boolean',
+    default: true,
   },
 };

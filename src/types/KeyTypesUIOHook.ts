@@ -123,7 +123,7 @@ export const UiohookKeyMap = {
   NumLock: 69,
   ScrollLock: 70,
   PrintScreen: 3639,
-  "`": 125,
+  '`': 125,
 };
 
 export enum PTTEventType {

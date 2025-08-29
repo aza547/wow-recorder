@@ -1,6 +1,6 @@
 import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
-import { AudioSourceType, VideoSourceName, WCRSceneItem } from 'main/types';
+import { AudioSourceType, WCRSceneItem } from 'main/types';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 
 declare global {
@@ -25,7 +25,12 @@ declare global {
           previewHeight: number;
         }>;
 
-        configurePreview(x: number, y: number, width: number, height: number): void;
+        configurePreview(
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+        ): void;
         showPreview(): void;
         hidePreview(): void;
         disablePreview(): void;
@@ -34,7 +39,10 @@ declare global {
           src: WCRSceneItem,
         ): Promise<SceneItemPosition & SourceDimensions>;
         resetSourcePosition(src: WCRSceneItem): void;
-        setSourcePosition(src: WCRSceneItem, target: { x: number; y: number, width: number, height: number }): void;
+        setSourcePosition(
+          src: WCRSceneItem,
+          target: { x: number; y: number; width: number; height: number },
+        ): void;
 
         audioSettingsOpen(): Promise<void>;
         audioSettingsClosed(): Promise<void>;

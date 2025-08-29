@@ -1,6 +1,6 @@
 import Combatant from 'main/Combatant';
 import { getLocalePhrase } from '../localisation/translations';
-import { Language, Phrase } from '../localisation/types';
+import { Language, Phrase } from '../localisation/phrases';
 import { IConfigService } from '../config/ConfigService';
 import { Flavour, Metadata } from '../main/types';
 import { classicArenas, retailArenas } from '../main/constants';

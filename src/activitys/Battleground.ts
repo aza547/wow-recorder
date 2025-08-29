@@ -1,5 +1,5 @@
 import { Flavour, Metadata } from 'main/types';
-import { Language, Phrase } from '../localisation/types';
+import { Language, Phrase } from '../localisation/phrases';
 import { getLocalePhrase } from '../localisation/translations';
 import { IConfigService } from '../config/ConfigService';
 import { classicBattlegrounds, retailBattlegrounds } from '../main/constants';

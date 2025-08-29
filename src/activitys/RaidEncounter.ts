@@ -2,15 +2,12 @@ import { Flavour, Metadata, RaidInstanceType } from 'main/types';
 
 import Combatant from '../main/Combatant';
 import { IConfigService } from '../config/ConfigService';
-import {
-  getLocalePhrase,
-  Language,
-  Phrase,
-} from '../localisation/translations';
+import { getLocalePhrase, Language } from '../localisation/translations';
 import { instanceDifficulty, raidInstances } from '../main/constants';
 
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
+import { Phrase } from 'localisation/phrases';
 
 /**
  * Class representing a raid encounter.

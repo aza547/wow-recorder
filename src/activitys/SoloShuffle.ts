@@ -1,6 +1,6 @@
 import Combatant from 'main/Combatant';
 import { IConfigService } from 'config/ConfigService';
-import { Language, Phrase } from '../localisation/types';
+import { Language, Phrase } from '../localisation/phrases';
 import { getLocalePhrase } from '../localisation/translations';
 import {
   Flavour,

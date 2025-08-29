@@ -1,4 +1,4 @@
-import { Phrase } from '../localisation/types';
+import { Phrase } from '../localisation/phrases';
 import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchemaKey } from '../config/configSchema';
 
@@ -92,6 +92,10 @@ const categoryRecordingSettings: Omit<
   [VideoCategory.Battlegrounds]: {
     allowRecordKey: 'recordBattlegrounds',
     autoUploadKey: 'cloudUploadBattlegrounds',
+  },
+  [VideoCategory.Manual]: {
+    allowRecordKey: 'manualRecord',
+    autoUploadKey: 'manualRecordUpload',
   },
 };
 

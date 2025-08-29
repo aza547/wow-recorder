@@ -106,6 +106,11 @@ export const getSettings = (): ConfigurationSchema => {
     videoSourceScale: getConfigValue<number>('videoSourceScale'),
     videoSourceXPosition: getConfigValue<number>('videoSourceXPosition'),
     videoSourceYPosition: getConfigValue<number>('videoSourceYPosition'),
+    manualRecord: getConfigValue<boolean>('manualRecord'),
+    manualRecordHotKey: getConfigValue<number>('manualRecordHotKey'),
+    manualRecordHotKeyModifiers: getConfigValue<string>('manualRecordHotKeyModifiers'),
+    manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
+    manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
     /* eslint-enable prettier/prettier */
   };
 

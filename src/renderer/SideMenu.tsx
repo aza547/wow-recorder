@@ -25,7 +25,6 @@ import { ConfigurationSchema } from 'config/configSchema';
 import {
   getLocaleCategoryLabel,
   getLocalePhrase,
-  Phrase,
 } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import { setConfigValue } from './useSettings';
@@ -40,6 +39,7 @@ import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import UpdateNotifier from './containers/UpdateNotifier/UpdateNotifier';
 import CloudStatusCard from './containers/ApplicationStatusCard/CloudStatusCard';
 import ManualRecordButton from './ManualRecordButton';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -237,10 +237,6 @@ const SideMenu = (props: IProps) => {
           <LogsButton appState={appState} />
           <TestButton recorderStatus={recorderStatus} appState={appState} />
           <DiscordButton appState={appState} />
-          <ManualRecordButton
-            recorderStatus={recorderStatus}
-            appState={appState}
-          />
         </div>
         {!!appVersion && (
           <div className="w-full mt-1 text-foreground font-sans text-[11px] font-bold text-center opacity-75">

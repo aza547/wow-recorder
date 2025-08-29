@@ -1,10 +1,11 @@
 import { ConfigurationSchema } from 'config/configSchema';
 import React from 'react';
 import { AppState } from 'main/types';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   appState: AppState;

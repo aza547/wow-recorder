@@ -429,6 +429,15 @@ enum Phrase {
   VideoSourceScaleDescription,
   VideoSourceXPositionDescription,
   VideoSourceYPositionDescription,
+  ManualRecordSettingsLabel,
+  ManualRecordSwitchLabel,
+  ManualRecordHotKeyLabel,
+  ManualRecordUploadLabel,
+  ManualRecordSoundAlertLabel,
+  ManualRecordDescription,
+  ManualRecordHotKeyDescription,
+  ManualRecordUploadDescription,
+  ManualRecordSoundAlertDescription,
 }
 
 enum Language {

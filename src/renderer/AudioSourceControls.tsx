@@ -13,10 +13,9 @@ import {
   VolumeX,
   X,
 } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
-  blurAll,
   fetchAudioSourceChoices,
   getKeyByValue,
   getKeyModifiersString,
@@ -45,6 +44,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from './components/Popover/Popover';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timeout | undefined;
@@ -58,6 +58,7 @@ const AudioSourceControls = (props: IProps) => {
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
   const audioChoicesLoaded = useRef(false);
+  const pttInputRef = useRef<HTMLInputElement>(null);
 
   // Available choices per source.
   const [sourceChoices, setSourceChoices] = useState<
@@ -145,7 +146,7 @@ const AudioSourceControls = (props: IProps) => {
         setPttHotKeyFieldFocused(false);
         setPttHotKey(keyPressEvent);
         setPushToTalkKey(keyPressEvent);
-        blurAll(document);
+        pttInputRef.current?.blur();
       }
     };
 
@@ -335,6 +336,7 @@ const AudioSourceControls = (props: IProps) => {
         </Label>
         <Input
           name="pttKey"
+          ref={pttInputRef}
           value={getHotkeyString()}
           onFocus={() => setPttHotKeyFieldFocused(true)}
           onBlur={() => setPttHotKeyFieldFocused(false)}

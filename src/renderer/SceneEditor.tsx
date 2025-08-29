@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import React, { Dispatch, useState } from 'react';
 import { AppState, RecStatus, WCRSceneItem } from 'main/types';
-import { Phrase } from 'localisation/types';
+import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';

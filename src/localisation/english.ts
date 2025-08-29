@@ -1,4 +1,4 @@
-import { Translations, Phrase } from './types';
+import { Translations, Phrase } from './phrases';
 
 /* eslint-disable prettier/prettier */
 const ENGLISH: Translations = {
@@ -432,6 +432,15 @@ const ENGLISH: Translations = {
   [Phrase.VideoSourceScaleDescription]: "The scale of the video source.",
   [Phrase.VideoSourceXPositionDescription]: "The X position of the video source.",
   [Phrase.VideoSourceYPositionDescription]: "The Y position of the video source.",
+  [Phrase.ManualRecordSettingsLabel]: 'Manual Settings',
+  [Phrase.ManualRecordSwitchLabel]: 'Manual Recording',
+  [Phrase.ManualRecordHotKeyLabel]: 'Start/Stop Hotkey',
+  [Phrase.ManualRecordUploadLabel]: 'Upload Manual Recordings',
+  [Phrase.ManualRecordDescription]: 'Enables manual recording, which a user can start and stop on demand to record things not captured by the combat log.',
+  [Phrase.ManualRecordHotKeyDescription]: 'Set a hotkey to manually start and stop recording.',
+  [Phrase.ManualRecordUploadDescription]: 'Automatically upload recordings started manually to the cloud.',
+  [Phrase.ManualRecordSoundAlertLabel]: 'Sound Alert',
+  [Phrase.ManualRecordSoundAlertDescription]: 'Play a sound alert when manual recording starts or stops.',
 };
 
 export default ENGLISH;

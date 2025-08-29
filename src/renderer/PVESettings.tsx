@@ -1,7 +1,7 @@
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import React from 'react';
 import { Info } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { AppState } from 'main/types';
 import { setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
@@ -15,6 +15,7 @@ import {
   SelectItem,
   SelectValue,
 } from './components/Select/Select';
+import { Phrase } from 'localisation/phrases';
 
 const raidDifficultyOptions = [
   { name: 'LFR', phrase: Phrase.LFR },
