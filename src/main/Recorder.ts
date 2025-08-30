@@ -1017,7 +1017,7 @@ export default class Recorder extends EventEmitter {
     noobs.InitPreview(hwnd);
     noobs.SetDrawSourceOutline(true);
 
-    noobs.CreateSource(VideoSourceName.OVERLAY, 'image_source');
+    noobs.CreateSource(VideoSourceName.OVERLAY, 'image_source'); // TODO
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
@@ -1082,14 +1082,14 @@ export default class Recorder extends EventEmitter {
       videoSourceScale,
     } = config;
 
-    noobs.CreateSource(VideoSourceName.WINDOW, 'window_capture');
+    noobs.CreateSource(VideoSourceName.WINDOW, 'window_capture'); // TODO
     const settings = noobs.GetSourceSettings(VideoSourceName.WINDOW);
 
     noobs.SetSourceSettings(VideoSourceName.WINDOW, {
       ...settings,
       capture_mode: 'window',
       force_sdr: forceSdr,
-      cursor: captureCursor,
+      cursor: captureCursor, // For some reason is named differently here.
       method: 2,
       compatibility: true,
     });
@@ -1118,7 +1118,7 @@ export default class Recorder extends EventEmitter {
       videoSourceYPosition,
       videoSourceScale,
     } = config;
-    noobs.CreateSource(VideoSourceName.GAME, 'game_capture');
+    noobs.CreateSource(VideoSourceName.GAME, 'game_capture');// TODO
 
     const defaults = noobs.GetSourceSettings(VideoSourceName.GAME);
 
@@ -1126,7 +1126,7 @@ export default class Recorder extends EventEmitter {
       ...defaults,
       capture_mode: 'window',
       force_sdr: forceSdr,
-      cursor: captureCursor,
+      capture_cursor: captureCursor,
       priority: 2,
     };
 
@@ -1156,9 +1156,10 @@ export default class Recorder extends EventEmitter {
       videoSourceXPosition,
       videoSourceYPosition,
       videoSourceScale,
+      captureCursor,
     } = config;
 
-    noobs.CreateSource(VideoSourceName.MONITOR, 'monitor_capture');
+    noobs.CreateSource(VideoSourceName.MONITOR, 'monitor_capture'); // TODO
     const defaults = noobs.GetSourceSettings(VideoSourceName.MONITOR);
     const properties = noobs.GetSourceProperties(VideoSourceName.MONITOR);
 
@@ -1193,6 +1194,7 @@ export default class Recorder extends EventEmitter {
       method: 0,
       monitor_id: monitorId.value,
       force_sdr: forceSdr,
+      capture_cursor: captureCursor,
     };
 
     const position: SceneItemPosition = {

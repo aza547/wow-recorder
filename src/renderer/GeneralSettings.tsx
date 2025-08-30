@@ -20,6 +20,7 @@ interface IProps {
 }
 
 const ipc = window.electron.ipcRenderer;
+let debounceTimeout: NodeJS.Timeout | null;
 
 const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState } = props;
@@ -42,9 +43,13 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       maxStorage: config.maxStorage,
     });
 
-    // Inform the backend of a settings change so we can update config
-    // and validate it's good.
-    ipc.reconfigureBase();
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    debounceTimeout = setTimeout(() => {
+      ipc.reconfigureBase();
+    }, 500);
   }, [
     config.separateBufferPath,
     config.storagePath,

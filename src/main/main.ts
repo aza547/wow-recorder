@@ -30,6 +30,7 @@ import CloudClient from 'storage/CloudClient';
 import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
+import AsyncQueue from 'utils/AsyncQueue';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -319,12 +320,17 @@ ipcMain.on('writeClipboard', (_event, args) => {
   clipboard.writeText(args[0] as string);
 });
 
+// Enforces serial execution of calls to reconfigureBase. Also has a limit
+// of 1 queued task and will drop any extra tasks, which is appropriate for
+// deduplicating reconfigure work.
+const reconfigureBaseQueue = new AsyncQueue();
+
 /**
  * A reconfig is triggered when a base setting changes.
  */
 ipcMain.on('reconfigureBase', () => {
-  console.info('[Main] Reconfig event');
-  manager.reconfigureBase();
+  console.info('[Main] Queue a reconfigure');
+  reconfigureBaseQueue.add(() => manager.reconfigureBase());
 });
 
 /**
