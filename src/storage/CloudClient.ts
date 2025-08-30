@@ -1,9 +1,8 @@
 import fs from 'fs';
-import { EventEmitter } from 'stream';
 import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 import {
   CloudMetadata,
-  CloudSignedMetadata,
+  CloudStatus,
   CompleteMultiPartUploadRequestBody,
   CreateMultiPartUploadResponseBody,
 } from 'main/types';
@@ -12,26 +11,47 @@ import AuthError from '../utils/AuthError';
 import { z } from 'zod';
 import { Affiliation, TAffiliation } from 'types/api';
 import WebSocket from 'ws';
+import {
+  cloudSignedMetadataToRendererVideo,
+  convertKoreanVideoCategory,
+  getPromiseBomb,
+} from 'main/util';
+import StorageClient from './StorageClient';
+import { getCloudConfig } from 'utils/configUtils';
+import { clipboard, ipcMain } from 'electron';
 
 /**
  * A client for retrieving resources from the cloud.
  */
-export default class CloudClient extends EventEmitter {
+export default class CloudClient extends StorageClient {
+  /**
+   * Singleton instance.
+   */
+  private static instance: CloudClient;
+
+  /**
+   * Singleton get method.
+   */
+  public static getInstance() {
+    if (!this.instance) this.instance = new CloudClient();
+    return this.instance;
+  }
+
   /**
    * The username of the cloud user.
    */
-  private user: string;
+  private user = '';
 
   /**
    * The password of the cloud user.
    */
-  private pass: string;
+  private pass = '';
 
   /**
    * The bucket name we're configured to target. Expected to be the name of
    * the guild as configured in the settings.
    */
-  private guild: string;
+  private guild = '';
 
   /**
    * The last modified time of the shared storage.
@@ -39,10 +59,15 @@ export default class CloudClient extends EventEmitter {
   private bucketLastMod = 0;
 
   /**
+   * Indicates whether the client is authenticated or not.
+   */
+  private authenticated = false;
+
+  /**
    * The auth header for the WCR API, which uses basic HTTP auth using the cloud
    * user and password.
    */
-  private authHeader: string;
+  private authHeader?: string;
 
   /**
    * The WCR API endpoint. This is used for authentication, retrieval and
@@ -143,13 +168,58 @@ export default class CloudClient extends EventEmitter {
   /**
    * Constructor.
    */
-  constructor(user: string, pass: string, guild: string) {
+  private constructor() {
+    console.info('[CloudClient] Creating cloud client');
     super();
-    console.info('[CloudClient] Creating cloud client with', user, guild);
-    this.user = user;
-    this.pass = pass;
-    this.guild = guild;
-    this.authHeader = CloudClient.createAuthHeader(user, pass);
+    this.setupListeners();
+  }
+
+  public ready() {
+    return this.authenticated;
+  }
+
+  /**
+   * Login to the cloud store.
+   */
+  public async login() {
+    console.info('[CloudClient] Logging into cloud store');
+
+    const config = getCloudConfig();
+    this.user = config.cloudAccountName;
+    this.pass = config.cloudAccountPassword;
+    this.guild = config.cloudGuildName;
+
+    console.info('[CloudClient] User:', this.user);
+    console.info('[CloudClient] Guild:', this.guild);
+
+    this.authHeader = CloudClient.createAuthHeader(this.user, this.pass);
+
+    if (!this.user) {
+      console.warn('[CloudClient] Empty account name');
+      this.onAuthFailure();
+      return;
+    }
+
+    if (!this.pass) {
+      console.warn('[CloudClient] Empty account pass');
+      this.onAuthFailure();
+      return;
+    }
+
+    if (!this.guild) {
+      console.warn('[CloudClient] Empty guild name');
+      this.onNoGuildSelection();
+      return;
+    }
+
+    // TODO actually test login?
+
+    this.authenticated = true;
+    await this.pollInit();
+    this.startPolling();
+
+    this.send('refreshState');
+    this.refresh();
   }
 
   /**
@@ -169,10 +239,16 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Get the video state from the WCR database.
+   * Get the video state from the remote WCR database, and refresh
+   * the frontend.
    */
-  public async getState(): Promise<CloudSignedMetadata[]> {
+  public async getVideos() {
     console.info('[CloudClient] Getting video state');
+
+    if (!this.authenticated) {
+      console.info('[CloudClient] Not authenticated so no videos');
+      return [];
+    }
 
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.api}/guild/${guild}/video`;
@@ -193,11 +269,13 @@ export default class CloudClient extends EventEmitter {
       'videos',
     );
 
-    // Update mtime to avoid multiple refreshes.
+    // Update mtime to avoid unnecessary refreshes.
     const mtime = await mtimePromise;
     this.bucketLastMod = mtime;
 
-    return response.data;
+    const data = [...response.data];
+    data.forEach(convertKoreanVideoCategory);
+    return data.map(cloudSignedMetadataToRendererVideo);
   }
 
   /**
@@ -221,7 +299,8 @@ export default class CloudClient extends EventEmitter {
 
     // Update the mtime to avoid multiple refreshes.
     this.bucketLastMod = Date.now();
-    this.emit('change');
+    this.refresh();
+    this.send('refreshState');
 
     console.info(
       '[CloudClient] Added',
@@ -544,7 +623,8 @@ export default class CloudClient extends EventEmitter {
             this.bucketLastMod,
           );
 
-          this.emit('change');
+          this.refresh();
+          this.send('refreshState');
           this.bucketLastMod = mtime;
         }
       }
@@ -715,7 +795,8 @@ export default class CloudClient extends EventEmitter {
           this.bucketLastMod,
         );
 
-        this.emit('change');
+        this.refresh();
+        this.send('refreshState');
         this.bucketLastMod = mtime;
       }
     } catch (error) {
@@ -992,7 +1073,120 @@ export default class CloudClient extends EventEmitter {
    * a check for 401 status codes. If we get a 401, we emit a logout event.
    */
   private validateResponseStatus(status: number) {
-    if (status === 401) this.emit('logout');
+    if (status === 401) this.onAuthFailure();
     return status >= 200 && status < 300;
+  }
+
+  /**
+   * Handle changes to the cloud status, does not refresh the videos.
+   */
+  public async refreshStatus() {
+    try {
+      const usagePromise = this.getUsage();
+      const limitPromise = this.getStorageLimit();
+      const affiliationsPromise = this.getUserAffiliations();
+
+      // This is a bit tricky, get the guild name from the active client which is
+      // guarenteed to be up to date, unlike other fields in this class.
+      const guild = this.getGuildName();
+
+      const usage = await usagePromise;
+      const limit = await limitPromise;
+      const affiliations = await affiliationsPromise;
+
+      const available = affiliations.map((aff) => aff.guildName);
+      const affiliation = affiliations.find((aff) => aff.guildName === guild);
+
+      const status: CloudStatus = {
+        authenticated: true,
+        guild,
+        available,
+        usage: usage,
+        limit: limit,
+        read: false,
+        write: false,
+        del: false,
+      };
+
+      if (affiliation) {
+        status.read = affiliation.read;
+        status.write = affiliation.write;
+        status.del = affiliation.del;
+      }
+
+      this.send('updateCloudStatus', status);
+    } catch (error) {
+      console.error('[CloudClient] Error getting cloud status', String(error));
+    }
+  }
+
+  /**
+   * Handles an authentication failure.
+   */
+  private onAuthFailure() {
+    this.authenticated = false;
+
+    const status: CloudStatus = {
+      authenticated: this.authenticated,
+      guild: this.guild,
+      available: [],
+      usage: 0,
+      limit: 0,
+      read: false,
+      write: false,
+      del: false,
+    };
+
+    this.send('updateCloudStatus', status);
+  }
+
+  /**
+   * Handles the case where no guild is selected but credentials are valid..
+   */
+  private async onNoGuildSelection() {
+    console.warn('[CloudClient] No guild selected');
+    this.authenticated = false;
+    let winner;
+
+    try {
+      const bomb = getPromiseBomb(10, 'Authentication timed out');
+      const affs = CloudClient.getUserAffiliations(this.user, this.pass);
+
+      winner = await Promise.race([affs, bomb]);
+    } catch (error) {
+      console.warn('[Manager] Guild list failed', String(error));
+      return;
+    }
+
+    // Safe to cast here, either we got this data or we have thrown.
+    const affiliations = winner as TAffiliation[];
+    const guild = this.guild;
+    const available = affiliations.map((aff) => aff.guildName);
+
+    // We need to push the available guilds to the frontend to allow the user
+    // select a guild. Just push the permissions if we can for good measure so
+    // they are present on first attempt if the guild name is present. If the config
+    // is invalid we might get stuck before doing a full refresh so it's nice if this
+    // is accurate.
+    const status: CloudStatus = {
+      authenticated: false,
+      guild,
+      available,
+      usage: 0,
+      limit: 0,
+      read: false,
+      write: false,
+      del: false,
+    };
+
+    this.send('updateCloudStatus', status);
+  }
+
+  private setupListeners() {
+    ipcMain.handle('getShareableLink', async (_event, args) => {
+      const videoName = args[0];
+      const shareable = await this.getShareableLink(videoName);
+      clipboard.writeText(shareable);
+    });
   }
 }

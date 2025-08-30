@@ -275,40 +275,6 @@ const loadVideoDetailsDisk = async (
   }
 };
 
-const loadAllVideosDisk = async (
-  storageDir: string,
-): Promise<RendererVideo[]> => {
-  if (!storageDir) {
-    return [];
-  }
-
-  const videos = await getSortedVideos(storageDir);
-
-  if (videos.length === 0) {
-    return [];
-  }
-
-  const videoDetailPromises = videos.map((video) =>
-    loadVideoDetailsDisk(video),
-  );
-
-  // Await all the videoDetailsPromises to settle, and then remove any
-  // that were rejected. This can happen if there is a missing metadata file.
-  const videoDetails: RendererVideo[] = (
-    await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
-  ).filter((result) => !(result instanceof Error));
-
-  // Any details marked for deletion do it now. We allow for this flag to be
-  // set in the metadata to give us a robust mechanism for removing a video
-  // that may be open in the player. We hide it from the state as part of a
-  // refresh, that guarentees it cannot be loaded in the player.
-  videoDetails.filter((video) => video.delete).forEach(delayedDeleteVideo);
-
-  // Return this list of videos without those marked for deletion which may still
-  // exist for a short time.
-  return videoDetails.filter((video) => !video.delete);
-};
-
 /**
  * Writes video metadata asynchronously and returns a Promise
  */
@@ -1011,4 +977,5 @@ export {
   mv,
   playSoundAlert,
   isManualRecordHotKey,
+  delayedDeleteVideo,
 };

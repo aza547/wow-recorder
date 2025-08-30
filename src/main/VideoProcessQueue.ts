@@ -1,6 +1,5 @@
 import { BrowserWindow } from 'electron';
 import path from 'path';
-import assert from 'assert';
 import { shouldUpload } from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from '../config/ConfigService';
@@ -53,11 +52,6 @@ export default class VideoProcessQueue {
    * Config service handle.
    */
   private cfg = ConfigService.getInstance();
-
-  /**
-   * Cloud client, defined if using cloud storage.
-   */
-  private cloudClient: CloudClient | undefined;
 
   /**
    * List of video file paths currently in the upload queue, or in
@@ -138,20 +132,6 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Set the cloud client.
-   */
-  public setCloudClient = (cloudClient: CloudClient) => {
-    this.cloudClient = cloudClient;
-  };
-
-  /**
-   * Unset the cloud client.
-   */
-  public unsetCloudClient() {
-    this.cloudClient = undefined;
-  }
-
-  /**
    * Add a video to the queue for processing, the processing it undergoes is
    * dictated by the input. This is the only public method on this class.
    */
@@ -223,7 +203,11 @@ export default class VideoProcessQueue {
       //   await tryUnlink(data.source);
       // }
 
-      if (this.cloudClient && shouldUpload(this.cfg, data.metadata)) {
+      const upload =
+        CloudClient.getInstance().ready() &&
+        shouldUpload(this.cfg, data.metadata);
+
+      if (upload) {
         const item: UploadQueueItem = {
           path: videoPath,
         };
@@ -263,12 +247,12 @@ export default class VideoProcessQueue {
       lastProgress = progress;
     };
 
-    try {
-      assert(this.cloudClient);
+    const client = CloudClient.getInstance();
 
+    try {
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
-      await this.cloudClient.putFile(item.path, rateLimit, progressCallback);
+      await client.putFile(item.path, rateLimit, progressCallback);
       progressCallback(100);
 
       // Now add the metadata.
@@ -298,7 +282,7 @@ export default class VideoProcessQueue {
         cloudMetadata.start = stats.mtime;
       }
 
-      await this.cloudClient.postVideo(cloudMetadata);
+      await client.postVideo(cloudMetadata);
     } catch (error) {
       console.error(
         '[VideoProcessQueue] Error processing video:',
@@ -333,10 +317,10 @@ export default class VideoProcessQueue {
       lastProgress = progress;
     };
 
-    try {
-      assert(this.cloudClient);
+    const client = CloudClient.getInstance();
 
-      await this.cloudClient.getAsFile(
+    try {
+      await client.getAsFile(
         `${videoName}.mp4`,
         videoSource,
         storageDir,

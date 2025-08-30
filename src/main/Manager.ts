@@ -1,29 +1,16 @@
 import { BrowserWindow, app, clipboard, ipcMain, powerMonitor } from 'electron';
-import path from 'path';
-import fs from 'fs';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
 import assert from 'assert';
-import { getLocalePhrase, Language } from 'localisation/translations';
-import AuthError from '../utils/AuthError';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
   buildClipMetadata,
-  checkDisk,
   getMetadataForVideo,
   getOBSFormattedDate,
   tagVideoDisk,
   openSystemExplorer,
   markForVideoForDelete,
-  getPromiseBomb,
-  loadAllVideosDisk,
-  cloudSignedMetadataToRendererVideo,
-  isFolderOwned,
   exists,
-  takeOwnershipStorageDir,
-  takeOwnershipBufferDir,
   deleteVideoDisk,
-  getWowFlavour,
-  convertKoreanVideoCategory,
   protectVideoDisk,
   isManualRecordHotKey,
   playSoundAlert,
@@ -37,32 +24,25 @@ import RetailLogHandler from '../parsing/RetailLogHandler';
 import Recorder from './Recorder';
 import ConfigService from '../config/ConfigService';
 import {
-  ObsBaseConfig,
-  ObsVideoConfig,
-  ObsAudioConfig,
   RecStatus,
-  FlavourConfig,
-  ObsOverlayConfig,
-  IOBSDevice,
   VideoQueueItem,
   MicStatus,
   RendererVideo,
-  CloudStatus,
   DiskStatus,
   UploadQueueItem,
-  CloudConfig,
   WCRSceneItem,
   AudioSourceType,
   WowProcessEvent,
   SoundAlerts,
+  BaseConfig,
 } from './types';
 import {
-  getObsBaseConfig,
   getObsVideoConfig,
   getObsAudioConfig,
-  getFlavourConfig,
   getOverlayConfig,
-  getCloudConfig,
+  getBaseConfig,
+  validateBaseConfig,
+  getLocaleError,
 } from '../utils/configUtils';
 import { ERecordingState } from './obsEnums';
 import {
@@ -70,10 +50,7 @@ import {
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
 import VideoProcessQueue from './VideoProcessQueue';
-import CloudClient from '../storage/CloudClient';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
-import RetryableConfigError from '../utils/RetryableConfigError';
-import { TAffiliation } from 'types/api';
 import noobs from 'noobs';
 import { Phrase } from 'localisation/phrases';
 import LogHandler from 'parsing/LogHandler';
@@ -93,9 +70,9 @@ import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 export default class Manager {
   public recorder: Recorder;
 
-  private mainWindow: BrowserWindow;
+  private window: BrowserWindow;
 
-  private cfg: ConfigService = ConfigService.getInstance();
+  private cfg = ConfigService.getInstance();
 
   private poller = Poller.getInstance();
 
@@ -107,8 +84,6 @@ export default class Manager {
 
   private retailPtrLogHandler: RetailLogHandler | undefined;
 
-  private cloudClient: CloudClient | undefined;
-
   private videoProcessQueue: VideoProcessQueue;
 
   private configValid = false;
@@ -118,11 +93,6 @@ export default class Manager {
   private reconfiguring = false;
 
   private audioSettingsOpen = false;
-
-  /**
-   * If we have been through startup configuration.
-   */
-  private started = false;
 
   /**
    * It's confusing if you try to change the hotkey to something similar and
@@ -139,19 +109,18 @@ export default class Manager {
   /**
    * Constructor.
    */
-  constructor(mainWindow: BrowserWindow) {
+  constructor(window: BrowserWindow) {
     console.info('[Manager] Creating manager');
 
+    this.window = window;
     this.setupListeners();
-
-    this.mainWindow = mainWindow;
-    this.recorder = new Recorder(this.mainWindow);
+    this.recorder = new Recorder(this.window);
 
     this.recorder.on('state-change', () => {
-      setTimeout(() => this.refreshStatus(), 0);
+      setTimeout(() => this.refresh(), 0);
     });
 
-    this.videoProcessQueue = new VideoProcessQueue(this.mainWindow);
+    this.videoProcessQueue = new VideoProcessQueue(this.window);
   }
 
   /**
@@ -161,34 +130,20 @@ export default class Manager {
   public async startup() {
     console.info('[Manager] Starting up');
 
-    // This should never happen so just defend against it.
-    assert(!this.started);
-
     this.reconfiguring = true;
-    this.refreshStatus();
-
-    const base = getObsBaseConfig(this.cfg);
-    const video = getObsVideoConfig(this.cfg);
-    const audio = getObsAudioConfig(this.cfg);
-    const flavour = getFlavourConfig(this.cfg);
-    const overlay = getOverlayConfig(this.cfg);
+    this.refresh();
 
     try {
-      await this.validateBaseConfig(base);
-      await this.configureObsBase(base);
-
-      await this.configureObsVideo(video);
-      await this.configureObsAudio(audio);
-      await this.configureFlavour(flavour);
-
-      await this.validateOverlayConfig(overlay);
-      await this.configureObsOverlay(overlay);
-
-      this.started = true;
+      await this.configureBase();
+      await this.configureObsVideo();
+      await this.configureObsAudio();
+      await this.validateOverlayConfig();
+      await this.configureObsOverlay();
     } catch (error) {
       console.error('[Manager] Error during startup', error);
       this.reconfiguring = false;
       this.setConfigInvalid(String(error));
+      return;
     }
 
     this.reconfiguring = false;
@@ -200,30 +155,13 @@ export default class Manager {
       .start();
   }
 
-  public async configureBase() {
-    const base = getObsBaseConfig(this.cfg);
-
-    try {
-      await this.validateBaseConfig(base);
-      await this.configureObsBase(base);
-    } catch (error) {
-      console.error('[Manager] Error during base configuration', error);
-      this.reconfiguring = false;
-      this.setConfigInvalid(String(error));
-    }
-  }
-
-  public async configureCloud() {
-    const cloud = getCloudConfig(this.cfg);
-
-    try {
-      await this.validateCloudConfig(cloud);
-      await this.configureCloudClient(cloud);
-    } catch (error) {
-      console.error('[Manager] Error during cloud configuration', error);
-      this.reconfiguring = false;
-      this.setConfigInvalid(String(error));
-    }
+  /**
+   * Configure the base config.
+   */
+  private async configureBase() {
+    const config = getBaseConfig(this.cfg);
+    await validateBaseConfig(config);
+    await this.applyBaseConfig(config);
   }
 
   /**
@@ -301,7 +239,7 @@ export default class Manager {
   private setConfigValid() {
     this.configValid = true;
     this.configMessage = '';
-    this.refreshStatus();
+    this.refresh();
   }
 
   /**
@@ -310,14 +248,14 @@ export default class Manager {
   private setConfigInvalid(reason: string) {
     this.configValid = false;
     this.configMessage = reason;
-    this.refreshStatus();
+    this.refresh();
   }
 
   /**
    * Refresh the recorder and mic status icons in the UI. This is the only
    * place that this should be done from to avoid any status icon confusion.
    */
-  public refreshStatus() {
+  public refresh() {
     if (this.reconfiguring) {
       this.refreshRecStatus(RecStatus.Reconfiguring);
       return;
@@ -365,16 +303,16 @@ export default class Manager {
    * Send a message to the frontend to update the recorder status icon.
    */
   private refreshRecStatus(status: RecStatus, msg = '') {
-    if (this.mainWindow.isDestroyed()) return; // Can happen on shutdown.
-    this.mainWindow.webContents.send('updateRecStatus', status, msg);
+    if (this.window.isDestroyed()) return; // Can happen on shutdown.
+    this.window.webContents.send('updateRecStatus', status, msg);
   }
 
   /**
    * Send a message to the frontend to update the mic status icon.
    */
   private refreshMicStatus(status: MicStatus) {
-    if (this.mainWindow.isDestroyed()) return; // Can happen on shutdown.
-    this.mainWindow.webContents.send('updateMicStatus', status);
+    if (this.window.isDestroyed()) return; // Can happen on shutdown.
+    this.window.webContents.send('updateMicStatus', status);
   }
 
   /**
@@ -385,54 +323,7 @@ export default class Manager {
     // gets stale data otherwise. A caching thing in libobs maybe? Noobs will
     // send a source signal to the recorder if the size of sources change, but
     // for other changes we need to manually trigger a redraw.
-    setTimeout(() => this.mainWindow.webContents.send('redrawPreview'), 100);
-  }
-
-  /**
-   * Send a message to the frontend to update the cloud status, which populates
-   * the cloud usage bar. Safe to call regardless of if cloud storage in use or not.
-   */
-  private async refreshCloudStatus() {
-    if (this.cloudClient === undefined) {
-      return;
-    }
-
-    try {
-      const usagePromise = this.cloudClient.getUsage();
-      const limitPromise = this.cloudClient.getStorageLimit();
-      const affiliationsPromise = this.cloudClient.getUserAffiliations();
-
-      // This is a bit tricky, get the guild name from the active client which is
-      // guarenteed to be up to date, unlike other fields in this class.
-      const guild = this.cloudClient.getGuildName();
-
-      const usage = await usagePromise;
-      const limit = await limitPromise;
-      const affiliations = await affiliationsPromise;
-
-      const available = affiliations.map((aff) => aff.guildName);
-      const affiliation = affiliations.find((aff) => aff.guildName === guild);
-
-      const status: CloudStatus = {
-        guild,
-        available,
-        usage: usage,
-        limit: limit,
-        read: false,
-        write: false,
-        del: false,
-      };
-
-      if (affiliation) {
-        status.read = affiliation.read;
-        status.write = affiliation.write;
-        status.del = affiliation.del;
-      }
-
-      this.mainWindow.webContents.send('updateCloudStatus', status);
-    } catch (error) {
-      console.error('[Manager] Error getting cloud status', String(error));
-    }
+    setTimeout(() => this.window.webContents.send('redrawPreview'), 100);
   }
 
   /**
@@ -440,10 +331,10 @@ export default class Manager {
    * the disk usage bar.
    */
   private async refreshDiskStatus() {
-    const usage = await new DiskSizeMonitor(this.mainWindow).usage();
+    const usage = await new DiskSizeMonitor(this.window).usage();
     const limit = this.cfg.get<number>('maxStorage') * 1024 ** 3;
     const status: DiskStatus = { usage, limit };
-    this.mainWindow.webContents.send('updateDiskStatus', status);
+    this.window.webContents.send('updateDiskStatus', status);
   }
 
   /**
@@ -498,164 +389,89 @@ export default class Manager {
   /**
    * Configure the base OBS config. We need to stop the recording to do this.
    */
-  private async configureObsBase(config: ObsBaseConfig) {
-    // Force stop as we don't care about the output video.
+  private async applyBaseConfig(config: BaseConfig) {
     await this.recorder.stop(true);
 
-    await this.refreshCloudStatus();
     await this.refreshDiskStatus();
 
     await this.recorder.configureBase(config);
-    this.mainWindow.webContents.send('refreshState');
-  }
-
-  /**
-   * Configure the base OBS config. We need to stop the recording to do this.
-   */
-  private async configureCloudClient(config: CloudConfig) {
-    const {
-      cloudStorage,
-      cloudAccountName,
-      cloudAccountPassword,
-      cloudGuildName,
-    } = config;
-
-    if (this.cloudClient) {
-      this.cloudClient.removeAllListeners();
-      this.cloudClient.stopPolling();
-      this.cloudClient = undefined;
-      this.videoProcessQueue.unsetCloudClient();
-    }
-
-    if (cloudStorage) {
-      console.info('[Manager] Cloud storage is enabled');
-
-      this.cloudClient = new CloudClient(
-        cloudAccountName,
-        cloudAccountPassword,
-        cloudGuildName,
-      );
-
-      this.cloudClient.on('change', () => {
-        this.mainWindow.webContents.send('refreshState');
-        this.refreshCloudStatus();
-      });
-
-      this.cloudClient.on('logout', () => {
-        // Likely the user has changed their password on the website. Trigger
-        // a reconfigure which will update the status card and move the app to
-        // error state.
-        console.warn('[Manager] Got logout event from CloudClient');
-        this.stages[5].valid = false; // Stage 5 is the cloud stage.
-        //this.manage(); // Queue a call to manage to mimic first time setup.
-      });
-
-      await this.cloudClient.pollInit();
-      this.cloudClient.startPolling();
-      this.videoProcessQueue.setCloudClient(this.cloudClient);
-    }
-
-    await this.refreshCloudStatus();
-    this.mainWindow.webContents.send('refreshState');
-  }
-
-  /**
-   * Configure video settings in OBS. This can all be changed live.
-   */
-  private configureObsVideo(config: ObsVideoConfig) {
-    this.recorder.configureVideoSources(config, this.poller.isWowRunning());
-  }
-
-  /**
-   * Configure audio settings in OBS. This can all be changed live.
-   */
-  private configureObsAudio(config: ObsAudioConfig) {
-    const shouldConfigure =
-      this.poller.isWowRunning() || this.audioSettingsOpen;
-
-    if (!shouldConfigure) {
-      console.info("[Manager] Won't configure audio sources, WoW not running");
-      return;
-    }
-
-    this.recorder.configureAudioSources(config);
-  }
-
-  /**
-   * Configure the appropriate LogHandlers.
-   */
-  private async configureFlavour(config: FlavourConfig) {
     this.manualLogHandler = undefined;
 
     if (this.retailLogHandler) {
       this.retailLogHandler.removeAllListeners();
       this.retailLogHandler.destroy();
+      this.retailLogHandler = undefined;
     }
 
     if (this.classicLogHandler) {
       this.classicLogHandler.removeAllListeners();
       this.classicLogHandler.destroy();
+      this.classicLogHandler = undefined;
     }
 
     if (this.eraLogHandler) {
       this.eraLogHandler.removeAllListeners();
       this.eraLogHandler.destroy();
+      this.eraLogHandler = undefined;
     }
 
     if (this.retailPtrLogHandler) {
       this.retailPtrLogHandler.removeAllListeners();
       this.retailPtrLogHandler.destroy();
+      this.retailPtrLogHandler = undefined;
     }
 
     if (config.recordRetail) {
       this.retailLogHandler = new RetailLogHandler(
-        this.mainWindow,
+        this.window,
         this.recorder,
         this.videoProcessQueue,
         config.retailLogPath,
       );
 
-      this.retailLogHandler.on('state-change', () => this.refreshStatus());
+      this.retailLogHandler.on('state-change', () => this.refresh());
     }
 
     if (config.recordClassic) {
       this.classicLogHandler = new ClassicLogHandler(
-        this.mainWindow,
+        this.window,
         this.recorder,
         this.videoProcessQueue,
         config.classicLogPath,
       );
 
-      this.classicLogHandler.on('state-change', () => this.refreshStatus());
+      this.classicLogHandler.on('state-change', () => this.refresh());
     }
 
     if (config.recordEra) {
       this.eraLogHandler = new EraLogHandler(
-        this.mainWindow,
+        this.window,
         this.recorder,
         this.videoProcessQueue,
         config.eraLogPath,
       );
 
-      this.eraLogHandler.on('state-change', () => this.refreshStatus());
+      this.eraLogHandler.on('state-change', () => this.refresh());
     }
 
     if (config.recordRetailPtr) {
       this.retailPtrLogHandler = new RetailLogHandler(
-        this.mainWindow,
+        this.window,
         this.recorder,
         this.videoProcessQueue,
         config.retailPtrLogPath,
       );
 
       this.retailPtrLogHandler.setIsPtr();
-      this.retailPtrLogHandler.on('state-change', () => this.refreshStatus());
+      this.retailPtrLogHandler.on('state-change', () => this.refresh());
     }
 
     // Order of priority which log handler to use for manual recordings.
     // It doesn't actually matter which takes it as the logic is all in
     // the LogHandler class itself, but it's abstract and we need to make
     // sure we start and stop aganst the same concrete implementation.
+    //
+    // TODO what if we send manual through one but get real events through another?
     if (this.retailLogHandler) {
       this.manualLogHandler = this.retailLogHandler;
     } else if (this.retailPtrLogHandler) {
@@ -665,269 +481,46 @@ export default class Manager {
     } else if (this.eraLogHandler) {
       this.manualLogHandler = this.eraLogHandler;
     }
+
+    // We're done, now make sure we refresh the frontend.
+    this.window.webContents.send('refreshState');
+  }
+
+  /**
+   * Configure video settings in OBS. This can all be changed live.
+   */
+  private configureObsVideo() {
+    const isWowRunning = this.poller.isWowRunning();
+    const config = getObsVideoConfig(this.cfg);
+    this.recorder.configureVideoSources(config, isWowRunning);
+  }
+
+  /**
+   * Configure audio settings in OBS. This can all be changed live.
+   */
+  private configureObsAudio() {
+    const isWowRunning = this.poller.isWowRunning();
+    const shouldConfigure = isWowRunning || this.audioSettingsOpen;
+
+    if (!shouldConfigure) {
+      console.info("[Manager] Won't configure audio sources, WoW not running");
+      return;
+    }
+
+    const config = getObsAudioConfig(this.cfg);
+    this.recorder.configureAudioSources(config);
   }
 
   /**
    * Configure chat overlay in OBS. This can all be changed live.
    */
-  private configureObsOverlay(config: ObsOverlayConfig) {
+  private configureObsOverlay() {
+    const config = getOverlayConfig(this.cfg);
     this.recorder.configureOverlayImageSource(config);
   }
 
-  /**
-   * Validate the cloud config.
-   */
-  private async validateCloudConfig(config: CloudConfig) {
-    const {
-      cloudStorage,
-      cloudAccountName,
-      cloudAccountPassword,
-      cloudGuildName,
-      cloudUpload,
-    } = config;
-
-    if (!cloudStorage) {
-      console.info('[Manager] Cloud Storage is not enabled');
-      return;
-    }
-
-    if (!cloudAccountName) {
-      console.warn('[Manager] Empty account name');
-      throw new Error(this.getLocaleError(Phrase.ErrorAccountEmpty));
-    }
-
-    if (!cloudAccountPassword) {
-      console.warn('[Manager] Empty account key');
-      throw new Error(this.getLocaleError(Phrase.ErrorPasswordEmpty));
-    }
-
-    let winner;
-
-    try {
-      const bomb = getPromiseBomb(10, 'Authentication timed out');
-
-      const affs = CloudClient.getUserAffiliations(
-        cloudAccountName,
-        cloudAccountPassword,
-      );
-
-      winner = await Promise.race([affs, bomb]);
-    } catch (error) {
-      console.warn('[Manager] Cloud validation failed', String(error));
-
-      if (error instanceof AuthError) {
-        // If the server returns a 401 or a 403 we just rethrow that so the
-        // message is presented on the status indicator. No point retrying
-        // if the user has their password wrong.
-        console.warn('[Manager] Auth failed, will not retry');
-        throw error;
-      }
-
-      console.warn('[Manager] Will retry');
-
-      throw new RetryableConfigError(
-        'Failed to authenticate with the cloud store.',
-        10000,
-      );
-    }
-
-    // Safe to cast here, either we got this data or we have thrown.
-    const affiliations = winner as TAffiliation[];
-    const guild = cloudGuildName;
-    const available = affiliations.map((aff) => aff.guildName);
-
-    // Look for a match against the selected guild name. If this isn't selected
-    // yet, cloudGuildName is an empty string, which will never match.
-    const affiliation = affiliations.find((aff) => aff.guildName === guild);
-
-    // We need to push the available guilds to the frontend to allow the user
-    // select a guild. Just push the permissions if we can for good measure so
-    // they are present on first attempt if the guild name is present. If the config
-    // is invalid we might get stuck before doing a full refresh so it's nice if this
-    // is accurate.
-    const status: CloudStatus = {
-      guild,
-      available,
-      usage: 0,
-      limit: 0,
-      read: false,
-      write: false,
-      del: false,
-    };
-
-    if (affiliation) {
-      status.read = affiliation.read;
-      status.write = affiliation.write;
-      status.del = affiliation.del;
-    }
-
-    this.mainWindow.webContents.send('updateCloudStatus', status);
-
-    if (!affiliation) {
-      console.warn('[Manager] Empty guild name');
-      throw new Error(this.getLocaleError(Phrase.ErrorGuildEmpty));
-    }
-
-    if (!affiliation.read) {
-      throw new Error(
-        this.getLocaleError(Phrase.ErrorUserNotAuthorizedPlayback),
-      );
-    }
-
-    if (!affiliation.write && cloudUpload) {
-      throw new Error(this.getLocaleError(Phrase.ErrorUserNotAuthorizedUpload));
-    }
-  }
-
-  /**
-   * Validate the base config.
-   */
-  private async validateBaseConfig(config: ObsBaseConfig) {
-    const { storagePath, maxStorage, obsPath } = config;
-
-    if (!storagePath) {
-      console.warn(
-        '[Manager] Validation failed: `storagePath` is falsy',
-        storagePath,
-      );
-
-      throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
-    }
-
-    if (storagePath.includes('#')) {
-      // A user hit this: the video player loads the file path as a URL where # is interpreted as a timestamp.
-      console.warn(
-        '[Manager] Validation failed: `storagePath` contains invalid character "#"',
-      );
-      throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
-    }
-
-    if (!fs.existsSync(path.dirname(storagePath))) {
-      console.warn(
-        '[Manager] Validation failed, storagePath does not exist',
-        storagePath,
-      );
-
-      throw new Error(this.getLocaleError(Phrase.ErrorStoragePathInvalid));
-    }
-
-    await checkDisk(storagePath, maxStorage);
-
-    if (!obsPath) {
-      console.warn('[Manager] Validation failed: `obsPath` is falsy', obsPath);
-      throw new Error(this.getLocaleError(Phrase.ErrorBufferPathInvalid));
-    }
-
-    const obsParentDir = path.dirname(obsPath);
-    const obsParentDirExists = await exists(obsParentDir);
-
-    if (!obsParentDirExists) {
-      console.warn(
-        '[Manager] Validation failed, obsPath does not exist',
-        obsPath,
-      );
-      throw new Error(this.getLocaleError(Phrase.ErrorBufferPathInvalid));
-    }
-
-    if (path.resolve(storagePath) === path.resolve(obsPath)) {
-      console.warn(
-        '[Manager] Validation failed: Storage Path is the same as Buffer Path',
-      );
-
-      throw new Error(
-        this.getLocaleError(Phrase.ErrorStoragePathSameAsBufferPath),
-      );
-    }
-
-    const obsDirExists = await exists(obsPath);
-
-    // 10GB is a rough guess at what the worst case buffer directory might be.
-    if (obsDirExists) {
-      await checkDisk(obsPath, 10);
-    } else {
-      const parentDir = path.dirname(obsPath);
-      await checkDisk(parentDir, 10);
-    }
-
-    const storagePathOwned = await isFolderOwned(storagePath);
-
-    if (!storagePathOwned) {
-      await takeOwnershipStorageDir(storagePath);
-    }
-
-    if (obsDirExists && !(await isFolderOwned(obsPath))) {
-      await takeOwnershipBufferDir(obsPath);
-    }
-  }
-
-  /**
-   * Checks the flavour config is valid.
-   * @throws an error describing why the config is invalid
-   */
-  private validateFlavour = (config: FlavourConfig) => {
-    const {
-      recordRetail,
-      retailLogPath,
-      recordRetailPtr,
-      retailPtrLogPath,
-      recordClassic,
-      classicLogPath,
-      recordEra,
-      eraLogPath,
-    } = config;
-
-    if (recordRetail) {
-      const validFlavours = ['wow'];
-      const validPath =
-        validFlavours.includes(getWowFlavour(retailLogPath)) &&
-        path.basename(retailLogPath) === 'Logs';
-
-      if (!validPath) {
-        console.error('[Util] Invalid retail log path', retailLogPath);
-        throw new Error(this.getLocaleError(Phrase.InvalidRetailLogPath));
-      }
-    }
-
-    if (recordRetailPtr) {
-      const validFlavours = ['wowxptr', 'wow_beta'];
-      const validPath =
-        validFlavours.includes(getWowFlavour(retailPtrLogPath)) &&
-        path.basename(retailPtrLogPath) === 'Logs';
-
-      if (!validPath) {
-        console.error('[Util] Invalid retail PTR log path', retailPtrLogPath);
-        throw new Error(
-          this.getLocaleError(Phrase.InvalidRetailPtrLogPathText),
-        );
-      }
-    }
-
-    if (recordClassic) {
-      const validFlavours = ['wow_classic', 'wow_classic_beta'];
-      const validPath =
-        validFlavours.includes(getWowFlavour(classicLogPath)) &&
-        path.basename(classicLogPath) === 'Logs';
-
-      if (!validPath) {
-        console.error('[Util] Invalid classic log path', classicLogPath);
-        throw new Error(this.getLocaleError(Phrase.InvalidClassicLogPath));
-      }
-    }
-
-    if (recordEra) {
-      const validFlavours = ['wow_classic_era'];
-      const validPath =
-        validFlavours.includes(getWowFlavour(eraLogPath)) &&
-        path.basename(eraLogPath) === 'Logs';
-
-      if (!validPath) {
-        console.error('[Util] Invalid era log path', eraLogPath);
-        throw new Error(this.getLocaleError(Phrase.InvalidEraLogPath));
-      }
-    }
-  };
-
-  private async validateOverlayConfig(config: ObsOverlayConfig) {
+  private async validateOverlayConfig() {
+    const config = getOverlayConfig(this.cfg);
     const { chatOverlayOwnImage, chatOverlayOwnImagePath, cloudStorage } =
       config;
 
@@ -937,7 +530,7 @@ export default class Manager {
 
     if (!cloudStorage) {
       console.warn('[Manager] To use a custom overlay, enable cloud storage');
-      throw new Error(this.getLocaleError(Phrase.ErrorCustomOverlayNotAllowed));
+      throw new Error(getLocaleError(Phrase.ErrorCustomOverlayNotAllowed));
     }
 
     if (!chatOverlayOwnImagePath) {
@@ -945,7 +538,7 @@ export default class Manager {
         '[Manager] Overlay image was not provided for custom overlay',
       );
 
-      throw new Error(this.getLocaleError(Phrase.ErrorNoCustomImage));
+      throw new Error(getLocaleError(Phrase.ErrorNoCustomImage));
     }
 
     if (
@@ -953,14 +546,14 @@ export default class Manager {
       !chatOverlayOwnImagePath.toLocaleLowerCase().endsWith('.gif')
     ) {
       console.warn('[Manager] Overlay image must be a .png or .gif file');
-      throw new Error(this.getLocaleError(Phrase.ErrorCustomImageFileType));
+      throw new Error(getLocaleError(Phrase.ErrorCustomImageFileType));
     }
 
     const fileExists = await exists(chatOverlayOwnImagePath);
 
     if (!fileExists) {
       console.warn(`[Manager] ${chatOverlayOwnImagePath} does not exist`);
-      let errorMsg = this.getLocaleError(Phrase.ErrorCustomImageFileType);
+      let errorMsg = getLocaleError(Phrase.ErrorCustomImageFileType);
       errorMsg += `: ${chatOverlayOwnImagePath}`;
       throw new Error(errorMsg);
     }
@@ -972,7 +565,7 @@ export default class Manager {
   private setupListeners() {
     // Config change listener we use to tweak the app settings in Windows if
     // the user enables/disables run on start-up.
-    this.cfg.on('change', (key: string, value: any) => {
+    this.cfg.on('change', (key: string, value: unknown) => {
       if (key === 'startUp') {
         const isStartUp = value === true;
         console.info('[Main] OS level set start-up behaviour:', isStartUp);
@@ -1011,33 +604,6 @@ export default class Manager {
 
       return obsEncoders;
     });
-
-    // Audio devices listener, to populate settings on the frontend.
-    ipcMain.handle(
-      'getAudioDevices',
-      (): {
-        input: IOBSDevice[];
-        output: IOBSDevice[];
-        process: {
-          name: string;
-          value: string | number;
-        }[];
-      } => {
-        if (!this.recorder.obsInitialized) {
-          return {
-            input: [],
-            output: [],
-            process: [],
-          };
-        }
-
-        return {
-          input: this.recorder.getInputAudioDevices(),
-          output: this.recorder.getOutputAudioDevices(),
-          process: this.recorder.getProcessAudioDevices(),
-        };
-      },
-    );
 
     // Test listener, to enable the test button to start a test.
     ipcMain.on('test', (_event, args) => {
@@ -1078,7 +644,11 @@ export default class Manager {
         return;
       }
 
-      this.manage();
+      const isWowRunning = this.poller.isWowRunning();
+
+      if (isWowRunning) {
+        this.onWowStarted();
+      }
     });
 
     // VideoButton event listeners.
@@ -1161,29 +731,6 @@ export default class Manager {
 
       if (cloud.length > 0) {
         this.deleteCloudVideos(cloud);
-      }
-    });
-
-    /**
-     * Listener to generate a shareable link to a video.
-     */
-    ipcMain.handle('getShareableLink', async (_event, args) => {
-      assert(this.cloudClient);
-      const videoName = args[0];
-      const shareable = await this.cloudClient.getShareableLink(videoName);
-      clipboard.writeText(shareable);
-    });
-
-    /**
-     * Called when the user triggers a refresh (with F5 or Ctrl + R) to repopulate
-     * status fields on the frontend.
-     */
-    ipcMain.on('refreshFrontend', async () => {
-      this.refreshStatus();
-
-      if (this.configValid) {
-        await this.refreshDiskStatus();
-        await this.refreshCloudStatus();
       }
     });
 
@@ -1351,11 +898,45 @@ export default class Manager {
         return;
       }
 
+      const logHandlers = [
+        this.retailLogHandler,
+        this.retailPtrLogHandler,
+        this.classicLogHandler,
+        this.eraLogHandler,
+      ];
+
+      // TODO - worry about the reverse. This protects starting a manual
+      // recording while in a real activity. What about starting a real
+      // activity while in a manual activity? I think that needs solved.
+      const inRealActivity =
+        logHandlers
+          .filter((handler) => handler !== undefined)
+          .map((handler) => handler.activity)
+          .filter((activity) => activity !== undefined)
+          .map((handler) => handler.category)
+          .filter((category) => category !== VideoCategory.Manual).length > 0;
+
+      if (inRealActivity) {
+        console.warn('[Manager] In activity, unable to start manual recording');
+        const sounds = this.cfg.get('manualRecordSoundAlert');
+
+        if (sounds) {
+          playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.window);
+        }
+
+        return;
+      }
+
       if (!this.manualLogHandler) {
         // I don't think it should be possible to hit this, but be safe.
         // The poller check above compares WoW process state to config categories.
         console.warn('[Manager] No manual log handler available');
-        playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.mainWindow);
+        const sounds = this.cfg.get('manualRecordSoundAlert');
+
+        if (sounds) {
+          playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.window);
+        }
+
         return;
       }
 
@@ -1394,36 +975,7 @@ export default class Manager {
   }
 
   /**
-   * Load the details for all the videos.
-   */
-  public async loadAllVideos(storagePath: string) {
-    const videos: RendererVideo[] = [];
-
-    if (this.cloudClient !== undefined) {
-      const cloudVideos = await this.loadAllVideosCloud();
-      videos.push(...cloudVideos);
-    }
-
-    const diskVideos = await loadAllVideosDisk(storagePath);
-    videos.push(...diskVideos);
-
-    return videos;
-  }
-
-  private async loadAllVideosCloud(): Promise<RendererVideo[]> {
-    try {
-      assert(this.cloudClient);
-      const cloudSigned = await this.cloudClient.getState();
-      cloudSigned.forEach(convertKoreanVideoCategory);
-      return cloudSigned.map(cloudSignedMetadataToRendererVideo);
-    } catch (error) {
-      console.error('[Manager] Failed to get state:', String(error));
-      return [];
-    }
-  }
-
-  /**
-   * Delete a video from the disk, and it's accompanying metadata.
+   * Delete a video from the disk, and its accompanying metadata.
    */
   private deleteVideoDisk = async (videoName: string) => {
     try {
@@ -1506,12 +1058,4 @@ export default class Manager {
       console.warn('[Manager] Failed to tag', videoNames, String(error));
     }
   };
-
-  /**
-   * Return a language appropriate error string.
-   */
-  private getLocaleError(phrase: Phrase) {
-    const lang = this.cfg.get<string>('language') as Language;
-    return getLocalePhrase(lang, phrase);
-  }
 }

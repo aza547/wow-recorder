@@ -31,10 +31,10 @@ import {
 import {
   AudioSource,
   AudioSourceType,
+  BaseConfig,
   CrashData,
   MicStatus,
   ObsAudioConfig,
-  ObsBaseConfig,
   ObsOverlayConfig,
   ObsVideoConfig,
   VideoSourceName,
@@ -73,9 +73,9 @@ export default class Recorder extends EventEmitter {
   public startDate = new Date();
 
   /**
-   * Reference back to the mainWindow object for updating the app status icon.
+   * Reference back to the window object for updating the app status icon.
    */
-  private mainWindow: BrowserWindow;
+  private window: BrowserWindow;
 
   /**
    * ConfigService instance.
@@ -195,10 +195,10 @@ export default class Recorder extends EventEmitter {
   /**
    * Contructor.
    */
-  constructor(mainWindow: BrowserWindow) {
+  constructor(window: BrowserWindow) {
     super();
     console.info('[Recorder] Constructing recorder:', this.uuid);
-    this.mainWindow = mainWindow;
+    this.window = window;
     this.initializeOBS();
   }
 
@@ -293,7 +293,7 @@ export default class Recorder extends EventEmitter {
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
-  public async configureBase(config: ObsBaseConfig) {
+  public async configureBase(config: BaseConfig) {
     const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
@@ -319,6 +319,7 @@ export default class Recorder extends EventEmitter {
     }
 
     const outputPath = path.normalize(obsPath);
+    console.info('[Recorder] Set recording directory', outputPath);
     await this.cleanup(outputPath);
     await Recorder.createRecordingDirs(outputPath);
     noobs.SetRecordingDir(outputPath);
@@ -833,9 +834,9 @@ export default class Recorder extends EventEmitter {
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
 
-    // TODO not hardcoded
-    const recordingPath =
-      'D:/checkouts/warcraft-recorder-obs-engine/recordings';
+    // Probably changing the design of noobs here. Don't really want
+    // to pass this in as part of init, and it's not necessary either.
+    const recordingPath = 'not-a-path';
 
     console.log('[Recorder] Noobs path:', noobsPath);
     console.log('[Recorder] Log path:', logPath);
@@ -844,7 +845,7 @@ export default class Recorder extends EventEmitter {
     noobs.Init(noobsPath, logPath, recordingPath, cb);
     noobs.SetBuffering(true);
 
-    const hwnd = this.mainWindow.getNativeWindowHandle();
+    const hwnd = this.window.getNativeWindowHandle();
     noobs.InitPreview(hwnd);
     noobs.SetDrawSourceOutline(true);
 
@@ -861,7 +862,7 @@ export default class Recorder extends EventEmitter {
     if (signal.type === 'volmeter' && signal.value !== undefined) {
       // A volmeter callback was fired. This happens very often while there
       // are audio sources attached and the audio settings are open.
-      this.mainWindow.webContents.send('volmeter', signal.id, signal.value);
+      this.window.webContents.send('volmeter', signal.id, signal.value);
       return;
     }
 
@@ -872,7 +873,7 @@ export default class Recorder extends EventEmitter {
     if (signal.type === 'source') {
       // A source has sporadically changed dimensions. This typically happens
       // when a game or window capture source is initialized or resized.
-      this.mainWindow.webContents.send('redrawPreview', signal);
+      this.window.webContents.send('redrawPreview', signal);
       return;
     }
 
@@ -1216,10 +1217,7 @@ export default class Recorder extends EventEmitter {
       const settings = noobs.GetSourceSettings(this.activeCaptureSource);
       const updated = { ...settings, window: match.value };
       noobs.SetSourceSettings(this.activeCaptureSource, updated);
-      setTimeout(
-        () => this.mainWindow.webContents.send('redrawPreview'),
-        10000,
-      );
+      setTimeout(() => this.window.webContents.send('redrawPreview'), 10000);
       return;
     }
 

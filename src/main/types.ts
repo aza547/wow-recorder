@@ -2,7 +2,6 @@ import { Size } from 'electron';
 import { Language } from '../localisation/translations';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
-import ConfigService from '../config/ConfigService';
 import { Tag } from 'react-tag-autocomplete';
 import { DateValueType } from 'react-tailwindcss-datepicker';
 
@@ -361,7 +360,7 @@ type Encoder = {
   type: EncoderType;
 };
 
-type ObsBaseConfig = {
+type BaseConfig = {
   storagePath: string;
   maxStorage: number;
   obsPath: string;
@@ -369,6 +368,14 @@ type ObsBaseConfig = {
   obsFPS: number;
   obsQuality: string;
   obsRecEncoder: string;
+  recordRetail: boolean;
+  retailLogPath: string;
+  recordClassic: boolean;
+  classicLogPath: string;
+  recordEra: boolean;
+  eraLogPath: string;
+  recordRetailPtr: boolean;
+  retailPtrLogPath: string;
 };
 
 type ObsVideoConfig = {
@@ -406,32 +413,12 @@ type ObsAudioConfig = {
   pushToTalkModifiers: string;
 };
 
-type FlavourConfig = {
-  recordRetail: boolean;
-  retailLogPath: string;
-  recordClassic: boolean;
-  classicLogPath: string;
-  recordEra: boolean;
-  eraLogPath: string;
-  recordRetailPtr: boolean;
-  retailPtrLogPath: string;
-};
-
 type CloudConfig = {
   cloudStorage: boolean;
   cloudUpload: boolean;
   cloudAccountName: string;
   cloudAccountPassword: string;
   cloudGuildName: string;
-};
-
-type ConfigStage = {
-  name: string;
-  valid: boolean;
-  current: any;
-  get: (cfg: ConfigService) => any;
-  configure: (...args: any[]) => Promise<void>;
-  validate: (...args: any[]) => Promise<void>;
 };
 
 enum DeathMarkers {
@@ -459,6 +446,7 @@ type SliderMark = {
 };
 
 type CloudStatus = {
+  authenticated: boolean;
   guild: string;
   available: string[];
   read: boolean; // Always true for now.
@@ -651,13 +639,11 @@ export {
   Pages,
   EncoderType,
   Encoder,
-  ObsBaseConfig,
+  BaseConfig,
   ObsVideoConfig,
   ObsOverlayConfig,
   ObsAudioConfig,
-  FlavourConfig,
   CloudConfig,
-  ConfigStage,
   DeathMarkers,
   VideoMarker,
   MarkerColors,

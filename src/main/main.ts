@@ -26,6 +26,8 @@ import Manager from './Manager';
 import AppUpdater from './AppUpdater';
 import MenuBuilder from './menu';
 import { Phrase } from 'localisation/phrases';
+import CloudClient from 'storage/CloudClient';
+import DiskClient from 'storage/DiskClient';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -164,6 +166,15 @@ const createWindow = async () => {
     },
   });
 
+  // Setup the storage clients.
+  const cloud = CloudClient.getInstance();
+  cloud.setWindow(mainWindow);
+  cloud.login();
+
+  const disk = DiskClient.getInstance();
+  disk.setWindow(mainWindow);
+
+  // Setup the manager.
   if (manager === undefined) {
     manager = new Manager(mainWindow);
   }
@@ -188,22 +199,6 @@ const createWindow = async () => {
     if (!startMinimized) {
       mainWindow.show();
     }
-
-    // setTimeout(() => {
-    //   if (!mainWindow) return;
-    //   console.warn('[Main] PREVIEW SHOW START');
-    //   const hwnd = mainWindow.getNativeWindowHandle();
-    //   console.info('[Main] hwnd:', hwnd);
-    //   wcr.ObsShowPreview(hwnd);
-    //   console.warn('[Main] PREVIEW SHOW STOP');
-    // }, 5000);
-
-    // setTimeout(() => {
-    //   if (!mainWindow) return;
-    //   console.warn('[Main] PREVIEW HIDE START');
-    //   wcr.ObsHidePreview();
-    //   console.warn('[Main] PREVIEW HIDE STOP');
-    // }, 10000);
   });
 
   mainWindow.on('focus', () => {
@@ -219,7 +214,7 @@ const createWindow = async () => {
   });
 
   await mainWindow.loadURL(resolveHtmlPath('index.html'));
-  manager.refreshStatus();
+  manager.refresh();
   setupTray();
 
   // Open urls in the user's browser
@@ -340,7 +335,7 @@ ipcMain.on('settingsChange', () => {
 
   if (manager) {
     console.log('[Main] Settings change calling manage');
-    manager.manage();
+    // manager.manage(); TODO
   }
 });
 
@@ -360,12 +355,24 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
 });
 
 /**
- * Get the list of video files and their state.
+ * Get the list of video files and their state. Deliberately let both the
+ * cloud and disk clients run concurrently.
  */
 ipcMain.handle('getVideoState', async () => {
-  const storagePath = cfg.get<string>('storagePath');
+  const cp = CloudClient.getInstance().getVideos();
+  const dp = DiskClient.getInstance().getVideos();
+
+  const cloud = await cp;
+  const disk = await dp;
+
+  return [...cloud, ...disk];
+});
+
+ipcMain.on('refreshFrontend', async () => {
   assert(manager);
-  return manager.loadAllVideos(storagePath);
+  manager.refresh();
+  CloudClient.getInstance().refreshStatus();
+  DiskClient.getInstance().refreshStatus();
 });
 
 /**

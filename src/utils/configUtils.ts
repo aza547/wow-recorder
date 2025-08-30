@@ -1,14 +1,12 @@
 import {
-  ObsBaseConfig,
+  BaseConfig,
   ObsVideoConfig,
   ObsAudioConfig,
-  FlavourConfig,
   ObsOverlayConfig,
   Metadata,
   CloudConfig,
   Flavour,
   AudioSource,
-  ManualRecordingSoundAlerts,
 } from 'main/types';
 import path from 'path';
 import ConfigService from '../config/ConfigService';
@@ -18,8 +16,10 @@ import {
 } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import { ESupportedEncoders } from '../main/obsEnums';
-import { getAssetPath } from 'main/util';
-import { BrowserWindow } from 'electron';
+import { Language, Phrase } from 'localisation/phrases';
+import { getLocalePhrase } from 'localisation/translations';
+import fs from 'fs';
+import { checkDisk, exists, getWowFlavour, isFolderOwned, takeOwnershipBufferDir, takeOwnershipStorageDir } from 'main/util';
 
 const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   if (category === VideoCategory.Clips) {
@@ -146,7 +146,7 @@ const shouldUpload = (cfg: ConfigService, metadata: Metadata) => {
   return true;
 };
 
-const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
+const getBaseConfig = (cfg: ConfigService): BaseConfig => {
   const storagePath = cfg.getPath('storagePath');
   let obsPath: string;
 
@@ -174,6 +174,14 @@ const getObsBaseConfig = (cfg: ConfigService): ObsBaseConfig => {
     obsFPS: cfg.get<number>('obsFPS'),
     obsQuality: cfg.get<string>('obsQuality'),
     obsRecEncoder,
+    recordClassic: cfg.get<boolean>('recordClassic'),
+    classicLogPath: cfg.get<string>('classicLogPath'),
+    recordRetail: cfg.get<boolean>('recordRetail'),
+    recordRetailPtr: cfg.get<boolean>('recordRetailPtr'),
+    retailLogPath: cfg.get<string>('retailLogPath'),
+    recordEra: cfg.get<boolean>('recordEra'),
+    eraLogPath: cfg.get<string>('eraLogPath'),
+    retailPtrLogPath: cfg.get<string>('retailPtrLogPath'),
   };
 };
 
@@ -201,19 +209,6 @@ const getObsAudioConfig = (cfg: ConfigService): ObsAudioConfig => {
   };
 };
 
-const getFlavourConfig = (cfg: ConfigService): FlavourConfig => {
-  return {
-    recordClassic: cfg.get<boolean>('recordClassic'),
-    classicLogPath: cfg.get<string>('classicLogPath'),
-    recordRetail: cfg.get<boolean>('recordRetail'),
-    recordRetailPtr: cfg.get<boolean>('recordRetailPtr'),
-    retailLogPath: cfg.get<string>('retailLogPath'),
-    recordEra: cfg.get<boolean>('recordEra'),
-    eraLogPath: cfg.get<string>('eraLogPath'),
-    retailPtrLogPath: cfg.get<string>('retailPtrLogPath'),
-  };
-};
-
 const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
   return {
     chatOverlayEnabled: cfg.get<boolean>('chatOverlayEnabled'),
@@ -231,7 +226,9 @@ const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
   };
 };
 
-const getCloudConfig = (cfg: ConfigService): CloudConfig => {
+const getCloudConfig = (): CloudConfig => {
+  const cfg = ConfigService.getInstance();
+
   return {
     cloudStorage: cfg.get<boolean>('cloudStorage'),
     cloudUpload: cfg.get<boolean>('cloudUpload'),
@@ -241,13 +238,152 @@ const getCloudConfig = (cfg: ConfigService): CloudConfig => {
   };
 };
 
+const getLocaleError = (phrase: Phrase) => {
+  const lang = ConfigService.getInstance().get<string>('language') as Language;
+  return getLocalePhrase(lang, phrase);
+};
+
+const validateBaseConfig = async (config: BaseConfig) => {
+  const {
+    storagePath,
+    maxStorage,
+    obsPath,
+    recordRetail,
+    retailLogPath,
+    recordRetailPtr,
+    retailPtrLogPath,
+    recordClassic,
+    classicLogPath,
+    recordEra,
+    eraLogPath,
+  } = config;
+
+  if (!storagePath) {
+    console.warn('[Manager] storagePath is falsy', storagePath);
+    const error = getLocaleError(Phrase.ErrorStoragePathInvalid);
+    throw new Error(error);
+  }
+
+  if (storagePath.includes('#')) {
+    // A user hit this: the video player loads the file path as a URL where
+    // # is interpreted as a timestamp.
+    console.warn('[Manager] storagePath contains #', storagePath);
+    const error = getLocaleError(Phrase.ErrorStoragePathInvalid);
+    throw new Error(error);
+  }
+
+  const storagePathExists = await exists(storagePath);
+
+  if (!storagePathExists) {
+    console.warn('[Manager] storagePath does not exist', storagePath);
+    const error = getLocaleError(Phrase.ErrorStoragePathInvalid);
+    throw new Error(error);
+  }
+
+  await checkDisk(storagePath, maxStorage);
+
+  if (!obsPath) {
+    console.warn('[Manager] obsPath is falsy', obsPath);
+    const error = getLocaleError(Phrase.ErrorBufferPathInvalid);
+    throw new Error(error);
+  }
+
+  const obsParentDir = path.dirname(obsPath);
+  const obsParentDirExists = await exists(obsParentDir);
+
+  if (!obsParentDirExists) {
+    console.warn('[Manager] obsPath does not exist', obsPath);
+    const error = getLocaleError(Phrase.ErrorBufferPathInvalid);
+    throw new Error(error);
+  }
+
+  if (path.resolve(storagePath) === path.resolve(obsPath)) {
+    console.warn('[Manager] storagePath is the same as obsPath');
+    const error = getLocaleError(Phrase.ErrorStoragePathSameAsBufferPath);
+    throw new Error(error);
+  }
+
+  const obsDirExists = await exists(obsPath);
+
+  // 10GB is a rough guess at what the worst case buffer directory might be.
+  if (obsDirExists) {
+    await checkDisk(obsPath, 10);
+  } else {
+    const parentDir = path.dirname(obsPath);
+    await checkDisk(parentDir, 10);
+  }
+
+  const storagePathOwned = await isFolderOwned(storagePath);
+
+  if (!storagePathOwned) {
+    await takeOwnershipStorageDir(storagePath);
+  }
+
+  if (obsDirExists && !(await isFolderOwned(obsPath))) {
+    await takeOwnershipBufferDir(obsPath);
+  }
+
+  if (recordRetail) {
+    const validFlavours = ['wow'];
+    const validPath =
+      validFlavours.includes(getWowFlavour(retailLogPath)) &&
+      path.basename(retailLogPath) === 'Logs';
+
+    if (!validPath) {
+      console.error('[Util] Invalid retail log path', retailLogPath);
+      const error = getLocaleError(Phrase.InvalidRetailLogPath);
+      throw new Error(error);
+    }
+  }
+
+  if (recordRetailPtr) {
+    const validFlavours = ['wowxptr', 'wow_beta'];
+    const validPath =
+      validFlavours.includes(getWowFlavour(retailPtrLogPath)) &&
+      path.basename(retailPtrLogPath) === 'Logs';
+
+    if (!validPath) {
+      console.error('[Util] Invalid retail PTR log path', retailPtrLogPath);
+      const error = getLocaleError(Phrase.InvalidRetailPtrLogPathText);
+      throw new Error(error);
+    }
+  }
+
+  if (recordClassic) {
+    const validFlavours = ['wow_classic', 'wow_classic_beta'];
+    const validPath =
+      validFlavours.includes(getWowFlavour(classicLogPath)) &&
+      path.basename(classicLogPath) === 'Logs';
+
+    if (!validPath) {
+      console.error('[Util] Invalid classic log path', classicLogPath);
+      const error = getLocaleError(Phrase.InvalidClassicLogPath);
+      throw new Error(error);
+    }
+  }
+
+  if (recordEra) {
+    const validFlavours = ['wow_classic_era'];
+    const validPath =
+      validFlavours.includes(getWowFlavour(eraLogPath)) &&
+      path.basename(eraLogPath) === 'Logs';
+
+    if (!validPath) {
+      console.error('[Util] Invalid era log path', eraLogPath);
+      const error = getLocaleError(Phrase.InvalidEraLogPath);
+      throw new Error(error);
+    }
+  }
+};
+
 export {
   allowRecordCategory,
   shouldUpload,
-  getObsBaseConfig,
+  getBaseConfig,
   getObsVideoConfig,
   getObsAudioConfig,
-  getFlavourConfig,
   getOverlayConfig,
   getCloudConfig,
+  validateBaseConfig,
+  getLocaleError,
 };

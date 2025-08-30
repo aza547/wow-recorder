@@ -54,7 +54,8 @@ export default class Poller extends EventEmitter {
   }
 
   /**
-   * Convienence method to check if WoW is running.
+   * Convienence method to check if WoW is running. Only returns true if WoW
+   * is running, and the configuration is setup to record that flavour of WoW.
    */
   public isWowRunning() {
     return this.wowRunning;

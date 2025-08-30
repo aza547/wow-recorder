@@ -9,7 +9,6 @@ export type Channels =
   | 'logPath'
   | 'openURL'
   | 'test'
-  | 'getAudioDevices'
   | 'getAllDisplays'
   | 'videoPlayerSettings'
   | 'recorder'
