@@ -1,4 +1,3 @@
-import { BrowserWindow } from 'electron';
 import { FileInfo, FileSortDirection } from '../main/types';
 import ConfigService from '../config/ConfigService';
 import {
@@ -6,6 +5,7 @@ import {
   getMetadataForVideo,
   getSortedVideos,
 } from '../main/util';
+import { send } from 'main/main';
 
 // Had a bug here where we used filter with an async function but that isn't
 // valid as it just returns a truthy promise. See issue 323. To get around
@@ -18,12 +18,6 @@ const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
 
 export default class DiskSizeMonitor {
   private cfg = ConfigService.getInstance();
-
-  private mainWindow: BrowserWindow;
-
-  constructor(mainWindow: BrowserWindow) {
-    this.mainWindow = mainWindow;
-  }
 
   async run() {
     const storageDir = this.cfg.get<string>('storagePath');
@@ -84,7 +78,7 @@ export default class DiskSizeMonitor {
     );
 
     if (filesForDeletion.length > 0) {
-      this.mainWindow.webContents.send('refreshState');
+      send('refreshState');
     }
   }
 

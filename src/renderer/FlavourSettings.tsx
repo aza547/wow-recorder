@@ -43,7 +43,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       retailPtrLogPath: config.retailPtrLogPath,
     });
 
-    ipc.sendMessage('settingsChange', []);
+    ipc.reconfigureBase();
   }, [
     config.recordRetail,
     config.recordClassic,

@@ -3,7 +3,7 @@ import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 import { AudioSourceType, WCRSceneItem } from './types';
 
 export type Channels =
-  | 'mainWindow'
+  | 'window'
   | 'getVideoState'
   | 'videoButton'
   | 'logPath'
@@ -16,7 +16,6 @@ export type Channels =
   | 'getEncoders'
   | 'selectPath'
   | 'selectFile'
-  | 'settingsChange'
   | 'getNextKeyPress'
   | 'clip'
   | 'deleteVideos'
@@ -42,7 +41,11 @@ export type Channels =
   | 'setSourcePosition'
   | 'resetSourcePosition'
   | 'setForceMono'
-  | 'setAudioSuppression';
+  | 'setAudioSuppression'
+  | 'setCaptureCursor'
+  | 'reconfigureBase'
+  | 'reconfigureVideo'
+  | 'reconfigureOverlay';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -157,6 +160,18 @@ contextBridge.exposeInMainWorld('electron', {
 
     setAudioSuppression(enabled: boolean) {
       ipcRenderer.send('setAudioSuppression', enabled);
+    },
+
+    reconfigureBase() {
+      ipcRenderer.send('reconfigureBase');
+    },
+
+    reconfigureVideo() {
+      ipcRenderer.send('reconfigureVideo');
+    },
+
+    reconfigureOverlay() {
+      ipcRenderer.send('reconfigureOverlay');
     },
   },
 });

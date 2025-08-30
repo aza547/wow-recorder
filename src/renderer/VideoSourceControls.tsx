@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'config/configSchema';
 import { Info } from 'lucide-react';
@@ -23,9 +23,9 @@ const VideoSourceControls = (props: IProps) => {
   const { appState } = props;
   const [config, setConfig] = useSettings();
   const [displays, setDisplays] = useState<OurDisplayType[]>([]);
-  const initialRender = React.useRef(true);
+  const initialRender = useRef(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const getDisplays = async () => {
       const allDisplays = await ipc.invoke('getAllDisplays', []);
       setDisplays(allDisplays);
@@ -47,7 +47,7 @@ const VideoSourceControls = (props: IProps) => {
       forceSdr: config.forceSdr,
     });
 
-    ipc.sendMessage('settingsChange', []);
+    ipc.reconfigureVideo();
   }, [
     config.monitorIndex,
     config.obsCaptureMode,
@@ -56,7 +56,8 @@ const VideoSourceControls = (props: IProps) => {
   ]);
 
   const setOBSCaptureMode = (mode: string) => {
-    if (mode === null) {
+    if (!mode) {
+      // Covers empty string or anything nullish.
       return;
     }
 
@@ -69,7 +70,8 @@ const VideoSourceControls = (props: IProps) => {
   };
 
   const setMonitor = (display: string) => {
-    if (display === null) {
+    // Display is a string at this point so "0" is still truthy.
+    if (!display) {
       return;
     }
 

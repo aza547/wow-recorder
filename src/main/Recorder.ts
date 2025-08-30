@@ -1,4 +1,3 @@
-import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import WaitQueue from 'wait-queue';
@@ -42,8 +41,11 @@ import {
 } from './types';
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
-import { getOverlayConfig } from '../utils/configUtils';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  getObsAudioConfig,
+  getObsVideoConfig,
+  getOverlayConfig,
+} from '../utils/configUtils';
 
 import noobs, {
   ObsData,
@@ -51,6 +53,9 @@ import noobs, {
   Signal,
   SourceDimensions,
 } from 'noobs';
+import { getNativeWindowHandle, send } from './main';
+import { ipcMain } from 'electron';
+import Poller from 'utils/Poller';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -70,24 +75,25 @@ export default class Recorder extends EventEmitter {
   /**
    * Date the buffer recording started.
    */
-  public startDate = new Date();
+  private static instance: Recorder;
 
   /**
-   * Reference back to the window object for updating the app status icon.
+   * Date the buffer recording started.
    */
-  private window: BrowserWindow;
+  public static getInstance() {
+    if (!this.instance) this.instance = new Recorder();
+    return this.instance;
+  }
+
+  /**
+   * Date the buffer recording started.
+   */
+  public startDate = new Date();
 
   /**
    * ConfigService instance.
    */
-  private cfg: ConfigService = ConfigService.getInstance();
-
-  /**
-   * On creation of the recorder we generate a UUID to identify the OBS
-   * server. On a change of settings, we destroy the recorder object and
-   * create a new one, with a different UUID.
-   */
-  private uuid: string = uuidv4();
+  private cfg = ConfigService.getInstance();
 
   /**
    * Timer for latching onto a window for either game capture or
@@ -190,16 +196,179 @@ export default class Recorder extends EventEmitter {
   private chatOverlayDefaultImage = getAssetPath('poster', 'chat-overlay.png');
 
   private pushToTalkKeyListener = (e: UiohookKeyboardEvent) => {};
+
   private pushToTalkMouseListener = (e: UiohookMouseEvent) => {};
 
   /**
-   * Contructor.
+   * Constructor.
    */
-  constructor(window: BrowserWindow) {
+  private constructor() {
     super();
-    console.info('[Recorder] Constructing recorder:', this.uuid);
-    this.window = window;
-    this.initializeOBS();
+    console.info('[Recorder] Constructing recorder');
+    this.setupListeners();
+  }
+
+  private setupListeners() {
+    ipcMain.on('reconfigureVideo', () => {
+      console.info('[Recorder] Video source reconfigure');
+      const cfg = getObsVideoConfig(this.cfg);
+      const wowRunning = Poller.getInstance().isWowRunning();
+      this.configureVideoSources(cfg, wowRunning);
+    });
+
+    ipcMain.on('reconfigureOverlay', () => {
+      console.info('[Recorder] Overlay source reconfigure');
+      const overlayCfg = getOverlayConfig(this.cfg);
+      this.configureOverlayImageSource(overlayCfg);
+    });
+
+    /**
+     * Callback to attach the audio devices. This is called when the user
+     * opens the audio settings so that the volmeter bars can be populated.
+     */
+    ipcMain.handle('audioSettingsOpen', () => {
+      console.info('[Manager] Audio settings were opened');
+      noobs.SetVolmeterEnabled(true);
+
+      if (Poller.getInstance().isWowRunning()) {
+        console.info('[Manager] Wont touch audio sources as WoW is running');
+        return;
+      }
+
+      const config = getObsAudioConfig(this.cfg);
+      this.configureAudioSources(config);
+    });
+
+    ipcMain.handle('audioSettingsClosed', () => {
+      console.info('[Manager] Audio settings were closed');
+      noobs.SetVolmeterEnabled(false);
+
+      if (Poller.getInstance().isWowRunning()) {
+        console.info('[Manager] Wont touch audio sources as WoW is running');
+        return;
+      }
+
+      this.removeAudioSources();
+    });
+
+    ipcMain.handle('getDisplayInfo', () => {
+      return this.getDisplayInfo();
+    });
+
+    ipcMain.handle('getSourcePosition', (_event, item: WCRSceneItem) => {
+      return this.getSourcePosition(item);
+    });
+
+    ipcMain.on(
+      'setSourcePosition',
+      (
+        event,
+        item: WCRSceneItem,
+        target: { x: number; y: number; width: number; height: number },
+      ) => {
+        this.setSourcePosition(item, target);
+        // Don't need to redraw here, frontend handles this for us.
+      },
+    );
+
+    ipcMain.on('resetSourcePosition', (_event, item: WCRSceneItem) => {
+      this.resetSourcePosition(item);
+      setTimeout(() => send('redrawPreview'), 100);
+    });
+
+    ipcMain.handle(
+      'createAudioSource',
+      (event, id: string, type: AudioSourceType) => {
+        console.info('[Manager] Creating audio source', id, 'of type', type);
+        const name = noobs.CreateSource(id, type);
+        console.info('[Manager] Created audio source', name);
+        noobs.AddSourceToScene(name);
+        return name;
+      },
+    );
+
+    ipcMain.handle('getAudioSourceProperties', (_event, id: string) => {
+      console.info('[Manager] Getting audio source properties for', id);
+      return noobs.GetSourceProperties(id);
+    });
+
+    ipcMain.on('deleteAudioSource', (_event, id: string) => {
+      console.info('[Manager] Deleting audio source', id);
+      noobs.DeleteSource(id);
+    });
+
+    ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
+      console.info(
+        '[Manager] Setting audio device for source',
+        id,
+        'to',
+        value,
+      );
+      const settings = noobs.GetSourceSettings(id);
+      settings['device_id'] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
+      console.info(
+        '[Manager] Setting audio window for source',
+        id,
+        'to',
+        value,
+      );
+      const settings = noobs.GetSourceSettings(id);
+      settings['window'] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
+      console.info(
+        '[Manager] Setting audio volume for source',
+        id,
+        'to',
+        value,
+      );
+      noobs.SetSourceVolume(id, value);
+    });
+
+    ipcMain.on('setForceMono', (_event, enabled: boolean) => {
+      console.info('[Manager] Setting force mono to', enabled);
+      noobs.SetForceMono(enabled);
+    });
+
+    ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
+      console.info('[Manager] Setting audio suppression to', enabled);
+      noobs.SetAudioSuppression(enabled);
+    });
+
+    ipcMain.on(
+      'configurePreview',
+      (_event, x: number, y: number, width: number, height: number) => {
+        this.configurePreview(x, y, width, height);
+        setTimeout(() => send('redrawPreview'), 100);
+      },
+    );
+
+    ipcMain.on('showPreview', () => {
+      this.showPreview();
+    });
+
+    ipcMain.on('hidePreview', () => {
+      this.hidePreview();
+    });
+
+    ipcMain.on('disablePreview', () => {
+      this.disablePreview();
+    });
+
+    // Encoder listener, to populate settings on the frontend.
+    ipcMain.handle('getEncoders', (): string[] => {
+      const obsEncoders = this.getAvailableEncoders().filter(
+        (encoder) => encoder !== 'none',
+      );
+
+      return obsEncoders;
+    });
   }
 
   /**
@@ -554,7 +723,7 @@ export default class Recorder extends EventEmitter {
    * Release all OBS resources and shut it down.
    */
   public shutdownOBS() {
-    console.info('[Recorder] OBS shutting down', this.uuid);
+    console.info('[Recorder] OBS shutting down');
 
     if (!this.obsInitialized) {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
@@ -816,11 +985,10 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Call through OSN to initialize OBS. This is slow and synchronous,
-   * so use sparingly - it will block the main thread.
+   * Initialize OBS, should be called once on startup.
    */
-  private initializeOBS() {
-    console.info('[Recorder] Initializing OBS', this.uuid);
+  public initializeObs() {
+    console.info('[Recorder] Initializing OBS');
     const cb = this.handleSignal.bind(this);
 
     let logPath = devMode
@@ -845,7 +1013,7 @@ export default class Recorder extends EventEmitter {
     noobs.Init(noobsPath, logPath, recordingPath, cb);
     noobs.SetBuffering(true);
 
-    const hwnd = this.window.getNativeWindowHandle();
+    const hwnd = getNativeWindowHandle();
     noobs.InitPreview(hwnd);
     noobs.SetDrawSourceOutline(true);
 
@@ -862,7 +1030,7 @@ export default class Recorder extends EventEmitter {
     if (signal.type === 'volmeter' && signal.value !== undefined) {
       // A volmeter callback was fired. This happens very often while there
       // are audio sources attached and the audio settings are open.
-      this.window.webContents.send('volmeter', signal.id, signal.value);
+      send('volmeter', signal.id, signal.value);
       return;
     }
 
@@ -872,8 +1040,9 @@ export default class Recorder extends EventEmitter {
 
     if (signal.type === 'source') {
       // A source has sporadically changed dimensions. This typically happens
-      // when a game or window capture source is initialized or resized.
-      this.window.webContents.send('redrawPreview', signal);
+      // when a game or window capture source is initialized or resized. To be
+      // clear this is the dimensions NOT the scale. Users cannot trigger this.
+      send('redrawPreview');
       return;
     }
 
@@ -1217,7 +1386,7 @@ export default class Recorder extends EventEmitter {
       const settings = noobs.GetSourceSettings(this.activeCaptureSource);
       const updated = { ...settings, window: match.value };
       noobs.SetSourceSettings(this.activeCaptureSource, updated);
-      setTimeout(() => this.window.webContents.send('redrawPreview'), 10000);
+      // setTimeout(() => send('redrawPreview'), 10000); // ?? TODO - surely not required now there is the source callback?
       return;
     }
 

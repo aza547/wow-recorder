@@ -62,10 +62,10 @@ export default class Poller extends EventEmitter {
   }
 
   /**
-   * Reset the poller state and stop the child process.
+   * Stop the poller and reset the state.
    */
-  public reset() {
-    console.info('[Poller] Reset process poller');
+  public stop() {
+    console.info('[Poller] Stop process poller');
     this.wowRunning = false;
 
     if (this.child) {
@@ -79,7 +79,7 @@ export default class Poller extends EventEmitter {
    */
   public start() {
     console.info('[Poller] Start process poller');
-    this.reset();
+    this.stop();
 
     this.child = spawn(this.binary);
     this.child.stdout.on('data', this.handleStdout);

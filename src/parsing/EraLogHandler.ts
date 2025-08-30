@@ -1,7 +1,3 @@
-import VideoProcessQueue from 'main/VideoProcessQueue';
-import { BrowserWindow } from 'electron';
-
-import Recorder from '../main/Recorder';
 import LogHandler from './LogHandler';
 import { Flavour } from '../main/types';
 import { isUnitPlayer } from './logutils';
@@ -13,13 +9,8 @@ import { classicUniqueSpecSpells } from '../main/constants';
  * Classic era log handler class.
  */
 export default class EraLogHandler extends LogHandler {
-  constructor(
-    mainWindow: BrowserWindow,
-    recorder: Recorder,
-    videoProcessQueue: VideoProcessQueue,
-    logPath: string,
-  ) {
-    super(mainWindow, recorder, videoProcessQueue, logPath, 2);
+  constructor(logPath: string) {
+    super(logPath, 2);
 
     this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {
@@ -48,7 +39,7 @@ export default class EraLogHandler extends LogHandler {
   }
 
   private handleCombatantInfoLine(line: LogLine): void {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       console.warn(
         '[EraLogHandler] No activity in progress, ignoring COMBATANT_INFO',
       );
@@ -73,11 +64,11 @@ export default class EraLogHandler extends LogHandler {
     );
 
     const newCombatant = new Combatant(GUID, teamID, specID);
-    this.activity.addCombatant(newCombatant);
+    LogHandler.activity.addCombatant(newCombatant);
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       // Deliberately don't log anything here as we hit this a lot
       return;
     }
@@ -89,7 +80,7 @@ export default class EraLogHandler extends LogHandler {
   }
 
   private handleSpellCastSuccess(line: LogLine) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return;
     }
 
@@ -122,7 +113,7 @@ export default class EraLogHandler extends LogHandler {
     srcNameRealm: string,
     srcFlags: number,
   ) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return undefined;
     }
 
@@ -141,7 +132,7 @@ export default class EraLogHandler extends LogHandler {
   }
 
   protected handleUnitDiedLine(line: LogLine) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return;
     }
 

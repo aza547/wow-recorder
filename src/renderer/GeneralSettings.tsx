@@ -44,7 +44,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
 
     // Inform the backend of a settings change so we can update config
     // and validate it's good.
-    ipc.sendMessage('settingsChange', []);
+    ipc.reconfigureBase();
   }, [
     config.separateBufferPath,
     config.storagePath,

@@ -1,7 +1,6 @@
 import { Flavour, Metadata } from 'main/types';
 import { Language, Phrase } from '../localisation/phrases';
 import { getLocalePhrase } from '../localisation/translations';
-import { IConfigService } from '../config/ConfigService';
 import { classicBattlegrounds, retailBattlegrounds } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
@@ -15,9 +14,8 @@ export default class Battleground extends Activity {
     category: VideoCategory,
     zoneID: number,
     flavour: Flavour,
-    cfg: IConfigService,
   ) {
-    super(startDate, category, flavour, cfg);
+    super(startDate, category, flavour);
     this.zoneID = zoneID;
     this.overrun = 3;
   }

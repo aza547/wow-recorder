@@ -1,4 +1,3 @@
-import { IConfigService } from 'config/ConfigService';
 import Combatant from '../main/Combatant';
 import { Language, Phrase } from '../localisation/phrases';
 import { getLocalePhrase } from '../localisation/translations';
@@ -35,10 +34,9 @@ export default class ChallengeModeDungeon extends Activity {
     mapID: number,
     level: number,
     affixes: number[],
-    cfg: IConfigService,
     flavor: Flavour,
   ) {
-    super(startDate, VideoCategory.MythicPlus, flavor, cfg);
+    super(startDate, VideoCategory.MythicPlus, flavor);
     this._zoneID = zoneID;
     this._mapID = mapID;
     this._level = level;

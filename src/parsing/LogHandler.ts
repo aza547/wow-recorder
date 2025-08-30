@@ -1,7 +1,4 @@
-import { BrowserWindow } from 'electron';
-import { EventEmitter } from 'stream';
 import VideoProcessQueue from '../main/VideoProcessQueue';
-import Poller from '../utils/Poller';
 import Combatant from '../main/Combatant';
 import CombatLogWatcher from './CombatLogWatcher';
 import ConfigService from '../config/ConfigService';
@@ -28,7 +25,8 @@ import { VideoCategory } from '../types/VideoCategory';
 import { allowRecordCategory } from '../utils/configUtils';
 import { assert } from 'console';
 import Manual from 'activitys/Manual';
-import { playSoundAlert } from 'main/util';
+import { playSoundAlert } from 'main/main';
+import Poller from 'utils/Poller';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -36,45 +34,25 @@ import { playSoundAlert } from 'main/util';
  *
  * If you need something flavour specific then put it in the appropriate
  * subclass; i.e. RetailLogHandler, ClassicLogHandler or EraLogHandler.
+ *
+ * Static fields in this class provide locking function. While we will
+ * typically have up to 4 child classes, we don't want multiple concurrent
+ * activities.
  */
-export default abstract class LogHandler extends EventEmitter {
+export default abstract class LogHandler {
+  public static activity: Activity | undefined;
+
+  public static overrunning = false;
+
+  private static minBossHp = 100 * 10 ** 6;
+
   public combatLogWatcher: CombatLogWatcher;
-
-  public activity?: Activity;
-
-  public overrunning = false;
-
-  protected recorder: Recorder;
 
   protected player: Combatant | undefined;
 
-  protected cfg: ConfigService = ConfigService.getInstance();
+  private static stateChangeCallback: () => void;
 
-  protected poller: Poller = Poller.getInstance();
-
-  protected mainWindow: BrowserWindow;
-
-  private minBossHp = 100 * 10 ** 6;
-
-  /**
-   * Once we have completed a recording, we throw it onto the
-   * VideoProcessQueue to handle cutting it to size, writing accompanying
-   * metadata and saving it to the final location for display in the GUI.
-   */
-  protected videoProcessQueue: VideoProcessQueue;
-
-  constructor(
-    mainWindow: BrowserWindow,
-    recorder: Recorder,
-    videoProcessQueue: VideoProcessQueue,
-    logPath: string,
-    dataTimeout: number,
-  ) {
-    super();
-
-    this.mainWindow = mainWindow;
-    this.recorder = recorder;
-
+  constructor(logPath: string, dataTimeout: number) {
     this.combatLogWatcher = new CombatLogWatcher(logPath, dataTimeout);
     this.combatLogWatcher.watch();
 
@@ -84,19 +62,26 @@ export default abstract class LogHandler extends EventEmitter {
 
     // For ease of testing force stop.
     this.combatLogWatcher.on('WARCRAFT_RECORDER_FORCE_STOP', () => {
-      this.forceEndActivity();
+      LogHandler.forceEndActivity();
     });
-
-    this.videoProcessQueue = videoProcessQueue;
   }
 
-  destroy() {
+  public static setStateChangeCallback = (cb: () => void) => {
+    this.stateChangeCallback = cb;
+  };
+
+  public destroy() {
     this.combatLogWatcher.unwatch();
     this.combatLogWatcher.removeAllListeners();
   }
 
   protected async handleEncounterStartLine(line: LogLine, flavour: Flavour) {
     console.debug('[LogHandler] Handling ENCOUNTER_START line:', line);
+
+    if (LogHandler.activity) {
+      console.warn('[LogHandler] Activity already in progress');
+      return;
+    }
 
     const startDate = line.date();
     const encounterID = parseInt(line.arg(1), 10);
@@ -126,16 +111,15 @@ export default abstract class LogHandler extends EventEmitter {
       encounterName,
       difficultyID,
       flavour,
-      this.cfg,
     );
 
-    await this.startActivity(activity);
+    await LogHandler.startActivity(activity);
   }
 
   protected async handleEncounterEndLine(line: LogLine) {
     console.debug('[LogHandler] Handling ENCOUNTER_END line:', line);
 
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       console.info('[LogHandler] Encounter stop with no active encounter');
       return;
     }
@@ -153,16 +137,16 @@ export default abstract class LogHandler extends EventEmitter {
     const result = Boolean(parseInt(line.arg(5), 10));
 
     if (result) {
-      const overrun = this.cfg.get<number>('raidOverrun');
-      this.activity.overrun = overrun;
+      const overrun = ConfigService.getInstance().get<number>('raidOverrun');
+      LogHandler.activity.overrun = overrun;
     }
 
-    this.activity.end(line.date(), result);
-    await this.endActivity();
+    LogHandler.activity.end(line.date(), result);
+    await LogHandler.endActivity();
   }
 
   protected handleUnitDiedLine(line: LogLine): void {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return;
     }
 
@@ -182,13 +166,14 @@ export default abstract class LogHandler extends EventEmitter {
 
     const playerName = line.arg(6);
     const playerGUID = line.arg(5);
-    const playerSpecId = this.activity.getCombatant(playerGUID)?.specID ?? 0;
+    const playerSpecId =
+      LogHandler.activity.getCombatant(playerGUID)?.specID ?? 0;
 
     // Add player death and subtract 2 seconds from the time of death to allow the
     // user to view a bit of the video before the death and not at the actual millisecond
     // it happens.
     const deathDate = (line.date().getTime() - 2) / 1000;
-    const activityStartDate = this.activity.startDate.getTime() / 1000;
+    const activityStartDate = LogHandler.activity.startDate.getTime() / 1000;
     let relativeTime = deathDate - activityStartDate;
 
     if (relativeTime < 0) {
@@ -204,12 +189,12 @@ export default abstract class LogHandler extends EventEmitter {
       friendly: isUnitFriendly(unitFlags),
     };
 
-    this.activity.addDeath(playerDeath);
+    LogHandler.activity.addDeath(playerDeath);
   }
 
-  protected async startActivity(activity: Activity) {
+  protected static async startActivity(activity: Activity) {
     const { category } = activity;
-    const allowed = allowRecordCategory(this.cfg, category);
+    const allowed = allowRecordCategory(ConfigService.getInstance(), category);
 
     if (!allowed) {
       console.info('[LogHandler] Not configured to record', category);
@@ -228,12 +213,12 @@ export default abstract class LogHandler extends EventEmitter {
     assert(offset >= 0);
 
     try {
-      this.activity = activity;
-      await this.recorder.startRecording(offset);
-      this.emit('state-change');
+      LogHandler.activity = activity;
+      await Recorder.getInstance().startRecording(offset);
+      LogHandler.stateChangeCallback();
     } catch (error) {
       console.error('[LogHandler] Error starting activity', String(error));
-      this.activity = undefined;
+      LogHandler.activity = undefined;
     }
   }
 
@@ -241,40 +226,40 @@ export default abstract class LogHandler extends EventEmitter {
    * End the recording after the overrun has elasped. Every single activity
    * ending comes through this function.
    */
-  protected async endActivity() {
-    if (!this.activity) {
+  protected static async endActivity() {
+    if (!LogHandler.activity) {
       console.error("[LogHandler] No active activity so can't stop");
       return;
     }
 
     console.info(
-      `[LogHandler] Ending recording video for category: ${this.activity.category}`,
+      `[LogHandler] Ending recording video for category: ${LogHandler.activity.category}`,
     );
 
     // It's important we clear the activity before we call stop as stop will
     // await for the overrun, and we might do weird things if the player
     // immediately starts a new activity while we're awaiting. See issue 291.
-    const lastActivity = this.activity;
-    this.overrunning = true;
-    this.activity = undefined;
+    const lastActivity = LogHandler.activity;
+    LogHandler.overrunning = true;
+    LogHandler.activity = undefined;
 
     const { overrun } = lastActivity;
 
     if (overrun > 0) {
-      this.emit('state-change');
       console.info('[LogHandler] Awaiting overrun:', overrun);
+      LogHandler.stateChangeCallback();
       await new Promise((resolve) => setTimeout(resolve, 1000 * overrun));
       console.info('[LogHandler] Done awaiting overrun');
     }
 
-    this.overrunning = false;
-    const { startDate } = this.recorder;
+    LogHandler.overrunning = false;
+    const { startDate } = Recorder.getInstance();
     let videoFile;
 
     try {
-      await this.recorder.stop(false);
-      videoFile = this.recorder.lastFile;
-      this.poller.start();
+      await Recorder.getInstance().stop(false);
+      videoFile = Recorder.getInstance().lastFile;
+      Poller.getInstance().start();
     } catch (error) {
       console.error('[LogHandler] Failed to stop OBS, discarding video', error);
       return;
@@ -294,7 +279,9 @@ export default abstract class LogHandler extends EventEmitter {
       const suffix = lastActivity.getFileName();
 
       if (lastActivity.category === VideoCategory.Raids) {
-        const minDuration = this.cfg.get<number>('minEncounterDuration');
+        const minDuration = ConfigService.getInstance().get<number>(
+          'minEncounterDuration',
+        );
         const notLongEnough = duration < minDuration;
 
         if (notLongEnough) {
@@ -312,7 +299,7 @@ export default abstract class LogHandler extends EventEmitter {
         deleteSource: true,
       };
 
-      this.videoProcessQueue.queueVideo(queueItem);
+      VideoProcessQueue.getInstance().queueVideo(queueItem);
     } catch (error) {
       // We've failed to get the Metadata from the activity. Throw away the
       // video and log why. Example of when we hit this is on raid resets
@@ -331,13 +318,13 @@ export default abstract class LogHandler extends EventEmitter {
       } seconds.`,
     );
 
-    if (this.activity) {
-      await this.forceEndActivity(-ms / 1000);
+    if (LogHandler.activity) {
+      await LogHandler.forceEndActivity(-ms / 1000);
     }
   }
 
-  public async forceEndActivity(timedelta = 0) {
-    if (!this.activity) {
+  public static async forceEndActivity(timedelta = 0) {
+    if (!LogHandler.activity) {
       console.error('[LogHandler] forceEndActivity called but no activity');
       return;
     }
@@ -345,36 +332,36 @@ export default abstract class LogHandler extends EventEmitter {
     console.info('[LogHandler] Force ending activity, timedelta:', timedelta);
     const endDate = new Date();
     endDate.setTime(endDate.getTime() + timedelta * 1000);
-    this.activity.overrun = 0;
+    LogHandler.activity.overrun = 0;
 
-    this.activity.end(endDate, false);
-    await this.endActivity();
-    this.activity = undefined;
+    LogHandler.activity.end(endDate, false);
+    await LogHandler.endActivity();
+    LogHandler.activity = undefined;
   }
 
-  public dropActivity() {
-    this.overrunning = false;
-    this.activity = undefined;
+  public static dropActivity() {
+    LogHandler.overrunning = false;
+    LogHandler.activity = undefined;
   }
 
   protected async zoneChangeStop(line: LogLine) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       console.error('[LogHandler] No active activity on zone change stop');
 
       return;
     }
 
     const endDate = line.date();
-    this.activity.end(endDate, false);
-    await this.endActivity();
+    LogHandler.activity.end(endDate, false);
+    await LogHandler.endActivity();
   }
 
   protected isArena() {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return false;
     }
 
-    const { category } = this.activity;
+    const { category } = LogHandler.activity;
 
     return (
       category === VideoCategory.TwoVTwo ||
@@ -386,20 +373,20 @@ export default abstract class LogHandler extends EventEmitter {
   }
 
   protected isBattleground() {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return false;
     }
 
-    const { category } = this.activity;
+    const { category } = LogHandler.activity;
     return category === VideoCategory.Battlegrounds;
   }
 
   protected isMythicPlus() {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return false;
     }
 
-    const { category } = this.activity;
+    const { category } = LogHandler.activity;
     return category === VideoCategory.MythicPlus;
   }
 
@@ -411,7 +398,7 @@ export default abstract class LogHandler extends EventEmitter {
   ) {
     let combatant: Combatant | undefined;
 
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return combatant;
     }
 
@@ -430,14 +417,14 @@ export default abstract class LogHandler extends EventEmitter {
     // because it can't change, unless the user changes characters mid
     // recording like in issue 355, in which case better to retain the initial
     // character details.
-    if (!this.activity.playerGUID && isUnitSelf(srcFlags)) {
-      this.activity.playerGUID = srcGUID;
+    if (!LogHandler.activity.playerGUID && isUnitSelf(srcFlags)) {
+      LogHandler.activity.playerGUID = srcGUID;
     }
 
     // Even if the combatant exists already we still update it with the info it
     // may not have yet. We can't tell the name, realm or if it's the player
     // from COMBATANT_INFO events.
-    combatant = this.activity.getCombatant(srcGUID);
+    combatant = LogHandler.activity.getCombatant(srcGUID);
 
     if (allowNew && combatant === undefined) {
       // We've failed to get a pre-existing combatant, but we are allowed to add it.
@@ -454,12 +441,15 @@ export default abstract class LogHandler extends EventEmitter {
 
     [combatant.name, combatant.realm, combatant.region] =
       ambiguate(srcNameRealm);
-    this.activity.addCombatant(combatant);
+    LogHandler.activity.addCombatant(combatant);
     return combatant;
   }
 
   protected handleSpellDamage(line: LogLine) {
-    if (!this.activity || this.activity.category !== VideoCategory.Raids) {
+    if (
+      !LogHandler.activity ||
+      LogHandler.activity.category !== VideoCategory.Raids
+    ) {
       // We only care about this event for working out boss HP, which we
       // only do in raids.
       return;
@@ -467,7 +457,10 @@ export default abstract class LogHandler extends EventEmitter {
 
     const max = parseInt(line.arg(15), 10);
 
-    if (this.activity.flavour === Flavour.Retail && max < this.minBossHp) {
+    if (
+      LogHandler.activity.flavour === Flavour.Retail &&
+      max < LogHandler.minBossHp
+    ) {
       // Assume that if the HP is less than 100 million then it's not a boss.
       // That avoids us marking bosses as 0% when they haven't been touched
       // yet, i.e. short pulls on Gallywix before the shield is broken and we are
@@ -477,7 +470,7 @@ export default abstract class LogHandler extends EventEmitter {
       return;
     }
 
-    const raid = this.activity as RaidEncounter;
+    const raid = LogHandler.activity as RaidEncounter;
     const current = parseInt(line.arg(14), 10);
 
     // We don't check the unit here, the RaidEncounter class has logic
@@ -490,37 +483,28 @@ export default abstract class LogHandler extends EventEmitter {
   /**
    * Handle the pressing of the manual recording hotkey.
    */
-  public async handleManualRecordingHotKey() {
+  public static async handleManualRecordingHotKey() {
     const sounds = ConfigService.getInstance().get('manualRecordSoundAlert');
 
-    if (this.activity && this.activity.category !== VideoCategory.Manual) {
-      console.info("[LogHandler] Activity in progress, can't start manual");
-
-      if (sounds) {
-        playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.mainWindow);
-      }
-
+    if (!LogHandler.activity) {
+      console.info('[LogHandler] Starting manual recording');
+      const startDate = new Date();
+      const activity = new Manual(startDate, Flavour.Retail);
+      await LogHandler.startActivity(activity);
+      if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_START);
       return;
     }
 
-    if (this.activity) {
+    if (LogHandler.activity.category === VideoCategory.Manual) {
       console.info('[LogHandler] Stopping manual recording');
       const endDate = new Date();
-      this.activity.end(endDate, true); // Result is meaningless but requried.
-      await this.endActivity();
-
-      if (sounds) {
-        playSoundAlert(SoundAlerts.MANUAL_RECORDING_STOP, this.mainWindow);
-      }
-    } else {
-      console.info('[LogHandler] Starting manual recording');
-      const startDate = new Date();
-      const activity = new Manual(startDate, Flavour.Retail, this.cfg);
-      await this.startActivity(activity);
-
-      if (sounds) {
-        playSoundAlert(SoundAlerts.MANUAL_RECORDING_START, this.mainWindow);
-      }
+      LogHandler.activity.end(endDate, true); // Result is meaningless but required.
+      await LogHandler.endActivity();
+      if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_STOP);
+      return;
     }
+
+    console.warn('[LogHandler] Unable to start manual recording');
+    if (sounds) playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR);
   }
 }

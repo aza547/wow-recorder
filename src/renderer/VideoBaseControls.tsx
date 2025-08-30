@@ -83,7 +83,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       obsRecEncoder: config.obsRecEncoder,
     });
 
-    ipc.sendMessage('settingsChange', []);
+    ipc.reconfigureBase();
   }, [
     config.obsOutputResolution,
     config.obsFPS,

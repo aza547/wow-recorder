@@ -5,6 +5,8 @@ import {
   CloudStatus,
   CompleteMultiPartUploadRequestBody,
   CreateMultiPartUploadResponseBody,
+  RendererVideo,
+  UploadQueueItem,
 } from 'main/types';
 import path from 'path';
 import AuthError from '../utils/AuthError';
@@ -19,6 +21,7 @@ import {
 import StorageClient from './StorageClient';
 import { getCloudConfig } from 'utils/configUtils';
 import { clipboard, ipcMain } from 'electron';
+import VideoProcessQueue from 'main/VideoProcessQueue';
 
 /**
  * A client for retrieving resources from the cloud.
@@ -179,63 +182,46 @@ export default class CloudClient extends StorageClient {
   }
 
   /**
-   * Login to the cloud store.
+   * Handle changes to the cloud status, does not refresh the videos.
    */
-  public async login() {
-    console.info('[CloudClient] Logging into cloud store');
+  public async refreshStatus() {
+    try {
+      const usagePromise = this.getUsage();
+      const limitPromise = this.getStorageLimit();
+      const affiliationsPromise = this.getUserAffiliations();
 
-    const config = getCloudConfig();
-    this.user = config.cloudAccountName;
-    this.pass = config.cloudAccountPassword;
-    this.guild = config.cloudGuildName;
+      // This is a bit tricky, get the guild name from the active client which is
+      // guarenteed to be up to date, unlike other fields in this class.
+      const guild = this.getGuildName();
 
-    console.info('[CloudClient] User:', this.user);
-    console.info('[CloudClient] Guild:', this.guild);
+      const usage = await usagePromise;
+      const limit = await limitPromise;
+      const affiliations = await affiliationsPromise;
 
-    this.authHeader = CloudClient.createAuthHeader(this.user, this.pass);
+      const available = affiliations.map((aff) => aff.guildName);
+      const affiliation = affiliations.find((aff) => aff.guildName === guild);
 
-    if (!this.user) {
-      console.warn('[CloudClient] Empty account name');
-      this.onAuthFailure();
-      return;
+      const status: CloudStatus = {
+        authenticated: true,
+        guild,
+        available,
+        usage: usage,
+        limit: limit,
+        read: false,
+        write: false,
+        del: false,
+      };
+
+      if (affiliation) {
+        status.read = affiliation.read;
+        status.write = affiliation.write;
+        status.del = affiliation.del;
+      }
+
+      this.send('updateCloudStatus', status);
+    } catch (error) {
+      console.error('[CloudClient] Error getting cloud status', String(error));
     }
-
-    if (!this.pass) {
-      console.warn('[CloudClient] Empty account pass');
-      this.onAuthFailure();
-      return;
-    }
-
-    if (!this.guild) {
-      console.warn('[CloudClient] Empty guild name');
-      this.onNoGuildSelection();
-      return;
-    }
-
-    // TODO actually test login?
-
-    this.authenticated = true;
-    await this.pollInit();
-    this.startPolling();
-
-    this.send('refreshState');
-    this.refresh();
-  }
-
-  /**
-   * Return the guild name.
-   */
-  public getGuildName() {
-    return this.guild;
-  }
-
-  /**
-   * Build the Authorization header string.
-   */
-  private static createAuthHeader(user: string, pass: string) {
-    const authHeaderString = `${user}:${pass}`;
-    const encodedAuthString = Buffer.from(authHeaderString).toString('base64');
-    return `Basic ${encodedAuthString}`;
   }
 
   /**
@@ -279,37 +265,6 @@ export default class CloudClient extends StorageClient {
   }
 
   /**
-   * Add a video to the WCR database.
-   */
-  public async postVideo(metadata: CloudMetadata) {
-    console.info('[CloudClient] Adding video to database', metadata.videoName);
-
-    const guild = encodeURIComponent(this.guild);
-    const url = `${CloudClient.api}/guild/${guild}/video`;
-    const headers = { Authorization: this.authHeader };
-
-    await axios.post(url, metadata, {
-      headers,
-      validateStatus: (s) => this.validateResponseStatus(s),
-    });
-
-    // Always run the housekeeper after an upload so that there
-    // will be space for the next upload.
-    await this.runHousekeeping();
-
-    // Update the mtime to avoid multiple refreshes.
-    this.bucketLastMod = Date.now();
-    this.refresh();
-    this.send('refreshState');
-
-    console.info(
-      '[CloudClient] Added',
-      metadata.videoName,
-      'to video database.',
-    );
-  }
-
-  /**
    * Delete a set of cloud videos. This is a bulk delete operation, but
    * totally valid to call this on one video at a time.
    */
@@ -331,7 +286,7 @@ export default class CloudClient extends StorageClient {
   /**
    * Protect or unprotect a set of videos.
    */
-  public async protectVideos(protect: boolean, videoNames: string[]) {
+  public async protectVideos(videoNames: string[], protect: boolean) {
     console.info(
       `[CloudClient] Attempt to ${protect ? 'protect' : 'unprotect'}`,
       videoNames,
@@ -356,7 +311,7 @@ export default class CloudClient extends StorageClient {
   /**
    * Tag a video.
    */
-  public async tagVideos(tag: string, videoNames: string[]) {
+  public async tagVideos(videoNames: string[], tag: string) {
     console.info('[CloudClient] Set tag', tag, 'on', videoNames);
 
     const guild = encodeURIComponent(this.guild);
@@ -370,6 +325,97 @@ export default class CloudClient extends StorageClient {
     });
 
     console.info('[CloudClient] Successfully set tag', tag, 'on', videoNames);
+  }
+
+  /**
+   * Login to the cloud store.
+   */
+  public async login() {
+    console.info('[CloudClient] Logging into cloud store');
+
+    const config = getCloudConfig();
+    this.user = config.cloudAccountName;
+    this.pass = config.cloudAccountPassword;
+    this.guild = config.cloudGuildName;
+
+    console.info('[CloudClient] User:', this.user);
+    console.info('[CloudClient] Guild:', this.guild);
+
+    this.authHeader = CloudClient.createAuthHeader(this.user, this.pass);
+
+    if (!this.user) {
+      console.warn('[CloudClient] Empty account name');
+      this.onAuthFailure();
+      return;
+    }
+
+    if (!this.pass) {
+      console.warn('[CloudClient] Empty account pass');
+      this.onAuthFailure();
+      return;
+    }
+
+    if (!this.guild) {
+      console.warn('[CloudClient] Empty guild name');
+      this.onNoGuildSelection();
+      return;
+    }
+
+    // TODO actually test login?
+
+    this.authenticated = true;
+    await this.pollInit();
+    this.startPolling();
+
+    this.send('refreshState');
+    this.refreshStatus();
+  }
+
+  /**
+   * Return the guild name.
+   */
+  public getGuildName() {
+    return this.guild;
+  }
+
+  /**
+   * Build the Authorization header string.
+   */
+  private static createAuthHeader(user: string, pass: string) {
+    const authHeaderString = `${user}:${pass}`;
+    const encodedAuthString = Buffer.from(authHeaderString).toString('base64');
+    return `Basic ${encodedAuthString}`;
+  }
+
+  /**
+   * Add a video to the WCR database.
+   */
+  public async postVideo(metadata: CloudMetadata) {
+    console.info('[CloudClient] Adding video to database', metadata.videoName);
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/video`;
+    const headers = { Authorization: this.authHeader };
+
+    await axios.post(url, metadata, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    // Always run the housekeeper after an upload so that there
+    // will be space for the next upload.
+    await this.runHousekeeping();
+
+    // Update the mtime to avoid multiple refreshes.
+    this.bucketLastMod = Date.now();
+    this.refreshStatus();
+    this.send('refreshState');
+
+    console.info(
+      '[CloudClient] Added',
+      metadata.videoName,
+      'to video database.',
+    );
   }
 
   /**
@@ -623,7 +669,7 @@ export default class CloudClient extends StorageClient {
             this.bucketLastMod,
           );
 
-          this.refresh();
+          this.refreshStatus();
           this.send('refreshState');
           this.bucketLastMod = mtime;
         }
@@ -795,7 +841,7 @@ export default class CloudClient extends StorageClient {
           this.bucketLastMod,
         );
 
-        this.refresh();
+        this.refreshStatus();
         this.send('refreshState');
         this.bucketLastMod = mtime;
       }
@@ -1078,49 +1124,6 @@ export default class CloudClient extends StorageClient {
   }
 
   /**
-   * Handle changes to the cloud status, does not refresh the videos.
-   */
-  public async refreshStatus() {
-    try {
-      const usagePromise = this.getUsage();
-      const limitPromise = this.getStorageLimit();
-      const affiliationsPromise = this.getUserAffiliations();
-
-      // This is a bit tricky, get the guild name from the active client which is
-      // guarenteed to be up to date, unlike other fields in this class.
-      const guild = this.getGuildName();
-
-      const usage = await usagePromise;
-      const limit = await limitPromise;
-      const affiliations = await affiliationsPromise;
-
-      const available = affiliations.map((aff) => aff.guildName);
-      const affiliation = affiliations.find((aff) => aff.guildName === guild);
-
-      const status: CloudStatus = {
-        authenticated: true,
-        guild,
-        available,
-        usage: usage,
-        limit: limit,
-        read: false,
-        write: false,
-        del: false,
-      };
-
-      if (affiliation) {
-        status.read = affiliation.read;
-        status.write = affiliation.write;
-        status.del = affiliation.del;
-      }
-
-      this.send('updateCloudStatus', status);
-    } catch (error) {
-      console.error('[CloudClient] Error getting cloud status', String(error));
-    }
-  }
-
-  /**
    * Handles an authentication failure.
    */
   private onAuthFailure() {
@@ -1187,6 +1190,53 @@ export default class CloudClient extends StorageClient {
       const videoName = args[0];
       const shareable = await this.getShareableLink(videoName);
       clipboard.writeText(shareable);
+    });
+
+    ipcMain.on('deleteVideos', async (_event, args) => {
+      const videos = args as RendererVideo[];
+      const toDelete = videos.filter((v) => v.cloud).map((v) => v.videoName);
+      if (toDelete.length < 1) return;
+      this.deleteVideos(toDelete);
+    });
+
+    // VideoButton event listeners.
+    ipcMain.on('videoButton', async (_event, args) => {
+      const ready = this.ready();
+      const action = args[0] as string;
+
+      if (!ready) {
+        console.warn('[Manager] Cannot process event', action, args);
+        return;
+      }
+
+      if (action === 'protect') {
+        const protect = args[1] as boolean;
+        const videos = args[2] as RendererVideo[];
+        const cloud = videos.filter((v) => v.cloud);
+        const toProtect = cloud.map((v) => v.videoName);
+        if (toProtect.length < 1) return;
+        this.protectVideos(toProtect, protect);
+      }
+
+      if (action === 'tag') {
+        const tag = args[1] as string;
+        const videos = args[2] as RendererVideo[];
+        const cloud = videos.filter((v) => v.cloud);
+        const toTag = cloud.map((v) => v.videoName);
+        if (toTag.length < 1) return;
+        this.tagVideos(toTag, tag);
+      }
+
+      if (action === 'download') {
+        const video = args[1] as RendererVideo;
+        VideoProcessQueue.getInstance().queueDownload(video);
+      }
+
+      if (action === 'upload') {
+        const src = args[1] as string;
+        const item: UploadQueueItem = { path: src };
+        VideoProcessQueue.getInstance().queueUpload(item);
+      }
     });
   }
 }

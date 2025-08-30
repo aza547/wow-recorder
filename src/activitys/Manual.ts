@@ -1,7 +1,4 @@
 import { Flavour, Metadata } from 'main/types';
-
-import { IConfigService } from '../config/ConfigService';
-
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
 
@@ -9,8 +6,8 @@ import Activity from './Activity';
  * Class representing a manual recording.
  */
 export default class Manual extends Activity {
-  constructor(startDate: Date, flavour: Flavour, cfg: IConfigService) {
-    super(startDate, VideoCategory.Manual, flavour, cfg);
+  constructor(startDate: Date, flavour: Flavour) {
+    super(startDate, VideoCategory.Manual, flavour);
   }
 
   /**

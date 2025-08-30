@@ -6,15 +6,15 @@ const ipc = window.electron.ipcRenderer;
 
 export default function RendererTitleBar() {
   const clickedHide = () => {
-    ipc.sendMessage('mainWindow', ['minimize']);
+    ipc.sendMessage('window', ['minimize']);
   };
 
   const clickedResize = () => {
-    ipc.sendMessage('mainWindow', ['resize']);
+    ipc.sendMessage('window', ['resize']);
   };
 
   const clickedQuit = () => {
-    ipc.sendMessage('mainWindow', ['quit']);
+    ipc.sendMessage('window', ['quit']);
   };
 
   const TitleBarButton = ({

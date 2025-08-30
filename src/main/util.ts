@@ -462,9 +462,9 @@ const getWowFlavour = (pathSpec: string): string => {
  * Updates the status icon for the application.
  * @param status the status number
  */
-const addCrashToUI = (mainWindow: BrowserWindow, crashData: CrashData) => {
+const addCrashToUI = (window: BrowserWindow, crashData: CrashData) => {
   console.info('[Util] Updating crashes with:', crashData);
-  mainWindow.webContents.send('updateCrashes', crashData);
+  window.webContents.send('updateCrashes', crashData);
 };
 
 const isPushToTalkHotkey = (
@@ -931,14 +931,8 @@ const mv = async (src: string, dst: string) => {
   console.timeEnd('[Util] Moving video file took');
 };
 
-const playSoundAlert = (alert: SoundAlerts, mainWindow: BrowserWindow) => {
-  const path = getAssetPath(`sounds/${alert}.mp3`);
-  mainWindow.webContents.send('playAudio', path);
-};
-
 export {
   setupApplicationLogging,
-  loadAllVideosDisk,
   writeMetadataFile,
   deleteVideoDisk,
   openSystemExplorer,
@@ -975,7 +969,6 @@ export {
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
   mv,
-  playSoundAlert,
   isManualRecordHotKey,
   delayedDeleteVideo,
 };

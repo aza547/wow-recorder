@@ -1,19 +1,12 @@
-import { BrowserWindow, app, clipboard, ipcMain, powerMonitor } from 'electron';
+import { app, ipcMain, powerMonitor } from 'electron';
 import { uIOhook, UiohookKeyboardEvent } from 'uiohook-napi';
-import assert from 'assert';
 import EraLogHandler from '../parsing/EraLogHandler';
 import {
   buildClipMetadata,
   getMetadataForVideo,
   getOBSFormattedDate,
-  tagVideoDisk,
-  openSystemExplorer,
-  markForVideoForDelete,
   exists,
-  deleteVideoDisk,
-  protectVideoDisk,
   isManualRecordHotKey,
-  playSoundAlert,
   nextKeyPressPromise,
   nextMousePressPromise,
 } from './util';
@@ -27,13 +20,8 @@ import {
   RecStatus,
   VideoQueueItem,
   MicStatus,
-  RendererVideo,
   DiskStatus,
-  UploadQueueItem,
-  WCRSceneItem,
-  AudioSourceType,
   WowProcessEvent,
-  SoundAlerts,
   BaseConfig,
 } from './types';
 import {
@@ -51,10 +39,10 @@ import {
 } from '../utils/testButtonUtils';
 import VideoProcessQueue from './VideoProcessQueue';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
-import noobs from 'noobs';
 import { Phrase } from 'localisation/phrases';
 import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import { send } from './main';
 
 /**
  * The manager class is responsible for orchestrating all the functional
@@ -68,13 +56,13 @@ import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
  * occurs and it will always do the right thing.
  */
 export default class Manager {
-  public recorder: Recorder;
-
-  private window: BrowserWindow;
+  public recorder = Recorder.getInstance();
 
   private cfg = ConfigService.getInstance();
 
   private poller = Poller.getInstance();
+
+  private logHandlers: LogHandler[] = [];
 
   private retailLogHandler: RetailLogHandler | undefined;
 
@@ -83,8 +71,6 @@ export default class Manager {
   private eraLogHandler: EraLogHandler | undefined;
 
   private retailPtrLogHandler: RetailLogHandler | undefined;
-
-  private videoProcessQueue: VideoProcessQueue;
 
   private configValid = false;
 
@@ -101,58 +87,90 @@ export default class Manager {
   private manualHotKeyDisabled = false;
 
   /**
-   * This log handler assigned for a manual recording. Need a reference to
-   * this to know which log handler to use to stop the manual recording on.
-   */
-  private manualLogHandler?: LogHandler;
-
-  /**
    * Constructor.
    */
-  constructor(window: BrowserWindow) {
+  constructor() {
     console.info('[Manager] Creating manager');
-
-    this.window = window;
     this.setupListeners();
-    this.recorder = new Recorder(this.window);
 
     this.recorder.on('state-change', () => {
-      setTimeout(() => this.refresh(), 0);
+      setTimeout(() => this.refreshStatus(), 0);
     });
 
-    this.videoProcessQueue = new VideoProcessQueue(this.window);
+    this.poller
+      .on(WowProcessEvent.STARTED, () => this.onWowStarted())
+      .on(WowProcessEvent.STOPPED, () => this.onWowStopped());
   }
 
   /**
-   * Run the startup configuration, which validates the config and applies it
-   * from the config service.
+   * Run the startup configuration. Run once, on startup.
    */
   public async startup() {
     console.info('[Manager] Starting up');
 
+    // This should be a given, except with the dev hot reloader.
+    await this.recorder.stop(true);
+
     this.reconfiguring = true;
-    this.refresh();
+    this.refreshStatus();
+
+    // This stuff should never fail.
+    await this.configureObsVideo();
+    await this.configureObsAudio();
+    await this.configureObsOverlay();
+
+    let success = false;
 
     try {
+      // This can fail.
       await this.configureBase();
-      await this.configureObsVideo();
-      await this.configureObsAudio();
-      await this.validateOverlayConfig();
-      await this.configureObsOverlay();
+      success = true;
     } catch (error) {
-      console.error('[Manager] Error during startup', error);
-      this.reconfiguring = false;
+      console.error('[Manager] Failed to configure base on startup', error);
       this.setConfigInvalid(String(error));
-      return;
     }
 
     this.reconfiguring = false;
-    this.setConfigValid();
 
-    this.poller
-      .on(WowProcessEvent.STARTED, () => this.onWowStarted())
-      .on(WowProcessEvent.STOPPED, () => this.onWowStopped())
-      .start();
+    if (success) {
+      this.setConfigValid();
+      this.poller.start();
+    }
+
+    this.refreshStatus();
+  }
+
+  /**
+   * Reconfigure the base settings. This exists because we need the recorder
+   * to be stopped to do this, and because the user can input invalid settings
+   * which we want to catch.
+   *
+   * TODO queueing?
+   */
+  public async reconfigureBase() {
+    console.info('[Manager] Reconfiguring base');
+
+    // The recording must be stopped to do this.
+    await this.recorder.stop(true);
+    this.reconfiguring = true;
+    this.refreshStatus();
+    let success = false;
+
+    try {
+      await this.configureBase();
+      success = true;
+    } catch (error) {
+      console.error('[Manager] Failed to configure base on startup', error);
+      this.setConfigInvalid(String(error));
+    }
+
+    if (success) {
+      this.setConfigValid();
+      this.poller.start();
+    }
+
+    this.reconfiguring = false;
+    this.refreshStatus();
   }
 
   /**
@@ -168,45 +186,13 @@ export default class Manager {
    * Force a recording to stop regardless of the scenario.
    */
   public async forceStop() {
-    if (this.retailLogHandler && this.retailLogHandler.activity) {
-      await this.retailLogHandler.forceEndActivity();
-    }
+    const inActivity = Boolean(LogHandler.activity);
 
-    if (this.classicLogHandler && this.classicLogHandler.activity) {
-      await this.classicLogHandler.forceEndActivity();
-    }
-
-    if (this.eraLogHandler && this.eraLogHandler.activity) {
-      await this.eraLogHandler.forceEndActivity();
-    }
-
-    if (this.retailPtrLogHandler && this.retailPtrLogHandler.activity) {
-      await this.retailPtrLogHandler.forceEndActivity();
-    }
-  }
-
-  /**
-   * Immediately drop any in-progress activity.
-   */
-  public dropActivity() {
-    if (this.retailLogHandler && this.retailLogHandler.activity) {
-      console.info('[Manager] Dropping retail activity');
-      this.retailLogHandler.dropActivity();
-    }
-
-    if (this.classicLogHandler && this.classicLogHandler.activity) {
-      console.info('[Manager] Dropping classic activity');
-      this.classicLogHandler.dropActivity();
-    }
-
-    if (this.eraLogHandler && this.eraLogHandler.activity) {
-      console.info('[Manager] Dropping era activity');
-      this.eraLogHandler.dropActivity();
-    }
-
-    if (this.retailPtrLogHandler && this.retailPtrLogHandler.activity) {
-      console.info('[Manager] Dropping ptr activity');
-      this.retailPtrLogHandler.dropActivity();
+    if (inActivity) {
+      console.info('[Manager] Force ending activity');
+      LogHandler.forceEndActivity();
+    } else {
+      console.info('[Manager] No activity to force end');
     }
   }
 
@@ -239,7 +225,7 @@ export default class Manager {
   private setConfigValid() {
     this.configValid = true;
     this.configMessage = '';
-    this.refresh();
+    this.refreshStatus();
   }
 
   /**
@@ -248,14 +234,14 @@ export default class Manager {
   private setConfigInvalid(reason: string) {
     this.configValid = false;
     this.configMessage = reason;
-    this.refresh();
+    this.refreshStatus();
   }
 
   /**
    * Refresh the recorder and mic status icons in the UI. This is the only
    * place that this should be done from to avoid any status icon confusion.
    */
-  public refresh() {
+  public refreshStatus() {
     if (this.reconfiguring) {
       this.refreshRecStatus(RecStatus.Reconfiguring);
       return;
@@ -269,17 +255,8 @@ export default class Manager {
       return;
     }
 
-    const inOverrun =
-      this.retailLogHandler?.overrunning ||
-      this.classicLogHandler?.overrunning ||
-      this.eraLogHandler?.overrunning ||
-      this.retailPtrLogHandler?.overrunning;
-
-    const inActivity =
-      this.retailLogHandler?.activity ||
-      this.classicLogHandler?.activity ||
-      this.eraLogHandler?.activity ||
-      this.retailPtrLogHandler?.activity;
+    const inOverrun = LogHandler.overrunning;
+    const inActivity = Boolean(LogHandler.activity);
 
     if (inOverrun) {
       this.refreshRecStatus(RecStatus.Overrunning);
@@ -303,16 +280,14 @@ export default class Manager {
    * Send a message to the frontend to update the recorder status icon.
    */
   private refreshRecStatus(status: RecStatus, msg = '') {
-    if (this.window.isDestroyed()) return; // Can happen on shutdown.
-    this.window.webContents.send('updateRecStatus', status, msg);
+    send('updateRecStatus', status, msg);
   }
 
   /**
    * Send a message to the frontend to update the mic status icon.
    */
   private refreshMicStatus(status: MicStatus) {
-    if (this.window.isDestroyed()) return; // Can happen on shutdown.
-    this.window.webContents.send('updateMicStatus', status);
+    send('updateMicStatus', status);
   }
 
   /**
@@ -323,7 +298,7 @@ export default class Manager {
     // gets stale data otherwise. A caching thing in libobs maybe? Noobs will
     // send a source signal to the recorder if the size of sources change, but
     // for other changes we need to manually trigger a redraw.
-    setTimeout(() => this.window.webContents.send('redrawPreview'), 100);
+    setTimeout(() => send('redrawPreview'), 100);
   }
 
   /**
@@ -331,10 +306,10 @@ export default class Manager {
    * the disk usage bar.
    */
   private async refreshDiskStatus() {
-    const usage = await new DiskSizeMonitor(this.window).usage();
+    const usage = await new DiskSizeMonitor().usage();
     const limit = this.cfg.get<number>('maxStorage') * 1024 ** 3;
     const status: DiskStatus = { usage, limit };
-    this.window.webContents.send('updateDiskStatus', status);
+    send('updateDiskStatus', status);
   }
 
   /**
@@ -363,17 +338,12 @@ export default class Manager {
    */
   private async onWowStopped() {
     console.info('[Manager] Detected WoW not running');
+    const inActivity = Boolean(LogHandler.activity);
 
-    if (this.retailLogHandler && this.retailLogHandler.activity) {
-      await this.retailLogHandler.forceEndActivity();
-    } else if (this.classicLogHandler && this.classicLogHandler.activity) {
-      await this.classicLogHandler.forceEndActivity();
-    } else if (this.eraLogHandler && this.eraLogHandler.activity) {
-      await this.eraLogHandler.forceEndActivity();
-    } else if (this.retailPtrLogHandler && this.retailPtrLogHandler.activity) {
-      await this.retailPtrLogHandler.forceEndActivity();
+    if (inActivity) {
+      console.info('[Manager] Force ending activity');
+      LogHandler.forceEndActivity();
     } else {
-      // No activity so we can just force stop.
       await this.recorder.stop(true);
     }
 
@@ -390,100 +360,52 @@ export default class Manager {
    * Configure the base OBS config. We need to stop the recording to do this.
    */
   private async applyBaseConfig(config: BaseConfig) {
-    await this.recorder.stop(true);
-
     await this.refreshDiskStatus();
-
     await this.recorder.configureBase(config);
-    this.manualLogHandler = undefined;
+
+    LogHandler.activity = undefined;
+    LogHandler.overrunning = false;
+    LogHandler.setStateChangeCallback(() => this.refreshStatus());
 
     if (this.retailLogHandler) {
-      this.retailLogHandler.removeAllListeners();
       this.retailLogHandler.destroy();
       this.retailLogHandler = undefined;
     }
 
     if (this.classicLogHandler) {
-      this.classicLogHandler.removeAllListeners();
       this.classicLogHandler.destroy();
       this.classicLogHandler = undefined;
     }
 
     if (this.eraLogHandler) {
-      this.eraLogHandler.removeAllListeners();
       this.eraLogHandler.destroy();
       this.eraLogHandler = undefined;
     }
 
     if (this.retailPtrLogHandler) {
-      this.retailPtrLogHandler.removeAllListeners();
       this.retailPtrLogHandler.destroy();
       this.retailPtrLogHandler = undefined;
     }
 
     if (config.recordRetail) {
-      this.retailLogHandler = new RetailLogHandler(
-        this.window,
-        this.recorder,
-        this.videoProcessQueue,
-        config.retailLogPath,
-      );
-
-      this.retailLogHandler.on('state-change', () => this.refresh());
+      this.retailLogHandler = new RetailLogHandler(config.retailLogPath);
     }
 
     if (config.recordClassic) {
-      this.classicLogHandler = new ClassicLogHandler(
-        this.window,
-        this.recorder,
-        this.videoProcessQueue,
-        config.classicLogPath,
-      );
-
-      this.classicLogHandler.on('state-change', () => this.refresh());
+      this.classicLogHandler = new ClassicLogHandler(config.classicLogPath);
     }
 
     if (config.recordEra) {
-      this.eraLogHandler = new EraLogHandler(
-        this.window,
-        this.recorder,
-        this.videoProcessQueue,
-        config.eraLogPath,
-      );
-
-      this.eraLogHandler.on('state-change', () => this.refresh());
+      this.eraLogHandler = new EraLogHandler(config.eraLogPath);
     }
 
     if (config.recordRetailPtr) {
-      this.retailPtrLogHandler = new RetailLogHandler(
-        this.window,
-        this.recorder,
-        this.videoProcessQueue,
-        config.retailPtrLogPath,
-      );
-
+      this.retailPtrLogHandler = new RetailLogHandler(config.retailPtrLogPath);
       this.retailPtrLogHandler.setIsPtr();
-      this.retailPtrLogHandler.on('state-change', () => this.refresh());
-    }
-
-    // Order of priority which log handler to use for manual recordings.
-    // It doesn't actually matter which takes it as the logic is all in
-    // the LogHandler class itself, but it's abstract and we need to make
-    // sure we start and stop aganst the same concrete implementation.
-    //
-    // TODO what if we send manual through one but get real events through another?
-    if (this.retailLogHandler) {
-      this.manualLogHandler = this.retailLogHandler;
-    } else if (this.retailPtrLogHandler) {
-      this.manualLogHandler = this.retailPtrLogHandler;
-    } else if (this.classicLogHandler) {
-      this.manualLogHandler = this.classicLogHandler;
-    } else if (this.eraLogHandler) {
-      this.manualLogHandler = this.eraLogHandler;
     }
 
     // We're done, now make sure we refresh the frontend.
-    this.window.webContents.send('refreshState');
+    send('refreshState');
   }
 
   /**
@@ -576,35 +498,6 @@ export default class Manager {
       }
     });
 
-    ipcMain.on(
-      'configurePreview',
-      (_event, x: number, y: number, width: number, height: number) => {
-        this.recorder.configurePreview(x, y, width, height);
-        this.redrawPreview();
-      },
-    );
-
-    ipcMain.on('showPreview', () => {
-      this.recorder.showPreview();
-    });
-
-    ipcMain.on('hidePreview', () => {
-      this.recorder.hidePreview();
-    });
-
-    ipcMain.on('disablePreview', () => {
-      this.recorder.disablePreview();
-    });
-
-    // Encoder listener, to populate settings on the frontend.
-    ipcMain.handle('getEncoders', (): string[] => {
-      const obsEncoders = this.recorder
-        .getAvailableEncoders()
-        .filter((encoder) => encoder !== 'none');
-
-      return obsEncoders;
-    });
-
     // Test listener, to enable the test button to start a test.
     ipcMain.on('test', (_event, args) => {
       const testCategory = args[0] as VideoCategory;
@@ -633,7 +526,7 @@ export default class Manager {
         metadata: clipMetadata,
       };
 
-      this.videoProcessQueue.queueVideo(clipQueueItem);
+      VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
     });
 
     // Force stop listener, to enable the force stop button to do its job.
@@ -649,208 +542,6 @@ export default class Manager {
       if (isWowRunning) {
         this.onWowStarted();
       }
-    });
-
-    // VideoButton event listeners.
-    ipcMain.on('videoButton', async (_event, args) => {
-      const action = args[0] as string;
-
-      if (action === 'open') {
-        // Open only called for disk based video, see openURL for cloud version.
-        const src = args[1] as string;
-        const cloud = args[2] as boolean;
-        assert(!cloud);
-        openSystemExplorer(src);
-      }
-
-      if (action === 'protect') {
-        const protect = args[1] as boolean;
-        const videos = args[2] as RendererVideo[];
-
-        const cloud = videos.filter((v) => v.cloud);
-        const disk = videos.filter((v) => !v.cloud);
-
-        disk
-          .map((v) => v.videoSource)
-          .forEach((src) => protectVideoDisk(protect, src));
-
-        if (cloud.length > 0) {
-          const cloudNames = cloud.map((v) => v.videoName);
-          this.protectVideoCloud(protect, cloudNames);
-        }
-      }
-
-      if (action === 'tag') {
-        const tag = args[1] as string;
-        const videos = args[2] as RendererVideo[];
-
-        const cloud = videos.filter((v) => v.cloud);
-        const disk = videos.filter((v) => !v.cloud);
-
-        disk.map((v) => v.videoSource).forEach((src) => tagVideoDisk(src, tag));
-
-        if (cloud.length > 0) {
-          const cloudNames = cloud.map((v) => v.videoName);
-          this.tagVideosCloud(cloudNames, tag);
-        }
-      }
-
-      if (action === 'download') {
-        if (!this.configValid) {
-          console.warn('[Manager] Refusing to queue download, config invalid');
-          return;
-        }
-
-        const video = args[1] as RendererVideo;
-        this.videoProcessQueue.queueDownload(video);
-      }
-
-      if (action === 'upload') {
-        if (!this.configValid) {
-          console.warn('[Manager] Refusing to queue upload, config invalid');
-          return;
-        }
-
-        const src = args[1] as string;
-
-        const item: UploadQueueItem = {
-          path: src,
-        };
-
-        this.videoProcessQueue.queueUpload(item);
-      }
-    });
-
-    ipcMain.on('deleteVideos', async (_event, args) => {
-      const videos = args as RendererVideo[];
-
-      const cloud = videos.filter((v) => v.cloud);
-      const disk = videos.filter((v) => !v.cloud);
-
-      disk.map((v) => v.videoSource).forEach(this.deleteVideoDisk);
-
-      if (cloud.length > 0) {
-        this.deleteCloudVideos(cloud);
-      }
-    });
-
-    /**
-     * Callback to attach the audio devices. This is called when the user
-     * opens the audio settings so that the volmeter bars can be populated.
-     */
-    ipcMain.handle('audioSettingsOpen', () => {
-      console.info('[Manager] Audio settings were opened');
-      noobs.SetVolmeterEnabled(true);
-
-      if (this.poller.isWowRunning()) {
-        console.info('[Manager] Wont touch audio sources as WoW is running');
-        return;
-      }
-
-      const audioConfig = getObsAudioConfig(this.cfg);
-      this.recorder.configureAudioSources(audioConfig);
-    });
-
-    ipcMain.handle('audioSettingsClosed', () => {
-      console.info('[Manager] Audio settings were closed');
-      noobs.SetVolmeterEnabled(false);
-
-      if (this.poller.isWowRunning()) {
-        console.info('[Manager] Wont touch audio sources as WoW is running');
-        return;
-      }
-
-      this.recorder.removeAudioSources();
-    });
-
-    ipcMain.handle('getDisplayInfo', () => {
-      return this.recorder.getDisplayInfo();
-    });
-
-    ipcMain.handle('getSourcePosition', (_event, item: WCRSceneItem) => {
-      return this.recorder.getSourcePosition(item);
-    });
-
-    ipcMain.on(
-      'setSourcePosition',
-      (
-        _event,
-        item: WCRSceneItem,
-        target: { x: number; y: number; width: number; height: number },
-      ) => {
-        this.recorder.setSourcePosition(item, target);
-        // Don't need to redraw here, frontend handles this for us.
-      },
-    );
-
-    ipcMain.on('resetSourcePosition', (_event, item: WCRSceneItem) => {
-      this.recorder.resetSourcePosition(item);
-      this.redrawPreview();
-    });
-
-    ipcMain.handle(
-      'createAudioSource',
-      (_event, id: string, type: AudioSourceType) => {
-        console.info('[Manager] Creating audio source', id, 'of type', type);
-        const name = noobs.CreateSource(id, type);
-        console.info('[Manager] Created audio source', name);
-        noobs.AddSourceToScene(name);
-        return name;
-      },
-    );
-
-    ipcMain.handle('getAudioSourceProperties', (_event, id: string) => {
-      console.info('[Manager] Getting audio source properties for', id);
-      return noobs.GetSourceProperties(id);
-    });
-
-    ipcMain.on('deleteAudioSource', (_event, id: string) => {
-      console.info('[Manager] Deleting audio source', id);
-      noobs.DeleteSource(id);
-    });
-
-    ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
-      console.info(
-        '[Manager] Setting audio device for source',
-        id,
-        'to',
-        value,
-      );
-      const settings = noobs.GetSourceSettings(id);
-      settings['device_id'] = value;
-      noobs.SetSourceSettings(id, settings);
-    });
-
-    ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
-      console.info(
-        '[Manager] Setting audio window for source',
-        id,
-        'to',
-        value,
-      );
-      const settings = noobs.GetSourceSettings(id);
-      settings['window'] = value;
-      noobs.SetSourceSettings(id, settings);
-    });
-
-    ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
-      console.info(
-        '[Manager] Setting audio volume for source',
-        id,
-        'to',
-        value,
-      );
-      noobs.SetSourceVolume(id, value);
-    });
-
-    ipcMain.on('setForceMono', (_event, enabled: boolean) => {
-      console.info('[Manager] Setting force mono to', enabled);
-      noobs.SetForceMono(enabled);
-    });
-
-    ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
-      console.info('[Manager] Setting audio suppression to', enabled);
-      noobs.SetAudioSuppression(enabled);
     });
 
     /**
@@ -898,59 +589,7 @@ export default class Manager {
         return;
       }
 
-      const logHandlers = [
-        this.retailLogHandler,
-        this.retailPtrLogHandler,
-        this.classicLogHandler,
-        this.eraLogHandler,
-      ];
-
-      // TODO - worry about the reverse. This protects starting a manual
-      // recording while in a real activity. What about starting a real
-      // activity while in a manual activity? I think that needs solved.
-      const inRealActivity =
-        logHandlers
-          .filter((handler) => handler !== undefined)
-          .map((handler) => handler.activity)
-          .filter((activity) => activity !== undefined)
-          .map((handler) => handler.category)
-          .filter((category) => category !== VideoCategory.Manual).length > 0;
-
-      if (inRealActivity) {
-        console.warn('[Manager] In activity, unable to start manual recording');
-        const sounds = this.cfg.get('manualRecordSoundAlert');
-
-        if (sounds) {
-          playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.window);
-        }
-
-        return;
-      }
-
-      if (!this.manualLogHandler) {
-        // I don't think it should be possible to hit this, but be safe.
-        // The poller check above compares WoW process state to config categories.
-        console.warn('[Manager] No manual log handler available');
-        const sounds = this.cfg.get('manualRecordSoundAlert');
-
-        if (sounds) {
-          playSoundAlert(SoundAlerts.MANUAL_RECORDING_ERROR, this.window);
-        }
-
-        return;
-      }
-
-      this.manualLogHandler.handleManualRecordingHotKey();
-    });
-
-    // Important we shutdown OBS on the before-quit event as if we get closed by
-    // the installer we want to ensure we shutdown OBS, this is common when
-    // upgrading the app. See issue 325 and 338.
-    app.on('before-quit', () => {
-      console.info('[Manager] Running before-quit actions');
-      this.poller.reset();
-      uIOhook.stop();
-      this.recorder.shutdownOBS();
+      LogHandler.handleManualRecordingHotKey();
     });
 
     // If Windows is going to sleep, we don't want to confuse OBS. It would be
@@ -958,104 +597,15 @@ export default class Manager {
     // activity, all we can do is drop the activity and stop the recorder.
     powerMonitor.on('suspend', async () => {
       console.info('[Manager] Detected Windows is going to sleep.');
-      this.dropActivity();
-      this.poller.reset();
+      LogHandler.dropActivity();
+      this.poller.stop();
       await this.recorder.stop(true);
     });
 
     powerMonitor.on('resume', async () => {
       console.info('[Manager] Detected Windows waking up from a sleep.');
       await this.recorder.stop(true);
-
-      this.poller
-        .on('wowProcessStart', () => this.onWowStarted())
-        .on('wowProcessStop', () => this.onWowStopped())
-        .start();
+      this.poller.start();
     });
   }
-
-  /**
-   * Delete a video from the disk, and its accompanying metadata.
-   */
-  private deleteVideoDisk = async (videoName: string) => {
-    try {
-      // Bit weird we have to check a boolean here given all the error handling
-      // going on. That's just me taking an easy way out rather than fixing this
-      // more elegantly. TL;DR deleteVideoDisk doesn't throw anything.
-      const success = await deleteVideoDisk(videoName);
-
-      if (!success) {
-        throw new Error('Failed deleting video, will mark for delete');
-      }
-    } catch (error) {
-      // If that didn't work for any reason, try to at least mark it for deletion,
-      // so that it can be picked up on refresh and we won't show videos the user
-      // intended to delete
-      console.warn(
-        '[Manager] Failed to directly delete video on disk:',
-        String(error),
-      );
-
-      markForVideoForDelete(videoName);
-    }
-  };
-
-  /**
-   * Delete a video from the cloud, and it's accompanying metadata.
-   */
-  private deleteCloudVideos = async (videos: RendererVideo[]) => {
-    try {
-      assert(this.cloudClient);
-      const names = videos.map((v) => v.videoName);
-      await this.cloudClient.deleteVideos(names);
-    } catch (error) {
-      // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to bulk delete', String(error));
-    }
-  };
-
-  /**
-   * Toggle protection on a video in the cloud.
-   */
-  private protectVideoCloud = async (
-    protect: boolean,
-    videoNames: string[],
-  ) => {
-    console.info(
-      `[Manager] User ${protect ? 'protected' : 'unprotected'}`,
-      videoNames,
-    );
-
-    try {
-      assert(this.cloudClient);
-
-      if (protect) {
-        await this.cloudClient.protectVideos(true, videoNames);
-      } else {
-        await this.cloudClient.protectVideos(false, videoNames);
-      }
-    } catch (error) {
-      // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn(
-        `[Manager] Failed to ${protect ? 'protect' : 'unprotect'}`,
-        videoNames,
-        String(error),
-      );
-    }
-  };
-
-  /**
-   * Tag a video in the cloud.
-   */
-  private tagVideosCloud = async (videoNames: string[], tag: string) => {
-    console.info('[Manager] User tagged', videoNames, 'with', tag);
-
-    try {
-      assert(this.cloudClient);
-      await this.cloudClient.tagVideos(tag, videoNames);
-    } catch (error) {
-      // Just log this and quietly swallow it. Nothing more we can do.
-      console.warn('[Manager] Failed to tag', videoNames, String(error));
-    }
-  };
 }

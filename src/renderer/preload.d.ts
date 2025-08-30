@@ -54,6 +54,10 @@ declare global {
         setAudioSourceVolume(id: string, volume: number): void;
         setForceMono(enabled: boolean): void;
         setAudioSuppression(enabled: boolean): void;
+
+        reconfigureBase(): void;
+        reconfigureVideo(): void;
+        reconfigureOverlay(): void;
       };
     };
   }

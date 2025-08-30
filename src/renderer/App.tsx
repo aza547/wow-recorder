@@ -135,17 +135,8 @@ const WarcraftRecorder = () => {
 
   const doRefresh = async () => {
     ipc.sendMessage('refreshFrontend', []);
-    const state = (await ipc.invoke('getVideoState', [])) as RendererVideo[];
-    setVideoState(state);
-
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        // Fixes issue 410 which caused the preview not to re-appear if
-        // refreshState triggered when full screen.
-        videoFullScreen: false,
-      };
-    });
+    ipc.sendMessage('getVideoState', []);
+    if (appState.page !== Pages.SceneEditor) ipc.hidePreview(); // For dev mode.
   };
 
   const updateRecStatus = (status: unknown, err: unknown) => {
@@ -244,6 +235,38 @@ const WarcraftRecorder = () => {
     new Audio(file as string).play();
   };
 
+  const displayCloudVideos = (videos: unknown) => {
+    setVideoState((prev) => {
+      const disk = prev.filter((video) => !video.cloud);
+      return [...disk, ...(videos as RendererVideo[])];
+    });
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
+  const displayDiskVideos = (videos: unknown) => {
+    setVideoState((prev) => {
+      const cloud = prev.filter((video) => video.cloud);
+      return [...cloud, ...(videos as RendererVideo[])];
+    });
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
   useEffect(() => {
     doRefresh();
     ipc.on('refreshState', doRefresh);
@@ -255,6 +278,8 @@ const WarcraftRecorder = () => {
     ipc.on('updateCloudStatus', updateCloudStatus);
     ipc.on('updateAvailable', onUpdateAvailable);
     ipc.on('playAudio', playAudio);
+    ipc.on('displayCloudVideos', displayCloudVideos);
+    ipc.on('displayDiskVideos', displayDiskVideos);
 
     return () => {
       ipc.removeAllListeners('refreshState');

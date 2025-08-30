@@ -36,7 +36,7 @@ const ChatOverlayControls = (props: IProps) => {
       chatOverlayOwnImagePath: config.chatOverlayOwnImagePath,
     });
 
-    ipc.sendMessage('settingsChange', []);
+    ipc.reconfigureOverlay();
   }, [
     config.chatOverlayEnabled,
     config.chatOverlayOwnImage,

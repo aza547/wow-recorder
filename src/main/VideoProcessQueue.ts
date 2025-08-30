@@ -1,4 +1,3 @@
-import { BrowserWindow } from 'electron';
 import path from 'path';
 import { shouldUpload } from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
@@ -19,6 +18,7 @@ import {
   mv,
 } from './util';
 import CloudClient from '../storage/CloudClient';
+import { send } from './main';
 
 const atomicQueue = require('atomic-queue');
 
@@ -26,6 +26,16 @@ const atomicQueue = require('atomic-queue');
  * A queue for cutting videos to size.
  */
 export default class VideoProcessQueue {
+  private static instance: VideoProcessQueue;
+
+  /**
+   * Get the singleton instance of the VideoProcessQueue.
+   */
+  public static getInstance(): VideoProcessQueue {
+    if (!this.instance) this.instance = new VideoProcessQueue();
+    return this.instance;
+  }
+
   /**
    * Atomic queue object for queueing cutting of videos.
    */
@@ -42,11 +52,6 @@ export default class VideoProcessQueue {
    * Atomic queue object for queuing download of videos.
    */
   private downloadQueue: any;
-
-  /**
-   * Handle to the main window for updating the saving status icon.
-   */
-  private mainWindow: BrowserWindow;
 
   /**
    * Config service handle.
@@ -70,8 +75,7 @@ export default class VideoProcessQueue {
   /**
    * Constructor.
    */
-  constructor(mainWindow: BrowserWindow) {
-    this.mainWindow = mainWindow;
+  private constructor() {
     this.videoQueue = this.createVideoQueue();
     this.uploadQueue = this.createUploadQueue();
     this.downloadQueue = this.createDownloadQueue();
@@ -156,7 +160,7 @@ export default class VideoProcessQueue {
     this.uploadQueue.write(item);
 
     const queued = Math.max(0, this.inProgressUploads.length);
-    this.mainWindow.webContents.send('updateUploadQueueLength', queued);
+    send('updateUploadQueueLength', queued);
   };
 
   /**
@@ -176,7 +180,7 @@ export default class VideoProcessQueue {
     this.downloadQueue.write(video);
 
     const queued = Math.max(0, this.inProgressDownloads.length);
-    this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
+    send('updateDownloadQueueLength', queued);
   };
 
   /**
@@ -243,7 +247,7 @@ export default class VideoProcessQueue {
         return;
       }
 
-      this.mainWindow.webContents.send('updateUploadProgress', progress);
+      send('updateUploadProgress', progress);
       lastProgress = progress;
     };
 
@@ -313,7 +317,7 @@ export default class VideoProcessQueue {
         return;
       }
 
-      this.mainWindow.webContents.send('updateDownloadProgress', progress);
+      send('updateDownloadProgress', progress);
       lastProgress = progress;
     };
 
@@ -370,7 +374,7 @@ export default class VideoProcessQueue {
    */
   private startedProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Now processing video', item.source);
-    this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
+    send('updateSaveStatus', SaveStatus.Saving);
   }
 
   /**
@@ -379,8 +383,8 @@ export default class VideoProcessQueue {
    */
   private finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished cutting video', item.source);
-    this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
-    this.mainWindow.webContents.send('refreshState');
+    send('updateSaveStatus', SaveStatus.NotSaving);
+    send('refreshState');
   }
 
   /**
@@ -389,9 +393,9 @@ export default class VideoProcessQueue {
   private startedUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Now uploading video', item.path);
     const queued = Math.max(0, this.inProgressUploads.length);
-    this.mainWindow.webContents.send('updateUploadProgress', 0);
-    this.mainWindow.webContents.send('updateUploadQueueLength', queued);
-    this.mainWindow.webContents.send('refreshState');
+    send('updateUploadProgress', 0);
+    send('updateUploadQueueLength', queued);
+    send('refreshState');
   }
 
   /**
@@ -399,15 +403,15 @@ export default class VideoProcessQueue {
    */
   private finishUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Finished uploading video', item.path);
-    this.mainWindow.webContents.send('refreshState');
+    send('refreshState');
 
     this.inProgressUploads = this.inProgressUploads.filter(
       (p) => p !== item.path,
     );
 
     const queued = Math.max(0, this.inProgressUploads.length);
-    this.mainWindow.webContents.send('updateUploadQueueLength', queued);
-    this.mainWindow.webContents.send('refreshState');
+    send('updateUploadQueueLength', queued);
+    send('refreshState');
   }
 
   /**
@@ -417,9 +421,9 @@ export default class VideoProcessQueue {
     const { videoName } = video;
     console.info('[VideoProcessQueue] Now downloading video', videoName);
     const queued = Math.max(0, this.inProgressDownloads.length);
-    this.mainWindow.webContents.send('updateDownloadProgress', 0);
-    this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
-    this.mainWindow.webContents.send('refreshState');
+    send('updateDownloadProgress', 0);
+    send('updateDownloadQueueLength', queued);
+    send('refreshState');
   }
 
   /**
@@ -434,8 +438,8 @@ export default class VideoProcessQueue {
     );
 
     const queued = Math.max(0, this.inProgressDownloads.length);
-    this.mainWindow.webContents.send('refreshState');
-    this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
+    send('refreshState');
+    send('updateDownloadQueueLength', queued);
   }
 
   /**
@@ -443,7 +447,7 @@ export default class VideoProcessQueue {
    */
   private async videoQueueEmpty() {
     console.info('[VideoProcessQueue] Video processing queue empty');
-    const sizeMonitor = new DiskSizeMonitor(this.mainWindow);
+    const sizeMonitor = new DiskSizeMonitor();
     sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 
@@ -452,7 +456,7 @@ export default class VideoProcessQueue {
       limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
     };
 
-    this.mainWindow.webContents.send('updateDiskStatus', status);
+    send('updateDiskStatus', status);
   }
 
   /**
@@ -467,7 +471,7 @@ export default class VideoProcessQueue {
    */
   private async downloadQueueEmpty() {
     console.info('[VideoProcessQueue] Download processing queue empty');
-    const sizeMonitor = new DiskSizeMonitor(this.mainWindow);
+    const sizeMonitor = new DiskSizeMonitor();
     sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 
@@ -476,7 +480,7 @@ export default class VideoProcessQueue {
       limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
     };
 
-    this.mainWindow.webContents.send('updateDiskStatus', status);
+    send('updateDiskStatus', status);
   }
 
   /**
