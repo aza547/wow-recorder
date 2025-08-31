@@ -22,6 +22,7 @@ export default class Manual extends Activity {
       overrun: this.overrun,
       combatants: [],
       start: this.startDate.getTime(),
+      uniqueHash: this.getUniqueHash(),
     };
   }
 
