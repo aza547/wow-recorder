@@ -16,11 +16,20 @@ import {
   rendererVideoToMetadata,
   getFileInfo,
   mv,
+  fixPathWhenPackaged,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import { send } from './main';
+import ffmpeg from 'fluent-ffmpeg';
 
 const atomicQueue = require('atomic-queue');
+
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const ffmpegInstallerPath = fixPathWhenPackaged(ffmpegInstaller.path);
+ffmpeg.setFfmpegPath(ffmpegInstallerPath);
+
+const isDebug =
+  process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 /**
  * A queue for cutting videos to size.
@@ -193,19 +202,21 @@ export default class VideoProcessQueue {
   ): Promise<void> {
     try {
       const outputDir = this.cfg.get<string>('storagePath');
+      let videoPath;
 
-      const videoPath = await this.moveVideo(
-        data.source,
-        outputDir,
-        data.suffix,
-      );
+      if (data.clip) {
+        videoPath = await this.cutVideo(
+          data.source,
+          outputDir,
+          data.suffix,
+          data.offset,
+          data.duration,
+        );
+      } else {
+        videoPath = await this.moveVideo(data.source, outputDir, data.suffix);
+      }
 
       await writeMetadataFile(videoPath, data.metadata);
-
-      // if (data.deleteSource) {
-      //   console.info('[VideoProcessQueue] Deleting source video file');
-      //   await tryUnlink(data.source);
-      // }
 
       const upload =
         CloudClient.getInstance().ready() &&
@@ -530,5 +541,95 @@ export default class VideoProcessQueue {
 
     await mv(srcFile, outputPath);
     return outputPath;
+  }
+
+  private async cutVideo(
+    srcFile: string,
+    outputDir: string,
+    suffix: string | undefined,
+    offset: number,
+    duration: number,
+  ): Promise<string> {
+    const start = offset > 0 ? offset : 0;
+
+    const outputPath = VideoProcessQueue.getOutputVideoPath(
+      srcFile,
+      outputDir,
+      suffix,
+    );
+
+    console.info('[VideoProcessQueue] Duration:', duration);
+
+    const fn = ffmpeg(srcFile)
+      .setStartTime(start)
+      .setDuration(duration)
+      // Crucially we copy the video and audio, so we don't do any
+      // re-encoding which would take time and CPU.
+      .withVideoCodec('copy')
+      .withAudioCodec('copy')
+      // Avoid any negative timestamps, which can cause issues with
+      // some players, but does extend the video slightly depending on
+      // the keyframe alignment.
+      .outputOptions('-avoid_negative_ts make_zero')
+      .output(outputPath);
+
+    console.time('[VideoProcessQueue] Video cut took:');
+    await VideoProcessQueue.ffmpegWrapper(fn, 'Video cut');
+    console.timeEnd('[VideoProcessQueue] Video cut took:');
+    return outputPath;
+  }
+
+  /**
+   * An async wrapper around ffmpeg-fluent to avoid a bunch of horrible promise
+   * wrapping indented code being repeated.
+   *
+   * @param fn the ffmpeg function to wrap
+   * @param descr a description of the command for logging
+   */
+  private static async ffmpegWrapper(fn: ffmpeg.FfmpegCommand, descr: string) {
+    return new Promise<void>((resolve, reject) => {
+      const handleErr = (err: unknown) => {
+        const msg = `[VideoProcessQueue] ${descr} failed! ${String(err)}`;
+        console.error(msg);
+        reject(msg);
+      };
+
+      const handleEnd = async (err: unknown) => {
+        if (err) handleErr(err);
+        resolve();
+      };
+
+      const handleStart = (cmd: string) =>
+        console.info('[VideoProcessQueue] FFmpeg command:', cmd);
+
+      const handleStderr = (cmd: string) => {
+        // This is very verbose, so just do it if we're in debug mode.
+        if (isDebug) console.info('[VideoProcessQueue] FFmpeg stderr:', cmd);
+      };
+
+      const onProgress = (progress: {
+        frames: number;
+        currentFps: number;
+        currentKbps: number;
+        targetSize: number;
+        timemark: string;
+        percent?: number | undefined;
+      }) => {
+        console.info(
+          '[VideoProcessQueue] Ffmpeg task:',
+          descr,
+          'progress:',
+          progress.percent?.toFixed(0),
+          '%',
+        );
+      };
+
+      fn.on('start', handleStart)
+        .on('end', handleEnd)
+        .on('error', handleErr)
+        .on('stderr', handleStderr)
+        .on('progress', onProgress)
+        .run();
+    });
   }
 }

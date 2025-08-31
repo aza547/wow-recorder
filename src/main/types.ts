@@ -166,7 +166,7 @@ type VideoQueueItem = {
   suffix: string;
   offset: number;
   duration: number;
-  deleteSource: boolean;
+  clip: boolean;
   metadata: Metadata;
 };
 

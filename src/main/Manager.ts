@@ -522,7 +522,7 @@ export default class Manager {
         suffix: `Clipped at ${getOBSFormattedDate(now)}`,
         offset,
         duration,
-        deleteSource: false,
+        clip: true,
         metadata: clipMetadata,
       };
 
