@@ -19,7 +19,6 @@ import {
   ObsAudioConfig,
   CrashData,
   CloudSignedMetadata,
-  SoundAlerts,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
@@ -297,62 +296,6 @@ const openSystemExplorer = (filePath: string) => {
   const windowsPath = filePath.replace(/\//g, '\\');
   const cmd = `explorer.exe /select,"${windowsPath}"`;
   exec(cmd, () => {});
-};
-
-/**
- * Put a save marker on a video, protecting it from the file monitor.
- */
-const protectVideoDisk = async (protect: boolean, videoPath: string) => {
-  let metadata;
-
-  try {
-    metadata = await getMetadataForVideo(videoPath);
-  } catch (err) {
-    console.error(
-      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
-      err,
-    );
-
-    return;
-  }
-
-  if (protect) {
-    console.info(`[Util] User set protected ${videoPath}`);
-  } else {
-    console.info(`[Util] User unprotected ${videoPath}`);
-  }
-
-  metadata.protected = protect;
-  await writeMetadataFile(videoPath, metadata);
-};
-
-/**
- * Tag a video.
- */
-const tagVideoDisk = async (videoPath: string, tag: string) => {
-  let metadata;
-
-  try {
-    metadata = await getMetadataForVideo(videoPath);
-  } catch (err) {
-    console.error(
-      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
-      err,
-    );
-
-    return;
-  }
-
-  if (!tag || !/\S/.test(tag)) {
-    // empty or whitespace only
-    console.info('[Util] User removed tag');
-    metadata.tag = undefined;
-  } else {
-    console.info('[Util] User tagged', videoPath, 'with', tag);
-    metadata.tag = tag;
-  }
-
-  await writeMetadataFile(videoPath, metadata);
 };
 
 /**
@@ -949,7 +892,6 @@ export {
   writeMetadataFile,
   deleteVideoDisk,
   openSystemExplorer,
-  protectVideoDisk,
   fixPathWhenPackaged,
   getSortedVideos,
   getAvailableDisplays,
@@ -968,7 +910,6 @@ export {
   buildClipMetadata,
   getOBSFormattedDate,
   checkDisk,
-  tagVideoDisk,
   getMetadataFileNameForVideo,
   loadVideoDetailsDisk,
   reverseChronologicalVideoSort,

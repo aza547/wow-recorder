@@ -3,10 +3,12 @@ import StorageClient from './StorageClient';
 import {
   delayedDeleteVideo,
   deleteVideoDisk,
+  getMetadataForVideo,
   getSortedVideos,
   loadVideoDetailsDisk,
   markForVideoForDelete,
   openSystemExplorer,
+  writeMetadataFile,
 } from 'main/util';
 import { DiskStatus, RendererVideo } from 'main/types';
 import DiskSizeMonitor from './DiskSizeMonitor';
@@ -89,16 +91,71 @@ export default class DiskClient extends StorageClient {
     return videoDetails.filter((video) => !video.delete);
   }
 
-  public async deleteVideos(videoNames: string[]) {
-    videoNames.forEach((videoName) => this.deleteVideoDisk(videoName));
+  public async deleteVideos(videoPaths: string[]) {
+    videoPaths.forEach((videoPath) => this.deleteVideoDisk(videoPath));
   }
 
-  public async tagVideos(videoNames: string[], tag: string) {
-    throw new Error('Method not implemented.');//TODO
+  public async tagVideos(videoPaths: string[], tag: string) {
+    videoPaths.forEach((videoPath) => this.tagVideoDisk(videoPath, tag));
   }
 
-  public async protectVideos(videoNames: string[], protect: boolean) {
-    throw new Error('Method not implemented.'); //TODO
+  public async protectVideos(videoPaths: string[], protect: boolean) {
+    videoPaths.forEach((videoPath) =>
+      this.protectVideoDisk(protect, videoPath),
+    );
+  }
+
+  /**
+   * Put a save marker on a video, protecting it from the file monitor.
+   */
+  private async protectVideoDisk(protect: boolean, videoPath: string) {
+    let metadata;
+
+    try {
+      metadata = await getMetadataForVideo(videoPath);
+    } catch (err) {
+      console.error(
+        `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
+        err,
+      );
+
+      return;
+    }
+
+    if (protect) {
+      console.info(`[Util] User set protected ${videoPath}`);
+    } else {
+      console.info(`[Util] User unprotected ${videoPath}`);
+    }
+
+    metadata.protected = protect;
+    await writeMetadataFile(videoPath, metadata);
+  }
+
+  private async tagVideoDisk(videoPath: string, tag: string) {
+    let metadata;
+
+    try {
+      metadata = await getMetadataForVideo(videoPath);
+    } catch (err) {
+      console.error(
+        `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
+        err,
+      );
+
+      return;
+    }
+
+    if (!tag || !/\S/.test(tag)) {
+      // empty or whitespace only
+      console.info('[Util] User removed tag');
+      metadata.tag = undefined;
+    } else {
+      console.info('[Util] User tagged', videoPath, 'with', tag);
+      metadata.tag = tag;
+    }
+
+    await writeMetadataFile(videoPath, metadata);
   }
 
   private async deleteVideoDisk(videoName: string) {
@@ -127,7 +184,7 @@ export default class DiskClient extends StorageClient {
   private setupListeners() {
     ipcMain.on('deleteVideos', async (_event, args) => {
       const videos = args as RendererVideo[];
-      const toDelete = videos.filter((v) => !v.cloud).map((v) => v.videoName);
+      const toDelete = videos.filter((v) => !v.cloud).map((v) => v.videoSource);
       if (toDelete.length < 1) return;
       this.deleteVideos(toDelete);
     });
@@ -147,7 +204,7 @@ export default class DiskClient extends StorageClient {
         const protect = args[1] as boolean;
         const videos = args[2] as RendererVideo[];
         const disk = videos.filter((v) => !v.cloud);
-        const toProtect = disk.map((v) => v.videoName);
+        const toProtect = disk.map((v) => v.videoSource);
         this.protectVideos(toProtect, protect);
       }
 
@@ -155,7 +212,7 @@ export default class DiskClient extends StorageClient {
         const tag = args[1] as string;
         const videos = args[2] as RendererVideo[];
         const disk = videos.filter((v) => !v.cloud);
-        const toTag = disk.map((v) => v.videoName);
+        const toTag = disk.map((v) => v.videoSource);
         this.tagVideos(toTag, tag);
       }
     });
