@@ -169,7 +169,9 @@ const CloudStatus = ({ appState }: StatusProps) => {
             )}
           </div>
         </div>
-        <HoverCardContent className="w-80 mx-4">{description}</HoverCardContent>
+        <HoverCardContent className="w-[260px] mx-4">
+          {description}
+        </HoverCardContent>
       </HoverCardTrigger>
     </HoverCard>
   );

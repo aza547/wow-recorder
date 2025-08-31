@@ -385,7 +385,7 @@ const Status = ({
           </div>
         </div>
         {!!statusDescription && (
-          <HoverCardContent className="w-80 mx-4">
+          <HoverCardContent className="w-[260px] mx-4">
             {statusDescription}
           </HoverCardContent>
         )}

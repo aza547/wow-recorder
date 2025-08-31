@@ -688,6 +688,10 @@ const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
       return 'AMD H.264';
     case ESupportedEncoders.AMD_AV1:
       return 'AMD AV1';
+    case ESupportedEncoders.QSV_H264:
+      return 'Intel H.264';
+    case ESupportedEncoders.QSV_AV1:
+      return 'Intel AV1';
     default:
       throw new Error('Unknown Encoder');
   }

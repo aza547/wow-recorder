@@ -7,18 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 - [Issue 697](https://github.com/aza547/wow-recorder/issues/697) & [PR 702](https://github.com/aza547/wow-recorder/pull/702) - Remove the dependency on OSN, OBS bindings are now provided by [noobs](https://github.com/aza547/noobs).
-- Buffer recordings are now entirely in memory, reducing disk wear.
+- Buffer recordings are now entirely in memory, removing a timing window that could cause videos to be wrongly cut also reducing disk wear and hopefully user confusion.
 - Rework the audio sources page to be easier to understand.
-- TODO still: jim_nvenc deprected in favour of ...
-#b 
+- The `jim_nvenc` and `jim_nvenc_av1` encoders have been replaced by their modern counterparts. Migration is automatic.
+
 ### Added
 - Add the ability to manually record.
 - Add the ability to drag and scale video sources on the scene, as well as various other options.
 - Split out cloud config from regular config and add an appropriate status card.
 - Add the ability to force the video sources to SDR.
 - Volume can now be configured on a per-source basis.
-- TODO still: AV1 support for AMD?
-- TODO still: [Issue 724](https://github.com/aza547/wow-recorder/issues/724) - Adds QSV (Intel) encoder support
+- Add AV1 support for AMD: there has been no testing of this, please share your experience in Discord!
+- Add support for QSV encoding: there has been no testing of this, please share your experience in Discord!
 
 ### Fixed
 - Fix HOA timer.

@@ -44,7 +44,7 @@ export default class DiskClient extends StorageClient {
    * Refresh the disk status on the frontend, does not refresh the videos.
    */
   public async refreshStatus() {
-    const usage = await new DiskSizeMonitor(this.window).usage(); // TODO fix this? Surely the disk monitor doesn't need this.
+    const usage = await new DiskSizeMonitor().usage();
     const cfg = ConfigService.getInstance();
     const limit = cfg.get<number>('maxStorage') * 1024 ** 3;
     const status: DiskStatus = { usage, limit };

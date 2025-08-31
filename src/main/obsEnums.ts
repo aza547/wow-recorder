@@ -115,6 +115,8 @@ export enum ESupportedEncoders {
   AMD_AV1 = 'av1_texture_amf',
   NVENC_H264 = 'obs_nvenc_h264_tex',
   NVENC_AV1 = 'obs_nvenc_av1_tex',
+  QSV_H264 = 'obs_qsv11_soft_v2',
+  QSV_AV1 = 'obs_qsv11_av1',
 }
 
 export enum QualityPresets {

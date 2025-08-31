@@ -25,7 +25,7 @@ const CloudStatusCard = ({ appState }: CloudStatusCardProps) => {
       <div
         id="status-card-inner"
         className={
-          'w-[calc(100%-5px)] h-full rounded-md border border-background-dark-gradient-from relative z-10 transition-all'
+          'w-[calc(100%-5px)] h-full rounded-md border border-background-dark-gradient-from relative transition-all'
         }
       >
         <div

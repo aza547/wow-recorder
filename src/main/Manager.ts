@@ -145,7 +145,8 @@ export default class Manager {
    * to be stopped to do this, and because the user can input invalid settings
    * which we want to catch.
    *
-   * TODO queueing?
+   * Be careful how you call this. While JavaScript is single-threaded, async
+   * calls can overlap and cause race conditions. Do not run this concurrently.
    */
   public async reconfigureBase() {
     console.info('[Manager] Reconfiguring base');

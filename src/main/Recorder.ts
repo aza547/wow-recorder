@@ -520,7 +520,8 @@ export default class Recorder extends EventEmitter {
       case ESupportedEncoders.AMD_AV1:
       case ESupportedEncoders.NVENC_H264:
       case ESupportedEncoders.NVENC_AV1:
-        // These settings are identical for AMD and NVENC encoders.
+      case ESupportedEncoders.QSV_H264:
+      case ESupportedEncoders.QSV_AV1:
         settings.rate_control = 'CQP';
         settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
         break;
@@ -633,8 +634,8 @@ export default class Recorder extends EventEmitter {
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
 
-    // Can't release all the listeners here as we use uIOhook for
-    // triggering manual recording too.
+    // Can't release all the listeners here as we now use
+    // uIOhook for triggering manual recording too.
     uIOhook.off('keydown', this.pushToTalkKeyListener);
     uIOhook.off('keyup', this.pushToTalkKeyListener);
     uIOhook.off('mousedown', this.pushToTalkMouseListener);
@@ -1388,7 +1389,6 @@ export default class Recorder extends EventEmitter {
       const settings = noobs.GetSourceSettings(this.activeCaptureSource);
       const updated = { ...settings, window: match.value };
       noobs.SetSourceSettings(this.activeCaptureSource, updated);
-      // setTimeout(() => send('redrawPreview'), 10000); // ?? TODO - surely not required now there is the source callback?
       return;
     }
 
