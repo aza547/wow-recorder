@@ -21,7 +21,7 @@ type CloudStatusCardProps = {
 
 const CloudStatusCard = ({ appState }: CloudStatusCardProps) => {
   return (
-    <div className="w-full h-14 rounded-md mb-2 flex relative">
+    <div className="w-full h-14 rounded-md mb-4 flex relative">
       <div
         id="status-card-inner"
         className={
