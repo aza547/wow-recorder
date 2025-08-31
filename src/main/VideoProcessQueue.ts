@@ -17,10 +17,12 @@ import {
   getFileInfo,
   mv,
   fixPathWhenPackaged,
+  logAxiosError,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import { send } from './main';
 import ffmpeg from 'fluent-ffmpeg';
+import axios from 'axios';
 
 const atomicQueue = require('atomic-queue');
 
@@ -299,11 +301,13 @@ export default class VideoProcessQueue {
 
       await client.postVideo(cloudMetadata);
     } catch (error) {
-      console.error(
-        '[VideoProcessQueue] Error processing video:',
-        String(error),
-        error,
-      );
+      if (axios.isAxiosError(error)) {
+        const msg = '[CloudClient] Axios error processing video';
+        logAxiosError(msg, error);
+      } else {
+        console.error('[CloudClient] Error processing video', error);
+      }
+
       progressCallback(100);
     }
 

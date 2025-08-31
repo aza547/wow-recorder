@@ -1,5 +1,5 @@
 import fs from 'fs';
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import {
   CloudMetadata,
   CloudStatus,
@@ -9,14 +9,13 @@ import {
   UploadQueueItem,
 } from 'main/types';
 import path from 'path';
-import AuthError from '../utils/AuthError';
 import { z } from 'zod';
 import { Affiliation, TAffiliation } from 'types/api';
 import WebSocket from 'ws';
 import {
   cloudSignedMetadataToRendererVideo,
   convertKoreanVideoCategory,
-  getPromiseBomb,
+  logAxiosError,
 } from 'main/util';
 import StorageClient from './StorageClient';
 import { getCloudConfig } from 'utils/configUtils';
@@ -41,6 +40,21 @@ export default class CloudClient extends StorageClient {
   }
 
   /**
+   * Whether the cloud client is enabled or not.
+   */
+  private enabled = false;
+
+  /**
+   * Indicates whether the client is authenticated or not.
+   */
+  private authenticated = false;
+
+  /**
+   * Whether the client is authorized or not.
+   */
+  private authorized = false;
+
+  /**
    * The username of the cloud user.
    */
   private user = '';
@@ -57,14 +71,34 @@ export default class CloudClient extends StorageClient {
   private guild = '';
 
   /**
+   * The total storage usage in bytes for the current guild.
+   */
+  private usage = 0;
+
+  /**
+   * The maximum storage limit in bytes for the current guild.
+   */
+  private limit = 0;
+
+  /**
+   * Permissions for the current user in the selected guild.
+   * - read: Whether the user can read/download files.
+   * - write: Whether the user can upload files.
+   * - del: Whether the user can delete files.
+   */
+  private read = false;
+  private write = false;
+  private del = false;
+
+  /**
+   * Available guilds the user can choose from.
+   */
+  private affiliations: TAffiliation[] = [];
+
+  /**
    * The last modified time of the shared storage.
    */
   private bucketLastMod = 0;
-
-  /**
-   * Indicates whether the client is authenticated or not.
-   */
-  private authenticated = false;
 
   /**
    * The auth header for the WCR API, which uses basic HTTP auth using the cloud
@@ -177,51 +211,36 @@ export default class CloudClient extends StorageClient {
     this.setupListeners();
   }
 
+  /**
+   * Check if the client is ready for use.
+   */
   public ready() {
-    return this.authenticated;
+    return this.enabled && this.authenticated && this.authorized;
   }
 
   /**
    * Handle changes to the cloud status, does not refresh the videos.
    */
   public async refreshStatus() {
-    try {
-      const usagePromise = this.getUsage();
-      const limitPromise = this.getStorageLimit();
-      const affiliationsPromise = this.getUserAffiliations();
+    const status: CloudStatus = {
+      enabled: this.enabled,
+      authenticated: this.authenticated,
+      authorized: this.authorized,
+      guild: this.guild,
+      available: this.affiliations.map((a) => a.guildName),
+      usage: this.usage,
+      limit: this.limit,
+      read: this.read,
+      write: this.write,
+      del: this.del,
+    };
 
-      // This is a bit tricky, get the guild name from the active client which is
-      // guarenteed to be up to date, unlike other fields in this class.
-      const guild = this.getGuildName();
-
-      const usage = await usagePromise;
-      const limit = await limitPromise;
-      const affiliations = await affiliationsPromise;
-
-      const available = affiliations.map((aff) => aff.guildName);
-      const affiliation = affiliations.find((aff) => aff.guildName === guild);
-
-      const status: CloudStatus = {
-        authenticated: true,
-        guild,
-        available,
-        usage: usage,
-        limit: limit,
-        read: false,
-        write: false,
-        del: false,
-      };
-
-      if (affiliation) {
-        status.read = affiliation.read;
-        status.write = affiliation.write;
-        status.del = affiliation.del;
-      }
-
-      this.send('updateCloudStatus', status);
-    } catch (error) {
-      console.error('[CloudClient] Error getting cloud status', String(error));
+    if (!this.ready()) {
+      // Remove the cloud videos from the UI if we're not ready.
+      this.send('displayCloudVideos', []);
     }
+
+    this.send('updateCloudStatus', status);
   }
 
   /**
@@ -328,46 +347,139 @@ export default class CloudClient extends StorageClient {
   }
 
   /**
+   * Reset the state of the client.
+   */
+  private reset() {
+    this.enabled = false;
+    this.authenticated = false;
+    this.authorized = false;
+    this.user = '';
+    this.pass = '';
+    this.authHeader = undefined;
+    this.guild = '';
+    this.affiliations = [];
+    this.usage = 0;
+    this.limit = 0;
+    this.read = false;
+    this.write = false;
+    this.del = false;
+    this.stopPolling();
+  }
+
+  /**
    * Login to the cloud store.
    */
-  public async login() {
-    console.info('[CloudClient] Logging into cloud store');
+  public async configure() {
+    console.info('[CloudClient] Configuring cloud client');
+    this.reset();
 
     const config = getCloudConfig();
+
+    const {
+      cloudStorage,
+      cloudAccountName,
+      cloudAccountPassword,
+      cloudGuildName,
+      cloudUpload,
+    } = config;
+
+    console.info(
+      '[CloudClient] Configure with:',
+      cloudStorage,
+      cloudAccountName,
+      cloudGuildName,
+      cloudUpload,
+    );
+
+    this.enabled = cloudStorage;
+
+    if (!this.enabled) {
+      console.info('[CloudClient] Cloud storage is not enabled');
+      this.refreshStatus();
+      return;
+    }
+
+    if (!cloudAccountName) {
+      console.warn('[CloudClient] Empty account name');
+      this.refreshStatus();
+      return;
+    }
+
+    if (!cloudAccountPassword) {
+      console.warn('[CloudClient] Empty account pass');
+      this.refreshStatus();
+      return;
+    }
+
     this.user = config.cloudAccountName;
     this.pass = config.cloudAccountPassword;
-    this.guild = config.cloudGuildName;
-
-    console.info('[CloudClient] User:', this.user);
-    console.info('[CloudClient] Guild:', this.guild);
-
     this.authHeader = CloudClient.createAuthHeader(this.user, this.pass);
 
-    if (!this.user) {
-      console.warn('[CloudClient] Empty account name');
-      this.onAuthFailure();
+    try {
+      this.affiliations = await this.getUserAffiliations();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const msg = '[CloudClient] Failed to get user affiliations';
+        logAxiosError(msg, error);
+      } else {
+        console.error('[CloudClient] Unexpected error', error);
+      }
+
+      this.refreshStatus();
       return;
     }
 
-    if (!this.pass) {
-      console.warn('[CloudClient] Empty account pass');
-      this.onAuthFailure();
-      return;
-    }
-
-    if (!this.guild) {
-      console.warn('[CloudClient] Empty guild name');
-      this.onNoGuildSelection();
-      return;
-    }
-
-    // TODO actually test login?
-
+    // If we got this far the username and password are valid.
     this.authenticated = true;
+
+    if (!cloudGuildName) {
+      console.warn('[CloudClient] Empty guild name');
+      this.refreshStatus();
+      return;
+    }
+
+    this.guild = cloudGuildName;
+
+    const affiliation = this.affiliations.find(
+      (aff) => aff.guildName === this.guild,
+    );
+
+    if (!affiliation) {
+      console.warn('[CloudClient] User is not affiliated with the guild');
+      this.refreshStatus();
+      return;
+    }
+
+    this.read = affiliation.read;
+    this.write = affiliation.write;
+    this.del = affiliation.del;
+
+    if (cloudUpload && !affiliation.write) {
+      console.warn('[CloudClient] User is not authorized to upload');
+      this.refreshStatus();
+      return;
+    }
+
+    // If we got this far the user is authorized for their configuration.
+    this.authorized = true;
+
+    try {
+      const usagePromise = this.getUsage();
+      const limitPromise = this.getStorageLimit();
+      this.usage = await usagePromise;
+      this.limit = await limitPromise;
+    } catch (error) {
+      // Unlikely to fail here as we've already contacted the server.
+      console.error('[CloudClient] Failed to get user storage info', error);
+      this.refreshStatus();
+      return;
+    }
+
     await this.pollInit();
     this.startPolling();
 
-    this.send('refreshState');
+    const videos = await this.getVideos();
+    this.send('displayCloudVideos', videos);
     this.refreshStatus();
   }
 
@@ -736,52 +848,21 @@ export default class CloudClient extends StorageClient {
   }
 
   /**
-   * Get the guilds the user is affiliated with.
-   */
-  public async getUserAffiliations(): Promise<TAffiliation[]> {
-    return CloudClient.getUserAffiliations(this.user, this.pass);
-  }
-
-  /**
    * Static method to get the guilds the user is affiliated with.
    */
-  public static async getUserAffiliations(
-    user: string,
-    pass: string,
-  ): Promise<TAffiliation[]> {
+  public async getUserAffiliations(): Promise<TAffiliation[]> {
     console.info('[CloudClient] Get user affiliations');
 
-    const Authorization = CloudClient.createAuthHeader(user, pass);
-    const headers = { Authorization };
+    const headers = { Authorization: this.authHeader };
     const url = `${CloudClient.api}/user/affiliations`;
 
     // This is static so we can't emit a logout event.
     const response = await axios.get(url, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    const { status, data } = response;
-
-    if (status === 401 || status === 403) {
-      // Special static case, the caller handles any required logouts.
-      console.error('[CloudClient] Auth failed:', status, data);
-
-      throw new AuthError(
-        'Login to cloud store failed, check your credentials',
-      );
-    }
-
-    if (status !== 200) {
-      console.error(
-        '[CloudClient] Failed to get user affiliations',
-        status,
-        data,
-      );
-
-      throw new Error('Failed to get user affiliations');
-    }
-
+    const { data } = response;
     const affiliations = z.array(Affiliation).parse(data);
     console.info('[CloudClient] Got user affiliations', affiliations);
     return affiliations;
@@ -915,13 +996,8 @@ export default class CloudClient extends StorageClient {
         success = true;
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError;
-
-          console.warn(
-            '[CloudClient] Single part retryable failure:',
-            key,
-            axiosError.message,
-          );
+          const msg = '[CloudClient] Single part retryable failure: ' + key;
+          logAxiosError(msg, error);
         } else {
           console.error('[CloudClient] Not an AxiosError', key, String(error));
         }
@@ -1030,13 +1106,8 @@ export default class CloudClient extends StorageClient {
         } catch (error) {
           // Almost certainly this is an AxiosError.
           if (axios.isAxiosError(error)) {
-            const axiosError = error as AxiosError;
-
-            console.warn(
-              '[CloudClient] Multipart retryable failure:',
-              key,
-              axiosError.message,
-            );
+            const msg = '[CloudClient] Multipart retryable failure: ' + key;
+            logAxiosError(msg, error);
           } else {
             console.error(
               '[CloudClient] Not an AxiosError',
@@ -1116,76 +1187,29 @@ export default class CloudClient extends StorageClient {
 
   /**
    * Validate the response status. This is basically just default behaviour plus
-   * a check for 401 status codes. If we get a 401, we emit a logout event.
+   * a check for 401 status codes.
    */
   private validateResponseStatus(status: number) {
-    if (status === 401) this.onAuthFailure();
+    if (status === 401) {
+      this.authenticated = false;
+      this.authorized = false;
+      this.usage = 0;
+      this.limit = 0;
+      this.read = false;
+      this.write = false;
+      this.del = false;
+      this.stopPolling();
+    }
+
     return status >= 200 && status < 300;
   }
 
-  /**
-   * Handles an authentication failure.
-   */
-  private onAuthFailure() {
-    this.authenticated = false;
-
-    const status: CloudStatus = {
-      authenticated: this.authenticated,
-      guild: this.guild,
-      available: [],
-      usage: 0,
-      limit: 0,
-      read: false,
-      write: false,
-      del: false,
-    };
-
-    this.send('updateCloudStatus', status);
-  }
-
-  /**
-   * Handles the case where no guild is selected but credentials are valid..
-   */
-  private async onNoGuildSelection() {
-    console.warn('[CloudClient] No guild selected');
-    this.authenticated = false;
-    let winner;
-
-    try {
-      const bomb = getPromiseBomb(10, 'Authentication timed out');
-      const affs = CloudClient.getUserAffiliations(this.user, this.pass);
-
-      winner = await Promise.race([affs, bomb]);
-    } catch (error) {
-      console.warn('[Manager] Guild list failed', String(error));
-      return;
-    }
-
-    // Safe to cast here, either we got this data or we have thrown.
-    const affiliations = winner as TAffiliation[];
-    const guild = this.guild;
-    const available = affiliations.map((aff) => aff.guildName);
-
-    // We need to push the available guilds to the frontend to allow the user
-    // select a guild. Just push the permissions if we can for good measure so
-    // they are present on first attempt if the guild name is present. If the config
-    // is invalid we might get stuck before doing a full refresh so it's nice if this
-    // is accurate.
-    const status: CloudStatus = {
-      authenticated: false,
-      guild,
-      available,
-      usage: 0,
-      limit: 0,
-      read: false,
-      write: false,
-      del: false,
-    };
-
-    this.send('updateCloudStatus', status);
-  }
-
   private setupListeners() {
+    ipcMain.on('reconfigureCloud', async () => {
+      console.log('[CloudClient] Reconfiguring cloud client');
+      this.configure();
+    });
+
     ipcMain.handle('getShareableLink', async (_event, args) => {
       const videoName = args[0];
       const shareable = await this.getShareableLink(videoName);

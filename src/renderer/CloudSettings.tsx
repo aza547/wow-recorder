@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
-import { setConfigValues, useSettings } from './useSettings';
+import { setConfigValue, setConfigValues, useSettings } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
@@ -27,6 +27,7 @@ import {
 import Separator from './components/Separator/Separator';
 import TextBanner from './components/TextBanner/TextBanner';
 import { Phrase } from 'localisation/phrases';
+import { useEffect, useRef } from 'react';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -47,15 +48,10 @@ interface IProps {
 const CloudSettings = (props: IProps) => {
   const { recorderStatus, appState } = props;
   const [config, setConfig] = useSettings();
-  const initialRender = React.useRef(true);
+  const initialRender = useRef(true);
 
-  React.useEffect(() => {
-    if (initialRender.current) {
-      // Drop out on initial render after getting the cloud status,
-      // we don't need to set config. The first time we load.
-      initialRender.current = false;
-      return;
-    }
+  useEffect(() => {
+    if (initialRender.current) return;
 
     if (debounceTimer) {
       clearTimeout(debounceTimer);
@@ -68,28 +64,9 @@ const CloudSettings = (props: IProps) => {
         cloudAccountPassword: config.cloudAccountPassword,
         cloudGuildName: config.cloudGuildName,
         cloudUpload: config.cloudUpload,
-        cloudUploadRetail: config.cloudUploadRetail,
-        cloudUploadClassic: config.cloudUploadClassic,
-        cloudUploadRateLimit: config.cloudUploadRateLimit,
-        cloudUploadRateLimitMbps: config.cloudUploadRateLimitMbps,
-        cloudUpload2v2: config.cloudUpload2v2,
-        cloudUpload3v3: config.cloudUpload3v3,
-        cloudUpload5v5: config.cloudUpload5v5,
-        cloudUploadSkirmish: config.cloudUploadSkirmish,
-        cloudUploadSoloShuffle: config.cloudUploadSoloShuffle,
-        cloudUploadDungeons: config.cloudUploadDungeons,
-        cloudUploadRaids: config.cloudUploadRaids,
-        cloudUploadBattlegrounds: config.cloudUploadBattlegrounds,
-        cloudUploadRaidMinDifficulty: config.cloudUploadRaidMinDifficulty,
-        cloudUploadDungeonMinLevel: config.cloudUploadDungeonMinLevel,
-        cloudUploadClips: config.cloudUploadClips,
-        chatOverlayOwnImage: config.chatOverlayOwnImage,
-        uploadCurrentRaidEncountersOnly: config.uploadCurrentRaidEncountersOnly,
       });
 
-      // Inform the backend of a settings change so we can update config
-      // and validate it's good.
-      ipc.sendMessage('settingsChange', []);
+      ipc.reconfigureCloud();
     }, 500);
   }, [
     config.cloudStorage,
@@ -97,24 +74,11 @@ const CloudSettings = (props: IProps) => {
     config.cloudAccountPassword,
     config.cloudGuildName,
     config.cloudUpload,
-    config.cloudUploadRetail,
-    config.cloudUploadClassic,
-    config.cloudUploadRateLimit,
-    config.cloudUploadRateLimitMbps,
-    config.cloudUpload2v2,
-    config.cloudUpload3v3,
-    config.cloudUpload5v5,
-    config.cloudUploadSkirmish,
-    config.cloudUploadSoloShuffle,
-    config.cloudUploadDungeons,
-    config.cloudUploadRaids,
-    config.cloudUploadBattlegrounds,
-    config.cloudUploadRaidMinDifficulty,
-    config.cloudUploadDungeonMinLevel,
-    config.cloudUploadClips,
-    config.chatOverlayOwnImage,
-    config.uploadCurrentRaidEncountersOnly,
   ]);
+
+  useEffect(() => {
+    initialRender.current = false;
+  }, []);
 
   const isComponentDisabled = () => {
     const isRecording = recorderStatus === RecStatus.Recording;
@@ -150,6 +114,7 @@ const CloudSettings = (props: IProps) => {
     label: Phrase,
   ) => {
     const changeFn = (checked: boolean) => {
+      setConfigValue(preference, checked);
       setConfig((prevState) => {
         return {
           ...prevState,
@@ -180,6 +145,8 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setMinRaidThreshold = (value: string) => {
+    setConfigValue('cloudUploadRaidMinDifficulty', value);
+
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -240,6 +207,8 @@ const CloudSettings = (props: IProps) => {
       // Block invalid config.
       return;
     }
+
+    setConfigValue('cloudUploadDungeonMinLevel', cloudUploadDungeonMinLevel);
 
     setConfig((prevState) => {
       return {
@@ -312,6 +281,8 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setCloudUploadRetail = (checked: boolean) => {
+    setConfigValue('cloudUploadRetail', checked);
+
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -321,6 +292,8 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setCloudUploadClassic = (checked: boolean) => {
+    setConfigValue('cloudUploadClassic', checked);
+
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -434,6 +407,8 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setCloudUploadRateLimit = (checked: boolean) => {
+    setConfigValue('cloudUploadRateLimit', checked);
+
     setConfig((prevState) => {
       return {
         ...prevState,
@@ -778,6 +753,8 @@ const CloudSettings = (props: IProps) => {
       // Block invalid config.
       return;
     }
+
+    setConfigValue('cloudUploadRateLimitMbps', cloudUploadRateLimitMbps);
 
     setConfig((prevState) => {
       return {

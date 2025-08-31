@@ -38,7 +38,6 @@ import ApplicationStatusCard from './containers/ApplicationStatusCard/Applicatio
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import UpdateNotifier from './containers/UpdateNotifier/UpdateNotifier';
 import CloudStatusCard from './containers/ApplicationStatusCard/CloudStatusCard';
-import ManualRecordButton from './ManualRecordButton';
 import { Phrase } from 'localisation/phrases';
 
 interface IProps {

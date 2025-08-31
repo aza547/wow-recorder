@@ -165,7 +165,7 @@ const createWindow = async () => {
   // Setup the storage clients.
   const cloud = CloudClient.getInstance();
   cloud.setWindow(window);
-  cloud.login();
+  cloud.configure();
 
   const disk = DiskClient.getInstance();
   disk.setWindow(window);

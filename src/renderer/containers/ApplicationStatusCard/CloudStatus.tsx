@@ -9,13 +9,17 @@ import {
   HoverCardTrigger,
 } from 'renderer/components/HoverCard/HoverCard';
 import Separator from 'renderer/components/Separator/Separator';
-import StatusLight from 'renderer/components/StatusLight/StatusLight';
+import StatusLight, {
+  StatusLightVariant,
+} from 'renderer/components/StatusLight/StatusLight';
 
 type StatusProps = {
   appState: AppState;
 };
 
 const CloudStatus = ({ appState }: StatusProps) => {
+  const { cloudStatus } = appState;
+
   const [uploadProgress, setUploadProgress] = React.useState(0);
   const [downloadProgress, setDownloadProgress] = React.useState(0);
 
@@ -53,6 +57,62 @@ const CloudStatus = ({ appState }: StatusProps) => {
   const isUpDowning = queuedUploads > 0 || queuedDownloads > 0;
   const statusLightsClasses = 'w-1.5 h-full rounded-l-md rounded-r-none';
 
+  let status: string;
+  let variant: StatusLightVariant;
+  let description = <></>;
+
+  if (!cloudStatus.enabled) {
+    status = 'Disconnected';
+    variant = 'disconnected';
+
+    description = (
+      <div className="flex flex-col gap-y-2">
+        <h2 className="text-sm font-semibold">Disconnected</h2>
+        <Separator className="my-1" />
+        <p className="text-xs text-popover-foreground/60">
+          To use pro... buy a sub
+        </p>
+      </div>
+    );
+  } else if (!cloudStatus.authenticated) {
+    status = 'Error';
+    variant = 'error';
+
+    description = (
+      <div className="flex flex-col gap-y-2">
+        <h2 className="text-sm font-semibold">Not Authenticated</h2>
+        <Separator className="my-1" />
+        <p className="text-xs text-popover-foreground/60">
+          Login failed, check your login credentials!
+        </p>
+      </div>
+    );
+  } else if (!cloudStatus.authorized) {
+    status = 'Error';
+    variant = 'error';
+
+    description = (
+      <div className="flex flex-col gap-y-2">
+        <h2 className="text-sm font-semibold">Not Authorized</h2>
+        <Separator className="my-1" />
+        <p className="text-xs text-popover-foreground/60">
+          Login succeeded but not authorized, check your guild permissions!
+        </p>
+      </div>
+    );
+  } else {
+    status = 'Connected';
+    variant = 'connected';
+
+    description = (
+      <div className="flex flex-col gap-y-2">
+        <h2 className="text-sm font-semibold">Connected</h2>
+        <Separator className="my-1" />
+        <p className="text-xs text-popover-foreground/60">You are connected!</p>
+      </div>
+    );
+  }
+
   return (
     <HoverCard openDelay={300}>
       <HoverCardTrigger>
@@ -60,7 +120,7 @@ const CloudStatus = ({ appState }: StatusProps) => {
           <StatusLight
             wrapperClasses={`${statusLightsClasses}`}
             foregroundClasses={`border-none ${statusLightsClasses}`}
-            variant="ready"
+            variant={variant}
           />
           <div className="ml-4 py-2 font-sans flex flex-col justify-around">
             <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
@@ -68,7 +128,7 @@ const CloudStatus = ({ appState }: StatusProps) => {
             </span>
 
             <span className="text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground">
-              Connected
+              {status}
             </span>
 
             {(isSaving || isUpDowning) && (
@@ -109,7 +169,7 @@ const CloudStatus = ({ appState }: StatusProps) => {
             )}
           </div>
         </div>
-        <HoverCardContent className="w-80 mx-4">asd</HoverCardContent>
+        <HoverCardContent className="w-80 mx-4">{description}</HoverCardContent>
       </HoverCardTrigger>
     </HoverCard>
   );

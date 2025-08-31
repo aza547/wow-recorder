@@ -45,7 +45,8 @@ export type Channels =
   | 'setCaptureCursor'
   | 'reconfigureBase'
   | 'reconfigureVideo'
-  | 'reconfigureOverlay';
+  | 'reconfigureOverlay'
+  | 'reconfigureCloud';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -172,6 +173,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     reconfigureOverlay() {
       ipcRenderer.send('reconfigureOverlay');
+    },
+
+    reconfigureCloud() {
+      ipcRenderer.send('reconfigureCloud');
     },
   },
 });

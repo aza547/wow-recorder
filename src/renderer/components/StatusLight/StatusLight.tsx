@@ -17,20 +17,27 @@ const statusLightForegroundVariants = cva('rounded-full border-[3px]', {
       waiting: 'bg-zinc-400 border-zinc-500',
       overrunning:
         'bg-blue-accent border-blue-accent-border shadow-[0px_0px_4px_2px_rgba(2,132,199,0.66)]',
+      connected:
+        'bg-blue-accent border-blue-accent-border shadow-[0px_0px_4px_2px_rgba(2,132,199,0.66)] animate-pulse',
+      disconnected: 'bg-zinc-400 border-zinc-500',
     },
   },
 });
 
+export type StatusLightVariant =
+  | 'waiting'
+  | 'recording'
+  | 'invalid'
+  | 'error'
+  | 'ready'
+  | 'overrunning'
+  | 'connected'
+  | 'disconnected';
+
 export interface StatusLightProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof statusLightForegroundVariants> {
-  variant:
-    | 'waiting'
-    | 'recording'
-    | 'invalid'
-    | 'error'
-    | 'ready'
-    | 'overrunning';
+  variant: StatusLightVariant;
   wrapperClasses?: string;
   foregroundClasses?: string;
 }

@@ -81,6 +81,9 @@ const WarcraftRecorder = () => {
 
     // The cloud storage status.
     cloudStatus: {
+      enabled: false,
+      authenticated: false,
+      authorized: false,
       guild: '',
       available: [],
       read: false,

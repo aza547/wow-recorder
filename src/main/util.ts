@@ -23,6 +23,7 @@ import {
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
+import { AxiosError } from 'axios';
 
 /**
  * When packaged, we need to fix some paths
@@ -931,6 +932,18 @@ const mv = async (src: string, dst: string) => {
   console.timeEnd('[Util] Moving video file took');
 };
 
+/**
+ * Convience method to log an axios error.
+ */
+const logAxiosError = (msg: string, error: AxiosError) => {
+  console.error(msg, {
+    message: error.message,
+    status: error.response?.status,
+    data: error.response?.data,
+    url: error.config?.url,
+  });
+};
+
 export {
   setupApplicationLogging,
   writeMetadataFile,
@@ -971,4 +984,5 @@ export {
   mv,
   isManualRecordHotKey,
   delayedDeleteVideo,
+  logAxiosError,
 };

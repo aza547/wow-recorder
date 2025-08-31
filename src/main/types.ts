@@ -446,7 +446,9 @@ type SliderMark = {
 };
 
 type CloudStatus = {
+  enabled: boolean;
   authenticated: boolean;
+  authorized: boolean;
   guild: string;
   available: string[];
   read: boolean; // Always true for now.
