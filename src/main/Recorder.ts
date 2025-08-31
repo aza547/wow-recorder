@@ -516,10 +516,10 @@ export default class Recorder extends EventEmitter {
         settings.crf = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
-      case ESupportedEncoders.AMD_AMF_H264:
-      case ESupportedEncoders.JIM_NVENC:
-      case ESupportedEncoders.JIM_AV1_NVENC:
-      case ESupportedEncoders.AMD_AMF_AV1:
+      case ESupportedEncoders.AMD_H264:
+      case ESupportedEncoders.AMD_AV1:
+      case ESupportedEncoders.NVENC_H264:
+      case ESupportedEncoders.NVENC_AV1:
         // These settings are identical for AMD and NVENC encoders.
         settings.rate_control = 'CQP';
         settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
@@ -1299,8 +1299,8 @@ export default class Recorder extends EventEmitter {
    */
   private static getCqpFromQuality(encoder: string, quality: string) {
     if (
-      encoder === ESupportedEncoders.JIM_AV1_NVENC ||
-      encoder === ESupportedEncoders.AMD_AMF_AV1
+      encoder === ESupportedEncoders.NVENC_AV1 ||
+      encoder === ESupportedEncoders.AMD_AV1
     ) {
       // AV1 typically needs lower CQP values for similar quality
       switch (quality) {

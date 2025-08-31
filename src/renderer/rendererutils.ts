@@ -651,8 +651,8 @@ const encoderFilter = (enc: string, highRes: boolean) => {
   if (highRes) {
     return (
       encoder === ESupportedEncoders.OBS_X264 ||
-      encoder === ESupportedEncoders.JIM_AV1_NVENC ||
-      encoder === ESupportedEncoders.AMD_AMF_AV1
+      encoder === ESupportedEncoders.AMD_AV1 ||
+      encoder === ESupportedEncoders.NVENC_AV1
     );
   }
 
@@ -676,15 +676,29 @@ const mapEncoderToString = (enc: Encoder, lang: Language) => {
   return encoderAsString;
 };
 
+const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
+  switch (enc) {
+    case ESupportedEncoders.OBS_X264:
+      return 'OBS H.264';
+    case ESupportedEncoders.NVENC_H264:
+      return 'NVIDIA H.264';
+    case ESupportedEncoders.NVENC_AV1:
+      return 'NVIDIA AV1';
+    case ESupportedEncoders.AMD_H264:
+      return 'AMD H.264';
+    case ESupportedEncoders.AMD_AV1:
+      return 'AMD AV1';
+    default:
+      throw new Error('Unknown Encoder');
+  }
+};
+
 const mapStringToEncoder = (enc: string): Encoder => {
-  const encoder = enc as ESupportedEncoders;
-  const isHardwareEncoder = encoder !== ESupportedEncoders.OBS_X264;
-
-  const encoderType = isHardwareEncoder
-    ? EncoderType.HARDWARE
-    : EncoderType.SOFTWARE;
-
-  return { name: enc, type: encoderType };
+  const value = enc as ESupportedEncoders;
+  const isHardwareEncoder = value !== ESupportedEncoders.OBS_X264;
+  const type = isHardwareEncoder ? EncoderType.HARDWARE : EncoderType.SOFTWARE;
+  const name = getFriendlyEncoderName(value);
+  return { name, value, type };
 };
 
 const pathSelect = async (): Promise<string> => {

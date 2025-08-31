@@ -139,7 +139,7 @@ const WarcraftRecorder = () => {
   const doRefresh = async () => {
     ipc.sendMessage('refreshFrontend', []);
     ipc.sendMessage('getVideoState', []);
-    if (appState.page !== Pages.SceneEditor) ipc.hidePreview(); // For dev mode.
+    //if (appState.page !== Pages.SceneEditor) ipc.hidePreview(); // For dev mode. But maybe not good? Was hiding after a recording or on changing settings. Weird.
   };
 
   const updateRecStatus = (status: unknown, err: unknown) => {

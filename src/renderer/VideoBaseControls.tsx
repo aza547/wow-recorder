@@ -330,7 +330,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           </SelectTrigger>
           <SelectContent>
             {encoders.map((encoder) => (
-              <SelectItem key={encoder.name} value={encoder.name}>
+              <SelectItem key={encoder.name} value={encoder.value}>
                 {mapEncoderToString(encoder, appState.language)}
               </SelectItem>
             ))}

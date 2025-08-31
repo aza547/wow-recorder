@@ -357,6 +357,7 @@ enum EncoderType {
 
 type Encoder = {
   name: string;
+  value: string;
   type: EncoderType;
 };
 

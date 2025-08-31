@@ -18,8 +18,14 @@ import { VideoCategory } from '../types/VideoCategory';
 import { ESupportedEncoders } from '../main/obsEnums';
 import { Language, Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
-import fs from 'fs';
-import { checkDisk, exists, getWowFlavour, isFolderOwned, takeOwnershipBufferDir, takeOwnershipStorageDir } from 'main/util';
+import {
+  checkDisk,
+  exists,
+  getWowFlavour,
+  isFolderOwned,
+  takeOwnershipBufferDir,
+  takeOwnershipStorageDir,
+} from 'main/util';
 
 const allowRecordCategory = (cfg: ConfigService, category: VideoCategory) => {
   if (category === VideoCategory.Clips) {
@@ -162,7 +168,19 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
   let obsRecEncoder = cfg.get<string>('obsRecEncoder');
 
   if (obsRecEncoder === 'amd_amf_h264') {
-    obsRecEncoder = ESupportedEncoders.AMD_AMF_H264;
+    obsRecEncoder = ESupportedEncoders.AMD_H264;
+    cfg.set('obsRecEncoder', obsRecEncoder);
+  }
+
+  // The jim_nvenc encoder was deprecated in libobs. Migrate to the new version.
+  if (obsRecEncoder === 'jim_nvenc') {
+    obsRecEncoder = ESupportedEncoders.NVENC_H264;
+    cfg.set('obsRecEncoder', obsRecEncoder);
+  }
+
+  // The jim_av1_nvenc encoder was deprecated in libobs. Migrate to the new version.
+  if (obsRecEncoder === 'jim_av1_nvenc') {
+    obsRecEncoder = ESupportedEncoders.NVENC_AV1;
     cfg.set('obsRecEncoder', obsRecEncoder);
   }
 
