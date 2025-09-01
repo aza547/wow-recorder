@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import React, { Dispatch, useState } from 'react';
-import { AppState, RecStatus, WCRSceneItem } from 'main/types';
+import { AppState, RecStatus, SceneItem } from 'main/types';
 import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import RecorderPreview from './RecorderPreview';
@@ -40,7 +40,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         className="flex w-[60px]"
         variant="ghost"
         size="xs"
-        onClick={() => ipc.resetSourcePosition(WCRSceneItem.GAME)}
+        onClick={() => ipc.resetSourcePosition(SceneItem.GAME)}
       >
         <span className="text-xs text-foreground-lighter">
           Reset
@@ -57,7 +57,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         className="flex w-[60px]"
         variant="ghost"
         size="xs"
-        onClick={() => ipc.resetSourcePosition(WCRSceneItem.OVERLAY)}
+        onClick={() => ipc.resetSourcePosition(SceneItem.OVERLAY)}
       >
         <span className="text-xs text-foreground-lighter">
           Reset

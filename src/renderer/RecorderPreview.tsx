@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { stopPropagation } from './rendererutils';
-import { BoxDimensions, SceneInteraction, WCRSceneItem } from 'main/types';
+import { BoxDimensions, SceneInteraction, SceneItem } from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
 
 const ipc = window.electron.ipcRenderer;
@@ -179,11 +179,11 @@ const RecorderPreview = (props: {
     setPreviewInfo(display);
 
     if (config.chatOverlayEnabled) {
-      const chat = await ipc.getSourcePosition(WCRSceneItem.OVERLAY);
+      const chat = await ipc.getSourcePosition(SceneItem.OVERLAY);
       setOverlayBoxDimensions(chat);
     }
 
-    const game = await ipc.getSourcePosition(WCRSceneItem.GAME);
+    const game = await ipc.getSourcePosition(SceneItem.GAME);
     setGameBoxDimensions(game);
   };
 
@@ -203,8 +203,8 @@ const RecorderPreview = (props: {
     };
   }, [configureDraggableBoxes]);
 
-  const onSourceMove = (event: MouseEvent, src: WCRSceneItem) => {
-    if (src === WCRSceneItem.OVERLAY) {
+  const onSourceMove = (event: MouseEvent, src: SceneItem) => {
+    if (src === SceneItem.OVERLAY) {
       setOverlayBoxDimensions((prev) => {
         const updated = {
           ...prev,
@@ -226,7 +226,7 @@ const RecorderPreview = (props: {
           snapped.y = previewInfo.previewHeight - snapped.height - 2 * yCorr;
         }
 
-        ipc.setSourcePosition(WCRSceneItem.OVERLAY, snapped);
+        ipc.setSourcePosition(SceneItem.OVERLAY, snapped);
         return updated;
       });
     } else {
@@ -251,14 +251,14 @@ const RecorderPreview = (props: {
           snapped.y = previewInfo.previewHeight - snapped.height - 2 * yCorr;
         }
 
-        ipc.setSourcePosition(WCRSceneItem.GAME, snapped);
+        ipc.setSourcePosition(SceneItem.GAME, snapped);
         return updated;
       });
     }
   };
 
-  const onSourceScale = (event: MouseEvent, src: WCRSceneItem) => {
-    if (src === WCRSceneItem.OVERLAY) {
+  const onSourceScale = (event: MouseEvent, src: SceneItem) => {
+    if (src === SceneItem.OVERLAY) {
       setOverlayBoxDimensions((prev) => {
         const aspectRatio = prev.width / prev.height;
         let newWidth = prev.width + event.movementX;
@@ -271,7 +271,7 @@ const RecorderPreview = (props: {
           height: newHeight,
         };
 
-        ipc.setSourcePosition(WCRSceneItem.OVERLAY, updated);
+        ipc.setSourcePosition(SceneItem.OVERLAY, updated);
         return updated;
       });
     } else {
@@ -287,7 +287,7 @@ const RecorderPreview = (props: {
           height: newHeight,
         };
 
-        ipc.setSourcePosition(WCRSceneItem.GAME, updated);
+        ipc.setSourcePosition(SceneItem.GAME, updated);
         return updated;
       });
     }
@@ -296,13 +296,13 @@ const RecorderPreview = (props: {
   const onMouseMove = useCallback(
     (event: MouseEvent) => {
       if (draggingOverlay.current === SceneInteraction.MOVE) {
-        onSourceMove(event, WCRSceneItem.OVERLAY);
+        onSourceMove(event, SceneItem.OVERLAY);
       } else if (draggingGame.current === SceneInteraction.MOVE) {
-        onSourceMove(event, WCRSceneItem.GAME);
+        onSourceMove(event, SceneItem.GAME);
       } else if (draggingGame.current === SceneInteraction.SCALE) {
-        onSourceScale(event, WCRSceneItem.GAME);
+        onSourceScale(event, SceneItem.GAME);
       } else if (draggingOverlay.current === SceneInteraction.SCALE) {
-        onSourceScale(event, WCRSceneItem.OVERLAY);
+        onSourceScale(event, SceneItem.OVERLAY);
       }
     },
     [onSourceMove],
@@ -316,10 +316,10 @@ const RecorderPreview = (props: {
   const onMouseDown = useCallback(
     (
       event: React.MouseEvent<HTMLDivElement>,
-      src: WCRSceneItem,
+      src: SceneItem,
       action: SceneInteraction,
     ) => {
-      if (src === WCRSceneItem.OVERLAY) {
+      if (src === SceneItem.OVERLAY) {
         draggingOverlay.current = action;
       } else {
         draggingGame.current = action;
@@ -361,21 +361,21 @@ const RecorderPreview = (props: {
     }
   };
 
-  const renderDraggableSceneBox = (src: WCRSceneItem) => {
-    if (src === WCRSceneItem.OVERLAY && !config.chatOverlayEnabled) {
+  const renderDraggableSceneBox = (src: SceneItem) => {
+    if (src === SceneItem.OVERLAY && !config.chatOverlayEnabled) {
       return <></>;
     }
 
     const { x, y, width, height } =
-      src === WCRSceneItem.OVERLAY ? overlayBoxDimensions : gameBoxDimensions;
+      src === SceneItem.OVERLAY ? overlayBoxDimensions : gameBoxDimensions;
 
-    const snap = src === WCRSceneItem.OVERLAY ? snapOverlay : snapGame;
+    const snap = src === SceneItem.OVERLAY ? snapOverlay : snapGame;
 
     if (width < 1 && height < 1) {
       return <></>;
     }
 
-    const text = src === WCRSceneItem.OVERLAY ? 'Chat Overlay' : 'Game Window';
+    const text = src === SceneItem.OVERLAY ? 'Chat Overlay' : 'Game Window';
 
     const position: {
       left?: number;
@@ -407,7 +407,7 @@ const RecorderPreview = (props: {
 
     return (
       <Box
-        id={src === WCRSceneItem.OVERLAY ? 'overlay-box' : 'game-box'}
+        id={src === SceneItem.OVERLAY ? 'overlay-box' : 'game-box'}
         onMouseDown={(e) => onMouseDown(e, src, SceneInteraction.MOVE)}
         sx={{
           position: 'absolute',
@@ -444,8 +444,8 @@ const RecorderPreview = (props: {
         ref={previewDivRef}
         className="relative h-full mx-12 overflow-hidden border border-black"
       >
-        {renderDraggableSceneBox(WCRSceneItem.GAME)}
-        {renderDraggableSceneBox(WCRSceneItem.OVERLAY)}
+        {renderDraggableSceneBox(SceneItem.GAME)}
+        {renderDraggableSceneBox(SceneItem.OVERLAY)}
       </div>
     </div>
   );

@@ -571,7 +571,7 @@ type ObsVolmeterCallbackInfo = {
   inputPeak: number[];
 };
 
-enum WCRSceneItem {
+enum SceneItem {
   OVERLAY = 'Overlay',
   GAME = 'Game',
 }
@@ -669,7 +669,7 @@ export {
   VideoSourceName,
   AudioSource,
   AudioSourcePrefix,
-  WCRSceneItem,
+  SceneItem,
   SceneInteraction,
   BoxDimensions,
   WowProcessEvent,

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
-import { AudioSourceType, WCRSceneItem } from './types';
+import { AudioSourceType, SceneItem } from './types';
 
 export type Channels =
   | 'window'
@@ -106,19 +106,19 @@ contextBridge.exposeInMainWorld('electron', {
     },
 
     getSourcePosition(
-      src: WCRSceneItem,
+      src: SceneItem,
     ): Promise<SourceDimensions & SceneItemPosition> {
       return ipcRenderer.invoke('getSourcePosition', src);
     },
 
     setSourcePosition(
-      src: WCRSceneItem,
+      src: SceneItem,
       target: { x: number; y: number; width: number; height: number },
     ) {
       ipcRenderer.send('setSourcePosition', src, target);
     },
 
-    resetSourcePosition(src: WCRSceneItem) {
+    resetSourcePosition(src: SceneItem) {
       ipcRenderer.send('resetSourcePosition', src);
     },
 
