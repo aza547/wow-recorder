@@ -74,12 +74,12 @@ const devMode = process.env.NODE_ENV === 'development';
  */
 export default class Recorder extends EventEmitter {
   /**
-   * Date the buffer recording started.
+   * Singleton instance.
    */
   private static instance: Recorder;
 
   /**
-   * Date the buffer recording started.
+   * Singleton instance accessor.
    */
   public static getInstance() {
     if (!this.instance) this.instance = new Recorder();

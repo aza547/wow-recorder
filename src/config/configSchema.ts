@@ -159,14 +159,14 @@ export const configSchema = {
     type: 'array',
     default: [
       {
-        id: 'WCR Default Speaker',
+        id: 'WCR Audio Source 1',
         friendly: 'default',
         device: 'default',
         volume: 1,
         type: AudioSourceType.OUTPUT,
       },
       {
-        id: 'WCR Default Mic',
+        id: 'WCR Audio Source 2',
         friendly: 'default',
         device: 'default',
         volume: 1,
