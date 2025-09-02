@@ -1,8 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  CrashData,
-  Crashes,
+  ErrorReport,
   MicStatus,
   Pages,
   RecStatus,
@@ -36,7 +35,7 @@ const WarcraftRecorder = () => {
   const [config, setConfig] = useSettings();
   const [error, setError] = useState<string>('');
   const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
-  const [crashes, setCrashes] = useState<Crashes>([]);
+  const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
   const updateNotified = useRef(false);
   const { toast } = useToast();
 
@@ -158,8 +157,8 @@ const WarcraftRecorder = () => {
     setMicStatus(status as MicStatus);
   };
 
-  const updateCrashes = (crash: unknown) => {
-    setCrashes((prevArray) => [...prevArray, crash as CrashData]);
+  const updateErrorReports = (report: unknown) => {
+    setErrorReports((prevArray) => [...prevArray, report as ErrorReport]);
   };
 
   const updateDiskStatus = (status: unknown) => {
@@ -276,7 +275,7 @@ const WarcraftRecorder = () => {
     ipc.on('updateRecStatus', updateRecStatus);
     ipc.on('updateSaveStatus', updateSaveStatus);
     ipc.on('updateMicStatus', updateMicStatus);
-    ipc.on('updateCrashes', updateCrashes);
+    ipc.on('updateErrorReport', updateErrorReports);
     ipc.on('updateDiskStatus', updateDiskStatus);
     ipc.on('updateCloudStatus', updateCloudStatus);
     ipc.on('updateAvailable', onUpdateAvailable);
@@ -289,7 +288,7 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('updateRecStatus');
       ipc.removeAllListeners('updateSaveStatus');
       ipc.removeAllListeners('updateMicStatus');
-      ipc.removeAllListeners('updateCrashes');
+      ipc.removeAllListeners('updateErrorReport');
       ipc.removeAllListeners('updateDiskStatus');
       ipc.removeAllListeners('updateCloudStatus');
       ipc.removeAllListeners('updateAvailable');
@@ -320,7 +319,7 @@ const WarcraftRecorder = () => {
               persistentProgress={persistentProgress}
               error={error}
               micStatus={micStatus}
-              crashes={crashes}
+              errorReports={errorReports}
               savingStatus={savingStatus}
               config={config}
               updateAvailable={updateAvailable}

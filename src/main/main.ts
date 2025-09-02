@@ -184,7 +184,7 @@ const createWindow = async () => {
       `Warcraft Recorder v${appVersion}`,
     );
 
-    console.log('[Main] Ready to show calling startup');
+    console.log('[Main] Ready to show, calling startup');
     await manager.startup();
 
     const startMinimized = cfg.get<boolean>('startMinimized');
@@ -323,7 +323,7 @@ ipcMain.on('writeClipboard', (_event, args) => {
 // Enforces serial execution of calls to reconfigureBase. Also has a limit
 // of 1 queued task and will drop any extra tasks, which is appropriate for
 // deduplicating reconfigure work.
-const reconfigureBaseQueue = new AsyncQueue();
+const reconfigureBaseQueue = new AsyncQueue(1);
 
 /**
  * A reconfig is triggered when a base setting changes.

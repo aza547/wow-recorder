@@ -37,13 +37,16 @@ const isDebug =
  * A queue for cutting videos to size.
  */
 export default class VideoProcessQueue {
+  /**
+   * Singleton instance.
+   */
   private static instance: VideoProcessQueue;
 
   /**
-   * Get the singleton instance of the VideoProcessQueue.
+   * Singleton instance accessor.
    */
-  public static getInstance(): VideoProcessQueue {
-    if (!this.instance) this.instance = new VideoProcessQueue();
+  public static getInstance() {
+    if (!this.instance) this.instance = new this();
     return this.instance;
   }
 
@@ -397,7 +400,7 @@ export default class VideoProcessQueue {
    * frontend.
    */
   private finishProcessingVideo(item: VideoQueueItem) {
-    console.info('[VideoProcessQueue] Finished cutting video', item.source);
+    console.info('[VideoProcessQueue] Finished processing video', item.source);
     send('updateSaveStatus', SaveStatus.NotSaving);
     send('refreshState');
   }

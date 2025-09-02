@@ -32,10 +32,10 @@ export default class CloudClient extends StorageClient {
   private static instance: CloudClient;
 
   /**
-   * Singleton get method.
+   * Singleton instance accessor.
    */
   public static getInstance() {
-    if (!this.instance) this.instance = new CloudClient();
+    if (!this.instance) this.instance = new this();
     return this.instance;
   }
 

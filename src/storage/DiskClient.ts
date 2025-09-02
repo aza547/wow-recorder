@@ -25,10 +25,10 @@ export default class DiskClient extends StorageClient {
   private static instance: DiskClient;
 
   /**
-   * Singleton get method.
+   * Singleton instance accessor.
    */
   public static getInstance() {
-    if (!this.instance) this.instance = new DiskClient();
+    if (!this.instance) this.instance = new this();
     return this.instance;
   }
 

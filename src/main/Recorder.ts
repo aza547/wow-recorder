@@ -8,7 +8,6 @@ import {
   EventType,
 } from 'uiohook-napi';
 import { EventEmitter } from 'stream';
-import Queue from 'queue-promise';
 import {
   CaptureMode,
   EOBSOutputSignal,
@@ -27,12 +26,12 @@ import {
   getPromiseBomb,
   takeOwnershipBufferDir,
   exists,
+  emitErrorReport,
 } from './util';
 import {
   AudioSource,
   AudioSourceType,
   BaseConfig,
-  CrashData,
   MicStatus,
   ObsAudioConfig,
   ObsOverlayConfig,
@@ -57,6 +56,7 @@ import noobs, {
 import { getNativeWindowHandle, send } from './main';
 import { ipcMain } from 'electron';
 import Poller from 'utils/Poller';
+import AsyncQueue from 'utils/AsyncQueue';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -82,7 +82,7 @@ export default class Recorder extends EventEmitter {
    * Singleton instance accessor.
    */
   public static getInstance() {
-    if (!this.instance) this.instance = new Recorder();
+    if (!this.instance) this.instance = new this();
     return this.instance;
   }
 
@@ -170,10 +170,7 @@ export default class Recorder extends EventEmitter {
    * Action queue, used to ensure we do not make concurrent stop/start
    * requests to OBS. That's complication we can do without.
    */
-  private actionQueue = new Queue({
-    concurrent: 1,
-    interval: 100,
-  });
+  private queue = new AsyncQueue(100);
 
   /**
    * The last file output by OBS.
@@ -214,8 +211,7 @@ export default class Recorder extends EventEmitter {
     ipcMain.on('reconfigureVideo', () => {
       console.info('[Recorder] Video source reconfigure');
       const cfg = getObsVideoConfig(this.cfg);
-      const wowRunning = Poller.getInstance().isWowRunning();
-      this.configureVideoSources(cfg, wowRunning);
+      this.configureVideoSources(cfg);
     });
 
     ipcMain.on('reconfigureOverlay', () => {
@@ -385,26 +381,21 @@ export default class Recorder extends EventEmitter {
    * misbehaves.
    */
   public async startBuffer() {
-    console.info('[Recorder] Queued start');
+    console.info('[Recorder] Queued start buffer');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
-    this.actionQueue.enqueue(async () => {
+    const task = async () => {
       try {
         await this.startObsBuffer();
         resolveHelper(null);
       } catch (error) {
-        console.error('[Recorder] Crash on start call', String(error));
-
-        const crashData: CrashData = {
-          date: new Date(),
-          reason: String(error),
-        };
-
-        this.emit('crash', crashData);
+        console.error('[Recorder] Error on starting buffer', String(error));
+        emitErrorReport(error);
         rejectHelper(error);
       }
-    });
+    };
 
+    this.queue.add(task);
     await promise;
   }
 
@@ -414,26 +405,21 @@ export default class Recorder extends EventEmitter {
    * misbehaves.
    */
   public async startRecording(offset: number) {
-    console.info('[Recorder] Queued start rec');
+    console.info('[Recorder] Queued start recording');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
-    this.actionQueue.enqueue(async () => {
+    const task = async () => {
       try {
         await this.convertObsBuffer(offset);
         resolveHelper(null);
       } catch (error) {
-        console.error('[Recorder] Crash on start call', String(error));
-
-        const crashData: CrashData = {
-          date: new Date(),
-          reason: String(error),
-        };
-
-        this.emit('crash', crashData);
+        console.error('[Recorder] Error on starting recording', String(error));
+        emitErrorReport(error);
         rejectHelper(error);
       }
-    });
+    };
 
+    this.queue.add(task);
     await promise;
   }
 
@@ -442,27 +428,46 @@ export default class Recorder extends EventEmitter {
    * to make sure we only attempt one recorder action at once, and to handle if OBS
    * misbehaves.
    */
-  public async stop(force: boolean) {
-    console.info('[Recorder] Queued stop', force);
+  public async stop() {
+    console.info('[Recorder] Queued stop');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
-    this.actionQueue.enqueue(async () => {
+    const task = async () => {
       try {
-        await this.stopObsRecording(force);
+        await this.stopObsRecording();
         resolveHelper(null);
       } catch (error) {
-        console.error('[Recorder] Crash on stop call', String(error));
-
-        const crashData: CrashData = {
-          date: new Date(),
-          reason: String(error),
-        };
-
-        this.emit('crash', crashData);
+        console.error('[Recorder] Error on stop', String(error));
+        emitErrorReport(error);
         rejectHelper(error);
       }
-    });
+    };
 
+    this.queue.add(task);
+    await promise;
+  }
+
+  /**
+   * Publicly accessible method to stop recording, handles all the gory internals
+   * to make sure we only attempt one recorder action at once, and to handle if OBS
+   * misbehaves.
+   */
+  public async forceStop() {
+    console.info('[Recorder] Queued force stop');
+    const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
+
+    const task = async () => {
+      try {
+        await this.forceStopOBS();
+        resolveHelper(null);
+      } catch (error) {
+        console.error('[Recorder] Error on force stop', String(error));
+        emitErrorReport(error);
+        rejectHelper(error);
+      }
+    };
+
+    this.queue.add(task);
     await promise;
   }
 
@@ -545,7 +550,7 @@ export default class Recorder extends EventEmitter {
   /**
    * Configures the video source in OBS.
    */
-  public configureVideoSources(config: ObsVideoConfig, isWowRunning: boolean) {
+  public configureVideoSources(config: ObsVideoConfig) {
     const { obsCaptureMode } = config;
     this.clearFindWindowInterval();
 
@@ -572,7 +577,9 @@ export default class Recorder extends EventEmitter {
       throw new Error('Unrecognised capture mode');
     }
 
-    if (isWowRunning && obsCaptureMode !== 'monitor_capture') {
+    const wowRunning = Poller.getInstance().isWowRunning();
+
+    if (wowRunning && obsCaptureMode !== 'monitor_capture') {
       this.attachCaptureSource();
     }
 
@@ -861,7 +868,7 @@ export default class Recorder extends EventEmitter {
 
     await Promise.race([
       this.startQueue.shift(),
-      getPromiseBomb(30, 'OBS timeout waiting for start'),
+      getPromiseBomb(30, 'Failed to start'),
     ]);
 
     this.startQueue.empty();
@@ -884,26 +891,14 @@ export default class Recorder extends EventEmitter {
       throw new Error('OBS not initialized');
     }
 
-    // if (this.obsState === ERecordingState.Recording) {
-    //   console.info('[Recorder] Already started');
-    //   return;
-    // }
-
-    // // Sleep for a second, without this sometimes OBS does not respond at all.
-    // await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    this.startQueue.empty();
+    if (this.obsState !== ERecordingState.Recording) {
+      console.error('[Recorder] Buffer not started');
+      throw new Error('Buffer not started');
+    }
 
     // The native code expects an integer.
     const rounded = Math.round(offset);
     noobs.StartRecording(rounded);
-
-    // await Promise.race([
-    //   this.startQueue.shift(),
-    //   getPromiseBomb(30, 'OBS timeout waiting for start'),
-    // ]);
-
-    this.startQueue.empty();
 
     // I think this causes a very slight offset in the video - i.e. we set the
     // start to just after we receive the signal from OBS that recording has
@@ -913,10 +908,11 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Stop OBS, no-op if already stopped.
+   * Stop OBS, no-op if already stopped. If stopping fails, will attempt
+   * recovery by force stopping. Will set lastFile if successful.
    */
-  private async stopObsRecording(force: boolean) {
-    console.info('[Recorder] Stop');
+  private async stopObsRecording() {
+    console.info('[Recorder] Stop recording');
 
     if (!this.obsInitialized) {
       console.error('[Recorder] OBS not initialized');
@@ -929,55 +925,61 @@ export default class Recorder extends EventEmitter {
     }
 
     this.wroteQueue.empty();
-
-    if (force) {
-      console.info('[Recorder] Force stop recording');
-      noobs.ForceStopRecording();
-    } else {
-      console.info('[Recorder] Stop recording');
-      noobs.StopRecording();
-    }
+    noobs.StopRecording();
 
     const wrote = this.wroteQueue.shift();
-    await Promise.race([wrote, getPromiseBomb(60, 'OBS timeout on stop')]);
+    let success = false;
 
-    if (force) {
-      this.lastFile = '';
-    } else {
-      this.lastFile = noobs.GetLastRecording();
+    try {
+      await Promise.race([wrote, getPromiseBomb(60, 'Failed to stop')]);
+      success = true;
+    } catch (error) {
+      console.error('[Recorder]', error, 'will force stop');
+      noobs.ForceStopRecording();
+
+      await Promise.race([
+        wrote,
+        getPromiseBomb(3, 'Failed to recover by force stopping'),
+      ]);
     }
 
-    console.info('[Recorder] Set last file:', this.lastFile);
+    if (success) {
+      console.info('[Recorder] Stopped successfully');
+      this.lastFile = noobs.GetLastRecording();
+    } else {
+      console.info('[Recorder] Failed to stop, but force stop succeeded');
+      this.lastFile = null;
+    }
   }
 
-  // /**
-  //  * Force stop OBS, no-op if already stopped. Optionally pass in a wrote
-  //  * promise to await instead of shifting from the queue ourselves. That's
-  //  * useful in the case we've failed to stop and are now force stopping.
-  //  */
-  // private async forceStopOBS(wrote: Promise<any> | undefined = undefined) {
-  //   console.info('[Recorder] Force stop');
+  /**
+   * Force stop OBS, no-op if already stopped. Optionally pass in a wrote
+   * promise to await instead of shifting from the queue ourselves. That's
+   * useful in the case we've failed to stop and are now force stopping.
+   */
+  private async forceStopOBS() {
+    console.info('[Recorder] Force stop');
 
-  //   if (!this.obsInitialized) {
-  //     console.error('[Recorder] OBS not initialized');
-  //     throw new Error('OBS not initialized');
-  //   }
+    if (!this.obsInitialized) {
+      console.error('[Recorder] OBS not initialized');
+      throw new Error('OBS not initialized');
+    }
 
-  //   // if (this.obsState === ERecordingState.Offline) {
-  //   //   console.info('[Recorder] Already stopped');
-  //   //   return;
-  //   // }
+    if (this.obsState === ERecordingState.Offline) {
+      console.info('[Recorder] Already stopped');
+      return;
+    }
 
-  //   this.wroteQueue.empty();
-  //   noobs.StopRecording(); // TODO should be force
+    this.wroteQueue.empty();
+    noobs.ForceStopRecording();
 
-  //   // If we were passed a wrote promise, use that instead of shifting from
-  //   // the queue as a previously created promise will get the result first.
-  //   wrote = wrote || this.wroteQueue.shift();
-  //   // const bomb = getPromiseBomb(3, 'OBS timeout on force stop');
-  //   // await Promise.race([wrote, bomb]);
-  //   this.lastFile = null;
-  // }
+    // If we were passed a wrote promise, use that instead of shifting from
+    // the queue as a previously created promise will get the result first.
+    const wrote = this.wroteQueue.shift();
+    const bomb = getPromiseBomb(3, 'Failed to force stop');
+    await Promise.race([wrote, bomb]);
+    this.lastFile = null;
+  }
 
   /**
    * Create the obsPath directory if it doesn't already exist. Also

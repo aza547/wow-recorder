@@ -1,7 +1,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
-import { app, BrowserWindow, Display, screen } from 'electron';
+import { app, Display, screen } from 'electron';
 import {
   EventType,
   uIOhook,
@@ -17,12 +17,13 @@ import {
   OurDisplayType,
   RendererVideo,
   ObsAudioConfig,
-  CrashData,
+  ErrorReport,
   CloudSignedMetadata,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
 import { AxiosError } from 'axios';
+import { send } from './main';
 
 /**
  * When packaged, we need to fix some paths
@@ -403,12 +404,17 @@ const getWowFlavour = (pathSpec: string): string => {
 };
 
 /**
- * Updates the status icon for the application.
- * @param status the status number
+ * Adds an error to the error report component.
  */
-const addCrashToUI = (window: BrowserWindow, crashData: CrashData) => {
-  console.info('[Util] Updating crashes with:', crashData);
-  window.webContents.send('updateCrashes', crashData);
+const emitErrorReport = (data: unknown) => {
+  console.error('[Util] Emitting error report', String(data));
+
+  const report: ErrorReport = {
+    date: new Date(),
+    reason: String(data),
+  };
+
+  send('updateErrorReport', report);
 };
 
 const isPushToTalkHotkey = (
@@ -906,7 +912,7 @@ export {
   nextMousePressPromise,
   convertUioHookEvent,
   getPromiseBomb,
-  addCrashToUI,
+  emitErrorReport,
   buildClipMetadata,
   getOBSFormattedDate,
   checkDisk,

@@ -27,6 +27,7 @@ import { assert } from 'console';
 import Manual from 'activitys/Manual';
 import { playSoundAlert } from 'main/main';
 import Poller from 'utils/Poller';
+import { emitErrorReport } from 'main/util';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -253,28 +254,38 @@ export default abstract class LogHandler {
     }
 
     LogHandler.overrunning = false;
-    const { startDate } = Recorder.getInstance();
+    const recorder = Recorder.getInstance();
+    const poller = Poller.getInstance();
+
+    const { startDate } = recorder;
     let videoFile;
 
     try {
-      const recorder = Recorder.getInstance();
-      const poller = Poller.getInstance();
-
-      await recorder.stop(false);
+      await recorder.stop();
       videoFile = recorder.lastFile;
-      const wowRunning = poller.isWowRunning();
-
-      if (wowRunning) {
-        console.info('[LogHandler] Restarting buffer as WoW still running');
-        recorder.startBuffer();
-      }
     } catch (error) {
-      console.error('[LogHandler] Failed to stop OBS, discarding video', error);
+      console.error(
+        '[LogHandler] Failed to stop recording, discarding video',
+        error,
+      );
+      const report =
+        'Failed to stop recording, discarding: ' + lastActivity.getFileName();
+      emitErrorReport(report);
       return;
     }
 
+    const wowRunning = poller.isWowRunning();
+
+    if (wowRunning) {
+      console.info('[LogHandler] Restarting buffer as WoW still running');
+      recorder.startBuffer(); // No need to await.
+    }
+
     if (!videoFile) {
-      console.error('[LogHandler] OBS failed to produce a video file');
+      console.error('[LogHandler] No video file available');
+      const report =
+        'No video file produced, discarding: ' + lastActivity.getFileName();
+      emitErrorReport(report);
       return;
     }
 
@@ -304,7 +315,7 @@ export default abstract class LogHandler {
         offset,
         duration,
         metadata,
-        deleteSource: true,
+        clip: false,
       };
 
       VideoProcessQueue.getInstance().queueVideo(queueItem);

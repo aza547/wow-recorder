@@ -155,7 +155,6 @@
     "lucide-react": "^0.428.0",
     "node-abi": "^4.9.0",
     "path": "^0.12.7",
-    "queue-promise": "^2.2.1",
     "re-resizable": "^6.9.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

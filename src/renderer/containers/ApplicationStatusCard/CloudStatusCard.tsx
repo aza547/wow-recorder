@@ -1,21 +1,8 @@
-import {
-  AppState,
-  Crashes,
-  MicStatus,
-  RecStatus,
-  SaveStatus,
-} from 'main/types';
+import { AppState } from 'main/types';
 
-import { ConfigurationSchema } from 'config/configSchema';
 import CloudStatus from './CloudStatus';
 
 type CloudStatusCardProps = {
-  recorderStatus: RecStatus;
-  error: string;
-  micStatus: MicStatus;
-  crashes: Crashes;
-  savingStatus: SaveStatus;
-  config: ConfigurationSchema;
   appState: AppState;
 };
 

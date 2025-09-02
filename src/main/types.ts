@@ -44,9 +44,7 @@ enum SaveStatus {
  * We display any OBS crashes on the frontend so we don't silently recover
  * and have the user think all is well.
  */
-type Crashes = CrashData[];
-
-type CrashData = {
+type ErrorReport = {
   date: Date;
   reason: string;
 };
@@ -651,8 +649,7 @@ export {
   VideoMarker,
   MarkerColors,
   MicStatus,
-  Crashes,
-  CrashData,
+  ErrorReport,
   SliderMark,
   CloudStatus,
   DiskStatus,

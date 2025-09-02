@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
 import {
   AppState,
-  Crashes,
+  ErrorReport,
   MicStatus,
   Pages,
   RecStatus,
@@ -48,7 +48,7 @@ interface IProps {
   persistentProgress: MutableRefObject<number>;
   error: string;
   micStatus: MicStatus;
-  crashes: Crashes;
+  errorReports: ErrorReport[];
   savingStatus: SaveStatus;
   config: ConfigurationSchema;
   updateAvailable: boolean;
@@ -63,7 +63,7 @@ const SideMenu = (props: IProps) => {
     persistentProgress,
     error,
     micStatus,
-    crashes,
+    errorReports,
     savingStatus,
     config,
     updateAvailable,
@@ -171,20 +171,12 @@ const SideMenu = (props: IProps) => {
         recorderStatus={recorderStatus}
         error={error}
         micStatus={micStatus}
-        crashes={crashes}
+        errorReports={errorReports}
         savingStatus={savingStatus}
         config={config}
         appState={appState}
       />
-      <CloudStatusCard
-        recorderStatus={recorderStatus}
-        error={error}
-        micStatus={micStatus}
-        crashes={crashes}
-        savingStatus={savingStatus}
-        config={config}
-        appState={appState}
-      />
+      <CloudStatusCard appState={appState} />
       <Separator className="mb-4" />
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"

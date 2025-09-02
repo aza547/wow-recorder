@@ -1,7 +1,11 @@
 export default class AsyncQueue {
   private queue: (() => Promise<void>)[] = [];
   private running = false;
-  private limit = 1; // Limit the queued tasks.
+  private limit: number; // Limit the queued tasks.
+
+  constructor(limit: number) {
+    this.limit = limit;
+  }
 
   public add(task: () => Promise<void>) {
     // Just drop any tasks added over the limit.

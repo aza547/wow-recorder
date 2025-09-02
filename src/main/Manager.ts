@@ -45,39 +45,46 @@ import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 
 /**
- * The manager class is responsible for orchestrating all the functional
- * bits of the app including the Recorder, LogHandlers and Poller classes.
- *
- * In particular, it has the knowledge of how to reconfigure the Recorder
- * class, which is non-trivial as some config can be changed live while others
- * can not.
- *
- * The external interface here is manage(), call this any time a config change
- * occurs and it will always do the right thing.
+ * Manager class.
  */
 export default class Manager {
-  public recorder = Recorder.getInstance();
-
+  /**
+   * Quick references to a bunch of singletons.
+   */
+  private poller = Poller.getInstance();
+  private recorder = Recorder.getInstance();
   private cfg = ConfigService.getInstance();
 
-  private poller = Poller.getInstance();
-
-  private logHandlers: LogHandler[] = [];
-
+  /**
+   * Log handlers.
+   */
   private retailLogHandler: RetailLogHandler | undefined;
-
+  private retailPtrLogHandler: RetailLogHandler | undefined;
   private classicLogHandler: ClassicLogHandler | undefined;
-
   private eraLogHandler: EraLogHandler | undefined;
 
-  private retailPtrLogHandler: RetailLogHandler | undefined;
-
+  /**
+   * If the config is valid or not.
+   */
   private configValid = false;
 
+  /**
+   * The config message, typically used to show the user why their config is
+   * invalid.
+   */
   private configMessage = '';
 
+  /**
+   * If we are in the middle of a reconfigure or not.
+   */
   private reconfiguring = false;
 
+  /**
+   * If the audio settings are open or not. We want the audio devices to
+   * be attached to power the volmeters in the case they are on display,
+   * even if WoW is closed. But we want the audio devices disconnected if
+   * both the settings and WoW are closed to allow Windows to naturally sleep.
+   */
   private audioSettingsOpen = false;
 
   /**
@@ -109,7 +116,7 @@ export default class Manager {
     console.info('[Manager] Starting up');
 
     // This should be a given, except with the dev hot reloader.
-    await this.recorder.stop(true);
+    await this.recorder.forceStop();
 
     this.reconfiguring = true;
     this.refreshStatus();
@@ -151,7 +158,7 @@ export default class Manager {
     console.info('[Manager] Reconfiguring base');
 
     // The recording must be stopped to do this.
-    await this.recorder.stop(true);
+    await this.recorder.forceStop();
     this.reconfiguring = true;
     this.refreshStatus();
     let success = false;
@@ -344,7 +351,7 @@ export default class Manager {
       console.info('[Manager] Force ending activity');
       LogHandler.forceEndActivity();
     } else {
-      await this.recorder.stop(true);
+      await this.recorder.forceStop();
     }
 
     this.recorder.clearFindWindowInterval();
@@ -412,9 +419,8 @@ export default class Manager {
    * Configure video settings in OBS. This can all be changed live.
    */
   private configureObsVideo() {
-    const isWowRunning = this.poller.isWowRunning();
     const config = getObsVideoConfig(this.cfg);
-    this.recorder.configureVideoSources(config, isWowRunning);
+    this.recorder.configureVideoSources(config);
   }
 
   /**
@@ -599,12 +605,12 @@ export default class Manager {
       console.info('[Manager] Detected Windows is going to sleep.');
       LogHandler.dropActivity();
       this.poller.stop();
-      await this.recorder.stop(true);
+      await this.recorder.forceStop();
     });
 
     powerMonitor.on('resume', async () => {
       console.info('[Manager] Detected Windows waking up from a sleep.');
-      await this.recorder.stop(true);
+      await this.recorder.forceStop();
       this.poller.start();
     });
   }
