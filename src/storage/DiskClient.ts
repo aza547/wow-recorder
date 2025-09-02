@@ -158,12 +158,12 @@ export default class DiskClient extends StorageClient {
     await writeMetadataFile(videoPath, metadata);
   }
 
-  private async deleteVideoDisk(videoName: string) {
+  private async deleteVideoDisk(videoPath: string) {
     try {
       // Bit weird we have to check a boolean here given all the error handling
       // going on. That's just me taking an easy way out rather than fixing this
       // more elegantly. TL;DR deleteVideoDisk doesn't throw anything.
-      const success = await deleteVideoDisk(videoName); // TODO path not name?
+      const success = await deleteVideoDisk(videoPath);
 
       if (!success) {
         throw new Error('Failed deleting video, will mark for delete');
@@ -177,7 +177,7 @@ export default class DiskClient extends StorageClient {
         String(error),
       );
 
-      markForVideoForDelete(videoName);
+      markForVideoForDelete(videoPath);
     }
   }
 
