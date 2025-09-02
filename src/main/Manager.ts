@@ -130,13 +130,12 @@ export default class Manager {
       this.setConfigInvalid(String(error));
     }
 
-    this.reconfiguring = false;
-
     if (success) {
       this.setConfigValid();
       this.poller.start();
     }
 
+    this.reconfiguring = false;
     this.refreshStatus();
   }
 

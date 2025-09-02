@@ -257,9 +257,17 @@ export default abstract class LogHandler {
     let videoFile;
 
     try {
-      await Recorder.getInstance().stop(false);
-      videoFile = Recorder.getInstance().lastFile;
-      Poller.getInstance().start();
+      const recorder = Recorder.getInstance();
+      const poller = Poller.getInstance();
+
+      await recorder.stop(false);
+      videoFile = recorder.lastFile;
+      const wowRunning = poller.isWowRunning();
+
+      if (wowRunning) {
+        console.info('[LogHandler] Restarting buffer as WoW still running');
+        recorder.startBuffer();
+      }
     } catch (error) {
       console.error('[LogHandler] Failed to stop OBS, discarding video', error);
       return;
