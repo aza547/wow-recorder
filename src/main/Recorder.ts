@@ -120,11 +120,11 @@ export default class Recorder extends EventEmitter {
   private findWindowAttemptLimit = 10;
 
   /**
-   * Resolution selected by the user in settings. Defaults to 1920x1080 for
-   * no good reason other than avoiding undefined. It quickly gets set to
-   * what the user configured.
+   * Resolution selected by the user in settings.
    */
-  private resolution: keyof typeof obsResolutions = '1920x1080';
+  private resolution: keyof typeof obsResolutions = this.cfg.get<string>(
+    'obsOutputResolution',
+  ) as keyof typeof obsResolutions;
 
   /**
    * Active audio sources.
@@ -838,7 +838,7 @@ export default class Recorder extends EventEmitter {
    */
   public async cleanup(obsPath: string) {
     console.info('[Recorder] Clean out buffer');
-    const videos = await getSortedVideos(obsPath); // TODO remove this sorting, its redundant
+    const videos = await getSortedVideos(obsPath); // This sorting is redundant.
     const files = videos.map((f) => f.name);
     const promises = files.map(tryUnlink);
     await Promise.all(promises);

@@ -623,7 +623,6 @@ const AudioSourceControls = (props: IProps) => {
                     return { ...config, audioSources: newSources };
                   });
 
-                  // TODO debounce?
                   ipc.setAudioSourceVolume(src.id, newValue[0] / 100);
                 }}
               />

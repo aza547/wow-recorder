@@ -440,10 +440,7 @@ const PVESettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">
         <Label htmlFor="recordChallengeModes" className="flex items-center">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.ChallengeModeLabel,
-          )}
+          {getLocalePhrase(appState.language, Phrase.ChallengeModeLabel)}
           <Tooltip
             content={getLocalePhrase(
               appState.language,

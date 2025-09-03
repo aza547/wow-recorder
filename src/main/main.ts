@@ -162,15 +162,12 @@ const createWindow = async () => {
     },
   });
 
-  // Setup the storage clients.
-  const cloud = CloudClient.getInstance();
-  cloud.setWindow(window);
-  cloud.configure();
+  // Initialize the storage clients, this is the first call to the singletons
+  // so invokes the constructors.
+  CloudClient.getInstance();
+  DiskClient.getInstance();
 
-  const disk = DiskClient.getInstance();
-  disk.setWindow(window);
-
-  // We need to do this after creating the window as it's used by the preview.
+  // We need to do this AFTER creating the window as it's used by the preview.
   Recorder.getInstance().initializeObs();
 
   window.on('ready-to-show', async () => {

@@ -3,6 +3,7 @@ import StorageClient from './StorageClient';
 import {
   delayedDeleteVideo,
   deleteVideoDisk,
+  exists,
   getMetadataForVideo,
   getSortedVideos,
   loadVideoDetailsDisk,
@@ -14,6 +15,7 @@ import { DiskStatus, RendererVideo } from 'main/types';
 import DiskSizeMonitor from './DiskSizeMonitor';
 import { ipcMain } from 'electron';
 import assert from 'assert';
+import { send } from 'main/main';
 
 /**
  * A client for retrieving resources from the cloud.
@@ -38,7 +40,6 @@ export default class DiskClient extends StorageClient {
   }
 
   public ready() {
-    // TODO check the folder?
     return true;
   }
 
@@ -50,7 +51,7 @@ export default class DiskClient extends StorageClient {
     const cfg = ConfigService.getInstance();
     const limit = cfg.get<number>('maxStorage') * 1024 ** 3;
     const status: DiskStatus = { usage, limit };
-    this.send('updateDiskStatus', status);
+    send('updateDiskStatus', status);
   }
 
   /**
@@ -59,8 +60,13 @@ export default class DiskClient extends StorageClient {
   public async getVideos() {
     const storageDir = ConfigService.getInstance().get<string>('storagePath');
 
-    // TODO: more validity checks?
     if (!storageDir) {
+      return [];
+    }
+
+    const dirExists = await exists(storageDir);
+
+    if (!dirExists) {
       return [];
     }
 

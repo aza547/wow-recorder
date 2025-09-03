@@ -21,6 +21,7 @@ import StorageClient from './StorageClient';
 import { getCloudConfig } from 'utils/configUtils';
 import { clipboard, ipcMain } from 'electron';
 import VideoProcessQueue from 'main/VideoProcessQueue';
+import { send } from 'main/main';
 
 /**
  * A client for retrieving resources from the cloud.
@@ -209,6 +210,7 @@ export default class CloudClient extends StorageClient {
     console.info('[CloudClient] Creating cloud client');
     super();
     this.setupListeners();
+    this.configure();
   }
 
   /**
@@ -237,10 +239,10 @@ export default class CloudClient extends StorageClient {
 
     if (!this.ready()) {
       // Remove the cloud videos from the UI if we're not ready.
-      this.send('displayCloudVideos', []);
+      send('displayCloudVideos', []);
     }
 
-    this.send('updateCloudStatus', status);
+    send('updateCloudStatus', status);
   }
 
   /**
@@ -369,7 +371,7 @@ export default class CloudClient extends StorageClient {
   /**
    * Login to the cloud store.
    */
-  public async configure() {
+  private async configure() {
     console.info('[CloudClient] Configuring cloud client');
     this.reset();
 
@@ -479,15 +481,8 @@ export default class CloudClient extends StorageClient {
     this.startPolling();
 
     const videos = await this.getVideos();
-    this.send('displayCloudVideos', videos);
+    send('displayCloudVideos', videos);
     this.refreshStatus();
-  }
-
-  /**
-   * Return the guild name.
-   */
-  public getGuildName() {
-    return this.guild;
   }
 
   /**
@@ -521,7 +516,7 @@ export default class CloudClient extends StorageClient {
     // Update the mtime to avoid multiple refreshes.
     this.bucketLastMod = Date.now();
     this.refreshStatus();
-    this.send('refreshState');
+    send('refreshState');
 
     console.info(
       '[CloudClient] Added',
@@ -782,7 +777,7 @@ export default class CloudClient extends StorageClient {
           );
 
           this.refreshStatus();
-          this.send('refreshState');
+          send('refreshState');
           this.bucketLastMod = mtime;
         }
       }
@@ -923,7 +918,7 @@ export default class CloudClient extends StorageClient {
         );
 
         this.refreshStatus();
-        this.send('refreshState');
+        send('refreshState');
         this.bucketLastMod = mtime;
       }
     } catch (error) {
