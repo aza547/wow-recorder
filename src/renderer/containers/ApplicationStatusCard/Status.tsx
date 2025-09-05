@@ -1,6 +1,6 @@
 import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
-import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
+import { HardDriveDownload } from 'lucide-react';
 import { ConfigurationSchema } from 'config/configSchema';
 import { AppState, RecStatus, SaveStatus } from 'main/types';
 import React from 'react';
@@ -37,6 +37,8 @@ const Status = ({
   config,
   appState,
 }: StatusProps) => {
+  const { language } = appState;
+
   const stopRecording = () => {
     window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
   };
@@ -45,22 +47,22 @@ const Status = ({
     const flavours: string[] = [];
 
     if (config.recordRetail) {
-      const s = getLocalePhrase(appState.language, Phrase.Retail);
+      const s = getLocalePhrase(language, Phrase.Retail);
       flavours.push(s);
     }
 
     if (config.recordClassic) {
-      const s = getLocalePhrase(appState.language, Phrase.Classic);
+      const s = getLocalePhrase(language, Phrase.Classic);
       flavours.push(s);
     }
 
     if (config.recordEra) {
-      const s = getLocalePhrase(appState.language, Phrase.Era);
+      const s = getLocalePhrase(language, Phrase.Era);
       flavours.push(s);
     }
 
     if (config.recordRetailPtr) {
-      const s = getLocalePhrase(appState.language, Phrase.RetailPtr);
+      const s = getLocalePhrase(language, Phrase.RetailPtr);
       flavours.push(s);
     }
 
@@ -68,37 +70,37 @@ const Status = ({
       return `${flavours.join(', ')}.`;
     }
 
-    return getLocalePhrase(appState.language, Phrase.StatusDescriptionNothing);
+    return getLocalePhrase(language, Phrase.StatusDescriptionNothing);
   };
 
   // The short recording status descriptor used on the status card
   const RecStatusTitle: Record<RecStatus, string> = {
     [RecStatus.Recording]: getLocalePhrase(
-      appState.language,
+      language,
       Phrase.StatusTitleRecording,
     ),
     [RecStatus.WaitingForWoW]: getLocalePhrase(
-      appState.language,
+      language,
       Phrase.StatusTitleWaiting,
     ),
     [RecStatus.InvalidConfig]: getLocalePhrase(
-      appState.language,
+      language,
       Phrase.StatusTitleInvalid,
     ),
     [RecStatus.ReadyToRecord]: getLocalePhrase(
-      appState.language,
+      language,
       Phrase.StatusTitleReady,
     ),
     [RecStatus.FatalError]: getLocalePhrase(
-      appState.language,
+      language,
       Phrase.StatusTitleFatalError,
     ),
     [RecStatus.Overrunning]: getLocalePhrase(
-      appState.language,
+      language,
       Phrase.StatusTitleOverrunning,
     ),
     [RecStatus.Reconfiguring]: getLocalePhrase(
-      appState.language,
+      language,
       Phrase.StatusTitleReconfiguring,
     ),
   };
@@ -120,21 +122,15 @@ const Status = ({
     [RecStatus.Recording]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionRecording,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionRecording)}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          {getLocalePhrase(appState.language, Phrase.StatusDescriptionForceEnd)}
+          {getLocalePhrase(language, Phrase.StatusDescriptionForceEnd)}
         </p>
         <div className="flex w-full justify-end">
           <Button size="sm" onClick={stopRecording} className="mt-2 w-1/3">
-            {getLocalePhrase(
-              appState.language,
-              Phrase.StatusButtonForceEndLabel,
-            )}
+            {getLocalePhrase(language, Phrase.StatusButtonForceEndLabel)}
           </Button>
         </div>
       </div>
@@ -142,12 +138,12 @@ const Status = ({
     [RecStatus.WaitingForWoW]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          {getLocalePhrase(appState.language, Phrase.StatusDescriptionWaiting)}
+          {getLocalePhrase(language, Phrase.StatusDescriptionWaiting)}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
           {getLocalePhrase(
-            appState.language,
+            language,
             Phrase.StatusDescriptionConfiguredToRecord,
           )}{' '}
           {getConfiguredFlavours()}
@@ -157,17 +153,11 @@ const Status = ({
     [RecStatus.InvalidConfig]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionMisconfigured,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionMisconfigured)}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionPleaseResolve,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionPleaseResolve)}
         </p>
         <p className="text-xs text-error-text">{error}</p>
       </div>
@@ -175,24 +165,18 @@ const Status = ({
     [RecStatus.ReadyToRecord]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionDetectedRunning,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionDetectedRunning)}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionWatchingLogs,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionWatchingLogs)}
           {': '}
         </p>
         <ul className="text-xs text-popover-foreground/60 list-disc pl-4">
           {config.recordRetail && (
             <li>
               <span className="font-bold">
-                {getLocalePhrase(appState.language, Phrase.Retail)}
+                {getLocalePhrase(language, Phrase.Retail)}
                 {': '}
               </span>
               <code>{config.retailLogPath}</code>
@@ -201,7 +185,7 @@ const Status = ({
           {config.recordClassic && (
             <li>
               <span className="font-bold">
-                {getLocalePhrase(appState.language, Phrase.Classic)}
+                {getLocalePhrase(language, Phrase.Classic)}
                 {': '}
               </span>
               <code>{config.classicLogPath}</code>
@@ -210,7 +194,7 @@ const Status = ({
           {config.recordEra && (
             <li>
               <span className="font-bold">
-                {getLocalePhrase(appState.language, Phrase.Era)}
+                {getLocalePhrase(language, Phrase.Era)}
                 {': '}
               </span>
               <code>{config.eraLogPath}</code>
@@ -219,7 +203,7 @@ const Status = ({
           {config.recordRetailPtr && (
             <li>
               <span className="font-bold">
-                {getLocalePhrase(appState.language, Phrase.RetailPtr)}
+                {getLocalePhrase(language, Phrase.RetailPtr)}
                 {': '}
               </span>
               <code>{config.retailPtrLogPath}</code>
@@ -229,37 +213,25 @@ const Status = ({
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
           <span className="font-bold">
-            {getLocalePhrase(appState.language, Phrase.StatusDescriptionTip)}
+            {getLocalePhrase(language, Phrase.StatusDescriptionTip)}
             {': '}
           </span>
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionIfNoRecording,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionIfNoRecording)}
         </p>
       </div>
     ),
     [RecStatus.FatalError]: (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionFatalError,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionFatalError)}
         </h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionPleaseResolve,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionPleaseResolve)}
         </p>
         <p className="text-xs text-error-text">{error}</p>
         <p className="text-xs text-popover-foreground/60">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionIfRecurring,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionIfRecurring)}
         </p>
       </div>
     ),
@@ -268,10 +240,7 @@ const Status = ({
         <h2 className="text-sm font-semibold">Overrunning ...</h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.StatusDescriptionOverrunning,
-          )}
+          {getLocalePhrase(language, Phrase.StatusDescriptionOverrunning)}
         </p>
       </div>
     ),
@@ -287,41 +256,7 @@ const Status = ({
       statusDescription: RecStatusDescription[status],
     };
 
-  const [uploadProgress, setUploadProgress] = React.useState(0);
-  const [downloadProgress, setDownloadProgress] = React.useState(0);
-
-  const [queuedUploads, setQueuedUploads] = React.useState(0);
-  const [queuedDownloads, setQueuedDownloads] = React.useState(0);
-
-  React.useEffect(() => {
-    const ipc = window.electron.ipcRenderer;
-
-    ipc.on('updateUploadProgress', (progress) => {
-      setUploadProgress(progress as number);
-    });
-
-    ipc.on('updateDownloadProgress', (progress) => {
-      setDownloadProgress(progress as number);
-    });
-
-    ipc.on('updateDownloadQueueLength', (queued) => {
-      setQueuedDownloads(queued as number);
-    });
-
-    ipc.on('updateUploadQueueLength', (queued) => {
-      setQueuedUploads(queued as number);
-    });
-
-    return () => {
-      ipc.removeAllListeners('updateUploadProgress');
-      ipc.removeAllListeners('updateDownloadProgress');
-      ipc.removeAllListeners('updateDownloadQueueLength');
-      ipc.removeAllListeners('updateUploadQueueLength');
-    };
-  }, []);
-
   const isSaving = savingStatus === SaveStatus.Saving;
-  const isUpDowning = queuedUploads > 0 || queuedDownloads > 0;
 
   return (
     <HoverCard openDelay={300}>
@@ -334,54 +269,20 @@ const Status = ({
           />
           <div className="ml-4 py-2 font-sans flex flex-col justify-around">
             <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
-              Recorder
+              {getLocalePhrase(language, Phrase.StatusTitleRec)}
             </span>
 
-            <span
+            <div
               className={cn(
-                'text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground',
+                'flex items-center text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground',
                 { '': !!statusDescription },
               )}
             >
               {statusTitle}
-            </span>
-
-            {(isSaving || isUpDowning) && (
-              <div className="flex text-foreground-lighter font-bold text-[11px] drop-shadow-sm gap-x-1 items-center hover:text-foreground-lighter">
-                {isSaving && (
-                  <>
-                    <HardDriveDownload size={14} />
-                    {getLocalePhrase(appState.language, Phrase.Saving)}
-                    {isUpDowning && <Separator orientation="vertical" />}
-                  </>
-                )}
-                {isUpDowning && (
-                  <>
-                    <>
-                      {queuedDownloads > 0 && (
-                        <>
-                          <CloudDownload size={14} />{' '}
-                          {downloadProgress.toFixed(0)}%
-                          {queuedDownloads > 1 && ` (+${queuedDownloads - 1}) `}
-                        </>
-                      )}
-                    </>
-                    {queuedDownloads > 0 && queuedUploads > 0 && (
-                      <Separator orientation="vertical" />
-                    )}
-                    <>
-                      {queuedUploads > 0 && (
-                        <>
-                          <CloudUpload size={14} />
-                          {uploadProgress.toFixed(0)}%
-                          {queuedUploads > 1 && ` (+${queuedUploads - 1}) `}
-                        </>
-                      )}
-                    </>
-                  </>
-                )}
-              </div>
-            )}
+              {isSaving && (
+                <HardDriveDownload size={14} className="mx-1 animate-pulse" />
+              )}
+            </div>
           </div>
         </div>
         {!!statusDescription && (

@@ -441,6 +441,16 @@ const ENGLISH: Translations = {
   [Phrase.ManualRecordUploadDescription]: 'Automatically upload recordings started manually to the cloud.',
   [Phrase.ManualRecordSoundAlertLabel]: 'Sound Alert',
   [Phrase.ManualRecordSoundAlertDescription]: 'Play a sound alert when manual recording starts or stops.',
+  [Phrase.StatusTitleRec]: 'Recorder',
+  [Phrase.StatusTitlePro]: 'Pro',
+  [Phrase.StatusTitleConnected]: 'Connected',
+  [Phrase.StatusDescrConnected]: 'Guild connection established. Pro features are enabled.',
+  [Phrase.StatusTitleDisconnected]: 'Disconnected',
+  [Phrase.StatusDescrDisconnected]: 'To use Pro features, purchase a guild subscription or join an existing guild and configure your login details in the Pro settings page.',
+  [Phrase.StatusTitleNotAuthenticated]: 'Not Authenticated',
+  [Phrase.StatusDescrNotAuthenticated]: 'Login failed, please check your credentials are valid.',
+  [Phrase.StatusTitleNotAuthorized]: 'Not Authorized',
+  [Phrase.StatusDescrNotAuthorized]: 'Your login succeeded but you are not authorized to access the selected guild.',
 };
 
 export default ENGLISH;

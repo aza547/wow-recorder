@@ -438,6 +438,16 @@ enum Phrase {
   ManualRecordHotKeyDescription,
   ManualRecordUploadDescription,
   ManualRecordSoundAlertDescription,
+  StatusTitleRec,
+  StatusTitlePro,
+  StatusTitleConnected,
+  StatusDescrConnected,
+  StatusTitleDisconnected,
+  StatusDescrDisconnected,
+  StatusTitleNotAuthenticated,
+  StatusDescrNotAuthenticated,
+  StatusTitleNotAuthorized,
+  StatusDescrNotAuthorized,
 }
 
 enum Language {

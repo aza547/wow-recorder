@@ -1,8 +1,8 @@
-import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
-import { CloudDownload, CloudUpload, HardDriveDownload } from 'lucide-react';
+import { getLocalePhrase } from 'localisation/translations';
+import { CloudDownload, CloudUpload } from 'lucide-react';
 import { AppState } from 'main/types';
-import React from 'react';
+import { useEffect, useState } from 'react';
 import {
   HoverCard,
   HoverCardContent,
@@ -13,22 +13,22 @@ import StatusLight, {
   StatusLightVariant,
 } from 'renderer/components/StatusLight/StatusLight';
 
+const ipc = window.electron.ipcRenderer;
+
 type StatusProps = {
   appState: AppState;
 };
 
 const CloudStatus = ({ appState }: StatusProps) => {
-  const { cloudStatus } = appState;
+  const { cloudStatus, language } = appState;
 
-  const [uploadProgress, setUploadProgress] = React.useState(0);
-  const [downloadProgress, setDownloadProgress] = React.useState(0);
+  const [uploadProgress, setUploadProgress] = useState(50);
+  const [downloadProgress, setDownloadProgress] = useState(50);
 
-  const [queuedUploads, setQueuedUploads] = React.useState(0);
-  const [queuedDownloads, setQueuedDownloads] = React.useState(0);
+  const [queuedUploads, setQueuedUploads] = useState(1);
+  const [queuedDownloads, setQueuedDownloads] = useState(1);
 
-  React.useEffect(() => {
-    const ipc = window.electron.ipcRenderer;
-
+  useEffect(() => {
     ipc.on('updateUploadProgress', (progress) => {
       setUploadProgress(progress as number);
     });
@@ -53,7 +53,6 @@ const CloudStatus = ({ appState }: StatusProps) => {
     };
   }, []);
 
-  const isSaving = false;
   const isUpDowning = queuedUploads > 0 || queuedDownloads > 0;
   const statusLightsClasses = 'w-1.5 h-full rounded-l-md rounded-r-none';
 
@@ -62,56 +61,85 @@ const CloudStatus = ({ appState }: StatusProps) => {
   let description = <></>;
 
   if (!cloudStatus.enabled) {
-    status = 'Disconnected';
+    status = getLocalePhrase(language, Phrase.StatusTitleDisconnected);
     variant = 'disconnected';
 
     description = (
       <div className="flex flex-col gap-y-2">
-        <h2 className="text-sm font-semibold">Disconnected</h2>
+        <h2 className="text-sm font-semibold">{status}</h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          To use pro... buy a sub
+          {getLocalePhrase(language, Phrase.StatusDescrDisconnected)}
         </p>
       </div>
     );
   } else if (!cloudStatus.authenticated) {
-    status = 'Error';
     variant = 'error';
+    status = getLocalePhrase(language, Phrase.StatusTitleNotAuthenticated);
 
     description = (
       <div className="flex flex-col gap-y-2">
-        <h2 className="text-sm font-semibold">Not Authenticated</h2>
+        <h2 className="text-sm font-semibold">{status}</h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          Login failed, check your login credentials!
+          {getLocalePhrase(language, Phrase.StatusDescrNotAuthenticated)}
         </p>
       </div>
     );
   } else if (!cloudStatus.authorized) {
-    status = 'Error';
     variant = 'error';
+    status = getLocalePhrase(language, Phrase.StatusTitleNotAuthorized);
 
     description = (
       <div className="flex flex-col gap-y-2">
-        <h2 className="text-sm font-semibold">Not Authorized</h2>
+        <h2 className="text-sm font-semibold">{status}</h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          Login succeeded but not authorized, check your guild permissions!
+          {getLocalePhrase(language, Phrase.StatusDescrNotAuthorized)}
         </p>
       </div>
     );
   } else {
-    status = 'Connected';
     variant = 'connected';
+    status = getLocalePhrase(language, Phrase.StatusTitleConnected);
 
     description = (
       <div className="flex flex-col gap-y-2">
-        <h2 className="text-sm font-semibold">Connected</h2>
+        <h2 className="text-sm font-semibold">{status}</h2>
         <Separator className="my-1" />
-        <p className="text-xs text-popover-foreground/60">You are connected!</p>
+        <p className="text-xs text-popover-foreground/60">
+          {getLocalePhrase(language, Phrase.StatusDescrConnected)}
+        </p>
       </div>
     );
   }
+
+  const renderSeparator = () => {
+    if (queuedDownloads > 0 && queuedUploads > 0)
+      return <Separator orientation="vertical" />;
+    return <></>;
+  };
+
+  const renderUploadIcon = () => {
+    if (queuedUploads < 1) return <></>;
+    return (
+      <>
+        <CloudUpload size={14} />
+        {uploadProgress.toFixed(0)}%
+        {queuedUploads > 1 && ` (+${queuedUploads - 1}) `}
+      </>
+    );
+  };
+
+  const renderDownloadIcon = () => {
+    if (queuedDownloads < 1) return <></>;
+    return (
+      <>
+        <CloudDownload size={14} /> {downloadProgress.toFixed(0)}%
+        {queuedDownloads > 1 && ` (+${queuedDownloads - 1}) `}
+      </>
+    );
+  };
 
   return (
     <HoverCard openDelay={300}>
@@ -124,49 +152,45 @@ const CloudStatus = ({ appState }: StatusProps) => {
           />
           <div className="ml-4 py-2 font-sans flex flex-col justify-around">
             <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
-              Pro
+              {getLocalePhrase(language, Phrase.StatusTitlePro)}
             </span>
 
-            <span className="text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground">
+            <span className="flex text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground">
               {status}
+              {renderDownloadIcon()}
+              {renderSeparator()}
+              {renderUploadIcon()}
+              {/* {isUpDowning && (
+                <div className="flex text-foreground-lighter font-bold text-[11px] drop-shadow-sm gap-x-1 items-center hover:text-foreground-lighter">
+                  {isUpDowning && (
+                    <>
+                      <>
+                        {queuedDownloads > 0 && (
+                          <>
+                            <CloudDownload size={14} />{' '}
+                            {downloadProgress.toFixed(0)}%
+                            {queuedDownloads > 1 &&
+                              ` (+${queuedDownloads - 1}) `}
+                          </>
+                        )}
+                      </>
+                      {queuedDownloads > 0 && queuedUploads > 0 && (
+                        <Separator orientation="vertical" />
+                      )}
+                      <>
+                        {queuedUploads > 0 && (
+                          <>
+                            <CloudUpload size={14} />
+                            {uploadProgress.toFixed(0)}%
+                            {queuedUploads > 1 && ` (+${queuedUploads - 1}) `}
+                          </>
+                        )}
+                      </>
+                    </>
+                  )}
+                </div>
+              )} */}
             </span>
-
-            {(isSaving || isUpDowning) && (
-              <div className="flex text-foreground-lighter font-bold text-[11px] drop-shadow-sm gap-x-1 items-center hover:text-foreground-lighter">
-                {isSaving && (
-                  <>
-                    <HardDriveDownload size={14} />
-                    {getLocalePhrase(appState.language, Phrase.Saving)}
-                    {isUpDowning && <Separator orientation="vertical" />}
-                  </>
-                )}
-                {isUpDowning && (
-                  <>
-                    <>
-                      {queuedDownloads > 0 && (
-                        <>
-                          <CloudDownload size={14} />{' '}
-                          {downloadProgress.toFixed(0)}%
-                          {queuedDownloads > 1 && ` (+${queuedDownloads - 1}) `}
-                        </>
-                      )}
-                    </>
-                    {queuedDownloads > 0 && queuedUploads > 0 && (
-                      <Separator orientation="vertical" />
-                    )}
-                    <>
-                      {queuedUploads > 0 && (
-                        <>
-                          <CloudUpload size={14} />
-                          {uploadProgress.toFixed(0)}%
-                          {queuedUploads > 1 && ` (+${queuedUploads - 1}) `}
-                        </>
-                      )}
-                    </>
-                  </>
-                )}
-              </div>
-            )}
           </div>
         </div>
         <HoverCardContent className="w-[260px] mx-4">
