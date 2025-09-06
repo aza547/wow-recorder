@@ -347,24 +347,23 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
 
 const loadCloudVideos = async () => {
   const videos = await CloudClient.getInstance().getVideos();
-  send('displayCloudVideos', videos);
+  send('setCloudVideos', videos);
 };
 
 const loadDiskVideos = async () => {
   const videos = await DiskClient.getInstance().getVideos();
-  send('displayDiskVideos', videos);
+  send('setDiskVideos', videos);
 };
 
-ipcMain.on('getVideoState', async () => {
-  loadCloudVideos();
-  loadDiskVideos();
-});
-
-ipcMain.on('refreshFrontend', async () => {
+const refreshFrontendStatus = () => {
   manager.refreshStatus();
   CloudClient.getInstance().refreshStatus();
   DiskClient.getInstance().refreshStatus();
-});
+};
+
+ipcMain.on('refreshCloudVideoState', loadCloudVideos);
+ipcMain.on('refreshDiskVideoState', loadDiskVideos);
+ipcMain.on('refreshFrontendStatus', refreshFrontendStatus);
 
 /**
  * Set/get global video player settings.

@@ -412,7 +412,7 @@ export default class Manager {
     }
 
     // We're done, now make sure we refresh the frontend.
-    send('refreshState');
+    send('refreshDiskState');
   }
 
   /**

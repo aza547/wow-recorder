@@ -4,7 +4,8 @@ import { AudioSourceType, SceneItem } from './types';
 
 export type Channels =
   | 'window'
-  | 'getVideoState'
+  | 'refreshDiskVideoState'
+  | 'refreshCloudVideoState'
   | 'videoButton'
   | 'logPath'
   | 'openURL'
@@ -21,7 +22,7 @@ export type Channels =
   | 'deleteVideos'
   | 'writeClipboard'
   | 'getShareableLink'
-  | 'refreshFrontend'
+  | 'refreshFrontendStatus'
   | 'doAppUpdate'
   | 'volmeter'
   | 'audioSettingsOpen'

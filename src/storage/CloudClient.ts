@@ -11,7 +11,7 @@ import {
 import path from 'path';
 import { z } from 'zod';
 import { Affiliation, TAffiliation } from 'types/api';
-import WebSocket from 'ws';
+import WebSocket, { RawData } from 'ws';
 import {
   cloudSignedMetadataToRendererVideo,
   convertKoreanVideoCategory,
@@ -22,6 +22,14 @@ import { getCloudConfig } from 'utils/configUtils';
 import { clipboard, ipcMain } from 'electron';
 import VideoProcessQueue from 'main/VideoProcessQueue';
 import { send } from 'main/main';
+
+const enum VideoMessages {
+  CREATE = 'vc',
+  DELETE = 'vd',
+  PROTECT = 'vp',
+  UNPROTECT = 'vu',
+  TAG = 'vt',
+}
 
 /**
  * A client for retrieving resources from the cloud.
@@ -115,7 +123,8 @@ export default class CloudClient extends StorageClient {
    * Production API: https://api.warcraftrecorder.com/api
    * Development API: https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api
    */
-  private static api = 'https://api.warcraftrecorder.com/api';
+  private static api =
+    'https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api';
 
   /**
    * The polling websocket endpoint. This is used to get real-time updates
@@ -124,7 +133,8 @@ export default class CloudClient extends StorageClient {
    *  Production API: wss://api.warcraftrecorder.com/poll
    *  Development API: wss://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/poll
    */
-  private static poll = 'wss://api.warcraftrecorder.com/poll';
+  private static poll =
+    'wss://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/poll';
 
   /**
    * The WCR website, used by the client to build shareable links.
@@ -154,56 +164,6 @@ export default class CloudClient extends StorageClient {
   private polling = false;
 
   /**
-   * If we have an open websocket, we want to keep it alive. This timer will
-   * send a ping to do that. The server is configured to return a pong in response.
-   *
-   * It will close after 5 minutes of no activity so we must send messages more
-   * frequently than this. Not sure this is a defined timeout, couldn't find it in
-   * the Cloudflare Websocket docs, but surely every minute is fine.
-   */
-  private heartbeatTimer = setInterval(() => {
-    if (!this.ws) {
-      // We're not connected.
-      return;
-    }
-
-    if (this.ws.readyState !== WebSocket.OPEN) {
-      // The socket isn't ready to send messages.
-      return;
-    }
-
-    try {
-      this.ws.ping();
-    } catch (error) {
-      console.warn('[CloudClient] Error sending websocket ping', String(error));
-    }
-  }, 60 * 1000);
-
-  /**
-   * Timer for reconnecting the WebSocket connection. We don't try to reconnect
-   * if the websocket is closed by the server. We just wait on this timer to fire.
-   */
-  private reconnectTimer = setInterval(() => {
-    if (this.ws) {
-      // We're already connected.
-      return;
-    }
-
-    if (!this.polling) {
-      // We've not been told to start polling yet.
-      return;
-    }
-
-    try {
-      this.connectPollingWebsocket();
-    } catch (error) {
-      // Not sure if this is really possible, but just being safe.
-      // I think errors instead come through the on('error') handler.
-      console.warn('[CloudClient] Error connecting websocket', String(error));
-    }
-  }, 10000);
-
-  /**
    * Constructor.
    */
   private constructor() {
@@ -211,6 +171,65 @@ export default class CloudClient extends StorageClient {
     super();
     this.setupListeners();
     this.configure();
+    this.startHeartbeatTimer();
+    this.startReconnectTimer();
+  }
+
+  /**
+   * If we have an open websocket, we want to keep it alive. This timer will
+   * send a ping to do that. The server is configured to return a pong in response.
+   *
+   * It will close after 5 minutes of no activity so we must send messages more
+   * frequently than this. Not sure this is a defined timeout, couldn't find it in
+   * the Cloudflare Websocket docs, but surely every minute is fine.
+   */
+  private startHeartbeatTimer() {
+    setInterval(() => {
+      if (!this.ws) {
+        // We're not connected.
+        return;
+      }
+
+      if (this.ws.readyState !== WebSocket.OPEN) {
+        // The socket isn't ready to send messages.
+        return;
+      }
+
+      try {
+        this.ws.ping();
+      } catch (error) {
+        console.warn(
+          '[CloudClient] Error sending websocket ping',
+          String(error),
+        );
+      }
+    }, 60 * 1000);
+  }
+
+  /**
+   * Timer for reconnecting the WebSocket connection. We don't try to reconnect
+   * if the websocket is closed by the server. We just wait on this timer to fire.
+   */
+  private startReconnectTimer() {
+    setInterval(() => {
+      if (this.ws) {
+        // We're already connected.
+        return;
+      }
+
+      if (!this.polling) {
+        // We've not been told to start polling yet.
+        return;
+      }
+
+      try {
+        this.connectPollingWebsocket();
+      } catch (error) {
+        // Not sure if this is really possible, but just being safe.
+        // I think errors instead come through the on('error') handler.
+        console.warn('[CloudClient] Error connecting websocket', String(error));
+      }
+    }, 10000);
   }
 
   /**
@@ -239,7 +258,7 @@ export default class CloudClient extends StorageClient {
 
     if (!this.ready()) {
       // Remove the cloud videos from the UI if we're not ready.
-      send('displayCloudVideos', []);
+      send('setCloudVideos', []);
     }
 
     send('updateCloudStatus', status);
@@ -475,7 +494,7 @@ export default class CloudClient extends StorageClient {
     this.startPolling();
 
     const videos = await this.getVideos();
-    send('displayCloudVideos', videos);
+    send('setCloudVideos', videos);
     this.refreshStatus();
   }
 
@@ -510,7 +529,6 @@ export default class CloudClient extends StorageClient {
     // Update the mtime to avoid multiple refreshes.
     this.bucketLastMod = Date.now();
     this.refreshStatus();
-    send('refreshState');
 
     console.info(
       '[CloudClient] Added',
@@ -710,14 +728,6 @@ export default class CloudClient extends StorageClient {
       this.ws.close();
       this.ws = null;
     }
-
-    if (this.reconnectTimer) {
-      clearInterval(this.reconnectTimer);
-    }
-
-    if (this.heartbeatTimer) {
-      clearInterval(this.heartbeatTimer);
-    }
   }
 
   /**
@@ -734,7 +744,8 @@ export default class CloudClient extends StorageClient {
 
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.poll}?guild=${guild}`;
-    this.ws = new WebSocket(url);
+    const headers = { Authorization: this.authHeader };
+    this.ws = new WebSocket(url, { headers });
 
     this.ws.on('open', () => {
       console.info('[CloudClient] WebSocket connection established');
@@ -745,37 +756,7 @@ export default class CloudClient extends StorageClient {
       this.checkForUpdate();
     });
 
-    this.ws.on('message', (data) => {
-      const msg = data.toString();
-
-      if (!msg.includes(':')) {
-        // Any message we need to take action on has a colon in it.
-        // This is a ping/pong or something else we don't care about.
-        return;
-      }
-
-      // Messages beyond this point are of the form key:value. For now,
-      // we only have mtime messages, but this is a good pattern to follow
-      // for extensibility.
-      console.info('[CloudClient] Received WebSocket message:', msg);
-      const [key, value] = msg.split(':');
-
-      if (key === 'mtime') {
-        const mtime = parseInt(value, 10);
-
-        if (mtime > this.bucketLastMod) {
-          console.info(
-            '[CloudClient] Cloud data changed:',
-            mtime,
-            this.bucketLastMod,
-          );
-
-          this.refreshStatus();
-          send('refreshState');
-          this.bucketLastMod = mtime;
-        }
-      }
-    });
+    this.ws.on('message', (data) => this.handleWebsocketMessage(data));
 
     this.ws.on('error', (error) => {
       console.warn('[CloudClient] WebSocket error:', error);
@@ -1252,5 +1233,76 @@ export default class CloudClient extends StorageClient {
         VideoProcessQueue.getInstance().queueUpload(item);
       }
     });
+  }
+
+  /**
+   * Handle a websocket message, typically a notification of a change to the
+   * guild video store.
+   */
+  private handleWebsocketMessage(data: RawData) {
+    const msg = data.toString();
+    const index = msg.indexOf(':');
+
+    if (index === -1) {
+      // Any message we need to take action on has a colon in it.
+      // This is a ping/pong or something else we don't care about.
+      return;
+    }
+
+    // Messages beyond this point are of the form key:value.
+    console.info('[CloudClient] Received WebSocket message:', msg);
+    const key = msg.slice(0, index);
+    const value = msg.slice(index + 1);
+
+    if (key === VideoMessages.CREATE) {
+      console.info('[CloudClient] Adding or modifying cloud video');
+      const video = JSON.parse(value);
+      const rv = cloudSignedMetadataToRendererVideo(video);
+      send('displayAddCloudVideo', rv);
+      return;
+    }
+
+    if (key === VideoMessages.DELETE) {
+      console.info('[CloudClient] Removing cloud video');
+      send('displayRemoveCloudVideo', value);
+      return;
+    }
+
+    if (key === VideoMessages.PROTECT) {
+      console.info('[CloudClient] Protecting cloud video');
+      send('displayProtectCloudVideo', value);
+      return;
+    }
+
+    if (key === VideoMessages.UNPROTECT) {
+      console.info('[CloudClient] Unprotecting cloud video');
+      send('displayUnprotectCloudVideo', value);
+      return;
+    }
+
+    if (key === VideoMessages.TAG) {
+      // Special case as we need to get the tag value as well. Encoding
+      // the videoName with URL encoding in-case it has a colon in it, feels
+      // like something Blizzard might do. Format is vt:URLEncodedvideoName:tag
+      const tagIndex = value.indexOf(':');
+
+      if (tagIndex === -1) {
+        console.warn('[CloudClient] Invalid tag message', msg);
+        return;
+      }
+
+      const encodedVideoName = value.slice(0, tagIndex);
+      const videoName = decodeURIComponent(encodedVideoName);
+      const tag = value.slice(tagIndex + 1);
+
+      console.info('[CloudClient] Tagging cloud video', videoName, tag);
+      send('displayTagCloudVideo', videoName, tag);
+
+      return;
+    }
+
+    // Might be mtime (legacy refresh mechanism) or something else
+    // we don't care about.
+    console.info('[CloudClient] No action on this message');
   }
 }

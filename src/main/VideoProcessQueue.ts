@@ -402,7 +402,7 @@ export default class VideoProcessQueue {
   private finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished processing video', item.source);
     send('updateSaveStatus', SaveStatus.NotSaving);
-    send('refreshState');
+    send('refreshDiskState');
   }
 
   /**
@@ -413,7 +413,6 @@ export default class VideoProcessQueue {
     const queued = Math.max(0, this.inProgressUploads.length);
     send('updateUploadProgress', 0);
     send('updateUploadQueueLength', queued);
-    send('refreshState');
   }
 
   /**
@@ -421,7 +420,6 @@ export default class VideoProcessQueue {
    */
   private finishUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Finished uploading video', item.path);
-    send('refreshState');
 
     this.inProgressUploads = this.inProgressUploads.filter(
       (p) => p !== item.path,
@@ -429,7 +427,6 @@ export default class VideoProcessQueue {
 
     const queued = Math.max(0, this.inProgressUploads.length);
     send('updateUploadQueueLength', queued);
-    send('refreshState');
   }
 
   /**
@@ -441,7 +438,6 @@ export default class VideoProcessQueue {
     const queued = Math.max(0, this.inProgressDownloads.length);
     send('updateDownloadProgress', 0);
     send('updateDownloadQueueLength', queued);
-    send('refreshState');
   }
 
   /**
@@ -456,7 +452,7 @@ export default class VideoProcessQueue {
     );
 
     const queued = Math.max(0, this.inProgressDownloads.length);
-    send('refreshState');
+    send('refreshDiskState');
     send('updateDownloadQueueLength', queued);
   }
 

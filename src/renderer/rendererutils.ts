@@ -1103,6 +1103,11 @@ const getKeyPressEventString = (
   return keys.join('+');
 };
 
+const videoMatch = (a: RendererVideo, b: RendererVideo) =>
+  a.videoName === b.videoName && a.cloud === b.cloud;
+
+const videoMatchName = (a: RendererVideo, name: string) => a.videoName === name;
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1163,4 +1168,6 @@ export {
   getVideoStorageFilter,
   fetchAudioSourceChoices,
   getKeyPressEventString,
+  videoMatch,
+  videoMatchName,
 };

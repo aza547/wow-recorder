@@ -78,7 +78,7 @@ export default class DiskSizeMonitor {
     );
 
     if (filesForDeletion.length > 0) {
-      send('refreshState');
+      send('refreshDiskState');
     }
   }
 
