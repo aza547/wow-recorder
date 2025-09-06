@@ -872,12 +872,24 @@ const takeOwnershipBufferDir = async (dir: string) => {
 
 /**
  * Asynchronously moves a file. Maybe moving a file across storage devices
- * so time it for debug sake.
+ * so time it for debug sake. Rename doesn't handle cross devices moves so
+ * fall back to copy and delete in that case.
  */
 const mv = async (src: string, dst: string) => {
   console.info('[Util] Moving file from:', src, 'to:', dst);
   console.time('[Util] Moving video file took');
-  await fs.promises.rename(src, dst);
+
+  try {
+    await fs.promises.rename(src, dst);
+  } catch (err: any) {
+    if (err && err.code === 'EXDEV') {
+      await fs.promises.copyFile(src, dst);
+      await fs.promises.unlink(src);
+    } else {
+      throw err;
+    }
+  }
+
   console.timeEnd('[Util] Moving video file took');
 };
 

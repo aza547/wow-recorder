@@ -595,6 +595,11 @@ export default class Manager {
         return;
       }
 
+      if (this.recorder.obsState !== ERecordingState.Recording) {
+        console.warn('[Manager] Recorder not ready when manual hotkey pressed');
+        return;
+      }
+
       LogHandler.handleManualRecordingHotKey();
     });
 

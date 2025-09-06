@@ -417,6 +417,7 @@ const RecorderPreview = (props: {
           outline: '2px solid #bb4420',
           outlineOffset: '-4px', // Slight offset to save it showing up on the edges.
           zIndex: ++zIndex,
+          cursor: 'move',
         }}
       >
         <div className="flex w-full h-full items-center justify-center bg-black text-lg text-foreground-lighter">
@@ -432,6 +433,7 @@ const RecorderPreview = (props: {
             height: cornerSize,
             backgroundColor: '#bb4420',
             zIndex,
+            cursor: 'se-resize',
           }}
         />
       </Box>

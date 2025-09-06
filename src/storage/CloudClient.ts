@@ -123,8 +123,7 @@ export default class CloudClient extends StorageClient {
    * Production API: https://api.warcraftrecorder.com/api
    * Development API: https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api
    */
-  private static api =
-    'https://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/api';
+  private static api = 'https://api.warcraftrecorder.com/api';
 
   /**
    * The polling websocket endpoint. This is used to get real-time updates
@@ -133,8 +132,7 @@ export default class CloudClient extends StorageClient {
    *  Production API: wss://api.warcraftrecorder.com/poll
    *  Development API: wss://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/poll
    */
-  private static poll =
-    'wss://warcraft-recorder-api-dev.alex-kershaw4.workers.dev/poll';
+  private static poll = 'wss://api.warcraftrecorder.com/poll';
 
   /**
    * The WCR website, used by the client to build shareable links.
@@ -1255,7 +1253,7 @@ export default class CloudClient extends StorageClient {
     const value = msg.slice(index + 1);
 
     if (key === VideoMessages.CREATE) {
-      console.info('[CloudClient] Adding or modifying cloud video');
+      console.info('[CloudClient] Adding cloud video');
       const video = JSON.parse(value);
       const rv = cloudSignedMetadataToRendererVideo(video);
       send('displayAddCloudVideo', rv);

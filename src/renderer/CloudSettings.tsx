@@ -452,7 +452,7 @@ const CloudSettings = (props: IProps) => {
     setConfig((prevState) => {
       return {
         ...prevState,
-        cloudAccountName: event.target.value,
+        cloudAccountName: event.target.value.toLowerCase(),
       };
     });
   };
