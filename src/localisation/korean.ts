@@ -426,6 +426,33 @@ const KOREAN: Translations = {
   [Phrase.UploadCurrentRaidsOnlyDescription]: "현재 시즌의 레이드 전투만 업로드합니다. 이는 본섭 레이드 전투에만 적용됩니다.",
   [Phrase.MustNotBeEmpty]: "비워둘 수 없습니다",
   [Phrase.PushToTalkReleaseDelayLabel]: "종료 지연",
+
+  [Phrase.ForceSdrLabel]: "강제 SDR",
+  [Phrase.ForceSdrDescription]: "HDR 대신 SDR로 비디오를 렌더링하도록 강제합니다.",
+  [Phrase.VideoSourceScaleDescription]: "비디오 소스의 크기.",
+  [Phrase.VideoSourceXPositionDescription]: "비디오 소스의 X 위치.",
+  [Phrase.VideoSourceYPositionDescription]: "비디오 소스의 Y 위치.",
+  [Phrase.VideoCategoryManualLabel]: '수동',
+  [Phrase.ManualRecordSettingsLabel]: '수동 설정',
+  [Phrase.ManualRecordSwitchLabel]: '수동녹화',
+  [Phrase.ManualRecordHotKeyLabel]: '시작/중지 단축키',
+  [Phrase.ManualRecordUploadLabel]: '수동 녹화 업로드',
+  [Phrase.ManualRecordDescription]: '사용자가 필요에 따라 시작 및 중지하여 전투 기록에 기록되지 않은 내용을 기록할 수 있는 수동 기록 기능을 제공합니다..',
+  [Phrase.ManualRecordHotKeyDescription]: '수동으로 녹음을 시작 및 중지하기 위한 단축키를 설정합니다.',
+  [Phrase.ManualRecordUploadDescription]: '수동으로 시작된 녹음을 자동으로 클라우드에 업로드합니다.',
+  [Phrase.ManualRecordSoundAlertLabel]: '소리 경고',
+  [Phrase.ManualRecordSoundAlertDescription]: '수동 녹화가 시작되거나 중지될 때 경고음을 재생합니다.',
+  [Phrase.StatusTitleRec]: '기록계',
+  [Phrase.StatusTitlePro]: '찬성',
+  [Phrase.StatusTitleConnected]: '연결됨',
+  [Phrase.StatusDescrConnected]: '길드 연결이 설정되었습니다. Pro 기능이 활성화되었습니다.',
+  [Phrase.StatusTitleDisconnected]: '연결이 끊김',
+  [Phrase.StatusDescrDisconnected]: 'Pro 기능을 사용하려면 길드 구독을 구매하거나 기존 길드에 가입하고 Pro 설정 페이지에서 로그인 세부 정보를 구성하세요.',
+  [Phrase.StatusTitleNotAuthenticated]: '인증되지 않음',
+  [Phrase.StatusDescrNotAuthenticated]: '로그인에 실패했습니다. 자격 증명이 유효한지 확인하세요.',
+  [Phrase.StatusTitleNotAuthorized]: '승인되지 않음',
+  [Phrase.StatusDescrNotAuthorized]: '로그인에 성공했지만 선택한 길드에 접근할 권한이 없습니다.',
+
 };
 
 export default KOREAN;

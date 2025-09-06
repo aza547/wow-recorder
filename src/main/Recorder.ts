@@ -322,6 +322,7 @@ export default class Recorder extends EventEmitter {
       );
       const settings = noobs.GetSourceSettings(id);
       settings['window'] = value;
+      settings['priority'] = 2; // Executable matching
       noobs.SetSourceSettings(id, settings);
     });
 
@@ -666,6 +667,7 @@ export default class Recorder extends EventEmitter {
 
       if (src.type === AudioSourceType.PROCESS && src.device) {
         settings['window'] = src.device;
+        settings['priority'] = 2; // Executable matching
         noobs.SetSourceSettings(name, settings);
       } else {
         settings['device_id'] = src.device ? src.device : '';

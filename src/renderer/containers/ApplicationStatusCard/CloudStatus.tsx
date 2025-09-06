@@ -22,11 +22,11 @@ type StatusProps = {
 const CloudStatus = ({ appState }: StatusProps) => {
   const { cloudStatus, language } = appState;
 
-  const [uploadProgress, setUploadProgress] = useState(50);
-  const [downloadProgress, setDownloadProgress] = useState(50);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
-  const [queuedUploads, setQueuedUploads] = useState(1);
-  const [queuedDownloads, setQueuedDownloads] = useState(1);
+  const [queuedUploads, setQueuedUploads] = useState(0);
+  const [queuedDownloads, setQueuedDownloads] = useState(0);
 
   useEffect(() => {
     ipc.on('updateUploadProgress', (progress) => {
@@ -53,7 +53,6 @@ const CloudStatus = ({ appState }: StatusProps) => {
     };
   }, []);
 
-  const isUpDowning = queuedUploads > 0 || queuedDownloads > 0;
   const statusLightsClasses = 'w-1.5 h-full rounded-l-md rounded-r-none';
 
   let status: string;
@@ -114,30 +113,25 @@ const CloudStatus = ({ appState }: StatusProps) => {
     );
   }
 
-  const renderSeparator = () => {
-    if (queuedDownloads > 0 && queuedUploads > 0)
-      return <Separator orientation="vertical" />;
-    return <></>;
-  };
-
   const renderUploadIcon = () => {
     if (queuedUploads < 1) return <></>;
     return (
-      <>
-        <CloudUpload size={14} />
+      <div className="flex items-center text-xs text-foreground-lighter gap-x-[2px]">
+        <CloudUpload size={16} />
         {uploadProgress.toFixed(0)}%
         {queuedUploads > 1 && ` (+${queuedUploads - 1}) `}
-      </>
+      </div>
     );
   };
 
   const renderDownloadIcon = () => {
     if (queuedDownloads < 1) return <></>;
     return (
-      <>
-        <CloudDownload size={14} /> {downloadProgress.toFixed(0)}%
+      <div className="flex items-center text-xs text-foreground-lighter gap-x-[2px]">
+        <CloudDownload size={16} />
+        {downloadProgress.toFixed(0)}%
         {queuedDownloads > 1 && ` (+${queuedDownloads - 1}) `}
-      </>
+      </div>
     );
   };
 
@@ -150,47 +144,18 @@ const CloudStatus = ({ appState }: StatusProps) => {
             foregroundClasses={`border-none ${statusLightsClasses}`}
             variant={variant}
           />
-          <div className="ml-4 py-2 font-sans flex flex-col justify-around">
+          <div className="ml-4 mr-1 py-2 font-sans flex flex-col justify-around">
             <span className="text-foreground-lighter font-bold text-xs drop-shadow-sm opacity-60 hover:text-foreground-lighter">
               {getLocalePhrase(language, Phrase.StatusTitlePro)}
             </span>
 
-            <span className="flex text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground">
+            <span className="text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground">
               {status}
-              {renderDownloadIcon()}
-              {renderSeparator()}
-              {renderUploadIcon()}
-              {/* {isUpDowning && (
-                <div className="flex text-foreground-lighter font-bold text-[11px] drop-shadow-sm gap-x-1 items-center hover:text-foreground-lighter">
-                  {isUpDowning && (
-                    <>
-                      <>
-                        {queuedDownloads > 0 && (
-                          <>
-                            <CloudDownload size={14} />{' '}
-                            {downloadProgress.toFixed(0)}%
-                            {queuedDownloads > 1 &&
-                              ` (+${queuedDownloads - 1}) `}
-                          </>
-                        )}
-                      </>
-                      {queuedDownloads > 0 && queuedUploads > 0 && (
-                        <Separator orientation="vertical" />
-                      )}
-                      <>
-                        {queuedUploads > 0 && (
-                          <>
-                            <CloudUpload size={14} />
-                            {uploadProgress.toFixed(0)}%
-                            {queuedUploads > 1 && ` (+${queuedUploads - 1}) `}
-                          </>
-                        )}
-                      </>
-                    </>
-                  )}
-                </div>
-              )} */}
             </span>
+          </div>
+          <div className="flex flex-col w-full mt-1 mr-6 items-center justify-center text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground">
+            {renderDownloadIcon()}
+            {renderUploadIcon()}
           </div>
         </div>
         <HoverCardContent className="w-[260px] mx-4">

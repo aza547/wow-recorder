@@ -261,8 +261,6 @@ export default class CloudClient extends StorageClient {
     const url = `${CloudClient.api}/guild/${guild}/video`;
     const headers = { Authorization: this.authHeader };
 
-    const mtimePromise = this.getMtime();
-
     const statePromise = axios.get(url, {
       headers,
       validateStatus: (s) => this.validateResponseStatus(s),
@@ -275,10 +273,6 @@ export default class CloudClient extends StorageClient {
       response.data.length,
       'videos',
     );
-
-    // Update mtime to avoid unnecessary refreshes.
-    const mtime = await mtimePromise;
-    this.bucketLastMod = mtime;
 
     const data = [...response.data];
     data.forEach(convertKoreanVideoCategory);
@@ -1194,6 +1188,7 @@ export default class CloudClient extends StorageClient {
       this.write = false;
       this.del = false;
       this.stopPolling();
+      this.refreshStatus();
     }
 
     return status >= 200 && status < 300;
