@@ -31,6 +31,7 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
+import { ESupportedEncoders } from './obsEnums';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -170,17 +171,24 @@ const createWindow = async () => {
   // We need to do this AFTER creating the window as it's used by the preview.
   Recorder.getInstance().initializeObs();
 
-  // If this is first time setup, auto-pick an encoder for the user. Don't bother
-  // to signal to the frontend here, they would have to be very fast to have opened
-  // the settings already.
-  const firstTimeSetup = cfg.get<boolean>('firstTimeSetup');
+  // If this is first time setup, auto-pick an encoder for the user. Only do it
+  // if the current value is the software encoder, as this is new in 7.0.0, all
+  // users would be subject to it. This way, only the few people who really do
+  // prefer the software encoder will be inconvenienced.
+  const firstTimeSetup =
+    cfg.get<boolean>('firstTimeSetup') &&
+    cfg.get<string>('obsRecEncoder') === ESupportedEncoders.OBS_X264;
 
   if (firstTimeSetup) {
+    // Don't bother to signal to the frontend here, they would have to be
+    // very fast to have opened the settings already.
     console.info('[Main] First time setup, picking default encoder');
     const encoder = Recorder.getInstance().getSensibleEncoderDefault();
     cfg.set('obsRecEncoder', encoder);
-    cfg.set('firstTimeSetup', false);
   }
+
+  // Ensure we don't hit the above branch again.
+  cfg.set('firstTimeSetup', false);
 
   window.on('ready-to-show', async () => {
     if (!window) {
@@ -397,7 +405,6 @@ ipcMain.on('refreshFrontendStatus', refreshFrontendStatus);
 ipcMain.on('refreshDiskStatus', refreshDiskStatus);
 ipcMain.on('refreshCloudStatus', refreshCloudStatus);
 ipcMain.on('refreshCloudGuilds', refreshCloudGuilds);
-
 
 /**
  * Set/get global video player settings.
