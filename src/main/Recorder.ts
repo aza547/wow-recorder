@@ -373,6 +373,10 @@ export default class Recorder extends EventEmitter {
 
       return obsEncoders;
     });
+
+    ipcMain.handle('getSensibleEncoderDefault', (): string => {
+      return this.getSensibleEncoderDefault();
+    });
   }
 
   /**
@@ -1568,5 +1572,30 @@ export default class Recorder extends EventEmitter {
       this.cfg.set('videoSourceYPosition', y);
       this.cfg.set('videoSourceScale', scale);
     }
+  }
+
+  /**
+   * Choose a sensible default encoder from those available. Doesn't choose AV1
+   * variants, those are considered advanced and not a sensible default. They
+   * need hardware rendering of the app to be enabled.
+   */
+  public getSensibleEncoderDefault() {
+    const encoders = this.getAvailableEncoders();
+
+    if (encoders.includes(ESupportedEncoders.NVENC_H264)) {
+      return ESupportedEncoders.NVENC_H264;
+    }
+
+    if (encoders.includes(ESupportedEncoders.QSV_H264)) {
+      return ESupportedEncoders.QSV_H264;
+    }
+
+    if (encoders.includes(ESupportedEncoders.AMD_H264)) {
+      // Deliberatly after other hardware encoders as sometimes the
+      // AMD iGPU can provide this and it's not usable.
+      return ESupportedEncoders.AMD_H264;
+    }
+
+    return ESupportedEncoders.OBS_X264;
   }
 }

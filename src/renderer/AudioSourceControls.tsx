@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
 import {
   AppWindow,
-  AudioWaveform,
+  AudioLines,
   Info,
   MicVocal,
   PlusIcon,
@@ -591,7 +591,7 @@ const AudioSourceControls = (props: IProps) => {
               value={100 * magnitude}
             />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <AudioWaveform className="text-foreground-lighter" size={18} />
+              <AudioLines className="text-foreground-lighter" size={18} />
             </div>
           </div>
         </td>

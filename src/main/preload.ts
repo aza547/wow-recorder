@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 import { AudioSourceType, SceneItem } from './types';
+import { getSensibleEncoderDefault } from './util';
 
 export type Channels =
   | 'window'
@@ -47,7 +48,8 @@ export type Channels =
   | 'reconfigureBase'
   | 'reconfigureVideo'
   | 'reconfigureOverlay'
-  | 'reconfigureCloud';
+  | 'reconfigureCloud'
+  | 'getSensibleEncoderDefault';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -178,6 +180,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     reconfigureCloud() {
       ipcRenderer.send('reconfigureCloud');
+    },
+
+    getSensibleEncoderDefault(): Promise<string> {
+      return ipcRenderer.invoke('getSensibleEncoderDefault');
     },
   },
 });

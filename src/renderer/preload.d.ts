@@ -59,6 +59,8 @@ declare global {
         reconfigureVideo(): void;
         reconfigureOverlay(): void;
         reconfigureCloud(): void;
+
+        getSensibleEncoderDefault(): Promise<string>;
       };
     };
   }

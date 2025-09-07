@@ -448,6 +448,8 @@ enum Phrase {
   StatusDescrNotAuthenticated,
   StatusTitleNotAuthorized,
   StatusDescrNotAuthorized,
+  FirstTimeSetupDescription,
+  AutoSelectEncoderTooltip,
 }
 
 enum Language {

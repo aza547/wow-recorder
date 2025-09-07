@@ -451,6 +451,8 @@ const ENGLISH: Translations = {
   [Phrase.StatusDescrNotAuthenticated]: 'Login failed, please check your credentials are valid.',
   [Phrase.StatusTitleNotAuthorized]: 'Not Authorized',
   [Phrase.StatusDescrNotAuthorized]: 'Your login succeeded but you are not authorized to access the selected guild.',
+  [Phrase.FirstTimeSetupDescription]: 'This is the first time the user has launched the application.',
+  [Phrase.AutoSelectEncoderTooltip]: 'Automatically select a sensible encoder from those available. A good option for most users.',
 };
 
 export default ENGLISH;

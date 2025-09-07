@@ -170,6 +170,18 @@ const createWindow = async () => {
   // We need to do this AFTER creating the window as it's used by the preview.
   Recorder.getInstance().initializeObs();
 
+  // If this is first time setup, auto-pick an encoder for the user. Don't bother
+  // to signal to the frontend here, they would have to be very fast to have opened
+  // the settings already.
+  const firstTimeSetup = cfg.get<boolean>('firstTimeSetup');
+
+  if (firstTimeSetup) {
+    console.info('[Main] First time setup, picking default encoder');
+    const encoder = Recorder.getInstance().getSensibleEncoderDefault();
+    cfg.set('obsRecEncoder', encoder);
+    cfg.set('firstTimeSetup', false);
+  }
+
   window.on('ready-to-show', async () => {
     if (!window) {
       throw new Error('window is not defined');

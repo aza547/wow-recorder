@@ -3,7 +3,7 @@ import { AppState, Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
 import { configSchema } from 'config/configSchema';
 import { ESupportedEncoders, QualityPresets } from 'main/obsEnums';
-import { Info } from 'lucide-react';
+import { Info, Wand } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
@@ -27,6 +27,7 @@ import {
 } from './components/Select/Select';
 import TextBanner from './components/TextBanner/TextBanner';
 import { Phrase } from 'localisation/phrases';
+import { Button } from './components/Button/Button';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -301,6 +302,16 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
     });
   };
 
+  const autoSelectEncoder = async () => {
+    const encoder = await ipc.getSensibleEncoderDefault();
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        obsRecEncoder: encoder,
+      };
+    });
+  };
+
   const getEncoderSelect = () => {
     if (isComponentDisabled()) {
       return <></>;
@@ -320,22 +331,35 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
-        <Select
-          value={config.obsRecEncoder}
-          onValueChange={setEncoder}
-          disabled={isComponentDisabled()}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select encoder" />
-          </SelectTrigger>
-          <SelectContent>
-            {encoders.map((encoder) => (
-              <SelectItem key={encoder.name} value={encoder.value}>
-                {mapEncoderToString(encoder, appState.language)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-row gap-x-2">
+          <Select
+            value={config.obsRecEncoder}
+            onValueChange={setEncoder}
+            disabled={isComponentDisabled()}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select encoder" />
+            </SelectTrigger>
+            <SelectContent>
+              {encoders.map((encoder) => (
+                <SelectItem key={encoder.name} value={encoder.value}>
+                  {mapEncoderToString(encoder, appState.language)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              Phrase.AutoSelectEncoderTooltip,
+            )}
+            side="right"
+          >
+            <Button variant="ghost" onClick={autoSelectEncoder}>
+              <Wand />
+            </Button>
+          </Tooltip>
+        </div>
       </div>
     );
   };

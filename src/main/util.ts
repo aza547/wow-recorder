@@ -24,6 +24,8 @@ import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
 import { AxiosError } from 'axios';
 import { send } from './main';
+import Recorder from './Recorder';
+import { ESupportedEncoders } from './obsEnums';
 
 /**
  * When packaged, we need to fix some paths

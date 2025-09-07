@@ -111,6 +111,7 @@ export const getSettings = (): ConfigurationSchema => {
     manualRecordHotKeyModifiers: getConfigValue<string>('manualRecordHotKeyModifiers'),
     manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
     manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
+    firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     /* eslint-enable prettier/prettier */
   };
 

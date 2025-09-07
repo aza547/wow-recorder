@@ -93,6 +93,7 @@ export type ConfigurationSchema = {
   manualRecordHotKeyModifiers: string;
   manualRecordSoundAlert: boolean;
   manualRecordUpload: boolean;
+  firstTimeSetup: boolean;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -580,6 +581,11 @@ export const configSchema = {
   },
   manualRecordUpload: {
     description: Phrase.ManualRecordUploadDescription,
+    type: 'boolean',
+    default: true,
+  },
+  firstTimeSetup: {
+    description: Phrase.FirstTimeSetupDescription,
     type: 'boolean',
     default: true,
   },

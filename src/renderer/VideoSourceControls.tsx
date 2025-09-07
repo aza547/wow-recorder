@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'config/configSchema';
 import { Info } from 'lucide-react';
