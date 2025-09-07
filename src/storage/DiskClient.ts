@@ -20,7 +20,7 @@ import { send } from 'main/main';
 /**
  * A client for retrieving resources from the cloud.
  */
-export default class DiskClient extends StorageClient {
+export default class DiskClient implements StorageClient {
   /**
    * Singleton instance.
    */
@@ -35,7 +35,6 @@ export default class DiskClient extends StorageClient {
   }
 
   private constructor() {
-    super();
     this.setupListeners();
   }
 

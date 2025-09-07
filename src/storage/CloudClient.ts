@@ -34,7 +34,7 @@ const enum VideoMessages {
 /**
  * A client for retrieving resources from the cloud.
  */
-export default class CloudClient extends StorageClient {
+export default class CloudClient implements StorageClient {
   /**
    * Singleton instance.
    */
@@ -166,7 +166,6 @@ export default class CloudClient extends StorageClient {
    */
   private constructor() {
     console.info('[CloudClient] Creating cloud client');
-    super();
     this.setupListeners();
     this.configure();
     this.startHeartbeatTimer();

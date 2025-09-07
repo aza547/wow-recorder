@@ -19,9 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Volume can now be configured on a per-source basis.
 - Add AV1 support for AMD: there has been no testing of this, please share your experience in Discord!
 - Add support for QSV encoding: there has been no testing of this, please share your experience in Discord!
+- Add a button to refresh the list of guilds on demand.
+- On first time setup, automatically set the default the encoder to a sensible default (i.e. pick a hardware encoder).
+- Add a button to set the encoder to a sensible default (same as above, but on demand rather than on first time install).
 
 ### Fixed
 - Fix HOA timer.
+- Hide the scene preview while select menus are open, so they do not overlap.
 
 ## [6.15.6] - 2025-08-28
 ### Fixed
