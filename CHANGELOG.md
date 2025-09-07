@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Fix HOA timer.
 
 ## [6.15.6] - 2025-08-28
 ### Fixed
