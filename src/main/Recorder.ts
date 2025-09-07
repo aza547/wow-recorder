@@ -46,7 +46,6 @@ import {
   getObsVideoConfig,
   getOverlayConfig,
 } from '../utils/configUtils';
-
 import noobs, {
   ObsData,
   SceneItemPosition,
@@ -170,7 +169,7 @@ export default class Recorder extends EventEmitter {
    * Action queue, used to ensure we do not make concurrent stop/start
    * requests to OBS. That's complication we can do without.
    */
-  private queue = new AsyncQueue(100);
+  private queue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
   /**
    * The last file output by OBS.

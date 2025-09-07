@@ -179,19 +179,27 @@ const RecorderPreview = (props: {
     setPreviewInfo(display);
 
     if (config.chatOverlayEnabled) {
-      const chat = await ipc.getSourcePosition(SceneItem.OVERLAY);
-      setOverlayBoxDimensions(chat);
+      const pos = await ipc.getSourcePosition(SceneItem.OVERLAY);
+      setOverlayBoxDimensions(pos);
     }
 
-    const game = await ipc.getSourcePosition(SceneItem.GAME);
-    setGameBoxDimensions(game);
+    const pos = await ipc.getSourcePosition(SceneItem.GAME);
+    setGameBoxDimensions(pos);
   };
 
   const configurePreview = async () => {
+    const zoomFactor = window.devicePixelRatio; // Windows display scaling.
+
     if (previewDivRef.current) {
       const { width, height, x, y } =
         previewDivRef.current.getBoundingClientRect();
-      ipc.configurePreview(x, y, width, height);
+
+      ipc.configurePreview(
+        x * zoomFactor,
+        y * zoomFactor,
+        width * zoomFactor,
+        height * zoomFactor,
+      );
     }
   };
 
@@ -204,12 +212,14 @@ const RecorderPreview = (props: {
   }, [configureDraggableBoxes]);
 
   const onSourceMove = (event: MouseEvent, src: SceneItem) => {
+    const zoomFactor = window.devicePixelRatio;
+
     if (src === SceneItem.OVERLAY) {
       setOverlayBoxDimensions((prev) => {
         const updated = {
           ...prev,
-          x: prev.x + event.movementX,
-          y: prev.y + event.movementY,
+          x: prev.x + event.movementX * zoomFactor,
+          y: prev.y + event.movementY * zoomFactor,
         };
 
         const snapped = { ...updated };
@@ -233,8 +243,8 @@ const RecorderPreview = (props: {
       setGameBoxDimensions((prev) => {
         const updated = {
           ...prev,
-          x: prev.x + event.movementX,
-          y: prev.y + event.movementY,
+          x: prev.x + event.movementX * zoomFactor,
+          y: prev.y + event.movementY * zoomFactor,
         };
 
         const snapped = { ...updated };
@@ -258,10 +268,12 @@ const RecorderPreview = (props: {
   };
 
   const onSourceScale = (event: MouseEvent, src: SceneItem) => {
+    const zoomFactor = window.devicePixelRatio;
+
     if (src === SceneItem.OVERLAY) {
       setOverlayBoxDimensions((prev) => {
         const aspectRatio = prev.width / prev.height;
-        let newWidth = prev.width + event.movementX;
+        let newWidth = prev.width + event.movementX * zoomFactor;
         newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
         const newHeight = newWidth / aspectRatio;
 
@@ -277,7 +289,7 @@ const RecorderPreview = (props: {
     } else {
       setGameBoxDimensions((prev) => {
         const aspectRatio = prev.width / prev.height;
-        let newWidth = prev.width + event.movementX;
+        let newWidth = prev.width + event.movementX * zoomFactor;
         newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
         const newHeight = newWidth / aspectRatio;
 
@@ -378,15 +390,11 @@ const RecorderPreview = (props: {
     const text = src === SceneItem.OVERLAY ? 'Chat Overlay' : 'Game Window';
 
     const position: {
-      left?: number;
-      right?: number;
-      top?: number;
-      bottom?: number;
+      left: number;
+      top: number;
     } = {
-      left: undefined,
-      right: undefined,
-      top: undefined,
-      bottom: undefined,
+      left: 0,
+      top: 0,
     };
 
     if (snap.x === Snap.LEFT) {
@@ -405,6 +413,11 @@ const RecorderPreview = (props: {
       position.top = y + yCorr;
     }
 
+    // Handle windows display scaling.
+    const zoomFactor = window.devicePixelRatio;
+    position.left = position.left / zoomFactor;
+    position.top = position.top / zoomFactor;
+
     return (
       <Box
         id={src === SceneItem.OVERLAY ? 'overlay-box' : 'game-box'}
@@ -412,8 +425,8 @@ const RecorderPreview = (props: {
         sx={{
           position: 'absolute',
           ...position,
-          height,
-          width,
+          height: height / zoomFactor,
+          width: width / zoomFactor,
           outline: '2px solid #bb4420',
           outlineOffset: '-4px', // Slight offset to save it showing up on the edges.
           zIndex: ++zIndex,
