@@ -145,7 +145,7 @@ const WarcraftRecorder = () => {
   };
 
   const refreshDiskState = async () => {
-    ipc.sendMessage('refreshFrontendStatus', []);
+    ipc.sendMessage('refreshDiskStatus', []);
     ipc.sendMessage('refreshDiskVideoState', []);
   };
 

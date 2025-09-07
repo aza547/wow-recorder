@@ -238,6 +238,27 @@ export default class CloudClient extends StorageClient {
   }
 
   /**
+   * Get this list of guild affiliations for the user.
+   */
+  public async fetchAffiliations() {
+    let success = false;
+
+    try {
+      this.affiliations = await this.getUserAffiliations();
+      success = true;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const msg = '[CloudClient] Failed to get user affiliations';
+        logAxiosError(msg, error);
+      } else {
+        console.error('[CloudClient] Unexpected error', error);
+      }
+    }
+
+    return success;
+  }
+
+  /**
    * Handle changes to the cloud status, does not refresh the videos.
    */
   public async refreshStatus() {
@@ -428,16 +449,10 @@ export default class CloudClient extends StorageClient {
     this.pass = config.cloudAccountPassword;
     this.authHeader = CloudClient.createAuthHeader(this.user, this.pass);
 
-    try {
-      this.affiliations = await this.getUserAffiliations();
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const msg = '[CloudClient] Failed to get user affiliations';
-        logAxiosError(msg, error);
-      } else {
-        console.error('[CloudClient] Unexpected error', error);
-      }
+    const success = await this.fetchAffiliations();
 
+    if (!success) {
+      // Probably bad credentials.
       this.refreshStatus();
       return;
     }

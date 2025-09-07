@@ -450,8 +450,13 @@ const KOREAN: Translations = {
   [Phrase.StatusDescrDisconnected]: 'Pro 기능을 사용하려면 길드 구독을 구매하거나 기존 길드에 가입하고 Pro 설정 페이지에서 로그인 세부 정보를 구성하세요.',
   [Phrase.StatusTitleNotAuthenticated]: '인증되지 않음',
   [Phrase.StatusDescrNotAuthenticated]: '로그인에 실패했습니다. 자격 증명이 유효한지 확인하세요.',
-  [Phrase.StatusTitleNotAuthorized]: '승인되지 않음',
+  [Phrase.StatusTitleNoGuild]: '길드 없음',
+  [Phrase.StatusDescrNoGuild]: '로그인에 성공했지만 길드를 선택하지 않았습니다.',
+  [Phrase.StatusTitleNotAuthorized]: '접근 불가',
   [Phrase.StatusDescrNotAuthorized]: '로그인에 성공했지만 선택한 길드에 접근할 권한이 없습니다.',
+  [Phrase.FirstTimeSetupDescription]: '사용자가 애플리케이션을 처음으로 시작했습니다.',
+  [Phrase.AutoSelectEncoderTooltip]: '사용 가능한 인코더 중에서 합리적인 인코더를 자동으로 선택합니다. 대부분의 사용자에게 좋은 옵션입니다.',
+  [Phrase.CloudRefreshGuildTooltip]: '사용 가능한 길드 목록을 새로 고칩니다.',
 
 };
 

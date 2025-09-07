@@ -87,14 +87,18 @@ const CloudStatus = ({ appState }: StatusProps) => {
     );
   } else if (!cloudStatus.authorized) {
     variant = 'error';
-    status = getLocalePhrase(language, Phrase.StatusTitleNotAuthorized);
+    status = cloudStatus.guild
+      ? getLocalePhrase(language, Phrase.StatusTitleNotAuthorized)
+      : getLocalePhrase(language, Phrase.StatusTitleNoGuild);
 
     description = (
       <div className="flex flex-col gap-y-2">
         <h2 className="text-sm font-semibold">{status}</h2>
         <Separator className="my-1" />
         <p className="text-xs text-popover-foreground/60">
-          {getLocalePhrase(language, Phrase.StatusDescrNotAuthorized)}
+          {status === getLocalePhrase(language, Phrase.StatusTitleNotAuthorized)
+            ? getLocalePhrase(language, Phrase.StatusDescrNotAuthorized)
+            : getLocalePhrase(language, Phrase.StatusDescrNoGuild)}
         </p>
       </div>
     );
@@ -149,7 +153,7 @@ const CloudStatus = ({ appState }: StatusProps) => {
               {getLocalePhrase(language, Phrase.StatusTitlePro)}
             </span>
 
-            <span className="text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground">
+            <span className="text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground whitespace-nowrap overflow-hidden text-ellipsis">
               {status}
             </span>
           </div>

@@ -61,6 +61,7 @@ declare global {
         reconfigureCloud(): void;
 
         getSensibleEncoderDefault(): Promise<string>;
+        refreshCloudGuilds(): void;
       };
     };
   }

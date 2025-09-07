@@ -449,8 +449,13 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.StatusDescrDisconnected]: '要使用专业版功能，请购买公会订阅或加入现有公会，并在专业版设置页面配置您的登录详细信息。',
   [Phrase.StatusTitleNotAuthenticated]: '未认证',
   [Phrase.StatusDescrNotAuthenticated]: '登录失败，请检查您的凭据是否有效。',
-  [Phrase.StatusTitleNotAuthorized]: '未授权',
+  [Phrase.StatusTitleNoGuild]: '没有公会',
+  [Phrase.StatusDescrNoGuild]: '您的登录成功，但您尚未选择公会。',
+  [Phrase.StatusTitleNotAuthorized]: '无法访问',
   [Phrase.StatusDescrNotAuthorized]: '您的登录成功，但您无权访问所选公会。',
+  [Phrase.FirstTimeSetupDescription]: '这是用户第一次启动应用程序。',
+  [Phrase.AutoSelectEncoderTooltip]: '自动从可用的编码器中选择一个合理的编码器。对于大多数用户来说，这是一个不错的选择。',
+  [Phrase.CloudRefreshGuildTooltip]: '刷新可用公会的列表。',
 
 };
 

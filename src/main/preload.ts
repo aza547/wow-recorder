@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 import { AudioSourceType, SceneItem } from './types';
-import { getSensibleEncoderDefault } from './util';
 
 export type Channels =
   | 'window'
@@ -23,7 +22,6 @@ export type Channels =
   | 'deleteVideos'
   | 'writeClipboard'
   | 'getShareableLink'
-  | 'refreshFrontendStatus'
   | 'doAppUpdate'
   | 'volmeter'
   | 'audioSettingsOpen'
@@ -49,7 +47,11 @@ export type Channels =
   | 'reconfigureVideo'
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
-  | 'getSensibleEncoderDefault';
+  | 'getSensibleEncoderDefault'
+  | 'refreshFrontendStatus'
+  | 'refreshCloudStatus'
+  | 'refreshDiskStatus'
+  | 'refreshCloudGuilds';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -184,6 +186,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     getSensibleEncoderDefault(): Promise<string> {
       return ipcRenderer.invoke('getSensibleEncoderDefault');
+    },
+
+    refreshCloudGuilds() {
+      ipcRenderer.send('refreshCloudGuilds');
     },
   },
 });

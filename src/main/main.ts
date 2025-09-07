@@ -368,14 +368,36 @@ const loadDiskVideos = async () => {
 };
 
 const refreshFrontendStatus = () => {
+  console.info('[Main] Frontend triggered full status refresh');
   manager.refreshStatus();
   CloudClient.getInstance().refreshStatus();
   DiskClient.getInstance().refreshStatus();
 };
 
+const refreshDiskStatus = () => {
+  console.info('[Main] Frontend disk status refresh');
+  DiskClient.getInstance().refreshStatus();
+};
+
+const refreshCloudStatus = async () => {
+  console.info('[Main] Frontend triggered cloud status refresh');
+  CloudClient.getInstance().refreshStatus();
+};
+
+const refreshCloudGuilds = async () => {
+  console.info('[Main] Frontend triggered cloud guilds refresh');
+  const client = CloudClient.getInstance();
+  await client.fetchAffiliations();
+  client.refreshStatus();
+};
+
 ipcMain.on('refreshCloudVideoState', loadCloudVideos);
 ipcMain.on('refreshDiskVideoState', loadDiskVideos);
 ipcMain.on('refreshFrontendStatus', refreshFrontendStatus);
+ipcMain.on('refreshDiskStatus', refreshDiskStatus);
+ipcMain.on('refreshCloudStatus', refreshCloudStatus);
+ipcMain.on('refreshCloudGuilds', refreshCloudGuilds);
+
 
 /**
  * Set/get global video player settings.

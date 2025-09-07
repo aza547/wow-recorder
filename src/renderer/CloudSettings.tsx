@@ -7,6 +7,7 @@ import {
   Info,
   MonitorPlay,
   Pencil,
+  RefreshCcw,
   Trash,
   X,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ import Separator from './components/Separator/Separator';
 import TextBanner from './components/TextBanner/TextBanner';
 import { Phrase } from 'localisation/phrases';
 import { useEffect, useRef } from 'react';
+import { Button } from './components/Button/Button';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -47,6 +49,7 @@ interface IProps {
 
 const CloudSettings = (props: IProps) => {
   const { recorderStatus, appState } = props;
+  const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
 
@@ -93,7 +96,7 @@ const CloudSettings = (props: IProps) => {
 
     return (
       <TextBanner>
-        {getLocalePhrase(appState.language, Phrase.SomeSettingsDisabledText)}
+        {getLocalePhrase(language, Phrase.SomeSettingsDisabledText)}
       </TextBanner>
     );
   };
@@ -126,10 +129,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor={preference} className="flex items-center">
-          {getLocalePhrase(appState.language, label)}
+          {getLocalePhrase(language, label)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema[preference].description,
             )}
             side="top"
@@ -166,13 +169,10 @@ const CloudSettings = (props: IProps) => {
           htmlFor="cloudUploadRaidMinDifficulty"
           className="flex items-center"
         >
-          {getLocalePhrase(
-            appState.language,
-            Phrase.UploadDifficultyThresholdLabel,
-          )}
+          {getLocalePhrase(language, Phrase.UploadDifficultyThresholdLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudUploadRaidMinDifficulty.description,
             )}
             side="top"
@@ -191,7 +191,7 @@ const CloudSettings = (props: IProps) => {
           <SelectContent>
             {raidDifficultyOptions.map((difficulty) => (
               <SelectItem key={difficulty.name} value={difficulty.name}>
-                {getLocalePhrase(appState.language, difficulty.phrase)}
+                {getLocalePhrase(language, difficulty.phrase)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -229,10 +229,10 @@ const CloudSettings = (props: IProps) => {
           htmlFor="cloudUploadDungeonMinLevel"
           className="flex items-center"
         >
-          {getLocalePhrase(appState.language, Phrase.UploadLevelThresholdLabel)}
+          {getLocalePhrase(language, Phrase.UploadLevelThresholdLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudUploadDungeonMinLevel.description,
             )}
             side="top"
@@ -310,10 +310,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="cloudStorage" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.CloudPlaybackLabel)}
+          {getLocalePhrase(language, Phrase.CloudPlaybackLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudStorage.description,
             )}
             side="top"
@@ -336,10 +336,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="cloudUpload" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.CloudUploadLabel)}
+          {getLocalePhrase(language, Phrase.CloudUploadLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudUpload.description,
             )}
             side="top"
@@ -362,10 +362,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="cloudUploadRetail" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.CloudUploadRetailLabel)}
+          {getLocalePhrase(language, Phrase.CloudUploadRetailLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudUploadRetail.description,
             )}
             side="top"
@@ -388,10 +388,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="cloudUploadClassic" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.CloudUploadClassicLabel)}
+          {getLocalePhrase(language, Phrase.CloudUploadClassicLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudUploadClassic.description,
             )}
             side="top"
@@ -425,13 +425,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="cloudUploadRateLimit" className="flex items-center">
-          {getLocalePhrase(
-            appState.language,
-            Phrase.UploadRateLimitToggleLabel,
-          )}
+          {getLocalePhrase(language, Phrase.UploadRateLimitToggleLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudUploadRateLimit.description,
             )}
             side="top"
@@ -465,10 +462,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
         <Label htmlFor="cloudAccountName" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.UserEmailLabel)}
+          {getLocalePhrase(language, Phrase.UserEmailLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudAccountName.description,
             )}
             side="top"
@@ -485,7 +482,7 @@ const CloudSettings = (props: IProps) => {
         />
         {config.cloudAccountName === '' && (
           <span className="text-error text-xs font-semibold mt-1">
-            {getLocalePhrase(appState.language, Phrase.CannotBeEmpty)}
+            {getLocalePhrase(language, Phrase.CannotBeEmpty)}
           </span>
         )}
       </div>
@@ -511,10 +508,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
         <Label htmlFor="cloudAccountPassword" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.PasswordLabel)}
+          {getLocalePhrase(language, Phrase.PasswordLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudAccountPassword.description,
             )}
             side="top"
@@ -532,7 +529,7 @@ const CloudSettings = (props: IProps) => {
         />
         {config.cloudAccountPassword === '' && (
           <span className="text-error text-xs font-semibold mt-1">
-            {getLocalePhrase(appState.language, Phrase.CannotBeEmpty)}
+            {getLocalePhrase(language, Phrase.CannotBeEmpty)}
           </span>
         )}
       </div>
@@ -548,20 +545,24 @@ const CloudSettings = (props: IProps) => {
     });
   };
 
+  const refreshGuildList = () => {
+    ipc.refreshCloudGuilds();
+  };
+
   const getCloudGuildField = () => {
     if (isComponentDisabled() || !config.cloudStorage) {
       return <></>;
     }
 
-    const { available } = appState.cloudStatus;
+    const { available, authenticated } = appState.cloudStatus;
 
     return (
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
         <Label htmlFor="cloudGuildName" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.GuildNameLabel)}
+          {getLocalePhrase(language, Phrase.GuildNameLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudGuildName.description,
             )}
             side="top"
@@ -569,18 +570,32 @@ const CloudSettings = (props: IProps) => {
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
-        <Select onValueChange={setCloudGuild} value={config.cloudGuildName}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a guild" />
-          </SelectTrigger>
-          <SelectContent>
-            {available.map((guild) => (
-              <SelectItem key={guild} value={guild}>
-                {guild}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-row gap-x-2">
+          <Select onValueChange={setCloudGuild} value={config.cloudGuildName}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a guild" />
+            </SelectTrigger>
+            <SelectContent>
+              {available.map((guild) => (
+                <SelectItem key={guild} value={guild}>
+                  {guild}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Tooltip
+            content={getLocalePhrase(language, Phrase.CloudRefreshGuildTooltip)}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={refreshGuildList}
+              disabled={!authenticated}
+            >
+              <RefreshCcw size={16} />
+            </Button>
+          </Tooltip>
+        </div>
       </div>
     );
   };
@@ -617,7 +632,7 @@ const CloudSettings = (props: IProps) => {
       <div>
         {icon}
         <span className="text-xs text-foreground font-semibold whitespace-nowrap">
-          {getLocalePhrase(appState.language, phrase)}
+          {getLocalePhrase(language, phrase)}
           {renderPermissionIcon(enabled)}
         </span>
       </div>
@@ -630,12 +645,9 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex-col">
         <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.PermissionLabel)}
+          {getLocalePhrase(language, Phrase.PermissionLabel)}
           <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              Phrase.PermissionDescription,
-            )}
+            content={getLocalePhrase(language, Phrase.PermissionDescription)}
           >
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
@@ -644,7 +656,7 @@ const CloudSettings = (props: IProps) => {
         <div className="flex flex-row gap-x-4">
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               Phrase.PermissionReadDescription,
             )}
           >
@@ -652,7 +664,7 @@ const CloudSettings = (props: IProps) => {
           </Tooltip>
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               Phrase.PermissionWriteDescription,
             )}
           >
@@ -660,7 +672,7 @@ const CloudSettings = (props: IProps) => {
           </Tooltip>
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               Phrase.PermissionDeleteDescription,
             )}
           >
@@ -680,15 +692,12 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex-col">
         <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.CloudUsageDescription)}
+          {getLocalePhrase(language, Phrase.CloudUsageDescription)}
         </Label>
 
         <div className="flex flex-row items-center justify-start w-1/3 min-w-80 max-w-120 gap-x-2">
           <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              Phrase.CloudUsageDescription,
-            )}
+            content={getLocalePhrase(language, Phrase.CloudUsageDescription)}
           >
             <Cloud size={24} className="text-foreground-lighter" />
           </Tooltip>
@@ -772,10 +781,10 @@ const CloudSettings = (props: IProps) => {
     return (
       <div className="flex flex-col w-1/4 min-w-60 max-w-80">
         <Label htmlFor="cloudUploadRateLimitMbps" className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.UploadRateLimitValueLabel)}
+          {getLocalePhrase(language, Phrase.UploadRateLimitValueLabel)}
           <Tooltip
             content={getLocalePhrase(
-              appState.language,
+              language,
               configSchema.cloudUploadRateLimitMbps.description,
             )}
             side="top"
@@ -792,7 +801,7 @@ const CloudSettings = (props: IProps) => {
         />
         {config.cloudUploadRateLimitMbps < 1 && (
           <span className="text-error text-xs font-semibold mt-1">
-            {getLocalePhrase(appState.language, Phrase.OneOrGreater)}
+            {getLocalePhrase(language, Phrase.OneOrGreater)}
           </span>
         )}
       </div>

@@ -449,8 +449,13 @@ const GERMAN: Translations = {
   [Phrase.StatusDescrDisconnected]: 'Um Pro-Features zu nutzen, kaufe ein Gilden-Abonnement oder tritt einer bestehenden Gilde bei und konfiguriere deine Anmeldedaten auf der Pro-Einstellungsseite.',
   [Phrase.StatusTitleNotAuthenticated]: 'Nicht authentifiziert',
   [Phrase.StatusDescrNotAuthenticated]: 'Anmeldung fehlgeschlagen, bitte überprüfe, ob deine Zugangsdaten gültig sind.',
-  [Phrase.StatusTitleNotAuthorized]: 'Nicht autorisiert',
+  [Phrase.StatusTitleNoGuild]: 'Keine Gilde',
+  [Phrase.StatusDescrNoGuild]: 'Ihre Anmeldung war erfolgreich, Sie haben jedoch keine Gilde ausgewählt.',
+  [Phrase.StatusTitleNotAuthorized]: 'Kein Zugriff',
   [Phrase.StatusDescrNotAuthorized]: 'Deine Anmeldung war erfolgreich, aber du bist nicht berechtigt, auf die ausgewählte Gilde zuzugreifen.',
+  [Phrase.FirstTimeSetupDescription]: 'Dies ist das erste Mal, dass der Benutzer die Anwendung gestartet hat.',
+  [Phrase.AutoSelectEncoderTooltip]: 'Wählen Sie automatisch einen sinnvollen Encoder aus den verfügbaren aus. Eine gute Option für die meisten Benutzer.',
+  [Phrase.CloudRefreshGuildTooltip]: 'Aktualisieren Sie die Liste der verfügbaren Gilden.',
 };
 
 export default GERMAN;

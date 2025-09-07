@@ -446,10 +446,13 @@ enum Phrase {
   StatusDescrDisconnected,
   StatusTitleNotAuthenticated,
   StatusDescrNotAuthenticated,
+  StatusTitleNoGuild,
+  StatusDescrNoGuild,
   StatusTitleNotAuthorized,
   StatusDescrNotAuthorized,
   FirstTimeSetupDescription,
   AutoSelectEncoderTooltip,
+  CloudRefreshGuildTooltip,
 }
 
 enum Language {

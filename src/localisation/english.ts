@@ -447,12 +447,15 @@ const ENGLISH: Translations = {
   [Phrase.StatusDescrConnected]: 'Guild connection established. Pro features are enabled.',
   [Phrase.StatusTitleDisconnected]: 'Disconnected',
   [Phrase.StatusDescrDisconnected]: 'To use Pro features, purchase a guild subscription or join an existing guild and configure your login details in the Pro settings page.',
-  [Phrase.StatusTitleNotAuthenticated]: 'Not Authenticated',
+  [Phrase.StatusTitleNotAuthenticated]: 'Login Failed',
   [Phrase.StatusDescrNotAuthenticated]: 'Login failed, please check your credentials are valid.',
-  [Phrase.StatusTitleNotAuthorized]: 'Not Authorized',
+  [Phrase.StatusTitleNoGuild]: 'No Guild',
+  [Phrase.StatusDescrNoGuild]: 'Your login succeeded but you have not selected a guild.',
+  [Phrase.StatusTitleNotAuthorized]: 'No Access',
   [Phrase.StatusDescrNotAuthorized]: 'Your login succeeded but you are not authorized to access the selected guild.',
   [Phrase.FirstTimeSetupDescription]: 'This is the first time the user has launched the application.',
   [Phrase.AutoSelectEncoderTooltip]: 'Automatically select a sensible encoder from those available. A good option for most users.',
+  [Phrase.CloudRefreshGuildTooltip]: 'Refresh the list of available guilds.',
 };
 
 export default ENGLISH;
