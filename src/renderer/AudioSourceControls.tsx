@@ -1,5 +1,5 @@
 import { AppState, AudioSource, AudioSourceType } from 'main/types';
-import { useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
 import {
   AppWindow,
@@ -51,10 +51,11 @@ let debounceTimer: NodeJS.Timeout | undefined;
 
 interface IProps {
   appState: AppState;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 const AudioSourceControls = (props: IProps) => {
-  const { appState } = props;
+  const { appState, setPreviewEnabled } = props;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
   const audioChoicesLoaded = useRef(false);
@@ -511,17 +512,14 @@ const AudioSourceControls = (props: IProps) => {
     return (
       <div className="flex flex-col w-[500px]">
         <Select
-          onValueChange={(value) => {
-            setSourceDevice(src, value);
-          }}
           value={src.device}
+          onValueChange={(value) => setSourceDevice(src, value)}
+          onOpenChange={(open) => setPreviewEnabled(!open)}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a device...." />
           </SelectTrigger>
-          <SelectContent className="max-h-[200px] overflow-y-auto">
-            {renderSelectItems()}
-          </SelectContent>
+          <SelectContent>{renderSelectItems()}</SelectContent>
         </Select>
       </div>
     );
@@ -603,7 +601,7 @@ const AudioSourceControls = (props: IProps) => {
             <PopoverTrigger asChild>
               <Button variant="ghost">{icon}</Button>
             </PopoverTrigger>
-            <PopoverContent className="border border-card">
+            <PopoverContent className="border-bg" side="right" align="center">
               <Slider
                 defaultValue={[val]}
                 value={[val]}

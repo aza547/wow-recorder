@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import { Dispatch, FC, SetStateAction, useEffect, useRef, useState } from 'react';
 import { AppState, Encoder, RecStatus } from 'main/types';
 import { obsResolutions } from 'main/constants';
 import { configSchema } from 'config/configSchema';
@@ -37,6 +37,7 @@ const fpsOptions = [10, 20, 30, 60];
 interface IProps {
   recorderStatus: RecStatus;
   appState: AppState;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 /**
@@ -51,7 +52,7 @@ interface IProps {
  */
 const VideoBaseControls: FC<IProps> = (props: IProps) => {
   const [config, setConfig] = useSettings();
-  const { recorderStatus, appState } = props;
+  const { recorderStatus, appState, setPreviewEnabled } = props;
   const initialRender = useRef(true);
   const highRes = isHighRes(config.obsOutputResolution);
   const [encoders, setEncoders] = useState<Encoder[]>([]);
@@ -142,6 +143,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
         <Select
           value={config.obsOutputResolution}
           onValueChange={setCanvasResolution}
+          onOpenChange={(open) => setPreviewEnabled(!open)}
           disabled={isComponentDisabled()}
         >
           <SelectTrigger className="w-full">
@@ -276,6 +278,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
         <Select
           value={config.obsQuality}
           onValueChange={setQuality}
+          onOpenChange={(open) => setPreviewEnabled(!open)}
           disabled={isComponentDisabled()}
         >
           <SelectTrigger className="w-full">
@@ -335,6 +338,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           <Select
             value={config.obsRecEncoder}
             onValueChange={setEncoder}
+            onOpenChange={(open) => setPreviewEnabled(!open)}
             disabled={isComponentDisabled()}
           >
             <SelectTrigger className="w-full">

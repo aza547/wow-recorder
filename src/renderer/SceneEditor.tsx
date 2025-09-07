@@ -142,12 +142,16 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
               <VideoBaseControls
                 recorderStatus={recorderStatus}
                 appState={appState}
+                setPreviewEnabled={setPreviewEnabled}
               />
             </div>
           </TabsContent>
           <TabsContent value="audio">
             <div className="p-4">
-              <AudioSourceControls appState={appState} />
+              <AudioSourceControls
+                appState={appState}
+                setPreviewEnabled={setPreviewEnabled}
+              />
             </div>
           </TabsContent>
           <TabsContent value="overlay">
