@@ -443,7 +443,7 @@ export default class RetailLogHandler extends LogHandler {
 
   private handleCombatantInfoLine(line: LogLine): void {
     if (!LogHandler.activity) {
-      console.error(
+      console.warn(
         '[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO',
       );
       return;

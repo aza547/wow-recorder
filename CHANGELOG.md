@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Buffer recordings are now entirely in memory, removing a timing window that could cause videos to be wrongly cut also reducing disk wear and hopefully user confusion.
 - Rework the audio sources page to be easier to understand.
 - The `jim_nvenc` and `jim_nvenc_av1` encoders have been replaced by their modern counterparts. Migration is automatic.
+- Allow cloud settings to be reconfigured while recording.
 
 ### Added
 - Add the ability to manually record.
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a button to set the encoder to a sensible default (same as above, but on demand rather than on first time install).
 
 ### Fixed
+- [Issue 677](https://github.com/aza547/wow-recorder/issues/677) - Resolve issues with select menus hidden behind scene preview.
 - Fix HOA timer.
 - Hide the scene preview while select menus are open, so they do not overlap.
 

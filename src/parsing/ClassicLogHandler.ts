@@ -424,7 +424,7 @@ export default class ClassicLogHandler extends LogHandler {
     console.debug('[ClassicLogHandler] Handling COMBATANT_INFO line:', line);
 
     if (!LogHandler.activity) {
-      console.error(
+      console.warn(
         '[ClassicLogHandler] No activity in progress, ignoring COMBATANT_INFO',
       );
       return;

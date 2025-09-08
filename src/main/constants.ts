@@ -359,16 +359,6 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * and retail at the same time. Eventually the older tiers should be removed.
  */
 const currentRetailEncounters = [
-  // TWW Season 2
-  3009, // Vexie
-  3010, // Cauldron
-  3011, // Rik
-  3012, // Stix
-  3013, // Sprocket
-  3014, // Bandit
-  3015, // Mug'Zee
-  3016, // Gally
-
   // TWW Season 3
   3129, // Plexus Sentinel
   3131, // Loom'ithar

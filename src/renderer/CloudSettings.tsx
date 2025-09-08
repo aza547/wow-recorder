@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from './components/Select/Select';
 import Separator from './components/Separator/Separator';
-import TextBanner from './components/TextBanner/TextBanner';
 import { Phrase } from 'localisation/phrases';
 import { useEffect, useRef } from 'react';
 import { Button } from './components/Button/Button';
@@ -43,12 +42,11 @@ const raidDifficultyOptions = [
 let debounceTimer: NodeJS.Timeout | undefined;
 
 interface IProps {
-  recorderStatus: RecStatus;
   appState: AppState;
 }
 
 const CloudSettings = (props: IProps) => {
-  const { recorderStatus, appState } = props;
+  const { appState } = props;
   const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
@@ -82,24 +80,6 @@ const CloudSettings = (props: IProps) => {
   useEffect(() => {
     initialRender.current = false;
   }, []);
-
-  const isComponentDisabled = () => {
-    const isRecording = recorderStatus === RecStatus.Recording;
-    const isOverrunning = recorderStatus === RecStatus.Overrunning;
-    return isRecording || isOverrunning;
-  };
-
-  const getDisabledText = () => {
-    if (!isComponentDisabled()) {
-      return <></>;
-    }
-
-    return (
-      <TextBanner>
-        {getLocalePhrase(language, Phrase.SomeSettingsDisabledText)}
-      </TextBanner>
-    );
-  };
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
@@ -303,10 +283,6 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getCloudSwitch = () => {
-    if (isComponentDisabled()) {
-      return <></>;
-    }
-
     return (
       <div className="flex flex-col w-[140px]">
         <Label htmlFor="cloudStorage" className="flex items-center">
@@ -329,7 +305,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getCloudUploadSwitch = () => {
-    if (isComponentDisabled() || !config.cloudStorage) {
+    if (!config.cloudStorage) {
       return <></>;
     }
 
@@ -355,7 +331,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getRetailUploadSwitch = () => {
-    if (isComponentDisabled() || !config.cloudUpload) {
+    if (!config.cloudUpload) {
       return <></>;
     }
 
@@ -381,7 +357,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getClassicUploadSwitch = () => {
-    if (isComponentDisabled() || !config.cloudUpload) {
+    if (!config.cloudUpload) {
       return <></>;
     }
 
@@ -418,7 +394,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getCloudUploadRateLimitSwitch = () => {
-    if (isComponentDisabled() || !config.cloudUpload) {
+    if (!config.cloudUpload) {
       return <></>;
     }
 
@@ -455,7 +431,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getCloudAccountNameField = () => {
-    if (isComponentDisabled() || !config.cloudStorage) {
+    if (!config.cloudStorage) {
       return <></>;
     }
 
@@ -501,7 +477,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getCloudAccountPasswordField = () => {
-    if (isComponentDisabled() || !config.cloudStorage) {
+    if (!config.cloudStorage) {
       return <></>;
     }
 
@@ -550,7 +526,7 @@ const CloudSettings = (props: IProps) => {
   };
 
   const getCloudGuildField = () => {
-    if (isComponentDisabled() || !config.cloudStorage) {
+    if (!config.cloudStorage) {
       return <></>;
     }
 
@@ -810,10 +786,7 @@ const CloudSettings = (props: IProps) => {
 
   return (
     <div className="flex flex-col gap-y-4 flex-wrap">
-      {getDisabledText()}
-
       <div className="flex flex-row">{getCloudSwitch()}</div>
-
       <div className="flex flex-row gap-4 flex-wrap">
         {getCloudAccountNameField()}
         {getCloudAccountPasswordField()}
