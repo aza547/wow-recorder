@@ -181,7 +181,15 @@ export default class Recorder extends EventEmitter {
    */
   private pttReleaseDelayTimer?: NodeJS.Timeout;
 
-  private sourceDebounceTimer?: NodeJS.Timeout;
+  /**
+   * Timer to debounce the saving of the game capture position or scale changing.
+   */
+  private gamePosDebounceTimer?: NodeJS.Timeout;
+
+  /**
+   * Timer to debounce the saving of the overlay position or scale changing.
+   */
+  private overlayPosDebounceTimer?: NodeJS.Timeout;
 
   private captureMode = CaptureMode.NONE;
 
@@ -500,6 +508,7 @@ export default class Recorder extends EventEmitter {
     if (changedResolution) {
       // Reset the sources on changing resolution as OBS will otherwise try
       // scale them for us which just ends up being confusing.
+      console.info('[Recorder] Resolution changed, resetting sources');
       if (this.captureSource) this.resetSourcePosition(this.captureSource);
       if (this.overlaySource) this.resetSourcePosition(this.overlaySource);
     }
@@ -598,6 +607,11 @@ export default class Recorder extends EventEmitter {
   private async configureOwnOverlay(config: ObsOverlayConfig) {
     console.info('[Recorder] Configure own image as chat overlay');
 
+    if (!this.overlaySource) {
+      console.error('[Recorder] No existing overlay source');
+      throw new Error('No existing overlay source');
+    }
+
     const {
       chatOverlayScale,
       chatOverlayXPosition,
@@ -605,16 +619,16 @@ export default class Recorder extends EventEmitter {
       chatOverlayOwnImagePath,
     } = config;
 
-    const settings = noobs.GetSourceSettings(VideoSourceName.OVERLAY);
+    const settings = noobs.GetSourceSettings(this.overlaySource);
 
-    noobs.SetSourceSettings(VideoSourceName.OVERLAY, {
+    noobs.SetSourceSettings(this.overlaySource, {
       ...settings,
       file: chatOverlayOwnImagePath,
     });
 
-    noobs.AddSourceToScene(VideoSourceName.OVERLAY);
+    noobs.AddSourceToScene(this.overlaySource);
 
-    noobs.SetSourcePos(VideoSourceName.OVERLAY, {
+    noobs.SetSourcePos(this.overlaySource, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
@@ -628,19 +642,24 @@ export default class Recorder extends EventEmitter {
   private configureDefaultOverlay(config: ObsOverlayConfig) {
     console.info('[Recorder] Configure default image as chat overlay');
 
+    if (!this.overlaySource) {
+      console.error('[Recorder] No existing overlay source');
+      throw new Error('No existing overlay source');
+    }
+
     const { chatOverlayXPosition, chatOverlayYPosition, chatOverlayScale } =
       config;
 
-    const settings = noobs.GetSourceSettings(VideoSourceName.OVERLAY);
+    const settings = noobs.GetSourceSettings(this.overlaySource);
 
-    noobs.SetSourceSettings(VideoSourceName.OVERLAY, {
+    noobs.SetSourceSettings(this.overlaySource, {
       ...settings,
       file: this.chatOverlayDefaultImage,
     });
 
-    noobs.AddSourceToScene(VideoSourceName.OVERLAY);
+    noobs.AddSourceToScene(this.overlaySource);
 
-    noobs.SetSourcePos(VideoSourceName.OVERLAY, {
+    noobs.SetSourcePos(this.overlaySource, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
@@ -1113,14 +1132,14 @@ export default class Recorder extends EventEmitter {
       compatibility: true,
     });
 
+    noobs.AddSourceToScene(this.captureSource);
+
     noobs.SetSourcePos(this.captureSource, {
       x: videoSourceXPosition,
       y: videoSourceYPosition,
       scaleX: videoSourceScale,
       scaleY: videoSourceScale,
     });
-
-    noobs.AddSourceToScene(this.captureSource);
   }
 
   /**
@@ -1161,8 +1180,8 @@ export default class Recorder extends EventEmitter {
     };
 
     noobs.SetSourceSettings(this.captureSource, settings);
-    noobs.SetSourcePos(this.captureSource, position);
     noobs.AddSourceToScene(this.captureSource);
+    noobs.SetSourcePos(this.captureSource, position);
   }
 
   /**
@@ -1230,9 +1249,9 @@ export default class Recorder extends EventEmitter {
       scaleY: videoSourceScale,
     };
 
-    noobs.SetSourceSettings(VideoSourceName.MONITOR, settings);
-    noobs.SetSourcePos(VideoSourceName.MONITOR, position);
-    noobs.AddSourceToScene(VideoSourceName.MONITOR);
+    noobs.SetSourceSettings(this.captureSource, settings);
+    noobs.AddSourceToScene(this.captureSource);
+    noobs.SetSourcePos(this.captureSource, position);
   }
 
   /**
@@ -1241,7 +1260,11 @@ export default class Recorder extends EventEmitter {
   public configureOverlayImageSource(config: ObsOverlayConfig) {
     const { chatOverlayEnabled, chatOverlayOwnImage } = config;
     console.info('[Recorder] Configure image source for chat overlay');
-    noobs.RemoveSourceFromScene(VideoSourceName.OVERLAY);
+
+    if (this.overlaySource) {
+      // Might be a no-op, we never actually delete this source.
+      noobs.RemoveSourceFromScene(this.overlaySource);
+    }
 
     if (!chatOverlayEnabled) {
       console.info('[Recorder] Chat overlay is disabled, not configuring');
@@ -1458,7 +1481,7 @@ export default class Recorder extends EventEmitter {
     const sf = Math.min(sfx, sfy);
 
     const src =
-      item === SceneItem.OVERLAY ? VideoSourceName.OVERLAY : this.captureSource;
+      item === SceneItem.OVERLAY ? this.overlaySource : this.captureSource;
 
     if (!src) {
       console.warn(
@@ -1517,18 +1540,29 @@ export default class Recorder extends EventEmitter {
 
     noobs.SetSourcePos(src, updated);
 
-    if (this.sourceDebounceTimer) {
-      clearTimeout(this.sourceDebounceTimer);
-    }
-
     const item = src.startsWith('WCR Chat Overlay')
       ? SceneItem.OVERLAY
       : SceneItem.GAME;
 
-    this.sourceDebounceTimer = setTimeout(() => {
-      this.saveSourcePosition(item, updated.x, updated.y, scale);
-      this.sourceDebounceTimer = undefined;
-    }, 1000);
+    if (item === SceneItem.OVERLAY) {
+      if (this.overlayPosDebounceTimer) {
+        clearTimeout(this.overlayPosDebounceTimer);
+      }
+
+      this.overlayPosDebounceTimer = setTimeout(() => {
+        this.saveSourcePosition(item, updated.x, updated.y, scale);
+        this.overlayPosDebounceTimer = undefined;
+      }, 1000);
+    } else if (item === SceneItem.GAME) {
+      if (this.gamePosDebounceTimer) {
+        clearTimeout(this.gamePosDebounceTimer);
+      }
+
+      this.gamePosDebounceTimer = setTimeout(() => {
+        this.saveSourcePosition(item, updated.x, updated.y, scale);
+        this.gamePosDebounceTimer = undefined;
+      }, 1000);
+    }
   }
 
   /**
