@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Split out cloud config from regular config and add an appropriate status card.
 - Add the ability to force the video sources to SDR.
 - Volume can now be configured on a per-source basis.
-- Add AV1 support for AMD: there has been no testing of this, please share your experience in Discord!
+- [Issue 632](https://github.com/aza547/wow-recorder/issues/632) - Add AV1 support for AMD: there has been no testing of this, please share your experience in Discord!
 - Add support for QSV encoding: there has been no testing of this, please share your experience in Discord!
 - Add a button to refresh the list of guilds on demand.
 - On first time setup, automatically set the default the encoder to a sensible default (i.e. pick a hardware encoder).
@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 677](https://github.com/aza547/wow-recorder/issues/677) - Resolve issues with select menus hidden behind scene preview.
+- [Issue 640](https://github.com/aza547/wow-recorder/issues/640) - Remove a hack relying on moving the preview off-screen when not on display.
 - Fix HOA timer.
 - Hide the scene preview while select menus are open, so they do not overlap.
 
