@@ -306,9 +306,9 @@ export default class CloudClient implements StorageClient {
     const response = await statePromise;
 
     console.info(
-      '[CloudClient] Got video state with',
+      '[CloudClient] Loaded',
       response.data.length,
-      'videos',
+      'videos from cloud',
     );
 
     const data = [...response.data];

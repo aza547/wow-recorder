@@ -93,7 +93,9 @@ export default class DiskClient implements StorageClient {
 
     // Return this list of videos without those marked for deletion which may still
     // exist for a short time.
-    return videoDetails.filter((video) => !video.delete);
+    const toDisplay = videoDetails.filter((video) => !video.delete);
+    console.info('[DiskClient] Loaded', toDisplay.length, 'videos from disk');
+    return toDisplay;
   }
 
   public async deleteVideos(videoPaths: string[]) {

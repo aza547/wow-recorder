@@ -260,8 +260,17 @@ export default abstract class LogHandler {
     const { startDate } = recorder;
     let videoFile;
 
+    const stopPromise = recorder.stop(); // Queue the stop.
+    const wowRunning = poller.isWowRunning();
+
+    if (wowRunning) {
+      // Immediately queue the buffer start so it's ready if we go instantly into another activity.
+      console.info('[LogHandler] Queue buffer start as WoW still running');
+      recorder.startBuffer(); // No assignment, we don't care about when it's done.
+    }
+
     try {
-      await recorder.stop();
+      await stopPromise; // Now await the stop so we can process the video.
       videoFile = recorder.lastFile;
     } catch (error) {
       console.error(
@@ -272,13 +281,6 @@ export default abstract class LogHandler {
         'Failed to stop recording, discarding: ' + lastActivity.getFileName();
       emitErrorReport(report);
       return;
-    }
-
-    const wowRunning = poller.isWowRunning();
-
-    if (wowRunning) {
-      console.info('[LogHandler] Restarting buffer as WoW still running');
-      recorder.startBuffer(); // No need to await.
     }
 
     if (!videoFile) {
