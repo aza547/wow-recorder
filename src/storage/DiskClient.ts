@@ -35,6 +35,7 @@ export default class DiskClient implements StorageClient {
   }
 
   private constructor() {
+    console.info('[DiskClient] Creating disk client');
     this.setupListeners();
   }
 

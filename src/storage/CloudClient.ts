@@ -424,13 +424,12 @@ export default class CloudClient implements StorageClient {
       cloudUpload,
     } = config;
 
-    console.info(
-      '[CloudClient] Configure with:',
+    console.info('[CloudClient] Configure with:', {
       cloudStorage,
       cloudAccountName,
       cloudGuildName,
       cloudUpload,
-    );
+    });
 
     this.enabled = cloudStorage;
 
@@ -513,7 +512,7 @@ export default class CloudClient implements StorageClient {
     await this.pollInit();
     this.startPolling();
 
-    // 
+    //
     this.refreshStatus();
     this.refreshVideos();
   }

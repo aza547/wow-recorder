@@ -507,9 +507,10 @@ export default class Recorder extends EventEmitter {
     const changedResolution = canvasHeight !== height || canvasWidth !== width;
 
     if (changedResolution) {
-      // OBS applies auto-scaling to the existing sources if we change the
-      // resolution with video sources already configured. So reconfigure
-      // the video sources if the resolution has changed to undo that.
+      // Noobs defaults to 1920x1080, so if at a different resolution, this
+      // will be hit on startup. Changing canvas size causes libobs to auto-scale
+      // the existing sources. So reconfigure the video sources if the resolution
+      // has changed to undo that.
       console.info('[Recorder] Resolution changed, reconfig video sources');
       const cfg = getObsVideoConfig(this.cfg);
       this.configureVideoSources(cfg);

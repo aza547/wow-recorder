@@ -186,6 +186,8 @@ const createWindow = async () => {
   cfg.set('firstTimeSetup', false);
 
   window.on('ready-to-show', async () => {
+    console.log('[Main] Ready to show');
+
     if (!window) {
       throw new Error('window is not defined');
     }
@@ -202,14 +204,10 @@ const createWindow = async () => {
     CloudClient.getInstance();
     DiskClient.getInstance();
 
-    console.log('[Main] Ready to show, calling startup');
     await manager.startup();
 
     const startMinimized = cfg.get<boolean>('startMinimized');
-
-    if (!startMinimized) {
-      window.show();
-    }
+    if (!startMinimized) window.show();
   });
 
   window.on('focus', () => {
