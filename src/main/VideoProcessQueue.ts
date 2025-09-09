@@ -23,6 +23,7 @@ import CloudClient from '../storage/CloudClient';
 import { send } from './main';
 import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
+import DiskClient from 'storage/DiskClient';
 
 const atomicQueue = require('atomic-queue');
 
@@ -399,10 +400,11 @@ export default class VideoProcessQueue {
    * Log we are done, and update the saving status icon and refresh the
    * frontend.
    */
-  private finishProcessingVideo(item: VideoQueueItem) {
+  private async finishProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Finished processing video', item.source);
     send('updateSaveStatus', SaveStatus.NotSaving);
-    send('refreshDiskState');
+    DiskClient.getInstance().refreshStatus();
+    DiskClient.getInstance().refreshVideos();
   }
 
   /**
@@ -443,7 +445,7 @@ export default class VideoProcessQueue {
   /**
    * Called on the end of an upload.
    */
-  private finishDownloadingVideo(video: RendererVideo) {
+  private async finishDownloadingVideo(video: RendererVideo) {
     const { videoName } = video;
     console.info('[VideoProcessQueue] Finished downloading video', videoName);
 
@@ -452,8 +454,10 @@ export default class VideoProcessQueue {
     );
 
     const queued = Math.max(0, this.inProgressDownloads.length);
-    send('refreshDiskState');
     send('updateDownloadQueueLength', queued);
+
+    DiskClient.getInstance().refreshStatus();
+    DiskClient.getInstance().refreshVideos();
   }
 
   /**

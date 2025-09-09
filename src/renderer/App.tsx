@@ -18,7 +18,11 @@ import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import './App.css';
 import { useSettings } from './useSettings';
-import { getCategoryFromConfig, videoMatch, videoMatchName } from './rendererutils';
+import {
+  getCategoryFromConfig,
+  videoMatch,
+  videoMatchName,
+} from './rendererutils';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
 import SideMenu from './SideMenu';
@@ -134,20 +138,6 @@ const WarcraftRecorder = () => {
 
   // Used to remember the player height when switching categories.
   const playerHeight = useRef(500);
-
-  const doRefresh = async () => {
-    ipc.sendMessage('refreshFrontendStatus', []);
-    ipc.sendMessage('refreshDiskVideoState', []);
-    ipc.sendMessage('refreshCloudVideoState', []);
-
-    // For dev mode. But maybe not good? Was hiding after a recording or on changing settings. Weird.
-    //if (appState.page !== Pages.SceneEditor) ipc.hidePreview();
-  };
-
-  const refreshDiskState = async () => {
-    ipc.sendMessage('refreshDiskStatus', []);
-    ipc.sendMessage('refreshDiskVideoState', []);
-  };
 
   const updateRecStatus = (status: unknown, err: unknown) => {
     setRecorderStatus(status as RecStatus);
@@ -396,9 +386,6 @@ const WarcraftRecorder = () => {
   };
 
   useEffect(() => {
-    doRefresh();
-    ipc.on('refreshState', doRefresh);
-    ipc.on('refreshDiskState', refreshDiskState);
     ipc.on('updateRecStatus', updateRecStatus);
     ipc.on('updateSaveStatus', updateSaveStatus);
     ipc.on('updateMicStatus', updateMicStatus);
@@ -416,8 +403,6 @@ const WarcraftRecorder = () => {
     ipc.on('displayTagCloudVideo', displayTagCloudVideo);
 
     return () => {
-      ipc.removeAllListeners('refreshState');
-      ipc.removeAllListeners('refreshDiskState');
       ipc.removeAllListeners('updateRecStatus');
       ipc.removeAllListeners('updateSaveStatus');
       ipc.removeAllListeners('updateMicStatus');
@@ -506,7 +491,4 @@ export default function App() {
       </Routes>
     </Router>
   );
-}
-function _equals(m: RendererVideo, rv: RendererVideo) {
-  throw new Error('Function not implemented.');
 }

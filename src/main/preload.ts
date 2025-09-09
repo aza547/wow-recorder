@@ -4,8 +4,6 @@ import { AudioSourceType, SceneItem } from './types';
 
 export type Channels =
   | 'window'
-  | 'refreshDiskVideoState'
-  | 'refreshCloudVideoState'
   | 'videoButton'
   | 'logPath'
   | 'openURL'
@@ -48,9 +46,6 @@ export type Channels =
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'getSensibleEncoderDefault'
-  | 'refreshFrontendStatus'
-  | 'refreshCloudStatus'
-  | 'refreshDiskStatus'
   | 'refreshCloudGuilds';
 
 contextBridge.exposeInMainWorld('electron', {

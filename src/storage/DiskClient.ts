@@ -54,9 +54,17 @@ export default class DiskClient implements StorageClient {
   }
 
   /**
+   * Get the videos and set them on the frontend.
+   */
+  public async refreshVideos() {
+    const videos = await this.getVideos();
+    send('setDiskVideos', videos);
+  }
+
+  /**
    * Get the videos.
    */
-  public async getVideos() {
+  private async getVideos() {
     const storageDir = ConfigService.getInstance().get<string>('storagePath');
 
     if (!storageDir) {

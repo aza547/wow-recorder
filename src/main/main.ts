@@ -163,11 +163,6 @@ const createWindow = async () => {
     },
   });
 
-  // Initialize the storage clients, this is the first call to the singletons
-  // so invokes the constructors.
-  CloudClient.getInstance();
-  DiskClient.getInstance();
-
   // We need to do this AFTER creating the window as it's used by the preview.
   Recorder.getInstance().initializeObs();
 
@@ -200,6 +195,12 @@ const createWindow = async () => {
       'updateVersionDisplay',
       `Warcraft Recorder v${appVersion}`,
     );
+
+    // Initialize the storage clients, this is the first call to the
+    // singletons so invokes the constructors. Deliberatly do this after
+    // the window is created so any messages to the frontend actually arrive.
+    CloudClient.getInstance();
+    DiskClient.getInstance();
 
     console.log('[Main] Ready to show, calling startup');
     await manager.startup();
@@ -365,33 +366,6 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
   return getAvailableDisplays();
 });
 
-const loadCloudVideos = async () => {
-  const videos = await CloudClient.getInstance().getVideos();
-  send('setCloudVideos', videos);
-};
-
-const loadDiskVideos = async () => {
-  const videos = await DiskClient.getInstance().getVideos();
-  send('setDiskVideos', videos);
-};
-
-const refreshFrontendStatus = () => {
-  console.info('[Main] Frontend triggered full status refresh');
-  manager.refreshStatus();
-  CloudClient.getInstance().refreshStatus();
-  DiskClient.getInstance().refreshStatus();
-};
-
-const refreshDiskStatus = () => {
-  console.info('[Main] Frontend disk status refresh');
-  DiskClient.getInstance().refreshStatus();
-};
-
-const refreshCloudStatus = async () => {
-  console.info('[Main] Frontend triggered cloud status refresh');
-  CloudClient.getInstance().refreshStatus();
-};
-
 const refreshCloudGuilds = async () => {
   console.info('[Main] Frontend triggered cloud guilds refresh');
   const client = CloudClient.getInstance();
@@ -399,11 +373,6 @@ const refreshCloudGuilds = async () => {
   client.refreshStatus();
 };
 
-ipcMain.on('refreshCloudVideoState', loadCloudVideos);
-ipcMain.on('refreshDiskVideoState', loadDiskVideos);
-ipcMain.on('refreshFrontendStatus', refreshFrontendStatus);
-ipcMain.on('refreshDiskStatus', refreshDiskStatus);
-ipcMain.on('refreshCloudStatus', refreshCloudStatus);
 ipcMain.on('refreshCloudGuilds', refreshCloudGuilds);
 
 /**

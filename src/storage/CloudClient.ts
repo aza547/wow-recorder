@@ -283,10 +283,18 @@ export default class CloudClient implements StorageClient {
   }
 
   /**
+   * Get the video state from the WCR API and set it on the frontend.
+   */
+  public async refreshVideos() {
+    const videos = await this.getVideos();
+    send('setCloudVideos', videos);
+  }
+
+  /**
    * Get the video state from the remote WCR database, and refresh
    * the frontend.
    */
-  public async getVideos() {
+  private async getVideos() {
     console.info('[CloudClient] Getting video state');
 
     if (!this.authenticated) {
@@ -505,9 +513,9 @@ export default class CloudClient implements StorageClient {
     await this.pollInit();
     this.startPolling();
 
-    const videos = await this.getVideos();
-    send('setCloudVideos', videos);
+    // 
     this.refreshStatus();
+    this.refreshVideos();
   }
 
   /**
@@ -905,7 +913,7 @@ export default class CloudClient implements StorageClient {
         );
 
         this.refreshStatus();
-        send('refreshState');
+        this.refreshVideos();
         this.bucketLastMod = mtime;
       }
     } catch (error) {

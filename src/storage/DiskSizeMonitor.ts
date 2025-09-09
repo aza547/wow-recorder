@@ -6,6 +6,7 @@ import {
   getSortedVideos,
 } from '../main/util';
 import { send } from 'main/main';
+import DiskClient from './DiskClient';
 
 // Had a bug here where we used filter with an async function but that isn't
 // valid as it just returns a truthy promise. See issue 323. To get around
@@ -78,7 +79,9 @@ export default class DiskSizeMonitor {
     );
 
     if (filesForDeletion.length > 0) {
-      send('refreshDiskState');
+      DiskClient.getInstance().refreshStatus();
+      const videos = await DiskClient.getInstance().getVideos();
+      send('setDiskVideos', videos);
     }
   }
 

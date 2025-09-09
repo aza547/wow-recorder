@@ -43,6 +43,7 @@ import { Phrase } from 'localisation/phrases';
 import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
+import DiskClient from 'storage/DiskClient';
 
 /**
  * Manager class.
@@ -144,6 +145,8 @@ export default class Manager {
 
     this.reconfiguring = false;
     this.refreshStatus();
+    await DiskClient.getInstance().refreshStatus();
+    await DiskClient.getInstance().refreshVideos();
   }
 
   /**
@@ -176,8 +179,13 @@ export default class Manager {
       this.poller.start();
     }
 
+    // We're done, now make sure we refresh the frontend.
     this.reconfiguring = false;
     this.refreshStatus();
+
+    // ...and for the disk client too.
+    await DiskClient.getInstance().refreshStatus();
+    await DiskClient.getInstance().refreshVideos();
   }
 
   /**
@@ -367,7 +375,6 @@ export default class Manager {
    * Configure the base OBS config. We need to stop the recording to do this.
    */
   private async applyBaseConfig(config: BaseConfig) {
-    await this.refreshDiskStatus();
     await this.recorder.configureBase(config);
 
     LogHandler.activity = undefined;
@@ -410,9 +417,6 @@ export default class Manager {
       this.retailPtrLogHandler = new RetailLogHandler(config.retailPtrLogPath);
       this.retailPtrLogHandler.setIsPtr();
     }
-
-    // We're done, now make sure we refresh the frontend.
-    send('refreshDiskState');
   }
 
   /**

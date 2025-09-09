@@ -492,12 +492,13 @@ export default class Recorder extends EventEmitter {
       config;
 
     if (this.obsState !== ERecordingState.Offline) {
-      throw new Error('[Recorder] OBS must be offline to do this');
+      console.error('[Recorder] OBS must be offline to reconfigure base');
+      throw new Error('[Recorder] OBS must be offline to reconfigure base');
     }
 
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
-    console.info('[Recorder] Reconfigure OBS video context');
+    console.info('[Recorder] Configure OBS video context');
 
     const canvas = noobs.GetPreviewInfo();
     noobs.ResetVideoContext(obsFPS, width, height);
@@ -506,11 +507,12 @@ export default class Recorder extends EventEmitter {
     const changedResolution = canvasHeight !== height || canvasWidth !== width;
 
     if (changedResolution) {
-      // Reset the sources on changing resolution as OBS will otherwise try
-      // scale them for us which just ends up being confusing.
-      console.info('[Recorder] Resolution changed, resetting sources');
-      if (this.captureSource) this.resetSourcePosition(this.captureSource);
-      if (this.overlaySource) this.resetSourcePosition(this.overlaySource);
+      // OBS applies auto-scaling to the existing sources if we change the
+      // resolution with video sources already configured. So reconfigure
+      // the video sources if the resolution has changed to undo that.
+      console.info('[Recorder] Resolution changed, reconfig video sources');
+      const cfg = getObsVideoConfig(this.cfg);
+      this.configureVideoSources(cfg);
     }
 
     const outputPath = path.normalize(obsPath);
