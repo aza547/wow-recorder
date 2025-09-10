@@ -122,21 +122,22 @@ export default class Manager {
     this.reconfiguring = true;
     this.refreshStatus();
 
-    // This stuff should never fail.
-    await this.configureObsVideo();
-    await this.configureObsAudio();
-    await this.configureObsOverlay();
-
     let success = false;
 
     try {
       // This can fail.
-      await this.configureBase();
+      await this.configureBase(true);
       success = true;
     } catch (error) {
       console.error('[Manager] Failed to configure base on startup', error);
       this.setConfigInvalid(String(error));
     }
+
+    // This stuff should never fail, and doesn't rely on the previous step
+    // succeeding. We still want to apply as much as we can.
+    await this.configureObsVideo();
+    await this.configureObsAudio();
+    await this.configureObsOverlay();
 
     if (success) {
       this.setConfigValid();
@@ -167,7 +168,7 @@ export default class Manager {
     let success = false;
 
     try {
-      await this.configureBase();
+      await this.configureBase(false);
       success = true;
     } catch (error) {
       console.error('[Manager] Failed to configure base on startup', error);
@@ -191,10 +192,10 @@ export default class Manager {
   /**
    * Configure the base config.
    */
-  private async configureBase() {
+  private async configureBase(startup: boolean) {
     const config = getBaseConfig(this.cfg);
     await validateBaseConfig(config);
-    await this.applyBaseConfig(config);
+    await this.applyBaseConfig(config, startup);
   }
 
   /**
@@ -374,30 +375,30 @@ export default class Manager {
   /**
    * Configure the base OBS config. We need to stop the recording to do this.
    */
-  private async applyBaseConfig(config: BaseConfig) {
-    await this.recorder.configureBase(config);
+  private async applyBaseConfig(config: BaseConfig, startup: boolean) {
+    await this.recorder.configureBase(config, startup);
 
     LogHandler.activity = undefined;
     LogHandler.overrunning = false;
     LogHandler.setStateChangeCallback(() => this.refreshStatus());
 
-    if (this.retailLogHandler) {
-      this.retailLogHandler.destroy();
+    if (!startup) {
+      console.info('[Manager] Not startup, so reset log handlers');
+
+      const logHandlers = [
+        this.retailLogHandler,
+        this.classicLogHandler,
+        this.eraLogHandler,
+        this.retailPtrLogHandler,
+      ];
+
+      logHandlers
+        .filter((lh) => lh !== undefined)
+        .forEach((lh) => lh.destroy());
+
       this.retailLogHandler = undefined;
-    }
-
-    if (this.classicLogHandler) {
-      this.classicLogHandler.destroy();
       this.classicLogHandler = undefined;
-    }
-
-    if (this.eraLogHandler) {
-      this.eraLogHandler.destroy();
       this.eraLogHandler = undefined;
-    }
-
-    if (this.retailPtrLogHandler) {
-      this.retailPtrLogHandler.destroy();
       this.retailPtrLogHandler = undefined;
     }
 

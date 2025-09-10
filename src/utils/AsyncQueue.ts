@@ -19,7 +19,14 @@ export default class AsyncQueue {
 
     while (this.queue.length) {
       const task = this.queue.shift()!;
-      await task();
+
+      try {
+        await task();
+      } catch (e) {
+        // Don't let a failing task stop the queue processing
+        // further tasks. Just log it and move on.
+        console.warn('[AsyncQueue] Task failed:', e);
+      }
     }
 
     this.running = false;

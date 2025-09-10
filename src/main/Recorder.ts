@@ -487,7 +487,7 @@ export default class Recorder extends EventEmitter {
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
-  public async configureBase(config: BaseConfig) {
+  public async configureBase(config: BaseConfig, startup: boolean) {
     const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
@@ -506,11 +506,12 @@ export default class Recorder extends EventEmitter {
     const { canvasHeight, canvasWidth } = canvas;
     const changedResolution = canvasHeight !== height || canvasWidth !== width;
 
-    if (changedResolution) {
+    if (changedResolution && !startup) {
       // Noobs defaults to 1920x1080, so if at a different resolution, this
       // will be hit on startup. Changing canvas size causes libobs to auto-scale
       // the existing sources. So reconfigure the video sources if the resolution
-      // has changed to undo that.
+      // has changed to undo that. We avoid this branch on startup as we will
+      // reconfigure the video sources anyway.
       console.info('[Recorder] Resolution changed, reconfig video sources');
       const cfg = getObsVideoConfig(this.cfg);
       this.configureVideoSources(cfg);
