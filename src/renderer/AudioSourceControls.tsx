@@ -56,6 +56,7 @@ interface IProps {
 
 const AudioSourceControls = (props: IProps) => {
   const { appState, setPreviewEnabled } = props;
+  const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
   const audioChoicesLoaded = useRef(false);
@@ -700,7 +701,7 @@ const AudioSourceControls = (props: IProps) => {
             variant="outline"
           >
             <PlusIcon className="px-0" />
-            Speaker
+            {getLocalePhrase(language, Phrase.AddSpeakerButtonText)}
           </Button>
           <Button
             onClick={() => addSource(AudioSourceType.INPUT)}
@@ -708,7 +709,7 @@ const AudioSourceControls = (props: IProps) => {
             variant="outline"
           >
             <PlusIcon className="px-0" />
-            Microphone
+            {getLocalePhrase(language, Phrase.AddMicrophoneButtonText)}
           </Button>
           <Button
             onClick={() => addSource(AudioSourceType.PROCESS)}
@@ -716,7 +717,7 @@ const AudioSourceControls = (props: IProps) => {
             variant="outline"
           >
             <PlusIcon className="px-0" />
-            Application
+            {getLocalePhrase(language, Phrase.AddApplicationButtonText)}
           </Button>
         </div>
       </div>

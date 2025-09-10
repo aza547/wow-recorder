@@ -457,6 +457,15 @@ const KOREAN: Translations = {
   [Phrase.FirstTimeSetupDescription]: '사용자가 애플리케이션을 처음으로 시작했습니다.',
   [Phrase.AutoSelectEncoderTooltip]: '사용 가능한 인코더 중에서 합리적인 인코더를 자동으로 선택합니다. 대부분의 사용자에게 좋은 옵션입니다.',
   [Phrase.CloudRefreshGuildTooltip]: '사용 가능한 길드 목록을 새로 고칩니다.',
+  [Phrase.SourceSnappingSwitchText]: '스냅',
+  [Phrase.SourceSnappingSwitchTooltip]: '소스 스냅을 전환합니다.',
+  [Phrase.ResetOverlayButtonText]: '오버레이 재설정',
+  [Phrase.ResetGameButtonText]: '게임 재설정',
+  [Phrase.GameWindowLabel]: '게임 창',
+  [Phrase.OverlayLabel]: '채팅 창',
+  [Phrase.AddSpeakerButtonText]: '스피커',
+  [Phrase.AddMicrophoneButtonText]: '마이크',
+  [Phrase.AddApplicationButtonText]: '응용 프로그램',
 
 };
 

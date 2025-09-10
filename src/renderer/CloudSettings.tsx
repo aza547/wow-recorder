@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
-import { AppState, RecStatus } from 'main/types';
+import { AppState } from 'main/types';
 import {
   Check,
   Cloud,

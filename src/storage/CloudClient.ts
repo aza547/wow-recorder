@@ -1268,10 +1268,12 @@ export default class CloudClient implements StorageClient {
       return;
     }
 
-    // Messages beyond this point are of the form key:value.
-    console.info('[CloudClient] Received WebSocket message:', msg);
+    // Messages beyond this point are of the form key:value. Just log the key
+    // to illustrate what it is. Messages may contain signed video URLs which
+    // we don't want in the log.
     const key = msg.slice(0, index);
     const value = msg.slice(index + 1);
+    console.info('[CloudClient] Received WebSocket message with key:', key);
 
     if (key === VideoMessages.CREATE) {
       console.info('[CloudClient] Adding cloud video');

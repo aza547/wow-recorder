@@ -453,6 +453,15 @@ enum Phrase {
   FirstTimeSetupDescription,
   AutoSelectEncoderTooltip,
   CloudRefreshGuildTooltip,
+  SourceSnappingSwitchText,
+  SourceSnappingSwitchTooltip,
+  ResetOverlayButtonText,
+  ResetGameButtonText,
+  GameWindowLabel,
+  OverlayLabel,
+  AddSpeakerButtonText,
+  AddMicrophoneButtonText,
+  AddApplicationButtonText,
 }
 
 enum Language {

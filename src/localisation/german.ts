@@ -456,6 +456,15 @@ const GERMAN: Translations = {
   [Phrase.FirstTimeSetupDescription]: 'Dies ist das erste Mal, dass der Benutzer die Anwendung gestartet hat.',
   [Phrase.AutoSelectEncoderTooltip]: 'Wählen Sie automatisch einen sinnvollen Encoder aus den verfügbaren aus. Eine gute Option für die meisten Benutzer.',
   [Phrase.CloudRefreshGuildTooltip]: 'Aktualisieren Sie die Liste der verfügbaren Gilden.',
+  [Phrase.SourceSnappingSwitchText]: 'Schnappen',
+  [Phrase.SourceSnappingSwitchTooltip]: 'Quellen-Snapping umschalten',
+  [Phrase.ResetOverlayButtonText]: 'Overlay zurücksetzen',
+  [Phrase.ResetGameButtonText]: 'Spiel zurücksetzen',
+  [Phrase.GameWindowLabel]: 'Spielfenster',
+  [Phrase.OverlayLabel]: 'Chat-Fenster',
+  [Phrase.AddSpeakerButtonText]: 'Lautsprecher',
+  [Phrase.AddMicrophoneButtonText]: 'Mikrofon',
+  [Phrase.AddApplicationButtonText]: 'Anwendung',
 };
 
 export default GERMAN;

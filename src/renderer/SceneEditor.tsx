@@ -21,6 +21,7 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import { ConfigurationSchema } from 'config/configSchema';
 
 const ipc = window.electron.ipcRenderer;
+const devMode = process.env.NODE_ENV === 'development';
 
 interface IProps {
   appState: AppState;
@@ -37,16 +38,12 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
   const renderResetGameButton = () => {
     return (
       <Button
-        className="flex w-[60px]"
+        className="flex w-[60px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
         variant="ghost"
         size="xs"
         onClick={() => ipc.resetSourcePosition(SceneItem.GAME)}
       >
-        <span className="text-xs text-foreground-lighter">
-          Reset
-          <br />
-          Game
-        </span>
+        {getLocalePhrase(appState.language, Phrase.ResetGameButtonText)}
       </Button>
     );
   };
@@ -54,17 +51,45 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
   const renderResetOverlayButton = () => {
     return (
       <Button
-        className="flex w-[60px]"
+        className="flex w-[60px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
         variant="ghost"
         size="xs"
         onClick={() => ipc.resetSourcePosition(SceneItem.OVERLAY)}
       >
-        <span className="text-xs text-foreground-lighter">
-          Reset
-          <br />
-          Overlay
-        </span>
+        {getLocalePhrase(appState.language, Phrase.ResetOverlayButtonText)}
       </Button>
+    );
+  };
+
+  const renderToggleSnappingSwitch = () => {
+    return (
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.SourceSnappingSwitchTooltip,
+        )}
+        side="bottom"
+      >
+        <div className="flex items-center justify-center text-xs text-card-foreground font-medium gap-x-2">
+          {getLocalePhrase(appState.language, Phrase.SourceSnappingSwitchText)}
+          <Switch checked={snapEnabled} onCheckedChange={setSnapEnabled} />
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const renderShowPreviewSwitch = () => {
+    // This is a dev mode only thing so don't worry about translations.
+    return (
+      <Tooltip content="Toggle preview." side="bottom">
+        <div className="flex items-center justify-center text-xs text-card-foreground font-medium gap-x-2">
+          Preview
+          <Switch
+            checked={previewEnabled}
+            onCheckedChange={setPreviewEnabled}
+          />
+        </div>
+      </Tooltip>
     );
   };
 
@@ -81,6 +106,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
     >
       <Box sx={{ width: '100%', height: '60%' }}>
         <RecorderPreview
+          appState={appState}
           previewEnabled={previewEnabled}
           config={config}
           snapEnabled={snapEnabled}
@@ -103,28 +129,8 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
           <div className="flex ml-auto items-center justify-center gap-x-4">
             {renderResetGameButton()}
             {config.chatOverlayEnabled && renderResetOverlayButton()}
-            <Tooltip content="Toggle Snapping" side="bottom">
-              <Box className="flex items-center justify-center ">
-                <span className="text-xs text-card-foreground font-medium pr-2 text-center">
-                  Source <br /> Snapping
-                </span>
-                <Switch
-                  checked={snapEnabled}
-                  onCheckedChange={setSnapEnabled}
-                />
-              </Box>
-            </Tooltip>
-            <Tooltip content="Toggle Preview" side="bottom">
-              <Box className="flex items-center justify-center ">
-                <span className="text-xs text-card-foreground font-medium pr-2 text-center">
-                  Show <br /> Preview
-                </span>
-                <Switch
-                  checked={previewEnabled}
-                  onCheckedChange={setPreviewEnabled}
-                />
-              </Box>
-            </Tooltip>
+            {renderToggleSnappingSwitch()}
+            {devMode && renderShowPreviewSwitch()}
           </div>
         </TabsList>
 

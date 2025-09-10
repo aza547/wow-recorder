@@ -499,7 +499,7 @@ const CategoryPage = (props: IProps) => {
 
   const openSetupInstructions = () => {
     window.electron.ipcRenderer.sendMessage('openURL', [
-      'https://github.com/aza547/wow-recorder#readme',
+      'https://www.warcraftrecorder.com/about',
     ]);
   };
 

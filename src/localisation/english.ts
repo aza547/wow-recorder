@@ -456,6 +456,15 @@ const ENGLISH: Translations = {
   [Phrase.FirstTimeSetupDescription]: 'This is the first time the user has launched the application.',
   [Phrase.AutoSelectEncoderTooltip]: 'Automatically select a sensible encoder from those available. A good option for most users.',
   [Phrase.CloudRefreshGuildTooltip]: 'Refresh the list of available guilds.',
+  [Phrase.SourceSnappingSwitchText]: 'Snapping',
+  [Phrase.SourceSnappingSwitchTooltip]: 'Toggle source snapping.',
+  [Phrase.ResetOverlayButtonText]: 'Reset Overlay',
+  [Phrase.ResetGameButtonText]: 'Reset Game',
+  [Phrase.GameWindowLabel]: 'Game Window',
+  [Phrase.OverlayLabel]: 'Chat Window',
+  [Phrase.AddSpeakerButtonText]: 'Speaker',
+  [Phrase.AddMicrophoneButtonText]: 'Microphone',
+  [Phrase.AddApplicationButtonText]: 'Application',
 };
 
 export default ENGLISH;

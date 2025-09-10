@@ -1,8 +1,15 @@
 import { Box } from '@mui/material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { stopPropagation } from './rendererutils';
-import { BoxDimensions, SceneInteraction, SceneItem } from 'main/types';
+import {
+  AppState,
+  BoxDimensions,
+  SceneInteraction,
+  SceneItem,
+} from 'main/types';
 import { ConfigurationSchema } from 'config/configSchema';
+import { getLocalePhrase } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 const showPreview = ipc.showPreview;
@@ -20,11 +27,13 @@ enum Snap {
 }
 
 const RecorderPreview = (props: {
+  appState: AppState;
   previewEnabled: boolean;
   config: ConfigurationSchema;
   snapEnabled: boolean;
 }) => {
-  const { previewEnabled, config, snapEnabled } = props;
+  const { appState, previewEnabled, config, snapEnabled } = props;
+  const { language } = appState;
 
   const initialRender = useRef(true);
   const previewDivRef = useRef<HTMLDivElement>(null);
@@ -387,7 +396,10 @@ const RecorderPreview = (props: {
       return <></>;
     }
 
-    const text = src === SceneItem.OVERLAY ? 'Chat Overlay' : 'Game Window';
+    const text =
+      src === SceneItem.OVERLAY
+        ? getLocalePhrase(language, Phrase.ChatOverlayLabel)
+        : getLocalePhrase(language, Phrase.GameWindowLabel);
 
     const position: {
       left: number;

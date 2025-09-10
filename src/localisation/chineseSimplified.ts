@@ -456,7 +456,15 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.FirstTimeSetupDescription]: '这是用户第一次启动应用程序。',
   [Phrase.AutoSelectEncoderTooltip]: '自动从可用的编码器中选择一个合理的编码器。对于大多数用户来说，这是一个不错的选择。',
   [Phrase.CloudRefreshGuildTooltip]: '刷新可用公会的列表。',
-
+  [Phrase.SourceSnappingSwitchText]: '捕捉',
+  [Phrase.SourceSnappingSwitchTooltip]: '切换源捕捉。',
+  [Phrase.ResetOverlayButtonText]: '重置覆盖层',
+  [Phrase.ResetGameButtonText]: '重置游戏',
+  [Phrase.GameWindowLabel]: '游戏窗口',
+  [Phrase.OverlayLabel]: '聊天窗口',
+  [Phrase.AddSpeakerButtonText]: '扬声器',
+  [Phrase.AddMicrophoneButtonText]: '麦克风',
+  [Phrase.AddApplicationButtonText]: '应用程序',
 };
 
 export default CHINESE_SIMPLIFIED;
