@@ -221,6 +221,12 @@ export default class Recorder extends EventEmitter {
       this.configureVideoSources(cfg);
     });
 
+    ipcMain.on('reconfigureAudio', () => {
+      console.info('[Recorder] Audio source reconfigure');
+      const cfg = getObsAudioConfig(this.cfg);
+      this.configureAudioSources(cfg);
+    });
+
     ipcMain.on('reconfigureOverlay', () => {
       console.info('[Recorder] Overlay source reconfigure');
       const overlayCfg = getOverlayConfig(this.cfg);
@@ -677,6 +683,7 @@ export default class Recorder extends EventEmitter {
    */
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
+    console.info('[Recorder] Configure audio sources');
 
     // Can't release all the listeners here as we now use
     // uIOhook for triggering manual recording too.
@@ -689,6 +696,7 @@ export default class Recorder extends EventEmitter {
     noobs.SetAudioSuppression(config.obsAudioSuppression);
 
     config.audioSources.forEach((src) => {
+      console.info('[Recorder] Create audio source', src.id);
       const name = noobs.CreateSource(src.id, src.type);
       const settings = noobs.GetSourceSettings(name);
 

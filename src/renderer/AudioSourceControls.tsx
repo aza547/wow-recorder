@@ -97,40 +97,45 @@ const AudioSourceControls = (props: IProps) => {
   );
 
   useEffect(() => {
-    if (initialRender.current) {
-      // Don't rewrite the config for no reason on mount.
-      initialRender.current = false;
-      return;
-    }
-
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
+    if (initialRender.current) return;
+    if (debounceTimer) clearTimeout(debounceTimer);
 
     debounceTimer = setTimeout(() => {
       setConfigValues({
-        audioSources: config.audioSources,
-        obsAudioSuppression: config.obsAudioSuppression,
-        obsForceMono: config.obsForceMono,
         pushToTalk: config.pushToTalk,
         pushToTalkKey: config.pushToTalkKey,
         pushToTalkMouseButton: config.pushToTalkMouseButton,
         pushToTalkModifiers: config.pushToTalkModifiers,
         pushToTalkReleaseDelay: config.pushToTalkReleaseDelay,
       });
+
+      // These parameters require a full audio reconfigure once
+      // the config is applied.
+      ipc.reconfigureAudio();
     }, 500);
   }, [
-    config.audioSources,
-    config.obsForceMono,
     config.pushToTalk,
     config.pushToTalkKey,
     config.pushToTalkMouseButton,
     config.pushToTalkModifiers,
     config.pushToTalkReleaseDelay,
-    config.obsAudioSuppression,
   ]);
 
   useEffect(() => {
+    // No reconfigure required for these parameters, we
+    // do it via IPC call.
+    if (initialRender.current) return;
+
+    setConfigValues({
+      audioSources: config.audioSources,
+      obsAudioSuppression: config.obsAudioSuppression,
+      obsForceMono: config.obsForceMono,
+    });
+  }, [config.audioSources, config.obsAudioSuppression, config.obsForceMono]);
+
+  useEffect(() => {
+    if (initialRender.current) return;
+
     const setPushToTalkKey = (event: PTTKeyPressEvent) => {
       setConfig((prevState) => {
         return {
@@ -155,8 +160,11 @@ const AudioSourceControls = (props: IProps) => {
     listenNextKeyPress();
   }, [pttHotKeyFieldFocused, setConfig]);
 
+  useEffect(() => {
+    initialRender.current = false;
+  }, []);
+
   const volmeterRefresh = (id: string, magnitude: number) => {
-    // console.log('volmeter', id, magnitude);
     setSourceMagnitude((prev) => {
       prev[id] = magnitude;
       return { ...prev };

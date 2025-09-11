@@ -57,6 +57,7 @@ declare global {
 
         reconfigureBase(): void;
         reconfigureVideo(): void;
+        reconfigureAudio(): void;
         reconfigureOverlay(): void;
         reconfigureCloud(): void;
 

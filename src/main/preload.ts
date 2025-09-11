@@ -43,6 +43,7 @@ export type Channels =
   | 'setCaptureCursor'
   | 'reconfigureBase'
   | 'reconfigureVideo'
+  | 'reconfigureAudio'
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'getSensibleEncoderDefault'
@@ -169,6 +170,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     reconfigureVideo() {
       ipcRenderer.send('reconfigureVideo');
+    },
+
+    reconfigureAudio() {
+      ipcRenderer.send('reconfigureAudio');
     },
 
     reconfigureOverlay() {

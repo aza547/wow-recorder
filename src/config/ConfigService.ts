@@ -68,8 +68,8 @@ export default class ConfigService
    * There should only ever be one instance created and this method facilitates that.
    */
   static getInstance(): ConfigService {
-    if (!ConfigService.instance) ConfigService.instance = new ConfigService();
-    return ConfigService.instance;
+    if (!this.instance) this.instance = new this();
+    return this.instance;
   }
 
   private constructor() {

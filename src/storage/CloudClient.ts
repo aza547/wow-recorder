@@ -1276,27 +1276,27 @@ export default class CloudClient implements StorageClient {
     console.info('[CloudClient] Received WebSocket message with key:', key);
 
     if (key === VideoMessages.CREATE) {
-      console.info('[CloudClient] Adding cloud video');
       const video = JSON.parse(value);
+      console.info('[CloudClient] Adding cloud video', video.videoName);
       const rv = cloudSignedMetadataToRendererVideo(video);
       send('displayAddCloudVideo', rv);
       return;
     }
 
     if (key === VideoMessages.DELETE) {
-      console.info('[CloudClient] Removing cloud video');
+      console.info('[CloudClient] Removing cloud video', value);
       send('displayRemoveCloudVideo', value);
       return;
     }
 
     if (key === VideoMessages.PROTECT) {
-      console.info('[CloudClient] Protecting cloud video');
+      console.info('[CloudClient] Protecting cloud video', value);
       send('displayProtectCloudVideo', value);
       return;
     }
 
     if (key === VideoMessages.UNPROTECT) {
-      console.info('[CloudClient] Unprotecting cloud video');
+      console.info('[CloudClient] Unprotecting cloud video', value);
       send('displayUnprotectCloudVideo', value);
       return;
     }
