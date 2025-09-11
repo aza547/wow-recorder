@@ -7,7 +7,7 @@ import {
   getLocaleCategoryLabel,
   getLocalePhrase,
 } from '../../localisation/translations';
-import { Language, Phrase } from '../../localisation/types';
+import { Language, Phrase } from '../../localisation/phrases';
 
 test('English Phrase', () => {
   const phrase = getLocalePhrase(Language.ENGLISH, Phrase.NoVideosSaved);

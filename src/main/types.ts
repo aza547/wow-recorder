@@ -2,7 +2,6 @@ import { Size } from 'electron';
 import { Language } from '../localisation/translations';
 import { RawChallengeModeTimelineSegment } from './keystone';
 import { VideoCategory } from '../types/VideoCategory';
-import ConfigService from '../config/ConfigService';
 import { Tag } from 'react-tag-autocomplete';
 import { DateValueType } from 'react-tailwindcss-datepicker';
 
@@ -45,9 +44,7 @@ enum SaveStatus {
  * We display any OBS crashes on the frontend so we don't silently recover
  * and have the user think all is well.
  */
-type Crashes = CrashData[];
-
-type CrashData = {
+type ErrorReport = {
   date: Date;
   reason: string;
 };
@@ -167,7 +164,7 @@ type VideoQueueItem = {
   suffix: string;
   offset: number;
   duration: number;
-  deleteSource: boolean;
+  clip: boolean;
   metadata: Metadata;
 };
 
@@ -286,11 +283,19 @@ interface IDevice {
   description: string;
 }
 
-enum TAudioSourceType {
-  input = 'wasapi_input_capture',
-  output = 'wasapi_output_capture',
-  process = 'wasapi_process_output_capture',
+enum AudioSourceType {
+  OUTPUT = 'wasapi_output_capture',
+  INPUT = 'wasapi_input_capture',
+  PROCESS = 'wasapi_process_output_capture',
 }
+
+type AudioSource = {
+  id: string; // The source name
+  type: AudioSourceType;
+  friendly?: string; // A user-friendly name for the source
+  device?: string; // Machine friendly identifier for the device or window
+  volume: number; // Current volume setting (0-1)
+};
 
 /**
  * If we should be showing a certain page. This always takes priority over anything
@@ -350,10 +355,11 @@ enum EncoderType {
 
 type Encoder = {
   name: string;
+  value: string;
   type: EncoderType;
 };
 
-type ObsBaseConfig = {
+type BaseConfig = {
   storagePath: string;
   maxStorage: number;
   obsPath: string;
@@ -361,12 +367,24 @@ type ObsBaseConfig = {
   obsFPS: number;
   obsQuality: string;
   obsRecEncoder: string;
+  recordRetail: boolean;
+  retailLogPath: string;
+  recordClassic: boolean;
+  classicLogPath: string;
+  recordEra: boolean;
+  eraLogPath: string;
+  recordRetailPtr: boolean;
+  retailPtrLogPath: string;
 };
 
 type ObsVideoConfig = {
   obsCaptureMode: string;
   monitorIndex: number;
   captureCursor: boolean;
+  forceSdr: boolean;
+  videoSourceScale: number;
+  videoSourceXPosition: number;
+  videoSourceYPosition: number;
 };
 
 type ObsOverlayConfig = {
@@ -385,29 +403,13 @@ type ObsOverlayConfig = {
 };
 
 type ObsAudioConfig = {
-  audioInputDevices: string;
-  audioOutputDevices: string;
-  audioProcessDevices: { value: string; label: string }[];
+  audioSources: AudioSource[];
+  obsAudioSuppression: boolean;
   obsForceMono: boolean;
-  speakerVolume: number;
-  micVolume: number;
-  processVolume: number;
   pushToTalk: boolean;
   pushToTalkKey: number;
   pushToTalkMouseButton: number;
   pushToTalkModifiers: string;
-  obsAudioSuppression: boolean;
-};
-
-type FlavourConfig = {
-  recordRetail: boolean;
-  retailLogPath: string;
-  recordClassic: boolean;
-  classicLogPath: string;
-  recordEra: boolean;
-  eraLogPath: string;
-  recordRetailPtr: boolean;
-  retailPtrLogPath: string;
 };
 
 type CloudConfig = {
@@ -416,15 +418,6 @@ type CloudConfig = {
   cloudAccountName: string;
   cloudAccountPassword: string;
   cloudGuildName: string;
-};
-
-type ConfigStage = {
-  name: string;
-  valid: boolean;
-  current: any;
-  get: (cfg: ConfigService) => any;
-  configure: (...args: any[]) => Promise<void>;
-  validate: (...args: any[]) => Promise<void>;
 };
 
 enum DeathMarkers {
@@ -452,6 +445,9 @@ type SliderMark = {
 };
 
 type CloudStatus = {
+  enabled: boolean;
+  authenticated: boolean;
+  authorized: boolean;
   guild: string;
   available: string[];
   read: boolean; // Always true for now.
@@ -573,6 +569,48 @@ type ObsVolmeterCallbackInfo = {
   inputPeak: number[];
 };
 
+enum SceneItem {
+  OVERLAY = 'Overlay',
+  GAME = 'Game',
+}
+
+enum SceneInteraction {
+  NONE,
+  MOVE,
+  SCALE,
+}
+
+type BoxDimensions = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+enum VideoSourceName {
+  WINDOW = 'WCR Window Capture',
+  GAME = 'WCR Game Capture',
+  MONITOR = 'WCR Monitor Capture',
+  OVERLAY = 'WCR Chat Overlay',
+}
+
+enum AudioSourcePrefix {
+  SPEAKER = 'WCR Speaker Capture',
+  MIC = 'WCR Mic Capture',
+  PROCESS = 'WCR Process Capture',
+}
+
+enum WowProcessEvent {
+  STARTED = 'wowProcessStart',
+  STOPPED = 'wowProcessStop',
+}
+
+enum SoundAlerts {
+  MANUAL_RECORDING_ERROR = 'manual-recording-error',
+  MANUAL_RECORDING_START = 'manual-recording-start',
+  MANUAL_RECORDING_STOP = 'manual-recording-stop',
+}
+
 export {
   RecStatus,
   SaveStatus,
@@ -594,7 +632,7 @@ export {
   EDeviceType,
   IOBSDevice,
   IDevice,
-  TAudioSourceType,
+  AudioSourceType,
   AppState,
   RawCombatant,
   TPreviewPosition,
@@ -602,19 +640,16 @@ export {
   Pages,
   EncoderType,
   Encoder,
-  ObsBaseConfig,
+  BaseConfig,
   ObsVideoConfig,
   ObsOverlayConfig,
   ObsAudioConfig,
-  FlavourConfig,
   CloudConfig,
-  ConfigStage,
   DeathMarkers,
   VideoMarker,
   MarkerColors,
   MicStatus,
-  Crashes,
-  CrashData,
+  ErrorReport,
   SliderMark,
   CloudStatus,
   DiskStatus,
@@ -628,4 +663,12 @@ export {
   StorageFilter,
   ObsSourceCallbackInfo,
   ObsVolmeterCallbackInfo,
+  VideoSourceName,
+  AudioSource,
+  AudioSourcePrefix,
+  SceneItem,
+  SceneInteraction,
+  BoxDimensions,
+  WowProcessEvent,
+  SoundAlerts,
 };

@@ -1,8 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  CrashData,
-  Crashes,
+  ErrorReport,
   MicStatus,
   Pages,
   RecStatus,
@@ -14,12 +13,16 @@ import {
   StorageFilter,
 } from 'main/types';
 import Box from '@mui/material/Box';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { getLocalePhrase, Language } from 'localisation/translations';
 import Layout from './Layout';
 import RendererTitleBar from './RendererTitleBar';
 import './App.css';
 import { useSettings } from './useSettings';
-import { getCategoryFromConfig } from './rendererutils';
+import {
+  getCategoryFromConfig,
+  videoMatch,
+  videoMatchName,
+} from './rendererutils';
 import { TooltipProvider } from './components/Tooltip/Tooltip';
 import Toaster from './components/Toast/Toaster';
 import SideMenu from './SideMenu';
@@ -28,6 +31,7 @@ import { Button } from './components/Button/Button';
 import { ErrorBoundary } from 'react-error-boundary';
 import { RefreshCcw } from 'lucide-react';
 import { VideoCategory } from 'types/VideoCategory';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -35,7 +39,7 @@ const WarcraftRecorder = () => {
   const [config, setConfig] = useSettings();
   const [error, setError] = useState<string>('');
   const [micStatus, setMicStatus] = useState<MicStatus>(MicStatus.NONE);
-  const [crashes, setCrashes] = useState<Crashes>([]);
+  const [errorReports, setErrorReports] = useState<ErrorReport[]>([]);
   const updateNotified = useRef(false);
   const { toast } = useToast();
 
@@ -80,6 +84,9 @@ const WarcraftRecorder = () => {
 
     // The cloud storage status.
     cloudStatus: {
+      enabled: false,
+      authenticated: false,
+      authorized: false,
       guild: '',
       available: [],
       read: false,
@@ -109,6 +116,7 @@ const WarcraftRecorder = () => {
       [VideoCategory.MythicPlus]: 0,
       [VideoCategory.Raids]: 0,
       [VideoCategory.Battlegrounds]: 0,
+      [VideoCategory.Manual]: 0,
       [VideoCategory.Clips]: 0,
     };
 
@@ -131,21 +139,6 @@ const WarcraftRecorder = () => {
   // Used to remember the player height when switching categories.
   const playerHeight = useRef(500);
 
-  const doRefresh = async () => {
-    ipc.sendMessage('refreshFrontend', []);
-    const state = (await ipc.invoke('getVideoState', [])) as RendererVideo[];
-    setVideoState(state);
-
-    setAppState((prevState) => {
-      return {
-        ...prevState,
-        // Fixes issue 410 which caused the preview not to re-appear if
-        // refreshState triggered when full screen.
-        videoFullScreen: false,
-      };
-    });
-  };
-
   const updateRecStatus = (status: unknown, err: unknown) => {
     setRecorderStatus(status as RecStatus);
 
@@ -162,8 +155,8 @@ const WarcraftRecorder = () => {
     setMicStatus(status as MicStatus);
   };
 
-  const updateCrashes = (crash: unknown) => {
-    setCrashes((prevArray) => [...prevArray, crash as CrashData]);
+  const updateErrorReports = (report: unknown) => {
+    setErrorReports((prevArray) => [...prevArray, report as ErrorReport]);
   };
 
   const updateDiskStatus = (status: unknown) => {
@@ -237,26 +230,194 @@ const WarcraftRecorder = () => {
     updateNotified.current = true;
   };
 
+  const playAudio = (file: unknown) => {
+    console.log('Play audio', file);
+    new Audio(file as string).play();
+  };
+
+  const setCloudVideos = (videos: unknown) => {
+    setVideoState((prev) => {
+      const disk = prev.filter((video) => !video.cloud);
+      return [...disk, ...(videos as RendererVideo[])];
+    });
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
+  const setDiskVideos = (videos: unknown) => {
+    setVideoState((prev) => {
+      const cloud = prev.filter((video) => video.cloud);
+      return [...cloud, ...(videos as RendererVideo[])];
+    });
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
+  // Incrementally add a new cloud video to the frontend, or update
+  // it if it exists already.
+  const displayAddCloudVideo = (video: unknown) => {
+    const rv = video as RendererVideo;
+
+    const match = videoState.find((v) => videoMatch(v, rv));
+
+    if (match && _equals(match, rv)) {
+      // Video already exact match, no need to re-render.
+      return;
+    }
+
+    setVideoState((prev) => [...prev.filter((v) => !videoMatch(v, rv)), rv]);
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
+  const displayRemoveCloudVideo = (videoName: unknown) => {
+    const name = videoName as string;
+
+    setVideoState((prev) => {
+      const updated = prev.filter(
+        (video) => video.cloud && video.videoName !== name,
+      );
+
+      return updated;
+    });
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
+  const displayProtectCloudVideo = (videoName: unknown) => {
+    const name = videoName as string;
+
+    setVideoState((prev) => {
+      const match = prev.find((video) => videoMatchName(video, name));
+
+      if (match) {
+        // Pretty sure only one of these matters.
+        match.protected = true;
+        match.isProtected = true;
+      }
+
+      return prev;
+    });
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
+  const displayUnprotectCloudVideo = (videoName: unknown) => {
+    const name = videoName as string;
+
+    setVideoState((prev) => {
+      const match = prev.find((video) => videoMatchName(video, name));
+
+      if (match) {
+        // Pretty sure only one of these matters.
+        match.protected = false;
+        match.isProtected = false;
+      }
+
+      return prev;
+    });
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
+  const displayTagCloudVideo = (videoName: unknown, tag: unknown) => {
+    const name = videoName as string;
+
+    setVideoState((prev) => {
+      const match = prev.find((video) => videoMatchName(video, name));
+
+      if (match) {
+        match.tag = tag as string;
+      }
+
+      return prev;
+    });
+
+    setAppState((prevState) => {
+      return {
+        ...prevState,
+        // Fixes issue 410 which caused the preview not to re-appear if
+        // refreshState triggered when full screen.
+        videoFullScreen: false,
+      };
+    });
+  };
+
   useEffect(() => {
-    doRefresh();
-    ipc.on('refreshState', doRefresh);
     ipc.on('updateRecStatus', updateRecStatus);
     ipc.on('updateSaveStatus', updateSaveStatus);
     ipc.on('updateMicStatus', updateMicStatus);
-    ipc.on('updateCrashes', updateCrashes);
+    ipc.on('updateErrorReport', updateErrorReports);
     ipc.on('updateDiskStatus', updateDiskStatus);
     ipc.on('updateCloudStatus', updateCloudStatus);
     ipc.on('updateAvailable', onUpdateAvailable);
+    ipc.on('playAudio', playAudio);
+    ipc.on('setCloudVideos', setCloudVideos);
+    ipc.on('setDiskVideos', setDiskVideos);
+    ipc.on('displayAddCloudVideo', displayAddCloudVideo);
+    ipc.on('displayRemoveCloudVideo', displayRemoveCloudVideo);
+    ipc.on('displayProtectCloudVideo', displayProtectCloudVideo);
+    ipc.on('displayUnprotectCloudVideo', displayUnprotectCloudVideo);
+    ipc.on('displayTagCloudVideo', displayTagCloudVideo);
 
     return () => {
-      ipc.removeAllListeners('refreshState');
       ipc.removeAllListeners('updateRecStatus');
       ipc.removeAllListeners('updateSaveStatus');
       ipc.removeAllListeners('updateMicStatus');
-      ipc.removeAllListeners('updateCrashes');
+      ipc.removeAllListeners('updateErrorReport');
       ipc.removeAllListeners('updateDiskStatus');
       ipc.removeAllListeners('updateCloudStatus');
       ipc.removeAllListeners('updateAvailable');
+      ipc.removeAllListeners('playAudio');
+      ipc.removeAllListeners('setCloudVideos');
+      ipc.removeAllListeners('setDiskVideos');
+      ipc.removeAllListeners('displayAddCloudVideo');
+      ipc.removeAllListeners('displayRemoveCloudVideo');
+      ipc.removeAllListeners('displayProtectCloudVideo');
+      ipc.removeAllListeners('displayUnprotectCloudVideo');
+      ipc.removeAllListeners('displayTagCloudVideo');
     };
   }, []);
 
@@ -283,7 +444,7 @@ const WarcraftRecorder = () => {
               persistentProgress={persistentProgress}
               error={error}
               micStatus={micStatus}
-              crashes={crashes}
+              errorReports={errorReports}
               savingStatus={savingStatus}
               config={config}
               updateAvailable={updateAvailable}

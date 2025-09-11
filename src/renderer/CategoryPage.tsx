@@ -13,11 +13,9 @@ import {
   GripHorizontal,
   LockKeyhole,
   Trash,
-  MessageSquare,
-  MessageSquareMore,
   LockOpen,
 } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import SearchBar from './SearchBar';
 import VideoMarkerToggles from './VideoMarkerToggles';
@@ -45,6 +43,7 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import DateRangePicker from './DateRangePicker';
 import StorageFilterToggle from './StorageFilterToggle';
 import VideoCorrelator from './VideoCorrelator';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   category: VideoCategory;
@@ -500,7 +499,7 @@ const CategoryPage = (props: IProps) => {
 
   const openSetupInstructions = () => {
     window.electron.ipcRenderer.sendMessage('openURL', [
-      'https://github.com/aza547/wow-recorder#readme',
+      'https://www.warcraftrecorder.com/about',
     ]);
   };
 

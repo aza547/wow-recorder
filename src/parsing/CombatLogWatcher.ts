@@ -3,9 +3,9 @@ import fs, { watch, FSWatcher } from 'fs';
 import util from 'util';
 import { FileInfo } from 'main/types';
 import path from 'path';
-import Queue from 'queue-promise';
 import { getFileInfo, getSortedFiles } from '../main/util';
 import LogLine from './LogLine';
+import AsyncQueue from 'utils/AsyncQueue';
 
 /**
  * Setup a bunch of promisified fs calls for convienence.
@@ -55,10 +55,7 @@ export default class CombatLogWatcher extends EventEmitter {
    * A promise queue we use to ensure that we only have one active attempt to
    * parse the file at a time.
    */
-  private queue = new Queue({
-    concurrent: 1,
-    interval: 0,
-  });
+  private queue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
   /**
    * The most recently updated log file, we remember this purely so we can
@@ -111,7 +108,7 @@ export default class CombatLogWatcher extends EventEmitter {
         this.current = file;
       }
 
-      this.queue.enqueue(() => this.process(file));
+      this.queue.add(() => this.process(file));
     });
   }
 

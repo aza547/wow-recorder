@@ -1,5 +1,3 @@
-import VideoProcessQueue from 'main/VideoProcessQueue';
-import { BrowserWindow } from 'electron';
 import {
   classicArenas,
   classicBattlegrounds,
@@ -8,7 +6,6 @@ import {
   mopChallengeModes,
 } from '../main/constants';
 
-import Recorder from '../main/Recorder';
 import LogHandler from './LogHandler';
 import { Flavour } from '../main/types';
 import ArenaMatch from '../activitys/ArenaMatch';
@@ -18,18 +15,14 @@ import LogLine from './LogLine';
 import { VideoCategory } from '../types/VideoCategory';
 import Combatant from 'main/Combatant';
 import ChallengeModeDungeon from 'activitys/ChallengeModeDungeon';
+import ConfigService from 'config/ConfigService';
 
 /**
  * Classic log handler class.
  */
 export default class ClassicLogHandler extends LogHandler {
-  constructor(
-    mainWindow: BrowserWindow,
-    recorder: Recorder,
-    videoProcessQueue: VideoProcessQueue,
-    logPath: string,
-  ) {
-    super(mainWindow, recorder, videoProcessQueue, logPath, 2);
+  constructor(logPath: string) {
+    super(logPath, 2);
 
     this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {
@@ -67,7 +60,7 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return;
     }
 
@@ -80,7 +73,7 @@ export default class ClassicLogHandler extends LogHandler {
     const spellName = line.arg(10);
 
     const alreadyKnowCombatant =
-      this.activity.getCombatant(srcGUID) !== undefined;
+      LogHandler.activity.getCombatant(srcGUID) !== undefined;
 
     const combatant = this.processClassicCombatant(
       srcGUID,
@@ -101,7 +94,7 @@ export default class ClassicLogHandler extends LogHandler {
     // If it's the first time we have spotted an enemy combatant in arena,
     // then the gates have just opened. Adjust the activity start time.
     if (this.isArena() && !alreadyKnowCombatant && isEnemyCombatant) {
-      const combatants = this.activity.combatantMap.values();
+      const combatants = LogHandler.activity.combatantMap.values();
       const enemyCombatants = [...combatants].filter((c) => c.teamID === 0);
 
       if (enemyCombatants.length === 1) {
@@ -110,7 +103,7 @@ export default class ClassicLogHandler extends LogHandler {
           '[ClassicLogHandler] Adjusting game start date:',
           newStartDate,
         );
-        this.activity.startDate = newStartDate;
+        LogHandler.activity.startDate = newStartDate;
       }
     }
 
@@ -141,19 +134,19 @@ export default class ClassicLogHandler extends LogHandler {
       zoneID,
     );
 
-    if (this.activity) {
+    if (LogHandler.activity) {
       const isActivityBG = this.isBattleground();
       const isActivityArena = this.isArena();
 
       // Sometimes (maybe always) see a double ZONE_CHANGE fired on the way into arena.
       // Explicitly check here that the zoneID we're going to is different than that
       // of the activity we are in to avoid ending the arena on the duplicate event.
-      if (isActivityArena && zoneID !== this.activity.zoneID) {
+      if (isActivityArena && zoneID !== LogHandler.activity.zoneID) {
         console.info('[ClassicLogHandler] Zone change out of Arena');
         await this.endArena(line.date());
       }
 
-      if (isActivityBG && zoneID !== this.activity.zoneID) {
+      if (isActivityBG && zoneID !== LogHandler.activity.zoneID) {
         console.info('[ClassicLogHandler] Zone change out of battleground');
         await this.battlegroundEnd(line);
       }
@@ -170,7 +163,7 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   protected handleUnitDiedLine(line: LogLine) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return;
     }
 
@@ -191,7 +184,7 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   private handleSpellCastSuccess(line: LogLine) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return;
     }
 
@@ -230,7 +223,7 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   private async startArena(startDate: Date, zoneID: number) {
-    if (this.activity) {
+    if (LogHandler.activity) {
       console.error(
         "[ClassicLogHandler] Another activity in progress, can't start arena",
       );
@@ -245,10 +238,9 @@ export default class ClassicLogHandler extends LogHandler {
       category,
       zoneID,
       Flavour.Classic,
-      this.cfg,
     );
 
-    await this.startActivity(activity);
+    await LogHandler.startActivity(activity);
   }
 
   private static calculateArenaResult(arenaMatch: ArenaMatch) {
@@ -266,7 +258,7 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   private async endArena(endDate: Date) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       console.error(
         '[ClassicLogHandler] Arena stop with no active arena match',
       );
@@ -274,10 +266,10 @@ export default class ClassicLogHandler extends LogHandler {
     }
 
     console.debug('[ClassicLogHandler] Stopping arena at date:', endDate);
-    const arenaMatch = this.activity as ArenaMatch;
+    const arenaMatch = LogHandler.activity as ArenaMatch;
     const result = await ClassicLogHandler.calculateArenaResult(arenaMatch);
     arenaMatch.endArena(endDate, result);
-    await this.endActivity();
+    await LogHandler.endActivity();
   }
 
   protected processClassicCombatant(
@@ -288,12 +280,12 @@ export default class ClassicLogHandler extends LogHandler {
     destNameRealm: string,
     destFlags: number,
   ) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return undefined;
     }
 
-    const srcCombatant = this.activity.getCombatant(srcGUID);
-    const destCombatant = this.activity.getCombatant(destGUID);
+    const srcCombatant = LogHandler.activity.getCombatant(srcGUID);
+    const destCombatant = LogHandler.activity.getCombatant(destGUID);
     const srcIdentified = srcCombatant !== undefined;
     const destIdentified = destCombatant !== undefined;
 
@@ -354,14 +346,14 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   private processArenaDeath(deathDate: Date) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       return;
     }
 
     let totalFriends = 0;
     let totalEnemies = 0;
 
-    this.activity.combatantMap.forEach((combatant) => {
+    LogHandler.activity.combatantMap.forEach((combatant) => {
       if (combatant.teamID === 1) {
         totalFriends++;
       } else {
@@ -369,7 +361,9 @@ export default class ClassicLogHandler extends LogHandler {
       }
     });
 
-    const deadFriends = this.activity.deaths.filter((d) => d.friendly).length;
+    const deadFriends = LogHandler.activity.deaths.filter(
+      (d) => d.friendly,
+    ).length;
     const aliveFriends = totalFriends - deadFriends;
 
     if (aliveFriends < 1) {
@@ -380,7 +374,9 @@ export default class ClassicLogHandler extends LogHandler {
       return;
     }
 
-    const deadEnemies = this.activity.deaths.filter((d) => !d.friendly).length;
+    const deadEnemies = LogHandler.activity.deaths.filter(
+      (d) => !d.friendly,
+    ).length;
     const aliveEnemies = totalEnemies - deadEnemies;
 
     if (aliveEnemies < 1) {
@@ -390,7 +386,7 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   private async battlegroundStart(line: LogLine) {
-    if (this.activity) {
+    if (LogHandler.activity) {
       console.error(
         "[ClassicLogHandler] Another activity in progress, can't start battleground",
       );
@@ -406,14 +402,13 @@ export default class ClassicLogHandler extends LogHandler {
       category,
       zoneID,
       Flavour.Classic,
-      this.cfg,
     );
 
-    await this.startActivity(activity);
+    await LogHandler.startActivity(activity);
   }
 
   private async battlegroundEnd(line: LogLine) {
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       console.error(
         "[ClassicLogHandler] Can't stop battleground as no active activity",
       );
@@ -421,15 +416,15 @@ export default class ClassicLogHandler extends LogHandler {
     }
 
     const endTime = line.date();
-    this.activity.end(endTime, false);
-    await this.endActivity();
+    LogHandler.activity.end(endTime, false);
+    await LogHandler.endActivity();
   }
 
   private handleCombatantInfoLine(line: LogLine) {
     console.debug('[ClassicLogHandler] Handling COMBATANT_INFO line:', line);
 
-    if (!this.activity) {
-      console.error(
+    if (!LogHandler.activity) {
+      console.warn(
         '[ClassicLogHandler] No activity in progress, ignoring COMBATANT_INFO',
       );
       return;
@@ -439,7 +434,7 @@ export default class ClassicLogHandler extends LogHandler {
 
     // In CMs we see COMBANTANT_INFO events for each encounter.
     // Don't bother overwriting them if we have them already.
-    const combatant = this.activity.getCombatant(GUID);
+    const combatant = LogHandler.activity.getCombatant(GUID);
 
     if (combatant) {
       return;
@@ -453,7 +448,7 @@ export default class ClassicLogHandler extends LogHandler {
     // We weirdly MOP classic doesn't include class or spec in
     // the COMBATANT_INFO.
     const newCombatant = new Combatant(GUID);
-    this.activity.addCombatant(newCombatant);
+    LogHandler.activity.addCombatant(newCombatant);
   }
 
   private async handleChallengeModeStartLine(line: LogLine) {
@@ -462,7 +457,10 @@ export default class ClassicLogHandler extends LogHandler {
       line,
     );
 
-    if (this.activity && this.activity.category === VideoCategory.MythicPlus) {
+    if (
+      LogHandler.activity &&
+      LogHandler.activity.category === VideoCategory.MythicPlus
+    ) {
       // This can happen if you zone in and out of a key mid pull.
       // If it's a new key, we see a CHALLENGE_MODE_END event first.
       console.info('[ClassicLogHandler] Subsequent start event for dungeon');
@@ -482,9 +480,10 @@ export default class ClassicLogHandler extends LogHandler {
       return;
     }
 
-    const recordChallengeModes = this.cfg.get<boolean>(
+    const recordChallengeModes = ConfigService.getInstance().get<boolean>(
       'recordChallengeModes',
     );
+
     if (!recordChallengeModes) {
       console.info(
         '[ClassicLogHandler] Ignoring MoP Challenge Mode (disabled in settings)',
@@ -500,11 +499,10 @@ export default class ClassicLogHandler extends LogHandler {
       mapID,
       0,
       [],
-      this.cfg,
       Flavour.Classic,
     );
 
-    await this.startActivity(activity);
+    await LogHandler.startActivity(activity);
   }
 
   private async handleChallengeModeEndLine(line: LogLine) {
@@ -513,17 +511,17 @@ export default class ClassicLogHandler extends LogHandler {
       line,
     );
 
-    if (!this.activity) {
+    if (!LogHandler.activity) {
       console.error(
         '[ClassicLogHandler] Challenge mode stop with no active ChallengeModeDungeon',
       );
       return;
     }
 
-    const challengeModeActivity = this.activity as ChallengeModeDungeon;
+    const challengeModeActivity = LogHandler.activity as ChallengeModeDungeon;
     const endDate = line.date();
 
     challengeModeActivity.endChallengeMode(endDate, 0, true);
-    await this.endActivity();
+    await LogHandler.endActivity();
   }
 }

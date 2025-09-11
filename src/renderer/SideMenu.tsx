@@ -5,6 +5,7 @@ import {
   Dice3,
   Dice5,
   Goal,
+  HardHat,
   MonitorCog,
   Sword,
   Swords,
@@ -13,7 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
 import {
   AppState,
-  Crashes,
+  ErrorReport,
   MicStatus,
   Pages,
   RecStatus,
@@ -24,7 +25,6 @@ import { ConfigurationSchema } from 'config/configSchema';
 import {
   getLocaleCategoryLabel,
   getLocalePhrase,
-  Phrase,
 } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
 import { setConfigValue } from './useSettings';
@@ -37,6 +37,8 @@ import DiscordButton from './DiscordButton';
 import ApplicationStatusCard from './containers/ApplicationStatusCard/ApplicationStatusCard';
 import { ScrollArea } from './components/ScrollArea/ScrollArea';
 import UpdateNotifier from './containers/UpdateNotifier/UpdateNotifier';
+import CloudStatusCard from './containers/ApplicationStatusCard/CloudStatusCard';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -46,7 +48,7 @@ interface IProps {
   persistentProgress: MutableRefObject<number>;
   error: string;
   micStatus: MicStatus;
-  crashes: Crashes;
+  errorReports: ErrorReport[];
   savingStatus: SaveStatus;
   config: ConfigurationSchema;
   updateAvailable: boolean;
@@ -61,7 +63,7 @@ const SideMenu = (props: IProps) => {
     persistentProgress,
     error,
     micStatus,
-    crashes,
+    errorReports,
     savingStatus,
     config,
     updateAvailable,
@@ -94,7 +96,7 @@ const SideMenu = (props: IProps) => {
     }
 
     return (
-      <Menu.Item value={tabCategory}>
+      <Menu.Item value={tabCategory} className="py-1.5">
         <Menu.Item.Icon>
           {typeof tabIcon === 'string' ? (
             <img
@@ -116,7 +118,7 @@ const SideMenu = (props: IProps) => {
 
   const renderSettingsTab = () => {
     return (
-      <Menu.Item value={Pages.Settings}>
+      <Menu.Item value={Pages.Settings} className="py-1.5">
         <Menu.Item.Icon>
           <Cog />
         </Menu.Item.Icon>
@@ -127,7 +129,7 @@ const SideMenu = (props: IProps) => {
 
   const renderSceneTab = () => {
     return (
-      <Menu.Item value={Pages.SceneEditor}>
+      <Menu.Item value={Pages.SceneEditor} className="py-1.5">
         <Menu.Item.Icon>
           <MonitorCog />
         </Menu.Item.Icon>
@@ -169,11 +171,13 @@ const SideMenu = (props: IProps) => {
         recorderStatus={recorderStatus}
         error={error}
         micStatus={micStatus}
-        crashes={crashes}
+        errorReports={errorReports}
         savingStatus={savingStatus}
         config={config}
         appState={appState}
       />
+      <CloudStatusCard appState={appState} />
+      <Separator className="mb-4" />
       <ScrollArea
         className="w-full h-[calc(100%-80px)]"
         withScrollIndicators={false}
@@ -199,6 +203,7 @@ const SideMenu = (props: IProps) => {
             <FontAwesomeIcon icon={faDragon} size="lg" />,
           )}
           {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
+          {renderCategoryTab(VideoCategory.Manual, <HardHat />)}
           {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}
         </Menu>
         <Separator className="my-5" />

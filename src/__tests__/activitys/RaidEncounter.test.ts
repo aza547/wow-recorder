@@ -2,7 +2,7 @@ import { specializationById } from '../../main/constants';
 import RaidEncounter from '../../activitys/RaidEncounter';
 import { Flavour } from '../../main/types';
 import Combatant from '../../main/Combatant';
-import { Phrase } from '../../localisation/types';
+import { Phrase } from '../../localisation/phrases';
 import TestConfigService from '../../utils/TestConfigService';
 
 const cfg = new TestConfigService();

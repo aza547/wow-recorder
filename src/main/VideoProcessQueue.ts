@@ -1,6 +1,4 @@
-import { BrowserWindow } from 'electron';
 import path from 'path';
-import assert from 'assert';
 import { shouldUpload } from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from '../config/ConfigService';
@@ -13,17 +11,22 @@ import {
   VideoQueueItem,
 } from './types';
 import {
-  fixPathWhenPackaged,
-  tryUnlink,
   writeMetadataFile,
   getMetadataForVideo,
   rendererVideoToMetadata,
   getFileInfo,
+  mv,
+  fixPathWhenPackaged,
+  logAxiosError,
 } from './util';
 import CloudClient from '../storage/CloudClient';
+import { send } from './main';
 import ffmpeg from 'fluent-ffmpeg';
+import axios from 'axios';
+import DiskClient from 'storage/DiskClient';
 
 const atomicQueue = require('atomic-queue');
+
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const ffmpegInstallerPath = fixPathWhenPackaged(ffmpegInstaller.path);
 ffmpeg.setFfmpegPath(ffmpegInstallerPath);
@@ -35,6 +38,19 @@ const isDebug =
  * A queue for cutting videos to size.
  */
 export default class VideoProcessQueue {
+  /**
+   * Singleton instance.
+   */
+  private static instance: VideoProcessQueue;
+
+  /**
+   * Singleton instance accessor.
+   */
+  public static getInstance() {
+    if (!this.instance) this.instance = new this();
+    return this.instance;
+  }
+
   /**
    * Atomic queue object for queueing cutting of videos.
    */
@@ -53,19 +69,9 @@ export default class VideoProcessQueue {
   private downloadQueue: any;
 
   /**
-   * Handle to the main window for updating the saving status icon.
-   */
-  private mainWindow: BrowserWindow;
-
-  /**
    * Config service handle.
    */
   private cfg = ConfigService.getInstance();
-
-  /**
-   * Cloud client, defined if using cloud storage.
-   */
-  private cloudClient: CloudClient | undefined;
 
   /**
    * List of video file paths currently in the upload queue, or in
@@ -84,8 +90,7 @@ export default class VideoProcessQueue {
   /**
    * Constructor.
    */
-  constructor(mainWindow: BrowserWindow) {
-    this.mainWindow = mainWindow;
+  private constructor() {
     this.videoQueue = this.createVideoQueue();
     this.uploadQueue = this.createUploadQueue();
     this.downloadQueue = this.createDownloadQueue();
@@ -146,20 +151,6 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Set the cloud client.
-   */
-  public setCloudClient = (cloudClient: CloudClient) => {
-    this.cloudClient = cloudClient;
-  };
-
-  /**
-   * Unset the cloud client.
-   */
-  public unsetCloudClient() {
-    this.cloudClient = undefined;
-  }
-
-  /**
    * Add a video to the queue for processing, the processing it undergoes is
    * dictated by the input. This is the only public method on this class.
    */
@@ -184,7 +175,7 @@ export default class VideoProcessQueue {
     this.uploadQueue.write(item);
 
     const queued = Math.max(0, this.inProgressUploads.length);
-    this.mainWindow.webContents.send('updateUploadQueueLength', queued);
+    send('updateUploadQueueLength', queued);
   };
 
   /**
@@ -204,7 +195,7 @@ export default class VideoProcessQueue {
     this.downloadQueue.write(video);
 
     const queued = Math.max(0, this.inProgressDownloads.length);
-    this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
+    send('updateDownloadQueueLength', queued);
   };
 
   /**
@@ -217,23 +208,27 @@ export default class VideoProcessQueue {
   ): Promise<void> {
     try {
       const outputDir = this.cfg.get<string>('storagePath');
+      let videoPath;
 
-      const videoPath = await this.cutVideo(
-        data.source,
-        outputDir,
-        data.suffix,
-        data.offset,
-        data.duration,
-      );
+      if (data.clip) {
+        videoPath = await this.cutVideo(
+          data.source,
+          outputDir,
+          data.suffix,
+          data.offset,
+          data.duration,
+        );
+      } else {
+        videoPath = await this.moveVideo(data.source, outputDir, data.suffix);
+      }
 
       await writeMetadataFile(videoPath, data.metadata);
 
-      if (data.deleteSource) {
-        console.info('[VideoProcessQueue] Deleting source video file');
-        await tryUnlink(data.source);
-      }
+      const upload =
+        CloudClient.getInstance().ready() &&
+        shouldUpload(this.cfg, data.metadata);
 
-      if (this.cloudClient && shouldUpload(this.cfg, data.metadata)) {
+      if (upload) {
         const item: UploadQueueItem = {
           path: videoPath,
         };
@@ -269,16 +264,16 @@ export default class VideoProcessQueue {
         return;
       }
 
-      this.mainWindow.webContents.send('updateUploadProgress', progress);
+      send('updateUploadProgress', progress);
       lastProgress = progress;
     };
 
-    try {
-      assert(this.cloudClient);
+    const client = CloudClient.getInstance();
 
+    try {
       // Upload the video first, this can take a bit of time, and don't want
       // to confuse the frontend by having metadata without video.
-      await this.cloudClient.putFile(item.path, rateLimit, progressCallback);
+      await client.putFile(item.path, rateLimit, progressCallback);
       progressCallback(100);
 
       // Now add the metadata.
@@ -308,13 +303,15 @@ export default class VideoProcessQueue {
         cloudMetadata.start = stats.mtime;
       }
 
-      await this.cloudClient.postVideo(cloudMetadata);
+      await client.postVideo(cloudMetadata);
     } catch (error) {
-      console.error(
-        '[VideoProcessQueue] Error processing video:',
-        String(error),
-        error,
-      );
+      if (axios.isAxiosError(error)) {
+        const msg = '[CloudClient] Axios error processing video';
+        logAxiosError(msg, error);
+      } else {
+        console.error('[CloudClient] Error processing video', error);
+      }
+
       progressCallback(100);
     }
 
@@ -339,14 +336,14 @@ export default class VideoProcessQueue {
         return;
       }
 
-      this.mainWindow.webContents.send('updateDownloadProgress', progress);
+      send('updateDownloadProgress', progress);
       lastProgress = progress;
     };
 
-    try {
-      assert(this.cloudClient);
+    const client = CloudClient.getInstance();
 
-      await this.cloudClient.getAsFile(
+    try {
+      await client.getAsFile(
         `${videoName}.mp4`,
         videoSource,
         storageDir,
@@ -396,17 +393,18 @@ export default class VideoProcessQueue {
    */
   private startedProcessingVideo(item: VideoQueueItem) {
     console.info('[VideoProcessQueue] Now processing video', item.source);
-    this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.Saving);
+    send('updateSaveStatus', SaveStatus.Saving);
   }
 
   /**
    * Log we are done, and update the saving status icon and refresh the
    * frontend.
    */
-  private finishProcessingVideo(item: VideoQueueItem) {
-    console.info('[VideoProcessQueue] Finished cutting video', item.source);
-    this.mainWindow.webContents.send('updateSaveStatus', SaveStatus.NotSaving);
-    this.mainWindow.webContents.send('refreshState');
+  private async finishProcessingVideo(item: VideoQueueItem) {
+    console.info('[VideoProcessQueue] Finished processing video', item.source);
+    send('updateSaveStatus', SaveStatus.NotSaving);
+    DiskClient.getInstance().refreshStatus();
+    DiskClient.getInstance().refreshVideos();
   }
 
   /**
@@ -415,9 +413,8 @@ export default class VideoProcessQueue {
   private startedUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Now uploading video', item.path);
     const queued = Math.max(0, this.inProgressUploads.length);
-    this.mainWindow.webContents.send('updateUploadProgress', 0);
-    this.mainWindow.webContents.send('updateUploadQueueLength', queued);
-    this.mainWindow.webContents.send('refreshState');
+    send('updateUploadProgress', 0);
+    send('updateUploadQueueLength', queued);
   }
 
   /**
@@ -425,15 +422,13 @@ export default class VideoProcessQueue {
    */
   private finishUploadingVideo(item: UploadQueueItem) {
     console.info('[VideoProcessQueue] Finished uploading video', item.path);
-    this.mainWindow.webContents.send('refreshState');
 
     this.inProgressUploads = this.inProgressUploads.filter(
       (p) => p !== item.path,
     );
 
     const queued = Math.max(0, this.inProgressUploads.length);
-    this.mainWindow.webContents.send('updateUploadQueueLength', queued);
-    this.mainWindow.webContents.send('refreshState');
+    send('updateUploadQueueLength', queued);
   }
 
   /**
@@ -443,15 +438,14 @@ export default class VideoProcessQueue {
     const { videoName } = video;
     console.info('[VideoProcessQueue] Now downloading video', videoName);
     const queued = Math.max(0, this.inProgressDownloads.length);
-    this.mainWindow.webContents.send('updateDownloadProgress', 0);
-    this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
-    this.mainWindow.webContents.send('refreshState');
+    send('updateDownloadProgress', 0);
+    send('updateDownloadQueueLength', queued);
   }
 
   /**
    * Called on the end of an upload.
    */
-  private finishDownloadingVideo(video: RendererVideo) {
+  private async finishDownloadingVideo(video: RendererVideo) {
     const { videoName } = video;
     console.info('[VideoProcessQueue] Finished downloading video', videoName);
 
@@ -460,8 +454,10 @@ export default class VideoProcessQueue {
     );
 
     const queued = Math.max(0, this.inProgressDownloads.length);
-    this.mainWindow.webContents.send('refreshState');
-    this.mainWindow.webContents.send('updateDownloadQueueLength', queued);
+    send('updateDownloadQueueLength', queued);
+
+    DiskClient.getInstance().refreshStatus();
+    DiskClient.getInstance().refreshVideos();
   }
 
   /**
@@ -469,7 +465,7 @@ export default class VideoProcessQueue {
    */
   private async videoQueueEmpty() {
     console.info('[VideoProcessQueue] Video processing queue empty');
-    const sizeMonitor = new DiskSizeMonitor(this.mainWindow);
+    const sizeMonitor = new DiskSizeMonitor();
     sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 
@@ -478,7 +474,7 @@ export default class VideoProcessQueue {
       limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
     };
 
-    this.mainWindow.webContents.send('updateDiskStatus', status);
+    send('updateDiskStatus', status);
   }
 
   /**
@@ -493,7 +489,7 @@ export default class VideoProcessQueue {
    */
   private async downloadQueueEmpty() {
     console.info('[VideoProcessQueue] Download processing queue empty');
-    const sizeMonitor = new DiskSizeMonitor(this.mainWindow);
+    const sizeMonitor = new DiskSizeMonitor();
     sizeMonitor.run();
     const usage = await sizeMonitor.usage();
 
@@ -502,7 +498,7 @@ export default class VideoProcessQueue {
       limit: this.cfg.get<number>('maxStorage') * 1024 ** 3,
     };
 
-    this.mainWindow.webContents.send('updateDiskStatus', status);
+    send('updateDiskStatus', status);
   }
 
   /**
@@ -537,20 +533,23 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Avoid trying to start from a negative start time, which is obviously nonsense.
+   * Move a video file to its final location.
    */
-  private static async getStartTime(target: number) {
-    if (target < 0) {
-      console.warn('[VideoProcessQueue] Rejecting negative start time', target);
-      return 0;
-    }
+  private async moveVideo(
+    srcFile: string,
+    outputDir: string,
+    suffix: string | undefined,
+  ) {
+    const outputPath = VideoProcessQueue.getOutputVideoPath(
+      srcFile,
+      outputDir,
+      suffix,
+    );
 
-    return target;
+    await mv(srcFile, outputPath);
+    return outputPath;
   }
 
-  /**
-   * Cut the video to size using ffmpeg.
-   */
   private async cutVideo(
     srcFile: string,
     outputDir: string,
@@ -558,7 +557,7 @@ export default class VideoProcessQueue {
     offset: number,
     duration: number,
   ): Promise<string> {
-    const start = await VideoProcessQueue.getStartTime(offset);
+    const start = offset > 0 ? offset : 0;
 
     const outputPath = VideoProcessQueue.getOutputVideoPath(
       srcFile,
