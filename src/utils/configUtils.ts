@@ -232,15 +232,11 @@ const getOverlayConfig = (cfg: ConfigService): ObsOverlayConfig => {
     chatOverlayEnabled: cfg.get<boolean>('chatOverlayEnabled'),
     chatOverlayOwnImage: cfg.get<boolean>('chatOverlayOwnImage'),
     chatOverlayOwnImagePath: cfg.get<string>('chatOverlayOwnImagePath'),
-    chatOverlayWidth: cfg.get<number>('chatOverlayWidth'),
-    chatOverlayHeight: cfg.get<number>('chatOverlayHeight'),
     chatOverlayScale: cfg.get<number>('chatOverlayScale'),
     chatOverlayXPosition: cfg.get<number>('chatOverlayXPosition'),
     chatOverlayYPosition: cfg.get<number>('chatOverlayYPosition'),
-
-    // While not strictly overlay config, we need this to determine
-    // if it's valid to have a custom overlay (which is a paid feature).
-    cloudStorage: cfg.get<boolean>('cloudStorage'),
+    chatOverlayCropX: cfg.get<number>('chatOverlayCropX'),
+    chatOverlayCropY: cfg.get<number>('chatOverlayCropY'),
   };
 };
 

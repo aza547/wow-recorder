@@ -115,7 +115,16 @@ contextBridge.exposeInMainWorld('electron', {
 
     setSourcePosition(
       src: SceneItem,
-      target: { x: number; y: number; width: number; height: number },
+      target: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        cropLeft: number;
+        cropRight: number;
+        cropTop: number;
+        cropBottom: number;
+      },
     ) {
       ipcRenderer.send('setSourcePosition', src, target);
     },

@@ -276,7 +276,16 @@ export default class Recorder extends EventEmitter {
       (
         event,
         item: SceneItem,
-        target: { x: number; y: number; width: number; height: number },
+        target: {
+          x: number;
+          y: number;
+          width: number;
+          height: number;
+          cropLeft: number;
+          cropRight: number;
+          cropTop: number;
+          cropBottom: number;
+        },
       ) => {
         const src =
           item === SceneItem.OVERLAY ? this.overlaySource : this.captureSource;
@@ -644,6 +653,10 @@ export default class Recorder extends EventEmitter {
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
       scaleY: chatOverlayScale,
+      cropLeft: config.chatOverlayCropX,
+      cropRight: config.chatOverlayCropX,
+      cropTop: config.chatOverlayCropY,
+      cropBottom: config.chatOverlayCropY,
     });
   }
 
@@ -675,6 +688,10 @@ export default class Recorder extends EventEmitter {
       y: chatOverlayYPosition,
       scaleX: chatOverlayScale,
       scaleY: chatOverlayScale,
+      cropLeft: config.chatOverlayCropX,
+      cropRight: config.chatOverlayCropX,
+      cropTop: config.chatOverlayCropY,
+      cropBottom: config.chatOverlayCropY,
     });
   }
 
@@ -1085,8 +1102,8 @@ export default class Recorder extends EventEmitter {
     logPath = fixPathWhenPackaged(logPath);
     noobsPath = fixPathWhenPackaged(noobsPath);
 
-    console.log('[Recorder] Noobs path:', noobsPath);
-    console.log('[Recorder] Log path:', logPath);
+    console.info('[Recorder] Noobs path:', noobsPath);
+    console.info('[Recorder] Log path:', logPath);
     noobs.Init(noobsPath, logPath, cb);
     noobs.SetBuffering(true);
 
@@ -1123,6 +1140,7 @@ export default class Recorder extends EventEmitter {
       // when a game or window capture source is initialized or resized. To be
       // clear this is the dimensions NOT the scale. Users cannot trigger this.
       send('redrawPreview');
+      send('initCropSliders');
       return;
     }
 
@@ -1186,6 +1204,10 @@ export default class Recorder extends EventEmitter {
       y: videoSourceYPosition,
       scaleX: videoSourceScale,
       scaleY: videoSourceScale,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
     });
   }
 
@@ -1224,6 +1246,10 @@ export default class Recorder extends EventEmitter {
       y: videoSourceYPosition,
       scaleX: videoSourceScale,
       scaleY: videoSourceScale,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
     };
 
     noobs.SetSourceSettings(this.captureSource, settings);
@@ -1279,7 +1305,7 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] Monitor index was not found');
     }
 
-    console.log('[Recorder] Selected monitor:', monitorId);
+    console.info('[Recorder] Selected monitor:', monitorId);
 
     const settings = {
       ...defaults,
@@ -1294,6 +1320,10 @@ export default class Recorder extends EventEmitter {
       y: videoSourceYPosition,
       scaleX: videoSourceScale,
       scaleY: videoSourceScale,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
     };
 
     noobs.SetSourceSettings(this.captureSource, settings);
@@ -1551,6 +1581,10 @@ export default class Recorder extends EventEmitter {
       scaleY: current.scaleY,
       width: current.width * sf * current.scaleX,
       height: current.height * sf * current.scaleY,
+      cropLeft: current.cropLeft * sf * current.scaleX,
+      cropRight: current.cropRight * sf * current.scaleX,
+      cropTop: current.cropTop * sf * current.scaleY,
+      cropBottom: current.cropBottom * sf * current.scaleY,
     };
 
     return position;
@@ -1561,7 +1595,16 @@ export default class Recorder extends EventEmitter {
    */
   public setSourcePosition(
     src: string,
-    target: { x: number; y: number; width: number; height: number },
+    target: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      cropLeft: number;
+      cropRight: number;
+      cropTop: number;
+      cropBottom: number;
+    },
   ) {
     const previewInfo = noobs.GetPreviewInfo(); // Could be cached?
     const current = noobs.GetSourcePos(src);
@@ -1587,6 +1630,10 @@ export default class Recorder extends EventEmitter {
       y: target.y / sf,
       scaleX: scale,
       scaleY: scale,
+      cropLeft: target.cropLeft / (sf * scale),
+      cropRight: target.cropRight / (sf * scale),
+      cropTop: target.cropTop / (sf * scale),
+      cropBottom: target.cropBottom / (sf * scale),
     };
 
     noobs.SetSourcePos(src, updated);
@@ -1595,20 +1642,28 @@ export default class Recorder extends EventEmitter {
       ? SceneItem.OVERLAY
       : SceneItem.GAME;
 
-    if (item === SceneItem.OVERLAY) {
-      if (this.overlayPosDebounceTimer) {
-        clearTimeout(this.overlayPosDebounceTimer);
-      }
+    const timer =
+      item === SceneItem.OVERLAY
+        ? this.overlayPosDebounceTimer
+        : this.gamePosDebounceTimer;
 
+    if (timer) {
+      clearTimeout(timer);
+    }
+
+    if (item === SceneItem.OVERLAY) {
       this.overlayPosDebounceTimer = setTimeout(() => {
-        this.saveSourcePosition(item, updated.x, updated.y, scale);
+        this.saveSourcePosition(
+          item,
+          updated.x,
+          updated.y,
+          scale,
+          updated.cropLeft,
+          updated.cropTop,
+        );
         this.overlayPosDebounceTimer = undefined;
       }, 1000);
     } else if (item === SceneItem.GAME) {
-      if (this.gamePosDebounceTimer) {
-        clearTimeout(this.gamePosDebounceTimer);
-      }
-
       this.gamePosDebounceTimer = setTimeout(() => {
         this.saveSourcePosition(item, updated.x, updated.y, scale);
         this.gamePosDebounceTimer = undefined;
@@ -1627,6 +1682,10 @@ export default class Recorder extends EventEmitter {
       y: 0,
       scaleX: 1,
       scaleY: 1,
+      cropLeft: 0,
+      cropTop: 0,
+      cropRight: 0,
+      cropBottom: 0,
     };
 
     noobs.SetSourcePos(src, updated);
@@ -1646,13 +1705,23 @@ export default class Recorder extends EventEmitter {
     x: number,
     y: number,
     scale: number,
+    cropX: number = 0,
+    cropY: number = 0,
   ) {
-    console.info('[Recorder] Saving', item, 'position', { x, y, scale });
+    console.info('[Recorder] Saving', item, 'position', {
+      x,
+      y,
+      scale,
+      cropX,
+      cropY,
+    });
 
     if (item === SceneItem.OVERLAY) {
       this.cfg.set('chatOverlayXPosition', x);
       this.cfg.set('chatOverlayYPosition', y);
       this.cfg.set('chatOverlayScale', scale);
+      this.cfg.set('chatOverlayCropX', cropX);
+      this.cfg.set('chatOverlayCropY', cropY);
     } else {
       this.cfg.set('videoSourceXPosition', x);
       this.cfg.set('videoSourceYPosition', y);

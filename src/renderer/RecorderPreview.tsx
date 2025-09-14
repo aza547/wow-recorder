@@ -63,6 +63,10 @@ const RecorderPreview = (props: {
       y: 0,
       width: 200,
       height: 100,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
     });
 
   const [gameBoxDimensions, setGameBoxDimensions] = useState<BoxDimensions>({
@@ -70,6 +74,10 @@ const RecorderPreview = (props: {
     y: 0,
     width: 1000,
     height: 500,
+    cropLeft: 0,
+    cropRight: 0,
+    cropTop: 0,
+    cropBottom: 0,
   });
 
   useEffect(() => {
@@ -92,13 +100,10 @@ const RecorderPreview = (props: {
   }, []);
 
   useEffect(() => {
-    if (initialRender.current) {
-      // Just save calling the stuff below on initial render, we setup
-      // everything in the other use effect. This isn't really important
-      // but it helps to avoid unnecessary function calls.
-      initialRender.current = false;
-      return;
-    }
+    // Just save calling the stuff below on initial render, we setup
+    // everything in the other use effect. This isn't really important
+    // but it helps to avoid unnecessary function calls.
+    if (initialRender.current) return;
 
     if (previewEnabled) {
       showPreview();
@@ -135,6 +140,8 @@ const RecorderPreview = (props: {
       Math.abs(
         overlayBoxDimensions.y +
           overlayBoxDimensions.height -
+          overlayBoxDimensions.cropTop -
+          overlayBoxDimensions.cropBottom -
           previewInfo.previewHeight +
           2 * yCorr,
       ) < snapDistance
@@ -148,6 +155,8 @@ const RecorderPreview = (props: {
       Math.abs(
         overlayBoxDimensions.x +
           overlayBoxDimensions.width -
+          overlayBoxDimensions.cropLeft -
+          overlayBoxDimensions.cropRight -
           previewInfo.previewWidth +
           2 * xCorr,
       ) < snapDistance
@@ -220,98 +229,83 @@ const RecorderPreview = (props: {
     };
   }, [configureDraggableBoxes]);
 
+  useEffect(() => {
+    if (initialRender.current) return;
+    // If the crop sliders change we need to redraw.
+    configureDraggableBoxes();
+  }, [config.chatOverlayCropX, config.chatOverlayCropY]);
+
+  useEffect(() => {
+    initialRender.current = false;
+  }, []);
+
   const onSourceMove = (event: MouseEvent, src: SceneItem) => {
     const zoomFactor = window.devicePixelRatio;
 
-    if (src === SceneItem.OVERLAY) {
-      setOverlayBoxDimensions((prev) => {
-        const updated = {
-          ...prev,
-          x: prev.x + event.movementX * zoomFactor,
-          y: prev.y + event.movementY * zoomFactor,
-        };
+    const fn =
+      src === SceneItem.OVERLAY
+        ? setOverlayBoxDimensions
+        : setGameBoxDimensions;
 
-        const snapped = { ...updated };
+    fn((prev) => {
+      const updated = {
+        ...prev,
+        x: prev.x + event.movementX * zoomFactor,
+        y: prev.y + event.movementY * zoomFactor,
+      };
 
-        if (snapOverlay.x === Snap.LEFT) {
-          snapped.x = 0;
-        } else if (snapOverlay.x === Snap.RIGHT) {
-          snapped.x = previewInfo.previewWidth - snapped.width - 2 * xCorr;
-        }
+      const snapped = { ...updated };
 
-        if (snapOverlay.y === Snap.TOP) {
-          snapped.y = 0;
-        } else if (snapOverlay.y === Snap.BOTTOM) {
-          snapped.y = previewInfo.previewHeight - snapped.height - 2 * yCorr;
-        }
+      if (snapOverlay.x === Snap.LEFT) {
+        snapped.x = 0;
+      } else if (snapOverlay.x === Snap.RIGHT) {
+        snapped.x =
+          previewInfo.previewWidth -
+          snapped.width -
+          2 * xCorr +
+          snapped.cropRight +
+          snapped.cropLeft;
+      }
 
-        ipc.setSourcePosition(SceneItem.OVERLAY, snapped);
-        return updated;
-      });
-    } else {
-      setGameBoxDimensions((prev) => {
-        const updated = {
-          ...prev,
-          x: prev.x + event.movementX * zoomFactor,
-          y: prev.y + event.movementY * zoomFactor,
-        };
+      if (snapOverlay.y === Snap.TOP) {
+        snapped.y = 0;
+      } else if (snapOverlay.y === Snap.BOTTOM) {
+        snapped.y =
+          previewInfo.previewHeight -
+          snapped.height -
+          2 * yCorr +
+          snapped.cropBottom +
+          snapped.cropTop;
+      }
 
-        const snapped = { ...updated };
-
-        if (snapGame.x === Snap.LEFT) {
-          snapped.x = 0;
-        } else if (snapGame.x === Snap.RIGHT) {
-          snapped.x = previewInfo.previewWidth - snapped.width - 2 * xCorr;
-        }
-
-        if (snapGame.y === Snap.TOP) {
-          snapped.y = 0;
-        } else if (snapGame.y === Snap.BOTTOM) {
-          snapped.y = previewInfo.previewHeight - snapped.height - 2 * yCorr;
-        }
-
-        ipc.setSourcePosition(SceneItem.GAME, snapped);
-        return updated;
-      });
-    }
+      ipc.setSourcePosition(src, snapped);
+      return updated;
+    });
   };
 
   const onSourceScale = (event: MouseEvent, src: SceneItem) => {
     const zoomFactor = window.devicePixelRatio;
 
-    if (src === SceneItem.OVERLAY) {
-      setOverlayBoxDimensions((prev) => {
-        const aspectRatio = prev.width / prev.height;
-        let newWidth = prev.width + event.movementX * zoomFactor;
-        newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
-        const newHeight = newWidth / aspectRatio;
+    const fn =
+      src === SceneItem.OVERLAY
+        ? setOverlayBoxDimensions
+        : setGameBoxDimensions;
 
-        const updated = {
-          ...prev,
-          width: newWidth,
-          height: newHeight,
-        };
+    fn((prev) => {
+      const aspectRatio = prev.width / prev.height;
+      let newWidth = prev.width + event.movementX * zoomFactor;
+      newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
+      const newHeight = newWidth / aspectRatio;
 
-        ipc.setSourcePosition(SceneItem.OVERLAY, updated);
-        return updated;
-      });
-    } else {
-      setGameBoxDimensions((prev) => {
-        const aspectRatio = prev.width / prev.height;
-        let newWidth = prev.width + event.movementX * zoomFactor;
-        newWidth = Math.max(20, newWidth); // Prevent negative or too small sizes
-        const newHeight = newWidth / aspectRatio;
+      const updated = {
+        ...prev,
+        width: newWidth,
+        height: newHeight,
+      };
 
-        const updated = {
-          ...prev,
-          width: newWidth,
-          height: newHeight,
-        };
-
-        ipc.setSourcePosition(SceneItem.GAME, updated);
-        return updated;
-      });
-    }
+      ipc.setSourcePosition(src, updated);
+      return updated;
+    });
   };
 
   const onMouseMove = useCallback(
@@ -387,7 +381,7 @@ const RecorderPreview = (props: {
       return <></>;
     }
 
-    const { x, y, width, height } =
+    const { x, y, width, height, cropLeft, cropRight, cropTop, cropBottom } =
       src === SceneItem.OVERLAY ? overlayBoxDimensions : gameBoxDimensions;
 
     const snap = src === SceneItem.OVERLAY ? snapOverlay : snapGame;
@@ -412,7 +406,8 @@ const RecorderPreview = (props: {
     if (snap.x === Snap.LEFT) {
       position.left = xCorr;
     } else if (snap.x === Snap.RIGHT) {
-      position.left = previewInfo.previewWidth - width - xCorr;
+      position.left =
+        previewInfo.previewWidth - width - xCorr + cropLeft + cropRight;
     } else {
       position.left = x + xCorr;
     }
@@ -420,7 +415,8 @@ const RecorderPreview = (props: {
     if (snap.y === Snap.TOP) {
       position.top = yCorr;
     } else if (snap.y === Snap.BOTTOM) {
-      position.top = previewInfo.previewHeight - height - yCorr;
+      position.top =
+        previewInfo.previewHeight - height - yCorr + cropTop + cropBottom;
     } else {
       position.top = y + yCorr;
     }
@@ -437,8 +433,8 @@ const RecorderPreview = (props: {
         sx={{
           position: 'absolute',
           ...position,
-          height: height / zoomFactor,
-          width: width / zoomFactor,
+          height: (height - cropTop - cropBottom) / zoomFactor,
+          width: (width - cropLeft - cropRight) / zoomFactor,
           outline: '2px solid #bb4420',
           outlineOffset: '-4px', // Slight offset to save it showing up on the edges.
           zIndex: ++zIndex,

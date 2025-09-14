@@ -1,7 +1,7 @@
 import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
 import { AudioSourceType, SceneItem } from 'main/types';
-import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
+import { Crop, ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 
 declare global {
   interface Window {
@@ -37,11 +37,20 @@ declare global {
 
         getSourcePosition(
           src: SceneItem,
-        ): Promise<SceneItemPosition & SourceDimensions>;
+        ): Promise<SceneItemPosition & SourceDimensions & Crop>;
         resetSourcePosition(src: SceneItem): void;
         setSourcePosition(
           src: SceneItem,
-          target: { x: number; y: number; width: number; height: number },
+          target: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+            cropLeft: number;
+            cropRight: number;
+            cropTop: number;
+            cropBottom: number;
+          },
         ): void;
 
         audioSettingsOpen(): Promise<void>;

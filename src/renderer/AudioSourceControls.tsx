@@ -612,7 +612,6 @@ const AudioSourceControls = (props: IProps) => {
             </PopoverTrigger>
             <PopoverContent className="border-bg" side="right" align="center">
               <Slider
-                defaultValue={[val]}
                 value={[val]}
                 max={100}
                 step={1}

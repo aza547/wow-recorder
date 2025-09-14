@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import React, { Dispatch, useState } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { AppState, RecStatus, SceneItem } from 'main/types';
 import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
@@ -27,7 +27,7 @@ interface IProps {
   appState: AppState;
   recorderStatus: RecStatus;
   config: ConfigurationSchema;
-  setConfig: Dispatch<React.SetStateAction<ConfigurationSchema>>;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const SceneEditor: React.FC<IProps> = (props: IProps) => {
@@ -54,7 +54,14 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
         className="flex w-[60px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
         variant="ghost"
         size="xs"
-        onClick={() => ipc.resetSourcePosition(SceneItem.OVERLAY)}
+        onClick={() => {
+          setConfig((prev) => ({
+            ...prev,
+            chatOverlayCropX: 0,
+            chatOverlayCropY: 0,
+          }));
+          ipc.resetSourcePosition(SceneItem.OVERLAY);
+        }}
       >
         {getLocalePhrase(appState.language, Phrase.ResetOverlayButtonText)}
       </Button>

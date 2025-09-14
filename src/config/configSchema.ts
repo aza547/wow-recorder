@@ -43,11 +43,11 @@ export type ConfigurationSchema = {
   chatOverlayEnabled: boolean;
   chatOverlayOwnImage: boolean;
   chatOverlayOwnImagePath: string;
-  chatOverlayWidth: number;
-  chatOverlayHeight: number;
   chatOverlayScale: number;
   chatOverlayXPosition: number;
   chatOverlayYPosition: number;
+  chatOverlayCropX: number;
+  chatOverlayCropY: number;
   deathMarkers: number;
   encounterMarkers: boolean;
   roundMarkers: boolean;
@@ -328,16 +328,6 @@ export const configSchema = {
     type: 'string',
     default: '',
   },
-  chatOverlayWidth: {
-    description: Phrase.ChatOverlayWidthDescription,
-    type: 'integer',
-    default: 700,
-  },
-  chatOverlayHeight: {
-    description: Phrase.ChatOverlayHeightDescription,
-    type: 'integer',
-    default: 230,
-  },
   chatOverlayScale: {
     description: Phrase.ChatOverlayScaleDescription,
     type: 'integer',
@@ -352,6 +342,16 @@ export const configSchema = {
     description: Phrase.ChatOverlayYPositionDescription,
     type: 'integer',
     default: 870,
+  },
+  chatOverlayCropX: {
+    description: Phrase.ChatOverlayWidthDescription,
+    type: 'integer',
+    default: 0,
+  },
+  chatOverlayCropY: {
+    description: Phrase.ChatOverlayHeightDescription,
+    type: 'integer',
+    default: 0,
   },
   deathMarkers: {
     description: Phrase.DeathMarkersDescription,

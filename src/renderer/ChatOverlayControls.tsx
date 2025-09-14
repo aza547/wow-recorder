@@ -1,7 +1,7 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { Info, Lock } from 'lucide-react';
-import { AppState } from 'main/types';
+import { AppState, SceneItem } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
 import { imageSelect } from './rendererutils';
@@ -10,6 +10,7 @@ import { Tooltip } from './components/Tooltip/Tooltip';
 import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
 import { Phrase } from 'localisation/phrases';
+import Slider from './components/Slider/Slider';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -22,14 +23,22 @@ interface IProps {
 const ChatOverlayControls = (props: IProps) => {
   const { appState, config, setConfig } = props;
   const { cloudStatus } = appState;
-  const initialRender = React.useRef(true);
+  const initialRender = useRef(true);
 
-  React.useEffect(() => {
-    // Don't fire on the initial render.
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
-    }
+  const [cropMaxX, setCropMaxX] = useState(0);
+  const [cropMaxY, setCropMaxY] = useState(0);
+
+  const initCropSliders = async () => {
+    if (!config.chatOverlayEnabled) return;
+    const pos = await ipc.getSourcePosition(SceneItem.OVERLAY);
+    // Don't let them scale to less than 80% of the dimension.
+    // That seems reasonable to avoid weird issues.
+    setCropMaxX(0.8 * Math.round(pos.width / 2));
+    setCropMaxY(0.8 * Math.round(pos.height / 2));
+  };
+
+  useEffect(() => {
+    if (initialRender.current) return;
 
     setConfigValues({
       chatOverlayEnabled: config.chatOverlayEnabled,
@@ -43,6 +52,21 @@ const ChatOverlayControls = (props: IProps) => {
     config.chatOverlayOwnImage,
     config.chatOverlayOwnImagePath,
   ]);
+
+  useEffect(() => {
+    // If the user changes an overlay source, it will fire the source
+    //  callback, which we react to to ensure the sliders are sensible.
+    ipc.on('initCropSliders', initCropSliders);
+
+    return () => {
+      ipc.removeAllListeners('initCropSliders');
+    };
+  }, [initCropSliders]);
+
+  useEffect(() => {
+    initCropSliders();
+    initialRender.current = false;
+  }, []);
 
   const setOverlayEnabled = (checked: boolean) => {
     setConfig((prevState) => {
@@ -162,6 +186,77 @@ const ChatOverlayControls = (props: IProps) => {
     );
   };
 
+  const setCropX = async (array: number[]) => {
+    const value = array[0];
+    setConfig((prev) => ({ ...prev, chatOverlayCropX: value }));
+    const p = await ipc.getSourcePosition(SceneItem.OVERLAY);
+    p.cropLeft = value;
+    p.cropRight = value;
+    await ipc.setSourcePosition(SceneItem.OVERLAY, p);
+  };
+
+  const setCropY = async (array: number[]) => {
+    const value = array[0];
+    setConfig((prev) => ({ ...prev, chatOverlayCropY: value }));
+    const p = await ipc.getSourcePosition(SceneItem.OVERLAY);
+    p.cropTop = value;
+    p.cropBottom = value;
+    await ipc.setSourcePosition(SceneItem.OVERLAY, p);
+  };
+
+  const getChatOverlayCropSliders = () => {
+    const { chatOverlayCropX, chatOverlayCropY } = config;
+    console.log({ chatOverlayCropX, chatOverlayCropY });
+    return (
+      <div className="flex flex-col gap-y-4 w-full mt-2">
+        <div className="flex gap-x-3 items-center">
+          <Label className="flex items-center w-[75px] mb-0">
+            {getLocalePhrase(appState.language, Phrase.WidthLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.chatOverlayCropX.description,
+              )}
+              side="right"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex w-[150px] items-center">
+            <Slider
+              value={[config.chatOverlayCropX]}
+              max={cropMaxX}
+              step={1}
+              onValueChange={setCropX}
+            />
+          </div>
+        </div>
+        <div className="flex gap-x-3 items-center">
+          <Label className="flex items-center w-[75px] mb-0">
+            {getLocalePhrase(appState.language, Phrase.HeightLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.chatOverlayCropY.description,
+              )}
+              side="right"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex w-[150px] items-center">
+            <Slider
+              value={[config.chatOverlayCropY]}
+              max={cropMaxY}
+              step={1}
+              onValueChange={setCropY}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const showPathWarning =
     config.chatOverlayOwnImage &&
     !config.chatOverlayOwnImagePath.endsWith('.png') &&
@@ -181,6 +276,7 @@ const ChatOverlayControls = (props: IProps) => {
           {getLocalePhrase(appState.language, Phrase.ErrorCustomImageFileType)}
         </p>
       )}
+      {config.chatOverlayEnabled && getChatOverlayCropSliders()}
     </div>
   );
 };

@@ -395,15 +395,11 @@ type ObsOverlayConfig = {
   chatOverlayEnabled: boolean;
   chatOverlayOwnImage: boolean;
   chatOverlayOwnImagePath: string;
-  chatOverlayWidth: number;
-  chatOverlayHeight: number;
   chatOverlayScale: number;
   chatOverlayXPosition: number;
   chatOverlayYPosition: number;
-
-  // While not strictly overlay config, we need this to determine
-  // if it's valid to have a custom overlay (which is a paid feature).
-  cloudStorage: boolean;
+  chatOverlayCropX: number;
+  chatOverlayCropY: number;
 };
 
 type ObsAudioConfig = {
@@ -589,6 +585,10 @@ type BoxDimensions = {
   y: number;
   width: number;
   height: number;
+  cropLeft: number;
+  cropRight: number;
+  cropTop: number;
+  cropBottom: number;
 };
 
 enum VideoSourceName {
