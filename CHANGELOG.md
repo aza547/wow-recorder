@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Buffer recordings are now entirely in memory, removing a timing window that could cause videos to be wrongly cut also reducing disk wear and hopefully user confusion.
 - Rework the audio sources page to be easier to understand.
 - The `jim_nvenc` and `jim_nvenc_av1` encoders have been replaced by their modern counterparts. Migration is automatic.
+- Pro config is now separated from the base config and won't interrupt recording if it goes wrong (e.g. your guild is deleted).
 
 ### Added
 - Add the ability to manually record via a hotkey configurable in the settings.
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 640](https://github.com/aza547/wow-recorder/issues/640) - Remove a hack relying on moving the preview off-screen when not on display.
 - Fix HOA timer.
 - Hide the scene preview while select menus are open, so they do not overlap.
+- Automatically handle the changing of an audio device ID, if the device is available with a different ID.
 
 ## [6.15.6] - 2025-08-28
 ### Fixed

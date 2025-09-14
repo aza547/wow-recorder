@@ -5,7 +5,6 @@ import {
   buildClipMetadata,
   getMetadataForVideo,
   getOBSFormattedDate,
-  exists,
   isManualRecordHotKey,
   nextKeyPressPromise,
   nextMousePressPromise,
@@ -20,7 +19,6 @@ import {
   RecStatus,
   VideoQueueItem,
   MicStatus,
-  DiskStatus,
   WowProcessEvent,
   BaseConfig,
 } from './types';
@@ -30,7 +28,6 @@ import {
   getOverlayConfig,
   getBaseConfig,
   validateBaseConfig,
-  getLocaleError,
 } from '../utils/configUtils';
 import { ERecordingState } from './obsEnums';
 import {
@@ -38,8 +35,6 @@ import {
   runRetailRecordingTest,
 } from '../utils/testButtonUtils';
 import VideoProcessQueue from './VideoProcessQueue';
-import DiskSizeMonitor from '../storage/DiskSizeMonitor';
-import { Phrase } from 'localisation/phrases';
 import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
@@ -318,17 +313,6 @@ export default class Manager {
   }
 
   /**
-   * Send a message to the frontend to update the disk status, which populates
-   * the disk usage bar.
-   */
-  private async refreshDiskStatus() {
-    const usage = await new DiskSizeMonitor().usage();
-    const limit = this.cfg.get<number>('maxStorage') * 1024 ** 3;
-    const status: DiskStatus = { usage, limit };
-    send('updateDiskStatus', status);
-  }
-
-  /**
    * Called when the WoW process is detected, which may be either on launch
    * of the App if WoW is open, or the user has genuinely opened WoW. Attaches
    * the audio sources and starts the buffer recording.
@@ -450,46 +434,6 @@ export default class Manager {
   private configureObsOverlay() {
     const config = getOverlayConfig(this.cfg);
     this.recorder.configureOverlayImageSource(config);
-  }
-
-  private async validateOverlayConfig() {
-    const config = getOverlayConfig(this.cfg);
-    const { chatOverlayOwnImage, chatOverlayOwnImagePath, cloudStorage } =
-      config;
-
-    if (!chatOverlayOwnImage) {
-      return;
-    }
-
-    if (!cloudStorage) {
-      console.warn('[Manager] To use a custom overlay, enable cloud storage');
-      throw new Error(getLocaleError(Phrase.ErrorCustomOverlayNotAllowed));
-    }
-
-    if (!chatOverlayOwnImagePath) {
-      console.warn(
-        '[Manager] Overlay image was not provided for custom overlay',
-      );
-
-      throw new Error(getLocaleError(Phrase.ErrorNoCustomImage));
-    }
-
-    if (
-      !chatOverlayOwnImagePath.toLocaleLowerCase().endsWith('.png') &&
-      !chatOverlayOwnImagePath.toLocaleLowerCase().endsWith('.gif')
-    ) {
-      console.warn('[Manager] Overlay image must be a .png or .gif file');
-      throw new Error(getLocaleError(Phrase.ErrorCustomImageFileType));
-    }
-
-    const fileExists = await exists(chatOverlayOwnImagePath);
-
-    if (!fileExists) {
-      console.warn(`[Manager] ${chatOverlayOwnImagePath} does not exist`);
-      let errorMsg = getLocaleError(Phrase.ErrorCustomImageFileType);
-      errorMsg += `: ${chatOverlayOwnImagePath}`;
-      throw new Error(errorMsg);
-    }
   }
 
   /**

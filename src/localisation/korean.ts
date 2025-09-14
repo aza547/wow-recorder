@@ -159,6 +159,7 @@ const KOREAN: Translations = {
   [Phrase.UploadBattlgroundsLabel]: '전장 업로드',
   [Phrase.SettingsDisabledText]: '기록이 활성화된 동안에는 이러한 설정을 수정할 수 없습니다.',
   [Phrase.SomeSettingsDisabledText]: '기록이 활성화되어 있는 동안에는 일부 설정을 수정할 수 없습니다.',
+  [Phrase.CloudSettingsDisabledText]: '클라우드 설정은 업로드 또는 다운로드가 진행 중일 때 수정할 수 없습니다.',
   [Phrase.InvalidRetailLogPathText]: '잘못된 본섭 로그 경로',
   [Phrase.InvalidClassicLogPathText]: '잘못된 클래식 로그 경로',
   [Phrase.InvalidClassicEraLogPathText]: '잘못된 클래식 시대 로그 경로',

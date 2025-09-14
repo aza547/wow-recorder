@@ -293,7 +293,7 @@ type AudioSource = {
   id: string; // The source name
   type: AudioSourceType;
   friendly?: string; // A user-friendly name for the source
-  device?: string; // Machine friendly identifier for the device or window
+  device?: string | number; // Machine friendly identifier for the device or window, I think this can only be a string in practice.
   volume: number; // Current volume setting (0-1)
 };
 
@@ -333,6 +333,10 @@ type AppState = {
   language: Language;
   cloudStatus: CloudStatus;
   diskStatus: DiskStatus;
+  uploadProgress: number;
+  downloadProgress: number;
+  queuedUploads: number;
+  queuedDownloads: number;
 };
 
 type TPreviewPosition = {

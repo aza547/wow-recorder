@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
-import { setConfigValue, setConfigValues, useSettings } from './useSettings';
+import { setConfigValue, setConfigValues } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
@@ -27,8 +27,9 @@ import {
 } from './components/Select/Select';
 import Separator from './components/Separator/Separator';
 import { Phrase } from 'localisation/phrases';
-import { useEffect, useRef } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 import { Button } from './components/Button/Button';
+import TextBanner from './components/TextBanner/TextBanner';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -43,12 +44,13 @@ let debounceTimer: NodeJS.Timeout | undefined;
 
 interface IProps {
   appState: AppState;
+  config: ConfigurationSchema;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const CloudSettings = (props: IProps) => {
-  const { appState } = props;
-  const { language } = appState;
-  const [config, setConfig] = useSettings();
+  const { appState, config, setConfig } = props;
+  const { language, queuedUploads, queuedDownloads } = appState;
   const initialRender = useRef(true);
 
   useEffect(() => {
@@ -68,6 +70,14 @@ const CloudSettings = (props: IProps) => {
       });
 
       ipc.reconfigureCloud();
+
+      if (!config.cloudStorage) {
+        // If the user has disabled cloud storage, also
+        // disable custom image overlays and reconfigure it.
+        setConfig((prev) => ({ ...prev, chatOverlayOwnImage: false }));
+        setConfigValues({ chatOverlayOwnImage: false });
+        ipc.reconfigureOverlay();
+      }
     }, 500);
   }, [
     config.cloudStorage,
@@ -80,6 +90,18 @@ const CloudSettings = (props: IProps) => {
   useEffect(() => {
     initialRender.current = false;
   }, []);
+
+  const isComponentDisabled = () => {
+    return queuedUploads > 0 || queuedDownloads > 0;
+  };
+
+  const getDisabledText = () => {
+    return (
+      <TextBanner>
+        {getLocalePhrase(language, Phrase.CloudSettingsDisabledText)}
+      </TextBanner>
+    );
+  };
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
@@ -784,14 +806,25 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
+  const disabled = isComponentDisabled();
+
+  const getPossiblyHiddenFields = () => {
+    return (
+      <>
+        <div className="flex flex-row">{getCloudSwitch()}</div>
+        <div className="flex flex-row gap-4 flex-wrap">
+          {getCloudAccountNameField()}
+          {getCloudAccountPasswordField()}
+          {getCloudGuildField()}
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-y-4 flex-wrap">
-      <div className="flex flex-row">{getCloudSwitch()}</div>
-      <div className="flex flex-row gap-4 flex-wrap">
-        {getCloudAccountNameField()}
-        {getCloudAccountPasswordField()}
-        {getCloudGuildField()}
-      </div>
+      {disabled && getDisabledText()}
+      {!disabled && getPossiblyHiddenFields()}
 
       {config.cloudStorage && (
         <>

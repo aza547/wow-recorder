@@ -16,8 +16,10 @@ const statusLightForegroundVariants = cva('rounded-full border-[3px]', {
         'bg-error border-error-border shadow-[0px_0px_4px_2px_rgba(153,27,27,0.66)]',
       waiting: 'bg-zinc-400 border-zinc-500',
       overrunning:
-        'bg-blue-accent border-blue-accent-border shadow-[0px_0px_4px_2px_rgba(2,132,199,0.66)]',
+        'bg-orange-500 border-orange-500 shadow-[0px_0px_4px_2px_rgba(249,115,22,0.66)]',
       connected:
+        'bg-blue-accent border-blue-accent-border shadow-[0px_0px_4px_2px_rgba(2,132,199,0.66)]',
+      active:
         'bg-blue-accent border-blue-accent-border shadow-[0px_0px_4px_2px_rgba(2,132,199,0.66)] animate-pulse',
       disconnected: 'bg-zinc-400 border-zinc-500',
     },
@@ -32,7 +34,8 @@ export type StatusLightVariant =
   | 'ready'
   | 'overrunning'
   | 'connected'
-  | 'disconnected';
+  | 'disconnected'
+  | 'active';
 
 export interface StatusLightProps
   extends React.HTMLAttributes<HTMLDivElement>,

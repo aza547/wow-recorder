@@ -56,6 +56,7 @@ import { getNativeWindowHandle, send } from './main';
 import { ipcMain } from 'electron';
 import Poller from 'utils/Poller';
 import AsyncQueue from 'utils/AsyncQueue';
+import assert from 'assert';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -705,7 +706,41 @@ export default class Recorder extends EventEmitter {
         settings['priority'] = 2; // Executable matching
         noobs.SetSourceSettings(name, settings);
       } else {
-        settings['device_id'] = src.device ? src.device : '';
+        const properties = noobs.GetSourceProperties(name);
+        const available = properties.find((prop) => prop.name === 'device_id');
+        assert(available && available.type === 'list'); // To help the compiler out.
+
+        // Try to match by device ID.
+        let match = available.items.find((d) => d.value === src.device);
+
+        if (!match) {
+          // Fallback to matching by name if we didn't find an ID match.
+          // Suspect this can happen on replugging devices.
+          console.info('[Recorder] Fallback to matching audio device by name');
+          match = available.items.find((d) => d.name === src.friendly);
+
+          if (!match) {
+            // Still no match after looking at both ID and friendly name,
+            // so give up trying to configure this source.
+            console.warn('[Recorder] Failed to configure audio device', src);
+            noobs.DeleteSource(name);
+            return;
+          }
+
+          // Correct the device ID in the config.
+          console.info(
+            '[Recorder] Fix up audio device ID from',
+            src.device,
+            'to',
+            match.value,
+          );
+
+          src.device = match.value;
+          this.cfg.set('audioSources', config.audioSources);
+        }
+
+        // Finish configuring the source.
+        settings['device_id'] = match.value;
         noobs.SetSourceSettings(name, settings);
       }
 
@@ -1269,8 +1304,8 @@ export default class Recorder extends EventEmitter {
   /**
    * Configure the chat overlay image source.
    */
-  public configureOverlayImageSource(config: ObsOverlayConfig) {
-    const { chatOverlayEnabled, chatOverlayOwnImage } = config;
+  public async configureOverlayImageSource(config: ObsOverlayConfig) {
+    const { chatOverlayEnabled } = config;
     console.info('[Recorder] Configure image source for chat overlay');
 
     if (this.overlaySource) {
@@ -1283,10 +1318,14 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    if (chatOverlayOwnImage && this.cfg.get('cloudStorage')) {
-      this.configureOwnOverlay(config);
-    } else {
+    const useDefaultOverlay = await this.useDefaultOverlayImage(config);
+
+    if (useDefaultOverlay) {
+      console.info('[Recorder] Using default overlay');
       this.configureDefaultOverlay(config);
+    } else {
+      console.info('[Recorder] Using custom overlay');
+      this.configureOwnOverlay(config);
     }
   }
 
@@ -1644,5 +1683,31 @@ export default class Recorder extends EventEmitter {
     }
 
     return ESupportedEncoders.OBS_X264;
+  }
+
+  /**
+   * Decide if we can should use the default overlay image or the custom one.
+   */
+  private async useDefaultOverlayImage(config: ObsOverlayConfig) {
+    const { chatOverlayOwnImage, chatOverlayOwnImagePath } = config;
+
+    if (!chatOverlayOwnImage) {
+      console.info('[Recorder] Configured to use default overlay');
+      return true;
+    }
+
+    if (!chatOverlayOwnImagePath) {
+      console.warn('[Recorder] No custom image path set');
+      return true;
+    }
+
+    const fileExists = await exists(chatOverlayOwnImagePath);
+
+    if (!fileExists) {
+      console.warn(`[Recorder] File does not exist`, chatOverlayOwnImagePath);
+      return true;
+    }
+
+    return false;
   }
 }

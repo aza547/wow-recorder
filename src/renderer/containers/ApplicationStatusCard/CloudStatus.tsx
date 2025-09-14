@@ -2,7 +2,6 @@ import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import { CloudDownload, CloudUpload } from 'lucide-react';
 import { AppState } from 'main/types';
-import { useEffect, useState } from 'react';
 import {
   HoverCard,
   HoverCardContent,
@@ -13,45 +12,19 @@ import StatusLight, {
   StatusLightVariant,
 } from 'renderer/components/StatusLight/StatusLight';
 
-const ipc = window.electron.ipcRenderer;
-
 type StatusProps = {
   appState: AppState;
 };
 
 const CloudStatus = ({ appState }: StatusProps) => {
-  const { cloudStatus, language } = appState;
-
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [downloadProgress, setDownloadProgress] = useState(0);
-
-  const [queuedUploads, setQueuedUploads] = useState(0);
-  const [queuedDownloads, setQueuedDownloads] = useState(0);
-
-  useEffect(() => {
-    ipc.on('updateUploadProgress', (progress) => {
-      setUploadProgress(progress as number);
-    });
-
-    ipc.on('updateDownloadProgress', (progress) => {
-      setDownloadProgress(progress as number);
-    });
-
-    ipc.on('updateDownloadQueueLength', (queued) => {
-      setQueuedDownloads(queued as number);
-    });
-
-    ipc.on('updateUploadQueueLength', (queued) => {
-      setQueuedUploads(queued as number);
-    });
-
-    return () => {
-      ipc.removeAllListeners('updateUploadProgress');
-      ipc.removeAllListeners('updateDownloadProgress');
-      ipc.removeAllListeners('updateDownloadQueueLength');
-      ipc.removeAllListeners('updateUploadQueueLength');
-    };
-  }, []);
+  const {
+    cloudStatus,
+    language,
+    queuedUploads,
+    queuedDownloads,
+    uploadProgress,
+    downloadProgress,
+  } = appState;
 
   const statusLightsClasses = 'w-1.5 h-full rounded-l-md rounded-r-none';
 
@@ -103,7 +76,10 @@ const CloudStatus = ({ appState }: StatusProps) => {
       </div>
     );
   } else {
-    variant = 'connected';
+    variant =
+      appState.queuedDownloads > 0 || appState.queuedUploads > 0
+        ? 'active'
+        : 'connected';
     status = getLocalePhrase(language, Phrase.StatusTitleConnected);
 
     description = (

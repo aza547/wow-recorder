@@ -717,6 +717,12 @@ const fileSelect = async (): Promise<string> => {
   return path;
 };
 
+const imageSelect = async (): Promise<string> => {
+  const ipc = window.electron.ipcRenderer;
+  const path = await ipc.invoke('selectImage', []);
+  return path;
+};
+
 const convertNumToDeathMarkers = (n: number) => {
   if (n === 2) return DeathMarkers.ALL;
   if (n === 1) return DeathMarkers.OWN;
@@ -1136,6 +1142,7 @@ export {
   mapStringToEncoder,
   pathSelect,
   fileSelect,
+  imageSelect,
   convertNumToDeathMarkers,
   convertDeathMarkersToNum,
   getAllDeathMarkers,

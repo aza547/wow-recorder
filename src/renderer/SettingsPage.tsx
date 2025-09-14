@@ -153,7 +153,11 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                   )}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <CloudSettings appState={appState} />
+                <CloudSettings
+                  appState={appState}
+                  config={config}
+                  setConfig={setConfig}
+                />
               </div>
             </div>
           </TabsContent>

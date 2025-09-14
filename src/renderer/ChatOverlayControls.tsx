@@ -1,10 +1,10 @@
-import React, { Dispatch } from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { Info, Lock } from 'lucide-react';
 import { AppState } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues } from './useSettings';
-import { fileSelect } from './rendererutils';
+import { imageSelect } from './rendererutils';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Switch from './components/Switch/Switch';
@@ -16,11 +16,12 @@ const ipc = window.electron.ipcRenderer;
 interface IProps {
   appState: AppState;
   config: ConfigurationSchema;
-  setConfig: Dispatch<React.SetStateAction<ConfigurationSchema>>;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const ChatOverlayControls = (props: IProps) => {
   const { appState, config, setConfig } = props;
+  const { cloudStatus } = appState;
   const initialRender = React.useRef(true);
 
   React.useEffect(() => {
@@ -98,7 +99,7 @@ const ChatOverlayControls = (props: IProps) => {
             )}
             side="right"
           >
-            {config.cloudStorage ? (
+            {cloudStatus.authorized ? (
               <Info size={20} className="inline-flex" />
             ) : (
               <Lock size={20} className="inline-flex" />
@@ -107,9 +108,12 @@ const ChatOverlayControls = (props: IProps) => {
         </Label>
         <div className="flex h-10 items-center">
           <Switch
-            checked={config.cloudStorage && config.chatOverlayOwnImage}
+            checked={config.chatOverlayOwnImage}
             onCheckedChange={setOwnImage}
-            disabled={!config.cloudStorage || !config.chatOverlayEnabled}
+            disabled={
+              !config.chatOverlayOwnImage &&
+              (!config.chatOverlayEnabled || !cloudStatus.authorized)
+            }
           />
         </div>
       </div>
@@ -117,7 +121,7 @@ const ChatOverlayControls = (props: IProps) => {
   };
 
   const setOverlayPath = async () => {
-    const newPath = await fileSelect();
+    const newPath = await imageSelect();
 
     if (newPath === '') {
       return;
@@ -146,15 +150,22 @@ const ChatOverlayControls = (props: IProps) => {
             <Info size={20} className="inline-flex ml-2" />
           </Tooltip>
         </Label>
-        <Input
-          name="overlayImagePath"
-          value={config.chatOverlayOwnImagePath}
-          onClick={setOverlayPath}
-          readOnly
-        />
+        <>
+          <Input
+            name="overlayImagePath"
+            value={config.chatOverlayOwnImagePath}
+            onClick={setOverlayPath}
+            readOnly
+          />
+        </>
       </div>
     );
   };
+
+  const showPathWarning =
+    config.chatOverlayOwnImage &&
+    !config.chatOverlayOwnImagePath.endsWith('.png') &&
+    !config.chatOverlayOwnImagePath.endsWith('.gif');
 
   return (
     <div className="flex flex-col items-center content-center w-full flex-wrap gap-4">
@@ -162,10 +173,14 @@ const ChatOverlayControls = (props: IProps) => {
         {getChatOverlayEnabledSwitch()}
         {config.chatOverlayEnabled && getChatOverlayOwnImageSwitch()}
         {config.chatOverlayEnabled &&
-          config.cloudStorage &&
           config.chatOverlayOwnImage &&
           getOwnImagePathField()}
       </div>
+      {showPathWarning && (
+        <p className="flex w-full text-red-500 text-sm">
+          {getLocalePhrase(appState.language, Phrase.ErrorCustomImageFileType)}
+        </p>
+      )}
     </div>
   );
 };

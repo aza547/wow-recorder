@@ -14,6 +14,7 @@ export type Channels =
   | 'config'
   | 'getEncoders'
   | 'selectPath'
+  | 'selectImage'
   | 'selectFile'
   | 'getNextKeyPress'
   | 'clip'

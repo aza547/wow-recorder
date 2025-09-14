@@ -321,6 +321,27 @@ ipcMain.handle('selectFile', async () => {
 });
 
 /**
+ * Opens a system explorer window to select a path.
+ */
+ipcMain.handle('selectImage', async () => {
+  if (!window) {
+    return '';
+  }
+
+  const result = await dialog.showOpenDialog(window, {
+    properties: ['openFile'],
+    filters: [{ name: 'Images', extensions: ['gif', 'png'] }],
+  });
+
+  if (result.canceled) {
+    console.info('[Main] User cancelled file selection');
+    return '';
+  }
+
+  return result.filePaths[0];
+});
+
+/**
  * Listener to open the folder containing the Warcraft Recorder logs.
  */
 ipcMain.on('logPath', (_event, args) => {

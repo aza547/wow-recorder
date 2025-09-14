@@ -159,6 +159,7 @@ enum Phrase {
   UploadClipsLabel,
   SettingsDisabledText,
   SomeSettingsDisabledText,
+  CloudSettingsDisabledText,
   InvalidRetailLogPathText,
   InvalidClassicLogPathText,
   InvalidClassicEraLogPathText,

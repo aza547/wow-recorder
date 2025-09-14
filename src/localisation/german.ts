@@ -159,6 +159,7 @@ const GERMAN: Translations = {
   [Phrase.UploadBattlgroundsLabel]: 'Schlachtfelder hochladen',
   [Phrase.SettingsDisabledText]: 'Diese Einstellungen können nicht bearbeitet werden während eine Aufnahme läuft.',
   [Phrase.SomeSettingsDisabledText]: 'Einige Einstellung in der Kategorie sind aktuell versteckt, da diese nicht bearbeitet werden können während eine Aufnahme läuft.',
+  [Phrase.CloudSettingsDisabledText]: 'Cloud-Einstellungen können nicht geändert werden, während Uploads oder Downloads im Gange sind.',
   [Phrase.InvalidRetailLogPathText]: 'Ungültiger Retail Log Pfad',
   [Phrase.InvalidClassicLogPathText]: 'Ungültiger Classic Log Pfad.',
   [Phrase.InvalidClassicEraLogPathText]: 'Ungültiger Classic Era Log Pfad.',

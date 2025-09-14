@@ -159,6 +159,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.UploadBattlgroundsLabel]: '上传战场',
   [Phrase.SettingsDisabledText]: '在录制进行时，无法修改这些设置。',
   [Phrase.SomeSettingsDisabledText]: '此分类中的部分设置在录制进行时会被隐藏，无法修改。',
+  [Phrase.CloudSettingsDisabledText]: '云端设置无法在上传或下载进行时修改。',
   [Phrase.InvalidRetailLogPathText]: '无效的正式服日志路径',
   [Phrase.InvalidClassicLogPathText]: '无效的怀旧服日志路径。',
   [Phrase.InvalidClassicEraLogPathText]: '无效的经典旧世服日志路径。',

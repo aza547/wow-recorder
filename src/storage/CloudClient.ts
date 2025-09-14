@@ -31,6 +31,12 @@ const enum VideoMessages {
   TAG = 'vt',
 }
 
+const enum GuildMessages {
+  MTIME = 'mtime',
+  USAGE = 'gu',
+  LIMIT = 'gl',
+}
+
 /**
  * A client for retrieving resources from the cloud.
  */
@@ -897,24 +903,44 @@ export default class CloudClient implements StorageClient {
   }
 
   /**
-   * Check if the mtime object in R2 matches what we think it is, if it doesn't
-   * we need to trigger a UI refresh.
+   * Check if the guild mtime value matches what we think it is, if it doesn't
+   * we need to trigger a UI refresh. This should only be called on startup and
+   * in the event of a Websocket reconnecting, beyond that we rely on the Websocket
+   * messages to keep the client in sync.
    */
   private async checkForUpdate() {
+    console.info('[CloudClient] Checking guild for updates');
+
     try {
       const mtime = await this.getMtime();
 
-      if (mtime > this.bucketLastMod) {
+      if (mtime <= this.bucketLastMod) {
         console.info(
-          '[CloudClient] Cloud data changed:',
+          '[CloudClient] No changes detected',
           mtime,
           this.bucketLastMod,
         );
-
-        this.refreshStatus();
-        this.refreshVideos();
-        this.bucketLastMod = mtime;
+        return;
       }
+
+      console.info(
+        '[CloudClient] Cloud data changed:',
+        mtime,
+        this.bucketLastMod,
+      );
+
+      // Trigger videos to be refreshed. No need to await this.
+      this.refreshVideos();
+
+      // Make sure we have the latest limit and usage for the guild.
+      const usagePromise = this.getUsage();
+      const limitPromise = this.getStorageLimit();
+      this.usage = await usagePromise;
+      this.limit = await limitPromise;
+      this.refreshStatus();
+
+      // Update the last modified time now we have refreshed.
+      this.bucketLastMod = mtime;
     } catch (error) {
       console.error('[CloudClient] Failed to check for update', String(error));
     }
@@ -1322,8 +1348,25 @@ export default class CloudClient implements StorageClient {
       return;
     }
 
-    // Might be mtime (legacy refresh mechanism) or something else
-    // we don't care about.
+    if (key === GuildMessages.USAGE) {
+      console.info('[CloudClient] Guild usage message received', value);
+      this.usage = parseInt(value, 10);
+      this.refreshStatus();
+      return;
+    }
+
+    if (key === GuildMessages.LIMIT) {
+      console.info('[CloudClient] Guild limit message received', value);
+      this.limit = parseInt(value, 10);
+      this.refreshStatus();
+      return;
+    }
+
+    if (key === GuildMessages.MTIME) {
+      console.info('[CloudClient] Guild mtime message received', value);
+      this.bucketLastMod = parseInt(value, 10);
+    }
+
     console.info('[CloudClient] No action on this message');
   }
 }
