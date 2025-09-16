@@ -257,7 +257,6 @@ export default abstract class LogHandler {
     const recorder = Recorder.getInstance();
     const poller = Poller.getInstance();
 
-    const { startDate } = recorder;
     let videoFile;
 
     const stopPromise = recorder.stop(); // Queue the stop.
@@ -292,9 +291,6 @@ export default abstract class LogHandler {
     }
 
     try {
-      const activityStartTime = lastActivity.startDate.getTime();
-      const bufferStartTime = startDate.getTime();
-      const offset = (activityStartTime - bufferStartTime) / 1000;
       const metadata = lastActivity.getMetadata();
       const { duration } = metadata;
       const suffix = lastActivity.getFileName();
@@ -314,7 +310,7 @@ export default abstract class LogHandler {
       const queueItem: VideoQueueItem = {
         source: videoFile,
         suffix,
-        offset,
+        offset: 0, // We don't need to offset here, we've already cut the buffer back.
         duration,
         metadata,
         clip: false,

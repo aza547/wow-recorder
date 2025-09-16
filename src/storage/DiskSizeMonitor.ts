@@ -80,8 +80,7 @@ export default class DiskSizeMonitor {
 
     if (filesForDeletion.length > 0) {
       DiskClient.getInstance().refreshStatus();
-      const videos = await DiskClient.getInstance().getVideos();
-      send('setDiskVideos', videos);
+      DiskClient.getInstance().refreshVideos();
     }
   }
 

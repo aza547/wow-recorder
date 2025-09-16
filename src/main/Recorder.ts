@@ -87,11 +87,6 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Date the buffer recording started.
-   */
-  public startDate = new Date();
-
-  /**
    * ConfigService instance.
    */
   private cfg = ConfigService.getInstance();
@@ -759,6 +754,7 @@ export default class Recorder extends EventEmitter {
         // Finish configuring the source.
         settings['device_id'] = match.value;
         noobs.SetSourceSettings(name, settings);
+        noobs.SetSourceVolume(name, src.volume);
       }
 
       noobs.AddSourceToScene(name);
@@ -949,7 +945,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    // Sleep for a second, without this sometimes OBS does not respond at all.
+    // Sleep for a second, without this sometimes the OBS output can still be active.
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     this.startQueue.empty();
@@ -961,12 +957,6 @@ export default class Recorder extends EventEmitter {
     ]);
 
     this.startQueue.empty();
-
-    // I think this causes a very slight offset in the video - i.e. we set the
-    // start to just after we receive the signal from OBS that recording has
-    // started, and not when it has actually started. Very minor though so probably
-    // fine to live with this forever.
-    this.startDate = new Date();
   }
 
   /**
@@ -988,12 +978,6 @@ export default class Recorder extends EventEmitter {
     // The native code expects an integer.
     const rounded = Math.round(offset);
     noobs.StartRecording(rounded);
-
-    // I think this causes a very slight offset in the video - i.e. we set the
-    // start to just after we receive the signal from OBS that recording has
-    // started, and not when it has actually started. Very minor though so probably
-    // fine to live with this forever.
-    this.startDate = new Date();
   }
 
   /**
