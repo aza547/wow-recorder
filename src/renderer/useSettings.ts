@@ -1,4 +1,5 @@
 import { ConfigurationSchema } from 'config/configSchema';
+import { AudioSource } from 'main/types';
 import * as React from 'react';
 
 export const getConfigValue = <T>(configKey: string): T => {
@@ -29,9 +30,7 @@ export const getSettings = (): ConfigurationSchema => {
     maxStorage: getConfigValue<number>('maxStorage'),
     minEncounterDuration: getConfigValue<number>('minEncounterDuration'),
     monitorIndex: getConfigValue<number>('monitorIndex'),
-    audioInputDevices: getConfigValue<string>('audioInputDevices'),
-    audioOutputDevices: getConfigValue<string>('audioOutputDevices'),
-    audioProcessDevices: getConfigValue<{ value: string; label: string }[]>('audioProcessDevices'),
+    audioSources: getConfigValue<AudioSource[]>('audioSources'),
     startUp: getConfigValue<boolean>('startUp'),
     startMinimized: getConfigValue<boolean>('startMinimized'),
     recordRetail: getConfigValue<boolean>('recordRetail'),
@@ -59,15 +58,12 @@ export const getSettings = (): ConfigurationSchema => {
     chatOverlayEnabled: getConfigValue<boolean>('chatOverlayEnabled'),
     chatOverlayOwnImage: getConfigValue<boolean>('chatOverlayOwnImage'),
     chatOverlayOwnImagePath: getConfigValue<string>('chatOverlayOwnImagePath'),
-    chatOverlayWidth: getConfigValue<number>('chatOverlayWidth'),
-    chatOverlayHeight: getConfigValue<number>('chatOverlayHeight'),
     chatOverlayScale: getConfigValue<number>('chatOverlayScale'),
     chatOverlayXPosition: getConfigValue<number>('chatOverlayXPosition'),
     chatOverlayYPosition: getConfigValue<number>('chatOverlayYPosition'),
+    chatOverlayCropX: getConfigValue<number>('chatOverlayCropX'),
+    chatOverlayCropY: getConfigValue<number>('chatOverlayCropY'),
     captureCursor: getConfigValue<boolean>('captureCursor'),
-    speakerVolume: getConfigValue<number>('speakerVolume'),
-    micVolume: getConfigValue<number>('micVolume'),
-    processVolume: getConfigValue<number>('processVolume'),
     selectedCategory: getConfigValue<number>('selectedCategory'),
     deathMarkers: getConfigValue<number>('deathMarkers'),
     encounterMarkers: getConfigValue<boolean>('encounterMarkers'),
@@ -106,6 +102,16 @@ export const getSettings = (): ConfigurationSchema => {
     recordCurrentRaidEncountersOnly: getConfigValue<boolean>('recordCurrentRaidEncountersOnly'),
     uploadCurrentRaidEncountersOnly: getConfigValue<boolean>('uploadCurrentRaidEncountersOnly'),
     recordChallengeModes: getConfigValue<boolean>('recordChallengeModes'),
+    forceSdr: getConfigValue<boolean>('forceSdr'),
+    videoSourceScale: getConfigValue<number>('videoSourceScale'),
+    videoSourceXPosition: getConfigValue<number>('videoSourceXPosition'),
+    videoSourceYPosition: getConfigValue<number>('videoSourceYPosition'),
+    manualRecord: getConfigValue<boolean>('manualRecord'),
+    manualRecordHotKey: getConfigValue<number>('manualRecordHotKey'),
+    manualRecordHotKeyModifiers: getConfigValue<string>('manualRecordHotKeyModifiers'),
+    manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
+    manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
+    firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     /* eslint-enable prettier/prettier */
   };
 

@@ -1,4 +1,4 @@
-import { Phrase } from '../localisation/types';
+import { Phrase } from '../localisation/phrases';
 import { VideoCategory } from '../types/VideoCategory';
 import { ConfigurationSchemaKey } from '../config/configSchema';
 
@@ -92,6 +92,10 @@ const categoryRecordingSettings: Omit<
   [VideoCategory.Battlegrounds]: {
     allowRecordKey: 'recordBattlegrounds',
     autoUploadKey: 'cloudUploadBattlegrounds',
+  },
+  [VideoCategory.Manual]: {
+    allowRecordKey: 'manualRecord',
+    autoUploadKey: 'manualRecordUpload',
   },
 };
 
@@ -355,16 +359,6 @@ const raidEncountersById: NumberKeyToStringValueMapType = {
  * and retail at the same time. Eventually the older tiers should be removed.
  */
 const currentRetailEncounters = [
-  // TWW Season 2
-  3009, // Vexie
-  3010, // Cauldron
-  3011, // Rik
-  3012, // Stix
-  3013, // Sprocket
-  3014, // Bandit
-  3015, // Mug'Zee
-  3016, // Gally
-
   // TWW Season 3
   3129, // Plexus Sentinel
   3131, // Loom'ithar

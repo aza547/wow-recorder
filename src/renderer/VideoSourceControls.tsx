@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'config/configSchema';
 import { Info } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
 import {
@@ -11,6 +11,7 @@ import {
 } from './components/ToggleGroup/ToggleGroup';
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -22,9 +23,9 @@ const VideoSourceControls = (props: IProps) => {
   const { appState } = props;
   const [config, setConfig] = useSettings();
   const [displays, setDisplays] = useState<OurDisplayType[]>([]);
-  const initialRender = React.useRef(true);
+  const initialRender = useRef(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const getDisplays = async () => {
       const allDisplays = await ipc.invoke('getAllDisplays', []);
       setDisplays(allDisplays);
@@ -43,13 +44,20 @@ const VideoSourceControls = (props: IProps) => {
       obsCaptureMode: config.obsCaptureMode,
       monitorIndex: config.monitorIndex,
       captureCursor: config.captureCursor,
+      forceSdr: config.forceSdr,
     });
 
-    ipc.sendMessage('settingsChange', []);
-  }, [config.monitorIndex, config.obsCaptureMode, config.captureCursor]);
+    ipc.reconfigureVideo();
+  }, [
+    config.monitorIndex,
+    config.obsCaptureMode,
+    config.captureCursor,
+    config.forceSdr,
+  ]);
 
   const setOBSCaptureMode = (mode: string) => {
-    if (mode === null) {
+    if (!mode) {
+      // Covers empty string or anything nullish.
       return;
     }
 
@@ -62,7 +70,8 @@ const VideoSourceControls = (props: IProps) => {
   };
 
   const setMonitor = (display: string) => {
-    if (display === null) {
+    // Display is a string at this point so "0" is still truthy.
+    if (!display) {
       return;
     }
 
@@ -160,7 +169,7 @@ const VideoSourceControls = (props: IProps) => {
 
   const getCursorToggle = () => {
     return (
-      <div className="flex flex-col w-[140px]">
+      <div className="flex flex-col w-[120px]">
         <Label className="flex items-center">
           {getLocalePhrase(appState.language, Phrase.CaptureCursorLabel)}
           <Tooltip
@@ -183,11 +192,43 @@ const VideoSourceControls = (props: IProps) => {
     );
   };
 
+  const setForceSdr = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        forceSdr: checked,
+      };
+    });
+  };
+
+  const getForceSdrToggle = () => {
+    return (
+      <div className="flex flex-col w-[120px]">
+        <Label className="flex items-center">
+          {getLocalePhrase(appState.language, Phrase.ForceSdrLabel)}
+          <Tooltip
+            content={getLocalePhrase(
+              appState.language,
+              configSchema.forceSdr.description,
+            )}
+            side="right"
+          >
+            <Info size={20} className="inline-flex ml-2" />
+          </Tooltip>
+        </Label>
+        <div className="flex h-10 items-center">
+          <Switch checked={config.forceSdr} onCheckedChange={setForceSdr} />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex items-center w-full gap-x-8">
       {getCaptureModeToggle()}
       {getMonitorToggle()}
       {getCursorToggle()}
+      {getForceSdrToggle()}
     </div>
   );
 };

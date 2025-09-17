@@ -6,7 +6,7 @@ import {
 import Label from './components/Label/Label';
 import { LayoutGrid, TvMinimal } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
-import { Phrase } from 'localisation/types';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   appState: AppState;

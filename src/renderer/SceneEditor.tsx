@@ -1,7 +1,7 @@
 import { Box } from '@mui/material';
-import React from 'react';
-import { AppState, RecStatus } from 'main/types';
-import { Phrase } from 'localisation/types';
+import React, { Dispatch, SetStateAction, useState } from 'react';
+import { AppState, RecStatus, SceneItem } from 'main/types';
+import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import RecorderPreview from './RecorderPreview';
 import ChatOverlayControls from './ChatOverlayControls';
@@ -15,14 +15,90 @@ import {
   TabsList,
   TabsTrigger,
 } from './components/Tabs/Tabs';
+import { Button } from './components/Button/Button';
+import Switch from './components/Switch/Switch';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import { ConfigurationSchema } from 'config/configSchema';
+
+const ipc = window.electron.ipcRenderer;
+const devMode = process.env.NODE_ENV === 'development';
 
 interface IProps {
   appState: AppState;
   recorderStatus: RecStatus;
+  config: ConfigurationSchema;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const SceneEditor: React.FC<IProps> = (props: IProps) => {
-  const { recorderStatus, appState } = props;
+  const { recorderStatus, appState, config, setConfig } = props;
+  const [previewEnabled, setPreviewEnabled] = useState(true);
+  const [snapEnabled, setSnapEnabled] = useState(true);
+
+  const renderResetGameButton = () => {
+    return (
+      <Button
+        className="flex w-[60px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
+        variant="ghost"
+        size="xs"
+        onClick={() => ipc.resetSourcePosition(SceneItem.GAME)}
+      >
+        {getLocalePhrase(appState.language, Phrase.ResetGameButtonText)}
+      </Button>
+    );
+  };
+
+  const renderResetOverlayButton = () => {
+    return (
+      <Button
+        className="flex w-[60px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
+        variant="ghost"
+        size="xs"
+        onClick={() => {
+          setConfig((prev) => ({
+            ...prev,
+            chatOverlayCropX: 0,
+            chatOverlayCropY: 0,
+          }));
+          ipc.resetSourcePosition(SceneItem.OVERLAY);
+        }}
+      >
+        {getLocalePhrase(appState.language, Phrase.ResetOverlayButtonText)}
+      </Button>
+    );
+  };
+
+  const renderToggleSnappingSwitch = () => {
+    return (
+      <Tooltip
+        content={getLocalePhrase(
+          appState.language,
+          Phrase.SourceSnappingSwitchTooltip,
+        )}
+        side="bottom"
+      >
+        <div className="flex items-center justify-center text-xs text-card-foreground font-medium gap-x-2">
+          {getLocalePhrase(appState.language, Phrase.SourceSnappingSwitchText)}
+          <Switch checked={snapEnabled} onCheckedChange={setSnapEnabled} />
+        </div>
+      </Tooltip>
+    );
+  };
+
+  const renderShowPreviewSwitch = () => {
+    // This is a dev mode only thing so don't worry about translations.
+    return (
+      <Tooltip content="Toggle preview." side="bottom">
+        <div className="flex items-center justify-center text-xs text-card-foreground font-medium gap-x-2">
+          Preview
+          <Switch
+            checked={previewEnabled}
+            onCheckedChange={setPreviewEnabled}
+          />
+        </div>
+      </Tooltip>
+    );
+  };
 
   return (
     <Box
@@ -36,7 +112,12 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
       className="bg-background-higher pt-[32px]"
     >
       <Box sx={{ width: '100%', height: '60%' }}>
-        <RecorderPreview />
+        <RecorderPreview
+          appState={appState}
+          previewEnabled={previewEnabled}
+          config={config}
+          snapEnabled={snapEnabled}
+        />
       </Box>
       <Tabs defaultValue="source" className="w-full h-[40%] px-4">
         <TabsList>
@@ -52,7 +133,14 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
           <TabsTrigger value="overlay">
             {getLocalePhrase(appState.language, Phrase.OverlayHeading)}
           </TabsTrigger>
+          <div className="flex ml-auto items-center justify-center gap-x-4">
+            {renderResetGameButton()}
+            {config.chatOverlayEnabled && renderResetOverlayButton()}
+            {renderToggleSnappingSwitch()}
+            {devMode && renderShowPreviewSwitch()}
+          </div>
         </TabsList>
+
         <ScrollArea
           withScrollIndicators={false}
           className="h-[calc(100%-48px)] pb-8"
@@ -67,17 +155,25 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
               <VideoBaseControls
                 recorderStatus={recorderStatus}
                 appState={appState}
+                setPreviewEnabled={setPreviewEnabled}
               />
             </div>
           </TabsContent>
           <TabsContent value="audio">
             <div className="p-4">
-              <AudioSourceControls appState={appState} />
+              <AudioSourceControls
+                appState={appState}
+                setPreviewEnabled={setPreviewEnabled}
+              />
             </div>
           </TabsContent>
           <TabsContent value="overlay">
             <div className="p-4">
-              <ChatOverlayControls appState={appState} />
+              <ChatOverlayControls
+                appState={appState}
+                config={config}
+                setConfig={setConfig}
+              />
             </div>
           </TabsContent>
         </ScrollArea>

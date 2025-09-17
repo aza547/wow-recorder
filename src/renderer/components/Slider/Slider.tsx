@@ -16,6 +16,7 @@ const Slider = React.forwardRef<
       'relative flex w-full touch-none select-none items-center',
       className,
     )}
+    value={value}
     {...props}
   >
     <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-card">

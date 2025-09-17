@@ -1,6 +1,6 @@
 import {
   AppState,
-  Crashes,
+  ErrorReport,
   MicStatus,
   RecStatus,
   SaveStatus,
@@ -9,13 +9,13 @@ import { cn } from 'renderer/components/utils';
 import { ConfigurationSchema } from 'config/configSchema';
 import MicrophoneStatus from './MicStatus';
 import Status from './Status';
-import CrashStatus from './CrashStatus';
+import ErrorReporter from './ErrorReporter';
 
 type ApplicationStatusCardProps = {
   recorderStatus: RecStatus;
   error: string;
   micStatus: MicStatus;
-  crashes: Crashes;
+  errorReports: ErrorReport[];
   savingStatus: SaveStatus;
   config: ConfigurationSchema;
   appState: AppState;
@@ -25,14 +25,14 @@ const ApplicationStatusCard = ({
   recorderStatus,
   error,
   micStatus,
-  crashes,
+  errorReports,
   savingStatus,
   config,
   appState,
 }: ApplicationStatusCardProps) => {
-  const hasExtraBar = !!(micStatus || crashes?.length);
+  const hasExtraBar = !!(micStatus || errorReports?.length);
   return (
-    <div className="w-full h-20 rounded-md mb-4 flex relative">
+    <div className="w-full h-14 rounded-md mb-2 flex relative">
       <div
         id="status-card-inner"
         className={cn(
@@ -68,7 +68,7 @@ const ApplicationStatusCard = ({
           )}
         >
           <MicrophoneStatus micStatus={micStatus} appState={appState} />
-          <CrashStatus crashes={crashes} appState={appState} />
+          <ErrorReporter errorReports={errorReports} appState={appState} />
         </div>
       </div>
     </div>

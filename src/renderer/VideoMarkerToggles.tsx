@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { ConfigurationSchema } from 'config/configSchema';
 import { AppState, DeathMarkers } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
-import { Phrase } from 'localisation/types';
+import { Phrase } from 'localisation/phrases';
 import { setConfigValues } from './useSettings';
 import {
   convertNumToDeathMarkers,

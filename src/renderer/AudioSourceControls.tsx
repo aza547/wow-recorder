@@ -1,16 +1,22 @@
-import {
-  AppState,
-  DeviceType,
-  IOBSDevice,
-  ObsVolmeterCallbackInfo,
-} from 'main/types';
-import { useEffect, useRef, useState } from 'react';
+import { AppState, AudioSource, AudioSourceType } from 'main/types';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { configSchema } from 'config/configSchema';
-import { Info } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import {
+  AppWindow,
+  AudioLines,
+  Info,
+  MicVocal,
+  PlusIcon,
+  Speaker,
+  Volume1,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-react';
+import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
-  blurAll,
+  fetchAudioSourceChoices,
   getKeyByValue,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
@@ -19,37 +25,65 @@ import {
 import { PTTKeyPressEvent, UiohookKeyMap } from '../types/KeyTypesUIOHook';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
-import { MultiSelect } from './components/MultiSelect/MultiSelect';
 import Slider from './components/Slider/Slider';
 import Switch from './components/Switch/Switch';
 import { Input } from './components/Input/Input';
 import Progress from './components/Progress/Progress';
+import { Button } from './components/Button/Button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './components/Select/Select';
+
+import { ObsListItem } from 'noobs';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from './components/Popover/Popover';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 let debounceTimer: NodeJS.Timeout | undefined;
 
 interface IProps {
   appState: AppState;
+  setPreviewEnabled: Dispatch<SetStateAction<boolean>>;
 }
 
 const AudioSourceControls = (props: IProps) => {
-  const { appState } = props;
+  const { appState, setPreviewEnabled } = props;
+  const { language } = appState;
   const [config, setConfig] = useSettings();
   const initialRender = useRef(true);
+  const audioChoicesLoaded = useRef(false);
+  const pttInputRef = useRef<HTMLInputElement>(null);
 
-  const [availableAudioDevices, setAvailableAudioDevices] = useState<{
-    input: IOBSDevice[];
-    output: IOBSDevice[];
-    process: {
-      name: string;
-      value: string | number;
-    }[];
-  }>({ input: [], output: [], process: [] });
+  // Available choices per source.
+  const [sourceChoices, setSourceChoices] = useState<
+    Record<string, ObsListItem[]>
+  >({});
 
-  const [volmeter, setVolmeter] = useState({
-    input: 50,
-    output: 30,
-    process: 70,
+  // Volmeter data.
+  const [sourceMagnitude, setSourceMagnitude] = useState<
+    Record<string, number>
+  >({});
+
+  // Volume popover state. We only allow one to be open at a time.
+  const [volumePopoverSourceId, setVolumePopoverSourceId] = useState('');
+
+  // We will block adding new sources if we have a partially
+  // configured process source (speakers and mics can both
+  // default to "default" so this only effects process sources).
+  let sourcesAreFullyDefined = true;
+
+  config.audioSources.forEach((src) => {
+    if (!src.device) {
+      sourcesAreFullyDefined = false;
+    }
   });
 
   const [pttHotKeyFieldFocused, setPttHotKeyFieldFocused] = useState(false);
@@ -63,60 +97,45 @@ const AudioSourceControls = (props: IProps) => {
   );
 
   useEffect(() => {
-    if (initialRender.current) {
-      const getAvailableAudioDevices = async () => {
-        const devices = await ipc.invoke('getAudioDevices', []);
-        setAvailableAudioDevices(devices);
-      };
-
-      getAvailableAudioDevices();
-
-      // The rest of this effect handles config changes, so if it's the
-      // initial render then just return here.
-      initialRender.current = false;
-      return;
-    }
-
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
+    if (initialRender.current) return;
+    if (debounceTimer) clearTimeout(debounceTimer);
 
     debounceTimer = setTimeout(() => {
       setConfigValues({
-        audioOutputDevices: config.audioOutputDevices,
-        speakerVolume: config.speakerVolume,
-        audioInputDevices: config.audioInputDevices,
-        micVolume: config.micVolume,
-        audioProcessDevices: config.audioProcessDevices,
-        processVolume: config.processVolume,
-        obsForceMono: config.obsForceMono,
         pushToTalk: config.pushToTalk,
         pushToTalkKey: config.pushToTalkKey,
         pushToTalkMouseButton: config.pushToTalkMouseButton,
         pushToTalkModifiers: config.pushToTalkModifiers,
         pushToTalkReleaseDelay: config.pushToTalkReleaseDelay,
-        obsAudioSuppression: config.obsAudioSuppression,
       });
 
-      ipc.sendMessage('settingsChange', []);
+      // These parameters require a full audio reconfigure once
+      // the config is applied.
+      ipc.reconfigureAudio();
     }, 500);
   }, [
-    config.audioOutputDevices,
-    config.speakerVolume,
-    config.audioInputDevices,
-    config.micVolume,
-    config.audioProcessDevices,
-    config.processVolume,
-    config.obsForceMono,
     config.pushToTalk,
     config.pushToTalkKey,
     config.pushToTalkMouseButton,
     config.pushToTalkModifiers,
     config.pushToTalkReleaseDelay,
-    config.obsAudioSuppression,
   ]);
 
   useEffect(() => {
+    // No reconfigure required for these parameters, we
+    // do it via IPC call.
+    if (initialRender.current) return;
+
+    setConfigValues({
+      audioSources: config.audioSources,
+      obsAudioSuppression: config.obsAudioSuppression,
+      obsForceMono: config.obsForceMono,
+    });
+  }, [config.audioSources, config.obsAudioSuppression, config.obsForceMono]);
+
+  useEffect(() => {
+    if (initialRender.current) return;
+
     const setPushToTalkKey = (event: PTTKeyPressEvent) => {
       setConfig((prevState) => {
         return {
@@ -134,237 +153,64 @@ const AudioSourceControls = (props: IProps) => {
         setPttHotKeyFieldFocused(false);
         setPttHotKey(keyPressEvent);
         setPushToTalkKey(keyPressEvent);
-        blurAll(document);
+        pttInputRef.current?.blur();
       }
     };
 
     listenNextKeyPress();
   }, [pttHotKeyFieldFocused, setConfig]);
 
-  const getSourceAverageMagnitude = (
-    data: ObsVolmeterCallbackInfo[],
-    prefix: string,
-  ) => {
-    const magnitudes = data
-      .filter((d) => d.sourceName.startsWith(prefix))
-      .flatMap((d) => d.magnitude);
+  useEffect(() => {
+    initialRender.current = false;
+  }, []);
 
-    // OBS returns data in dBFS, which is a logarithmic scale. 0dBFS is the
-    // maximum level, and approximately -100dBFS is silence. Add 100 roughly
-    // convert it to a percentage.
-    const length = magnitudes.length;
-    if (length === 0) return -100;
-
-    const average =
-      magnitudes
-        // Sometimes OBS returns magintudes of -65k. Not sure why but clamp it
-        // to avoid messing with the average. Both -65k and -100 are silence.
-        // Also clamp to 0 to avoid any unexpected positive values, just
-        // being cautious with that, no actual evidence of this happening.
-        .map((m) => Math.max(m, -100))
-        .map((m) => Math.min(m, 0))
-        .reduce((a, b) => a + b, 0) / length;
-
-    return average;
-  };
-
-  const volmeterRefresh = (data: ObsVolmeterCallbackInfo[]) => {
-    const speakers = getSourceAverageMagnitude(data, 'WCR Speaker Source');
-    const mics = getSourceAverageMagnitude(data, 'WCR Mic Source');
-    const processes = getSourceAverageMagnitude(data, 'WCR App Source');
-
-    // We've clamped between -100 and 0. Very lazy maths here to convert it
-    // to a value between 0 and 100, to use as a position on the progress bar.
-    setVolmeter({
-      output: speakers + 100,
-      input: mics + 100,
-      process: processes + 100,
+  const volmeterRefresh = (id: string, magnitude: number) => {
+    setSourceMagnitude((prev) => {
+      prev[id] = magnitude;
+      return { ...prev };
     });
   };
 
+  // On initial load we don't know the available choices for existing
+  // sources in the config, so retrieve it here.
+  const initAudioSourceChoices = async () => {
+    const promises = config.audioSources.map(async (s) => ({
+      id: s.id,
+      choices: await fetchAudioSourceChoices(s),
+    }));
+
+    const choices = await Promise.all(promises);
+    const updated: Record<string, ObsListItem[]> = {};
+
+    choices.forEach((choice) => {
+      updated[choice.id] = choice.choices;
+    });
+
+    setSourceChoices(updated);
+    audioChoicesLoaded.current = true;
+  };
+
   useEffect(() => {
-    ipc.on('volmeter', (data: unknown) =>
-      volmeterRefresh(data as ObsVolmeterCallbackInfo[]),
+    ipc.on('volmeter', (id: unknown, magnitude: unknown) =>
+      volmeterRefresh(id as string, magnitude as number),
     );
+
+    const initAudioSettings = async () => {
+      await ipc.audioSettingsOpen();
+      await initAudioSourceChoices();
+    };
 
     // Attach the audio devices so volmeter bars show
     // even if WoW is closed.
-    ipc.sendMessage('audioSettingsOpen', [true]);
+    initAudioSettings();
 
     return () => {
       ipc.removeAllListeners('volmeter');
 
-      // Remove the audio devices so Windows can still
-      // sleep on unmounting.
-      ipc.sendMessage('audioSettingsOpen', [false]);
+      // Remove the audio devices so Windows can still sleep on unmounting.
+      ipc.audioSettingsClosed();
     };
   }, []);
-
-  const onDeviceChange = (
-    type: DeviceType,
-    values: string[] | { value: string; label: string }[],
-  ) => {
-    setConfig((previous) => {
-      const updated = { ...previous };
-
-      switch (type) {
-        case DeviceType.INPUT:
-          updated.audioInputDevices = values.filter((d) => d).join(',');
-          break;
-        case DeviceType.OUTPUT:
-          updated.audioOutputDevices = values.filter((d) => d).join(',');
-          break;
-        default:
-          throw new Error('Invalid device type');
-      }
-
-      return updated;
-    });
-  };
-
-  const onProcessChange = (
-    values: string[], // The newly selected settings.
-    options: { value: string; label: string }[], // The available options.
-  ) => {
-    const updated = options.filter((p) => values.includes(p.value));
-
-    setConfig((previous) => ({
-      ...previous,
-      audioProcessDevices: updated,
-    }));
-  };
-
-  const getSpeakerSelect = () => {
-    const options = availableAudioDevices.output.map((audioDevice) => ({
-      value: audioDevice.id,
-      label: audioDevice.description,
-    }));
-
-    config.audioOutputDevices
-      .split(',')
-      .filter((id) => id)
-      .forEach((id) => {
-        const found = options.find((o) => o.value === id);
-
-        if (!found) {
-          options.push({ value: id, label: 'Unknown Device' });
-        }
-      });
-
-    return (
-      <div className="flex flex-col w-full">
-        <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.SpeakersLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              configSchema.audioOutputDevices.description,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <MultiSelect
-          options={options}
-          onValueChange={(values) => onDeviceChange(DeviceType.OUTPUT, values)}
-          defaultValue={config.audioOutputDevices.split(',').filter((d) => d)}
-          placeholder={getLocalePhrase(
-            appState.language,
-            Phrase.SelectAnOutputDevice,
-          )}
-          maxCount={1}
-        />
-      </div>
-    );
-  };
-
-  const getMicSelect = () => {
-    const options = availableAudioDevices.input.map((audioDevice) => ({
-      value: audioDevice.id,
-      label: audioDevice.description,
-    }));
-
-    config.audioInputDevices
-      .split(',')
-      .filter((id) => id)
-      .forEach((id) => {
-        const found = options.find((o) => o.value === id);
-
-        if (!found) {
-          options.push({ value: id, label: 'Unknown Device' });
-        }
-      });
-
-    return (
-      <div className="flex flex-col w-full">
-        <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.MicrophonesLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              configSchema.audioInputDevices.description,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <MultiSelect
-          options={options}
-          onValueChange={(values) => onDeviceChange(DeviceType.INPUT, values)}
-          defaultValue={config.audioInputDevices.split(',').filter((d) => d)}
-          placeholder={getLocalePhrase(
-            appState.language,
-            Phrase.SelectAnInputDevice,
-          )}
-          maxCount={1}
-        />
-      </div>
-    );
-  };
-
-  const getProcessSelect = () => {
-    // Add any options that are stored in config. They may still be valid, in
-    // the event of a window name change. Reminder: OBS will match by name and
-    // then Window type. They may also be invalid, in which case we want to
-    // allow a user to deselect them.
-    const options = [...config.audioProcessDevices];
-
-    // Now add any devices we know about. We don't want to add duplicates, so
-    // check if the option already exists in the currently selected devices.
-    availableAudioDevices.process
-      .map((w) => ({ value: String(w.value), label: w.name }))
-      .filter((avail) => !options.map((o) => o.value).includes(avail.value))
-      .forEach((dedup) => options.push(dedup));
-
-    // Sort alphabetically by label.
-    options.sort((w1, w2) => w1.label.localeCompare(w2.label));
-
-    return (
-      <div className="flex flex-col w-full">
-        <Label className="flex items-center">
-          {getLocalePhrase(appState.language, Phrase.ProcessesLabel)}
-          <Tooltip
-            content={getLocalePhrase(
-              appState.language,
-              configSchema.audioProcessDevices.description,
-            )}
-            side="right"
-          >
-            <Info size={20} className="inline-flex ml-2" />
-          </Tooltip>
-        </Label>
-        <MultiSelect
-          options={options}
-          onValueChange={(values) => onProcessChange(values, options)}
-          defaultValue={config.audioProcessDevices.map((d) => d.value)}
-          placeholder={getLocalePhrase(appState.language, Phrase.SelectProcess)}
-          maxCount={1}
-        />
-      </div>
-    );
-  };
 
   const setForceMono = (checked: boolean) => {
     setConfig((prevState) => {
@@ -373,6 +219,8 @@ const AudioSourceControls = (props: IProps) => {
         obsForceMono: checked,
       };
     });
+
+    ipc.setForceMono(checked);
   };
 
   const setPushToTalk = (checked: boolean) => {
@@ -391,6 +239,8 @@ const AudioSourceControls = (props: IProps) => {
         obsAudioSuppression: checked,
       };
     });
+
+    ipc.setAudioSuppression(checked);
   };
 
   const getMonoSwitch = () => {
@@ -496,6 +346,7 @@ const AudioSourceControls = (props: IProps) => {
         </Label>
         <Input
           name="pttKey"
+          ref={pttInputRef}
           value={getHotkeyString()}
           onFocus={() => setPttHotKeyFieldFocused(true)}
           onBlur={() => setPttHotKeyFieldFocused(false)}
@@ -529,33 +380,6 @@ const AudioSourceControls = (props: IProps) => {
       </div>
     );
   };
-
-  const getSpeakerSection = () => (
-    <div className="flex flex-col justify-center w-1/4 gap-y-2">
-      {getSpeakerSelect()}
-      <div className="flex items-center">
-        <Progress className="h-1 mt-1 w-full" value={volmeter.output} />
-      </div>
-    </div>
-  );
-
-  const getMicSection = () => (
-    <div className="flex flex-col justify-center w-1/4 gap-y-2">
-      {getMicSelect()}
-      <div className="flex items-center gap-2">
-        <Progress className="h-1 mt-1 w-full" value={volmeter.input} />
-      </div>
-    </div>
-  );
-
-  const getProcessSection = () => (
-    <div className="flex flex-col justify-center w-1/4 gap-y-2">
-      {getProcessSelect()}
-      <div className="flex items-center gap-2">
-        <Progress className="h-1 mt-1 w-full" value={volmeter.process} />
-      </div>
-    </div>
-  );
 
   useEffect(() => {
     setLocalReleaseDelay(config.pushToTalkReleaseDelay);
@@ -593,7 +417,7 @@ const AudioSourceControls = (props: IProps) => {
           max={2000}
           step={1}
           withTooltip={false}
-          className="flex-1"
+          className="w-[80px]"
         />
         <span className="text-sm text-foreground-lighter tabular-nums min-w-[60px] text-right whitespace-nowrap">
           {localReleaseDelay > 999
@@ -604,24 +428,331 @@ const AudioSourceControls = (props: IProps) => {
     </div>
   );
 
+  const setSourceDevice = (src: AudioSource, device: string) => {
+    const idx = config.audioSources.indexOf(src);
+    if (idx === -1) return;
+
+    const choice = sourceChoices[src.id].find((item) => item.value === device);
+    if (!choice) return;
+
+    const clone = [...config.audioSources];
+    clone[idx] = { ...src, device, friendly: choice.name };
+
+    setConfig((prev) => ({ ...prev, audioSources: clone }));
+
+    if (src.type === AudioSourceType.PROCESS) {
+      ipc.setAudioSourceWindow(src.id, device);
+    } else {
+      ipc.setAudioSourceDevice(src.id, device);
+    }
+  };
+
+  const renderSourceType = (src: AudioSource) => {
+    if (src.type === AudioSourceType.OUTPUT) {
+      return (
+        <div className="flex justify-center items-center  text-foreground-lighter gap-x-1">
+          <Speaker />
+        </div>
+      );
+    }
+
+    if (src.type === AudioSourceType.INPUT) {
+      return (
+        <div className="flex justify-center items-center text-foreground-lighter gap-x-1">
+          <MicVocal />
+        </div>
+      );
+    }
+
+    if (src.type === AudioSourceType.PROCESS) {
+      return (
+        <div className="flex justify-center items-center text-foreground-lighter gap-x-1">
+          <AppWindow />
+        </div>
+      );
+    }
+  };
+
+  const renderSourceDeviceSelect = (src: AudioSource) => {
+    const choices: ObsListItem[] = [];
+
+    if (sourceChoices[src.id]) {
+      // Deduplicate on the name field.
+      sourceChoices[src.id].forEach((choice) => {
+        if (!choices.find((item) => item.name === choice.name)) {
+          choices.push(choice);
+        }
+      });
+    }
+
+    const renderSelectItems = () => {
+      if (!audioChoicesLoaded.current) {
+        return <></>;
+      }
+
+      const found = choices.find((tt) => tt.value === src.device);
+
+      const items = choices.map((tt) => (
+        <SelectItem key={tt.name} value={String(tt.value)}>
+          {tt.name}
+        </SelectItem>
+      ));
+
+      // If we don't find the device currently selected add it so it
+      // renders with a warning. Don't do the warning this for process
+      // as it's common for the windows to change and we do exe
+      // matching anyway.
+      if (!found && src.device) {
+        const text =
+          src.type !== AudioSourceType.PROCESS
+            ? `⚠ Unknown device: ${src.friendly}`
+            : src.device;
+
+        items.push(
+          <SelectItem key="custom" value={src.device}>
+            {text}
+          </SelectItem>,
+        );
+      }
+
+      return items;
+    };
+
+    return (
+      <div className="flex flex-col w-[500px]">
+        <Select
+          value={src.device}
+          onValueChange={(value) => setSourceDevice(src, value)}
+          onOpenChange={(open) => setPreviewEnabled(!open)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a device...." />
+          </SelectTrigger>
+          <SelectContent>{renderSelectItems()}</SelectContent>
+        </Select>
+      </div>
+    );
+  };
+
+  const removeSource = (src: AudioSource) => {
+    const idx = config.audioSources.indexOf(src);
+    if (idx === -1) return;
+
+    setConfig((prev) => {
+      const clone = [...prev.audioSources];
+      clone.splice(idx, 1);
+      return { ...prev, audioSources: clone };
+    });
+
+    setSourceChoices((prev) => {
+      const clone = { ...prev };
+      delete clone[src.id];
+      return clone;
+    });
+
+    setSourceMagnitude((prev) => {
+      const clone = { ...prev };
+      delete clone[src.id];
+      return clone;
+    });
+
+    setVolumePopoverSourceId('');
+    ipc.deleteAudioSource(src.id);
+  };
+
+  const renderDeleteSourceButton = (src: AudioSource) => {
+    return (
+      <Button onClick={() => removeSource(src)} variant="ghost" size="sm">
+        <X color="red" opacity={0.5} />
+      </Button>
+    );
+  };
+
+  const toggleVolumePopover = (src: AudioSource, open: boolean) => {
+    setVolumePopoverSourceId(open ? src.id : '');
+  };
+
+  const renderSourceRow = (src: AudioSource) => {
+    const idx = config.audioSources.indexOf(src);
+    const val = Math.round(src.volume * 100);
+    let icon;
+
+    if (val === 0) {
+      icon = <VolumeX />;
+    } else if (val < 50) {
+      icon = <Volume1 />;
+    } else {
+      icon = <Volume2 />;
+    }
+
+    const magnitude = sourceMagnitude[src.id] ?? 0;
+
+    return (
+      <tr key={idx}>
+        <td className="px-2">{renderSourceType(src)}</td>
+        <td className="px-2">{renderSourceDeviceSelect(src)}</td>
+        <td className="px-2">
+          <div className="relative h-[38px] w-[150px]">
+            <Progress
+              className="h-full w-full rounded-sm"
+              value={100 * magnitude}
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <AudioLines className="text-foreground-lighter" size={18} />
+            </div>
+          </div>
+        </td>
+        <td>
+          <Popover
+            open={src.id === volumePopoverSourceId}
+            onOpenChange={(open) => toggleVolumePopover(src, open)}
+          >
+            <PopoverTrigger asChild>
+              <Button variant="ghost">{icon}</Button>
+            </PopoverTrigger>
+            <PopoverContent className="border-bg" side="right" align="center">
+              <Slider
+                value={[val]}
+                max={100}
+                step={1}
+                onValueChange={(newValue) => {
+                  setConfig(() => {
+                    const idx = config.audioSources.indexOf(src);
+                    if (idx === -1) return config;
+                    const newSources = [...config.audioSources];
+
+                    newSources[idx] = {
+                      ...newSources[idx],
+                      volume: newValue[0] / 100,
+                    };
+
+                    return { ...config, audioSources: newSources };
+                  });
+
+                  ipc.setAudioSourceVolume(src.id, newValue[0] / 100);
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </td>
+        <td>{renderDeleteSourceButton(src)}</td>
+      </tr>
+    );
+  };
+
+  const addSource = async (type: AudioSourceType) => {
+    const ids = config.audioSources.map((src) => src.id);
+    let idx = 1;
+
+    // Find the next available name.
+    while (ids.includes(`WCR Audio Source ${idx}`)) {
+      idx++;
+    }
+
+    const id = `WCR Audio Source ${idx}`;
+    const name = await ipc.createAudioSource(id, type);
+    const device = type === AudioSourceType.PROCESS ? undefined : 'default';
+    const friendly = device;
+
+    const src: AudioSource = {
+      id: name, // Careful to not assume we got the name we asked for.
+      type,
+      friendly,
+      device,
+      volume: 1,
+    };
+
+    const choices = await fetchAudioSourceChoices(src);
+
+    setConfig((prev) => ({
+      ...prev,
+      audioSources: [...prev.audioSources, src],
+    }));
+
+    setSourceChoices((prev) => ({
+      ...prev,
+      [src.id]: choices,
+    }));
+  };
+
+  const renderSourceTable = () => {
+    return (
+      <table className="table-auto w-max">
+        <tbody>
+          {config.audioSources.map(renderSourceRow)}
+          <tr>
+            <td colSpan={5}></td>
+          </tr>
+        </tbody>
+      </table>
+    );
+  };
+
+  const renderHelpText = () => {
+    return (
+      <div className="flex flex-col text-sm text-foreground-lighter">
+        Add a source to record audio.
+      </div>
+    );
+  };
+
+  const getSourcesSection = () => {
+    return (
+      <div className="flex flex-col gap-y-2">
+        {config.audioSources.length > 0 && renderSourceTable()}
+        {config.audioSources.length < 1 && renderHelpText()}
+        <div className="flex gap-2 mx-2">
+          <Button
+            onClick={() => addSource(AudioSourceType.OUTPUT)}
+            disabled={!sourcesAreFullyDefined}
+            variant="outline"
+          >
+            <PlusIcon className="px-0" />
+            {getLocalePhrase(language, Phrase.AddSpeakerButtonText)}
+          </Button>
+          <Button
+            onClick={() => addSource(AudioSourceType.INPUT)}
+            disabled={!sourcesAreFullyDefined}
+            variant="outline"
+          >
+            <PlusIcon className="px-0" />
+            {getLocalePhrase(language, Phrase.AddMicrophoneButtonText)}
+          </Button>
+          <Button
+            onClick={() => addSource(AudioSourceType.PROCESS)}
+            disabled={!sourcesAreFullyDefined}
+            variant="outline"
+          >
+            <PlusIcon className="px-0" />
+            {getLocalePhrase(language, Phrase.AddApplicationButtonText)}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const getSettingsSection = () => {
+    return (
+      <div className="flex gap-y-8 flex-col m-4">
+        <div className="flex items-center content-start w-full gap-10 flex-wrap">
+          {getAudioSuppressionSwitch()}
+          {getMonoSwitch()}
+          {getPushToTalkSwitch()}
+          {config.pushToTalk && (
+            <>
+              {getPushToTalkSelect()}
+              {getPushToTalkReleaseDelaySlider()}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex gap-y-10 flex-col">
-      <div className="flex items-center content-start w-full gap-10 flex-wrap">
-        {getSpeakerSection()}
-        {getMicSection()}
-        {getProcessSection()}
-      </div>
-      <div className="flex items-center content-start w-full gap-10 flex-wrap">
-        {getAudioSuppressionSwitch()}
-        {getMonoSwitch()}
-        {getPushToTalkSwitch()}
-        {config.pushToTalk && (
-          <>
-            {getPushToTalkSelect()}
-            {getPushToTalkReleaseDelaySlider()}
-          </>
-        )}
-      </div>
+    <div className="flex flex-col w-full h-full gap-4">
+      {getSourcesSection()}
+      {getSettingsSection()}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { VideoCategory } from '../types/VideoCategory';
-import { Language, LocalizationDataType, Phrase } from './types';
+import { Language, LocalizationDataType, Phrase } from './phrases';
 import EnglishTranslations from './english';
 import KoreanTranslations from './korean';
 import GermanTranslations from './german';
@@ -35,6 +35,8 @@ const getLocaleCategoryLabel = (
       return getLocalePhrase(lang, Phrase.VideoCategoryMythicPlusLabel);
     case VideoCategory.Battlegrounds:
       return getLocalePhrase(lang, Phrase.VideoCategoryBattlegroundsLabel);
+    case VideoCategory.Manual:
+      return getLocalePhrase(lang, Phrase.VideoCategoryManualLabel);
     case VideoCategory.Clips:
       return getLocalePhrase(lang, Phrase.VideoCategoryClipsLabel);
     default:
@@ -42,4 +44,4 @@ const getLocaleCategoryLabel = (
   }
 };
 
-export { getLocalePhrase, getLocaleCategoryLabel, Language, Phrase };
+export { getLocalePhrase, getLocaleCategoryLabel, Language };
