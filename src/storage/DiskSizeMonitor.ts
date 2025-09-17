@@ -5,7 +5,6 @@ import {
   getMetadataForVideo,
   getSortedVideos,
 } from '../main/util';
-import { send } from 'main/main';
 import DiskClient from './DiskClient';
 
 // Had a bug here where we used filter with an async function but that isn't
