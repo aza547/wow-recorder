@@ -5,7 +5,6 @@ import {
   getMetadataForVideo,
   getSortedVideos,
 } from '../main/util';
-import { send } from 'main/main';
 import DiskClient from './DiskClient';
 
 // Had a bug here where we used filter with an async function but that isn't
@@ -80,8 +79,7 @@ export default class DiskSizeMonitor {
 
     if (filesForDeletion.length > 0) {
       DiskClient.getInstance().refreshStatus();
-      const videos = await DiskClient.getInstance().getVideos();
-      send('setDiskVideos', videos);
+      DiskClient.getInstance().refreshVideos();
     }
   }
 

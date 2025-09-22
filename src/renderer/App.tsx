@@ -32,6 +32,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { RefreshCcw } from 'lucide-react';
 import { VideoCategory } from 'types/VideoCategory';
 import { Phrase } from 'localisation/phrases';
+import _ from 'lodash';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -318,7 +319,7 @@ const WarcraftRecorder = () => {
 
     const match = videoState.find((v) => videoMatch(v, rv));
 
-    if (match && _equals(match, rv)) {
+    if (match && _.isEqual(match, rv)) {
       // Video already exact match, no need to re-render.
       return;
     }
@@ -360,7 +361,7 @@ const WarcraftRecorder = () => {
     const name = videoName as string;
 
     setVideoState((prev) => {
-      const match = prev.find((video) => videoMatchName(video, name));
+      const match = prev.find((rv) => rv.cloud && videoMatchName(rv, name));
 
       if (match) {
         // Pretty sure only one of these matters.
@@ -385,7 +386,7 @@ const WarcraftRecorder = () => {
     const name = videoName as string;
 
     setVideoState((prev) => {
-      const match = prev.find((video) => videoMatchName(video, name));
+      const match = prev.find((rv) => rv.cloud && videoMatchName(rv, name));
 
       if (match) {
         // Pretty sure only one of these matters.
@@ -410,7 +411,7 @@ const WarcraftRecorder = () => {
     const name = videoName as string;
 
     setVideoState((prev) => {
-      const match = prev.find((video) => videoMatchName(video, name));
+      const match = prev.find((rv) => rv.cloud && videoMatchName(rv, name));
 
       if (match) {
         match.tag = tag as string;

@@ -15,7 +15,6 @@ import {
   getMetadataForVideo,
   rendererVideoToMetadata,
   getFileInfo,
-  mv,
   fixPathWhenPackaged,
   logAxiosError,
 } from './util';
@@ -208,19 +207,17 @@ export default class VideoProcessQueue {
   ): Promise<void> {
     try {
       const outputDir = this.cfg.get<string>('storagePath');
-      let videoPath;
 
-      if (data.clip) {
-        videoPath = await this.cutVideo(
-          data.source,
-          outputDir,
-          data.suffix,
-          data.offset,
-          data.duration,
-        );
-      } else {
-        videoPath = await this.moveVideo(data.source, outputDir, data.suffix);
-      }
+      // In a lot of cases this is basically just a copy. But this also
+      // covers the cases where we're cutting a section off the end of
+      // the video due to a timeout.
+      const videoPath = await this.cutVideo(
+        data.source,
+        outputDir,
+        data.suffix,
+        data.offset,
+        data.duration,
+      );
 
       await writeMetadataFile(videoPath, data.metadata);
 
@@ -533,23 +530,11 @@ export default class VideoProcessQueue {
   }
 
   /**
-   * Move a video file to its final location.
+   * This can be called either to cut a clip, or to cut a video on
+   * finishing. Keep in mind that a video finishing may have a duration
+   * less than the source video, if the recording was stopped by a log
+   * timeout.
    */
-  private async moveVideo(
-    srcFile: string,
-    outputDir: string,
-    suffix: string | undefined,
-  ) {
-    const outputPath = VideoProcessQueue.getOutputVideoPath(
-      srcFile,
-      outputDir,
-      suffix,
-    );
-
-    await mv(srcFile, outputPath);
-    return outputPath;
-  }
-
   private async cutVideo(
     srcFile: string,
     outputDir: string,
@@ -557,15 +542,26 @@ export default class VideoProcessQueue {
     offset: number,
     duration: number,
   ): Promise<string> {
-    const start = offset > 0 ? offset : 0;
+    console.info('[VideoProcessQueue] Cutting video:', {
+      srcFile,
+      outputDir,
+      suffix,
+      offset,
+      duration,
+    });
+
+    let start = offset;
+
+    if (offset < 0) {
+      console.warn('[VideoProcessQueue] Negative offset set to zero');
+      start = 0; // Sanity check.
+    }
 
     const outputPath = VideoProcessQueue.getOutputVideoPath(
       srcFile,
       outputDir,
       suffix,
     );
-
-    console.info('[VideoProcessQueue] Duration:', duration);
 
     const fn = ffmpeg(srcFile)
       .setStartTime(start)
