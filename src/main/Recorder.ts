@@ -1672,12 +1672,20 @@ export default class Recorder extends EventEmitter {
       cropBottom: 0,
     };
 
-    noobs.SetSourcePos(src, updated);
-
     const item = src.startsWith('WCR Chat Overlay')
       ? SceneItem.OVERLAY
       : SceneItem.GAME;
 
+    if (item === SceneItem.GAME) {
+      console.info('[Recorder] Resetting game source so fit to window');
+      const { height, width } = noobs.GetSourcePos(src);
+      const { canvasHeight, canvasWidth } = noobs.GetPreviewInfo();
+      const scale = Math.min(height / canvasHeight, width / canvasWidth);
+      updated.scaleX = scale;
+      updated.scaleY = scale;
+    }
+
+    noobs.SetSourcePos(src, updated);
     this.saveSourcePosition(item, 0, 0, 1);
   }
 
