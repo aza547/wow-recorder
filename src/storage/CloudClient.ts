@@ -168,6 +168,12 @@ export default class CloudClient implements StorageClient {
   private polling = false;
 
   /**
+   * It's common to receive a bunch of video deletes at once due to the
+   * housekeeper, so batch them to avoid spurious re-renders.
+   */
+  private videoDeleteBatch: string[] = [];
+
+  /**
    * Constructor.
    */
   private constructor() {
@@ -176,6 +182,7 @@ export default class CloudClient implements StorageClient {
     this.configure();
     this.startHeartbeatTimer();
     this.startReconnectTimer();
+    this.startDeleteBatchTimer();
   }
 
   /**
@@ -233,6 +240,26 @@ export default class CloudClient implements StorageClient {
         console.warn('[CloudClient] Error connecting websocket', String(error));
       }
     }, 10000);
+  }
+
+  /**
+   * Timer for updating the frontend, no-op if nothing in the
+   * videoDeleteBatch array.
+   */
+  private startDeleteBatchTimer() {
+    setInterval(() => {
+      if (this.videoDeleteBatch.length < 1) {
+        return;
+      }
+
+      console.info(
+        '[CloudClient] Batch delete timer removing',
+        this.videoDeleteBatch,
+      );
+
+      send('displayRemoveCloudVideos', this.videoDeleteBatch);
+      this.videoDeleteBatch = [];
+    }, 1000);
   }
 
   /**
@@ -1310,8 +1337,11 @@ export default class CloudClient implements StorageClient {
     }
 
     if (key === VideoMessages.DELETE) {
-      console.info('[CloudClient] Removing cloud video', value);
-      send('displayRemoveCloudVideo', value);
+      console.info('[CloudClient] Queueing cloud video removal', value);
+      // This can come in bursts due how the housekeeper behaves.
+      // So batch it up. That means there is a small delay in updating
+      // the frontend when we receieve an event by shouldn't be noticable.
+      this.videoDeleteBatch.push(value);
       return;
     }
 
