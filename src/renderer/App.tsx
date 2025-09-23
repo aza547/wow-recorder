@@ -341,7 +341,7 @@ const WarcraftRecorder = () => {
 
     setVideoState((prev) => {
       const updated = prev.filter(
-        (video) => video.cloud && names.includes(video.videoName),
+        (video) => video.cloud && !names.includes(video.videoName),
       );
 
       return updated;
