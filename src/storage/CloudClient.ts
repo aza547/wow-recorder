@@ -168,10 +168,13 @@ export default class CloudClient implements StorageClient {
   private polling = false;
 
   /**
-   * It's common to receive a bunch of video deletes at once due to the
-   * housekeeper, so batch them to avoid spurious re-renders.
+   * It's common to receive a bunch of video modifications at once due to
+   * the housekeeper, or bulk changes. Batch these up and send them to the
+   * frontend every second to avoid spurious re-renders.
    */
   private videoDeleteBatch: string[] = [];
+  private videoProtectBatch: string[] = [];
+  private videoUnprotectBatch: string[] = [];
 
   /**
    * Constructor.
@@ -182,7 +185,7 @@ export default class CloudClient implements StorageClient {
     this.configure();
     this.startHeartbeatTimer();
     this.startReconnectTimer();
-    this.startDeleteBatchTimer();
+    this.startBatchTimer();
   }
 
   /**
@@ -243,23 +246,27 @@ export default class CloudClient implements StorageClient {
   }
 
   /**
-   * Timer for updating the frontend, no-op if nothing in the
-   * videoDeleteBatch array.
+   * Timer for batch updating the frontend when the remote state changes.
    */
-  private startDeleteBatchTimer() {
-    setInterval(() => {
-      if (this.videoDeleteBatch.length < 1) {
-        return;
+  private startBatchTimer() {
+    const processBatchUpdates = () => {
+      if (this.videoDeleteBatch.length > 0) {
+        const batch = this.videoDeleteBatch.splice(0);
+        send('displayRemoveCloudVideos', batch);
       }
 
-      console.info(
-        '[CloudClient] Batch delete timer removing',
-        this.videoDeleteBatch,
-      );
+      if (this.videoProtectBatch.length > 0) {
+        const batch = this.videoProtectBatch.splice(0);
+        send('displayProtectCloudVideos', batch);
+      }
 
-      send('displayRemoveCloudVideos', this.videoDeleteBatch);
-      this.videoDeleteBatch = [];
-    }, 1000);
+      if (this.videoUnprotectBatch.length > 0) {
+        const batch = this.videoUnprotectBatch.splice(0);
+        send('displayUnprotectCloudVideos', batch);
+      }
+    };
+
+    setInterval(processBatchUpdates, 1000);
   }
 
   /**
@@ -1337,23 +1344,20 @@ export default class CloudClient implements StorageClient {
     }
 
     if (key === VideoMessages.DELETE) {
-      console.info('[CloudClient] Queueing cloud video removal', value);
-      // This can come in bursts due how the housekeeper behaves.
-      // So batch it up. That means there is a small delay in updating
-      // the frontend when we receieve an event by shouldn't be noticable.
+      console.info('[CloudClient] Batching cloud video removal', value);
       this.videoDeleteBatch.push(value);
       return;
     }
 
     if (key === VideoMessages.PROTECT) {
-      console.info('[CloudClient] Protecting cloud video', value);
-      send('displayProtectCloudVideo', value);
+      console.info('[CloudClient] Batching cloud video protection', value);
+      this.videoProtectBatch.push(value);
       return;
     }
 
     if (key === VideoMessages.UNPROTECT) {
-      console.info('[CloudClient] Unprotecting cloud video', value);
-      send('displayUnprotectCloudVideo', value);
+      console.info('[CloudClient] Batching cloud video unprotection', value);
+      this.videoUnprotectBatch.push(value);
       return;
     }
 
@@ -1395,6 +1399,7 @@ export default class CloudClient implements StorageClient {
     if (key === GuildMessages.MTIME) {
       console.info('[CloudClient] Guild mtime message received', value);
       this.bucketLastMod = parseInt(value, 10);
+      return;
     }
 
     console.info('[CloudClient] No action on this message');

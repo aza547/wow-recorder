@@ -357,17 +357,19 @@ const WarcraftRecorder = () => {
     });
   };
 
-  const displayProtectCloudVideo = (videoName: unknown) => {
-    const name = videoName as string;
+  const displayProtectCloudVideos = (videoNames: unknown) => {
+    const names = videoNames as string[];
 
     setVideoState((prev) => {
-      const match = prev.find((rv) => rv.cloud && videoMatchName(rv, name));
+      const matches = prev.filter(
+        (rv) => rv.cloud && names.includes(rv.videoName),
+      );
 
-      if (match) {
+      matches.forEach((match) => {
         // Pretty sure only one of these matters.
         match.protected = true;
         match.isProtected = true;
-      }
+      });
 
       return prev;
     });
@@ -382,17 +384,19 @@ const WarcraftRecorder = () => {
     });
   };
 
-  const displayUnprotectCloudVideo = (videoName: unknown) => {
-    const name = videoName as string;
+  const displayUnprotectCloudVideos = (videoNames: unknown) => {
+    const names = videoNames as string[];
 
     setVideoState((prev) => {
-      const match = prev.find((rv) => rv.cloud && videoMatchName(rv, name));
+      const matches = prev.filter(
+        (rv) => rv.cloud && names.includes(rv.videoName),
+      );
 
-      if (match) {
+      matches.forEach((match) => {
         // Pretty sure only one of these matters.
         match.protected = false;
         match.isProtected = false;
-      }
+      });
 
       return prev;
     });
@@ -443,8 +447,8 @@ const WarcraftRecorder = () => {
     ipc.on('setDiskVideos', setDiskVideos);
     ipc.on('displayAddCloudVideo', displayAddCloudVideo);
     ipc.on('displayRemoveCloudVideos', displayRemoveCloudVideos);
-    ipc.on('displayProtectCloudVideo', displayProtectCloudVideo);
-    ipc.on('displayUnprotectCloudVideo', displayUnprotectCloudVideo);
+    ipc.on('displayProtectCloudVideos', displayProtectCloudVideos);
+    ipc.on('displayUnprotectCloudVideos', displayUnprotectCloudVideos);
     ipc.on('displayTagCloudVideo', displayTagCloudVideo);
 
     return () => {
@@ -460,8 +464,8 @@ const WarcraftRecorder = () => {
       ipc.removeAllListeners('setDiskVideos');
       ipc.removeAllListeners('displayAddCloudVideo');
       ipc.removeAllListeners('displayRemoveCloudVideos');
-      ipc.removeAllListeners('displayProtectCloudVideo');
-      ipc.removeAllListeners('displayUnprotectCloudVideo');
+      ipc.removeAllListeners('displayProtectCloudVideos');
+      ipc.removeAllListeners('displayUnprotectCloudVideos');
       ipc.removeAllListeners('displayTagCloudVideo');
     };
   }, []);

@@ -1678,15 +1678,29 @@ export default class Recorder extends EventEmitter {
 
     if (item === SceneItem.GAME) {
       console.info('[Recorder] Resetting game source so fit to window');
+
       const { height, width } = noobs.GetSourcePos(src);
       const { canvasHeight, canvasWidth } = noobs.GetPreviewInfo();
-      const scale = Math.min(height / canvasHeight, width / canvasWidth);
-      updated.scaleX = scale;
-      updated.scaleY = scale;
+
+      const scaleX = canvasWidth / width;
+      const scaleY = canvasHeight / height;
+
+      if (scaleX < scaleY) {
+        // X-limited, center vertically.
+        updated.scaleX = scaleX;
+        updated.scaleY = scaleX;
+        updated.y = (canvasHeight - height * scaleX) / 2;
+      } else {
+        // Y-limited, center horizontally.
+        updated.x = (canvasWidth - width * scaleY) / 2;
+        updated.scaleX = scaleY;
+        updated.scaleY = scaleY;
+      }
     }
 
+    // scaleX and scaleY are the same by this point as we maintain aspect ratio.
     noobs.SetSourcePos(src, updated);
-    this.saveSourcePosition(item, 0, 0, 1);
+    this.saveSourcePosition(item, updated.x, updated.y, updated.scaleX);
   }
 
   /**
