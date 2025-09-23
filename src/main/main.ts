@@ -165,6 +165,7 @@ const createWindow = async () => {
 
   // We need to do this AFTER creating the window as it's used by the preview.
   Recorder.getInstance().initializeObs();
+  await manager.startup();
 
   // If this is first time setup, auto-pick an encoder for the user. Only do it
   // if the current value is the software encoder, as this is new in 7.0.0, all
@@ -185,6 +186,7 @@ const createWindow = async () => {
   // Ensure we don't hit the above branch again.
   cfg.set('firstTimeSetup', false);
 
+  // This gets hit on a user triggering refresh with CTRL-R.
   window.on('ready-to-show', async () => {
     console.log('[Main] Ready to show');
 
@@ -198,16 +200,22 @@ const createWindow = async () => {
       `Warcraft Recorder v${appVersion}`,
     );
 
-    // Initialize the storage clients, this is the first call to the
-    // singletons so invokes the constructors. Deliberatly do this after
-    // the window is created so any messages to the frontend actually arrive.
-    CloudClient.getInstance();
-    DiskClient.getInstance();
-
-    await manager.startup();
-
     const startMinimized = cfg.get<boolean>('startMinimized');
     if (!startMinimized) window.show();
+
+    // Important to refresh status and videos after a user triggered
+    // refresh, otherwise the frontend will be in its default state
+    // which may not reflect reality.
+    const disk = DiskClient.getInstance();
+    const cloud = CloudClient.getInstance();
+
+    await Promise.all([
+      manager.refreshStatus(),
+      disk.refreshStatus(),
+      disk.refreshVideos(),
+      cloud.refreshStatus(),
+      cloud.refreshVideos(),
+    ]);
   });
 
   window.on('focus', () => {
@@ -223,7 +231,6 @@ const createWindow = async () => {
   });
 
   await window.loadURL(resolveHtmlPath('index.html'));
-  manager.refreshStatus();
   setupTray();
 
   // Open urls in the user's browser

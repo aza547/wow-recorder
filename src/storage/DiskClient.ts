@@ -66,6 +66,7 @@ export default class DiskClient implements StorageClient {
    * Get the videos.
    */
   private async getVideos() {
+    console.info('[DiskClient] Getting videos from disk');
     const storageDir = ConfigService.getInstance().get<string>('storagePath');
 
     if (!storageDir) {

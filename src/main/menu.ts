@@ -13,6 +13,16 @@ export default class MenuBuilder {
   private buildDefaultTemplate(): MenuItemConstructorOptions[] {
     const developSubmenu: MenuItemConstructorOptions[] = [
       {
+        label: 'Reload',
+        accelerator: 'CommandOrControl+R',
+        role: 'reload',
+      },
+      {
+        label: 'Toggle Developer Tools',
+        role: 'toggleDevTools',
+        accelerator: 'CommandOrControl+Shift+I',
+      },
+      {
         label: 'Zoom In',
         accelerator: 'CommandOrControl+Plus',
         role: 'zoomIn',

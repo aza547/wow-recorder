@@ -110,13 +110,7 @@ export default class Manager {
    */
   public async startup() {
     console.info('[Manager] Starting up');
-
-    // This should be a given, except with the dev hot reloader.
-    await this.recorder.forceStop();
-
     this.reconfiguring = true;
-    this.refreshStatus();
-
     let success = false;
 
     try {
@@ -140,9 +134,6 @@ export default class Manager {
     }
 
     this.reconfiguring = false;
-    this.refreshStatus();
-    await DiskClient.getInstance().refreshStatus();
-    await DiskClient.getInstance().refreshVideos();
   }
 
   /**

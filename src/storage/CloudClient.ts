@@ -333,7 +333,7 @@ export default class CloudClient implements StorageClient {
    * the frontend.
    */
   private async getVideos() {
-    console.info('[CloudClient] Getting video state');
+    console.info('[CloudClient] Getting videos from cloud');
 
     if (!this.authenticated) {
       console.info('[CloudClient] Not authenticated so no videos');
