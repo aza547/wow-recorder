@@ -133,7 +133,7 @@ const CloudStatus = ({ appState }: StatusProps) => {
               {status}
             </span>
           </div>
-          <div className="flex flex-col w-full mt-1 mr-6 items-center justify-center text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground">
+          <div className="flex flex-col w-full my-[10px] mr-10 items-center justify-end text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground gap-y-[2px]">
             {renderDownloadIcon()}
             {renderUploadIcon()}
           </div>
