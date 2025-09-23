@@ -249,7 +249,7 @@ export default class CloudClient implements StorageClient {
    * Timer for batch updating the frontend when the remote state changes.
    */
   private startBatchTimer() {
-    const processBatchUpdates = () => {
+    setInterval(() => {
       if (this.videoDeleteBatch.length > 0) {
         const batch = this.videoDeleteBatch.splice(0);
         send('displayRemoveCloudVideos', batch);
@@ -264,9 +264,7 @@ export default class CloudClient implements StorageClient {
         const batch = this.videoUnprotectBatch.splice(0);
         send('displayUnprotectCloudVideos', batch);
       }
-    };
-
-    setInterval(processBatchUpdates, 1000);
+    }, 1000);
   }
 
   /**
