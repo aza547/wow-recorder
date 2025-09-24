@@ -270,7 +270,7 @@ export default class CloudClient implements StorageClient {
   /**
    * Check if the client is ready for use.
    */
-  public ready() {
+  public async ready() {
     return this.enabled && this.authenticated && this.authorized;
   }
 
@@ -312,7 +312,9 @@ export default class CloudClient implements StorageClient {
       del: this.del,
     };
 
-    if (!this.ready()) {
+    const rdy = await this.ready();
+
+    if (!rdy) {
       // Remove the cloud videos from the UI if we're not ready.
       send('setCloudVideos', []);
     }
@@ -333,12 +335,14 @@ export default class CloudClient implements StorageClient {
    * the frontend.
    */
   private async getVideos() {
-    console.info('[CloudClient] Getting videos from cloud');
+    const rdy = await this.ready();
 
-    if (!this.authenticated) {
-      console.info('[CloudClient] Not authenticated so no videos');
+    if (!rdy) {
+      console.info('[CloudClient] Not ready so no videos');
       return [];
     }
+
+    console.info('[CloudClient] Getting videos from cloud');
 
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.api}/guild/${guild}/video`;
@@ -1273,7 +1277,7 @@ export default class CloudClient implements StorageClient {
 
     // VideoButton event listeners.
     ipcMain.on('videoButton', async (_event, args) => {
-      const ready = this.ready();
+      const ready = await this.ready();
       const action = args[0] as string;
 
       if (!ready) {

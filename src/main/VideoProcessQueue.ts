@@ -221,15 +221,11 @@ export default class VideoProcessQueue {
 
       await writeMetadataFile(videoPath, data.metadata);
 
-      const upload =
-        CloudClient.getInstance().ready() &&
-        shouldUpload(this.cfg, data.metadata);
+      const readyToUpload = await CloudClient.getInstance().ready();
+      const upload = readyToUpload && shouldUpload(this.cfg, data.metadata);
 
       if (upload) {
-        const item: UploadQueueItem = {
-          path: videoPath,
-        };
-
+        const item: UploadQueueItem = { path: videoPath };
         this.queueUpload(item);
       }
     } catch (error) {

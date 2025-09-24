@@ -39,14 +39,27 @@ export default class DiskClient implements StorageClient {
     this.setupListeners();
   }
 
-  public ready() {
-    return true;
+  public async ready() {
+    const storageDir = ConfigService.getInstance().get<string>('storagePath');
+
+    if (!storageDir) {
+      return false;
+    }
+
+    return exists(storageDir);
   }
 
   /**
    * Refresh the disk status on the frontend, does not refresh the videos.
    */
   public async refreshStatus() {
+    const rdy = await this.ready();
+
+    if (!rdy) {
+      console.warn('[DiskClient] Not ready, no status');
+      return;
+    }
+
     const usage = await new DiskSizeMonitor().usage();
     const cfg = ConfigService.getInstance();
     const limit = cfg.get<number>('maxStorage') * 1024 ** 3;
@@ -66,19 +79,16 @@ export default class DiskClient implements StorageClient {
    * Get the videos.
    */
   private async getVideos() {
+    const rdy = await this.ready();
+
+    if (!rdy) {
+      console.warn('[DiskClient] Not ready, no videos');
+      return [];
+    }
+
     console.info('[DiskClient] Getting videos from disk');
+
     const storageDir = ConfigService.getInstance().get<string>('storagePath');
-
-    if (!storageDir) {
-      return [];
-    }
-
-    const dirExists = await exists(storageDir);
-
-    if (!dirExists) {
-      return [];
-    }
-
     const videos = await getSortedVideos(storageDir);
 
     if (videos.length === 0) {

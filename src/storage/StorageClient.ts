@@ -1,5 +1,5 @@
 interface StorageClient {
-  ready(): boolean;
+  ready(): Promise<boolean>;
   refreshStatus(): Promise<void>;
   refreshVideos(): Promise<void>;
   deleteVideos(videoNames: string[]): Promise<void>;

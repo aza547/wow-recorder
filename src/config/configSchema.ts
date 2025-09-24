@@ -146,7 +146,7 @@ export const configSchema = {
   monitorIndex: {
     description: Phrase.MonitorIndexDescription,
     type: 'integer',
-    default: 1,
+    default: 0,
     minimum: 1,
     maximum: 4,
   },
@@ -341,7 +341,7 @@ export const configSchema = {
   chatOverlayYPosition: {
     description: Phrase.ChatOverlayYPositionDescription,
     type: 'integer',
-    default: 870,
+    default: 0,
   },
   chatOverlayCropX: {
     description: Phrase.ChatOverlayWidthDescription,
