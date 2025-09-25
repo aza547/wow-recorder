@@ -1,20 +1,21 @@
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
+import { getLocalePhrase } from 'localisation/translations';
 import { ShieldAlert } from 'lucide-react';
-import { Crashes, CrashData, AppState } from 'main/types';
+import { AppState, ErrorReport } from 'main/types';
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from 'renderer/components/HoverCard/HoverCard';
 
-const CrashStatus = ({
-  crashes,
+const ErrorReporter = ({
+  errorReports,
   appState,
 }: {
-  crashes: Crashes;
+  errorReports: ErrorReport[];
   appState: AppState;
 }) => {
-  if (!crashes?.length) return null;
+  if (!errorReports?.length) return null;
   return (
     <HoverCard>
       <HoverCardTrigger>
@@ -26,12 +27,12 @@ const CrashStatus = ({
             {getLocalePhrase(appState.language, Phrase.CrashHappenedText)}
           </p>
           <ul className="text-xs text-popover-foreground/60 list-disc pl-4">
-            {crashes.map((crash: CrashData) => {
-              const dateString = crash.date.toLocaleString();
+            {errorReports.map((report: ErrorReport) => {
+              const dateString = report.date.toLocaleString();
               return (
-                <li key={crash.date.toISOString()}>
+                <li key={report.date.toISOString()}>
                   <span className="font-bold">{dateString}:</span>{' '}
-                  <code>{crash.reason}</code>
+                  <code>{report.reason}</code>
                 </li>
               );
             })}
@@ -42,4 +43,4 @@ const CrashStatus = ({
   );
 };
 
-export default CrashStatus;
+export default ErrorReporter;

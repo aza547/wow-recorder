@@ -3,7 +3,7 @@ import { configSchema } from 'config/configSchema';
 import { AppState, RecStatus } from 'main/types';
 import { useEffect, useRef } from 'react';
 import { HardDrive, Info } from 'lucide-react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { setConfigValues, useSettings } from './useSettings';
 import { pathSelect } from './rendererutils';
 import { Input } from './components/Input/Input';
@@ -12,6 +12,7 @@ import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Progress from './components/Progress/Progress';
 import TextBanner from './components/TextBanner/TextBanner';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -19,6 +20,7 @@ interface IProps {
 }
 
 const ipc = window.electron.ipcRenderer;
+let debounceTimeout: NodeJS.Timeout | null;
 
 const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, appState } = props;
@@ -41,9 +43,13 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       maxStorage: config.maxStorage,
     });
 
-    // Inform the backend of a settings change so we can update config
-    // and validate it's good.
-    ipc.sendMessage('settingsChange', []);
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    debounceTimeout = setTimeout(() => {
+      ipc.reconfigureBase();
+    }, 500);
   }, [
     config.separateBufferPath,
     config.storagePath,

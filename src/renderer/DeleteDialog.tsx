@@ -1,5 +1,5 @@
 import { AppState, RendererVideo } from 'main/types';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
   DialogClose,
@@ -26,6 +26,7 @@ import {
 } from '@tanstack/react-table';
 import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
+import { Phrase } from 'localisation/phrases';
 
 type DeleteDialogProps = {
   children: React.ReactNode;
@@ -124,11 +125,19 @@ const DeleteDialog = ({
         <tbody>
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
+              {row.getVisibleCells().map((cell, index) => {
+                let className = 'px-[4px] ';
+
+                if (index === 2) {
+                  className += 'text-left w-full'; // Take remaining space
+                }
+
+                return (
+                  <td key={cell.id} className={className}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

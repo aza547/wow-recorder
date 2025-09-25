@@ -1,7 +1,7 @@
 import { Checkbox } from '@mui/material';
 import { HeaderContext } from '@tanstack/react-table';
 import { getLocalePhrase } from 'localisation/translations';
-import { Language, Phrase } from 'localisation/types';
+import { Language, Phrase } from 'localisation/phrases';
 import {
   CalendarDays,
   Eye,

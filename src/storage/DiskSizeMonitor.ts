@@ -1,4 +1,3 @@
-import { BrowserWindow } from 'electron';
 import { FileInfo, FileSortDirection } from '../main/types';
 import ConfigService from '../config/ConfigService';
 import {
@@ -6,6 +5,7 @@ import {
   getMetadataForVideo,
   getSortedVideos,
 } from '../main/util';
+import DiskClient from './DiskClient';
 
 // Had a bug here where we used filter with an async function but that isn't
 // valid as it just returns a truthy promise. See issue 323. To get around
@@ -19,12 +19,6 @@ const asyncFilter = async (fileStream: FileInfo[], filter: any) => {
 export default class DiskSizeMonitor {
   private cfg = ConfigService.getInstance();
 
-  private mainWindow: BrowserWindow;
-
-  constructor(mainWindow: BrowserWindow) {
-    this.mainWindow = mainWindow;
-  }
-
   async run() {
     const storageDir = this.cfg.get<string>('storagePath');
     const maxStorageGB = this.cfg.get<number>('maxStorage');
@@ -36,7 +30,7 @@ export default class DiskSizeMonitor {
 
     const maxStorageBytes = maxStorageGB * 1024 ** 3;
     const usage = await this.usage();
-    const bytesToFree = usage - maxStorageBytes;
+    const bytesToFree = usage - maxStorageBytes * 0.95; // Remain slightly under the threshold.
     let bytesFreed = 0;
 
     const files = await getSortedVideos(
@@ -84,7 +78,8 @@ export default class DiskSizeMonitor {
     );
 
     if (filesForDeletion.length > 0) {
-      this.mainWindow.webContents.send('refreshState');
+      DiskClient.getInstance().refreshStatus();
+      DiskClient.getInstance().refreshVideos();
     }
   }
 

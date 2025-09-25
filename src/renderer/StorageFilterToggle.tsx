@@ -8,8 +8,9 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import SaveIcon from '@mui/icons-material/Save';
 import { Workflow } from 'lucide-react';
 import { Tooltip } from './components/Tooltip/Tooltip';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import { Table } from '@tanstack/react-table';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   appState: AppState;

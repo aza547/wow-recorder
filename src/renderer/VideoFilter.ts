@@ -19,7 +19,7 @@ import {
 import { Tag } from 'react-tag-autocomplete';
 import { specImages, affixImages, classImages } from './images';
 import VideoTag from './VideoTag';
-import { Language, Phrase } from 'localisation/types';
+import { Language, Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import { DateValueType } from 'react-tailwindcss-datepicker';
 

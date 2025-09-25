@@ -1,7 +1,7 @@
 import { URL } from 'url';
 import path from 'path';
 import fs, { promises as fspromise } from 'fs';
-import { app, BrowserWindow, Display, screen } from 'electron';
+import { app, Display, screen } from 'electron';
 import {
   EventType,
   uIOhook,
@@ -17,16 +17,19 @@ import {
   OurDisplayType,
   RendererVideo,
   ObsAudioConfig,
-  CrashData,
+  ErrorReport,
   CloudSignedMetadata,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
+import ConfigService from 'config/ConfigService';
+import { AxiosError } from 'axios';
+import { send } from './main';
 
 /**
  * When packaged, we need to fix some paths
  */
-const fixPathWhenPackaged = (pathSpec: string) => {
-  return pathSpec.replace('app.asar', 'app.asar.unpacked');
+const fixPathWhenPackaged = (p: string) => {
+  return p.replace('app.asar', 'app.asar.unpacked');
 };
 
 /**
@@ -273,40 +276,6 @@ const loadVideoDetailsDisk = async (
   }
 };
 
-const loadAllVideosDisk = async (
-  storageDir: string,
-): Promise<RendererVideo[]> => {
-  if (!storageDir) {
-    return [];
-  }
-
-  const videos = await getSortedVideos(storageDir);
-
-  if (videos.length === 0) {
-    return [];
-  }
-
-  const videoDetailPromises = videos.map((video) =>
-    loadVideoDetailsDisk(video),
-  );
-
-  // Await all the videoDetailsPromises to settle, and then remove any
-  // that were rejected. This can happen if there is a missing metadata file.
-  const videoDetails: RendererVideo[] = (
-    await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
-  ).filter((result) => !(result instanceof Error));
-
-  // Any details marked for deletion do it now. We allow for this flag to be
-  // set in the metadata to give us a robust mechanism for removing a video
-  // that may be open in the player. We hide it from the state as part of a
-  // refresh, that guarentees it cannot be loaded in the player.
-  videoDetails.filter((video) => video.delete).forEach(delayedDeleteVideo);
-
-  // Return this list of videos without those marked for deletion which may still
-  // exist for a short time.
-  return videoDetails.filter((video) => !video.delete);
-};
-
 /**
  * Writes video metadata asynchronously and returns a Promise
  */
@@ -328,62 +297,6 @@ const openSystemExplorer = (filePath: string) => {
   const windowsPath = filePath.replace(/\//g, '\\');
   const cmd = `explorer.exe /select,"${windowsPath}"`;
   exec(cmd, () => {});
-};
-
-/**
- * Put a save marker on a video, protecting it from the file monitor.
- */
-const protectVideoDisk = async (protect: boolean, videoPath: string) => {
-  let metadata;
-
-  try {
-    metadata = await getMetadataForVideo(videoPath);
-  } catch (err) {
-    console.error(
-      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
-      err,
-    );
-
-    return;
-  }
-
-  if (protect) {
-    console.info(`[Util] User set protected ${videoPath}`);
-  } else {
-    console.info(`[Util] User unprotected ${videoPath}`);
-  }
-
-  metadata.protected = protect;
-  await writeMetadataFile(videoPath, metadata);
-};
-
-/**
- * Tag a video.
- */
-const tagVideoDisk = async (videoPath: string, tag: string) => {
-  let metadata;
-
-  try {
-    metadata = await getMetadataForVideo(videoPath);
-  } catch (err) {
-    console.error(
-      `[Util] Metadata not found for '${videoPath}', but somehow we managed to load it. This shouldn't happen.`,
-      err,
-    );
-
-    return;
-  }
-
-  if (!tag || !/\S/.test(tag)) {
-    // empty or whitespace only
-    console.info('[Util] User removed tag');
-    metadata.tag = undefined;
-  } else {
-    console.info('[Util] User tagged', videoPath, 'with', tag);
-    metadata.tag = tag;
-  }
-
-  await writeMetadataFile(videoPath, metadata);
 };
 
 /**
@@ -491,12 +404,17 @@ const getWowFlavour = (pathSpec: string): string => {
 };
 
 /**
- * Updates the status icon for the application.
- * @param status the status number
+ * Adds an error to the error report component.
  */
-const addCrashToUI = (mainWindow: BrowserWindow, crashData: CrashData) => {
-  console.info('[Util] Updating crashes with:', crashData);
-  mainWindow.webContents.send('updateCrashes', crashData);
+const emitErrorReport = (data: unknown) => {
+  console.error('[Util] Emitting error report', String(data));
+
+  const report: ErrorReport = {
+    date: new Date(),
+    reason: String(data),
+  };
+
+  send('updateErrorReport', report);
 };
 
 const isPushToTalkHotkey = (
@@ -524,6 +442,37 @@ const isPushToTalkHotkey = (
   // an additional modifier present (so CTRL + SHIFT + E will trigger
   // a CTRL + E hotkey).
   pushToTalkModifiers.split(',').forEach((mod) => {
+    if (mod === 'alt') modifierMatch = altKey;
+    if (mod === 'ctrl') modifierMatch = ctrlKey;
+    if (mod === 'shift') modifierMatch = shiftKey;
+    if (mod === 'win') modifierMatch = metaKey;
+  });
+
+  return buttonMatch && modifierMatch;
+};
+
+const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
+  const { keycode, altKey, ctrlKey, shiftKey, metaKey, type } = event;
+  const cfg = ConfigService.getInstance();
+
+  if (type !== EventType.EVENT_KEY_PRESSED) {
+    // We should never hit this but just being safe.
+    return false;
+  }
+
+  const manualRecordHotKey = cfg.get<number>('manualRecordHotKey');
+  const manualRecordHotKeyModifiers = cfg.get<string>(
+    'manualRecordHotKeyModifiers',
+  );
+
+  const buttonMatch = keycode > 0 && keycode === manualRecordHotKey;
+  let modifierMatch = true;
+
+  // Deliberately permissive here, we check all the modifiers we have in
+  // config are met but we don't enforce the inverse, i.e. we'll accept
+  // an additional modifier present (so CTRL + SHIFT + E will trigger
+  // a CTRL + E hotkey).
+  manualRecordHotKeyModifiers.split(',').forEach((mod) => {
     if (mod === 'alt') modifierMatch = altKey;
     if (mod === 'ctrl') modifierMatch = ctrlKey;
     if (mod === 'shift') modifierMatch = shiftKey;
@@ -921,13 +870,23 @@ const takeOwnershipBufferDir = async (dir: string) => {
   await fs.promises.writeFile(file, content);
 };
 
+/**
+ * Convience method to log an axios error.
+ */
+const logAxiosError = (msg: string, error: AxiosError) => {
+  console.error(msg, {
+    message: error.message,
+    status: error.response?.status,
+    data: error.response?.data,
+    url: error.config?.url,
+  });
+};
+
 export {
   setupApplicationLogging,
-  loadAllVideosDisk,
   writeMetadataFile,
   deleteVideoDisk,
   openSystemExplorer,
-  protectVideoDisk,
   fixPathWhenPackaged,
   getSortedVideos,
   getAvailableDisplays,
@@ -942,11 +901,10 @@ export {
   nextMousePressPromise,
   convertUioHookEvent,
   getPromiseBomb,
-  addCrashToUI,
+  emitErrorReport,
   buildClipMetadata,
   getOBSFormattedDate,
   checkDisk,
-  tagVideoDisk,
   getMetadataFileNameForVideo,
   loadVideoDetailsDisk,
   reverseChronologicalVideoSort,
@@ -959,4 +917,7 @@ export {
   takeOwnershipStorageDir,
   takeOwnershipBufferDir,
   convertKoreanVideoCategory,
+  isManualRecordHotKey,
+  delayedDeleteVideo,
+  logAxiosError,
 };

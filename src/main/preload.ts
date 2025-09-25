@@ -1,32 +1,54 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
+import { AudioSourceType, SceneItem } from './types';
 
 export type Channels =
-  | 'mainWindow'
-  | 'getVideoState'
+  | 'window'
   | 'videoButton'
   | 'logPath'
   | 'openURL'
   | 'test'
-  | 'getAudioDevices'
   | 'getAllDisplays'
   | 'videoPlayerSettings'
   | 'recorder'
   | 'config'
-  | 'preview'
   | 'getEncoders'
   | 'selectPath'
+  | 'selectImage'
   | 'selectFile'
-  | 'settingsChange'
-  | 'overlay'
   | 'getNextKeyPress'
   | 'clip'
   | 'deleteVideos'
   | 'writeClipboard'
   | 'getShareableLink'
-  | 'refreshFrontend'
   | 'doAppUpdate'
   | 'volmeter'
-  | 'audioSettingsOpen';
+  | 'audioSettingsOpen'
+  | 'audioSettingsClosed'
+  | 'updateSourcePos'
+  | 'createAudioSource'
+  | 'getAudioSourceProperties'
+  | 'deleteAudioSource'
+  | 'setAudioSourceDevice'
+  | 'setAudioSourceWindow'
+  | 'getDisplayInfo'
+  | 'configurePreview'
+  | 'showPreview'
+  | 'hidePreview'
+  | 'disablePreview'
+  | 'getSourcePosition'
+  | 'setSourcePosition'
+  | 'resetSourcePosition'
+  | 'setForceMono'
+  | 'setAudioSuppression'
+  | 'setCaptureCursor'
+  | 'reconfigureBase'
+  | 'reconfigureVideo'
+  | 'reconfigureAudio'
+  | 'reconfigureOverlay'
+  | 'reconfigureCloud'
+  | 'getSensibleEncoderDefault'
+  | 'refreshCloudGuilds';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -56,6 +78,128 @@ contextBridge.exposeInMainWorld('electron', {
 
     removeAllListeners(channel: Channels) {
       ipcRenderer.removeAllListeners(channel);
+    },
+
+    getDisplayInfo(): Promise<{
+      canvasWidth: number;
+      canvasHeight: number;
+      previewWidth: number;
+      previewHeight: number;
+    }> {
+      return ipcRenderer.invoke('getDisplayInfo');
+    },
+
+    // This is async as it's useful to wait for the configuration to complete
+    // before triggering frontend updates.
+    configurePreview(x: number, y: number, width: number, height: number) {
+      ipcRenderer.send('configurePreview', x, y, width, height);
+    },
+
+    showPreview() {
+      ipcRenderer.send('showPreview');
+    },
+
+    hidePreview() {
+      ipcRenderer.send('hidePreview');
+    },
+
+    disablePreview() {
+      ipcRenderer.send('disablePreview');
+    },
+
+    getSourcePosition(
+      src: SceneItem,
+    ): Promise<SourceDimensions & SceneItemPosition> {
+      return ipcRenderer.invoke('getSourcePosition', src);
+    },
+
+    setSourcePosition(
+      src: SceneItem,
+      target: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        cropLeft: number;
+        cropRight: number;
+        cropTop: number;
+        cropBottom: number;
+      },
+    ) {
+      ipcRenderer.send('setSourcePosition', src, target);
+    },
+
+    resetSourcePosition(src: SceneItem) {
+      ipcRenderer.send('resetSourcePosition', src);
+    },
+
+    audioSettingsOpen(): Promise<void> {
+      return ipcRenderer.invoke('audioSettingsOpen');
+    },
+
+    audioSettingsClosed(): Promise<void> {
+      return ipcRenderer.invoke('audioSettingsClosed');
+    },
+
+    // Also returns the properties.
+    createAudioSource(id: string, type: AudioSourceType): Promise<string> {
+      return ipcRenderer.invoke('createAudioSource', id, type);
+    },
+
+    getAudioSourceProperties(id: string): Promise<ObsProperty[]> {
+      return ipcRenderer.invoke('getAudioSourceProperties', id);
+    },
+
+    deleteAudioSource(id: string): void {
+      ipcRenderer.send('deleteAudioSource', id);
+    },
+
+    setAudioSourceDevice(id: string, device: string): void {
+      ipcRenderer.send('setAudioSourceDevice', id, device);
+    },
+
+    setAudioSourceWindow(id: string, window: string): void {
+      ipcRenderer.send('setAudioSourceWindow', id, window);
+    },
+
+    setAudioSourceVolume(id: string, volume: number): void {
+      ipcRenderer.send('setAudioSourceVolume', id, volume);
+    },
+
+    setForceMono(enabled: boolean) {
+      ipcRenderer.send('setForceMono', enabled);
+    },
+
+    setAudioSuppression(enabled: boolean) {
+      ipcRenderer.send('setAudioSuppression', enabled);
+    },
+
+    reconfigureBase() {
+      ipcRenderer.send('reconfigureBase');
+    },
+
+    reconfigureVideo() {
+      ipcRenderer.send('reconfigureVideo');
+    },
+
+    reconfigureAudio() {
+      ipcRenderer.send('reconfigureAudio');
+    },
+
+    reconfigureOverlay() {
+      ipcRenderer.send('reconfigureOverlay');
+    },
+
+    reconfigureCloud() {
+      ipcRenderer.send('reconfigureCloud');
+    },
+
+    getSensibleEncoderDefault(): Promise<string> {
+      return ipcRenderer.invoke('getSensibleEncoderDefault');
+    },
+
+    refreshCloudGuilds() {
+      ipcRenderer.send('refreshCloudGuilds');
     },
   },
 });

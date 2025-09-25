@@ -1,4 +1,4 @@
-import { CrashData, Crashes } from 'main/types';
+import { ErrorReport, Crashes } from 'main/types';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import { Tooltip, IconButton, Popover, Box, Typography } from '@mui/material';
 import { useState } from 'react';
@@ -38,9 +38,9 @@ export default function CrashStatus(props: IProps) {
   const getCrashSummary = () => {
     return (
       <>
-        {crashes.map((crashData: CrashData) => {
-          const dateString = crashData.date.toLocaleString();
-          const { reason } = crashData;
+        {crashes.map((ErrorReport: ErrorReport) => {
+          const dateString = ErrorReport.date.toLocaleString();
+          const { reason } = ErrorReport;
 
           return (
             <Typography

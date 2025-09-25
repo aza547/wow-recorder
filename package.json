@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "description": "A World of Warcraft screen recorder",
+  "description": "Warcraft Recorder",
   "keywords": [
     "world",
     "of",
@@ -153,9 +153,8 @@
     "history": "^5.3.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.428.0",
-    "node-abi": "^4.9.0",
+    "node-abi": "^4.14.0",
     "path": "^0.12.7",
-    "queue-promise": "^2.2.1",
     "re-resizable": "^6.9.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -176,7 +175,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@electron/rebuild": "^3.7.1",
+    "@electron/rebuild": "^4.0.1",
     "@eslint/js": "^9.17.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@svgr/webpack": "^8.1.0",
@@ -192,7 +191,7 @@
     "@types/react-test-renderer": "^18.0.1",
     "@types/webpack-bundle-analyzer": "^4.6.0",
     "autoprefixer": "^10.4.21",
-    "browserslist": "^4.25.0",
+    "browserslist": "^4.26.2",
     "browserslist-config-erb": "^0.0.3",
     "chalk": "^4.1.2",
     "concurrently": "^9.1.2",
@@ -201,8 +200,8 @@
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
     "detect-port": "^2.1.0",
-    "electron": "^36.4.0",
-    "electron-builder": "^25.1.8",
+    "electron": "^38.1.2",
+    "electron-builder": "^26.0.12",
     "electron-devtools-installer": "^4.0.0",
     "electron-notarize": "^1.2.1",
     "electronmon": "^2.0.3",
@@ -239,8 +238,7 @@
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.0",
-    "webpack-merge": "^6.0.1",
-    "obs-studio-node": "https://pub-4cf93aaf84c649c88aadb13a092952f2.r2.dev/osn-0.25.47wcr-release-win64.tar.gz"
+    "webpack-merge": "^6.0.1"
   },
   "browserslist": [
     "extends browserslist-config-erb"

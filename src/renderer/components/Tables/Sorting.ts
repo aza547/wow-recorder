@@ -1,6 +1,6 @@
 import { Row } from '@tanstack/react-table';
 import { getLocalePhrase } from 'localisation/translations';
-import { Language, Phrase } from 'localisation/types';
+import { Language, Phrase } from 'localisation/phrases';
 import { RendererVideo } from 'main/types';
 import {
   countUniqueViewpoints,

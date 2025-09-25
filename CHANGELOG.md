@@ -6,13 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- [Issue 697](https://github.com/aza547/wow-recorder/issues/697) & [PR 702](https://github.com/aza547/wow-recorder/pull/702) - Remove the dependency on OSN, OBS bindings are now provided by [noobs](https://github.com/aza547/noobs).
+- Buffer recordings are now entirely in memory, removing a timing window that could cause videos to be wrongly cut also reducing disk wear and hopefully user confusion.
+- Rework the audio sources page to be easier to understand.
+- The `jim_nvenc` and `jim_nvenc_av1` encoders have been replaced by their modern counterparts. Migration is automatic.
+- Pro config is now separated from the base config and won't interrupt recording if it goes wrong (e.g. your guild is deleted).
+
 ### Added
+- Add the ability to manually record via a hotkey configurable in the settings.
+- Add the ability to drag and scale video sources on the scene, as well as various other options.
+- Split out cloud config from regular config and add an appropriate status card. Cloud settings to be reconfigured while recording.
+- Add the ability to force the video sources to SDR.
+- Volume can now be configured on a per-source basis.
+- [Issue 632](https://github.com/aza547/wow-recorder/issues/632) - Add AV1 support for AMD: there has been no testing of this, please share your experience in Discord!
+- Add support for QSV encoding: there has been no testing of this, please share your experience in Discord!
+- Add a button to refresh the list of guilds on demand.
+- On first time setup, automatically set the default the encoder to a sensible default (i.e. pick a hardware encoder).
+- Add a button to set the encoder to a sensible default (same as above, but on demand rather than on first time install).
+
 ### Fixed
+- [Issue 677](https://github.com/aza547/wow-recorder/issues/677) - Resolve issues with select menus hidden behind scene preview.
+- [Issue 640](https://github.com/aza547/wow-recorder/issues/640) - Remove a hack relying on moving the preview off-screen when not on display.
 - Fix HOA timer.
+- Hide the scene preview while select menus are open, so they do not overlap.
+- Automatically handle the changing of an audio device ID, if the device is available with a different ID.
 
 ## [6.15.6] - 2025-08-28
 ### Fixed
 - [Issue 725](https://github.com/aza547/wow-recorder/issues/725) - Remove the faders. This is to address crashes reported by several users. This function will come back using the libobs volume setting in 7.0.0 but setting source volume is for now unsupported. Stability is priority.
+- OBS logs now live in the same folder as the WCR logs so should be more obvious.
+- OBS logs now have correct timestamps, rather than starting at 00:00:00.
 
 ## [6.15.5] - 2025-08-25
 ### Fixed

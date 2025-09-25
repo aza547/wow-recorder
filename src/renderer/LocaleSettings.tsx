@@ -2,7 +2,7 @@ import * as React from 'react';
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
 import { Info } from 'lucide-react';
 import { Dispatch, SetStateAction } from 'react';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { getLocalePhrase, Language } from 'localisation/translations';
 import { AppState } from 'main/types';
 import {
   Select,
@@ -15,6 +15,7 @@ import { setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import Switch from './components/Switch/Switch';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   config: ConfigurationSchema;

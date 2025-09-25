@@ -1,5 +1,5 @@
 import { getLocalePhrase } from 'localisation/translations';
-import { Phrase, Language } from 'localisation/types';
+import { Phrase, Language } from 'localisation/phrases';
 import { AppState } from 'main/types';
 import { Dispatch, SetStateAction, useCallback } from 'react';
 import Datepicker, { DateValueType } from 'react-tailwindcss-datepicker';

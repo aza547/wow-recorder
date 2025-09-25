@@ -1,37 +1,114 @@
 import fs from 'fs';
-import { EventEmitter } from 'stream';
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import {
   CloudMetadata,
-  CloudSignedMetadata,
+  CloudStatus,
   CompleteMultiPartUploadRequestBody,
   CreateMultiPartUploadResponseBody,
+  RendererVideo,
+  UploadQueueItem,
 } from 'main/types';
 import path from 'path';
-import AuthError from '../utils/AuthError';
 import { z } from 'zod';
 import { Affiliation, TAffiliation } from 'types/api';
-import WebSocket from 'ws';
+import WebSocket, { RawData } from 'ws';
+import {
+  cloudSignedMetadataToRendererVideo,
+  convertKoreanVideoCategory,
+  logAxiosError,
+} from 'main/util';
+import StorageClient from './StorageClient';
+import { getCloudConfig } from 'utils/configUtils';
+import { clipboard, ipcMain } from 'electron';
+import VideoProcessQueue from 'main/VideoProcessQueue';
+import { send } from 'main/main';
+
+const enum VideoMessages {
+  CREATE = 'vc',
+  DELETE = 'vd',
+  PROTECT = 'vp',
+  UNPROTECT = 'vu',
+  TAG = 'vt',
+}
+
+const enum GuildMessages {
+  MTIME = 'mtime',
+  USAGE = 'gu',
+  LIMIT = 'gl',
+}
 
 /**
  * A client for retrieving resources from the cloud.
  */
-export default class CloudClient extends EventEmitter {
+export default class CloudClient implements StorageClient {
+  /**
+   * Singleton instance.
+   */
+  private static instance: CloudClient;
+
+  /**
+   * Singleton instance accessor.
+   */
+  public static getInstance() {
+    if (!this.instance) this.instance = new this();
+    return this.instance;
+  }
+
+  /**
+   * Whether the cloud client is enabled or not.
+   */
+  private enabled = false;
+
+  /**
+   * Indicates whether the client is authenticated or not.
+   */
+  private authenticated = false;
+
+  /**
+   * Whether the client is authorized or not.
+   */
+  private authorized = false;
+
   /**
    * The username of the cloud user.
    */
-  private user: string;
+  private user = '';
 
   /**
    * The password of the cloud user.
    */
-  private pass: string;
+  private pass = '';
 
   /**
    * The bucket name we're configured to target. Expected to be the name of
    * the guild as configured in the settings.
    */
-  private guild: string;
+  private guild = '';
+
+  /**
+   * The total storage usage in bytes for the current guild.
+   */
+  private usage = 0;
+
+  /**
+   * The maximum storage limit in bytes for the current guild.
+   */
+  private limit = 0;
+
+  /**
+   * Permissions for the current user in the selected guild.
+   * - read: Whether the user can read/download files.
+   * - write: Whether the user can upload files.
+   * - del: Whether the user can delete files.
+   */
+  private read = false;
+  private write = false;
+  private del = false;
+
+  /**
+   * Available guilds the user can choose from.
+   */
+  private affiliations: TAffiliation[] = [];
 
   /**
    * The last modified time of the shared storage.
@@ -42,7 +119,7 @@ export default class CloudClient extends EventEmitter {
    * The auth header for the WCR API, which uses basic HTTP auth using the cloud
    * user and password.
    */
-  private authHeader: string;
+  private authHeader?: string;
 
   /**
    * The WCR API endpoint. This is used for authentication, retrieval and
@@ -91,6 +168,27 @@ export default class CloudClient extends EventEmitter {
   private polling = false;
 
   /**
+   * It's common to receive a bunch of video modifications at once due to
+   * the housekeeper, or bulk changes. Batch these up and send them to the
+   * frontend every second to avoid spurious re-renders.
+   */
+  private videoDeleteBatch: string[] = [];
+  private videoProtectBatch: string[] = [];
+  private videoUnprotectBatch: string[] = [];
+
+  /**
+   * Constructor.
+   */
+  private constructor() {
+    console.info('[CloudClient] Creating cloud client');
+    this.setupListeners();
+    this.configure();
+    this.startHeartbeatTimer();
+    this.startReconnectTimer();
+    this.startBatchTimer();
+  }
+
+  /**
    * If we have an open websocket, we want to keep it alive. This timer will
    * send a ping to do that. The server is configured to return a pong in response.
    *
@@ -98,87 +196,157 @@ export default class CloudClient extends EventEmitter {
    * frequently than this. Not sure this is a defined timeout, couldn't find it in
    * the Cloudflare Websocket docs, but surely every minute is fine.
    */
-  private heartbeatTimer = setInterval(() => {
-    if (!this.ws) {
-      // We're not connected.
-      return;
-    }
+  private startHeartbeatTimer() {
+    setInterval(() => {
+      if (!this.ws) {
+        // We're not connected.
+        return;
+      }
 
-    if (this.ws.readyState !== WebSocket.OPEN) {
-      // The socket isn't ready to send messages.
-      return;
-    }
+      if (this.ws.readyState !== WebSocket.OPEN) {
+        // The socket isn't ready to send messages.
+        return;
+      }
 
-    try {
-      this.ws.ping();
-    } catch (error) {
-      console.warn('[CloudClient] Error sending websocket ping', String(error));
-    }
-  }, 60 * 1000);
+      try {
+        this.ws.ping();
+      } catch (error) {
+        console.warn(
+          '[CloudClient] Error sending websocket ping',
+          String(error),
+        );
+      }
+    }, 60 * 1000);
+  }
 
   /**
    * Timer for reconnecting the WebSocket connection. We don't try to reconnect
    * if the websocket is closed by the server. We just wait on this timer to fire.
    */
-  private reconnectTimer = setInterval(() => {
-    if (this.ws) {
-      // We're already connected.
-      return;
-    }
+  private startReconnectTimer() {
+    setInterval(() => {
+      if (this.ws) {
+        // We're already connected.
+        return;
+      }
 
-    if (!this.polling) {
-      // We've not been told to start polling yet.
-      return;
-    }
+      if (!this.polling) {
+        // We've not been told to start polling yet.
+        return;
+      }
+
+      try {
+        this.connectPollingWebsocket();
+      } catch (error) {
+        // Not sure if this is really possible, but just being safe.
+        // I think errors instead come through the on('error') handler.
+        console.warn('[CloudClient] Error connecting websocket', String(error));
+      }
+    }, 10000);
+  }
+
+  /**
+   * Timer for batch updating the frontend when the remote state changes.
+   */
+  private startBatchTimer() {
+    setInterval(() => {
+      if (this.videoDeleteBatch.length > 0) {
+        const batch = this.videoDeleteBatch.splice(0);
+        send('displayRemoveCloudVideos', batch);
+      }
+
+      if (this.videoProtectBatch.length > 0) {
+        const batch = this.videoProtectBatch.splice(0);
+        send('displayProtectCloudVideos', batch);
+      }
+
+      if (this.videoUnprotectBatch.length > 0) {
+        const batch = this.videoUnprotectBatch.splice(0);
+        send('displayUnprotectCloudVideos', batch);
+      }
+    }, 1000);
+  }
+
+  /**
+   * Check if the client is ready for use.
+   */
+  public async ready() {
+    return this.enabled && this.authenticated && this.authorized;
+  }
+
+  /**
+   * Get this list of guild affiliations for the user.
+   */
+  public async fetchAffiliations() {
+    let success = false;
 
     try {
-      this.connectPollingWebsocket();
+      this.affiliations = await this.getUserAffiliations();
+      success = true;
     } catch (error) {
-      // Not sure if this is really possible, but just being safe.
-      // I think errors instead come through the on('error') handler.
-      console.warn('[CloudClient] Error connecting websocket', String(error));
+      if (axios.isAxiosError(error)) {
+        const msg = '[CloudClient] Failed to get user affiliations';
+        logAxiosError(msg, error);
+      } else {
+        console.error('[CloudClient] Unexpected error', error);
+      }
     }
-  }, 10000);
 
-  /**
-   * Constructor.
-   */
-  constructor(user: string, pass: string, guild: string) {
-    super();
-    console.info('[CloudClient] Creating cloud client with', user, guild);
-    this.user = user;
-    this.pass = pass;
-    this.guild = guild;
-    this.authHeader = CloudClient.createAuthHeader(user, pass);
+    return success;
   }
 
   /**
-   * Return the guild name.
+   * Handle changes to the cloud status, does not refresh the videos.
    */
-  public getGuildName() {
-    return this.guild;
+  public async refreshStatus() {
+    const status: CloudStatus = {
+      enabled: this.enabled,
+      authenticated: this.authenticated,
+      authorized: this.authorized,
+      guild: this.guild,
+      available: this.affiliations.map((a) => a.guildName),
+      usage: this.usage,
+      limit: this.limit,
+      read: this.read,
+      write: this.write,
+      del: this.del,
+    };
+
+    const rdy = await this.ready();
+
+    if (!rdy) {
+      // Remove the cloud videos from the UI if we're not ready.
+      send('setCloudVideos', []);
+    }
+
+    send('updateCloudStatus', status);
   }
 
   /**
-   * Build the Authorization header string.
+   * Get the video state from the WCR API and set it on the frontend.
    */
-  private static createAuthHeader(user: string, pass: string) {
-    const authHeaderString = `${user}:${pass}`;
-    const encodedAuthString = Buffer.from(authHeaderString).toString('base64');
-    return `Basic ${encodedAuthString}`;
+  public async refreshVideos() {
+    const videos = await this.getVideos();
+    send('setCloudVideos', videos);
   }
 
   /**
-   * Get the video state from the WCR database.
+   * Get the video state from the remote WCR database, and refresh
+   * the frontend.
    */
-  public async getState(): Promise<CloudSignedMetadata[]> {
-    console.info('[CloudClient] Getting video state');
+  private async getVideos() {
+    const rdy = await this.ready();
+
+    if (!rdy) {
+      console.info('[CloudClient] Not ready so no videos');
+      return [];
+    }
+
+    console.info('[CloudClient] Getting videos from cloud');
 
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.api}/guild/${guild}/video`;
     const headers = { Authorization: this.authHeader };
-
-    const mtimePromise = this.getMtime();
 
     const statePromise = axios.get(url, {
       headers,
@@ -188,46 +356,14 @@ export default class CloudClient extends EventEmitter {
     const response = await statePromise;
 
     console.info(
-      '[CloudClient] Got video state with',
+      '[CloudClient] Loaded',
       response.data.length,
-      'videos',
+      'videos from cloud',
     );
 
-    // Update mtime to avoid multiple refreshes.
-    const mtime = await mtimePromise;
-    this.bucketLastMod = mtime;
-
-    return response.data;
-  }
-
-  /**
-   * Add a video to the WCR database.
-   */
-  public async postVideo(metadata: CloudMetadata) {
-    console.info('[CloudClient] Adding video to database', metadata.videoName);
-
-    const guild = encodeURIComponent(this.guild);
-    const url = `${CloudClient.api}/guild/${guild}/video`;
-    const headers = { Authorization: this.authHeader };
-
-    await axios.post(url, metadata, {
-      headers,
-      validateStatus: (s) => this.validateResponseStatus(s),
-    });
-
-    // Always run the housekeeper after an upload so that there
-    // will be space for the next upload.
-    await this.runHousekeeping();
-
-    // Update the mtime to avoid multiple refreshes.
-    this.bucketLastMod = Date.now();
-    this.emit('change');
-
-    console.info(
-      '[CloudClient] Added',
-      metadata.videoName,
-      'to video database.',
-    );
+    const data = [...response.data];
+    data.forEach(convertKoreanVideoCategory);
+    return data.map(cloudSignedMetadataToRendererVideo);
   }
 
   /**
@@ -252,7 +388,7 @@ export default class CloudClient extends EventEmitter {
   /**
    * Protect or unprotect a set of videos.
    */
-  public async protectVideos(protect: boolean, videoNames: string[]) {
+  public async protectVideos(videoNames: string[], protect: boolean) {
     console.info(
       `[CloudClient] Attempt to ${protect ? 'protect' : 'unprotect'}`,
       videoNames,
@@ -277,7 +413,7 @@ export default class CloudClient extends EventEmitter {
   /**
    * Tag a video.
    */
-  public async tagVideos(tag: string, videoNames: string[]) {
+  public async tagVideos(videoNames: string[], tag: string) {
     console.info('[CloudClient] Set tag', tag, 'on', videoNames);
 
     const guild = encodeURIComponent(this.guild);
@@ -291,6 +427,175 @@ export default class CloudClient extends EventEmitter {
     });
 
     console.info('[CloudClient] Successfully set tag', tag, 'on', videoNames);
+  }
+
+  /**
+   * Reset the state of the client.
+   */
+  private reset() {
+    this.enabled = false;
+    this.authenticated = false;
+    this.authorized = false;
+    this.user = '';
+    this.pass = '';
+    this.authHeader = undefined;
+    this.guild = '';
+    this.affiliations = [];
+    this.usage = 0;
+    this.limit = 0;
+    this.read = false;
+    this.write = false;
+    this.del = false;
+    this.stopPolling();
+  }
+
+  /**
+   * Login to the cloud store.
+   */
+  private async configure() {
+    console.info('[CloudClient] Configuring cloud client');
+    this.reset();
+
+    const config = getCloudConfig();
+
+    const {
+      cloudStorage,
+      cloudAccountName,
+      cloudAccountPassword,
+      cloudGuildName,
+      cloudUpload,
+    } = config;
+
+    console.info('[CloudClient] Configure with:', {
+      cloudStorage,
+      cloudAccountName,
+      cloudGuildName,
+      cloudUpload,
+    });
+
+    this.enabled = cloudStorage;
+
+    if (!this.enabled) {
+      console.info('[CloudClient] Cloud storage is not enabled');
+      this.refreshStatus();
+      return;
+    }
+
+    if (!cloudAccountName) {
+      console.warn('[CloudClient] Empty account name');
+      this.refreshStatus();
+      return;
+    }
+
+    if (!cloudAccountPassword) {
+      console.warn('[CloudClient] Empty account pass');
+      this.refreshStatus();
+      return;
+    }
+
+    this.user = config.cloudAccountName;
+    this.pass = config.cloudAccountPassword;
+    this.authHeader = CloudClient.createAuthHeader(this.user, this.pass);
+
+    const success = await this.fetchAffiliations();
+
+    if (!success) {
+      // Probably bad credentials.
+      this.refreshStatus();
+      return;
+    }
+
+    // If we got this far the username and password are valid.
+    this.authenticated = true;
+
+    if (!cloudGuildName) {
+      console.warn('[CloudClient] Empty guild name');
+      this.refreshStatus();
+      return;
+    }
+
+    this.guild = cloudGuildName;
+
+    const affiliation = this.affiliations.find(
+      (aff) => aff.guildName === this.guild,
+    );
+
+    if (!affiliation) {
+      console.warn('[CloudClient] User is not affiliated with the guild');
+      this.refreshStatus();
+      return;
+    }
+
+    this.read = affiliation.read;
+    this.write = affiliation.write;
+    this.del = affiliation.del;
+
+    if (cloudUpload && !affiliation.write) {
+      console.warn('[CloudClient] User is not authorized to upload');
+      this.refreshStatus();
+      return;
+    }
+
+    // If we got this far the user is authorized for their configuration.
+    this.authorized = true;
+
+    try {
+      const usagePromise = this.getUsage();
+      const limitPromise = this.getStorageLimit();
+      this.usage = await usagePromise;
+      this.limit = await limitPromise;
+    } catch (error) {
+      // Unlikely to fail here as we've already contacted the server.
+      console.error('[CloudClient] Failed to get user storage info', error);
+      this.refreshStatus();
+      return;
+    }
+
+    await this.pollInit();
+    this.startPolling();
+
+    //
+    this.refreshStatus();
+    this.refreshVideos();
+  }
+
+  /**
+   * Build the Authorization header string.
+   */
+  private static createAuthHeader(user: string, pass: string) {
+    const authHeaderString = `${user}:${pass}`;
+    const encodedAuthString = Buffer.from(authHeaderString).toString('base64');
+    return `Basic ${encodedAuthString}`;
+  }
+
+  /**
+   * Add a video to the WCR database.
+   */
+  public async postVideo(metadata: CloudMetadata) {
+    console.info('[CloudClient] Adding video to database', metadata.videoName);
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/video`;
+    const headers = { Authorization: this.authHeader };
+
+    await axios.post(url, metadata, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    // Always run the housekeeper after an upload so that there
+    // will be space for the next upload.
+    await this.runHousekeeping();
+
+    // Update the mtime to avoid multiple refreshes.
+    this.bucketLastMod = Date.now();
+    this.refreshStatus();
+
+    console.info(
+      '[CloudClient] Added',
+      metadata.videoName,
+      'to video database.',
+    );
   }
 
   /**
@@ -484,14 +789,6 @@ export default class CloudClient extends EventEmitter {
       this.ws.close();
       this.ws = null;
     }
-
-    if (this.reconnectTimer) {
-      clearInterval(this.reconnectTimer);
-    }
-
-    if (this.heartbeatTimer) {
-      clearInterval(this.heartbeatTimer);
-    }
   }
 
   /**
@@ -508,7 +805,8 @@ export default class CloudClient extends EventEmitter {
 
     const guild = encodeURIComponent(this.guild);
     const url = `${CloudClient.poll}?guild=${guild}`;
-    this.ws = new WebSocket(url);
+    const headers = { Authorization: this.authHeader };
+    this.ws = new WebSocket(url, { headers });
 
     this.ws.on('open', () => {
       console.info('[CloudClient] WebSocket connection established');
@@ -519,36 +817,7 @@ export default class CloudClient extends EventEmitter {
       this.checkForUpdate();
     });
 
-    this.ws.on('message', (data) => {
-      const msg = data.toString();
-
-      if (!msg.includes(':')) {
-        // Any message we need to take action on has a colon in it.
-        // This is a ping/pong or something else we don't care about.
-        return;
-      }
-
-      // Messages beyond this point are of the form key:value. For now,
-      // we only have mtime messages, but this is a good pattern to follow
-      // for extensibility.
-      console.info('[CloudClient] Received WebSocket message:', msg);
-      const [key, value] = msg.split(':');
-
-      if (key === 'mtime') {
-        const mtime = parseInt(value, 10);
-
-        if (mtime > this.bucketLastMod) {
-          console.info(
-            '[CloudClient] Cloud data changed:',
-            mtime,
-            this.bucketLastMod,
-          );
-
-          this.emit('change');
-          this.bucketLastMod = mtime;
-        }
-      }
-    });
+    this.ws.on('message', (data) => this.handleWebsocketMessage(data));
 
     this.ws.on('error', (error) => {
       console.warn('[CloudClient] WebSocket error:', error);
@@ -610,52 +879,21 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Get the guilds the user is affiliated with.
-   */
-  public async getUserAffiliations(): Promise<TAffiliation[]> {
-    return CloudClient.getUserAffiliations(this.user, this.pass);
-  }
-
-  /**
    * Static method to get the guilds the user is affiliated with.
    */
-  public static async getUserAffiliations(
-    user: string,
-    pass: string,
-  ): Promise<TAffiliation[]> {
+  public async getUserAffiliations(): Promise<TAffiliation[]> {
     console.info('[CloudClient] Get user affiliations');
 
-    const Authorization = CloudClient.createAuthHeader(user, pass);
-    const headers = { Authorization };
+    const headers = { Authorization: this.authHeader };
     const url = `${CloudClient.api}/user/affiliations`;
 
     // This is static so we can't emit a logout event.
     const response = await axios.get(url, {
       headers,
-      validateStatus: () => true,
+      validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    const { status, data } = response;
-
-    if (status === 401 || status === 403) {
-      // Special static case, the caller handles any required logouts.
-      console.error('[CloudClient] Auth failed:', status, data);
-
-      throw new AuthError(
-        'Login to cloud store failed, check your credentials',
-      );
-    }
-
-    if (status !== 200) {
-      console.error(
-        '[CloudClient] Failed to get user affiliations',
-        status,
-        data,
-      );
-
-      throw new Error('Failed to get user affiliations');
-    }
-
+    const { data } = response;
     const affiliations = z.array(Affiliation).parse(data);
     console.info('[CloudClient] Got user affiliations', affiliations);
     return affiliations;
@@ -701,23 +939,44 @@ export default class CloudClient extends EventEmitter {
   }
 
   /**
-   * Check if the mtime object in R2 matches what we think it is, if it doesn't
-   * we need to trigger a UI refresh.
+   * Check if the guild mtime value matches what we think it is, if it doesn't
+   * we need to trigger a UI refresh. This should only be called on startup and
+   * in the event of a Websocket reconnecting, beyond that we rely on the Websocket
+   * messages to keep the client in sync.
    */
   private async checkForUpdate() {
+    console.info('[CloudClient] Checking guild for updates');
+
     try {
       const mtime = await this.getMtime();
 
-      if (mtime > this.bucketLastMod) {
+      if (mtime <= this.bucketLastMod) {
         console.info(
-          '[CloudClient] Cloud data changed:',
+          '[CloudClient] No changes detected',
           mtime,
           this.bucketLastMod,
         );
-
-        this.emit('change');
-        this.bucketLastMod = mtime;
+        return;
       }
+
+      console.info(
+        '[CloudClient] Cloud data changed:',
+        mtime,
+        this.bucketLastMod,
+      );
+
+      // Trigger videos to be refreshed. No need to await this.
+      this.refreshVideos();
+
+      // Make sure we have the latest limit and usage for the guild.
+      const usagePromise = this.getUsage();
+      const limitPromise = this.getStorageLimit();
+      this.usage = await usagePromise;
+      this.limit = await limitPromise;
+      this.refreshStatus();
+
+      // Update the last modified time now we have refreshed.
+      this.bucketLastMod = mtime;
     } catch (error) {
       console.error('[CloudClient] Failed to check for update', String(error));
     }
@@ -788,13 +1047,8 @@ export default class CloudClient extends EventEmitter {
         success = true;
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError;
-
-          console.warn(
-            '[CloudClient] Single part retryable failure:',
-            key,
-            axiosError.message,
-          );
+          const msg = '[CloudClient] Single part retryable failure: ' + key;
+          logAxiosError(msg, error);
         } else {
           console.error('[CloudClient] Not an AxiosError', key, String(error));
         }
@@ -903,13 +1157,8 @@ export default class CloudClient extends EventEmitter {
         } catch (error) {
           // Almost certainly this is an AxiosError.
           if (axios.isAxiosError(error)) {
-            const axiosError = error as AxiosError;
-
-            console.warn(
-              '[CloudClient] Multipart retryable failure:',
-              key,
-              axiosError.message,
-            );
+            const msg = '[CloudClient] Multipart retryable failure: ' + key;
+            logAxiosError(msg, error);
           } else {
             console.error(
               '[CloudClient] Not an AxiosError',
@@ -989,10 +1238,172 @@ export default class CloudClient extends EventEmitter {
 
   /**
    * Validate the response status. This is basically just default behaviour plus
-   * a check for 401 status codes. If we get a 401, we emit a logout event.
+   * a check for 401 status codes.
    */
   private validateResponseStatus(status: number) {
-    if (status === 401) this.emit('logout');
+    if (status === 401) {
+      this.authenticated = false;
+      this.authorized = false;
+      this.usage = 0;
+      this.limit = 0;
+      this.read = false;
+      this.write = false;
+      this.del = false;
+      this.stopPolling();
+      this.refreshStatus();
+    }
+
     return status >= 200 && status < 300;
+  }
+
+  private setupListeners() {
+    ipcMain.on('reconfigureCloud', async () => {
+      console.log('[CloudClient] Reconfiguring cloud client');
+      this.configure();
+    });
+
+    ipcMain.handle('getShareableLink', async (_event, args) => {
+      const videoName = args[0];
+      const shareable = await this.getShareableLink(videoName);
+      clipboard.writeText(shareable);
+    });
+
+    ipcMain.on('deleteVideos', async (_event, args) => {
+      const videos = args as RendererVideo[];
+      const toDelete = videos.filter((v) => v.cloud).map((v) => v.videoName);
+      if (toDelete.length < 1) return;
+      this.deleteVideos(toDelete);
+    });
+
+    // VideoButton event listeners.
+    ipcMain.on('videoButton', async (_event, args) => {
+      const ready = await this.ready();
+      const action = args[0] as string;
+
+      if (!ready) {
+        console.warn('[Manager] Cannot process event', action, args);
+        return;
+      }
+
+      if (action === 'protect') {
+        const protect = args[1] as boolean;
+        const videos = args[2] as RendererVideo[];
+        const cloud = videos.filter((v) => v.cloud);
+        const toProtect = cloud.map((v) => v.videoName);
+        if (toProtect.length < 1) return;
+        this.protectVideos(toProtect, protect);
+      }
+
+      if (action === 'tag') {
+        const tag = args[1] as string;
+        const videos = args[2] as RendererVideo[];
+        const cloud = videos.filter((v) => v.cloud);
+        const toTag = cloud.map((v) => v.videoName);
+        if (toTag.length < 1) return;
+        this.tagVideos(toTag, tag);
+      }
+
+      if (action === 'download') {
+        const video = args[1] as RendererVideo;
+        VideoProcessQueue.getInstance().queueDownload(video);
+      }
+
+      if (action === 'upload') {
+        const src = args[1] as string;
+        const item: UploadQueueItem = { path: src };
+        VideoProcessQueue.getInstance().queueUpload(item);
+      }
+    });
+  }
+
+  /**
+   * Handle a websocket message, typically a notification of a change to the
+   * guild video store.
+   */
+  private handleWebsocketMessage(data: RawData) {
+    const msg = data.toString();
+    const index = msg.indexOf(':');
+
+    if (index === -1) {
+      // Any message we need to take action on has a colon in it.
+      // This is a ping/pong or something else we don't care about.
+      return;
+    }
+
+    // Messages beyond this point are of the form key:value. Just log the key
+    // to illustrate what it is. Messages may contain signed video URLs which
+    // we don't want in the log.
+    const key = msg.slice(0, index);
+    const value = msg.slice(index + 1);
+    console.info('[CloudClient] Received WebSocket message with key:', key);
+
+    if (key === VideoMessages.CREATE) {
+      const video = JSON.parse(value);
+      console.info('[CloudClient] Adding cloud video', video.videoName);
+      const rv = cloudSignedMetadataToRendererVideo(video);
+      send('displayAddCloudVideo', rv);
+      return;
+    }
+
+    if (key === VideoMessages.DELETE) {
+      console.info('[CloudClient] Batching cloud video removal', value);
+      this.videoDeleteBatch.push(value);
+      return;
+    }
+
+    if (key === VideoMessages.PROTECT) {
+      console.info('[CloudClient] Batching cloud video protection', value);
+      this.videoProtectBatch.push(value);
+      return;
+    }
+
+    if (key === VideoMessages.UNPROTECT) {
+      console.info('[CloudClient] Batching cloud video unprotection', value);
+      this.videoUnprotectBatch.push(value);
+      return;
+    }
+
+    if (key === VideoMessages.TAG) {
+      // Special case as we need to get the tag value as well. Encoding
+      // the videoName with URL encoding in-case it has a colon in it, feels
+      // like something Blizzard might do. Format is vt:URLEncodedvideoName:tag
+      const tagIndex = value.indexOf(':');
+
+      if (tagIndex === -1) {
+        console.warn('[CloudClient] Invalid tag message', msg);
+        return;
+      }
+
+      const encodedVideoName = value.slice(0, tagIndex);
+      const videoName = decodeURIComponent(encodedVideoName);
+      const tag = value.slice(tagIndex + 1);
+
+      console.info('[CloudClient] Tagging cloud video', videoName, tag);
+      send('displayTagCloudVideo', videoName, tag);
+
+      return;
+    }
+
+    if (key === GuildMessages.USAGE) {
+      console.info('[CloudClient] Guild usage message received', value);
+      this.usage = parseInt(value, 10);
+      this.refreshStatus();
+      return;
+    }
+
+    if (key === GuildMessages.LIMIT) {
+      console.info('[CloudClient] Guild limit message received', value);
+      this.limit = parseInt(value, 10);
+      this.refreshStatus();
+      return;
+    }
+
+    if (key === GuildMessages.MTIME) {
+      console.info('[CloudClient] Guild mtime message received', value);
+      this.bucketLastMod = parseInt(value, 10);
+      return;
+    }
+
+    console.info('[CloudClient] No action on this message');
   }
 }

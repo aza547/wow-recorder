@@ -1,6 +1,6 @@
 import { AppState, RendererVideo } from 'main/types';
 import { Dispatch, SetStateAction, useState } from 'react';
-import { getLocalePhrase, Phrase } from 'localisation/translations';
+import { getLocalePhrase } from 'localisation/translations';
 import {
   Dialog,
   DialogClose,
@@ -13,6 +13,7 @@ import {
 } from './components/Dialog/Dialog';
 import { Input } from './components/Input/Input';
 import { Button } from './components/Button/Button';
+import { Phrase } from 'localisation/phrases';
 
 interface IProps {
   initialTag: string;

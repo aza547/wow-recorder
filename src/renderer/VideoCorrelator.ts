@@ -50,8 +50,12 @@ export default class VideoCorrelator {
         video.category === VideoCategory.SoloShuffle ||
         videoToCompare.category === VideoCategory.SoloShuffle;
 
+      const isEitherManual =
+        video.category === VideoCategory.Manual ||
+        videoToCompare.category === VideoCategory.Manual;
+
       if (
-        (isEitherClip || isEitherShuffle) &&
+        (isEitherClip || isEitherShuffle || isEitherManual) &&
         video.videoName !== videoToCompare.videoName
       ) {
         // Only correlate clips if they are the literally the same video
@@ -62,6 +66,10 @@ export default class VideoCorrelator {
         // be relevant, we would need to have two users of the same guild
         // playing the same solo shuffle game, and uploading. Which is
         // entirely unlikely.
+        //
+        // ...and the same deal for manual too. It is impossible to
+        // correlate manual clips between users as they have no combat
+        // log basis.
         continue;
       }
 

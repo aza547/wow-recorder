@@ -1,10 +1,6 @@
-import { BrowserWindow } from 'electron';
 import path from 'path';
 import fs from 'fs';
-import * as osn from 'obs-studio-node';
-import { IInput, IScene, ISceneItem, ISource } from 'obs-studio-node';
 import WaitQueue from 'wait-queue';
-
 import {
   UiohookKeyboardEvent,
   UiohookMouseEvent,
@@ -12,20 +8,13 @@ import {
   EventType,
 } from 'uiohook-napi';
 import { EventEmitter } from 'stream';
-import Queue from 'queue-promise';
 import {
-  EColorSpace,
-  EFPSType,
+  CaptureMode,
   EOBSOutputSignal,
-  ERangeType,
   ERecordingState,
-  EScaleType,
-  ESourceFlags,
   ESupportedEncoders,
-  EVideoFormat,
   QualityPresets,
 } from './obsEnums';
-
 import {
   deferredPromiseHelper,
   fixPathWhenPackaged,
@@ -37,28 +26,39 @@ import {
   getPromiseBomb,
   takeOwnershipBufferDir,
   exists,
+  emitErrorReport,
 } from './util';
-
 import {
-  CrashData,
-  IOBSDevice,
-  IObsInput,
-  ISettingsSubCategory,
+  AudioSource,
+  AudioSourceType,
+  BaseConfig,
   MicStatus,
   ObsAudioConfig,
-  ObsBaseConfig,
   ObsOverlayConfig,
-  ObsSourceCallbackInfo,
   ObsVideoConfig,
-  ObsVolmeterCallbackInfo,
-  TAudioSourceType,
-  TObsValue,
-  TPreviewPosition,
+  VideoSourceName,
+  SceneItem,
 } from './types';
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
-import { getOverlayConfig } from '../utils/configUtils';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  getObsAudioConfig,
+  getObsVideoConfig,
+  getOverlayConfig,
+} from '../utils/configUtils';
+import noobs, {
+  ObsData,
+  SceneItemPosition,
+  Signal,
+  SourceDimensions,
+} from 'noobs';
+import { getNativeWindowHandle, send } from './main';
+import { ipcMain } from 'electron';
+import Poller from 'utils/Poller';
+import AsyncQueue from 'utils/AsyncQueue';
+import assert from 'assert';
+
+const devMode = process.env.NODE_ENV === 'development';
 
 /**
  * Class for handing the interface between Warcraft Recorder and OBS.
@@ -74,95 +74,29 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export default class Recorder extends EventEmitter {
   /**
-   * Date the buffer recording started.
+   * Singleton instance.
    */
-  public startDate = new Date();
+  private static instance: Recorder;
 
   /**
-   * Reference back to the mainWindow object for updating the app status icon.
+   * Singleton instance accessor.
    */
-  private mainWindow: BrowserWindow;
+  public static getInstance() {
+    if (!this.instance) this.instance = new this();
+    return this.instance;
+  }
 
   /**
    * ConfigService instance.
    */
-  private cfg: ConfigService = ConfigService.getInstance();
-
-  /**
-   * Location to write all recording to. This is not the final location of
-   * the finalized video files.
-   */
-  private obsPath: string | undefined;
-
-  /**
-   * On creation of the recorder we generate a UUID to identify the OBS
-   * server. On a change of settings, we destroy the recorder object and
-   * create a new one, with a different UUID.
-   */
-  private uuid: string = uuidv4();
-
-  /**
-   * OBS IScene object.
-   */
-  private scene: IScene;
-
-  /**
-   * Window capture item within the scene.
-   */
-  private windowCaptureSceneItem: ISceneItem;
-
-  /**
-   * Game capture item within the scene.
-   */
-  private gameCaptureSceneItem: ISceneItem;
-
-  /**
-   * Monitor capture item within the scene.
-   */
-  private monitorCaptureSceneItem: ISceneItem;
-
-  /**
-   * Overlay image item within the scene.
-   */
-  private overlayImageSceneItem: ISceneItem;
-
-  /**
-   * The window capture source.
-   */
-  private windowCaptureSource: IInput;
-
-  /**
-   * The game capture source.
-   */
-  private gameCaptureSource: IInput;
-
-  /**
-   * The monitor capture source.
-   */
-  private monitorCaptureSource: IInput;
-
-  /**
-   * The dummy window capture source.
-   */
-  private dummyWindowCaptureSource: IInput;
-
-  /**
-   * The dummy game capture source.
-   */
-  private dummyGameCaptureSource: IInput;
-
-  /**
-   * The image source to be used for the overlay, we create this
-   * ahead of time regardless of if the user has the overlay enabled.
-   */
-  private overlayImageSource: IInput;
+  private cfg = ConfigService.getInstance();
 
   /**
    * Timer for latching onto a window for either game capture or
    * window capture. Often this does not appear immediately on
    * the WoW process starting.
    */
-  private findWindowInterval?: NodeJS.Timeout;
+  private findWindowTimer?: NodeJS.Timeout;
 
   /**
    * We wait 5s between each attempt to latch on to game or window
@@ -181,30 +115,16 @@ export default class Recorder extends EventEmitter {
   private findWindowAttemptLimit = 10;
 
   /**
-   * Resolution selected by the user in settings. Defaults to 1920x1080 for
-   * no good reason other than avoiding undefined. It quickly gets set to
-   * what the user configured.
+   * Resolution selected by the user in settings.
    */
-  private resolution: keyof typeof obsResolutions = '1920x1080';
+  private resolution: keyof typeof obsResolutions = this.cfg.get<string>(
+    'obsOutputResolution',
+  ) as keyof typeof obsResolutions;
 
   /**
-   * Arbritrarily chosen channel numbers for video input. We only ever
-   * include one video source.
+   * Active audio sources.
    */
-  private videoChannel = 0;
-
-  /**
-   * Some arbritrarily chosen channel numbers we can use for adding input
-   * devices to the OBS scene. That is, adding microphone audio to the
-   * recordings.
-   */
-  private audioInputChannels = [1, 2, 3];
-
-  /**
-   * Array of input devices we are including in the source. This is not an
-   * array of all the devices we know about.
-   */
-  private audioInputDevices: IInput[] = [];
+  private audioSources: AudioSource[] = [];
 
   /**
    * Gets toggled if push to talk is enabled and when the hotkey for push to
@@ -213,69 +133,16 @@ export default class Recorder extends EventEmitter {
   private inputDevicesMuted = false;
 
   /**
-   * Some arbritrarily chosen channel numbers we can use for adding output
-   * devices to the OBS scene. That is, adding speaker audio to the
-   * recordings.
-   */
-  private audioOutputChannels = [4, 5, 6, 7, 8];
-
-  /**
-   * Array of output devices we are including in the source. This is not an
-   * array of all the devices we know about.
-   */
-  private audioOutputDevices: IInput[] = [];
-
-  /**
-   * Some arbritrarily chosen channel numbers we can use for adding process
-   * capture devices to the OBS scene. That is, adding application audio to the
-   * recordings.
-   */
-  private audioProcessChannels = [9, 10, 11, 12, 13];
-
-  /**
-   * Array of process capture devices we are including in the source. This is
-   * not an array of all the devices we know about.
-   */
-  private audioProcessDevices: IInput[] = [];
-
-  /**
    * WaitQueue object for storing signalling from OBS. We only care about
    * start signals here which indicate the recording has started.
    */
-  private startQueue = new WaitQueue<osn.EOutputSignal>();
+  private startQueue = new WaitQueue<Signal>();
 
   /**
    * WaitQueue object for storing signalling from OBS. We only care about
    * wrote signals here which indicate the video file has been written.
    */
-  private wroteQueue = new WaitQueue<osn.EOutputSignal>();
-
-  /**
-   * Name we use to create and reference the preview display.
-   */
-  private previewName = 'preview';
-
-  /**
-   * Has the preview been created yet.
-   */
-  private previewCreated = false;
-
-  /**
-   * Exists across a reconfigure.
-   */
-  private previewLocation: TPreviewPosition = {
-    width: 0,
-    height: 0,
-    xPos: 0,
-    yPos: 0,
-  };
-
-  /**
-   * Volmeters are used to monitor the audio levels of an input source. We
-   * keep a list of them here as we need a volmeter per audio source, and
-   * it's handy to have a list for cleaning them up.
-   */
-  private volmeters: osn.IVolmeter[] = [];
+  private wroteQueue = new WaitQueue<Signal>();
 
   /**
    * The state of the recorder, typically used to tell if OBS is recording
@@ -295,18 +162,10 @@ export default class Recorder extends EventEmitter {
   public obsInitialized = false;
 
   /**
-   * For easy checking if OBS has been configured.
-   */
-  public obsConfigured = false;
-
-  /**
    * Action queue, used to ensure we do not make concurrent stop/start
    * requests to OBS. That's complication we can do without.
    */
-  private actionQueue = new Queue({
-    concurrent: 1,
-    interval: 100,
-  });
+  private queue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
 
   /**
    * The last file output by OBS.
@@ -314,120 +173,229 @@ export default class Recorder extends EventEmitter {
   public lastFile: string | null = null;
 
   /**
-   * The video context.
-   */
-  private context: osn.IVideo;
-
-  /**
    * Timer that keeps the mic on briefly after you release the Push To Talk key.
    */
   private pttReleaseDelayTimer?: NodeJS.Timeout;
 
   /**
-   * Sensible defaults for the video context.
+   * Timer to debounce the saving of the game capture position or scale changing.
    */
-  private defaultVideoContext: osn.IVideoInfo = {
-    fpsNum: 60,
-    fpsDen: 1,
-    baseWidth: 1920,
-    baseHeight: 1080,
-    outputWidth: 1920,
-    outputHeight: 1080,
-
-    // Bit of a mess here to keep typescript happy and make this readable.
-    // See https://github.com/stream-labs/obs-studio-node/issues/1260.
-    outputFormat: EVideoFormat.NV12 as unknown as osn.EVideoFormat,
-    colorspace: EColorSpace.CS709 as unknown as osn.EColorSpace,
-    scaleType: EScaleType.Bicubic as unknown as osn.EScaleType,
-    fpsType: EFPSType.Fractional as unknown as osn.EFPSType,
-
-    // The AMD encoder causes recordings to get much darker if using the full
-    // color range setting. So swap that to partial here. See Issue 446.
-    range: ERangeType.Partial as unknown as osn.ERangeType,
-  };
+  private gamePosDebounceTimer?: NodeJS.Timeout;
 
   /**
-   * Contructor.
+   * Timer to debounce the saving of the overlay position or scale changing.
    */
-  constructor(mainWindow: BrowserWindow) {
+  private overlayPosDebounceTimer?: NodeJS.Timeout;
+
+  private captureMode = CaptureMode.NONE;
+
+  private captureSource?: string;
+
+  private overlaySource?: string;
+
+  private chatOverlayDefaultImage = getAssetPath('poster', 'chat-overlay.png');
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private pushToTalkKeyListener = (e: UiohookKeyboardEvent) => {};
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private pushToTalkMouseListener = (e: UiohookMouseEvent) => {};
+
+  /**
+   * Constructor.
+   */
+  private constructor() {
+    console.info('[Recorder] Constructing recorder');
     super();
-    console.info('[Recorder] Constructing recorder:', this.uuid);
-    this.mainWindow = mainWindow;
-    this.initializeOBS();
+    this.setupListeners();
+  }
 
-    // The video context is an OBS construct used to control many features of
-    // recording, including the dimensions and FPS.
-    this.context = osn.VideoFactory.create();
-    this.context.video = this.defaultVideoContext;
-
-    // We create all the sources we might need to use here, as the source API
-    // provided by OSN provides mechanisms for retrieving valid settings; it's
-    // useful to always be able to access them even if we never enable the sources.
-    this.windowCaptureSource = osn.InputFactory.create(
-      'window_capture',
-      'WCR Window Capture',
-    );
-
-    this.gameCaptureSource = osn.InputFactory.create(
-      'game_capture',
-      'WCR Game Capture',
-    );
-
-    this.monitorCaptureSource = osn.InputFactory.create(
-      'monitor_capture',
-      'WCR Monitor Capture',
-    );
-
-    this.dummyWindowCaptureSource = osn.InputFactory.create(
-      'window_capture',
-      'WCR Dummy Window Capture',
-    );
-
-    this.dummyGameCaptureSource = osn.InputFactory.create(
-      'game_capture',
-      'WCR Dummy Game Capture',
-    );
-
-    // In theory having this created so early isn't required, but may as well
-    // and avoid a bunch of undefined checks. We will reconfigure it as required.
-    this.overlayImageSource = osn.InputFactory.create(
-      'image_source',
-      'WCR Chat Overlay',
-      { file: getAssetPath('poster', 'chat-cover.png') },
-    );
-
-    // Connects the signal handler, we get feedback from OBS by way of
-    // signals, so this is how we know it's doing the right thing after
-    // we ask it to start/stop.
-    osn.NodeObs.OBS_service_connectOutputSignals((s: osn.EOutputSignal) => {
-      this.handleSignal(s);
+  private setupListeners() {
+    ipcMain.on('reconfigureVideo', () => {
+      console.info('[Recorder] Video source reconfigure');
+      const cfg = getObsVideoConfig(this.cfg);
+      this.configureVideoSources(cfg);
     });
 
-    // The source callback is OBS's way of informing us of changes to the
-    // sources. Used for dynamic resizing.
-    osn.NodeObs.RegisterSourceCallback((d: ObsSourceCallbackInfo[]) => {
-      this.handleSourceCallback(d);
+    ipcMain.on('reconfigureAudio', () => {
+      console.info('[Recorder] Audio source reconfigure');
+      const cfg = getObsAudioConfig(this.cfg);
+      this.configureAudioSources(cfg);
     });
 
-    // The volmeter callback is OBS's way of communicating the state of audio
-    // sources. Used for monitoring audio levels.
-    osn.NodeObs.RegisterVolmeterCallback((d: ObsVolmeterCallbackInfo[]) => {
-      this.handleVolmeterCallback(d);
+    ipcMain.on('reconfigureOverlay', () => {
+      console.info('[Recorder] Overlay source reconfigure');
+      const overlayCfg = getOverlayConfig(this.cfg);
+      this.configureOverlayImageSource(overlayCfg);
     });
 
-    // The scene is an OBS construct that holds the sources, think of it as a
-    // blank canvas we can add sources to. We could create it later but we can
-    // once again avoid a bunch of undefined checks by doing it here.
-    this.scene = osn.SceneFactory.create('WCR Scene');
-    osn.Global.setOutputSource(this.videoChannel, this.scene);
+    /**
+     * Callback to attach the audio devices. This is called when the user
+     * opens the audio settings so that the volmeter bars can be populated.
+     */
+    ipcMain.handle('audioSettingsOpen', () => {
+      console.info('[Manager] Audio settings were opened');
+      noobs.SetVolmeterEnabled(true);
 
-    // It might seem a bit weird that we add all the sources, but we disable
-    // them all by default. That way we can avoid undefined checks on all the
-    // variables set here, as we need the scene item references for scaling.
-    this.windowCaptureSceneItem = this.scene.add(this.windowCaptureSource);
-    this.gameCaptureSceneItem = this.scene.add(this.gameCaptureSource);
-    this.monitorCaptureSceneItem = this.scene.add(this.monitorCaptureSource);
-    this.overlayImageSceneItem = this.scene.add(this.overlayImageSource);
+      if (Poller.getInstance().isWowRunning()) {
+        console.info('[Manager] Wont touch audio sources as WoW is running');
+        return;
+      }
+
+      const config = getObsAudioConfig(this.cfg);
+      this.configureAudioSources(config);
+    });
+
+    ipcMain.handle('audioSettingsClosed', () => {
+      console.info('[Manager] Audio settings were closed');
+      noobs.SetVolmeterEnabled(false);
+
+      if (Poller.getInstance().isWowRunning()) {
+        console.info('[Manager] Wont touch audio sources as WoW is running');
+        return;
+      }
+
+      this.removeAudioSources();
+    });
+
+    ipcMain.handle('getDisplayInfo', () => {
+      return this.getDisplayInfo();
+    });
+
+    ipcMain.handle('getSourcePosition', (_event, item: SceneItem) => {
+      return this.getSourcePosition(item);
+    });
+
+    ipcMain.on(
+      'setSourcePosition',
+      (
+        event,
+        item: SceneItem,
+        target: {
+          x: number;
+          y: number;
+          width: number;
+          height: number;
+          cropLeft: number;
+          cropRight: number;
+          cropTop: number;
+          cropBottom: number;
+        },
+      ) => {
+        const src =
+          item === SceneItem.OVERLAY ? this.overlaySource : this.captureSource;
+        if (!src) return;
+        this.setSourcePosition(src, target);
+        // Don't need to redraw here, frontend handles this for us.
+      },
+    );
+
+    ipcMain.on('resetSourcePosition', (_event, item: SceneItem) => {
+      const src =
+        item === SceneItem.OVERLAY ? this.overlaySource : this.captureSource;
+      if (!src) return;
+      this.resetSourcePosition(src);
+      setTimeout(() => send('redrawPreview'), 100);
+    });
+
+    ipcMain.handle(
+      'createAudioSource',
+      (event, id: string, type: AudioSourceType) => {
+        console.info('[Manager] Creating audio source', id, 'of type', type);
+        const name = noobs.CreateSource(id, type);
+        console.info('[Manager] Created audio source', name);
+        noobs.AddSourceToScene(name);
+        return name;
+      },
+    );
+
+    ipcMain.handle('getAudioSourceProperties', (_event, id: string) => {
+      console.info('[Manager] Getting audio source properties for', id);
+      return noobs.GetSourceProperties(id);
+    });
+
+    ipcMain.on('deleteAudioSource', (_event, id: string) => {
+      console.info('[Manager] Deleting audio source', id);
+      noobs.DeleteSource(id);
+    });
+
+    ipcMain.on('setAudioSourceDevice', (_event, id: string, value: string) => {
+      console.info(
+        '[Manager] Setting audio device for source',
+        id,
+        'to',
+        value,
+      );
+      const settings = noobs.GetSourceSettings(id);
+      settings['device_id'] = value;
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceWindow', (_event, id: string, value: string) => {
+      console.info(
+        '[Manager] Setting audio window for source',
+        id,
+        'to',
+        value,
+      );
+      const settings = noobs.GetSourceSettings(id);
+      settings['window'] = value;
+      settings['priority'] = 2; // Executable matching
+      noobs.SetSourceSettings(id, settings);
+    });
+
+    ipcMain.on('setAudioSourceVolume', (_event, id: string, value: number) => {
+      console.info(
+        '[Manager] Setting audio volume for source',
+        id,
+        'to',
+        value,
+      );
+      noobs.SetSourceVolume(id, value);
+    });
+
+    ipcMain.on('setForceMono', (_event, enabled: boolean) => {
+      console.info('[Manager] Setting force mono to', enabled);
+      noobs.SetForceMono(enabled);
+    });
+
+    ipcMain.on('setAudioSuppression', (_event, enabled: boolean) => {
+      console.info('[Manager] Setting audio suppression to', enabled);
+      noobs.SetAudioSuppression(enabled);
+    });
+
+    ipcMain.on(
+      'configurePreview',
+      (_event, x: number, y: number, width: number, height: number) => {
+        this.configurePreview(x, y, width, height);
+        setTimeout(() => send('redrawPreview'), 100);
+      },
+    );
+
+    ipcMain.on('showPreview', () => {
+      this.showPreview();
+    });
+
+    ipcMain.on('hidePreview', () => {
+      this.hidePreview();
+    });
+
+    ipcMain.on('disablePreview', () => {
+      this.disablePreview();
+    });
+
+    // Encoder listener, to populate settings on the frontend.
+    ipcMain.handle('getEncoders', (): string[] => {
+      const obsEncoders = this.getAvailableEncoders().filter(
+        (encoder) => encoder !== 'none',
+      );
+
+      return obsEncoders;
+    });
+
+    ipcMain.handle('getSensibleEncoderDefault', (): string => {
+      return this.getSensibleEncoderDefault();
+    });
   }
 
   /**
@@ -435,27 +403,46 @@ export default class Recorder extends EventEmitter {
    * to make sure we only attempt one recorder action at once, and to handle if OBS
    * misbehaves.
    */
-  public async start() {
-    console.info('[Recorder] Queued start');
+  public async startBuffer() {
+    console.info('[Recorder] Queued start buffer');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
-    this.actionQueue.enqueue(async () => {
+    const task = async () => {
       try {
-        await this.startOBS();
+        await this.startObsBuffer();
         resolveHelper(null);
       } catch (error) {
-        console.error('[Recorder] Crash on start call', String(error));
-
-        const crashData: CrashData = {
-          date: new Date(),
-          reason: String(error),
-        };
-
-        this.emit('crash', crashData);
+        console.error('[Recorder] Error on starting buffer', String(error));
+        emitErrorReport(error);
         rejectHelper(error);
       }
-    });
+    };
 
+    this.queue.add(task);
+    await promise;
+  }
+
+  /**
+   * Publicly accessible method to start recording, handles all the gory internals
+   * to make sure we only attempt one recorder action at once, and to handle if OBS
+   * misbehaves.
+   */
+  public async startRecording(offset: number) {
+    console.info('[Recorder] Queued start recording');
+    const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
+
+    const task = async () => {
+      try {
+        await this.convertObsBuffer(offset);
+        resolveHelper(null);
+      } catch (error) {
+        console.error('[Recorder] Error on starting recording', String(error));
+        emitErrorReport(error);
+        rejectHelper(error);
+      }
+    };
+
+    this.queue.add(task);
     await promise;
   }
 
@@ -468,51 +455,42 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Queued stop');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
-    this.actionQueue.enqueue(async () => {
+    const task = async () => {
       try {
-        await this.stopOBS();
+        await this.stopObsRecording();
         resolveHelper(null);
       } catch (error) {
-        console.error('[Recorder] Crash on stop call', String(error));
-
-        const crashData: CrashData = {
-          date: new Date(),
-          reason: String(error),
-        };
-
-        this.emit('crash', crashData);
+        console.error('[Recorder] Error on stop', String(error));
+        emitErrorReport(error);
         rejectHelper(error);
       }
-    });
+    };
 
+    this.queue.add(task);
     await promise;
   }
 
   /**
-   * Force stop OBS. This drops the current recording and stops OBS. The
-   * resulting MP4 may be malformed and should not be used.
+   * Publicly accessible method to stop recording, handles all the gory internals
+   * to make sure we only attempt one recorder action at once, and to handle if OBS
+   * misbehaves.
    */
   public async forceStop() {
     console.info('[Recorder] Queued force stop');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
-    this.actionQueue.enqueue(async () => {
+    const task = async () => {
       try {
         await this.forceStopOBS();
         resolveHelper(null);
       } catch (error) {
-        console.error('[Recorder] Crash on force stop call', String(error));
-
-        const crashData: CrashData = {
-          date: new Date(),
-          reason: String(error),
-        };
-
-        this.emit('crash', crashData);
+        console.error('[Recorder] Error on force stop', String(error));
+        emitErrorReport(error);
         rejectHelper(error);
       }
-    });
+    };
 
+    this.queue.add(task);
     await promise;
   }
 
@@ -520,63 +498,48 @@ export default class Recorder extends EventEmitter {
    * Configures OBS. This does a bunch of things that we need the
    * user to have setup their config for, which is why it's split out.
    */
-  public async configureBase(config: ObsBaseConfig) {
+  public async configureBase(config: BaseConfig, startup: boolean) {
     const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
     if (this.obsState !== ERecordingState.Offline) {
-      throw new Error('[Recorder] OBS must be offline to do this');
+      console.error('[Recorder] OBS must be offline to reconfigure base');
+      throw new Error('[Recorder] OBS must be offline to reconfigure base');
     }
 
-    this.obsPath = obsPath;
-    await Recorder.createRecordingDirs(this.obsPath);
-    this.cleanup();
     this.resolution = obsOutputResolution as keyof typeof obsResolutions;
     const { height, width } = obsResolutions[this.resolution];
+    console.info('[Recorder] Configure OBS video context');
 
-    const videoInfo: osn.IVideoInfo = {
-      fpsNum: obsFPS,
-      fpsDen: 1,
-      baseWidth: width,
-      baseHeight: height,
-      outputWidth: width,
-      outputHeight: height,
+    const canvas = noobs.GetPreviewInfo();
+    noobs.ResetVideoContext(obsFPS, width, height);
 
-      // Bit of a mess here to keep typescript happy and make this readable.
-      // See https://github.com/stream-labs/obs-studio-node/issues/1260.
-      outputFormat: EVideoFormat.NV12 as unknown as osn.EVideoFormat,
-      colorspace: EColorSpace.CS709 as unknown as osn.EColorSpace,
-      scaleType: EScaleType.Bicubic as unknown as osn.EScaleType,
-      fpsType: EFPSType.Fractional as unknown as osn.EFPSType,
+    const { canvasHeight, canvasWidth } = canvas;
+    const changedResolution = canvasHeight !== height || canvasWidth !== width;
 
-      // The AMD encoder causes recordings to get much darker if using the full
-      // color range setting. So swap that to partial here. See Issue 446.
-      range: ERangeType.Partial as unknown as osn.ERangeType,
-    };
-
-    if (
-      videoInfo.fpsNum !== this.context.video.fpsNum ||
-      videoInfo.baseWidth !== this.context.video.baseWidth ||
-      videoInfo.baseHeight !== this.context.video.baseHeight ||
-      videoInfo.outputWidth !== this.context.video.outputWidth ||
-      videoInfo.outputHeight !== this.context.video.outputHeight
-    ) {
-      // There are dragons here. This looks simple but it's not and I think
-      // assigning this context is the source of a bug where we can timeout
-      // on reconfiguring. I spent ages trying to solve it in June 2025 but
-      // gave up in. Cowardly only assign it if something has changed to avoid
-      // any risk in the case where nothing has changed.
-      console.info('[Recorder] Reconfigure OBS video context');
-      this.context.video = videoInfo;
+    if (changedResolution && !startup) {
+      // Noobs defaults to 1920x1080, so if at a different resolution, this
+      // will be hit on startup. Changing canvas size causes libobs to auto-scale
+      // the existing sources. So reconfigure the video sources if the resolution
+      // has changed to undo that. We avoid this branch on startup as we will
+      // reconfigure the video sources anyway.
+      console.info('[Recorder] Resolution changed, reconfig video sources');
+      const cfg = getObsVideoConfig(this.cfg);
+      this.configureVideoSources(cfg);
     }
 
-    const outputPath = path.normalize(this.obsPath);
+    const outputPath = path.normalize(obsPath);
+    await Recorder.createRecordingDirs(outputPath);
+    await this.cleanup(outputPath);
 
-    Recorder.applySetting('Output', 'Mode', 'Advanced');
-    Recorder.applySetting('Output', 'RecFilePath', outputPath);
-    Recorder.applySetting('Output', 'RecEncoder', obsRecEncoder);
-    Recorder.applySetting('Output', 'RecFormat', 'mp4');
+    console.info('[Recorder] Set recording directory', outputPath);
+    noobs.SetRecordingDir(outputPath);
 
+    const settings = Recorder.getEncoderSettings(obsRecEncoder, obsQuality);
+    noobs.SetVideoEncoder(obsRecEncoder, settings);
+  }
+
+  private static getEncoderSettings(encoder: string, quality: string) {
     // Specify a 1 sec interval for the I-frames. This allows us to round to
     // the nearest second later when cutting and always land on a keyframe.
     //   - This is part of the strategy to avoid re-encoding the videos while
@@ -585,93 +548,72 @@ export default class Recorder extends EventEmitter {
     //     I think is an acceptable error.
     //   - Obviously this is a trade off in file size, where the default keyframe
     //     interval appears to be around 4s.
-    Recorder.applySetting('Output', 'Reckeyint_sec', 1);
+    const settings: ObsData = { keyint_sec: 1 };
 
-    // We set the CPQ or CRF value here. Low value is higher quality, and
-    // vice versa. The limits on what this can actually be set to I took
-    // from what OBS studio allows and is annotated below, but we don't
-    // go to the extremes of the allowed range anyway.
-    const cqp = Recorder.getCqpFromQuality(obsQuality, obsRecEncoder);
-
-    switch (obsRecEncoder) {
+    switch (encoder) {
       case ESupportedEncoders.OBS_X264:
         // CRF and CPQ are so similar in configuration that we can just treat
         // the CRF configuration the same as CQP configuration.
-        Recorder.applySetting('Output', 'Recrate_control', 'CRF');
-        Recorder.applySetting('Output', 'Reccrf', cqp);
+        settings.rate_control = 'CRF';
+        settings.crf = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
-      case ESupportedEncoders.AMD_AMF_H264:
-      case ESupportedEncoders.JIM_NVENC:
-      case ESupportedEncoders.JIM_AV1_NVENC:
-      case ESupportedEncoders.AMD_AMF_AV1:
-        // These settings are identical for AMD and NVENC encoders.
-        Recorder.applySetting('Output', 'Recrate_control', 'CQP');
-        Recorder.applySetting('Output', 'Reccqp', cqp);
+      case ESupportedEncoders.AMD_H264:
+      case ESupportedEncoders.AMD_AV1:
+      case ESupportedEncoders.NVENC_H264:
+      case ESupportedEncoders.NVENC_AV1:
+      case ESupportedEncoders.QSV_H264:
+      case ESupportedEncoders.QSV_AV1:
+        settings.rate_control = 'CQP';
+        settings.cqp = Recorder.getCqpFromQuality(encoder, quality);
         break;
 
       default:
-        console.error('[Recorder] Unrecognised encoder type', obsRecEncoder);
+        console.error('[Recorder] Unrecognised encoder type', encoder);
         throw new Error('Unrecognised encoder type');
     }
 
-    this.scaleVideoSourceSize();
+    return settings;
   }
 
   /**
    * Configures the video source in OBS.
    */
-  public configureVideoSources(config: ObsVideoConfig, isWowRunning: boolean) {
-    const { obsCaptureMode, monitorIndex, captureCursor } = config;
+  public configureVideoSources(config: ObsVideoConfig) {
+    const { obsCaptureMode } = config;
     this.clearFindWindowInterval();
 
-    [
-      this.windowCaptureSource,
-      this.gameCaptureSource,
-      this.monitorCaptureSource,
-      this.overlayImageSource,
-    ].forEach((src) => {
-      src.enabled = false;
-    });
+    if (this.captureSource) {
+      console.info(
+        '[Recorder] Removing existing capture source',
+        this.captureSource,
+      );
 
-    if (obsCaptureMode === 'monitor_capture') {
-      // We don't care if WoW is running or not for monitor capture.
-      this.configureMonitorCaptureSource(monitorIndex);
+      noobs.RemoveSourceFromScene(this.captureSource);
+      noobs.DeleteSource(this.captureSource);
+      this.captureSource = undefined;
+      this.captureMode = CaptureMode.NONE;
     }
 
-    if (!isWowRunning) {
-      // Don't try to configure game or window capture sources if WoW isn't
-      // running. We won't be able to find them.
-      console.info("[Recorder] WoW isn't running");
+    if (obsCaptureMode === 'monitor_capture') {
+      this.configureMonitorCaptureSource(config);
+    } else if (obsCaptureMode === 'game_capture') {
+      this.configureGameCaptureSource(config);
+    } else if (obsCaptureMode === 'window_capture') {
+      this.configureWindowCaptureSource(config);
     } else {
-      console.info('[Recorder] WoW is running');
+      console.error('[Recorder] Unrecognised capture mode', obsCaptureMode);
+      throw new Error('Unrecognised capture mode');
+    }
 
-      if (obsCaptureMode === 'game_capture') {
-        this.configureGameCaptureSource(captureCursor);
-      } else if (obsCaptureMode === 'window_capture') {
-        this.configureWindowCaptureSource(captureCursor);
-      }
+    const wowRunning = Poller.getInstance().isWowRunning();
+
+    if (wowRunning && obsCaptureMode !== 'monitor_capture') {
+      this.attachCaptureSource();
     }
 
     const overlayCfg = getOverlayConfig(this.cfg);
     this.configureOverlayImageSource(overlayCfg);
-    this.scaleVideoSourceSize();
-  }
-
-  /**
-   * Hides the scene preview.
-   */
-  public hidePreview() {
-    // I'd love to make OBS_content_destroyDisplay work here but I've not managed
-    // so far. This is a hack to "hide" it by moving it off screen.
-    this.previewLocation.xPos = 50000;
-    this.previewLocation.yPos = 50000;
-
-    osn.NodeObs.OBS_content_moveDisplay(
-      this.previewName,
-      this.previewLocation.xPos,
-      this.previewLocation.yPos,
-    );
   }
 
   /**
@@ -680,6 +622,11 @@ export default class Recorder extends EventEmitter {
   private async configureOwnOverlay(config: ObsOverlayConfig) {
     console.info('[Recorder] Configure own image as chat overlay');
 
+    if (!this.overlaySource) {
+      console.error('[Recorder] No existing overlay source');
+      throw new Error('No existing overlay source');
+    }
+
     const {
       chatOverlayScale,
       chatOverlayXPosition,
@@ -687,29 +634,25 @@ export default class Recorder extends EventEmitter {
       chatOverlayOwnImagePath,
     } = config;
 
-    this.overlayImageSceneItem.position = {
+    const settings = noobs.GetSourceSettings(this.overlaySource);
+
+    noobs.SetSourceSettings(this.overlaySource, {
+      ...settings,
+      file: chatOverlayOwnImagePath,
+    });
+
+    noobs.AddSourceToScene(this.overlaySource);
+
+    noobs.SetSourcePos(this.overlaySource, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
-    };
-
-    this.overlayImageSceneItem.scale = {
-      x: chatOverlayScale,
-      y: chatOverlayScale,
-    };
-
-    this.overlayImageSceneItem.crop = {
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0,
-    };
-
-    const { settings } = this.overlayImageSource;
-    settings.file = chatOverlayOwnImagePath;
-
-    this.overlayImageSource.update(settings);
-    this.overlayImageSource.save();
-    this.overlayImageSource.enabled = true;
+      scaleX: chatOverlayScale,
+      scaleY: chatOverlayScale,
+      cropLeft: config.chatOverlayCropX,
+      cropRight: config.chatOverlayCropX,
+      cropTop: config.chatOverlayCropY,
+      cropBottom: config.chatOverlayCropY,
+    });
   }
 
   /**
@@ -718,45 +661,33 @@ export default class Recorder extends EventEmitter {
   private configureDefaultOverlay(config: ObsOverlayConfig) {
     console.info('[Recorder] Configure default image as chat overlay');
 
-    const {
-      chatOverlayWidth,
-      chatOverlayHeight,
-      chatOverlayXPosition,
-      chatOverlayYPosition,
-      chatOverlayScale,
-    } = config;
+    if (!this.overlaySource) {
+      console.error('[Recorder] No existing overlay source');
+      throw new Error('No existing overlay source');
+    }
 
-    // This is the height of the default chat overlay image, a bit ugly
-    // to have it hardcoded here, but whatever.
-    const baseWidth = 5000;
-    const baseHeight = 2000;
+    const { chatOverlayXPosition, chatOverlayYPosition, chatOverlayScale } =
+      config;
 
-    const toCropX = (baseWidth - chatOverlayWidth) / 2;
-    const toCropY = (baseHeight - chatOverlayHeight) / 2;
+    const settings = noobs.GetSourceSettings(this.overlaySource);
 
-    const { settings } = this.overlayImageSource;
-    settings.file = getAssetPath('poster', 'chat-cover.png');
+    noobs.SetSourceSettings(this.overlaySource, {
+      ...settings,
+      file: this.chatOverlayDefaultImage,
+    });
 
-    this.overlayImageSceneItem.position = {
+    noobs.AddSourceToScene(this.overlaySource);
+
+    noobs.SetSourcePos(this.overlaySource, {
       x: chatOverlayXPosition,
       y: chatOverlayYPosition,
-    };
-
-    this.overlayImageSceneItem.scale = {
-      x: chatOverlayScale,
-      y: chatOverlayScale,
-    };
-
-    this.overlayImageSceneItem.crop = {
-      left: toCropX,
-      right: toCropX,
-      top: toCropY,
-      bottom: toCropY,
-    };
-
-    this.overlayImageSource.update(settings);
-    this.overlayImageSource.save();
-    this.overlayImageSource.enabled = true;
+      scaleX: chatOverlayScale,
+      scaleY: chatOverlayScale,
+      cropLeft: config.chatOverlayCropX,
+      cropRight: config.chatOverlayCropX,
+      cropTop: config.chatOverlayCropY,
+      cropBottom: config.chatOverlayCropY,
+    });
   }
 
   /**
@@ -765,174 +696,97 @@ export default class Recorder extends EventEmitter {
    */
   public configureAudioSources(config: ObsAudioConfig) {
     this.removeAudioSources();
-    uIOhook.removeAllListeners();
+    console.info('[Recorder] Configure audio sources');
 
-    const {
-      audioInputDevices,
-      audioOutputDevices,
-      audioProcessDevices,
-      micVolume,
-      speakerVolume,
-      processVolume,
-      obsForceMono,
-      obsAudioSuppression,
-    } = config;
+    // Can't release all the listeners here as we now use
+    // uIOhook for triggering manual recording too.
+    uIOhook.off('keydown', this.pushToTalkKeyListener);
+    uIOhook.off('keyup', this.pushToTalkKeyListener);
+    uIOhook.off('mousedown', this.pushToTalkMouseListener);
+    uIOhook.off('mouseup', this.pushToTalkMouseListener);
 
-    audioInputDevices
-      .split(',')
-      .filter((id) => id)
-      .forEach((id, idx) => {
-        console.info('[Recorder] Adding input source', id, idx);
+    noobs.SetForceMono(config.obsForceMono);
+    noobs.SetAudioSuppression(config.obsAudioSuppression);
 
-        const obsSource = this.createOBSAudioSource(
-          id,
-          idx,
-          TAudioSourceType.input,
-        );
+    config.audioSources.forEach((src) => {
+      console.info('[Recorder] Create audio source', src.id);
+      const name = noobs.CreateSource(src.id, src.type);
+      const settings = noobs.GetSourceSettings(name);
 
-        const obsVolmeter = osn.VolmeterFactory.create(0);
-        obsVolmeter.attach(obsSource);
+      if (src.type === AudioSourceType.PROCESS && src.device) {
+        settings['window'] = src.device;
+        settings['priority'] = 2; // Executable matching
+        noobs.SetSourceSettings(name, settings);
+      } else {
+        const properties = noobs.GetSourceProperties(name);
+        const available = properties.find((prop) => prop.name === 'device_id');
+        assert(available && available.type === 'list'); // To help the compiler out.
 
-        if (obsAudioSuppression) {
-          const filter = osn.FilterFactory.create(
-            'noise_suppress_filter_v2',
-            'filter',
-            { method: 'rnnoise', suppress_level: -30, intensity: 1 },
+        // Try to match by device ID.
+        let match = available.items.find((d) => d.value === src.device);
+
+        if (!match) {
+          // Fallback to matching by name if we didn't find an ID match.
+          // Suspect this can happen on replugging devices.
+          console.info('[Recorder] Fallback to matching audio device by name');
+          match = available.items.find((d) => d.name === src.friendly);
+
+          if (!match) {
+            // Still no match after looking at both ID and friendly name,
+            // so give up trying to configure this source.
+            console.warn('[Recorder] Failed to configure audio device', src);
+            noobs.DeleteSource(name);
+            return;
+          }
+
+          // Correct the device ID in the config.
+          console.info(
+            '[Recorder] Fix up audio device ID from',
+            src.device,
+            'to',
+            match.value,
           );
 
-          obsSource.addFilter(filter);
+          src.device = match.value;
+          this.cfg.set('audioSources', config.audioSources);
         }
 
-        this.volmeters.push(obsVolmeter);
-        this.audioInputDevices.push(obsSource);
-      });
+        // Finish configuring the source.
+        settings['device_id'] = match.value;
+        noobs.SetSourceSettings(name, settings);
+        noobs.SetSourceVolume(name, src.volume);
+      }
 
-    if (this.audioInputDevices.length > this.audioInputChannels.length) {
-      console.warn(
-        '[Recorder] Too many audio input devices, configuring first',
-        this.audioInputChannels.length,
-      );
+      noobs.AddSourceToScene(name);
+      this.audioSources.push(src);
+    });
 
-      this.audioInputDevices = this.audioInputDevices.slice(
-        0,
-        this.audioInputChannels.length,
-      );
-    }
+    const mics = this.audioSources.filter(
+      (src) => src.type === AudioSourceType.INPUT,
+    );
 
-    if (this.audioInputDevices.length !== 0 && config.pushToTalk) {
+    if (mics.length !== 0 && config.pushToTalk) {
       this.obsMicState = MicStatus.MUTED;
       this.emit('state-change');
-    } else if (this.audioInputDevices.length !== 0) {
+    } else if (mics.length !== 0) {
       this.obsMicState = MicStatus.LISTENING;
       this.emit('state-change');
     }
 
-    this.audioInputDevices.forEach((device) => {
-      const index = this.audioInputDevices.indexOf(device);
-      const channel = this.audioInputChannels[index];
-
-      if (obsForceMono) {
-        device.flags = ESourceFlags.ForceMono;
-      }
-
-      this.addAudioSource(device, channel);
-    });
-
     if (config.pushToTalk) {
-      this.audioInputDevices.forEach((device) => {
-        device.muted = true;
-      });
-
       this.inputDevicesMuted = true;
 
-      uIOhook.on('keydown', (e: UiohookKeyboardEvent) =>
-        this.pushToTalkHandler(e, config),
-      );
+      this.pushToTalkKeyListener = (e: UiohookKeyboardEvent) =>
+        this.pushToTalkHandler(e, config);
 
-      uIOhook.on('mousedown', (e: UiohookMouseEvent) =>
-        this.pushToTalkHandler(e, config),
-      );
+      this.pushToTalkMouseListener = (e: UiohookMouseEvent) =>
+        this.pushToTalkHandler(e, config);
 
-      uIOhook.on('keyup', (e: UiohookKeyboardEvent) =>
-        this.pushToTalkHandler(e, config),
-      );
-
-      uIOhook.on('mouseup', (e: UiohookMouseEvent) =>
-        this.pushToTalkHandler(e, config),
-      );
+      uIOhook.on('keydown', this.pushToTalkKeyListener);
+      uIOhook.on('keyup', this.pushToTalkKeyListener);
+      uIOhook.on('mousedown', this.pushToTalkMouseListener);
+      uIOhook.on('mouseup', this.pushToTalkMouseListener);
     }
-
-    audioOutputDevices
-      .split(',')
-      .filter((id) => id)
-      .forEach((id, idx) => {
-        console.info('[Recorder] Adding output source', id);
-
-        const obsSource = this.createOBSAudioSource(
-          id,
-          idx,
-          TAudioSourceType.output,
-        );
-
-        const obsVolmeter = osn.VolmeterFactory.create(0);
-        obsVolmeter.attach(obsSource);
-        this.volmeters.push(obsVolmeter);
-        this.audioOutputDevices.push(obsSource);
-      });
-
-    if (this.audioOutputDevices.length > this.audioOutputChannels.length) {
-      console.warn(
-        '[Recorder] Too many audio output devices, configuring first',
-        this.audioOutputChannels.length,
-      );
-
-      this.audioOutputDevices = this.audioOutputDevices.slice(
-        0,
-        this.audioOutputChannels.length,
-      );
-    }
-
-    this.audioOutputDevices.forEach((device) => {
-      const index = this.audioOutputDevices.indexOf(device);
-      const channel = this.audioOutputChannels[index];
-      this.addAudioSource(device, channel);
-    });
-
-    audioProcessDevices
-      .map((source) => source.value)
-      .forEach((value, idx) => {
-        console.info('[Recorder] Adding app capture source', value);
-
-        const obsSource = this.createOBSAudioSource(
-          value,
-          idx,
-          TAudioSourceType.process,
-        );
-
-        const obsVolmeter = osn.VolmeterFactory.create(0);
-        obsVolmeter.attach(obsSource);
-
-        this.volmeters.push(obsVolmeter);
-        this.audioProcessDevices.push(obsSource);
-      });
-
-    if (this.audioProcessDevices.length > this.audioProcessChannels.length) {
-      console.warn(
-        '[Recorder] Too many audio process devices, configuring first',
-        this.audioProcessChannels.length,
-      );
-
-      this.audioProcessDevices = this.audioProcessDevices.slice(
-        0,
-        this.audioProcessChannels.length,
-      );
-    }
-
-    this.audioProcessDevices.forEach((device) => {
-      const index = this.audioProcessDevices.indexOf(device);
-      const channel = this.audioProcessChannels[index];
-      this.addAudioSource(device, channel);
-    });
   }
 
   /**
@@ -940,43 +794,19 @@ export default class Recorder extends EventEmitter {
    * so it can be called externally when WoW is closed.
    */
   public removeAudioSources() {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    console.info('[Recorder] Removing OBS audio sources...');
-
-    this.volmeters.forEach((volmeter, index) => {
-      console.info('[Recorder] Release volmeter', index);
-      volmeter.detach();
-
-      console.info('[Recorder] Destroy volmeter', index);
-      volmeter.destroy();
-    });
-
-    this.volmeters = [];
-
-    this.audioInputDevices.forEach((device, idx) => {
-      const channel = this.audioInputChannels[idx];
-      this.removeAudioSource(device, channel);
-    });
-
-    this.audioOutputDevices.forEach((device, idx) => {
-      const channel = this.audioOutputChannels[idx];
-      this.removeAudioSource(device, channel);
-    });
-
-    this.audioProcessDevices.forEach((device, idx) => {
-      const channel = this.audioProcessChannels[idx];
-      this.removeAudioSource(device, channel);
-    });
-
-    this.audioInputDevices = [];
-    this.audioOutputDevices = [];
-    this.audioProcessDevices = [];
+    console.info('[Recorder] Remove all audio sources');
 
     this.obsMicState = MicStatus.NONE;
     this.emit('state-change');
+
+    this.audioSources.forEach((src) => {
+      console.info('[Recorder] Remove audio source', src.id);
+      noobs.RemoveSourceFromScene(src.id);
+      noobs.DeleteSource(src.id);
+    });
+
+    this.audioSources = [];
+    this.inputDevicesMuted = true;
   }
 
   /**
@@ -985,9 +815,9 @@ export default class Recorder extends EventEmitter {
   public clearFindWindowInterval() {
     this.findWindowAttempts = 0;
 
-    if (this.findWindowInterval) {
-      clearInterval(this.findWindowInterval);
-      this.findWindowInterval = undefined;
+    if (this.findWindowTimer) {
+      clearInterval(this.findWindowTimer);
+      this.findWindowTimer = undefined;
     }
   }
 
@@ -995,48 +825,15 @@ export default class Recorder extends EventEmitter {
    * Release all OBS resources and shut it down.
    */
   public shutdownOBS() {
-    console.info('[Recorder] OBS shutting down', this.uuid);
+    console.info('[Recorder] OBS shutting down');
 
     if (!this.obsInitialized) {
       console.info('[Recorder] OBS not initialized so not attempting shutdown');
       return;
     }
 
-    // Important to avoid us trying to restart OBS while shutting down / quitting.
-    this.obsState = ERecordingState.Offline;
-
-    this.clearFindWindowInterval();
-
-    [
-      this.windowCaptureSource,
-      this.gameCaptureSource,
-      this.monitorCaptureSource,
-      this.overlayImageSource,
-      this.dummyWindowCaptureSource,
-      this.dummyGameCaptureSource,
-    ].forEach((src) => {
-      src.release();
-    });
-
-    [this.wroteQueue, this.startQueue].forEach((queue) => {
-      queue.empty();
-      queue.clearListeners();
-    });
-
-    this.context.destroy();
-
-    try {
-      osn.NodeObs.InitShutdownSequence();
-      osn.NodeObs.RemoveSourceCallback();
-      osn.NodeObs.RemoveVolmeterCallback();
-      osn.NodeObs.OBS_service_removeCallback();
-      osn.NodeObs.IPC.disconnect();
-    } catch (e) {
-      throw new Error(`Exception shutting down OBS process: ${e}`);
-    }
-
+    noobs.Shutdown();
     this.obsInitialized = false;
-    this.obsConfigured = false;
     console.info('[Recorder] OBS shut down successfully');
   }
 
@@ -1049,10 +846,10 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    const inputDevices =
-      osn.NodeObs.OBS_settings_getInputAudioDevices() as IOBSDevice[];
+    // const inputDevices =
+    //   osn.NodeObs.OBS_settings_getInputAudioDevices() as IOBSDevice[];
 
-    return inputDevices;
+    return [];
   }
 
   /**
@@ -1060,14 +857,7 @@ export default class Recorder extends EventEmitter {
    * the list of devices for user selection.
    */
   public getOutputAudioDevices() {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    const outputDevices =
-      osn.NodeObs.OBS_settings_getOutputAudioDevices() as IOBSDevice[];
-
-    return outputDevices;
+    return [];
   }
 
   /**
@@ -1077,35 +867,7 @@ export default class Recorder extends EventEmitter {
     name: string; // Display name.
     value: string | number; // Value to configure OBS with.
   }[] {
-    console.info('[Recorder] Getting available windows for audio capture');
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    const src = osn.InputFactory.create(
-      TAudioSourceType.process,
-      'WCR Dummy Process Audio Source',
-    );
-
-    let prop = src.properties.first();
-
-    while (prop && prop.name !== 'window') {
-      prop = prop.next();
-    }
-
-    const windows = [];
-
-    if (prop.name === 'window' && Recorder.isObsListProperty(prop)) {
-      const unique = Array.from(
-        new Map(prop.details.items.map((item) => [item.value, item])).values(),
-      );
-
-      windows.push(...unique);
-    }
-
-    src.release();
-    return windows;
+    return [];
   }
 
   /**
@@ -1118,86 +880,59 @@ export default class Recorder extends EventEmitter {
       throw new Error('[Recorder] OBS not initialized');
     }
 
-    const encoders = Recorder.getAvailableValues(
-      'Output',
-      'Recording',
-      'RecEncoder',
-    );
-
-    console.info('[Recorder]', encoders);
+    const encoders = noobs.ListVideoEncoders();
+    console.info('[Recorder] Encoders:', encoders);
     return encoders;
   }
 
   /**
-   * Show the scene preview on the UI, taking the location and dimensions as
-   * input.
+   * Set the size and position of the scene preview.
    */
-  public showPreview(
-    width: number,
-    height: number,
-    xPos: number,
-    yPos: number,
-  ) {
-    if (!this.previewCreated) {
-      osn.NodeObs.OBS_content_createSourcePreviewDisplay(
-        this.mainWindow.getNativeWindowHandle(),
-        this.scene.name,
-        this.previewName,
-      );
-
-      osn.NodeObs.OBS_content_resizeDisplay(this.previewName, 0, 0);
-
-      // This is just setting the preview background to black, and something
-      // to do with the padding which I can't quite remember what.
-      osn.NodeObs.OBS_content_setShouldDrawUI(this.previewName, false);
-      osn.NodeObs.OBS_content_setPaddingSize(this.previewName, 0);
-      osn.NodeObs.OBS_content_setPaddingColor(this.previewName, 0, 0, 0);
-    }
-
-    this.previewLocation = { width, height, xPos, yPos };
-    osn.NodeObs.OBS_content_resizeDisplay(this.previewName, width, height);
-    osn.NodeObs.OBS_content_moveDisplay(this.previewName, xPos, yPos);
+  public configurePreview(x: number, y: number, width: number, height: number) {
+    console.info('[Recorder] Configure preview with', x, y, width, height);
+    noobs.ConfigurePreview(x, y, width, height);
   }
 
   /**
-   * Show the preview on the UI, only if we already know the location and
-   * dimensions.
+   * Show the scene preview.
    */
-  public showPreviewMemory() {
-    if (this.previewLocation !== undefined) {
-      const { width, height, xPos, yPos } = this.previewLocation;
-      this.showPreview(width, height, xPos, yPos);
-    }
+  public showPreview() {
+    console.info('[Recorder] Show preview');
+    noobs.ShowPreview();
+  }
+
+  /**
+   * Hide the scene preview.
+   */
+  public hidePreview() {
+    console.info('[Recorder] Hide preview');
+    noobs.HidePreview();
+  }
+
+  /**
+   * Disable the scene preview.
+   */
+  public disablePreview() {
+    console.info('[Recorder] Disable preview');
+    noobs.DisablePreview();
   }
 
   /**
    * Clean-up the recording directory.
    * @params Number of files to leave.
    */
-  public async cleanup(filesToLeave = 3) {
-    console.info('[Recorder] Clean out buffer', filesToLeave);
-
-    if (!this.obsPath) {
-      console.info('[Recorder] Not attempting to clean-up');
-      return;
-    }
-
-    // Sort newest to oldest
-    const sortedBufferVideos = await getSortedVideos(this.obsPath);
-    if (!sortedBufferVideos || sortedBufferVideos.length === 0) return;
-    const videosToDelete = sortedBufferVideos.slice(filesToLeave);
-
-    const deletePromises = videosToDelete.map(async (video) => {
-      await tryUnlink(video.name);
-    });
-
-    await Promise.all(deletePromises);
+  public async cleanup(obsPath: string) {
+    console.info('[Recorder] Clean out buffer');
+    const videos = await getSortedVideos(obsPath); // This sorting is redundant.
+    const files = videos.map((f) => f.name);
+    const promises = files.map(tryUnlink);
+    await Promise.all(promises);
   }
 
   /**
    * Start OBS, no-op if already started.
    */
-  private async startOBS() {
+  private async startObsBuffer() {
     console.info('[Recorder] Start');
 
     if (!this.obsInitialized) {
@@ -1210,31 +945,47 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    // Sleep for a second, without this sometimes OBS does not respond at all.
+    // Sleep for a second, without this sometimes the OBS output can still be active.
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     this.startQueue.empty();
-    osn.NodeObs.OBS_service_startRecording();
+    noobs.StartBuffer();
 
     await Promise.race([
       this.startQueue.shift(),
-      getPromiseBomb(30, 'OBS timeout waiting for start'),
+      getPromiseBomb(30, 'Failed to start'),
     ]);
 
     this.startQueue.empty();
-
-    // I think this causes a very slight offset in the video - i.e. we set the
-    // start to just after we receive the signal from OBS that recording has
-    // started, and not when it has actually started. Very minor though so probably
-    // fine to live with this forever.
-    this.startDate = new Date();
   }
 
   /**
-   * Stop OBS, no-op if already stopped.
+   * Conver the buffer recording to a a real recording.
    */
-  private async stopOBS() {
-    console.info('[Recorder] Stop');
+  private async convertObsBuffer(offset: number) {
+    console.info('[Recorder] Convert buffer with offset:', offset);
+
+    if (!this.obsInitialized) {
+      console.error('[Recorder] OBS not initialized');
+      throw new Error('OBS not initialized');
+    }
+
+    if (this.obsState !== ERecordingState.Recording) {
+      console.error('[Recorder] Buffer not started');
+      throw new Error('Buffer not started');
+    }
+
+    // The native code expects an integer.
+    const rounded = Math.round(offset);
+    noobs.StartRecording(rounded);
+  }
+
+  /**
+   * Stop OBS, no-op if already stopped. If stopping fails, will attempt
+   * recovery by force stopping. Will set lastFile if successful.
+   */
+  private async stopObsRecording() {
+    console.info('[Recorder] Stop recording');
 
     if (!this.obsInitialized) {
       console.error('[Recorder] OBS not initialized');
@@ -1247,16 +998,30 @@ export default class Recorder extends EventEmitter {
     }
 
     this.wroteQueue.empty();
-    osn.NodeObs.OBS_service_stopRecording();
+    noobs.StopRecording();
+
     const wrote = this.wroteQueue.shift();
+    let success = false;
 
     try {
-      await Promise.race([wrote, getPromiseBomb(60, 'OBS timeout on stop')]);
-      this.lastFile = osn.NodeObs.OBS_service_getLastRecording();
-      console.info('[Recorder] Set last file:', this.lastFile);
+      await Promise.race([wrote, getPromiseBomb(60, 'Failed to stop')]);
+      success = true;
     } catch (error) {
-      console.error('[Recorder] Error stopping OBS', error);
-      await this.forceStopOBS(wrote);
+      console.error('[Recorder]', error, 'will force stop');
+      noobs.ForceStopRecording();
+
+      await Promise.race([
+        wrote,
+        getPromiseBomb(3, 'Failed to recover by force stopping'),
+      ]);
+    }
+
+    if (success) {
+      console.info('[Recorder] Stopped successfully');
+      this.lastFile = noobs.GetLastRecording();
+    } else {
+      console.info('[Recorder] Failed to stop, but force stop succeeded');
+      this.lastFile = null;
     }
   }
 
@@ -1265,9 +1030,7 @@ export default class Recorder extends EventEmitter {
    * promise to await instead of shifting from the queue ourselves. That's
    * useful in the case we've failed to stop and are now force stopping.
    */
-  private async forceStopOBS(
-    wrote: Promise<osn.EOutputSignal> | undefined = undefined,
-  ) {
+  private async forceStopOBS() {
     console.info('[Recorder] Force stop');
 
     if (!this.obsInitialized) {
@@ -1281,12 +1044,12 @@ export default class Recorder extends EventEmitter {
     }
 
     this.wroteQueue.empty();
-    osn.NodeObs.OBS_service_stopRecordingForce();
+    noobs.ForceStopRecording();
 
     // If we were passed a wrote promise, use that instead of shifting from
     // the queue as a previously created promise will get the result first.
-    wrote = wrote || this.wroteQueue.shift();
-    const bomb = getPromiseBomb(3, 'OBS timeout on force stop');
+    const wrote = this.wroteQueue.shift();
+    const bomb = getPromiseBomb(3, 'Failed to force stop');
     await Promise.race([wrote, bomb]);
     this.lastFile = null;
   }
@@ -1306,36 +1069,36 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Call through OSN to initialize OBS. This is slow and synchronous,
-   * so use sparingly - it will block the main thread.
+   * Initialize OBS, should be called once only.
    */
-  private initializeOBS() {
-    console.info('[Recorder] Initializing OBS', this.uuid);
+  public initializeObs() {
+    console.info('[Recorder] Initializing OBS');
+    const cb = this.handleSignal.bind(this);
 
-    try {
-      osn.NodeObs.IPC.host(this.uuid);
+    let logPath = devMode
+      ? path.resolve(__dirname, './logs')
+      : path.resolve(__dirname, '../../dist/main/logs');
 
-      osn.NodeObs.SetWorkingDirectory(
-        fixPathWhenPackaged(
-          path.join(__dirname, '../../', 'node_modules', 'obs-studio-node'),
-        ),
-      );
+    let noobsPath = devMode
+      ? path.resolve(__dirname, '../../release/app/node_modules/noobs/dist')
+      : path.resolve(__dirname, '../../node_modules/noobs/dist');
 
-      const initResult = osn.NodeObs.OBS_API_initAPI(
-        'en-US',
-        fixPathWhenPackaged(path.join(path.normalize(__dirname), 'osn-data')),
-        '1.0.0',
-        '',
-      );
+    logPath = fixPathWhenPackaged(logPath);
+    noobsPath = fixPathWhenPackaged(noobsPath);
 
-      if (initResult !== 0) {
-        throw new Error(
-          `OBS process initialization failed with code ${initResult}`,
-        );
-      }
-    } catch (e) {
-      throw new Error(`Exception when initializing OBS process: ${e}`);
-    }
+    console.info('[Recorder] Noobs path:', noobsPath);
+    console.info('[Recorder] Log path:', logPath);
+    noobs.Init(noobsPath, logPath, cb);
+    noobs.SetBuffering(true);
+
+    const hwnd = getNativeWindowHandle();
+    noobs.InitPreview(hwnd);
+    noobs.SetDrawSourceOutline(true);
+
+    this.overlaySource = noobs.CreateSource(
+      VideoSourceName.OVERLAY,
+      'image_source',
+    );
 
     this.obsInitialized = true;
     console.info('[Recorder] OBS initialized successfully');
@@ -1344,94 +1107,46 @@ export default class Recorder extends EventEmitter {
   /**
    * Handle a signal from OBS.
    */
-  private handleSignal(obsSignal: osn.EOutputSignal) {
-    console.info('[Recorder] Got signal:', obsSignal);
-
-    if (obsSignal.type !== 'recording') {
-      console.info('[Recorder] No action needed on this signal');
+  private handleSignal(signal: Signal) {
+    if (signal.type === 'volmeter' && signal.value !== undefined) {
+      // A volmeter callback was fired. This happens very often while there
+      // are audio sources attached and the audio settings are open.
+      send('volmeter', signal.id, signal.value);
       return;
     }
 
-    // This code was previously here catching any non-zero return signals,
-    // but it seems that is not a good criteria to consider it a crash as
-    // seen several instances of non-zero return codes that have been
-    // non-fatal.
-    //
-    // For example when I use my NVENC encoder on my non-default
-    // GPU we get a -4 RC despite everything being otherwise fine; suspect
-    // caused by the fact that it tries the AMD GPU first which doesn't work.
-    //
-    // I spent alot of time trying to work out what was wrong only to find that
-    // the difference in streamlabs desktop is that they don't crash on a non-zero
-    // RC.
-    //
-    // So we do what we can by checking wrote signals non-zero and ignoring
-    // other non-zero signals. If something goes wrong earlier, we will hit a
-    // timeout anyway which will cover our backs.
-    if (obsSignal.code !== 0 && obsSignal.signal === 'wrote') {
-      console.error('[Recorder] Non-zero wrote signal');
+    // The rest of the signals here are not as frequent as volmeter signals
+    // so just log them all.
+    console.info('[Recorder] Got signal', signal);
 
-      const crashData: CrashData = {
-        date: new Date(),
-        reason: obsSignal.error,
-      };
-
-      this.emit('crash', crashData);
+    if (signal.type === 'source') {
+      // A source has sporadically changed dimensions. This typically happens
+      // when a game or window capture source is initialized or resized. To be
+      // clear this is the dimensions NOT the scale. Users cannot trigger this.
+      send('redrawPreview');
+      send('initCropSliders');
       return;
     }
 
-    switch (obsSignal.signal) {
+    switch (signal.id) {
       case EOBSOutputSignal.Start:
-        this.startQueue.push(obsSignal);
+        this.startQueue.push(signal);
         this.obsState = ERecordingState.Recording;
-        break;
-
-      case EOBSOutputSignal.Starting:
-        this.obsState = ERecordingState.Starting;
+        this.emit('state-change');
+        console.info('[Recorder] State is now: ', this.obsState);
         break;
 
       case EOBSOutputSignal.Stop:
+        this.wroteQueue.push(signal);
         this.obsState = ERecordingState.Offline;
+        this.emit('state-change');
+        console.info('[Recorder] State is now: ', this.obsState);
         break;
-
-      case EOBSOutputSignal.Stopping:
-        this.obsState = ERecordingState.Stopping;
-        break;
-
-      case EOBSOutputSignal.Wrote:
-        this.wroteQueue.push(obsSignal);
-        break;
-
-      case EOBSOutputSignal.WriteError:
-        this.emit('crash', {
-          date: new Date(),
-          reason: obsSignal.error,
-        });
-        return;
 
       default:
         console.info('[Recorder] No action needed on this signal');
         break;
     }
-
-    this.emit('state-change');
-    console.info('[Recorder] State is now: ', this.obsState);
-  }
-
-  /**
-   * Handle a source callback from OBS.
-   */
-  private handleSourceCallback(data: ObsSourceCallbackInfo[]) {
-    console.info('[Recorder] Got source callback:', data);
-    this.scaleVideoSourceSize();
-  }
-
-  /**
-   * Handle a volmeter callback from OBS. Deliberatly no logs in here
-   * as it's extremely frequently.
-   */
-  private handleVolmeterCallback(data: ObsVolmeterCallbackInfo[]) {
-    this.mainWindow.webContents.send('volmeter', data);
   }
 
   /**
@@ -1439,215 +1154,193 @@ export default class Recorder extends EventEmitter {
    * diverged slightly, so while this was previously a hardcoded string, now we
    * search for it in the OSN sources API.
    */
-  private configureWindowCaptureSource(captureCursor: boolean) {
+  private configureWindowCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Window Capture');
+    const {
+      forceSdr,
+      captureCursor,
+      videoSourceXPosition,
+      videoSourceYPosition,
+      videoSourceScale,
+    } = config;
 
-    this.findWindowInterval = setInterval(
-      () => this.tryAttachWindowCaptureSource(captureCursor),
-      this.findWindowIntervalDuration,
+    this.captureMode = CaptureMode.WINDOW;
+    this.captureSource = noobs.CreateSource(
+      VideoSourceName.WINDOW,
+      'window_capture',
     );
 
-    // Call immediately to avoid the first interval delay. Will clear
-    // the interval if it is successful. Common case is that WoW has
-    // been open for a while and this immediately succeeds.
-    this.tryAttachWindowCaptureSource(captureCursor);
+    const settings = noobs.GetSourceSettings(this.captureSource);
+
+    noobs.SetSourceSettings(this.captureSource, {
+      ...settings,
+      capture_mode: 'window',
+      force_sdr: forceSdr,
+      cursor: captureCursor, // For some reason is named differently here.
+      method: 2,
+      compatibility: true,
+    });
+
+    noobs.AddSourceToScene(this.captureSource);
+
+    noobs.SetSourcePos(this.captureSource, {
+      x: videoSourceXPosition,
+      y: videoSourceYPosition,
+      scaleX: videoSourceScale,
+      scaleY: videoSourceScale,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
+    });
   }
 
   /**
    * Configures the game capture source.
    */
-  private configureGameCaptureSource(captureCursor: boolean) {
+  private configureGameCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Game Capture');
 
-    this.findWindowInterval = setInterval(
-      () => this.tryAttachGameCaptureSource(captureCursor),
-      this.findWindowIntervalDuration,
+    const {
+      forceSdr,
+      captureCursor,
+      videoSourceXPosition,
+      videoSourceYPosition,
+      videoSourceScale,
+    } = config;
+
+    this.captureMode = CaptureMode.GAME;
+    this.captureSource = noobs.CreateSource(
+      VideoSourceName.GAME,
+      'game_capture',
     );
 
-    // Call immediately to avoid the first interval delay. Will clear
-    // the interval if it is successful. Common case is that WoW has
-    // been open for a while and this immediately succeeds.
-    this.tryAttachGameCaptureSource(captureCursor);
+    const defaults = noobs.GetSourceSettings(this.captureSource);
+
+    const settings = {
+      ...defaults,
+      capture_mode: 'window',
+      force_sdr: forceSdr,
+      capture_cursor: captureCursor,
+      priority: 2,
+    };
+
+    const position = {
+      x: videoSourceXPosition,
+      y: videoSourceYPosition,
+      scaleX: videoSourceScale,
+      scaleY: videoSourceScale,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
+    };
+
+    noobs.SetSourceSettings(this.captureSource, settings);
+    noobs.AddSourceToScene(this.captureSource);
+    noobs.SetSourcePos(this.captureSource, position);
   }
 
   /**
    * Creates a monitor capture source. Monitor capture always shows the cursor.
    */
-  private configureMonitorCaptureSource(monitorIndex: number) {
+  private configureMonitorCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');
-    let prop = this.monitorCaptureSource.properties.first();
 
-    while (prop && prop.name !== 'monitor_id') {
-      prop = prop.next();
+    const {
+      forceSdr,
+      monitorIndex,
+      videoSourceXPosition,
+      videoSourceYPosition,
+      videoSourceScale,
+      captureCursor,
+    } = config;
+
+    this.captureMode = CaptureMode.MONITOR;
+    this.captureSource = noobs.CreateSource(
+      VideoSourceName.MONITOR,
+      'monitor_capture',
+    );
+
+    const defaults = noobs.GetSourceSettings(this.captureSource);
+    const properties = noobs.GetSourceProperties(this.captureSource);
+
+    const monitors = properties.find((p) => p.name === 'monitor_id');
+
+    if (!monitors) {
+      console.error('[Recorder] No monitors found');
+      throw new Error('[Recorder] No monitors found');
     }
 
-    const { settings } = this.monitorCaptureSource;
-    settings.compatibility = false;
-    settings.force_sdr = false;
+    if (monitors.type !== 'list') {
+      console.error('[Recorder] Window setting is not a list');
+      throw new Error('Window setting is not a list');
+    }
 
-    if (prop.name === 'monitor_id' && Recorder.isObsListProperty(prop)) {
-      // An "Auto" option appears as the first thing here so make sure we
-      // don't select that; the frontend doesn't expect it and we end up
-      // having multiple indexes corresponding to a single monitor.
-      const filtered = prop.details.items.filter(
-        (item) => item.value !== 'Auto',
+    const opts = monitors.items.filter((item) => item.value !== 'DUMMY');
+    const monitorId = opts[monitorIndex];
+
+    if (!monitorId) {
+      console.error(
+        '[Recorder] Monitor with index was not found for index',
+        monitorIndex,
+        opts,
       );
-
-      if (filtered[monitorIndex]) {
-        // The monitor selected is present so use it.
-        settings.monitor_id = filtered[monitorIndex].value as string;
-      } else {
-        // Default to use the first monitor if index is undefined.
-        console.warn('[Recorder] Monitor', monitorIndex, 'not found');
-        settings.monitor_id = filtered[0].value as string;
-      }
+      throw new Error('[Recorder] Monitor index was not found');
     }
 
-    this.monitorCaptureSource.update(settings);
-    this.monitorCaptureSource.save();
-    this.monitorCaptureSource.enabled = true;
+    console.info('[Recorder] Selected monitor:', monitorId);
+
+    const settings = {
+      ...defaults,
+      method: 0,
+      monitor_id: monitorId.value,
+      force_sdr: forceSdr,
+      capture_cursor: captureCursor,
+    };
+
+    const position: SceneItemPosition = {
+      x: videoSourceXPosition,
+      y: videoSourceYPosition,
+      scaleX: videoSourceScale,
+      scaleY: videoSourceScale,
+      cropLeft: 0,
+      cropRight: 0,
+      cropTop: 0,
+      cropBottom: 0,
+    };
+
+    noobs.SetSourceSettings(this.captureSource, settings);
+    noobs.AddSourceToScene(this.captureSource);
+    noobs.SetSourcePos(this.captureSource, position);
   }
 
   /**
    * Configure the chat overlay image source.
    */
-  public configureOverlayImageSource(config: ObsOverlayConfig) {
-    const { chatOverlayEnabled, chatOverlayOwnImage } = config;
+  public async configureOverlayImageSource(config: ObsOverlayConfig) {
+    const { chatOverlayEnabled } = config;
     console.info('[Recorder] Configure image source for chat overlay');
 
+    if (this.overlaySource) {
+      // Might be a no-op, we never actually delete this source.
+      noobs.RemoveSourceFromScene(this.overlaySource);
+    }
+
     if (!chatOverlayEnabled) {
-      this.overlayImageSource.enabled = false;
-    } else if (chatOverlayOwnImage && this.cfg.get('cloudStorage')) {
-      this.configureOwnOverlay(config);
-    } else {
+      console.info('[Recorder] Chat overlay is disabled, not configuring');
+      return;
+    }
+
+    const useDefaultOverlay = await this.useDefaultOverlayImage(config);
+
+    if (useDefaultOverlay) {
+      console.info('[Recorder] Using default overlay');
       this.configureDefaultOverlay(config);
-    }
-  }
-
-  /**
-   * Add a single audio source to the OBS scene.
-   */
-  private addAudioSource(obsInput: IInput, channel: number) {
-    console.info(
-      '[Recorder] Adding OBS audio source',
-      obsInput.name,
-      obsInput.id,
-    );
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    if (channel < 1 || channel >= 64) {
-      throw new Error(`[Recorder] Invalid channel number ${channel}`);
-    }
-
-    osn.Global.setOutputSource(channel, obsInput);
-  }
-
-  /**
-   * Remove a single audio source from the OBS scene.
-   */
-  private removeAudioSource(source: IInput, channel: number) {
-    if (!this.obsInitialized) {
-      throw new Error('OBS not initialized');
-    }
-
-    console.info(
-      '[Recorder] Removing OBS audio source',
-      source.name,
-      source.id,
-    );
-
-    osn.Global.setOutputSource(channel, null as unknown as ISource);
-    source.release();
-  }
-
-  /**
-   * Create an OBS audio source.
-   */
-  private createOBSAudioSource(
-    id: string,
-    idx: number,
-    type: TAudioSourceType,
-  ) {
-    console.info('[Recorder] Creating OBS audio source', id, idx, type);
-
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    let name = '';
-
-    if (type === TAudioSourceType.output) {
-      name = `WCR Speaker Source ${idx}`;
-    } else if (type === TAudioSourceType.input) {
-      name = `WCR Mic Source ${idx}`;
-    } else if (type === TAudioSourceType.process) {
-      name = `WCR App Source ${idx}`;
     } else {
-      // Programmer error, should never happen.
-      throw new Error('Invalid audio source type');
+      console.info('[Recorder] Using custom overlay');
+      this.configureOwnOverlay(config);
     }
-
-    const settings = TAudioSourceType.process
-      ? // Priority 2: "Match title, otherwise find window of same executable".
-        { window: id, priority: 2 }
-      : { device_id: id };
-
-    return osn.InputFactory.create(type, name, settings);
-  }
-
-  /**
-   * Watch the video input source for size changes, and rescale to fill the
-   * canvas.
-   */
-  private scaleVideoSourceSize() {
-    let src;
-    let item;
-
-    if (this.windowCaptureSource.enabled) {
-      src = this.windowCaptureSource;
-      item = this.windowCaptureSceneItem;
-    } else if (this.gameCaptureSource.enabled) {
-      src = this.gameCaptureSource;
-      item = this.gameCaptureSceneItem;
-    } else if (this.monitorCaptureSource.enabled) {
-      src = this.monitorCaptureSource;
-      item = this.monitorCaptureSceneItem;
-    } else {
-      // No log here as as may be frequent.
-      return;
-    }
-
-    if (src.width === 0 || src.height === 0) {
-      // This happens often, suspect it's before OBS gets a hook into a game
-      // capture process.
-      return;
-    }
-
-    const { width, height } = obsResolutions[this.resolution];
-
-    const newScaleFactor = {
-      x: width / src.width,
-      y: height / src.height,
-    };
-
-    const closeEnough =
-      Math.round(item.scale.x * 100) / 100 ===
-        Math.round(newScaleFactor.x * 100) / 100 &&
-      Math.round(item.scale.y * 100) / 100 ===
-        Math.round(newScaleFactor.y * 100) / 100;
-
-    if (closeEnough) {
-      // Don't rescale if things are within a rounding error. I think the
-      // OSN library does some internal rounding and we don't want to spam
-      // trigger rescaling when it isn't required. See Issue 586.
-      return;
-    }
-
-    console.info('[Recorder] Rescaling from', item.scale, 'to', newScaleFactor);
-    item.scale = newScaleFactor;
   }
 
   /**
@@ -1658,9 +1351,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    this.audioInputDevices.forEach((device) => {
-      device.muted = true;
-    });
+    noobs.SetMuteAudioInputs(true);
 
     this.inputDevicesMuted = true;
     this.obsMicState = MicStatus.MUTED;
@@ -1675,9 +1366,7 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    this.audioInputDevices.forEach((device) => {
-      device.muted = false;
-    });
+    noobs.SetMuteAudioInputs(false);
 
     this.inputDevicesMuted = false;
     this.obsMicState = MicStatus.LISTENING;
@@ -1720,13 +1409,13 @@ export default class Recorder extends EventEmitter {
   /**
    * Convert the quality setting to an appropriate CQP/CRF value based on encoder type.
    */
-  private static getCqpFromQuality(obsQuality: string, encoder: string) {
+  private static getCqpFromQuality(encoder: string, quality: string) {
     if (
-      encoder === ESupportedEncoders.JIM_AV1_NVENC ||
-      encoder === ESupportedEncoders.AMD_AMF_AV1
+      encoder === ESupportedEncoders.NVENC_AV1 ||
+      encoder === ESupportedEncoders.AMD_AV1
     ) {
       // AV1 typically needs lower CQP values for similar quality
-      switch (obsQuality) {
+      switch (quality) {
         case QualityPresets.ULTRA:
           return 20;
         case QualityPresets.HIGH:
@@ -1736,13 +1425,13 @@ export default class Recorder extends EventEmitter {
         case QualityPresets.LOW:
           return 32;
         default:
-          console.error('[Recorder] Unrecognised quality', obsQuality);
+          console.error('[Recorder] Unrecognised quality', quality);
           throw new Error('Unrecognised quality');
       }
     }
 
     // Original values for x264 CRF and other encoders' CQP
-    switch (obsQuality) {
+    switch (quality) {
       case QualityPresets.ULTRA:
         return 22;
       case QualityPresets.HIGH:
@@ -1752,90 +1441,9 @@ export default class Recorder extends EventEmitter {
       case QualityPresets.LOW:
         return 34;
       default:
-        console.error('[Recorder] Unrecognised quality', obsQuality);
+        console.error('[Recorder] Unrecognised quality', quality);
         throw new Error('Unrecognised quality');
     }
-  }
-
-  /**
-   * Apply a setting to OBS.
-   */
-  private static applySetting(
-    category: string,
-    parameter: string,
-    value: string | number,
-  ) {
-    console.info('[Recorder] Apply setting', category, parameter, value);
-
-    let old;
-    const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
-
-    settings.forEach((subcategory: ISettingsSubCategory) => {
-      subcategory.parameters.forEach((param: IObsInput<TObsValue>) => {
-        if (param.name === parameter) {
-          old = param.currentValue;
-          param.currentValue = value;
-        }
-      });
-    });
-
-    if (value !== old) {
-      osn.NodeObs.OBS_settings_saveSettings(category, settings);
-    }
-  }
-
-  /**
-   * Get the allowed values for a specific setting.
-   */
-  private static getAvailableValues(
-    category: string,
-    subcategory: string,
-    parameter: string,
-  ) {
-    console.info(
-      '[Recorder] Get available values for',
-      category,
-      subcategory,
-      parameter,
-    );
-
-    const categorySettings =
-      osn.NodeObs.OBS_settings_getSettings(category).data;
-
-    if (!categorySettings) {
-      throw new Error(`No category found: ${category}`);
-    }
-
-    const subcategorySettings = categorySettings.find(
-      (sub: ISettingsSubCategory) => sub.nameSubCategory === subcategory,
-    );
-
-    if (!subcategorySettings) {
-      throw new Error(`No subcategory found: ${subcategory} in ${category}`);
-    }
-
-    const parameterSettings = subcategorySettings.parameters.find(
-      (param: IObsInput<TObsValue>) => param.name === parameter,
-    );
-
-    if (!parameterSettings) {
-      throw new Error(
-        `No parameter found: ${parameter} in ${category} -> ${subcategory}`,
-      );
-    }
-
-    return parameterSettings.values.map(
-      (value: TObsValue) => Object.values(value)[0],
-    );
-  }
-
-  /**
-   * Type guard for an OBS list property.
-   */
-  private static isObsListProperty(
-    property: osn.IProperty,
-  ): property is osn.IListProperty {
-    return property.type === 6;
   }
 
   /**
@@ -1851,133 +1459,330 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Find a window appropriate for capture by the provided source. This
-   * is logically the same and can be used for both Window and Game capture
-   * modes.
+   * Attach the current game_capture or window_capture source to the WoW client.
    */
-  private static findWowWindow(src: IInput) {
-    // The source properties are cached by OSN, so update an irrelevant
-    // setting to force a refresh. This refreshes the window list within
-    // the properties object.
-    //
-    // This relies on some internals of OSN which update the cache to
-    // refresh on calling the update function. See "osn::ISource::Update"
-    // in isource.cpp for more details.
-    const { settings } = src;
-    settings.refresh = uuidv4();
-    src.update(settings);
+  public attachCaptureSource() {
+    console.info('[Recorder] Attaching capture source', this.captureSource);
 
-    let prop = src.properties.first();
-
-    while (prop && prop.name !== 'window') {
-      prop = prop.next();
+    if (
+      this.captureMode !== CaptureMode.WINDOW &&
+      this.captureMode !== CaptureMode.GAME
+    ) {
+      console.info('[Recorder] Nothing to attach for', this.captureMode);
+      return;
     }
 
-    if (prop.name !== 'window' || !Recorder.isObsListProperty(prop)) {
-      console.warn('[Recorder] Did not find window property');
-      return undefined;
+    if (!this.captureSource) {
+      // This should never happen.
+      console.error('[Recorder] No capture source available');
+      return;
     }
 
-    const items = prop.details.items;
-    const match = items.find(Recorder.windowMatch);
+    const properties = noobs.GetSourceProperties(this.captureSource);
+    const windows = properties.find((item) => item.name === 'window');
 
-    if (!match) {
-      return undefined;
+    if (!windows) {
+      console.error('[Recorder] Failed to find window setting');
+      throw new Error('Failed to find window setting');
     }
 
-    const window = String(match.value);
-    console.info('[Recorder] Found a match:', window);
-    return window;
+    if (windows.type !== 'list') {
+      console.error('[Recorder] Window setting is not a list');
+      throw new Error('Window setting is not a list');
+    }
+
+    const opts = windows.items;
+    const match = opts.find(Recorder.windowMatch);
+
+    if (match) {
+      console.info('[Recorder] Found matching window for game capture:', match);
+      const settings = noobs.GetSourceSettings(this.captureSource);
+      const updated = { ...settings, window: match.value };
+      noobs.SetSourceSettings(this.captureSource, updated);
+      return;
+    }
+
+    if (this.findWindowAttempts < this.findWindowAttemptLimit) {
+      console.info('[Recorder] No matching window yet');
+      this.findWindowAttempts++;
+
+      this.findWindowTimer = setTimeout(
+        () => this.attachCaptureSource(),
+        this.findWindowIntervalDuration,
+      );
+
+      return;
+    }
+
+    console.warn(
+      '[Recorder] Failed to find WoW window after',
+      this.findWindowAttempts,
+      'attempts. Giving up.',
+    );
   }
 
   /**
-   * Try to attach to a game capture source for WoW. If the window is not
-   * found, do nothing.
+   * Get the current dimensions of the display preview. This includes the
+   * base canvas size (unscaled) and the current display size (scaled).
    */
-  private tryAttachGameCaptureSource(captureCursor: boolean) {
-    this.findWindowAttempts++;
-
-    if (this.findWindowAttempts > this.findWindowAttemptLimit) {
-      console.error('[Recorder] Exceeded find window attempts, giving up');
-      this.clearFindWindowInterval();
-      return;
-    }
-
-    console.info(
-      '[Recorder] Looking for game capture source, attempt',
-      this.findWindowAttempts,
-    );
-
-    let window = undefined;
-
-    try {
-      window = Recorder.findWowWindow(this.dummyGameCaptureSource);
-    } catch (ex) {
-      console.error('[Recorder] Exception when trying to find window:', ex);
-    }
-
-    if (!window) {
-      console.info('[Recorder] Game capture window not found, will retry');
-      return;
-    }
-
-    console.info('[Recorder] Game capture window found', window);
-
-    const { settings } = this.gameCaptureSource;
-    settings.capture_mode = 'window';
-    settings.allow_transparency = false;
-    settings.priority = 1;
-    settings.capture_cursor = captureCursor;
-    settings.window = window;
-
-    this.gameCaptureSource.update(settings);
-    this.gameCaptureSource.save();
-    this.gameCaptureSource.enabled = true;
-
-    console.info('[Recorder] Game capture source configured');
-    this.clearFindWindowInterval();
+  public getDisplayInfo(): {
+    canvasWidth: number;
+    canvasHeight: number;
+    previewWidth: number;
+    previewHeight: number;
+  } {
+    return noobs.GetPreviewInfo();
   }
 
   /**
-   * Try to attach to a window capture source for WoW. If the window is not
-   * found, do nothing.
+   * Get the current position and dimensions of a source. Width and height are
+   * before scaling. This is the real size on the canvas, not the size in the
+   * preview.
    */
-  private tryAttachWindowCaptureSource(captureCursor: boolean) {
-    this.findWindowAttempts++;
+  public getSourcePosition(item: SceneItem) {
+    const previewInfo = this.getDisplayInfo(); // Could be cached
+    const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
+    const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
+    const sf = Math.min(sfx, sfy);
 
-    if (this.findWindowAttempts > this.findWindowAttemptLimit) {
-      console.error('[Recorder] Exceeded find window attempts, giving up');
-      this.clearFindWindowInterval();
+    const src =
+      item === SceneItem.OVERLAY ? this.overlaySource : this.captureSource;
+
+    if (!src) {
+      console.warn(
+        '[Recorder] getSourcePosition: No source found for item:',
+        item,
+      );
       return;
     }
 
-    console.info(
-      '[Recorder] Looking for window capture source, attempt',
-      this.findWindowAttempts,
-    );
+    const current = noobs.GetSourcePos(src);
 
-    const window = Recorder.findWowWindow(this.dummyWindowCaptureSource);
+    const position: SceneItemPosition & SourceDimensions = {
+      x: current.x * sf,
+      y: current.y * sf,
+      scaleX: current.scaleX,
+      scaleY: current.scaleY,
+      width: current.width * sf * current.scaleX,
+      height: current.height * sf * current.scaleY,
+      cropLeft: current.cropLeft * sf * current.scaleX,
+      cropRight: current.cropRight * sf * current.scaleX,
+      cropTop: current.cropTop * sf * current.scaleY,
+      cropBottom: current.cropBottom * sf * current.scaleY,
+    };
 
-    if (!window) {
-      console.info('[Recorder] Window capture window not found, will retry');
-      return;
+    return position;
+  }
+
+  /**
+   * Sets the position of a source in the OBS scene.
+   */
+  public setSourcePosition(
+    src: string,
+    target: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      cropLeft: number;
+      cropRight: number;
+      cropTop: number;
+      cropBottom: number;
+    },
+  ) {
+    const previewInfo = noobs.GetPreviewInfo(); // Could be cached?
+    const current = noobs.GetSourcePos(src);
+
+    // This is confusing because there are two forms of scaling at play
+    // that we need to account for.
+    //   1. The source scaling. The current.width might be 1000px but
+    //      if it's scaled by 0.5 the real width is 500px.
+    //   2. The preview scaling. The preview is reduced to fit the div
+    //      based on the aspect ratio.
+    const sfx = previewInfo.previewWidth / previewInfo.canvasWidth;
+    const sfy = previewInfo.previewHeight / previewInfo.canvasHeight;
+    const sf = Math.min(sfx, sfy);
+
+    // We only allow one scale factor to retail the aspect ratio of
+    // the source so just use the X.
+    const scaledWidth = current.width * current.scaleX * sf;
+    const ratioX = target.width / scaledWidth;
+    const scale = ratioX * current.scaleX;
+
+    const updated: SceneItemPosition = {
+      x: target.x / sf,
+      y: target.y / sf,
+      scaleX: scale,
+      scaleY: scale,
+      cropLeft: target.cropLeft / (sf * scale),
+      cropRight: target.cropRight / (sf * scale),
+      cropTop: target.cropTop / (sf * scale),
+      cropBottom: target.cropBottom / (sf * scale),
+    };
+
+    noobs.SetSourcePos(src, updated);
+
+    const item = src.startsWith('WCR Chat Overlay')
+      ? SceneItem.OVERLAY
+      : SceneItem.GAME;
+
+    const timer =
+      item === SceneItem.OVERLAY
+        ? this.overlayPosDebounceTimer
+        : this.gamePosDebounceTimer;
+
+    if (timer) {
+      clearTimeout(timer);
     }
 
-    console.info('[Recorder] Window capture window found', window);
+    if (item === SceneItem.OVERLAY) {
+      this.overlayPosDebounceTimer = setTimeout(() => {
+        this.saveSourcePosition(
+          item,
+          updated.x,
+          updated.y,
+          scale,
+          updated.cropLeft,
+          updated.cropTop,
+        );
+        this.overlayPosDebounceTimer = undefined;
+      }, 1000);
+    } else if (item === SceneItem.GAME) {
+      this.gamePosDebounceTimer = setTimeout(() => {
+        this.saveSourcePosition(item, updated.x, updated.y, scale);
+        this.gamePosDebounceTimer = undefined;
+      }, 1000);
+    }
+  }
 
-    // This corresponds to Windows Graphics Capture. The other mode "BITBLT" doesn't seem to work and
-    // captures behind the WoW window. Not sure why, some googling suggested Windows theme issues.
-    // See https://github.com/obsproject/obs-studio/blob/master/plugins/win-capture/window-capture.c#L70.
-    const { settings } = this.windowCaptureSource;
-    settings.method = 2;
-    settings.cursor = captureCursor;
-    settings.window = window;
+  /**
+   * Reset the source position to 0, 0 and unscaled.
+   */
+  public resetSourcePosition(src: string) {
+    console.info('[Recorder] Reset source position', src);
 
-    this.windowCaptureSource.update(settings);
-    this.windowCaptureSource.save();
-    this.windowCaptureSource.enabled = true;
+    const updated: SceneItemPosition = {
+      x: 0,
+      y: 0,
+      scaleX: 1,
+      scaleY: 1,
+      cropLeft: 0,
+      cropTop: 0,
+      cropRight: 0,
+      cropBottom: 0,
+    };
 
-    console.info('[Recorder] Window capture source configured');
-    this.clearFindWindowInterval();
+    const item = src.startsWith('WCR Chat Overlay')
+      ? SceneItem.OVERLAY
+      : SceneItem.GAME;
+
+    if (item === SceneItem.GAME) {
+      console.info('[Recorder] Resetting game source so fit to window');
+
+      const { height, width } = noobs.GetSourcePos(src);
+      const { canvasHeight, canvasWidth } = noobs.GetPreviewInfo();
+
+      const scaleX = canvasWidth / width;
+      const scaleY = canvasHeight / height;
+
+      if (scaleX < scaleY) {
+        // X-limited, center vertically.
+        updated.scaleX = scaleX;
+        updated.scaleY = scaleX;
+        updated.y = (canvasHeight - height * scaleX) / 2;
+      } else {
+        // Y-limited, center horizontally.
+        updated.x = (canvasWidth - width * scaleY) / 2;
+        updated.scaleX = scaleY;
+        updated.scaleY = scaleY;
+      }
+    }
+
+    // scaleX and scaleY are the same by this point as we maintain aspect ratio.
+    noobs.SetSourcePos(src, updated);
+    this.saveSourcePosition(item, updated.x, updated.y, updated.scaleX);
+  }
+
+  /**
+   * Save a video source position in the config.
+   */
+  private saveSourcePosition(
+    item: SceneItem,
+    x: number,
+    y: number,
+    scale: number,
+    cropX: number = 0,
+    cropY: number = 0,
+  ) {
+    console.info('[Recorder] Saving', item, 'position', {
+      x,
+      y,
+      scale,
+      cropX,
+      cropY,
+    });
+
+    if (item === SceneItem.OVERLAY) {
+      this.cfg.set('chatOverlayXPosition', x);
+      this.cfg.set('chatOverlayYPosition', y);
+      this.cfg.set('chatOverlayScale', scale);
+      this.cfg.set('chatOverlayCropX', cropX);
+      this.cfg.set('chatOverlayCropY', cropY);
+    } else {
+      this.cfg.set('videoSourceXPosition', x);
+      this.cfg.set('videoSourceYPosition', y);
+      this.cfg.set('videoSourceScale', scale);
+    }
+  }
+
+  /**
+   * Choose a sensible default encoder from those available. Doesn't choose AV1
+   * variants, those are considered advanced and not a sensible default. They
+   * need hardware rendering of the app to be enabled.
+   */
+  public getSensibleEncoderDefault() {
+    const encoders = this.getAvailableEncoders();
+
+    if (encoders.includes(ESupportedEncoders.NVENC_H264)) {
+      return ESupportedEncoders.NVENC_H264;
+    }
+
+    if (encoders.includes(ESupportedEncoders.QSV_H264)) {
+      return ESupportedEncoders.QSV_H264;
+    }
+
+    if (encoders.includes(ESupportedEncoders.AMD_H264)) {
+      // Deliberatly after other hardware encoders as sometimes the
+      // AMD iGPU can provide this and it's not usable.
+      return ESupportedEncoders.AMD_H264;
+    }
+
+    return ESupportedEncoders.OBS_X264;
+  }
+
+  /**
+   * Decide if we can should use the default overlay image or the custom one.
+   */
+  private async useDefaultOverlayImage(config: ObsOverlayConfig) {
+    const { chatOverlayOwnImage, chatOverlayOwnImagePath } = config;
+
+    if (!chatOverlayOwnImage) {
+      console.info('[Recorder] Configured to use default overlay');
+      return true;
+    }
+
+    if (!chatOverlayOwnImagePath) {
+      console.warn('[Recorder] No custom image path set');
+      return true;
+    }
+
+    const fileExists = await exists(chatOverlayOwnImagePath);
+
+    if (!fileExists) {
+      console.warn(`[Recorder] File does not exist`, chatOverlayOwnImagePath);
+      return true;
+    }
+
+    return false;
   }
 }

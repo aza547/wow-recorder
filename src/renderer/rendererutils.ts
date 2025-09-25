@@ -34,13 +34,20 @@ import {
   RawCombatant,
   StorageFilter,
   Flavour,
+  AudioSource,
+  AppState,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
 import { ESupportedEncoders } from 'main/obsEnums';
-import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
+import {
+  PTTEventType,
+  PTTKeyPressEvent,
+  UiohookKeyMap,
+} from 'types/KeyTypesUIOHook';
 import { ConfigurationSchema } from 'config/configSchema';
-import { getLocalePhrase, Language, Phrase } from 'localisation/translations';
+import { getLocalePhrase, Language } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
 
 const getVideoResult = (video: RendererVideo): boolean => {
   return video.result;
@@ -644,8 +651,8 @@ const encoderFilter = (enc: string, highRes: boolean) => {
   if (highRes) {
     return (
       encoder === ESupportedEncoders.OBS_X264 ||
-      encoder === ESupportedEncoders.JIM_AV1_NVENC ||
-      encoder === ESupportedEncoders.AMD_AMF_AV1
+      encoder === ESupportedEncoders.AMD_AV1 ||
+      encoder === ESupportedEncoders.NVENC_AV1
     );
   }
 
@@ -669,15 +676,33 @@ const mapEncoderToString = (enc: Encoder, lang: Language) => {
   return encoderAsString;
 };
 
+const getFriendlyEncoderName = (enc: ESupportedEncoders) => {
+  switch (enc) {
+    case ESupportedEncoders.OBS_X264:
+      return 'OBS H.264';
+    case ESupportedEncoders.NVENC_H264:
+      return 'NVIDIA H.264';
+    case ESupportedEncoders.NVENC_AV1:
+      return 'NVIDIA AV1';
+    case ESupportedEncoders.AMD_H264:
+      return 'AMD H.264';
+    case ESupportedEncoders.AMD_AV1:
+      return 'AMD AV1';
+    case ESupportedEncoders.QSV_H264:
+      return 'Intel H.264';
+    case ESupportedEncoders.QSV_AV1:
+      return 'Intel AV1';
+    default:
+      throw new Error('Unknown Encoder');
+  }
+};
+
 const mapStringToEncoder = (enc: string): Encoder => {
-  const encoder = enc as ESupportedEncoders;
-  const isHardwareEncoder = encoder !== ESupportedEncoders.OBS_X264;
-
-  const encoderType = isHardwareEncoder
-    ? EncoderType.HARDWARE
-    : EncoderType.SOFTWARE;
-
-  return { name: enc, type: encoderType };
+  const value = enc as ESupportedEncoders;
+  const isHardwareEncoder = value !== ESupportedEncoders.OBS_X264;
+  const type = isHardwareEncoder ? EncoderType.HARDWARE : EncoderType.SOFTWARE;
+  const name = getFriendlyEncoderName(value);
+  return { name, value, type };
 };
 
 const pathSelect = async (): Promise<string> => {
@@ -689,6 +714,12 @@ const pathSelect = async (): Promise<string> => {
 const fileSelect = async (): Promise<string> => {
   const ipc = window.electron.ipcRenderer;
   const path = await ipc.invoke('selectFile', []);
+  return path;
+};
+
+const imageSelect = async (): Promise<string> => {
+  const ipc = window.electron.ipcRenderer;
+  const path = await ipc.invoke('selectImage', []);
   return path;
 };
 
@@ -728,6 +759,25 @@ const getPTTKeyPressEventFromConfig = (
   };
 };
 
+const getManualRecordHotKeyFromConfig = (
+  config: ConfigurationSchema,
+): PTTKeyPressEvent => {
+  const ctrl = config.manualRecordHotKeyModifiers.includes('ctrl');
+  const win = config.manualRecordHotKeyModifiers.includes('win');
+  const shift = config.manualRecordHotKeyModifiers.includes('shift');
+  const alt = config.manualRecordHotKeyModifiers.includes('alt');
+
+  return {
+    altKey: alt,
+    ctrlKey: ctrl,
+    metaKey: win,
+    shiftKey: shift,
+    keyCode: config.manualRecordHotKey,
+    mouseButton: -1, // No mouse click support for manual record.
+    type: PTTEventType.EVENT_KEY_PRESSED,
+  };
+};
+
 const getKeyByValue = (object: any, value: any) => {
   return Object.keys(object).find((key) => object[key] === value);
 };
@@ -749,13 +799,6 @@ const getKeyModifiersString = (keyevent: PTTKeyPressEvent) => {
   }
 
   return modifiers.join(',');
-};
-
-const blurAll = (document: Document) => {
-  const tmp = document.createElement('input');
-  document.body.appendChild(tmp);
-  tmp.focus();
-  document.body.removeChild(tmp);
 };
 
 const getNextKeyOrMouseEvent = async (): Promise<PTTKeyPressEvent> => {
@@ -1023,6 +1066,54 @@ const raidResultToPercent = (video: RendererVideo) => {
   return bossPercent;
 };
 
+// Retrieve the available choices for this source from libobs.
+const fetchAudioSourceChoices = async (src: AudioSource) => {
+  const ipc = window.electron.ipcRenderer;
+  const properties = await ipc.getAudioSourceProperties(src.id);
+
+  const devices = properties.find(
+    (prop) => prop.name === 'device_id' || prop.name === 'window',
+  );
+
+  if (!devices || devices.type !== 'list') {
+    return [];
+  }
+
+  return devices.items;
+};
+
+const getKeyPressEventString = (
+  event: PTTKeyPressEvent,
+  appState: AppState,
+) => {
+  const keys: string[] = [];
+
+  if (event.altKey) keys.push('Alt');
+  if (event.ctrlKey) keys.push('Ctrl');
+  if (event.shiftKey) keys.push('Shift');
+  if (event.metaKey) keys.push('Win');
+
+  const { keyCode, mouseButton } = event;
+
+  if (keyCode > 0) {
+    const key = getKeyByValue(UiohookKeyMap, keyCode);
+    if (key !== undefined) keys.push(key);
+  } else if (mouseButton > 0) {
+    keys.push(
+      `${getLocalePhrase(appState.language, Phrase.Mouse)} ${
+        event.mouseButton
+      }`,
+    );
+  }
+
+  return keys.join('+');
+};
+
+const videoMatch = (a: RendererVideo, b: RendererVideo) =>
+  a.videoName === b.videoName && a.cloud === b.cloud;
+
+const videoMatchName = (a: RendererVideo, name: string) => a.videoName === name;
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1051,6 +1142,7 @@ export {
   mapStringToEncoder,
   pathSelect,
   fileSelect,
+  imageSelect,
   convertNumToDeathMarkers,
   convertDeathMarkersToNum,
   getAllDeathMarkers,
@@ -1059,8 +1151,8 @@ export {
   getEncounterMarkers,
   isHighRes,
   getPTTKeyPressEventFromConfig,
+  getManualRecordHotKeyFromConfig,
   getKeyByValue,
-  blurAll,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
   secToMmSs,
@@ -1081,4 +1173,8 @@ export {
   getSpecClass,
   raidResultToPercent,
   getVideoStorageFilter,
+  fetchAudioSourceChoices,
+  getKeyPressEventString,
+  videoMatch,
+  videoMatchName,
 };
