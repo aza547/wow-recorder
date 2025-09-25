@@ -838,39 +838,6 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Get a list of the audio input devices. Used by the settings to populate
-   * the list of devices for user selection.
-   */
-  public getInputAudioDevices() {
-    if (!this.obsInitialized) {
-      throw new Error('[Recorder] OBS not initialized');
-    }
-
-    // const inputDevices =
-    //   osn.NodeObs.OBS_settings_getInputAudioDevices() as IOBSDevice[];
-
-    return [];
-  }
-
-  /**
-   * Get a list of the audio output devices. Used by the settings to populate
-   * the list of devices for user selection.
-   */
-  public getOutputAudioDevices() {
-    return [];
-  }
-
-  /**
-   * Return an array of all the windows for audio process capture available to OBS.
-   */
-  public getProcessAudioDevices(): {
-    name: string; // Display name.
-    value: string | number; // Value to configure OBS with.
-  }[] {
-    return [];
-  }
-
-  /**
    * Return an array of all the encoders available to OBS.
    */
   public getAvailableEncoders(): string[] {
@@ -1133,14 +1100,14 @@ export default class Recorder extends EventEmitter {
         this.startQueue.push(signal);
         this.obsState = ERecordingState.Recording;
         this.emit('state-change');
-        console.info('[Recorder] State is now: ', this.obsState);
+        console.info('[Recorder] State is now:', this.obsState);
         break;
 
       case EOBSOutputSignal.Stop:
         this.wroteQueue.push(signal);
         this.obsState = ERecordingState.Offline;
         this.emit('state-change');
-        console.info('[Recorder] State is now: ', this.obsState);
+        console.info('[Recorder] State is now:', this.obsState);
         break;
 
       default:
@@ -1242,7 +1209,7 @@ export default class Recorder extends EventEmitter {
   }
 
   /**
-   * Creates a monitor capture source. Monitor capture always shows the cursor.
+   * Creates a monitor capture source.
    */
   private configureMonitorCaptureSource(config: ObsVideoConfig) {
     console.info('[Recorder] Configuring OBS for Monitor Capture');

@@ -1067,7 +1067,7 @@ const raidResultToPercent = (video: RendererVideo) => {
 };
 
 // Retrieve the available choices for this source from libobs.
-const fetchAudioSourceChoices = async (src: AudioSource) => {
+const getAudioSourceChoices = async (src: AudioSource) => {
   const ipc = window.electron.ipcRenderer;
   const properties = await ipc.getAudioSourceProperties(src.id);
 
@@ -1173,7 +1173,7 @@ export {
   getSpecClass,
   raidResultToPercent,
   getVideoStorageFilter,
-  fetchAudioSourceChoices,
+  getAudioSourceChoices,
   getKeyPressEventString,
   videoMatch,
   videoMatchName,

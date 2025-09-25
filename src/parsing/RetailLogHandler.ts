@@ -34,7 +34,7 @@ export default class RetailLogHandler extends LogHandler {
   private isPtr = false;
 
   constructor(logPath: string) {
-    super(logPath, 10);
+    super(logPath, 2);
 
     this.combatLogWatcher
       .on('ENCOUNTER_START', async (line: LogLine) => {

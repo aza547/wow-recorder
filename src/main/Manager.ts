@@ -188,14 +188,13 @@ export default class Manager {
    * Force a recording to stop regardless of the scenario.
    */
   public async forceStop() {
-    const inActivity = Boolean(LogHandler.activity);
-
-    if (inActivity) {
-      console.info('[Manager] Force ending activity');
-      LogHandler.forceEndActivity();
-    } else {
+    if (!LogHandler.activity) {
       console.info('[Manager] No activity to force end');
+      return;
     }
+
+    console.info('[Manager] Force ending activity');
+    LogHandler.forceEndActivity();
   }
 
   /**

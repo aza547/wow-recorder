@@ -67,7 +67,9 @@ export default abstract class LogHandler {
     });
   }
 
-  public static setStateChangeCallback = (cb: () => void) => {
+  public static setStateChangeCallback = (
+    cb: typeof LogHandler.stateChangeCallback,
+  ) => {
     this.stateChangeCallback = cb;
   };
 

@@ -16,7 +16,7 @@ import {
 import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import {
-  fetchAudioSourceChoices,
+  getAudioSourceChoices,
   getKeyByValue,
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
@@ -176,7 +176,7 @@ const AudioSourceControls = (props: IProps) => {
   const initAudioSourceChoices = async () => {
     const promises = config.audioSources.map(async (s) => ({
       id: s.id,
-      choices: await fetchAudioSourceChoices(s),
+      choices: await getAudioSourceChoices(s),
     }));
 
     const choices = await Promise.all(promises);
@@ -474,6 +474,11 @@ const AudioSourceControls = (props: IProps) => {
   };
 
   const renderSourceDeviceSelect = (src: AudioSource) => {
+    if (typeof src.device !== 'string') {
+      // Stupid typeguard. This can't happen.
+      return <></>;
+    }
+
     const choices: ObsListItem[] = [];
 
     if (sourceChoices[src.id]) {
@@ -487,6 +492,11 @@ const AudioSourceControls = (props: IProps) => {
 
     const renderSelectItems = () => {
       if (!audioChoicesLoaded.current) {
+        return <></>;
+      }
+
+      if (typeof src.device !== 'string') {
+        // Stupid typeguard. This can't happen.
         return <></>;
       }
 
@@ -505,7 +515,7 @@ const AudioSourceControls = (props: IProps) => {
       if (!found && src.device) {
         const text =
           src.type !== AudioSourceType.PROCESS
-            ? `⚠ Unknown device: ${src.friendly}`
+            ? `⚠ Unknown device: ${src.friendly}` // TODO: Localise
             : src.device;
 
         items.push(
@@ -662,7 +672,7 @@ const AudioSourceControls = (props: IProps) => {
       volume: 1,
     };
 
-    const choices = await fetchAudioSourceChoices(src);
+    const choices = await getAudioSourceChoices(src);
 
     setConfig((prev) => ({
       ...prev,
