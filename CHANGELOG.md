@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rework the audio sources page to be easier to understand.
 - The `jim_nvenc` and `jim_nvenc_av1` encoders have been replaced by their modern counterparts. Migration is automatic.
 - Pro config is now separated from the base config and won't interrupt recording if it goes wrong (e.g. your guild is deleted).
-- Reduce retail log timeout from 10m to 2m to make abandoned keys end quicker.
 
 ### Added
 - Add the ability to manually record via a hotkey configurable in the settings.
