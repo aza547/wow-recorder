@@ -717,7 +717,7 @@ export default class Recorder extends EventEmitter {
         settings['window'] = src.device;
         settings['priority'] = 2; // Executable matching
         noobs.SetSourceSettings(name, settings);
-      } else {
+      } else if (src.type !== AudioSourceType.PROCESS) {
         const properties = noobs.GetSourceProperties(name);
         const available = properties.find((prop) => prop.name === 'device_id');
         assert(available && available.type === 'list'); // To help the compiler out.
@@ -755,6 +755,9 @@ export default class Recorder extends EventEmitter {
         settings['device_id'] = match.value;
         noobs.SetSourceSettings(name, settings);
         noobs.SetSourceVolume(name, src.volume);
+      } else {
+        // Can happen if a user adds an app source but never selects a window.
+        console.warn('[Recorder] Unable to configure audio source', src);
       }
 
       noobs.AddSourceToScene(name);

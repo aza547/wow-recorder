@@ -583,19 +583,20 @@ export default class CloudClient implements StorageClient {
       validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    // Always run the housekeeper after an upload so that there
-    // will be space for the next upload.
-    await this.runHousekeeping();
-
-    // Update the mtime to avoid multiple refreshes.
-    this.bucketLastMod = Date.now();
-    this.refreshStatus();
-
     console.info(
       '[CloudClient] Added',
       metadata.videoName,
       'to video database.',
     );
+
+    // Update the mtime to avoid multiple refreshes.
+    this.bucketLastMod = Date.now();
+    this.refreshStatus();
+
+    // Always run the housekeeper after an upload so that there
+    // will be space for the next upload. Don't need to wait for
+    // it to finish as the result doesn't impact the client.
+    this.runHousekeeping();
   }
 
   /**

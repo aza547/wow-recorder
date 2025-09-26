@@ -474,7 +474,7 @@ const AudioSourceControls = (props: IProps) => {
   };
 
   const renderSourceDeviceSelect = (src: AudioSource) => {
-    if (typeof src.device !== 'string') {
+    if (typeof src.device === 'number') {
       // Stupid typeguard. This can't happen.
       return <></>;
     }
@@ -495,7 +495,7 @@ const AudioSourceControls = (props: IProps) => {
         return <></>;
       }
 
-      if (typeof src.device !== 'string') {
+      if (typeof src.device === 'number') {
         // Stupid typeguard. This can't happen.
         return <></>;
       }

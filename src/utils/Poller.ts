@@ -78,8 +78,8 @@ export default class Poller extends EventEmitter {
    * Start the poller.
    */
   public start() {
-    console.info('[Poller] Start process poller');
     this.stop();
+    console.info('[Poller] Start process poller');
 
     this.child = spawn(this.binary);
     this.child.stdout.on('data', this.handleStdout);
