@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add the ability to manually record via a hotkey configurable in the settings.
 - Add the ability to drag and scale video sources on the scene, as well as various other options.
-- Split out cloud config from regular config and add an appropriate status card. Cloud settings to be reconfigured while recording.
+- Split out cloud config from regular config and add an appropriate status card. Cloud settings can be reconfigured while recording.
 - Add the ability to force the video sources to SDR.
 - Volume can now be configured on a per-source basis.
 - [Issue 632](https://github.com/aza547/wow-recorder/issues/632) - Add AV1 support for AMD: there has been no testing of this, please share your experience in Discord!
