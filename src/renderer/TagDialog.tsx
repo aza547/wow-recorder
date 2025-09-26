@@ -1,4 +1,4 @@
-import { AppState, RendererVideo } from 'main/types';
+import { RendererVideo } from 'main/types';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { getLocalePhrase } from 'localisation/translations';
 import {
@@ -13,18 +13,18 @@ import {
 } from './components/Dialog/Dialog';
 import { Input } from './components/Input/Input';
 import { Button } from './components/Button/Button';
-import { Phrase } from 'localisation/phrases';
+import { Language, Phrase } from 'localisation/phrases';
 
 interface IProps {
   initialTag: string;
   videos: RendererVideo[];
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>;
   children: React.ReactNode;
-  appState: AppState;
+  language: Language;
 }
 
 export default function TagDialog(props: IProps) {
-  const { videos, setVideoState, children, appState, initialTag } = props;
+  const { videos, setVideoState, children, language, initialTag } = props;
 
   const [tag, setTag] = useState(initialTag);
 
@@ -69,10 +69,10 @@ export default function TagDialog(props: IProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {getLocalePhrase(appState.language, Phrase.AddADescription)}
+            {getLocalePhrase(language, Phrase.AddADescription)}
           </DialogTitle>
           <DialogDescription>
-            {getLocalePhrase(appState.language, Phrase.TagDialogText)}
+            {getLocalePhrase(language, Phrase.TagDialogText)}
           </DialogDescription>
         </DialogHeader>
         <Input
@@ -92,17 +92,17 @@ export default function TagDialog(props: IProps) {
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="ghost">
-              {getLocalePhrase(appState.language, Phrase.CancelTooltip)}
+              {getLocalePhrase(language, Phrase.CancelTooltip)}
             </Button>
           </DialogClose>
           <DialogClose asChild>
             <Button onClick={clearTag} variant="ghost">
-              {getLocalePhrase(appState.language, Phrase.Clear)}
+              {getLocalePhrase(language, Phrase.Clear)}
             </Button>
           </DialogClose>
           <DialogClose asChild>
             <Button onClick={onSave} type="submit">
-              {getLocalePhrase(appState.language, Phrase.Save)}
+              {getLocalePhrase(language, Phrase.Save)}
             </Button>
           </DialogClose>
         </DialogFooter>

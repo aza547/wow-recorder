@@ -84,7 +84,8 @@ export const populateActivityCell = (
   if (isRaidUtil(video) && video.encounterName) {
     activity = video.encounterName;
   } else if (isMythicPlusUtil(video) && video.mapID) {
-    activity = getDungeonName(video);
+    const dungeonName = getDungeonName(video);
+    if (dungeonName) activity = dungeonName;
   } else if (video.zoneName) {
     activity = video.zoneName;
   }
