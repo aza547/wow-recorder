@@ -199,7 +199,7 @@ export const populateDetailsCell = (
             initialTag={tag}
             videos={toTag}
             setVideoState={setVideoState}
-            appState={appState}
+            language={language}
           >
             <Button variant="ghost" size="xs" disabled={noPermission}>
               {icon}
