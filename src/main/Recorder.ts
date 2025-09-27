@@ -734,8 +734,11 @@ export default class Recorder extends EventEmitter {
           if (!match) {
             // Still no match after looking at both ID and friendly name,
             // so give up trying to configure this source.
-            console.warn('[Recorder] Failed to configure audio device', src);
-            noobs.DeleteSource(name);
+            console.warn(
+              '[Recorder] Failed to configure audio device',
+              src,
+              available.items,
+            );
             return;
           }
 
