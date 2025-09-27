@@ -96,10 +96,12 @@ const CloudStatus = ({ appState }: StatusProps) => {
   const renderUploadIcon = () => {
     if (queuedUploads < 1) return <></>;
     return (
-      <div className="flex items-center text-xs text-foreground-lighter gap-x-[2px]">
+      <div className="inline-flex gap-x-[2px] text-xs text-foreground-lighter">
         <CloudUpload size={16} />
         {uploadProgress.toFixed(0)}%
-        {queuedUploads > 1 && ` (+${queuedUploads - 1}) `}
+        <span className="text-[0.60rem] text-foreground mx-[2px]">
+          {queuedUploads > 1 && `+${queuedUploads - 1}`}
+        </span>
       </div>
     );
   };
@@ -107,10 +109,12 @@ const CloudStatus = ({ appState }: StatusProps) => {
   const renderDownloadIcon = () => {
     if (queuedDownloads < 1) return <></>;
     return (
-      <div className="flex items-center text-xs text-foreground-lighter gap-x-[2px]">
+      <div className="inline-flex gap-x-[2px] text-xs text-foreground-lighter">
         <CloudDownload size={16} />
         {downloadProgress.toFixed(0)}%
-        {queuedDownloads > 1 && ` (+${queuedDownloads - 1}) `}
+        <span className="text-[0.60rem] text-foreground mx-[2px]">
+          {queuedDownloads > 1 && `+${queuedDownloads - 1}`}
+        </span>
       </div>
     );
   };
@@ -133,7 +137,7 @@ const CloudStatus = ({ appState }: StatusProps) => {
               {status}
             </span>
           </div>
-          <div className="flex flex-col w-full my-[10px] mr-10 items-center justify-end text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground gap-y-[2px]">
+          <div className="flex flex-col w-full my-[8px] ml-2 mr-10 items-start justify-end text-popover-foreground font-semibold text-sm transition-all hover:text-popover-foreground gap-y-[2px]">
             {renderDownloadIcon()}
             {renderUploadIcon()}
           </div>

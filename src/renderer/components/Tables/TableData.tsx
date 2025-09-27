@@ -63,6 +63,7 @@ const useTable = (
     videoFilterTags,
     dateRangeFilter,
     storageFilter,
+    cloudStatus,
   } = appState;
 
   /**
@@ -97,7 +98,8 @@ const useTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
+        cell: (ctx) =>
+          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
       },
       {
         id: 'Encounter',
@@ -144,7 +146,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, videoState, setVideoState],
+    [language, cloudStatus, videoState, setVideoState],
   );
 
   /**
@@ -159,7 +161,8 @@ const useTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
+        cell: (ctx) =>
+          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
       },
       {
         id: 'Map',
@@ -196,7 +199,7 @@ const useTable = (
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, setVideoState],
+    [language, cloudStatus, setVideoState],
   );
 
   /**
@@ -211,7 +214,8 @@ const useTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
+        cell: (ctx) =>
+          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
       },
       {
         id: 'Map',
@@ -277,7 +281,8 @@ const useTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
+        cell: (ctx) =>
+          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
       },
       {
         id: 'Map',
@@ -329,7 +334,8 @@ const useTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
+        cell: (ctx) =>
+          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
       },
       {
         id: 'Type',
@@ -379,7 +385,8 @@ const useTable = (
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,
-        cell: (ctx) => populateDetailsCell(ctx, appState, setVideoState),
+        cell: (ctx) =>
+          populateDetailsCell(ctx, language, cloudStatus, setVideoState),
       },
       {
         id: 'Type',

@@ -1,5 +1,5 @@
 import { CellContext } from '@tanstack/react-table';
-import { AppState, RendererVideo } from 'main/types';
+import { CloudStatus, RendererVideo } from 'main/types';
 import {
   getVideoResultText,
   getResultColor,
@@ -95,11 +95,11 @@ export const populateActivityCell = (
 
 export const populateDetailsCell = (
   ctx: CellContext<RendererVideo, unknown>,
-  appState: AppState,
+  language: Language,
+  cloudStatus: CloudStatus,
   setVideoState: Dispatch<SetStateAction<RendererVideo[]>>,
 ) => {
   const video = ctx.getValue() as RendererVideo;
-  const { language, cloudStatus } = appState;
   const { write, del } = cloudStatus;
 
   const renderProtectedIcon = () => {

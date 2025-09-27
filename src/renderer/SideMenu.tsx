@@ -166,7 +166,7 @@ const SideMenu = (props: IProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background w-1/6 min-w-60 max-w-80 px-4 items-center pt-4 pb-2">
+    <div className="flex flex-col h-full bg-background w-80 px-4 items-center pt-4 pb-2">
       <ApplicationStatusCard
         recorderStatus={recorderStatus}
         error={error}
