@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [7.0.1] - 2025-09-27
 
 ### Fixed
 - Fix a bug where opening the audio settings page could crash the app.
