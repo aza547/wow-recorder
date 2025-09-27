@@ -40,12 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix HOA timer.
 - Hide the scene preview while select menus are open, so they do not overlap.
 - Automatically handle the changing of an audio device ID, if the device is available with a different ID.
-
+- OBS logs now live in the same folder as the WCR logs so should be more obvious.
+- OBS logs now have correct timestamps, rather than starting at 00:00:00.
+- 
 ## [6.15.6] - 2025-08-28
 ### Fixed
 - [Issue 725](https://github.com/aza547/wow-recorder/issues/725) - Remove the faders. This is to address crashes reported by several users. This function will come back using the libobs volume setting in 7.0.0 but setting source volume is for now unsupported. Stability is priority.
-- OBS logs now live in the same folder as the WCR logs so should be more obvious.
-- OBS logs now have correct timestamps, rather than starting at 00:00:00.
 
 ## [6.15.5] - 2025-08-25
 ### Fixed
