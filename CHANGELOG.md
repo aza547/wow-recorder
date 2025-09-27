@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [7.0.0] - 2025-09-27
+### Changed
 - [Issue 697](https://github.com/aza547/wow-recorder/issues/697) & [PR 702](https://github.com/aza547/wow-recorder/pull/702) - Remove the dependency on OSN, OBS bindings are now provided by [noobs](https://github.com/aza547/noobs).
 - Buffer recordings are now entirely in memory, removing a timing window that could cause videos to be wrongly cut also reducing disk wear and hopefully user confusion.
 - Rework the audio sources page to be easier to understand.
