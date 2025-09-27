@@ -466,6 +466,7 @@ const GERMAN: Translations = {
   [Phrase.AddSpeakerButtonText]: 'Lautsprecher',
   [Phrase.AddMicrophoneButtonText]: 'Mikrofon',
   [Phrase.AddApplicationButtonText]: 'Anwendung',
+  [Phrase.NoAudioSourcesText]: 'Fügen Sie eine Quelle hinzu, um Audio aufzunehmen.',
 };
 
 export default GERMAN;

@@ -246,11 +246,6 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       return <></>;
     }
 
-    const cloudFilter = (quality: QualityPresets) => {
-      if (config.cloudUpload) return quality !== QualityPresets.ULTRA;
-      return true;
-    };
-
     const translateQuality = (p: QualityPresets) => {
       switch (p) {
         case QualityPresets.ULTRA:
@@ -266,7 +261,7 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
       }
     };
 
-    const options = Object.values(QualityPresets).filter(cloudFilter);
+    const options = Object.values(QualityPresets);
 
     return (
       <div className="flex flex-col w-1/4 min-w-40 max-w-60">

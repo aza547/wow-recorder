@@ -700,8 +700,8 @@ const AudioSourceControls = (props: IProps) => {
 
   const renderHelpText = () => {
     return (
-      <div className="flex flex-col text-sm text-foreground-lighter">
-        Add a source to record audio.
+      <div className="flex flex-col text-sm text-foreground-lighter mx-2">
+        {getLocalePhrase(language, Phrase.NoAudioSourcesText)}
       </div>
     );
   };

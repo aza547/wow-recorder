@@ -466,6 +466,7 @@ const KOREAN: Translations = {
   [Phrase.AddSpeakerButtonText]: '스피커',
   [Phrase.AddMicrophoneButtonText]: '마이크',
   [Phrase.AddApplicationButtonText]: '애플리케이션',
+  [Phrase.NoAudioSourcesText]: '오디오를 녹음할 소스를 추가하세요.',
 };
 
 export default KOREAN;
