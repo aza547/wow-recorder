@@ -190,6 +190,10 @@ const createWindow = async () => {
   window.on('ready-to-show', async () => {
     console.log('[Main] Ready to show');
 
+    const status = app.getGPUFeatureStatus();
+    const info = await app.getGPUInfo('complete');
+    console.info('[Main] GPU info', { status, info });
+
     if (!window) {
       throw new Error('window is not defined');
     }
