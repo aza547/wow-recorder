@@ -1758,4 +1758,14 @@ export default class Recorder extends EventEmitter {
 
     return false;
   }
+
+  /**
+   * Get the last recorded file and clear it so it won't be returned again.
+   */
+  public getAndClearLastFile() {
+    console.info('[Recorder] Get and clear last file', this.lastFile);
+    const last = this.lastFile;
+    this.lastFile = null;
+    return last;
+  }
 }

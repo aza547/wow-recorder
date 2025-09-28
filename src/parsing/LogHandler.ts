@@ -271,24 +271,30 @@ export default abstract class LogHandler {
     }
 
     try {
-      await stopPromise; // Now await the stop so we can process the video.
-      videoFile = recorder.lastFile;
+      // Now await the stop so we get the file from the recorder. Clear it
+      // when we do to prevent it being reused.
+      await stopPromise;
+      videoFile = recorder.getAndClearLastFile();
     } catch (error) {
       console.error(
         '[LogHandler] Failed to stop recording, discarding video',
         error,
       );
+
       const report =
         'Failed to stop recording, discarding: ' + lastActivity.getFileName();
       emitErrorReport(report);
+
       return;
     }
 
     if (!videoFile) {
       console.error('[LogHandler] No video file available');
+
       const report =
         'No video file produced, discarding: ' + lastActivity.getFileName();
       emitErrorReport(report);
+
       return;
     }
 

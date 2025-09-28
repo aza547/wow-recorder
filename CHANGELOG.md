@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - Log electron GPU info on startup.
+- Log error messages from OBS signals if available.
 
 ### Fixed
+- Fix a bug where a previous clip could be re-used if OBS hit a recording error.
 
 ## [7.0.1] - 2025-09-27
 
