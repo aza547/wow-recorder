@@ -57,6 +57,7 @@ import { ipcMain } from 'electron';
 import Poller from 'utils/Poller';
 import AsyncQueue from 'utils/AsyncQueue';
 import assert from 'assert';
+import { isHighRes } from 'renderer/rendererutils';
 
 const devMode = process.env.NODE_ENV === 'development';
 
@@ -1715,6 +1716,12 @@ export default class Recorder extends EventEmitter {
    */
   public getSensibleEncoderDefault() {
     const encoders = this.getAvailableEncoders();
+    const highRes = isHighRes(this.resolution);
+
+    if (!highRes) {
+      // Just go for the software encoder if high res.
+      return ESupportedEncoders.OBS_X264;
+    }
 
     if (encoders.includes(ESupportedEncoders.NVENC_H264)) {
       return ESupportedEncoders.NVENC_H264;

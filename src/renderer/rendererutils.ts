@@ -652,7 +652,8 @@ const encoderFilter = (enc: string, highRes: boolean) => {
     return (
       encoder === ESupportedEncoders.OBS_X264 ||
       encoder === ESupportedEncoders.AMD_AV1 ||
-      encoder === ESupportedEncoders.NVENC_AV1
+      encoder === ESupportedEncoders.NVENC_AV1 ||
+      encoder === ESupportedEncoders.QSV_AV1
     );
   }
 

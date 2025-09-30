@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix a bug where a previous clip could be re-used if OBS hit a recording error.
+- Fix a bug where the encoder could auto-default to an invalid selection if recording resolutions higher than 4000.
 
 ## [7.0.1] - 2025-09-27
 
