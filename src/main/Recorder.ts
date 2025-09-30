@@ -1718,7 +1718,7 @@ export default class Recorder extends EventEmitter {
     const encoders = this.getAvailableEncoders();
     const highRes = isHighRes(this.resolution);
 
-    if (!highRes) {
+    if (highRes) {
       // Just go for the software encoder if high res.
       return ESupportedEncoders.OBS_X264;
     }
