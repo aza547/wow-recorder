@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "description": "Warcraft Recorder",
   "main": "./dist/main/main.js",
   "author": {
@@ -15,7 +15,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^2.1.2",
     "atomic-queue": "^5.0.4",
-    "noobs": "0.0.157",
+    "noobs": "0.0.158",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"

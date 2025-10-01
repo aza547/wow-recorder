@@ -247,6 +247,8 @@ const RecorderPreview = (props: {
         ? setOverlayBoxDimensions
         : setGameBoxDimensions;
 
+    const snap = src === SceneItem.OVERLAY ? snapOverlay : snapGame;
+
     fn((prev) => {
       const updated = {
         ...prev,
@@ -256,9 +258,9 @@ const RecorderPreview = (props: {
 
       const snapped = { ...updated };
 
-      if (snapOverlay.x === Snap.LEFT) {
+      if (snap.x === Snap.LEFT) {
         snapped.x = 0;
-      } else if (snapOverlay.x === Snap.RIGHT) {
+      } else if (snap.x === Snap.RIGHT) {
         snapped.x =
           previewInfo.previewWidth -
           snapped.width -
@@ -267,9 +269,9 @@ const RecorderPreview = (props: {
           snapped.cropLeft;
       }
 
-      if (snapOverlay.y === Snap.TOP) {
+      if (snap.y === Snap.TOP) {
         snapped.y = 0;
-      } else if (snapOverlay.y === Snap.BOTTOM) {
+      } else if (snap.y === Snap.BOTTOM) {
         snapped.y =
           previewInfo.previewHeight -
           snapped.height -

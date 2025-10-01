@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Log error messages from OBS signals if available.
 
 ### Fixed
+- [Issue 740](https://github.com/aza547/wow-recorder/issues/740) - Fix an issue where HDR displays would show a black screen on both the preview and recording.
+- [Issue 743](https://github.com/aza547/wow-recorder/issues/743) - Fix a bug where the encoder could auto-default to an invalid selection if recording resolutions higher than 4000.
+- [Issue 744](https://github.com/aza547/wow-recorder/issues/744) - Fix a bug where the game source would not move if the overlay source was snapped.
 - Fix a bug where a previous clip could be re-used if OBS hit a recording error.
-- Fix a bug where the encoder could auto-default to an invalid selection if recording resolutions higher than 4000.
 
 ## [7.0.1] - 2025-09-27
 
