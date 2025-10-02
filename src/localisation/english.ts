@@ -460,7 +460,7 @@ const ENGLISH: Translations = {
   [Phrase.SourceSnappingSwitchText]: 'Snapping',
   [Phrase.SourceSnappingSwitchTooltip]: 'Toggle source snapping.',
   [Phrase.ResetOverlayButtonText]: 'Reset Overlay',
-  [Phrase.ResetGameButtonText]: 'Reset Game',
+  [Phrase.ResetGameButtonText]: 'Auto-Fit Game',
   [Phrase.GameWindowLabel]: 'Game Window',
   [Phrase.OverlayLabel]: 'Chat Window',
   [Phrase.AddSpeakerButtonText]: 'Speaker',
