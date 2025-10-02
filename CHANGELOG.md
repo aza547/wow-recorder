@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 746](https://github.com/aza547/wow-recorder/issues/746) - Rewords the "Reset Game" button to "Auto-Fit Game". 
 
 ## [7.0.2] - 2025-10-01
 ### Added
