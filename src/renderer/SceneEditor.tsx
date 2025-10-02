@@ -38,7 +38,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
   const renderResetGameButton = () => {
     return (
       <Button
-        className="flex w-[60px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
+        className="flex w-[80px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
         variant="ghost"
         size="xs"
         onClick={() => ipc.resetSourcePosition(SceneItem.GAME)}
@@ -51,7 +51,7 @@ const SceneEditor: React.FC<IProps> = (props: IProps) => {
   const renderResetOverlayButton = () => {
     return (
       <Button
-        className="flex w-[60px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
+        className="flex w-[80px] text-xs text-foreground-lighter whitespace-normal break-words text-center"
         variant="ghost"
         size="xs"
         onClick={() => {
