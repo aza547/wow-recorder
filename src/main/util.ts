@@ -435,18 +435,17 @@ const isPushToTalkHotkey = (
     return buttonMatch;
   }
 
-  let modifierMatch = true;
-
   // Deliberately permissive here, we check all the modifiers we have in
   // config are met but we don't enforce the inverse, i.e. we'll accept
   // an additional modifier present (so CTRL + SHIFT + E will trigger
   // a CTRL + E hotkey).
-  pushToTalkModifiers.split(',').forEach((mod) => {
-    if (mod === 'alt') modifierMatch = altKey;
-    if (mod === 'ctrl') modifierMatch = ctrlKey;
-    if (mod === 'shift') modifierMatch = shiftKey;
-    if (mod === 'win') modifierMatch = metaKey;
-  });
+  const modifierMatch = pushToTalkModifiers.split(',').reduce((acc, mod) => {
+    if (mod === 'alt') return acc && altKey;
+    if (mod === 'ctrl') return acc && ctrlKey;
+    if (mod === 'shift') return acc && shiftKey;
+    if (mod === 'win') return acc && metaKey;
+    return acc; // Ignore unknown modifiers
+  }, true);
 
   return buttonMatch && modifierMatch;
 };
@@ -466,18 +465,20 @@ const isManualRecordHotKey = (event: UiohookKeyboardEvent) => {
   );
 
   const buttonMatch = keycode > 0 && keycode === manualRecordHotKey;
-  let modifierMatch = true;
 
   // Deliberately permissive here, we check all the modifiers we have in
   // config are met but we don't enforce the inverse, i.e. we'll accept
   // an additional modifier present (so CTRL + SHIFT + E will trigger
   // a CTRL + E hotkey).
-  manualRecordHotKeyModifiers.split(',').forEach((mod) => {
-    if (mod === 'alt') modifierMatch = altKey;
-    if (mod === 'ctrl') modifierMatch = ctrlKey;
-    if (mod === 'shift') modifierMatch = shiftKey;
-    if (mod === 'win') modifierMatch = metaKey;
-  });
+  const modifierMatch = manualRecordHotKeyModifiers
+    .split(',')
+    .reduce((acc, mod) => {
+      if (mod === 'alt') return acc && altKey;
+      if (mod === 'ctrl') return acc && ctrlKey;
+      if (mod === 'shift') return acc && shiftKey;
+      if (mod === 'win') return acc && metaKey;
+      return acc; // Ignore unknown modifiers
+    }, true);
 
   return buttonMatch && modifierMatch;
 };
