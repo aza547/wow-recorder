@@ -467,6 +467,8 @@ const ENGLISH: Translations = {
   [Phrase.AddMicrophoneButtonText]: 'Microphone',
   [Phrase.AddApplicationButtonText]: 'Application',
   [Phrase.NoAudioSourcesText]: 'Add a source to record audio.',
+  [Phrase.SelectADevice]: 'Select a device...',
+  [Phrase.SelectAnApplication]: 'Select an application...',
 };
 
 export default ENGLISH;

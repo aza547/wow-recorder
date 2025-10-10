@@ -467,6 +467,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.AddMicrophoneButtonText]: '麦克风',
   [Phrase.AddApplicationButtonText]: '应用程序',
   [Phrase.NoAudioSourcesText]: '添加一个源以录制音频。',
+  [Phrase.SelectADevice]: '选择一个设备...',
+  [Phrase.SelectAnApplication]: '选择一个应用程序...',
 };
 
 export default CHINESE_SIMPLIFIED;

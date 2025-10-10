@@ -464,6 +464,8 @@ enum Phrase {
   AddMicrophoneButtonText,
   AddApplicationButtonText,
   NoAudioSourcesText,
+  SelectADevice,
+  SelectAnApplication,
 }
 
 enum Language {

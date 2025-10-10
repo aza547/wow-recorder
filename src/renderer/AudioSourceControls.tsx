@@ -536,7 +536,13 @@ const AudioSourceControls = (props: IProps) => {
           onOpenChange={(open) => setPreviewEnabled(!open)}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a device...." />
+            <SelectValue
+              placeholder={
+                src.type !== AudioSourceType.PROCESS
+                  ? getLocalePhrase(language, Phrase.SelectADevice)
+                  : getLocalePhrase(language, Phrase.SelectAnApplication)
+              }
+            />
           </SelectTrigger>
           <SelectContent>{renderSelectItems()}</SelectContent>
         </Select>
