@@ -399,7 +399,7 @@ ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
 const refreshCloudGuilds = async () => {
   console.info('[Main] Frontend triggered cloud guilds refresh');
   const client = CloudClient.getInstance();
-  await client.fetchAffiliations();
+  await client.fetchAffiliations(true);
   client.refreshStatus();
 };
 

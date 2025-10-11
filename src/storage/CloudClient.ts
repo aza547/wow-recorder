@@ -275,13 +275,15 @@ export default class CloudClient implements StorageClient {
   }
 
   /**
-   * Get this list of guild affiliations for the user.
+   * Get this list of guild affiliations for the user. Optionally
+   * logout the user if we get a 401 response, but not as part of
+   * the configure function to avoid looping forever.
    */
-  public async fetchAffiliations() {
+  public async fetchAffiliations(logoutOn401: boolean) {
     let success = false;
 
     try {
-      this.affiliations = await this.getUserAffiliations();
+      this.affiliations = await this.getUserAffiliations(logoutOn401);
       success = true;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -497,7 +499,7 @@ export default class CloudClient implements StorageClient {
     this.pass = config.cloudAccountPassword;
     this.authHeader = CloudClient.createAuthHeader(this.user, this.pass);
 
-    const success = await this.fetchAffiliations();
+    const success = await this.fetchAffiliations(false);
 
     if (!success) {
       // Probably bad credentials.
@@ -546,7 +548,7 @@ export default class CloudClient implements StorageClient {
       this.limit = await limitPromise;
     } catch (error) {
       // Unlikely to fail here as we've already contacted the server.
-      console.error('[CloudClient] Failed to get user storage info', error);
+      console.error('[CloudClient] Failed to get guild storage info', error);
       this.refreshStatus();
       return;
     }
@@ -880,19 +882,23 @@ export default class CloudClient implements StorageClient {
   }
 
   /**
-   * Static method to get the guilds the user is affiliated with.
+   * Get the guilds the user is affiliated with.
    */
-  public async getUserAffiliations(): Promise<TAffiliation[]> {
+  private async getUserAffiliations(
+    logoutOn401: boolean,
+  ): Promise<TAffiliation[]> {
     console.info('[CloudClient] Get user affiliations');
 
     const headers = { Authorization: this.authHeader };
     const url = `${CloudClient.api}/user/affiliations`;
 
-    // This is static so we can't emit a logout event.
-    const response = await axios.get(url, {
-      headers,
-      validateStatus: (s) => this.validateResponseStatus(s),
-    });
+    const cfg: AxiosRequestConfig = { headers };
+
+    if (logoutOn401) {
+      cfg.validateStatus = (s) => this.validateResponseStatus(s);
+    }
+
+    const response = await axios.get(url, cfg);
 
     const { data } = response;
     const affiliations = z.array(Affiliation).parse(data);
@@ -1243,15 +1249,7 @@ export default class CloudClient implements StorageClient {
    */
   private validateResponseStatus(status: number) {
     if (status === 401) {
-      this.authenticated = false;
-      this.authorized = false;
-      this.usage = 0;
-      this.limit = 0;
-      this.read = false;
-      this.write = false;
-      this.del = false;
-      this.stopPolling();
-      this.refreshStatus();
+      this.configure();
     }
 
     return status >= 200 && status < 300;
