@@ -436,6 +436,13 @@ app.on('window-all-closed', async () => {
  */
 app.on('before-quit', () => {
   console.info('[Main] Running before-quit actions');
+
+  if (tray) {
+    console.info('[Main] Destroy tray icon');
+    tray.destroy();
+    tray = null;
+  }
+
   Poller.getInstance().stop();
   uIOhook.stop();
   Recorder.getInstance().shutdownOBS();
