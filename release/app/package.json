@@ -1,6 +1,6 @@
 {
   "name": "WarcraftRecorder",
-  "version": "7.0.3",
+  "version": "7.0.4",
   "description": "Warcraft Recorder",
   "main": "./dist/main/main.js",
   "author": {
