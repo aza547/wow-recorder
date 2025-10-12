@@ -98,7 +98,7 @@
     "publish": {
       "provider": "github",
       "owner": "aza547",
-      "repo": "wow-recorder-upgr-test"
+      "repo": "wow-recorder"
     }
   },
   "jest": {
