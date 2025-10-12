@@ -15,7 +15,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^2.1.2",
     "atomic-queue": "^5.0.4",
-    "noobs": "D:\\checkouts\\warcraft-recorder-obs-engine\\noobs-0.0.159.tgz",
+    "noobs": "^0.0.176",
     "uiohook-napi": "^1.5.2"
   },
   "license": "MIT"
