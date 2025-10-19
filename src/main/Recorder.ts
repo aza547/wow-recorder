@@ -919,9 +919,6 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    // Sleep for a second, without this sometimes the OBS output can still be active.
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     this.startQueue.empty();
     noobs.StartBuffer();
 
