@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 719](https://github.com/aza547/wow-recorder/issues/719) - Add the ability to bulk upload/download videos.
+
 ### Fixed
 - [Issue 748](https://github.com/aza547/wow-recorder/issues/748) - Fix an issue where the auto-installer would fail to close the application.
 
