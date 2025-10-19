@@ -14,6 +14,8 @@ import {
   LockKeyhole,
   Trash,
   LockOpen,
+  CloudUpload,
+  CloudDownload,
 } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
@@ -44,6 +46,7 @@ import DateRangePicker from './DateRangePicker';
 import StorageFilterToggle from './StorageFilterToggle';
 import VideoCorrelator from './VideoCorrelator';
 import { Phrase } from 'localisation/phrases';
+import BulkTransferDialog from './BulkTransferDialog';
 
 interface IProps {
   category: VideoCategory;
@@ -356,6 +359,57 @@ const CategoryPage = (props: IProps) => {
       );
     };
 
+    const renderBulkTransferButton = (upload: boolean) => {
+      const toTransfer = selectedViewpoints
+        .filter((rv) => rv.cloud === !upload)
+        .filter(
+          (rv) =>
+            selectedViewpoints.filter((v) => v.videoName === rv.videoName)
+              .length < 2, // If we have more 2 viewpoints with the same name then one must be disk and one cloud.
+        );
+
+      const noPermission = upload && !write;
+
+      const disabled =
+        toTransfer.length < 1 || noPermission || !cloudStatus.authorized;
+
+      let tooltip = upload
+        ? getLocalePhrase(language, Phrase.BulkUploadButtonTooltip)
+        : getLocalePhrase(language, Phrase.BulkDownloadButtonTooltip);
+
+      if (noPermission) {
+        tooltip = getLocalePhrase(language, Phrase.GuildNoPermission);
+      }
+
+      const icon = upload ? (
+        <CloudUpload size={18} />
+      ) : (
+        <CloudDownload size={18} />
+      );
+
+      return (
+        <Tooltip content={tooltip}>
+          <div>
+            <BulkTransferDialog
+              key={toTransfer.map((v) => v.videoName).join(',')} // Forces a remount on selection change.
+              inScope={toTransfer}
+              appState={appState}
+              upload={upload}
+            >
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={disabled}
+                className="border border-background"
+              >
+                {icon}
+              </Button>
+            </BulkTransferDialog>
+          </div>
+        </Tooltip>
+      );
+    };
+
     const renderSelectionLabel = () => {
       const { language } = appState;
       let text = getLocalePhrase(language, Phrase.Selection);
@@ -479,6 +533,8 @@ const CategoryPage = (props: IProps) => {
           <div>
             {renderSelectionLabel()}
             <div className="flex gap-x-1 mr-2 py-[1px]">
+              {config.cloudUpload && renderBulkTransferButton(true)}
+              {config.cloudStorage && renderBulkTransferButton(false)}
               {renderProtectButton()}
               {renderDeleteButton()}
             </div>

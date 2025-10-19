@@ -469,6 +469,13 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.NoAudioSourcesText]: '添加一个源以录制音频。',
   [Phrase.SelectADevice]: '选择一个设备...',
   [Phrase.SelectAnApplication]: '选择一个应用程序...',
+  [Phrase.BulkUploadButtonTooltip]: '将所有选中的剪辑从本地磁盘上传到云端。',
+  [Phrase.BulkDownloadButtonTooltip]: '将所有选中的剪辑从云端下载到本地磁盘。',
+  [Phrase.BulkUploadDialogText]: '这将把所有选中的剪辑加入上传队列到云端。这可能需要很长时间才能完成。可以通过应用程序左上角的状态卡监控进度。',
+  [Phrase.BulkDownloadDialogText]: '这将把所有选中的剪辑从云端加入下载队列。可以通过应用程序左上角的状态卡监控进度。',
+  [Phrase.BulkTransferWarningText]: '这可能需要很长时间才能完成。如果您使用按流量计费的连接，可能会产生数据费用。关闭计算机将中断此过程。',
+  [Phrase.UploadButtonText]: '队列上传',
+  [Phrase.DownloadButtonText]: '队列下载',
 };
 
 export default CHINESE_SIMPLIFIED;

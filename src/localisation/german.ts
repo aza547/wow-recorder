@@ -469,6 +469,13 @@ const GERMAN: Translations = {
   [Phrase.NoAudioSourcesText]: 'Fügen Sie eine Quelle hinzu, um Audio aufzunehmen.',
   [Phrase.SelectADevice]: 'Wählen Sie ein Gerät aus...',
   [Phrase.SelectAnApplication]: 'Wählen Sie eine Anwendung aus...',
+  [Phrase.BulkUploadButtonTooltip]: 'Laden Sie alle ausgewählten Clips von Ihrer lokalen Festplatte in die Cloud hoch.',
+  [Phrase.BulkDownloadButtonTooltip]: 'Laden Sie alle ausgewählten Clips aus der Cloud auf Ihre lokale Festplatte herunter.',
+  [Phrase.BulkUploadDialogText]: 'Dies wird die Warteschlange für den Upload aller ausgewählten Clips in die Cloud erstellen. Dies kann eine Weile dauern. Der Fortschritt kann über die Statuskarte in der oberen linken Ecke der Anwendung überwacht werden.',
+  [Phrase.BulkDownloadDialogText]: 'Dies wird die Warteschlange für den Download aller ausgewählten Clips aus der Cloud erstellen. Der Fortschritt kann über die Statuskarte in der oberen linken Ecke der Anwendung überwacht werden.',
+  [Phrase.BulkTransferWarningText]: 'Dies kann eine Weile dauern. Es können Datengebühren anfallen, wenn Sie sich in einem gemessenen Netzwerk befinden. Das Ausschalten Ihres Computers unterbricht den Vorgang.',
+  [Phrase.UploadButtonText]: 'Uploads in die Warteschlange stellen',
+  [Phrase.DownloadButtonText]: 'Downloads in die Warteschlange stellen',
 };
 
 export default GERMAN;

@@ -466,6 +466,13 @@ enum Phrase {
   NoAudioSourcesText,
   SelectADevice,
   SelectAnApplication,
+  BulkUploadButtonTooltip,
+  BulkDownloadButtonTooltip,
+  BulkUploadDialogText,
+  BulkDownloadDialogText,
+  UploadButtonText,
+  DownloadButtonText,
+  BulkTransferWarningText,
 }
 
 enum Language {

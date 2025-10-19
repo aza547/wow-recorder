@@ -469,6 +469,13 @@ const ENGLISH: Translations = {
   [Phrase.NoAudioSourcesText]: 'Add a source to record audio.',
   [Phrase.SelectADevice]: 'Select a device...',
   [Phrase.SelectAnApplication]: 'Select an application...',
+  [Phrase.BulkUploadButtonTooltip]: 'Upload all selected clips from your local disk to the cloud.',
+  [Phrase.BulkDownloadButtonTooltip]: 'Download all selected clips from the cloud to your local disk.',
+  [Phrase.BulkUploadDialogText]: 'This will queue the upload of all selected clips to the cloud. This may take a long time to complete. The progress can be monitored via the status card in the top-left of the application.',
+  [Phrase.BulkDownloadDialogText]: 'This will queue the download of all selected clips from the cloud.  The progress can be monitored via the status card in the top-left of the application.',
+  [Phrase.BulkTransferWarningText]: 'This may take a long time to complete. Data charges may apply if you are on a metered connection. Switching off your computer will interrupt the process.',
+  [Phrase.UploadButtonText]: 'Queue Uploads',
+  [Phrase.DownloadButtonText]: 'Queue Downloads',
 };
 
 export default ENGLISH;
