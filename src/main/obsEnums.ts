@@ -1,8 +1,6 @@
 export const enum ERecordingState {
-  Offline = 'offline',
-  Starting = 'starting',
+  None = 'none',
   Recording = 'recording',
-  Stopping = 'stopping',
 }
 
 export const enum EOBSOutputSignal {
@@ -10,6 +8,8 @@ export const enum EOBSOutputSignal {
   Start = 'start',
   Stopping = 'stopping',
   Stop = 'stop',
+  Activate = 'activate',
+  Deactivate = 'deactivate',
 }
 
 export enum ESupportedEncoders {

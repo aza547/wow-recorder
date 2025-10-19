@@ -149,7 +149,7 @@ export default class Recorder extends EventEmitter {
    * The state of the recorder, typically used to tell if OBS is recording
    * or not.
    */
-  public obsState: ERecordingState = ERecordingState.Offline;
+  public obsState: ERecordingState = ERecordingState.None;
 
   /**
    * The state of the recorder in regards to input devices, i.e. what are we
@@ -503,7 +503,7 @@ export default class Recorder extends EventEmitter {
     const { obsFPS, obsRecEncoder, obsQuality, obsOutputResolution, obsPath } =
       config;
 
-    if (this.obsState !== ERecordingState.Offline) {
+    if (this.obsState !== ERecordingState.None) {
       console.error('[Recorder] OBS must be offline to reconfigure base');
       throw new Error('[Recorder] OBS must be offline to reconfigure base');
     }
@@ -966,7 +966,7 @@ export default class Recorder extends EventEmitter {
       throw new Error('OBS not initialized');
     }
 
-    if (this.obsState === ERecordingState.Offline) {
+    if (this.obsState === ERecordingState.None) {
       console.info('[Recorder] Already stopped');
       return;
     }
@@ -1012,7 +1012,7 @@ export default class Recorder extends EventEmitter {
       throw new Error('OBS not initialized');
     }
 
-    if (this.obsState === ERecordingState.Offline) {
+    if (this.obsState === ERecordingState.None) {
       console.info('[Recorder] Already stopped');
       return;
     }
@@ -1110,9 +1110,9 @@ export default class Recorder extends EventEmitter {
         console.info('[Recorder] State is now:', this.obsState);
         break;
 
-      case EOBSOutputSignal.Stop:
+      case EOBSOutputSignal.Deactivate:
         this.wroteQueue.push(signal);
-        this.obsState = ERecordingState.Offline;
+        this.obsState = ERecordingState.None;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
         break;

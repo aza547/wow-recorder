@@ -265,11 +265,7 @@ export default class Manager {
       this.refreshRecStatus(RecStatus.Recording);
     } else if (this.recorder.obsState === ERecordingState.Recording) {
       this.refreshRecStatus(RecStatus.ReadyToRecord);
-    } else if (
-      this.recorder.obsState === ERecordingState.Offline ||
-      this.recorder.obsState === ERecordingState.Starting ||
-      this.recorder.obsState === ERecordingState.Stopping
-    ) {
+    } else if (this.recorder.obsState === ERecordingState.None) {
       this.refreshRecStatus(RecStatus.WaitingForWoW);
     }
 
