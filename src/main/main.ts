@@ -8,6 +8,7 @@ import {
   Tray,
   Menu,
   clipboard,
+  protocol,
 } from 'electron';
 import os from 'os';
 import { uIOhook } from 'uiohook-napi';
@@ -32,6 +33,7 @@ import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
 import { ESupportedEncoders } from './obsEnums';
+import fs from 'fs';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -64,6 +66,20 @@ if (!cfg.get<boolean>('hardwareAcceleration')) {
   console.info('[Main] Disabling hardware acceleration');
   app.disableHardwareAcceleration();
 }
+
+// Register the vod:// protocol as privileged. Required to securely play
+// videos from disk.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'vod',
+    privileges: {
+      bypassCSP: true,
+      standard: true,
+      stream: true,
+      supportFetchAPI: true,
+    },
+  },
+]);
 
 /**
  * Default the video player settings on app start.
@@ -155,8 +171,6 @@ const createWindow = async () => {
     frame: false,
     title: `Warcraft Recorder v${appVersion}`,
     webPreferences: {
-      nodeIntegration: true,
-      webSecurity: false,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
@@ -472,6 +486,53 @@ app
     });
 
     new MenuBuilder().buildMenu();
+
+    // Required by the video player to safely play files from disk.
+    protocol.handle('vod', async (request) => {
+      try {
+        // Extract Base64-encoded filename
+        const encodedFilename = decodeURIComponent(
+          request.url.replace('vod://wcr/', ''),
+        );
+        const filename = encodedFilename.split('#')[0];
+
+        // Allow only mp4 files
+        if (!filename.endsWith('.mp4')) {
+          return new Response('Only video files are allowed', { status: 400 });
+        }
+
+        const stats = fs.statSync(filename);
+        const totalSize = stats.size;
+
+        // Parse Range header
+        const range = request.headers.get('Range') || 'bytes=0-';
+        const [startStr, endStr] = range.replace('bytes=', '').split('-');
+        const start = parseInt(startStr, 10);
+        const end = endStr ? parseInt(endStr, 10) : totalSize - 1;
+        const chunkSize = end - start + 1;
+
+        // Read the exact chunk
+        const buffer = new Uint8Array(chunkSize);
+        const fd = fs.openSync(filename, 'r');
+        fs.readSync(fd, buffer, 0, chunkSize, start);
+        fs.closeSync(fd);
+
+        return new Response(buffer, {
+          status: 206,
+          statusText: 'Partial Content',
+          headers: {
+            'Content-Type': 'video/mp4',
+            'Content-Length': chunkSize.toString(),
+            'Accept-Ranges': 'bytes',
+            'Content-Range': `bytes ${start}-${end}/${totalSize}`,
+          },
+        });
+      } catch (err) {
+        console.error(err);
+        return new Response('Error serving file', { status: 500 });
+      }
+    });
+
     createWindow();
   })
   .catch(console.error);
