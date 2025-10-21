@@ -20,6 +20,7 @@ import {
   setupApplicationLogging,
   getAvailableDisplays,
   getAssetPath,
+  handleSafeVodRequest,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -33,7 +34,6 @@ import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
 import { ESupportedEncoders } from './obsEnums';
-import { createReadStream, promises as fspromise, Stats } from 'fs';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -171,6 +171,7 @@ const createWindow = async () => {
     frame: false,
     title: `Warcraft Recorder v${appVersion}`,
     webPreferences: {
+      sandbox: true,
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
@@ -488,93 +489,7 @@ app
     new MenuBuilder().buildMenu();
 
     // Required by the video player to safely play files from disk.
-    protocol.handle('vod', async (request) => {
-      try {
-        const sliced = request.url.toString().slice('vod://wcr/'.length);
-        const requestUrl = decodeURIComponent(sliced);
-
-        if (!requestUrl) {
-          console.error('[Main] Bad URL:', requestUrl);
-
-          return new Response('', {
-            status: 400,
-            statusText: 'Bad URL',
-          });
-        }
-
-        const filePath = Buffer.from(requestUrl)
-          .toString('utf-8')
-          .split('#')[0]; // Remove any timestamps, the frontend handles those.
-
-        if (!filePath.endsWith('.mp4')) {
-          console.error('[Main] Not an MP4 file:', filePath);
-
-          return new Response('', {
-            status: 400,
-            statusText: 'Must be MP4',
-          });
-        }
-
-        let stats: Stats;
-
-        try {
-          // This will throw if the file doesn't exist.
-          stats = await fspromise.stat(filePath);
-        } catch (err) {
-          console.error('[Main] Error stating file:', err, filePath);
-
-          return new Response('', {
-            status: 404,
-            statusText: 'File Not Found',
-          });
-        }
-
-        const fileSize = stats.size;
-        const rangeHeader = request.headers.get('Range');
-
-        if (rangeHeader) {
-          const rangeParts = rangeHeader.replace(/bytes=/, '').split('-');
-          const start = parseInt(rangeParts[0], 10);
-          const end = rangeParts[1]
-            ? parseInt(rangeParts[1], 10)
-            : fileSize - 1;
-
-          const chunkSize = end - start + 1;
-          const stream = createReadStream(filePath, { start, end });
-
-          return new Response(stream as unknown as BodyInit, {
-            status: 206,
-            statusText: 'Partial Content',
-            headers: {
-              'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-              'Accept-Ranges': 'bytes',
-              'Content-Length': chunkSize.toString(),
-              'Content-Type': 'video/mp4',
-              'Cache-Control': 'no-cache',
-            },
-          });
-        } else {
-          const stream = createReadStream(filePath);
-
-          return new Response(stream as unknown as BodyInit, {
-            status: 200,
-            headers: {
-              'Content-Length': fileSize.toString(),
-              'Accept-Ranges': 'bytes',
-              'Content-Type': 'video/mp4',
-              'Cache-Control': 'no-cache',
-            },
-          });
-        }
-      } catch (error) {
-        console.error('[Main] Protocol handler error:', error);
-
-        return new Response('Internal Server Error', {
-          status: 500,
-          statusText: 'Internal Server Error',
-        });
-      }
-    });
+    protocol.handle('vod', handleSafeVodRequest);
 
     createWindow();
   })
