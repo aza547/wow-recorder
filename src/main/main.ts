@@ -171,7 +171,7 @@ const createWindow = async () => {
     frame: false,
     title: `Warcraft Recorder v${appVersion}`,
     webPreferences: {
-      sandbox: true,
+      sandbox: true, // Good security practice.
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
