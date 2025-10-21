@@ -506,6 +506,15 @@ app
           .toString('utf-8')
           .split('#')[0]; // Remove any timestamps, the frontend handles those.
 
+        if (!filePath.endsWith('.mp4')) {
+          console.error('[Main] Not an MP4 file:', filePath);
+
+          return new Response('', {
+            status: 400,
+            statusText: 'Must be MP4',
+          });
+        }
+
         let stats: Stats;
 
         try {
