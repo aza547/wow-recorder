@@ -33,7 +33,7 @@ import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
 import { ESupportedEncoders } from './obsEnums';
-import fs from 'fs';
+import { createReadStream, promises as fspromise, Stats } from 'fs';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -490,46 +490,80 @@ app
     // Required by the video player to safely play files from disk.
     protocol.handle('vod', async (request) => {
       try {
-        // Extract Base64-encoded filename
-        const encodedFilename = decodeURIComponent(
-          request.url.replace('vod://wcr/', ''),
-        );
-        const filename = encodedFilename.split('#')[0];
+        const sliced = request.url.toString().slice('vod://wcr/'.length);
+        const requestUrl = decodeURIComponent(sliced);
 
-        // Allow only mp4 files
-        if (!filename.endsWith('.mp4')) {
-          return new Response('Only video files are allowed', { status: 400 });
+        if (!requestUrl) {
+          console.error('[Main] Bad URL:', requestUrl);
+
+          return new Response('', {
+            status: 400,
+            statusText: 'Bad URL',
+          });
         }
 
-        const stats = fs.statSync(filename);
-        const totalSize = stats.size;
+        const filePath = Buffer.from(requestUrl)
+          .toString('utf-8')
+          .split('#')[0]; // Remove any timestamps, the frontend handles those.
 
-        // Parse Range header
-        const range = request.headers.get('Range') || 'bytes=0-';
-        const [startStr, endStr] = range.replace('bytes=', '').split('-');
-        const start = parseInt(startStr, 10);
-        const end = endStr ? parseInt(endStr, 10) : totalSize - 1;
-        const chunkSize = end - start + 1;
+        let stats: Stats;
 
-        // Read the exact chunk
-        const buffer = new Uint8Array(chunkSize);
-        const fd = fs.openSync(filename, 'r');
-        fs.readSync(fd, buffer, 0, chunkSize, start);
-        fs.closeSync(fd);
+        try {
+          // This will throw if the file doesn't exist.
+          stats = await fspromise.stat(filePath);
+        } catch (err) {
+          console.error('[Main] Error stating file:', err, filePath);
 
-        return new Response(buffer, {
-          status: 206,
-          statusText: 'Partial Content',
-          headers: {
-            'Content-Type': 'video/mp4',
-            'Content-Length': chunkSize.toString(),
-            'Accept-Ranges': 'bytes',
-            'Content-Range': `bytes ${start}-${end}/${totalSize}`,
-          },
+          return new Response('', {
+            status: 404,
+            statusText: 'File Not Found',
+          });
+        }
+
+        const fileSize = stats.size;
+        const rangeHeader = request.headers.get('Range');
+
+        if (rangeHeader) {
+          const rangeParts = rangeHeader.replace(/bytes=/, '').split('-');
+          const start = parseInt(rangeParts[0], 10);
+          const end = rangeParts[1]
+            ? parseInt(rangeParts[1], 10)
+            : fileSize - 1;
+
+          const chunkSize = end - start + 1;
+          const stream = createReadStream(filePath, { start, end });
+
+          return new Response(stream as unknown as BodyInit, {
+            status: 206,
+            statusText: 'Partial Content',
+            headers: {
+              'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+              'Accept-Ranges': 'bytes',
+              'Content-Length': chunkSize.toString(),
+              'Content-Type': 'video/mp4',
+              'Cache-Control': 'no-cache',
+            },
+          });
+        } else {
+          const stream = createReadStream(filePath);
+
+          return new Response(stream as unknown as BodyInit, {
+            status: 200,
+            headers: {
+              'Content-Length': fileSize.toString(),
+              'Accept-Ranges': 'bytes',
+              'Content-Type': 'video/mp4',
+              'Cache-Control': 'no-cache',
+            },
+          });
+        }
+      } catch (error) {
+        console.error('[Main] Protocol handler error:', error);
+
+        return new Response('Internal Server Error', {
+          status: 500,
+          statusText: 'Internal Server Error',
         });
-      } catch (err) {
-        console.error(err);
-        return new Response('Error serving file', { status: 500 });
       }
     });
 

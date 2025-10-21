@@ -685,8 +685,6 @@ export const VideoPlayer = (props: IProps) => {
       ? src.current
       : `vod://wcr/${src.current}`;
 
-    console.log('safe', safe);
-
     return (
       <ReactPlayer
         id="react-player"
