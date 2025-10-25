@@ -503,8 +503,7 @@ const send = (channel: string, ...args: unknown[]) => {
 const playSoundAlert = (alert: SoundAlerts) => {
   if (!window || window.isDestroyed()) return; // Can happen on shutdown.
   console.info('[Main] Playing sound alert', alert);
-  const path = getAssetPath(`sounds/${alert}.mp3`);
-  send('playAudio', path);
+  send('playAudio', alert);
 };
 
 const getNativeWindowHandle = () => {

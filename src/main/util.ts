@@ -24,6 +24,7 @@ import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
 import { AxiosError } from 'axios';
 import { send } from './main';
+import { Readable } from 'stream';
 
 /**
  * When packaged, we need to fix some paths
@@ -935,8 +936,9 @@ const handleSafeVodRequest = async (request: Request) => {
 
       const chunkSize = end - start + 1;
       const stream = createReadStream(filePath, { start, end });
+      const body = Readable.toWeb(stream);
 
-      return new Response(stream as unknown as BodyInit, {
+      return new Response(body as ReadableStream<Uint8Array>, {
         status: 206,
         statusText: 'Partial Content',
         headers: {
@@ -949,8 +951,9 @@ const handleSafeVodRequest = async (request: Request) => {
       });
     } else {
       const stream = createReadStream(filePath);
+      const body = Readable.toWeb(stream);
 
-      return new Response(stream as unknown as BodyInit, {
+      return new Response(body as ReadableStream<Uint8Array>, {
         status: 200,
         headers: {
           'Content-Length': fileSize.toString(),
