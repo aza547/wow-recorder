@@ -33,6 +33,7 @@ import { RefreshCcw } from 'lucide-react';
 import { VideoCategory } from 'types/VideoCategory';
 import { Phrase } from 'localisation/phrases';
 import _ from 'lodash';
+import { playAudio } from './sounds';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -273,11 +274,6 @@ const WarcraftRecorder = () => {
 
     // Don't show this prompt again.
     updateNotified.current = true;
-  };
-
-  const playAudio = (file: unknown) => {
-    console.log('Play audio', file);
-    new Audio(file as string).play();
   };
 
   const setCloudVideos = (videos: unknown) => {

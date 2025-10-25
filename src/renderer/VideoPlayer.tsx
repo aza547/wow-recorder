@@ -614,7 +614,7 @@ export const VideoPlayer = (props: IProps) => {
    * retry happen automatically?
    */
   const onError = (e: unknown) => {
-    console.log(e);
+    console.error('Video Player Error', e);
   };
 
   /**
@@ -681,6 +681,10 @@ export const VideoPlayer = (props: IProps) => {
       throw new Error('No player reference');
     }
 
+    const safe = src.current.startsWith('https://')
+      ? src.current
+      : `vod://wcr/${src.current}`;
+
     return (
       <ReactPlayer
         id="react-player"
@@ -688,7 +692,7 @@ export const VideoPlayer = (props: IProps) => {
         height="100%"
         width="100%"
         key={src.current}
-        url={src.current}
+        url={safe}
         style={style}
         playing={playing}
         volume={volume}

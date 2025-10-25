@@ -8,6 +8,7 @@ import {
   Tray,
   Menu,
   clipboard,
+  protocol,
 } from 'electron';
 import os from 'os';
 import { uIOhook } from 'uiohook-napi';
@@ -19,6 +20,7 @@ import {
   setupApplicationLogging,
   getAvailableDisplays,
   getAssetPath,
+  handleSafeVodRequest,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -64,6 +66,20 @@ if (!cfg.get<boolean>('hardwareAcceleration')) {
   console.info('[Main] Disabling hardware acceleration');
   app.disableHardwareAcceleration();
 }
+
+// Register the vod:// protocol as privileged. Required to securely play
+// videos from disk.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'vod',
+    privileges: {
+      bypassCSP: true,
+      standard: true,
+      stream: true,
+      supportFetchAPI: true,
+    },
+  },
+]);
 
 /**
  * Default the video player settings on app start.
@@ -155,8 +171,7 @@ const createWindow = async () => {
     frame: false,
     title: `Warcraft Recorder v${appVersion}`,
     webPreferences: {
-      nodeIntegration: true,
-      webSecurity: false,
+      sandbox: true, // Good security practice.
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
@@ -472,6 +487,10 @@ app
     });
 
     new MenuBuilder().buildMenu();
+
+    // Required by the video player to safely play files from disk.
+    protocol.handle('vod', handleSafeVodRequest);
+
     createWindow();
   })
   .catch(console.error);
@@ -484,8 +503,7 @@ const send = (channel: string, ...args: unknown[]) => {
 const playSoundAlert = (alert: SoundAlerts) => {
   if (!window || window.isDestroyed()) return; // Can happen on shutdown.
   console.info('[Main] Playing sound alert', alert);
-  const path = getAssetPath(`sounds/${alert}.mp3`);
-  send('playAudio', path);
+  send('playAudio', alert);
 };
 
 const getNativeWindowHandle = () => {
