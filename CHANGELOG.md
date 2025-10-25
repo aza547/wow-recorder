@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 748](https://github.com/aza547/wow-recorder/issues/748) - Fix an issue where the auto-installer would fail to close the application.
+- Fix an issue where WCR wouldn't launch for some users with modified PATH environment variables.
 
 ## [7.0.3] - 2025-10-11
 ### Fixed
