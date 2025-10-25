@@ -95,15 +95,26 @@ export default class DiskClient implements StorageClient {
       return [];
     }
 
-    const videoDetailPromises = videos.map((video) =>
-      loadVideoDetailsDisk(video),
-    );
+    // Windows has a 16k file handle limit per process. Load in batches
+    // of 1000 to be safe. The real fix here would be to have a local database
+    // for managing this stuff rather than reading many thousand files here.
+    const batchSize = 1000;
+    const videoDetails: RendererVideo[] = [];
 
-    // Await all the videoDetailsPromises to settle, and then remove any
-    // that were rejected. This can happen if there is a missing metadata file.
-    const videoDetails: RendererVideo[] = (
-      await Promise.all(videoDetailPromises.map((p) => p.catch((e) => e)))
-    ).filter((result) => !(result instanceof Error));
+    for (let i = 0; i < videos.length; i += batchSize) {
+      console.info('[DiskClient] Batch loading videos', i, 'to', i + batchSize);
+      const batch = videos.slice(i, i + batchSize);
+
+      const batchPromises = batch.map((video) =>
+        loadVideoDetailsDisk(video).catch((e) => e),
+      );
+
+      const batchResults = await Promise.all(batchPromises);
+
+      videoDetails.push(
+        ...batchResults.filter((result) => !(result instanceof Error)),
+      );
+    }
 
     // Any details marked for deletion do it now. We allow for this flag to be
     // set in the metadata to give us a robust mechanism for removing a video
