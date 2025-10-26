@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [7.1.0] - 2025-10-26
+### Added
 - [Issue 719](https://github.com/aza547/wow-recorder/issues/719) - Add the ability to bulk upload/download videos.
 
 ### Fixed
 - [Issue 748](https://github.com/aza547/wow-recorder/issues/748) - Fix an issue where the auto-installer would fail to close the application.
 - [Issue 728](https://github.com/aza547/wow-recorder/issues/728) - Fix an issue where WCR could fail to load videos from disk if many thousands of videos are present.
 - Fix an issue where WCR wouldn't launch for some users with modified PATH environment variables.
+- Better adhere to Electron security best practices, videos are now served from disk in a more secure manner via a custom protocol.
 
 ## [7.0.3] - 2025-10-11
 ### Fixed
