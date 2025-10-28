@@ -569,7 +569,10 @@ export default class VideoProcessQueue {
       // Avoid any negative timestamps, which can cause issues with
       // some players, but does extend the video slightly depending on
       // the keyframe alignment.
-      .outputOptions('-avoid_negative_ts make_zero')
+      .outputOption('-avoid_negative_ts make_zero')
+      // Move the moov atom to the start of the file for faster playback start.
+      // This means R2 doesn't need to seek to the end to start playback.
+      .outputOption('-movflags +faststart')
       .output(outputPath);
 
     console.time('[VideoProcessQueue] Video cut took:');

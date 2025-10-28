@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Add the `-movflags +faststart` ffmpeg flags to the final video cut to improve Cloud load speeds.
 
 ## [7.1.0] - 2025-10-26
 ### Added
