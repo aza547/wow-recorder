@@ -1249,15 +1249,23 @@ export default class Recorder extends EventEmitter {
     }
 
     const opts = monitors.items.filter((item) => item.value !== 'DUMMY');
-    const monitorId = opts[monitorIndex];
+    let monitorId = opts[monitorIndex];
 
     if (!monitorId) {
-      console.error(
+      console.warn(
         '[Recorder] Monitor with index was not found for index',
         monitorIndex,
         opts,
+        'will default to first monitor',
       );
-      throw new Error('[Recorder] Monitor index was not found');
+
+      monitorId = opts[0];
+
+      if (!monitorId) {
+        // Somehow still no monitor so all we can do is error.
+        console.error('[Recorder] No valid monitors found', opts);
+        throw new Error('[Recorder] No valid monitors');
+      }
     }
 
     console.info('[Recorder] Selected monitor:', monitorId);
