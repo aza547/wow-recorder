@@ -148,7 +148,7 @@ export default class Manager {
     console.info('[Manager] Reconfiguring base');
 
     // The recording must be stopped to do this.
-    await this.recorder.forceStop();
+    await this.recorder.forceStop(true);
     this.reconfiguring = true;
     this.refreshStatus();
     let success = false;
@@ -330,7 +330,7 @@ export default class Manager {
       console.info('[Manager] Force ending activity');
       LogHandler.forceEndActivity();
     } else {
-      await this.recorder.forceStop();
+      await this.recorder.forceStop(true);
     }
 
     this.recorder.clearFindWindowInterval();
@@ -545,12 +545,12 @@ export default class Manager {
       console.info('[Manager] Detected Windows is going to sleep.');
       LogHandler.dropActivity();
       this.poller.stop();
-      await this.recorder.forceStop();
+      await this.recorder.forceStop(false); // No timeout on this.
     });
 
     powerMonitor.on('resume', async () => {
       console.info('[Manager] Detected Windows waking up from a sleep.');
-      await this.recorder.forceStop();
+      await this.recorder.forceStop(true);
       this.poller.start();
     });
   }

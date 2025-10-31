@@ -141,15 +141,15 @@ export default class Recorder extends EventEmitter {
 
   /**
    * WaitQueue object for storing signalling from OBS. We only care about
-   * wrote signals here which indicate the video file has been written.
+   * deactivate signals here which indicate the OBS output has deactivated.
    */
-  private wroteQueue = new WaitQueue<Signal>();
+  private stopQueue = new WaitQueue<Signal>();
 
   /**
    * The state of the recorder, typically used to tell if OBS is recording
    * or not.
    */
-  public obsState: ERecordingState = ERecordingState.None;
+  public obsState = ERecordingState.None;
 
   /**
    * The state of the recorder in regards to input devices, i.e. what are we
@@ -476,13 +476,13 @@ export default class Recorder extends EventEmitter {
    * to make sure we only attempt one recorder action at once, and to handle if OBS
    * misbehaves.
    */
-  public async forceStop() {
+  public async forceStop(timeout: boolean) {
     console.info('[Recorder] Queued force stop');
     const { resolveHelper, rejectHelper, promise } = deferredPromiseHelper();
 
     const task = async () => {
       try {
-        await this.forceStopOBS();
+        await this.forceStopOBS(timeout);
         resolveHelper(null);
       } catch (error) {
         console.error('[Recorder] Error on force stop', String(error));
@@ -968,10 +968,10 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    this.wroteQueue.empty();
+    this.stopQueue.empty();
     noobs.StopRecording();
 
-    const wrote = this.wroteQueue.shift();
+    const wrote = this.stopQueue.shift();
     let success = false;
 
     try {
@@ -1001,7 +1001,7 @@ export default class Recorder extends EventEmitter {
    * promise to await instead of shifting from the queue ourselves. That's
    * useful in the case we've failed to stop and are now force stopping.
    */
-  private async forceStopOBS() {
+  private async forceStopOBS(timeout: boolean) {
     console.info('[Recorder] Force stop');
 
     if (!this.obsInitialized) {
@@ -1014,14 +1014,25 @@ export default class Recorder extends EventEmitter {
       return;
     }
 
-    this.wroteQueue.empty();
+    this.stopQueue.empty();
     noobs.ForceStopRecording();
 
-    // If we were passed a wrote promise, use that instead of shifting from
-    // the queue as a previously created promise will get the result first.
-    const wrote = this.wroteQueue.shift();
-    const bomb = getPromiseBomb(3, 'Failed to force stop');
-    await Promise.race([wrote, bomb]);
+    const wrote = this.stopQueue.shift();
+
+    if (timeout) {
+      // In the normal case we expect to be done within a short timeout,
+      // so enforce that here.
+      const bomb = getPromiseBomb(3, 'Failed to force stop');
+      await Promise.race([wrote, bomb]);
+    } else {
+      // We allow this to be called without a timeout to enable waiting
+      // indefinitely on Windows sleeping. Often the deactivate signal
+      // is not received until Windows wakes, which could be an arbitrary
+      // amount of time later. This isn't perfect as we could in theory
+      // get stuck here forever, but it's hopefully good enough.
+      await wrote;
+    }
+
     this.lastFile = null;
   }
 
@@ -1108,7 +1119,7 @@ export default class Recorder extends EventEmitter {
         break;
 
       case EOBSOutputSignal.Deactivate:
-        this.wroteQueue.push(signal);
+        this.stopQueue.push(signal);
         this.obsState = ERecordingState.None;
         this.emit('state-change');
         console.info('[Recorder] State is now:', this.obsState);
