@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+
+## [7.1.1] - 2025-10-31
+### Fixed
 - [Issue 760](https://github.com/aza547/wow-recorder/issues/760) - Guard against invalid monitor indexes.
 - Add the `-movflags +faststart` ffmpeg flags to the final video cut to improve Cloud load speeds.
 - Fix some Korean translations that were accidentally in Chinese.
