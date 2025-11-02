@@ -94,7 +94,7 @@ const useTable = (
     () => [
       {
         id: 'Details',
-        size: 80,
+        size: 40,
         accessorFn: (v) => v,
         sortingFn: (a, b) => detailSort(a, b),
         header: DetailsHeader,

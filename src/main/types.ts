@@ -337,6 +337,7 @@ type AppState = {
   downloadProgress: number;
   queuedUploads: number;
   queuedDownloads: number;
+  chatOpen: boolean;
 };
 
 type TPreviewPosition = {

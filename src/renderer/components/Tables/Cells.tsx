@@ -213,7 +213,7 @@ export const populateDetailsCell = (
   return (
     <Box className="inline-flex">
       {renderProtectedIcon()}
-      {renderTagIcon()}
+      {/* {renderTagIcon()} */}
     </Box>
   );
 };

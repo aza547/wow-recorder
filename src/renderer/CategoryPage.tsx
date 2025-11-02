@@ -16,6 +16,9 @@ import {
   LockOpen,
   CloudUpload,
   CloudDownload,
+  ArrowLeftFromLine,
+  ArrowRightToLine,
+  SendHorizontal,
 } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
@@ -47,6 +50,7 @@ import StorageFilterToggle from './StorageFilterToggle';
 import VideoCorrelator from './VideoCorrelator';
 import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
+import { Input } from './components/Input/Input';
 
 interface IProps {
   category: VideoCategory;
@@ -80,6 +84,7 @@ const CategoryPage = (props: IProps) => {
     viewpointSelectionOpen,
     cloudStatus,
     storageFilter,
+    chatOpen,
   } = appState;
 
   const { write, del } = cloudStatus;
@@ -152,6 +157,60 @@ const CategoryPage = (props: IProps) => {
     playerHeight.current = height;
   };
 
+  const renderChatOpen = () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    const selectedRow = selectedRows[0];
+
+    return (
+      <div className="w-[750px] h-full bg-background flex flex-col">
+        <div className="flex items-start">
+          <Button
+            onClick={() =>
+              setAppState((prev) => ({ ...prev, chatOpen: false }))
+            }
+            variant="ghost"
+            className="mx-2"
+            size="xs"
+          >
+            <ArrowRightToLine />
+          </Button>
+        </div>
+        <ViewpointSelection
+          video={selectedRow ? selectedRow.original : filteredState[0]}
+          appState={appState}
+          setAppState={setAppState}
+          persistentProgress={persistentProgress}
+        />
+        <div className="flex flex-1 flex-col m-2">
+          <div className="flex-1 overflow-auto bg-background border-card border mb-2 p-2 rounded-sm">
+            Chat display here
+          </div>
+          <div className="h-10 bg-background border-card flex items-center gap-x-2">
+            <Input className="flex-grow" placeholder="Chat input goes here." />
+            <Button variant="ghost" size="sm">
+              <SendHorizontal size={16} />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderChatHidden = () => {
+    return (
+      <div className="w-20 h-full">
+        <Button
+          onClick={() => setAppState((prev) => ({ ...prev, chatOpen: true }))}
+          variant="ghost"
+          className="mx-2"
+          size="xs"
+        >
+          <ArrowLeftFromLine />
+        </Button>
+      </div>
+    );
+  };
+
   /**
    * Render the video player. Safe to assume we have videos at this point
    * as we don't call this if haveVideos isn't true.
@@ -191,15 +250,20 @@ const CategoryPage = (props: IProps) => {
           bottom: <GripHorizontal />,
         }}
       >
-        <VideoPlayer
-          key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
-          videos={videosToPlay}
-          categoryState={categoryState}
-          persistentProgress={persistentProgress}
-          config={config}
-          appState={appState}
-          setAppState={setAppState}
-        />
+        <div className="flex h-full w-full">
+          <VideoPlayer
+            key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
+            videos={videosToPlay}
+            categoryState={categoryState}
+            persistentProgress={persistentProgress}
+            config={config}
+            appState={appState}
+            setAppState={setAppState}
+          />
+
+          {chatOpen && renderChatOpen()}
+          {!chatOpen && renderChatHidden()}
+        </div>
       </Resizable>
     );
   };
@@ -540,7 +604,7 @@ const CategoryPage = (props: IProps) => {
             </div>
           </div>
         </div>
-        <div className="relative">{renderViewpointSelectionPopover()}</div>
+        {/* <div className="relative">{renderViewpointSelectionPopover()}</div> */}
         <div className="w-full h-full overflow-hidden">
           <VideoSelectionTable
             table={table}

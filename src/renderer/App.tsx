@@ -107,6 +107,9 @@ const WarcraftRecorder = () => {
     downloadProgress: 0,
     queuedUploads: 0,
     queuedDownloads: 0,
+
+    // The chat panel state.
+    chatOpen: false,
   });
 
   useEffect(() => {
