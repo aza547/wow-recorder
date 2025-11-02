@@ -364,7 +364,11 @@ const validateBaseConfig = async (config: BaseConfig) => {
   }
 
   if (recordClassic) {
-    const validFlavours = ['wow_classic', 'wow_classic_beta'];
+    const validFlavours = [
+      'wow_classic',
+      'wow_classic_beta',
+      'wow_classic_ptr',
+    ];
     const validPath =
       validFlavours.includes(getWowFlavour(classicLogPath)) &&
       path.basename(classicLogPath) === 'Logs';

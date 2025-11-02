@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Accept MOP classic PTR flavours in the MOP classic field. As usual, PTR support is best effort.
 
 ## [7.1.1] - 2025-10-31
 ### Fixed
