@@ -11,3 +11,14 @@ export const Affiliation = z.object({
 });
 
 export type TAffiliation = z.infer<typeof Affiliation>;
+
+export const ChatMessage = z.object({
+  id: z.number(),
+  guildName: z.string(),
+  userName: z.string(),
+  start: z.number(),
+  uniqueHash: z.string(),
+  message: z.string(),
+});
+
+export type TChatMessage = z.infer<typeof ChatMessage>;

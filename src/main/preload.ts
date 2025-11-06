@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
-import { AudioSourceType, SceneItem } from './types';
+import { AudioSourceType, RendererVideo, SceneItem } from './types';
+import { TChatMessage } from 'types/api';
 
 export type Channels =
   | 'window'
@@ -200,6 +201,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     refreshCloudGuilds() {
       ipcRenderer.send('refreshCloudGuilds');
+    },
+
+    getChatMessages(video: RendererVideo): Promise<TChatMessage[]> {
+      return ipcRenderer.invoke('getChatMessages', video);
     },
   },
 });

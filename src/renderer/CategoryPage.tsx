@@ -18,7 +18,6 @@ import {
   CloudDownload,
   ArrowLeftFromLine,
   ArrowRightToLine,
-  SendHorizontal,
 } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
@@ -40,8 +39,6 @@ import { Resizable, ResizeCallback } from 're-resizable';
 import { Direction } from 're-resizable/lib/resizer';
 import VideoPlayer from './VideoPlayer';
 import Label from './components/Label/Label';
-import { Popover, PopoverContent } from './components/Popover/Popover';
-import { PopoverTrigger } from '@radix-ui/react-popover';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
 import useTable from './components/Tables/TableData';
 import { Tooltip } from './components/Tooltip/Tooltip';
@@ -50,7 +47,7 @@ import StorageFilterToggle from './StorageFilterToggle';
 import VideoCorrelator from './VideoCorrelator';
 import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
-import { Input } from './components/Input/Input';
+import VideoChat from './VideoChat';
 
 interface IProps {
   category: VideoCategory;
@@ -182,15 +179,7 @@ const CategoryPage = (props: IProps) => {
           persistentProgress={persistentProgress}
         />
         <div className="flex flex-1 flex-col m-2">
-          <div className="flex-1 overflow-auto bg-background border-card border mb-2 p-2 rounded-sm">
-            Chat display here
-          </div>
-          <div className="h-10 bg-background border-card flex items-center gap-x-2">
-            <Input className="flex-grow" placeholder="Chat input goes here." />
-            <Button variant="ghost" size="sm">
-              <SendHorizontal size={16} />
-            </Button>
-          </div>
+          <VideoChat />
         </div>
       </div>
     );
@@ -489,65 +478,6 @@ const CategoryPage = (props: IProps) => {
       }
 
       return <Label>{text}</Label>;
-    };
-
-    const renderViewpointSelectionPopover = () => {
-      return (
-        <Popover
-          open={viewpointSelectionOpen}
-          onOpenChange={() => {
-            setAppState((a) => {
-              return {
-                ...a,
-                viewpointSelectionOpen: !a.viewpointSelectionOpen,
-              };
-            });
-          }}
-        >
-          <PopoverTrigger asChild className="absolute top-[90px] left-0">
-            <Button
-              variant={viewpointSelectionOpen ? 'default' : 'secondary'}
-              size="xs"
-              className="z-10 h-20 rounded-l-none flex justify-start p-[3px]"
-            >
-              <Eye size={15} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            onEscapeKeyDown={(e) => {
-              // Close the popover when escape is pressed.
-              setAppState((a) => {
-                return {
-                  ...a,
-                  viewpointSelectionOpen: false,
-                };
-              });
-
-              // Need this for some reason else the popover doesn't close.
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            side="left"
-            className="p-0 absolute top-[-40px] left-[30px] w-auto min-w-max"
-            onInteractOutside={(e) => {
-              e.preventDefault();
-            }}
-            onPointerDownOutside={(e) => {
-              e.preventDefault();
-            }}
-            onFocusOutside={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <ViewpointSelection
-              video={selectedRow ? selectedRow.original : filteredState[0]}
-              appState={appState}
-              setAppState={setAppState}
-              persistentProgress={persistentProgress}
-            />
-          </PopoverContent>
-        </Popover>
-      );
     };
 
     return (

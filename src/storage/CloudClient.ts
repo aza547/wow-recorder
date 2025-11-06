@@ -10,7 +10,7 @@ import {
 } from 'main/types';
 import path from 'path';
 import { z } from 'zod';
-import { Affiliation, TAffiliation } from 'types/api';
+import { Affiliation, ChatMessage, TAffiliation } from 'types/api';
 import WebSocket, { RawData } from 'ws';
 import {
   cloudSignedMetadataToRendererVideo,
@@ -1403,6 +1403,24 @@ export default class CloudClient implements StorageClient {
       return;
     }
 
+    // TODO catch chat messaages.
+
     console.info('[CloudClient] No action on this message');
+  }
+
+  public async getChatMessages(video: RendererVideo) {
+    const guild = encodeURIComponent(this.guild);
+    const hash = "fdf624990a0122e32c0456489cb2be51"; //video.uniqueHash;
+    const start = 1744925382000; // video.start;
+
+    const url = `${CloudClient.api}/guild/${guild}/chat/${hash}/${start}`;
+    const headers = { Authorization: this.authHeader };
+
+    const rsp = await axios.get(url, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    return z.array(ChatMessage).parse(rsp.data);
   }
 }

@@ -1,7 +1,8 @@
 import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
-import { AudioSourceType, SceneItem } from 'main/types';
+import { AudioSourceType, RendererVideo, SceneItem } from 'main/types';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
+import { TChatMessage } from 'types/api';
 
 declare global {
   interface Window {
@@ -72,6 +73,7 @@ declare global {
 
         getSensibleEncoderDefault(): Promise<string>;
         refreshCloudGuilds(): void;
+        getChatMessages(video: RendererVideo): Promise<TChatMessage[]>;
       };
     };
   }
