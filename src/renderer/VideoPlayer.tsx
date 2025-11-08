@@ -8,9 +8,11 @@ import {
   VideoPlayerSettings,
 } from 'main/types';
 import {
+  forwardRef,
   MutableRefObject,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useRef,
   useState,
@@ -98,7 +100,13 @@ const sliderBaseSx = {
   },
 };
 
-export const VideoPlayer = (props: IProps) => {
+export interface VideoPlayerRef {
+  // Exposes external seeking of the video player.
+  // For example from by clicking a timestamp in chat.
+  seekTo: (seconds: number) => void;
+}
+
+export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const {
     videos,
     persistentProgress,
@@ -120,6 +128,14 @@ export const VideoPlayer = (props: IProps) => {
   const players: MutableRefObject<ReactPlayer | null>[] = videos.map(() =>
     useRef(null),
   );
+
+  useImperativeHandle(ref, () => ({
+    seekTo(seconds: number) {
+      // Seek all players
+      players.forEach((player) => player.current?.seekTo(seconds, 'seconds'));
+      persistentProgress.current = seconds;
+    },
+  }));
 
   const numReady = useRef<number>(0);
   const progressSlider = useRef<HTMLSpanElement>(null);
@@ -1350,6 +1366,7 @@ export const VideoPlayer = (props: IProps) => {
       {renderControls()}
     </div>
   );
-};
+});
+VideoPlayer.displayName = 'VideoPlayer'; // ✅ Add this line
 
 export default VideoPlayer;

@@ -36,7 +36,7 @@ import MultiPovPlaybackToggles from './MultiPovPlaybackToggles';
 import VideoFilter from './VideoFilter';
 import { Resizable, ResizeCallback } from 're-resizable';
 import { Direction } from 're-resizable/lib/resizer';
-import VideoPlayer from './VideoPlayer';
+import VideoPlayer, { VideoPlayerRef } from './VideoPlayer';
 import Label from './components/Label/Label';
 import ViewpointSelection from './components/Viewpoints/ViewpointSelection';
 import useTable from './components/Tables/TableData';
@@ -113,6 +113,7 @@ const CategoryPage = (props: IProps) => {
 
   // Handle to reset the video player height.
   const resizableRef = useRef<Resizable>(null);
+  const videoPlayerRef = useRef<VideoPlayerRef>(null);
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -176,16 +177,15 @@ const CategoryPage = (props: IProps) => {
           setAppState={setAppState}
           persistentProgress={persistentProgress}
         />
-        <div className="flex flex-1 flex-col">
-          <VideoChat
-            key={
-              selectedRow
-                ? selectedRow.original.videoName
-                : filteredState[0].videoName
-            }
-            video={selectedRow ? selectedRow.original : filteredState[0]}
-          />
-        </div>
+        <VideoChat
+          key={
+            selectedRow
+              ? selectedRow.original.videoName
+              : filteredState[0].videoName
+          }
+          videoPlayerRef={videoPlayerRef}
+          video={selectedRow ? selectedRow.original : filteredState[0]}
+        />
       </div>
     );
   };
@@ -246,6 +246,7 @@ const CategoryPage = (props: IProps) => {
       >
         <div className="flex h-full w-full">
           <VideoPlayer
+            ref={videoPlayerRef}
             key={videosToPlay.map((rv) => rv.videoName + rv.cloud).join(', ')}
             videos={videosToPlay}
             categoryState={categoryState}
@@ -539,7 +540,6 @@ const CategoryPage = (props: IProps) => {
             </div>
           </div>
         </div>
-        {/* <div className="relative">{renderViewpointSelectionPopover()}</div> */}
         <div className="w-full h-full overflow-hidden">
           <VideoSelectionTable
             table={table}

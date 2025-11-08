@@ -1,35 +1,36 @@
 import { SendHorizontal } from 'lucide-react';
 import { Textarea } from './components/TextArea/textarea';
 import { Button } from './components/Button/Button';
-import { useEffect, useState } from 'react';
+import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { RendererVideo } from 'main/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircularProgress } from '@mui/material';
 import { areDatesWithinSeconds } from './rendererutils';
 import { ChatMessage, TChatMessage } from 'types/api';
+import { Tooltip } from './components/Tooltip/Tooltip';
+import { VideoPlayerRef } from './VideoPlayer';
 
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
   video: RendererVideo;
+  videoPlayerRef: MutableRefObject<VideoPlayerRef | null>;
 }
 
 /**
  * A page representing a video category.
  */
 const VideoChat = (props: IProps) => {
-  const { video } = props;
+  const { video, videoPlayerRef } = props;
   const [message, setMessage] = useState<string>('');
+  const chatRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data, isPending, error, refetch } = useQuery({
     gcTime: 0, // Always refetch.
     queryKey: ['chats', video.videoName],
     refetchOnWindowFocus: false,
-    queryFn: async () => {
-      const result = await ipc.getChatMessages(video);
-      return result.map((c) => ({ message: c.message, userName: c.userName }));
-    },
+    queryFn: async () => ipc.getChatMessages(video),
   });
 
   const addChatMessage = (message: unknown) => {
@@ -76,10 +77,60 @@ const VideoChat = (props: IProps) => {
     };
   }, [addChatMessage]);
 
+  // Scrolls to the bottom of the chat on loading it, or receiving a new message.
+  useEffect(() => {
+    if (!chatRef.current) return;
+
+    chatRef.current.scrollTo({
+      top: chatRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
+  }, [data]);
+
   const handleSendMessage = () => {
     console.log('post', message);
     window.electron.ipcRenderer.postChatMessage(video, message);
     setMessage('');
+  };
+
+  const processMessageContent = (msg: string) => {
+    const timestampRegex = /\b(\d{1,2}):(\d{2})\b/g;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = timestampRegex.exec(msg)) !== null) {
+      const [fullMatch, minutes, seconds] = match;
+      const index = match.index;
+
+      if (index > lastIndex) {
+        parts.push(msg.slice(lastIndex, index)); // text before timestamp
+      }
+
+      parts.push(
+        <Button
+          variant="secondary"
+          className="px-1 m-0 h-5"
+          size="xs"
+          key={index}
+          onClick={() => {
+            videoPlayerRef.current?.seekTo(
+              parseInt(minutes) * 60 + parseInt(seconds),
+            );
+          }}
+        >
+          {fullMatch}
+        </Button>,
+      );
+
+      lastIndex = index + fullMatch.length;
+    }
+
+    if (lastIndex < msg.length) {
+      parts.push(msg.slice(lastIndex));
+    }
+
+    return <div>{parts}</div>;
   };
 
   const renderChats = () => {
@@ -95,12 +146,35 @@ const VideoChat = (props: IProps) => {
       return <div>Error loading chat messages.</div>;
     }
 
+    const now = new Date();
+
     if (data && data.length > 0) {
-      return data.map((chat, idx) => (
-        <div key={idx} className="mb-2">
-          <strong>{chat.userName}:</strong> {chat.message}
-        </div>
-      ));
+      return data.map((chat, idx) => {
+        const date = new Date(chat.timestamp);
+
+        const isToday =
+          date.getDate() === now.getDate() &&
+          date.getMonth() === now.getMonth() &&
+          date.getFullYear() === now.getFullYear();
+
+        const formattedDate = isToday
+          ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : date.toLocaleDateString([], { day: '2-digit', month: 'short' });
+
+        return (
+          <div key={idx} className="mb-4">
+            <div>
+              <strong className="text-foreground-lighter mr-1">
+                {chat.userName}
+              </strong>
+              <Tooltip content={date.toLocaleString()}>
+                <span className="mx-1">{formattedDate}</span>
+              </Tooltip>
+            </div>
+            {processMessageContent(chat.message)}
+          </div>
+        );
+      });
     }
 
     return <div>No chat messages available.</div>;
@@ -108,12 +182,18 @@ const VideoChat = (props: IProps) => {
 
   return (
     <>
-      <div className="text-xs text-foreground flex-1 overflow-auto bg-background-dark-gradient-to mb-2 p-2 rounded-sm break-words">
+      <div
+        ref={chatRef}
+        className="flex-1 overflow-y-auto p-2 text-xs text-foreground bg-background-dark-gradient-to rounded-sm break-words
+             scrollbar-thin "
+      >
         {renderChats()}
       </div>
       <div className="text-xs text-foreground flex items-center gap-x-2">
         <Textarea
-          className="bg-background-dark-gradient-to rounded-sm border-background-dark-gradient-to flex-1 resize-none placeholder:text-foreground  focus-visible:ring-0 focus-visible:border-background-dark-gradient-to"
+          className="bg-background-dark-gradient-to rounded-sm border-background-dark-gradient-to flex-1 resize-none
+           placeholder:text-foreground  focus-visible:ring-0 focus-visible:border-background-dark-gradient-to 
+           scrollbar-thin"
           placeholder="Type your message here..."
           maxLength={256}
           value={message}
