@@ -74,6 +74,7 @@ declare global {
         getSensibleEncoderDefault(): Promise<string>;
         refreshCloudGuilds(): void;
         getChatMessages(video: RendererVideo): Promise<TChatMessage[]>;
+        postChatMessage(video: RendererVideo, message: string): void;
       };
     };
   }

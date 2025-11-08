@@ -420,9 +420,14 @@ const refreshCloudGuilds = async () => {
 
 ipcMain.on('refreshCloudGuilds', refreshCloudGuilds);
 
-ipcMain.handle('getChatMessages', async (event, args) => {
+ipcMain.handle('getChatMessages', async (event, video) => {
   const client = CloudClient.getInstance();
-  return client.getChatMessages(args[0] as RendererVideo);
+  return client.getChatMessages(video);
+});
+
+ipcMain.on('postChatMessage', (event, video, message) => {
+  const client = CloudClient.getInstance();
+  client.postChatMessage(video, message);
 });
 
 /**

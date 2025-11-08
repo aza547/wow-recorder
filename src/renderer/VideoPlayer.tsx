@@ -1188,7 +1188,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderControls = () => {
     return (
-      <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2">
+      <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2 rounded-br-sm">
         {renderPlayPause()}
         {renderVolumeButton()}
         {renderVolumeSlider()}

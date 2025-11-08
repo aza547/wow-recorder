@@ -271,7 +271,7 @@ export default function ViewpointSelection(props: IProps) {
   }
 
   return (
-    <div className="grid grid-cols-5 my-1 mx-1">
+    <div className="grid grid-cols-5">
       {combatants.sort(combatantNameSort).map(mapCombatants)}
     </div>
   );

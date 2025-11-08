@@ -9,7 +9,6 @@ import {
   useRef,
 } from 'react';
 import {
-  Eye,
   GripHorizontal,
   LockKeyhole,
   Trash,
@@ -78,7 +77,6 @@ const CategoryPage = (props: IProps) => {
     videoFilterTags,
     language,
     dateRangeFilter,
-    viewpointSelectionOpen,
     cloudStatus,
     storageFilter,
     chatOpen,
@@ -159,17 +157,17 @@ const CategoryPage = (props: IProps) => {
     const selectedRow = selectedRows[0];
 
     return (
-      <div className="w-[750px] h-full bg-background flex flex-col">
+      <div className="max-w-[525px] min-w-[525px] h-full bg-background-higher flex flex-col mx-2 gap-y-2">
         <div className="flex items-start">
           <Button
             onClick={() =>
               setAppState((prev) => ({ ...prev, chatOpen: false }))
             }
             variant="ghost"
-            className="mx-2"
+            className="mt-2"
             size="xs"
           >
-            <ArrowRightToLine />
+            <ArrowRightToLine size={18} />
           </Button>
         </div>
         <ViewpointSelection
@@ -178,8 +176,15 @@ const CategoryPage = (props: IProps) => {
           setAppState={setAppState}
           persistentProgress={persistentProgress}
         />
-        <div className="flex flex-1 flex-col m-2">
-          <VideoChat />
+        <div className="flex flex-1 flex-col">
+          <VideoChat
+            key={
+              selectedRow
+                ? selectedRow.original.videoName
+                : filteredState[0].videoName
+            }
+            video={selectedRow ? selectedRow.original : filteredState[0]}
+          />
         </div>
       </div>
     );
@@ -187,14 +192,14 @@ const CategoryPage = (props: IProps) => {
 
   const renderChatHidden = () => {
     return (
-      <div className="w-20 h-full">
+      <div className="h-full relative">
         <Button
           onClick={() => setAppState((prev) => ({ ...prev, chatOpen: true }))}
           variant="ghost"
-          className="mx-2"
+          className="absolute top-0 right-0 m-2"
           size="xs"
         >
-          <ArrowLeftFromLine />
+          <ArrowLeftFromLine size={18} />
         </Button>
       </div>
     );

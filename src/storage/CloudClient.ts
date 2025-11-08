@@ -29,6 +29,7 @@ const enum VideoMessages {
   PROTECT = 'vp',
   UNPROTECT = 'vu',
   TAG = 'vt',
+  CHAT = 'vm',
 }
 
 const enum GuildMessages {
@@ -818,6 +819,10 @@ export default class CloudClient implements StorageClient {
       // updates to make sure we are up to date. After this we can
       // rely on the websocket to notify us of changes.
       this.checkForUpdate();
+
+      // Any open chat windows must be refreshed in case we missed
+      // messages while the websocket was disconnected.
+      send('refreshChatMessages');
     });
 
     this.ws.on('message', (data) => this.handleWebsocketMessage(data));
@@ -1379,7 +1384,13 @@ export default class CloudClient implements StorageClient {
 
       console.info('[CloudClient] Tagging cloud video', videoName, tag);
       send('displayTagCloudVideo', videoName, tag);
+      return;
+    }
 
+    if (key === VideoMessages.CHAT) {
+      console.info('[CloudClient] Video chat message received');
+      const message = JSON.parse(value);
+      send('displayAddChatMessage', message);
       return;
     }
 
@@ -1409,11 +1420,19 @@ export default class CloudClient implements StorageClient {
   }
 
   public async getChatMessages(video: RendererVideo) {
-    const guild = encodeURIComponent(this.guild);
-    const hash = "fdf624990a0122e32c0456489cb2be51"; //video.uniqueHash;
-    const start = 1744925382000; // video.start;
+    console.info(
+      '[CloudClient] Getting chat messages for video',
+      video.start,
+      video.uniqueHash,
+    );
 
-    const url = `${CloudClient.api}/guild/${guild}/chat/${hash}/${start}`;
+    if (video.start === undefined || video.uniqueHash === undefined) {
+      console.warn('[CloudClient] Unable to GET chat messages for this video');
+      return [];
+    }
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/chat/${video.uniqueHash}/${video.start}`;
     const headers = { Authorization: this.authHeader };
 
     const rsp = await axios.get(url, {
@@ -1421,6 +1440,34 @@ export default class CloudClient implements StorageClient {
       validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    return z.array(ChatMessage).parse(rsp.data);
+    const chatMessages = z.array(ChatMessage).parse(rsp.data);
+    console.info('[CloudClient] Got', chatMessages.length, 'chat messages');
+    return chatMessages;
+  }
+
+  public async postChatMessage(video: RendererVideo, message: string) {
+    console.info(
+      '[CloudClient] Posting chat message for video',
+      video.start,
+      video.uniqueHash,
+      message,
+    );
+
+    if (video.start === undefined || video.uniqueHash === undefined) {
+      console.warn('[CloudClient] Unable to POST chat message for this video');
+      return [];
+    }
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/chat/${video.uniqueHash}/${video.start}`;
+    const headers = { Authorization: this.authHeader };
+    const body = { message };
+
+    await axios.post(url, body, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    console.info('[CloudClient] Successfully posted chat message');
   }
 }

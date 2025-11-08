@@ -206,5 +206,9 @@ contextBridge.exposeInMainWorld('electron', {
     getChatMessages(video: RendererVideo): Promise<TChatMessage[]> {
       return ipcRenderer.invoke('getChatMessages', video);
     },
+
+    postChatMessage(video: RendererVideo, message: string) {
+      ipcRenderer.send('postChatMessage', video, message);
+    },
   },
 });
