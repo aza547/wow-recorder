@@ -476,6 +476,10 @@ const GERMAN: Translations = {
   [Phrase.BulkTransferWarningText]: 'Dies kann eine Weile dauern. Es können Datengebühren anfallen, wenn Sie sich in einem gemessenen Netzwerk befinden. Das Ausschalten Ihres Computers unterbricht den Vorgang.',
   [Phrase.UploadButtonText]: 'Uploads in die Warteschlange stellen',
   [Phrase.DownloadButtonText]: 'Downloads in die Warteschlange stellen',
+  [Phrase.ChatTypeMessageText]: 'Kommentar hinzufügen... Verwende MM:SS für einen Zeitstempel.',
+  [Phrase.ChatUploadToCloudText]: 'In die Cloud hochladen, um Videochat zu aktivieren.',
+  [Phrase.ChatNoMessagesText]: 'Keine Nachrichten zum Anzeigen.',
+  [Phrase.ChatErrorLoadingText]: 'Fehler beim Laden der Chatnachrichten.',
 };
 
 export default GERMAN;

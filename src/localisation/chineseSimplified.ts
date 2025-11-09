@@ -476,6 +476,10 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.BulkTransferWarningText]: '这可能需要很长时间才能完成。如果您使用按流量计费的连接，可能会产生数据费用。关闭计算机将中断此过程。',
   [Phrase.UploadButtonText]: '队列上传',
   [Phrase.DownloadButtonText]: '队列下载',
+  [Phrase.ChatTypeMessageText]: '添加评论……使用 MM:SS 时间戳。',
+  [Phrase.ChatUploadToCloudText]: '上传到云端以启用视频聊天。',
+  [Phrase.ChatNoMessagesText]: '没有可显示的消息。',
+  [Phrase.ChatErrorLoadingText]: '加载聊天消息时出错。',
 };
 
 export default CHINESE_SIMPLIFIED;

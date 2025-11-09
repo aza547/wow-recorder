@@ -9,6 +9,8 @@ import { areDatesWithinSeconds } from './rendererutils';
 import { ChatMessage, TChatMessage } from 'types/api';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { VideoPlayerRef } from './VideoPlayer';
+import { getLocalePhrase, Language } from 'localisation/translations';
+import { Phrase } from 'localisation/phrases';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -16,6 +18,7 @@ interface IProps {
   enabled: boolean;
   video: RendererVideo;
   videoPlayerRef: MutableRefObject<VideoPlayerRef | null>;
+  language: Language;
 }
 
 /**
@@ -149,7 +152,11 @@ const VideoChat = (props: IProps) => {
     }
 
     if (error) {
-      return <div>Error loading chat messages.</div>;
+      return (
+        <div>
+          {getLocalePhrase(props.language, Phrase.ChatErrorLoadingText)}
+        </div>
+      );
     }
 
     const now = new Date();
@@ -183,14 +190,16 @@ const VideoChat = (props: IProps) => {
       });
     }
 
-    return <div>No chat messages available.</div>;
+    return (
+      <div>{getLocalePhrase(props.language, Phrase.ChatNoMessagesText)}</div>
+    );
   };
 
   if (!enabled) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-foreground text-sm font-bold">
         <Cloud />
-        Upload to the cloud to enable video chat.
+        {getLocalePhrase(props.language, Phrase.ChatUploadToCloudText)}
       </div>
     );
   }
@@ -210,7 +219,10 @@ const VideoChat = (props: IProps) => {
             border-background-dark-gradient-to flex-1 resize-none
             placeholder:text-foreground  focus-visible:ring-0 
             focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
-          placeholder="Type your message here..."
+          placeholder={getLocalePhrase(
+            props.language,
+            Phrase.ChatTypeMessageText,
+          )}
           maxLength={256}
           value={message}
           onChange={(e) => setMessage(e.target.value)}

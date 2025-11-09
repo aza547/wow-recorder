@@ -186,6 +186,7 @@ const CategoryPage = (props: IProps) => {
           enabled={activeRow.cloud || activeRow.multiPov.some((rv) => rv.cloud)}
           videoPlayerRef={videoPlayerRef}
           video={selectedRow ? selectedRow.original : filteredState[0]}
+          language={language}
         />
       </div>
     );

@@ -476,6 +476,10 @@ const KOREAN: Translations = {
   [Phrase.BulkTransferWarningText]: '완료하는 데 시간이 오래 걸릴 수 있습니다. 컴퓨터를 끄면 프로세스가 중단됩니다.',
   [Phrase.UploadButtonText]: '업로드 대기열 추가',
   [Phrase.DownloadButtonText]: '다운로드 대기열 추가',
+  [Phrase.ChatTypeMessageText]: '댓글 추가… 타임스탬프는 MM:SS 형식을 사용하세요.',
+  [Phrase.ChatUploadToCloudText]: '비디오 채팅을 사용하려면 클라우드에 업로드하세요.',
+  [Phrase.ChatNoMessagesText]: '표시할 메시지가 없습니다.',
+  [Phrase.ChatErrorLoadingText]: '채팅 메시지를 불러오는 중 오류가 발생했습니다.',
 };
 
 export default KOREAN;
