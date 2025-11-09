@@ -193,7 +193,9 @@ const getBaseConfig = (cfg: ConfigService): BaseConfig => {
     obsQuality: cfg.get<string>('obsQuality'),
     obsRecEncoder,
     recordClassic: cfg.get<boolean>('recordClassic'),
+    recordClassicPtr: cfg.get<boolean>('recordClassicPtr'),
     classicLogPath: cfg.get<string>('classicLogPath'),
+    classicPtrLogPath: cfg.get<string>('classicPtrLogPath'),
     recordRetail: cfg.get<boolean>('recordRetail'),
     recordRetailPtr: cfg.get<boolean>('recordRetailPtr'),
     retailLogPath: cfg.get<string>('retailLogPath'),
@@ -267,7 +269,9 @@ const validateBaseConfig = async (config: BaseConfig) => {
     recordRetailPtr,
     retailPtrLogPath,
     recordClassic,
+    recordClassicPtr,
     classicLogPath,
+    classicPtrLogPath,
     recordEra,
     eraLogPath,
   } = config;
@@ -364,11 +368,7 @@ const validateBaseConfig = async (config: BaseConfig) => {
   }
 
   if (recordClassic) {
-    const validFlavours = [
-      'wow_classic',
-      'wow_classic_beta',
-      'wow_classic_ptr',
-    ];
+    const validFlavours = ['wow_classic'];
     const validPath =
       validFlavours.includes(getWowFlavour(classicLogPath)) &&
       path.basename(classicLogPath) === 'Logs';
@@ -376,6 +376,32 @@ const validateBaseConfig = async (config: BaseConfig) => {
     if (!validPath) {
       console.error('[Util] Invalid classic log path', classicLogPath);
       const error = getLocaleError(Phrase.InvalidClassicLogPath);
+      throw new Error(error);
+    }
+  }
+
+  if (recordClassicPtr) {
+    const validFlavours = ['wow_classic_beta', 'wow_classic_ptr'];
+    const validPath =
+      validFlavours.includes(getWowFlavour(classicPtrLogPath)) &&
+      path.basename(classicPtrLogPath) === 'Logs';
+
+    if (!validPath) {
+      console.error('[Util] Invalid classic PTR log path', classicPtrLogPath);
+      const error = getLocaleError(Phrase.InvalidClassicPtrLogPath);
+      throw new Error(error);
+    }
+  }
+
+  if (recordRetailPtr) {
+    const validFlavours = ['wowxptr', 'wow_beta'];
+    const validPath =
+      validFlavours.includes(getWowFlavour(retailPtrLogPath)) &&
+      path.basename(retailPtrLogPath) === 'Logs';
+
+    if (!validPath) {
+      console.error('[Util] Invalid retail PTR log path', retailPtrLogPath);
+      const error = getLocaleError(Phrase.InvalidRetailPtrLogPathText);
       throw new Error(error);
     }
   }

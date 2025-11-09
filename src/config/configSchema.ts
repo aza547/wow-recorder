@@ -6,9 +6,10 @@ export type ConfigurationSchema = {
   bufferStoragePath: string;
   separateBufferPath: boolean;
   retailLogPath: string;
-  classicLogPath: string;
-  eraLogPath: string;
   retailPtrLogPath: string;
+  classicLogPath: string;
+  classicPtrLogPath: string;
+  eraLogPath: string;
   maxStorage: number;
   monitorIndex: number;
   selectedCategory: number;
@@ -23,9 +24,10 @@ export type ConfigurationSchema = {
   obsCaptureMode: string; // 'window_capture' or 'game_capture' or 'monitor_capture'
   obsRecEncoder: string;
   recordRetail: boolean;
-  recordClassic: boolean;
-  recordEra: boolean;
   recordRetailPtr: boolean;
+  recordClassic: boolean;
+  recordClassicPtr: boolean;
+  recordEra: boolean;
   recordRaids: boolean;
   recordDungeons: boolean;
   recordTwoVTwo: boolean;
@@ -124,6 +126,11 @@ export const configSchema = {
   },
   classicLogPath: {
     description: Phrase.ClassicLogPathDescription,
+    type: 'string',
+    default: '',
+  },
+  classicPtrLogPath: {
+    description: Phrase.ClassicPtrLogPathDescription,
     type: 'string',
     default: '',
   },
@@ -230,6 +237,11 @@ export const configSchema = {
   },
   recordClassic: {
     description: Phrase.RecordClassicDescription,
+    type: 'boolean',
+    default: false,
+  },
+  recordClassicPtr: {
+    description: Phrase.RecordClassicPtrDescription,
     type: 'boolean',
     default: false,
   },
