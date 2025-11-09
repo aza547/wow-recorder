@@ -476,7 +476,7 @@ const ENGLISH: Translations = {
   [Phrase.BulkTransferWarningText]: 'This may take a long time to complete. Data charges may apply if you are on a metered connection. Switching off your computer will interrupt the process.',
   [Phrase.UploadButtonText]: 'Queue Uploads',
   [Phrase.DownloadButtonText]: 'Queue Downloads',
-  [Phrase.ChatTypeMessageText]: 'Add a comment... Use MM:SS for a timestamp.',
+  [Phrase.ChatTypeMessageText]: 'Add a comment... use MM:SS for a timestamp.',
   [Phrase.ChatUploadToCloudText]: 'Upload to the cloud to enable video chat.',
   [Phrase.ChatNoMessagesText]: 'No messages to display.',
   [Phrase.ChatErrorLoadingText]: 'Error loading chat messages.',
