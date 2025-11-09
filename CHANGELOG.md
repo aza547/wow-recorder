@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Accept MOP classic PTR flavours in the MOP classic field. As usual, PTR support is best effort.
 - Take the latest rust-ps exe.
+- Make the debounce timer on inputting cloud login details longer so it's less annoying.
 
 ## [7.1.1] - 2025-10-31
 ### Fixed

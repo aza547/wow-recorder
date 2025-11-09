@@ -1,4 +1,4 @@
-import { SendHorizontal } from 'lucide-react';
+import { Cloud, SendHorizontal } from 'lucide-react';
 import { Textarea } from './components/TextArea/textarea';
 import { Button } from './components/Button/Button';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
@@ -13,6 +13,7 @@ import { VideoPlayerRef } from './VideoPlayer';
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
+  enabled: boolean;
   video: RendererVideo;
   videoPlayerRef: MutableRefObject<VideoPlayerRef | null>;
 }
@@ -21,13 +22,14 @@ interface IProps {
  * A page representing a video category.
  */
 const VideoChat = (props: IProps) => {
-  const { video, videoPlayerRef } = props;
+  const { video, videoPlayerRef, enabled } = props;
   const [message, setMessage] = useState<string>('');
   const chatRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data, isPending, error, refetch } = useQuery({
     gcTime: 0, // Always refetch.
+    enabled, // Don't bother fetching if chat is disabled.
     queryKey: ['chats', video.videoName],
     refetchOnWindowFocus: false,
     queryFn: async () => ipc.getChatMessages(video),
@@ -83,12 +85,16 @@ const VideoChat = (props: IProps) => {
 
     chatRef.current.scrollTo({
       top: chatRef.current.scrollHeight,
-      behavior: 'smooth',
+      behavior: 'instant',
     });
   }, [data]);
 
   const handleSendMessage = () => {
-    console.log('post', message);
+    if (message.trim() === '') {
+      setMessage('');
+      return;
+    }
+
     window.electron.ipcRenderer.postChatMessage(video, message);
     setMessage('');
   };
@@ -130,7 +136,7 @@ const VideoChat = (props: IProps) => {
       parts.push(msg.slice(lastIndex));
     }
 
-    return <div>{parts}</div>;
+    return <div className="pl-1">{parts}</div>;
   };
 
   const renderChats = () => {
@@ -162,13 +168,13 @@ const VideoChat = (props: IProps) => {
           : date.toLocaleDateString([], { day: '2-digit', month: 'short' });
 
         return (
-          <div key={idx} className="mb-4">
+          <div key={idx} className="mb-2">
             <div>
               <strong className="text-foreground-lighter mr-1">
                 {chat.userName}
               </strong>
               <Tooltip content={date.toLocaleString()}>
-                <span className="mx-1">{formattedDate}</span>
+                <span>{formattedDate}</span>
               </Tooltip>
             </div>
             {processMessageContent(chat.message)}
@@ -180,20 +186,30 @@ const VideoChat = (props: IProps) => {
     return <div>No chat messages available.</div>;
   };
 
+  if (!enabled) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-foreground text-sm font-bold">
+        <Cloud />
+        Upload to the cloud to enable video chat.
+      </div>
+    );
+  }
+
   return (
     <>
       <div
         ref={chatRef}
-        className="flex-1 overflow-y-auto p-2 text-xs text-foreground bg-background-dark-gradient-to rounded-sm break-words
-             scrollbar-thin "
+        className="flex-1 overflow-y-auto p-2 text-sm text-foreground 
+          bg-background-dark-gradient-to rounded-sm break-words scrollbar-thin"
       >
         {renderChats()}
       </div>
-      <div className="text-xs text-foreground flex items-center gap-x-2">
+      <div className="text-sm text-foreground flex items-center gap-x-2">
         <Textarea
-          className="bg-background-dark-gradient-to rounded-sm border-background-dark-gradient-to flex-1 resize-none
-           placeholder:text-foreground  focus-visible:ring-0 focus-visible:border-background-dark-gradient-to 
-           scrollbar-thin"
+          className="bg-background-dark-gradient-to rounded-sm 
+            border-background-dark-gradient-to flex-1 resize-none
+            placeholder:text-foreground  focus-visible:ring-0 
+            focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
           placeholder="Type your message here..."
           maxLength={256}
           value={message}

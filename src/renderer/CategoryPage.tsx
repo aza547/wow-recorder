@@ -153,12 +153,14 @@ const CategoryPage = (props: IProps) => {
     playerHeight.current = height;
   };
 
-  const renderChatOpen = () => {
+  const renderDrawerOpen = () => {
+    // Only the first row in the selection is relevant for the drawer display.
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedRow = selectedRows[0];
+    const activeRow = selectedRow ? selectedRow.original : filteredState[0];
 
     return (
-      <div className="max-w-[525px] min-w-[525px] h-full bg-background-higher flex flex-col mx-2 gap-y-2">
+      <div className="max-w-[500px] min-w-[500px] h-full bg-background-higher flex flex-col mx-2 gap-y-2">
         <div className="flex items-start">
           <Button
             onClick={() =>
@@ -171,18 +173,17 @@ const CategoryPage = (props: IProps) => {
             <ArrowRightToLine size={18} />
           </Button>
         </div>
-        <ViewpointSelection
-          video={selectedRow ? selectedRow.original : filteredState[0]}
-          appState={appState}
-          setAppState={setAppState}
-          persistentProgress={persistentProgress}
-        />
+        <div className="flex items-center justify-center w-full">
+          <ViewpointSelection
+            video={selectedRow ? selectedRow.original : filteredState[0]}
+            appState={appState}
+            setAppState={setAppState}
+            persistentProgress={persistentProgress}
+          />
+        </div>
         <VideoChat
-          key={
-            selectedRow
-              ? selectedRow.original.videoName
-              : filteredState[0].videoName
-          }
+          key={activeRow.videoName}
+          enabled={activeRow.cloud || activeRow.multiPov.some((rv) => rv.cloud)}
           videoPlayerRef={videoPlayerRef}
           video={selectedRow ? selectedRow.original : filteredState[0]}
         />
@@ -190,7 +191,7 @@ const CategoryPage = (props: IProps) => {
     );
   };
 
-  const renderChatHidden = () => {
+  const renderDrawerClosed = () => {
     return (
       <div className="h-full relative">
         <Button
@@ -256,8 +257,8 @@ const CategoryPage = (props: IProps) => {
             setAppState={setAppState}
           />
 
-          {chatOpen && renderChatOpen()}
-          {!chatOpen && renderChatHidden()}
+          {chatOpen && renderDrawerOpen()}
+          {!chatOpen && renderDrawerClosed()}
         </div>
       </Resizable>
     );
