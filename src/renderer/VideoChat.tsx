@@ -5,7 +5,6 @@ import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { RendererVideo } from 'main/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircularProgress } from '@mui/material';
-import { areDatesWithinSeconds } from './rendererutils';
 import { ChatMessage, TChatMessage } from 'types/api';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { VideoPlayerRef } from './VideoPlayer';
@@ -18,22 +17,28 @@ interface IProps {
   video: RendererVideo;
   videoPlayerRef: MutableRefObject<VideoPlayerRef | null>;
   language: Language;
+  cloudAccountName: string;
 }
 
 /**
  * A page representing a video category.
  */
 const VideoChat = (props: IProps) => {
-  const { video, videoPlayerRef } = props;
+  const { video, videoPlayerRef, cloudAccountName } = props;
   const [message, setMessage] = useState<string>('');
   const chatRef = useRef<HTMLDivElement>(null);
+  const correlatorRef = useRef<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isPending, error, refetch } = useQuery({
     gcTime: 0, // Always refetch.
     queryKey: ['chats', video.videoName],
     refetchOnWindowFocus: false,
-    queryFn: async () => ipc.getChatMessages(video),
+    queryFn: async () => {
+      const correlator = await ipc.getOrCreateChatCorrelator(video);
+      correlatorRef.current = correlator;
+      return ipc.getChatMessages(correlator);
+    },
   });
 
   const addChatMessage = (message: unknown) => {
@@ -46,13 +51,9 @@ const VideoChat = (props: IProps) => {
       return;
     }
 
-    const { start, uniqueHash } = parsed;
+    const { correlator } = parsed;
 
-    if (
-      !video.start ||
-      !areDatesWithinSeconds(new Date(video.start), new Date(start), 60) ||
-      video.uniqueHash !== uniqueHash
-    ) {
+    if (correlator !== correlatorRef.current) {
       // Websocket update for another video.
       return;
     }
@@ -96,7 +97,13 @@ const VideoChat = (props: IProps) => {
       return;
     }
 
-    window.electron.ipcRenderer.postChatMessage(video, message);
+    if (correlatorRef.current === null) {
+      console.error('No chat correlator available to send message');
+      setMessage('');
+      return;
+    }
+
+    window.electron.ipcRenderer.postChatMessage(correlatorRef.current, message);
     setMessage('');
   };
 
@@ -206,7 +213,7 @@ const VideoChat = (props: IProps) => {
         <Textarea
           className="bg-background-dark-gradient-to rounded-sm 
             border-background-dark-gradient-to flex-1 resize-none
-            placeholder:text-foreground  focus-visible:ring-0 
+            placeholder:text-foreground  focus-visible:ring-0 placeholder:italic
             focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
           placeholder={getLocalePhrase(
             props.language,
@@ -226,14 +233,20 @@ const VideoChat = (props: IProps) => {
             }
           }}
         />
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={handleSendMessage}
-          className="rounded-sm"
-        >
-          <SendHorizontal size={18} />
-        </Button>
+        <div className="flex flex-col items-center gap-x-2">
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={handleSendMessage}
+            className="rounded-sm"
+          >
+            <SendHorizontal size={18} />
+          </Button>
+          {/* TODO - This will run off the screen for long usernames, also tooltip to explain properly and recommend set username? */}
+          <div className="flex items-center justify-center text-xs text-foreground font-bold">
+            {cloudAccountName}
+          </div>
+        </div>
       </div>
     </>
   );

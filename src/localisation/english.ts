@@ -71,7 +71,7 @@ const ENGLISH: Translations = {
   [Phrase.CloudUploadClassicDescription]: 'If Classic recordings should be uploaded to the cloud.',
   [Phrase.CloudUploadRateLimitDescription]: 'If upload to the cloud should be rate limited. Useful if you are finding uploading is causing you to lag.',
   [Phrase.CloudUploadRateLimitMbpsDescription]: 'The upload rate limit in MB/s ',
-  [Phrase.CloudAccountNameDescription]: 'Your Warcraft Recorder account username.',
+  [Phrase.CloudAccountNameDescription]: 'Your Warcraft Recorder account username. This will be shown as your display name when using the chat feature.',
   [Phrase.CloudAccountPasswordDescription]: 'Your Warcraft Recorder account password.',
   [Phrase.CloudGuildNameDescription]: 'The guild or group your account is affiliated with.',
   [Phrase.CloudUpload2v2Description]: 'If 2v2 recordings should be uploaded to the cloud.',

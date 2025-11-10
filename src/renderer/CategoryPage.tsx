@@ -158,6 +158,7 @@ const CategoryPage = (props: IProps) => {
         videoPlayerRef={videoPlayerRef}
         video={video}
         language={language}
+        cloudAccountName={config.cloudAccountName}
       />
     );
   };
@@ -183,6 +184,8 @@ const CategoryPage = (props: IProps) => {
       ? selectedRow.original
       : filteredState[0];
 
+    // Only try to find a chat video if we have a video with cloud storage,
+    // a start time and a hash, else we cannot find the chat correlator.
     const chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(
       (rv) => rv.cloud && rv.uniqueHash && rv.start,
     );

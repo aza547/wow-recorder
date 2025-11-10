@@ -203,12 +203,16 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('refreshCloudGuilds');
     },
 
-    getChatMessages(video: RendererVideo): Promise<TChatMessage[]> {
-      return ipcRenderer.invoke('getChatMessages', video);
+    getOrCreateChatCorrelator(video: RendererVideo): Promise<string> {
+      return ipcRenderer.invoke('getOrCreateChatCorrelator', video);
     },
 
-    postChatMessage(video: RendererVideo, message: string) {
-      ipcRenderer.send('postChatMessage', video, message);
+    getChatMessages(correlator: string): Promise<TChatMessage[]> {
+      return ipcRenderer.invoke('getChatMessages', correlator);
+    },
+
+    postChatMessage(correlator: string, message: string) {
+      ipcRenderer.send('postChatMessage', correlator, message);
     },
   },
 });

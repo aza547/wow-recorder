@@ -420,14 +420,19 @@ const refreshCloudGuilds = async () => {
 
 ipcMain.on('refreshCloudGuilds', refreshCloudGuilds);
 
-ipcMain.handle('getChatMessages', async (event, video) => {
+ipcMain.handle('getOrCreateChatCorrelator', async (event, video) => {
   const client = CloudClient.getInstance();
-  return client.getChatMessages(video);
+  return client.getOrCreateChatCorrelator(video);
 });
 
-ipcMain.on('postChatMessage', (event, video, message) => {
+ipcMain.handle('getChatMessages', async (event, correlator) => {
   const client = CloudClient.getInstance();
-  client.postChatMessage(video, message);
+  return client.getChatMessages(correlator);
+});
+
+ipcMain.on('postChatMessage', (event, correlator, message) => {
+  const client = CloudClient.getInstance();
+  client.postChatMessage(correlator, message);
 });
 
 /**

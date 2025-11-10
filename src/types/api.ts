@@ -13,10 +13,8 @@ export const Affiliation = z.object({
 export type TAffiliation = z.infer<typeof Affiliation>;
 
 export const ChatMessage = z.object({
-  guildName: z.string(),
+  correlator: z.string(),
   userName: z.string(),
-  start: z.number(),
-  uniqueHash: z.string(),
   message: z.string(),
   timestamp: z.number(),
 });
