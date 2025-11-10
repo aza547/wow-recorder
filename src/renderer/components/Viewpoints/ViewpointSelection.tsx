@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { AppState, RawCombatant, RendererVideo } from 'main/types';
-import { X } from 'lucide-react';
+import { Ban, X } from 'lucide-react';
 import { specializationById, WoWCharacterClassType } from 'main/constants';
 import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import {
@@ -259,7 +259,8 @@ export default function ViewpointSelection(props: IProps) {
 
   if (combatants.length === 0) {
     return (
-      <div className="p-2 text-secondary-foreground text-sm">
+      <div className="flex flex-col items-center justify-center p-2 text-foreground font-bold text-sm">
+        <Ban />
         {getLocalePhrase(appState.language, Phrase.NoCombatants)}
       </div>
     );
