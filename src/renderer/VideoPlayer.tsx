@@ -103,7 +103,7 @@ const sliderBaseSx = {
 export interface VideoPlayerRef {
   // Exposes external seeking of the video player.
   // For example from by clicking a timestamp in chat.
-  seekTo: (seconds: number) => void;
+  seekAllPlayersTo: (seconds: number) => void;
 }
 
 export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
@@ -125,12 +125,16 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   }
 
   // Reference to each player. Required to control the ReactPlayer component.
+  // Probably breaking some hook rules here and being saved by the key in the
+  // parent remounting this when videos changes. Maybe should just use 4
+  // hardcoded refs rather than this array.
   const players: MutableRefObject<ReactPlayer | null>[] = videos.map(() =>
     useRef(null),
   );
 
+  // Exposes the seekTo method so that we can seek from outside the component.
   useImperativeHandle(ref, () => ({
-    seekTo(seconds: number) {
+    seekAllPlayersTo(seconds: number) {
       // Seek all players
       players.forEach((player) => player.current?.seekTo(seconds, 'seconds'));
       persistentProgress.current = seconds;

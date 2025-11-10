@@ -121,7 +121,7 @@ const VideoChat = (props: IProps) => {
           size="xs"
           key={index}
           onClick={() => {
-            videoPlayerRef.current?.seekTo(
+            videoPlayerRef.current?.seekAllPlayersTo(
               parseInt(minutes) * 60 + parseInt(seconds),
             );
           }}
