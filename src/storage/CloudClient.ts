@@ -1426,7 +1426,7 @@ export default class CloudClient implements StorageClient {
       video.uniqueHash,
     );
 
-    if (video.start === undefined || video.uniqueHash === undefined) {
+    if (!video.start || !video.uniqueHash) {
       console.warn('[CloudClient] Unable to GET chat messages for this video');
       return [];
     }

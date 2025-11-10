@@ -17,6 +17,7 @@ import {
   CloudDownload,
   ArrowLeftFromLine,
   ArrowRightToLine,
+  Cloud,
 } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
@@ -141,6 +142,26 @@ const CategoryPage = (props: IProps) => {
     };
   }, [playerHeight]);
 
+  const renderChat = (video: RendererVideo | undefined) => {
+    if (!video) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center text-foreground text-sm font-bold">
+          <Cloud />
+          {getLocalePhrase(language, Phrase.ChatUploadToCloudText)}
+        </div>
+      );
+    }
+
+    return (
+      <VideoChat
+        key={video.videoName}
+        videoPlayerRef={videoPlayerRef}
+        video={video}
+        language={language}
+      />
+    );
+  };
+
   /**
    * Handle a resize event.
    */
@@ -157,7 +178,14 @@ const CategoryPage = (props: IProps) => {
     // Only the first row in the selection is relevant for the drawer display.
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedRow = selectedRows[0];
-    const activeRow = selectedRow ? selectedRow.original : filteredState[0];
+
+    const activeParentVideo = selectedRow
+      ? selectedRow.original
+      : filteredState[0];
+
+    const chatVideo = [activeParentVideo, ...activeParentVideo.multiPov].find(
+      (rv) => rv.cloud && rv.uniqueHash && rv.start,
+    );
 
     return (
       <div className="max-w-[500px] min-w-[500px] h-full bg-background-higher flex flex-col mx-2 gap-y-2">
@@ -175,19 +203,13 @@ const CategoryPage = (props: IProps) => {
         </div>
         <div className="flex items-center justify-center w-full">
           <ViewpointSelection
-            video={selectedRow ? selectedRow.original : filteredState[0]}
+            video={activeParentVideo}
             appState={appState}
             setAppState={setAppState}
             persistentProgress={persistentProgress}
           />
         </div>
-        <VideoChat
-          key={activeRow.videoName}
-          enabled={activeRow.cloud || activeRow.multiPov.some((rv) => rv.cloud)}
-          videoPlayerRef={videoPlayerRef}
-          video={selectedRow ? selectedRow.original : filteredState[0]}
-          language={language}
-        />
+        {renderChat(chatVideo)}
       </div>
     );
   };
@@ -231,6 +253,7 @@ const CategoryPage = (props: IProps) => {
         enable={{ bottom: true }}
         bounds="parent"
         onResize={onResize}
+        minHeight={chatOpen ? 500 : undefined}
         handleStyles={{
           bottom: {
             width: '50%',

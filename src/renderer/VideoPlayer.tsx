@@ -1339,22 +1339,15 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     );
   };
 
-  return (
-    <div id="player-and-controls" className="w-full h-full">
-      <div style={{ height: 'calc(100% - 40px)' }}>
-        <div className="w-full h-full relative">
-          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
-          {isDrawingEnabled && renderDrawingOverlay()}
-        </div>
-      </div>
-
+  const renderLoadingSpinner = () => {
+    return (
       <Backdrop
         sx={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          bottom: '40px',
+          bottom: 0,
           zIndex: 1,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
         }}
@@ -1362,6 +1355,18 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       >
         <CircularProgress color="inherit" />
       </Backdrop>
+    );
+  };
+
+  return (
+    <div id="player-and-controls" className="w-full h-full">
+      <div style={{ height: 'calc(100% - 40px)' }}>
+        <div className="w-full h-full relative">
+          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
+          {isDrawingEnabled && renderDrawingOverlay()}
+          {renderLoadingSpinner()}
+        </div>
+      </div>
 
       {renderControls()}
     </div>

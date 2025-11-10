@@ -1,4 +1,4 @@
-import { Cloud, SendHorizontal } from 'lucide-react';
+import { SendHorizontal } from 'lucide-react';
 import { Textarea } from './components/TextArea/textarea';
 import { Button } from './components/Button/Button';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
@@ -15,7 +15,6 @@ import { Phrase } from 'localisation/phrases';
 const ipc = window.electron.ipcRenderer;
 
 interface IProps {
-  enabled: boolean;
   video: RendererVideo;
   videoPlayerRef: MutableRefObject<VideoPlayerRef | null>;
   language: Language;
@@ -25,14 +24,13 @@ interface IProps {
  * A page representing a video category.
  */
 const VideoChat = (props: IProps) => {
-  const { video, videoPlayerRef, enabled } = props;
+  const { video, videoPlayerRef } = props;
   const [message, setMessage] = useState<string>('');
   const chatRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data, isPending, error, refetch } = useQuery({
     gcTime: 0, // Always refetch.
-    enabled, // Don't bother fetching if chat is disabled.
     queryKey: ['chats', video.videoName],
     refetchOnWindowFocus: false,
     queryFn: async () => ipc.getChatMessages(video),
@@ -194,15 +192,6 @@ const VideoChat = (props: IProps) => {
       <div>{getLocalePhrase(props.language, Phrase.ChatNoMessagesText)}</div>
     );
   };
-
-  if (!enabled) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center text-foreground text-sm font-bold">
-        <Cloud />
-        {getLocalePhrase(props.language, Phrase.ChatUploadToCloudText)}
-      </div>
-    );
-  }
 
   return (
     <>
