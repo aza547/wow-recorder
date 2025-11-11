@@ -8,10 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - [PR 764](https://github.com/aza547/wow-recorder/pull/764) - Adds the video chat feature for Pro users.
+- Classic PTR "support". The app will accept Classic PTR paths.  As usual, PTR support is best effort.
 
 ### Fixed
-- Accept MOP classic PTR flavours in the MOP classic field. As usual, PTR support is best effort.
-- Take the latest rust-ps exe.
+- Take the latest rust-ps executable.
 - Make the debounce timer on inputting cloud login details longer so it's less annoying.
 
 ## [7.1.1] - 2025-10-31
