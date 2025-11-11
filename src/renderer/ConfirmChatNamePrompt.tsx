@@ -27,7 +27,7 @@ const ConfirmChatNamePrompt = (props: IProps) => {
   };
 
   return (
-    <div className="flex mt-2 flex-col items-center justify-center text-sm text-foreground gap-y-2">
+    <div className="flex h-full m-2 flex-col items-center justify-center text-sm text-foreground gap-y-2 border border-background-dark-gradient-to rounded-sm bg-background-dark-gradient-to">
       <div className="flex flex-col gap-y-2 px-4">
         <p>{getLocalePhrase(language, Phrase.ChatUserText1)}</p>
         {cloudAccountName.includes('@') && (
