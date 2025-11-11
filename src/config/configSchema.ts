@@ -94,6 +94,7 @@ export type ConfigurationSchema = {
   manualRecordSoundAlert: boolean;
   manualRecordUpload: boolean;
   firstTimeSetup: boolean;
+  chatUserNameAgreed: string;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -588,5 +589,10 @@ export const configSchema = {
     description: Phrase.FirstTimeSetupDescription,
     type: 'boolean',
     default: true,
+  },
+  chatUserNameAgreed: {
+    description: Phrase.Unknown, // Not actually exposed.
+    type: 'string',
+    default: '',
   },
 };

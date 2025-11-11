@@ -476,6 +476,15 @@ const GERMAN: Translations = {
   [Phrase.BulkTransferWarningText]: 'Dies kann eine Weile dauern. Es können Datengebühren anfallen, wenn Sie sich in einem gemessenen Netzwerk befinden. Das Ausschalten Ihres Computers unterbricht den Vorgang.',
   [Phrase.UploadButtonText]: 'Uploads in die Warteschlange stellen',
   [Phrase.DownloadButtonText]: 'Downloads in die Warteschlange stellen',
+  [Phrase.ChatTypeMessageText]: 'Kommentar hinzufügen... Verwende MM:SS für einen Zeitstempel.',
+  [Phrase.ChatUploadToCloudText]: 'In die Cloud hochladen, um Videochat zu aktivieren.',
+  [Phrase.ChatNoMessagesText]: 'Keine Nachrichten zum Anzeigen.',
+  [Phrase.ChatErrorLoadingText]: 'Fehler beim Laden der Chatnachrichten.',
+  [Phrase.ChatUserText1]: 'Um den Chat zu verwenden, bestätigen Sie bitte, dass Ihr Benutzername für Mitglieder Ihrer Gilde sichtbar sein darf, die diesen Chat lesen können.',
+  [Phrase.ChatUserText2]: 'Um Ihre E-Mail-Adresse zu schützen, können Sie auf folgender Seite einen eigenen Benutzernamen festlegen: ',
+  [Phrase.ChatUserText3]: ', und anschließend Ihren Benutzernamen in den App-Einstellungen aktualisieren.',
+  [Phrase.ChatUserText4]: 'Chatten als',
+  [Phrase.ChatForClipsComingSoon]: 'Chat für Clips kommt bald.',
 };
 
 export default GERMAN;

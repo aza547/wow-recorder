@@ -22,7 +22,7 @@ import {
   getAssetPath,
   handleSafeVodRequest,
 } from './util';
-import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
+import { OurDisplayType, RendererVideo, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
 import Manager from './Manager';
 import AppUpdater from './AppUpdater';
@@ -419,6 +419,21 @@ const refreshCloudGuilds = async () => {
 };
 
 ipcMain.on('refreshCloudGuilds', refreshCloudGuilds);
+
+ipcMain.handle('getOrCreateChatCorrelator', async (event, video) => {
+  const client = CloudClient.getInstance();
+  return client.getOrCreateChatCorrelator(video);
+});
+
+ipcMain.handle('getChatMessages', async (event, correlator) => {
+  const client = CloudClient.getInstance();
+  return client.getChatMessages(correlator);
+});
+
+ipcMain.on('postChatMessage', (event, correlator, message) => {
+  const client = CloudClient.getInstance();
+  client.postChatMessage(correlator, message);
+});
 
 /**
  * Set/get global video player settings.

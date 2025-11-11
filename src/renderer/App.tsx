@@ -34,8 +34,10 @@ import { VideoCategory } from 'types/VideoCategory';
 import { Phrase } from 'localisation/phrases';
 import _ from 'lodash';
 import { playAudio } from './sounds';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const ipc = window.electron.ipcRenderer;
+const queryClient = new QueryClient();
 
 const WarcraftRecorder = () => {
   const [config, setConfig] = useSettings();
@@ -107,6 +109,9 @@ const WarcraftRecorder = () => {
     downloadProgress: 0,
     queuedUploads: 0,
     queuedDownloads: 0,
+
+    // The chat panel state.
+    chatOpen: false,
   });
 
   useEffect(() => {
@@ -478,35 +483,37 @@ const WarcraftRecorder = () => {
         }}
       >
         <Toaster />
-        <TooltipProvider>
-          <RendererTitleBar />
-          <div className="flex flex-row items-center h-full w-full font-sans">
-            <SideMenu
-              recorderStatus={recorderStatus}
-              videoCounters={videoCounters}
-              appState={appState}
-              setAppState={setAppState}
-              persistentProgress={persistentProgress}
-              error={error}
-              micStatus={micStatus}
-              errorReports={errorReports}
-              savingStatus={savingStatus}
-              config={config}
-              updateAvailable={updateAvailable}
-            />
-            <Layout
-              recorderStatus={recorderStatus}
-              videoState={videoState}
-              setVideoState={setVideoState}
-              appState={appState}
-              setAppState={setAppState}
-              persistentProgress={persistentProgress}
-              playerHeight={playerHeight}
-              config={config}
-              setConfig={setConfig}
-            />
-          </div>
-        </TooltipProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <RendererTitleBar />
+            <div className="flex flex-row items-center h-full w-full font-sans">
+              <SideMenu
+                recorderStatus={recorderStatus}
+                videoCounters={videoCounters}
+                appState={appState}
+                setAppState={setAppState}
+                persistentProgress={persistentProgress}
+                error={error}
+                micStatus={micStatus}
+                errorReports={errorReports}
+                savingStatus={savingStatus}
+                config={config}
+                updateAvailable={updateAvailable}
+              />
+              <Layout
+                recorderStatus={recorderStatus}
+                videoState={videoState}
+                setVideoState={setVideoState}
+                appState={appState}
+                setAppState={setAppState}
+                persistentProgress={persistentProgress}
+                playerHeight={playerHeight}
+                config={config}
+                setConfig={setConfig}
+              />
+            </div>
+          </TooltipProvider>
+        </QueryClientProvider>
       </Box>
     </ErrorBoundary>
   );

@@ -8,9 +8,11 @@ import {
   VideoPlayerSettings,
 } from 'main/types';
 import {
+  forwardRef,
   MutableRefObject,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useRef,
   useState,
@@ -98,7 +100,13 @@ const sliderBaseSx = {
   },
 };
 
-export const VideoPlayer = (props: IProps) => {
+export interface VideoPlayerRef {
+  // Exposes external seeking of the video player.
+  // For example from by clicking a timestamp in chat.
+  seekAllPlayersTo: (seconds: number) => void;
+}
+
+export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   const {
     videos,
     persistentProgress,
@@ -117,9 +125,21 @@ export const VideoPlayer = (props: IProps) => {
   }
 
   // Reference to each player. Required to control the ReactPlayer component.
+  // Probably breaking some hook rules here and being saved by the key in the
+  // parent remounting this when videos changes. Maybe should just use 4
+  // hardcoded refs rather than this array.
   const players: MutableRefObject<ReactPlayer | null>[] = videos.map(() =>
     useRef(null),
   );
+
+  // Exposes the seekTo method so that we can seek from outside the component.
+  useImperativeHandle(ref, () => ({
+    seekAllPlayersTo(seconds: number) {
+      // Seek all players
+      players.forEach((player) => player.current?.seekTo(seconds, 'seconds'));
+      persistentProgress.current = seconds;
+    },
+  }));
 
   const numReady = useRef<number>(0);
   const progressSlider = useRef<HTMLSpanElement>(null);
@@ -1188,7 +1208,7 @@ export const VideoPlayer = (props: IProps) => {
    */
   const renderControls = () => {
     return (
-      <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2">
+      <div className="w-full h-10 flex flex-row justify-center items-center bg-background-dark-gradient-to border border-background-dark-gradient-to px-1 py-2 rounded-br-sm">
         {renderPlayPause()}
         {renderVolumeButton()}
         {renderVolumeSlider()}
@@ -1323,22 +1343,15 @@ export const VideoPlayer = (props: IProps) => {
     );
   };
 
-  return (
-    <div id="player-and-controls" className="w-full h-full">
-      <div style={{ height: 'calc(100% - 40px)' }}>
-        <div className="w-full h-full relative">
-          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
-          {isDrawingEnabled && renderDrawingOverlay()}
-        </div>
-      </div>
-
+  const renderLoadingSpinner = () => {
+    return (
       <Backdrop
         sx={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          bottom: '40px',
+          bottom: 0,
           zIndex: 1,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
         }}
@@ -1346,10 +1359,23 @@ export const VideoPlayer = (props: IProps) => {
       >
         <CircularProgress color="inherit" />
       </Backdrop>
+    );
+  };
+
+  return (
+    <div id="player-and-controls" className="w-full h-full">
+      <div style={{ height: 'calc(100% - 40px)' }}>
+        <div className="w-full h-full relative">
+          <div className={playerDivClass}>{srcs.map(renderPlayer)}</div>
+          {isDrawingEnabled && renderDrawingOverlay()}
+          {renderLoadingSpinner()}
+        </div>
+      </div>
 
       {renderControls()}
     </div>
   );
-};
+});
+VideoPlayer.displayName = 'VideoPlayer'; // ✅ Add this line
 
 export default VideoPlayer;

@@ -473,6 +473,15 @@ enum Phrase {
   UploadButtonText,
   DownloadButtonText,
   BulkTransferWarningText,
+  ChatTypeMessageText,
+  ChatUploadToCloudText,
+  ChatNoMessagesText,
+  ChatErrorLoadingText,
+  ChatUserText1,
+  ChatUserText2,
+  ChatUserText3,
+  ChatUserText4,
+  ChatForClipsComingSoon,
 }
 
 enum Language {

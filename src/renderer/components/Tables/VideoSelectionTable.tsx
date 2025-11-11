@@ -333,7 +333,7 @@ const VideoSelectionTable = (props: IProps) => {
   return (
     <div className="w-full h-full overflow-hidden px-2">
       <ScrollArea withScrollIndicators={false} className="h-full w-full">
-        <div className="pb-2 px-6">
+        <div className="pb-2 px-4">
           <table className="table-fixed w-full">
             {renderTableHeader()}
             {renderTableBody()}

@@ -476,6 +476,15 @@ const KOREAN: Translations = {
   [Phrase.BulkTransferWarningText]: '완료하는 데 시간이 오래 걸릴 수 있습니다. 컴퓨터를 끄면 프로세스가 중단됩니다.',
   [Phrase.UploadButtonText]: '업로드 대기열 추가',
   [Phrase.DownloadButtonText]: '다운로드 대기열 추가',
+  [Phrase.ChatTypeMessageText]: '댓글 추가… 타임스탬프는 MM:SS 형식을 사용하세요.',
+  [Phrase.ChatUploadToCloudText]: '비디오 채팅을 사용하려면 클라우드에 업로드하세요.',
+  [Phrase.ChatNoMessagesText]: '표시할 메시지가 없습니다.',
+  [Phrase.ChatErrorLoadingText]: '채팅 메시지를 불러오는 중 오류가 발생했습니다.',
+  [Phrase.ChatUserText1]: '채팅을 사용하려면, 이 채팅을 볼 수 있는 길드 구성원에게 사용자 이름이 공개되는 것에 동의해야 합니다.',
+  [Phrase.ChatUserText2]: '이메일 주소가 노출되지 않도록 하려면, 다음 사이트에서 사용자 이름을 직접 설정할 수 있습니다: ',
+  [Phrase.ChatUserText3]: ', 그런 다음 앱 설정에서 사용자 이름을 업데이트하세요.',
+  [Phrase.ChatUserText4]: '다음 이름으로 채팅하기',
+  [Phrase.ChatForClipsComingSoon]: '클립용 채팅 기능이 곧 제공됩니다.',
 };
 
 export default KOREAN;

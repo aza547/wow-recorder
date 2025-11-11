@@ -476,6 +476,15 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.BulkTransferWarningText]: '这可能需要很长时间才能完成。如果您使用按流量计费的连接，可能会产生数据费用。关闭计算机将中断此过程。',
   [Phrase.UploadButtonText]: '队列上传',
   [Phrase.DownloadButtonText]: '队列下载',
+  [Phrase.ChatTypeMessageText]: '添加评论……使用 MM:SS 时间戳。',
+  [Phrase.ChatUploadToCloudText]: '上传到云端以启用视频聊天。',
+  [Phrase.ChatNoMessagesText]: '没有可显示的消息。',
+  [Phrase.ChatErrorLoadingText]: '加载聊天消息时出错。',
+  [Phrase.ChatUserText1]: '要使用聊天功能，请确认您同意将用户名显示给可能阅读此聊天的公会成员。',
+  [Phrase.ChatUserText2]: '为避免泄露您的电子邮件地址，您可以在以下网站设置自定义用户名：',
+  [Phrase.ChatUserText3]: '，然后在应用设置中更新您的用户名。',
+  [Phrase.ChatUserText4]: '以此用户名聊天',
+  [Phrase.ChatForClipsComingSoon]: '剪辑聊天功能即将推出。',
 };
 
 export default CHINESE_SIMPLIFIED;

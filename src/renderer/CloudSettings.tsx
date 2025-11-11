@@ -78,7 +78,7 @@ const CloudSettings = (props: IProps) => {
         setConfigValues({ chatOverlayOwnImage: false });
         ipc.reconfigureOverlay();
       }
-    }, 500);
+    }, 2000); // Want to be long enough that it doesn't trigger mid-typing.
   }, [
     config.cloudStorage,
     config.cloudAccountName,

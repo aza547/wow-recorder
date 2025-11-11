@@ -6,10 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Moved the viewpoints selection into an expandable drawer.
+
 ### Added
+- [PR 764](https://github.com/aza547/wow-recorder/pull/764) - Adds the video chat feature for Pro users.
+- Classic PTR "support". The app will accept Classic PTR paths.  As usual, PTR support is best effort.
+
 ### Fixed
-- Accept MOP classic PTR flavours in the MOP classic field. As usual, PTR support is best effort.
-- Take the latest rust-ps exe.
+- Take the latest rust-ps executable.
+- Make the debounce timer on inputting cloud login details longer so it's less annoying.
+- Fix the style of the scrollbar on the filter selection dropdown.
 
 ## [7.1.1] - 2025-10-31
 ### Fixed

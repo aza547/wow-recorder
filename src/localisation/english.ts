@@ -71,7 +71,7 @@ const ENGLISH: Translations = {
   [Phrase.CloudUploadClassicDescription]: 'If Classic recordings should be uploaded to the cloud.',
   [Phrase.CloudUploadRateLimitDescription]: 'If upload to the cloud should be rate limited. Useful if you are finding uploading is causing you to lag.',
   [Phrase.CloudUploadRateLimitMbpsDescription]: 'The upload rate limit in MB/s ',
-  [Phrase.CloudAccountNameDescription]: 'Your Warcraft Recorder account username.',
+  [Phrase.CloudAccountNameDescription]: 'Your Warcraft Recorder account username. This will be shown as your display name when using the chat feature.',
   [Phrase.CloudAccountPasswordDescription]: 'Your Warcraft Recorder account password.',
   [Phrase.CloudGuildNameDescription]: 'The guild or group your account is affiliated with.',
   [Phrase.CloudUpload2v2Description]: 'If 2v2 recordings should be uploaded to the cloud.',
@@ -476,6 +476,15 @@ const ENGLISH: Translations = {
   [Phrase.BulkTransferWarningText]: 'This may take a long time to complete. Data charges may apply if you are on a metered connection. Switching off your computer will interrupt the process.',
   [Phrase.UploadButtonText]: 'Queue Uploads',
   [Phrase.DownloadButtonText]: 'Queue Downloads',
+  [Phrase.ChatTypeMessageText]: 'Add a comment... use MM:SS for a timestamp.',
+  [Phrase.ChatUploadToCloudText]: 'Upload to the cloud to enable video chat.',
+  [Phrase.ChatNoMessagesText]: 'No messages to display.',
+  [Phrase.ChatErrorLoadingText]: 'Error loading chat messages.',
+  [Phrase.ChatUserText1]: 'To use chat, please confirm you are happy for your username to be exposed to other members of your guild.',
+  [Phrase.ChatUserText2]: 'To avoid exposing your email address, you may set a custom username on ',
+  [Phrase.ChatUserText3]: ', and then update your username in the app settings.',
+  [Phrase.ChatUserText4]: 'Chat as',
+  [Phrase.ChatForClipsComingSoon]: 'Chat for clips is coming soon.',
 };
 
 export default ENGLISH;

@@ -10,7 +10,7 @@ import {
 } from 'main/types';
 import path from 'path';
 import { z } from 'zod';
-import { Affiliation, TAffiliation } from 'types/api';
+import { Affiliation, ChatMessage, TAffiliation } from 'types/api';
 import WebSocket, { RawData } from 'ws';
 import {
   cloudSignedMetadataToRendererVideo,
@@ -29,6 +29,7 @@ const enum VideoMessages {
   PROTECT = 'vp',
   UNPROTECT = 'vu',
   TAG = 'vt',
+  CHAT = 'vm',
 }
 
 const enum GuildMessages {
@@ -818,6 +819,10 @@ export default class CloudClient implements StorageClient {
       // updates to make sure we are up to date. After this we can
       // rely on the websocket to notify us of changes.
       this.checkForUpdate();
+
+      // Any open chat windows must be refreshed in case we missed
+      // messages while the websocket was disconnected.
+      send('refreshChatMessages');
     });
 
     this.ws.on('message', (data) => this.handleWebsocketMessage(data));
@@ -1379,7 +1384,13 @@ export default class CloudClient implements StorageClient {
 
       console.info('[CloudClient] Tagging cloud video', videoName, tag);
       send('displayTagCloudVideo', videoName, tag);
+      return;
+    }
 
+    if (key === VideoMessages.CHAT) {
+      console.info('[CloudClient] Video chat message received');
+      const message = JSON.parse(value);
+      send('displayAddChatMessage', message);
       return;
     }
 
@@ -1404,5 +1415,85 @@ export default class CloudClient implements StorageClient {
     }
 
     console.info('[CloudClient] No action on this message');
+  }
+
+  public async getOrCreateChatCorrelator(video: RendererVideo) {
+    console.info('[CloudClient] Get or create chat correlator');
+
+    const { uniqueHash, start } = video;
+
+    if (!start || !uniqueHash) {
+      console.error(
+        '[CloudClient] Unable to get or create chat correlator for this video',
+        start,
+        uniqueHash,
+      );
+      throw new Error('Unable to get or create chat correlator for this video');
+    }
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/chat/${uniqueHash}/${start}`;
+    const headers = { Authorization: this.authHeader };
+
+    const rsp = await axios.post(url, undefined, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    const { correlator } = z.object({ correlator: z.string() }).parse(rsp.data);
+    console.info('[CloudClient] Got chat correlator', correlator);
+    return correlator;
+  }
+
+  public async getChatMessages(correlator: string) {
+    console.info(
+      '[CloudClient] Getting chat messages for correlator',
+      correlator,
+    );
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/chat/${correlator}`;
+    const headers = { Authorization: this.authHeader };
+
+    const rsp = await axios.get(url, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    const chatMessages = z.array(ChatMessage).parse(rsp.data);
+
+    console.info(
+      '[CloudClient] Got',
+      chatMessages.length,
+      'chat messages for correlator',
+      correlator,
+    );
+
+    return chatMessages;
+  }
+
+  public async postChatMessage(correlator: string, message: string) {
+    console.info(
+      '[CloudClient] Posting chat message for video',
+      correlator,
+      message,
+    );
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/chat/${correlator}`;
+    const headers = { Authorization: this.authHeader };
+    const body = { message };
+
+    await axios.post(url, body, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    console.info(
+      '[CloudClient] Successfully posted chat message',
+      message,
+      'for correlator',
+      correlator,
+    );
   }
 }
