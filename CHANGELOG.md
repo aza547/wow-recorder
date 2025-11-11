@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [PR 764](https://github.com/aza547/wow-recorder/pull/764) - Adds the video chat feature for Pro users.
+
 ### Fixed
 - Accept MOP classic PTR flavours in the MOP classic field. As usual, PTR support is best effort.
 - Take the latest rust-ps exe.
