@@ -18,6 +18,7 @@ import {
   ArrowLeftFromLine,
   ArrowRightToLine,
   Cloud,
+  Clapperboard,
 } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { VideoCategory } from '../types/VideoCategory';
@@ -144,10 +145,19 @@ const CategoryPage = (props: IProps) => {
   }, [playerHeight]);
 
   const renderChat = (video: RendererVideo | undefined) => {
+    if (category === VideoCategory.Clips) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center text-foreground text-sm font-bold">
+          <Clapperboard size={35} className="mb-2" />
+          {getLocalePhrase(language, Phrase.ChatForClipsComingSoon)}
+        </div>
+      );
+    }
+
     if (!video) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center text-foreground text-sm font-bold">
-          <Cloud />
+          <Cloud size={35} className="mb-2" />
           {getLocalePhrase(language, Phrase.ChatUploadToCloudText)}
         </div>
       );

@@ -484,6 +484,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ChatUserText2]: '为避免泄露您的电子邮件地址，您可以在以下网站设置自定义用户名：',
   [Phrase.ChatUserText3]: '，然后在应用设置中更新您的用户名。',
   [Phrase.ChatUserText4]: '以此用户名聊天',
+  [Phrase.ChatForClipsComingSoon]: '剪辑聊天功能即将推出。',
 };
 
 export default CHINESE_SIMPLIFIED;

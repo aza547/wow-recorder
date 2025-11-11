@@ -481,6 +481,7 @@ enum Phrase {
   ChatUserText2,
   ChatUserText3,
   ChatUserText4,
+  ChatForClipsComingSoon,
 }
 
 enum Language {

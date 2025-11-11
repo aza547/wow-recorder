@@ -484,6 +484,7 @@ const GERMAN: Translations = {
   [Phrase.ChatUserText2]: 'Um Ihre E-Mail-Adresse zu schützen, können Sie auf folgender Seite einen eigenen Benutzernamen festlegen: ',
   [Phrase.ChatUserText3]: ', und anschließend Ihren Benutzernamen in den App-Einstellungen aktualisieren.',
   [Phrase.ChatUserText4]: 'Chatten als',
+  [Phrase.ChatForClipsComingSoon]: 'Chat für Clips kommt bald.',
 };
 
 export default GERMAN;

@@ -484,6 +484,7 @@ const ENGLISH: Translations = {
   [Phrase.ChatUserText2]: 'To avoid exposing your email address, you may set a custom username on ',
   [Phrase.ChatUserText3]: ', and then update your username in the app settings.',
   [Phrase.ChatUserText4]: 'Chat as',
+  [Phrase.ChatForClipsComingSoon]: 'Chat for clips is coming soon.',
 };
 
 export default ENGLISH;

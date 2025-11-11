@@ -484,6 +484,7 @@ const KOREAN: Translations = {
   [Phrase.ChatUserText2]: '이메일 주소가 노출되지 않도록 하려면, 다음 사이트에서 사용자 이름을 직접 설정할 수 있습니다: ',
   [Phrase.ChatUserText3]: ', 그런 다음 앱 설정에서 사용자 이름을 업데이트하세요.',
   [Phrase.ChatUserText4]: '다음 이름으로 채팅하기',
+  [Phrase.ChatForClipsComingSoon]: '클립용 채팅 기능이 곧 제공됩니다.',
 };
 
 export default KOREAN;
