@@ -17,14 +17,13 @@ interface IProps {
   video: RendererVideo;
   videoPlayerRef: MutableRefObject<VideoPlayerRef | null>;
   language: Language;
-  cloudAccountName: string;
 }
 
 /**
  * A page representing a video category.
  */
 const VideoChat = (props: IProps) => {
-  const { video, videoPlayerRef, cloudAccountName } = props;
+  const { video, videoPlayerRef } = props;
   const [message, setMessage] = useState<string>('');
   const chatRef = useRef<HTMLDivElement>(null);
   const correlatorRef = useRef<string | null>(null);
@@ -144,7 +143,7 @@ const VideoChat = (props: IProps) => {
       parts.push(msg.slice(lastIndex));
     }
 
-    return <div className="pl-1">{parts}</div>;
+    return <div className="pl-2">{parts}</div>;
   };
 
   const renderChats = () => {
@@ -213,7 +212,7 @@ const VideoChat = (props: IProps) => {
         <Textarea
           className="bg-background-dark-gradient-to rounded-sm 
             border-background-dark-gradient-to flex-1 resize-none
-            placeholder:text-foreground  focus-visible:ring-0 placeholder:italic
+            placeholder:text-foreground  focus-visible:ring-0
             focus-visible:border-background-dark-gradient-to scrollbar-thin py-2"
           placeholder={getLocalePhrase(
             props.language,
@@ -242,10 +241,6 @@ const VideoChat = (props: IProps) => {
           >
             <SendHorizontal size={18} />
           </Button>
-          {/* TODO - This will run off the screen for long usernames, also tooltip to explain properly and recommend set username? */}
-          <div className="flex items-center justify-center text-xs text-foreground font-bold">
-            {cloudAccountName}
-          </div>
         </div>
       </div>
     </>

@@ -480,6 +480,10 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ChatUploadToCloudText]: '上传到云端以启用视频聊天。',
   [Phrase.ChatNoMessagesText]: '没有可显示的消息。',
   [Phrase.ChatErrorLoadingText]: '加载聊天消息时出错。',
+  [Phrase.ChatUserText1]: '要使用聊天功能，请确认您同意将用户名显示给可能阅读此聊天的公会成员。',
+  [Phrase.ChatUserText2]: '为避免泄露您的电子邮件地址，您可以在以下网站设置自定义用户名：',
+  [Phrase.ChatUserText3]: '，然后在应用设置中更新您的用户名。',
+  [Phrase.ChatUserText4]: '以此用户名聊天',
 };
 
 export default CHINESE_SIMPLIFIED;

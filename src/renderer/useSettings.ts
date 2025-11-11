@@ -112,6 +112,7 @@ export const getSettings = (): ConfigurationSchema => {
     manualRecordSoundAlert: getConfigValue<boolean>('manualRecordSoundAlert'),
     manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
+    chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
     /* eslint-enable prettier/prettier */
   };
 

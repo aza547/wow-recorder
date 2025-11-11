@@ -477,6 +477,10 @@ enum Phrase {
   ChatUploadToCloudText,
   ChatNoMessagesText,
   ChatErrorLoadingText,
+  ChatUserText1,
+  ChatUserText2,
+  ChatUserText3,
+  ChatUserText4,
 }
 
 enum Language {

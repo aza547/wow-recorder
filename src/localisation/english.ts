@@ -480,6 +480,10 @@ const ENGLISH: Translations = {
   [Phrase.ChatUploadToCloudText]: 'Upload to the cloud to enable video chat.',
   [Phrase.ChatNoMessagesText]: 'No messages to display.',
   [Phrase.ChatErrorLoadingText]: 'Error loading chat messages.',
+  [Phrase.ChatUserText1]: 'To use chat, please confirm you are happy for your username to be exposed to members of your guild who may read this chat.',
+  [Phrase.ChatUserText2]: 'To avoid exposing your email address, you may set a custom username on ',
+  [Phrase.ChatUserText3]: ', and then update your username in the app settings.',
+  [Phrase.ChatUserText4]: 'Chat as',
 };
 
 export default ENGLISH;

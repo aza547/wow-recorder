@@ -48,6 +48,7 @@ import VideoCorrelator from './VideoCorrelator';
 import { Phrase } from 'localisation/phrases';
 import BulkTransferDialog from './BulkTransferDialog';
 import VideoChat from './VideoChat';
+import ConfirmChatNamePrompt from './ConfirmChatNamePrompt';
 
 interface IProps {
   category: VideoCategory;
@@ -152,13 +153,22 @@ const CategoryPage = (props: IProps) => {
       );
     }
 
+    if (config.cloudAccountName !== config.chatUserNameAgreed) {
+      return (
+        <ConfirmChatNamePrompt
+          cloudAccountName={config.cloudAccountName}
+          setConfig={setConfig}
+          language={language}
+        />
+      );
+    }
+
     return (
       <VideoChat
         key={video.videoName}
         videoPlayerRef={videoPlayerRef}
         video={video}
         language={language}
-        cloudAccountName={config.cloudAccountName}
       />
     );
   };
