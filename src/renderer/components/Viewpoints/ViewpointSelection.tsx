@@ -260,7 +260,7 @@ export default function ViewpointSelection(props: IProps) {
   if (combatants.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-2 text-foreground font-bold text-sm">
-        <Ban />
+        <Ban size={35} className="mb-2" />
         {getLocalePhrase(appState.language, Phrase.NoCombatants)}
       </div>
     );

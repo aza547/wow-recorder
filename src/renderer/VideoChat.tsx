@@ -195,7 +195,7 @@ const VideoChat = (props: IProps) => {
     }
 
     return (
-      <div className="flex flex-col items-center justify-center w-full h-full">
+      <div className="flex flex-col items-center justify-center w-full h-full font-bold">
         <MessageSquare size={35} className="mx-8 my-2" />
         {getLocalePhrase(props.language, Phrase.ChatNoMessagesText)}
       </div>
