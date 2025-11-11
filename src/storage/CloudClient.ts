@@ -1414,8 +1414,6 @@ export default class CloudClient implements StorageClient {
       return;
     }
 
-    // TODO catch chat messaages.
-
     console.info('[CloudClient] No action on this message');
   }
 

@@ -1,4 +1,4 @@
-import { MessageSquare, SendHorizontal } from 'lucide-react';
+import { MessageSquare, SendHorizontal, Unplug } from 'lucide-react';
 import { Textarea } from './components/TextArea/textarea';
 import { Button } from './components/Button/Button';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
@@ -157,7 +157,8 @@ const VideoChat = (props: IProps) => {
 
     if (error) {
       return (
-        <div>
+        <div className="flex flex-col items-center justify-center w-full h-full font-bold">
+          <Unplug size={35} className="mx-8 my-2" />
           {getLocalePhrase(props.language, Phrase.ChatErrorLoadingText)}
         </div>
       );
