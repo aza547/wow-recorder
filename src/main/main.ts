@@ -22,7 +22,7 @@ import {
   getAssetPath,
   handleSafeVodRequest,
 } from './util';
-import { OurDisplayType, RendererVideo, SoundAlerts, VideoPlayerSettings } from './types';
+import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
 import Manager from './Manager';
 import AppUpdater from './AppUpdater';
