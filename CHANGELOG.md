@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+### Added
+### Fixed
+
+## [7.2.0] - 2025-11-12
+### Changed
 - Moved the viewpoints selection into an expandable drawer.
 
 ### Added
