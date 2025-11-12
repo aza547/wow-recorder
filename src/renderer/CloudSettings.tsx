@@ -203,6 +203,12 @@ const CloudSettings = (props: IProps) => {
   };
 
   const setMinKeystoneLevel = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.value) {
+      // Allow setting empty as midpoint.
+      setConfig((prev) => ({ ...prev, cloudUploadDungeonMinLevel: -1 }));
+      return;
+    }
+
     const cloudUploadDungeonMinLevel = parseInt(event.target.value, 10);
 
     if (Number.isNaN(cloudUploadDungeonMinLevel)) {
@@ -243,7 +249,11 @@ const CloudSettings = (props: IProps) => {
           </Tooltip>
         </Label>
         <Input
-          value={config.cloudUploadDungeonMinLevel}
+          value={
+            config.cloudUploadDungeonMinLevel >= 0
+              ? config.cloudUploadDungeonMinLevel
+              : ''
+          }
           name="cloudUploadDungeonMinLevel"
           disabled={!config.cloudUploadDungeons}
           onChange={setMinKeystoneLevel}

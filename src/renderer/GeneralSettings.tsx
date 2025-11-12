@@ -36,12 +36,17 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
       return;
     }
 
-    setConfigValues({
+    const toSet: Record<string, unknown> = {
       storagePath: config.storagePath,
       bufferStoragePath: config.bufferStoragePath,
       separateBufferPath: config.separateBufferPath,
-      maxStorage: config.maxStorage,
-    });
+    };
+
+    if (config.maxStorage >= 0) {
+      toSet.maxStorage = config.maxStorage;
+    }
+
+    setConfigValues(toSet);
 
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
@@ -221,6 +226,12 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
   };
 
   const setMaxStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.value) {
+      // Allow setting empty as midpoint.
+      setConfig((prev) => ({ ...prev, maxStorage: -1 }));
+      return;
+    }
+
     const maxStorage = parseInt(event.target.value, 10);
 
     if (Number.isNaN(maxStorage) || maxStorage < 0) {
@@ -257,7 +268,7 @@ const GeneralSettings: React.FC<IProps> = (props: IProps) => {
         </Label>
         <Input
           name="maxDiskStorage"
-          value={config.maxStorage}
+          value={config.maxStorage >= 0 ? config.maxStorage : ''}
           onChange={setMaxStorage}
           required
           type="numeric"

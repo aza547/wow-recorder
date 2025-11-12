@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Take the latest rust-ps executable.
 - Make the debounce timer on inputting cloud login details longer so it's less annoying.
 - Fix the style of the scrollbar on the filter selection dropdown.
+- [Issue 765](https://github.com/aza547/wow-recorder/issues/765) - Allow number settings fields to be temporarily empty while changing them.
 
 ## [7.1.1] - 2025-10-31
 ### Fixed
