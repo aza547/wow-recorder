@@ -56,6 +56,11 @@ const Status = ({
       flavours.push(s);
     }
 
+    if (config.recordClassicPtr) {
+      const s = getLocalePhrase(language, Phrase.ClassicPtr);
+      flavours.push(s);
+    }
+
     if (config.recordEra) {
       const s = getLocalePhrase(language, Phrase.Era);
       flavours.push(s);
@@ -189,6 +194,15 @@ const Status = ({
                 {': '}
               </span>
               <code>{config.classicLogPath}</code>
+            </li>
+          )}
+          {config.recordClassicPtr && (
+            <li>
+              <span className="font-bold">
+                {getLocalePhrase(language, Phrase.ClassicPtr)}
+                {': '}
+              </span>
+              <code>{config.classicPtrLogPath}</code>
             </li>
           )}
           {config.recordEra && (

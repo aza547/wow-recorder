@@ -378,7 +378,9 @@ type BaseConfig = {
   recordRetail: boolean;
   retailLogPath: string;
   recordClassic: boolean;
+  recordClassicPtr: boolean;
   classicLogPath: string;
+  classicPtrLogPath: string;
   recordEra: boolean;
   eraLogPath: string;
   recordRetailPtr: boolean;

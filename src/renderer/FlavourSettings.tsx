@@ -35,20 +35,24 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     setConfigValues({
       recordRetail: config.recordRetail,
       retailLogPath: config.retailLogPath,
-      recordClassic: config.recordClassic,
-      classicLogPath: config.classicLogPath,
-      recordEra: config.recordEra,
-      eraLogPath: config.eraLogPath,
       recordRetailPtr: config.recordRetailPtr,
       retailPtrLogPath: config.retailPtrLogPath,
+      recordClassic: config.recordClassic,
+      classicLogPath: config.classicLogPath,
+      recordClassicPtr: config.recordClassicPtr,
+      classicPtrLogPath: config.classicPtrLogPath,
+      recordEra: config.recordEra,
+      eraLogPath: config.eraLogPath,
     });
 
     ipc.reconfigureBase();
   }, [
     config.recordRetail,
     config.recordClassic,
+    config.recordClassicPtr,
     config.retailLogPath,
     config.classicLogPath,
+    config.classicPtrLogPath,
     config.recordEra,
     config.eraLogPath,
     config.recordRetailPtr,
@@ -429,6 +433,94 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         )}
       </div>
     );
+
+  //classic ptr
+  };
+
+  const setRecordClassicPtr = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        recordClassicPtr: checked,
+      };
+    });
+  };
+
+  const setClassicPtrLogPath = async () => {
+    if (isComponentDisabled()) {
+      return;
+    }
+
+    const newPath = await pathSelect();
+
+    if (newPath === '') {
+      return;
+    }
+
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        classicPtrLogPath: newPath,
+      };
+    });
+  };
+
+  const getClassicPtrSettings = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-row gap-x-6">
+        <div className="flex flex-col w-[140px]">
+          <Label htmlFor="recordClassicPtr" className="flex items-center">
+            {getLocalePhrase(appState.language, Phrase.RecordClassicPtrLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.recordClassicPtr.description,
+              )}
+              side="top"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch('recordClassicPtr', setRecordClassicPtr)}
+          </div>
+        </div>
+        {config.recordClassicPtr && (
+          <div className="flex flex-col w-1/2">
+            <Label htmlFor="classicPtrLogPath" className="flex items-center">
+              {getLocalePhrase(appState.language, Phrase.ClassicPtrLogPathLabel)}
+              <Tooltip
+                content={getLocalePhrase(
+                  appState.language,
+                  configSchema.classicPtrLogPath.description,
+                )}
+                side="top"
+              >
+                <Info size={20} className="inline-flex ml-2" />
+              </Tooltip>
+            </Label>
+            <Input
+              value={config.classicPtrLogPath}
+              onClick={setClassicPtrLogPath}
+              readOnly
+              required
+            />
+            {config.classicPtrLogPath === '' && (
+              <span className="text-error text-xs font-semibold mt-1">
+                {getLocalePhrase(
+                  appState.language,
+                  Phrase.InvalidClassicPtrLogPathText,
+                )}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -438,6 +530,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       {getClassicSettings()}
       {getEraSettings()}
       {getRetailPtrSettings()}
+      {getClassicPtrSettings()}
     </div>
   );
 };
