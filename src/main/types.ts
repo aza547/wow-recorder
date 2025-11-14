@@ -333,11 +333,14 @@ type AppState = {
   language: Language;
   cloudStatus: CloudStatus;
   diskStatus: DiskStatus;
+  chatOpen: boolean;
+};
+
+type CloudState = {
   uploadProgress: number;
   downloadProgress: number;
   queuedUploads: number;
   queuedDownloads: number;
-  chatOpen: boolean;
 };
 
 type TPreviewPosition = {
@@ -676,4 +679,5 @@ export {
   BoxDimensions,
   WowProcessEvent,
   SoundAlerts,
+  CloudState,
 };

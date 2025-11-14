@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Improve frontend render performance on upload/download progress re-renders.
 
 ## [7.2.0] - 2025-11-12
 ### Changed

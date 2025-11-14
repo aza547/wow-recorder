@@ -1,7 +1,8 @@
 import { Phrase } from 'localisation/phrases';
 import { getLocalePhrase } from 'localisation/translations';
 import { CloudDownload, CloudUpload } from 'lucide-react';
-import { AppState } from 'main/types';
+import { AppState, CloudState } from 'main/types';
+import { useEffect, useState } from 'react';
 import {
   HoverCard,
   HoverCardContent,
@@ -16,15 +17,54 @@ type StatusProps = {
   appState: AppState;
 };
 
+const ipc = window.electron.ipcRenderer;
+
 const CloudStatus = ({ appState }: StatusProps) => {
-  const {
-    cloudStatus,
-    language,
-    queuedUploads,
-    queuedDownloads,
-    uploadProgress,
-    downloadProgress,
-  } = appState;
+  const { cloudStatus, language } = appState;
+
+  const [cloudState, setCloudState] = useState<CloudState>({
+    uploadProgress: 0,
+    downloadProgress: 0,
+    queuedUploads: 0,
+    queuedDownloads: 0,
+  });
+
+  useEffect(() => {
+    ipc.on('updateUploadProgress', (progress) => {
+      setCloudState((prevState) => ({
+        ...prevState,
+        uploadProgress: progress as number,
+      }));
+    });
+
+    ipc.on('updateDownloadProgress', (progress) => {
+      setCloudState((prevState) => ({
+        ...prevState,
+        downloadProgress: progress as number,
+      }));
+    });
+
+    ipc.on('updateDownloadQueueLength', (queued) => {
+      setCloudState((prevState) => ({
+        ...prevState,
+        queuedDownloads: queued as number,
+      }));
+    });
+
+    ipc.on('updateUploadQueueLength', (queued) => {
+      setCloudState((prevState) => ({
+        ...prevState,
+        queuedUploads: queued as number,
+      }));
+    });
+
+    return () => {
+      ipc.removeAllListeners('updateUploadProgress');
+      ipc.removeAllListeners('updateDownloadProgress');
+      ipc.removeAllListeners('updateDownloadQueueLength');
+      ipc.removeAllListeners('updateUploadQueueLength');
+    };
+  }, []);
 
   const statusLightsClasses = 'w-1.5 h-full rounded-l-md rounded-r-none';
 
@@ -77,7 +117,7 @@ const CloudStatus = ({ appState }: StatusProps) => {
     );
   } else {
     variant =
-      appState.queuedDownloads > 0 || appState.queuedUploads > 0
+      cloudState.queuedDownloads > 0 || cloudState.queuedUploads > 0
         ? 'active'
         : 'connected';
     status = getLocalePhrase(language, Phrase.StatusTitleConnected);
@@ -94,26 +134,27 @@ const CloudStatus = ({ appState }: StatusProps) => {
   }
 
   const renderUploadIcon = () => {
-    if (queuedUploads < 1) return <></>;
+    if (cloudState.queuedUploads < 1) return <></>;
     return (
       <div className="inline-flex gap-x-[2px] text-xs text-foreground-lighter">
         <CloudUpload size={16} />
-        {uploadProgress.toFixed(0)}%
+        {cloudState.uploadProgress.toFixed(0)}%
         <span className="text-[0.60rem] text-foreground mx-[2px]">
-          {queuedUploads > 1 && `+${queuedUploads - 1}`}
+          {cloudState.queuedUploads > 1 && `+${cloudState.queuedUploads - 1}`}
         </span>
       </div>
     );
   };
 
   const renderDownloadIcon = () => {
-    if (queuedDownloads < 1) return <></>;
+    if (cloudState.queuedDownloads < 1) return <></>;
     return (
       <div className="inline-flex gap-x-[2px] text-xs text-foreground-lighter">
         <CloudDownload size={16} />
-        {downloadProgress.toFixed(0)}%
+        {cloudState.downloadProgress.toFixed(0)}%
         <span className="text-[0.60rem] text-foreground mx-[2px]">
-          {queuedDownloads > 1 && `+${queuedDownloads - 1}`}
+          {cloudState.queuedDownloads > 1 &&
+            `+${cloudState.queuedDownloads - 1}`}
         </span>
       </div>
     );

@@ -103,53 +103,9 @@ const WarcraftRecorder = () => {
     // The disk storage status.
     diskStatus: { usage: 0, limit: 0 },
 
-    // Displayed on the cloud status card and used to hide
-    // some cloud settings if in the middle of an upload or download.
-    uploadProgress: 0,
-    downloadProgress: 0,
-    queuedUploads: 0,
-    queuedDownloads: 0,
-
     // The chat panel state.
     chatOpen: false,
   });
-
-  useEffect(() => {
-    ipc.on('updateUploadProgress', (progress) => {
-      setAppState((prevState) => ({
-        ...prevState,
-        uploadProgress: progress as number,
-      }));
-    });
-
-    ipc.on('updateDownloadProgress', (progress) => {
-      setAppState((prevState) => ({
-        ...prevState,
-        downloadProgress: progress as number,
-      }));
-    });
-
-    ipc.on('updateDownloadQueueLength', (queued) => {
-      setAppState((prevState) => ({
-        ...prevState,
-        queuedDownloads: queued as number,
-      }));
-    });
-
-    ipc.on('updateUploadQueueLength', (queued) => {
-      setAppState((prevState) => ({
-        ...prevState,
-        queuedUploads: queued as number,
-      }));
-    });
-
-    return () => {
-      ipc.removeAllListeners('updateUploadProgress');
-      ipc.removeAllListeners('updateDownloadProgress');
-      ipc.removeAllListeners('updateDownloadQueueLength');
-      ipc.removeAllListeners('updateUploadQueueLength');
-    };
-  }, []);
 
   // The video state contains most of the frontend state.
   const [videoState, setVideoState] = useState<RendererVideo[]>([]);
