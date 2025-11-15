@@ -6,9 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Record in MKV as an intermediate format for better error handle characteristics.
+
 ### Added
 ### Fixed
 - Improve frontend render performance on upload/download progress re-renders.
+- Fix an issue where the temporary recording folder would only get cleared out on restarts of the app.
 
 ## [7.2.0] - 2025-11-12
 ### Changed

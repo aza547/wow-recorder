@@ -841,6 +841,7 @@ const takeOwnershipBufferDir = async (dir: string) => {
 
   const unexpected = files
     .filter((file) => !file.endsWith('.mp4'))
+    .filter((file) => !file.endsWith('.mkv'))
     .filter((file) => file !== 'managed.txt');
 
   if (unexpected.length > 0) {
@@ -855,10 +856,10 @@ const takeOwnershipBufferDir = async (dir: string) => {
     throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
   }
 
-  const regex = /^\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}.mp4$/;
+  const regex = /^\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}.(mp4|mkv)$/;
 
   files
-    .filter((file) => file.endsWith('.mp4'))
+    .filter((file) => file.endsWith('.mp4') || file.endsWith('.mkv'))
     .forEach((file) => {
       const match = regex.test(file);
 

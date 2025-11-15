@@ -19,7 +19,6 @@ import {
   deferredPromiseHelper,
   fixPathWhenPackaged,
   getAssetPath,
-  getSortedVideos,
   isPushToTalkHotkey,
   convertUioHookEvent,
   tryUnlink,
@@ -27,6 +26,7 @@ import {
   takeOwnershipBufferDir,
   exists,
   emitErrorReport,
+  getSortedFiles,
 } from './util';
 import {
   AudioSource,
@@ -38,6 +38,7 @@ import {
   ObsVideoConfig,
   VideoSourceName,
   SceneItem,
+  FileSortDirection,
 } from './types';
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
@@ -533,8 +534,11 @@ export default class Recorder extends EventEmitter {
     await Recorder.createRecordingDirs(outputPath);
     await this.cleanup(outputPath);
 
+    // Record in MKV to avoid file corruption on crashes. MP4 cannot be
+    // recovered in that event but MKV can. We will remux to MP4 for browser
+    // player compatibility in the VideoProcessQueue.
     console.info('[Recorder] Set recording directory', outputPath);
-    noobs.SetRecordingCfg(outputPath, 0);
+    noobs.SetRecordingCfg(outputPath, 'mkv');
 
     const settings = Recorder.getEncoderSettings(obsRecEncoder, obsQuality);
     noobs.SetVideoEncoder(obsRecEncoder, settings);
@@ -893,11 +897,19 @@ export default class Recorder extends EventEmitter {
 
   /**
    * Clean-up the recording directory.
-   * @params Number of files to leave.
    */
   public async cleanup(obsPath: string) {
     console.info('[Recorder] Clean out buffer');
-    const videos = await getSortedVideos(obsPath); // This sorting is redundant.
+
+    // We now record in MKV but convert to MP4 during processing. So we're really
+    // cleaning out MKVs here but also may as well make sure we get any stray MP4s
+    // that might be hanging around from legacy versions.
+    const videos = await getSortedFiles(
+      obsPath,
+      '.*\\.(mp4|mkv)',
+      FileSortDirection.NewestFirst, // This sorting is redundant in this context.
+    );
+
     const files = videos.map((f) => f.name);
     const promises = files.map(tryUnlink);
     await Promise.all(promises);
