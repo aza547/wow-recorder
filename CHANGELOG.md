@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Record in MKV as an intermediate format for better error handle characteristics.
+- [Issue 771](https://github.com/aza547/wow-recorder/issues/771) - Record in MKV as an intermediate format for better error handle characteristics.
 
 ### Added
 ### Fixed
