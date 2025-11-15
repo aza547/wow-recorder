@@ -1,5 +1,5 @@
 import path from 'path';
-import { shouldUpload } from '../utils/configUtils';
+import { getBaseConfig, shouldUpload } from '../utils/configUtils';
 import DiskSizeMonitor from '../storage/DiskSizeMonitor';
 import ConfigService from '../config/ConfigService';
 import {
@@ -17,12 +17,14 @@ import {
   getFileInfo,
   fixPathWhenPackaged,
   logAxiosError,
+  tryUnlink,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import { send } from './main';
 import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import DiskClient from 'storage/DiskClient';
+import Recorder from './Recorder';
 
 const atomicQueue = require('atomic-queue');
 
@@ -398,6 +400,23 @@ export default class VideoProcessQueue {
     send('updateSaveStatus', SaveStatus.NotSaving);
     DiskClient.getInstance().refreshStatus();
     DiskClient.getInstance().refreshVideos();
+
+    // Delete the source file if it's not a clip. Clips source files should be retained.
+    if (!item.clip) {
+      console.info('[VideoProcessQueue] Deleting source file', item.source);
+      let success = await tryUnlink(item.source);
+
+      if (!success) {
+        // Wait a couple of seconds and try again.
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        success = await tryUnlink(item.source);
+      }
+
+      if (!success) {
+        // Not much else to do than log it.
+        console.warn('[VideoProcessQueue] Failed to delete src', item.source);
+      }
+    }
   }
 
   /**
@@ -458,8 +477,17 @@ export default class VideoProcessQueue {
    */
   private async videoQueueEmpty() {
     console.info('[VideoProcessQueue] Video processing queue empty');
+
+    // Run the size monitor.
     const sizeMonitor = new DiskSizeMonitor();
     sizeMonitor.run();
+
+    // Tidy the recording dir.
+    const cfg = ConfigService.getInstance();
+    const { obsPath } = getBaseConfig(cfg);
+    await Recorder.getInstance().cleanup(obsPath);
+
+    // Update the frontend with the new usage.
     const usage = await sizeMonitor.usage();
 
     const status: DiskStatus = {
@@ -514,7 +542,9 @@ export default class VideoProcessQueue {
     outputDir: string,
     suffix: string | undefined,
   ) {
-    let videoName = path.basename(sourceFile, '.mp4');
+    // Can be either ".mp4" if clipping or ".mkv" if regular recording.
+    const extension = sourceFile.slice(-4);
+    let videoName = path.basename(sourceFile, extension);
 
     if (suffix) {
       videoName += ' - ';
@@ -522,6 +552,7 @@ export default class VideoProcessQueue {
     }
 
     videoName = VideoProcessQueue.sanitizeFilename(videoName);
+    // Always output MP4. MKV is just an intermediate format.
     return path.join(outputDir, `${videoName}.mp4`);
   }
 
