@@ -534,7 +534,7 @@ export default class Recorder extends EventEmitter {
     await this.cleanup(outputPath);
 
     console.info('[Recorder] Set recording directory', outputPath);
-    noobs.SetRecordingDir(outputPath);
+    noobs.SetRecordingCfg(outputPath, 0);
 
     const settings = Recorder.getEncoderSettings(obsRecEncoder, obsQuality);
     noobs.SetVideoEncoder(obsRecEncoder, settings);

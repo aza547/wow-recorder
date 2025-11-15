@@ -17,6 +17,7 @@ import {
   getFileInfo,
   fixPathWhenPackaged,
   logAxiosError,
+  tryUnlink,
 } from './util';
 import CloudClient from '../storage/CloudClient';
 import { send } from './main';
@@ -220,6 +221,18 @@ export default class VideoProcessQueue {
       );
 
       await writeMetadataFile(videoPath, data.metadata);
+
+      if (!data.clip) {
+        console.info('[VideoProcessQueue] Deleting source file');
+        const success = await tryUnlink(data.source);
+
+        if (!success) {
+          console.warn(
+            '[VideoProcessQueue] Failed to delete source video:',
+            data.source,
+          );
+        }
+      }
 
       const readyToUpload = await CloudClient.getInstance().ready();
       const upload = readyToUpload && shouldUpload(this.cfg, data.metadata);
