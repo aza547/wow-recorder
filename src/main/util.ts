@@ -904,12 +904,12 @@ const handleSafeVodRequest = async (request: Request) => {
 
     const filePath = Buffer.from(requestUrl).toString('utf-8').split('#')[0]; // Remove any timestamps, the frontend handles those.
 
-    if (!filePath.endsWith('.mp4')) {
-      console.error('[Util] Not an MP4 file:', filePath);
+    if (!filePath.endsWith('.mp4') && !filePath.endsWith('.mkv')) {
+      console.error('[Util] Not an MP4 or MKV file:', filePath);
 
       return new Response('', {
         status: 400,
-        statusText: 'Must be MP4',
+        statusText: 'Must be MP4 or MKV',
       });
     }
 

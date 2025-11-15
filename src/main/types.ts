@@ -305,6 +305,7 @@ enum Pages {
   'None',
   'SceneEditor',
   'Settings',
+  'LivePlayer',
 }
 
 /**

@@ -138,6 +138,17 @@ const SideMenu = (props: IProps) => {
     );
   };
 
+  const renderLivePlayerTab = () => {
+    return (
+      <Menu.Item value={Pages.LivePlayer} className="py-1.5">
+        <Menu.Item.Icon>
+          <MonitorCog />
+        </Menu.Item.Icon>
+        Live Player
+      </Menu.Item>
+    );
+  };
+
   const handleChangeCategory = (newCategory: VideoCategory) => {
     const index = getCategoryIndex(newCategory);
     setConfigValue('selectedCategory', index);
@@ -216,6 +227,7 @@ const SideMenu = (props: IProps) => {
           </Menu.Label>
           {renderSettingsTab()}
           {renderSceneTab()}
+          {renderLivePlayerTab()}
         </Menu>
       </ScrollArea>
       <div className="mt-auto w-full">

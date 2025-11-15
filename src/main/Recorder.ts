@@ -43,6 +43,7 @@ import {
 import ConfigService from '../config/ConfigService';
 import { obsResolutions } from './constants';
 import {
+  getBaseConfig,
   getObsAudioConfig,
   getObsVideoConfig,
   getOverlayConfig,
@@ -397,6 +398,10 @@ export default class Recorder extends EventEmitter {
 
     ipcMain.handle('getSensibleEncoderDefault', (): string => {
       return this.getSensibleEncoderDefault();
+    });
+
+    ipcMain.handle('getLiveVideoName', async (): Promise<string | null> => {
+      return this.getLiveFile();
     });
   }
 
@@ -1804,5 +1809,17 @@ export default class Recorder extends EventEmitter {
     const last = this.lastFile;
     this.lastFile = null;
     return last;
+  }
+
+  public async getLiveFile() {
+    const { obsPath } = getBaseConfig(this.cfg);
+
+    const videos = await getSortedFiles(
+      obsPath,
+      '.*\\.(mkv)',
+      FileSortDirection.NewestFirst,
+    );
+
+    return videos[0]?.name || null;
   }
 }

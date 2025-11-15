@@ -5,6 +5,7 @@ import { ConfigurationSchema } from 'config/configSchema';
 import SceneEditor from './SceneEditor';
 import SettingsPage from './SettingsPage';
 import CategoryPage from './CategoryPage';
+import LivePlayer from './LivePlayer';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -72,10 +73,15 @@ const Layout = (props: IProps) => {
     );
   };
 
+  const renderLivePlayer = () => {
+    return <LivePlayer></LivePlayer>;
+  };
+
   return (
     <>
       {page === Pages.Settings && renderSettingsPage()}
       {page === Pages.SceneEditor && renderSceneEditor()}
+      {page === Pages.LivePlayer && renderLivePlayer()}
       {page === Pages.None && renderCategoryPage()}
     </>
   );
