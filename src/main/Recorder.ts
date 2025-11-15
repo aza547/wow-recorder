@@ -985,7 +985,7 @@ export default class Recorder extends EventEmitter {
     const wrote = this.stopQueue.shift();
 
     try {
-      await Promise.race([wrote, getPromiseBomb(0, 'Failed to stop')]);
+      await Promise.race([wrote, getPromiseBomb(60, 'Failed to stop')]);
       console.info('[Recorder] Stopped successfully');
     } catch (error) {
       console.error('[Recorder]', error, 'will force stop.');
