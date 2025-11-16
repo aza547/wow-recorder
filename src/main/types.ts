@@ -334,6 +334,7 @@ type AppState = {
   cloudStatus: CloudStatus;
   diskStatus: DiskStatus;
   chatOpen: boolean;
+  preferredViewpoint: string;
 };
 
 type CloudState = {

@@ -34,7 +34,12 @@ interface IProps {
  */
 const VideoSelectionTable = (props: IProps) => {
   const { appState, setAppState, persistentProgress, table } = props;
-  const { videoFilterTags, dateRangeFilter, storageFilter } = appState;
+  const {
+    videoFilterTags,
+    dateRangeFilter,
+    storageFilter,
+    preferredViewpoint,
+  } = appState;
 
   /**
    * Mark the row as selected and update the video player to play the first
@@ -75,6 +80,17 @@ const VideoSelectionTable = (props: IProps) => {
 
       const video = row.original;
       const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
+
+      let toSelect: RendererVideo | undefined;
+
+      if (preferredViewpoint) {
+        toSelect = povs.find((pov) => pov.player?._name === preferredViewpoint);
+      }
+
+      if (!toSelect) {
+        toSelect = povs[0];
+      }
+
       persistentProgress.current = 0;
 
       // It's a regular click, so unselect any other selected rows.
@@ -91,12 +107,12 @@ const VideoSelectionTable = (props: IProps) => {
 
       setAppState((prevState) => ({
         ...prevState,
-        selectedVideos: povs[0] ? [povs[0]] : [],
+        selectedVideos: toSelect ? [toSelect] : [],
         multiPlayerMode: false,
         playing: false,
       }));
     },
-    [persistentProgress, setAppState, table],
+    [persistentProgress, setAppState, table, preferredViewpoint],
   );
 
   /**

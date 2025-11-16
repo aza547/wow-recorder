@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 - [Issue 771](https://github.com/aza547/wow-recorder/issues/771) - Record in MKV as an intermediate format for better error handle characteristics.
-
+- [Issue 775](https://github.com/aza547/wow-recorder/issues/755) - Selected player is now sticky when changing between rows.
 ### Added
 ### Fixed
 - Improve frontend render performance on upload/download progress re-renders.

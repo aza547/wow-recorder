@@ -105,6 +105,11 @@ const WarcraftRecorder = () => {
 
     // The chat panel state.
     chatOpen: false,
+
+    // The preferred viewpoint for activities with multiple viewpoints.
+    // This is updated when a user switches viewpoint to in the viewpoint
+    // selector to remember their preference when changing rows in the table.
+    preferredViewpoint: '',
   });
 
   // The video state contains most of the frontend state.
