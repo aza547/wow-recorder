@@ -264,6 +264,7 @@ export const populateAffixesCell = (
 
 export const populateViewpointCell = (
   info: CellContext<RendererVideo, unknown>,
+  preferredViewpoint: string,
 ) => {
   const video = info.getValue() as RendererVideo;
   const count = countUniqueViewpoints(video);
@@ -271,7 +272,19 @@ export const populateViewpointCell = (
   // Prioritize the any videos with a disk copy as that's likely to be the
   // local users viewpoint so most relevant to them.
   const povs = [video, ...video.multiPov].sort(povDiskFirstNameSort);
-  const first = povs[0];
+  let first = povs[0];
+
+  if (preferredViewpoint) {
+    // If we have a preferred viewpoint, try to put that player first.
+    const preferredMatch = povs.find(
+      (p) => p.player?._name === preferredViewpoint,
+    );
+
+    if (preferredMatch) {
+      first = preferredMatch;
+    }
+  }
+
   const { player } = first;
 
   if (!player || !player._specID) {

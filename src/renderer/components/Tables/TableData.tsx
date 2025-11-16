@@ -64,6 +64,7 @@ const useTable = (
     dateRangeFilter,
     storageFilter,
     cloudStatus,
+    preferredViewpoint,
   } = appState;
 
   /**
@@ -142,11 +143,11 @@ const useTable = (
         id: 'Viewpoints',
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
-        cell: populateViewpointCell,
+        cell: (v) => populateViewpointCell(v, preferredViewpoint),
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, cloudStatus, videoState, setVideoState],
+    [language, cloudStatus, videoState, setVideoState, preferredViewpoint],
   );
 
   /**
@@ -195,11 +196,11 @@ const useTable = (
         id: 'Viewpoints',
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
-        cell: populateViewpointCell,
+        cell: (v) => populateViewpointCell(v, preferredViewpoint),
         sortingFn: viewPointCountSort,
       },
     ],
-    [language, cloudStatus, setVideoState],
+    [language, cloudStatus, setVideoState, preferredViewpoint],
   );
 
   /**
@@ -262,11 +263,11 @@ const useTable = (
         id: 'Viewpoints',
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
-        cell: populateViewpointCell,
+        cell: (v) => populateViewpointCell(v, preferredViewpoint),
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, setVideoState],
+    [appState, setVideoState, preferredViewpoint],
   );
 
   /**
@@ -315,11 +316,11 @@ const useTable = (
         id: 'Viewpoints',
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
-        cell: populateViewpointCell,
+        cell: (v) => populateViewpointCell(v, preferredViewpoint),
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, setVideoState],
+    [appState, setVideoState, preferredViewpoint],
   );
 
   /**
@@ -370,11 +371,11 @@ const useTable = (
         id: 'Viewpoints',
         accessorFn: (v) => v,
         header: () => ViewpointsHeader(language),
-        cell: populateViewpointCell,
+        cell: (v) => populateViewpointCell(v, preferredViewpoint),
         sortingFn: viewPointCountSort,
       },
     ],
-    [appState, setVideoState],
+    [appState, setVideoState, preferredViewpoint],
   );
 
   const manualColumns = useMemo<ColumnDef<RendererVideo>[]>(
