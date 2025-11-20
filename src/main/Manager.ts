@@ -57,6 +57,7 @@ export default class Manager {
   private retailLogHandler: RetailLogHandler | undefined;
   private retailPtrLogHandler: RetailLogHandler | undefined;
   private classicLogHandler: ClassicLogHandler | undefined;
+  private classicPtrLogHandler: ClassicLogHandler | undefined;
   private eraLogHandler: EraLogHandler | undefined;
 
   /**
@@ -357,9 +358,10 @@ export default class Manager {
 
       const logHandlers = [
         this.retailLogHandler,
-        this.classicLogHandler,
-        this.eraLogHandler,
         this.retailPtrLogHandler,
+        this.classicLogHandler,
+        this.classicPtrLogHandler,
+        this.eraLogHandler,
       ];
 
       logHandlers
@@ -367,9 +369,10 @@ export default class Manager {
         .forEach((lh) => lh.destroy());
 
       this.retailLogHandler = undefined;
-      this.classicLogHandler = undefined;
-      this.eraLogHandler = undefined;
       this.retailPtrLogHandler = undefined;
+      this.classicLogHandler = undefined;
+      this.classicPtrLogHandler = undefined;
+      this.eraLogHandler = undefined;
     }
 
     if (config.recordRetail) {
@@ -378,6 +381,10 @@ export default class Manager {
 
     if (config.recordClassic) {
       this.classicLogHandler = new ClassicLogHandler(config.classicLogPath);
+    }
+
+    if (config.recordClassicPtr) {
+      this.classicLogHandler = new ClassicLogHandler(config.classicPtrLogPath);
     }
 
     if (config.recordEra) {
