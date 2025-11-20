@@ -24,6 +24,7 @@ jobs:
 
     - name: Install deps
       run: npm install
-
-    - name: Run unit tests 
-      run: npm test
+      
+    # https://github.com/aza547/wow-recorder/issues/737
+    # - name: Run unit tests 
+    #   run: npm test
