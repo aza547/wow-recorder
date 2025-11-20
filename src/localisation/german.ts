@@ -485,6 +485,13 @@ const GERMAN: Translations = {
   [Phrase.ChatUserText3]: ', und anschließend Ihren Benutzernamen in den App-Einstellungen aktualisieren.',
   [Phrase.ChatUserText4]: 'Chatten als',
   [Phrase.ChatForClipsComingSoon]: 'Chat für Clips kommt bald.',
+  [Phrase.ClassicPtrLogPathDescription]: 'Speicherort des World-of-Warcraft-Protokollordners für die Classic-PTR-Installation, z. B. "D:\\World of Warcraft\\_classic_ptr_\\Logs".',
+  [Phrase.RecordClassicPtrDescription]: 'Gibt an, ob die Anwendung Classic PTR aufzeichnen soll. Die Funktion ist nur eingeschränkt zuverlässig und hängt von der fortgesetzten PTR-Kampfprotokoll-Kompatibilität ab.',
+  [Phrase.RecordClassicPtrLabel]: 'Classic PTR aufzeichnen',
+  [Phrase.ClassicPtrLogPathLabel]: 'Classic PTR-Protokollpfad',
+  [Phrase.InvalidClassicPtrLogPathText]: 'Ungültiger Classic-PTR-Protokollpfad.',
+  [Phrase.ClassicPtr]: 'Classic PTR',
+  [Phrase.InvalidClassicPtrLogPath]: 'Ungültiger Classic-PTR-Protokollpfad.',
 };
 
 export default GERMAN;

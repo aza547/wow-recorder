@@ -393,19 +393,6 @@ const validateBaseConfig = async (config: BaseConfig) => {
     }
   }
 
-  if (recordRetailPtr) {
-    const validFlavours = ['wowxptr', 'wow_beta'];
-    const validPath =
-      validFlavours.includes(getWowFlavour(retailPtrLogPath)) &&
-      path.basename(retailPtrLogPath) === 'Logs';
-
-    if (!validPath) {
-      console.error('[Util] Invalid retail PTR log path', retailPtrLogPath);
-      const error = getLocaleError(Phrase.InvalidRetailPtrLogPathText);
-      throw new Error(error);
-    }
-  }
-
   if (recordEra) {
     const validFlavours = ['wow_classic_era'];
     const validPath =

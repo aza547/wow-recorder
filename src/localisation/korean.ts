@@ -485,6 +485,13 @@ const KOREAN: Translations = {
   [Phrase.ChatUserText3]: ', 그런 다음 앱 설정에서 사용자 이름을 업데이트하세요.',
   [Phrase.ChatUserText4]: '다음 이름으로 채팅하기',
   [Phrase.ChatForClipsComingSoon]: '클립용 채팅 기능이 곧 제공됩니다.',
+  [Phrase.ClassicPtrLogPathDescription]: '클래식 PTR 설치의 월드 오브 워크래프트 로그 폴더 위치, 예: "D:\\World of Warcraft\\_classic_ptr_\\Logs".',
+  [Phrase.RecordClassicPtrDescription]: '클래식 PTR을 기록할지 여부. 이 기능은 블리자드의 PTR 전투 로그 호환성 유지 여부에 따라 달라질 수 있어 동작이 불안정할 수 있습니다.',
+  [Phrase.RecordClassicPtrLabel]: '클래식 PTR 기록',
+  [Phrase.ClassicPtrLogPathLabel]: '클래식 PTR 로그 경로',
+  [Phrase.InvalidClassicPtrLogPathText]: '유효하지 않은 클래식 PTR 로그 경로입니다.',
+  [Phrase.ClassicPtr]: '클래식 PTR',
+  [Phrase.InvalidClassicPtrLogPath]: '유효하지 않은 클래식 PTR 로그 경로입니다.',
 };
 
 export default KOREAN;

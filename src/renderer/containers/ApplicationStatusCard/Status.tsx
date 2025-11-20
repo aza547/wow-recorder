@@ -56,11 +56,6 @@ const Status = ({
       flavours.push(s);
     }
 
-    if (config.recordClassicPtr) {
-      const s = getLocalePhrase(language, Phrase.ClassicPtr);
-      flavours.push(s);
-    }
-
     if (config.recordEra) {
       const s = getLocalePhrase(language, Phrase.Era);
       flavours.push(s);
@@ -68,6 +63,11 @@ const Status = ({
 
     if (config.recordRetailPtr) {
       const s = getLocalePhrase(language, Phrase.RetailPtr);
+      flavours.push(s);
+    }
+
+    if (config.recordClassicPtr) {
+      const s = getLocalePhrase(language, Phrase.ClassicPtr);
       flavours.push(s);
     }
 
@@ -196,15 +196,6 @@ const Status = ({
               <code>{config.classicLogPath}</code>
             </li>
           )}
-          {config.recordClassicPtr && (
-            <li>
-              <span className="font-bold">
-                {getLocalePhrase(language, Phrase.ClassicPtr)}
-                {': '}
-              </span>
-              <code>{config.classicPtrLogPath}</code>
-            </li>
-          )}
           {config.recordEra && (
             <li>
               <span className="font-bold">
@@ -221,6 +212,15 @@ const Status = ({
                 {': '}
               </span>
               <code>{config.retailPtrLogPath}</code>
+            </li>
+          )}
+          {config.recordClassicPtr && (
+            <li>
+              <span className="font-bold">
+                {getLocalePhrase(language, Phrase.ClassicPtr)}
+                {': '}
+              </span>
+              <code>{config.classicPtrLogPath}</code>
             </li>
           )}
         </ul>

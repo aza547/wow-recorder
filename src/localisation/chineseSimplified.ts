@@ -485,6 +485,13 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ChatUserText3]: '，然后在应用设置中更新您的用户名。',
   [Phrase.ChatUserText4]: '以此用户名聊天',
   [Phrase.ChatForClipsComingSoon]: '剪辑聊天功能即将推出。',
+  [Phrase.ClassicPtrLogPathDescription]: '经典 PTR 安装的魔兽世界日志文件夹位置，例如 "D:\\World of Warcraft\\_classic_ptr_\\Logs"。',
+  [Phrase.RecordClassicPtrDescription]: '是否记录经典 PTR。该功能取决于暴雪对 PTR 战斗日志的兼容性，可能会不稳定。',
+  [Phrase.RecordClassicPtrLabel]: '记录经典 PTR',
+  [Phrase.ClassicPtrLogPathLabel]: '经典 PTR 日志路径',
+  [Phrase.InvalidClassicPtrLogPathText]: '无效的经典 PTR 日志路径。',
+  [Phrase.ClassicPtr]: '经典 PTR',
+  [Phrase.InvalidClassicPtrLogPath]: '无效的经典 PTR 日志路径。',
 };
 
 export default CHINESE_SIMPLIFIED;

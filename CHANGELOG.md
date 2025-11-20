@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - [Issue 771](https://github.com/aza547/wow-recorder/issues/771) - Record in MKV as an intermediate format for better error handle characteristics.
 - [Issue 775](https://github.com/aza547/wow-recorder/issues/755) - Selected player is now sticky when changing between rows.
+
 ### Added
+- [PR 768](https://github.com/aza547/wow-recorder/pull/768) - Added config for setting classic PTR. 
+
 ### Fixed
 - Improve frontend render performance on upload/download progress re-renders.
 - Fix an issue where the temporary recording folder would only get cleared out on restarts of the app.

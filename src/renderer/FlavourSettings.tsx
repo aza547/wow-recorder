@@ -132,7 +132,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <div className="flex flex-row gap-x-6">
-        <div className="flex flex-col w-[140px]">
+        <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordRetail" className="flex items-center">
             {getLocalePhrase(appState.language, Phrase.RecordRetailLabel)}
             <Tooltip
@@ -209,7 +209,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <div className="flex flex-row gap-x-6">
-        <div className="flex flex-col w-[140px]">
+        <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordClassic" className="flex items-center">
             {getLocalePhrase(appState.language, Phrase.RecordClassicLabel)}
             <Tooltip
@@ -295,7 +295,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <div className="flex flex-row gap-x-6">
-        <div className="flex flex-col w-[140px]">
+        <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordEra" className="flex items-center">
             {getLocalePhrase(appState.language, Phrase.RecordClassicEraLabel)}
             <Tooltip
@@ -384,7 +384,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <div className="flex flex-row gap-x-6">
-        <div className="flex flex-col w-[140px]">
+        <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordRetailPtr" className="flex items-center">
             {getLocalePhrase(appState.language, Phrase.RecordRetailPtrLabel)}
             <Tooltip
@@ -472,7 +472,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
 
     return (
       <div className="flex flex-row gap-x-6">
-        <div className="flex flex-col w-[140px]">
+        <div className="flex flex-col w-[160px]">
           <Label htmlFor="recordClassicPtr" className="flex items-center">
             {getLocalePhrase(appState.language, Phrase.RecordClassicPtrLabel)}
             <Tooltip
