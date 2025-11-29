@@ -540,8 +540,20 @@ export default class Recorder extends EventEmitter {
     console.info('[Recorder] Set recording directory', outputPath);
     noobs.SetRecordingCfg(outputPath, 'mkv');
 
-    const settings = Recorder.getEncoderSettings(obsRecEncoder, obsQuality);
-    noobs.SetVideoEncoder(obsRecEncoder, settings);
+    // Configure the encoder. It's possible that a user has replaced their
+    // GPU since we last ran, so double check the encoder is still valid.
+    let encoder = obsRecEncoder;
+
+    if (!this.getAvailableEncoders().includes(obsRecEncoder)) {
+      // If the encoder is not valid, then default to something sensible and
+      // save that in the config as if it were first time setup.
+      console.warn('[Recorder] Encoder not available', obsRecEncoder);
+      encoder = this.getSensibleEncoderDefault();
+      this.cfg.set('obsRecEncoder', encoder);
+    }
+
+    const settings = Recorder.getEncoderSettings(encoder, obsQuality);
+    noobs.SetVideoEncoder(encoder, settings);
   }
 
   private static getEncoderSettings(encoder: string, quality: string) {

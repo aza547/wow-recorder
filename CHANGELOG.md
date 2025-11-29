@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Improve frontend render performance on upload/download progress re-renders.
 - Fix an issue where the temporary recording folder would only get cleared out on restarts of the app.
+- [Issue 775](https://github.com/aza547/wow-recorder/issues/775) - Fixes a bug where changing from an Nvidia to an AMD GPU or vice versa could cause the app to crash.
 
 ## [7.2.0] - 2025-11-12
 ### Changed
