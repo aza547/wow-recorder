@@ -489,6 +489,7 @@ enum Phrase {
   ChatUserText3,
   ChatUserText4,
   ChatForClipsComingSoon,
+  PatreonButtonLabel,
 }
 
 enum Language {

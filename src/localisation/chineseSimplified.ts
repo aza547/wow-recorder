@@ -492,6 +492,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.InvalidClassicPtrLogPathText]: '无效的经典 PTR 日志路径。',
   [Phrase.ClassicPtr]: '经典 PTR',
   [Phrase.InvalidClassicPtrLogPath]: '无效的经典 PTR 日志路径。',
+  [Phrase.PatreonButtonLabel]: '在 Patreon 订阅',
 };
 
 export default CHINESE_SIMPLIFIED;

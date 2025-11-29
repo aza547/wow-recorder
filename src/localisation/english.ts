@@ -492,6 +492,7 @@ const ENGLISH: Translations = {
   [Phrase.ChatUserText3]: ', and then update your username in the app settings.',
   [Phrase.ChatUserText4]: 'Chat as',
   [Phrase.ChatForClipsComingSoon]: 'Chat for clips is coming soon.',
+  [Phrase.PatreonButtonLabel]: 'Support us on Patreon',
 };
 
 export default ENGLISH;

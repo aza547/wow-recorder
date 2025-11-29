@@ -492,6 +492,7 @@ const KOREAN: Translations = {
   [Phrase.InvalidClassicPtrLogPathText]: '유효하지 않은 클래식 PTR 로그 경로입니다.',
   [Phrase.ClassicPtr]: '클래식 PTR',
   [Phrase.InvalidClassicPtrLogPath]: '유효하지 않은 클래식 PTR 로그 경로입니다.',
+  [Phrase.PatreonButtonLabel]: 'Patreon 구독하기',
 };
 
 export default KOREAN;

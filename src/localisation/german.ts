@@ -492,6 +492,7 @@ const GERMAN: Translations = {
   [Phrase.InvalidClassicPtrLogPathText]: 'Ungültiger Classic-PTR-Protokollpfad.',
   [Phrase.ClassicPtr]: 'Classic PTR',
   [Phrase.InvalidClassicPtrLogPath]: 'Ungültiger Classic-PTR-Protokollpfad.',
+  [Phrase.PatreonButtonLabel]: 'Auf Patreon abonnieren',
 };
 
 export default GERMAN;
