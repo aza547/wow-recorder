@@ -26,7 +26,7 @@ export default function RendererTitleBar() {
       <button
         type="button"
         className={cn(
-          'w-8 h-8 bg-transparent border-0 text-white text-base outline-none hover:bg-foreground',
+          'w-8 h-8 bg-transparent border-0 text-white text-base outline-none hover:bg-foreground flex items-center justify-center',
           className,
         )}
         {...props}
@@ -48,19 +48,22 @@ export default function RendererTitleBar() {
       <div className="text-popover-foreground font-semibold text-sm font-sans">
         Warcraft Recorder
       </div>
-      <div id="title-bar-btns" className="ml-auto absolute right-0 top-0">
+      <div id="title-bar-btns" className="ml-auto absolute right-0 top-0 h-full flex items-center">
         <TitleBarButton id="min-btn" onClick={clickedHide}>
-          🗕
+          <span className="inline-block w-3 h-[2px] bg-white" />
         </TitleBarButton>
         <TitleBarButton id="max-btn" onClick={clickedResize}>
-          🗗
+          <span className="inline-block w-3 h-3 border border-white" />
         </TitleBarButton>
         <TitleBarButton
           id="close-btn"
           className="hover:bg-destructive"
           onClick={clickedQuit}
         >
-          ✖
+          <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="2" y1="2" x2="10" y2="10" />
+            <line x1="10" y1="2" x2="2" y2="10" />
+          </svg>
         </TitleBarButton>
       </div>
     </div>
