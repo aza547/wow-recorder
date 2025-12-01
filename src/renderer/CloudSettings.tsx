@@ -188,7 +188,7 @@ const CloudSettings = (props: IProps) => {
           value={config.cloudUploadRaidMinDifficulty}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a difficulty" />
+            <SelectValue placeholder={getLocalePhrase(language, Phrase.SelectDifficulty)} />
           </SelectTrigger>
           <SelectContent>
             {raidDifficultyOptions.map((difficulty) => (
@@ -581,7 +581,7 @@ const CloudSettings = (props: IProps) => {
         <div className="flex flex-row gap-x-2">
           <Select onValueChange={setCloudGuild} value={config.cloudGuildName}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a guild" />
+              <SelectValue placeholder={getLocalePhrase(language, Phrase.SelectGuild)} />
             </SelectTrigger>
             <SelectContent>
               {available.map((guild) => (

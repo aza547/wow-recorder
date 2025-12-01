@@ -493,6 +493,13 @@ const ENGLISH: Translations = {
   [Phrase.ChatUserText4]: 'Chat as',
   [Phrase.ChatForClipsComingSoon]: 'Chat for clips is coming soon.',
   [Phrase.PatreonButtonLabel]: 'Support us on Patreon',
+  [Phrase.SelectDifficulty]: 'Select a difficulty',
+  [Phrase.SelectResolution]: 'Select a resolution',
+  [Phrase.SelectQuality]: 'Select quality',
+  [Phrase.SelectEncoder]: 'Select encoder',
+  [Phrase.SelectGuild]: 'Select a guild',
+  [Phrase.SelectOptions]: 'Select options',
+  [Phrase.SelectLanguage]: 'Select language',
 };
 
 export default ENGLISH;
