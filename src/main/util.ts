@@ -885,7 +885,7 @@ const logAxiosError = (msg: string, error: AxiosError) => {
     cause: error.cause,
     url: error.config?.url,
     rspStatus: error.response?.status,
-    data: error.response?.data,
+    rspData: error.response?.data,
   });
 };
 
