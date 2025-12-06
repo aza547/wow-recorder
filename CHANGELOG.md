@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 777](https://github.com/aza547/wow-recorder/issues/777) - Adds Midnight M+, raids and new arena.
+
 ### Fixed
 
 ## [7.2.1] - 2025-11-29

@@ -460,7 +460,12 @@ export default class RetailLogHandler extends LogHandler {
     }
 
     const teamID = parseInt(line.arg(2), 10);
-    const specID = parseInt(line.arg(24), 10);
+
+    // This changed from 24 to 25 on Midnight Beta. Eventually it should
+    // become 25 as standard. But for now just use 25 on PTR and 24 on live.
+    const specID = this.isPtr
+      ? parseInt(line.arg(25), 10)
+      : parseInt(line.arg(24), 10);
 
     console.info(
       '[RetailLogHandler] Adding combatant from COMBATANT_INFO',
