@@ -25,7 +25,6 @@ import ConfigService from 'config/ConfigService';
 import { AxiosError } from 'axios';
 import { send } from './main';
 import { Readable } from 'stream';
-import { hostname } from 'os';
 
 /**
  * When packaged, we need to fix some paths
