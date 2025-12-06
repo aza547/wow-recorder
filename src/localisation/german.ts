@@ -493,6 +493,13 @@ const GERMAN: Translations = {
   [Phrase.ClassicPtr]: 'Classic PTR',
   [Phrase.InvalidClassicPtrLogPath]: 'Ungültiger Classic-PTR-Protokollpfad.',
   [Phrase.PatreonButtonLabel]: 'Auf Patreon abonnieren',
+  [Phrase.SelectDifficulty]: 'Wählen Sie einen Schwierigkeitsgrad',
+  [Phrase.SelectResolution]: 'Wählen Sie eine Auflösung',
+  [Phrase.SelectQuality]: 'Qualität wählen',
+  [Phrase.SelectEncoder]: 'Encoder wählen',
+  [Phrase.SelectGuild]: 'Wählen Sie eine Gilde',
+  [Phrase.SelectOptions]: 'Optionen wählen',
+  [Phrase.SelectLanguage]: 'Sprache wählen',
 };
 
 export default GERMAN;

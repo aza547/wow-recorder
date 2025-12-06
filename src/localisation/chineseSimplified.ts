@@ -493,6 +493,13 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.ClassicPtr]: '经典 PTR',
   [Phrase.InvalidClassicPtrLogPath]: '无效的经典 PTR 日志路径。',
   [Phrase.PatreonButtonLabel]: '在 Patreon 订阅',
+  [Phrase.SelectDifficulty]: '选择难度',
+  [Phrase.SelectResolution]: '选择分辨率',
+  [Phrase.SelectQuality]: '选择质量',
+  [Phrase.SelectEncoder]: '选择编码器',
+  [Phrase.SelectGuild]: '选择公会',
+  [Phrase.SelectOptions]: '选择选项',
+  [Phrase.SelectLanguage]: '选择语言',
 };
 
 export default CHINESE_SIMPLIFIED;

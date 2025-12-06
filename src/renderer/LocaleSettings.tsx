@@ -119,7 +119,7 @@ const WindowsSettings = (props: IProps) => {
           </Label>
           <Select value={String(config.language)} onValueChange={setLanguage}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select encoder" />
+              <SelectValue placeholder={getLocalePhrase(appState.language, Phrase.SelectLanguage)} />
             </SelectTrigger>
             <SelectContent>
               {Object.values(Language).map(mapLanguageToSelectItem)}
