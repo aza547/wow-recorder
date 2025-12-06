@@ -25,6 +25,7 @@ import ConfigService from 'config/ConfigService';
 import { AxiosError } from 'axios';
 import { send } from './main';
 import { Readable } from 'stream';
+import { hostname } from 'os';
 
 /**
  * When packaged, we need to fix some paths
@@ -879,9 +880,12 @@ const takeOwnershipBufferDir = async (dir: string) => {
 const logAxiosError = (msg: string, error: AxiosError) => {
   console.error(msg, {
     message: error.message,
-    status: error.response?.status,
-    data: error.response?.data,
+    status: error.status,
+    code: error.code,
+    cause: error.cause,
     url: error.config?.url,
+    rspStatus: error.response?.status,
+    data: error.response?.data,
   });
 };
 
