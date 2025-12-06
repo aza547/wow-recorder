@@ -171,6 +171,7 @@ const retailArenas: NumberKeyToStringValueMapType = {
   2547: 'Enigma Crucible',
   2563: 'Nokhudon',
   2759: 'Cage of Carnage',
+  2923: 'Voidscar Arena', // https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L638
 };
 
 /**
@@ -369,6 +370,21 @@ const currentRetailEncounters = [
   3134, // Nexus-King Salhadaar
   3135, // Dimensius, the All-Devouring
 
+  // Midnight - The Voidspire
+  3176, // Imperator Averzian
+  3177, // Vorsaius
+  3178, // Fallen-King Salhadar
+  3179, // Vaelgor & Ezzorak
+  3180, // Lightblinded Vanguard
+  3181, // Crown of the Cosmos
+
+  // Midnight - March on Quel'danas
+  3182, // Belo'ren, Child of Al'ar
+  3183, // Midnight Falls
+
+  // Midnight - The Dreamrift
+  3306, // Chimaerus the Undreamt God
+
   // Test Encounter
   9999, // Saves having to update the test button data.
 ];
@@ -518,6 +534,16 @@ const dungeonsByZoneId: NumberKeyToStringValueMapType = {
   // TWW S3.
   // Taken from https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L487.
   2830: "Eco-Dome Al'Dani",
+
+  // Midnight S1.
+  // Taken from https://github.com/BigWigsMods/BigWigs/blob/master/Loader.lua#L487.
+  2805: 'Windrunner Spire',
+  2811: "Magisters' Terrace",
+  2813: 'Murder Row',
+  2825: 'Den of Nalorakk',
+  2859: 'The Blinding Vale',
+  2874: 'Maisara Caverns',
+  2915: 'Nexus-Point Xenas',
 };
 
 /**
@@ -592,6 +618,15 @@ const dungeonsByMapId: NumberKeyToStringValueMapType = {
 
   // TWW S3 - taken from WoWhead, searching for "set keystone map X".
   542: "Eco-Dome Al'Dani",
+
+  // Midnight Season 1 - taken from WoWhead, searching for "set keystone map X".
+  558: "Magister's Terrace",
+  560: 'Maisara Caverns',
+  559: 'Nexus-Point Xenas',
+  557: 'Windrunner Spire',
+  556: 'Pit of Saron',
+  239: 'Seat of the Triumvirate',
+  161: 'Skyreach',
 };
 
 /**
@@ -676,6 +711,16 @@ const dungeonTimersByMapId: { [id: number]: number[] } = {
   // TWW S3
   // Timings from https://www.wowhead.com/guide/mythic-plus-dungeons/the-war-within-season-3/overview.
   542: [31 * 60, 31 * 60 * 0.8, 31 * 60 * 0.6], // "Eco-Dome Al'Dani"
+
+  // Midnight S1
+  // TODO: Timers need to be updated. Currently using placeholders.
+  558: [30 * 60, 25 * 60, 20 * 60], // Magister's Terrace
+  560: [30 * 60, 25 * 60, 20 * 60], // Maisara Caverns
+  559: [30 * 60, 25 * 60, 20 * 60], // Nexus-Point Xenas
+  557: [30 * 60, 25 * 60, 20 * 60], // Windrunner Spire
+  556: [30 * 60, 25 * 60, 20 * 60], // Pit of Saron
+  239: [30 * 60, 25 * 60, 20 * 60], // Seat of the Triumvirate
+  161: [30 * 60, 25 * 60, 20 * 60], // Skyreach
 };
 
 // Useful database for grabbing this stuff:
@@ -993,6 +1038,45 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
   3107: 'Azhiccar',
   3108: "Taah'bat and A'wazj",
   3109: 'Soul-Scribe',
+
+  // Magister's Terrace
+  3071: 'Arcanotron Custos',
+  3072: 'Gemellus',
+  3073: 'Seranel Sunlash',
+  3074: 'Degentrius',
+
+  // Maisara Caverns
+  3212: "Muro'jin and Nekraxx",
+  3214: "Rak'tul, Vessel of Souls",
+  3213: 'Vordaza',
+
+  // Nexus-Point Xenas
+  3328: 'Chief Corewright Kasreth',
+  3332: 'Corewarden Nysarra',
+  3333: 'Lothraxion',
+
+  // Windrunner Spire
+  3058: 'Commander Kroluk',
+  3057: 'Derelict Duo',
+  3056: 'Emberdawn',
+  3059: 'The Restless Heart',
+
+  // Pit of Saron
+  1999: 'Forgemaster Garfrost',
+  2001: 'Ick and Krick',
+  2000: 'Scourgelord Tyrannus',
+
+  // Seat of the Triumvirate
+  2068: "L'ura",
+  2066: 'Saprish',
+  2067: 'Viceroy Nezhar',
+  2065: 'Zuraal the Ascended',
+
+  // Skyreach
+  1699: 'Araknath',
+  1701: 'High Sage Viryx',
+  1698: 'Ranjit',
+  1700: 'Rukhran',
 };
 
 const instanceNamesByZoneId: NumberKeyToStringValueMapType = {
