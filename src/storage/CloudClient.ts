@@ -1438,7 +1438,7 @@ export default class CloudClient implements StorageClient {
     const guild = encodeURIComponent(this.guild);
 
     const url =
-      category === VideoCategory.Manual || category === VideoCategory.Clips
+      category === VideoCategory.Clips
         ? `${CloudClient.api}/guild/${guild}/named-chat/${videoName}`
         : `${CloudClient.api}/guild/${guild}/chat/${uniqueHash}/${start}`;
 
