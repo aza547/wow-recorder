@@ -192,6 +192,7 @@
     "@types/react-test-renderer": "^18.0.1",
     "@types/webpack-bundle-analyzer": "^4.6.0",
     "autoprefixer": "^10.4.21",
+    "baseline-browser-mapping": "^2.9.4",
     "browserslist": "^4.26.2",
     "browserslist-config-erb": "^0.0.3",
     "chalk": "^4.1.2",
