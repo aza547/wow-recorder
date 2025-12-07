@@ -1448,6 +1448,8 @@ export default class CloudClient implements StorageClient {
       let uniqueName = `${encodeURIComponent(videoName)} - ${duration.toFixed(2)}`;
 
       if (category === VideoCategory.Clips) {
+        // Clips default to 30s so decent chance of a collission, so
+        // also add the clippedAt time.
         uniqueName += ` - ${clippedAt}`;
       }
 
