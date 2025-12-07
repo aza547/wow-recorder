@@ -22,6 +22,7 @@ import { getCloudConfig } from 'utils/configUtils';
 import { clipboard, ipcMain } from 'electron';
 import VideoProcessQueue from 'main/VideoProcessQueue';
 import { send } from 'main/main';
+import { VideoCategory } from 'types/VideoCategory';
 
 const enum VideoMessages {
   CREATE = 'vc',
@@ -1420,19 +1421,27 @@ export default class CloudClient implements StorageClient {
   public async getOrCreateChatCorrelator(video: RendererVideo) {
     console.info('[CloudClient] Get or create chat correlator');
 
-    const { uniqueHash, start } = video;
+    const { category, uniqueHash, start, videoName } = video;
 
     if (!start || !uniqueHash) {
       console.error(
         '[CloudClient] Unable to get or create chat correlator for this video',
+        category,
         start,
         uniqueHash,
+        videoName,
       );
+
       throw new Error('Unable to get or create chat correlator for this video');
     }
 
     const guild = encodeURIComponent(this.guild);
-    const url = `${CloudClient.api}/guild/${guild}/chat/${uniqueHash}/${start}`;
+
+    const url =
+      category === VideoCategory.Manual || category === VideoCategory.Clips
+        ? `${CloudClient.api}/guild/${guild}/named-chat/${videoName}`
+        : `${CloudClient.api}/guild/${guild}/chat/${uniqueHash}/${start}`;
+
     const headers = { Authorization: this.authHeader };
 
     const rsp = await axios.post(url, undefined, {

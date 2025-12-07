@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - [Issue 777](https://github.com/aza547/wow-recorder/issues/777) - Adds Midnight M+, raids and new arena.
+- [Issue 769](https://github.com/aza547/wow-recorder/issues/769) - Enables chat for Clips and fixes for Manual categories.
 
 ### Fixed
 
