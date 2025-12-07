@@ -1421,7 +1421,8 @@ export default class CloudClient implements StorageClient {
   public async getOrCreateChatCorrelator(video: RendererVideo) {
     console.info('[CloudClient] Get or create chat correlator');
 
-    const { category, uniqueHash, start, videoName } = video;
+    const { category, uniqueHash, start, videoName, duration, clippedAt } =
+      video;
 
     if (!start || !uniqueHash) {
       console.error(
@@ -1430,17 +1431,30 @@ export default class CloudClient implements StorageClient {
         start,
         uniqueHash,
         videoName,
+        duration,
+        clippedAt,
       );
 
       throw new Error('Unable to get or create chat correlator for this video');
     }
 
+    // Build the URL based on whether we need a named correlator or not. For
+    // clips and manual we can't rely on the uniqueHash to actually be unique
+    // so we have to build a unique name for the chat correlator.
     const guild = encodeURIComponent(this.guild);
+    let url = `${CloudClient.api}/guild/${guild}/`;
 
-    const url =
-      category === VideoCategory.Manual || category === VideoCategory.Clips
-        ? `${CloudClient.api}/guild/${guild}/named-chat/${videoName}`
-        : `${CloudClient.api}/guild/${guild}/chat/${uniqueHash}/${start}`;
+    if (category === VideoCategory.Manual || category === VideoCategory.Clips) {
+      let uniqueName = `${encodeURIComponent(videoName)} - ${duration.toFixed(2)}`;
+
+      if (category === VideoCategory.Clips) {
+        uniqueName += ` - ${clippedAt}`;
+      }
+
+      url += `named-chat/${uniqueName}`;
+    } else {
+      url += `chat/${uniqueHash}/${start}`;
+    }
 
     const headers = { Authorization: this.authHeader };
 
