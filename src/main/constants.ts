@@ -1041,8 +1041,8 @@ const dungeonEncounters: NumberKeyToStringValueMapType = {
 
   // Magister's Terrace
   3071: 'Arcanotron Custos',
-  3072: 'Gemellus',
-  3073: 'Seranel Sunlash',
+  3073: 'Gemellus',
+  3072: 'Seranel Sunlash',
   3074: 'Degentrius',
 
   // Maisara Caverns
