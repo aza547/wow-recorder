@@ -500,6 +500,7 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.SelectGuild]: '选择公会',
   [Phrase.SelectOptions]: '选择选项',
   [Phrase.SelectLanguage]: '选择语言',
+  [Phrase.ChatDeleteMessageTooltip]: '删除此聊天消息',
 };
 
 export default CHINESE_SIMPLIFIED;

@@ -214,5 +214,9 @@ contextBridge.exposeInMainWorld('electron', {
     postChatMessage(correlator: string, message: string) {
       ipcRenderer.send('postChatMessage', correlator, message);
     },
+
+    deleteChatMessage(id: number) {
+      ipcRenderer.send('deleteChatMessage', id);
+    },
   },
 });

@@ -1,15 +1,16 @@
-import { MessageSquare, SendHorizontal, Unplug } from 'lucide-react';
+import { MessageSquare, SendHorizontal, Unplug, X } from 'lucide-react';
 import { Textarea } from './components/TextArea/textarea';
 import { Button } from './components/Button/Button';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { RendererVideo } from 'main/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CircularProgress } from '@mui/material';
-import { ChatMessage, TChatMessage } from 'types/api';
+import { ChatMessageWithId, TChatMessageWithId } from 'types/api';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { VideoPlayerRef } from './VideoPlayer';
 import { getLocalePhrase, Language } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
+import { z } from 'zod';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -17,13 +18,14 @@ interface IProps {
   video: RendererVideo;
   videoPlayerRef: MutableRefObject<VideoPlayerRef | null>;
   language: Language;
+  deletePermissions: boolean;
 }
 
 /**
  * A page representing a video category.
  */
 const VideoChat = (props: IProps) => {
-  const { video, videoPlayerRef } = props;
+  const { video, videoPlayerRef, language, deletePermissions } = props;
   const [message, setMessage] = useState<string>('');
   const chatRef = useRef<HTMLDivElement>(null);
   const correlatorRef = useRef<string | null>(null);
@@ -41,10 +43,10 @@ const VideoChat = (props: IProps) => {
   });
 
   const addChatMessage = (message: unknown) => {
-    let parsed: TChatMessage;
+    let parsed: TChatMessageWithId;
 
     try {
-      parsed = ChatMessage.parse(message);
+      parsed = ChatMessageWithId.parse(message);
     } catch (e) {
       console.error('Invalid chat message received', message, e);
       return;
@@ -61,15 +63,36 @@ const VideoChat = (props: IProps) => {
     // like updating state does.
     queryClient.setQueryData(
       ['chats', video.videoName],
-      (prev: TChatMessage[]) => {
+      (prev: TChatMessageWithId[]) => {
         return [...prev, parsed].sort((a, b) => a.timestamp - b.timestamp);
       },
     );
   };
 
+  const deleteChatMessage = (id: unknown) => {
+    let parsedId: number;
+
+    try {
+      parsedId = z.number().parse(id);
+    } catch (e) {
+      console.error('Invalid delete chat message received', id, e);
+      return;
+    }
+
+    // Add to the cached query data directly. This triggers a re-render just
+    // like updating state does.
+    queryClient.setQueryData(
+      ['chats', video.videoName],
+      (prev: TChatMessageWithId[]) => {
+        return prev?.filter((msg) => msg.id !== parsedId) ?? [];
+      },
+    );
+  };
+
   useEffect(() => {
-    // We get a websocket message if a new chat is added.
+    // We get a websocket message if a new chat is added/deleted.
     ipc.on('displayAddChatMessage', addChatMessage);
+    ipc.on('displayDeleteChatMessage', deleteChatMessage);
 
     // If guild websocket reconnects, refresh the chat in case we missed any messages.
     ipc.on('refreshChatMessages', () => refetch());
@@ -181,13 +204,31 @@ const VideoChat = (props: IProps) => {
 
         return (
           <div key={idx} className="mb-2">
-            <div>
+            <div className="flex">
               <strong className="text-foreground-lighter mr-1">
                 {chat.userName}
               </strong>
               <Tooltip content={date.toLocaleString()}>
                 <span>{formattedDate}</span>
               </Tooltip>
+              {deletePermissions && (
+                <div className="flex items-center justify-center">
+                  <Tooltip
+                    content={getLocalePhrase(
+                      language,
+                      Phrase.ChatDeleteMessageTooltip,
+                    )}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="mx-1 p-0 w-4 h-4 rounded-sm"
+                      onClick={() => ipc.deleteChatMessage(chat.id)}
+                    >
+                      <X />
+                    </Button>
+                  </Tooltip>
+                </div>
+              )}
             </div>
             {processMessageContent(chat.message)}
           </div>

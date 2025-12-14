@@ -169,6 +169,7 @@ const CategoryPage = (props: IProps) => {
         videoPlayerRef={videoPlayerRef}
         video={video}
         language={language}
+        deletePermissions={del}
       />
     );
   };

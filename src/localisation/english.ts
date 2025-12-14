@@ -500,6 +500,7 @@ const ENGLISH: Translations = {
   [Phrase.SelectGuild]: 'Select a guild',
   [Phrase.SelectOptions]: 'Select options',
   [Phrase.SelectLanguage]: 'Select language',
+  [Phrase.ChatDeleteMessageTooltip]: 'Delete this chat message',
 };
 
 export default ENGLISH;

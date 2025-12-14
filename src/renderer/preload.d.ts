@@ -2,7 +2,7 @@ import ElectronStore from 'electron-store';
 import { Channels } from 'main/preload';
 import { AudioSourceType, RendererVideo, SceneItem } from 'main/types';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
-import { TChatMessage } from 'types/api';
+import { TChatMessageWithId } from 'types/api';
 
 declare global {
   interface Window {
@@ -74,8 +74,9 @@ declare global {
         getSensibleEncoderDefault(): Promise<string>;
         refreshCloudGuilds(): void;
         getOrCreateChatCorrelator(video: RendererVideo): Promise<string>;
-        getChatMessages(correlator: string): Promise<TChatMessage[]>;
+        getChatMessages(correlator: string): Promise<TChatMessageWithId[]>;
         postChatMessage(correlator: string, message: string): void;
+        deleteChatMessage(id: number): void;
       };
     };
   }

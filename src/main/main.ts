@@ -435,6 +435,11 @@ ipcMain.on('postChatMessage', (event, correlator, message) => {
   client.postChatMessage(correlator, message);
 });
 
+ipcMain.on('deleteChatMessage', (event, id) => {
+  const client = CloudClient.getInstance();
+  client.deleteChatMessage(id);
+});
+
 /**
  * Set/get global video player settings.
  */

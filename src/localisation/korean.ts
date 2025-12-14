@@ -500,6 +500,7 @@ const KOREAN: Translations = {
   [Phrase.SelectGuild]: '서버 선택',
   [Phrase.SelectOptions]: '옵션 선택',
   [Phrase.SelectLanguage]: '언어 선택',
+  [Phrase.ChatDeleteMessageTooltip]: '이 채팅 메시지 삭제',
 };
 
 export default KOREAN;

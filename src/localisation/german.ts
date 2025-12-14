@@ -500,6 +500,7 @@ const GERMAN: Translations = {
   [Phrase.SelectGuild]: 'Wählen Sie eine Gilde',
   [Phrase.SelectOptions]: 'Optionen wählen',
   [Phrase.SelectLanguage]: 'Sprache wählen',
+  [Phrase.ChatDeleteMessageTooltip]: 'Diese Chat-Nachricht löschen',
 };
 
 export default GERMAN;

@@ -497,6 +497,7 @@ enum Phrase {
   SelectGuild,
   SelectOptions,
   SelectLanguage,
+  ChatDeleteMessageTooltip,
 }
 
 enum Language {

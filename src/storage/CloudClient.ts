@@ -10,7 +10,7 @@ import {
 } from 'main/types';
 import path from 'path';
 import { z } from 'zod';
-import { Affiliation, ChatMessage, TAffiliation } from 'types/api';
+import { Affiliation, ChatMessageWithId, TAffiliation } from 'types/api';
 import WebSocket, { RawData } from 'ws';
 import {
   cloudSignedMetadataToRendererVideo,
@@ -30,7 +30,8 @@ const enum VideoMessages {
   PROTECT = 'vp',
   UNPROTECT = 'vu',
   TAG = 'vt',
-  CHAT = 'vm',
+  CHAT_CREATE = 'vm',
+  CHAT_DELETE = 'vmd',
 }
 
 const enum GuildMessages {
@@ -1388,10 +1389,17 @@ export default class CloudClient implements StorageClient {
       return;
     }
 
-    if (key === VideoMessages.CHAT) {
+    if (key === VideoMessages.CHAT_CREATE) {
       console.info('[CloudClient] Video chat message received');
       const message = JSON.parse(value);
       send('displayAddChatMessage', message);
+      return;
+    }
+
+    if (key === VideoMessages.CHAT_DELETE) {
+      console.info('[CloudClient] Video chat message delete received');
+      const id = JSON.parse(value);
+      send('displayDeleteChatMessage', id);
       return;
     }
 
@@ -1485,7 +1493,7 @@ export default class CloudClient implements StorageClient {
       validateStatus: (s) => this.validateResponseStatus(s),
     });
 
-    const chatMessages = z.array(ChatMessage).parse(rsp.data);
+    const chatMessages = z.array(ChatMessageWithId).parse(rsp.data);
 
     console.info(
       '[CloudClient] Got',
@@ -1520,5 +1528,20 @@ export default class CloudClient implements StorageClient {
       'for correlator',
       correlator,
     );
+  }
+
+  public async deleteChatMessage(id: number) {
+    console.info('[CloudClient] Deleting chat message with id', id);
+
+    const guild = encodeURIComponent(this.guild);
+    const url = `${CloudClient.api}/guild/${guild}/chat/${id}`;
+    const headers = { Authorization: this.authHeader };
+
+    await axios.delete(url, {
+      headers,
+      validateStatus: (s) => this.validateResponseStatus(s),
+    });
+
+    console.info('[CloudClient] Successfully deleted chat message with id', id);
   }
 }
