@@ -252,13 +252,17 @@ const VideoSelectionTable = (props: IProps) => {
   /**
    * Render the base row.
    */
-  const renderBaseRow = (row: Row<RendererVideo>, selected: boolean) => {
+  const renderBaseRow = (
+    row: Row<RendererVideo>,
+    selected: boolean,
+    sortedIndex: number,
+  ) => {
     const cells = row.getVisibleCells();
     let className = 'cursor-pointer hover:bg-secondary/80 ';
 
     if (selected) {
       className += 'bg-secondary/100 ';
-    } else if (row.index % 2 === 0) {
+    } else if (sortedIndex % 2 === 0) {
       className += 'bg-secondary/15 ';
     }
 
@@ -276,20 +280,21 @@ const VideoSelectionTable = (props: IProps) => {
   /**
    * Render an individual row of the table.
    */
-  const renderRow = (row: Row<RendererVideo>) => {
+  const renderRow = (row: Row<RendererVideo>, sortedIndex: number) => {
     const selected =
       row.getIsSelected() ||
       (!table.getIsSomeRowsSelected() && row.index === 0);
 
-    return <Fragment key={row.id}>{renderBaseRow(row, selected)}</Fragment>;
+    return (
+      <Fragment key={row.id}>
+        {renderBaseRow(row, selected, sortedIndex)}
+      </Fragment>
+    );
   };
 
-  /**
-   * Render the body of the selection table.
-   */
   const renderTableBody = () => {
     const { rows } = table.getRowModel();
-    return <tbody>{rows.map(renderRow)}</tbody>;
+    return <tbody>{rows.map((row, i) => renderRow(row, i))}</tbody>;
   };
 
   /**

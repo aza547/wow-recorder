@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- [Issue 733](https://github.com/aza547/wow-recorder/issues/733) - Fix row highlighting when sorted.
 
 ## [7.3.0] - 2025-12-07
 ### Added
