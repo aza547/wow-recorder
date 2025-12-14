@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+- [Issue 769](https://github.com/aza547/wow-recorder/issues/769) - Users with delete permissions can now delete chat messages.
 ### Fixed
 - [Issue 733](https://github.com/aza547/wow-recorder/issues/733) - Fix row highlighting when sorted.
 
