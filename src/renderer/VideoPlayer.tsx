@@ -1376,6 +1376,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
     </div>
   );
 });
-VideoPlayer.displayName = 'VideoPlayer'; // ✅ Add this line
+VideoPlayer.displayName = 'VideoPlayer';
 
 export default VideoPlayer;

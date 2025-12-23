@@ -190,7 +190,7 @@ const VideoChat = (props: IProps) => {
     const now = new Date();
 
     if (data && data.length > 0) {
-      return data.map((chat, idx) => {
+      return data.map((chat) => {
         const date = new Date(chat.timestamp);
 
         const isToday =
@@ -203,7 +203,7 @@ const VideoChat = (props: IProps) => {
           : date.toLocaleDateString([], { day: '2-digit', month: 'short' });
 
         return (
-          <div key={idx} className="mb-2">
+          <div key={chat.id} className="mb-2">
             <div className="flex">
               <strong className="text-foreground-lighter mr-1">
                 {chat.userName}
