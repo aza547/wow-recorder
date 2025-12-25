@@ -50,7 +50,7 @@ interface IProps {
 
 const CloudSettings = (props: IProps) => {
   const { appState, config, setConfig } = props;
-  const { language, queuedUploads, queuedDownloads } = appState;
+  const { language } = appState;
   const initialRender = useRef(true);
 
   useEffect(() => {
@@ -188,7 +188,9 @@ const CloudSettings = (props: IProps) => {
           value={config.cloudUploadRaidMinDifficulty}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={getLocalePhrase(language, Phrase.SelectDifficulty)} />
+            <SelectValue
+              placeholder={getLocalePhrase(language, Phrase.SelectDifficulty)}
+            />
           </SelectTrigger>
           <SelectContent>
             {raidDifficultyOptions.map((difficulty) => (
@@ -581,7 +583,9 @@ const CloudSettings = (props: IProps) => {
         <div className="flex flex-row gap-x-2">
           <Select onValueChange={setCloudGuild} value={config.cloudGuildName}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={getLocalePhrase(language, Phrase.SelectGuild)} />
+              <SelectValue
+                placeholder={getLocalePhrase(language, Phrase.SelectGuild)}
+              />
             </SelectTrigger>
             <SelectContent>
               {available.map((guild) => (
