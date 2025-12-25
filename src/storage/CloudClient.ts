@@ -1398,7 +1398,7 @@ export default class CloudClient implements StorageClient {
 
     if (key === VideoMessages.CHAT_DELETE) {
       console.info('[CloudClient] Video chat message delete received');
-      const id = JSON.parse(value);
+      const id = parseInt(value, 10);
       send('displayDeleteChatMessage', id);
       return;
     }
