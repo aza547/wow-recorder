@@ -166,6 +166,9 @@ const SideMenu = (props: IProps) => {
     });
   };
 
+  const mythicPlusIcon = <FontAwesomeIcon icon={faDungeon} size="xl" />;
+  const raidsIcon = <FontAwesomeIcon icon={faDragon} size="lg" />;
+
   return (
     <div className="flex flex-col h-full bg-background w-80 px-4 items-center pt-4 pb-2">
       <ApplicationStatusCard
@@ -195,14 +198,8 @@ const SideMenu = (props: IProps) => {
           {renderCategoryTab(VideoCategory.FiveVFive, <Dice5 />)}
           {renderCategoryTab(VideoCategory.Skirmish, <Sword />)}
           {renderCategoryTab(VideoCategory.SoloShuffle, <Swords />)}
-          {renderCategoryTab(
-            VideoCategory.MythicPlus,
-            <FontAwesomeIcon icon={faDungeon} size="xl" />,
-          )}
-          {renderCategoryTab(
-            VideoCategory.Raids,
-            <FontAwesomeIcon icon={faDragon} size="lg" />,
-          )}
+          {renderCategoryTab(VideoCategory.MythicPlus, mythicPlusIcon)}
+          {renderCategoryTab(VideoCategory.Raids, raidsIcon)}
           {renderCategoryTab(VideoCategory.Battlegrounds, <Goal />)}
           {renderCategoryTab(VideoCategory.Manual, <HardHat />)}
           {renderCategoryTab(VideoCategory.Clips, <Clapperboard />)}
