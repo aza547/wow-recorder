@@ -1833,6 +1833,18 @@ const mopChallengeModesTimers: Record<number, number[]> = {
   78: [45, 22, 13], // Scarlet Monastery
 };
 
+const wowInstallSearchPaths = [
+  'C:\\World of Warcraft',
+  'C:\\Program Files\\World of Warcraft',
+  'C:\\Program Files (x86)\\World of Warcraft',
+  'D:\\World of Warcraft',
+  'D:\\Program Files\\World of Warcraft',
+  'D:\\Program Files (x86)\\World of Warcraft',
+  'E:\\World of Warcraft',
+  'E:\\Program Files\\World of Warcraft',
+  'E:\\Program Files (x86)\\World of Warcraft',
+];
+
 export {
   months,
   categoryTabSx,
@@ -1866,4 +1878,5 @@ export {
   currentRetailEncounters,
   mopChallengeModes,
   mopChallengeModesTimers,
+  wowInstallSearchPaths,
 };

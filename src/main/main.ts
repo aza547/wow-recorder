@@ -21,6 +21,7 @@ import {
   getAvailableDisplays,
   getAssetPath,
   handleSafeVodRequest,
+  runFirstTimeSetupActions,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -33,7 +34,6 @@ import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
 import Recorder from './Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
-import { ESupportedEncoders } from './obsEnums';
 
 const logDir = setupApplicationLogging();
 const appVersion = app.getVersion();
@@ -182,24 +182,14 @@ const createWindow = async () => {
   Recorder.getInstance().initializeObs();
   await manager.startup();
 
-  // If this is first time setup, auto-pick an encoder for the user. Only do it
-  // if the current value is the software encoder, as this is new in 7.0.0, all
-  // users would be subject to it. This way, only the few people who really do
-  // prefer the software encoder will be inconvenienced.
-  const firstTimeSetup =
-    cfg.get<boolean>('firstTimeSetup') &&
-    cfg.get<string>('obsRecEncoder') === ESupportedEncoders.OBS_X264;
+  // Don't bother to signal any changes to the frontend here, they Window isn't
+  // shown yet so they can't have opened the settings.
+  const firstTimeSetup = cfg.get<boolean>('firstTimeSetup');
 
   if (firstTimeSetup) {
-    // Don't bother to signal to the frontend here, they would have to be
-    // very fast to have opened the settings already.
-    console.info('[Main] First time setup, picking default encoder');
-    const encoder = Recorder.getInstance().getSensibleEncoderDefault();
-    cfg.set('obsRecEncoder', encoder);
+    console.info('[Main] Run first time setup actions');
+    await runFirstTimeSetupActions();
   }
-
-  // Ensure we don't hit the above branch again.
-  cfg.set('firstTimeSetup', false);
 
   // This gets hit on a user triggering refresh with CTRL-R.
   window.on('ready-to-show', async () => {

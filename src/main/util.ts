@@ -25,6 +25,9 @@ import ConfigService from 'config/ConfigService';
 import { AxiosError } from 'axios';
 import { send } from './main';
 import { Readable } from 'stream';
+import { ESupportedEncoders } from './obsEnums';
+import Recorder from './Recorder';
+import { wowInstallSearchPaths } from './constants';
 
 /**
  * When packaged, we need to fix some paths
@@ -977,6 +980,71 @@ const handleSafeVodRequest = async (request: Request) => {
   }
 };
 
+const runFirstTimeSetupActions = async () => {
+  const cfg = ConfigService.getInstance();
+
+  const defaultEncoder =
+    cfg.get<string>('obsRecEncoder') === ESupportedEncoders.OBS_X264;
+
+  if (defaultEncoder) {
+    // If this is first time setup, auto-pick an encoder for the user. Only do it
+    // if the current value is the software encoder, as this is new in 7.0.0, all
+    // users would be subject to it. This way, only the few people who really do
+    // prefer the software encoder will be inconvenienced.
+    console.info('[Util] Picking sensible OBS recorder encoder');
+    const encoder = Recorder.getInstance().getSensibleEncoderDefault();
+    cfg.set('obsRecEncoder', encoder);
+  }
+
+  const isRetailConfigured =
+    cfg.get<boolean>('recordRetail') && cfg.get<string>('retailLogPath');
+
+  if (!isRetailConfigured) {
+    console.info('[Util] Attempt to first time configure retail installation');
+
+    for (let i = 0; i < wowInstallSearchPaths.length; i++) {
+      const installPath = wowInstallSearchPaths[i] + '\\_retail_\\Logs';
+      const installExists = await exists(installPath);
+
+      if (installExists) {
+        console.info('[Util] Found retail WoW installation at', installPath);
+        cfg.set('retailLogPath', installPath);
+        cfg.set('recordRetail', true);
+        break;
+      }
+    }
+  }
+
+  const isClassicConfigured =
+    cfg.get<boolean>('recordClassic') && cfg.get<string>('classicLogPath');
+
+  if (!isClassicConfigured) {
+    console.info('[Util] Attempt to first time configure classic installation');
+
+    for (let i = 0; i < wowInstallSearchPaths.length; i++) {
+      const installPath = wowInstallSearchPaths[i] + '\\_classic_\\Logs';
+      const installExists = await exists(installPath);
+
+      if (installExists) {
+        console.info('[Util] Found classic WoW installation at', installPath);
+        cfg.set('classicLogPath', installPath);
+        cfg.set('recordClassic', true);
+        break;
+      }
+    }
+  }
+
+  if (!cfg.get<string>('storagePath')) {
+    console.info('[Util] Setting up default storage path');
+    const baseVideoPath = app.getPath('videos');
+    const initialStorageDir = path.join(baseVideoPath, 'Warcraft Recorder');
+    fs.mkdirSync(initialStorageDir, { recursive: true });
+    cfg.set('storagePath', initialStorageDir);
+  }
+
+  cfg.set('firstTimeSetup', false);
+};
+
 export {
   setupApplicationLogging,
   writeMetadataFile,
@@ -1016,4 +1084,5 @@ export {
   delayedDeleteVideo,
   logAxiosError,
   handleSafeVodRequest,
+  runFirstTimeSetupActions,
 };
