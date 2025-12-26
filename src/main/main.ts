@@ -189,6 +189,7 @@ const createWindow = async () => {
   if (firstTimeSetup) {
     console.info('[Main] Run first time setup actions');
     await runFirstTimeSetupActions();
+    cfg.set('firstTimeSetup', false);
   }
 
   // This gets hit on a user triggering refresh with CTRL-R.

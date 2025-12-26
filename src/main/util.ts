@@ -1041,8 +1041,6 @@ const runFirstTimeSetupActions = async () => {
     fs.mkdirSync(initialStorageDir, { recursive: true });
     cfg.set('storagePath', initialStorageDir);
   }
-
-  cfg.set('firstTimeSetup', false);
 };
 
 export {
