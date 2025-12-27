@@ -28,6 +28,7 @@ import Manual from 'activitys/Manual';
 import { playSoundAlert } from 'main/main';
 import Poller from 'utils/Poller';
 import { emitErrorReport } from 'main/util';
+import AsyncQueue from 'utils/AsyncQueue';
 
 /**
  * Generic LogHandler class. Everything in this class must be valid for both
@@ -53,17 +54,25 @@ export default abstract class LogHandler {
 
   private static stateChangeCallback: () => void;
 
+  /**
+   * Enforces ordered processing of log lines. Some log line processing
+   * is asynchronous so we need to ensure later lines don't get processed
+   * before earlier ones.
+   */
+  protected logProcessQueue = new AsyncQueue(Number.MAX_SAFE_INTEGER);
+
   constructor(logPath: string, dataTimeout: number) {
     this.combatLogWatcher = new CombatLogWatcher(logPath, dataTimeout);
     this.combatLogWatcher.watch();
+    const lpq = this.logProcessQueue;
 
-    this.combatLogWatcher.on('timeout', (ms: number) => {
-      this.dataTimeout(ms);
+    this.combatLogWatcher.on('timeout', (ms) => {
+      lpq.add(async () => this.dataTimeout(ms));
     });
 
     // For ease of testing force stop.
     this.combatLogWatcher.on('WARCRAFT_RECORDER_FORCE_STOP', () => {
-      LogHandler.forceEndActivity();
+      lpq.add(async () => LogHandler.forceEndActivity());
     });
   }
 

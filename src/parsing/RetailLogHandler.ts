@@ -36,43 +36,21 @@ export default class RetailLogHandler extends LogHandler {
   constructor(logPath: string) {
     super(logPath, 10);
 
+    /* eslint-disable prettier/prettier */
     this.combatLogWatcher
-      .on('ENCOUNTER_START', async (line: LogLine) => {
-        await this.handleEncounterStartLine(line);
-      })
-      .on('ENCOUNTER_END', async (line: LogLine) => {
-        await this.handleEncounterEndLine(line);
-      })
-      .on('ZONE_CHANGE', async (line: LogLine) => {
-        await this.handleZoneChange(line);
-      })
-      .on('SPELL_AURA_APPLIED', (line: LogLine) => {
-        this.handleSpellAuraAppliedLine(line);
-      })
-      .on('UNIT_DIED', (line: LogLine) => {
-        this.handleUnitDiedLine(line);
-      })
-      .on('ARENA_MATCH_START', async (line: LogLine) => {
-        await this.handleArenaStartLine(line);
-      })
-      .on('ARENA_MATCH_END', async (line: LogLine) => {
-        await this.handleArenaEndLine(line);
-      })
-      .on('CHALLENGE_MODE_START', async (line: LogLine) => {
-        await this.handleChallengeModeStartLine(line);
-      })
-      .on('CHALLENGE_MODE_END', async (line: LogLine) => {
-        await this.handleChallengeModeEndLine(line);
-      })
-      .on('COMBATANT_INFO', async (line: LogLine) => {
-        this.handleCombatantInfoLine(line);
-      })
-      .on('SPELL_CAST_SUCCESS', async (line: LogLine) => {
-        this.handleSpellCastSuccess(line);
-      })
-      .on('SPELL_DAMAGE', async (line: LogLine) => {
-        this.handleSpellDamage(line);
-      });
+      .on('ENCOUNTER_START',      (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterStartLine(line));})
+      .on('ENCOUNTER_END',        (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterEndLine(line)); })
+      .on('ZONE_CHANGE',          (line: LogLine) => { this.logProcessQueue.add(async () => this.handleZoneChange(line)); })
+      .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraAppliedLine(line)); })
+      .on('UNIT_DIED',            (line: LogLine) => { this.logProcessQueue.add(async () => this.handleUnitDiedLine(line)); })
+      .on('ARENA_MATCH_START',    (line: LogLine) => { this.logProcessQueue.add(async () => this.handleArenaStartLine(line)); })
+      .on('ARENA_MATCH_END',      (line: LogLine) => { this.logProcessQueue.add(async () => this.handleArenaEndLine(line)); })
+      .on('CHALLENGE_MODE_START', (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeStartLine(line)); })
+      .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeEndLine(line)); })
+      .on('COMBATANT_INFO',       (line: LogLine) => { this.logProcessQueue.add(async () => this.handleCombatantInfoLine(line)); })
+      .on('SPELL_CAST_SUCCESS',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellCastSuccess(line)); })
+      .on('SPELL_DAMAGE',         (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellDamage(line)); });
+    /* eslint-enable prettier/prettier */
   }
 
   public setIsPtr() {
@@ -82,16 +60,14 @@ export default class RetailLogHandler extends LogHandler {
   private async handleArenaStartLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ARENA_MATCH_START line:', line);
 
-    // Important we don't exit if we're in a Solo Shuffle, we use the ARENA_MATCH_START
-    // events to keep track of the rounds.
     if (
       LogHandler.activity &&
       LogHandler.activity.category !== VideoCategory.SoloShuffle
     ) {
-      console.error(
-        '[RetailLogHandler] Another activity in progress and not a Solo Shuffle',
-      );
-      return;
+      // Important we don't end an activity if we're in a Solo Shuffle,
+      // we use the ARENA_MATCH_START events to keep track of the rounds.
+      console.warn('[RetailLogHandler] Active activity on ARENA_START');
+      await LogHandler.forceEndActivity();
     }
 
     const startTime = line.date();
@@ -266,23 +242,29 @@ export default class RetailLogHandler extends LogHandler {
     console.debug('[RetailLogHandler] Handling ENCOUNTER_START line:', line);
     const encounterID = parseInt(line.arg(1), 10);
 
+    const knownDungeonEncounter = Object.prototype.hasOwnProperty.call(
+      dungeonEncounters,
+      encounterID,
+    );
+
+    if (!LogHandler.activity && knownDungeonEncounter) {
+      // We can hit this branch due to a few cases:
+      //   - It's a regular dungeon, we don't record those
+      //   - It's a M+ below the recording threshold
+      console.info('[RetailLogHandler] Known dungeon encounter and not in M+');
+      return;
+    }
+
+    if (LogHandler.activity && !knownDungeonEncounter) {
+      // Not a known dungeon encounter and in an activity so end the
+      // activity so we can start a raid encounter. This can happen
+      // if you abandon a key mid-pull and quickly start a raid boss
+      // before WCR has realized the M+ is over.
+      console.info('[RetailLogHandler] Active M+ but not a dungeon encounter');
+      await LogHandler.forceEndActivity();
+    }
+
     if (!LogHandler.activity) {
-      const knownDungeonEncounter = Object.prototype.hasOwnProperty.call(
-        dungeonEncounters,
-        encounterID,
-      );
-
-      if (knownDungeonEncounter) {
-        // We can hit this branch due to a few cases:
-        //   - It's a regular dungeon, we don't record those
-        //   - It's a M+ below the recording threshold
-        console.info(
-          '[RetailLogHandler] Known dungeon encounter and not in M+, not recording',
-        );
-
-        return;
-      }
-
       const currentRaidOnly = ConfigService.getInstance().get<boolean>(
         'recordCurrentRaidEncountersOnly',
       );
@@ -427,6 +409,7 @@ export default class RetailLogHandler extends LogHandler {
         );
 
         await LogHandler.forceEndActivity();
+        await this.battlegroundStart(line);
       } else {
         console.info(
           '[RetailLogHandler] Unknown zone change, no action taken: ',

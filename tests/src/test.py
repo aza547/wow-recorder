@@ -10,6 +10,7 @@ from glob import glob
 # Import the retail tests
 import retail.mythic_plus
 import retail.mythic_plus_drop_go
+import retail.mythic_plus_ditch_into_raid
 import retail.mythic_plus_repair
 import retail.mythic_plus_no_boss
 import retail.raid_wipe
@@ -44,13 +45,14 @@ RETAIL_LOG_PATH = "C:/Program Files/World of Warcraft/_retail_/Logs"
 CLASSIC_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_/Logs"
 ERA_LOG_PATH = "C:/Program Files/World of Warcraft/_classic_era_/Logs"
 PTR_LOG_PATH = "C:/Program Files/World of Warcraft/_xptr_/Logs"
-STORAGE_PATH = "D:/wr-test"
+STORAGE_PATH = "C:/Users/Alex/Videos/Warcraft Recorder"
 
 CWD = os.path.dirname(__file__)
 
 RETAIL_TESTS = [
     retail.mythic_plus,
     retail.mythic_plus_drop_go,
+    retail.mythic_plus_ditch_into_raid,
     retail.mythic_plus_repair,
     retail.mythic_plus_no_boss,
     retail.raid_reset,
@@ -128,16 +130,45 @@ def get_latest_metadata():
     return data
 
 
-def check_latest_mp4_contains(contains):
-    """Checks that the most recent MP4 file in the STORAGE_PATH includes a substring."""
+def check_output_file(expected, index):
+    """
+    Check an output video file name contains a substring.
+    
+    :param expected: The expected substring to find.
+    :param index: The index of the MP4 file to check, -1 for latest.
+    """
     files = glob(f"{STORAGE_PATH}/*.mp4")
-    latest = max(files, key=os.path.getctime)
-
-    if contains in latest:
-        print("  MP4 existed as expected")
-    else:
-        print(f"FAILED: Latest MP4 did not contain {contains}, was {latest}")
+    
+    if not files:
+        print(f"FAILED: No MP4 files found in {STORAGE_PATH}")
         sys.exit(1)
+
+    files.sort(key=os.path.getctime)
+    actual = files[index]
+    
+    if expected in actual:
+        print(f"  MP4 existed as expected: {actual}")
+    else:
+        print(f"FAILED: MP4 at index {index} did not contain {expected}, was {actual}")
+        sys.exit(1) 
+    
+
+def check_output(output):
+    """
+    Checks that the most recent MP4 file in the STORAGE_PATH includes a substring.
+
+    :param output: The expected substring(s) to find. Can be a string or a list 
+                   of strings. If it's a list, the first entry is the latest, the
+                   second is the second latest, and so on.
+    """
+    if isinstance(output, str):
+        check_output_file(output, -1)
+    elif isinstance(output, list):
+      for i, contains in enumerate(output):
+        check_output_file(contains, -(i + 1))
+    else:
+      print("ERROR: check_output called with unexpected type. Must be str or list. Programmer error?")
+      sys.exit(1)
 
 
 def check_boss_count(num):
@@ -241,8 +272,8 @@ def run_test(flavour, test):
     sleep(5)
 
     if hasattr(test, "OUTPUT"):
-        print(f"  Checking most recent MP4 contains {test.OUTPUT}")
-        check_latest_mp4_contains(test.OUTPUT)
+        print(f"  Check video file output")
+        check_output(test.OUTPUT)
 
     if hasattr(test, "BOSSES"):
         print(f"  Check run contains {test.BOSSES} bosses")

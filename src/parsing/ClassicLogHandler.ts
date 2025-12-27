@@ -24,34 +24,18 @@ export default class ClassicLogHandler extends LogHandler {
   constructor(logPath: string) {
     super(logPath, 2);
 
+    /* eslint-disable prettier/prettier */
     this.combatLogWatcher
-      .on('ENCOUNTER_START', async (line: LogLine) => {
-        await this.handleEncounterStartLine(line);
-      })
-      .on('ENCOUNTER_END', async (line: LogLine) => {
-        await this.handleEncounterEndLine(line);
-      })
-      .on('ZONE_CHANGE', async (line: LogLine) => {
-        await this.handleZoneChange(line);
-      })
-      .on('SPELL_AURA_APPLIED', (line: LogLine) => {
-        this.handleSpellAuraAppliedLine(line);
-      })
-      .on('UNIT_DIED', (line: LogLine) => {
-        this.handleUnitDiedLine(line);
-      })
-      .on('SPELL_CAST_SUCCESS', (line: LogLine) => {
-        this.handleSpellCastSuccess(line);
-      })
-      .on('COMBATANT_INFO', async (line: LogLine) => {
-        await this.handleCombatantInfoLine(line);
-      })
-      .on('CHALLENGE_MODE_START', async (line: LogLine) => {
-        await this.handleChallengeModeStartLine(line);
-      })
-      .on('CHALLENGE_MODE_END', async (line: LogLine) => {
-        await this.handleChallengeModeEndLine(line);
-      });
+      .on('ENCOUNTER_START',      (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterStartLine(line)) })
+      .on('ENCOUNTER_END',        (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterEndLine(line)) })
+      .on('ZONE_CHANGE',          (line: LogLine) => { this.logProcessQueue.add(async () => this.handleZoneChange(line)) })
+      .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraAppliedLine(line)) })
+      .on('UNIT_DIED',            (line: LogLine) => { this.logProcessQueue.add(async () => this.handleUnitDiedLine(line)) })
+      .on('SPELL_CAST_SUCCESS',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellCastSuccess(line)) })
+      .on('COMBATANT_INFO',       (line: LogLine) => { this.logProcessQueue.add(async () => this.handleCombatantInfoLine(line)) })
+      .on('CHALLENGE_MODE_START', (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeStartLine(line)) })
+      .on('CHALLENGE_MODE_END',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleChallengeModeEndLine(line)) });
+    /* eslint-enable prettier/prettier */
   }
 
   protected async handleEncounterStartLine(line: LogLine) {
