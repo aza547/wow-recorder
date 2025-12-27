@@ -21,7 +21,8 @@ import {
   getAvailableDisplays,
   getAssetPath,
   handleSafeVodRequest,
-  runFirstTimeSetupActions,
+  runFirstTimeSetupActionsObs,
+  runFirstTimeSetupActionsNoObs,
 } from './util';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
@@ -64,9 +65,10 @@ const cfg = ConfigService.getInstance();
 const firstTimeSetup = cfg.get<boolean>('firstTimeSetup');
 
 if (firstTimeSetup) {
+  // Things we want to do before we initialize OBS.
   console.info('[Main] Run first time setup actions');
-  runFirstTimeSetupActions();
-  cfg.set('firstTimeSetup', false);
+  runFirstTimeSetupActionsNoObs();
+  cfg.set('firstTimeSetup', false); // This gets done again when we default the encoder.
 }
 
 // It's a common problem that hardware acceleration causes rendering issues.
@@ -191,6 +193,12 @@ const createWindow = async () => {
   // We need to do this AFTER creating the window as it's used by the preview.
   Recorder.getInstance().initializeObs();
   await manager.startup();
+
+  if (firstTimeSetup) {
+    console.info('[Main] Run first time setup actions');
+    runFirstTimeSetupActionsObs();
+    cfg.set('firstTimeSetup', false);
+  }
 
   // This gets hit on a user triggering refresh with CTRL-R.
   window.on('ready-to-show', async () => {

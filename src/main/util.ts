@@ -985,7 +985,7 @@ const handleSafeVodRequest = async (request: Request) => {
   }
 };
 
-const runFirstTimeSetupActions = () => {
+const runFirstTimeSetupActionsObs = () => {
   const cfg = ConfigService.getInstance();
 
   const defaultEncoder =
@@ -1000,6 +1000,10 @@ const runFirstTimeSetupActions = () => {
     const encoder = Recorder.getInstance().getSensibleEncoderDefault();
     cfg.set('obsRecEncoder', encoder);
   }
+};
+
+const runFirstTimeSetupActionsNoObs = () => {
+  const cfg = ConfigService.getInstance();
 
   const isRetailConfigured =
     cfg.get<boolean>('recordRetail') && cfg.get<string>('retailLogPath');
@@ -1028,7 +1032,7 @@ const runFirstTimeSetupActions = () => {
 
     for (let i = 0; i < wowInstallSearchPaths.length; i++) {
       const installPath = wowInstallSearchPaths[i] + '\\_classic_\\Logs';
-      const installExists = await exists(installPath);
+      const installExists = existsSync(installPath);
 
       if (installExists) {
         console.info('[Util] Found classic WoW installation at', installPath);
@@ -1087,5 +1091,6 @@ export {
   delayedDeleteVideo,
   logAxiosError,
   handleSafeVodRequest,
-  runFirstTimeSetupActions,
+  runFirstTimeSetupActionsObs,
+  runFirstTimeSetupActionsNoObs,
 };
