@@ -29,7 +29,6 @@ import Separator from './components/Separator/Separator';
 import { Phrase } from 'localisation/phrases';
 import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
 import { Button } from './components/Button/Button';
-import TextBanner from './components/TextBanner/TextBanner';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -90,18 +89,6 @@ const CloudSettings = (props: IProps) => {
   useEffect(() => {
     initialRender.current = false;
   }, []);
-
-  const isComponentDisabled = () => {
-    return queuedUploads > 0 || queuedDownloads > 0;
-  };
-
-  const getDisabledText = () => {
-    return (
-      <TextBanner>
-        {getLocalePhrase(language, Phrase.CloudSettingsDisabledText)}
-      </TextBanner>
-    );
-  };
 
   const getSwitch = (
     preference: keyof ConfigurationSchema,
@@ -820,8 +807,6 @@ const CloudSettings = (props: IProps) => {
     );
   };
 
-  const disabled = isComponentDisabled();
-
   const getPossiblyHiddenFields = () => {
     return (
       <>
@@ -837,8 +822,7 @@ const CloudSettings = (props: IProps) => {
 
   return (
     <div className="flex flex-col gap-y-4 flex-wrap">
-      {disabled && getDisabledText()}
-      {!disabled && getPossiblyHiddenFields()}
+      {getPossiblyHiddenFields()}
 
       {config.cloudStorage && (
         <>

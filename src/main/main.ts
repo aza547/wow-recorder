@@ -59,6 +59,16 @@ const manager = new Manager();
  */
 const cfg = ConfigService.getInstance();
 
+// Don't bother to signal any changes to the frontend here, they Window isn't
+// shown yet so they can't have opened the settings.
+const firstTimeSetup = cfg.get<boolean>('firstTimeSetup');
+
+if (firstTimeSetup) {
+  console.info('[Main] Run first time setup actions');
+  runFirstTimeSetupActions();
+  cfg.set('firstTimeSetup', false);
+}
+
 // It's a common problem that hardware acceleration causes rendering issues.
 // Unclear why this happens and surely not an application bug but we can
 // make it easy for users to disable it if they want to.
@@ -181,16 +191,6 @@ const createWindow = async () => {
   // We need to do this AFTER creating the window as it's used by the preview.
   Recorder.getInstance().initializeObs();
   await manager.startup();
-
-  // Don't bother to signal any changes to the frontend here, they Window isn't
-  // shown yet so they can't have opened the settings.
-  const firstTimeSetup = cfg.get<boolean>('firstTimeSetup');
-
-  if (firstTimeSetup) {
-    console.info('[Main] Run first time setup actions');
-    await runFirstTimeSetupActions();
-    cfg.set('firstTimeSetup', false);
-  }
 
   // This gets hit on a user triggering refresh with CTRL-R.
   window.on('ready-to-show', async () => {

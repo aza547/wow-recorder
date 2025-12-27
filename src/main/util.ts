@@ -1,6 +1,11 @@
 import { URL } from 'url';
 import path from 'path';
-import fs, { createReadStream, promises as fspromise, Stats } from 'fs';
+import fs, {
+  createReadStream,
+  existsSync,
+  promises as fspromise,
+  Stats,
+} from 'fs';
 import { app, Display, screen } from 'electron';
 import {
   EventType,
@@ -980,7 +985,7 @@ const handleSafeVodRequest = async (request: Request) => {
   }
 };
 
-const runFirstTimeSetupActions = async () => {
+const runFirstTimeSetupActions = () => {
   const cfg = ConfigService.getInstance();
 
   const defaultEncoder =
@@ -1004,7 +1009,7 @@ const runFirstTimeSetupActions = async () => {
 
     for (let i = 0; i < wowInstallSearchPaths.length; i++) {
       const installPath = wowInstallSearchPaths[i] + '\\_retail_\\Logs';
-      const installExists = await exists(installPath);
+      const installExists = existsSync(installPath);
 
       if (installExists) {
         console.info('[Util] Found retail WoW installation at', installPath);
