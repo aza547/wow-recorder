@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - [Issue 733](https://github.com/aza547/wow-recorder/issues/733) - Fix row highlighting when sorted.
 - [Issue 731](https://github.com/aza547/wow-recorder/issues/731) - Fix an issue where quickly switching between content types could fail to record.
+- [Issue 782](https://github.com/aza547/wow-recorder/issues/782) - Make video buttons more friendly in the presence of cloud/disk storage. 
 
 ## [7.3.0] - 2025-12-07
 ### Added

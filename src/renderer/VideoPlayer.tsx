@@ -176,8 +176,19 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
   // different POVs of the same activity we want to play from the same
   // point.
   const timestamp = `#t=${persistentProgress.current}`;
-  const local = !videos[0].cloud;
-  const clippable = !multiPlayerMode && local;
+
+  // Check the category state to see if we have a cloud and/or disk
+  // copy of this video. These variables refer to the total state of
+  // the app rather than the selected video which is still either
+  // local or remote.
+  const videoName = videos[0].videoName;
+  const nameMatches = categoryState
+    .flatMap((v) => [v, ...v.multiPov])
+    .filter((v) => v.videoName === videoName);
+
+  const cloudVideo = nameMatches.find((v) => v.cloud);
+  const diskVideo = nameMatches.find((v) => !v.cloud);
+  const clippable = !multiPlayerMode && diskVideo !== undefined;
 
   // Deliberatly don't update the source when the timestamp changes. That's
   // just the initial playhead position. We only care to change sources when
@@ -850,7 +861,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
             size="xs"
             disabled={disabled}
           >
-            <CloudDownload size={20} />
+            <CloudDownload size={20} color="white" />
           </Button>
         </div>
       </Tooltip>
@@ -875,7 +886,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
             size="xs"
             disabled={disabled}
           >
-            <CloudUpload size={20} />
+            <CloudUpload size={20} color="white" />
           </Button>
         </div>
       </Tooltip>
@@ -892,14 +903,6 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
       </Button>
     );
   };
-
-  const n = videos[0].videoName;
-  const nameMatches = categoryState
-    .flatMap((v) => [v, ...v.multiPov])
-    .filter((v) => v.videoName === n);
-
-  const cloudVideo = nameMatches.find((v) => v.cloud);
-  const diskVideo = nameMatches.find((v) => !v.cloud);
 
   /**
    * Set the selected videos.
@@ -1020,7 +1023,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
             variant="ghost"
             size="xs"
             onClick={openLocation}
-            disabled={!clippable}
+            disabled={diskVideo === undefined}
           >
             <FolderOpen size={20} color="white" />
           </Button>
@@ -1072,7 +1075,12 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         content={getLocalePhrase(language, Phrase.ShareLinkButtonTooltip)}
       >
         <div>
-          <Button variant="ghost" size="xs" onClick={getShareableLink}>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={getShareableLink}
+            disabled={cloudVideo === undefined}
+          >
             <Link size={20} color="white" />
           </Button>
         </div>
@@ -1113,9 +1121,11 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
    * Make a request to the main process to clip a video.
    */
   const doClip = () => {
+    if (!diskVideo) return;
+
     const clipDuration = clipStopValue - clipStartValue;
     const clipOffset = clipStartValue;
-    const clipSource = videos[0].videoSource;
+    const clipSource = diskVideo.videoSource;
 
     ipc.sendMessage('clip', [clipSource, clipOffset, clipDuration]);
     setClipMode(false);
@@ -1198,7 +1208,7 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         size="xs"
         onClick={() => setIsDrawingEnabled(!isDrawingEnabled)}
       >
-        <Pencil size={20} color="white" opacity={isDrawingEnabled ? 1 : 0.2} />
+        <Pencil size={20} color={isDrawingEnabled ? '#bb4420' : 'white'} />
       </Button>
     </Tooltip>
   );
@@ -1221,9 +1231,10 @@ export const VideoPlayer = forwardRef<VideoPlayerRef, IProps>((props, ref) => {
         {!multiPlayerMode && !clipMode && (
           <Separator className="mx-2" orientation="vertical" />
         )}
+        {!multiPlayerMode && !clipMode && renderOpenFolderButton()}
+        {!multiPlayerMode && !clipMode && renderGetLinkButton()}
+        <Separator className="mx-2" orientation="vertical" />
         {renderDrawingButton()}
-        {!multiPlayerMode && !clipMode && local && renderOpenFolderButton()}
-        {!multiPlayerMode && !clipMode && !local && renderGetLinkButton()}
         {!clipMode && !isClip(videos[0]) && renderClipButton()}
         {!multiPlayerMode && !clipMode && (
           <Separator className="mx-2" orientation="vertical" />
