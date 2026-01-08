@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [7.4.0] - 2026-01-08
+### Added
 - [Issue 769](https://github.com/aza547/wow-recorder/issues/769) - Users with delete permissions can now delete chat messages.
 - [Issue 783](https://github.com/aza547/wow-recorder/issues/783) - Search for common WoW locations on initial install to auto-configure log paths.
 - [Issue 783](https://github.com/aza547/wow-recorder/issues/783) - Default storage folder to a sensible location on first time installation.
