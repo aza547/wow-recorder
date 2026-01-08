@@ -1,60 +1,64 @@
 # Warcraft Recorder
-![GitHub all releases](https://img.shields.io/github/downloads/aza547/wow-recorder/total)
-![Version](https://img.shields.io/github/package-json/v/aza547/wow-recorder?filename=release%2Fapp%2Fpackage.json)
-![Discord](https://img.shields.io/discord/1004860808737591326)
 
-Warcraft Recorder is a desktop screen recorder. It watches the WoW combat log file for interesting events, records them, and presents a user interface in which the recordings can be viewed. 
+Warcraft Recorder watches the World of Warcraft combat log and automatically records videos for “interesting” activities (arenas, raids, dungeons, etc).
 
-<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/aea579e3-5a7f-477d-bea0-273556a3ef9b" />
-
-#  How to Use
-1. Download and run the most recent [Warcraft Recorder installer](https://github.com/aza547/wow-recorder/releases/latest).
-2. Launch the application and click the Settings button.
-    - Create a folder on your PC to store the recordings.
-    - Set the Storage Path to the folder you just created.
-    - Enable recording and set the location of your World of Warcraft logs folder.
-    - Modify any other settings as desired.
-3. Click the Scene button and configure the OBS scene and recording settings.
-    - Select your desired output resolution.
-    - Add your speakers and/or microphone if you want to include audio.
-    - Recommend selecting a hardware encoder, if available.
-    - Modify any other settings as desired.
-5. Install the required combat logging addon, enabling advanced combat logging when prompted.
-    - Retail: SimpleCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
-    - Classic: AutoCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/autocombatlogger), [Wago](https://addons.wago.io/addons/autocombatlogger)). 
-    - Classic Era: AutoCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/autocombatlogger), [Wago](https://addons.wago.io/addons/autocombatlogger)). 
-
-# Supported Platforms
+## Supported Platforms
 
 | OS | Support |
 |---|---|
 | Windows | Yes |
-| Mac | No |
-| Linux | No |
+| Linux (Wayland) | Yes (MVP) |
+| macOS | No |
 
-| Flavour | Support |
+| WoW flavour | Support |
 |---|---|
 | Retail | Yes |
 | MoP Classic | Yes |
 | Classic Era | SoD Raids Only |
 
-# Testing It Works
-You can test that Warcraft Recorder works by clicking the test icon with World of Warcraft running after you have completed the above setup steps. This runs a short test of the recording function.
+## Quick Start
 
-# Bug Reports & Suggestions
+1. Install a combat logging addon and enable Advanced Combat Logging when prompted:
+   - Retail: SimpleCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/simplecombatlogger), [Wago](https://addons.wago.io/addons/simplecombatlogger)).
+   - Classic / Classic Era: AutoCombatLogger ([CurseForge](https://www.curseforge.com/wow/addons/autocombatlogger), [Wago](https://addons.wago.io/addons/autocombatlogger)).
+2. In Warcraft Recorder settings:
+   - Choose a Storage Path for videos.
+   - Set the WoW `Logs` folder for the flavour(s) you play.
+3. Use the Test button with WoW running to validate recording end-to-end.
 
-Please create an issue, I will get to it eventually. Bear in mind maintaining this is a hobby for me, so it may take me some time to comment. If you think you can improve something, feel free to submit a PR.
+## Linux (Wayland) Behavior
 
-I've created a dedicated discord for this project, feel free to join [here](https://discord.gg/NPha7KdjVk).
+Linux uses `gpu-screen-recorder` (GSR) instead of OBS.
 
-# Contributing
+- Capture is portal-based (PipeWire + XDG Desktop Portal). On first start (or after “Re-select Capture Target”), you must select the WoW window/monitor in the system share dialog.
+- Recording is fully automatic (start/stop is driven by combat log activity detection).
+- The “Replay buffer” is only used for pre-roll; full activities are recorded as regular recordings and are not limited by the buffer length.
 
-If you're interested in getting involved please drop me a message on discord and I can give you access to our development channel. Also see [contributing](https://github.com/aza547/wow-recorder/blob/main/docs/CONTRIBUTING.md) docs.
+### Linux Requirements
 
-# Mentions
+Required on most Wayland setups:
+- `gpu-screen-recorder`
+- PipeWire
+- `xdg-desktop-portal`
+- A portal backend for your compositor/DE (e.g. `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gnome`, `xdg-desktop-portal-kde`, `xdg-desktop-portal-wlr`)
 
-The recording done by Warcraft Recorder is made possible by packaging up [OBS](https://obsproject.com/). We wouldn't stand a chance at providing something useful without it. Big thanks to the OBS developers.
+The app performs best-effort runtime checks and reports missing prerequisites via the in-app error indicator.
 
-The app is built with [Electron](https://www.electronjs.org/) and [React](https://react.dev/), using the boilerplate provided by the [ERB](https://electron-react-boilerplate.js.org/) project. 
+## Building / Packaging (AppImage)
 
-Drawing overlay created using [Excalidraw](https://github.com/excalidraw/excalidraw).
+Linux packaging produces an AppImage:
+
+- `npm install`
+- `npm run package:linux`
+
+Use Node 22 LTS (or Node 20 LTS) for packaging.
+
+## Contributing
+
+See `docs/CONTRIBUTING.md`.
+
+## Credits
+
+- Windows recording is based on [OBS](https://obsproject.com/).
+- Linux recording uses [gpu-screen-recorder](https://git.dec05eba.com/gpu-screen-recorder/about/).
+- Built with [Electron](https://www.electronjs.org/) and [React](https://react.dev/) (ERB).
