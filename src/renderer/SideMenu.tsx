@@ -72,6 +72,7 @@ const SideMenu = (props: IProps) => {
 
   const [appVersion, setAppVersion] = useState<string>();
   const { category } = appState;
+  const isLinux = window.electron.platform === 'linux';
 
   useEffect(() => {
     window.electron.ipcRenderer.on('updateVersionDisplay', (t: unknown) => {
@@ -213,7 +214,7 @@ const SideMenu = (props: IProps) => {
             {getLocalePhrase(appState.language, Phrase.SettingsHeading)}
           </Menu.Label>
           {renderSettingsTab()}
-          {renderSceneTab()}
+          {!isLinux && renderSceneTab()}
         </Menu>
       </ScrollArea>
       <div className="mt-auto w-full">

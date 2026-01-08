@@ -97,6 +97,14 @@ export type ConfigurationSchema = {
   manualRecordUpload: boolean;
   firstTimeSetup: boolean;
   chatUserNameAgreed: string;
+
+  // Linux (gpu-screen-recorder) settings.
+  linuxGsrBufferSeconds: number;
+  linuxGsrCodec: string;
+  linuxGsrBitrateKbps: number;
+  linuxGsrAudio: string;
+  linuxGsrReplayStorage: string;
+  linuxGsrLeadInSeconds: number;
 };
 
 export type ConfigurationSchemaKey = keyof ConfigurationSchema;
@@ -230,6 +238,42 @@ export const configSchema = {
     description: Phrase.ObsRecEncoderDescription,
     type: 'string',
     default: 'obs_x264',
+  },
+  linuxGsrBufferSeconds: {
+    description: Phrase.LinuxGsrBufferSecondsDescription,
+    type: 'integer',
+    default: 180,
+    minimum: 30,
+    maximum: 600,
+  },
+  linuxGsrCodec: {
+    description: Phrase.LinuxGsrCodecDescription,
+    type: 'string',
+    default: 'h264',
+  },
+  linuxGsrBitrateKbps: {
+    description: Phrase.LinuxGsrBitrateKbpsDescription,
+    type: 'integer',
+    default: 20000,
+    minimum: 1000,
+    maximum: 200000,
+  },
+  linuxGsrAudio: {
+    description: Phrase.LinuxGsrAudioDescription,
+    type: 'string',
+    default: 'default_output',
+  },
+  linuxGsrReplayStorage: {
+    description: Phrase.LinuxGsrReplayStorageDescription,
+    type: 'string',
+    default: 'ram',
+  },
+  linuxGsrLeadInSeconds: {
+    description: Phrase.LinuxGsrLeadInSecondsDescription,
+    type: 'integer',
+    default: 0,
+    minimum: 0,
+    maximum: 30,
   },
   recordRetail: {
     description: Phrase.RecordRetailDescription,

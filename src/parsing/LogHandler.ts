@@ -3,7 +3,7 @@ import Combatant from '../main/Combatant';
 import CombatLogWatcher from './CombatLogWatcher';
 import ConfigService from '../config/ConfigService';
 import { instanceDifficulty } from '../main/constants';
-import Recorder from '../main/Recorder';
+import Recorder from '../main/recording/Recorder';
 import {
   Flavour,
   PlayerDeathType,
@@ -27,7 +27,7 @@ import { assert } from 'console';
 import Manual from 'activitys/Manual';
 import { playSoundAlert } from 'main/main';
 import Poller from 'utils/Poller';
-import { emitErrorReport } from 'main/util';
+import { emitErrorReport } from 'main/errorReporting';
 import AsyncQueue from 'utils/AsyncQueue';
 
 /**
@@ -265,6 +265,7 @@ export default abstract class LogHandler {
     }
 
     LogHandler.overrunning = false;
+    LogHandler.stateChangeCallback();
     const recorder = Recorder.getInstance();
     const poller = Poller.getInstance();
 

@@ -2,9 +2,6 @@ import ArenaMatch from '../../activitys/ArenaMatch';
 import { Flavour } from '../../main/types';
 import { VideoCategory } from '../../types/VideoCategory';
 import Combatant from '../../main/Combatant';
-import TestConfigService from '../../utils/TestConfigService';
-
-const cfg = new TestConfigService();
 
 test('Basic Arena Match', () => {
   const startDate = new Date('2022-12-25T12:00:00');
@@ -21,7 +18,6 @@ test('Basic Arena Match', () => {
     VideoCategory.TwoVTwo,
     1672,
     Flavour.Retail,
-    cfg,
   );
 
   arenaMatch.playerGUID = testCombatants[0].GUID;

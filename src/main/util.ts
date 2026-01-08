@@ -6,7 +6,7 @@ import fs, {
   promises as fspromise,
   Stats,
 } from 'fs';
-import { app, Display, screen } from 'electron';
+import { app, Display, screen, shell } from 'electron';
 import {
   EventType,
   uIOhook,
@@ -22,16 +22,14 @@ import {
   OurDisplayType,
   RendererVideo,
   ObsAudioConfig,
-  ErrorReport,
   CloudSignedMetadata,
 } from './types';
 import { VideoCategory } from '../types/VideoCategory';
 import ConfigService from 'config/ConfigService';
 import { AxiosError } from 'axios';
-import { send } from './main';
 import { Readable } from 'stream';
 import { ESupportedEncoders } from './obsEnums';
-import Recorder from './Recorder';
+import Recorder from './recording/Recorder';
 import { wowInstallSearchPaths } from './constants';
 
 /**
@@ -58,8 +56,6 @@ const setupApplicationLogging = () => {
   Object.assign(console, log.functions);
   return path.dirname(logPath);
 };
-
-const { exec } = require('child_process');
 
 const getResolvedHtmlPath = () => {
   if (process.env.NODE_ENV === 'development') {
@@ -303,9 +299,7 @@ const writeMetadataFile = async (videoPath: string, metadata: Metadata) => {
  * Open a folder in system explorer.
  */
 const openSystemExplorer = (filePath: string) => {
-  const windowsPath = filePath.replace(/\//g, '\\');
-  const cmd = `explorer.exe /select,"${windowsPath}"`;
-  exec(cmd, () => {});
+  shell.showItemInFolder(path.resolve(filePath));
 };
 
 /**
@@ -410,20 +404,6 @@ const getWowFlavour = (pathSpec: string): string => {
   const content = fs.readFileSync(flavourInfoFile).toString().split('\n');
 
   return content.length > 1 ? content[1] : 'unknown';
-};
-
-/**
- * Adds an error to the error report component.
- */
-const emitErrorReport = (data: unknown) => {
-  console.error('[Util] Emitting error report', String(data));
-
-  const report: ErrorReport = {
-    date: new Date(),
-    reason: String(data),
-  };
-
-  send('updateErrorReport', report);
 };
 
 const isPushToTalkHotkey = (
@@ -566,7 +546,7 @@ const convertUioHookEvent = (
 
 const nextKeyPressPromise = (): Promise<PTTKeyPressEvent> => {
   return new Promise((resolve) => {
-    uIOhook.once('keyup', (event) => {
+    uIOhook.once('keyup', (event: UiohookKeyboardEvent) => {
       resolve(convertUioHookEvent(event));
     });
   });
@@ -576,7 +556,7 @@ const nextMousePressPromise = (): Promise<PTTKeyPressEvent> => {
   return new Promise((resolve) => {
     // Deliberatly 'mousedown' else we fire on the initial click
     // and always get mouse button 1.
-    uIOhook.once('mousedown', (event) => {
+    uIOhook.once('mousedown', (event: UiohookMouseEvent) => {
       resolve(convertUioHookEvent(event));
     });
   });
@@ -847,10 +827,14 @@ const takeOwnershipBufferDir = async (dir: string) => {
 
   const files = await fs.promises.readdir(dir);
 
+  // Linux MVP uses subdirectories for gpu-screen-recorder outputs.
+  const allowedDirs = new Set(['replay', 'regular', 'staging']);
+
   const unexpected = files
     .filter((file) => !file.endsWith('.mp4'))
     .filter((file) => !file.endsWith('.mkv'))
-    .filter((file) => file !== 'managed.txt');
+    .filter((file) => file !== 'managed.txt')
+    .filter((file) => !allowedDirs.has(file));
 
   if (unexpected.length > 0) {
     console.warn(
@@ -864,18 +848,22 @@ const takeOwnershipBufferDir = async (dir: string) => {
     throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
   }
 
-  const regex = /^\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}.(mp4|mkv)$/;
+  // Filename strictness is Windows/OBS-specific; on Linux, gpu-screen-recorder
+  // naming and staging files don't match the legacy pattern.
+  if (process.platform === 'win32') {
+    const regex = /^\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}.(mp4|mkv)$/;
 
-  files
-    .filter((file) => file.endsWith('.mp4') || file.endsWith('.mkv'))
-    .forEach((file) => {
-      const match = regex.test(file);
+    files
+      .filter((file) => file.endsWith('.mp4') || file.endsWith('.mkv'))
+      .forEach((file) => {
+        const match = regex.test(file);
 
-      if (!match) {
-        console.warn('[Util] Unrecognized file in buffer dir', file);
-        throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
-      }
-    });
+        if (!match) {
+          console.warn('[Util] Unrecognized file in buffer dir', file);
+          throw new Error(`Can not take ownership of ${dir}. ${helptext}`);
+        }
+      });
+  }
 
   const file = path.join(dir, 'managed.txt');
   await fs.promises.writeFile(file, content);
@@ -1071,7 +1059,6 @@ export {
   nextMousePressPromise,
   convertUioHookEvent,
   getPromiseBomb,
-  emitErrorReport,
   buildClipMetadata,
   getOBSFormattedDate,
   checkDisk,

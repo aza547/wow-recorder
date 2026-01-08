@@ -7,6 +7,7 @@ import { TChatMessageWithId } from 'types/api';
 declare global {
   interface Window {
     electron: {
+      platform: string;
       store: ElectronStore;
       ipcRenderer: {
         sendMessage(channel: Channels, args: unknown[]): void;

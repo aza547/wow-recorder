@@ -3,9 +3,6 @@ import RaidEncounter from '../../activitys/RaidEncounter';
 import { Flavour } from '../../main/types';
 import Combatant from '../../main/Combatant';
 import { Phrase } from '../../localisation/phrases';
-import TestConfigService from '../../utils/TestConfigService';
-
-const cfg = new TestConfigService();
 
 const getRandomSpecID = () => {
   const keys = Object.keys(specializationById);
@@ -36,7 +33,6 @@ test('Basic Raid Encounter', () => {
     'Raszageth',
     16,
     Flavour.Retail,
-    cfg,
   );
 
   const testCombatants = getCombatants(20);

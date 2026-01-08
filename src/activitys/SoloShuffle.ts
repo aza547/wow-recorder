@@ -103,7 +103,6 @@ export default class SoloShuffle extends Activity {
       VideoCategory.SoloShuffle,
       this.zoneID,
       Flavour.Retail,
-      this.cfg,
     );
 
     this.rounds.push(newRound);

@@ -19,6 +19,7 @@ import LocaleSettings from './LocaleSettings';
 import WindowsSettings from './WindowsSettings';
 import { Phrase } from 'localisation/phrases';
 import ManualSettings from './ManualSettings';
+import LinuxCaptureSettings from './LinuxCaptureSettings';
 
 interface IProps {
   recorderStatus: RecStatus;
@@ -34,6 +35,7 @@ const CategoryHeading = ({ children }: { children: React.ReactNode }) => (
 
 const SettingsPage: React.FC<IProps> = (props: IProps) => {
   const { recorderStatus, config, setConfig, appState, setAppState } = props;
+  const isLinux = window.electron.platform === 'linux';
 
   return (
     <div className="w-full h-full bg-background-higher pt-[32px] px-4">
@@ -73,17 +75,25 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
               </div>
               <div>
                 <CategoryHeading>
-                  {getLocalePhrase(
-                    appState.language,
-                    Phrase.WindowsSettingsLabel,
-                  )}
+                  {!isLinux
+                    ? getLocalePhrase(appState.language, Phrase.WindowsSettingsLabel)
+                    : 'Linux Capture'}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <WindowsSettings
-                  appState={appState}
-                  config={config}
-                  setConfig={setConfig}
-                />
+                {!isLinux && (
+                  <WindowsSettings
+                    appState={appState}
+                    config={config}
+                    setConfig={setConfig}
+                  />
+                )}
+                {isLinux && (
+                  <LinuxCaptureSettings
+                    recorderStatus={recorderStatus}
+                    config={config}
+                    setConfig={setConfig}
+                  />
+                )}
               </div>
               <div>
                 <CategoryHeading>
@@ -139,7 +149,7 @@ const SettingsPage: React.FC<IProps> = (props: IProps) => {
                   )}
                 </CategoryHeading>
                 <Separator className="mt-2 mb-4" />
-                <ManualSettings appState={appState} />
+                {!isLinux && <ManualSettings appState={appState} />}
               </div>
             </div>
           </TabsContent>

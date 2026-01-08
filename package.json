@@ -28,10 +28,11 @@
     "build:dll": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.dev.dll.ts",
     "build:main": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.prod.ts",
     "build:renderer": "cross-env NODE_ENV=production TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.renderer.prod.ts",
-    "postinstall": "ts-node .erb/scripts/check-native-dep.js && electron-builder install-app-deps && npm run build:dll",
+    "postinstall": "ts-node .erb/scripts/check-native-dep.js && node .erb/scripts/postinstall.js",
     "lint": "cross-env NODE_ENV=development eslint ./src",
     "lint:fix": "cross-env NODE_ENV=development eslint ./src --fix",
-    "package": "ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never && npm run build:dll",
+    "package": "node .erb/scripts/check-supported-node.js && ts-node ./.erb/scripts/clean.js dist && npm run build && electron-builder build --publish never && npm run build:dll",
+    "package:linux": "node .erb/scripts/check-supported-node.js && ts-node ./.erb/scripts/clean.js dist && npm run build && ts-node .erb/scripts/sync-linux-dist.js && npm --prefix release/app-linux install --omit=dev && electron-builder build --linux AppImage --publish never -c.directories.app=release/app-linux",
     "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
     "prestart": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.main.dev.ts",
     "start": "ts-node ./.erb/scripts/check-port-in-use.js && npm run prestart && npm run start:renderer",
@@ -86,6 +87,13 @@
         "nsis"
       ]
     },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "artifactName": "WarcraftRecorder-${version}.AppImage",
+      "category": "Video"
+    },
     "directories": {
       "app": "release/app",
       "buildResources": "assets",
@@ -102,6 +110,19 @@
     }
   },
   "jest": {
+    "modulePaths": [
+      "<rootDir>/src"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/release/app",
+      "<rootDir>/release/app-linux",
+      "<rootDir>/release/build"
+    ],
+    "moduleNameMapper": {
+      "^uiohook-napi$": "<rootDir>/src/stubs/uiohook-napi.ts",
+      "^noobs$": "<rootDir>/src/stubs/noobs.ts",
+      "^config/ConfigService$": "<rootDir>/src/stubs/config/ConfigService.ts"
+    },
     "transform": {
       "\\.(ts|tsx|js|jsx)$": "ts-jest"
     }

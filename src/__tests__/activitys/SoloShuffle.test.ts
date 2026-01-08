@@ -1,9 +1,6 @@
 import { PlayerDeathType } from 'main/types';
 import SoloShuffle from '../../activitys/SoloShuffle';
 import Combatant from '../../main/Combatant';
-import TestConfigService from '../../utils/TestConfigService';
-
-const cfg = new TestConfigService();
 
 const getPlayerDeath = (deathDate: Date, rel: number, isFriendly: boolean) => {
   const playerDeath: PlayerDeathType = {
@@ -42,7 +39,7 @@ test('Basic Solo Shuffle', () => {
     new Combatant('Player-5810-0A3E1BD5', 1, 104),
   ];
 
-  const soloShuffle = new SoloShuffle(startDate, 1672, cfg);
+  const soloShuffle = new SoloShuffle(startDate, 1672);
 
   // First round
   let death = getPlayerDeath(getRelativeDate(startDate, 45), 45, false);

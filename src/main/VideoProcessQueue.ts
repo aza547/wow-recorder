@@ -24,7 +24,7 @@ import { send } from './main';
 import ffmpeg from 'fluent-ffmpeg';
 import axios from 'axios';
 import DiskClient from 'storage/DiskClient';
-import Recorder from './Recorder';
+import Recorder from './recording/Recorder';
 
 const atomicQueue = require('atomic-queue');
 

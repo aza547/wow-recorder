@@ -25,9 +25,9 @@ import {
   getPromiseBomb,
   takeOwnershipBufferDir,
   exists,
-  emitErrorReport,
   getSortedFiles,
 } from './util';
+import { emitErrorReport } from './errorReporting';
 import {
   AudioSource,
   AudioSourceType,

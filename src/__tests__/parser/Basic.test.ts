@@ -19,7 +19,10 @@ test('Basic Retail', async () => {
   combatLogParser.handleLogLine(arenaMatchStartLine);
 
   const testLogLine = await testLogLinePromise;
-  const expectedDate = new Date('2025-08-03T22:12:04');
+  const year = new Date().getFullYear();
+  const expectedDate = new Date();
+  expectedDate.setFullYear(year, 7, 3);
+  expectedDate.setHours(22, 12, 4, 0);
 
   expect(testLogLine.date()).toStrictEqual(expectedDate);
   expect(testLogLine.type()).toBe('ARENA_MATCH_START');
@@ -34,7 +37,10 @@ test('Date Parsing', async () => {
   // Pre The War Within expansion there were note years or timezones.
   const preTWW = '8/3 22:12:04.000  ARENA_MATCH_START,2547,33,5v5,1';
   const parsedPreTWW = new LogLine(preTWW);
-  const expectedPreTww = new Date('2025-08-03T22:12:04');
+  const year = new Date().getFullYear();
+  const expectedPreTww = new Date();
+  expectedPreTww.setFullYear(year, 7, 3);
+  expectedPreTww.setHours(22, 12, 4, 0);
   expect(parsedPreTWW.date()).toStrictEqual(expectedPreTww);
 
   // Year but no TZ.

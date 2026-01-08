@@ -52,6 +52,7 @@ export type Channels =
   | 'refreshCloudGuilds';
 
 contextBridge.exposeInMainWorld('electron', {
+  platform: process.platform,
   ipcRenderer: {
     sendMessage(channel: Channels, args: unknown[]) {
       ipcRenderer.send(channel, args);

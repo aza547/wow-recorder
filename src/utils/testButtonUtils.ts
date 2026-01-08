@@ -1,5 +1,7 @@
 import { VideoCategory } from '../types/VideoCategory';
 import Poller from './Poller';
+import Recorder from '../main/recording/Recorder';
+import { ERecordingState } from '../main/obsEnums';
 import {
   testData2v2,
   testData3v3,
@@ -11,6 +13,15 @@ import {
 import CombatLogWatcher from '../parsing/CombatLogWatcher';
 
 let testRunning = false;
+
+const isTestReady = () => {
+  if (process.platform === 'win32') {
+    return Poller.getInstance().isWowRunning();
+  }
+
+  // Linux MVP has no process poller; require that capture is running instead.
+  return Recorder.getInstance().obsState === ERecordingState.Recording;
+};
 
 const sendTestCombatLogLine = (
   watcher: CombatLogWatcher,
@@ -57,12 +68,12 @@ export const runRetailRecordingTest = (
     return;
   }
 
-  if (!Poller.getInstance().isWowRunning()) {
-    console.info("[test] WoW isn't running, not starting test.");
+  if (!isTestReady()) {
+    console.info('[test] Recorder is not ready, not starting test.');
     return;
   }
 
-  console.info('[test] WoW is running, starting test.');
+  console.info('[test] Starting test.');
   testRunning = true;
   const startDate = getAdjustedDate();
   let testLines: string[];
@@ -128,12 +139,12 @@ export const runClassicRecordingTest = (
     return;
   }
 
-  if (!Poller.getInstance().isWowRunning()) {
-    console.info("[test] WoW isn't running, not starting test.");
+  if (!isTestReady()) {
+    console.info('[test] Recorder is not ready, not starting test.');
     return;
   }
 
-  console.info('[test] WoW is running, starting test.');
+  console.info('[test] Starting test.');
   testRunning = true;
 
   // This inserts a test date so that the recorder doesn't confuse itself with

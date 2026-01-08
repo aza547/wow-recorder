@@ -78,6 +78,10 @@ export default class Poller extends EventEmitter {
    * Start the poller.
    */
   public start() {
+    if (process.platform !== 'win32') {
+      console.info('[Poller] Disabled on non-Windows platforms');
+      return;
+    }
     this.stop();
     console.info('[Poller] Start process poller');
 

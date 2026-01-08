@@ -1,9 +1,6 @@
 import { Flavour, PlayerDeathType } from '../../main/types';
 import ChallengeModeDungeon from '../../activitys/ChallengeModeDungeon';
 import Combatant from '../../main/Combatant';
-import TestConfigService from '../../utils/TestConfigService';
-
-const cfg = new TestConfigService();
 
 const getPlayerDeath = (deathDate: Date, rel: number, isFriendly: boolean) => {
   const playerDeath: PlayerDeathType = {
@@ -39,7 +36,6 @@ test('Basic Challenge Mode', () => {
     353,
     10,
     [159, 10, 152, 9], // Peril included
-    cfg,
     Flavour.Retail,
   );
 
@@ -91,7 +87,6 @@ test('Hard Depleted Challenge Mode', () => {
     353,
     10,
     [159, 10, 152, 9], // Peril included
-    cfg,
     Flavour.Retail,
   );
 
@@ -143,7 +138,6 @@ test('Peril Timed Challenge Mode', () => {
     353,
     10,
     [159, 10, 152, 9], // Peril included so we get +90 on the timer
-    cfg,
     Flavour.Retail,
   );
 
@@ -183,7 +177,6 @@ test('Peril Depleted Challenge Mode', () => {
     353,
     10,
     [159, 10, 152, 9], // Peril included so we get +90 on the timer
-    cfg,
     Flavour.Retail,
   );
 

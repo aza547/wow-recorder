@@ -13,6 +13,7 @@ import {
 import os from 'os';
 import { uIOhook } from 'uiohook-napi';
 import assert from 'assert';
+import { spawn } from 'child_process';
 import { getLocalePhrase, Language } from 'localisation/translations';
 import {
   resolveHtmlPath,
@@ -24,6 +25,7 @@ import {
   runFirstTimeSetupActionsObs,
   runFirstTimeSetupActionsNoObs,
 } from './util';
+import { checkLinuxRuntimePrereqs } from './linuxPrereqs';
 import { OurDisplayType, SoundAlerts, VideoPlayerSettings } from './types';
 import ConfigService from '../config/ConfigService';
 import Manager from './Manager';
@@ -33,7 +35,7 @@ import { Phrase } from 'localisation/phrases';
 import CloudClient from 'storage/CloudClient';
 import DiskClient from 'storage/DiskClient';
 import Poller from 'utils/Poller';
-import Recorder from './Recorder';
+import Recorder from './recording/Recorder';
 import AsyncQueue from 'utils/AsyncQueue';
 
 const logDir = setupApplicationLogging();
@@ -234,6 +236,20 @@ const createWindow = async () => {
       cloud.refreshStatus(),
       cloud.refreshVideos(),
     ]);
+
+    // Linux-only: best-effort dependency checks for portal/PipeWire/GSR.
+    if (process.platform === 'linux') {
+      const issues = checkLinuxRuntimePrereqs();
+      issues.forEach((m) => console.warn('[LinuxPrereqs]', m));
+      if (issues.length) {
+        issues.forEach((reason) => {
+          window?.webContents.send('updateErrorReport', {
+            date: new Date(),
+            reason,
+          });
+        });
+      }
+    }
   });
 
   window.on('focus', () => {
@@ -261,7 +277,9 @@ const createWindow = async () => {
 
   // Runs the auto-updater, which checks GitHub for new releases
   // and will prompt the user if any are available.
-  new AppUpdater(window);
+  if (process.platform !== 'linux') {
+    new AppUpdater(window);
+  }
 };
 
 /**
@@ -400,7 +418,55 @@ ipcMain.on('reconfigureBase', () => {
  */
 ipcMain.on('openURL', (event, args) => {
   event.preventDefault();
-  require('electron').shell.openExternal(args[0]);
+  const url = String(args[0]);
+
+  const trySpawn = (cmd: string, cmdArgs: string[]) => {
+    try {
+      const child = spawn(cmd, cmdArgs, {
+        detached: true,
+        stdio: 'ignore',
+      });
+      child.unref();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  (async () => {
+    try {
+      await shell.openExternal(url);
+      return;
+    } catch (error) {
+      console.error('[Main] Failed to open URL via shell.openExternal', {
+        url,
+        error: String(error),
+      });
+
+      // Fall back to common Linux launchers. This is particularly useful on
+      // Wayland when portal integration is misconfigured.
+      if (process.platform === 'linux') {
+        if (trySpawn('xdg-open', [url])) return;
+        if (trySpawn('gio', ['open', url])) return;
+      }
+
+      if (!window) return;
+
+      const result = await dialog.showMessageBox(window, {
+        type: 'error',
+        title: 'Failed to open link',
+        message: 'Unable to open this link in your browser.',
+        detail: url,
+        buttons: ['Copy Link', 'Close'],
+        defaultId: 0,
+        cancelId: 1,
+      });
+
+      if (result.response === 0) {
+        clipboard.writeText(url);
+      }
+    }
+  })().catch((e) => console.error('[Main] openURL handler failed', e));
 });
 
 /**

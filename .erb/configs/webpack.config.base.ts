@@ -3,12 +3,28 @@
  */
 
 import webpack from 'webpack';
+import path from 'path';
 import TsconfigPathsPlugins from 'tsconfig-paths-webpack-plugin';
 import webpackPaths from './webpack.paths';
-import { dependencies as externals } from '../../release/app/package.json';
+import { dependencies as releaseAppDependencies } from '../../release/app/package.json';
+
+const isWin = process.platform === 'win32';
+
+const externals = Object.keys(releaseAppDependencies || {}).filter((dep) => {
+  if (isWin) return true;
+  // Linux MVP: bundle stubs for Windows-only native deps.
+  return dep !== 'noobs' && dep !== 'uiohook-napi';
+});
+
+const linuxStubsAliases = isWin
+  ? {}
+  : {
+      noobs: path.join(webpackPaths.srcPath, 'stubs', 'noobs'),
+      'uiohook-napi': path.join(webpackPaths.srcPath, 'stubs', 'uiohook-napi'),
+    };
 
 const configuration: webpack.Configuration = {
-  externals: [...Object.keys(externals || {})],
+  externals: [...externals],
 
   stats: 'errors-only',
 
@@ -45,6 +61,7 @@ const configuration: webpack.Configuration = {
     extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
     modules: [webpackPaths.srcPath, 'node_modules'],
     // There is no need to add aliases here, the paths in tsconfig get mirrored
+    alias: linuxStubsAliases,
     plugins: [new TsconfigPathsPlugins()],
     fallback: {
       'roughjs/bin/rough': require.resolve('roughjs/bin/rough'),

@@ -1,0 +1,16 @@
+{
+  "name": "WarcraftRecorder",
+  "version": "7.4.0",
+  "description": "Warcraft Recorder (Linux)",
+  "main": "./dist/main/main.js",
+  "author": {
+    "name": "Alex K"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "atomic-queue": "^5.0.4"
+  },
+  "license": "MIT"
+}
+

@@ -498,6 +498,13 @@ enum Phrase {
   SelectOptions,
   SelectLanguage,
   ChatDeleteMessageTooltip,
+
+  LinuxGsrBufferSecondsDescription,
+  LinuxGsrCodecDescription,
+  LinuxGsrBitrateKbpsDescription,
+  LinuxGsrAudioDescription,
+  LinuxGsrReplayStorageDescription,
+  LinuxGsrLeadInSecondsDescription,
 }
 
 enum Language {

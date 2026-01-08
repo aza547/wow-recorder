@@ -501,6 +501,13 @@ const ENGLISH: Translations = {
   [Phrase.SelectOptions]: 'Select options',
   [Phrase.SelectLanguage]: 'Select language',
   [Phrase.ChatDeleteMessageTooltip]: 'Delete this chat message',
+
+  [Phrase.LinuxGsrBufferSecondsDescription]: 'Replay buffer length in seconds when using gpu-screen-recorder on Linux.',
+  [Phrase.LinuxGsrCodecDescription]: 'Video codec for gpu-screen-recorder on Linux (h264/hevc/av1).',
+  [Phrase.LinuxGsrBitrateKbpsDescription]: 'Target video bitrate in kbps for gpu-screen-recorder on Linux (CBR).',
+  [Phrase.LinuxGsrAudioDescription]: 'Audio input spec for gpu-screen-recorder on Linux (e.g. default_output, default_input, app:<name>).',
+  [Phrase.LinuxGsrReplayStorageDescription]: 'Replay buffer storage mode for gpu-screen-recorder on Linux (ram or disk).',
+  [Phrase.LinuxGsrLeadInSecondsDescription]: 'Extra seconds to include before the detected activity start when trimming the replay pre-roll on Linux.',
 };
 
 export default ENGLISH;
