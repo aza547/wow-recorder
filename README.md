@@ -44,6 +44,17 @@ Required on most Wayland setups:
 
 The app performs best-effort runtime checks and reports missing prerequisites via the in-app error indicator.
 
+## Installing (AppImage)
+
+1. Install prerequisites (see “Linux Requirements” above).
+2. Ensure your system can run AppImages (FUSE2 / `libfuse.so.2`):
+   - Arch/CachyOS: `sudo pacman -S fuse2`
+   - Debian/Ubuntu: `sudo apt install libfuse2`
+   - Fedora: `sudo dnf install fuse-libs`
+3. Download the `.AppImage`, make it executable, and run it:
+   - `chmod +x Warcraft-Recorder-*.AppImage`
+   - `./Warcraft-Recorder-*.AppImage`
+
 ## Building / Packaging (AppImage)
 
 Linux packaging produces an AppImage:
