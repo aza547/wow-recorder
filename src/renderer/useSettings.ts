@@ -56,6 +56,8 @@ export const getSettings = (): ConfigurationSchema => {
     linuxGsrBufferSeconds: getConfigValue<number>('linuxGsrBufferSeconds'),
     linuxGsrCodec: getConfigValue<string>('linuxGsrCodec'),
     linuxGsrBitrateKbps: getConfigValue<number>('linuxGsrBitrateKbps'),
+    linuxGsrAudioOutput: getConfigValue<string>('linuxGsrAudioOutput'),
+    linuxGsrAudioInput: getConfigValue<string>('linuxGsrAudioInput'),
     linuxGsrAudio: getConfigValue<string>('linuxGsrAudio'),
     linuxGsrReplayStorage: getConfigValue<string>('linuxGsrReplayStorage'),
     linuxGsrLeadInSeconds: getConfigValue<number>('linuxGsrLeadInSeconds'),

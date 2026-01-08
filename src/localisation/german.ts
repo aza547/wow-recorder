@@ -505,6 +505,8 @@ const GERMAN: Translations = {
   [Phrase.LinuxGsrBufferSecondsDescription]: 'Replay-Pufferlänge in Sekunden bei Verwendung von gpu-screen-recorder unter Linux.',
   [Phrase.LinuxGsrCodecDescription]: 'Video-Codec für gpu-screen-recorder unter Linux (h264/hevc/av1).',
   [Phrase.LinuxGsrBitrateKbpsDescription]: 'Ziel-Video-Bitrate in kbps für gpu-screen-recorder unter Linux (CBR).',
+  [Phrase.LinuxGsrAudioOutputDescription]: 'Audio-Ausgabequelle für gpu-screen-recorder unter Linux (default_output oder device:<name>).',
+  [Phrase.LinuxGsrAudioInputDescription]: 'Audio-Eingabequelle für gpu-screen-recorder unter Linux (default_input oder device:<name>).',
   [Phrase.LinuxGsrAudioDescription]: 'Audio-Eingabespezifikation für gpu-screen-recorder unter Linux (z.B. default_output, default_input, app:<name>).',
   [Phrase.LinuxGsrReplayStorageDescription]: 'Replay-Puffer-Speichermodus für gpu-screen-recorder unter Linux (ram oder disk).',
   [Phrase.LinuxGsrLeadInSecondsDescription]: 'Zusätzliche Sekunden vor dem erkannten Aktivitätsstart beim Trimmen des Replay-Vorlaufs unter Linux.',

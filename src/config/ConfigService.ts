@@ -76,6 +76,7 @@ export default class ConfigService
     super();
 
     this.cleanupStore();
+    this.migrateLinuxGsrAudioConfig();
 
     const loggable = this._store.store;
 
@@ -227,6 +228,42 @@ export default class ConfigService
       '[Config Service] Deleted deprecated keys from configuration store',
       keysToDelete,
     );
+  }
+
+  /**
+   * Backwards compatible migration for older Linux audio config.
+   *
+   * Historically we stored a single string (`linuxGsrAudio`) which was passed
+   * to gpu-screen-recorder via `-a`. We now store separate input/output sources.
+   */
+  private migrateLinuxGsrAudioConfig(): void {
+    if (!this._store.has('linuxGsrAudio')) return;
+    if (this._store.has('linuxGsrAudioOutput')) return;
+
+    const legacy = this._store.get('linuxGsrAudio');
+    if (typeof legacy !== 'string') return;
+
+    const tokens = legacy
+      .split('|')
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    // If the legacy config includes app audio (or anything else we can't map),
+    // keep using linuxGsrAudio without migrating to the split config.
+    const hasAppAudio = tokens.some(
+      (t) => t.startsWith('app:') || t.startsWith('app-inverse:'),
+    );
+    if (hasAppAudio) return;
+
+    const hasDefaultOutput = tokens.includes('default_output');
+    const hasDefaultInput = tokens.includes('default_input');
+    const deviceToken = tokens.find((t) => t.startsWith('device:')) ?? '';
+
+    const output = hasDefaultOutput ? 'default_output' : deviceToken || legacy;
+    const input = hasDefaultInput ? 'default_input' : '';
+
+    this._store.set('linuxGsrAudioOutput', output);
+    this._store.set('linuxGsrAudioInput', input);
   }
 
   /**

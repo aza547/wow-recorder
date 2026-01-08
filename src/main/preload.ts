@@ -49,6 +49,7 @@ export type Channels =
   | 'reconfigureOverlay'
   | 'reconfigureCloud'
   | 'getSensibleEncoderDefault'
+  | 'getLinuxGsrAudioDevices'
   | 'refreshCloudGuilds';
 
 contextBridge.exposeInMainWorld('electron', {
@@ -89,6 +90,13 @@ contextBridge.exposeInMainWorld('electron', {
       previewHeight: number;
     }> {
       return ipcRenderer.invoke('getDisplayInfo');
+    },
+
+    getLinuxGsrAudioDevices(): Promise<{
+      inputs: Array<{ value: string; label: string }>;
+      outputs: Array<{ value: string; label: string }>;
+    }> {
+      return ipcRenderer.invoke('getLinuxGsrAudioDevices');
     },
 
     // This is async as it's useful to wait for the configuration to complete

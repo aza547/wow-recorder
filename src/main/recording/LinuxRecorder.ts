@@ -427,9 +427,19 @@ export default class LinuxRecorder extends EventEmitter {
       'no',
     ];
 
-    const audio = this.cfg.get<string>('linuxGsrAudio') ?? 'default_output';
-    if (audio) {
-      args.push('-a', audio);
+    const outputAudio = this.cfg.has('linuxGsrAudioOutput')
+      ? (this.cfg.get<string>('linuxGsrAudioOutput') ?? '')
+      : (this.cfg.get<string>('linuxGsrAudio') ?? 'default_output');
+
+    const inputAudio = this.cfg.has('linuxGsrAudioInput')
+      ? (this.cfg.get<string>('linuxGsrAudioInput') ?? '')
+      : '';
+
+    const audioSources = [outputAudio, inputAudio].filter(Boolean);
+    const uniqueAudioSources = Array.from(new Set(audioSources));
+
+    if (uniqueAudioSources.length) {
+      args.push('-a', uniqueAudioSources.join('|'));
     }
 
     console.info('[LinuxRecorder] Spawning gpu-screen-recorder', { args });

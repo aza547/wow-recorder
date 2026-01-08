@@ -13,7 +13,7 @@ import {
 import os from 'os';
 import { uIOhook } from 'uiohook-napi';
 import assert from 'assert';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { getLocalePhrase, Language } from 'localisation/translations';
 import {
   resolveHtmlPath,
@@ -382,6 +382,114 @@ ipcMain.handle('selectImage', async () => {
   }
 
   return result.filePaths[0];
+});
+
+type GsrAudioDevice = { value: string; label: string };
+
+const uniqDevicesByValue = (devices: GsrAudioDevice[]) => {
+  const seen = new Set<string>();
+  return devices.filter((d) => {
+    if (seen.has(d.value)) return false;
+    seen.add(d.value);
+    return true;
+  });
+};
+
+const parseGsrAudioDevices = (text: string) => {
+  const inputs: GsrAudioDevice[] = [];
+  const outputs: GsrAudioDevice[] = [];
+  const all: GsrAudioDevice[] = [];
+
+  let section: 'inputs' | 'outputs' | 'unknown' = 'unknown';
+
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  lines.forEach((line) => {
+    if (/output/i.test(line) && /device/i.test(line) && /:$/.test(line)) {
+      section = 'outputs';
+      return;
+    }
+
+    if (/input/i.test(line) && /device/i.test(line) && /:$/.test(line)) {
+      section = 'inputs';
+      return;
+    }
+
+    const normalized = line.replace(/^[-*]\s+/, '');
+
+    const match = normalized.match(
+      /^(default_output|default_input|device:[^\s]+)(?:\s+(.*))?$/,
+    );
+    if (!match) return;
+
+    const value = match[1];
+    const detail = (match[2] ?? '').trim();
+    const label = detail ? `${value} — ${detail}` : value;
+
+    const device = { value, label };
+    if (section === 'outputs') outputs.push(device);
+    else if (section === 'inputs') inputs.push(device);
+    else all.push(device);
+  });
+
+  const finalOutputs = uniqDevicesByValue(
+    outputs.length ? outputs : all,
+  ).filter((d) => d.value !== 'default_input');
+
+  const finalInputs = uniqDevicesByValue(inputs.length ? inputs : all).filter(
+    (d) => d.value !== 'default_output',
+  );
+
+  // Always include defaults.
+  if (!finalOutputs.some((d) => d.value === 'default_output')) {
+    finalOutputs.unshift({
+      value: 'default_output',
+      label: 'default_output — Default output device',
+    });
+  }
+
+  if (!finalInputs.some((d) => d.value === 'default_input')) {
+    finalInputs.unshift({
+      value: 'default_input',
+      label: 'default_input — Default input device',
+    });
+  }
+
+  return { inputs: finalInputs, outputs: finalOutputs };
+};
+
+ipcMain.handle('getLinuxGsrAudioDevices', () => {
+  if (process.platform !== 'linux') {
+    return { inputs: [], outputs: [] };
+  }
+
+  const res = spawnSync('gpu-screen-recorder', ['--list-audio-devices'], {
+    encoding: 'utf-8',
+    timeout: 2000,
+  });
+
+  const output = `${res.stdout ?? ''}\n${res.stderr ?? ''}`.trim();
+  if (!output) {
+    return {
+      inputs: [
+        {
+          value: 'default_input',
+          label: 'default_input — Default input device',
+        },
+      ],
+      outputs: [
+        {
+          value: 'default_output',
+          label: 'default_output — Default output device',
+        },
+      ],
+    };
+  }
+
+  return parseGsrAudioDevices(output);
 });
 
 /**

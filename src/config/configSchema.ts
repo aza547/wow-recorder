@@ -102,6 +102,8 @@ export type ConfigurationSchema = {
   linuxGsrBufferSeconds: number;
   linuxGsrCodec: string;
   linuxGsrBitrateKbps: number;
+  linuxGsrAudioOutput: string;
+  linuxGsrAudioInput: string;
   linuxGsrAudio: string;
   linuxGsrReplayStorage: string;
   linuxGsrLeadInSeconds: number;
@@ -257,6 +259,16 @@ export const configSchema = {
     default: 20000,
     minimum: 1000,
     maximum: 200000,
+  },
+  linuxGsrAudioOutput: {
+    description: Phrase.LinuxGsrAudioOutputDescription,
+    type: 'string',
+    default: 'default_output',
+  },
+  linuxGsrAudioInput: {
+    description: Phrase.LinuxGsrAudioInputDescription,
+    type: 'string',
+    default: '',
   },
   linuxGsrAudio: {
     description: Phrase.LinuxGsrAudioDescription,

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 769](https://github.com/aza547/wow-recorder/issues/769) - Users with delete permissions can now delete chat messages.
 - [Issue 783](https://github.com/aza547/wow-recorder/issues/783) - Search for common WoW locations on initial install to auto-configure log paths.
 - [Issue 783](https://github.com/aza547/wow-recorder/issues/783) - Default storage folder to a sensible location on first time installation.
+- Linux: split gpu-screen-recorder audio config into Output Audio and Input Audio dropdowns.
 
 ### Fixed
 - [Issue 733](https://github.com/aza547/wow-recorder/issues/733) - Fix row highlighting when sorted.
