@@ -115,6 +115,11 @@ const WarcraftRecorder = () => {
     // This is updated when a user switches viewpoint to in the viewpoint
     // selector to remember their preference when changing rows in the table.
     preferredViewpoint: '',
+
+    // TODO: [linux-port] initialize platform synchronously
+    // Platform detection - fetched synchronously so it's correct from first render.
+    platform: ipc.getPlatform(),
+    // TODO: [linux-port] END
   });
 
   // The video state contains most of the frontend state.
@@ -404,6 +409,11 @@ const WarcraftRecorder = () => {
       };
     });
   };
+
+  // Expose appState to window for debugging in console
+  useEffect(() => {
+    (window as any).appState = appState;
+  }, [appState]);
 
   useEffect(() => {
     ipc.on('updateRecStatus', updateRecStatus);

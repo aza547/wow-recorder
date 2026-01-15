@@ -51,9 +51,21 @@ const fixPathWhenPackaged = (p: string) => {
  */
 const setupApplicationLogging = () => {
   const log = require('electron-log');
-  const date = new Date().toISOString().slice(0, 10);
-  const logRelativePath = `logs/WarcraftRecorder-${date}.log`;
-  const logPath = fixPathWhenPackaged(path.join(__dirname, logRelativePath));
+
+  // TODO: [linux-port] always use local time for file names? I assume this was the intent?
+  const now = new Date();
+  const date = `${now.getFullYear()}-${String(now.getMonth() + 1)
+    .padStart(2, '0')}-${String(now.getDate())
+    .padStart(2, '0')}`;
+  // TODO: [linux-port] END
+
+  // TODO: [linux-port] use the electron provided log path
+  const logFileName = `WarcraftRecorder-${date}.log`;
+
+  const logPath = app.isPackaged
+    ? path.join(app.getPath('logs'), logFileName)
+    : fixPathWhenPackaged(path.join(__dirname, 'logs', logFileName));
+  // TODO: [linux-port] END
   log.transports.file.resolvePath = () => logPath;
   Object.assign(console, log.functions);
   return path.dirname(logPath);

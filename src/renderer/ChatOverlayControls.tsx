@@ -260,7 +260,13 @@ const ChatOverlayControls = (props: IProps) => {
   const showPathWarning =
     config.chatOverlayOwnImage &&
     !config.chatOverlayOwnImagePath.endsWith('.png') &&
-    !config.chatOverlayOwnImagePath.endsWith('.gif');
+    !config.chatOverlayOwnImagePath.endsWith('.gif') &&
+    // TODO: [linux-port] jpg natively supported by stb_image
+    !(appState.platform === 'linux' && 
+      (config.chatOverlayOwnImagePath.endsWith('.jpg') || 
+      config.chatOverlayOwnImagePath.endsWith('.jpeg')));
+    // TODO: [linux-port] END
+
 
   return (
     <div className="flex flex-col items-center content-center w-full flex-wrap gap-4">
@@ -273,7 +279,9 @@ const ChatOverlayControls = (props: IProps) => {
       </div>
       {showPathWarning && (
         <p className="flex w-full text-red-500 text-sm">
-          {getLocalePhrase(appState.language, Phrase.ErrorCustomImageFileType)}
+          {getLocalePhrase(appState.language, (appState.platform === 'linux' 
+            ? Phrase.ErrorCustomImageFileTypeLinux 
+            : Phrase.ErrorCustomImageFileType))}
         </p>
       )}
       {config.chatOverlayEnabled && getChatOverlayCropSliders()}

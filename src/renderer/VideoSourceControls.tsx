@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppState, OurDisplayType } from 'main/types';
 import { configSchema } from 'config/configSchema';
-import { Info } from 'lucide-react';
+import { Info, MonitorDot } from 'lucide-react';
 import { getLocalePhrase } from 'localisation/translations';
 import { useSettings, setConfigValues } from './useSettings';
 import Label from './components/Label/Label';
@@ -12,6 +12,7 @@ import {
 import Switch from './components/Switch/Switch';
 import { Tooltip } from './components/Tooltip/Tooltip';
 import { Phrase } from 'localisation/phrases';
+import { Button } from './components/Button/Button';
 
 const ipc = window.electron.ipcRenderer;
 
@@ -100,7 +101,9 @@ const VideoSourceControls = (props: IProps) => {
           <Tooltip
             content={getLocalePhrase(
               appState.language,
-              configSchema.obsCaptureMode.description,
+              (appState.platform === 'linux')
+                ? configSchema.obsCaptureMode.descriptionLinux
+                : configSchema.obsCaptureMode.description,
             )}
             side="right"
           >
@@ -117,21 +120,30 @@ const VideoSourceControls = (props: IProps) => {
           <ToggleGroupItem value="window_capture">
             {getLocalePhrase(appState.language, Phrase.WindowCaptureValue)}
           </ToggleGroupItem>
-          <ToggleGroupItem value="game_capture">
-            {getLocalePhrase(appState.language, Phrase.GameCaptureValue)}
-          </ToggleGroupItem>
-          <ToggleGroupItem value="monitor_capture">
-            {getLocalePhrase(appState.language, Phrase.MonitorCaptureValue)}
-          </ToggleGroupItem>
+          { /* TODO: [linux-port] game capture only works on win32 */}
+          {
+          (appState.platform === 'win32') ? 
+            <>
+              <ToggleGroupItem value="game_capture">
+                {getLocalePhrase(appState.language, Phrase.GameCaptureValue)}
+              </ToggleGroupItem>
+              <ToggleGroupItem value="monitor_capture">
+                {getLocalePhrase(appState.language, Phrase.MonitorCaptureValue)}
+              </ToggleGroupItem>
+            </> : <></>
+          }
+          { /* TODO: [linux-port] END */}
         </ToggleGroup>
       </div>
     );
   };
 
   const getMonitorToggle = () => {
-    if (config.obsCaptureMode !== 'monitor_capture') {
+    // TODO: [linux-port] monitor selection not available on linux, controlled by pipewire
+    if (config.obsCaptureMode !== 'monitor_capture' || appState.platform !== 'win32') {
       return <></>;
     }
+    // TODO: [linux-port] END
 
     return (
       <div>
@@ -223,12 +235,38 @@ const VideoSourceControls = (props: IProps) => {
     );
   };
 
+  const handleReselectPipewireSource = () => {
+    ipc.reselectPipewireSource();
+  };
+
+  const getReselectPipewireButton = () => {
+    // Only show on Linux when window_capture is selected
+    if (appState.platform !== 'linux' || config.obsCaptureMode !== 'window_capture') {
+      return <></>;
+    }
+
+    return (
+      <div className="flex gap-2">
+        <Button
+          onClick={handleReselectPipewireSource}
+          variant="outline"
+        >
+          <MonitorDot className="mr-2" />
+          {getLocalePhrase(appState.language, Phrase.ReselectPipewireSourceButtonText)}
+        </Button>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex items-center w-full gap-x-8">
-      {getCaptureModeToggle()}
-      {getMonitorToggle()}
-      {getCursorToggle()}
-      {getForceSdrToggle()}
+    <div className="flex flex-col w-full gap-y-4">
+      <div className="flex items-center w-full gap-x-8">
+        {getCaptureModeToggle()}
+        {getMonitorToggle()}
+        {getCursorToggle()}
+        {getForceSdrToggle()}
+      </div>
+      {getReselectPipewireButton()}
     </div>
   );
 };

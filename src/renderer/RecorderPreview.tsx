@@ -198,11 +198,15 @@ const RecorderPreview = (props: {
 
     if (config.chatOverlayEnabled) {
       const pos = await ipc.getSourcePosition(SceneItem.OVERLAY);
-      setOverlayBoxDimensions(pos);
+      if (pos) {
+        setOverlayBoxDimensions(pos);
+      }
     }
 
     const pos = await ipc.getSourcePosition(SceneItem.GAME);
-    setGameBoxDimensions(pos);
+    if (pos) {
+      setGameBoxDimensions(pos);  
+    }
   };
 
   const configurePreview = async () => {

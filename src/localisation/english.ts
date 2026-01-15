@@ -27,6 +27,7 @@ const ENGLISH: Translations = {
   [Phrase.ObsForceMonoDescription]: 'Whether to force the audio of your input device to mono. Enable if your microphone audio is only playing out of one stereo channel.',
   [Phrase.ObsQualityDescription]: 'Quality to record at. Higher quality works your encoder harder and uses more disk space per video.',
   [Phrase.ObsCaptureModeDescription]: 'The capture mode OBS should use to record. See the #faq channel in discord for more details.',
+  [Phrase.ObsCaptureModeDescriptionLinux]: 'The capture mode OBS should use to record. On Linux, Pipewire can capture either a specific window or the whole screen',
   [Phrase.ObsRecEncoderDescription]: 'The video encoder to use. Hardware encoders are typically preferable, usually giving better performance, but are specific to your graphics card.',
   [Phrase.RecordRetailDescription]: 'Whether the application should record retail.',
   [Phrase.RecordClassicDescription]: 'Whether the application should record classic.',
@@ -324,6 +325,7 @@ const ENGLISH: Translations = {
   [Phrase.ErrorCustomOverlayNotAllowed]: 'To use a custom overlay, login to your Pro account.',
   [Phrase.ErrorNoCustomImage]: 'Overlay image was not provided for custom overlay.',
   [Phrase.ErrorCustomImageFileType]: 'Overlay image must be a .png or .gif file.',
+  [Phrase.ErrorCustomImageFileTypeLinux]: 'Overlay image must be a .png, .jpg, or .gif file.',
   [Phrase.ErrorCustomImageNotExist]: 'Specified file does not exist.',
   [Phrase.InvalidRetailLogPath]: 'Invalid retail log path.',
   [Phrase.InvalidClassicLogPath]: 'Invalid classic log path.',
@@ -506,7 +508,7 @@ const ENGLISH: Translations = {
   [Phrase.StartManualRecordingTooltip]: 'Start a manual recording.',
   [Phrase.StopManualRecordingTooltip]: 'Stop the current manual recording.',
   [Phrase.RecordedAt]: 'Recorded at',
-
+  [Phrase.ReselectPipewireSourceButtonText]: 'Reselect Pipewire Source',
 };
 
 export default ENGLISH;

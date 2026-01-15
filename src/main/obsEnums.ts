@@ -33,5 +33,8 @@ export const enum CaptureMode {
   WINDOW,
   GAME,
   MONITOR,
+  // TODO: [linux-port] Linux only
+  PIPEWIRE,
+  // TODO: [linux-port] END
   NONE,
 }

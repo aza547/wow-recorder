@@ -91,7 +91,17 @@ export default class Manager {
    * it starts a recording mid changing it, so set this to true while doing so.
    */
   private manualHotKeyDisabled = false;
-
+  
+  // TODO: [linux-port]
+  /**
+   * Record the time the application started up.
+   * Linux only for now. Unfortunately Pipewire has some quirks when you
+   * too quickly try to grab a capture and can result in duplicate pipewire sessions
+   * with the same restore token.
+   */
+  private appStartupTime = Date.now();
+  // TODO: [linux-port] END
+  
   /**
    * Constructor.
    */
@@ -317,7 +327,18 @@ export default class Manager {
    */
   private async onWowStarted() {
     console.info('[Manager] Detected WoW is running');
-    this.recorder.attachCaptureSource();
+    // TODO: [linux-port] need to re-trigger the pipewire restore token
+    if (process.platform === 'linux') {
+        // do not configure on a wow trigger shortly after the app has started up
+        const now = Date.now();
+        if (now - (this.appStartupTime ?? now) > 10_000) {
+          const videoConfig = getObsVideoConfig(this.cfg);
+          await this.recorder.configureVideoSources(videoConfig);
+        }
+    } else {
+      this.recorder.attachCaptureSource();
+    }
+    // TODO: [linux-port] END
 
     const audioConfig = getObsAudioConfig(this.cfg);
     this.recorder.configureAudioSources(audioConfig);

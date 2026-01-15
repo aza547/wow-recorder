@@ -10,3 +10,6 @@
 *.ttf   binary
 *.woff  binary
 *.woff2 binary
+# TODO: [linux-port] these are all binaries
+binaries/* binary
+# TODO: [linux-port] END

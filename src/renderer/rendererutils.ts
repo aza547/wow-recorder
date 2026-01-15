@@ -36,6 +36,7 @@ import {
   Flavour,
   AudioSource,
   AppState,
+  AudioSourceType,
 } from 'main/types';
 import { ambiguate } from 'parsing/logutils';
 import { VideoCategory } from 'types/VideoCategory';
@@ -1072,9 +1073,15 @@ const getAudioSourceChoices = async (src: AudioSource) => {
   const ipc = window.electron.ipcRenderer;
   const properties = await ipc.getAudioSourceProperties(src.id);
 
-  const devices = properties.find(
-    (prop) => prop.name === 'device_id' || prop.name === 'window',
-  );
+  // TODO: [linux-port] display TargetName in addition to window
+  let devices;
+  if (src.type === AudioSourceType.PROCESS) {
+    devices = properties.find((prop) => prop.name === 'window' || prop.name === 'TargetName');
+  } else {
+    devices = properties.find((prop) => prop.name === 'device_id');
+  }
+  // TODO: [linux-port] END
+  console.log("----> Devices from audio source", devices);
 
   if (!devices || devices.type !== 'list') {
     return [];

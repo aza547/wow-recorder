@@ -91,6 +91,8 @@ export default class DiskSizeMonitor {
       return 0;
     }
 
-    return files.map((file) => file.size).reduce((acc, num) => acc + num, 0);
+    const result = files.map((file) => file.size).reduce((acc, num) => acc + num, 0);
+    console.log('Calculated size: ', result);
+    return result;
   }
 }

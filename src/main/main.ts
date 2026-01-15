@@ -355,7 +355,7 @@ ipcMain.handle('selectImage', async () => {
 
   const result = await dialog.showOpenDialog(window, {
     properties: ['openFile'],
-    filters: [{ name: 'Images', extensions: ['gif', 'png'] }],
+    filters: [{ name: 'Images', extensions: ['gif', 'png', 'jpg'] }],
   });
 
   if (result.canceled) {
@@ -409,6 +409,15 @@ ipcMain.on('openURL', (event, args) => {
 ipcMain.handle('getAllDisplays', (): OurDisplayType[] => {
   return getAvailableDisplays();
 });
+
+// TODO: [linux-port] add getPlatform handler (synchronous)
+/**
+ * Get the current platform (synchronous).
+ */
+ipcMain.on('getPlatform', (event) => {
+  event.returnValue = process.platform;
+});
+// TODO: [linux-port] END
 
 const refreshCloudGuilds = async () => {
   console.info('[Main] Frontend triggered cloud guilds refresh');
