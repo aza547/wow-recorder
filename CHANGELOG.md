@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - A switch to disable strict log path validation.
 - Manual recording start/stop buttons on the side menu as an alternative to hotkeys.
+- Added the app version to the local video metadata.
+
 ### Fixed
 
 ## [7.4.0] - 2026-01-08

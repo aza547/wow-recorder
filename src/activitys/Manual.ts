@@ -1,6 +1,7 @@
 import { Flavour, Metadata } from 'main/types';
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
+import { app } from 'electron';
 
 /**
  * Class representing a manual recording.
@@ -23,6 +24,7 @@ export default class Manual extends Activity {
       combatants: [],
       start: this.startDate.getTime(),
       uniqueHash: this.getUniqueHash(),
+      appVersion: app.getVersion(),
     };
   }
 

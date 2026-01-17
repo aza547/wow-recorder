@@ -6,6 +6,7 @@ import { instanceDifficulty, raidInstances } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
 import { Phrase } from 'localisation/phrases';
+import { app } from 'electron';
 
 /**
  * Class representing a raid encounter.
@@ -143,6 +144,7 @@ export default class RaidEncounter extends Activity {
       start: this.startDate.getTime(),
       uniqueHash: this.getUniqueHash(),
       bossPercent,
+      appVersion: app.getVersion(),
     };
   }
 

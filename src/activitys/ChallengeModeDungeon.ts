@@ -14,6 +14,7 @@ import {
   TimelineSegmentType,
 } from '../main/keystone';
 import Activity from './Activity';
+import { app } from 'electron';
 
 export default class ChallengeModeDungeon extends Activity {
   private _mapID: number;
@@ -223,6 +224,7 @@ export default class ChallengeModeDungeon extends Activity {
       deaths: this.deaths,
       start: this.startDate.getTime(),
       uniqueHash: this.getUniqueHash(),
+      appVersion: app.getVersion(),
     };
   }
 

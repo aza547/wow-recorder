@@ -4,6 +4,7 @@ import { getLocalePhrase } from '../localisation/translations';
 import { classicBattlegrounds, retailBattlegrounds } from '../main/constants';
 import { VideoCategory } from '../types/VideoCategory';
 import Activity from './Activity';
+import { app } from 'electron';
 
 /**
  * Arena match class.
@@ -72,6 +73,7 @@ export default class Battleground extends Activity {
       combatants: [],
       start: this.startDate.getTime(),
       uniqueHash: this.getUniqueHash(),
+      appVersion: app.getVersion(),
     };
   }
 
