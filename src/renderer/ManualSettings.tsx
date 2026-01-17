@@ -1,8 +1,14 @@
 import { configSchema, ConfigurationSchema } from 'config/configSchema';
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { AppState } from 'main/types';
 import { getLocalePhrase } from 'localisation/translations';
-import { setConfigValues, useSettings } from './useSettings';
+import { setConfigValues } from './useSettings';
 import Switch from './components/Switch/Switch';
 import Label from './components/Label/Label';
 import { Phrase } from 'localisation/phrases';
@@ -19,12 +25,12 @@ import { PTTEventType, PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 
 interface IProps {
   appState: AppState;
+  config: ConfigurationSchema;
+  setConfig: Dispatch<SetStateAction<ConfigurationSchema>>;
 }
 
 const ManualSettings = (props: IProps) => {
-  const { appState } = props;
-  const [config, setConfig] = useSettings();
-
+  const { appState, config, setConfig } = props;
   const initialRender = useRef(true);
   const manualHotKeyInputRef = useRef<HTMLInputElement>(null);
 

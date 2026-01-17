@@ -39,6 +39,7 @@ import LogHandler from 'parsing/LogHandler';
 import { PTTKeyPressEvent } from 'types/KeyTypesUIOHook';
 import { send } from './main';
 import DiskClient from 'storage/DiskClient';
+import Activity from 'activitys/Activity';
 
 /**
  * Manager class.
@@ -258,12 +259,11 @@ export default class Manager {
     }
 
     const inOverrun = LogHandler.overrunning;
-    const inActivity = Boolean(LogHandler.activity);
 
     if (inOverrun) {
       this.refreshRecStatus(RecStatus.Overrunning);
-    } else if (inActivity) {
-      this.refreshRecStatus(RecStatus.Recording);
+    } else if (LogHandler.activity) {
+      this.refreshRecStatus(RecStatus.Recording, '', LogHandler.activity);
     } else if (this.recorder.obsState === ERecordingState.Recording) {
       this.refreshRecStatus(RecStatus.ReadyToRecord);
     } else if (this.recorder.obsState === ERecordingState.None) {
@@ -277,8 +277,13 @@ export default class Manager {
   /**
    * Send a message to the frontend to update the recorder status icon.
    */
-  private refreshRecStatus(status: RecStatus, msg = '') {
+  private refreshRecStatus(
+    status: RecStatus,
+    msg = '',
+    activity: Activity | null = null,
+  ) {
     send('updateRecStatus', status, msg);
+    send('updateCategoryStatus', activity ? activity.category : null);
   }
 
   /**
@@ -477,19 +482,32 @@ export default class Manager {
       VideoProcessQueue.getInstance().queueVideo(clipQueueItem);
     });
 
-    // Force stop listener, to enable the force stop button to do its job.
-    ipcMain.on('recorder', async (_event, args) => {
-      if (args[0] === 'stop') {
-        console.info('[Manager] Force stopping recording due to user request.');
-        this.forceStop();
+    // Listens for a manual recording being started via the button. The
+    // hotkey listener is handled separately.
+    ipcMain.on('toggleManualRecording', async () => {
+      if (!this.cfg.get('manualRecord')) {
+        // Manual recording is not enabled.
         return;
       }
 
-      const isWowRunning = this.poller.isWowRunning();
-
-      if (isWowRunning) {
-        this.onWowStarted();
+      if (!this.poller.isWowRunning()) {
+        console.warn('[Manager] WoW not running when manual hotkey pressed');
+        return;
       }
+
+      if (this.recorder.obsState !== ERecordingState.Recording) {
+        console.warn('[Manager] Recorder not ready when manual hotkey pressed');
+        return;
+      }
+
+      LogHandler.handleManualRecordingHotKey();
+    });
+
+    // Test listener, to enable the test button to start a test.
+    ipcMain.on('test', (_event, args) => {
+      const testCategory = args[0] as VideoCategory;
+      const endTest = Boolean(args[1]);
+      this.test(testCategory, endTest);
     });
 
     /**

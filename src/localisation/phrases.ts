@@ -500,6 +500,8 @@ enum Phrase {
   ChatDeleteMessageTooltip,
   ValidateLogPathLabel,
   ValidateLogPathsDescription,
+  StartManualRecordingTooltip,
+  StopManualRecordingTooltip,
 }
 
 enum Language {

@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { ObsProperty, SceneItemPosition, SourceDimensions } from 'noobs';
 import { AudioSourceType, RendererVideo, SceneItem } from './types';
-import { TChatMessage } from 'types/api';
+import { TChatMessageWithId } from 'types/api';
 
 export type Channels =
   | 'window'
@@ -207,7 +207,7 @@ contextBridge.exposeInMainWorld('electron', {
       return ipcRenderer.invoke('getOrCreateChatCorrelator', video);
     },
 
-    getChatMessages(correlator: string): Promise<TChatMessage[]> {
+    getChatMessages(correlator: string): Promise<TChatMessageWithId[]> {
       return ipcRenderer.invoke('getChatMessages', correlator);
     },
 
@@ -217,6 +217,10 @@ contextBridge.exposeInMainWorld('electron', {
 
     deleteChatMessage(id: number) {
       ipcRenderer.send('deleteChatMessage', id);
+    },
+
+    toggleManualRecording() {
+      ipcRenderer.send('toggleManualRecording');
     },
   },
 });

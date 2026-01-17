@@ -51,6 +51,10 @@ const WarcraftRecorder = () => {
     RecStatus.WaitingForWoW,
   );
 
+  // The currently recording category.
+  const [recorderCategory, setRecorderCategory] =
+    useState<VideoCategory | null>(null);
+
   const [savingStatus, setSavingStatus] = useState<SaveStatus>(
     SaveStatus.NotSaving,
   );
@@ -157,6 +161,10 @@ const WarcraftRecorder = () => {
     if (status === RecStatus.InvalidConfig || status === RecStatus.FatalError) {
       setError(err as string);
     }
+  };
+
+  const updateCategoryStatus = (category: unknown) => {
+    setRecorderCategory(category as VideoCategory);
   };
 
   const updateSaveStatus = (status: unknown) => {
@@ -398,6 +406,7 @@ const WarcraftRecorder = () => {
 
   useEffect(() => {
     ipc.on('updateRecStatus', updateRecStatus);
+    ipc.on('updateCategoryStatus', updateCategoryStatus);
     ipc.on('updateSaveStatus', updateSaveStatus);
     ipc.on('updateMicStatus', updateMicStatus);
     ipc.on('updateErrorReport', updateErrorReports);
@@ -415,6 +424,7 @@ const WarcraftRecorder = () => {
 
     return () => {
       ipc.removeAllListeners('updateRecStatus');
+      ipc.removeAllListeners('updateCategoryStatus');
       ipc.removeAllListeners('updateSaveStatus');
       ipc.removeAllListeners('updateMicStatus');
       ipc.removeAllListeners('updateErrorReport');
@@ -460,6 +470,7 @@ const WarcraftRecorder = () => {
                 savingStatus={savingStatus}
                 config={config}
                 updateAvailable={updateAvailable}
+                recorderCategory={recorderCategory}
               />
               <Layout
                 recorderStatus={recorderStatus}
