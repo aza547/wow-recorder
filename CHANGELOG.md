@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 - A switch to disable log path validation so I don't need to constantly update the supported flavours and things like classic anniversary realms can work.
+- Manual recording start/stop buttons on the side menu as an alternative to hotkeys.
 ### Fixed
 
 ## [7.4.0] - 2026-01-08
