@@ -311,7 +311,8 @@ const SearchBar = (props: IProps) => {
     tagName: 'react-tags__tag-name',
     comboBox: 'react-tags__combobox',
     input: 'react-tags__combobox-input mx-2 placeholder:text-foreground',
-    listBox: 'react-tags__listbox  bg-card rounded-md border border-background scrollbar-thin',
+    listBox:
+      'react-tags__listbox  bg-card rounded-md border border-background scrollbar-thin',
     option: 'react-tags__listbox-option',
     optionIsActive: 'is-active',
     highlight: 'react-tags__listbox-option-highlight',

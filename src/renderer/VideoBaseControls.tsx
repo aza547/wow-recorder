@@ -154,7 +154,12 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           disabled={isComponentDisabled()}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={getLocalePhrase(appState.language, Phrase.SelectResolution)} />
+            <SelectValue
+              placeholder={getLocalePhrase(
+                appState.language,
+                Phrase.SelectResolution,
+              )}
+            />
           </SelectTrigger>
           <SelectContent side="right" position="popper">
             {outputResolutions.map((resolution) => (
@@ -284,7 +289,12 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
           disabled={isComponentDisabled()}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={getLocalePhrase(appState.language, Phrase.SelectQuality)} />
+            <SelectValue
+              placeholder={getLocalePhrase(
+                appState.language,
+                Phrase.SelectQuality,
+              )}
+            />
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (
@@ -344,7 +354,12 @@ const VideoBaseControls: FC<IProps> = (props: IProps) => {
             disabled={isComponentDisabled()}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={getLocalePhrase(appState.language, Phrase.SelectEncoder)} />
+              <SelectValue
+                placeholder={getLocalePhrase(
+                  appState.language,
+                  Phrase.SelectEncoder,
+                )}
+              />
             </SelectTrigger>
             <SelectContent>
               {encoders.map((encoder) => (

@@ -263,7 +263,12 @@ const PVESettings = (props: IProps) => {
           value={config.minRaidDifficulty}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={getLocalePhrase(appState.language, Phrase.SelectDifficulty)} />
+            <SelectValue
+              placeholder={getLocalePhrase(
+                appState.language,
+                Phrase.SelectDifficulty,
+              )}
+            />
           </SelectTrigger>
           <SelectContent>
             {raidDifficultyOptions.map((difficulty) => (

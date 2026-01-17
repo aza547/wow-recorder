@@ -263,7 +263,7 @@ export const populateAffixesCell = (
 };
 
 export const populateViewpointCell = (
-  info: CellContext<RendererVideo, unknown>
+  info: CellContext<RendererVideo, unknown>,
 ) => {
   const video = info.getValue() as RendererVideo;
   const count = countUniqueViewpoints(video);
