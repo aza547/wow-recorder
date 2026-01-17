@@ -43,6 +43,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       classicPtrLogPath: config.classicPtrLogPath,
       recordEra: config.recordEra,
       eraLogPath: config.eraLogPath,
+      validateLogPaths: config.validateLogPaths,
     });
 
     ipc.reconfigureBase();
@@ -57,6 +58,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     config.eraLogPath,
     config.recordRetailPtr,
     config.retailPtrLogPath,
+    config.validateLogPaths,
   ]);
 
   const isComponentDisabled = () => {
@@ -434,7 +436,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       </div>
     );
 
-  //classic ptr
+    //classic ptr
   };
 
   const setRecordClassicPtr = (checked: boolean) => {
@@ -492,7 +494,10 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
         {config.recordClassicPtr && (
           <div className="flex flex-col w-1/2">
             <Label htmlFor="classicPtrLogPath" className="flex items-center">
-              {getLocalePhrase(appState.language, Phrase.ClassicPtrLogPathLabel)}
+              {getLocalePhrase(
+                appState.language,
+                Phrase.ClassicPtrLogPathLabel,
+              )}
               <Tooltip
                 content={getLocalePhrase(
                   appState.language,
@@ -523,6 +528,43 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
     );
   };
 
+  const setValidateLogPaths = (checked: boolean) => {
+    setConfig((prevState) => {
+      return {
+        ...prevState,
+        validateLogPaths: checked,
+      };
+    });
+  };
+
+  const getValidateLogPathSwitch = () => {
+    if (isComponentDisabled()) {
+      return <></>;
+    }
+
+    return (
+      <div className="flex flex-row gap-x-6">
+        <div className="flex flex-col w-[160px]">
+          <Label htmlFor="recordClassicPtr" className="flex items-center">
+            {getLocalePhrase(appState.language, Phrase.ValidateLogPathLabel)}
+            <Tooltip
+              content={getLocalePhrase(
+                appState.language,
+                configSchema.validateLogPaths.description,
+              )}
+              side="top"
+            >
+              <Info size={20} className="inline-flex ml-2" />
+            </Tooltip>
+          </Label>
+          <div className="flex h-10 items-center">
+            {getSwitch('validateLogPaths', setValidateLogPaths)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-y-2">
       {getDisabledText()}
@@ -531,6 +573,7 @@ const FlavourSettings: React.FC<IProps> = (props: IProps) => {
       {getEraSettings()}
       {getRetailPtrSettings()}
       {getClassicPtrSettings()}
+      {getValidateLogPathSwitch()}
     </div>
   );
 };

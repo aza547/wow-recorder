@@ -386,6 +386,7 @@ type BaseConfig = {
   eraLogPath: string;
   recordRetailPtr: boolean;
   retailPtrLogPath: string;
+  validateLogPaths: boolean;
 };
 
 type ObsVideoConfig = {

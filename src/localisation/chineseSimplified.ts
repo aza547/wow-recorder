@@ -501,6 +501,8 @@ const CHINESE_SIMPLIFIED: Translations = {
   [Phrase.SelectOptions]: '选择选项',
   [Phrase.SelectLanguage]: '选择语言',
   [Phrase.ChatDeleteMessageTooltip]: '删除此聊天消息',
+  [Phrase.ValidateLogPathLabel]: '验证日志路径',
+  [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder 会检查你设置的日志路径是否指向受支持的 WoW 安装。你可以禁用此检查以允许设置不受支持的游戏模式。禁用此功能需自行承担风险。',
 };
 
 export default CHINESE_SIMPLIFIED;

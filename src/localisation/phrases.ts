@@ -498,6 +498,8 @@ enum Phrase {
   SelectOptions,
   SelectLanguage,
   ChatDeleteMessageTooltip,
+  ValidateLogPathLabel,
+  ValidateLogPathsDescription,
 }
 
 enum Language {
