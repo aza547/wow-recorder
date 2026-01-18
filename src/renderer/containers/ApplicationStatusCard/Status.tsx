@@ -61,7 +61,7 @@ const Status = ({
   }, [activityStatus]);
 
   const stopRecording = () => {
-    window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
+    window.electron.ipcRenderer.forceStopRecording();
   };
 
   const getConfiguredFlavours = () => {

@@ -509,6 +509,11 @@ export default class Manager {
       LogHandler.handleManualRecordingHotKey();
     });
 
+    // Handles a click of the force stop button.
+    ipcMain.on('forceStopRecording', async () => {
+      LogHandler.forceEndActivity();
+    });
+
     // Test listener, to enable the test button to start a test.
     ipcMain.on('test', (_event, args) => {
       const testCategory = args[0] as VideoCategory;

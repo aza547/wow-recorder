@@ -78,6 +78,7 @@ declare global {
         postChatMessage(correlator: string, message: string): void;
         deleteChatMessage(id: number): void;
         toggleManualRecording(): void;
+        forceStopRecording(): void;
       };
     };
   }

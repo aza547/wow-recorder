@@ -222,5 +222,9 @@ contextBridge.exposeInMainWorld('electron', {
     toggleManualRecording() {
       ipcRenderer.send('toggleManualRecording');
     },
+
+    forceStopRecording() {
+      ipcRenderer.send('forceStopRecording');
+    },
   },
 });

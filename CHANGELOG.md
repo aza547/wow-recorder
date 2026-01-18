@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - [Issue 789](https://github.com/aza547/wow-recorder/issues/789) - Fixes a bug where manual recordings could be interrupted by combat log events.
+- Fix a regression where the force stop button did nothing.
 
 ## [7.4.0] - 2026-01-08
 ### Added
