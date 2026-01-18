@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 ### Added
+### Fixed
+
+## [7.5.0] - 2026-01-18
+### Added
 - A switch to disable strict log path validation.
 - Manual recording start/stop buttons on the side menu as an alternative to hotkeys.
 - [Issue 788](https://github.com/aza547/wow-recorder/issues/788) - Added the app version to the video metadata and an indicator in the frontend.
