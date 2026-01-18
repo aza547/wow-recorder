@@ -12,33 +12,36 @@ export default class EraLogHandler extends LogHandler {
   constructor(logPath: string) {
     super(logPath, 2);
 
+    /* eslint-disable prettier/prettier */
     this.combatLogWatcher
-      .on('ENCOUNTER_START', async (line: LogLine) => {
-        await this.handleEncounterStartLine(line);
-      })
-      .on('ENCOUNTER_END', async (line: LogLine) => {
-        await this.handleEncounterEndLine(line);
-      })
-      .on('SPELL_AURA_APPLIED', (line: LogLine) => {
-        this.handleSpellAuraAppliedLine(line);
-      })
-      .on('SPELL_CAST_SUCCESS', (line: LogLine) => {
-        this.handleSpellCastSuccess(line);
-      })
-      .on('COMBATANT_INFO', async (line: LogLine) => {
-        this.handleCombatantInfoLine(line);
-      })
-      .on('UNIT_DIED', (line: LogLine) => {
-        this.handleUnitDiedLine(line);
-      });
+      .on('ENCOUNTER_START',      (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterStartLine(line)) })
+      .on('ENCOUNTER_END',        (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterEndLine(line)) })
+      .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraAppliedLine(line)) })
+      .on('SPELL_CAST_SUCCESS',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellCastSuccess(line)) })
+      .on('COMBATANT_INFO',       (line: LogLine) => { this.logProcessQueue.add(async () => this.handleCombatantInfoLine(line)) })
+      .on('UNIT_DIED',            (line: LogLine) => { this.logProcessQueue.add(async () => this.handleUnitDiedLine(line)) })
+    /* eslint-enable prettier/prettier */
   }
 
   protected async handleEncounterStartLine(line: LogLine) {
     console.debug('[EraLogHandler] Handling ENCOUNTER_START line:', line);
+
+    if (this.isManual()) {
+      console.info('[EraLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     await super.handleEncounterStartLine(line, Flavour.Classic);
   }
 
   private handleCombatantInfoLine(line: LogLine): void {
+    console.debug('[EraLogHandler] Handling COMBATANT_INFO line:', line);
+
+    if (this.isManual()) {
+      console.info('[EraLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     if (!LogHandler.activity) {
       console.warn(
         '[EraLogHandler] No activity in progress, ignoring COMBATANT_INFO',
@@ -68,7 +71,7 @@ export default class EraLogHandler extends LogHandler {
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || this.isManual()) {
       // Deliberately don't log anything here as we hit this a lot
       return;
     }
@@ -80,7 +83,8 @@ export default class EraLogHandler extends LogHandler {
   }
 
   private handleSpellCastSuccess(line: LogLine) {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || this.isManual()) {
+      // Deliberately don't log anything here as we hit this a lot
       return;
     }
 
@@ -132,7 +136,15 @@ export default class EraLogHandler extends LogHandler {
   }
 
   protected handleUnitDiedLine(line: LogLine) {
+    console.debug('[EraLogHandler] Handling UNIT_DIED line:', line);
+
+    if (this.isManual()) {
+      console.info('[EraLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     if (!LogHandler.activity) {
+      console.info('[EraLogHandler] Ignoring line as no activity in progress');
       return;
     }
 

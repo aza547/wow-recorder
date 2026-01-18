@@ -131,6 +131,11 @@ export default abstract class LogHandler {
   protected async handleEncounterEndLine(line: LogLine) {
     console.debug('[LogHandler] Handling ENCOUNTER_END line:', line);
 
+    if (this.isManual()) {
+      console.info('[ClassicLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     if (!LogHandler.activity) {
       console.info('[LogHandler] Encounter stop with no active encounter');
       return;
@@ -422,6 +427,11 @@ export default abstract class LogHandler {
 
     const { category } = LogHandler.activity;
     return category === VideoCategory.MythicPlus;
+  }
+
+  protected isManual() {
+    if (!LogHandler.activity) return false;
+    return LogHandler.activity.category === VideoCategory.Manual;
   }
 
   protected processCombatant(

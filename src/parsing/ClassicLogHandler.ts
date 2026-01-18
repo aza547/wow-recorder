@@ -40,11 +40,18 @@ export default class ClassicLogHandler extends LogHandler {
 
   protected async handleEncounterStartLine(line: LogLine) {
     console.debug('[ClassicLogHandler] Handling ENCOUNTER_START line:', line);
+
+    if (this.isManual()) {
+      console.info('[ClassicLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     await super.handleEncounterStartLine(line, Flavour.Classic);
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || this.isManual()) {
+      // Deliberately don't log anything here as we can hit this a lot
       return;
     }
 
@@ -106,6 +113,11 @@ export default class ClassicLogHandler extends LogHandler {
   private async handleZoneChange(line: LogLine) {
     console.info('[ClassicLogHandler] Handling ZONE_CHANGE line:', line);
 
+    if (this.isManual()) {
+      console.info('[ClassicLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     const zoneID = parseInt(line.arg(1), 10);
 
     const isZoneArena = Object.prototype.hasOwnProperty.call(
@@ -147,7 +159,8 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   protected handleUnitDiedLine(line: LogLine) {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || this.isManual()) {
+      // Deliberately don't log anything here as we can hit this a lot
       return;
     }
 
@@ -168,7 +181,8 @@ export default class ClassicLogHandler extends LogHandler {
   }
 
   private handleSpellCastSuccess(line: LogLine) {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || this.isManual()) {
+      // Deliberately don't log anything here as we can hit this a lot
       return;
     }
 
@@ -407,6 +421,11 @@ export default class ClassicLogHandler extends LogHandler {
   private handleCombatantInfoLine(line: LogLine) {
     console.debug('[ClassicLogHandler] Handling COMBATANT_INFO line:', line);
 
+    if (this.isManual()) {
+      console.info('[ClassicLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     if (!LogHandler.activity) {
       console.warn(
         '[ClassicLogHandler] No activity in progress, ignoring COMBATANT_INFO',
@@ -440,6 +459,11 @@ export default class ClassicLogHandler extends LogHandler {
       '[ClassicLogHandler] Handling CHALLENGE_MODE_START line:',
       line,
     );
+
+    if (this.isManual()) {
+      console.info('[ClassicLogHandler] Ignoring line as in manual recording');
+      return;
+    }
 
     if (
       LogHandler.activity &&
@@ -494,6 +518,11 @@ export default class ClassicLogHandler extends LogHandler {
       '[ClassicLogHandler] Handling CHALLENGE_MODE_END line:',
       line,
     );
+
+    if (this.isManual()) {
+      console.info('[ClassicLogHandler] Ignoring line as in manual recording');
+      return;
+    }
 
     if (!LogHandler.activity) {
       console.error(

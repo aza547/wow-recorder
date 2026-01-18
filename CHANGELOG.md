@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Issue 788](https://github.com/aza547/wow-recorder/issues/788) - Added the app version to the local video metadata and an indicator in the frontend.
 
 ### Fixed
+- [Issue 789](https://github.com/aza547/wow-recorder/issues/789) - Fixes a bug where manual recordings could be interrupted by combat log events.
 
 ## [7.4.0] - 2026-01-08
 ### Added

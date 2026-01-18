@@ -38,7 +38,7 @@ export default class RetailLogHandler extends LogHandler {
 
     /* eslint-disable prettier/prettier */
     this.combatLogWatcher
-      .on('ENCOUNTER_START',      (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterStartLine(line));})
+      .on('ENCOUNTER_START',      (line: LogLine) => { this.logProcessQueue.add(async () =>  this.handleEncounterStartLine(line));})
       .on('ENCOUNTER_END',        (line: LogLine) => { this.logProcessQueue.add(async () => this.handleEncounterEndLine(line)); })
       .on('ZONE_CHANGE',          (line: LogLine) => { this.logProcessQueue.add(async () => this.handleZoneChange(line)); })
       .on('SPELL_AURA_APPLIED',   (line: LogLine) => { this.logProcessQueue.add(async () => this.handleSpellAuraAppliedLine(line)); })
@@ -59,6 +59,11 @@ export default class RetailLogHandler extends LogHandler {
 
   private async handleArenaStartLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ARENA_MATCH_START line:', line);
+
+    if (this.isManual()) {
+      console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
 
     if (
       LogHandler.activity &&
@@ -122,6 +127,11 @@ export default class RetailLogHandler extends LogHandler {
   private async handleArenaEndLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ARENA_MATCH_END line:', line);
 
+    if (this.isManual()) {
+      console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     if (!LogHandler.activity) {
       console.error('[RetailLogHandler] Arena stop with no active arena match');
       return;
@@ -145,6 +155,11 @@ export default class RetailLogHandler extends LogHandler {
       '[RetailLogHandler] Handling CHALLENGE_MODE_START line:',
       line,
     );
+
+    if (this.isManual()) {
+      console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
 
     if (
       LogHandler.activity &&
@@ -212,6 +227,11 @@ export default class RetailLogHandler extends LogHandler {
   private async handleChallengeModeEndLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling CHALLENGE_MODE_END line:', line);
 
+    if (this.isManual()) {
+      console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     if (!LogHandler.activity) {
       console.error(
         '[RetailLogHandler] Challenge mode stop with no active ChallengeModeDungeon',
@@ -240,6 +260,12 @@ export default class RetailLogHandler extends LogHandler {
 
   protected async handleEncounterStartLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ENCOUNTER_START line:', line);
+
+    if (this.isManual()) {
+      console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     const encounterID = parseInt(line.arg(1), 10);
 
     const knownDungeonEncounter = Object.prototype.hasOwnProperty.call(
@@ -331,6 +357,11 @@ export default class RetailLogHandler extends LogHandler {
   protected async handleEncounterEndLine(line: LogLine) {
     console.debug('[RetailLogHandler] Handling ENCOUNTER_END line:', line);
 
+    if (this.isManual()) {
+      console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     if (!LogHandler.activity) {
       console.error(
         '[RetailLogHandler] Encounter end event spotted but not in activity',
@@ -375,6 +406,12 @@ export default class RetailLogHandler extends LogHandler {
 
   private async handleZoneChange(line: LogLine) {
     console.info('[RetailLogHandler] Handling ZONE_CHANGE line:', line);
+
+    if (this.isManual()) {
+      console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     const zoneID = parseInt(line.arg(1), 10);
 
     const isZoneBG = Object.prototype.hasOwnProperty.call(
@@ -425,6 +462,13 @@ export default class RetailLogHandler extends LogHandler {
   }
 
   private handleCombatantInfoLine(line: LogLine): void {
+    console.info('[RetailLogHandler] Handling COMBATANT_INFO line:', line);
+
+    if (this.isManual()) {
+      console.info('[RetailLogHandler] Ignoring line as in manual recording');
+      return;
+    }
+
     if (!LogHandler.activity) {
       console.warn(
         '[RetailLogHandler] No activity in progress, ignoring COMBATANT_INFO',
@@ -462,8 +506,8 @@ export default class RetailLogHandler extends LogHandler {
   }
 
   private handleSpellAuraAppliedLine(line: LogLine) {
-    if (!LogHandler.activity) {
-      // Deliberately don't log anything here as we hit this a lot
+    if (!LogHandler.activity || this.isManual()) {
+      // Deliberately don't log anything here as we can hit this a lot
       return;
     }
 
@@ -481,7 +525,8 @@ export default class RetailLogHandler extends LogHandler {
   }
 
   private handleSpellCastSuccess(line: LogLine) {
-    if (!LogHandler.activity) {
+    if (!LogHandler.activity || this.isManual()) {
+      // Deliberately don't log anything here as we can hit this a lot
       return;
     }
 
