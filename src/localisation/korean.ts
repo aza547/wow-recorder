@@ -504,7 +504,8 @@ const KOREAN: Translations = {
   [Phrase.ValidateLogPathLabel]: '로그 경로 검증',
   [Phrase.ValidateLogPathsDescription]: 'Warcraft Recorder는 설정한 로그 경로가 지원되는 WoW 설치를 가리키는지 확인합니다. 이 검사를 비활성화하면 지원되지 않는 게임 모드를 설정할 수 있습니다. 이 기능을 비활성화하는 것은 사용자 책임입니다.',
   [Phrase.StartManualRecordingTooltip]: '수동 녹화 시작',
-  [Phrase.StopManualRecordingTooltip]: '수동 녹화 중지'
+  [Phrase.StopManualRecordingTooltip]: '수동 녹화 중지',
+  [Phrase.RecordedAt]: '녹화 시간',
 };
 
 export default KOREAN;

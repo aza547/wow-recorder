@@ -502,6 +502,7 @@ enum Phrase {
   ValidateLogPathsDescription,
   StartManualRecordingTooltip,
   StopManualRecordingTooltip,
+  RecordedAt,
 }
 
 enum Language {

@@ -186,7 +186,7 @@ const CategoryPage = (props: IProps) => {
     playerHeight.current = height;
   };
 
-  const renderDrawerOpen = () => {
+  const renderDrawerOpen = (appVersion: string | undefined) => {
     // Only the first row in the selection is relevant for the drawer display.
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedRow = selectedRows[0];
@@ -214,6 +214,11 @@ const CategoryPage = (props: IProps) => {
           >
             <ArrowRightToLine size={18} />
           </Button>
+          {appVersion && (
+            <div className="flex items-center justify-end w-full h-[40px] pt-2 mx-2 text-sm text-foreground">
+              {getLocalePhrase(language, Phrase.RecordedAt)} v{appVersion}
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-center w-full">
           <ViewpointSelection
@@ -257,6 +262,9 @@ const CategoryPage = (props: IProps) => {
     const videosToPlay =
       selectedVideos.length > 0 ? selectedVideos : povs.slice(0, 1);
 
+    const selectedVideoAppVersion =
+      videosToPlay.length > 1 ? undefined : videosToPlay[0].appVersion;
+
     return (
       <Resizable
         ref={resizableRef}
@@ -295,7 +303,7 @@ const CategoryPage = (props: IProps) => {
             setAppState={setAppState}
           />
 
-          {chatOpen && renderDrawerOpen()}
+          {chatOpen && renderDrawerOpen(selectedVideoAppVersion)}
           {!chatOpen && renderDrawerClosed()}
         </div>
       </Resizable>
