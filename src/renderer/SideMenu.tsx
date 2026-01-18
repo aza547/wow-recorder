@@ -15,6 +15,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDungeon, faDragon } from '@fortawesome/free-solid-svg-icons';
 import {
+  ActivityStatus,
   AppState,
   ErrorReport,
   MicStatus,
@@ -59,7 +60,8 @@ interface IProps {
   savingStatus: SaveStatus;
   config: ConfigurationSchema;
   updateAvailable: boolean;
-  recorderCategory: VideoCategory | null;
+  recorderCategory: VideoCategory | undefined;
+  activityStatus: ActivityStatus | null;
 }
 
 const SideMenu = (props: IProps) => {
@@ -76,6 +78,7 @@ const SideMenu = (props: IProps) => {
     savingStatus,
     config,
     updateAvailable,
+    activityStatus,
   } = props;
 
   const [appVersion, setAppVersion] = useState<string>();
@@ -238,6 +241,7 @@ const SideMenu = (props: IProps) => {
     <div className="flex flex-col h-full bg-background w-80 px-4 items-center pt-4 pb-2">
       <ApplicationStatusCard
         recorderStatus={recorderStatus}
+        activityStatus={activityStatus}
         error={error}
         micStatus={micStatus}
         errorReports={errorReports}

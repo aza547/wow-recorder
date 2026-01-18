@@ -2,8 +2,8 @@ import { getLocalePhrase } from 'localisation/translations';
 import { Phrase } from 'localisation/phrases';
 import { HardDriveDownload } from 'lucide-react';
 import { ConfigurationSchema } from 'config/configSchema';
-import { AppState, RecStatus, SaveStatus } from 'main/types';
-import React from 'react';
+import { ActivityStatus, AppState, RecStatus, SaveStatus } from 'main/types';
+import React, { useEffect, useState } from 'react';
 import { Button } from 'renderer/components/Button/Button';
 import {
   HoverCard,
@@ -15,6 +15,7 @@ import StatusLight, {
   StatusLightProps,
 } from 'renderer/components/StatusLight/StatusLight';
 import { cn } from 'renderer/components/utils';
+import { secToHhMmSs, secToMmSs } from 'renderer/rendererutils';
 
 type StatusInfo = {
   statusTitle: string;
@@ -28,6 +29,7 @@ type StatusProps = {
   savingStatus: SaveStatus;
   config: ConfigurationSchema;
   appState: AppState;
+  activityStatus: ActivityStatus | null;
 };
 
 const Status = ({
@@ -36,8 +38,27 @@ const Status = ({
   savingStatus,
   config,
   appState,
+  activityStatus,
 }: StatusProps) => {
   const { language } = appState;
+  const [recTimerSec, setRecTimerSec] = useState(0);
+
+  useEffect(() => {
+    if (!activityStatus) return;
+
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - activityStatus.start) / 1000);
+      setRecTimerSec(elapsed);
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+
+    return () => {
+      clearInterval(id);
+      setRecTimerSec(0);
+    };
+  }, [activityStatus]);
 
   const stopRecording = () => {
     window.electron.ipcRenderer.sendMessage('recorder', ['stop']);
@@ -272,6 +293,14 @@ const Status = ({
 
   const isSaving = savingStatus === SaveStatus.Saving;
 
+  const renderRecTimer = () => {
+    if (recTimerSec > 3600) {
+      return secToHhMmSs(recTimerSec);
+    }
+
+    return secToMmSs(recTimerSec);
+  };
+
   return (
     <HoverCard openDelay={300}>
       <HoverCardTrigger>
@@ -293,6 +322,9 @@ const Status = ({
               )}
             >
               {statusTitle}
+              {recTimerSec > 0 && (
+                <div className="mx-2 text-foreground">{renderRecTimer()}</div>
+              )}
               {isSaving && (
                 <HardDriveDownload size={14} className="mx-1 animate-pulse" />
               )}

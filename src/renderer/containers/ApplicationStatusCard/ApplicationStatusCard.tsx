@@ -1,4 +1,5 @@
 import {
+  ActivityStatus,
   AppState,
   ErrorReport,
   MicStatus,
@@ -10,6 +11,7 @@ import { ConfigurationSchema } from 'config/configSchema';
 import MicrophoneStatus from './MicStatus';
 import Status from './Status';
 import ErrorReporter from './ErrorReporter';
+import { useEffect, useState } from 'react';
 
 type ApplicationStatusCardProps = {
   recorderStatus: RecStatus;
@@ -19,6 +21,7 @@ type ApplicationStatusCardProps = {
   savingStatus: SaveStatus;
   config: ConfigurationSchema;
   appState: AppState;
+  activityStatus: ActivityStatus | null;
 };
 
 const ApplicationStatusCard = ({
@@ -29,6 +32,7 @@ const ApplicationStatusCard = ({
   savingStatus,
   config,
   appState,
+  activityStatus,
 }: ApplicationStatusCardProps) => {
   const hasExtraBar = !!(micStatus || errorReports?.length);
   return (
@@ -54,6 +58,7 @@ const ApplicationStatusCard = ({
           savingStatus={savingStatus}
           config={config}
           appState={appState}
+          activityStatus={activityStatus}
         />
       </div>
       <div

@@ -1115,6 +1115,15 @@ const videoMatch = (a: RendererVideo, b: RendererVideo) =>
 
 const videoMatchName = (a: RendererVideo, name: string) => a.videoName === name;
 
+const secToHhMmSs = (seconds: number) => {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+};
+
 export {
   getFormattedDuration,
   getVideoResult,
@@ -1157,6 +1166,7 @@ export {
   getKeyModifiersString,
   getNextKeyOrMouseEvent,
   secToMmSs,
+  secToHhMmSs,
   getCategoryFromConfig,
   getVideoCategoryFilter,
   getCategoryIndex,

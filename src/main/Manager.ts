@@ -21,6 +21,7 @@ import {
   MicStatus,
   WowProcessEvent,
   BaseConfig,
+  ActivityStatus,
 } from './types';
 import {
   getObsVideoConfig,
@@ -263,7 +264,12 @@ export default class Manager {
     if (inOverrun) {
       this.refreshRecStatus(RecStatus.Overrunning);
     } else if (LogHandler.activity) {
-      this.refreshRecStatus(RecStatus.Recording, '', LogHandler.activity);
+      const activityStatus: ActivityStatus = {
+        category: LogHandler.activity.category,
+        start: LogHandler.activity.startDate.getTime(),
+      };
+
+      this.refreshRecStatus(RecStatus.Recording, '', activityStatus);
     } else if (this.recorder.obsState === ERecordingState.Recording) {
       this.refreshRecStatus(RecStatus.ReadyToRecord);
     } else if (this.recorder.obsState === ERecordingState.None) {
@@ -280,10 +286,10 @@ export default class Manager {
   private refreshRecStatus(
     status: RecStatus,
     msg = '',
-    activity: Activity | null = null,
+    activityStatus: ActivityStatus | null = null,
   ) {
     send('updateRecStatus', status, msg);
-    send('updateCategoryStatus', activity ? activity.category : null);
+    send('updateActivityStatus', activityStatus);
   }
 
   /**

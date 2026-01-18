@@ -1,5 +1,5 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { act, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ErrorReport,
   MicStatus,
@@ -11,6 +11,7 @@ import {
   CloudStatus,
   DiskStatus,
   StorageFilter,
+  ActivityStatus,
 } from 'main/types';
 import Box from '@mui/material/Box';
 import { getLocalePhrase, Language } from 'localisation/translations';
@@ -51,9 +52,9 @@ const WarcraftRecorder = () => {
     RecStatus.WaitingForWoW,
   );
 
-  // The currently recording category.
-  const [recorderCategory, setRecorderCategory] =
-    useState<VideoCategory | null>(null);
+  const [activityStatus, setActivityStatus] = useState<ActivityStatus | null>(
+    null,
+  );
 
   const [savingStatus, setSavingStatus] = useState<SaveStatus>(
     SaveStatus.NotSaving,
@@ -163,8 +164,8 @@ const WarcraftRecorder = () => {
     }
   };
 
-  const updateCategoryStatus = (category: unknown) => {
-    setRecorderCategory(category as VideoCategory);
+  const updateActivityStatus = (status: unknown) => {
+    setActivityStatus(status as ActivityStatus);
   };
 
   const updateSaveStatus = (status: unknown) => {
@@ -406,7 +407,7 @@ const WarcraftRecorder = () => {
 
   useEffect(() => {
     ipc.on('updateRecStatus', updateRecStatus);
-    ipc.on('updateCategoryStatus', updateCategoryStatus);
+    ipc.on('updateActivityStatus', updateActivityStatus);
     ipc.on('updateSaveStatus', updateSaveStatus);
     ipc.on('updateMicStatus', updateMicStatus);
     ipc.on('updateErrorReport', updateErrorReports);
@@ -424,7 +425,7 @@ const WarcraftRecorder = () => {
 
     return () => {
       ipc.removeAllListeners('updateRecStatus');
-      ipc.removeAllListeners('updateCategoryStatus');
+      ipc.removeAllListeners('updateActivityStatus');
       ipc.removeAllListeners('updateSaveStatus');
       ipc.removeAllListeners('updateMicStatus');
       ipc.removeAllListeners('updateErrorReport');
@@ -470,7 +471,8 @@ const WarcraftRecorder = () => {
                 savingStatus={savingStatus}
                 config={config}
                 updateAvailable={updateAvailable}
-                recorderCategory={recorderCategory}
+                recorderCategory={activityStatus?.category}
+                activityStatus={activityStatus}
               />
               <Layout
                 recorderStatus={recorderStatus}

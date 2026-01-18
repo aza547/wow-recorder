@@ -26,6 +26,11 @@ enum RecStatus {
   Reconfiguring,
 }
 
+type ActivityStatus = {
+  category: VideoCategory;
+  start: number;
+};
+
 enum MicStatus {
   NONE,
   MUTED,
@@ -685,4 +690,5 @@ export {
   WowProcessEvent,
   SoundAlerts,
   CloudState,
+  ActivityStatus,
 };
