@@ -15,7 +15,7 @@ import StatusLight, {
   StatusLightProps,
 } from 'renderer/components/StatusLight/StatusLight';
 import { cn } from 'renderer/components/utils';
-import { secToHhMmSs, secToMmSs } from 'renderer/rendererutils';
+import { secToMmSs } from 'renderer/rendererutils';
 
 type StatusInfo = {
   statusTitle: string;
@@ -293,14 +293,6 @@ const Status = ({
 
   const isSaving = savingStatus === SaveStatus.Saving;
 
-  const renderRecTimer = () => {
-    if (recTimerSec > 3600) {
-      return secToHhMmSs(recTimerSec);
-    }
-
-    return secToMmSs(recTimerSec);
-  };
-
   return (
     <HoverCard openDelay={300}>
       <HoverCardTrigger>
@@ -323,7 +315,9 @@ const Status = ({
             >
               {statusTitle}
               {recTimerSec > 0 && (
-                <div className="mx-2 text-foreground">{renderRecTimer()}</div>
+                <div className="mx-2 text-foreground">
+                  {secToMmSs(recTimerSec)}
+                </div>
               )}
               {isSaving && (
                 <HardDriveDownload size={14} className="mx-1 animate-pulse" />

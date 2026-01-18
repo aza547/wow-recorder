@@ -215,7 +215,7 @@ const CategoryPage = (props: IProps) => {
             <ArrowRightToLine size={18} />
           </Button>
           {appVersion && (
-            <div className="flex items-center justify-end w-full h-[40px] pt-2 mx-2 text-sm text-foreground">
+            <div className="flex items-center justify-start w-full h-[40px] pt-2 mx-2 text-sm font-bold text-foreground">
               {getLocalePhrase(language, Phrase.RecordedAt)} v{appVersion}
             </div>
           )}
