@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Update the parsing of COMBATANT_INFO events which changed in Midnight prepatch.
 
 ## [7.5.0] - 2026-01-18
 ### Added
