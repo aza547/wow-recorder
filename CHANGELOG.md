@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Added
 ### Fixed
+- Validate log path shows false by default when it's meant to show true.
 
 ## [7.5.1] - 2026-01-21
 ### Fixed

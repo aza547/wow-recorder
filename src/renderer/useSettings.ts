@@ -115,6 +115,7 @@ export const getSettings = (): ConfigurationSchema => {
     manualRecordUpload: getConfigValue<boolean>('manualRecordUpload'),
     firstTimeSetup: getConfigValue<boolean>('firstTimeSetup'),
     chatUserNameAgreed: getConfigValue<string>('chatUserNameAgreed'),
+    validateLogPaths: getConfigValue<boolean>('validateLogPaths'),
     /* eslint-enable prettier/prettier */
   };
 
